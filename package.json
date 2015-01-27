@@ -1,0 +1,20 @@
+{
+  "name": "streamr-client",
+  "version": "0.0.1",
+  "description": "",
+  "main": "streamr-client.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+
+  },
+  "devDependencies": {
+    "mocha": "*"
+  }
+}
