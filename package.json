@@ -1,0 +1,22 @@
+{
+  "name": "streamr-socketio-server",
+  "version": "0.0.1",
+  "description": "",
+  "main": "start-server.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha test"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "kafka-node": "0.2.16",
+    "socket.io": "1.3.2",
+    "optimist": "*"
+  },
+  "devDependencies": {
+    "mocha": "*"
+  }
+}
