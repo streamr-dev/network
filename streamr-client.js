@@ -1,5 +1,8 @@
 (function(exports) {
 
+var STREAM_KEY = "_S"
+var COUNTER_KEY = "_C"
+
 function StreamrClient(options) {
 	// Default options
 	this.options = {
@@ -66,7 +69,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 		}
 		
 		// Look up the handler
-		_this.streams[data.channel].handler(data)
+		_this.streams[data[STREAM_KEY]].handler(data)
 	})
 	
 	this.socket.on('subscribed', function(data) {
@@ -97,13 +100,13 @@ StreamrClient.prototype.connect = function(reconnect) {
 			var i
 			for (i=0;i<stream.queue.length;i++) {
 				// If the counter is correct, process the message
-				if (stream.queue[i].counter === stream.counter)
+				if (stream.queue[i][COUNTER_KEY] === stream.counter)
 					stream.handler(stream.queue[i])
 				// Ignore old messages in the queue
-				else if (stream.queue[i].counter < stream.counter)
+				else if (stream.queue[i][COUNTER_KEY] < stream.counter)
 					continue
 				// Else stop looping
-				else if (stream.queue[i].counter > stream.counter)
+				else if (stream.queue[i][COUNTER_KEY] > stream.counter)
 					break
 			}
 			
@@ -115,7 +118,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 			// and request another resend for the gap!
 			else {
 				stream.queue.splice(0, i)
-				_this.requestResend(data.channel, stream.counter, stream.queue[0].counter-1)
+				_this.requestResend(data.channel, stream.counter, stream.queue[0][COUNTER_KEY]-1)
 			}
 		}
 	})
@@ -189,28 +192,21 @@ StreamrClient.prototype.requestResend = function(streamId, from, to) {
 
 StreamrClient.prototype.handleResponse = function(message, streamId, callback) {
 	var stream = this.streams[streamId]
-	
-	// If no counter is present, this is the purged empty message that 
-	// should not be processed but must increment counter
-	if (message.counter==null) {
-		stream.counter++;
-		return
-	}
-	
+		
 	// Update ack counter
-	if (message.counter > stream.counter) {
+	if (message[COUNTER_KEY] > stream.counter) {
 		stream.queue.push(message)
 		
 		if (!stream.resending) {
 			console.log("Gap detected, requesting resend for channel "+streamId)
-			this.requestResend(streamId, stream.counter, message.counter-1)
+			this.requestResend(streamId, stream.counter, message[COUNTER_KEY]-1)
 		}
 	}
-	else if (message.counter < stream.counter) {
-		console.log("Already received message: "+message.counter+", expecting: "+stream.counter);
+	else if (message[COUNTER_KEY] < stream.counter) {
+		console.log("Already received message: "+message[COUNTER_KEY]+", expecting: "+stream.counter);
 	}
 	else {
-		stream.counter = message.counter + 1;
+		stream.counter = message[COUNTER_KEY] + 1;
 		callback(message);
 	}
 }
