@@ -207,6 +207,8 @@ StreamrClient.prototype.handleResponse = function(message, streamId, callback) {
 	}
 	else {
 		stream.counter = message[COUNTER_KEY] + 1;
+		delete message[COUNTER_KEY]
+		delete message[STREAM_KEY]
 		callback(message);
 	}
 }
