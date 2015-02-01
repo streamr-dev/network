@@ -154,6 +154,17 @@ describe('kafka-helper', function () {
 
 	describe("subscribe()", function() {
 
+		it('should emit subscribed', function(done) {
+			consumerMock.addTopics = function(requests, cb) {
+				cb(undefined, ["topic"])
+			}
+			kh.once('subscribed', function(topic) {
+				assert.equal(topic,"topic")
+				done()
+			})
+			kh.subscribe("topic", 0)
+		})
+
 		it('should query for a start offset if none is specified', function(done) {			
 			offsetResponses.push({
 				requests: [{topic:"topic", time:-1}],
@@ -202,6 +213,17 @@ describe('kafka-helper', function () {
 	})
 
 	describe("unsubscribe()", function() {
+		it('should emit unsubscribed', function(done) {
+			consumerMock.removeTopics = function(topics, cb) {
+				cb(undefined, topics)
+			}
+			kh.once('unsubscribed', function(topic) {
+				assert.equal(topic,"topic")
+				done()
+			})
+			kh.unsubscribe("topic")
+		})
+
 		it('should remove the topic from the consumer', function(done) {			
 
 			var removeTopicsCalled = false
