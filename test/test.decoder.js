@@ -6,7 +6,17 @@ describe('decoder', function () {
 
 	it('should return the message as is if it is not a raw buffer', function() {
 		var msg = {foo: "bar"}
-		assert(msg == decoder.decode(msg))
+		assert(msg === decoder.decode(msg))
+	})
+
+	it('should return buffers as json-parsed strings if no version or format is set', function() {
+		var msg = new Buffer('{"foo": "bar"}')
+		assert.equal(decoder.decode(msg).foo, JSON.parse(msg).foo)
+	})
+
+	it('should return as is if could not parse as json', function() {
+		var msg = new Buffer('')
+		assert(msg === decoder.decode(msg))
 	})
 
 	it('should parse UnifinaKafkaProducer JSON messages from raw buffers', function () {

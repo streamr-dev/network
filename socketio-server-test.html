@@ -2,7 +2,7 @@
 <head>
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
 	<script type="text/javascript" src="node_modules/socket.io/node_modules/socket.io-client/socket.io.js"></script>
-	<script type="text/javascript" src="../streamr-client/streamr-client.js"></script>
+	<script type="text/javascript" src="../../web-app/js/unifina/streamr-socketio-client/streamr-client.js"></script>
 
 	<script type="text/javascript">
 		var client
@@ -10,11 +10,11 @@
 		$(document).ready(function() {
 			client = new StreamrClient()
 			client.subscribe(
-				"http-test", 
+				"1T58fshSQs2kOPs3ERpF9w", 
 				function(message) {
 					$("body").append(JSON.stringify(message)+"<br><br>")
 				},
-				{resend_last: 2}
+				{resend_all: true}
 			)
 			client.connect()
 		})
