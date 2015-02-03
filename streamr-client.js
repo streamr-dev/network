@@ -3,6 +3,14 @@
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
 
+function extend(){
+    for(var i=1; i<arguments.length; i++)
+        for(var key in arguments[i])
+            if(arguments[i].hasOwnProperty(key))
+                arguments[0][key] = arguments[i][key];
+    return arguments[0];
+}
+
 function StreamrClient(options) {
 	// Default options
 	this.options = {
@@ -16,7 +24,7 @@ function StreamrClient(options) {
     if (typeof options === "string")
     	this.options.socketIoUrl = options
     else
-		$.extend(this.options, options || {})
+		extend(this.options, options || {})
 }
 
 StreamrClient.prototype.subscribe = function(streamId, callback, options) {
