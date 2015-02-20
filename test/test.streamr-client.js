@@ -31,6 +31,7 @@ var StreamrClient = require('../streamr-client').StreamrClient
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
+var BYE_KEY = "_bye"
 
 describe('StreamrClient', function() {
 	var client
@@ -46,6 +47,12 @@ describe('StreamrClient', function() {
 			})
 
 		return msg
+	}
+
+	function byeMsg(stream, counter) {
+		var bye = {}
+		bye[BYE_KEY] = true
+		return msg(stream, counter, bye)
 	}
 
 	beforeEach(function() {
@@ -101,6 +108,26 @@ describe('StreamrClient', function() {
 		client.socket.trigger('connect')
 		done()
 	})
+
+	it('should not a subscribe event for unsubscribed streams', function(done) {
+		var subscription = client.subscribe("stream1", function(message) {})
+		var subscription = client.subscribe("stream2", function(message) {})
+		client.connect()
+
+		client.socket.trigger('connect')
+		client.socket.trigger('subscribed', {channels: ["stream1","stream2"]})
+
+		client.socket.trigger('ui', byeMsg("stream1", 0))
+		client.socket.trigger('unsubscribed', {channel:"stream1"})
+
+		client.socket.emit = function(e, subscriptions) {
+			if (subscriptions.length>1 || subscriptions[0]==="stream1")
+			throw "Should not have subscribed to stream1 on reconnect!"
+		}
+		client.socket.trigger('disconnect')
+		client.socket.trigger('connect')
+		done()
+	})
 	
 	it('should emit a subscribe event when subscribing after connecting', function(done) {
 		client.connect()
@@ -149,7 +176,6 @@ describe('StreamrClient', function() {
 
 	it('should call the callback when a message is received with correct counter', function(done) {
 		var subscription = client.subscribe("stream1", function(message) {
-			assert.equal(message[COUNTER_KEY], 0)
 			done()
 		})
 		client.connect()
@@ -158,11 +184,40 @@ describe('StreamrClient', function() {
 		// Fake message
 		client.socket.trigger('ui', msg("stream1", 0))
 	})
+
+	it('should emit unsubscribe after processing a message with the bye key', function(done) {
+		var processed = false
+		var subscription = client.subscribe("stream1", function(message) {
+			processed = true
+		})
+		client.connect()
+		client.socket.trigger('connect')
+		
+		client.socket.emit = function(event, options) {
+			if (event==='unsubscribe' && processed && options.channels.length===1 && options.channels[0]==='stream1')
+				done()
+			else throw "Unexpected emission: "+event
+		}
+
+		// Fake message
+		client.socket.trigger('ui', byeMsg("stream1", 0))
+	})
+
+	it('should remove streams on unsubscribed', function(done) {
+		var subscription = client.subscribe("stream1", function(message) {})
+		client.connect()
+		client.socket.trigger('connect')
+		
+		// Fake message
+		client.socket.trigger('ui', byeMsg("stream1", 0))
+		client.socket.trigger('unsubscribed', {channel: 'stream1'})
+		assert(!client.streams['stream1'])
+		done()
+	})
 	
 	it('should not call the callback nor throw an exception when a message is re-received', function(done) {
 		var callbackCounter = 0
 		var subscription = client.subscribe("stream1", function(message) {
-			assert.equal(message[COUNTER_KEY], 0)
 			callbackCounter++
 			if (callbackCounter>1)
 				throw "Callback called more than once!"
@@ -180,10 +235,10 @@ describe('StreamrClient', function() {
 	it('should call the callback once for each message in order', function(done) {
 		var count = 0
 		var subscription = client.subscribe("stream1", function(message) {
-			console.log("Count: "+count+", message: "+message[COUNTER_KEY])
+			console.log("Count: "+count+", message: "+message.count)
 			
-			if (message[COUNTER_KEY] !== count)
-				throw "Message counter: "+message[COUNTER_KEY]+", expected: "+count
+			if (message.count !== count)
+				throw "Message counter: "+message.count+", expected: "+count
 				
 			if (++count === 3)
 				done()
@@ -191,9 +246,9 @@ describe('StreamrClient', function() {
 		client.connect()
 		client.socket.trigger('connect')
 		
-		client.socket.trigger('ui', msg("stream1",0))
-		client.socket.trigger('ui', msg("stream1",1))
-		client.socket.trigger('ui', msg("stream1",2))
+		client.socket.trigger('ui', msg("stream1", 0, {count:0}))
+		client.socket.trigger('ui', msg("stream1", 1, {count:1}))
+		client.socket.trigger('ui', msg("stream1", 2, {count:2}))
 	})
 	
 	it('should disconnect the socket when disconnected', function(done) {
@@ -324,7 +379,7 @@ describe('StreamrClient', function() {
 		
 		it('should process queued messages when the resend is complete', function(done) {
 			var subscription = client.subscribe("stream1", function(message) {
-				if (message[COUNTER_KEY]===12)
+				if (message.counter===12)
 					done()
 			})
 			client.connect()
@@ -333,15 +388,15 @@ describe('StreamrClient', function() {
 			validResendRequests.push({channel:"stream1", from:1, to:9})
 			client.socket.emit = resendCheckingEmitter
 
-			client.socket.trigger('ui', msg("stream1",0))
-			client.socket.trigger('ui', msg("stream1",10))
-			client.socket.trigger('ui', msg("stream1",11))
-			client.socket.trigger('ui', msg("stream1",12))
+			client.socket.trigger('ui', msg("stream1", 0, {counter: 0}))
+			client.socket.trigger('ui', msg("stream1",10, {counter: 10}))
+			client.socket.trigger('ui', msg("stream1",11, {counter: 11}))
+			client.socket.trigger('ui', msg("stream1",12, {counter: 12}))
 		})
 		
 		it('should ignore retransmissions in the queue', function(done) {
 			var subscription = client.subscribe("stream1", function(message) {
-				if (message[COUNTER_KEY]===12)
+				if (message.counter===12)
 					done()
 			})
 			client.connect()
@@ -350,17 +405,17 @@ describe('StreamrClient', function() {
 			validResendRequests.push({channel:"stream1", from:1, to:9})
 			client.socket.emit = resendCheckingEmitter
 
-			client.socket.trigger('ui', msg("stream1",0))
-			client.socket.trigger('ui', msg("stream1",10))
-			client.socket.trigger('ui', msg("stream1",11))
-			client.socket.trigger('ui', msg("stream1",11)) // bogus message
-			client.socket.trigger('ui', msg("stream1",5)) // bogus message
-			client.socket.trigger('ui', msg("stream1",12))
+			client.socket.trigger('ui', msg("stream1", 0, {counter: 0}))
+			client.socket.trigger('ui', msg("stream1", 10, {counter: 10}))
+			client.socket.trigger('ui', msg("stream1", 11, {counter: 11}))
+			client.socket.trigger('ui', msg("stream1", 11, {counter: 11})) // bogus message
+			client.socket.trigger('ui', msg("stream1", 5, {counter: 5})) // bogus message
+			client.socket.trigger('ui', msg("stream1", 12, {counter: 12}))
 		})
 		
 		it('should do another resend request if there are gaps in the queue', function(done) {
 			var subscription = client.subscribe("stream1", function(message) {
-				if (message[COUNTER_KEY]===12)
+				if (message.counter===12)
 					done()
 			})
 			client.connect()
@@ -370,9 +425,9 @@ describe('StreamrClient', function() {
 			validResendRequests.push({channel:"stream1", from:11, to:11})
 			client.socket.emit = resendCheckingEmitter
 
-			client.socket.trigger('ui', msg("stream1",0))
-			client.socket.trigger('ui', msg("stream1",10))
-			client.socket.trigger('ui', msg("stream1",12))
+			client.socket.trigger('ui', msg("stream1", 0, {counter: 0}))
+			client.socket.trigger('ui', msg("stream1", 10, {counter: 10}))
+			client.socket.trigger('ui', msg("stream1", 12, {counter: 12}))
 		})
 		
 		it('should re-request from the latest counter on reconnect', function(done) {

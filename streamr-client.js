@@ -2,6 +2,7 @@
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
+var BYE_KEY = "_bye"
 
 function extend(){
     for(var i=1; i<arguments.length; i++)
@@ -52,6 +53,16 @@ StreamrClient.prototype.subscribe = function(streamId, callback, options) {
 	return this.streams[streamId]
 }
 
+StreamrClient.prototype.unsubscribe = function(streamId) {
+	// If connected, emit a subscribe request
+	if (this.connected) {
+		this.requestUnsubscribe([streamId])
+	}
+	else {
+		delete this.streams[streamId]
+	}
+}
+
 StreamrClient.prototype.isConnected = function() {
 	return this.connected
 }
@@ -85,6 +96,11 @@ StreamrClient.prototype.connect = function(reconnect) {
 		data.channels.forEach(function(channel) {
 			_this.streams[channel].subscribed = true
 		})
+	})
+
+	this.socket.on('unsubscribed', function(data) {
+		console.log("Unsubscribed from "+data.channel)
+		delete _this.streams[data.channel]
 	})
 
 	// The expect event is sent by the server before a resend starts.
@@ -190,6 +206,11 @@ StreamrClient.prototype.requestSubscribe = function(streamIds) {
 	this.socket.emit('subscribe', subscriptions)
 }
 
+StreamrClient.prototype.requestUnsubscribe = function(streamIds) {
+	console.log("Unsubscribing from "+JSON.stringify(streamIds))
+	this.socket.emit('unsubscribe', {channels: streamIds})
+}
+
 StreamrClient.prototype.requestResend = function(streamId, from, to) {
 	var stream = this.streams[streamId]
 	stream.resending = true
@@ -214,10 +235,17 @@ StreamrClient.prototype.handleResponse = function(message, streamId, callback) {
 		console.log("Already received message: "+message[COUNTER_KEY]+", expecting: "+stream.counter);
 	}
 	else {
+		var bye = message[BYE_KEY]
 		stream.counter = message[COUNTER_KEY] + 1;
+		
 		delete message[COUNTER_KEY]
 		delete message[STREAM_KEY]
+		delete message[BYE_KEY]
+
 		callback(message);
+
+		if (bye)
+			this.unsubscribe(streamId)
 	}
 }
 
