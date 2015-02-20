@@ -374,6 +374,7 @@ describe('socketio-server', function () {
 				unSubCount++
 				if (unSubCount===2) {
 					assert.equal(socket.rooms.length, 0)
+					assert.equal(socket._streamrChannels.length, 0)
 					done()
 				}
 			})
@@ -441,6 +442,7 @@ describe('socketio-server', function () {
 				{channel: "c"}
 			])
 		})
+
 	})
 
 });
