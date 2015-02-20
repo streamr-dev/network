@@ -489,6 +489,54 @@ describe('StreamrClient', function() {
 			assert.equal(sub.counter, 10)
 			done()
 		})
-	})	
+	})
+
+	describe("client events", function() {
+		it('should trigger a connected event on connect', function(done) {
+			client.bind('connected', function() {
+				done()
+			})
+			client.connect()
+			client.socket.trigger('connect')
+		})
+
+		it('should trigger a disconnected event on disconnect', function(done) {
+			client.bind('disconnected', function() {
+				done()
+			})
+			client.connect()
+			client.socket.trigger('connect')
+			client.disconnect()
+			client.socket.trigger('disconnect')
+		})
+
+		it('should trigger a subscribed event on subscribed', function(done) {
+			client.bind('subscribed', function(channels) {
+				done()
+			})
+			client.subscribe("stream1", function(message) {}, {resend_all:true})
+			client.subscribe("stream2", function(message) {}, {resend_all:true})
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.socket.trigger('subscribed', {channels:["stream1","stream2"]})
+		})
+
+		it('should trigger an unsubscribed event on unsubscribed', function(done) {
+			var count = 0
+			client.bind('unsubscribed', function(channels) {
+				if (++count===2)
+					done()
+			})
+			client.subscribe("stream1", function(message) {}, {resend_all:true})
+			client.subscribe("stream2", function(message) {}, {resend_all:true})
+			client.connect()
+			client.socket.trigger('connect')
+			client.socket.trigger('subscribed', {channels:["stream1","stream2"]})
+
+			client.socket.trigger('unsubscribed', {channel:"stream1"})
+			client.socket.trigger('unsubscribed', {channel:"stream2"})
+		})
+	})
 })
 

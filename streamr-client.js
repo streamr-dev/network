@@ -12,6 +12,56 @@ function extend(){
     return arguments[0];
 }
 
+/**
+ * MicroEvent - to make any js object an event emitter (server or browser)
+ * 
+ * - pure javascript - server compatible, browser compatible
+ * - dont rely on the browser doms
+ * - super simple - you get it immediatly, no mistery, no magic involved
+ *
+ * - create a MicroEventDebug with goodies to debug
+ *   - make it safer to use
+*/
+
+var MicroEvent	= function(){};
+MicroEvent.prototype = {
+	bind	: function(event, fct){
+		this._events = this._events || {};
+		this._events[event] = this._events[event]	|| [];
+		this._events[event].push(fct);
+	},
+	unbind	: function(event, fct){
+		this._events = this._events || {};
+		if( event in this._events === false  )	return;
+		this._events[event].splice(this._events[event].indexOf(fct), 1);
+	},
+	trigger	: function(event /* , args... */){
+		this._events = this._events || {};
+		if( event in this._events === false  )	return;
+		for(var i = 0; i < this._events[event].length; i++){
+			this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1));
+		}
+	}
+};
+
+/**
+ * mixin will delegate all MicroEvent.js function in the destination object
+ *
+ * - require('MicroEvent').mixin(Foobar) will make Foobar able to use MicroEvent
+ *
+ * @param {Object} the object which will support MicroEvent
+*/
+MicroEvent.mixin	= function(destObject){
+	var props	= ['bind', 'unbind', 'trigger'];
+	for(var i = 0; i < props.length; i ++){
+		if( typeof destObject === 'function' ){
+			destObject.prototype[props[i]]	= MicroEvent.prototype[props[i]];
+		}else{
+			destObject[props[i]] = MicroEvent.prototype[props[i]];
+		}
+	}
+}
+
 function StreamrClient(options) {
 	// Default options
 	this.options = {
@@ -27,6 +77,8 @@ function StreamrClient(options) {
     else
 		extend(this.options, options || {})
 }
+
+MicroEvent.mixin(StreamrClient)
 
 StreamrClient.prototype.subscribe = function(streamId, callback, options) {
 	var _this = this
@@ -96,11 +148,13 @@ StreamrClient.prototype.connect = function(reconnect) {
 		data.channels.forEach(function(channel) {
 			_this.streams[channel].subscribed = true
 		})
+		_this.trigger('subscribed', data.channels)
 	})
 
 	this.socket.on('unsubscribed', function(data) {
 		console.log("Unsubscribed from "+data.channel)
 		delete _this.streams[data.channel]
+		_this.trigger('unsubscribed', data.channel)
 
 		// Disconnect if no longer subscribed to any channels
 		if (Object.keys(_this.streams).length===0) {
@@ -157,6 +211,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.socket.on('connect', function() {
 		console.log("Connected!")
 		_this.connected = true
+		_this.trigger('connected')
 		
 		var streamIds = []
 		for (var streamId in _this.streams) {
@@ -173,9 +228,12 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.socket.on('disconnect', function() {
 		console.log("Disconnected.")
 		_this.connected = false
+
 		for (var streamId in _this.streams) {
 			_this.streams[streamId].subscribed = false
 		}
+
+		_this.trigger('disconnected')
 	})
 
 	return this.streams
