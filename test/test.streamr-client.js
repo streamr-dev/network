@@ -214,6 +214,28 @@ describe('StreamrClient', function() {
 		assert(!client.streams['stream1'])
 		done()
 	})
+
+	it('should disconnect when no longer subscribed to any streams', function(done) {
+		client.subscribe("stream1", function(message) {})
+		client.subscribe("stream2", function(message) {})
+		client.connect()
+		client.socket.trigger('connect')
+		
+		client.socket.trigger('subscribed', {channels: ["stream1","stream2"]})
+
+		// Must not disconnect yet
+		client.socket.disconnect = function() {
+			throw "Disconnected too early!"
+		}
+		client.socket.trigger('ui', byeMsg("stream1", 0))
+		client.socket.trigger('unsubscribed', {channel: 'stream1'})
+
+		client.socket.trigger('ui', byeMsg("stream2", 0))
+		client.socket.disconnect = function() {
+			done()
+		}
+		client.socket.trigger('unsubscribed', {channel: 'stream2'})
+	})
 	
 	it('should not call the callback nor throw an exception when a message is re-received', function(done) {
 		var callbackCounter = 0

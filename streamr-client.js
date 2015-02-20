@@ -101,6 +101,12 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.socket.on('unsubscribed', function(data) {
 		console.log("Unsubscribed from "+data.channel)
 		delete _this.streams[data.channel]
+
+		// Disconnect if no longer subscribed to any channels
+		if (Object.keys(_this.streams).length===0) {
+			console.log("Disconnecting due to no longer being subscribed to any channels")
+			_this.disconnect()
+		}
 	})
 
 	// The expect event is sent by the server before a resend starts.
@@ -237,7 +243,7 @@ StreamrClient.prototype.handleResponse = function(message, streamId, callback) {
 	else {
 		var bye = message[BYE_KEY]
 		stream.counter = message[COUNTER_KEY] + 1;
-		
+
 		delete message[COUNTER_KEY]
 		delete message[STREAM_KEY]
 		delete message[BYE_KEY]
