@@ -9,4 +9,4 @@ First make sure you have all the dependencies installed:
 
 Example of starting the server in dev:
 
-`node start-server.js --zookeeper dev.unifina:2181 --port 8090`
+`node start-server.js --zookeeper dev.unifina:2181 --port 8889`
