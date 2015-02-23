@@ -65,7 +65,7 @@ MicroEvent.mixin	= function(destObject){
 function StreamrClient(options) {
 	// Default options
 	this.options = {
-		socketIoUrl: "http://localhost:8090"
+		server: "http://localhost:8090"
 	}
 	this.streams = {}
 	this.socket = null
@@ -73,7 +73,7 @@ function StreamrClient(options) {
 
     // Can give server URL as parameter instead of options object
     if (typeof options === "string")
-    	this.options.socketIoUrl = options
+    	this.options.server = options
     else
 		extend(this.options, options || {})
 }
@@ -131,8 +131,8 @@ StreamrClient.prototype.connect = function(reconnect) {
 		return this.streams
 	}
 	
-	console.log("Connecting to "+this.options.socketIoUrl)
-	this.socket = io(this.options.socketIoUrl, {forceNew: true})
+	console.log("Connecting to "+this.options.server)
+	this.socket = io(this.options.server, {forceNew: true})
 	
 	this.socket.on('ui', function(data) {
 		if (typeof data == 'string' || data instanceof String) {
