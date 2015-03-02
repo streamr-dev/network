@@ -24,7 +24,9 @@ function createFakeClient(latitude, longitude) {
 
 		console.log(msg)
 		rest.postJson('http://dev.unifina:8888/json', msg).on('complete', function(data, response) {
-			console.log(response.statusCode)
+			if (response)
+				console.log(response.statusCode)
+			else console.log("Warn: response was null")
 		});
 	}
 
