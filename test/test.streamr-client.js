@@ -74,250 +74,323 @@ describe('StreamrClient', function() {
 
 		client = new StreamrClient()
 	})
-	
-	it('should emit a subscribe event on connect', function(done) {
-		var subscription = client.subscribe("stream1", function(message) {})
-		client.connect()
 
-		client.socket.emit = function(e, subscriptions) {
-			if (e==='subscribe' && subscriptions.length===1 && subscriptions[0].channel==='stream1')
-				done()
-		}
-		client.socket.trigger('connect')
-	})
+	describe("connect", function() {
+		it('should emit a subscribe event on connect', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
 
-	it('should emit a subscribe event on reconnect', function(done) {
-		var subscription = client.subscribe("stream1", function(message) {})
-		client.connect()
+			client.socket.emit = function(e, subscriptions) {
+				if (e==='subscribe' && subscriptions.length===1 && subscriptions[0].channel==='stream1')
+					done()
+			}
+			client.socket.trigger('connect')
+		})
 
-		client.socket.emit = function(e, subscriptions) {
-			if (e==='subscribe' && subscriptions.length===1 && subscriptions[0].channel==='stream1')
-				done()
-		}
+		it('should not emit a subscribe event on connect if not subscribed to anything', function(done) {
+			client.connect()
 
-		client.socket.trigger('disconnect')
-		client.socket.trigger('connect')
-	})
-
-	it('should not emit a subscribe event on connect if not subscribed to anything', function(done) {
-		client.connect()
-
-		client.socket.emit = function(e, subscriptions) {
-			throw "Unexpected emit!"
-		}
-		client.socket.trigger('connect')
-		done()
-	})
-
-	it('should not a subscribe event for unsubscribed streams', function(done) {
-		var subscription = client.subscribe("stream1", function(message) {})
-		var subscription = client.subscribe("stream2", function(message) {})
-		client.connect()
-
-		client.socket.trigger('connect')
-		client.socket.trigger('subscribed', {channels: ["stream1","stream2"]})
-
-		client.socket.trigger('ui', byeMsg("stream1", 0))
-		client.socket.trigger('unsubscribed', {channel:"stream1"})
-
-		client.socket.emit = function(e, subscriptions) {
-			if (subscriptions.length>1 || subscriptions[0]==="stream1")
-			throw "Should not have subscribed to stream1 on reconnect!"
-		}
-		client.socket.trigger('disconnect')
-		client.socket.trigger('connect')
-		done()
-	})
-	
-	it('should emit a subscribe event when subscribing after connecting', function(done) {
-		client.connect()
-		client.socket.trigger('connect')
-
-		client.socket.emit = function(e, subscriptions) {
-			if (e==='subscribe' && subscriptions.length===1 && subscriptions[0].channel==='stream1')
-				done()
-		}
-		client.subscribe("stream1", function(message) {})
-	})
-
-	it('should emit a subscribe event on disconnect for topics subscribed after initial connect', function(done) {
-		client.connect()
-		client.socket.trigger('connect')
-
-		client.subscribe("stream1", function(message) {})
-
-		client.socket.emit = function(e, subscriptions) {
-			if (e==='subscribe' && subscriptions.length===1 && subscriptions[0].channel==='stream1')
-				done()
-		}
-		client.socket.trigger('disconnect')
-		client.socket.trigger('connect')
-	})
-
-	it('should include options in the subscription message', function(done) {
-		var subscription = client.subscribe("stream1", function(message) {}, {resend:true})
-		client.connect()
-
-		client.socket.emit = function(e, subscriptions) {
-			if (e==='subscribe' && subscription.options.resend)
-				done()
-		}
-		client.socket.trigger('connect')
-	})
-
-	it('should mark channels as subscribed when the server responds with subscribed', function(done) {
-		var subscription = client.subscribe("stream1", function(message) {})
-		client.connect()
-		client.socket.trigger('connect')
-		client.socket.trigger('subscribed', {channels: ["stream1"]})
-		assert(subscription.subscribed)
-		done()
-	})
-
-	it('should call the callback when a message is received with correct counter', function(done) {
-		var subscription = client.subscribe("stream1", function(message) {
+			client.socket.emit = function(e, subscriptions) {
+				throw "Unexpected emit!"
+			}
+			client.socket.trigger('connect')
 			done()
 		})
-		client.connect()
-		client.socket.trigger('connect')
-		
-		// Fake message
-		client.socket.trigger('ui', msg("stream1", 0))
-	})
 
-	it('should emit unsubscribe after processing a message with the bye key', function(done) {
-		var processed = false
-		var subscription = client.subscribe("stream1", function(message) {
-			processed = true
-		})
-		client.connect()
-		client.socket.trigger('connect')
-		
-		client.socket.emit = function(event, options) {
-			if (event==='unsubscribe' && processed && options.channels.length===1 && options.channels[0]==='stream1')
-				done()
-			else throw "Unexpected emission: "+event
-		}
+		it('should report that its connected after connecting', function(done) {
+			client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
 
-		// Fake message
-		client.socket.trigger('ui', byeMsg("stream1", 0))
-	})
-
-	it('should remove streams on unsubscribed', function(done) {
-		var subscription = client.subscribe("stream1", function(message) {})
-		client.connect()
-		client.socket.trigger('connect')
-		
-		// Fake message
-		client.socket.trigger('ui', byeMsg("stream1", 0))
-		client.socket.trigger('unsubscribed', {channel: 'stream1'})
-		assert(!client.streams['stream1'])
-		done()
-	})
-
-	it('should disconnect when no longer subscribed to any streams', function(done) {
-		client.subscribe("stream1", function(message) {})
-		client.subscribe("stream2", function(message) {})
-		client.connect()
-		client.socket.trigger('connect')
-		
-		client.socket.trigger('subscribed', {channels: ["stream1","stream2"]})
-
-		// Must not disconnect yet
-		client.socket.disconnect = function() {
-			throw "Disconnected too early!"
-		}
-		client.socket.trigger('ui', byeMsg("stream1", 0))
-		client.socket.trigger('unsubscribed', {channel: 'stream1'})
-
-		client.socket.trigger('ui', byeMsg("stream2", 0))
-		client.socket.disconnect = function() {
+			assert(client.isConnected())
 			done()
-		}
-		client.socket.trigger('unsubscribed', {channel: 'stream2'})
-	})
-	
-	it('should not call the callback nor throw an exception when a message is re-received', function(done) {
-		var callbackCounter = 0
-		var subscription = client.subscribe("stream1", function(message) {
-			callbackCounter++
-			if (callbackCounter>1)
-				throw "Callback called more than once!"
 		})
-		client.connect()
-		client.socket.trigger('connect')
-		
-		// Fake messages
-		client.socket.trigger('ui', msg("stream1",0))
-		client.socket.trigger('ui', msg("stream1",0))
-		client.socket.trigger('ui', msg("stream1",0))
-		done()
 	})
-	
-	it('should call the callback once for each message in order', function(done) {
-		var count = 0
-		var subscription = client.subscribe("stream1", function(message) {
-			console.log("Count: "+count+", message: "+message.count)
+
+	describe("reconnect", function() {
+		it('should emit a subscribe event on reconnect', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+
+			client.socket.emit = function(e, subscriptions) {
+				if (e==='subscribe' && subscriptions.length===1 && subscriptions[0].channel==='stream1')
+					done()
+			}
+
+			client.socket.trigger('disconnect')
+			client.socket.trigger('connect')
+		})
+
+		it('should not emit a subscribe event for unsubscribed streams on reconnect', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			var subscription = client.subscribe("stream2", function(message) {})
+			client.connect()
+
+			client.socket.trigger('connect')
+			client.socket.trigger('subscribed', {channels: ["stream1","stream2"]})
+
+			client.socket.trigger('ui', byeMsg("stream1", 0))
+			client.socket.trigger('unsubscribed', {channel:"stream1"})
+
+			client.socket.emit = function(e, subscriptions) {
+				if (subscriptions.length>1 || subscriptions[0]==="stream1")
+				throw "Should not have subscribed to stream1 on reconnect!"
+			}
+			client.socket.trigger('disconnect')
+			client.socket.trigger('connect')
+			done()
+		})
+
+		it('should emit a subscribe event on reconnect for topics subscribed after initial connect', function(done) {
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.subscribe("stream1", function(message) {})
+
+			client.socket.emit = function(e, subscriptions) {
+				if (e==='subscribe' && subscriptions.length===1 && subscriptions[0].channel==='stream1')
+					done()
+			}
+			client.socket.trigger('disconnect')
+			client.socket.trigger('connect')
+		})
+	})
+
+	describe("subscribe", function() {
+		it('should emit a subscribe event when subscribing after connecting', function(done) {
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.socket.emit = function(e, subscriptions) {
+				if (e==='subscribe' && subscriptions.length===1 && subscriptions[0].channel==='stream1')
+					done()
+			}
+			client.subscribe("stream1", function(message) {})
+		})
+
+		it('should include options in the subscription message', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {}, {resend:true})
+			client.connect()
+
+			client.socket.emit = function(e, subscriptions) {
+				if (e==='subscribe' && subscription.options.resend)
+					done()
+			}
+			client.socket.trigger('connect')
+		})
+
+		it('should mark channels as subscribed when the server responds with subscribed', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+			client.socket.trigger('subscribed', {channels: ["stream1"]})
+			assert(subscription.subscribed)
+			done()
+		})
+	})
+
+	describe("message handling", function() {
+		it('should call the callback when a message is received with correct counter', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {
+				done()
+			})
+			client.connect()
+			client.socket.trigger('connect')
 			
-			if (message.count !== count)
-				throw "Message counter: "+message.count+", expected: "+count
-				
-			if (++count === 3)
-				done()
+			// Fake message
+			client.socket.trigger('ui', msg("stream1", 0))
 		})
-		client.connect()
-		client.socket.trigger('connect')
+
+		it('should not call the callback nor throw an exception when a message is re-received', function(done) {
+			var callbackCounter = 0
+			var subscription = client.subscribe("stream1", function(message) {
+				callbackCounter++
+				if (callbackCounter>1)
+					throw "Callback called more than once!"
+			})
+			client.connect()
+			client.socket.trigger('connect')
+			
+			// Fake messages
+			client.socket.trigger('ui', msg("stream1",0))
+			client.socket.trigger('ui', msg("stream1",0))
+			client.socket.trigger('ui', msg("stream1",0))
+			done()
+		})
 		
-		client.socket.trigger('ui', msg("stream1", 0, {count:0}))
-		client.socket.trigger('ui', msg("stream1", 1, {count:1}))
-		client.socket.trigger('ui', msg("stream1", 2, {count:2}))
+		it('should call the callback once for each message in order', function(done) {
+			var count = 0
+			var subscription = client.subscribe("stream1", function(message) {
+				console.log("Count: "+count+", message: "+message.count)
+				
+				if (message.count !== count)
+					throw "Message counter: "+message.count+", expected: "+count
+					
+				if (++count === 3)
+					done()
+			})
+			client.connect()
+			client.socket.trigger('connect')
+			
+			client.socket.trigger('ui', msg("stream1", 0, {count:0}))
+			client.socket.trigger('ui', msg("stream1", 1, {count:1}))
+			client.socket.trigger('ui', msg("stream1", 2, {count:2}))
+		})
+
+		it('should emit unsubscribe after processing a message with the bye key', function(done) {
+			var processed = false
+			var subscription = client.subscribe("stream1", function(message) {
+				processed = true
+			})
+			client.connect()
+			client.socket.trigger('connect')
+			
+			client.socket.emit = function(event, options) {
+				if (event==='unsubscribe' && processed && options.channels.length===1 && options.channels[0]==='stream1')
+					done()
+				else throw "Unexpected emission: "+event
+			}
+
+			// Fake message
+			client.socket.trigger('ui', byeMsg("stream1", 0))
+		})
+	})
+
+	describe("unsubscribe", function() {
+		it('should remove streams on unsubscribed', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+			
+			// Fake message
+			client.socket.trigger('ui', byeMsg("stream1", 0))
+			client.socket.trigger('unsubscribed', {channel: 'stream1'})
+			assert(!client.streams['stream1'])
+			done()
+		})
 	})
 	
-	it('should disconnect the socket when disconnected', function(done) {
-		var subscription = client.subscribe("stream1", function(message) {})
-		client.connect()
-		client.socket.trigger('connect')
+	describe("disconnect", function() {
 
-		client.socket.disconnect = done
-		client.disconnect()
-	})
-	
-	it('should report that its connected after connecting', function(done) {
-		client.subscribe("stream1", function(message) {})
-		client.connect()
-		client.socket.trigger('connect')
+		it('should disconnect when no longer subscribed to any streams', function(done) {
+			client.subscribe("stream1", function(message) {})
+			client.subscribe("stream2", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+			
+			client.socket.trigger('subscribed', {channels: ["stream1","stream2"]})
 
-		assert(client.isConnected())
-		done()
-	})
+			// Must not disconnect yet
+			client.socket.disconnect = function() {
+				throw "Disconnected too early!"
+			}
+			client.socket.trigger('ui', byeMsg("stream1", 0))
+			client.socket.trigger('unsubscribed', {channel: 'stream1'})
 
-	it('should report that its not connected after disconnecting', function(done) {
-		client.subscribe("stream1", function(message) {})
-		client.connect()
-		client.socket.trigger('connect')
-
-		client.disconnect()
-		client.socket.trigger('disconnect')
-		assert(!client.isConnected())
-		done()
-	})
-	
-	it('should only subscribe to new subscriptions since calling disconnect()', function(done) {
-		client.subscribe("stream1", function(message) {})
-		var streams = client.connect()
-		client.socket.trigger('connect')
-
-		client.disconnect()
-		client.socket.trigger('disconnect')
-		
-		client.subscribe("stream2", function(message) {})
-		streams = client.connect()
-
-		socket.emit = function(e, subscriptions) {
-			if (e==='subscribe' && subscriptions.length===1)
+			client.socket.trigger('ui', byeMsg("stream2", 0))
+			client.socket.disconnect = function() {
 				done()
-		}
-		socket.trigger('connect')
+			}
+			client.socket.trigger('unsubscribed', {channel: 'stream2'})
+		})
+
+		it('should disconnect the socket when disconnected', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.socket.disconnect = done
+			client.disconnect()
+		})
+
+		it('should reset subscriptions when calling disconnect()', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.disconnect()
+			assert.equal(Object.keys(client.streams).length, 0)
+			done()
+		})
+
+		it('should report that its not connected after disconnecting', function(done) {
+			client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.disconnect()
+			client.socket.trigger('disconnect')
+			assert(!client.isConnected())
+			done()
+		})
+
+		it('should only subscribe to new subscriptions since calling disconnect()', function(done) {
+			client.subscribe("stream1", function(message) {})
+			var streams = client.connect()
+			client.socket.trigger('connect')
+
+			client.disconnect()
+			client.socket.trigger('disconnect')
+			
+			client.subscribe("stream2", function(message) {})
+			streams = client.connect()
+
+			socket.emit = function(e, subscriptions) {
+				if (e==='subscribe' && subscriptions.length===1)
+					done()
+			}
+			socket.trigger('connect')
+		})
+	})
+
+	describe("pause", function() {
+		it('should disconnect the socket', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.socket.disconnect = done
+			client.pause()
+		})
+
+		it('should not reset subscriptions', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.pause()
+			assert.equal(Object.keys(client.streams).length, 1)
+			done()
+		})
+
+		it('should report that its not connected after pausing', function(done) {
+			client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+
+			client.pause()
+			client.socket.trigger('disconnect')
+			assert(!client.isConnected())
+			done()
+		})
+
+		it('should subscribe to both old and new subscriptions after pause-and-connect', function(done) {
+			client.subscribe("stream1", function(message) {})
+			var streams = client.connect()
+			client.socket.trigger('connect')
+
+			client.pause()
+			client.socket.trigger('disconnect')
+			
+			client.subscribe("stream2", function(message) {})
+			streams = client.connect()
+
+			socket.emit = function(e, subscriptions) {
+				if (e==='subscribe' && subscriptions.length===2)
+					done()
+			}
+			socket.trigger('connect')
+		})
 	})
 	
 	describe("resend", function() {

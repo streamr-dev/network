@@ -239,6 +239,10 @@ StreamrClient.prototype.connect = function(reconnect) {
 	return this.streams
 }
 
+StreamrClient.prototype.pause = function() {
+	this.socket.disconnect()
+}
+
 StreamrClient.prototype.disconnect = function() {
 	this.streams = {}
 	this.socket.disconnect()
