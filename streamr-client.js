@@ -65,7 +65,12 @@ MicroEvent.mixin	= function(destObject){
 function StreamrClient(options) {
 	// Default options
 	this.options = {
-		server: "http://localhost:8090"
+		// The server to connect to
+		server: "http://localhost:8090",
+		// Automatically connect on first subscribe
+		autoConnect: false,
+		// Automatically disconnect on last unsubscribe
+		autoDisconnect: true
 	}
 	this.streams = {}
 	this.socket = null
@@ -100,6 +105,8 @@ StreamrClient.prototype.subscribe = function(streamId, callback, options) {
 	// If connected, emit a subscribe request
 	if (this.connected) {
 		this.requestSubscribe([streamId])
+	} else if (this.options.autoConnect) {
+		this.connect()
 	}
 
 	return this.streams[streamId]
@@ -157,7 +164,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 		_this.trigger('unsubscribed', data.channel)
 
 		// Disconnect if no longer subscribed to any channels
-		if (Object.keys(_this.streams).length===0) {
+		if (Object.keys(_this.streams).length===0 && _this.options.autoDisconnect) {
 			console.log("Disconnecting due to no longer being subscribed to any channels")
 			_this.disconnect()
 		}

@@ -187,6 +187,12 @@ describe('StreamrClient', function() {
 			assert(subscription.subscribed)
 			done()
 		})
+
+		it('should connect if autoConnect is set to true', function(done) {
+			client.options.autoConnect = true
+			client.connect = done
+			client.subscribe("stream1", function(message) {})
+		})
 	})
 
 	describe("message handling", function() {
@@ -292,6 +298,29 @@ describe('StreamrClient', function() {
 				done()
 			}
 			client.socket.trigger('unsubscribed', {channel: 'stream2'})
+		})
+
+		it('should not disconnect if autoDisconnect is set to false', function(done) {
+			client.options.autoDisconnect = false
+
+			client.subscribe("stream1", function(message) {})
+			client.subscribe("stream2", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+			
+			client.socket.trigger('subscribed', {channels: ["stream1","stream2"]})
+
+			// Must not disconnect
+			client.socket.disconnect = function() {
+				throw "Should not have disconnected!"
+			}
+			client.socket.trigger('ui', byeMsg("stream1", 0))
+			client.socket.trigger('unsubscribed', {channel: 'stream1'})
+
+			client.socket.trigger('ui', byeMsg("stream2", 0))
+
+			client.socket.trigger('unsubscribed', {channel: 'stream2'})
+			done()
 		})
 
 		it('should disconnect the socket when disconnected', function(done) {

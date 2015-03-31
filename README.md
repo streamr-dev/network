@@ -1,6 +1,6 @@
 # streamr-client
 
-streamr-client is a JavaScript client for connecting to `streamr-socketio-server`. You can subscribe to UI update streams or even raw data streams.
+streamr-client is a JavaScript client for connecting to Streamr data. You can subscribe to user interface widget updates or even raw data streams.
 
 ## Usage
 
@@ -28,7 +28,9 @@ client.connect()
 
 Option | Default value | Description
 ------ | ------------- | -----------
-socketIoUrl | http://localhost:8090 | Address of the `socketio-server` to connect to.
+server | http://api.streamr.com | Address of the server to connect to.
+autoConnect | false | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
+autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last channel is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
 
 ## Subscription options
 
