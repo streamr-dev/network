@@ -137,8 +137,13 @@ StreamrClient.prototype.connect = function(reconnect) {
 		console.log("connect() called while already connected, doing nothing...")
 		return this.streams
 	}
+	else if (this._connecting) {
+		console.log("connect() called while connecting, doing nothing...")
+		return this.streams
+	}
 	
 	console.log("Connecting to "+this.options.server)
+	this._connecting = true
 	this.socket = io(this.options.server, {forceNew: true})
 	
 	this.socket.on('ui', function(data) {
@@ -218,6 +223,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.socket.on('connect', function() {
 		console.log("Connected!")
 		_this.connected = true
+		_this.connecting = false
 		_this.trigger('connected')
 		
 		var streamIds = []

@@ -105,6 +105,25 @@ describe('StreamrClient', function() {
 			assert(client.isConnected())
 			done()
 		})
+
+		it('should not try to connect while connecting', function(done) {
+			var oldIo = global.io
+			var ioCalls = 0
+
+			global.io = function() {
+				ioCalls++
+				if (ioCalls>1)
+					throw "Too many io() calls!"
+				return oldIo()
+			}
+
+			client.options.autoConnect = true
+			client.subscribe("stream1", function(message) {})
+			client.subscribe("stream2", function(message) {})
+
+			assert.equal(ioCalls, 1)
+			done()
+		})
 	})
 
 	describe("reconnect", function() {
