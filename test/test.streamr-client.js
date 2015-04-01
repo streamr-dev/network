@@ -274,6 +274,22 @@ describe('StreamrClient', function() {
 			assert(!client.streams['stream1'])
 			done()
 		})
+
+		it('should handle messages after resubscribing', function(done) {
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+			client.socket.trigger('connect')
+			
+			// Fake message
+			client.unsubscribe(['stream1'])
+			client.socket.trigger('unsubscribed', {channel: 'stream1'})
+			assert(!client.streams['stream1'])
+
+			subscription = client.subscribe("stream1", function(message) {
+				done()
+			})
+			client.socket.trigger('ui', msg("stream1", 0, {}))
+		})
 	})
 	
 	describe("disconnect", function() {
