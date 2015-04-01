@@ -52,5 +52,16 @@ Name | Description
 connect() | Connects to the server, and also subscribes to any streams for which `subscribe()` has been called before calling `connect()`.
 disconnect() | Disconnects from the server, clearing all subscriptions.
 pause() | Disconnects from the server without clearing subscriptions.
-subscribe(streamId, callback, options) | Subscribes to stream `streamId`. Messages in this stream are passed to the `callback` function. See the above table for subscription `options`.
-unsubscribe(streamId) | Unsubscribes from the stream `streamId`. The callbacks for this stream will no longer receive messages.
+subscribe(streamId, callback, options) | Subscribes to a stream identified by the string `streamId`. Messages in this stream are passed to the `callback` function. See the above table for subscription `options`.
+unsubscribe(streamId) | Unsubscribes from the stream `streamId`. The callbacks for this stream might still receive messages before the unsubscribe is acknowledged by the server.
+bind(eventName, function) | Binds a `function` to an event called `eventName`
+unbind(eventName, function) | Unbinds the `function` from events called `eventName`
+
+## Events
+
+Name | Handler Arguments | Description
+---- | ----------------- | -----------
+subscribed | [streamId1, streamId2, ...] | Fired when a subscription request is acknowledged by the server. The bound functions will be called with a list of subscribed streamIds as the argument. Note that this list may not contain all the currently subscribed streams.
+unsubscribed | streamId | Fired when an unsubscription is acknowledged by the server. The callbacks for this stream should no longer receive messages for this stream.
+connected |  | Fired when the client has connected (or reconnected).
+disconnected |  | Fired when the client has disconnected (or paused).
