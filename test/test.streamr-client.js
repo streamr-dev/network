@@ -281,7 +281,7 @@ describe('StreamrClient', function() {
 			client.socket.trigger('connect')
 			
 			// Fake message
-			client.unsubscribe(['stream1'])
+			client.unsubscribe('stream1')
 			client.socket.trigger('unsubscribed', {channel: 'stream1'})
 			assert(!client.streams['stream1'])
 

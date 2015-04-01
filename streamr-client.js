@@ -66,9 +66,9 @@ function StreamrClient(options) {
 	// Default options
 	this.options = {
 		// The server to connect to
-		server: "http://localhost:8090",
+		server: "api.streamr.com",
 		// Automatically connect on first subscribe
-		autoConnect: false,
+		autoConnect: true,
 		// Automatically disconnect on last unsubscribe
 		autoDisconnect: true
 	}
