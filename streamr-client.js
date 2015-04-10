@@ -87,7 +87,23 @@ MicroEvent.mixin(StreamrClient)
 
 StreamrClient.prototype.subscribe = function(streamId, callback, options) {
 	var _this = this
-	options = options || {}
+	options = options || { resend_last: 0 }
+
+	var resendOptionCount = 0
+	// Check that multiple resend options are not given
+	if (options.resend_all)
+		resendOptionCount++
+	if (options.resend_from!=null)
+		resendOptionCount++
+	if (options.resend_last!=null)
+		resendOptionCount++
+	if (resendOptionCount>1)
+		throw "Multiple resend options active! Please use only one: "+JSON.stringify(options)
+
+	// If none of the resend options are given, use resend_last=0
+	if (!options.resend_all && !options.resend_from && !options.resend_last) {
+		options.resend_last = 0
+	}
 
 	// Register this stream if not already registered
 	if (!this.streams[streamId]) {
@@ -241,6 +257,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.socket.on('disconnect', function() {
 		console.log("Disconnected.")
 		_this.connected = false
+		_this.connecting = false
 
 		for (var streamId in _this.streams) {
 			_this.streams[streamId].subscribed = false
@@ -259,6 +276,7 @@ StreamrClient.prototype.pause = function() {
 StreamrClient.prototype.disconnect = function() {
 	this.streams = {}
 	this.socket.disconnect()
+	this._connecting = false
 }
 
 StreamrClient.prototype.requestSubscribe = function(streamIds) {
@@ -275,11 +293,8 @@ StreamrClient.prototype.requestSubscribe = function(streamIds) {
 			sub.options.resend_from = stream.counter
 		}
 
-		if (stream.options.resend_all || stream.options.resend_from || stream.options.resend_last) {
-			console.log("Waiting for resend for channel "+streamId)
-			stream.resending = true
-		}
-
+		console.log("Waiting for resend/expect for channel "+streamId)
+		stream.resending = true
 		subscriptions.push(sub)
 	})
 

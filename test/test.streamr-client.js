@@ -212,6 +212,18 @@ describe('StreamrClient', function() {
 			client.connect = done
 			client.subscribe("stream1", function(message) {})
 		})
+
+		it('should subscribe with the default resend option of resend_last=0 if nothing defined', function(done) {
+			client.subscribe("stream1", function(message) {})
+			client.connect()
+
+			client.socket.emit = function(subscribe, subscriptions) {
+				assert.equal(subscribe, "subscribe")
+				assert.equal(subscriptions[0].options.resend_last, 0)
+				done()
+			}
+			client.socket.trigger('connect')
+		})
 	})
 
 	describe("message handling", function() {
@@ -499,7 +511,8 @@ describe('StreamrClient', function() {
 				checkResendRequest(options,0)
 				done()
 			}
-			
+
+			client.socket.trigger('expect', {channel:'stream1', from:0})
 			client.socket.trigger('ui', msg("stream1",2))
 		})
 		
