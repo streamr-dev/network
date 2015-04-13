@@ -42,9 +42,11 @@ describe('socketio-server', function () {
 		kafkaMock = new events.EventEmitter
 		kafkaSubs = []
 
-		kafkaMock.subscribe = function(channel) {
+		kafkaMock.subscribe = function(channel, from, cb) {
 			kafkaSubs.push(channel)
-			this.emit('subscribed', channel)
+			this.emit('subscribed', channel, from)
+			if (cb)
+				cb(channel,from)
 		}
 		kafkaMock.unsubscribe = function(channel) {
 			var index = kafkaSubs.indexOf(channel)
@@ -52,7 +54,7 @@ describe('socketio-server', function () {
 				kafkaSubs.splice(index,1)
 				this.emit('unsubscribed', channel)
 			}
-			else throw "kafkaMocK: Tried to unsubscribe from "+channel+", but was not subscribed to it!"
+			else throw "kafkaMock: Tried to unsubscribe from "+channel+", but was not subscribed to it!"
 		}
 
 		// Mock socket.io
@@ -118,7 +120,7 @@ describe('socketio-server', function () {
 			}
 
 			expect = null
-			socket.on("expect", function(data) {
+			socket.on("resending", function(data) {
 				assert.equal(data.channel, "c")
 				expect = data.from
 			})
@@ -138,6 +140,19 @@ describe('socketio-server', function () {
 
 		afterEach(function() {
 			socket.removeAllListeners("expect")
+		})
+
+		it('should emit a resending event before starting the resend', function(done) {
+			kafkaMock.resend = function(channel, from, to, handler, callback) {}
+
+			socket.on('resending', function(data) {
+				assert.equal(data.channel, "c")
+				assert.equal(data.from, 5)
+				done()
+			})
+
+			ioMock.emit('connection', socket)
+			socket.emit('resend', {channel:"c", resend_all:true})
 		})
 
 		describe('resend_all', function() {
@@ -207,10 +222,13 @@ describe('socketio-server', function () {
 					throw "Resend should not be called, but it was! From: "+from+", to: "+to
 				}
 
+				socket.on('no_resend', function(data) {
+					assert.equal(data.next, 10)
+					done()
+				})
+
 				ioMock.emit('connection', socket)
 				socket.emit('resend', {channel:"c", resend_from:15})
-				assert.equal(expect, 10)
-				done()
 			});
 
 		})
@@ -259,10 +277,13 @@ describe('socketio-server', function () {
 					throw "Resend should not be called, but it was! From: "+from+", to: "+to
 				}
 
+				socket.on('no_resend', function(data) {
+					assert.equal(data.next, 10)
+					done()
+				})
+
 				ioMock.emit('connection', socket)
 				socket.emit('resend', {channel:"c", resend_last:0})
-				assert.equal(expect, 10)
-				done()
 			});
 
 			it('should not resend if resend_last is negative', function (done) {
@@ -270,10 +291,13 @@ describe('socketio-server', function () {
 					throw "Resend should not be called, but it was! From: "+from+", to: "+to
 				}
 
+				socket.on('no_resend', function(data) {
+					assert.equal(data.next, 10)
+					done()
+				})
+
 				ioMock.emit('connection', socket)
 				socket.emit('resend', {channel:"c", resend_last:-100})
-				assert.equal(expect, 10)
-				done()
 			});
 		})
 	})
@@ -298,7 +322,7 @@ describe('socketio-server', function () {
 
 	describe('subscribe', function() {
 
-		it('should subscribe to the requested channel', function (done) {
+		it('should subscribe to the requested channel from the next message if from not defined', function (done) {
 			// Must get the subscribed event
 			var subscribed = false
 			var kafkaSubscribed = false
@@ -310,88 +334,55 @@ describe('socketio-server', function () {
 					done()
 			})
 
-			kafkaMock.subscribe = function(channel) {
+			kafkaMock.subscribe = function(channel, from, cb) {
+				assert(from==null)
 				kafkaSubscribed = true
 				if (subscribed && kafkaSubscribed)
 					done()
+				else cb(channel,from)
 			}
 
 			ioMock.emit('connection', socket)
 			socket.emit('subscribe', {channel: "c"})
 		});
 
-		it('should handle rerequests', function (done) {
-			kafkaMock.getOffset = function(channel, earliest, cb) {
-				if (channel==="c")
-					cb(earliest ? 0 : 3)
-				else throw "Wrong channel: "+channel
-			}
+		it('should subscribe from the requested message', function (done) {
+			// Must get the subscribed event
+			var subscribed = false
+			var kafkaSubscribed = false
 
-			kafkaMock.resend = function(channel, from, to, handler, callback) {
-				if (channel==="c") {
-					assert.equal(from, 0)
-					assert.equal(to, 2)
-				}
-				else throw "Wrong channel: "+channel
+			socket.on('subscribed', function(data) {
+				subscribed = true
+				assert.equal(data.channel, "c")
+				if (subscribed && kafkaSubscribed)
+					done()
+			})
 
-				done()
+			kafkaMock.subscribe = function(channel, from, cb) {
+				assert(from==null)
+				kafkaSubscribed = true
+				if (subscribed && kafkaSubscribed)
+					done()
+				else cb(channel,from)
 			}
 
 			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c", options: {resend_all: true}})
+			socket.emit('subscribe', {channel: "c"})
 		});
 
-		it('should respond with a subscribed message containing the from field and resend information', function(done) {
-			kafkaMock.getOffset = function(channel, earliest, cb) {
-				if (channel==="c")
-					cb(earliest ? 0 : 3)
-				else throw "Wrong channel: "+channel
-			}
-
-			socket.on('subscribed', function(subscribed) {
-				assert.equal(subscribed.channel, "c")
-				assert.equal(subscribed.from, 0)
-				assert.equal(subscribed.resend.from, 0)
-				assert.equal(subscribed.resend.to, 2)
-				done()
-			})
-
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c", options: {resend_all: true}})
-		})
-
-		it('should respond with a subscribed message without resend if there will be no resend', function(done) {
-			kafkaMock.getOffset = function(channel, earliest, cb) {
-				if (channel==="c")
-					cb(earliest ? 0 : 3)
-				else throw "Wrong channel: "+channel
-			}
-
-			socket.on('subscribed', function(subscribed) {
-				assert.equal(subscribed.channel, "c")
-				assert.equal(subscribed.from, 3)
-
-				if (subscribed.resend)
-					throw "Should not start a resend!"
-
-				done()
-			})
-
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c", options: {resend_last: 0}})
-		})
 	})
 
 	describe('unsubscribe', function() {
 
 		it('should make the socket leave the channel and emit unsubscribed event', function(done) {
 
-			kafkaMock.on('subscribed', function(channel) {
+			socket.on('subscribed', function(data) {
 				assert.equal(Object.keys(ioMock.sockets.adapter.rooms['c']).length, 1)
 				socket.emit('unsubscribe', {channel: 'c'})
 			})
 
-			kafkaMock.on('unsubscribed', function(channel) {
+			socket.on('unsubscribed', function(data) {
+				assert.equal(data.channel, 'c')
 				assert.equal(socket.rooms.length, 0)
 				assert.equal(socket._streamrChannels.length, 0)
 				done()
@@ -402,7 +393,7 @@ describe('socketio-server', function () {
 		})
 
 		it('should unsubscribe kafka if there are no more sockets on the channel', function(done) {
-			kafkaMock.on('subscribed', function(channel) {
+			socket.on('subscribed', function(data) {
 				socket.emit('unsubscribe', {channel: 'c'})
 			})
 
@@ -437,7 +428,7 @@ describe('socketio-server', function () {
 
 	describe('disconnect', function() {
 		it('should unsubscribe kafka on channels where there are no more connections', function(done) {
-			kafkaMock.on('subscribed', function(channel) {
+			socket.on('subscribed', function(channel) {
 				socket.emit('disconnect')
 			})
 

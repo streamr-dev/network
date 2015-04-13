@@ -189,7 +189,6 @@ describe('kafka-helper', function () {
 
 		})
 
-
 		it('should subscribe from given offset if specified', function(done) {			
 
 			var addTopicsCalled = false
