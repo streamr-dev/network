@@ -231,6 +231,25 @@ describe('socketio-server', function () {
 				socket.emit('resend', {channel:"c", resend_from:15})
 			});
 
+			it('should cut the resend if resend_to is given', function (done) {
+				kafkaMock.resend = function(channel, from, to, handler, callback) {
+					assert.equal(channel, "c")
+					assert.equal(from, 7)
+					assert.equal(to, 8)
+					assert.equal(expect, 7)
+
+					for (var i=from;i<=to;i++)
+						handler({foo:"bar"})
+					callback()
+
+					assert.equal(msgCounter, to-from+1)
+					done()
+				}
+
+				ioMock.emit('connection', socket)
+				socket.emit('resend', {channel:"c", resend_from:7, resend_to:8})
+			});
+
 		})
 
 		describe('resend_last', function() {
