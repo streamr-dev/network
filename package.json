@@ -15,6 +15,7 @@
 
   },
   "devDependencies": {
-    "mocha": "*"
+    "mocha": "*",
+    "eventemitter2": "*"
   }
 }
