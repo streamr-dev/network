@@ -242,7 +242,13 @@ describe('StreamrClient', function() {
 	describe("subscribe", function() {
 		it('should throw an error if no streamId is given', function() {
 			assert.throws(function() {
-				client.subscribe()
+				client.subscribe(undefined, function() {})
+			})
+		})
+
+		it('should throw an error if streamId is wrong type', function() {
+			assert.throws(function() {
+				client.subscribe(['streamId'], function() {})
 			})
 		})
 
@@ -442,6 +448,17 @@ describe('StreamrClient', function() {
 			client.socket.once('subscribed', function() {
 				assert.throws(function() {
 					client.unsubscribe()
+				})
+			})
+		})
+
+		it('should throw error if streamId is wrong type', function() {
+			client.subscribe("stream1", function(message) {})
+			client.connect()
+
+			client.socket.once('subscribed', function() {
+				assert.throws(function() {
+					client.unsubscribe(['stream1'])
 				})
 			})
 		})

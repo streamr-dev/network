@@ -230,6 +230,8 @@ StreamrClient.prototype.subscribe = function(streamId, callback, options) {
 
 	if (!streamId)
 		throw "subscribe: Invalid arguments: stream id is required!"
+	else if (typeof streamId !== 'string')
+		throw "subscribe: stream id must be a string!"
 
 	if (!callback)
 		throw "subscribe: Invalid arguments: callback is required!"
@@ -260,6 +262,8 @@ StreamrClient.prototype.subscribe = function(streamId, callback, options) {
 StreamrClient.prototype.unsubscribe = function(streamId) {
 	if (!streamId)
 		throw "unsubscribe: stream id is required!"
+	else if (typeof streamId !== 'string')
+		throw "unsubscribe: stream id must be a string!"
 
 	// If connected, emit a subscribe request
 	if (this.connected) {
