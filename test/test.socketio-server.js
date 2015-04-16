@@ -445,6 +445,42 @@ describe('socketio-server', function () {
 		})
 	})
 
+	describe('subscribe-unsubscribe-subscribe', function() {
+		it('should work', function(done) {
+			socket.once('subscribed', function(data) {
+				socket.emit('unsubscribe', {channel: 'c'})
+			})
+
+			socket.once('unsubscribed', function() {
+				socket.once('subscribed', function() {
+					done()
+				})
+				socket.emit('subscribe', {channel: "c"})
+			})
+
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c"})
+		})
+
+		it('should work with subscribe from', function(done) {
+			socket.once('subscribed', function(data) {
+				assert.equal(data.from, 5)
+				socket.emit('unsubscribe', {channel: 'c'})
+			})
+
+			socket.once('unsubscribed', function() {
+				socket.once('subscribed', function(data) {
+					assert.equal(data.from, 7)
+					done()
+				})
+				socket.emit('subscribe', {channel: "c", from: 7})
+			})
+
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c", from: 5})
+		})
+	})
+
 	describe('disconnect', function() {
 		it('should unsubscribe kafka on channels where there are no more connections', function(done) {
 			socket.on('subscribed', function(channel) {
