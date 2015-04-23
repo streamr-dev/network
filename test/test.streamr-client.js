@@ -279,6 +279,25 @@ describe('StreamrClient', function() {
 			})
 		})
 
+		it('should trigger an error event if the subscribe fails', function(done) {
+			socket.removeListener('subscribe', socket.defaultSubscribeHandler)
+
+			socket.on('subscribe', function(request) {
+				async(function() {
+					socket.emit('subscribed', {channel: request.channel, error: 'error message'})	
+				})
+			})
+
+			var subscription = client.subscribe("stream1", function(message) {})
+			client.connect()
+
+			client.bind('error', function(msg) {
+				assert(msg.indexOf('error message' >= 0))
+				done()
+			})
+
+		})
+
 		it('should connect if autoConnect is set to true', function(done) {
 			client.options.autoConnect = true
 			client.connect = done

@@ -307,8 +307,13 @@ StreamrClient.prototype.connect = function(reconnect) {
 	})
 	
 	this.socket.on('subscribed', function(response) {
-		_this.streams[response.channel].trigger('subscribed', response)
-		_this.trigger('subscribed', response)
+		if (response.error) {
+			_this.handleError("Error subscribing to "+response.channel+": "+response.error)
+		}
+		else {
+			_this.streams[response.channel].trigger('subscribed', response)
+			_this.trigger('subscribed', response)
+		}
 	})
 
 	this.socket.on('unsubscribed', function(response) {
@@ -436,6 +441,11 @@ StreamrClient.prototype.requestResend = function(streamId, options) {
 
 	console.log("requestResend: "+JSON.stringify(request))
 	this.socket.emit('resend', request)
+}
+
+StreamrClient.prototype.handleError = function(msg) {
+	console.log(msg)
+	this.trigger('error', msg)
 }
 
 exports.StreamrClient = StreamrClient
