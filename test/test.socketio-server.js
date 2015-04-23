@@ -389,6 +389,20 @@ describe('socketio-server', function () {
 			socket.emit('subscribe', {channel: "c"})
 		});
 
+		it('should respond with error if channel is not defined', function(done) {
+			// Must get the subscribed event
+			var subscribed = false
+			var kafkaSubscribed = false
+
+			socket.on('subscribed', function(data) {
+				assert(data.error!=null)
+					done()
+			})
+
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {})
+		})
+
 	})
 
 	describe('unsubscribe', function() {
