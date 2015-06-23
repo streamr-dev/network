@@ -69,5 +69,7 @@ disconnected |  | Fired when the client has disconnected (or paused).
 
 ## Events on the `Subscription` object
 
+Name | Handler Arguments | Description
+---- | ----------------- | -----------
 subscribed | {channel: 'streamId', from: number} | Fired when a subscription request is acknowledged by the server.
 unsubscribed | {channel: 'streamId'} | Fired when an unsubscription is acknowledged by the server.
