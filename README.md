@@ -54,7 +54,9 @@ connect() | Connects to the server, and also subscribes to any streams for which
 disconnect() | Disconnects from the server, clearing all subscriptions.
 pause() | Disconnects from the server without clearing subscriptions.
 subscribe(streamId, callback, resendOptions) | Subscribes to a stream identified by the string `streamId`. Messages in this stream are passed to the `callback` function. See the above table for `resendOptions`. Returns a `Subscription` object.
-unsubscribe(streamId) | Unsubscribes from the stream `streamId`. The callbacks for this stream might still receive messages before the unsubscribe is acknowledged by the server.
+unsubscribe(Subscription) | Unsubscribes the given `Subscription`.
+unsubscribeAll(`streamId`) | Unsubscribes all `Subscriptions` for `streamId`.
+getSubscriptions(`streamId`) | Returns a list of `Subscriptions` for `streamId`.
 bind(eventName, function) | Binds a `function` to an event called `eventName`
 unbind(eventName, function) | Unbinds the `function` from events called `eventName`
 
