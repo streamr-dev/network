@@ -206,7 +206,7 @@ describe('StreamrClient', function() {
 			// when subscribed, a bye message is received, leading to an unsubscribe
 			client.socket.on('subscribed', function(response) {
 				if (sub1.isSubscribed() && sub2.isSubscribed()) {
-					client.unsubscribe('stream1')
+					client.unsubscribe(sub1)
 					client.socket.once('unsubscribed', function(response) {
 						client.socket.emit('disconnect')
 
@@ -378,6 +378,10 @@ describe('StreamrClient', function() {
 		})
 	})
 
+	describe('multiple subscriptions for same stream', function() {
+		
+	})
+
 	describe("message handling", function() {
 		it('should call the callback when a message is received with correct counter', function(done) {
 			var sub = client.subscribe("stream1", function(message) {
@@ -447,20 +451,20 @@ describe('StreamrClient', function() {
 
 	describe("unsubscribe", function() {
 		it('should remove streams on unsubscribed', function(done) {
-			client.subscribe("stream1", function(message) {})
+			var sub = client.subscribe("stream1", function(message) {})
 			client.connect()
 
 			client.socket.once('subscribed', function() {
-				client.unsubscribe('stream1')
+				client.unsubscribe(sub)
 			})
 
 			client.socket.once('unsubscribed', function() {
-				assert(!client.streams['stream1'])
+				assert(!client.subsByStream['stream1'])
 					done()
 			})
 		})
 
-		it('should throw error if no streamId given', function() {
+		it('should throw error if no Subscription given', function() {
 			client.subscribe("stream1", function(message) {})
 			client.connect()
 
@@ -471,27 +475,27 @@ describe('StreamrClient', function() {
 			})
 		})
 
-		it('should throw error if streamId is wrong type', function() {
+		it('should throw error if Subscription is wrong type', function() {
 			client.subscribe("stream1", function(message) {})
 			client.connect()
 
 			client.socket.once('subscribed', function() {
 				assert.throws(function() {
-					client.unsubscribe(['stream1'])
+					client.unsubscribe('stream1')
 				})
 			})
 		})
 
 		it('should handle messages after resubscribing', function(done) {
-			client.subscribe("stream1", function(message) {})
+			var sub = client.subscribe("stream1", function(message) {})
 			client.connect()
 			
 			client.socket.once('subscribed', function() {
-				client.unsubscribe('stream1')
+				client.unsubscribe(sub)
 			})
 			
 			client.socket.once('unsubscribed', function() {
-				assert(!client.streams['stream1'])
+				assert(client.getSubscriptions('stream1').length === 0)
 				client.subscribe("stream1", function(message) {
 					done()
 				})
@@ -499,6 +503,38 @@ describe('StreamrClient', function() {
 					client.socket.emit('ui', msg("stream1", 0, {}))
 				})
 			})
+		})
+	})
+
+	describe("unsubscribeAll", function() {
+		it('should remove all subscriptions for a stream', function(done) {
+			var sub1 = client.subscribe("stream1", function(message) {})
+			var sub2 = client.subscribe("stream1", function(message) {})
+			client.connect()
+
+			var subCount = 0
+			var subIncrementAndCheck = function() {
+				subCount++
+				if (subCount===2) {
+					client.unsubscribeAll('stream1')
+				}
+				else if (subCount>2)
+					throw "Too many subscriptions!"
+			}
+			var unsubCount = 0
+			var unsubIncrementAndCheck = function() {
+				unsubCount++
+				if (unsubCount===2) {
+					done()
+				}
+				else if (unsubCount>2) {
+					throw "Too many unsubscriptions!"
+				}
+			}
+			sub1.bind('subscribed', subIncrementAndCheck)
+			sub2.bind('subscribed', subIncrementAndCheck)
+			sub1.bind('unsubscribed', unsubIncrementAndCheck)
+			sub2.bind('unsubscribed', unsubIncrementAndCheck)
 		})
 	})
 	
@@ -536,8 +572,8 @@ describe('StreamrClient', function() {
 
 			client.socket.on('subscribed', function(response) {
 				if (sub1.isSubscribed() && sub2.isSubscribed()) {
-					client.unsubscribe('stream1')
-					client.unsubscribe('stream2')
+					client.unsubscribe(sub1)
+					client.unsubscribe(sub2)
 				}
 			})
 
@@ -557,8 +593,8 @@ describe('StreamrClient', function() {
 
 			client.socket.on('subscribed', function(response) {
 				if (sub1.isSubscribed() && sub2.isSubscribed()) {
-					client.unsubscribe('stream1')
-					client.unsubscribe('stream2')
+					client.unsubscribe(sub1)
+					client.unsubscribe(sub2)
 					done()
 				}
 			})
@@ -912,8 +948,8 @@ describe('StreamrClient', function() {
 
 			client.socket.on('subscribed', function() {
 				if (sub1.isSubscribed() && sub2.isSubscribed()) {
-					client.unsubscribe('stream1')
-					client.unsubscribe('stream2')
+					client.unsubscribe(sub1)
+					client.unsubscribe(sub2)
 				}
 			})
 		})
@@ -960,8 +996,8 @@ describe('StreamrClient', function() {
 
 			client.socket.on('subscribed', function() {
 				if (sub1.isSubscribed() && sub2.isSubscribed()) {
-					client.unsubscribe('stream1')
-					client.unsubscribe('stream2')
+					client.unsubscribe(sub1)
+					client.unsubscribe(sub2)
 				}
 			})
 		})
