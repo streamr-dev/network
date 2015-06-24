@@ -33,7 +33,7 @@ describe('kafka-helper', function () {
 
 		decoderMock = {
 			decode: function(message) {
-				return message
+				return {message: message}
 			}
 		}
 
@@ -264,6 +264,25 @@ describe('kafka-helper', function () {
 			assert.equal(message._C, 10)
 			done()
 		})
+		it('should append a _T timestamp field for Kafka messages if requested', function(done) {
+			var date = Date.now()
+			kh.decoder = {
+				decode: function(message) {
+					var result = decoderMock.decode(message)
+					result.timestamp = date
+					return result
+				}
+			}
+
+			var message = kh.decodeMessage({
+				topic: "topic",
+				offset: 10,
+				value: {foo:"bar"}
+			}, true)
+
+			assert.equal(message._T, date)
+			done()
+		})
 	})
 
 	describe("resend()", function() {
@@ -361,4 +380,73 @@ describe('kafka-helper', function () {
 		})
 	})
 
+	describe('getTimestampForOffset', function() {
+		beforeEach(function() {
+
+		})
+
+		it('should send a fetch request for the offset', function(done) {
+			var date = Date.now()
+
+			var date = Date.now()
+			kh.decoder = {
+				decode: function(message) {
+					var result = decoderMock.decode(message)
+					result.timestamp = date
+					return result
+				}
+			}
+
+			clientMock.sendFetchRequest = function(consumer, reqs, fetchMaxWaitMs, fetchMinBytes, maxTickMessages) {
+				consumerMock.emit('message', {
+					topic: reqs[0].topic,
+					partition: reqs[0].partition, 
+					offset: reqs[0].offset,
+					value: {
+						foo: 'bar'
+					}
+				})
+			}
+
+			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
+				assert.equal(err, undefined)
+				assert.equal(ts, date)
+				done()
+			})
+		})
+
+		it('should call the callback with an error if the offset is out of range', function(done) {
+
+			clientMock.sendFetchRequest = function(consumer, reqs, fetchMaxWaitMs, fetchMinBytes, maxTickMessages) {
+				consumerMock.emit('offsetOutOfRange', {
+					topic: reqs[0].topic,
+					partition: reqs[0].partition,
+					message: "TEST ERROR MESSAGE"
+				})
+			}
+
+			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
+				assert.equal(ts, undefined)
+				assert(err !== undefined)
+				done()
+			})
+		})
+
+		it('should call the callback with an error if any other error occurs', function(done) {
+
+			clientMock.sendFetchRequest = function(consumer, reqs, fetchMaxWaitMs, fetchMinBytes, maxTickMessages) {
+				consumerMock.emit('error', {
+					topic: reqs[0].topic,
+					partition: reqs[0].partition,
+					message: "TEST ERROR MESSAGE"
+				})
+			}
+
+			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
+				assert.equal(ts, undefined)
+				assert(err !== undefined)
+				done()
+			})
+		})
+	})
 });
