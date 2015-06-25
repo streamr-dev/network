@@ -252,6 +252,34 @@ describe('socketio-server', function () {
 
 		})
 
+		describe('resend_from_time', function() {
+			it('should query the offset after given date and request resend from that offset', function (done) {
+				var d = Date.now()
+
+				kafkaMock.getFirstOffsetAfter = function(topic, partition, date, cb) {
+					assert.equal(d, date)
+					cb(7)
+				}
+
+				kafkaMock.resend = function(channel, from, to, handler, callback) {
+					assert.equal(channel, "c")
+					assert.equal(from, 7)
+					assert.equal(to, 9)
+					assert.equal(expect, 7)
+
+					for (var i=from;i<=to;i++)
+						handler({foo:"bar"})
+					callback()
+
+					assert.equal(msgCounter, to-from+1)
+					done()
+				}
+
+				ioMock.emit('connection', socket)
+				socket.emit('resend', {channel:"c", resend_from_time:d})
+			});
+		})
+
 		describe('resend_last', function() {
 			it('should query the offsets and request resend for the last N messages', function (done) {
 				kafkaMock.resend = function(channel, from, to, handler, callback) {
