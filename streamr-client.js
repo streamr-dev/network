@@ -317,9 +317,10 @@ StreamrClient.prototype.connect = function(reconnect) {
 	})
 
 	this.socket.on('unsubscribed', function(response) {
-		_this.streams[response.channel].trigger('unsubscribed', response)
-		_this.trigger('unsubscribed', response)
+		var sub = _this.streams[response.channel]
 		delete _this.streams[response.channel]
+		sub.trigger('unsubscribed', response)
+		_this.trigger('unsubscribed', response)
 
 		// Disconnect if no longer subscribed to any channels
 		if (Object.keys(_this.streams).length===0 && _this.options.autoDisconnect) {
