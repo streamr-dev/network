@@ -195,7 +195,7 @@ Subscription.prototype.checkQueue = function() {
 }
 
 Subscription.prototype.hasResendOptions = function() {
-	return this.options.resend_all===true || this.options.resend_from >= 0 || this.options.resend_last > 0
+	return this.options.resend_all===true || this.options.resend_from >= 0 || this.options.resend_from_time >= 0 || this.options.resend_last > 0
 }
 
 Subscription.prototype.isSubscribed = function() {
@@ -387,9 +387,8 @@ StreamrClient.prototype.requestSubscribe = function(streamId, from) {
 	var stream = this.streams[streamId]
 	var sub = {channel: streamId}
 
-	// Change resend_all -> resend_from mode if messages have already been received
-
-	if (stream.counter && (stream.options.resend_all || stream.options.resend_from!=null)) {
+	// Resend from latest received message if messages have already been received
+	if (stream.counter && (stream.options.resend_all || stream.options.resend_from!=null || stream.options.resend_from_time!=null)) {
 		sub.from = stream.counter
 	}
 	// If subscription has resend options, do a resend first
