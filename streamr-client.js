@@ -85,8 +85,19 @@ function Subscription(streamId, callback, options) {
 		resendOptionCount++
 	if (this.options.resend_last!=null)
 		resendOptionCount++
+	if (this.options.resend_from_time!=null)
+		resendOptionCount++
 	if (resendOptionCount>1)
 		throw "Multiple resend options active! Please use only one: "+JSON.stringify(options)
+
+	// Automatically convert Date objects to numbers for resend_from_time
+	if (this.options.resend_from_time != null 
+		&& typeof this.options.resend_from_time !== 'number') {
+
+		if (typeof this.options.resend_from_time.getTime === 'function')
+			this.options.resend_from_time = this.options.resend_from_time.getTime()
+		else throw "resend_from_time option must be a Date object or a number representing time!"
+	}
 
 	/*** Message handlers ***/
 

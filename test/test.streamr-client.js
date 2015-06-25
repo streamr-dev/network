@@ -772,6 +772,23 @@ describe('StreamrClient', function() {
 				done()
 			})	
 		})
+
+		it('should recognize the resend_from_time option given as a Date object', function(done) {
+			var d = new Date()
+			validResendRequests.push({channel:"stream1", resend_from_time:d.getTime()})
+			client.subscribe("stream1", function(message) {}, {resend_from_time: d})
+			client.connect()
+
+			client.socket.once('resent', function() {
+				done()
+			})	
+		})
+
+		it('should throw if resend_from_time is in invalid format', function() {
+			assert.throws(function() {
+				client.subscribe("stream1", function(message) {}, {resend_from_time: "invalid"})
+			})
+		})
 		
 		it('should emit a resend request if the first message is not the expected one', function(done) {
 			client.subscribe("stream1", function(message) {})
