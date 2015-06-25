@@ -380,14 +380,111 @@ describe('kafka-helper', function () {
 		})
 	})
 
-	describe('getTimestampForOffset', function() {
-		beforeEach(function() {
+	describe('getFirstOffsetAfter', function() {
+		var dates
 
+		beforeEach(function() {
+			dates = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+			// mock getOffset
+			kh.getOffset = function(topic, first, cb) {
+				setTimeout(function() {
+					if (first)
+						cb(0)
+					else cb(dates.length)
+				})
+			}
+
+			// mock getTimestampForOffset
+			kh.getTimestampForOffset = function(topic, partition, offset, cb) {
+				setTimeout(function() {
+					if (dates[offset]===undefined)
+						throw "requested timestamp for an out-of-range offset: "+offset
+					else cb(dates[offset])
+				})
+			}
 		})
 
-		it('should send a fetch request for the offset', function(done) {
-			var date = Date.now()
+		it('should return the first available offset if requested date is before the first available message', function(done) {
+			kh.getFirstOffsetAfter("topic", 0, dates[0]-100, function(offset) {
+				assert.equal(offset, 0)
+				done()
+			})
+		})
 
+		it('should return the next available offset if requested date is after the latest message', function(done) {
+			kh.getFirstOffsetAfter("topic", 0, dates[dates.length-1] + 100, function(offset) {
+				assert.equal(offset, dates.length)
+				done()
+			})
+		})
+
+		it('should start a binary search if the requested date is between the first and last available message', function(done) {
+			kh.getFirstOffsetAfter("topic", 0, dates[3] + 1, function(offset) {
+				assert.equal(offset, 4)
+				done()
+			})
+		})
+
+		it('should return the offset of an exact timestamp match', function(done) {
+			kh.getFirstOffsetAfter("topic", 0, dates[3], function(offset) {
+				assert.equal(offset, 3)
+				done()
+			})
+		})
+
+		it('should find the first item', function(done) {
+			kh.getFirstOffsetAfter("topic", 0, dates[0], function(offset) {
+				assert.equal(offset, 0)
+				done()
+			})
+		})
+
+		it('should find the last item', function(done) {
+			kh.getFirstOffsetAfter("topic", 0, dates[dates.length-1], function(offset) {
+				assert.equal(offset, dates.length-1)
+				done()
+			})
+		})
+
+	})
+
+	describe('binarySearchOffsetForDate', function() {
+		it('should find the first offset after the requested date', function(done) {
+			var dates = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+			// mock getTimestampForOffset
+			kh.getTimestampForOffset = function(topic, partition, offset, cb) {
+				setTimeout(function() {
+					cb(dates[offset])
+				})
+			}
+
+			kh.binarySearchOffsetForDate("topic", 0, 35, 0, dates.length-1, function(offset) {
+				assert.equal(offset, dates.indexOf(40))
+				done()
+			})
+		})
+
+		it('should propagate the error if one occurs', function(done) {
+			// mock getTimestampForOffset to always return an error
+			kh.getTimestampForOffset = function(topic, partition, offset, cb) {
+				setTimeout(function() {
+					cb(undefined, "error")
+				})
+			}
+
+			kh.binarySearchOffsetForDate("topic", 0, 35, 0, 5, function(offset, err) {
+				assert.equal(offset, undefined)
+				assert.equal(err, "error")
+				done()
+			})
+		})
+	})
+
+	describe('getTimestampForOffset', function() {
+
+		it('should send a fetch request for the offset', function(done) {
 			var date = Date.now()
 			kh.decoder = {
 				decode: function(message) {
@@ -398,7 +495,7 @@ describe('kafka-helper', function () {
 			}
 
 			clientMock.sendFetchRequest = function(consumer, reqs, fetchMaxWaitMs, fetchMinBytes, maxTickMessages) {
-				consumerMock.emit('message', {
+				consumer.emit('message', {
 					topic: reqs[0].topic,
 					partition: reqs[0].partition, 
 					offset: reqs[0].offset,
@@ -408,7 +505,7 @@ describe('kafka-helper', function () {
 				})
 			}
 
-			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
+			kh.getTimestampForOffset("topic", 0, 5, function(ts, err) {
 				assert.equal(err, undefined)
 				assert.equal(ts, date)
 				done()
@@ -418,14 +515,14 @@ describe('kafka-helper', function () {
 		it('should call the callback with an error if the offset is out of range', function(done) {
 
 			clientMock.sendFetchRequest = function(consumer, reqs, fetchMaxWaitMs, fetchMinBytes, maxTickMessages) {
-				consumerMock.emit('offsetOutOfRange', {
+				consumer.emit('offsetOutOfRange', {
 					topic: reqs[0].topic,
 					partition: reqs[0].partition,
 					message: "TEST ERROR MESSAGE"
 				})
 			}
 
-			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
+			kh.getTimestampForOffset("topic", 0, 5, function(ts, err) {
 				assert.equal(ts, undefined)
 				assert(err !== undefined)
 				done()
@@ -435,14 +532,14 @@ describe('kafka-helper', function () {
 		it('should call the callback with an error if any other error occurs', function(done) {
 
 			clientMock.sendFetchRequest = function(consumer, reqs, fetchMaxWaitMs, fetchMinBytes, maxTickMessages) {
-				consumerMock.emit('error', {
+				consumer.emit('error', {
 					topic: reqs[0].topic,
 					partition: reqs[0].partition,
 					message: "TEST ERROR MESSAGE"
 				})
 			}
 
-			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
+			kh.getTimestampForOffset("topic", 0, 5, function(ts, err) {
 				assert.equal(ts, undefined)
 				assert(err !== undefined)
 				done()
