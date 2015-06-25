@@ -13,7 +13,14 @@ describe('kafka-helper', function () {
 
 	beforeEach(function() {
 		clientMock = new events.EventEmitter()
-		clientMock.close = function() {}
+		clientMock.close = function() {
+			clientMock.closed = true
+		}
+		setTimeout(function() {
+			clientMock.ready = true
+			clientMock.emit('ready')
+		})
+
 		consumerMock = new events.EventEmitter()
 		consumerMock.close = function() {}
 
@@ -396,7 +403,7 @@ describe('kafka-helper', function () {
 			}
 
 			// mock getTimestampForOffset
-			kh.getTimestampForOffset = function(topic, partition, offset, cb) {
+			kh.getTimestampForOffset = function(client, topic, partition, offset, cb) {
 				setTimeout(function() {
 					if (dates[offset]===undefined)
 						throw "requested timestamp for an out-of-range offset: "+offset
@@ -447,6 +454,13 @@ describe('kafka-helper', function () {
 			})
 		})
 
+		it('should close the temporary client before calling the callback', function(done) {
+			kh.getFirstOffsetAfter("topic", 0, dates[0]-100, function(offset) {
+				assert(clientMock.closed)
+				done()
+			})
+		})
+
 	})
 
 	describe('binarySearchOffsetForDate', function() {
@@ -454,13 +468,13 @@ describe('kafka-helper', function () {
 			var dates = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
 
 			// mock getTimestampForOffset
-			kh.getTimestampForOffset = function(topic, partition, offset, cb) {
+			kh.getTimestampForOffset = function(client, topic, partition, offset, cb) {
 				setTimeout(function() {
 					cb(dates[offset])
 				})
 			}
 
-			kh.binarySearchOffsetForDate("topic", 0, 35, 0, dates.length-1, function(offset) {
+			kh.binarySearchOffsetForDate(clientMock, "topic", 0, 35, 0, dates.length-1, function(offset) {
 				assert.equal(offset, dates.indexOf(40))
 				done()
 			})
@@ -468,13 +482,13 @@ describe('kafka-helper', function () {
 
 		it('should propagate the error if one occurs', function(done) {
 			// mock getTimestampForOffset to always return an error
-			kh.getTimestampForOffset = function(topic, partition, offset, cb) {
+			kh.getTimestampForOffset = function(client, topic, partition, offset, cb) {
 				setTimeout(function() {
 					cb(undefined, "error")
 				})
 			}
 
-			kh.binarySearchOffsetForDate("topic", 0, 35, 0, 5, function(offset, err) {
+			kh.binarySearchOffsetForDate(clientMock, "topic", 0, 35, 0, 5, function(offset, err) {
 				assert.equal(offset, undefined)
 				assert.equal(err, "error")
 				done()
@@ -505,7 +519,7 @@ describe('kafka-helper', function () {
 				})
 			}
 
-			kh.getTimestampForOffset("topic", 0, 5, function(ts, err) {
+			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
 				assert.equal(err, undefined)
 				assert.equal(ts, date)
 				done()
@@ -522,7 +536,7 @@ describe('kafka-helper', function () {
 				})
 			}
 
-			kh.getTimestampForOffset("topic", 0, 5, function(ts, err) {
+			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
 				assert.equal(ts, undefined)
 				assert(err !== undefined)
 				done()
@@ -539,7 +553,7 @@ describe('kafka-helper', function () {
 				})
 			}
 
-			kh.getTimestampForOffset("topic", 0, 5, function(ts, err) {
+			kh.getTimestampForOffset(clientMock, "topic", 0, 5, function(ts, err) {
 				assert.equal(ts, undefined)
 				assert(err !== undefined)
 				done()
