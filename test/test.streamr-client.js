@@ -711,6 +711,9 @@ describe('StreamrClient', function() {
 				async(function() {
 					if (request.resend_from!=null && request.resend_to!=null)
 						resend(request.channel, request.resend_from, request.resend_to)
+					else if (request.resend_from_time!=null) {
+						resend(request.channel, 99, 100)
+					}
 					else if (resendLimits[request.channel]===undefined)
 						client.socket.emit('no_resend', {channel: request.channel, next: 0})
 					else
@@ -724,6 +727,67 @@ describe('StreamrClient', function() {
 			if (validResendRequests.length>0) {
 				throw "resend requests remaining: "+JSON.stringify(validResendRequests)
 			}
+		})
+
+		it('should recognize the resend_all option', function(done) {
+			validResendRequests.push({channel:"stream1", resend_all:true})
+			resendLimits["stream1"] = {from: 5, to: 10}
+			client.subscribe("stream1", function(message) {}, {resend_all: true})
+			client.connect()
+
+			client.socket.once('resent', function() {
+				done()
+			})
+		})
+
+		it('should recognize the resend_from option', function(done) {
+			validResendRequests.push({channel:"stream1", resend_from:7})
+			resendLimits["stream1"] = {from: 5, to: 10}
+			client.subscribe("stream1", function(message) {}, {resend_from: 7})
+			client.connect()
+
+			client.socket.once('resent', function() {
+				done()
+			})
+		})
+
+		it('should recognize the resend_last option', function(done) {
+			validResendRequests.push({channel:"stream1", resend_last:3})
+			resendLimits["stream1"] = {from: 5, to: 10}
+			client.subscribe("stream1", function(message) {}, {resend_last: 3})
+			client.connect()
+
+			client.socket.once('resent', function() {
+				done()
+			})	
+		})
+
+		it('should recognize the resend_from_time option', function(done) {
+			var d = Date.now()
+			validResendRequests.push({channel:"stream1", resend_from_time:d})
+			client.subscribe("stream1", function(message) {}, {resend_from_time: d})
+			client.connect()
+
+			client.socket.once('resent', function() {
+				done()
+			})	
+		})
+
+		it('should recognize the resend_from_time option given as a Date object', function(done) {
+			var d = new Date()
+			validResendRequests.push({channel:"stream1", resend_from_time:d.getTime()})
+			client.subscribe("stream1", function(message) {}, {resend_from_time: d})
+			client.connect()
+
+			client.socket.once('resent', function() {
+				done()
+			})	
+		})
+
+		it('should throw if resend_from_time is in invalid format', function() {
+			assert.throws(function() {
+				client.subscribe("stream1", function(message) {}, {resend_from_time: "invalid"})
+			})
 		})
 		
 		it('should emit a resend request if the first message is not the expected one', function(done) {

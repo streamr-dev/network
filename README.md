@@ -44,6 +44,7 @@ Option | Default value | Description
 resend_all | undefined | Set to `true` if you want all the messages for the channel resent from the earliest available message.
 resend_last | undefined | Resend the previous `N` messages.
 resend_from | undefined | Resend from a specific message number.
+resend_from_time | undefined | Resend from a specific Date (or millisecond timestamp).
 resend_to | undefined | Can be used in conjunction with `resend_from` to limit the end of the resend. By default it is the newest message.
 
 ## Methods
