@@ -96,8 +96,19 @@ function Subscription(streamId, callback, options) {
 		resendOptionCount++
 	if (this.options.resend_last!=null)
 		resendOptionCount++
+	if (this.options.resend_from_time!=null)
+		resendOptionCount++
 	if (resendOptionCount>1)
 		throw "Multiple resend options active! Please use only one: "+JSON.stringify(options)
+
+	// Automatically convert Date objects to numbers for resend_from_time
+	if (this.options.resend_from_time != null 
+		&& typeof this.options.resend_from_time !== 'number') {
+
+		if (typeof this.options.resend_from_time.getTime === 'function')
+			this.options.resend_from_time = this.options.resend_from_time.getTime()
+		else throw "resend_from_time option must be a Date object or a number representing time!"
+	}
 
 	/*** Message handlers ***/
 
@@ -206,7 +217,7 @@ Subscription.prototype.checkQueue = function() {
 }
 
 Subscription.prototype.hasResendOptions = function() {
-	return this.options.resend_all===true || this.options.resend_from >= 0 || this.options.resend_last > 0
+	return this.options.resend_all===true || this.options.resend_from >= 0 || this.options.resend_from_time >= 0 || this.options.resend_last > 0
 }
 
 Subscription.prototype.isSubscribed = function() {
@@ -355,6 +366,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 	})
 
 	this.socket.on('unsubscribed', function(response) {
+		// TODO: continue from here
 		_this.subsByStream[response.channel].trigger('unsubscribed', response)
 		_this.trigger('unsubscribed', response)
 		delete _this.subsByStream[response.channel]
@@ -425,9 +437,8 @@ StreamrClient.prototype.requestSubscribe = function(streamId, from) {
 	var stream = this.subsByStream[streamId]
 	var sub = {channel: streamId}
 
-	// Change resend_all -> resend_from mode if messages have already been received
-
-	if (stream.counter && (stream.options.resend_all || stream.options.resend_from!=null)) {
+	// Resend from latest received message if messages have already been received
+	if (stream.counter && (stream.options.resend_all || stream.options.resend_from!=null || stream.options.resend_from_time!=null)) {
 		sub.from = stream.counter
 	}
 	// If subscription has resend options, do a resend first
