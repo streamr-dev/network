@@ -65,8 +65,6 @@ unbind(eventName, function) | Unbinds the `function` from events called `eventNa
 
 Name | Handler Arguments | Description
 ---- | ----------------- | -----------
-subscribed | {channel: 'streamId', from: number} | Fired when a subscription request is acknowledged by the server.
-unsubscribed | {channel: 'streamId'} | Fired when an unsubscription is acknowledged by the server.
 connected |  | Fired when the client has connected (or reconnected).
 disconnected |  | Fired when the client has disconnected (or paused).
 
@@ -74,5 +72,5 @@ disconnected |  | Fired when the client has disconnected (or paused).
 
 Name | Handler Arguments | Description
 ---- | ----------------- | -----------
-subscribed | {channel: 'streamId', from: number} | Fired when a subscription request is acknowledged by the server.
-unsubscribed | {channel: 'streamId'} | Fired when an unsubscription is acknowledged by the server.
+subscribed | {from: number} | Fired when a subscription request is acknowledged by the server.
+unsubscribed |  | Fired when an unsubscription is acknowledged by the server.

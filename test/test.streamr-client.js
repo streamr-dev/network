@@ -115,7 +115,7 @@ describe('StreamrClient', function() {
 	})
 
 	describe("connect", function() {
-		it('should emit pending subscribes on comment', function(done) {
+		it('should emit pending subscribes', function(done) {
 			var subscription = client.subscribe("stream1", function(message) {})
 			client.connect()
 
@@ -183,6 +183,7 @@ describe('StreamrClient', function() {
 			client.socket.once('connect', function() {
 				client.socket.once('disconnect', function() {
 					client.socket.on('subscribe', function(request) {
+						console.log(request)
 						if (request.channel==='stream1')
 							done()
 					})
@@ -269,7 +270,7 @@ describe('StreamrClient', function() {
 			})
 		})
 
-		it('should mark channels as subscribed when the server responds with subscribed', function(done) {
+		it('should mark Subscriptions as subscribed when the server responds with subscribed', function(done) {
 			var subscription = client.subscribe("stream1", function(message) {})
 			client.connect()
 
@@ -279,7 +280,7 @@ describe('StreamrClient', function() {
 			})
 		})
 
-		it('should trigger an error event if the subscribe fails', function(done) {
+		it('should trigger an error event on the client if the subscribe fails', function(done) {
 			socket.removeListener('subscribe', socket.defaultSubscribeHandler)
 
 			socket.on('subscribe', function(request) {
@@ -321,6 +322,61 @@ describe('StreamrClient', function() {
 			})
 		})
 
+		it('should send only one subscribe request to server even if there are multiple subscriptions for same stream', function(done) {
+			var subscribeCount = 0
+			socket.on('subscribe', function(request) {
+				subscribeCount++
+				if (subscribeCount > 1)
+					throw "Only one subscribe request should be sent to the server!"
+			})
+
+			var sub1 = client.subscribe("stream1", function(message) {})
+			var sub2 = client.subscribe("stream1", function(message) {})
+			client.connect()
+
+			function check(sub) {
+				sub._ack = true
+				if (sub1._ack && sub2._ack)
+					done()
+			} 
+
+			sub1.bind('subscribed', function(response) {
+				check(sub1)
+			})
+			sub2.bind('subscribed', function(response) {
+				check(sub2)
+			})
+		})
+
+		it('should subscribe late subscriptions from the latest message', function(done) {
+			var sub1 = client.subscribe("stream1", function(sub1msg) {
+				if (sub1msg.n===0) {
+					async(function() {
+						var sub2 = client.subscribe('stream1', function(sub2msg) {
+							if (sub2msg.n===1)
+								done()
+							else throw "Unexpected message received by sub2: "+JSON.stringify(sub2msg)
+						})
+						sub2.bind('subscribed', function(response) {
+							assert.equal(response.from, 1)
+							async(function() {
+								client.socket.emit('ui', msg('stream1', 1, {n:1}))
+							})
+						})
+					})
+				}
+			})
+			client.connect()
+
+			sub1.bind('subscribed', function(response) {
+				async(function() {
+					client.socket.emit('ui', msg('stream1', 0, {n:0}))
+				})
+			})
+
+		})
+
+
 	})
 
 	describe("subscribe with resend options", function() {
@@ -348,10 +404,10 @@ describe('StreamrClient', function() {
 
 			client.socket.once('resend', function(request) {
 				async(function() {
-					client.socket.emit('resending', {channel:'stream1', from:0 ,to:1})
+					client.socket.emit('resending', {channel:'stream1', sub: request.sub, from:0 ,to:1})
 					client.socket.emit('ui', msg('stream1', 0))
 					client.socket.emit('ui', msg('stream1', 1))
-					client.socket.emit('resent', {channel:'stream1', from:0, to:1})
+					client.socket.emit('resent', {channel:'stream1', sub: request.sub, from:0, to:1})
 				})
 
 				client.socket.once('subscribe', function(request) {
@@ -367,7 +423,7 @@ describe('StreamrClient', function() {
 
 			client.socket.once('resend', function(request) {
 				async(function() {
-					client.socket.emit('no_resend', {channel:'stream1', next:7})
+					client.socket.emit('no_resend', {channel:'stream1', sub: request.sub, next:7})
 				})
 
 				client.socket.once('subscribe', function(request) {
@@ -376,10 +432,65 @@ describe('StreamrClient', function() {
 				})
 			})
 		})
-	})
 
-	describe('multiple subscriptions for same stream', function() {
-		
+		it('should resend to multiple subscriptions as per each resend option', function(done) {
+			var sub1 = client.subscribe("stream1", function(message) {}, {resend_all:true})
+			var sub2 = client.subscribe("stream1", function(message) {}, {resend_last:1})
+			client.connect()
+
+			client.socket.once('resend', function(request) {
+				if (request.resend_all) {
+					async(function() {
+						client.socket.emit('resending', {channel:'stream1', sub: request.sub, from:0 ,to:1})
+						client.socket.emit('ui', msg('stream1', 0))
+						client.socket.emit('ui', msg('stream1', 1))
+						client.socket.emit('resent', {channel:'stream1', sub: request.sub, from:0, to:1})
+					})
+				}
+				else if (request.resend_last===1) {
+					async(function() {
+						client.socket.emit('resending', {channel:'stream1', sub: request.sub, from:1 ,to:1})
+						client.socket.emit('ui', msg('stream1', 1))
+						client.socket.emit('resent', {channel:'stream1', sub: request.sub, from:1, to:1})
+					})
+				}
+			})
+
+			var subCount = 0
+			client.socket.on('subscribe', function(request) {
+				subCount++
+
+				if (subCount>1)
+					throw "Only one subscribe should have been sent"
+
+				assert.equal(request.from, 2)
+				done()
+			})
+		})
+
+		it('should not report subscribed to resending channels', function(done) {
+			var sub1 = client.subscribe("stream1", function(message) {}, {resend_all:true})
+			client.connect()
+
+			client.socket.once('resend', function(request) {
+				async(function() {
+					client.socket.emit('resending', {channel:'stream1', sub: request.sub, from:0 ,to:1})
+				})
+
+				sub1.bind('subscribed', function(response) {
+					throw "Should not have reported a resending subscription as subscribed!"
+				})
+
+				async(function() {
+					var sub2 = client.subscribe("stream1", function(message) {}) // no resend
+					sub2.bind('subscribed', function() {
+						done()
+					})
+				})
+
+			})
+
+		})
 	})
 
 	describe("message handling", function() {
@@ -449,8 +560,19 @@ describe('StreamrClient', function() {
 		})
 	})
 
-	describe("unsubscribe", function() {
-		it('should remove streams on unsubscribed', function(done) {
+	describe('unsubscribe', function() {
+		it('should fire the unsubscribed event', function(done) {
+			var sub = client.subscribe("stream1", function(message) {})
+			client.connect()
+			sub.bind('subscribed', function() {
+				client.unsubscribe(sub)
+			})
+			sub.bind('unsubscribed', function() {
+				done()
+			})
+		})
+
+		it('should unsubscribe the client from a stream when there are no more subscriptions for that stream', function(done) {
 			var sub = client.subscribe("stream1", function(message) {})
 			client.connect()
 
@@ -459,27 +581,48 @@ describe('StreamrClient', function() {
 			})
 
 			client.socket.once('unsubscribed', function() {
-				assert(!client.subsByStream['stream1'])
-					done()
+				done()
 			})
 		})
 
-		it('should throw error if no Subscription given', function() {
-			client.subscribe("stream1", function(message) {})
+		it('should not unsubscribe the client from a stream when there are subscriptions remaining for that stream', function(done) {
+			var sub1 = client.subscribe("stream1", function(message) {})
+			var sub2 = client.subscribe("stream1", function(message) {})
 			client.connect()
 
-			client.socket.once('subscribed', function() {
+			sub2.bind('subscribed', function() {
+				client.unsubscribe(sub2)
+			})
+
+			sub2.bind('unsubscribed', function() {
+				done()
+			})
+
+			client.socket.on('unsubscribed', function() {
+				throw "Socket should not have unsubscribed"
+			})
+
+			sub1.bind('unsubscribed', function() {
+				throw "sub1 should not have unsubscribed"
+			})
+		})
+
+		it('should throw an error if no Subscription is given', function() {
+			var sub = client.subscribe('stream1', function(message) {})
+			client.connect()
+
+			sub.bind('subscribed', function() {
 				assert.throws(function() {
 					client.unsubscribe()
 				})
 			})
 		})
 
-		it('should throw error if Subscription is wrong type', function() {
-			client.subscribe("stream1", function(message) {})
+		it('should throw error if Subscription is of wrong type', function() {
+			var sub = client.subscribe("stream1", function(message) {})
 			client.connect()
 
-			client.socket.once('subscribed', function() {
+			sub.bind('subscribed', function() {
 				assert.throws(function() {
 					client.unsubscribe('stream1')
 				})
@@ -487,54 +630,23 @@ describe('StreamrClient', function() {
 		})
 
 		it('should handle messages after resubscribing', function(done) {
-			var sub = client.subscribe("stream1", function(message) {})
+			var sub = client.subscribe("stream1", function(message) {
+				throw "This message handler should not be called"
+			})
 			client.connect()
 			
-			client.socket.once('subscribed', function() {
+			sub.bind('subscribed', function() {
 				client.unsubscribe(sub)
 			})
 			
-			client.socket.once('unsubscribed', function() {
-				assert(client.getSubscriptions('stream1').length === 0)
-				client.subscribe("stream1", function(message) {
+			sub.bind('unsubscribed', function() {
+				var newSub = client.subscribe("stream1", function(message) {
 					done()
 				})
-				client.socket.once('subscribed', function() {
+				newSub.bind('subscribed', function() {
 					client.socket.emit('ui', msg("stream1", 0, {}))
 				})
 			})
-		})
-	})
-
-	describe("unsubscribeAll", function() {
-		it('should remove all subscriptions for a stream', function(done) {
-			var sub1 = client.subscribe("stream1", function(message) {})
-			var sub2 = client.subscribe("stream1", function(message) {})
-			client.connect()
-
-			var subCount = 0
-			var subIncrementAndCheck = function() {
-				subCount++
-				if (subCount===2) {
-					client.unsubscribeAll('stream1')
-				}
-				else if (subCount>2)
-					throw "Too many subscriptions!"
-			}
-			var unsubCount = 0
-			var unsubIncrementAndCheck = function() {
-				unsubCount++
-				if (unsubCount===2) {
-					done()
-				}
-				else if (unsubCount>2) {
-					throw "Too many unsubscriptions!"
-				}
-			}
-			sub1.bind('subscribed', subIncrementAndCheck)
-			sub2.bind('subscribed', subIncrementAndCheck)
-			sub1.bind('unsubscribed', unsubIncrementAndCheck)
-			sub2.bind('unsubscribed', unsubIncrementAndCheck)
 		})
 	})
 	
@@ -613,7 +725,7 @@ describe('StreamrClient', function() {
 			})
 
 			client.socket.once('disconnect', function() {
-				assert.equal(Object.keys(client.streams).length, 0)
+				assert.equal(client.getSubscriptions('stream1').length, 0)
 				done()
 			})
 		})
@@ -672,7 +784,7 @@ describe('StreamrClient', function() {
 			})
 
 			client.socket.once('disconnect', function() {
-				assert.equal(Object.keys(client.streams).length, 1)
+				assert.equal(client.getSubscriptions('stream1').length, 1)
 				done()
 			})
 		})
@@ -698,7 +810,8 @@ describe('StreamrClient', function() {
 				assert(!sub1.isSubscribed())
 				assert(!sub2.isSubscribed())
 
-				assert.equal(Object.keys(client.streams).length, 2)
+				assert.equal(client.getSubscriptions('stream1').length, 1)
+				assert.equal(client.getSubscriptions('stream2').length, 1)
 
 				console.log("conn")
 				client.connect()
@@ -717,7 +830,10 @@ describe('StreamrClient', function() {
 		
 		function checkResendRequest(request) {
 			var el = validResendRequests[0]
-			assert.deepEqual(el,request)
+			// all fields in the model request must be equal in actual request
+			Object.keys(el).forEach(function(field) {
+				assert.equal(el[field], request[field])
+			})
 			validResendRequests.shift()
 		}
 		
@@ -726,16 +842,17 @@ describe('StreamrClient', function() {
 			validResendRequests = []
 			resendLimits = {}
 
-			function resend(channel, from, to) {
+			function resend(channel, sub, from, to) {
 				client.socket.emit('resending', {
 					channel: channel, 
+					sub: sub,
 					from: from, 
 					to: to
 				})
 				for (var i=from;i<=to;i++) {
 					client.socket.emit('ui', msg(channel,i))
 				}
-				client.socket.emit('resent', {channel: channel, from:from, to:to})
+				client.socket.emit('resent', {channel: channel, sub: sub, from:from, to:to})
 			}
 
 			socket.defaultResendHandler = function(request) {
@@ -746,14 +863,14 @@ describe('StreamrClient', function() {
 
 				async(function() {
 					if (request.resend_from!=null && request.resend_to!=null)
-						resend(request.channel, request.resend_from, request.resend_to)
+						resend(request.channel, request.sub, request.resend_from, request.resend_to)
 					else if (request.resend_from_time!=null) {
-						resend(request.channel, 99, 100)
+						resend(request.channel, request.sub, 99, 100)
 					}
 					else if (resendLimits[request.channel]===undefined)
-						client.socket.emit('no_resend', {channel: request.channel, next: 0})
+						client.socket.emit('no_resend', {channel: request.channel, sub: request.sub, next: 0})
 					else
-						resend(request.channel, resendLimits[request.channel].from, resendLimits[request.channel].to)
+						resend(request.channel, request.sub, resendLimits[request.channel].from, resendLimits[request.channel].to)
 				})
 			}
 			socket.on('resend', socket.defaultResendHandler)
@@ -1036,35 +1153,7 @@ describe('StreamrClient', function() {
 				client.disconnect()
 			})
 		})
-
-		it('should trigger a subscribed event on subscribed', function(done) {
-			var subscribeCount = 0
-			client.bind('subscribed', function(response) {
-				if (++subscribeCount === 2)
-					done()
-			})
-			client.subscribe("stream1", function(message) {})
-			client.subscribe("stream2", function(message) {})
-			client.connect()
-		})
-
-		it('should trigger an unsubscribed event on unsubscribed', function(done) {
-			var count = 0
-			client.bind('unsubscribed', function(response) {
-				if (++count===2)
-					done()
-			})
-			var sub1 = client.subscribe("stream1", function(message) {})
-			var sub2 = client.subscribe("stream2", function(message) {})
-			client.connect()
-
-			client.socket.on('subscribed', function() {
-				if (sub1.isSubscribed() && sub2.isSubscribed()) {
-					client.unsubscribe(sub1)
-					client.unsubscribe(sub2)
-				}
-			})
-		})
 	})
+
 })
 
