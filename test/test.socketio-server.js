@@ -175,6 +175,28 @@ describe('socketio-server', function () {
 				ioMock.emit('connection', socket)
 				socket.emit('resend', {channel:"c", resend_all:true})
 			});
+
+			it('should reference the subscription id in resend state messages', function (done) {
+				kafkaMock.resend = function(channel, from, to, handler, callback) {
+					for (var i=from;i<=to;i++)
+						handler({foo:"bar"})
+					callback()
+				}
+
+				var resendingCalled = false
+				socket.on('resending', function(response) {
+					assert.equal(response.sub, 'foo')
+					resendingCalled = true
+				})
+				socket.on('resent', function(response) {
+					assert.equal(response.sub, 'foo')
+					assert(resendingCalled)
+					done()
+				})
+
+				ioMock.emit('connection', socket)
+				socket.emit('resend', {channel:"c", sub:'foo', resend_all:true})
+			});
 		})
 
 		describe('resend_from', function() {
