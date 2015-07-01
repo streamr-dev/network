@@ -155,6 +155,21 @@ describe('socketio-server', function () {
 			socket.emit('resend', {channel:"c", resend_all:true})
 		})
 
+		it('should add the subscription id to messages if present', function(done) {
+			kafkaMock.resend = function(channel, from, to, handler, callback) {
+				handler({test: 'content'})
+			}
+
+			socket.on('ui', function(msg) {
+				assert.equal(msg.test, 'content')
+				assert.equal(msg._sub, 'foo')
+				done()
+			})
+
+			ioMock.emit('connection', socket)
+			socket.emit('resend', {channel:"c", sub: 'foo', resend_all:true})
+		})
+
 		describe('resend_all', function() {
 
 			it('should query the offsets and request a resend of all messages', function (done) {

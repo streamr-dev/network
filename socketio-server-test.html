@@ -2,24 +2,43 @@
 <head>
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
 	<script type="text/javascript" src="node_modules/socket.io/node_modules/socket.io-client/socket.io.js"></script>
-	<script type="text/javascript" src="../../web-app/js/unifina/streamr-socketio-client/streamr-client.js"></script>
+	<script type="text/javascript" src="../streamr-client/streamr-client.js"></script>
 
 	<script type="text/javascript">
 		var client
 
-		$(document).ready(function() {
-			client = new StreamrClient()
-			client.subscribe(
-				"1T58fshSQs2kOPs3ERpF9w", 
+		function SubCounter($el, client, resend_last) {
+			var counter = 0
+			var sub = client.subscribe(
+				"d-8DKK2IQ0m8UpHd3bZ5iA", 
 				function(message) {
-					$("body").append(JSON.stringify(message)+"<br><br>")
+					counter++
+					$el.html(counter)
 				},
-				{resend_all: true}
+				{resend_last: resend_last}
 			)
+		}
+
+		$(document).ready(function() {
+			client = new StreamrClient("http://localhost:8889")
+
+			new SubCounter($("#sub1-count"), client, 0)
+			//new SubCounter($("#sub2-count"), client, 100)
+
 			client.connect()
+
+			$("#add").click(function() {
+				var div = $("<div></div>")
+				$("body").append(div)
+				new SubCounter(div, client, parseInt($("#count").val()))
+			})
 		})
 	</script>
 </head>
 <body>
+	<input type="text" id="count">
+	<button id="add">Add</button>
+	<div id="sub1-count"></div>
+	<div id="sub2-count"></div>
 </body>
 </html>
