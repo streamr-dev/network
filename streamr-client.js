@@ -84,7 +84,7 @@ function Subscription(streamId, callback, options) {
 	this.callback = callback
 	this.options = options || {}
 	this.queue = []
-	this.counter = 0
+	this.counter = null
 	this.subscribed = false
 
 	// Check that multiple resend options are not given
@@ -112,7 +112,7 @@ function Subscription(streamId, callback, options) {
 	/*** Message handlers ***/
 
 	this.bind('subscribed', function(response) {
-		console.log("subscribed: "+_this.streamId+" from "+response.from)
+		console.log("Sub "+_this.id+" subscribed: "+_this.streamId+" from "+response.from)
 
 		_this.subscribed = true
 
@@ -122,18 +122,18 @@ function Subscription(streamId, callback, options) {
 	})
 
 	this.bind('unsubscribed', function() {
-		console.log("unsubscribed: "+_this.streamId)
+		console.log("Sub "+_this.id+" unsubscribed: "+_this.streamId)
 		_this.subscribed = false
 		_this.resending = false
 	})
 
 	this.bind('resending', function(response) {
-		console.log("resending: "+response.channel+" next message set to "+response.from+", was: "+_this.counter)
+		console.log("Sub "+_this.id+" resending: "+response.channel+" next message set to "+response.from+", was: "+_this.counter)
 		_this.counter = response.from
 	})
 
 	this.bind('no_resend', function(response) {
-		console.log("no_resend: "+response.channel+" next message set to "+response.next+", was: "+_this.counter)
+		console.log("Sub "+_this.id+" no_resend: "+response.channel+" next message set to "+response.next+", was: "+_this.counter)
 
 		_this.counter = response.next
 		_this.resending = false
@@ -141,7 +141,7 @@ function Subscription(streamId, callback, options) {
 	})
 
 	this.bind('resent', function(response) {
-		console.log("resent: "+response.channel+" from "+response.from+" to "+response.to)
+		console.log("Sub "+_this.id+" resent: "+response.channel+" from "+response.from+" to "+response.to)
 		
 		_this.resending = false
 		_this.checkQueue()
@@ -161,6 +161,11 @@ function Subscription(streamId, callback, options) {
 MicroEvent.mixin(Subscription)
 
 Subscription.prototype.handleMessage = function(message) {
+	if (this.counter === null && message[COUNTER_KEY]!==undefined) {
+		console.log("Sub "+this.id+" received message "+message[COUNTER_KEY]+" but does not know what number to expect")
+		return
+	}
+
 	// Update ack counter
 	if (message[COUNTER_KEY] > this.counter) {
 		this.queue.push(message)
@@ -171,15 +176,11 @@ Subscription.prototype.handleMessage = function(message) {
 		}
 	}
 	else if (message[COUNTER_KEY] < this.counter) {
-		console.log("Already received message: "+message[COUNTER_KEY]+", expecting: "+this.counter)
+		console.log("Sub "+this.id+" already received message: "+message[COUNTER_KEY]+", expecting: "+this.counter)
 	}
 	else {
 		var bye = message[BYE_KEY]
 		this.counter = message[COUNTER_KEY] + 1
-
-		delete message[COUNTER_KEY]
-		delete message[STREAM_KEY]
-		delete message[BYE_KEY]
 
 		this.callback(message)
 
@@ -373,10 +374,17 @@ StreamrClient.prototype.connect = function(reconnect) {
 			data = JSON.parse(data)
 		}
 
-		// Notify the Subscriptions for this stream. If this is not the message each individual Subscription is expecting, they will either ignore it or request resend.
-		var subs = _this.subsByStream[data[STREAM_KEY]]
-		for (var i=0;i<subs.length;i++)
-			subs[i].handleMessage(data)
+		// If the message targets a specific subscription via _sub, only report the message to that
+		if (data._sub!==undefined) {
+			_this.subById[data._sub].handleMessage(data)
+		}
+		else {
+			// Notify the Subscriptions for this stream. If this is not the message each individual Subscription 
+			// is expecting, they will either ignore it or request resend via gap event.
+			var subs = _this.subsByStream[data[STREAM_KEY]]
+			for (var i=0;i<subs.length;i++)
+				subs[i].handleMessage(data)
+		}
 	})
 	
 	this.socket.on('subscribed', function(response) {

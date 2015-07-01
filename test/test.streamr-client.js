@@ -13,6 +13,7 @@ var StreamrClient = require('../streamr-client').StreamrClient
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
+var SUBSCRIPTION_KEY = "_sub"
 var BYE_KEY = "_bye"
 
 describe('StreamrClient', function() {
@@ -36,10 +37,14 @@ describe('StreamrClient', function() {
 		asyncs = []
 	}
 
-	function msg(stream, counter, content) {
+	function msg(stream, counter, content, subId) {
 		var msg = {}
 		msg[STREAM_KEY] = stream
 		msg[COUNTER_KEY] = counter
+
+		if (subId!==undefined)
+			msg[SUBSCRIPTION_KEY] = subId
+
 		if (content)
 			Object.keys(content).forEach(function(key) {
 				msg[key] = content[key]
@@ -376,7 +381,6 @@ describe('StreamrClient', function() {
 
 		})
 
-
 	})
 
 	describe("subscribe with resend options", function() {
@@ -434,8 +438,20 @@ describe('StreamrClient', function() {
 		})
 
 		it('should resend to multiple subscriptions as per each resend option', function(done) {
-			var sub1 = client.subscribe("stream1", function(message) {}, {resend_all:true})
-			var sub2 = client.subscribe("stream1", function(message) {}, {resend_last:1})
+			var sub1count = 0
+			var sub1 = client.subscribe("stream1", function(message) {
+				sub1count++
+				if (sub1count > 2)
+					throw "sub1 received more than 2 messages!"
+			}, {resend_all:true})
+
+			var sub2count = 0
+			var sub2 = client.subscribe("stream1", function(message) {
+				sub2count++
+				if (sub2count > 1)
+					throw "sub2 received more than 1 message"
+			}, {resend_last:1})
+
 			client.connect()
 
 			client.socket.once('resend', function(request) {
@@ -558,6 +574,27 @@ describe('StreamrClient', function() {
 					done()
 			})
 		})
+
+		it('should direct messages to specific subscriptions if the messages contain the _sub key', function(done) {
+			var sub1 = client.subscribe("stream1", function(message) {
+				throw "sub1 should not have received a message!"
+			})
+			sub1.counter = 0
+
+			var sub2 = client.subscribe("stream1", function(message) {
+				done()
+			})
+			sub2.counter = 0
+
+			client.connect()
+			sub2.bind('subscribed', function() {
+				assert.throws(function() {
+					client.socket.emit('ui', msg('stream1', 0, {}))//, sub2.id))		
+				})
+				client.socket.emit('ui', msg('stream1', 0, {}, sub2.id))	
+			})
+		})
+
 	})
 
 	describe('unsubscribe', function() {
