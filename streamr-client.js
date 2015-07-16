@@ -317,7 +317,7 @@ StreamrClient.prototype.unsubscribe = function(sub) {
 		throw "unsubscribe: please give a Subscription object as an argument!"
 
 	// If this is the last subscription for this stream, unsubscribe the client too
-	if (this.subsByStream[sub.streamId].length === 1 && this.connected && !this.disconnecting) {
+	if (this.subsByStream[sub.streamId].length === 1 && this.connected && !this.disconnecting && sub.isSubscribed()) {
 		this._requestUnsubscribe(sub.streamId)
 	}
 	// Else the sub can be cleaned off immediately
@@ -382,8 +382,12 @@ StreamrClient.prototype.connect = function(reconnect) {
 			// Notify the Subscriptions for this stream. If this is not the message each individual Subscription 
 			// is expecting, they will either ignore it or request resend via gap event.
 			var subs = _this.subsByStream[data[STREAM_KEY]]
-			for (var i=0;i<subs.length;i++)
-				subs[i].handleMessage(data)
+
+			if (subs) {
+				for (var i=0;i<subs.length;i++)
+					subs[i].handleMessage(data)
+			}
+			else console.log('WARN: message received for stream with no subscriptions: '+data[STREAM_KEY])
 		}
 	})
 	
@@ -433,7 +437,9 @@ StreamrClient.prototype.connect = function(reconnect) {
 	})
 
 	this.socket.on('resent', function(response) {
-		_this.subById[response.sub].trigger('resent', response)
+		if (_this.subById[response.sub])
+			_this.subById[response.sub].trigger('resent', response)
+		else console.log('resent: Subscription '+response.sub+' is gone already')
 	})
 	
 	// On connect/reconnect, send pending subscription requests

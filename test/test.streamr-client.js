@@ -505,6 +505,42 @@ describe('StreamrClient', function() {
 				})
 
 			})
+		})
+
+		it('should not subscribe or crash on resent if bye message is received', function(done) {
+			var sub = client.subscribe("stream1", function(message) {}, {resend_all:true})
+			client.connect()
+
+			client.socket.on('subscribe', function(request) {
+				throw "Should not have subscribed"
+			})
+			client.socket.once('resend', function(request) {
+				async(function() {
+					client.socket.emit('resending', {channel:'stream1', from:0 ,to:0, sub:sub.id})
+					client.socket.emit('ui', byeMsg('stream1', 0))
+					client.socket.emit('resent', {channel:'stream1', from:0, to:0, sub:sub.id})
+					done()
+				})
+			})
+
+		})
+
+		it('should not crash if messages exist after the bye message', function(done) {
+			var sub = client.subscribe("stream1", function(message) {}, {resend_all:true})
+			client.connect()
+
+			client.socket.on('subscribe', function(request) {
+				throw "Should not have subscribed"
+			})
+			client.socket.once('resend', function(request) {
+				async(function() {
+					client.socket.emit('resending', {channel:'stream1', from:0 ,to:1, sub:sub.id})
+					client.socket.emit('ui', byeMsg('stream1', 0))
+					client.socket.emit('ui', msg('stream1', 1, {}))
+					client.socket.emit('resent', {channel:'stream1', from:0, to:1, sub:sub.id})
+					done()
+				})
+			})
 
 		})
 	})
