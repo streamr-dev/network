@@ -62,6 +62,15 @@ MicroEvent.mixin	= function(destObject){
 	}
 }
 
+var subId = 0
+function generateSubscriptionId() {
+	var id = subId++
+	return id.toString()
+};
+
+/**
+ * Subscription
+ **/
 function Subscription(streamId, callback, options) {
 	if (!streamId)
 		throw "No stream id given!"
@@ -70,11 +79,12 @@ function Subscription(streamId, callback, options) {
 
 	var _this = this
 	
+	this.id = generateSubscriptionId()
 	this.streamId = streamId
 	this.callback = callback
 	this.options = options || {}
 	this.queue = []
-	this.counter = 0
+	this.counter = null
 	this.subscribed = false
 
 	// Check that multiple resend options are not given
@@ -102,25 +112,28 @@ function Subscription(streamId, callback, options) {
 	/*** Message handlers ***/
 
 	this.bind('subscribed', function(response) {
-		console.log("subscribed: "+response.channel+" from "+response.from)
+		console.log("Sub "+_this.id+" subscribed: "+_this.streamId+" from "+response.from)
 
 		_this.subscribed = true
-		if (response.from!=null)
+
+		if (response.from!=null) 
 			_this.counter = response.from
+		// TODO: trigger gap event if the from field is not what we expected after a resend?
 	})
 
-	this.bind('unsubscribed', function(response) {
-		console.log("unsubscribed: "+response.channel)
+	this.bind('unsubscribed', function() {
+		console.log("Sub "+_this.id+" unsubscribed: "+_this.streamId)
 		_this.subscribed = false
+		_this.resending = false
 	})
 
 	this.bind('resending', function(response) {
-		console.log("resending: "+response.channel+" next message set to "+response.from+", was: "+_this.counter)
+		console.log("Sub "+_this.id+" resending: "+response.channel+" next message set to "+response.from+", was: "+_this.counter)
 		_this.counter = response.from
 	})
 
 	this.bind('no_resend', function(response) {
-		console.log("no_resend: "+response.channel+" next message set to "+response.next+", was: "+_this.counter)
+		console.log("Sub "+_this.id+" no_resend: "+response.channel+" next message set to "+response.next+", was: "+_this.counter)
 
 		_this.counter = response.next
 		_this.resending = false
@@ -128,7 +141,7 @@ function Subscription(streamId, callback, options) {
 	})
 
 	this.bind('resent', function(response) {
-		console.log("resent: "+response.channel+" from "+response.from+" to "+response.to)
+		console.log("Sub "+_this.id+" resent: "+response.channel+" from "+response.from+" to "+response.to)
 		
 		_this.resending = false
 		_this.checkQueue()
@@ -148,6 +161,11 @@ function Subscription(streamId, callback, options) {
 MicroEvent.mixin(Subscription)
 
 Subscription.prototype.handleMessage = function(message) {
+	if (this.counter === null && message[COUNTER_KEY]!==undefined) {
+		console.log("Sub "+this.id+" received message "+message[COUNTER_KEY]+" but does not know what number to expect")
+		return
+	}
+
 	// Update ack counter
 	if (message[COUNTER_KEY] > this.counter) {
 		this.queue.push(message)
@@ -158,15 +176,11 @@ Subscription.prototype.handleMessage = function(message) {
 		}
 	}
 	else if (message[COUNTER_KEY] < this.counter) {
-		console.log("Already received message: "+message[COUNTER_KEY]+", expecting: "+this.counter)
+		console.log("Sub "+this.id+" already received message: "+message[COUNTER_KEY]+", expecting: "+this.counter)
 	}
 	else {
 		var bye = message[BYE_KEY]
 		this.counter = message[COUNTER_KEY] + 1
-
-		delete message[COUNTER_KEY]
-		delete message[STREAM_KEY]
-		delete message[BYE_KEY]
 
 		this.callback(message)
 
@@ -213,6 +227,10 @@ Subscription.prototype.isSubscribed = function() {
 	return this.subscribed
 }
 
+/**
+ * StreamClient
+ **/
+
 function StreamrClient(options) {
 	// Default options
 	this.options = {
@@ -223,7 +241,9 @@ function StreamrClient(options) {
 		// Automatically disconnect on last unsubscribe
 		autoDisconnect: true
 	}
-	this.streams = {}
+	this.subsByStream = {}
+	this.subById = {}
+
 	this.socket = null
     this.connected = false
 
@@ -236,6 +256,29 @@ function StreamrClient(options) {
 
 MicroEvent.mixin(StreamrClient)
 
+StreamrClient.prototype._addSubscription = function(sub) {
+	this.subById[sub.id] = sub
+
+	if (!this.subsByStream[sub.streamId])
+		this.subsByStream[sub.streamId] = [sub]
+	else this.subsByStream[sub.streamId].push(sub)
+}
+
+StreamrClient.prototype._removeSubscription = function(sub) {
+	delete this.subById[sub.id]
+
+	this.subsByStream[sub.streamId] = this.subsByStream[sub.streamId].filter(function(it) {
+		return it !== sub
+	})
+
+	if (this.subsByStream[sub.streamId].length === 0)
+		delete this.subsByStream[sub.streamId]
+}
+
+StreamrClient.prototype.getSubscriptions = function(streamId) {
+	return this.subsByStream[streamId] || []
+}
+
 StreamrClient.prototype.subscribe = function(streamId, callback, options) {
 	var _this = this
 
@@ -247,41 +290,56 @@ StreamrClient.prototype.subscribe = function(streamId, callback, options) {
 	if (!callback)
 		throw "subscribe: Invalid arguments: callback is required!"
 
-	// Register this stream if not already registered
-	if (!this.streams[streamId]) {
-		this.streams[streamId] = new Subscription(streamId, callback, options)
+	// Create the Subscription object and bind handlers
+	var sub = new Subscription(streamId, callback, options)
+	sub.bind('gap', function(from, to) {
+		_this._requestResend(sub, {resend_from: from, resend_to: to})
+	})
+	sub.bind('done', function() {
+		_this.unsubscribe(sub)
+	})
 
-		this.streams[streamId].bind('gap', function(from, to) {
-			_this.requestResend(streamId, {resend_from: from, resend_to: to})
-		})
-
-		this.streams[streamId].bind('done', function() {
-			_this.unsubscribe(streamId)
-		})
-	}
+	// Add to lookups
+	this._addSubscription(sub)
 
 	// If connected, emit a subscribe request
 	if (this.connected) {
-		this.requestSubscribe(streamId)
+		this._resendAndSubscribe(sub)
 	} else if (this.options.autoConnect) {
 		this.connect()
 	}
 
-	return this.streams[streamId]
+	return sub
 }
 
-StreamrClient.prototype.unsubscribe = function(streamId) {
+StreamrClient.prototype.unsubscribe = function(sub) {
+	if (!sub || !sub.streamId)
+		throw "unsubscribe: please give a Subscription object as an argument!"
+
+	// If this is the last subscription for this stream, unsubscribe the client too
+	if (this.subsByStream[sub.streamId].length === 1 && this.connected && !this.disconnecting) {
+		this._requestUnsubscribe(sub.streamId)
+	}
+	// Else the sub can be cleaned off immediately
+	else {
+		this._removeSubscription(sub)
+		sub.trigger('unsubscribed')
+	}
+}
+
+StreamrClient.prototype.unsubscribeAll = function(streamId) {
+	var _this = this
 	if (!streamId)
-		throw "unsubscribe: stream id is required!"
+		throw "unsubscribeAll: a stream id is required!"
 	else if (typeof streamId !== 'string')
 		throw "unsubscribe: stream id must be a string!"
 
-	// If connected, emit a subscribe request
-	if (this.connected) {
-		this.requestUnsubscribe(streamId)
-	}
-	else {
-		delete this.streams[streamId]
+	if (this.subsByStream[streamId]) {
+		// Copy the list to avoid concurrent modifications
+		var l = this.subsByStream[streamId].slice()
+		l.forEach(function(sub) {
+			_this.unsubscribe(sub)
+		})
 	}
 }
 
@@ -298,23 +356,35 @@ StreamrClient.prototype.connect = function(reconnect) {
 	
 	if (this.connected) {
 		console.log("connect() called while already connected, doing nothing...")
-		return this.streams
+		return
 	}
 	else if (this.connecting) {
 		console.log("connect() called while connecting, doing nothing...")
-		return this.streams
+		return
 	}
 	
 	console.log("Connecting to "+this.options.server)
 	this.connecting = true
+	this.disconnecting = false
+
 	this.socket = io(this.options.server, {forceNew: true})
 
 	this.socket.on('ui', function(data) {
 		if (typeof data == 'string' || data instanceof String) {
 			data = JSON.parse(data)
 		}
-		// Look up the handler
-		_this.streams[data[STREAM_KEY]].handleMessage(data)
+
+		// If the message targets a specific subscription via _sub, only report the message to that
+		if (data._sub!==undefined) {
+			_this.subById[data._sub].handleMessage(data)
+		}
+		else {
+			// Notify the Subscriptions for this stream. If this is not the message each individual Subscription 
+			// is expecting, they will either ignore it or request resend via gap event.
+			var subs = _this.subsByStream[data[STREAM_KEY]]
+			for (var i=0;i<subs.length;i++)
+				subs[i].handleMessage(data)
+		}
 	})
 	
 	this.socket.on('subscribed', function(response) {
@@ -322,35 +392,48 @@ StreamrClient.prototype.connect = function(reconnect) {
 			_this.handleError("Error subscribing to "+response.channel+": "+response.error)
 		}
 		else {
-			_this.streams[response.channel].trigger('subscribed', response)
-			_this.trigger('subscribed', response)
+			var subs = _this.subsByStream[response.channel]
+			delete subs._subscribing
+
+			console.log('Client subscribed: '+JSON.stringify(response))
+
+			// Report subscribed to all non-resending Subscriptions for this stream
+			subs.filter(function(sub) { 
+				return !sub.resending 
+			}).forEach(function(sub) {
+				sub.trigger('subscribed', response)
+			})
 		}
 	})
 
 	this.socket.on('unsubscribed', function(response) {
-		var sub = _this.streams[response.channel]
-		delete _this.streams[response.channel]
-		sub.trigger('unsubscribed', response)
-		_this.trigger('unsubscribed', response)
+		console.log("Client unsubscribed: "+JSON.stringify(response))
+
+		// Copy the list to avoid concurrent modifications
+		var l = _this.subsByStream[response.channel].slice()
+		l.forEach(function(sub) {
+			_this._removeSubscription(sub)
+			sub.trigger('unsubscribed')
+		})
 
 		// Disconnect if no longer subscribed to any channels
-		if (Object.keys(_this.streams).length===0 && _this.options.autoDisconnect) {
+		if (Object.keys(_this.subsByStream).length===0 && _this.options.autoDisconnect) {
 			console.log("Disconnecting due to no longer being subscribed to any channels")
 			_this.disconnect()
 		}
 	})
 
-	// The resending event is sent by the server before a resend starts.
+	// Route resending state messages to corresponding Subscriptions
 	this.socket.on('resending', function(response) {
-		_this.streams[response.channel].trigger('resending', response)
+		_this.subById[response.sub].trigger('resending', response)
 	})
 
 	this.socket.on('no_resend', function(response) {
-		_this.streams[response.channel].trigger('no_resend', response)
+		_this.subById[response.sub].trigger('no_resend', response)
 	})
 
 	this.socket.on('resent', function(response) {
-		_this.streams[response.channel].trigger('resent', response)
+		_this.subById[response.sub].trigger('resent', response)
 	})
 	
 	// On connect/reconnect, send pending subscription requests
@@ -358,30 +441,36 @@ StreamrClient.prototype.connect = function(reconnect) {
 		console.log("Connected!")
 		_this.connected = true
 		_this.connecting = false
+		_this.disconnecting = false
 		_this.trigger('connected')
 		
-		for (var streamId in _this.streams) {
-			_this.streams[streamId].trigger('connected')
-
-			if (!_this.streams[streamId].subscribed) {
-				_this.requestSubscribe(streamId)
-			}
-		}
+		Object.keys(_this.subsByStream).forEach(function(streamId) {
+			var subs = _this.subsByStream[streamId]
+			subs.forEach(function(sub) {
+				if (!sub.isSubscribed()) {
+					_this._resendAndSubscribe(sub)
+				}
+			})
+		})
 	})
 
 	this.socket.on('disconnect', function() {
 		console.log("Disconnected.")
 		_this.connected = false
 		_this.connecting = false
-
-		for (var streamId in _this.streams) {
-			_this.streams[streamId].trigger('disconnected')
-		}
-
+		_this.disconnecting = false
 		_this.trigger('disconnected')
+
+		Object.keys(_this.subsByStream).forEach(function(streamId) {
+			var subs = _this.subsByStream[streamId]
+			delete subs._subscribing
+			subs.forEach(function(sub) {
+				sub.trigger('disconnected')
+			})
+		})
 	})
 
-	return this.streams
+	return this.subsByStream
 }
 
 StreamrClient.prototype.pause = function() {
@@ -389,68 +478,102 @@ StreamrClient.prototype.pause = function() {
 }
 
 StreamrClient.prototype.disconnect = function() {
-	this.streams = {}
-	this.socket.disconnect()
+	var _this = this
 	this.connecting = false
+	this.disconnecting = true
+
+	Object.keys(this.subsByStream).forEach(function(streamId) {
+		_this.unsubscribeAll(streamId)
+	})
+
+	this.socket.disconnect()
 }
 
-StreamrClient.prototype.requestSubscribe = function(streamId, from) {
+StreamrClient.prototype._resendAndSubscribe = function(sub) {
 	var _this = this
-	var stream = this.streams[streamId]
-	var sub = {channel: streamId}
+
+	var from = undefined
 
 	// Resend from latest received message if messages have already been received
-	if (stream.counter && (stream.options.resend_all || stream.options.resend_from!=null || stream.options.resend_from_time!=null)) {
-		sub.from = stream.counter
+	if (sub.counter && (sub.options.resend_all || sub.options.resend_from!=null || sub.options.resend_from_time!=null)) {
+		from = sub.counter
 	}
 	// If subscription has resend options, do a resend first
-	else if (stream.hasResendOptions()) {
+	else if (sub.hasResendOptions()) {
 		var onResent = function(response) {
-			stream.unbind('resent', this)
-			stream.unbind('no_resend', onNoResend)
-
-			sub.from = response.to + 1
-
-			console.log("subscribing on resent: "+JSON.stringify(sub))
-			_this.socket.emit('subscribe', sub)	
+			sub.unbind('resent', this)
+			sub.unbind('no_resend', onNoResend)
+			from = response.to + 1
+			_this._requestSubscribe(sub, from)
 		}
 		var onNoResend = function(response) {
-			stream.unbind('resent', onResent)
-			stream.unbind('no_resend', this)
-
-			sub.from = response.next
-			
-			console.log("subscribing on no_resend: "+JSON.stringify(sub))
-			_this.socket.emit('subscribe', sub)	
+			sub.unbind('resent', onResent)
+			sub.unbind('no_resend', this)
+			from = response.next
+			_this._requestSubscribe(sub, from)
 		}
-		stream.bind('resent', onResent)
-		stream.bind('no_resend', onNoResend)
+		sub.bind('resent', onResent)
+		sub.bind('no_resend', onNoResend)
 
-		this.requestResend(streamId, stream.options)
+		this._requestResend(sub)
 	}
 
-	if (!stream.resending) {
-		console.log("subscribe: "+JSON.stringify(sub))
-		this.socket.emit('subscribe', sub)		
+	if (!sub.resending) {
+		_this._requestSubscribe(sub, from)
 	}
 }
 
-StreamrClient.prototype.requestUnsubscribe = function(streamId) {
-	console.log("Unsubscribing from "+JSON.stringify(streamId))
+StreamrClient.prototype._requestSubscribe = function(sub, from) {
+	var _this = this
+	var subs = _this.subsByStream[sub.streamId]
+
+	var subscribedSubs = subs.filter(function(it) {
+		return it.isSubscribed()
+	})
+
+	// If this is the first subscription for this stream, send a subscription request to the server
+	if (!subs._subscribing && subscribedSubs.length === 0) {
+		var req = {channel: sub.streamId, from: from}
+		console.log("_requestSubscribe: subscribing client: "+JSON.stringify(req))
+		subs._subscribing = true
+		_this.socket.emit('subscribe', req)	
+	}
+	// If there already is a subscribed subscription for this stream, this new one will just join it immediately
+	else if (subscribedSubs.length > 0) {
+		if (from === undefined) {
+			// Find the max received counter
+			var counters = subscribedSubs.map(function(it) {
+				return it.counter
+			})
+			from = Math.max.apply(Math, counters)
+		}
+
+		console.log('_requestSubscribe: another subscription for same stream: '+sub.streamId+', insta-subscribing from '+from)
+
+		setTimeout(function() {
+			sub.trigger('subscribed', {from: from})
+		}, 0)
+	}
+}
+
+StreamrClient.prototype._requestUnsubscribe = function(streamId) {
+	console.log("Client unsubscribing from "+JSON.stringify(streamId))
 	this.socket.emit('unsubscribe', {channel: streamId})
 }
 
-StreamrClient.prototype.requestResend = function(streamId, options) {
-	var stream = this.streams[streamId]
-	stream.resending = true
+StreamrClient.prototype._requestResend = function(sub, options) {
+	options = options || sub.options
+
+	sub.resending = true
 
 	var request = {}
 	Object.keys(options).forEach(function(key) {
 		request[key] = options[key]
 	})
-	request.channel = streamId
+	request.channel = sub.streamId
+	request.sub = sub.id
 
-	console.log("requestResend: "+JSON.stringify(request))
+	console.log("_requestResend: "+JSON.stringify(request))
 	this.socket.emit('resend', request)
 }
 
