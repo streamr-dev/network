@@ -13,8 +13,9 @@ var StreamrClient = require('../streamr-client').StreamrClient
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
-var SUBSCRIPTION_KEY = "_sub"
+var TIMESTAMP_KEY = "_TS"
 var BYE_KEY = "_bye"
+var SUB_KEY = "_sub"
 
 describe('StreamrClient', function() {
 	var client
@@ -43,7 +44,7 @@ describe('StreamrClient', function() {
 		msg[COUNTER_KEY] = counter
 
 		if (subId!==undefined)
-			msg[SUBSCRIPTION_KEY] = subId
+			msg[SUB_KEY] = subId
 
 		if (content)
 			Object.keys(content).forEach(function(key) {
@@ -631,6 +632,19 @@ describe('StreamrClient', function() {
 			})
 		})
 
+		it('should not call the handlers with any additional keys present in the message', function(done) {
+			var sub = client.subscribe("stream1", function(message) {
+				console.log(message)
+				assert.equal(Object.keys(message).length, 1)
+				done()
+			})
+			client.connect()
+
+			client.socket.once('subscribed', function() {
+				client.socket.emit('ui', msg("stream1", 0, {count:0}))
+			})
+		})
+
 	})
 
 	describe('unsubscribe', function() {
@@ -905,7 +919,7 @@ describe('StreamrClient', function() {
 			var el = validResendRequests[0]
 			// all fields in the model request must be equal in actual request
 			Object.keys(el).forEach(function(field) {
-				assert.equal(el[field], request[field])
+				assert.equal(request[field], el[field])
 			})
 			validResendRequests.shift()
 		}
@@ -1108,8 +1122,8 @@ describe('StreamrClient', function() {
 		})
 		
 		it('should do another resend request if there are gaps in the queue', function(done) {
-			var subscription = client.subscribe("stream1", function(message) {
-				if (message.counter===12)
+			var subscription = client.subscribe("stream1", function(message, streamId, timetamp, counter) {
+				if (counter===12)
 					done()
 			})
 			client.connect()

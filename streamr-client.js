@@ -2,7 +2,9 @@
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
+var TIMESTAMP_KEY = "_TS"
 var BYE_KEY = "_bye"
+var SUB_KEY = "_sub"
 
 function extend(){
     for(var i=1; i<arguments.length; i++)
@@ -160,29 +162,34 @@ function Subscription(streamId, callback, options) {
 
 MicroEvent.mixin(Subscription)
 
-Subscription.prototype.handleMessage = function(message) {
-	if (this.counter === null && message[COUNTER_KEY]!==undefined) {
-		console.log("Sub "+this.id+" received message "+message[COUNTER_KEY]+" but does not know what number to expect")
+Subscription.prototype.handleMessage = function(message, stream, timestamp, counter, bye) {
+	if (this.counter === null && counter!==undefined) {
+		console.log("Sub "+this.id+" received message "+counter+" but does not know what number to expect")
 		return
 	}
 
 	// Update ack counter
-	if (message[COUNTER_KEY] > this.counter) {
-		this.queue.push(message)
+	if (counter > this.counter) {
+		this.queue.push({
+			msg: message,
+			str: stream,
+			ts: timestamp,
+			c: counter,
+			bye: bye
+		})
 		
 		if (!this.resending) {
 			console.log("Gap detected, requesting resend for channel "+this.streamId)
-			this.trigger('gap', this.counter, message[COUNTER_KEY]-1)
+			this.trigger('gap', this.counter, counter-1)
 		}
 	}
-	else if (message[COUNTER_KEY] < this.counter) {
-		console.log("Sub "+this.id+" already received message: "+message[COUNTER_KEY]+", expecting: "+this.counter)
+	else if (counter < this.counter) {
+		console.log("Sub "+this.id+" already received message: "+counter+", expecting: "+this.counter)
 	}
 	else {
-		var bye = message[BYE_KEY]
-		this.counter = message[COUNTER_KEY] + 1
+		this.counter = counter + 1
 
-		this.callback(message)
+		this.callback(message, stream, timestamp, counter)
 
 		if (bye)
 			this.trigger('done')
@@ -196,13 +203,14 @@ Subscription.prototype.checkQueue = function() {
 		var i
 		for (i=0;i<this.queue.length;i++) {
 			// If the counter is correct, process the message
-			if (this.queue[i][COUNTER_KEY] === this.counter)
-				this.handleMessage(this.queue[i])
+			if (this.queue[i].c === this.counter) {
+				this.handleMessage(this.queue[i].msg, this.queue[i].str, this.queue[i].ts, this.queue[i].c, this.queue[i].bye)
+			}
 			// Ignore old messages in the queue
-			else if (this.queue[i][COUNTER_KEY] < this.counter)
+			else if (this.queue[i].c < this.counter)
 				continue
 			// Else stop looping
-			else if (this.queue[i][COUNTER_KEY] > this.counter)
+			else if (this.queue[i].c > this.counter)
 				break
 		}
 		
@@ -214,7 +222,7 @@ Subscription.prototype.checkQueue = function() {
 		// and request another resend for the gap!
 		else {
 			this.queue.splice(0, i)
-			this.trigger('gap', this.counter, this.queue[0][COUNTER_KEY]-1)
+			this.trigger('gap', this.counter, this.queue[0].c-1)
 		}
 	}
 }
@@ -235,7 +243,7 @@ function StreamrClient(options) {
 	// Default options
 	this.options = {
 		// The server to connect to
-		server: "api.streamr.com",
+		server: "data.streamr.com",
 		// Automatically connect on first subscribe
 		autoConnect: true,
 		// Automatically disconnect on last unsubscribe
@@ -374,20 +382,32 @@ StreamrClient.prototype.connect = function(reconnect) {
 			data = JSON.parse(data)
 		}
 
+		// Delete the internal fields from the msg
+		var streamId = data[STREAM_KEY]
+		delete data[STREAM_KEY]
+		var timestamp = data[TIMESTAMP_KEY]
+		delete data[TIMESTAMP_KEY]
+		var counter = data[COUNTER_KEY]
+		delete data[COUNTER_KEY]
+		var bye = data[BYE_KEY]
+		delete data[BYE_KEY]
+		var sub = data[SUB_KEY]
+		delete data[SUB_KEY]
+
 		// If the message targets a specific subscription via _sub, only report the message to that
-		if (data._sub!==undefined) {
-			_this.subById[data._sub].handleMessage(data)
+		if (sub!==undefined) {
+			_this.subById[sub].handleMessage(data, streamId, timestamp, counter, bye)
 		}
 		else {
 			// Notify the Subscriptions for this stream. If this is not the message each individual Subscription 
 			// is expecting, they will either ignore it or request resend via gap event.
-			var subs = _this.subsByStream[data[STREAM_KEY]]
+			var subs = _this.subsByStream[streamId]
 
 			if (subs) {
 				for (var i=0;i<subs.length;i++)
-					subs[i].handleMessage(data)
+					subs[i].handleMessage(data, streamId, timestamp, counter, bye)
 			}
-			else console.log('WARN: message received for stream with no subscriptions: '+data[STREAM_KEY])
+			else console.log('WARN: message received for stream with no subscriptions: '+streamId)
 		}
 	})
 	

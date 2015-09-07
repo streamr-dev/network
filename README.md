@@ -11,13 +11,13 @@ streamr-client is a JavaScript client for connecting to Streamr data. You can su
 ```javascript
 client = new StreamrClient({ 
 	// Connection options and default values
-	server: 'api.streamr.com',
+	server: 'data.streamr.com',
 	autoConnect: true,
 	autoDisconnect: true
 })
 client.subscribe(
-	'channel-id', 
-	function(message) {
+	'stream-id', 
+	function(message, streamId, counter) {
 		// Do something with the message, which is an object
 	},
 	{ 
@@ -26,6 +26,18 @@ client.subscribe(
 )
 client.connect()
 ```
+
+## Handling messages
+
+The second argument to client.subscribe() is the callback function that will be called for each message as they arrive. Its arguments are as follows:
+
+Argument | Description
+-------- | -----------
+message  | A javascript object containing the message itself
+streamId | The id of the stream the message belongs to
+timestamp| (optional) A javascript Date object containing the timestamp for this message, if available.
+counter  | (optional) A sequence number for this message, if available.
+
 
 ## Connection options
 
