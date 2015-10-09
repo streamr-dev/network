@@ -422,6 +422,35 @@ describe('StreamrClient', function() {
 			})
 		})
 
+		it('should request resend after subscribe if the counter subscribed from is not the expected value', function(done) {
+			socket.removeListener('subscribe', socket.defaultSubscribeHandler)
+
+			client.subscribe("stream1", function(message) {}, {resend_all:true})
+			client.connect()
+
+			client.socket.once('resend', function(request) {
+				async(function() {
+					client.socket.emit('resending', {channel:'stream1', sub: request.sub, from:0 ,to:1})
+					client.socket.emit('ui', msg('stream1', 0))
+					client.socket.emit('ui', msg('stream1', 1))
+					client.socket.emit('resent', {channel:'stream1', sub: request.sub, from:0, to:1})
+				})
+			})
+
+			client.socket.once('subscribe', function(request) {
+				assert.equal(request.from, 2)
+				async(function() {
+					client.socket.emit('subscribed', {channel:'stream1', from: 10})
+				})
+				client.socket.once('resend', function(request) {
+					assert.equal(request.resend_from, 2)
+					assert.equal(request.resend_to, 9)
+					done()
+				})
+			})
+			
+		})
+
 		it('should subscribe to the channel after no_resend', function(done) {
 			client.subscribe("stream1", function(message) {}, {resend_all:true})
 			client.connect()

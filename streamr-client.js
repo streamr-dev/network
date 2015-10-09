@@ -118,9 +118,18 @@ function Subscription(streamId, callback, options) {
 
 		_this.subscribed = true
 
-		if (response.from!=null) 
+		// If expected counter is not known, set it to whatever the subscribed message says
+		if (response.from != null && _this.counter==null)
 			_this.counter = response.from
-		// TODO: trigger gap event if the from field is not what we expected after a resend?
+		// If there is a mismatch in expected counter, issue a resend
+		else if (response.from != null && response.from > _this.counter) {
+			this.trigger('gap', this.counter, response.from-1)
+		}
+		// This situation should never occur, it is safe to ignore but will result in duplicate messages being sent by the server
+		else if (response.from != null && response.from < _this.counter) {
+			console.log("Subscribed from a counter less than what was expected! Expected: "+_this.counter+", subscribed from: "+response.from)
+		}
+
 	})
 
 	this.bind('unsubscribed', function() {
