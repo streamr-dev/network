@@ -1,6 +1,6 @@
 var assert = require('assert')
 var events = require('events')
-var KafkaHelper = require('../lib/kafka-helper').KafkaHelper
+var KafkaHelper = require('../lib/kafka-helper')
 
 describe('kafka-helper', function () {
 

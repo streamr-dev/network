@@ -17,7 +17,7 @@ describe('socketio-server', function () {
 		socket.rooms = []
 		socket.join = function(channel, cb) {
 			socket.rooms.push(channel)
-			console.log("Socket "+socket.id+" joined channel "+channel+", now on: "+socket.rooms)
+			console.log("SOCKET MOCK: Socket "+socket.id+" joined channel "+channel+", now on: "+socket.rooms)
 			if (!ioMock.sockets.adapter.rooms[channel]) {
 				ioMock.sockets.adapter.rooms[channel] = {}
 				ioMock.sockets.adapter.rooms[channel][socket.id] = socket
@@ -29,7 +29,7 @@ describe('socketio-server', function () {
 			if (index>=0) {
 				socket.rooms.splice(index, 1)
 				delete ioMock.sockets.adapter.rooms[channel][socket.id]	
-				console.log("Socket "+socket.id+" left channel "+channel+", now on: "+socket.rooms)
+				console.log("SOCKET MOCK: Socket "+socket.id+" left channel "+channel+", now on: "+socket.rooms)
 				cb()
 			}
 			else throw "Not subscribed to channel "+channel
@@ -71,12 +71,12 @@ describe('socketio-server', function () {
 				var result = {
 					emit: function(event, data) {
 						sockets.forEach(function(socket) {
-							console.log("Emitting to "+socket.id+": "+JSON.stringify(message))
+							console.log("IO MOCK: Emitting to "+socket.id+": "+JSON.stringify(data))
 							socket.emit(event, data)
 						})
 					}
 				}
-				console.log("in: returning emitter for "+JSON.stringify(sockets))
+				console.log("IO MOCK: in: returning emitter for "+JSON.stringify(sockets))
 				return result
 			}
 		}
@@ -468,6 +468,85 @@ describe('socketio-server', function () {
 			socket.emit('subscribe', {})
 		})
 
+		it('should not resubscribe kafka on new subscription to same stream', function (done) {
+			var subscribeCount = 0
+			kafkaMock.subscribe = function(channel, from, cb) {
+				subscribeCount++
+				if (subscribeCount>1)
+					throw "Subscribed too many times!"
+				cb(channel,from)
+			}
+			
+			var socket2 = createSocketMock("socket2")
+			
+			socket2.on('subscribed', function(data) {
+				done()
+			})
+
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c"})
+
+			ioMock.emit('connection', socket2)
+			socket2.emit('subscribe', {channel: "c"})
+		});
+
+		it('should report the correct next counter to all subscribers', function (done) {
+			var socket2 = createSocketMock("socket2")
+			
+			kafkaMock.subscribe = function(channel, from, cb) {
+				assert(from==null)
+				cb(channel, 5)
+			}
+
+			socket.on('subscribed', function(data) {
+				assert.equal(data.from, 5)
+			})
+
+			socket2.on('subscribed', function(data) {
+				assert.equal(data.from, 5)
+				done()
+			})
+
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c"})
+
+			ioMock.emit('connection', socket2)
+			socket2.emit('subscribe', {channel: "c"})
+		});
+
+		it('should report the correct next counter to a late subscriber', function (done) {
+
+			
+			kafkaMock.subscribe = function(channel, from, cb) {
+				assert(from==null)
+				cb(channel, 5)
+			}
+
+			socket.on('subscribed', function(data) {
+				assert.equal(data.from, 5)
+
+				socket.on('ui', function(msg) {
+					assert.equal(msg._C, 5)
+
+					// Then subscribe socket2, which should subscribe from message 6
+					var socket2 = createSocketMock("socket2")
+
+					socket2.on('subscribed', function(data) {
+						assert.equal(data.from, 6)
+						done()
+					})
+
+					ioMock.emit('connection', socket2)
+					socket2.emit('subscribe', {channel: "c"})
+				})
+				kafkaMock.emit('message', {foo:"bar", _C:5}, "c")
+			})
+
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c"})
+
+		});
+
 	})
 
 	describe('unsubscribe', function() {
@@ -482,7 +561,6 @@ describe('socketio-server', function () {
 			socket.on('unsubscribed', function(data) {
 				assert.equal(data.channel, 'c')
 				assert.equal(socket.rooms.length, 0)
-				assert.equal(socket._streamrChannels.length, 0)
 				done()
 			})
 
