@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "mocha": "*",
+    "sinon": "*",
     "mockery": "*",
     "buffermaker": "*"
   }
