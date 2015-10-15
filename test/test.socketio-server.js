@@ -1,5 +1,7 @@
 var assert = require('assert'),
 	events = require('events'),
+	sinon = require('sinon'),
+	constants = require('../lib/constants')
 	SocketIoServer = require('../lib/socketio-server').SocketIoServer
 
 describe('socketio-server', function () {
@@ -37,6 +39,11 @@ describe('socketio-server', function () {
 		return socket
 	}
 
+	function msg(data, counter) {
+		data[constants.COUNTER_KEY] = counter
+		return data
+	}
+
 	beforeEach(function() {
 		// Mock the Kafka helper
 		kafkaMock = new events.EventEmitter
@@ -56,6 +63,7 @@ describe('socketio-server', function () {
 			}
 			else throw "kafkaMock: Tried to unsubscribe from "+channel+", but was not subscribed to it!"
 		}
+		kafkaMock.resend = function() {}
 
 		// Mock socket.io
 		ioMock = new events.EventEmitter
@@ -143,8 +151,6 @@ describe('socketio-server', function () {
 		})
 
 		it('should emit a resending event before starting the resend', function(done) {
-			kafkaMock.resend = function(channel, from, to, handler, callback) {}
-
 			socket.on('resending', function(data) {
 				assert.equal(data.channel, "c")
 				assert.equal(data.from, 5)
@@ -170,6 +176,12 @@ describe('socketio-server', function () {
 			socket.emit('resend', {channel:"c", sub: 'foo', resend_all:true})
 		})
 
+		it('should create the Stream object', function() {
+			ioMock.emit('connection', socket)
+			socket.emit('resend', {channel:"c", resend_all:true})
+			assert(server.streams.c !== undefined)
+		})
+
 		describe('resend_all', function() {
 
 			it('should query the offsets and request a resend of all messages', function (done) {
@@ -180,7 +192,7 @@ describe('socketio-server', function () {
 					assert.equal(expect, 5)
 
 					for (var i=from;i<=to;i++)
-						handler({foo:"bar"})
+						handler(msg({foo:"bar"},i))
 					callback()
 
 					assert.equal(msgCounter, to-from+1)
@@ -194,7 +206,7 @@ describe('socketio-server', function () {
 			it('should reference the subscription id in resend state messages', function (done) {
 				kafkaMock.resend = function(channel, from, to, handler, callback) {
 					for (var i=from;i<=to;i++)
-						handler({foo:"bar"})
+						handler(msg({foo:"bar"},i))
 					callback()
 				}
 
@@ -224,7 +236,7 @@ describe('socketio-server', function () {
 					assert.equal(expect, 7)
 
 					for (var i=from;i<=to;i++)
-						handler({foo:"bar"})
+						handler(msg({foo:"bar"},i))
 					callback()
 
 					assert.equal(msgCounter, to-from+1)
@@ -243,7 +255,7 @@ describe('socketio-server', function () {
 					assert.equal(expect, 5)
 
 					for (var i=from;i<=to;i++)
-						handler({foo:"bar"})
+						handler(msg({foo:"bar"},i))
 					callback()
 
 					assert.equal(msgCounter, to-from+1)
@@ -276,7 +288,7 @@ describe('socketio-server', function () {
 					assert.equal(expect, 7)
 
 					for (var i=from;i<=to;i++)
-						handler({foo:"bar"})
+						handler(msg({foo:"bar"},i))
 					callback()
 
 					assert.equal(msgCounter, to-from+1)
@@ -286,6 +298,68 @@ describe('socketio-server', function () {
 				ioMock.emit('connection', socket)
 				socket.emit('resend', {channel:"c", resend_from:7, resend_to:8})
 			});
+
+			describe('cache', function() {
+
+				it('should be queried before asking kafka for a resend', function(done) {
+					ioMock.emit('connection', socket)
+					server.on('stream-object-created', function(stream) {
+						stream.cache.getRange = function(from, to) {
+							assert.equal(from, 7)
+							done()
+						}
+					})
+					socket.emit('resend', {channel:"c", resend_from:7})
+				})
+
+				it('should emit messages found in the cache', function(done) {
+					ioMock.emit('connection', socket)
+					server.on('stream-object-created', function(stream) {
+						stream.cache.getRange = function(from, to) {
+							assert.equal(from, 0)
+							assert.equal(to, 1)
+							return [msg({},0),msg({},1)]
+						}
+					})
+					var spy = sinon.spy()
+					socket.on('ui', spy)
+					socket.on('resent', function() {
+						assert.equal(spy.callCount, 2);
+						done()
+					})
+					socket.emit('resend', {channel:"c", resend_from:0, resend_to:1})
+				})
+
+				it('should not make another query to kafka if the same resend request arrives from another client', function(done) {
+					var resent
+
+					kafkaMock.resend = function(channel, from, to, handler, callback) {
+						if (!resent) {
+							for (var i=from;i<=to;i++)
+								handler(msg({foo:"bar"},i))
+							resent = true
+							callback()
+						}
+						else throw "kafkaMock.resend called twice!"
+					}
+
+					socket.on('resent', function() {
+						console.log("Socket 1 resent")
+						var socket2 = createSocketMock("socket2")
+						ioMock.emit('connection', socket2)
+						socket2.on('resent', function() {
+							console.log("Socket 2 resent")
+							done()
+						})
+						console.log(server.streams.c.cache.messages)
+						socket2.emit('resend', {channel:"c", resend_from:6, resend_to:7})
+					})
+
+					ioMock.emit('connection', socket)
+					socket.emit('resend', {channel:"c", resend_from:6, resend_to:7})
+				})
+
+			})
 
 		})
 
@@ -305,7 +379,7 @@ describe('socketio-server', function () {
 					assert.equal(expect, 7)
 
 					for (var i=from;i<=to;i++)
-						handler({foo:"bar"})
+						handler(msg({foo:"bar"},i))
 					callback()
 
 					assert.equal(msgCounter, to-from+1)
@@ -345,7 +419,7 @@ describe('socketio-server', function () {
 					assert.equal(expect, 5)
 
 					for (var i=from;i<=to;i++)
-						handler({foo:"bar"})
+						handler(msg({foo:"bar"},i))
 					callback()
 
 					assert.equal(msgCounter, to-from+1)
@@ -383,13 +457,75 @@ describe('socketio-server', function () {
 				ioMock.emit('connection', socket)
 				socket.emit('resend', {channel:"c", resend_last:-100})
 			});
+
+			describe('cache', function() {
+
+				it('should be queried before asking kafka for a resend', function(done) {
+					ioMock.emit('connection', socket)
+					server.on('stream-object-created', function(stream) {
+						stream.cache.getLast = function(count) {
+							assert.equal(count, 2)
+							done()
+						}
+					})
+					socket.emit('resend', {channel:"c", resend_last:2})
+				})
+
+				it('should emit messages found in the cache', function(done) {
+					ioMock.emit('connection', socket)
+					server.on('stream-object-created', function(stream) {
+						stream.cache.getLast = function(count) {
+							return [msg({},0),msg({},1)]
+						}
+					})
+					var spy = sinon.spy()
+					socket.on('ui', spy)
+					socket.on('resent', function() {
+						assert.equal(spy.callCount, 2);
+						done()
+					})
+					socket.emit('resend', {channel:"c", resend_last:2})
+				})
+
+				it('should not make another query to kafka if the same resend request arrives from another client', function(done) {
+					var resent
+
+					kafkaMock.resend = function(channel, from, to, handler, callback) {
+						if (!resent) {
+							for (var i=from;i<=to;i++)
+								handler(msg({foo:"bar"},i))
+							resent = true
+							callback()
+						}
+						else throw "kafkaMock.resend called twice!"
+					}
+
+					socket.on('resent', function() {
+						console.log("Socket 1 resent")
+						var socket2 = createSocketMock("socket2")
+						ioMock.emit('connection', socket2)
+						socket2.on('resent', function() {
+							console.log("Socket 2 resent")
+							done()
+						})
+						console.log(server.streams.c.cache.messages)
+						socket2.emit('resend', {channel:"c", resend_last:2})
+					})
+
+					ioMock.emit('connection', socket)
+					socket.emit('resend', {channel:"c", resend_last:2})
+				})
+
+			})
+
 		})
 	})
 
-	it('should emit kafka messages to sockets in that channel', function (done) {
-		// Expecting io.sockets.in(channel).emit('ui', data); 
-		ioMock.sockets = {
-			in: function(channel) {
+	describe('message handling', function() {
+
+		it('should emit kafka messages to sockets in that channel', function (done) {
+			// Expecting io.sockets.in(channel).emit('ui', data); 
+			ioMock.sockets.in = function(channel) {
 				assert.equal(channel, "c")
 				return {
 					emit: function(event, data) {
@@ -399,12 +535,38 @@ describe('socketio-server', function () {
 					}
 				}
 			}
-		}
-		ioMock.emit('connection', socket)
-		kafkaMock.emit('message', {foo:"bar"}, "c")
-	});
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c"})
+			kafkaMock.emit('message', msg({foo:"bar"},0), "c")
+		});
+
+		it('should add kafka messages to cache', function (done) {
+			ioMock.emit('connection', socket)
+			server.on('stream-object-created', function(stream) {
+				stream.cache.add = function(msg) {
+					done()
+				}
+			})
+			socket.emit('subscribe', {channel: "c"})
+			kafkaMock.emit('message', msg({foo:"bar"},0), "c")
+		});
+
+		it('should set stream counter', function () {
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c"})
+			kafkaMock.emit('message', msg({foo:"bar"},0), "c")
+			assert.equal(server.streams.c.counter, 1)
+		});
+
+	})
 
 	describe('subscribe', function() {
+
+		it('should create the Stream object', function() {
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c"})
+			assert(server.streams.c !== undefined)
+		})
 
 		it('should subscribe to the requested channel from the next message if from not defined', function (done) {
 			// Must get the subscribed event
@@ -516,7 +678,6 @@ describe('socketio-server', function () {
 
 		it('should report the correct next counter to a late subscriber', function (done) {
 
-			
 			kafkaMock.subscribe = function(channel, from, cb) {
 				assert(from==null)
 				cb(channel, 5)
@@ -526,7 +687,7 @@ describe('socketio-server', function () {
 				assert.equal(data.from, 5)
 
 				socket.on('ui', function(msg) {
-					assert.equal(msg._C, 5)
+					assert.equal(msg[constants.COUNTER_KEY], 5)
 
 					// Then subscribe socket2, which should subscribe from message 6
 					var socket2 = createSocketMock("socket2")
@@ -539,7 +700,7 @@ describe('socketio-server', function () {
 					ioMock.emit('connection', socket2)
 					socket2.emit('subscribe', {channel: "c"})
 				})
-				kafkaMock.emit('message', {foo:"bar", _C:5}, "c")
+				kafkaMock.emit('message', msg({foo:"bar"},5), "c")
 			})
 
 			ioMock.emit('connection', socket)
