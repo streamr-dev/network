@@ -12,10 +12,14 @@ describe('MessageCache', function () {
 	var HINT_TIMEOUT = 60*1000
 
 	var cache
+	var resender
 	var clock
 
 	beforeEach(function() {
-		cache = new MessageCache(MIN_SIZE, HARD_MAX)
+		resender = {
+			resend: sinon.spy()
+		}
+		cache = new MessageCache('streamId', MIN_SIZE, HARD_MAX, HINT_TIMEOUT, resender)
 	})
 
 	function msg(data, counter) {
@@ -47,7 +51,7 @@ describe('MessageCache', function () {
 		})
 
 		it('must have good performance for larger compactions', function() {
-			cache = new MessageCache(0, 1000)
+			cache = new MessageCache('streamId', 0, 1000)
 
 			var start = Date.now()
 
@@ -70,6 +74,43 @@ describe('MessageCache', function () {
 			cache.add(msg({},0))
 			assert.equal(cache.size(), 6)			
 		})
+
+		it('must request a resend if a gap is detected', function() {
+			for (var i=0; i<6; i++)
+				cache.add(msg({},i))
+
+			cache.add(msg({},10))
+			assert(resender.resend.calledWith('streamId', 6, 10))			
+		})
+
+		it('must not rerequest a resend while resending', function() {
+			for (var i=0; i<6; i++)
+				cache.add(msg({},i))
+
+			cache.add(msg({},10))
+			cache.add(msg({},11))
+			assert(resender.resend.calledOnce)			
+		})
+
+		it('must add the resent messages to the cache', function() {
+			resender.resend = function(topic, fromOffset, toOffset, handler, cb) {
+				assert(cache.resending)
+
+				for (var i=fromOffset; i<=toOffset; i++) {
+					handler(msg({}, i))
+					cb()
+				}
+			}
+
+			for (var i=0; i<6; i++)
+				cache.add(msg({},i))
+
+			cache.add(msg({},8))
+			assert.equal(cache.size(),9)
+			assert(!cache.resending)
+		})
+
+
 	})
 
 	describe('getLast', function() {

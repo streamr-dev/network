@@ -816,4 +816,19 @@ describe('socketio-server', function () {
 
 	})
 
+	describe('createStreamObject', function() {
+		it('should add the Stream to the lookup', function() {
+			var stream = server.createStreamObject('streamId')
+			assert(server.streams.streamId === stream)
+		})
+
+		it('should create the Stream with correct values', function() {
+			var stream = server.createStreamObject('streamId')
+			assert.equal(stream.id, 'streamId')
+			assert.equal(stream.state, 'init')
+			assert(stream.cache !== undefined)
+			assert(stream.cache.resender === kafkaMock)
+		})
+	})
+
 });
