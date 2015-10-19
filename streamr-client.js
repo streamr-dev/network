@@ -2,7 +2,7 @@
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
-var TIMESTAMP_KEY = "_TS"
+var TIMESTAMP_KEY = "_T"
 var BYE_KEY = "_bye"
 var SUB_KEY = "_sub"
 
