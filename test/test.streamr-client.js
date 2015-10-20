@@ -100,7 +100,7 @@ describe('StreamrClient', function() {
 		socket = createSocketMock()
 
 		var ioCalls = 0
-		global.io = function() {
+		global.io = function(uri, opts) {
 			ioCalls++
 
 			// Create new sockets for subsequent calls
@@ -112,6 +112,9 @@ describe('StreamrClient', function() {
 				socket.emit('connect')
 			})
 
+			socket.uri = uri;
+			socket.opts = opts;
+
 			return socket
 		}
 
@@ -121,6 +124,30 @@ describe('StreamrClient', function() {
 	})
 
 	describe("connect", function() {
+		it('should not pass transport details in io() call', function(done) {
+			client.connect()
+			client.socket.on("connect", function() {
+				assert.strictEqual(client.socket.opts["transports"], null)
+				done()
+			})
+		})
+
+		context('when client initialized with transport details', function () {
+			beforeEach(function () {
+				client = new StreamrClient({
+					transports: ["websocket"]
+				})
+			})
+
+			it('should pass transport details in io() call', function(done) {
+				client.connect()
+				client.socket.on("connect", function() {
+					assert.deepEqual(client.socket.opts["transports"], ["websocket"])
+					done()
+				})
+			})
+		})
+
 		it('should emit pending subscribes', function(done) {
 			var subscription = client.subscribe("stream1", function(message) {})
 			client.connect()

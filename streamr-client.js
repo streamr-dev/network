@@ -256,7 +256,9 @@ function StreamrClient(options) {
 		// Automatically connect on first subscribe
 		autoConnect: true,
 		// Automatically disconnect on last unsubscribe
-		autoDisconnect: true
+		autoDisconnect: true,
+		// Allow client socket library to choose appropriate transport
+		transports: null
 	}
 	this.subsByStream = {}
 	this.subById = {}
@@ -384,7 +386,10 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.connecting = true
 	this.disconnecting = false
 
-	this.socket = io(this.options.server, {forceNew: true})
+	this.socket = io(this.options.server, {
+		forceNew: true,
+		transports: this.options.transports
+	})
 
 	this.socket.on('ui', function(data) {
 		if (typeof data == 'string' || data instanceof String) {
