@@ -791,6 +791,71 @@ describe('StreamrClient', function() {
 				})
 			})
 		})
+
+		it('should disconnect when no longer subscribed to any streams', function(done) {
+			client.options.autoDisconnect = true
+
+			var sub1 = client.subscribe("stream1", function(message) {})
+			var sub2 = client.subscribe("stream2", function(message) {})
+			client.connect()
+
+			client.socket.on('subscribed', function(response) {
+				if (sub1.isSubscribed() && sub2.isSubscribed()) {
+					client.unsubscribe(sub1)
+					client.unsubscribe(sub2)
+				}
+			})
+
+			client.socket.on('disconnect', function() {
+				assert(!sub1.isSubscribed())
+				assert(!sub2.isSubscribed())
+				done()
+			})
+		})
+
+		it('should disconnect if all subscriptions are done during resend', function(done) {
+			client.options.autoDisconnect = true
+
+			var sub1 = client.subscribe("stream1", function(message) {}, {resend_all: true})
+			client.connect()
+
+			client.socket.on('resend', function(request) {
+				async(function() {
+					client.socket.emit('resending', {
+						channel: request.channel, 
+						sub: request.sub,
+						from: 0, 
+						to: 0
+					})
+					client.socket.emit('ui', byeMsg(request.channel,0))
+					client.socket.emit('resent', {channel: request.channel, sub: request.sub, from:0, to:0})
+				})
+			})
+
+			client.socket.on('disconnect', function() {
+				done()
+			})
+		})
+
+		it('should not disconnect if autoDisconnect is set to false', function(done) {
+			client.options.autoDisconnect = false
+
+			var sub1 = client.subscribe("stream1", function(message) {})
+			var sub2 = client.subscribe("stream2", function(message) {})
+			client.connect()
+
+			client.socket.on('subscribed', function(response) {
+				if (sub1.isSubscribed() && sub2.isSubscribed()) {
+					client.unsubscribe(sub1)
+					client.unsubscribe(sub2)
+					done()
+				}
+			})
+
+			client.socket.on('disconnect', function() {
+				throw "Should not have disconnected!"
+			})
+		})
 	})
 	
 	describe("disconnect", function() {
@@ -815,47 +880,6 @@ describe('StreamrClient', function() {
 				assert(!client.isConnected())
 				assert(!client.connecting)
 				done()
-			})
-		})
-
-		it('should disconnect when no longer subscribed to any streams', function(done) {
-			client.options.autoDisconnect = true
-
-			var sub1 = client.subscribe("stream1", function(message) {})
-			var sub2 = client.subscribe("stream2", function(message) {})
-			client.connect()
-
-			client.socket.on('subscribed', function(response) {
-				if (sub1.isSubscribed() && sub2.isSubscribed()) {
-					client.unsubscribe(sub1)
-					client.unsubscribe(sub2)
-				}
-			})
-
-			client.socket.on('disconnect', function() {
-				assert(!sub1.isSubscribed())
-				assert(!sub2.isSubscribed())
-				done()
-			})
-		})
-
-		it('should not disconnect if autoDisconnect is set to false', function(done) {
-			client.options.autoDisconnect = false
-
-			var sub1 = client.subscribe("stream1", function(message) {})
-			var sub2 = client.subscribe("stream2", function(message) {})
-			client.connect()
-
-			client.socket.on('subscribed', function(response) {
-				if (sub1.isSubscribed() && sub2.isSubscribed()) {
-					client.unsubscribe(sub1)
-					client.unsubscribe(sub2)
-					done()
-				}
-			})
-
-			client.socket.on('disconnect', function() {
-				throw "Should not have disconnected!"
 			})
 		})
 
