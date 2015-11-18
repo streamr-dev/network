@@ -34,3 +34,10 @@ Event     | Arguments | Description
 `resent` | `{channel: 'id', sub: 'subId', from:number, to:number}` | Informs the client that a resend is complete. The message will not contain the `from` and `to` fields if there was nothing to resend.
 `no_resend` | `{channel: 'id', sub: 'subId', next:number}` | Informs the client that there was nothing to resend. For convenience, the next available message number is given as `next`.
 `ui` | `{_S:'id', _C:number, ...` | Contains an object intended for the message recipient. Contains the keys `_S` identifying the stream and `_C` the counter (message sequence number)
+
+## Events emitted on server instance
+
+Event     | Arguments | Description
+--------- | -------- |  ----
+`stream-object-created` | Stream | Emitted when a Stream reference object is created
+`stream-object-deleted` | Stream | Emitted when a Stream reference object is deleted
