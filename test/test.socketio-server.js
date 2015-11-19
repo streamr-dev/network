@@ -30,11 +30,11 @@ describe('socketio-server', function () {
 			var index = socket.rooms.indexOf(channel)
 			if (index>=0) {
 				socket.rooms.splice(index, 1)
-				delete ioMock.sockets.adapter.rooms[channel][socket.id]	
-				console.log("SOCKET MOCK: Socket "+socket.id+" left channel "+channel+", now on: "+socket.rooms)
-				cb()
 			}
-			else throw "Not subscribed to channel "+channel
+			
+			delete ioMock.sockets.adapter.rooms[channel][socket.id]	
+			console.log("SOCKET MOCK: Socket "+socket.id+" left channel "+channel+", now on: "+socket.rooms)
+			cb()
 		}
 		return socket
 	}
@@ -802,6 +802,8 @@ describe('socketio-server', function () {
 	describe('disconnect', function() {
 		it('should unsubscribe kafka on channels where there are no more connections', function(done) {
 			socket.on('subscribed', function(channel) {
+				// socket.io clears socket.rooms on disconnect, check that it's not relied on
+				socket.rooms = []
 				socket.emit('disconnect')
 			})
 
