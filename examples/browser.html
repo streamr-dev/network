@@ -1,0 +1,27 @@
+<html>
+<head>
+	<script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
+	<script src="../streamr-client.js"></script>
+
+	<script>
+		// Create the client with default options
+		var client = new StreamrClient()
+		// Subscribe to a stream
+		var subscription = client.subscribe(
+		    '1ef8TbyGTFiAlZ8R2gCaJw', 
+		    function(message) {
+		    	// Handle the messages in this stream
+				var elem = document.createElement('p')
+				elem.innerHTML = JSON.stringify(message)
+				document.body.appendChild(elem)
+		    },
+		    {
+		    	// Resend the last 10 messages on connect
+		        resend_last: 10
+		    }
+		)
+	</script>
+</head>
+<body>
+</body>
+</html>

@@ -1,15 +1,6 @@
 var assert = require('assert'),
-	events = require('eventemitter2')
-
-global.window = {
-
-}
-
-global.Streamr = {
-
-}
-
-var StreamrClient = require('../streamr-client').StreamrClient
+	events = require('eventemitter2'),
+	mockery = require('mockery')
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
@@ -21,6 +12,8 @@ describe('StreamrClient', function() {
 	var client
 	var socket
 	var asyncs = []
+
+	var StreamrClient
 
 	function async(func) {
 		var me = setTimeout(function() {
@@ -88,19 +81,12 @@ describe('StreamrClient', function() {
 
 	beforeEach(function() {
 		clearAsync()
-
-		global.$ = function(o) {
-
-		}
-		
-		global.$.extend = function(o) {
-			return o
-		}
-		
 		socket = createSocketMock()
 
+		mockery.enable()
+
 		var ioCalls = 0
-		global.io = function() {
+		mockery.registerMock('socket.io-client', function() {
 			ioCalls++
 
 			// Create new sockets for subsequent calls
@@ -113,11 +99,17 @@ describe('StreamrClient', function() {
 			})
 
 			return socket
-		}
+		});
+
+		StreamrClient = require('../streamr-client')
 
 		client = new StreamrClient()
 		client.options.autoConnect = false
 		client.options.autoDisconnect = false
+	})
+
+	afterEach(function() {
+		mockery.disable()
 	})
 
 	describe("connect", function() {
@@ -161,10 +153,10 @@ describe('StreamrClient', function() {
 		})
 
 		it('should not try to connect while connecting', function(done) {
-			var oldIo = global.io
+			var oldIo = client.io
 			var ioCalls = 0
 
-			global.io = function() {
+			client.io = function() {
 				ioCalls++
 				if (ioCalls>1)
 					throw "Too many io() calls!"

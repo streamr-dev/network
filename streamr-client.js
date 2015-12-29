@@ -1,4 +1,11 @@
-(function(exports) {
+"use strict";
+
+(function() {
+
+var io
+if (typeof window !== 'undefined')
+	io = window.io
+else io = require('socket.io-client')
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
@@ -252,7 +259,7 @@ function StreamrClient(options) {
 	// Default options
 	this.options = {
 		// The server to connect to
-		server: "data.streamr.com",
+		server: "https://data.streamr.com",
 		// Automatically connect on first subscribe
 		autoConnect: true,
 		// Automatically disconnect on last unsubscribe
@@ -261,6 +268,7 @@ function StreamrClient(options) {
 	this.subsByStream = {}
 	this.subById = {}
 
+	this.io = io
 	this.socket = null
     this.connected = false
 
@@ -384,7 +392,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.connecting = true
 	this.disconnecting = false
 
-	this.socket = io(this.options.server, {forceNew: true})
+	this.socket = this.io(this.options.server, {forceNew: true})
 
 	this.socket.on('ui', function(data) {
 		if (typeof data == 'string' || data instanceof String) {
@@ -617,6 +625,8 @@ StreamrClient.prototype.handleError = function(msg) {
 	this.trigger('error', msg)
 }
 
-exports.StreamrClient = StreamrClient
+if (typeof module !== 'undefined' && module.exports)
+	module.exports = StreamrClient
+else window.StreamrClient = StreamrClient
 
 })(typeof(exports) !== 'undefined' ? exports : window)
