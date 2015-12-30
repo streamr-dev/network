@@ -15,6 +15,9 @@ describe('StreamrClient', function() {
 
 	var StreamrClient
 
+	var ioMock
+	var ioMockCalls
+
 	function async(func) {
 		var me = setTimeout(function() {
 			assert.equal(me, asyncs[0])
@@ -79,18 +82,14 @@ describe('StreamrClient', function() {
 		return s
 	}
 
-	beforeEach(function() {
-		clearAsync()
-		socket = createSocketMock()
-
+	before(function() {
 		mockery.enable()
 
-		var ioCalls = 0
 		mockery.registerMock('socket.io-client', function() {
-			ioCalls++
+			ioMockCalls++
 
 			// Create new sockets for subsequent calls
-			if (ioCalls > 1) {
+			if (ioMockCalls > 1) {
 				socket = createSocketMock()
 			}
 
@@ -102,13 +101,18 @@ describe('StreamrClient', function() {
 		});
 
 		StreamrClient = require('../streamr-client')
+	})
 
+	beforeEach(function() {
+		clearAsync()
+		socket = createSocketMock()
+		ioMockCalls = 0
 		client = new StreamrClient()
 		client.options.autoConnect = false
 		client.options.autoDisconnect = false
 	})
 
-	afterEach(function() {
+	after(function() {
 		mockery.disable()
 	})
 
@@ -153,21 +157,11 @@ describe('StreamrClient', function() {
 		})
 
 		it('should not try to connect while connecting', function(done) {
-			var oldIo = client.io
-			var ioCalls = 0
-
-			client.io = function() {
-				ioCalls++
-				if (ioCalls>1)
-					throw "Too many io() calls!"
-				return oldIo()
-			}
-
 			client.options.autoConnect = true
 			client.subscribe("stream1", function(message) {})
 			client.subscribe("stream2", function(message) {})
 
-			assert.equal(ioCalls, 1)
+			assert.equal(ioMockCalls, 1)
 			done()
 		})
 	})

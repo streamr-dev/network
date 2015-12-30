@@ -1,7 +1,7 @@
 {
   "name": "streamr-client",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.8.0",
+  "description": "JS client for subscribing to Streamr streams",
   "main": "streamr-client.js",
   "directories": {
     "test": "test"
@@ -12,7 +12,8 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "socket.io-client": "1.3.7"
+    "socket.io-client": "1.3.7",
+    "debug": "*"
   },
   "devDependencies": {
     "mocha": "*",

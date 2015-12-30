@@ -1,23 +1,28 @@
 # streamr-client
 
-streamr-client is a JavaScript client for connecting to Streamr data. You can subscribe to user interface widget updates or even raw data streams.
+This is a JavaScript client for subscribing to realtime streams from [Streamr](http://www.streamr.com). Streamr is a realtime stream processing and analytics platform. This client allows you to write JS applications that leverage the stream computing and pub/sub features of Streamr.
 
-## Requirements
+## Dependencies
 
-* socket.io
+* [socket.io-client](https://cdn.socket.io/socket.io-1.3.7.js)
+* [debug](https://github.com/visionmedia/debug) (optional)
+
+In node.js, dependencies will be installed automatically with `npm install`. In the browser, make sure you include `socket.io-client` before `streamr-client`.
 
 ## Usage
 
+The `examples` directory contains snippets for both browser and node.js.
+
 ```javascript
 client = new StreamrClient({ 
-	// Connection options and default values
-	server: 'data.streamr.com',
+	// Connection options can be omitted, these are the default values
+	server: 'https://data.streamr.com',
 	autoConnect: true,
 	autoDisconnect: true
 })
-client.subscribe(
+var sub = client.subscribe(
 	'stream-id', 
-	function(message, streamId, counter) {
+	function(message, streamId, timestamp, counter) {
 		// Do something with the message, which is an object
 	},
 	{ 
@@ -29,7 +34,7 @@ client.connect()
 
 ## Handling messages
 
-The second argument to client.subscribe() is the callback function that will be called for each message as they arrive. Its arguments are as follows:
+The second argument to `client.subscribe(streamId, callback, resendOptions)` is the callback function that will be called for each message as they arrive. Its arguments are as follows:
 
 Argument | Description
 -------- | -----------
@@ -73,16 +78,51 @@ getSubscriptions(`streamId`) | Returns a list of `Subscriptions` for `streamId`.
 bind(eventName, function) | Binds a `function` to an event called `eventName`
 unbind(eventName, function) | Unbinds the `function` from events called `eventName`
 
-## Events on the client
+## Binding to events
+
+The client and the subscriptions can fire events as detailed below. You can bind to them using `bind`:
+
+```javascript
+	function hello() {
+		console.log('Hello!')
+	}
+
+	client.bind('connected', hello)
+
+	var sub = client.subscribe(...)
+	sub.bind('subscribed', function() {
+		console.log('Subscribed to '+sub.streamId)
+	})
+```
+
+You can unbind using `unbind`:
+
+```javascript
+	client.unbind('connected', hello)
+```
+
+
+## Events on the StreamrClient instance
 
 Name | Handler Arguments | Description
 ---- | ----------------- | -----------
 connected |  | Fired when the client has connected (or reconnected).
 disconnected |  | Fired when the client has disconnected (or paused).
 
-## Events on the `Subscription` object
+## Events on the Subscription object
 
 Name | Handler Arguments | Description
 ---- | ----------------- | -----------
 subscribed | {from: number} | Fired when a subscription request is acknowledged by the server.
 unsubscribed |  | Fired when an unsubscription is acknowledged by the server.
+resending |  | Fired when the subscription starts resending.
+resent |  | Fired after `resending` when the subscription has finished resending.
+no_resend |  | Fired after `resending` in case there was nothing to resend.
+
+## Logging
+
+This library supports the [debug](https://github.com/visionmedia/debug) library for logging.
+
+In node.js, start your app like this: `DEBUG=StreamrClient node your-app.js`
+
+In the browser, include `debug.js` and set `localStorage.debug = 'StreamrClient'`
