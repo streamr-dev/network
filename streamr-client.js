@@ -272,7 +272,9 @@ function StreamrClient(options) {
 		// Automatically connect on first subscribe
 		autoConnect: true,
 		// Automatically disconnect on last unsubscribe
-		autoDisconnect: true
+		autoDisconnect: true,
+		// Allow client socket library to choose appropriate transport
+		transports: null
 	}
 	this.subsByStream = {}
 	this.subById = {}
@@ -354,10 +356,11 @@ StreamrClient.prototype.unsubscribe = function(sub) {
 	if (this.subsByStream[sub.streamId].length === 1 && this.connected && !this.disconnecting && sub.isSubscribed()) {
 		this._requestUnsubscribe(sub.streamId)
 	}
-	// Else the sub can be cleaned off immediately
+	// Else the sub can be cleaned off' immediately
 	else {
 		this._removeSubscription(sub)
 		sub.trigger('unsubscribed')
+		this._checkAutoDisconnect()
 	}
 }
 
@@ -401,7 +404,10 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.connecting = true
 	this.disconnecting = false
 
-	this.socket = this.io(this.options.server, {forceNew: true})
+	this.socket = this.io(this.options.server, {
+		forceNew: true,
+		transports: this.options.transports
+	})
 
 	this.socket.on('ui', function(data) {
 		if (typeof data == 'string' || data instanceof String) {
@@ -466,11 +472,7 @@ StreamrClient.prototype.connect = function(reconnect) {
 			sub.trigger('unsubscribed')
 		})
 
-		// Disconnect if no longer subscribed to any channels
-		if (Object.keys(_this.subsByStream).length===0 && _this.options.autoDisconnect) {
-			debug("Disconnecting due to no longer being subscribed to any channels")
-			_this.disconnect()
-		}
+		_this._checkAutoDisconnect()
 	})
 
 	// Route resending state messages to corresponding Subscriptions
@@ -539,6 +541,14 @@ StreamrClient.prototype.disconnect = function() {
 	})
 
 	this.socket.disconnect()
+}
+
+StreamrClient.prototype._checkAutoDisconnect = function() {
+	// Disconnect if no longer subscribed to any channels
+	if (Object.keys(this.subsByStream).length===0 && this.options.autoDisconnect) {
+		debug("Disconnecting due to no longer being subscribed to any channels")
+		this.disconnect()
+	}
 }
 
 StreamrClient.prototype._resendAndSubscribe = function(sub) {

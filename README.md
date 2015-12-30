@@ -51,6 +51,8 @@ Option | Default value | Description
 server | api.streamr.com | Address of the server to connect to.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last channel is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
+transports | null | Override default transport selection / upgrade scheme. For example, value `["websocket"]` will force use of sockets right from the beginning, while value `["polling"]` will allow only long-polling to be used.
+
 
 ## Resend options
 
