@@ -2,6 +2,10 @@
   "name": "streamr-client",
   "version": "0.8.0",
   "description": "JS client for subscribing to Streamr streams",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/streamr-dev/streamr-client.git"
+  },
   "main": "streamr-client.js",
   "directories": {
     "test": "test"
