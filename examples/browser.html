@@ -1,0 +1,53 @@
+<html>
+	<head>
+		<!-- For debug messages, include debug.js from https://github.com/visionmedia/debug and set localStorage.debug = 'StreamrClient' -->
+		<script src="https://cdn.socket.io/socket.io-1.3.7.js"></script>
+		<script src="../streamr-client.js"></script>
+
+		<script>
+			function log(msg) {
+				var elem = document.createElement('p')
+				elem.innerHTML = msg
+				document.body.appendChild(elem)
+			}
+
+			// Create the client with default options
+			var client = new StreamrClient()
+			// Subscribe to a stream
+			var subscription = client.subscribe(
+			    '1ef8TbyGTFiAlZ8R2gCaJw', 
+			    function(message) {
+			    	// Handle the messages in this stream
+			    	log(JSON.stringify(message))
+			    },
+			    {
+			    	// Resend the last 10 messages on connect
+			        resend_last: 10
+			    }
+			)
+
+			// Event binding examples
+			client.bind('connected', function() {
+				log('A connection has been established!')
+			})
+
+			subscription.bind('subscribed', function() {
+				log('Subscribed to '+subscription.streamId)
+			})
+
+			subscription.bind('resending', function() {
+				log('Resending from '+subscription.streamId)
+			})
+
+			subscription.bind('resent', function() {
+				log('Resend complete for '+subscription.streamId)
+			})
+
+			subscription.bind('no_resend', function() {
+				log('Nothing to resend for '+subscription.streamId)
+			})
+		</script>
+	</head>
+	<body>
+	</body>
+</html>

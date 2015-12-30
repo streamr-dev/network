@@ -1,15 +1,6 @@
 var assert = require('assert'),
-	events = require('eventemitter2')
-
-global.window = {
-
-}
-
-global.Streamr = {
-
-}
-
-var StreamrClient = require('../streamr-client').StreamrClient
+	events = require('eventemitter2'),
+	mockery = require('mockery')
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
@@ -21,6 +12,11 @@ describe('StreamrClient', function() {
 	var client
 	var socket
 	var asyncs = []
+
+	var StreamrClient
+
+	var ioMock
+	var ioMockCalls
 
 	function async(func) {
 		var me = setTimeout(function() {
@@ -86,25 +82,14 @@ describe('StreamrClient', function() {
 		return s
 	}
 
-	beforeEach(function() {
-		clearAsync()
+	before(function() {
+		mockery.enable()
 
-		global.$ = function(o) {
-
-		}
-		
-		global.$.extend = function(o) {
-			return o
-		}
-		
-		socket = createSocketMock()
-
-		var ioCalls = 0
-		global.io = function(uri, opts) {
-			ioCalls++
+		mockery.registerMock('socket.io-client', function(uri, opts) {
+			ioMockCalls++
 
 			// Create new sockets for subsequent calls
-			if (ioCalls > 1) {
+			if (ioMockCalls > 1) {
 				socket = createSocketMock()
 			}
 
@@ -116,11 +101,22 @@ describe('StreamrClient', function() {
 			socket.opts = opts;
 
 			return socket
-		}
+		});
 
+		StreamrClient = require('../streamr-client')
+	})
+
+	beforeEach(function() {
+		clearAsync()
+		socket = createSocketMock()
+		ioMockCalls = 0
 		client = new StreamrClient()
 		client.options.autoConnect = false
 		client.options.autoDisconnect = false
+	})
+
+	after(function() {
+		mockery.disable()
 	})
 
 	describe("connect", function() {
@@ -188,21 +184,11 @@ describe('StreamrClient', function() {
 		})
 
 		it('should not try to connect while connecting', function(done) {
-			var oldIo = global.io
-			var ioCalls = 0
-
-			global.io = function() {
-				ioCalls++
-				if (ioCalls>1)
-					throw "Too many io() calls!"
-				return oldIo()
-			}
-
 			client.options.autoConnect = true
 			client.subscribe("stream1", function(message) {})
 			client.subscribe("stream2", function(message) {})
 
-			assert.equal(ioCalls, 1)
+			assert.equal(ioMockCalls, 1)
 			done()
 		})
 	})
