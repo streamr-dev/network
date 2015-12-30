@@ -1,6 +1,8 @@
 # streamr-client
 
-This is a JavaScript client for subscribing to realtime streams from [Streamr](http://www.streamr.com). Streamr is a realtime stream processing and analytics platform. This client allows you to write JS applications that leverage the stream computing and pub/sub features of Streamr.
+This is a JavaScript client for subscribing to realtime streams from [Streamr](http://www.streamr.com). Streamr is a realtime stream processing and analytics platform. This client allows you to write JS applications that leverage the stream computing and pub/sub features of Streamr. It works both in the browser and in node.js.
+
+The streamr-client uses [socket.io](http://socket.io/) under the hood for streaming message delivery. It works in virtually all browsers by using websockets where available, or fallback methods on legacy browsers.
 
 ## Dependencies
 
