@@ -1,0 +1,13 @@
+{
+  "apps" : [{
+    "name"        : "socketio-server",
+    "script"      : "socketio-server.js",
+    "args"        : ["--zookeeper", "ip-10-16-207-139.ec2.internal:2181", "--port", "8889"],
+    "watch"       : false,
+    "node_args"   : "",
+    "merge_logs"  : true,
+    "env": {
+        "DEBUG": ""
+    }
+  }]
+}
