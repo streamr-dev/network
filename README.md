@@ -16,7 +16,7 @@ In node.js, dependencies will be installed automatically with `npm install`. In 
 The `examples` directory contains snippets for both browser and node.js.
 
 ```javascript
-client = new StreamrClient({ 
+var client = new StreamrClient({ 
 	// Connection options can be omitted, these are the default values
 	server: 'https://data.streamr.com',
 	autoConnect: true,
