@@ -1,0 +1,60 @@
+<html>
+<head>
+	<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+	<script src="https://cdn.socket.io/socket.io-1.4.3.js"></script>
+	<script type="text/javascript" src="streamr-client.js"></script>
+
+	<script type="text/javascript">
+		function generateUUID() {
+		    var d = new Date().getTime();
+		    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+		        var r = (d + Math.random()*16)%16 | 0;
+		        d = Math.floor(d/16);
+		        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+		    });
+		    return uuid;
+		};
+
+		var myId = generateUUID()
+		var client = new StreamrClient()
+		var msgCount = 0
+		var resendCount = 0
+		var subTime = null
+		var sub = client.subscribe(
+			// Broadcast stream
+		    'YEIMWe9NSTOESnNNjDX10g', 
+		    function(message, streamId, timestamp, counter) {
+		        msgCount++
+		    }
+		)
+		sub.bind('resending', function() {
+			resendCount++
+		})
+		sub.bind('subscribed', function() {
+        	subTime = Date.now()
+        	setInterval(function() {
+        		var secs = Math.round((Date.now()-subTime)/1000)
+				var msg = {
+				    id: myId,
+				    msgCount: msgCount,
+				    resendCount: resendCount,
+				    secs: secs,
+				    pct: (secs==0 ? 0 : msgCount/secs * 100)
+				}
+    			$.ajax({
+				    type: "POST",
+				    url: "https://data.streamr.com/json",
+				    headers: {
+				        Stream: "Qul-Y0TXQaiMfgxNWp0CQw",
+				        Auth: "N9ZVhJ0HTH-6X9wgaLihlg"
+				    },
+				    data: JSON.stringify(msg)
+				});
+        	}, 1000)
+    	})
+	</script>
+</head>
+<body>
+
+</body>
+</html>
