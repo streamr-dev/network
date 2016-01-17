@@ -1,10 +1,12 @@
 <html>
 <head>
-	<script type="text/javascript" src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
-	<script src="https://cdn.socket.io/socket.io-1.4.3.js"></script>
+	<script type="text/javascript" src="jquery-1.12.0.min.js"></script>
+	<script type="text/javascript" src="socket.io-1.4.4.js"></script>
 	<script type="text/javascript" src="streamr-client.js"></script>
 
 	<script type="text/javascript">
+		var REPORT_INTERVAL_SEC = 10
+
 		function generateUUID() {
 		    var d = new Date().getTime();
 		    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -16,7 +18,10 @@
 		};
 
 		var myId = generateUUID()
-		var client = new StreamrClient()
+		var client = new StreamrClient({ 
+			server: 'https://data.streamr.com'
+			/*transports: ['polling']*/
+		})
 		var msgCount = 0
 		var resendCount = 0
 		var subTime = null
@@ -24,6 +29,7 @@
 			// Broadcast stream
 		    'YEIMWe9NSTOESnNNjDX10g', 
 		    function(message, streamId, timestamp, counter) {
+		    	console.log("got message: "+counter)
 		        msgCount++
 		    }
 		)
@@ -31,6 +37,7 @@
 			resendCount++
 		})
 		sub.bind('subscribed', function() {
+			$("body").append("<div id='subscribed'>subscribed</div>")
         	subTime = Date.now()
         	setInterval(function() {
         		var secs = Math.round((Date.now()-subTime)/1000)
@@ -50,7 +57,7 @@
 				    },
 				    data: JSON.stringify(msg)
 				});
-        	}, 1000)
+        	}, REPORT_INTERVAL_SEC*1000)
     	})
 	</script>
 </head>
