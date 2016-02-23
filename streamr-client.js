@@ -151,6 +151,7 @@ function Subscription(streamId, callback, options) {
 	this.bind('unsubscribed', function() {
 		debug("Sub %s unsubscribed: %s", _this.id, _this.streamId)
 		_this.subscribed = false
+		_this.unsubscribing = false
 		_this.resending = false
 	})
 
@@ -303,12 +304,14 @@ StreamrClient.prototype._addSubscription = function(sub) {
 StreamrClient.prototype._removeSubscription = function(sub) {
 	delete this.subById[sub.id]
 
-	this.subsByStream[sub.streamId] = this.subsByStream[sub.streamId].filter(function(it) {
-		return it !== sub
-	})
+	if (this.subsByStream[sub.streamId]) {
+		this.subsByStream[sub.streamId] = this.subsByStream[sub.streamId].filter(function(it) {
+			return it !== sub
+		})
 
-	if (this.subsByStream[sub.streamId].length === 0)
-		delete this.subsByStream[sub.streamId]
+		if (this.subsByStream[sub.streamId].length === 0)
+			delete this.subsByStream[sub.streamId]
+	}
 }
 
 StreamrClient.prototype.getSubscriptions = function(streamId) {
@@ -353,11 +356,12 @@ StreamrClient.prototype.unsubscribe = function(sub) {
 		throw "unsubscribe: please give a Subscription object as an argument!"
 
 	// If this is the last subscription for this stream, unsubscribe the client too
-	if (this.subsByStream[sub.streamId].length === 1 && this.connected && !this.disconnecting && sub.isSubscribed()) {
+	if (this.subsByStream[sub.streamId].length === 1 && this.connected && !this.disconnecting && sub.isSubscribed() && !sub.unsubscribing) {
+		sub.unsubscribing = true
 		this._requestUnsubscribe(sub.streamId)
 	}
-	// Else the sub can be cleaned off' immediately
-	else {
+	// Else the sub can be cleaned off immediately
+	else if (!sub.unsubscribing) {
 		this._removeSubscription(sub)
 		sub.trigger('unsubscribed')
 		this._checkAutoDisconnect()
@@ -465,12 +469,14 @@ StreamrClient.prototype.connect = function(reconnect) {
 	this.socket.on('unsubscribed', function(response) {
 		debug("Client unsubscribed: %o", response)
 
-		// Copy the list to avoid concurrent modifications
-		var l = _this.subsByStream[response.channel].slice()
-		l.forEach(function(sub) {
-			_this._removeSubscription(sub)
-			sub.trigger('unsubscribed')
-		})
+		if (_this.subsByStream[response.channel]) {
+			// Copy the list to avoid concurrent modifications
+			var l = _this.subsByStream[response.channel].slice()
+			l.forEach(function(sub) {
+				_this._removeSubscription(sub)
+				sub.trigger('unsubscribed')
+			})
+		}
 
 		_this._checkAutoDisconnect()
 	})
