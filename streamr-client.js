@@ -356,7 +356,7 @@ StreamrClient.prototype.unsubscribe = function(sub) {
 		throw "unsubscribe: please give a Subscription object as an argument!"
 
 	// If this is the last subscription for this stream, unsubscribe the client too
-	if (this.subsByStream[sub.streamId].length === 1 && this.connected && !this.disconnecting && sub.isSubscribed() && !sub.unsubscribing) {
+	if (this.subsByStream[sub.streamId] !== undefined && this.subsByStream[sub.streamId].length === 1 && this.connected && !this.disconnecting && sub.isSubscribed() && !sub.unsubscribing) {
 		sub.unsubscribing = true
 		this._requestUnsubscribe(sub.streamId)
 	}

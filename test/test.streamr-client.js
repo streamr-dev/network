@@ -714,6 +714,25 @@ describe('StreamrClient', function() {
 			})
 		})
 
+		it('should not send another unsubscribed event if the same Subscription is unsubscribed multiple times', function(done) {
+			var sub = client.subscribe("stream1", function(message) {})
+			client.connect()
+
+			client.socket.once('subscribed', function() {
+				client.unsubscribe(sub)
+			})
+
+			client.socket.once('unsubscribed', function() {
+				setTimeout(function() {
+					client.unsubscribe(sub)
+					done()
+					client.socket.once('unsubscribed', function() {
+						throw "Unsubscribed event sent more than once for same Subscription!"
+					})
+				})
+			})
+		})
+
 		it('should not unsubscribe the client from a stream when there are subscriptions remaining for that stream', function(done) {
 			var sub1 = client.subscribe("stream1", function(message) {})
 			var sub2 = client.subscribe("stream1", function(message) {})
