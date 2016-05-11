@@ -157,6 +157,19 @@ describe('kafka-helper', function () {
 				done()
 			})
 		})
+
+		it('should not crash if the offsets is undefined (kafka was not available)', function(done) {
+			offsetMock.fetch = function(requests, callback) {
+				callback("Test error", undefined)
+			}
+
+			kh.getOffset("topic", false, function(offset, earliest, error) {
+				assert.equal(error, "Test error")
+				assert(!offset)
+				assert(!earliest)
+				done()
+			})
+		})
 	})
 
 	describe("subscribe()", function() {
