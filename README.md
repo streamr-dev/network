@@ -1,3 +1,6 @@
+<!-- Note that this readme is embedded on API Documentation page within Streamr. Please don't use first-level headings (h1). -->
+<!-- You should write this document so that it will work both as a stand-alone document in the public GitHub repo and as a section in the API docs. -->
+
 # streamr-client
 
 This is a JavaScript client for subscribing to realtime streams from [Streamr](http://www.streamr.com). Streamr is a realtime stream processing and analytics platform. This client allows you to write JS applications that leverage the stream computing and pub/sub features of Streamr. It works both in the browser and in node.js.
