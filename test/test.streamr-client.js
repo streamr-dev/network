@@ -289,6 +289,28 @@ describe('StreamrClient', function() {
 			})
 		})
 
+		it('should add any subscription options to subscription request', function(done) {
+			client.connect()
+			client.socket.once('connect', function() {
+				client.socket.once('subscribe', function(request) {
+					if (request.foo === 'bar')
+						done()
+				})
+				client.subscribe("stream1", function(message) {}, {foo: 'bar'})
+			})
+		})
+
+		it('should ignore any subscription options that conflict with required ones', function(done) {
+			client.connect()
+			client.socket.once('connect', function() {
+				client.socket.once('subscribe', function(request) {
+					if (request.channel === 'stream1')
+						done()
+				})
+				client.subscribe("stream1", function(message) {}, {channel: 'wrong'})
+			})
+		})
+
 		it('should mark Subscriptions as subscribed when the server responds with subscribed', function(done) {
 			var subscription = client.subscribe("stream1", function(message) {})
 			client.connect()
@@ -405,6 +427,17 @@ describe('StreamrClient', function() {
 
 			client.socket.once('resend', function(request) {
 				if (request.resend_all)
+					done()
+				else throw "Unexpected resend request: "+JSON.stringify(request)
+			})
+		})
+
+		it('should emit a resend request with given other options', function(done) {
+			client.subscribe("stream1", function(message) {}, {resend_all:true, foo: 'bar'})
+			client.connect()
+
+			client.socket.once('resend', function(request) {
+				if (request.resend_all && request.foo === 'bar')
 					done()
 				else throw "Unexpected resend request: "+JSON.stringify(request)
 			})
@@ -1026,7 +1059,9 @@ describe('StreamrClient', function() {
 			var el = validResendRequests[0]
 			// all fields in the model request must be equal in actual request
 			Object.keys(el).forEach(function(field) {
-				assert.equal(request[field], el[field])
+				if (request[field] !== el[field]) {
+					throw "Resend request field "+field+" does not match expected value! Was: "+JSON.stringify(request)+", expected: "+JSON.stringify(el)
+				}
 			})
 			validResendRequests.shift()
 		}
@@ -1162,6 +1197,48 @@ describe('StreamrClient', function() {
 			client.socket.once('subscribed', function() {
 				client.socket.emit('ui', msg("stream1",0))
 				client.socket.emit('ui', msg("stream1",10))
+			})
+
+			client.socket.once('resent', function() {
+				done()
+			})
+		})
+
+		it('should include any subscription options in resend request', function(done) {
+			client.subscribe("stream1", function(message) {}, {auth:'foo'})
+			client.connect()
+
+			validResendRequests.push({channel:"stream1", resend_from:1, resend_to:9})
+
+			client.socket.once('subscribed', function() {
+				client.socket.emit('ui', msg("stream1",0))
+				client.socket.emit('ui', msg("stream1",10))
+			})
+
+			client.socket.once('resend', function(request) {
+				assert.equal(request.auth, 'foo')
+			})
+
+			client.socket.once('resent', function() {
+				done()
+			})
+		})
+
+		it('should not include stronger resend requests in gap resend request', function(done) {
+			client.subscribe("stream1", function(message) {}, {auth:'foo', resend_all: true})
+			client.connect()
+
+			validResendRequests.push({channel:"stream1", resend_all:true})
+			validResendRequests.push({channel:"stream1", resend_from:1, resend_to:1})
+
+			client.socket.once('subscribed', function() {
+				client.socket.emit('ui', msg("stream1",0))
+				client.socket.emit('ui', msg("stream1",2))
+			})
+
+			client.socket.on('resend', function(request) {
+				if (request.resend_from)
+					assert.equal(request.resend_all, undefined)
 			})
 
 			client.socket.once('resent', function() {

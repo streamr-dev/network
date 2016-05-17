@@ -22,7 +22,7 @@ var TIMESTAMP_KEY = "_T"
 var BYE_KEY = "_bye"
 var SUB_KEY = "_sub"
 
-function extend(){
+function extend() {
     for(var i=1; i<arguments.length; i++)
         for(var key in arguments[i])
             if(arguments[i].hasOwnProperty(key))
@@ -601,7 +601,7 @@ StreamrClient.prototype._requestSubscribe = function(sub, from) {
 
 	// If this is the first subscription for this stream, send a subscription request to the server
 	if (!subs._subscribing && subscribedSubs.length === 0) {
-		var req = {channel: sub.streamId, from: from}
+		var req = extend({}, sub.options, {channel: sub.streamId, from: from})
 		debug("_requestSubscribe: subscribing client: %o", req)
 		subs._subscribing = true
 		_this.socket.emit('subscribe', req)	
@@ -629,18 +629,20 @@ StreamrClient.prototype._requestUnsubscribe = function(streamId) {
 	this.socket.emit('unsubscribe', {channel: streamId})
 }
 
-StreamrClient.prototype._requestResend = function(sub, options) {
-	options = options || sub.options
+StreamrClient.prototype._requestResend = function(sub, resendOptions) {
+	// If overriding resendOptions are given, need to remove resend options in sub.options
+	var options = extend({}, sub.options)
+	if (resendOptions) {
+		Object.keys(options).forEach(function (key) {
+			if (key.match(/resend_.*/)) {
+				delete options[key]
+			}
+		})
+	}
 
 	sub.resending = true
 
-	var request = {}
-	Object.keys(options).forEach(function(key) {
-		request[key] = options[key]
-	})
-	request.channel = sub.streamId
-	request.sub = sub.id
-
+	var request = extend({}, options, resendOptions, {channel: sub.streamId, sub: sub.id})
 	debug("_requestResend: %o", request)
 	this.socket.emit('resend', request)
 }
