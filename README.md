@@ -21,7 +21,7 @@ In node.js, dependencies will be installed automatically with `npm install`. In 
 
 ### Usage
 
-The included `examples` directory contains snippets for both browser and node.js.
+Here's a quick example. More detailed examples for the browser and node.js can be found [here](https://github.com/streamr-dev/streamr-client/tree/master/examples).
 
 ```javascript
 // Create a StreamrClient instance
