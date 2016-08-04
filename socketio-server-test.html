@@ -1,22 +1,49 @@
 <html>
 <head>
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
-	<script type="text/javascript" src="node_modules/socket.io/node_modules/socket.io-client/socket.io.js"></script>
+	<script type="text/javascript" src="node_modules/socket.io-client/socket.io.js"></script>
 	<script type="text/javascript" src="../streamr-client/streamr-client.js"></script>
 
 	<script type="text/javascript">
 		var client
 
+		window.consoleLoggingEnabled = true
+
 		function SubCounter($el, client, resend_last) {
 			var counter = 0
-			var sub = client.subscribe(
-				"d-8DKK2IQ0m8UpHd3bZ5iA", 
+
+			// "XvGvByswSCe0AvEFM9Z8LA", canvas topic
+			// "t3J6bB2SRWmnnJmvm4-anQ", table topic
+			// "7wa7APtlTq6EC5iTCBy6dw", hsl topic
+
+			var canvasSub = client.subscribe(
+					"XvGvByswSCe0AvEFM9Z8LA",
+					function(message) {
+						counter++
+						$el.html(counter)
+					},
+					{resend_last: 0}
+			)
+
+			var tableSub = client.subscribe(
+					"t3J6bB2SRWmnnJmvm4-anQ",
+					function(message) {
+						counter++
+						$el.html(counter)
+					},
+					{resend_last: 0}
+			)
+
+
+/*			var hslSub = client.subscribe(
+				"7wa7APtlTq6EC5iTCBy6dw",
 				function(message) {
 					counter++
 					$el.html(counter)
 				},
-				{resend_last: resend_last}
-			)
+				{resend_last: 0}
+			)*/
+
 		}
 
 		$(document).ready(function() {
