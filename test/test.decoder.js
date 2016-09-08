@@ -1,48 +1,27 @@
 var assert = require('assert'),
-	decoder = require('../lib/decoder'),
-	BufferMaker = require('buffermaker')
+	decoder = require('../lib/decoder')
 
 describe('decoder', function () {
 
-	it('should return the message as is if it is not a raw buffer', function() {
-		var msg = {foo: "bar"}
-		assert(msg === decoder.decode(msg).message)
-	})
+	describe('version 28', function() {
 
-	it('should return buffers as json-parsed strings if no version or format is set', function() {
-		var msg = new Buffer('{"foo": "bar"}')
-		assert.equal(decoder.decode(msg).message.foo, JSON.parse(msg).foo)
-	})
+		it('should encode/decode as expected', function() {
+			var version = 28
+			var offset = 100
+			var streamId = "streamId"
+			var msg = {foo: "bar"}
+			var timestamp = Date.now()
+			var buf = decoder.encode(version, timestamp, streamId, decoder.CONTENT_TYPE_JSON, msg)
 
-	it('should return as is if could not parse as json', function() {
-		var msg = new Buffer('')
-		assert(msg === decoder.decode(msg).message)
-	})
+			var result = decoder.decode(buf, 100)
 
-	it('should parse UnifinaKafkaProducer JSON messages from raw buffers', function () {
-		var msg = {foo: "bar"}
-		var buf = new BufferMaker()
-                        .Int8(27) // version
-                        .Int64BE(Date.now())
-                        .Int8(27) // format (JSON)
-                        .string(JSON.stringify(msg))
-                        .make();
-		var result = decoder.decode(buf)
-		assert.equal(result.message.foo, msg.foo)
-	});
-
-	it('should add a timestamp key to the message if requested', function() {
-		var msg = {foo: "bar"}
-		var date = Date.now()
-		var buf = new BufferMaker()
-                        .Int8(27) // version
-                        .Int64BE(date)
-                        .Int8(27) // format (JSON)
-                        .string(JSON.stringify(msg))
-                        .make();
-		var result = decoder.decode(buf)
-		assert.equal(result.message.foo, msg.foo)
-		assert.equal(result.timestamp, date)
+			assert.equal(decoder.get('version', result), version)
+			assert.equal(decoder.get('streamId', result), streamId)
+			assert.equal(decoder.get('timestamp', result), timestamp)
+			assert.equal(decoder.get('offset', result), offset)
+			assert.equal(decoder.get('contentType', result), decoder.CONTENT_TYPE_JSON)
+			assert.deepEqual(decoder.get('content', result), msg)
+		})
 	})
 
 });

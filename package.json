@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test",
+    "autotest": "supervisor -w . -n exit -x mocha -- test -b"
   },
   "author": "",
   "license": "",
