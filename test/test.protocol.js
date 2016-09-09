@@ -53,6 +53,16 @@ describe('protocol', function () {
 			assert.equal(protocol.get('contentType', result), protocol.CONTENT_TYPE_JSON)
 			assert.deepEqual(protocol.get('content', result), msg)
 		})
+
+		it('encode/decode redis extension with undefined previousOffset', function() {
+			previousOffset = undefined
+
+			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
+			var redisBuf = protocol.encodeRedisSuffix(buf, 0, offset, previousOffset, partition)
+			var result = protocol.decodeRedis(redisBuf)
+
+			assert.equal(protocol.get('previousOffset', result), undefined)
+		})
 	})
 
 });
