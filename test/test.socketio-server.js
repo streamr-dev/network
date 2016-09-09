@@ -1,7 +1,7 @@
 var assert = require('assert'),
 	events = require('events'),
 	sinon = require('sinon'),
-	decoder = require('../lib/decoder'),
+	decoder = require('../lib/protocol'),
 	constants = require('../lib/constants'),
 	SocketIoServer = require('../lib/socketio-server')
 
