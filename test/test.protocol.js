@@ -16,7 +16,7 @@ describe('protocol', function () {
 			version = 28
 		})
 
-		it('should encode/decode as expected', function() {
+		it('encode/decode', function() {
 			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
 			var result = protocol.decode(buf, offset, previousOffset)
 
@@ -29,9 +29,14 @@ describe('protocol', function () {
 			assert.deepEqual(protocol.get('content', result), msg)
 		})
 
-		it('should be able to decode the streamId only', function() {
+		it('decodeStreamId', function() {
 			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
 			assert.equal(protocol.decodeStreamId(buf), streamId)
+		})
+
+		it('decodeTimestamp', function() {
+			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
+			assert.equal(protocol.decodeTimestamp(buf), timestamp)
 		})
 	})
 
