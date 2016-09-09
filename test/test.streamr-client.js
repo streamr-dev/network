@@ -36,7 +36,7 @@ describe('StreamrClient', function() {
 
     var previousOffsetByStreamId = {}
 
-	function msg(streamId, offset, content, subId) {
+	function msg(streamId, offset, content, subId, forcePreviousOffset) {
         content = content || {}
 
         // unicast message to subscription
@@ -57,7 +57,7 @@ describe('StreamrClient', function() {
         }
         // broadcast message to all subscriptions
         else {
-            var previousOffset = previousOffsetByStreamId[streamId]
+            var previousOffset = forcePreviousOffset || previousOffsetByStreamId[streamId]
             previousOffsetByStreamId[streamId] = offset
 
             return [
@@ -88,7 +88,7 @@ describe('StreamrClient', function() {
 
 		s.defaultSubscribeHandler = function(request) {
 			async(function() {
-				s.emit('subscribed', {channel: request.channel, from: 0})	
+				s.emit('subscribed', {channel: request.channel})
 			})
 		}
 		s.on('subscribe', s.defaultSubscribeHandler)
@@ -1114,23 +1114,24 @@ describe('StreamrClient', function() {
 			})
 		})
 
-        // TODO: jatka tästä
-		it('should emit a resend request if the first message is not the expected one', function(done) {
-			client.subscribe("stream1", function(message) {})
-			client.connect()
-			
-			validResendRequests.push({channel:"stream1", resend_from:0, resend_to:1})
+        it('should not emit a resend request if there is no gap in messages', function(done) {
+            client.subscribe("stream1", function(message) {
+                if (message.done) {
+                    done()
+                }
+            })
+            client.connect()
 
-			client.socket.once('subscribed', function() {
-				assert(client.socket.defaultResendHandler!=null)
-				client.socket.emit('b', msg("stream1",2))
-			})
+            socket.once('resend', function(req) {
+                throw "Should not have made a resend request:" + JSON.stringify(req)
+            })
 
-			client.socket.once('resent', function() {
-				done()
-			})			
-		})
-		
+            client.socket.once('subscribed', function() {
+                client.socket.emit('b', msg("stream1", 0))
+                client.socket.emit('b', msg("stream1", 10, {done: true}, undefined, 0))
+            })
+        })
+
 		it('should emit a resend request if there is a gap in messages', function(done) {
 			client.subscribe("stream1", function(message) {})
 			client.connect()
@@ -1138,8 +1139,8 @@ describe('StreamrClient', function() {
 			validResendRequests.push({channel:"stream1", resend_from:1, resend_to:9})
 
 			client.socket.once('subscribed', function() {
-				client.socket.emit('b', msg("stream1",0))
-				client.socket.emit('b', msg("stream1",10))
+				client.socket.emit('b', msg("stream1", 0))
+				client.socket.emit('b', msg("stream1", 10, {}, undefined, 9))
 			})
 
 			client.socket.once('resent', function() {
@@ -1154,8 +1155,8 @@ describe('StreamrClient', function() {
 			validResendRequests.push({channel:"stream1", resend_from:1, resend_to:9})
 
 			client.socket.once('subscribed', function() {
-				client.socket.emit('b', msg("stream1",0))
-				client.socket.emit('b', msg("stream1",10))
+				client.socket.emit('b', msg("stream1", 0))
+				client.socket.emit('b', msg("stream1", 10, {}, undefined, 9))
 			})
 
 			client.socket.once('resend', function(request) {
@@ -1175,8 +1176,8 @@ describe('StreamrClient', function() {
 			validResendRequests.push({channel:"stream1", resend_from:1, resend_to:1})
 
 			client.socket.once('subscribed', function() {
-				client.socket.emit('b', msg("stream1",0))
-				client.socket.emit('b', msg("stream1",2))
+				client.socket.emit('b', msg("stream1", 0))
+				client.socket.emit('b', msg("stream1", 2, {}, undefined, 1))
 			})
 
 			client.socket.on('resend', function(request) {
@@ -1196,9 +1197,9 @@ describe('StreamrClient', function() {
 			validResendRequests.push({channel:"stream1", resend_from:1, resend_to:9})
 
 			client.socket.once('subscribed', function() {
-				client.socket.emit('b', msg("stream1",0))
-				client.socket.emit('b', msg("stream1",10))
-				client.socket.emit('b', msg("stream1",11))
+				client.socket.emit('b', msg("stream1", 0))
+				client.socket.emit('b', msg("stream1", 10, {}, undefined, 9))
+				client.socket.emit('b', msg("stream1", 11, {}, undefined, 10))
 			})
 
 			var counter = 0
@@ -1223,7 +1224,7 @@ describe('StreamrClient', function() {
 
 			client.socket.once('subscribed', function() {
 				client.socket.emit('b', msg("stream1", 0, {counter: 0}))
-				client.socket.emit('b', msg("stream1",10, {counter: 10}))
+				client.socket.emit('b', msg("stream1",10, {counter: 10}, undefined, 9))
 				client.socket.emit('b', msg("stream1",11, {counter: 11}))
 				client.socket.emit('b', msg("stream1",12, {counter: 12}))
 			})
@@ -1240,16 +1241,16 @@ describe('StreamrClient', function() {
 
 			client.socket.once('subscribed', function() {
 				client.socket.emit('b', msg("stream1", 0, {counter: 0}))
-				client.socket.emit('b', msg("stream1", 10, {counter: 10}))
-				client.socket.emit('b', msg("stream1", 11, {counter: 11}))
-				client.socket.emit('b', msg("stream1", 11, {counter: 11})) // bogus message
-				client.socket.emit('b', msg("stream1", 5, {counter: 5})) // bogus message
-				client.socket.emit('b', msg("stream1", 12, {counter: 12}))
+				client.socket.emit('b', msg("stream1", 10, {counter: 10}, undefined, 9))
+				client.socket.emit('b', msg("stream1", 11, {counter: 11}, undefined, 10))
+				client.socket.emit('b', msg("stream1", 11, {counter: 11}, undefined, 10)) // bogus message
+				client.socket.emit('b', msg("stream1", 5, {counter: 5}, undefined, 4)) // bogus message
+				client.socket.emit('b', msg("stream1", 12, {counter: 12}, undefined, 11))
 			})
 		})
 		
 		it('should do another resend request if there are gaps in the queue', function(done) {
-			var subscription = client.subscribe("stream1", function(message, streamId, timetamp, counter) {
+			client.subscribe("stream1", function(message, streamId, timetamp, counter) {
 				if (counter===12)
 					done()
 			})
@@ -1260,8 +1261,8 @@ describe('StreamrClient', function() {
 			
 			client.socket.once('subscribed', function() {
 				client.socket.emit('b', msg("stream1", 0, {counter: 0}))
-				client.socket.emit('b', msg("stream1", 10, {counter: 10}))
-				client.socket.emit('b', msg("stream1", 12, {counter: 12}))
+				client.socket.emit('b', msg("stream1", 10, {counter: 10}, undefined, 9))
+				client.socket.emit('b', msg("stream1", 12, {counter: 12}, undefined, 11))
 			})
 		})
 		
@@ -1276,23 +1277,23 @@ describe('StreamrClient', function() {
 
 			client.socket.on('subscribed', function(response) {
 				if (response.channel==='stream1') {
-					client.socket.emit('b', msg("stream1",0))
-					client.socket.emit('b', msg("stream1",1))
-					client.socket.emit('b', msg("stream1",2))
+					client.socket.emit('b', msg("stream1", 0))
+					client.socket.emit('b', msg("stream1", 1, {}, undefined, 0))
+					client.socket.emit('b', msg("stream1", 2, {}, undefined, 1))
 				}
 				else if (response.channel==='stream2') {
-					client.socket.emit('b', msg("stream2",0))
+					client.socket.emit('b', msg("stream2", 0))
 				}
 				else if (response.channel==='stream3') {
-					client.socket.emit('b', msg("stream3",0))
+					client.socket.emit('b', msg("stream3", 0))
+                    client.socket.emit('disconnect')
 				}
-				client.socket.emit('disconnect')
 			})
 
 			client.socket.once('disconnect', function() {
 				client.connect()
 
-				client.socket.on('subscribe', function(request) {
+				socket.on('subscribe', function(request) {
 					if (request.channel==='stream1' && request.from !== 3)
 						throw "Wrong starting index for "+request.channel+": "+request.from
 					else if (request.channel==='stream2' && request.from !== 1)
@@ -1307,7 +1308,6 @@ describe('StreamrClient', function() {
 				})
 			})
 		})
-
 
 	})
 

@@ -186,9 +186,9 @@
 		var content = getMessageField('content', msg)
 		var timestamp = getMessageField('timestamp', msg)
 		var offset = getMessageField('offset', msg)
-		var prevOffset = getMessageField('prevOffset', msg)
+		var previousOffset = getMessageField('previousOffset', msg)
 
-		if (prevOffset == null) {
+		if (previousOffset == null) {
 			debug("handleMessage: prevOffset is null, gap detection is impossible! message: %o", msg)
 		}
 
@@ -196,12 +196,12 @@
 		debug("handleMessage: lastReceivedOffset %d", this.lastReceivedOffset)
 
 		// Check for gaps
-		if (prevOffset != null && this.lastReceivedOffset != null && prevOffset > this.lastReceivedOffset) {
+		if (previousOffset != null && this.lastReceivedOffset != null && previousOffset > this.lastReceivedOffset) {
 			this.queue.push(msg)
 
 			if (!this.resending) {
 				var from = this.lastReceivedOffset + 1
-				var to = prevOffset
+				var to = previousOffset
 				debug("Gap detected, requesting resend for stream %s from %d to %d", this.streamId, from, to)
 				this.trigger('gap', from, to)
 			}
@@ -225,20 +225,10 @@
 			debug("Attempting to process %d queued messages for stream %s", this.queue.length, this.streamId)
 
 			var i
-			for (i=0;i<this.queue.length;i++) {
+			var length = this.queue.length
+			for (i=0; i<length; i++) {
 				var msg = this.queue[i]
 				this.handleMessage(msg)
-			}
-
-			// All messages in queue were processed
-			if (i===this.queue.length) {
-				this.queue = []
-			}
-			// Some messages could not be processed, so compact the queue
-			// and request another resend for the gap!
-			else {
-				this.queue.splice(0, i)
-				this.trigger('gap', this.lastReceivedOffset + 1, getMessageField('previousOffset', msg) - 1)
 			}
 		}
 	}
