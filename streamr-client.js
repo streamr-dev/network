@@ -192,11 +192,12 @@
 			debug("handleMessage: prevOffset is null, gap detection is impossible! message: %o", msg)
 		}
 
-		debug("handleMessage: %o", msg)
-		debug("handleMessage: lastReceivedOffset %d", this.lastReceivedOffset)
+		// Gap check
+		if (previousOffset != null && 					// previousOffset is required to check for gaps
+			this.lastReceivedOffset != null &&  		// and we need to know what msg was the previous one
+			previousOffset > this.lastReceivedOffset &&	// previous message had larger offset than our previous msg => gap!
+			!(this.options.resend_last != null && this.resending)) { // don't mind gaps when resending resend_last
 
-		// Check for gaps
-		if (previousOffset != null && this.lastReceivedOffset != null && previousOffset > this.lastReceivedOffset) {
 			this.queue.push(msg)
 
 			if (!this.resending) {
@@ -235,6 +236,34 @@
 
 	Subscription.prototype.hasResendOptions = function() {
 		return this.options.resend_all===true || this.options.resend_from >= 0 || this.options.resend_from_time >= 0 || this.options.resend_last > 0
+	}
+
+	/**
+	 * Resend needs can change if messages have already been received.
+	 * This function always returns the effective resend options:
+	 *
+	 * If messages have been received:
+	 * - resend_all becomes resend_from
+	 * - resend_from becomes resend_from the latest received message
+	 * - resend_from_time becomes resend_from the latest received message
+	 * - resend_last stays the same
+     */
+	Subscription.prototype.getEffectiveResendOptions = function() {
+		if (this.hasReceivedMessages() && this.hasResendOptions()) {
+			if (this.options.resend_all || this.options.resend_from || this.options.resend_from_time) {
+				return { resend_from: this.lastReceivedOffset + 1 }
+			}
+			else if (this.options.resend_last) {
+				return this.options
+			}
+		}
+		else {
+			return this.options
+		}
+	}
+
+	Subscription.prototype.hasReceivedMessages = function() {
+		return this.lastReceivedOffset != null
 	}
 
 	Subscription.prototype.isSubscribed = function() {
@@ -585,7 +614,7 @@
 
 	StreamrClient.prototype._requestResend = function(sub, resendOptions) {
 		// If overriding resendOptions are given, need to remove resend options in sub.options
-		var options = extend({}, sub.options)
+		var options = extend({}, sub.getEffectiveResendOptions())
 		if (resendOptions) {
 			Object.keys(options).forEach(function (key) {
 				if (key.match(/resend_.*/)) {

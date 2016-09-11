@@ -1,6 +1,7 @@
 var assert = require('assert'),
 	events = require('eventemitter2'),
-	mockery = require('mockery')
+	mockery = require('mockery'),
+	sinon = require('sinon')
 
 var STREAM_KEY = "_S"
 var COUNTER_KEY = "_C"
@@ -46,7 +47,7 @@ describe('StreamrClient', function() {
                 streamId,
                 Date.now(), // timestamp
                 offset,
-                undefined, // previousOffset
+                forcePreviousOffset, // previousOffset
                 27, // contentType (JSON)
                 content]
 
@@ -1033,15 +1034,36 @@ describe('StreamrClient', function() {
 				checkResendRequest(request)
 
 				async(function() {
-					if (request.resend_from!=null && request.resend_to!=null)
+					console.log("Mock resend handler handling request: %o", request)
+					if (request.resend_all) {
+						if (resendLimits[request.channel]===undefined) {
+							client.socket.emit('no_resend', {channel: request.channel, sub: request.sub})
+						}
+						else {
+							resend(request.channel, request.sub, resendLimits[request.channel].from, resendLimits[request.channel].to)
+						}
+					}
+					else if (request.resend_last) {
+						if (resendLimits[request.channel] === undefined) {
+							throw "Testing resend_last needs resendLimits.channel.to"
+						}
+						resend(request.channel, request.sub, resendLimits[request.channel].to - (request.resend_last - 1), resendLimits[request.channel].to)
+					}
+					else if (request.resend_from!=null && request.resend_to!=null) {
 						resend(request.channel, request.sub, request.resend_from, request.resend_to)
+					}
+					else if (request.resend_from!=null) {
+						if (resendLimits[request.channel] === undefined) {
+							throw "Testing resend_from needs resendLimits.channel.to"
+						}
+						resend(request.channel, request.sub, request.resend_from, resendLimits[request.channel].to)
+					}
 					else if (request.resend_from_time!=null) {
 						resend(request.channel, request.sub, 99, 100)
 					}
-					else if (resendLimits[request.channel]===undefined)
-						client.socket.emit('no_resend', {channel: request.channel, sub: request.sub})
-					else
-						resend(request.channel, request.sub, resendLimits[request.channel].from, resendLimits[request.channel].to)
+					else {
+						throw "Unknown kind of resend request: "+JSON.stringify(request)
+					}
 				})
 			}
 			socket.on('resend', socket.defaultResendHandler)
@@ -1265,46 +1287,139 @@ describe('StreamrClient', function() {
 				client.socket.emit('b', msg("stream1", 12, {counter: 12}, undefined, 11))
 			})
 		})
-		
-		it('should re-request from the latest counter on reconnect', function(done) {
-			var sub1 = client.subscribe("stream1", function(message) {}, {resend_all:true})
-			var sub2 = client.subscribe("stream2", function(message) {}, {resend_from:0})
-			var sub3 = client.subscribe("stream3", function(message) {}) // no resend for stream3
-			client.connect()
 
-			validResendRequests.push({channel:"stream1", resend_all:true})
-			validResendRequests.push({channel:"stream2", resend_from:0})
-
-			client.socket.on('subscribed', function(response) {
-				if (response.channel==='stream1') {
-					client.socket.emit('b', msg("stream1", 0))
-					client.socket.emit('b', msg("stream1", 1, {}, undefined, 0))
-					client.socket.emit('b', msg("stream1", 2, {}, undefined, 1))
-				}
-				else if (response.channel==='stream2') {
-					client.socket.emit('b', msg("stream2", 0))
-				}
-				else if (response.channel==='stream3') {
-					client.socket.emit('b', msg("stream3", 0))
-                    client.socket.emit('disconnect')
-				}
+		describe('on reconnect', function() {
+			var msgHandler
+			beforeEach(function() {
+				msgHandler = sinon.spy()
 			})
 
-			client.socket.once('disconnect', function() {
+			it('no resend', function(done) {
+				client.subscribe("stream", msgHandler)
 				client.connect()
 
-				socket.on('subscribe', function(request) {
-					if (request.channel==='stream1' && request.from !== 3)
-						throw "Wrong starting index for "+request.channel+": "+request.from
-					else if (request.channel==='stream2' && request.from !== 1)
-						throw "Wrong starting index for "+request.channel+": "+request.from
-					else if (request.channel==='stream3' && request.from !== undefined)
-						throw "Should not have specified the from field for stream3: "+request.from
+				client.socket.on('subscribed', function(response) {
+					client.socket.emit('b', msg("stream", 0))
+					client.socket.emit('disconnect')
 				})
 
-				client.socket.on('subscribed', function(response) {
-					if (sub1.isSubscribed() && sub2.isSubscribed() && sub3.isSubscribed())
+				client.socket.once('disconnect', function() {
+					client.connect()
+
+					socket.on('resend', function() {
+						throw "Should not have made a resend request!"
+					})
+
+					socket.on('subscribed', function() {
+						assert.equal(msgHandler.callCount, 1)
 						done()
+					})
+				})
+			})
+
+			it('resend_all', function(done) {
+				validResendRequests.push({channel:"stream", resend_all: true})
+				resendLimits["stream"] = {
+					from: 0,
+					to: 5
+				}
+
+				client.subscribe("stream", msgHandler, { resend_all: true })
+				client.connect()
+
+				client.socket.on('subscribed', function(response) {
+					client.socket.emit('disconnect')
+				})
+
+				client.socket.once('disconnect', function() {
+					client.connect()
+
+					socket.on('resend', function(request) {
+						assert.equal(request.resend_from, 6)
+						assert.equal(request.resend_to, undefined)
+						done()
+					})
+				})
+			})
+
+			it('resend_from', function(done) {
+				validResendRequests.push({channel:"stream", resend_from: 3})
+				resendLimits["stream"] = {
+					from: 0,
+					to: 5
+				}
+
+				client.subscribe("stream", msgHandler, { resend_from: 3 })
+				client.connect()
+
+				client.socket.on('subscribed', function(response) {
+					client.socket.emit('disconnect')
+				})
+
+				client.socket.once('disconnect', function() {
+					client.connect()
+
+					socket.on('resend', function(request) {
+						assert.equal(request.resend_from, 6)
+						assert.equal(request.resend_to, undefined)
+						done()
+					})
+				})
+			})
+
+			it('resend_last', function(done) {
+				validResendRequests.push({channel:"stream", resend_last: 1})
+				resendLimits["stream"] = {
+					from: 0,
+					to: 5
+				}
+
+				client.subscribe("stream", msgHandler, { resend_last: 1 })
+				client.connect()
+
+				client.socket.on('subscribed', function(response) {
+					client.socket.emit('disconnect')
+				})
+
+				client.socket.once('disconnect', function() {
+					client.connect()
+
+					socket.on('resend', function(request) {
+						assert.equal(request.resend_last, 1)
+						done()
+					})
+				})
+			})
+
+			it('resend_last should accept a gap on reconnect', function(done) {
+				validResendRequests.push({channel:"stream", resend_last: 1})
+				resendLimits["stream"] = {
+					from: 0,
+					to: 0
+				}
+
+				client.subscribe("stream", msgHandler, { resend_last: 1 })
+				client.connect()
+
+				client.socket.on('subscribed', function(response) {
+					socket.off('resend', socket.defaultResendHandler)
+					client.socket.emit('disconnect')
+				})
+
+				client.socket.once('disconnect', function() {
+					client.connect()
+
+					socket.on('resend', function(request) {
+						assert.equal(request.resend_last, 1)
+						client.socket.emit('resending', {
+							channel: request.channel,
+							sub: request.sub
+						})
+						client.socket.emit('u', msg(request.channel, 10, {}, request.sub, 9))
+						client.socket.emit('resent', {channel: request.channel, sub: request.sub})
+						assert.equal(msgHandler.callCount, 2)
+						done()
+					})
 				})
 			})
 		})
