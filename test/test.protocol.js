@@ -10,6 +10,7 @@ describe('protocol', function () {
 	var streamId = "streamId"
 	var msg = {foo: "bar"}
 	var timestamp = Date.now()
+	var ttl = 100
 
 	describe('version 28', function() {
 
@@ -18,12 +19,13 @@ describe('protocol', function () {
 		})
 
 		it('encode/decode', function() {
-			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
+			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg, ttl)
 			var result = protocol.decode(buf, offset, previousOffset)
 
 			assert.equal(protocol.get('version', result), version)
 			assert.equal(protocol.get('streamId', result), streamId)
 			assert.equal(protocol.get('timestamp', result), timestamp)
+			assert.equal(protocol.get('ttl', result), ttl)
 			assert.equal(protocol.get('offset', result), offset)
 			assert.equal(protocol.get('previousOffset', result), previousOffset)
 			assert.equal(protocol.get('contentType', result), protocol.CONTENT_TYPE_JSON)
@@ -52,6 +54,7 @@ describe('protocol', function () {
 			assert.equal(protocol.get('previousOffset', result), previousOffset)
 			assert.equal(protocol.get('contentType', result), protocol.CONTENT_TYPE_JSON)
 			assert.deepEqual(protocol.get('content', result), msg)
+			assert.equal(protocol.get('ttl', result), ttl)
 		})
 
 		it('encode/decode redis extension with undefined previousOffset', function() {
