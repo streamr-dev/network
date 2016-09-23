@@ -19,7 +19,7 @@ describe('protocol', function () {
 		})
 
 		it('encode/decode', function() {
-			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg, ttl)
+			var buf = protocol.encode(version, timestamp, ttl, streamId, protocol.CONTENT_TYPE_JSON, msg)
 			var result = protocol.decode(buf, offset, previousOffset)
 
 			assert.equal(protocol.get('version', result), version)
@@ -33,17 +33,17 @@ describe('protocol', function () {
 		})
 
 		it('decodeStreamId', function() {
-			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
+			var buf = protocol.encode(version, timestamp, ttl, streamId, protocol.CONTENT_TYPE_JSON, msg)
 			assert.equal(protocol.decodeStreamId(buf), streamId)
 		})
 
 		it('decodeTimestamp', function() {
-			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
+			var buf = protocol.encode(version, timestamp, ttl, streamId, protocol.CONTENT_TYPE_JSON, msg)
 			assert.equal(protocol.decodeTimestamp(buf), timestamp)
 		})
 
 		it('encode/decode redis extension', function() {
-			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
+			var buf = protocol.encode(version, timestamp, ttl, streamId, protocol.CONTENT_TYPE_JSON, msg)
 			var redisBuf = protocol.encodeRedisSuffix(buf, 0, offset, previousOffset, partition)
 			var result = protocol.decodeRedis(redisBuf)
 
@@ -60,7 +60,7 @@ describe('protocol', function () {
 		it('encode/decode redis extension with undefined previousOffset', function() {
 			previousOffset = undefined
 
-			var buf = protocol.encode(version, timestamp, streamId, protocol.CONTENT_TYPE_JSON, msg)
+			var buf = protocol.encode(version, timestamp, ttl, streamId, protocol.CONTENT_TYPE_JSON, msg)
 			var redisBuf = protocol.encodeRedisSuffix(buf, 0, offset, previousOffset, partition)
 			var result = protocol.decodeRedis(redisBuf)
 
