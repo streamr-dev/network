@@ -48,7 +48,7 @@ describe('socketio-server', function () {
 	beforeEach(function() {
 		realtimeAdapter = new events.EventEmitter
 		realtimeAdapter.subscribe = sinon.stub()
-		realtimeAdapter.subscribe.callsArgAsync(1)
+		realtimeAdapter.subscribe.callsArgAsync(2)
 		realtimeAdapter.unsubscribe = sinon.stub()
 
 		historicalAdapter = {
@@ -127,7 +127,7 @@ describe('socketio-server', function () {
 		})
 
 		it('should emit a resending event before starting the resend', function(done) {
-			historicalAdapter.getAll.callsArgAsync(1);
+			historicalAdapter.getAll.callsArgAsync(2);
 
 			socket.on('resending', function(data) {
 				assert.equal(data.channel, "c")
@@ -141,7 +141,7 @@ describe('socketio-server', function () {
 
 		it('should add the subscription id to messages', function(done) {
 			var originalMsg = {}
-			historicalAdapter.getAll.callsArgWithAsync(1, originalMsg);
+			historicalAdapter.getAll.callsArgWithAsync(2, originalMsg);
 
 			socket.on('u', function(msg) {
 				assert.equal(msg.m, originalMsg)
@@ -154,7 +154,7 @@ describe('socketio-server', function () {
 		})
 
 		it('should emit a resent event when resend is complete', function(done) {
-			historicalAdapter.getAll = function(channel, handler, finished) {
+			historicalAdapter.getAll = function(streamId, streamPartition, handler, finished) {
 				handler([])
 				finished()
 			}
@@ -170,7 +170,7 @@ describe('socketio-server', function () {
 		})
 
 		it('should emit no_resend if there is nothing to resend', function(done) {
-			historicalAdapter.getAll.callsArgAsync(2);
+			historicalAdapter.getAll.callsArgAsync(3);
 
 			socket.on('no_resend', function(data) {
 				assert.equal(data.channel, "c")
@@ -235,9 +235,9 @@ describe('socketio-server', function () {
 		it('should emit redis messages to sockets in that channel', function (done) {
 			var originalMsg = {}
 
-			// Expecting io.sockets.in(channel).emit('ui', msg);
+			// Expecting io.sockets.in(stream-partition).emit('b', msg);
 			ioMock.sockets.in = function(channel) {
-				assert.equal(channel, "c")
+				assert.equal(channel, "c-0")
 				return {
 					emit: function(event, msg) {
 						assert.equal(event, 'b')
@@ -248,17 +248,23 @@ describe('socketio-server', function () {
 			}
 			ioMock.emit('connection', socket)
 			socket.emit('subscribe', {channel: "c"})
-			realtimeAdapter.emit('message', originalMsg, "c")
+			realtimeAdapter.emit('message', originalMsg, "c", 0)
 		});
 
 	})
 
 	describe('subscribe', function() {
 
-		it('should create the Stream object', function() {
+		it('should create the Stream object with default partition', function() {
 			ioMock.emit('connection', socket)
 			socket.emit('subscribe', {channel: "c"})
-			assert(server.streams.c !== undefined)
+			assert(server.getStreamObject("c", 0) !== undefined)
+		})
+
+		it('should create the Stream object with given partition', function() {
+			ioMock.emit('connection', socket)
+			socket.emit('subscribe', {channel: "c", partition: 1})
+			assert(server.getStreamObject("c", 1) !== undefined)
 		})
 
 		it('should subscribe the realtime adapter', function() {
@@ -292,7 +298,7 @@ describe('socketio-server', function () {
 
 		it('should join the room', function(done) {
 			socket.on('subscribed', function(data) {
-				assert.equal(Object.keys(ioMock.sockets.adapter.rooms['c']).length, 1)
+				assert.equal(Object.keys(ioMock.sockets.adapter.rooms['c-0']).length, 1)
 				done()
 			})
 
@@ -388,17 +394,46 @@ describe('socketio-server', function () {
 	})
 
 	describe('createStreamObject', function() {
-		it('should add the Stream to the lookup', function() {
-			var stream = server.createStreamObject('streamId')
-			assert(server.streams.streamId === stream)
-		})
-
-		it('should create the Stream with correct values', function() {
-			var stream = server.createStreamObject('streamId')
+		it('should return an object with the correct id, partition and state', function() {
+			var stream = server.createStreamObject('streamId', 0)
 			assert.equal(stream.id, 'streamId')
+			assert.equal(stream.partition, 0)
 			assert.equal(stream.state, 'init')
 		})
 
+		it('should return an object that can be looked up', function() {
+			var stream = server.createStreamObject('streamId', 0)
+			assert.equal(server.getStreamObject('streamId', 0), stream)
+		})
+
 	})
+
+	describe('getStreamObject', function() {
+		var stream
+		beforeEach(function() {
+			stream = server.createStreamObject('streamId', 0)
+		})
+
+		it('must return the requested stream', function() {
+			assert.equal(server.getStreamObject('streamId', 0), stream)
+		})
+
+		it('must return undefined if the stream does not exist', function() {
+			assert.equal(server.getStreamObject('streamId', 1), undefined)
+		})
+	})
+
+	describe('deleteStreamObject', function() {
+		var stream
+		beforeEach(function() {
+			stream = server.createStreamObject('streamId', 0)
+		})
+
+		it('must delete the requested stream', function() {
+			server.deleteStreamObject('streamId', 0)
+			assert.equal(server.getStreamObject('streamId', 0), undefined)
+		})
+	})
+
 
 });
