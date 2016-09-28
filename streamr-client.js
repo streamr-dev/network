@@ -83,7 +83,7 @@
 	};
 
 	var versionFields = {
-		'28': ['version', 'streamId', 'timestamp', 'offset', 'previousOffset', 'contentType', 'content']
+		'28': ['version', 'streamId', 'streamPartition', 'timestamp', 'ttl', 'offset', 'previousOffset', 'contentType', 'content']
 	}
 
 	function getMessageField(field, msg) {
