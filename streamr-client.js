@@ -414,10 +414,8 @@
 		this.connecting = true
 		this.disconnecting = false
 
-		this.socket = this.io(this.options.server, {
-			forceNew: true,
-			transports: this.options.transports
-		})
+		var options = extend({}, this.options, {forceNew: true})
+		this.socket = this.io(this.options.server, options)
 
 		// Broadcast messages to all subs listening on stream
 		this.socket.on('b', function(msg) {
