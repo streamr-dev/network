@@ -275,6 +275,7 @@
 		this.options = {
 			// The server to connect to
 			server: "https://data.streamr.com",
+			path: "/api/v1/socket.io",
 			// Automatically connect on first subscribe
 			autoConnect: true,
 			// Automatically disconnect on last unsubscribe
