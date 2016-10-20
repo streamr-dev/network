@@ -1,6 +1,8 @@
 var assert = require('assert'),
 	protocol = require('../lib/protocol')
 
+const BufferMaker = require('buffermaker')
+
 describe('protocol', function () {
 
 	var version
@@ -31,6 +33,15 @@ describe('protocol', function () {
 			assert.equal(protocol.get('offset', result), offset)
 			assert.equal(protocol.get('previousOffset', result), previousOffset)
 			assert.equal(protocol.get('contentType', result), protocol.CONTENT_TYPE_JSON)
+			assert.deepEqual(protocol.get('content', result), msg)
+		})
+
+		it('encode/decode with content already a buffer', function() {
+			var msgBuf = new BufferMaker().string(JSON.stringify(msg)).make()
+
+			var buf = protocol.encode(version, timestamp, ttl, streamId, streamPartition, protocol.CONTENT_TYPE_JSON, msgBuf)
+			var result = protocol.decode(buf, offset, previousOffset)
+
 			assert.deepEqual(protocol.get('content', result), msg)
 		})
 
