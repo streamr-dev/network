@@ -16,11 +16,10 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "debug": "*",
-    "sinon": "^1.17.5",
-    "socket.io-client": "1.3.7"
+    "debug": "*"
   },
   "devDependencies": {
+    "sinon": "^1.17.5",
     "mocha": "*",
     "eventemitter2": "*",
     "mockery": "*"

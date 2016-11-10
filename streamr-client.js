@@ -2,17 +2,14 @@
 
 (function() {
 
-	var io
 	var debug
 	if (typeof window !== 'undefined') {
-		io = window.io
 		debug = (window.debug ? window.debug('StreamrClient') : function() {
 			if (window.consoleLoggingEnabled)
 				console.log.apply(console, arguments)
 		})
 	}
 	else {
-		io = require('socket.io-client')
 		debug = require('debug')('StreamrClient')
 	}
 
@@ -76,29 +73,151 @@
 		}
 	}
 
+	var Protocol = {
+
+		CONTENT_TYPE_JSON: 27,
+
+		versionFields: {
+			'28': ['version', 'streamId', 'streamPartition', 'timestamp', 'ttl', 'offset', 'previousOffset', 'contentType', 'content']
+		},
+
+		browserMessageTypes: ['b', 'u', 'subscribed', 'unsubscribed', 'resending', 'resent', 'no_resend'],
+
+		decodeBrowserWrapper: function(rawMsg) {
+			var jsonMsg = JSON.parse(rawMsg)
+			var version = jsonMsg[0]
+			if (version !== 0) {
+				throw "Unknown message version: "+version
+			}
+
+			return {
+				type: this.browserMessageTypes[jsonMsg[1]],
+				subId: jsonMsg[2],
+				msg: jsonMsg[3]
+			}
+		},
+
+		decodeMessage: function(type, message) {
+			if (typeof message === 'string') {
+				message = JSON.parse(message)
+			}
+
+			// Stream content needs to be decoded further
+			if (type === 'b' || type === 'u') {
+				if (this.versionFields[message[0]] === undefined) {
+					throw "Unsupported version: " + message[0]
+				} else {
+					var result = {}
+					var fields = this.versionFields[message[0]]
+					var contentType
+					for (var i = 0; i < message.length; i++) {
+
+						// Parse content if necessary
+						if (fields[i] === 'content') {
+							if (result.contentType === this.CONTENT_TYPE_JSON) {
+								message[i] = JSON.parse(message[i])
+							} else {
+								throw "Unknown content type: " + result.contentType
+							}
+						}
+
+						result[fields[i]] = message[i]
+					}
+					return result
+				}
+			} else {
+				return message
+			}
+		},
+
+		createSubscribeRequest: function(stream, resendOptions) {
+			var req = {
+				channel: stream
+			}
+			Object.keys(resendOptions).forEach(function(key) {
+				req[key] = resendOptions[key]
+			})
+			return req
+		}
+	}
+
+	/**
+	 * Socket
+	 */
+	function Connection(options) {
+		if (!options.url) {
+			throw "Server is not defined!"
+		}
+		this.options = options
+		this.connected = false
+		this.connecting = false
+		this.disconnecting = false
+
+		if (options.autoConnect) {
+			this.connect()
+		}
+	}
+
+	MicroEvent.mixin(Connection)
+
+	Connection.prototype.connect = function() {
+		var _this = this
+
+		if (!(this.connected || this.connecting)) {
+			this.connecting = true
+			_this.trigger('connecting')
+
+			this.socket = new WebSocket(this.options.url)
+			this.socket.binaryType = 'arraybuffer';
+
+			this.socket.onopen = function() {
+				debug("Connected to ", _this.options.url)
+				_this.connected = true
+				_this.connecting = false
+				_this.trigger('connected')
+			}
+
+			this.socket.onclose = function() {
+				if (!_this.disconnecting) {
+					debug("Connection lost. Attempting to reconnect")
+					setTimeout(function() {
+						_this.connect()
+					}, 2000)
+				} else {
+					_this.disconnecting = false
+				}
+
+				_this.connected = false
+				_this.connecting = false
+				_this.trigger('disconnected')
+			}
+
+			this.socket.onmessage = function(messageEvent) {
+				var decoded = Protocol.decodeBrowserWrapper(messageEvent.data)
+				_this.trigger(decoded.type, Protocol.decodeMessage(decoded.type, decoded.msg), decoded.subId)
+			}
+		}
+	}
+
+	Connection.prototype.disconnect = function() {
+		if (this.socket !== undefined && (connected || connecting)) {
+			this.disconnecting = true
+			this.socket.close()
+		}
+	}
+
+	Connection.prototype.send = function(req) {
+		this.socket.send(JSON.stringify(req))
+	}
+
+	/**
+	 * Subscription
+     */
 	var subId = 0
 	function generateSubscriptionId() {
 		var id = subId++
 		return id.toString()
 	};
-
-	var versionFields = {
-		'28': ['version', 'streamId', 'streamPartition', 'timestamp', 'ttl', 'offset', 'previousOffset', 'contentType', 'content']
-	}
-
-	function getMessageField(field, msg) {
-		if (msg == null || msg[0] == null || versionFields[msg[0]] == null) {
-			return undefined
-		}
-
-		var idx = versionFields[msg[0].toString()].indexOf(field)
-		if (idx >= 0) {
-			return msg[idx]
-		}
-		else {
-			return undefined
-		}
-	}
 
 	function Subscription(streamId, callback, options) {
 		if (!streamId)
@@ -183,10 +302,10 @@
 	MicroEvent.mixin(Subscription)
 
 	Subscription.prototype.handleMessage = function(msg) {
-		var content = getMessageField('content', msg)
-		var timestamp = getMessageField('timestamp', msg)
-		var offset = getMessageField('offset', msg)
-		var previousOffset = getMessageField('previousOffset', msg)
+		var content = msg.content
+		var timestamp = msg.timestamp
+		var offset = msg.offset
+		var previousOffset = msg.previousOffset
 
 		if (previousOffset == null) {
 			debug("handleMessage: prevOffset is null, gap detection is impossible! message: %o", msg)
@@ -196,7 +315,7 @@
 		if (previousOffset != null && 					// previousOffset is required to check for gaps
 			this.lastReceivedOffset != null &&  		// and we need to know what msg was the previous one
 			previousOffset > this.lastReceivedOffset &&	// previous message had larger offset than our previous msg => gap!
-			!(this.options.resend_last != null && this.resending)) { // don't mind gaps when resending resend_last
+			!(this.options.resend_last > 0 && this.resending)) { // don't mind gaps when resending resend_last
 
 			this.queue.push(msg)
 
@@ -231,6 +350,8 @@
 				var msg = this.queue[i]
 				this.handleMessage(msg)
 			}
+
+			this.queue = []
 		}
 	}
 
@@ -274,27 +395,20 @@
 		// Default options
 		this.options = {
 			// The server to connect to
-			server: "https://data.streamr.com",
-			path: "/api/v1/socket.io",
+			url: "wss://data.streamr.com/api/v1/ws",
+			path: "/api/v1/ws",
 			// Automatically connect on first subscribe
 			autoConnect: true,
 			// Automatically disconnect on last unsubscribe
-			autoDisconnect: true,
-			// Allow client socket library to choose appropriate transport
-			transports: null
+			autoDisconnect: true
 		}
 		this.subsByStream = {}
 		this.subById = {}
 
-		this.io = io
 		this.socket = null
 		this.connected = false
 
-		// Can give server URL as parameter instead of options object
-		if (typeof options === "string")
-			this.options.server = options
-		else
-			extend(this.options, options || {})
+		extend(this.options, options || {})
 	}
 
 	MicroEvent.mixin(StreamrClient)
@@ -411,18 +525,17 @@
 			return
 		}
 
-		debug("Connecting to %s", this.options.server)
+		debug("Connecting to %s", this.options.url)
 		this.connecting = true
 		this.disconnecting = false
 
-		var options = extend({}, this.options, {forceNew: true})
-		this.socket = this.io(this.options.server, options)
+		this.socket = new Connection(this.options)
 
 		// Broadcast messages to all subs listening on stream
-		this.socket.on('b', function(msg) {
+		this.socket.bind('b', function(msg) {
 			// Notify the Subscriptions for this stream. If this is not the message each individual Subscription
 			// is expecting, they will either ignore it or request resend via gap event.
-			var streamId = getMessageField('streamId', msg)
+			var streamId = msg.streamId
 			var subs = _this.subsByStream[streamId]
 			if (subs) {
 				for (var i=0;i<subs.length;i++)
@@ -434,19 +547,16 @@
 		})
 
 		// Unicast messages to a specific subscription only
-		this.socket.on('u', function(wrapper) {
-			var msg = wrapper.m
-			var sub = wrapper.sub
-
+		this.socket.bind('u', function(msg, sub) {
 			if (sub !== undefined && _this.subById[sub] !== undefined) {
 				_this.subById[sub].handleMessage(msg)
 			}
 			else {
-				debug('WARN: subscription not found for stream: %s, sub: %s', getMessageField('streamId', msg), sub)
+				debug('WARN: subscription not found for stream: %s, sub: %s', msg.streamId, sub)
 			}
 		})
 
-		this.socket.on('subscribed', function(response) {
+		this.socket.bind('subscribed', function(response) {
 			if (response.error) {
 				_this.handleError("Error subscribing to "+response.channel+": "+response.error)
 			}
@@ -465,7 +575,7 @@
 			}
 		})
 
-		this.socket.on('unsubscribed', function(response) {
+		this.socket.bind('unsubscribed', function(response) {
 			debug("Client unsubscribed: %o", response)
 
 			if (_this.subsByStream[response.channel]) {
@@ -481,22 +591,22 @@
 		})
 
 		// Route resending state messages to corresponding Subscriptions
-		this.socket.on('resending', function(response) {
+		this.socket.bind('resending', function(response) {
 			_this.subById[response.sub].trigger('resending', response)
 		})
 
-		this.socket.on('no_resend', function(response) {
+		this.socket.bind('no_resend', function(response) {
 			_this.subById[response.sub].trigger('no_resend', response)
 		})
 
-		this.socket.on('resent', function(response) {
+		this.socket.bind('resent', function(response) {
 			if (_this.subById[response.sub])
 				_this.subById[response.sub].trigger('resent', response)
 			else debug('resent: Subscription %d is gone already', response.sub)
 		})
 
 		// On connect/reconnect, send pending subscription requests
-		this.socket.on('connect', function() {
+		this.socket.bind('connected', function() {
 			debug("Connected!")
 			_this.connected = true
 			_this.connecting = false
@@ -513,7 +623,7 @@
 			})
 		})
 
-		this.socket.on('disconnect', function() {
+		this.socket.bind('disconnected', function() {
 			debug("Disconnected.")
 			_this.connected = false
 			_this.connecting = false
@@ -591,10 +701,10 @@
 
 		// If this is the first subscription for this stream, send a subscription request to the server
 		if (!subs._subscribing && subscribedSubs.length === 0) {
-			var req = extend({}, sub.options, {channel: sub.streamId})
+			var req = extend({}, sub.options, {type: 'subscribe', channel: sub.streamId})
 			debug("_requestSubscribe: subscribing client: %o", req)
 			subs._subscribing = true
-			_this.socket.emit('subscribe', req)
+			_this.socket.send(req)
 		}
 		// If there already is a subscribed subscription for this stream, this new one will just join it immediately
 		else if (subscribedSubs.length > 0) {
@@ -608,7 +718,10 @@
 
 	StreamrClient.prototype._requestUnsubscribe = function(streamId) {
 		debug("Client unsubscribing stream %o", streamId)
-		this.socket.emit('unsubscribe', {channel: streamId})
+		this.socket.send({
+			type: 'unsubscribe',
+			channel: streamId
+		})
 	}
 
 	StreamrClient.prototype._requestResend = function(sub, resendOptions) {
@@ -624,9 +737,9 @@
 
 		sub.resending = true
 
-		var request = extend({}, options, resendOptions, {channel: sub.streamId, sub: sub.id})
+		var request = extend({}, options, resendOptions, {type: 'resend', channel: sub.streamId, sub: sub.id})
 		debug("_requestResend: %o", request)
-		this.socket.emit('resend', request)
+		this.socket.send(request)
 	}
 
 	StreamrClient.prototype.handleError = function(msg) {
