@@ -1,7 +1,6 @@
 <html>
 <head>
 	<script type="text/javascript" src="https://code.jquery.com/jquery-1.11.2.min.js"></script>
-	<script type="text/javascript" src="node_modules/socket.io-client/socket.io.js"></script>
 	<script type="text/javascript" src="../streamr-client/streamr-client.js"></script>
 
 	<script type="text/javascript">
@@ -14,9 +13,9 @@
 
 			// "XvGvByswSCe0AvEFM9Z8LA", canvas topic
 			// "t3J6bB2SRWmnnJmvm4-anQ", table topic
-			// "7wa7APtlTq6EC5iTCBy6dw", hsl topic
+			// "YpTAPDbvSAmj-iCUYz-dxA", hsl topic
 
-			var canvasSub = client.subscribe(
+/*			var canvasSub = client.subscribe(
 					"XvGvByswSCe0AvEFM9Z8LA",
 					function(message) {
 						counter++
@@ -32,22 +31,22 @@
 						$el.html(counter)
 					},
 					{resend_last: 0}
-			)
+			)*/
 
-
-/*			var hslSub = client.subscribe(
-				"7wa7APtlTq6EC5iTCBy6dw",
+			var hslSub = client.subscribe(
+				"YpTAPDbvSAmj-iCUYz-dxA",
 				function(message) {
 					counter++
 					$el.html(counter)
 				},
 				{resend_last: 0}
-			)*/
+			)
 
 		}
 
 		$(document).ready(function() {
-			client = new StreamrClient("http://localhost:8889")
+			window.consoleLoggingEnabled = true
+			client = new StreamrClient({url: "ws://localhost:8889/api/v1/ws"})
 
 			new SubCounter($("#sub1-count"), client, 0)
 			//new SubCounter($("#sub2-count"), client, 100)
