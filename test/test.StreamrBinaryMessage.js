@@ -1,6 +1,7 @@
-var assert = require('assert')
+const assert = require('assert')
+const sinon = require('sinon')
 const BufferMaker = require('buffermaker')
-var StreamrBinaryMessage = require('../lib/protocol/StreamrBinaryMessage')
+const StreamrBinaryMessage = require('../lib/protocol/StreamrBinaryMessage')
 
 describe('StreamrBinaryMessage', function () {
 
@@ -35,15 +36,26 @@ describe('StreamrBinaryMessage', function () {
 			})
 
 			it('must not parse the content with skipContentParsing=true', function() {
-				var m = StreamrBinaryMessage.fromBytes(bytes, true)
+				// sinon sandbox removes spies automatically
+				sinon.test(function() {
+					this.spy(JSON, "parse")
+					this.spy(JSON, "stringify")
 
-				assert.equal(m.version, version)
-				assert.equal(m.streamId, streamId)
-				assert.equal(m.streamPartition, streamPartition)
-				assert.equal(m.timestamp, timestamp)
-				assert.equal(m.ttl, ttl)
-				assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
-				assert(Buffer.isBuffer(m.content))
+					var m = StreamrBinaryMessage.fromBytes(bytes, true)
+
+					assert.equal(m.version, version)
+					assert.equal(m.streamId, streamId)
+					assert.equal(m.streamPartition, streamPartition)
+					assert.equal(m.timestamp, timestamp)
+					assert.equal(m.ttl, ttl)
+					assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+					assert(Buffer.isBuffer(m.content))
+
+					// Since the content was passed as a buffer, it should remain as is on toBytes()
+					m.toBytes()
+					assert.equal(JSON.parse.callCount, 0)
+					assert.equal(JSON.parse.callCount, 0)
+				})
 			})
 
 			it('must not fail if content is already a buffer', function() {
