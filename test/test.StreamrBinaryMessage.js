@@ -34,7 +34,7 @@ describe('StreamrBinaryMessage', function () {
 				assert.deepEqual(m.content, msg)
 			})
 
-			it('must not include the content with skipContent=true', function() {
+			it('must not parse the content with skipContentParsing=true', function() {
 				var m = StreamrBinaryMessage.fromBytes(bytes, true)
 
 				assert.equal(m.version, version)
@@ -43,7 +43,7 @@ describe('StreamrBinaryMessage', function () {
 				assert.equal(m.timestamp, timestamp)
 				assert.equal(m.ttl, ttl)
 				assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
-				assert.deepEqual(m.content, undefined)
+				assert(Buffer.isBuffer(m.content))
 			})
 
 			it('must not fail if content is already a buffer', function() {
