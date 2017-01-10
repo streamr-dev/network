@@ -1,4 +1,5 @@
 var assert = require('assert')
+const BufferMaker = require('buffermaker')
 var StreamrBinaryMessage = require('../lib/protocol/StreamrBinaryMessage')
 
 describe('StreamrBinaryMessage', function () {
@@ -19,28 +20,40 @@ describe('StreamrBinaryMessage', function () {
 			bytes = new StreamrBinaryMessage(streamId, streamPartition, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).toBytes()
 		})
 
-		it('toBytes/fromBytes', function() {
-			var m = StreamrBinaryMessage.fromBytes(bytes)
+		describe('toBytes/fromBytes', function() {
 
-			assert.equal(m.version, version)
-			assert.equal(m.streamId, streamId)
-			assert.equal(m.streamPartition, streamPartition)
-			assert.equal(m.timestamp, timestamp)
-			assert.equal(m.ttl, ttl)
-			assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
-			assert.deepEqual(m.content, msg)
-		})
+			it('must not alter the field content', function() {
+				var m = StreamrBinaryMessage.fromBytes(bytes)
 
-		it('toBytes/fromBytes with skipPayload=true', function() {
-			var m = StreamrBinaryMessage.fromBytes(bytes, true)
+				assert.equal(m.version, version)
+				assert.equal(m.streamId, streamId)
+				assert.equal(m.streamPartition, streamPartition)
+				assert.equal(m.timestamp, timestamp)
+				assert.equal(m.ttl, ttl)
+				assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+				assert.deepEqual(m.content, msg)
+			})
 
-			assert.equal(m.version, version)
-			assert.equal(m.streamId, streamId)
-			assert.equal(m.streamPartition, streamPartition)
-			assert.equal(m.timestamp, timestamp)
-			assert.equal(m.ttl, ttl)
-			assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
-			assert.deepEqual(m.content, undefined)
+			it('must not include the content with skipContent=true', function() {
+				var m = StreamrBinaryMessage.fromBytes(bytes, true)
+
+				assert.equal(m.version, version)
+				assert.equal(m.streamId, streamId)
+				assert.equal(m.streamPartition, streamPartition)
+				assert.equal(m.timestamp, timestamp)
+				assert.equal(m.ttl, ttl)
+				assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+				assert.deepEqual(m.content, undefined)
+			})
+
+			it('must not fail if content is already a buffer', function() {
+				var msgBuf = new BufferMaker().string(JSON.stringify(msg)).make()
+				bytes = new StreamrBinaryMessage(streamId, streamPartition, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, msgBuf).toBytes()
+				var m = StreamrBinaryMessage.fromBytes(bytes)
+
+				assert.deepEqual(m.content, msg)
+			})
+
 		})
 
 	})
