@@ -35,7 +35,7 @@ describe('StreamrBinaryMessage', function () {
 				assert.deepEqual(m.content, msg)
 			})
 
-			it('must not parse the content with skipContentParsing=true', function() {
+			it('must not parse the content with contentAsBuffer=true', function() {
 				// sinon sandbox removes spies automatically
 				sinon.test(function() {
 					this.spy(JSON, "parse")

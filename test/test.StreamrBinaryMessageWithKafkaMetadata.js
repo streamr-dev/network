@@ -57,7 +57,7 @@ describe('StreamrBinaryMessageWithKafkaMetadata', function () {
 				assert.deepEqual(m.content, content)
 			})
 
-			it('will not call StreamrBinaryMessage.fromBytes()', function() {
+			it('will not call StreamrBinaryMessage.fromBytes() when StreamrBinaryMessage passed as buffer', function() {
 				// sinon.test() sandbox removes the spy when done
 				sinon.test(function() {
 					this.spy(StreamrBinaryMessage, "fromBytes")
