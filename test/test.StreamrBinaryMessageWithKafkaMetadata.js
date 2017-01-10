@@ -1,4 +1,5 @@
 var assert = require('assert')
+var sinon = require('sinon')
 var StreamrBinaryMessage = require('../lib/protocol/StreamrBinaryMessage')
 var StreamrBinaryMessageWithKafkaMetadata = require('../lib/protocol/StreamrBinaryMessageWithKafkaMetadata')
 
@@ -54,6 +55,18 @@ describe('StreamrBinaryMessageWithKafkaMetadata', function () {
 				assert.equal(m.ttl, ttl)
 				assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
 				assert.deepEqual(m.content, content)
+			})
+
+			it('will not call StreamrBinaryMessage.fromBytes()', function() {
+				// sinon.test() sandbox removes the spy when done
+				sinon.test(function() {
+					this.spy(StreamrBinaryMessage, "fromBytes")
+
+					var bytes = new StreamrBinaryMessageWithKafkaMetadata(streamrBinaryMessage.toBytes(), offset, previousOffset, kafkaPartition).toBytes()
+					StreamrBinaryMessageWithKafkaMetadata.fromBytes(bytes).getStreamrBinaryMessage()
+
+					assert.equal(StreamrBinaryMessage.fromBytes.callCount, 0)
+				})
 			})
 		})
 
