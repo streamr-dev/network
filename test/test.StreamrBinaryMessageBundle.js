@@ -42,10 +42,10 @@ describe('StreamrBinaryMessageBundle', function () {
 				var byteData = bundle.toBytes()
 
 				assert.equal(byteData.count, streamrBinaryMessagesWithKafkaMetadata.length)
-				assert.equal(byteData.firstOffset, streamrBinaryMessagesWithKafkaMetadata[0].offset)
-				assert.equal(byteData.lastOffset, streamrBinaryMessagesWithKafkaMetadata[streamrBinaryMessagesWithKafkaMetadata.length-1].offset)
-				assert.equal(byteData.firstTimestamp, streamrBinaryMessagesWithKafkaMetadata[0].getStreamrBinaryMessage().timestamp)
-				assert.equal(byteData.lastTimestamp, streamrBinaryMessagesWithKafkaMetadata[streamrBinaryMessagesWithKafkaMetadata.length-1].getStreamrBinaryMessage().timestamp)
+				assert.equal(byteData.minOffset, streamrBinaryMessagesWithKafkaMetadata[0].offset)
+				assert.equal(byteData.maxOffset, streamrBinaryMessagesWithKafkaMetadata[streamrBinaryMessagesWithKafkaMetadata.length-1].offset)
+				assert.equal(byteData.minTimestamp, streamrBinaryMessagesWithKafkaMetadata[0].getStreamrBinaryMessage().timestamp)
+				assert.equal(byteData.maxTimestamp, streamrBinaryMessagesWithKafkaMetadata[streamrBinaryMessagesWithKafkaMetadata.length-1].getStreamrBinaryMessage().timestamp)
 			})
 		})
 
