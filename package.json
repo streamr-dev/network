@@ -18,7 +18,6 @@
     "cors": "^2.7.1",
     "debug": "*",
     "express": "^4.14.0",
-    "kafka-node": "0.5.2",
     "node-int64": "*",
     "optimist": "*",
     "redis": "^2.6.2",
