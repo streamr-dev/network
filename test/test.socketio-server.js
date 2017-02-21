@@ -10,6 +10,7 @@ describe('socketio-server', function () {
 	var ioMock
 	var realtimeAdapter
 	var historicalAdapter
+	var latestOffsetFetcher
 	var socket
 
 	function createSocketMock(id) {
@@ -59,6 +60,12 @@ describe('socketio-server', function () {
 			getTimestampRange: sinon.stub()
 		}
 
+		latestOffsetFetcher = {
+			fetchOffset: function() {
+				return Promise.resolve(0)
+			}
+		}
+
 		// Mock socket.io
 		ioMock = new events.EventEmitter
 
@@ -87,7 +94,7 @@ describe('socketio-server', function () {
 		socket = createSocketMock("socket1")
 
 		// Create the server instance
-		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, ioMock)
+		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, ioMock)
 	});
 
 	afterEach(function() {
