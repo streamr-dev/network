@@ -2,19 +2,19 @@ const assert = require('assert')
 const sinon = require('sinon')
 const redis = require('redis')
 
-const RedisHelper = require('../lib/redis-helper')
+const RedisOffsetFetcher = require('../lib/redis-offset-fetcher')
 
-describe('RedisHelper', function() {
+describe('RedisOffsetFetcher', function() {
 
 	const REDIS_HOST = "127.0.0.1"
 	const REDIS_PASS = "kakka"
 
 	var testRedisClient
-	var redisHelper
+	var redisOffsetFetcher
 
 	beforeEach(function() {
 		testRedisClient = redis.createClient({ host: REDIS_HOST, password: REDIS_PASS })
-		redisHelper = new RedisHelper([REDIS_HOST], REDIS_PASS)
+		redisOffsetFetcher = new RedisOffsetFetcher(REDIS_HOST, REDIS_PASS)
 	})
 
 	afterEach(function() {
@@ -23,18 +23,16 @@ describe('RedisHelper', function() {
 	})
 
 	describe('fetchOffset', function() {
-		it("returns null if key doesn't exist", function(done) {
-			redisHelper.fetchOffset("stream-1", 0, function(result) {
-				assert.equal(result, null)
-				done()
-			});
+		it("returns null if key doesn't exist", function() {
+			return redisOffsetFetcher.fetchOffset("stream-1", 0).then(function(value) {
+				assert.equal(value, null)
+			})
 		})
 
-		it("returns value if key exists", function(done) {
+		it("returns value if key exists", function() {
 			testRedisClient.setex("stream-1-0", 10, "2487679201527")
-			redisHelper.fetchOffset("stream-1", 0, function(result) {
-				assert.equal(result, 2487679201527)
-				done()
+			return redisOffsetFetcher.fetchOffset("stream-1", 0).then(function(value) {
+				assert.equal(value, 2487679201527)
 			});
 		})
 	})
