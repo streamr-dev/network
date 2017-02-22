@@ -39,7 +39,7 @@ describe('CassandraHelper', function() {
 
 		cassandraHelper = new CassandraHelper([CASSANDRA_HOST], KEYSPACE, {
 			maxRefetchRetries: 2,
-			refetchInterval: 400
+			refetchInterval: 250
 		})
 		messagesReceived = []
 		msgHandler = messagesReceived.push.bind(messagesReceived)
@@ -87,7 +87,7 @@ describe('CassandraHelper', function() {
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
 			])
 			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, assertion(110, expectedMessages, done), 110)
-			cassandraDataInserter.timedBulkInsert(2, 250)
+			cassandraDataInserter.timedBulkInsert(2, 200)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
@@ -137,7 +137,7 @@ describe('CassandraHelper', function() {
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
 			])
 			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, assertion(110, expectedMessages, done), 110)
-			cassandraDataInserter.timedBulkInsert(2, 250)
+			cassandraDataInserter.timedBulkInsert(2, 200)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
@@ -191,7 +191,7 @@ describe('CassandraHelper', function() {
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
 			])
 			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, assertion(110, expectedMessages, done), 110)
-			cassandraDataInserter.timedBulkInsert(2, 250)
+			cassandraDataInserter.timedBulkInsert(2, 200)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
@@ -243,22 +243,22 @@ describe('CassandraHelper', function() {
 			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 75, msgHandler, assertion(75, expectedMessages, done), 75)
 		})
 
-		it("produces correct messages when lastKnownOffset > max (with no incoming data)", function(done) {
-			expectedMessages = allMessages.slice(4, 18)
-			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 79, msgHandler, assertion(90, expectedMessages, done), 90)
+		it("produces correct messages when lastKnownOffset > max", function(done) {
+			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 79, msgHandler, assertion(75, expectedMessages, done), 90)
 		})
 
-		it("produces correct messages when lastKnownOffset > max (with incoming data)", function(done) {
+		it("produces correct messages when min < lastKnownOffset < max (incoming data to [min, max] range)", function(done) {
 			expectedMessages = allMessages.slice(4).concat([
-				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }]
+				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
+				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
 			])
-			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 6666, msgHandler, assertion(105, expectedMessages, done), 105)
-			cassandraDataInserter.timedBulkInsert(2, 250)
+			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 130, msgHandler, assertion(110, expectedMessages, done), 110)
+			cassandraDataInserter.timedBulkInsert(10, 200)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
 			expectedMessages = allMessages.slice(4)
-			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 79, msgHandler, assertion(100, expectedMessages, done), 110)
+			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 114, msgHandler, assertion(100, expectedMessages, done), 105)
 		})
 
 		it("emits error if lastKnownOffset never appears", function(done) {
@@ -270,13 +270,22 @@ describe('CassandraHelper', function() {
 
 				assert.equal(data.streamId, "fake-stream-1")
 				assert.equal(data.partition, 0)
-				assert.equal(data.targetOffset, 110)
+				assert.equal(data.targetOffset, 105)
 				assert.equal(data.currentOffset, 100)
 				assert.equal(data.refetchCount, 2)
 
 				done()
 			})
-			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 79, msgHandler, function(){}, 110)
+			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 114, msgHandler, function(){}, 105)
+		})
+
+		it("produces empty result when min > max", function(done) {
+			cassandraHelper.getOffsetRange("fake-stream-1", 0, 15, 5, msgHandler, assertion(null, [], done), 100)
+		})
+
+		it("produces singleton result when min === max", function(done) {
+			expectedMessages = [ allMessages[2] ]
+			cassandraHelper.getOffsetRange("fake-stream-1", 0, 15, 15, msgHandler, assertion(15, expectedMessages, done), 100)
 		})
 	})
 })
