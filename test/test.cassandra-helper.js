@@ -61,20 +61,14 @@ CassandraDataInserter.prototype.insertData = function() {
 
 describe('CassandraHelper', function() {
 	var cassandraHelper
+	var messagesReceived
 	var msgHandler
-	var msgHandlerReceived
 	var cassandraDataInserter
 
 	beforeEach(function() {
 		cassandraHelper = new CassandraHelper([CASSANDRA_HOST], KEYSPACE)
-
-		msgHandlerReceived = []
-		msgHandler = function(msg) {
-			msgHandlerReceived.push(msg)
-		}
-
-
-		// Produce data to Cassandra
+		messagesReceived = []
+		msgHandler = messagesReceived.push.bind(messagesReceived)
 		cassandraDataInserter = new CassandraDataInserter()
 		return cassandraDataInserter.bulkInsert(50)
 	})
@@ -84,7 +78,6 @@ describe('CassandraHelper', function() {
 	})
 
 	describe("getLast", function() {
-
 		var expectedDataForFirstQuery
 
 		beforeEach(function() {
@@ -99,7 +92,7 @@ describe('CassandraHelper', function() {
 
 		it("produces correct messages when lastKnownOffset === undefined", function(done) {
 			const onDone = function() {
-				assert.deepEqual(msgHandlerReceived, expectedDataForFirstQuery)
+				assert.deepEqual(messagesReceived, expectedDataForFirstQuery)
 				done()
 			}
 			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone)
@@ -107,7 +100,7 @@ describe('CassandraHelper', function() {
 
 		it("produces correct messages when lastKnownOffset < cassandraLastOffset", function(done) {
 			const onDone = function() {
-				assert.deepEqual(msgHandlerReceived, expectedDataForFirstQuery)
+				assert.deepEqual(messagesReceived, expectedDataForFirstQuery)
 				done()
 			}
 			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone, 200)
@@ -115,7 +108,7 @@ describe('CassandraHelper', function() {
 
 		it("produces correct messages when lastKnownOffset == cassandraLastOffset", function(done) {
 			const onDone = function() {
-				assert.deepEqual(msgHandlerReceived, expectedDataForFirstQuery)
+				assert.deepEqual(messagesReceived, expectedDataForFirstQuery)
 				done()
 			}
 			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone, 230)
@@ -131,7 +124,7 @@ describe('CassandraHelper', function() {
 
 			const onDone = function() {
 				assert.equal(dataPushed, true)
-				assert.deepEqual(msgHandlerReceived, expectedDataForFirstQuery.concat(expectedDataForSecondQuery))
+				assert.deepEqual(messagesReceived, expectedDataForFirstQuery.concat(expectedDataForSecondQuery))
 				done()
 			}
 			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone, 260)
