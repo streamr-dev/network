@@ -71,15 +71,39 @@ CassandraDataInserter.prototype.insertData = function() {
 
 
 describe('CassandraHelper', function() {
+	var expectedMessages
 	var cassandraHelper
 	var messagesReceived
 	var msgHandler
 	var cassandraDataInserter
 
 	beforeEach(function() {
+		expectedMessages = [
+			[28, "fake-stream-1", 0, 1490180460000, 10, 5, -1,  27, { "key": "msg-1" }],
+			[28, "fake-stream-1", 0, 1490180520000, 10, 10, 5,  27, { "key": "msg-2" }],
+			[28, "fake-stream-1", 0, 1490180580000, 10, 15, 10,  27, { "key": "msg-3" }],
+			[28, "fake-stream-1", 0, 1490180640000, 10, 20, 15,  27, { "key": "msg-4" }],
+			[28, "fake-stream-1", 0, 1490180700000, 10, 25, 20,  27, { "key": "msg-5" }],
+			[28, "fake-stream-1", 0, 1490180760000, 10, 30, 25,  27, { "key": "msg-6" }],
+			[28, "fake-stream-1", 0, 1490180820000, 10, 35, 30,  27, { "key": "msg-7" }],
+			[28, "fake-stream-1", 0, 1490180880000, 10, 40, 35,  27, { "key": "msg-8" }],
+			[28, "fake-stream-1", 0, 1490180940000, 10, 45, 40,  27, { "key": "msg-9" }],
+			[28, "fake-stream-1", 0, 1490181000000, 10, 50, 45,  27, { "key": "msg-10" }],
+			[28, "fake-stream-1", 0, 1490181060000, 10, 55, 50,  27, { "key": "msg-11" }],
+			[28, "fake-stream-1", 0, 1490181120000, 10, 60, 55,  27, { "key": "msg-12" }],
+			[28, "fake-stream-1", 0, 1490181180000, 10, 65, 60,  27, { "key": "msg-13" }],
+			[28, "fake-stream-1", 0, 1490181240000, 10, 70, 65,  27, { "key": "msg-14" }],
+			[28, "fake-stream-1", 0, 1490181300000, 10, 75, 70,  27, { "key": "msg-15" }],
+			[28, "fake-stream-1", 0, 1490181360000, 10, 80, 75,  27, { "key": "msg-16" }],
+			[28, "fake-stream-1", 0, 1490181420000, 10, 85, 80,  27, { "key": "msg-17" }],
+			[28, "fake-stream-1", 0, 1490181480000, 10, 90, 85,  27, { "key": "msg-18" }],
+			[28, "fake-stream-1", 0, 1490181540000, 10, 95, 90,  27, { "key": "msg-19" }],
+			[28, "fake-stream-1", 0, 1490181600000, 10, 100, 95, 27, { "key": "msg-20" }]
+		]
+
 		cassandraHelper = new CassandraHelper([CASSANDRA_HOST], KEYSPACE, {
 			maxRefetchRetries: 2,
-			refetchInterval: 200
+			refetchInterval: 400
 		})
 		messagesReceived = []
 		msgHandler = messagesReceived.push.bind(messagesReceived)
@@ -91,69 +115,48 @@ describe('CassandraHelper', function() {
 		return cassandraDataInserter.clearAndClose()
 	})
 
-	describe("getLast", function() {
-		var expectedDataForFirstQuery
 
+	function doneAssertion(expectedLastOffsetSent, expectedMessages, done) {
+		return function(lastOffsetSent) {
+			assert.equal(lastOffsetSent, expectedLastOffsetSent)
+			assert.deepEqual(messagesReceived, expectedMessages)
+			done()
+		}
+	}
+
+	describe("getLast", function() {
 		beforeEach(function() {
-			expectedDataForFirstQuery = [
-				[28, "fake-stream-1", 0, 1490181360000, 10, 80, 75,  27, { "key": "msg-16" }],
-				[28, "fake-stream-1", 0, 1490181420000, 10, 85, 80,  27, { "key": "msg-17" }],
-				[28, "fake-stream-1", 0, 1490181480000, 10, 90, 85,  27, { "key": "msg-18" }],
-				[28, "fake-stream-1", 0, 1490181540000, 10, 95, 90,  27, { "key": "msg-19" }],
-				[28, "fake-stream-1", 0, 1490181600000, 10, 100, 95, 27, { "key": "msg-20" }]
-			]
+			expectedMessages = expectedMessages.slice(15, 20)
 		})
 
 		it("produces correct messages when lastKnownOffset === undefined", function(done) {
-			const onDone = function(lastOffsetSent) {
-				assert.equal(lastOffsetSent, 100)
-				assert.deepEqual(messagesReceived, expectedDataForFirstQuery)
-				done()
-			}
-			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone)
+			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, doneAssertion(100, expectedMessages, done))
+		})
+
+		it("produces correct messages when no messages in cassandra and lastKnownOffset === undefined", function(done) {
+			cassandraDataInserter.clearAndClose()
+			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, doneAssertion(null, [], done))
 		})
 
 		it("produces correct messages when lastKnownOffset < cassandraLastOffset", function(done) {
-			const onDone = function(lastOffsetSent) {
-				assert.equal(lastOffsetSent, 100)
-				assert.deepEqual(messagesReceived, expectedDataForFirstQuery)
-				done()
-			}
-			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone, 90)
+			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, doneAssertion(100, expectedMessages, done), 90)
 		})
 
 		it("produces correct messages when lastKnownOffset == cassandraLastOffset", function(done) {
-			const onDone = function(lastOffsetSent) {
-				assert.equal(lastOffsetSent, 100)
-				assert.deepEqual(messagesReceived, expectedDataForFirstQuery)
-				done()
-			}
-			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone, 100)
+			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, doneAssertion(100, expectedMessages, done), 100)
 		})
 
 		it("produces correct messages when lastKnownOffset > cassandraLastOffset", function(done) {
-			const expectedDataForSecondQuery = [
+			 expectedMessages = expectedMessages.concat([
 				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
-			]
-			const expectedMessages = expectedDataForFirstQuery.concat(expectedDataForSecondQuery)
-
-			const onDone = function(lastOffsetSent) {
-				assert.equal(lastOffsetSent, 110)
-				assert.deepEqual(messagesReceived, expectedMessages)
-				done()
-			}
-			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone, 110)
+			])
+			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, doneAssertion(110, expectedMessages, done), 110)
 			cassandraDataInserter.timedBulkInsert(2, 250)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
-			const onDone = function(lastOffsetSent) {
-				assert.equal(lastOffsetSent, 100)
-				assert.deepEqual(messagesReceived, expectedDataForFirstQuery)
-				done()
-			}
-			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, onDone, 110)
+			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, doneAssertion(100, expectedMessages, done), 110)
 		})
 
 		it("emits error if lastKnownOffset never appears", function(done) {
@@ -172,6 +175,110 @@ describe('CassandraHelper', function() {
 				done()
 			})
 			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, function(){}, 110)
+		})
+	})
+
+	describe("getAll", function () {
+		it("produces correct messages when lastKnownOffset === undefined", function(done) {
+			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, doneAssertion(100, expectedMessages, done))
+		})
+
+		it("produces correct messages when no messages in cassandra and lastKnownOffset === undefined", function(done) {
+			cassandraDataInserter.clearAndClose()
+			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, doneAssertion(null, [], done))
+		})
+
+		it("produces correct messages when lastKnownOffset < cassandraLastOffset", function(done) {
+			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, doneAssertion(100, expectedMessages, done), 90)
+		})
+
+		it("produces correct messages when lastKnownOffset == cassandraLastOffset", function(done) {
+			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, doneAssertion(100, expectedMessages, done), 100)
+		})
+
+		it("produces correct messages when lastKnownOffset > cassandraLastOffset", function(done) {
+			expectedMessages = expectedMessages.concat([
+				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
+				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
+			])
+			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, doneAssertion(110, expectedMessages, done), 110)
+			cassandraDataInserter.timedBulkInsert(2, 250)
+		})
+
+		it("eventually gives up if lastKnownOffset never appears", function(done) {
+			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, doneAssertion(100, expectedMessages, done), 110)
+		})
+
+		it("emits error if lastKnownOffset never appears", function(done) {
+			cassandraHelper.on("maxRefetchAttemptsReached", function(data) {
+				assert.deepEqual(Object.keys(data), [
+					"streamId", "partition", "targetOffset", "currentOffset",
+					"msgHandler", "onDone", "onMsgEnd", "refetchCount"
+				])
+
+				assert.equal(data.streamId, "fake-stream-1")
+				assert.equal(data.partition, 0)
+				assert.equal(data.targetOffset, 110)
+				assert.equal(data.currentOffset, 100)
+				assert.equal(data.refetchCount, 2)
+
+				done()
+			})
+			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, function(){}, 110)
+		})
+	})
+
+	describe("getFromOffset", function () {
+		beforeEach(function() {
+			expectedMessages = expectedMessages.slice(10, 20)
+		})
+
+		it("produces correct messages when lastKnownOffset === undefined", function(done) {
+			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, doneAssertion(100, expectedMessages, done))
+		})
+
+		it("produces correct messages when no messages in cassandra and lastKnownOffset === undefined", function(done) {
+			cassandraDataInserter.clearAndClose()
+			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, doneAssertion(null, [], done))
+		})
+
+		it("produces correct messages when lastKnownOffset < cassandraLastOffset", function(done) {
+			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, doneAssertion(100, expectedMessages, done), 90)
+		})
+
+		it("produces correct messages when lastKnownOffset == cassandraLastOffset", function(done) {
+			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, doneAssertion(100, expectedMessages, done), 100)
+		})
+
+		it("produces correct messages when lastKnownOffset > cassandraLastOffset", function(done) {
+			expectedMessages = expectedMessages.concat([
+				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
+				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
+			])
+			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, doneAssertion(110, expectedMessages, done), 110)
+			cassandraDataInserter.timedBulkInsert(2, 250)
+		})
+
+		it("eventually gives up if lastKnownOffset never appears", function(done) {
+			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, doneAssertion(100, expectedMessages, done), 110)
+		})
+
+		it("emits error if lastKnownOffset never appears", function(done) {
+			cassandraHelper.on("maxRefetchAttemptsReached", function(data) {
+				assert.deepEqual(Object.keys(data), [
+					"streamId", "partition", "targetOffset", "currentOffset",
+					"msgHandler", "onDone", "onMsgEnd", "refetchCount"
+				])
+
+				assert.equal(data.streamId, "fake-stream-1")
+				assert.equal(data.partition, 0)
+				assert.equal(data.targetOffset, 110)
+				assert.equal(data.currentOffset, 100)
+				assert.equal(data.refetchCount, 2)
+
+				done()
+			})
+			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, function(){}, 110)
 		})
 	})
 })
