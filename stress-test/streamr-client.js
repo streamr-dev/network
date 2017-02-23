@@ -264,11 +264,11 @@ Subscription.prototype.isSubscribed = function() {
  * StreamClient
  **/
 
-function StreamrClient(options) {
+function StreamrClient(url, options) {
 	// Default options
 	this.options = {
 		// The server to connect to
-		server: "https://data.streamr.com",
+		server: "wss://data.streamr.com",
 		// Automatically connect on first subscribe
 		autoConnect: true,
 		// Automatically disconnect on last unsubscribe
