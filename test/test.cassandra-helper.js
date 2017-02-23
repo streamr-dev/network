@@ -346,4 +346,36 @@ describe('CassandraHelper', function() {
 			cassandraHelper.getFromTimestamp("fake-stream-1", 0, startDate, msgHandler, function(){}, 110)
 		})
 	})
+
+	describe("getTimestampRange", function () {
+
+		var startDate
+		var endDate
+		var longInFuture
+
+		beforeEach(function() {
+			expectedMessages = expectedMessages.slice(4, 15)
+			startDate = new Date(2017, 2, 22, 13, 5, 0)				// offset: 25
+			endDate = new Date(2017, 2, 22, 13, 15, 45)				// offset: 75
+			longInFuture = new Date(2017, 2, 22, 19, 0, 0)
+		})
+
+		it("produces correct messages when startDate < endDate", function(done) {
+			cassandraHelper.getTimestampRange("fake-stream-1", 0, startDate, endDate, msgHandler, assertion(75, expectedMessages, done))
+		})
+
+		it("produces no messages when startDate < endDate but Cassandra empty", function(done) {
+			cassandraDataInserter.clearAndClose()
+			cassandraHelper.getTimestampRange("fake-stream-1", 0, startDate, endDate, msgHandler, assertion(null, [], done))
+		})
+
+		it("produces empty result when min > max", function(done) {
+			cassandraHelper.getTimestampRange("fake-stream-1", 0, endDate, startDate, msgHandler, assertion(null, [], done), 100)
+		})
+
+		it("produces singleton result when min === max", function(done) {
+			expectedMessages = [ allMessages[4] ]
+			cassandraHelper.getTimestampRange("fake-stream-1", 0, startDate, startDate, msgHandler, assertion(25, expectedMessages, done), 100)
+		})
+	})
 })
