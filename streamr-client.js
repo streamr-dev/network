@@ -408,6 +408,7 @@
 	 * Socket
 	 */
 	function Connection(options) {
+		EventEmitter.call(this);
 		if (!options.url) {
 			throw "Server is not defined!"
 		}
@@ -421,17 +422,19 @@
 		}
 	}
 
-	MicroEvent.mixin(Connection)
+	Object.keys(EventEmitter.prototype).forEach(function(it) {
+		Connection.prototype[it] = EventEmitter.prototype[it]
+	})
 
 	Connection.prototype.connect = function() {
 		var _this = this
 
 		if (!(this.connected || this.connecting)) {
 			this.connecting = true
-			_this.trigger('connecting')
 
 			this.socket = new WebSocket(this.options.url)
 			this.socket.binaryType = 'arraybuffer';
+			_this.emit('connecting')
 
 			this.socket.onopen = function() {
 				debug("Connected to ", _this.options.url)
