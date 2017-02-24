@@ -687,7 +687,7 @@
 		this.subsByStream = {}
 		this.subById = {}
 
-		this.socket = null
+		this.connection = null
 		this.connected = false
 
 		extend(this.options, options || {})
@@ -814,10 +814,10 @@
 		this.connecting = true
 		this.disconnecting = false
 
-		this.socket = new Connection(this.options)
+		this.connection = new Connection(this.options)
 
 		// Broadcast messages to all subs listening on stream
-		this.socket.bind('b', function(msg) {
+		this.connection.on('b', function(msg) {
 			// Notify the Subscriptions for this stream. If this is not the message each individual Subscription
 			// is expecting, they will either ignore it or request resend via gap event.
 			var streamId = msg.streamId
@@ -832,7 +832,7 @@
 		})
 
 		// Unicast messages to a specific subscription only
-		this.socket.bind('u', function(msg, sub) {
+		this.connection.on('u', function(msg, sub) {
 			if (sub !== undefined && _this.subById[sub] !== undefined) {
 				_this.subById[sub].handleMessage(msg, true)
 			}
@@ -841,7 +841,7 @@
 			}
 		})
 
-		this.socket.bind('subscribed', function(response) {
+		this.connection.on('subscribed', function(response) {
 			if (response.error) {
 				_this.handleError("Error subscribing to "+response.channel+": "+response.error)
 			}
@@ -860,7 +860,7 @@
 			}
 		})
 
-		this.socket.bind('unsubscribed', function(response) {
+		this.connection.on('unsubscribed', function(response) {
 			debug("Client unsubscribed: %o", response)
 
 			if (_this.subsByStream[response.channel]) {
@@ -876,7 +876,7 @@
 		})
 
 		// Route resending state messages to corresponding Subscriptions
-		this.socket.bind('resending', function(response) {
+		this.connection.on('resending', function(response) {
 			if (_this.subById[response.sub]) {
 				_this.subById[response.sub].emit('resending', response)
 			} else {
@@ -884,7 +884,7 @@
 			}
 		})
 
-		this.socket.bind('no_resend', function(response) {
+		this.connection.on('no_resend', function(response) {
 			if (_this.subById[response.sub]) {
 				_this.subById[response.sub].emit('no_resend', response)
 			} else {
@@ -892,7 +892,7 @@
 			}
 		})
 
-		this.socket.bind('resent', function(response) {
+		this.connection.on('resent', function(response) {
 			if (_this.subById[response.sub]) {
 				_this.subById[response.sub].emit('resent', response)
 			} else {
@@ -901,7 +901,7 @@
 		})
 
 		// On connect/reconnect, send pending subscription requests
-		this.socket.bind('connected', function() {
+		this.connection.on('connected', function() {
 			debug("Connected!")
 			_this.connected = true
 			_this.connecting = false
@@ -918,7 +918,7 @@
 			})
 		})
 
-		this.socket.bind('disconnected', function() {
+		this.connection.on('disconnected', function() {
 			debug("Disconnected.")
 			_this.connected = false
 			_this.connecting = false
@@ -938,7 +938,7 @@
 	}
 
 	StreamrClient.prototype.pause = function() {
-		this.socket.disconnect()
+		this.connection.disconnect()
 	}
 
 	StreamrClient.prototype.disconnect = function() {
@@ -950,7 +950,7 @@
 			_this.unsubscribeAll(streamId)
 		})
 
-		this.socket.disconnect()
+		this.connection.disconnect()
 	}
 
 	StreamrClient.prototype._checkAutoDisconnect = function() {
@@ -990,7 +990,7 @@
 			var req = extend({}, sub.options, {type: 'subscribe', channel: sub.streamId})
 			debug("_requestSubscribe: subscribing client: %o", req)
 			subs._subscribing = true
-			_this.socket.send(req)
+			_this.connection.send(req)
 		}
 		// If there already is a subscribed subscription for this stream, this new one will just join it immediately
 		else if (subscribedSubs.length > 0) {
@@ -1004,7 +1004,7 @@
 
 	StreamrClient.prototype._requestUnsubscribe = function(streamId) {
 		debug("Client unsubscribing stream %o", streamId)
-		this.socket.send({
+		this.connection.send({
 			type: 'unsubscribe',
 			channel: streamId
 		})
@@ -1025,7 +1025,7 @@
 
 		var request = extend({}, options, resendOptions, {type: 'resend', channel: sub.streamId, sub: sub.id})
 		debug("_requestResend: %o", request)
-		this.socket.send(request)
+		this.connection.send(request)
 	}
 
 	StreamrClient.prototype.handleError = function(msg) {
