@@ -1,8 +1,9 @@
 var assert = require('assert'),
 	events = require('events'),
 	sinon = require('sinon'),
-	constants = require('../lib/constants'),
-	SocketIoServer = require('../lib/socketio-server')
+	mockery = require('mockery'),
+	constants = require('../lib/constants')
+var SocketIoServer = require('../lib/socketio-server')
 
 describe('socketio-server', function () {
 
@@ -13,9 +14,8 @@ describe('socketio-server', function () {
 	var latestOffsetFetcher
 	var socket
 
-	function createSocketMock(id) {
+	function createSocketMock() {
 		var socket = new events.EventEmitter()
-		socket.id = id
 
 		socket.rooms = []
 		socket.join = function(channel, cb) {
@@ -40,10 +40,20 @@ describe('socketio-server', function () {
 		return socket
 	}
 
-	function msg(data, counter) {
-		data[constants.COUNTER_KEY] = counter
-		return data
-	}
+	before(function() {
+		mockery.enable()
+		const uuid = {
+			idx: 1,
+			v4: function() {
+				return "socket" + (this.idx++)
+			}
+		}
+		mockery.registerMock('uuid', uuid)
+	})
+
+	after(function() {
+		mockery.disable()
+	})
 
 	beforeEach(function() {
 		realtimeAdapter = new events.EventEmitter
@@ -95,10 +105,6 @@ describe('socketio-server', function () {
 
 		// Create the server instance
 		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, ioMock)
-	});
-
-	afterEach(function() {
-	
 	});
 
 	it('should listen for protocol events on client socket', function (done) {

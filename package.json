@@ -24,12 +24,12 @@
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
-    "ws": "^1.1.1",
+    "ws": "^1.1.1"
   },
   "devDependencies": {
+    "buffermaker": "*",
     "mocha": "*",
-    "sinon": "*",
-    "mockery": "*",
-    "buffermaker": "*"
+    "mockery": "^2.0.0",
+    "sinon": "*"
   }
 }
