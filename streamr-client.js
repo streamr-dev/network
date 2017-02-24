@@ -23,55 +23,318 @@
 		return arguments[0];
 	}
 
-	/**
-	 * MicroEvent - to make any js object an event emitter (server or browser)
-	 *
-	 * - pure javascript - server compatible, browser compatible
-	 * - dont rely on the browser doms
-	 * - super simple - you get it immediatly, no mistery, no magic involved
-	 *
-	 * - create a MicroEventDebug with goodies to debug
-	 *   - make it safer to use
-	*/
 
-	var MicroEvent	= function(){};
-	MicroEvent.prototype = {
-		bind	: function(event, fct){
-			this._events = this._events || {};
-			this._events[event] = this._events[event]	|| [];
-			this._events[event].push(fct);
-		},
-		unbind	: function(event, fct){
-			this._events = this._events || {};
-			if( event in this._events === false  )	return;
-			this._events[event].splice(this._events[event].indexOf(fct), 1);
-		},
-		trigger	: function(event /* , args... */){
-			this._events = this._events || {};
-			if( event in this._events === false  )	return;
-			for(var i = 0; i < this._events[event].length; i++){
-				this._events[event][i].apply(this, Array.prototype.slice.call(arguments, 1));
-			}
-		}
-	};
+	var EventEmitter = (function() {
+		'use strict';
 
-	/**
-	 * mixin will delegate all MicroEvent.js function in the destination object
-	 *
-	 * - require('MicroEvent').mixin(Foobar) will make Foobar able to use MicroEvent
-	 *
-	 * @param {Object} the object which will support MicroEvent
-	*/
-	MicroEvent.mixin = function(destObject) {
-		var props	= ['bind', 'unbind', 'trigger'];
-		for(var i = 0; i < props.length; i ++){
-			if( typeof destObject === 'function' ){
-				destObject.prototype[props[i]]	= MicroEvent.prototype[props[i]];
-			}else{
-				destObject[props[i]] = MicroEvent.prototype[props[i]];
-			}
+		var has = Object.prototype.hasOwnProperty
+			, prefix = '~';
+
+		/**
+		 * Constructor to create a storage for our `EE` objects.
+		 * An `Events` instance is a plain object whose properties are event names.
+		 *
+		 * @constructor
+		 * @api private
+		 */
+		function Events() {}
+
+//
+// We try to not inherit from `Object.prototype`. In some engines creating an
+// instance in this way is faster than calling `Object.create(null)` directly.
+// If `Object.create(null)` is not supported we prefix the event names with a
+// character to make sure that the built-in object properties are not
+// overridden or used as an attack vector.
+//
+		if (Object.create) {
+			Events.prototype = Object.create(null);
+
+			//
+			// This hack is needed because the `__proto__` property is still inherited in
+			// some old browsers like Android 4, iPhone 5.1, Opera 11 and Safari 5.
+			//
+			if (!new Events().__proto__) prefix = false;
 		}
-	}
+
+		/**
+		 * Representation of a single event listener.
+		 *
+		 * @param {Function} fn The listener function.
+		 * @param {Mixed} context The context to invoke the listener with.
+		 * @param {Boolean} [once=false] Specify if the listener is a one-time listener.
+		 * @constructor
+		 * @api private
+		 */
+		function EE(fn, context, once) {
+			this.fn = fn;
+			this.context = context;
+			this.once = once || false;
+		}
+
+		/**
+		 * Minimal `EventEmitter` interface that is molded against the Node.js
+		 * `EventEmitter` interface.
+		 *
+		 * @constructor
+		 * @api public
+		 */
+		function EventEmitter() {
+			this._events = new Events();
+			this._eventsCount = 0;
+		}
+
+		/**
+		 * Return an array listing the events for which the emitter has registered
+		 * listeners.
+		 *
+		 * @returns {Array}
+		 * @api public
+		 */
+		EventEmitter.prototype.eventNames = function eventNames() {
+			var names = []
+				, events
+				, name;
+
+			if (this._eventsCount === 0) return names;
+
+			for (name in (events = this._events)) {
+				if (has.call(events, name)) names.push(prefix ? name.slice(1) : name);
+			}
+
+			if (Object.getOwnPropertySymbols) {
+				return names.concat(Object.getOwnPropertySymbols(events));
+			}
+
+			return names;
+		};
+
+		/**
+		 * Return the listeners registered for a given event.
+		 *
+		 * @param {String|Symbol} event The event name.
+		 * @param {Boolean} exists Only check if there are listeners.
+		 * @returns {Array|Boolean}
+		 * @api public
+		 */
+		EventEmitter.prototype.listeners = function listeners(event, exists) {
+			var evt = prefix ? prefix + event : event
+				, available = this._events[evt];
+
+			if (exists) return !!available;
+			if (!available) return [];
+			if (available.fn) return [available.fn];
+
+			for (var i = 0, l = available.length, ee = new Array(l); i < l; i++) {
+				ee[i] = available[i].fn;
+			}
+
+			return ee;
+		};
+
+		/**
+		 * Calls each of the listeners registered for a given event.
+		 *
+		 * @param {String|Symbol} event The event name.
+		 * @returns {Boolean} `true` if the event had listeners, else `false`.
+		 * @api public
+		 */
+		EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+			var evt = prefix ? prefix + event : event;
+
+			if (!this._events[evt]) return false;
+
+			var listeners = this._events[evt]
+				, len = arguments.length
+				, args
+				, i;
+
+			if (listeners.fn) {
+				if (listeners.once) this.removeListener(event, listeners.fn, undefined, true);
+
+				switch (len) {
+					case 1: return listeners.fn.call(listeners.context), true;
+					case 2: return listeners.fn.call(listeners.context, a1), true;
+					case 3: return listeners.fn.call(listeners.context, a1, a2), true;
+					case 4: return listeners.fn.call(listeners.context, a1, a2, a3), true;
+					case 5: return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+					case 6: return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+				}
+
+				for (i = 1, args = new Array(len -1); i < len; i++) {
+					args[i - 1] = arguments[i];
+				}
+
+				listeners.fn.apply(listeners.context, args);
+			} else {
+				var length = listeners.length
+					, j;
+
+				for (i = 0; i < length; i++) {
+					if (listeners[i].once) this.removeListener(event, listeners[i].fn, undefined, true);
+
+					switch (len) {
+						case 1: listeners[i].fn.call(listeners[i].context); break;
+						case 2: listeners[i].fn.call(listeners[i].context, a1); break;
+						case 3: listeners[i].fn.call(listeners[i].context, a1, a2); break;
+						case 4: listeners[i].fn.call(listeners[i].context, a1, a2, a3); break;
+						default:
+							if (!args) for (j = 1, args = new Array(len -1); j < len; j++) {
+								args[j - 1] = arguments[j];
+							}
+
+							listeners[i].fn.apply(listeners[i].context, args);
+					}
+				}
+			}
+
+			return true;
+		};
+
+		/**
+		 * Add a listener for a given event.
+		 *
+		 * @param {String|Symbol} event The event name.
+		 * @param {Function} fn The listener function.
+		 * @param {Mixed} [context=this] The context to invoke the listener with.
+		 * @returns {EventEmitter} `this`.
+		 * @api public
+		 */
+		EventEmitter.prototype.on = function on(event, fn, context) {
+			var listener = new EE(fn, context || this)
+				, evt = prefix ? prefix + event : event;
+
+			if (!this._events[evt]) this._events[evt] = listener, this._eventsCount++;
+			else if (!this._events[evt].fn) this._events[evt].push(listener);
+			else this._events[evt] = [this._events[evt], listener];
+
+			return this;
+		};
+
+		/**
+		 * Add a one-time listener for a given event.
+		 *
+		 * @param {String|Symbol} event The event name.
+		 * @param {Function} fn The listener function.
+		 * @param {Mixed} [context=this] The context to invoke the listener with.
+		 * @returns {EventEmitter} `this`.
+		 * @api public
+		 */
+		EventEmitter.prototype.once = function once(event, fn, context) {
+			var listener = new EE(fn, context || this, true)
+				, evt = prefix ? prefix + event : event;
+
+			if (!this._events[evt]) this._events[evt] = listener, this._eventsCount++;
+			else if (!this._events[evt].fn) this._events[evt].push(listener);
+			else this._events[evt] = [this._events[evt], listener];
+
+			return this;
+		};
+
+		/**
+		 * Remove the listeners of a given event.
+		 *
+		 * @param {String|Symbol} event The event name.
+		 * @param {Function} fn Only remove the listeners that match this function.
+		 * @param {Mixed} context Only remove the listeners that have this context.
+		 * @param {Boolean} once Only remove one-time listeners.
+		 * @returns {EventEmitter} `this`.
+		 * @api public
+		 */
+		EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+			var evt = prefix ? prefix + event : event;
+
+			if (!this._events[evt]) return this;
+			if (!fn) {
+				if (--this._eventsCount === 0) this._events = new Events();
+				else delete this._events[evt];
+				return this;
+			}
+
+			var listeners = this._events[evt];
+
+			if (listeners.fn) {
+				if (
+					listeners.fn === fn
+					&& (!once || listeners.once)
+					&& (!context || listeners.context === context)
+				) {
+					if (--this._eventsCount === 0) this._events = new Events();
+					else delete this._events[evt];
+				}
+			} else {
+				for (var i = 0, events = [], length = listeners.length; i < length; i++) {
+					if (
+						listeners[i].fn !== fn
+						|| (once && !listeners[i].once)
+						|| (context && listeners[i].context !== context)
+					) {
+						events.push(listeners[i]);
+					}
+				}
+
+				//
+				// Reset the array, or remove it completely if we have no more listeners.
+				//
+				if (events.length) this._events[evt] = events.length === 1 ? events[0] : events;
+				else if (--this._eventsCount === 0) this._events = new Events();
+				else delete this._events[evt];
+			}
+
+			return this;
+		};
+
+		/**
+		 * Remove all listeners, or those of the specified event.
+		 *
+		 * @param {String|Symbol} [event] The event name.
+		 * @returns {EventEmitter} `this`.
+		 * @api public
+		 */
+		EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+			var evt;
+
+			if (event) {
+				evt = prefix ? prefix + event : event;
+				if (this._events[evt]) {
+					if (--this._eventsCount === 0) this._events = new Events();
+					else delete this._events[evt];
+				}
+			} else {
+				this._events = new Events();
+				this._eventsCount = 0;
+			}
+
+			return this;
+		};
+
+//
+// Alias methods names because people roll like that.
+//
+		EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+		EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+
+//
+// This function doesn't apply anymore.
+//
+		EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
+			return this;
+		};
+
+//
+// Expose the prefix.
+//
+		EventEmitter.prefixed = prefix;
+
+//
+// Allow `EventEmitter` to be imported as module namespace.
+//
+		EventEmitter.EventEmitter = EventEmitter;
+
+//
+// Expose the module.
+//
+		return EventEmitter
+	}())
 
 	var Protocol = {
 
@@ -220,6 +483,8 @@
 	};
 
 	function Subscription(streamId, callback, options) {
+		EventEmitter.call(this); // call parent constructor
+
 		if (!streamId)
 			throw "No stream id given!"
 		if (!callback)
@@ -232,6 +497,7 @@
 		this.callback = callback
 		this.options = options || {}
 		this.queue = []
+		this.subscribing = false
 		this.subscribed = false
 		this.lastReceivedOffset = null
 
@@ -259,49 +525,55 @@
 
 		/*** Message handlers ***/
 
-		this.bind('subscribed', function(response) {
+		this.on('subscribed', function(response) {
 			debug("Sub %s subscribed to stream: %s", _this.id, _this.streamId)
 			_this.subscribed = true
+			_this.subscribing = false
 		})
 
-		this.bind('unsubscribed', function() {
+		this.on('unsubscribed', function() {
 			debug("Sub %s unsubscribed: %s", _this.id, _this.streamId)
 			_this.subscribed = false
+			_this.subscribing = false
 			_this.unsubscribing = false
 			_this.resending = false
 		})
 
-		this.bind('resending', function(response) {
+		this.on('resending', function(response) {
 			debug("Sub %s resending: %o", _this.id, response)
 			// _this.resending = true was set elsewhere before making the request
 		})
 
-		this.bind('no_resend', function(response) {
+		this.on('no_resend', function(response) {
 			debug("Sub %s no_resend: %o", _this.id, response)
 			_this.resending = false
 			_this.checkQueue()
 		})
 
-		this.bind('resent', function(response) {
+		this.on('resent', function(response) {
 			debug("Sub %s resent: %o", _this.id, response)
 			_this.resending = false
 			_this.checkQueue()
 		})
 
-		this.bind('connected', function() {
+		this.on('connected', function() {
 
 		})
 
-		this.bind('disconnected', function() {
+		this.on('disconnected', function() {
 			_this.subscribed = false
+			_this.subscribing = false
 			_this.resending = false
 		})
 
 	}
 
-	MicroEvent.mixin(Subscription)
+	// Subscription extends EventEmitter
+	Object.keys(EventEmitter.prototype).forEach(function(it) {
+		Subscription.prototype[it] = EventEmitter.prototype[it]
+	})
 
-	Subscription.prototype.handleMessage = function(msg) {
+	Subscription.prototype.handleMessage = function(msg, isResend) {
 		var content = msg.content
 		var timestamp = msg.timestamp
 		var offset = msg.offset
@@ -311,31 +583,36 @@
 			debug("handleMessage: prevOffset is null, gap detection is impossible! message: %o", msg)
 		}
 
-		// Gap check
-		if (previousOffset != null && 					// previousOffset is required to check for gaps
-			this.lastReceivedOffset != null &&  		// and we need to know what msg was the previous one
-			previousOffset > this.lastReceivedOffset &&	// previous message had larger offset than our previous msg => gap!
-			!(this.options.resend_last > 0 && this.resending)) { // don't mind gaps when resending resend_last
-
+		// TODO: check this.options.resend_last ?
+		// If resending, queue broadcasted messages
+		if (this.resending && !isResend) {
 			this.queue.push(msg)
+		} else {
+			// Gap check
+			if (previousOffset != null && 					// previousOffset is required to check for gaps
+				this.lastReceivedOffset != null &&  		// and we need to know what msg was the previous one
+				previousOffset > this.lastReceivedOffset &&	// previous message had larger offset than our previous msg => gap!
+				!this.resending) {
 
-			if (!this.resending) {
+				// Queue the message to be processed after resend
+				this.queue.push(msg)
+
 				var from = this.lastReceivedOffset + 1
 				var to = previousOffset
 				debug("Gap detected, requesting resend for stream %s from %d to %d", this.streamId, from, to)
-				this.trigger('gap', from, to)
+				this.emit('gap', from, to)
 			}
-		}
-		// Prevent double-processing of messages for any reason
-		else if (this.lastReceivedOffset != null && offset <= this.lastReceivedOffset) {
-			debug("Sub %s already received message: %d, lastReceivedOffset: %d. Ignoring message.", this.id, offset, this.lastReceivedOffset)
-		}
-		// Normal case where prevOffset == null || lastReceivedOffset == null || prevOffset === lastReceivedOffset
-		else {
-			this.lastReceivedOffset = offset
-			this.callback(content, this.streamId, timestamp, offset)
-			if (content[BYE_KEY]) {
-				this.trigger('done')
+			// Prevent double-processing of messages for any reason
+			else if (this.lastReceivedOffset != null && offset <= this.lastReceivedOffset) {
+				debug("Sub %s already received message: %d, lastReceivedOffset: %d. Ignoring message.", this.id, offset, this.lastReceivedOffset)
+			}
+			// Normal case where prevOffset == null || lastReceivedOffset == null || prevOffset === lastReceivedOffset
+			else {
+				this.lastReceivedOffset = offset
+				this.callback(content, this.streamId, timestamp, offset)
+				if (content[BYE_KEY]) {
+					this.emit('done')
+				}
 			}
 		}
 	}
@@ -348,7 +625,7 @@
 			var length = this.queue.length
 			for (i=0; i<length; i++) {
 				var msg = this.queue[i]
-				this.handleMessage(msg)
+				this.handleMessage(msg, false)
 			}
 
 			this.queue = []
@@ -392,6 +669,8 @@
 	}
 
 	function StreamrClient(options) {
+		EventEmitter.call(this); // call parent constructor
+
 		// Default options
 		this.options = {
 			// The server to connect to
@@ -411,7 +690,10 @@
 		extend(this.options, options || {})
 	}
 
-	MicroEvent.mixin(StreamrClient)
+	// StreamrClient extends EventEmitter
+	Object.keys(EventEmitter.prototype).forEach(function(it) {
+		StreamrClient.prototype[it] = EventEmitter.prototype[it]
+	})
 
 	StreamrClient.prototype._addSubscription = function(sub) {
 		this.subById[sub.id] = sub
@@ -451,10 +733,10 @@
 
 		// Create the Subscription object and bind handlers
 		var sub = new Subscription(streamId, callback, options)
-		sub.bind('gap', function(from, to) {
+		sub.on('gap', function(from, to) {
 			_this._requestResend(sub, {resend_from: from, resend_to: to})
 		})
-		sub.bind('done', function() {
+		sub.on('done', function() {
 			debug("done event for sub %d", sub.id)
 			_this.unsubscribe(sub)
 		})
@@ -484,7 +766,7 @@
 		// Else the sub can be cleaned off immediately
 		else if (!sub.unsubscribing) {
 			this._removeSubscription(sub)
-			sub.trigger('unsubscribed')
+			sub.emit('unsubscribed')
 			this._checkAutoDisconnect()
 		}
 	}
@@ -539,7 +821,7 @@
 			var subs = _this.subsByStream[streamId]
 			if (subs) {
 				for (var i=0;i<subs.length;i++)
-					subs[i].handleMessage(msg)
+					subs[i].handleMessage(msg, false)
 			}
 			else {
 				debug('WARN: message received for stream with no subscriptions: %s', streamId)
@@ -549,7 +831,7 @@
 		// Unicast messages to a specific subscription only
 		this.socket.bind('u', function(msg, sub) {
 			if (sub !== undefined && _this.subById[sub] !== undefined) {
-				_this.subById[sub].handleMessage(msg)
+				_this.subById[sub].handleMessage(msg, true)
 			}
 			else {
 				debug('WARN: subscription not found for stream: %s, sub: %s', msg.streamId, sub)
@@ -570,7 +852,7 @@
 				subs.filter(function(sub) {
 					return !sub.resending
 				}).forEach(function(sub) {
-					sub.trigger('subscribed', response)
+					sub.emit('subscribed', response)
 				})
 			}
 		})
@@ -583,7 +865,7 @@
 				var l = _this.subsByStream[response.channel].slice()
 				l.forEach(function(sub) {
 					_this._removeSubscription(sub)
-					sub.trigger('unsubscribed')
+					sub.emit('unsubscribed')
 				})
 			}
 
@@ -592,17 +874,27 @@
 
 		// Route resending state messages to corresponding Subscriptions
 		this.socket.bind('resending', function(response) {
-			_this.subById[response.sub].trigger('resending', response)
+			if (_this.subById[response.sub]) {
+				_this.subById[response.sub].emit('resending', response)
+			} else {
+				debug('resent: Subscription %d is gone already', response.sub)
+			}
 		})
 
 		this.socket.bind('no_resend', function(response) {
-			_this.subById[response.sub].trigger('no_resend', response)
+			if (_this.subById[response.sub]) {
+				_this.subById[response.sub].emit('no_resend', response)
+			} else {
+				debug('resent: Subscription %d is gone already', response.sub)
+			}
 		})
 
 		this.socket.bind('resent', function(response) {
-			if (_this.subById[response.sub])
-				_this.subById[response.sub].trigger('resent', response)
-			else debug('resent: Subscription %d is gone already', response.sub)
+			if (_this.subById[response.sub]) {
+				_this.subById[response.sub].emit('resent', response)
+			} else {
+				debug('resent: Subscription %d is gone already', response.sub)
+			}
 		})
 
 		// On connect/reconnect, send pending subscription requests
@@ -611,7 +903,7 @@
 			_this.connected = true
 			_this.connecting = false
 			_this.disconnecting = false
-			_this.trigger('connected')
+			_this.emit('connected')
 
 			Object.keys(_this.subsByStream).forEach(function(streamId) {
 				var subs = _this.subsByStream[streamId]
@@ -628,13 +920,13 @@
 			_this.connected = false
 			_this.connecting = false
 			_this.disconnecting = false
-			_this.trigger('disconnected')
+			_this.emit('disconnected')
 
 			Object.keys(_this.subsByStream).forEach(function(streamId) {
 				var subs = _this.subsByStream[streamId]
 				delete subs._subscribing
 				subs.forEach(function(sub) {
-					sub.trigger('disconnected')
+					sub.emit('disconnected')
 				})
 			})
 		})
@@ -669,25 +961,16 @@
 	StreamrClient.prototype._resendAndSubscribe = function(sub) {
 		var _this = this
 
-		if (sub.hasResendOptions()) {
-			var onResent = function(response) {
-				sub.unbind('resent', this)
-				sub.unbind('no_resend', onNoResend)
-				_this._requestSubscribe(sub)
-			}
-			var onNoResend = function(response) {
-				sub.unbind('resent', onResent)
-				sub.unbind('no_resend', this)
-				_this._requestSubscribe(sub)
-			}
-			sub.bind('resent', onResent)
-			sub.bind('no_resend', onNoResend)
-
-			this._requestResend(sub)
-		}
-
-		if (!sub.resending) {
+		if (!sub.subscribing && !sub.resending) {
+			sub.subscribing = true
 			_this._requestSubscribe(sub)
+
+			// Once subscribed, ask for a resend
+			sub.once('subscribed', function() {
+				if (sub.hasResendOptions()) {
+					_this._requestResend(sub)
+				}
+			})
 		}
 	}
 
@@ -711,7 +994,7 @@
 			debug('_requestSubscribe: another subscription for same stream: %s, insta-subscribing', sub.streamId)
 
 			setTimeout(function() {
-				sub.trigger('subscribed')
+				sub.emit('subscribed')
 			}, 0)
 		}
 	}
@@ -744,7 +1027,7 @@
 
 	StreamrClient.prototype.handleError = function(msg) {
 		debug(msg)
-		this.trigger('error', msg)
+		this.emit('error', msg)
 	}
 
 	if (typeof module !== 'undefined' && module.exports)

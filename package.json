@@ -16,12 +16,12 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "debug": "*"
+    "debug": "*",
+    "eventemitter3": "*"
   },
   "devDependencies": {
-    "sinon": "^1.17.5",
     "mocha": "*",
-    "eventemitter2": "*",
-    "mockery": "*"
+    "mockery": "*",
+    "sinon": "^1.17.5"
   }
 }
