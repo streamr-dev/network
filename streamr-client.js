@@ -936,6 +936,7 @@
 			})
 		})
 
+		this.connection.connect() // TODO: i did not find this anywhere else?
 		return this.subsByStream
 	}
 
