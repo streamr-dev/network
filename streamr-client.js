@@ -530,7 +530,7 @@
 
 		/*** Message handlers ***/
 
-		this.on('subscribed', function(response) {
+		this.on('subscribed', function() {
 			debug("Sub %s subscribed to stream: %s", _this.id, _this.streamId)
 			_this.subscribed = true
 			_this.subscribing = false
@@ -857,7 +857,7 @@
 				subs.filter(function(sub) {
 					return !sub.resending
 				}).forEach(function(sub) {
-					sub.emit('subscribed', response)
+					sub.emit('subscribed')
 				})
 			}
 		})
