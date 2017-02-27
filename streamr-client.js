@@ -442,7 +442,7 @@
 				debug("Connected to ", _this.options.url)
 				_this.connected = true
 				_this.connecting = false
-				_this.trigger('connected')
+				_this.emit('connected')
 			}
 
 			this.socket.onclose = function() {
@@ -457,12 +457,12 @@
 
 				_this.connected = false
 				_this.connecting = false
-				_this.trigger('disconnected')
+				_this.emit('disconnected')
 			}
 
 			this.socket.onmessage = function(messageEvent) {
 				var decoded = Protocol.decodeBrowserWrapper(messageEvent.data)
-				_this.trigger(decoded.type, Protocol.decodeMessage(decoded.type, decoded.msg), decoded.subId)
+				_this.emit(decoded.type, Protocol.decodeMessage(decoded.type, decoded.msg), decoded.subId)
 			}
 		}
 	}
