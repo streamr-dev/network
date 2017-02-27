@@ -3,6 +3,7 @@
 (function() {
 
 	var debug
+	var WebSocket
 	if (typeof window !== 'undefined') {
 		debug = (window.debug ? window.debug('StreamrClient') : function() {
 			if (window.consoleLoggingEnabled)
@@ -11,6 +12,7 @@
 	}
 	else {
 		debug = require('debug')('StreamrClient')
+		WebSocket = require('ws')
 	}
 
 	var BYE_KEY = "_bye"

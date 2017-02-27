@@ -90,28 +90,54 @@ describe('StreamrClient', function() {
 	function createSocketMock() {
 		var s = new EventEmitter()
 
+		s.connect = function() {
+            async(function() {
+                s.onopen()
+            })
+        }
+
 		s.disconnect = function() {
 			async(function() {
-				mockDebug("socket.disconnect: emitting disconnect")
-				s.emit('disconnect')
+				if (!s.done) {
+					mockDebug("socket.disconnect: emitting disconnect")
+					s.onclose()
+                }
 			})
 		}
 
 		s.defaultSubscribeHandler = function(request) {
 			async(function() {
-				mockDebug("defaultSubscribeHandler: emitting subscribed")
-				s.emit('subscribed', {channel: request.channel})
+				if (!s.done) {
+                    mockDebug("defaultSubscribeHandler: emitting subscribed")
+                    s.onmessage({
+                        data: JSON.stringify([0, 2, null, {channel: request.channel, partition: 0}])
+                    })
+                }
 			})
 		}
-		s.on('subscribe', s.defaultSubscribeHandler)
 
 		s.defaultUnsubscribeHandler = function(request) {
 			async(function() {
-				mockDebug("defaultUnsubscribeHandler: emitting unsubscribed")
-				s.emit('unsubscribed', {channel: request.channel})	
+				if (!s.done) {
+					mockDebug("defaultUnsubscribeHandler: emitting unsubscribed")
+                    s.onmessage({
+                        data: JSON.stringify([0, 3, null, {channel: request.channel, partition: 0}])
+                    })
+                }
 			})
 		}
 		s.on('unsubscribe', s.defaultUnsubscribeHandler)
+
+		s.send = function(msg) {
+			var parsed = JSON.parse(msg)
+			if (parsed.type === 'subscribe') {
+                s.defaultSubscribeHandler(parsed)
+            } else if (parsed.type === 'unsubscribe') {
+				s.emit('unsubscribe', parsed)
+			} else {
+				throw "Unexpected message " + msg
+			}
+		}
 
 		return s
 	}
@@ -119,7 +145,7 @@ describe('StreamrClient', function() {
 	before(function() {
 		mockery.enable()
 
-		mockery.registerMock('socket.io-client', function(uri, opts) {
+		mockery.registerMock('ws', function(uri, opts) {
 			ioMockCalls++
 
 			// Create new sockets for subsequent calls
@@ -128,7 +154,7 @@ describe('StreamrClient', function() {
 			}
 
 			async(function() {
-				socket.emit('connect')
+				socket.onopen()
 			})
 
 			socket.uri = uri;
