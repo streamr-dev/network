@@ -468,7 +468,7 @@
 	}
 
 	Connection.prototype.disconnect = function() {
-		if (this.socket !== undefined && (connected || connecting)) {
+		if (this.socket !== undefined && (this.connected || this.connecting)) {
 			this.disconnecting = true
 			this.socket.close()
 		}
