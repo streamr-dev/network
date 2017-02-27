@@ -47,7 +47,7 @@ describe('StreamrClient', function() {
 
         // unicast message to subscription
         if (subId != null) {
-            var msg = [
+            return JSON.stringify([
                 28, // version
                 streamId,
 				0, // partition
@@ -56,12 +56,7 @@ describe('StreamrClient', function() {
                 offset,
                 forcePreviousOffset, // previousOffset
                 27, // contentType (JSON)
-				JSON.stringify(content)]
-
-			return JSON.stringify({
-                m: msg,
-                sub: subId
-			})
+				JSON.stringify(content)])
         }
         // broadcast message to all subscriptions
         else {
@@ -107,23 +102,13 @@ describe('StreamrClient', function() {
 
 		s.subscribeHandler = function(request) {
 			async(function() {
-				if (!s.done) {
-                    mockDebug("defaultSubscribeHandler: emitting subscribed")
-                    s.onmessage({
-                        data: JSON.stringify([0, 2, null, {channel: request.channel, partition: 0}])
-                    })
-                }
+                s.fakeReceive([0, 2, null, {channel: request.channel, partition: 0}])
 			})
 		}
 
 		s.unsubscribeHandler = function(request) {
 			async(function() {
-				if (!s.done) {
-					mockDebug("defaultUnsubscribeHandler: emitting unsubscribed")
-                    s.onmessage({
-                        data: JSON.stringify([0, 3, null, {channel: request.channel, partition: 0}])
-                    })
-                }
+				s.fakeReceive([0, 3, null, {channel: request.channel, partition: 0}])
 			})
 		}
 
@@ -141,7 +126,13 @@ describe('StreamrClient', function() {
 				s.resendHandler(parsed)
 			}
 		}
-		
+
+		s.fakeReceive = function (msg) {
+			if (!s.done) {
+                s.onmessage({data: JSON.stringify(msg)})
+            }
+        }
+
 		s.close = function() {
 			s.disconnect()
 		}
@@ -372,11 +363,7 @@ describe('StreamrClient', function() {
 
 		it('should trigger an error event on the client if the subscribe fails', function(done) {
             socket.subscribeHandler = function(request) {
-                if (!socket.done) {
-                    socket.onmessage({
-                        data: JSON.stringify([0, 2, null, {channel: request.channel, partition: 0, error: 'error message'}])
-                    })
-                }
+				socket.fakeReceive([0, 2, null, {channel: request.channel, partition: 0, error: 'error message'}])
             }
 
 			client.subscribe("stream1", function(message) {})
@@ -462,31 +449,17 @@ describe('StreamrClient', function() {
 
                 if (request.resend_all) {
                     async(function() {
-                        socket.onmessage({
-                        	data: JSON.stringify([0, resendingCode, request.sub, {channel:'stream1', partition: 0}])
-						})
-                        socket.onmessage({
-                            data: JSON.stringify([0, unicastCode, request.sub, msg('stream1', 0, request.sub)])
-                        })
-                        socket.onmessage({
-                            data: JSON.stringify([0, unicastCode, request.sub, msg('stream1', 1, request.sub)])
-                        })
-                        socket.onmessage({
-                            data: JSON.stringify([0, resentCode, request.sub, {channel:'stream1', partition: 0}])
-                        })
+                        socket.fakeReceive([0, resendingCode, request.sub, {channel:'stream1', partition: 0}])
+                        socket.fakeReceive([0, unicastCode, request.sub, msg('stream1', 0, request.sub)])
+                        socket.fakeReceive([0, unicastCode, request.sub, msg('stream1', 1, request.sub)])
+                        socket.fakeReceive([0, resentCode, request.sub, {channel:'stream1', partition: 0}])
                     })
                 }
                 else if (request.resend_last===1) {
                     async(function() {
-                        socket.onmessage({
-                            data: JSON.stringify([0, resendingCode, request.sub, {channel:'stream1', partition: 0}])
-                        })
-                        socket.onmessage({
-                            data: JSON.stringify([0, unicastCode, request.sub, msg('stream1', 1, request.sub)])
-                        })
-                        socket.onmessage({
-                            data: JSON.stringify([0, resentCode, request.sub, {channel:'stream1', partition: 0}])
-                        })
+                        socket.fakeReceive([0, resendingCode, request.sub, {channel:'stream1', partition: 0}])
+                        socket.fakeReceive([0, unicastCode, request.sub, msg('stream1', 1, request.sub)])
+                        socket.fakeReceive([0, resentCode, request.sub, {channel:'stream1', partition: 0}])
                     })
                 }
             }
@@ -523,15 +496,9 @@ describe('StreamrClient', function() {
                 const resentCode = 5
 
 				async(function() {
-					socket.onmessage({
-						data: JSON.stringify([0, resendingCode, request.sub, {channel:'stream1', partition: 0}])
-					})
-					socket.onmessage({
-						data: JSON.stringify([0, broadcastCode, null, byeMsg('stream1', 0)])
-					})
-					socket.onmessage({
-						data: JSON.stringify([0, resentCode, request.sub, {channel:'stream1', partition: 0}])
-					})
+					socket.fakeReceive([0, resendingCode, request.sub, {channel:'stream1', partition: 0}])
+					socket.fakeReceive([0, broadcastCode, null, byeMsg('stream1', 0)])
+					socket.fakeReceive([0, resentCode, request.sub, {channel:'stream1', partition: 0}])
 					done()
 				})
             }
@@ -548,19 +515,10 @@ describe('StreamrClient', function() {
                     const resendingCode = 4
                     const resentCode = 5
 
-                    socket.onmessage({
-                        data: JSON.stringify([0, resendingCode, request.sub, {channel:'stream1', partition: 0}])
-                    })
-
-                    socket.onmessage({
-                        data: JSON.stringify([0, broadcastCode, request.sub, byeMsg('stream1', 0)])
-                    })
-                    socket.onmessage({
-                        data: JSON.stringify([0, unicastCode, request.sub, msg('stream1', 1, sub.id)])
-                    })
-                    socket.onmessage({
-                        data: JSON.stringify([0, resentCode, request.sub, {channel:'stream1', sub:sub.id}])
-                    })
+                    socket.fakeReceive([0, resendingCode, request.sub, {channel:'stream1', partition: 0}])
+                    socket.fakeReceive([0, broadcastCode, request.sub, byeMsg('stream1', 0)])
+                    socket.fakeReceive([0, unicastCode, request.sub, msg('stream1', 1, sub.id)])
+                    socket.fakeReceive([0, resentCode, request.sub, {channel:'stream1', sub:sub.id}])
                     done()
                 })
             }
@@ -573,101 +531,111 @@ describe('StreamrClient', function() {
 	describe("message handling", function() {
 
 		it('should call the callback when a message is received', function(done) {
-			var sub = client.subscribe("stream1", function(message) {
+			client.subscribe("stream1", function() {
 				done()
 			})
 			client.connect()
 			client.connection.once('subscribed', function() {
-				client.connection.emit('b', msg("stream1", 0))
+                const broadcastCode = 0
+				socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0)])
 			})
 		})
 
 		it('should not call the callback nor throw an exception when a message is re-received', function(done) {
 			var callbackCounter = 0
 			client.subscribe("stream1", function(message) {
-				callbackCounter++
-				if (callbackCounter>1)
-					throw "Callback called more than once!"
+				++callbackCounter
+				assert.equal(callbackCounter, 1)
+                done()
 			})
 			client.connect()
 
 			client.connection.once('subscribed', function() {
-				// Fake messages
-				client.connection.emit('b', msg("stream1",0))
-				client.connection.emit('b', msg("stream1",0))
-				client.connection.emit('b', msg("stream1",0))
-				done()
-			})			
+				// Fake message
+                const broadcastCode = 0
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0)])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0)])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0)])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0)])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0)])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0)])
+			})
 		})
 		
 		it('should call the callback once for each message in order', function(done) {
-			var count = 0
+			var receivedCounts = []
 			client.subscribe("stream1", function(message) {
-				console.log("Count: "+count+", message: "+message.count)
-				
-				if (message.count !== count)
-					throw "Message counter: "+message.count+", expected: "+count
-					
-				if (++count === 3)
+                receivedCounts.push(message.count)
+				if (receivedCounts.length === 5) {
+                    assert.deepEqual(receivedCounts, [0, 1, 2, 3, 4])
 					done()
+                }
 			})
 			client.connect()
 			
 			client.connection.once('subscribed', function() {
-				client.connection.emit('b', msg("stream1", 0, {count:0}))
-				client.connection.emit('b', msg("stream1", 1, {count:1}))
-				client.connection.emit('b', msg("stream1", 2, {count:2}))
+                const broadcastCode = 0
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0, { count: 0 })])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 1, { count: 1 })])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 2, { count: 2 })])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 3, { count: 3 })])
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 4, { count: 4 })])
 			})
 		})
 
 		it('should emit unsubscribe after processing a message with the bye key', function(done) {
 			var processed = false
-			client.subscribe("stream1", function(message) {
-				processed = true
-			})
+			client.subscribe("stream1", function(message) { processed = true })
 			client.connect()
 
 			client.connection.once('subscribed', function() {
-				client.connection.emit('b', byeMsg("stream1", 0))
+                const broadcastCode = 0
+                socket.fakeReceive([0, broadcastCode, null, byeMsg("stream1", 0)])
 			})
 
 			client.connection.once('unsubscribed', function(response)  {
-				if (processed && response.channel==='stream1')
-					done()
+                assert.equal(processed, true)
+				assert.equal(response.channel, 'stream1')
+				done()
 			})
 		})
 
 		it('should direct messages to specific subscriptions if the messages contain the _sub key', function(done) {
-			var sub1 = client.subscribe("stream1", function(message) {
-				throw "sub1 should not have received a message!"
-			})
-			sub1.counter = 0
+            var numReceived = 0
+            var sub1 = client.subscribe("stream1", function(message) {
+                ++numReceived
+                if (numReceived === 2) {
+                    done()
+                }
+            })
 
 			var sub2 = client.subscribe("stream1", function(message) {
-				done()
+				throw "sub1 should not have received a message!"
 			})
-			sub2.counter = 0
 
 			client.connect()
 			sub2.on('subscribed', function() {
+                const broadcastCode = 0
+                const unicastCode = 1
+
 				assert.throws(function() {
                     // Received by sub2
-					client.connection.emit('b', msg('stream1', 0, {}))
+                    socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0)])
 				})
-				client.connection.emit('u', msg('stream1', 0, {}, sub2.id))
+                socket.fakeReceive([0, unicastCode, sub1.id, msg("stream1", 1)])
 			})
 		})
 
 		it('should not call the handlers with any additional keys present in the message', function(done) {
-			var sub = client.subscribe("stream1", function(message) {
-				console.log(message)
-				assert.equal(Object.keys(message).length, 1)
+			client.subscribe("stream1", function(message) {
+				assert.deepEqual(message, { count: 0 })
 				done()
 			})
 			client.connect()
 
 			client.connection.once('subscribed', function() {
-				client.connection.emit('b', msg("stream1", 0, {count:0}))
+                const broadcastCode = 0
+                socket.fakeReceive([0, broadcastCode, null, msg("stream1", 0, { count: 0 })])
 			})
 		})
 
