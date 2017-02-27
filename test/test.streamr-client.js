@@ -1442,18 +1442,14 @@ describe('StreamrClient', function() {
 
 	describe("client events", function() {
 		it('should trigger a connected event on connect', function(done) {
-			client.on('connected', function() {
-				done()
-			})
+			client.on('connected', done)
 			client.connect()
 		})
 
 		it('should trigger a disconnected event on disconnect', function(done) {
-			client.on('disconnected', function() {
-				done()
-			})
+			client.on('disconnected', done)
 			client.connect()
-			client.connection.once('connect', function() {
+			client.connection.once('connected', function() {
 				client.disconnect()
 			})
 		})
