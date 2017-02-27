@@ -830,16 +830,16 @@ describe('StreamrClient', function() {
 			var sub2 = client.subscribe("stream2", function(message) {})
 			client.connect()
 
+			client.connection.on('disconnected', function() {
+				throw "Should not have disconnected!"
+			})
+
 			client.connection.on('subscribed', function(response) {
 				if (sub1.isSubscribed() && sub2.isSubscribed()) {
 					client.unsubscribe(sub1)
 					client.unsubscribe(sub2)
 					done()
 				}
-			})
-
-			client.connection.on('disconnect', function() {
-				throw "Should not have disconnected!"
 			})
 		})
 	})
@@ -850,7 +850,7 @@ describe('StreamrClient', function() {
 			client.connect()
 			client.connection.disconnect = done
 
-			client.connection.once('connect', function() {
+			client.connection.once('connected', function() {
 				client.disconnect()
 			})
 		})
@@ -858,11 +858,11 @@ describe('StreamrClient', function() {
 		it('should report that it is not connected and not connecting after disconnecting', function(done) {
 			client.connect()
 
-			client.connection.once('connect', function() {
+			client.connection.once('connected', function() {
 				client.disconnect()
 			})
 
-			client.connection.once('disconnect', function() {
+			client.connection.once('disconnected', function() {
 				assert(!client.isConnected())
 				assert(!client.connecting)
 				done()
@@ -877,7 +877,7 @@ describe('StreamrClient', function() {
 				client.disconnect()
 			})
 
-			client.connection.once('disconnect', function() {
+			client.connection.once('disconnected', function() {
 				assert.equal(client.getSubscriptions('stream1').length, 0)
 				done()
 			})
@@ -891,14 +891,13 @@ describe('StreamrClient', function() {
 				client.disconnect()
 			})
 
-			client.connection.once('disconnect', function() {
+			client.connection.once('disconnected', function() {
 				client.subscribe("stream2", function(message) {})
 				client.connect()
 
 				client.connection.once('subscribed', function(response) {
-					if (response.channel === 'stream2')
-						done()
-					else throw "Unexpected response: "+JSON.stringify(response)
+					assert.equal(response.channel, 'stream2')
+					done()
 				})
 			})
 		})
@@ -910,7 +909,7 @@ describe('StreamrClient', function() {
 
 			client.connection.disconnect = done
 
-			client.connection.once('connect', function() {
+			client.connection.once('connected', function() {
 				client.pause()
 			})
 		})
@@ -918,11 +917,11 @@ describe('StreamrClient', function() {
 		it('should report that its not connected after pausing', function(done) {
 			client.connect()
 
-			client.connection.once('connect', function() {
+			client.connection.once('connected', function() {
 				client.pause()
 			})
 
-			client.connection.once('disconnect', function() {
+			client.connection.once('disconnected', function() {
 				assert(!client.isConnected())
 				done()
 			})
@@ -936,7 +935,7 @@ describe('StreamrClient', function() {
 				client.pause()
 			})
 
-			client.connection.once('disconnect', function() {
+			client.connection.once('disconnected', function() {
 				assert.equal(client.getSubscriptions('stream1').length, 1)
 				done()
 			})
@@ -952,12 +951,7 @@ describe('StreamrClient', function() {
 				client.pause()	
 			})
 
-			client.connection.on('connect', function() {
-				console.log("connect event")
-			})
-
-			client.connection.once('disconnect', function() {
-				console.log("sub2")
+			client.connection.once('disconnected', function() {
 				sub2 = client.subscribe("stream2", function(message) {})
 
 				assert(!sub1.isSubscribed())
@@ -966,12 +960,12 @@ describe('StreamrClient', function() {
 				assert.equal(client.getSubscriptions('stream1').length, 1)
 				assert.equal(client.getSubscriptions('stream2').length, 1)
 
-				console.log("conn")
 				client.connect()
-
 				client.connection.on('subscribed', function(response) {
-					if (sub1.isSubscribed() && sub2.isSubscribed())
+					if (sub1.isSubscribed() && sub2.isSubscribed()) {
+						socket.done = true
 						done()
+					}
 				})
 			})
 		})
