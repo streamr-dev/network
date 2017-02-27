@@ -1408,8 +1408,9 @@ describe('StreamrClient', function() {
 			var sub1 = client.subscribe("stream1", function(message) {})
 			var sub2 = client.subscribe("stream2", function(message) {})
 			var check = function(response) {
-				if (++subscribeCount === 2)
+				if (++subscribeCount === 2) {
 					done()
+				}
 			}
 			sub1.on('subscribed', check)
 			sub2.on('subscribed', check)
@@ -1420,8 +1421,9 @@ describe('StreamrClient', function() {
 		it('should trigger an unsubscribed event on unsubscribed', function(done) {
 			var count = 0
 			var check = function(response) {
-				if (++count===2)
+				if (++count===2) {
 					done()
+				}
 			}
 
 			var sub1 = client.subscribe("stream1", function(message) {})
