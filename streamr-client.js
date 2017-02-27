@@ -628,12 +628,14 @@
 
 			var i
 			var length = this.queue.length
+
+			var originalQueue = this.queue
+			this.queue = []
+
 			for (i=0; i<length; i++) {
-				var msg = this.queue[i]
+				var msg = originalQueue[i]
 				this.handleMessage(msg, false)
 			}
-
-			this.queue = []
 		}
 	}
 
