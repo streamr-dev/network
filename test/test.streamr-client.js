@@ -181,54 +181,33 @@ describe('StreamrClient', function() {
 	})
 
 	describe("connect", function() {
-		it('should not pass transport details in io() call', function(done) {
-			client.connect()
-			client.connection.on("connect", function() {
-				assert.strictEqual(client.connection.opts["transports"], null)
-				done()
-			})
-		})
-
-		context('when client initialized with transport details', function () {
-			beforeEach(function () {
-				client = new StreamrClient({
-					transports: ["websocket"]
-				})
-			})
-
-			it('should pass transport details in io() call', function(done) {
-				client.connect()
-				client.connection.on("connect", function() {
-					assert.deepEqual(client.connection.opts["transports"], ["websocket"])
-					done()
-				})
-			})
-		})
-
-		it('should emit pending subscribes', function(done) {
+		it('should send pending subscribes', function(done) {
 			var subscription = client.subscribe("stream1", function(message) {})
 			client.connect()
 
-			client.connection.on('subscribe', function(request) {
-				if (request.channel==='stream1')
+			client.connection.on('subscribed', function(request) {
+				if (request.channel==='stream1') {
+					socket.done = true
 					done()
+				}
 			})
 		})
 
-		it('should not emit anything on connect if not subscribed to anything', function(done) {
+		it('should not send anything on connect if not subscribed to anything', function(done) {
 			client.connect()
 
-			client.connection.emit = function() {
+			client.connection.send = function() {
 				if (this.event !== 'connect')
-					throw "Unexpected emit: "+this.event
+					throw "Unexpected send: "+this.event
 			}
 
+			socket.done = true
 			done()
 		})
 
 		it('should report that it is connected and not connecting after connecting', function(done) {
 			client.connect()
-			client.connection.on('connect', function() {
+			client.connection.on('connected', function() {
 				assert(client.isConnected())
 				assert(!client.connecting)
 				done()
@@ -250,6 +229,7 @@ describe('StreamrClient', function() {
 			client.subscribe("stream2", function(message) {})
 
 			assert.equal(ioMockCalls, 1)
+			socket.done = true
 			done()
 		})
 	})
@@ -260,20 +240,22 @@ describe('StreamrClient', function() {
 			client.connect()
 
 			// connect-disconnect-connect
-			client.connection.once('connect', function() {
-				client.connection.once('disconnect', function() {
-					client.connection.on('subscribe', function(request) {
+			client.connection.once('connected', function() {
+				client.connection.once('disconnected', function() {
+					client.connection.on('subscribed', function(request) {
 						console.log(request)
-						if (request.channel==='stream1')
+						if (request.channel==='stream1') {
+							socket.done = true
 							done()
+                        }
 					})
 
 					console.log("Disconnected, now connecting!")
-					client.connection.emit('connect')
+					socket.connect()
 				})
 
 				console.log("Connected, now disconnecting!")
-				client.connection.emit('disconnect')
+				socket.disconnect()
 
 			})
 
@@ -289,15 +271,18 @@ describe('StreamrClient', function() {
 				if (sub1.isSubscribed() && sub2.isSubscribed()) {
 					client.unsubscribe(sub1)
 					client.connection.once('unsubscribed', function(response) {
-						client.connection.emit('disconnect')
+						socket.disconnect()
 
-						client.connection.on('subscribe', function(request) {
-							if (request.channel==="stream1")
+						client.connection.on('subscribed', function(request) {
+							if (request.channel==="stream1") {
 								throw "Should not have subscribed to stream1 on reconnect!"
-							if (request.channel==='stream2')
+                            }
+							if (request.channel==='stream2') {
+								socket.done = true
 								done()
+                            }
 						})
-						client.connection.emit('connect')
+						socket.connect()
 					})
 				}
 			})
@@ -306,15 +291,17 @@ describe('StreamrClient', function() {
 
 		it('should emit a subscribe event on reconnect for topics subscribed after initial connect', function(done) {
 			client.connect()
-			client.connection.once('connect', function() {
+			client.connection.once('connected', function() {
 				client.subscribe("stream1", function(message) {})
 				client.connection.once('subscribed', function() {
-					client.connection.emit('disconnect')
-					client.connection.once('subscribe', function(request) {
-						if (request.channel==='stream1')
+					socket.disconnect()
+					client.connection.once('subscribed', function(request) {
+						if (request.channel==='stream1') {
+							socket.done = true
 							done()
+                        }
 					})
-					client.connection.emit('connect')
+					socket.connect()
 				})
 			})
 		})
@@ -339,12 +326,14 @@ describe('StreamrClient', function() {
 			})
 		})
 
-		it('should emit a subscribe event when subscribing after connecting', function(done) {
+		it('should emit a subscribed event when subscribing after connecting', function(done) {
 			client.connect()
-			client.connection.once('connect', function() {
-				client.connection.once('subscribe', function(request) {
-					if (request.channel==='stream1')
+			client.connection.once('connected', function() {
+				client.connection.once('subscribed', function(request) {
+					if (request.channel==='stream1') {
+						socket.done = true
 						done()
+                    }
 				})
 				client.subscribe("stream1", function(message) {})
 			})
@@ -352,8 +341,8 @@ describe('StreamrClient', function() {
 
 		it('should add any subscription options to subscription request', function(done) {
 			client.connect()
-			client.connection.once('connect', function() {
-				client.connection.once('subscribe', function(request) {
+			client.connection.once('connected', function() {
+				client.connection.once('subscribed', function(request) {
 					if (request.foo === 'bar')
 						done()
 				})
