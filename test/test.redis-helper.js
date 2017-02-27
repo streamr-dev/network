@@ -43,6 +43,19 @@ describe('RedisHelper', function() {
 		})
 	})
 
+	describe('unsubscribe', function() {
+		it('removes subscription entry', function(done) {
+			redisHelper.subscribe('streamId', 1, function() {
+				assert.equal(Object.keys(redisHelper.subscriptions).length, 1)
+				
+				redisHelper.unsubscribe('streamId', 1, function () {
+					assert.deepEqual(redisHelper.subscriptions, {})
+					done()
+				})
+			})
+		})
+	})
+
 	context('after subscribing', function() {
 		beforeEach(function(done) {
 			redisHelper.subscribe('streamId', 1, done)
@@ -61,7 +74,7 @@ describe('RedisHelper', function() {
 			})
 		})
 
-		it ('does not emit a "message" event for a message sent to another Redis channel', function(done) {
+		it('does not emit a "message" event for a message sent to another Redis channel', function(done) {
 			var msg = new StreamrBinaryMessage('streamId', 1, 1488214484821, 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, {
 				hello: 'world'
 			})
@@ -73,6 +86,48 @@ describe('RedisHelper', function() {
 
 			testRedisClient.publish('streamId-2', msgWithMetaData.toBytes(), function() {
 				setTimeout(done, 500)
+			})
+		})
+	})
+	
+	context('after subscribing and unsubscribing', function() {
+		beforeEach(function(done) {
+			redisHelper.subscribe('streamId', 1, function() {
+				redisHelper.unsubscribe('streamId', 1, done)
+			})
+		})
+
+		it('does not emits a "message" event when receiving data from Redis', function(done) {
+			var msg = new StreamrBinaryMessage('streamId', 1, 1488214484821, 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, {
+				hello: 'world'
+			})
+			var msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
+
+			redisHelper.on('message', function(msg) {
+				throw "Should not have received message: " + msg
+			})
+
+			testRedisClient.publish('streamId-1', msgWithMetaData.toBytes(), function() {
+				setTimeout(done, 500)
+			})
+		})
+
+		context('after (re)subscribing', function() {
+			beforeEach(function(done) {
+				redisHelper.subscribe('streamId', 1, done)
+			})
+
+			it('emits a "message" event when receiving data from Redis', function(done) {
+				var msg = new StreamrBinaryMessage('streamId', 1, 1488214484821, 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, {
+					hello: 'world'
+				})
+				var msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
+
+				testRedisClient.publish('streamId-1', msgWithMetaData.toBytes())
+				redisHelper.on('message', function(msg) {
+					assert.deepEqual(msg, [28, 'streamId', 1, 1488214484821, 0, 0, 0, 27, { hello: 'world'}])
+					done()
+				})
 			})
 		})
 	})
