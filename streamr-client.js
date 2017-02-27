@@ -958,7 +958,7 @@
 
 	StreamrClient.prototype._checkAutoDisconnect = function() {
 		// Disconnect if no longer subscribed to any channels
-		if (Object.keys(this.subsByStream).length===0 && this.options.autoDisconnect) {
+		if (this.options.autoDisconnect && Object.keys(this.subsByStream).length === 0) {
 			debug("Disconnecting due to no longer being subscribed to any channels")
 			this.disconnect()
 		}
