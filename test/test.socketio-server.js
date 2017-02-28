@@ -1,18 +1,18 @@
-var assert = require('assert'),
-	events = require('events'),
-	sinon = require('sinon'),
-	mockery = require('mockery'),
-	constants = require('../lib/constants')
-var SocketIoServer = require('../lib/socketio-server')
+const assert = require('assert')
+const events = require('events')
+const sinon = require('sinon')
+const mockery = require('mockery')
+const constants = require('../lib/constants')
+var SocketIoServer
 
 describe('socketio-server', function () {
 
 	var server
-	var ioMock
+	var wsMock
 	var realtimeAdapter
 	var historicalAdapter
 	var latestOffsetFetcher
-	var socket
+	var mockSocket
 
 	function createSocketMock() {
 		var socket = new events.EventEmitter()
@@ -21,9 +21,9 @@ describe('socketio-server', function () {
 		socket.join = function(channel, cb) {
 			socket.rooms.push(channel)
 			console.log("SOCKET MOCK: Socket "+socket.id+" joined channel "+channel+", now on: "+socket.rooms)
-			if (!ioMock.sockets.adapter.rooms[channel]) {
-				ioMock.sockets.adapter.rooms[channel] = {}
-				ioMock.sockets.adapter.rooms[channel][socket.id] = socket
+			if (!wsMock.sockets.adapter.rooms[channel]) {
+				wsMock.sockets.adapter.rooms[channel] = {}
+				wsMock.sockets.adapter.rooms[channel][socket.id] = socket
 			}
 			cb()
 		}
@@ -33,7 +33,7 @@ describe('socketio-server', function () {
 				socket.rooms.splice(index, 1)
 			}
 			
-			delete ioMock.sockets.adapter.rooms[channel][socket.id]	
+			delete wsMock.sockets.adapter.rooms[channel][socket.id]
 			console.log("SOCKET MOCK: Socket "+socket.id+" left channel "+channel+", now on: "+socket.rooms)
 			cb()
 		}
@@ -42,13 +42,13 @@ describe('socketio-server', function () {
 
 	before(function() {
 		mockery.enable()
-		const uuid = {
+		mockery.registerMock('node-uuid', {
 			idx: 1,
 			v4: function() {
 				return "socket" + (this.idx++)
 			}
-		}
-		mockery.registerMock('uuid', uuid)
+		})
+		SocketIoServer = require('../lib/socketio-server')
 	})
 
 	after(function() {
@@ -57,17 +57,17 @@ describe('socketio-server', function () {
 
 	beforeEach(function() {
 		realtimeAdapter = new events.EventEmitter
-		realtimeAdapter.subscribe = sinon.stub()
+		realtimeAdapter.subscribe = sinon.mock()
 		realtimeAdapter.subscribe.callsArgAsync(2)
-		realtimeAdapter.unsubscribe = sinon.stub()
+		realtimeAdapter.unsubscribe = sinon.mock()
 
 		historicalAdapter = {
-			getLast: sinon.stub(),
-			getAll: sinon.stub(),
-			getFromOffset: sinon.stub(),
-			getOffsetRange: sinon.stub(),
-			getFromTimestamp: sinon.stub(),
-			getTimestampRange: sinon.stub()
+			getLast: sinon.mock(),
+			getAll: sinon.mock(),
+			getFromOffset: sinon.mock(),
+			getOffsetRange: sinon.mock(),
+			getFromTimestamp: sinon.mock(),
+			getTimestampRange: sinon.mock()
 		}
 
 		latestOffsetFetcher = {
@@ -77,15 +77,15 @@ describe('socketio-server', function () {
 		}
 
 		// Mock socket.io
-		ioMock = new events.EventEmitter
+		wsMock = new events.EventEmitter
 
-		ioMock.sockets = {
+		wsMock.sockets = {
 			adapter: {
 				rooms: {}
 			},
 			in: function(room) {
-				var sockets = Object.keys(ioMock.sockets.adapter.rooms[room]).map(function(key) {
-					return ioMock.sockets.adapter.rooms[room][key]
+				var sockets = Object.keys(wsMock.sockets.adapter.rooms[room]).map(function(key) {
+					return wsMock.sockets.adapter.rooms[room][key]
 				})
 				var result = {
 					emit: function(event, data) {
@@ -101,15 +101,17 @@ describe('socketio-server', function () {
 		}
 
 		// Mock the socket
-		socket = createSocketMock("socket1")
+		mockSocket = createSocketMock("socket1")
 
 		// Create the server instance
-		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, ioMock)
+		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wsMock)
 	});
 
-	it('should listen for protocol events on client socket', function (done) {
-		var protocolMessages = ["subscribe", "unsubscribe", "resend", "disconnect"]
-		var socketListeners = {}
+	// TODO: replace
+	/*it('should listen for protocol events on client socket', function (done) {
+		const protocolMessages = ["subscribe", "unsubscribe", "resend", "disconnect"]
+		const socketListeners = {}
+
 		socket.on = function(event, func) {
 			socketListeners[event] = func
 			if (Object.keys(socketListeners).length === protocolMessages.length) {
@@ -120,49 +122,78 @@ describe('socketio-server', function () {
 				done()
 			}
 		}
+
 		ioMock.emit('connection', socket)
-	});
+	});*/
+
+	context('on socket connection', function() {
+		var mockSocket2
+
+		beforeEach(function() {
+			mockSocket2 = createSocketMock()
+			wsMock.emit('connection', mockSocket)
+			wsMock.emit('connection', mockSocket2)
+		})
+
+		it('assigns identifiers to connected sockets', function() {
+			assert.equal(mockSocket.id, 'socket1')
+			assert.equal(mockSocket2.id, 'socket2')
+		})
+
+		it('listens to connected sockets "message" event', function() {
+			assert.equal(mockSocket.listenerCount('message'), 1)
+			assert.equal(mockSocket2.listenerCount('message'), 1)
+		})
+
+		it('listens to connected sockets "close" event', function() {
+			assert.equal(mockSocket.listenerCount('close'), 1)
+			assert.equal(mockSocket2.listenerCount('close'), 1)
+		})
+
+		it('increments connection counter', function() {
+			assert.equal(server.connectionCounter, 2)
+		})
+	})
 
 	describe('resend', function() {
 
 		beforeEach(function() {
-			// io.sockets.in(channel).emit('ui', data);
-			ioMock.sockets = {
+			wsMock.sockets = {
 				in: function(channel) {
-					return socket
+					return mockSocket
 				}
 			}
 		})
 
 		afterEach(function() {
-			socket.removeAllListeners("expect")
+			mockSocket.removeAllListeners("expect")
 		})
 
-		it('should emit a resending event before starting the resend', function(done) {
-			historicalAdapter.getAll.callsArgAsync(2);
+		it('emits a resending event before starting the resend', function(done) {
+			historicalAdapter.getAll.callsArgAsync(2); // Async-invoke 2nd argument
 
-			socket.on('resending', function(data) {
+			mockSocket.on('resending', function(data) {
 				assert.equal(data.channel, "c")
 				assert.equal(data.sub, "sub")
 				done()
 			})
 
-			ioMock.emit('connection', socket)
-			socket.emit('resend', {channel:"c", sub: "sub", resend_all:true})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('resend', {channel:"c", sub: "sub", resend_all:true})
 		})
 
 		it('should add the subscription id to messages', function(done) {
 			var originalMsg = {}
 			historicalAdapter.getAll.callsArgWithAsync(2, originalMsg);
 
-			socket.on('u', function(msg) {
+			mockSocket.on('u', function(msg) {
 				assert.equal(msg.m, originalMsg)
 				assert.equal(msg.sub, 'foo')
 				done()
 			})
 
-			ioMock.emit('connection', socket)
-			socket.emit('resend', {channel:"c", sub: 'foo', resend_all:true})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('resend', {channel:"c", sub: 'foo', resend_all:true})
 		})
 
 		it('should emit a resent event when resend is complete', function(done) {
@@ -171,51 +202,49 @@ describe('socketio-server', function () {
 				finished()
 			}
 
-			socket.on('resent', function(data) {
+			mockSocket.on('resent', function(data) {
 				assert.equal(data.channel, "c")
 				assert.equal(data.sub, "sub")
 				done()
 			})
 
-			ioMock.emit('connection', socket)
-			socket.emit('resend', {channel:"c", sub: "sub", resend_all:true})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('resend', {channel:"c", sub: "sub", resend_all:true})
 		})
 
 		it('should emit no_resend if there is nothing to resend', function(done) {
 			historicalAdapter.getAll.callsArgAsync(3);
 
-			socket.on('no_resend', function(data) {
+			mockSocket.on('no_resend', function(data) {
 				assert.equal(data.channel, "c")
 				assert.equal(data.sub, "sub")
 				done()
 			})
 
-			ioMock.emit('connection', socket)
-			socket.emit('resend', {channel:"c", sub: "sub", resend_all:true})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('resend', {channel:"c", sub: "sub", resend_all:true})
 		})
 
 		describe('resend_all', function() {
-
-			it('should request all messages', function () {
-				ioMock.emit('connection', socket)
-				socket.emit('resend', {channel: "c", resend_all: true})
-				historicalAdapter.getAll.calledWith("c")
-			});
-
+			it('requests all messages', function () {
+				wsMock.emit('connection', mockSocket)
+				mockSocket.emit('resend', {channel: "c", resend_all: true})
+				assert(historicalAdapter.getAll.calledWith("c"))
+			})
 		})
 
 		describe('resend_from', function() {
 
 			it('should request messages from given offset of only resend_from is given', function () {
-				ioMock.emit('connection', socket)
-				socket.emit('resend', {channel: "c", resend_from: 7})
-				historicalAdapter.getFromOffset.calledWith("c", 7)
+				wsMock.emit('connection', mockSocket)
+				mockSocket.emit('resend', {channel: "c", resend_from: 7})
+				assert(historicalAdapter.getFromOffset.calledWith("c", 7))
 			});
 
 			it('should request range if resend_from and resend_to are given', function () {
-				ioMock.emit('connection', socket)
-				socket.emit('resend', {channel: "c", resend_from: 7, resend_to: 10})
-				historicalAdapter.getOffsetRange.calledWith("c", 7, 10)
+				wsMock.emit('connection', mockSocket)
+				mockSocket.emit('resend', {channel: "c", resend_from: 7, resend_to: 10})
+				assert(historicalAdapter.getOffsetRange.calledWith("c", 7, 10))
 			});
 
 		})
@@ -224,9 +253,9 @@ describe('socketio-server', function () {
 
 			it('should request messages from given timestamp', function () {
 				var timestamp = Date.now()
-				ioMock.emit('connection', socket)
-				socket.emit('resend', {channel: "c", resend_from_time: timestamp})
-				historicalAdapter.getFromOffset.calledWith("c", timestamp)
+				wsMock.emit('connection', mockSocket)
+				mockSocket.emit('resend', {channel: "c", resend_from_time: timestamp})
+				assert(historicalAdapter.getFromOffset.calledWith("c", timestamp))
 			});
 
 		})
@@ -234,9 +263,9 @@ describe('socketio-server', function () {
 		describe('resend_last', function() {
 
 			it('should request last N messages', function () {
-				ioMock.emit('connection', socket)
-				socket.emit('resend', {channel: "c", resend_last: 10})
-				historicalAdapter.getLast.calledWith("c", 10)
+				wsMock.emit('connection', mockSocket)
+				mockSocket.emit('resend', {channel: "c", resend_last: 10})
+				assert(historicalAdapter.getLast.calledWith("c", 10))
 			});
 
 		})
@@ -248,7 +277,7 @@ describe('socketio-server', function () {
 			var originalMsg = {}
 
 			// Expecting io.sockets.in(stream-partition).emit('b', msg);
-			ioMock.sockets.in = function(channel) {
+			wsMock.sockets.in = function(channel) {
 				assert.equal(channel, "c-0")
 				return {
 					emit: function(event, msg) {
@@ -258,8 +287,8 @@ describe('socketio-server', function () {
 					}
 				}
 			}
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 			realtimeAdapter.emit('message', originalMsg, "c", 0)
 		});
 
@@ -268,54 +297,54 @@ describe('socketio-server', function () {
 	describe('subscribe', function() {
 
 		it('should create the Stream object with default partition', function() {
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 			assert(server.getStreamObject("c", 0) !== undefined)
 		})
 
 		it('should create the Stream object with given partition', function() {
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c", partition: 1})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c", partition: 1})
 			assert(server.getStreamObject("c", 1) !== undefined)
 		})
 
 		it('should subscribe the realtime adapter', function() {
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 
 			assert(realtimeAdapter.subscribe.calledWith("c"))
 		})
 
 		it('should emit subscribed when subscribe callback is called', function (done) {
-			socket.on('subscribed', function(data) {
+			mockSocket.on('subscribed', function(data) {
 				assert.equal(data.channel, "c")
 				done()
 			})
 
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 		});
 
 		it('should not resubscribe realtimeAdapter on new subscription to same stream', function () {
 			var socket2 = createSocketMock("socket2")
 
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 
-			ioMock.emit('connection', socket2)
+			wsMock.emit('connection', socket2)
 			socket2.emit('subscribe', {channel: "c"})
 
 			assert(realtimeAdapter.subscribe.calledOnce)
 		});
 
 		it('should join the room', function(done) {
-			socket.on('subscribed', function(data) {
-				assert.equal(Object.keys(ioMock.sockets.adapter.rooms['c-0']).length, 1)
+			mockSocket.on('subscribed', function(data) {
+				assert.equal(Object.keys(wsMock.sockets.adapter.rooms['c-0']).length, 1)
 				done()
 			})
 
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 		})
 
 	})
@@ -323,36 +352,36 @@ describe('socketio-server', function () {
 	describe('unsubscribe', function() {
 
 		beforeEach(function(done) {
-			socket.on('subscribed', function(data) {
+			mockSocket.on('subscribed', function(data) {
 				done()
 			})
 
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 		})
 
 		it('should emit unsubscribed event', function(done) {
-			socket.on('unsubscribed', function(data) {
+			mockSocket.on('unsubscribed', function(data) {
 				assert.equal(data.channel, 'c')
 				done()
 			})
-			socket.emit('unsubscribe', {channel: 'c'})
+			mockSocket.emit('unsubscribe', {channel: 'c'})
 		})
 
 		it('should leave the room', function(done) {
-			socket.on('unsubscribed', function(data) {
-				assert.equal(socket.rooms.length, 0)
+			mockSocket.on('unsubscribed', function(data) {
+				assert.equal(mockSocket.rooms.length, 0)
 				done()
 			})
-			socket.emit('unsubscribe', {channel: 'c'})
+			mockSocket.emit('unsubscribe', {channel: 'c'})
 		})
 
 		it('should unsubscribe realtimeAdapter if there are no more sockets on the channel', function(done) {
-			socket.on('unsubscribed', function(channel) {
+			mockSocket.on('unsubscribed', function(channel) {
 				assert(realtimeAdapter.unsubscribe.calledWith("c"))
 				done()
 			})
-			socket.emit('unsubscribe', {channel: 'c'})
+			mockSocket.emit('unsubscribe', {channel: 'c'})
 		})
 
 		it('should NOT unsubscribe kafka if there are sockets remaining on the channel', function() {
@@ -364,43 +393,43 @@ describe('socketio-server', function () {
 
 			realtimeAdapter.unsubscribe.throws("Should not have unsubscribed!")
 
-			ioMock.emit('connection', socket2)
+			wsMock.emit('connection', socket2)
 			socket2.emit('subscribe', {channel: "c"})
 		})
 	})
 
 	describe('subscribe-unsubscribe-subscribe', function() {
 		it('should work', function(done) {
-			socket.once('subscribed', function(data) {
-				socket.emit('unsubscribe', {channel: 'c'})
+			mockSocket.once('subscribed', function(data) {
+				mockSocket.emit('unsubscribe', {channel: 'c'})
 			})
 
-			socket.once('unsubscribed', function() {
-				socket.once('subscribed', function() {
+			mockSocket.once('unsubscribed', function() {
+				mockSocket.once('subscribed', function() {
 					done()
 				})
-				socket.emit('subscribe', {channel: "c"})
+				mockSocket.emit('subscribe', {channel: "c"})
 			})
 
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 		})
 	})
 
 	describe('disconnect', function() {
 		it('should unsubscribe realtimeAdapter on channels where there are no more connections', function(done) {
-			socket.on('subscribed', function(channel) {
+			mockSocket.on('subscribed', function(channel) {
 				// socket.io clears socket.rooms on disconnect, check that it's not relied on
-				socket.rooms = []
-				socket.emit('disconnect')
+				mockSocket.rooms = []
+				mockSocket.emit('disconnect')
 			})
 
 			realtimeAdapter.unsubscribe = function() {
 				done()
 			}
 
-			ioMock.emit('connection', socket)
-			socket.emit('subscribe', {channel: "c"})
+			wsMock.emit('connection', mockSocket)
+			mockSocket.emit('subscribe', {channel: "c"})
 		})
 
 	})
