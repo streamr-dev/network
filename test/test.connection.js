@@ -82,55 +82,56 @@ describe('Connection', function () {
 	})
 
 	describe("send functions", function() {
-		var msgWithMetaData
+		var msgWithMetaDataAsArray
 
 		beforeEach(function() {
 			const streamrBinaryMessage = new StreamrBinaryMessage("streamId", 0, new Date(2017, 2, 24, 13, 45, 0), 0,
-				StreamrBinaryMessage.CONTENT_TYPE_JSON, {})
-			msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(streamrBinaryMessage, 25, 24, 0)
+				StreamrBinaryMessage.CONTENT_TYPE_JSON, '{}')
+			const msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(streamrBinaryMessage, 25, 24, 0)
+			msgWithMetaDataAsArray = msgWithMetaData.toArray()
 		})
 
 		function expectedMessage(msgCode) {
-			return JSON.stringify([0, msgCode, '', msgWithMetaData.toArray()])
+			return JSON.stringify([0, msgCode, '', [28, 'streamId', 0, 1490355900000, 0, 25, 24, 27, '{}']])
 		}
 
-		it('sendRaw sends expected message to socket', function() {
-			connection.sendRaw(['666', 'hello world'])
-			assert.deepEqual(fakeSocket.received, [['666', 'hello world']])
+		it('sendBroadcast sends expected message to socket', function() {
+			connection.sendBroadcast(msgWithMetaDataAsArray)
+			assert.deepEqual(fakeSocket.received, [expectedMessage(0)])
 		})
 
 		it('sendUnicast sends expected message to socket', function() {
-			connection.sendUnicast(msgWithMetaData)
+			connection.sendUnicast(msgWithMetaDataAsArray)
 			assert.deepEqual(fakeSocket.received, [expectedMessage(1)])
 		})
 
 		it('sendSubscribed sends expected message to socket', function() {
-			connection.sendSubscribed(msgWithMetaData)
+			connection.sendSubscribed(msgWithMetaDataAsArray)
 			assert.deepEqual(fakeSocket.received, [expectedMessage(2)])
 		})
 
 		it('sendUnsubscribed sends expected message to socket', function() {
-			connection.sendUnsubscribed(msgWithMetaData)
+			connection.sendUnsubscribed(msgWithMetaDataAsArray)
 			assert.deepEqual(fakeSocket.received, [expectedMessage(3)])
 		})
 
 		it('sendResending sends expected message to socket', function() {
-			connection.sendResending(msgWithMetaData)
+			connection.sendResending(msgWithMetaDataAsArray)
 			assert.deepEqual(fakeSocket.received, [expectedMessage(4)])
 		})
 
 		it('sendResent sends expected message to socket', function() {
-			connection.sendResent(msgWithMetaData)
+			connection.sendResent(msgWithMetaDataAsArray)
 			assert.deepEqual(fakeSocket.received, [expectedMessage(5)])
 		})
 
 		it('sendNoResend sends expected message to socket', function() {
-			connection.sendNoResend(msgWithMetaData)
+			connection.sendNoResend(msgWithMetaDataAsArray)
 			assert.deepEqual(fakeSocket.received, [expectedMessage(6)])
 		})
 
 		it('sendError sends expected message to socket', function() {
-			connection.sendError(msgWithMetaData)
+			connection.sendError(msgWithMetaDataAsArray)
 			assert.deepEqual(fakeSocket.received, [expectedMessage(7)])
 		})
 	})

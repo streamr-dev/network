@@ -15,26 +15,26 @@ describe('CassandraHelper', function() {
 
 	beforeEach(function() {
 		expectedMessages = allMessages = [
-			[28, "fake-stream-1", 0, 1490180460000, 10, 5, -1,  27, { "key": "msg-1" }],
-			[28, "fake-stream-1", 0, 1490180520000, 10, 10, 5,  27, { "key": "msg-2" }],
-			[28, "fake-stream-1", 0, 1490180580000, 10, 15, 10,  27, { "key": "msg-3" }],
-			[28, "fake-stream-1", 0, 1490180640000, 10, 20, 15,  27, { "key": "msg-4" }],
-			[28, "fake-stream-1", 0, 1490180700000, 10, 25, 20,  27, { "key": "msg-5" }],
-			[28, "fake-stream-1", 0, 1490180760000, 10, 30, 25,  27, { "key": "msg-6" }],
-			[28, "fake-stream-1", 0, 1490180820000, 10, 35, 30,  27, { "key": "msg-7" }],
-			[28, "fake-stream-1", 0, 1490180880000, 10, 40, 35,  27, { "key": "msg-8" }],
-			[28, "fake-stream-1", 0, 1490180940000, 10, 45, 40,  27, { "key": "msg-9" }],
-			[28, "fake-stream-1", 0, 1490181000000, 10, 50, 45,  27, { "key": "msg-10" }],
-			[28, "fake-stream-1", 0, 1490181060000, 10, 55, 50,  27, { "key": "msg-11" }],
-			[28, "fake-stream-1", 0, 1490181120000, 10, 60, 55,  27, { "key": "msg-12" }],
-			[28, "fake-stream-1", 0, 1490181180000, 10, 65, 60,  27, { "key": "msg-13" }],
-			[28, "fake-stream-1", 0, 1490181240000, 10, 70, 65,  27, { "key": "msg-14" }],
-			[28, "fake-stream-1", 0, 1490181300000, 10, 75, 70,  27, { "key": "msg-15" }],
-			[28, "fake-stream-1", 0, 1490181360000, 10, 80, 75,  27, { "key": "msg-16" }],
-			[28, "fake-stream-1", 0, 1490181420000, 10, 85, 80,  27, { "key": "msg-17" }],
-			[28, "fake-stream-1", 0, 1490181480000, 10, 90, 85,  27, { "key": "msg-18" }],
-			[28, "fake-stream-1", 0, 1490181540000, 10, 95, 90,  27, { "key": "msg-19" }],
-			[28, "fake-stream-1", 0, 1490181600000, 10, 100, 95, 27, { "key": "msg-20" }]
+			[28, "fake-stream-1", 0, 1490180460000, 10, 5, -1,  27, JSON.stringify({ "key": "msg-1" })],
+			[28, "fake-stream-1", 0, 1490180520000, 10, 10, 5,  27, JSON.stringify({ "key": "msg-2" })],
+			[28, "fake-stream-1", 0, 1490180580000, 10, 15, 10,  27, JSON.stringify({ "key": "msg-3" })],
+			[28, "fake-stream-1", 0, 1490180640000, 10, 20, 15,  27, JSON.stringify({ "key": "msg-4" })],
+			[28, "fake-stream-1", 0, 1490180700000, 10, 25, 20,  27, JSON.stringify({ "key": "msg-5" })],
+			[28, "fake-stream-1", 0, 1490180760000, 10, 30, 25,  27, JSON.stringify({ "key": "msg-6" })],
+			[28, "fake-stream-1", 0, 1490180820000, 10, 35, 30,  27, JSON.stringify({ "key": "msg-7" })],
+			[28, "fake-stream-1", 0, 1490180880000, 10, 40, 35,  27, JSON.stringify({ "key": "msg-8" })],
+			[28, "fake-stream-1", 0, 1490180940000, 10, 45, 40,  27, JSON.stringify({ "key": "msg-9" })],
+			[28, "fake-stream-1", 0, 1490181000000, 10, 50, 45,  27, JSON.stringify({ "key": "msg-10" })],
+			[28, "fake-stream-1", 0, 1490181060000, 10, 55, 50,  27, JSON.stringify({ "key": "msg-11" })],
+			[28, "fake-stream-1", 0, 1490181120000, 10, 60, 55,  27, JSON.stringify({ "key": "msg-12" })],
+			[28, "fake-stream-1", 0, 1490181180000, 10, 65, 60,  27, JSON.stringify({ "key": "msg-13" })],
+			[28, "fake-stream-1", 0, 1490181240000, 10, 70, 65,  27, JSON.stringify({ "key": "msg-14" })],
+			[28, "fake-stream-1", 0, 1490181300000, 10, 75, 70,  27, JSON.stringify({ "key": "msg-15" })],
+			[28, "fake-stream-1", 0, 1490181360000, 10, 80, 75,  27, JSON.stringify({ "key": "msg-16" })],
+			[28, "fake-stream-1", 0, 1490181420000, 10, 85, 80,  27, JSON.stringify({ "key": "msg-17" })],
+			[28, "fake-stream-1", 0, 1490181480000, 10, 90, 85,  27, JSON.stringify({ "key": "msg-18" })],
+			[28, "fake-stream-1", 0, 1490181540000, 10, 95, 90,  27, JSON.stringify({ "key": "msg-19" })],
+			[28, "fake-stream-1", 0, 1490181600000, 10, 100, 95, 27, JSON.stringify({ "key": "msg-20" })]
 		]
 
 		cassandraHelper = new CassandraHelper([CASSANDRA_HOST], KEYSPACE, {
@@ -83,8 +83,8 @@ describe('CassandraHelper', function() {
 
 		it("produces correct messages when lastKnownOffset > cassandraLastOffset", function(done) {
 			 expectedMessages = expectedMessages.concat([
-				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
-				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
+				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({ "key": "msg-21" })],
+				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, assertion(110, expectedMessages, done), 110)
 			cassandraDataInserter.timedBulkInsert(2, 200)
@@ -133,8 +133,8 @@ describe('CassandraHelper', function() {
 
 		it("produces correct messages when lastKnownOffset > cassandraLastOffset", function(done) {
 			expectedMessages = expectedMessages.concat([
-				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
-				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
+				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({ "key": "msg-21" })],
+				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, assertion(110, expectedMessages, done), 110)
 			cassandraDataInserter.timedBulkInsert(2, 200)
@@ -187,8 +187,8 @@ describe('CassandraHelper', function() {
 
 		it("produces correct messages when lastKnownOffset > cassandraLastOffset", function(done) {
 			expectedMessages = expectedMessages.concat([
-				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
-				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
+				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({ "key": "msg-21" })],
+				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, assertion(110, expectedMessages, done), 110)
 			cassandraDataInserter.timedBulkInsert(2, 200)
@@ -249,8 +249,8 @@ describe('CassandraHelper', function() {
 
 		it("produces correct messages when min < lastKnownOffset < max (incoming data to [min, max] range)", function(done) {
 			expectedMessages = allMessages.slice(4).concat([
-				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
-				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
+				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({ "key": "msg-21" })],
+				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 130, msgHandler, assertion(110, expectedMessages, done), 110)
 			cassandraDataInserter.timedBulkInsert(10, 200)
@@ -317,8 +317,8 @@ describe('CassandraHelper', function() {
 
 		it("produces correct messages when lastKnownOffset > cassandraLastOffset", function(done) {
 			expectedMessages = expectedMessages.concat([
-				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, { "key": "msg-21" }],
-				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, { "key": "msg-22" }]
+				[28, "fake-stream-1", 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({ "key": "msg-21" })],
+				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getFromTimestamp("fake-stream-1", 0, startDate, msgHandler, assertion(110, expectedMessages, done), 110)
 			cassandraDataInserter.timedBulkInsert(2, 200)
