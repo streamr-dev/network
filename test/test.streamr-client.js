@@ -47,7 +47,7 @@ describe('StreamrClient', function() {
 
 		// unicast message to subscription
 		if (subId != null) {
-			return JSON.stringify([
+			return [
 				28, // version
 				streamId,
 				0, // partition
@@ -56,14 +56,14 @@ describe('StreamrClient', function() {
 				offset,
 				forcePreviousOffset, // previousOffset
 				27, // contentType (JSON)
-				JSON.stringify(content)])
+				JSON.stringify(content)]
 		}
 		// broadcast message to all subscriptions
 		else {
 			var previousOffset = forcePreviousOffset || previousOffsetByStreamId[streamId]
 			previousOffsetByStreamId[streamId] = offset
 
-			return JSON.stringify([
+			return [
 				28, // version
 				streamId,
 				0, // partition
@@ -72,7 +72,7 @@ describe('StreamrClient', function() {
 				offset,
 				previousOffset !== offset ? previousOffset : null,
 				27, // contentType (JSON)
-				JSON.stringify(content)])
+				JSON.stringify(content)]
 		}
 	}
 
@@ -160,6 +160,7 @@ describe('StreamrClient', function() {
 			return socket
 		});
 
+		global.WebSocket = require('ws')
 		StreamrClient = require('../streamr-client')
 	})
 

@@ -3,7 +3,6 @@
 (function() {
 
 	var debug
-	var WebSocket
 	if (typeof window !== 'undefined') {
 		debug = (window.debug ? window.debug('StreamrClient') : function() {
 			if (window.consoleLoggingEnabled)
@@ -12,7 +11,6 @@
 	}
 	else {
 		debug = require('debug')('StreamrClient')
-		WebSocket = require('ws')
 	}
 
 	var BYE_KEY = "_bye"
@@ -363,33 +361,28 @@
 		},
 
 		decodeMessage: function(type, message) {
-			if (typeof message === 'string') {
-				message = JSON.parse(message)
-			}
-
-			// Stream content needs to be decoded further
 			if (type === 'b' || type === 'u') {
 				if (this.versionFields[message[0]] === undefined) {
 					throw "Unsupported version: " + message[0]
-				} else {
-					var result = {}
-					var fields = this.versionFields[message[0]]
-					var contentType
-					for (var i = 0; i < message.length; i++) {
-
-						// Parse content if necessary
-						if (fields[i] === 'content') {
-							if (result.contentType === this.CONTENT_TYPE_JSON) {
-								message[i] = JSON.parse(message[i])
-							} else {
-								throw "Unknown content type: " + result.contentType
-							}
-						}
-
-						result[fields[i]] = message[i]
-					}
-					return result
 				}
+				var result = {}
+				var fields = this.versionFields[message[0]]
+
+				for (var i = 0; i < message.length; i++) {
+
+					// Parse content if necessary
+					if (fields[i] === 'content') {
+						if (result.contentType === this.CONTENT_TYPE_JSON) {
+
+							message[i] = JSON.parse(message[i])
+						} else {
+							throw "Unknown content type: " + result.contentType
+						}
+					}
+
+					result[fields[i]] = message[i]
+				}
+				return result
 			} else {
 				return message
 			}
