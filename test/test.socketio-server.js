@@ -407,69 +407,94 @@ describe('socketio-server', function () {
 	})
 
 	describe('unsubscribe', function() {
-
 		beforeEach(function(done) {
-			mockSocket.on('subscribed', function(data) {
-				done()
-			})
-
+			// connect
 			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
-		})
 
-		it('should emit unsubscribed event', function(done) {
-			mockSocket.on('unsubscribed', function(data) {
-				assert.equal(data.channel, 'c')
+			// subscribe
+			mockSocket.receive({
+				channel: "streamId",
+				partition: 0,
+				type: 'subscribe'
+			})
+
+			// unsubscribe
+			setTimeout(function() {
+				mockSocket.receive({
+					channel: "streamId",
+					partition: 0,
+					type: 'unsubscribe'
+				})
 				done()
 			})
-			mockSocket.emit('unsubscribe', {channel: 'c'})
 		})
 
-		it('should leave the room', function(done) {
-			mockSocket.on('unsubscribed', function(data) {
-				assert.equal(mockSocket.rooms.length, 0)
-				done()
-			})
-			mockSocket.emit('unsubscribe', {channel: 'c'})
+		it('emits a unsubscribed event', function() {
+			assert.deepEqual(mockSocket.sentMessages[mockSocket.sentMessages.length - 1], JSON.stringify([
+				0, encoder.BROWSER_MSG_TYPE_UNSUBSCRIBED, '', { channel: 'streamId', partition: 0 }
+			]))
 		})
 
-		it('should unsubscribe realtimeAdapter if there are no more sockets on the channel', function(done) {
-			mockSocket.on('unsubscribed', function(channel) {
-				assert(realtimeAdapter.unsubscribe.calledWith("c"))
-				done()
-			})
-			mockSocket.emit('unsubscribe', {channel: 'c'})
+		it('unsubscribes from realtimeAdapter if there are no more sockets on the channel', function() {
+			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId', 0)
 		})
 
-		it('should NOT unsubscribe kafka if there are sockets remaining on the channel', function() {
-			var socket2 = createSocketMock()
+		it('does not unsubscribe from realtimeAdapter if there are sockets remaining on the channel', function(done) {
+			realtimeAdapter.unsubscribe = sinon.spy()
 
-			socket2.on('subscribed', function(channel) {
-				socket2.emit('unsubscribe', {channel: 'c'})
-			})
-
-			realtimeAdapter.unsubscribe.throws("Should not have unsubscribed!")
-
+			const socket2 = createSocketMock()
 			wsMock.emit('connection', socket2)
-			socket2.emit('subscribe', {channel: "c"})
+			socket2.receive({
+				channel: "streamId",
+				partition: 0,
+				type: 'subscribe'
+			})
+
+			setTimeout(function() {
+				sinon.assert.notCalled(realtimeAdapter.unsubscribe)
+				done()
+			})
 		})
 	})
 
 	describe('subscribe-unsubscribe-subscribe', function() {
 		it('should work', function(done) {
-			mockSocket.once('subscribed', function(data) {
-				mockSocket.emit('unsubscribe', {channel: 'c'})
-			})
-
-			mockSocket.once('unsubscribed', function() {
-				mockSocket.once('subscribed', function() {
-					done()
-				})
-				mockSocket.emit('subscribe', {channel: "c"})
-			})
-
+			// connect
 			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
+
+			// subscribe
+			mockSocket.receive({
+				channel: "streamId",
+				partition: 0,
+				type: 'subscribe'
+			})
+
+			setTimeout(function() {
+				// unsubscribe
+				mockSocket.receive({
+					channel: "streamId",
+					partition: 0,
+					type: 'unsubscribe'
+				})
+
+				setTimeout(function() {
+					// subscribed
+					mockSocket.receive({
+						channel: "streamId",
+						partition: 0,
+						type: 'subscribe'
+					})
+
+					setTimeout(function() {
+						assert.deepEqual(mockSocket.sentMessages, [
+							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { channel: 'streamId', partition: 0}]),
+							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_UNSUBSCRIBED, '', { channel: 'streamId', partition: 0}]),
+							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { channel: 'streamId', partition: 0}])
+						])
+						done()
+					})
+				})
+			})
 		})
 	})
 
