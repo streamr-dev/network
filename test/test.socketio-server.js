@@ -58,33 +58,12 @@ describe('socketio-server', function () {
 		// Mock socket.io
 		wsMock = new events.EventEmitter
 
-		wsMock.sockets = {
-			adapter: {
-				rooms: {}
-			},
-			in: function(room) {
-				var sockets = Object.keys(wsMock.sockets.adapter.rooms[room]).map(function(key) {
-					return wsMock.sockets.adapter.rooms[room][key]
-				})
-				var result = {
-					emit: function(event, data) {
-						sockets.forEach(function(socket) {
-							console.log("IO MOCK: Emitting to "+socket.id+": "+JSON.stringify(data))
-							socket.emit(event, data)
-						})
-					}
-				}
-				console.log("IO MOCK: in: returning emitter for "+JSON.stringify(sockets))
-				return result
-			}
-		}
-
 		// Mock the socket
 		mockSocket = createSocketMock()
 
 		// Create the server instance
 		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wsMock)
-	});
+	})
 
 	function kafkaMessage() {
 		const streamId = "streamId"
@@ -439,20 +418,55 @@ describe('socketio-server', function () {
 			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId', 0)
 		})
 
+		it('removes stream object if there are no more sockets on the channel', function() {
+			assert(server.getStreamObject('streamId', 0) == null)
+		})
+
 		it('does not unsubscribe from realtimeAdapter if there are sockets remaining on the channel', function(done) {
 			realtimeAdapter.unsubscribe = sinon.spy()
 
-			const socket2 = createSocketMock()
-			wsMock.emit('connection', socket2)
-			socket2.receive({
+			mockSocket.receive({
 				channel: "streamId",
 				partition: 0,
 				type: 'subscribe'
 			})
 
 			setTimeout(function() {
-				sinon.assert.notCalled(realtimeAdapter.unsubscribe)
-				done()
+				const socket2 = createSocketMock()
+				wsMock.emit('connection', socket2)
+				socket2.receive({
+					channel: "streamId",
+					partition: 0,
+					type: 'subscribe'
+				})
+
+				setTimeout(function() {
+					sinon.assert.notCalled(realtimeAdapter.unsubscribe)
+					done()
+				})
+			})
+		})
+
+		it('does not remove stream object if there are sockets remaining on the channel', function(done) {
+			mockSocket.receive({
+				channel: "streamId",
+				partition: 0,
+				type: 'subscribe'
+			})
+
+			setTimeout(function() {
+				const socket2 = createSocketMock()
+				wsMock.emit('connection', socket2)
+				socket2.receive({
+					channel: "streamId",
+					partition: 0,
+					type: 'subscribe'
+				})
+
+				setTimeout(function() {
+					assert(server.getStreamObject('streamId', 0) != null)
+					done()
+				})
 			})
 		})
 	})
@@ -499,36 +513,54 @@ describe('socketio-server', function () {
 	})
 
 	describe('disconnect', function() {
-		it('should unsubscribe realtimeAdapter on channels where there are no more connections', function(done) {
-			mockSocket.on('subscribed', function(channel) {
-				// socket.io clears socket.rooms on disconnect, check that it's not relied on
-				mockSocket.rooms = []
-				mockSocket.emit('disconnect')
+		beforeEach(function(done) {
+			wsMock.emit('connection', mockSocket)
+			mockSocket.receive({
+				channel: "streamId",
+				partition: 6,
+				type: 'subscribe'
+			})
+			mockSocket.receive({
+				channel: "streamId",
+				partition: 4,
+				type: 'subscribe'
+			})
+			mockSocket.receive({
+				channel: "streamId2",
+				partition: 0,
+				type: 'subscribe'
 			})
 
-			realtimeAdapter.unsubscribe = function() {
+			setTimeout(function() {
+				mockSocket.disconnect()
 				done()
-			}
+			})
+		})
 
-			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
+		it('unsubscribes from realtimeAdapter on channels where there are no more connections', function() {
+			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId', 6)
+			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId', 4)
+			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId2', 0)
+		})
+
+		it('decrements connection counter', function() {
+			assert.equal(server.connectionCounter, 0)
 		})
 
 	})
 
 	describe('createStreamObject', function() {
 		it('should return an object with the correct id, partition and state', function() {
-			var stream = server.createStreamObject('streamId', 0)
+			var stream = server.createStreamObject('streamId', 3)
 			assert.equal(stream.id, 'streamId')
-			assert.equal(stream.partition, 0)
+			assert.equal(stream.partition, 3)
 			assert.equal(stream.state, 'init')
 		})
 
 		it('should return an object that can be looked up', function() {
-			var stream = server.createStreamObject('streamId', 0)
-			assert.equal(server.getStreamObject('streamId', 0), stream)
+			var stream = server.createStreamObject('streamId', 4)
+			assert.equal(server.getStreamObject('streamId', 4), stream)
 		})
-
 	})
 
 	describe('getStreamObject', function() {

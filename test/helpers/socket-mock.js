@@ -26,6 +26,10 @@ module.exports = function () {
 		socket.sentMessages.push(message)
 	}
 
+	socket.disconnect = function() {
+		socket.emit('close')
+	}
+
 	socket.leave = function(channel, cb) {
 		var index = socket.rooms.indexOf(channel)
 		if (index>=0) {
