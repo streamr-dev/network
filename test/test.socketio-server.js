@@ -145,7 +145,7 @@ describe('socketio-server', function () {
 		})
 	})
 
-	describe('resend', function() {
+	describe('on resend request', function() {
 		it('emits a resending event before starting the resend', function(done) {
 			historicalAdapter.getAll = sinon.stub()
 			historicalAdapter.getAll.callsArgAsync(2); // Async-invoke 2nd argument
@@ -337,80 +337,92 @@ describe('socketio-server', function () {
 
 	describe('message broadcasting', function() {
 
-		it('should emit redis messages to sockets in that channel', function (done) {
-			var originalMsg = {}
-
-			// Expecting io.sockets.in(stream-partition).emit('b', msg);
-			wsMock.sockets.in = function(channel) {
-				assert.equal(channel, "c-0")
-				return {
-					emit: function(event, msg) {
-						assert.equal(event, 'b')
-						assert.deepEqual(msg, originalMsg)
-						done()
-					}
-				}
-			}
+		it('emits messages received from Redis to those sockets according to streamId', function (done) {
 			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
-			realtimeAdapter.emit('message', originalMsg, "c", 0)
-		});
+			mockSocket.receive({
+				channel: "streamId",
+				partition: 0,
+				type: 'subscribe'
+			})
 
+			setTimeout(function() {
+				realtimeAdapter.emit('message', kafkaMessage().toArray(), "streamId", 0)
+			})
+
+			setTimeout(function() {
+				assert.deepEqual(mockSocket.sentMessages[1], JSON.stringify([
+					0,
+					encoder.BROWSER_MSG_TYPE_BROADCAST,
+					'',
+					[28, 'streamId', 0, 1491037200000, 0, 2, 1, 27, JSON.stringify({ hello: 'world' })]
+				]))
+				done()
+			})
+		})
 	})
 
-	describe('subscribe', function() {
-
-		it('should create the Stream object with default partition', function() {
+	describe('on subscribe request', function() {
+		beforeEach(function() {
 			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
-			assert(server.getStreamObject("c", 0) !== undefined)
+			mockSocket.receive({
+				channel: "streamId",
+				partition: 0,
+				type: 'subscribe'
+			})
 		})
 
-		it('should create the Stream object with given partition', function() {
-			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c", partition: 1})
-			assert(server.getStreamObject("c", 1) !== undefined)
-		})
-
-		it('should subscribe the realtime adapter', function() {
-			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
-
-			assert(realtimeAdapter.subscribe.calledWith("c"))
-		})
-
-		it('should emit subscribed when subscribe callback is called', function (done) {
-			mockSocket.on('subscribed', function(data) {
-				assert.equal(data.channel, "c")
+		it('creates the Stream object with default partition', function(done) {
+			setTimeout(function() {
+				assert(server.getStreamObject("streamId", 0) != null)
 				done()
 			})
+		})
 
-			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
-		});
-
-		it('should not resubscribe realtimeAdapter on new subscription to same stream', function () {
-			var socket2 = createSocketMock()
-
-			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
-
+		it('creates the Stream object with given partition', function(done) {
+			const socket2 = new createSocketMock()
 			wsMock.emit('connection', socket2)
-			socket2.emit('subscribe', {channel: "c"})
-
-			assert(realtimeAdapter.subscribe.calledOnce)
-		});
-
-		it('should join the room', function(done) {
-			mockSocket.on('subscribed', function(data) {
-				assert.equal(Object.keys(wsMock.sockets.adapter.rooms['c-0']).length, 1)
-				done()
+			socket2.receive({
+				channel: "streamId",
+				partition: 1,
+				type: 'subscribe'
 			})
 
-			wsMock.emit('connection', mockSocket)
-			mockSocket.emit('subscribe', {channel: "c"})
+			setTimeout(function() {
+				assert(server.getStreamObject("streamId", 1) != null)
+				done()
+			})
 		})
 
+		it('subscribes to the realtime adapter', function(done) {
+			setTimeout(function() {
+				sinon.assert.calledWith(realtimeAdapter.subscribe, "streamId", 0)
+				done()
+			})
+		})
+
+		it('emits \'subscribed\' after subscribing', function (done) {
+			setTimeout(function() {
+				assert.deepEqual(mockSocket.sentMessages[0], JSON.stringify([
+					0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { channel: 'streamId', partition: 0 }
+				]))
+				done()
+			})
+		})
+
+		it('does not resubscribe to realtimeAdapter on new subscription to same stream', function (done) {
+			const socket2 = createSocketMock()
+			wsMock.emit('connection', socket2)
+			socket2.receive({
+				channel: "streamId",
+				partition: 0,
+				type: 'subscribe'
+			})
+
+			setTimeout(function() {
+				sinon.assert.calledOnce(realtimeAdapter.subscribe)
+				done()
+			})
+		})
 	})
 
 	describe('unsubscribe', function() {
