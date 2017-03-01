@@ -97,25 +97,6 @@ describe('socketio-server', function () {
 		return new StreamrBinaryMessageWithKafkaMetadata(msg.toBytes(), 2, 1, 0)
 	}
 
-	// TODO: replace
-	/*it('should listen for protocol events on client socket', function (done) {
-		const protocolMessages = ["subscribe", "unsubscribe", "resend", "disconnect"]
-		const socketListeners = {}
-
-		socket.on = function(event, func) {
-			socketListeners[event] = func
-			if (Object.keys(socketListeners).length === protocolMessages.length) {
-				// Check the subscribed events
-				protocolMessages.forEach(function(event) {
-					assert.equal(typeof socketListeners[event], 'function')
-				})
-				done()
-			}
-		}
-
-		ioMock.emit('connection', socket)
-	});*/
-
 	context('on socket connection', function() {
 		var mockSocket2
 
@@ -145,7 +126,7 @@ describe('socketio-server', function () {
 		})
 	})
 
-	describe('on resend request', function() {
+	context('on resend request', function() {
 		it('emits a resending event before starting the resend', function(done) {
 			historicalAdapter.getAll = sinon.stub()
 			historicalAdapter.getAll.callsArgAsync(2); // Async-invoke 2nd argument
@@ -335,7 +316,7 @@ describe('socketio-server', function () {
 		})
 	})
 
-	describe('message broadcasting', function() {
+	context('message broadcasting', function() {
 
 		it('emits messages received from Redis to those sockets according to streamId', function (done) {
 			wsMock.emit('connection', mockSocket)
@@ -361,7 +342,7 @@ describe('socketio-server', function () {
 		})
 	})
 
-	describe('on subscribe request', function() {
+	context('on subscribe request', function() {
 		beforeEach(function() {
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
