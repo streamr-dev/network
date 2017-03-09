@@ -128,6 +128,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: 'streamId',
 				partition: 0,
+				authKey: 'correct',
 				sub: 'sub',
 				type: 'resend',
 				resend_all: true
@@ -153,6 +154,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: 'streamId',
 				partition: 0,
+				authKey: 'correct',
 				sub: 'sub',
 				type: 'resend',
 				resend_all: true
@@ -180,6 +182,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: 'streamId',
 				partition: 0,
+				authKey: 'correct',
 				sub: 'sub',
 				type: 'resend',
 				resend_all: true
@@ -202,6 +205,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: 'streamId',
 				partition: 0,
+				authKey: 'correct',
 				sub: 'sub',
 				type: 'resend',
 				resend_all: true
@@ -223,6 +227,7 @@ describe('socketio-server', function () {
 					type: 'resend',
 					channel: 'streamId',
 					partition: 0,
+					authKey: 'correct',
 					sub: 7,
 					resend_all: true
 				})
@@ -241,6 +246,7 @@ describe('socketio-server', function () {
 					type: 'resend',
 					channel: 'streamId',
 					partition: 0,
+					authKey: 'correct',
 					sub: 7,
 					resend_from: 333
 				})
@@ -259,6 +265,7 @@ describe('socketio-server', function () {
 					type: 'resend',
 					channel: 'streamId',
 					partition: 0,
+					authKey: 'correct',
 					sub: 7,
 					resend_from: 7,
 					resend_to: 10
@@ -279,6 +286,7 @@ describe('socketio-server', function () {
 					type: 'resend',
 					channel: 'streamId',
 					partition: 0,
+					authKey: 'correct',
 					sub: 7,
 					resend_from_time: timestamp
 				})
@@ -297,6 +305,7 @@ describe('socketio-server', function () {
 					type: 'resend',
 					channel: 'streamId',
 					partition: 0,
+					authKey: 'correct',
 					sub: 7,
 					resend_last: 10
 				})
@@ -306,6 +315,37 @@ describe('socketio-server', function () {
 					done()
 				})
 			});
+		})
+	})
+
+	context('on resend request with invalid key', function() {
+		beforeEach(function() {
+			wsMock.emit('connection', mockSocket)
+			mockSocket.receive({
+				channel: 'streamId',
+				partition: 0,
+				authKey: 'wrong',
+				sub: 'sub',
+				type: 'resend',
+				resend_all: true
+			})
+		})
+
+		it('sends only error message to socket', function(done) {
+			setTimeout(function() {
+				assert.deepEqual(mockSocket.sentMessages, [JSON.stringify([
+					0, encoder.BROWSER_MSG_TYPE_ERROR, '',
+					'Not authorized to request resend from stream streamId and partition 0'
+				])])
+				done()
+			})
+		})
+
+		it('historicalAdapter is not called', function(done) {
+			setTimeout(function() {
+				sinon.assert.notCalled(historicalAdapter.getAll)
+				done()
+			})
 		})
 	})
 
