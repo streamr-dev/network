@@ -14,6 +14,7 @@ describe('socketio-server', function () {
 
 	var server
 	var wsMock
+	var authenticator
 	var realtimeAdapter
 	var historicalAdapter
 	var latestOffsetFetcher
@@ -55,6 +56,18 @@ describe('socketio-server', function () {
 			}
 		}
 
+		authenticator = {
+			authenticate: function(streamId, authKey, operation) {
+				return new Promise(function(resolve, reject) {
+					if (authKey === 'correct') {
+						resolve()
+					} else {
+						reject(403)
+					}
+				})
+			}
+		}
+
 		// Mock socket.io
 		wsMock = new events.EventEmitter
 
@@ -62,7 +75,8 @@ describe('socketio-server', function () {
 		mockSocket = createSocketMock()
 
 		// Create the server instance
-		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wsMock)
+		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wsMock,
+			authenticator)
 	})
 
 	function kafkaMessage() {
@@ -302,6 +316,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: "streamId",
 				partition: 0,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 
@@ -327,6 +342,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: "streamId",
 				partition: 0,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 		})
@@ -344,6 +360,7 @@ describe('socketio-server', function () {
 			socket2.receive({
 				channel: "streamId",
 				partition: 1,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 
@@ -375,11 +392,46 @@ describe('socketio-server', function () {
 			socket2.receive({
 				channel: "streamId",
 				partition: 0,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 
 			setTimeout(function() {
 				sinon.assert.calledOnce(realtimeAdapter.subscribe)
+				done()
+			})
+		})
+	})
+
+	context('on subscribe request with invalid key', function() {
+		beforeEach(function() {
+			wsMock.emit('connection', mockSocket)
+			mockSocket.receive({
+				channel: "streamId",
+				partition: 0,
+				authKey: 'wrong',
+				type: 'subscribe'
+			})
+		})
+
+		it('does not create the Stream object with default partition', function(done) {
+			setTimeout(function() {
+				assert(server.getStreamObject("streamId", 0) == null)
+				done()
+			})
+		})
+
+		it('does not subscribe to the realtime adapter', function(done) {
+			setTimeout(function() {
+				sinon.assert.notCalled(realtimeAdapter.subscribe)
+				done()
+			})
+		})
+
+		it('sends error message to socket', function (done) {
+			setTimeout(function() {
+				assert.equal(mockSocket.sentMessages[0], JSON.stringify([0, encoder.BROWSER_MSG_TYPE_ERROR, '',
+					'Not authorized to subscribe to stream streamId and partition 0']))
 				done()
 			})
 		})
@@ -394,6 +446,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: "streamId",
 				partition: 0,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 
@@ -428,6 +481,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: "streamId",
 				partition: 0,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 
@@ -437,6 +491,7 @@ describe('socketio-server', function () {
 				socket2.receive({
 					channel: "streamId",
 					partition: 0,
+					authKey: 'correct',
 					type: 'subscribe'
 				})
 
@@ -451,6 +506,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: "streamId",
 				partition: 0,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 
@@ -460,6 +516,7 @@ describe('socketio-server', function () {
 				socket2.receive({
 					channel: "streamId",
 					partition: 0,
+					authKey: 'correct',
 					type: 'subscribe'
 				})
 
@@ -480,6 +537,7 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: "streamId",
 				partition: 0,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 
@@ -496,6 +554,7 @@ describe('socketio-server', function () {
 					mockSocket.receive({
 						channel: "streamId",
 						partition: 0,
+						authKey: 'correct',
 						type: 'subscribe'
 					})
 
@@ -518,16 +577,19 @@ describe('socketio-server', function () {
 			mockSocket.receive({
 				channel: "streamId",
 				partition: 6,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 			mockSocket.receive({
 				channel: "streamId",
 				partition: 4,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 			mockSocket.receive({
 				channel: "streamId2",
 				partition: 0,
+				authKey: 'correct',
 				type: 'subscribe'
 			})
 
