@@ -8,10 +8,14 @@ describe('Authenticator', function () {
 	var authenticator
 	var expressApp
 	var server
+	var numOfRequests
 
 	beforeEach(function(done) {
+		numOfRequests = 0
+
 		expressApp = express()
 		expressApp.get('/api/v1/permissions/authenticate', function(req, res) {
+			numOfRequests += 1
 			if (req.query.streamId === 'streamId' && req.query.authKey === 'key' && req.query.operation === 'read') {
 				res.sendStatus(200)
 			} else {
@@ -22,6 +26,7 @@ describe('Authenticator', function () {
 			console.info('Server started on port 6194\n')
 			done()
 		})
+
 		authenticator = new Authenticator('http://127.0.0.1:6194')
 	})
 
@@ -74,6 +79,21 @@ describe('Authenticator', function () {
 
 		it('authenticates if key provides privilege to stream', function(done) {
 			authenticator.authenticate('streamId', 'key', 'read').then(function() {
+				done()
+			})
+		})
+
+		it('caches repeated invocations', function(done) {
+			Promise.all([authenticator.authenticate('streamId', 'key', 'read'),
+				authenticator.authenticate('streamId', 'key', 'read'),
+				authenticator.authenticate('streamId', 'key', 'read'),
+				authenticator.authenticate('streamId2', 'key', 'read'),
+				authenticator.authenticate('streamId', 'key', 'read'),
+				authenticator.authenticate('streamId2', 'key', 'read'),
+				authenticator.authenticate('streamId2', 'key', 'read'),
+				authenticator.authenticate('streamId2', 'key', 'read')
+			]).catch(function() {
+				assert.equal(numOfRequests, 2)
 				done()
 			})
 		})
