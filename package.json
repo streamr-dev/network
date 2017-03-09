@@ -19,6 +19,7 @@
     "cors": "^2.7.1",
     "debug": "*",
     "express": "^4.14.0",
+    "node-fetch": "^1.6.3",
     "node-int64": "*",
     "node-uuid": "^1.4.7",
     "optimist": "*",
