@@ -14,7 +14,7 @@ describe('socketio-server', function () {
 
 	var server
 	var wsMock
-	var authenticator
+	var streamFetcher
 	var realtimeAdapter
 	var historicalAdapter
 	var latestOffsetFetcher
@@ -56,11 +56,11 @@ describe('socketio-server', function () {
 			}
 		}
 
-		authenticator = {
-			authenticate: function(streamId, authKey, operation) {
+		streamFetcher = {
+			authenticatedFetch: function(streamId, authKey) {
 				return new Promise(function(resolve, reject) {
 					if (authKey === 'correct') {
-						resolve()
+						resolve({})
 					} else {
 						reject(403)
 					}
@@ -76,7 +76,7 @@ describe('socketio-server', function () {
 
 		// Create the server instance
 		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wsMock,
-			authenticator)
+			streamFetcher)
 	})
 
 	function kafkaMessage() {

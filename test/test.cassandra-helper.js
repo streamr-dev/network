@@ -39,7 +39,7 @@ describe('CassandraHelper', function() {
 
 		cassandraHelper = new CassandraHelper([CASSANDRA_HOST], KEYSPACE, {
 			maxRefetchRetries: 2,
-			refetchInterval: 250
+			refetchInterval: 120
 		})
 		messagesReceived = []
 		msgHandler = messagesReceived.push.bind(messagesReceived)
