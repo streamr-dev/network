@@ -2,7 +2,7 @@ var app = require('express')();
 var http = require('http').Server(app);
 var cors = require('cors')
 
-var Authenticator = require('./lib/authenticator')
+var StreamFetcher = require('./lib/stream-fetcher')
 var SocketIoServer = require('./lib/socketio-server')
 var RedisHelper = require('./lib/redis-helper')
 var RedisOffsetFetcher = require('./lib/redis-offset-fetcher')
@@ -16,11 +16,11 @@ var argv = require('optimist')
 var app = require('express')();
 var http = require('http').Server(app);
 
-var authenticator = new Authenticator(argv['streamr'])
+var streamFetcher = new StreamFetcher(argv['streamr'])
 var redis = new RedisHelper(argv.redis.split(","), argv['redis-pwd'])
 var cassandra = new CassandraHelper(argv.cassandra.split(","), argv.keyspace)
 var redisOffsetFetcher = new RedisOffsetFetcher(argv.redis.split(",")[0], argv['redis-pwd'])
-var server = new SocketIoServer(http, redis, cassandra, redisOffsetFetcher, null, authenticator)
+var server = new SocketIoServer(http, redis, cassandra, redisOffsetFetcher, null, streamFetcher)
 
 app.use(cors());
 
