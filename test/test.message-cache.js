@@ -13,7 +13,6 @@ describe('MessageCache', function () {
 
 	var cache
 	var resender
-	var clock
 
 	beforeEach(function() {
 		resender = {

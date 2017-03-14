@@ -7,16 +7,22 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test"
+    "test": "mocha test",
+    "autotest": "supervisor -w . -n exit -x mocha -- test -b"
   },
   "author": "",
   "license": "",
   "dependencies": {
-    "kafka-node": "0.5.2",
-    "socket.io": "1.3.2",
-    "optimist": "*",
+    "buffer-reader": "^0.1.0",
+    "cassandra-driver": "^3.1.1",
+    "cors": "^2.7.1",
+    "debug": "*",
+    "express": "^4.14.0",
     "node-int64": "*",
-    "debug": "*"
+    "optimist": "*",
+    "promise": "^7.1.1",
+    "redis": "^2.6.2",
+    "socket.io": "1.3.2"
   },
   "devDependencies": {
     "mocha": "*",

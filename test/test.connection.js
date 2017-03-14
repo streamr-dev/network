@@ -1,5 +1,6 @@
 var assert = require('assert')
 var Connection = require('../lib/connection.js')
+var Stream = require('../lib/stream.js')
 
 describe('Connection', function () {
 
@@ -9,45 +10,45 @@ describe('Connection', function () {
 		connection = new Connection("id", {})	
 	})
 
-	describe('addRoom', function() {
-		it('should add the given rooms to rooms array', function() {
-			connection.addRoom("room")
-			assert.equal(connection.getRooms().length, 1)
-			assert.equal(connection.getRooms()[0], "room")
-			connection.addRoom("room2")
-			assert.equal(connection.getRooms().length, 2)
-			assert.equal(connection.getRooms()[1], "room2")
+	describe('addStream', function() {
+		it('should add the given stream to streams array', function() {
+			connection.addStream(new Stream('stream', 0))
+			assert.equal(connection.getStreams().length, 1)
+			assert.equal(connection.getStreams()[0].id, 'stream')
+			connection.addStream(new Stream('stream2', 0))
+			assert.equal(connection.getStreams().length, 2)
+			assert.equal(connection.getStreams()[1].id, "stream2")
 		})
 	})
 
-	describe('removeRoom', function() {
+	describe('removeStream', function() {
 		beforeEach(function() {
-			connection.addRoom("room")
-			connection.addRoom("room2")
+			connection.addStream(new Stream('stream', 0))
+			connection.addStream(new Stream('stream2', 0))
 		})
 
-		it('should remove the given room from rooms array', function() {
-			connection.removeRoom("room")
-			assert.equal(connection.getRooms().length, 1)
-			assert.equal(connection.getRooms()[0], "room2")
-			connection.removeRoom("room2")
-			assert.equal(connection.getRooms().length, 0)
+		it('should remove the given stream from streams array', function() {
+			connection.removeStream("stream", 0)
+			assert.equal(connection.getStreams().length, 1)
+			assert.equal(connection.getStreams()[0].id, "stream2")
+			connection.removeStream("stream2", 0)
+			assert.equal(connection.getStreams().length, 0)
 		})
 	})
 
-	describe('getRooms', function() {
+	describe('getStreams', function() {
 		beforeEach(function() {
-			connection.addRoom("room")
-			connection.addRoom("room2")
+			connection.addStream(new Stream('stream', 0))
+			connection.addStream(new Stream('stream2', 0))
 		})
 
-		it('should return a copy of the rooms array', function() {
-			var rooms = connection.getRooms()
-			assert.equal(rooms.length, 2)
+		it('should return a copy of the streams array', function() {
+			var streams = connection.getStreams()
+			assert.equal(streams.length, 2)
 			// Modify the copy
-			rooms.push("foo")
-			assert.equal(rooms.length, 3)
-			assert.equal(connection.getRooms().length, 2)
+			streams.push("foo")
+			assert.equal(streams.length, 3)
+			assert.equal(connection.getStreams().length, 2)
 		})
 	})
 

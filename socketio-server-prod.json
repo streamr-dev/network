@@ -1,0 +1,13 @@
+{
+  "apps" : [{
+    "name"        : "socketio-server",
+    "script"      : "socketio-server.js",
+    "args"        : ["--redis", "redis1", "--redis-pwd", "AFuPxeVMwBKHV5Hm5SK3PkRZA", "--cassandra", "cassandra1", "--keyspace", "streamr_prod", "--port", "8890"],
+    "watch"       : false,
+    "node_args"   : "",
+    "merge_logs"  : true,
+    "env": {
+        "DEBUG": ""
+    }
+  }]
+}
