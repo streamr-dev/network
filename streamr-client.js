@@ -480,7 +480,7 @@
 		return id.toString()
 	};
 
-	function Subscription(streamId, callback, options) {
+	function Subscription(streamId, authKey, callback, options) {
 		EventEmitter.call(this); // call parent constructor
 
 		if (!streamId)
@@ -492,6 +492,7 @@
 
 		this.id = generateSubscriptionId()
 		this.streamId = streamId
+		this.authKey = authKey
 		this.callback = callback
 		this.options = options || {}
 		this.queue = []
@@ -679,7 +680,8 @@
 			// Automatically connect on first subscribe
 			autoConnect: true,
 			// Automatically disconnect on last unsubscribe
-			autoDisconnect: true
+			autoDisconnect: true,
+			authKey: null
 		}
 		this.subsByStream = {}
 		this.subById = {}
@@ -720,7 +722,7 @@
 		return this.subsByStream[streamId] || []
 	}
 
-	StreamrClient.prototype.subscribe = function(streamId, callback, options) {
+	StreamrClient.prototype.subscribe = function(streamId, authKey, callback, options) {
 		var _this = this
 
 		if (!streamId)
@@ -732,9 +734,9 @@
 			throw "subscribe: Invalid arguments: callback is required!"
 
 		// Create the Subscription object and bind handlers
-		var sub = new Subscription(streamId, callback, options)
+		var sub = new Subscription(streamId, authKey || this.authKey, callback, options)
 		sub.on('gap', function(from, to) {
-			_this._requestResend(sub, {resend_from: from, resend_to: to})
+			_this._requestResend(sub, {resend_from: from, resend_to: to, authKey: sub.authKey })
 		})
 		sub.on('done', function() {
 			debug("done event for sub %d", sub.id)
@@ -985,7 +987,7 @@
 
 		// If this is the first subscription for this stream, send a subscription request to the server
 		if (!subs._subscribing && subscribedSubs.length === 0) {
-			var req = extend({}, sub.options, {type: 'subscribe', channel: sub.streamId})
+			var req = extend({}, sub.options, { type: 'subscribe', channel: sub.streamId, authKey: sub.authKey })
 			debug("_requestSubscribe: subscribing client: %o", req)
 			subs._subscribing = true
 			_this.connection.send(req)
@@ -1021,7 +1023,12 @@
 
 		sub.resending = true
 
-		var request = extend({}, options, resendOptions, {type: 'resend', channel: sub.streamId, sub: sub.id})
+		var request = extend({}, options, resendOptions, {
+			type: 'resend',
+			channel: sub.streamId,
+			authKey: sub.authKey,
+			sub: sub.id
+		})
 		debug("_requestResend: %o", request)
 		this.connection.send(request)
 	}

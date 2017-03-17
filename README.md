@@ -4,7 +4,7 @@
 
 By using this client, you can easily subscribe to realtime [Streamr](http://www.streamr.com) streams from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). This enables you to use Streamr as an over-the-internet pub/sub engine with powerful analytics and automation features.
 
-The client uses [socket.io](http://socket.io/) under the hood for streaming message delivery. It works in virtually all browsers by using websockets where available, or fallback methods on legacy browsers.
+The client uses [web sockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) under the hood for streaming message delivery.
 
 ### Installation
 
@@ -14,7 +14,6 @@ The client is available on [npm](https://www.npmjs.com/package/streamr-client) a
 
 ### Dependencies
 
-* [socket.io-client](https://cdn.socket.io/socket.io-1.3.7.js)
 * [debug](https://github.com/visionmedia/debug) (optional)
 
 In node.js, dependencies will be installed automatically with `npm install`. In the browser, make sure you include `socket.io-client` before `streamr-client` in your HTML.
@@ -35,6 +34,7 @@ var client = new StreamrClient({
 // Subscribe to a stream
 var sub = client.subscribe(
     'stream-id',
+    'auth-key',
     function(message, streamId, timestamp, counter) {
         // Do something with a message, which is an object
     },
@@ -46,7 +46,7 @@ var sub = client.subscribe(
 
 ### Handling messages
 
-The second argument to `client.subscribe(streamId, callback, resendOptions)` is the callback function that will be called for each message as they arrive. Its arguments are as follows:
+The third argument to `client.subscribe(streamId, authKey, callback, resendOptions)` is the callback function that will be called for each message as they arrive. Its arguments are as follows:
 
 Argument | Description
 -------- | -----------
@@ -64,6 +64,7 @@ server | api.streamr.com | Address of the server to connect to.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last channel is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
 transports | null | Override default transport selection / upgrade scheme. For example, value `["websocket"]` will force use of sockets right from the beginning, while value `["polling"]` will allow only long-polling to be used.
+authKey | null | Define default authKey to use when none is specified in subscribe
 
 
 ### Resend options
@@ -85,7 +86,7 @@ Name | Description
 connect() | Connects to the server, and also subscribes to any streams for which `subscribe()` has been called before calling `connect()`.
 disconnect() | Disconnects from the server, clearing all subscriptions.
 pause() | Disconnects from the server without clearing subscriptions.
-subscribe(streamId, callback, resendOptions) | Subscribes to a stream identified by the string `streamId`. Messages in this stream are passed to the `callback` function. See the above table for `resendOptions`. Returns a `Subscription` object.
+subscribe(streamId, authId, callback, resendOptions) | Subscribes to a stream identified by the string `streamId`. Authentication key `authId` is used. Messages in this stream are passed to the `callback` function. See the above table for `resendOptions`. Returns a `Subscription` object.
 unsubscribe(Subscription) | Unsubscribes the given `Subscription`.
 unsubscribeAll(`streamId`) | Unsubscribes all `Subscriptions` for `streamId`.
 getSubscriptions(`streamId`) | Returns a list of `Subscriptions` for `streamId`.
