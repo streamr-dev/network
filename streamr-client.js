@@ -734,7 +734,7 @@
 			throw "subscribe: Invalid arguments: callback is required!"
 
 		// Create the Subscription object and bind handlers
-		var sub = new Subscription(streamId, authKey || this.authKey, callback, options)
+		var sub = new Subscription(streamId, authKey || this.options.authKey, callback, options)
 		sub.on('gap', function(from, to) {
 			_this._requestResend(sub, {resend_from: from, resend_to: to, authKey: sub.authKey })
 		})
