@@ -24,7 +24,7 @@
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
-    "ws": "^1.1.1"
+    "uws": "^0.13.0"
   },
   "devDependencies": {
     "buffermaker": "*",
