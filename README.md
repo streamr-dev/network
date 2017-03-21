@@ -4,7 +4,7 @@
 
 By using this client, you can easily subscribe to realtime [Streamr](http://www.streamr.com) streams from Javascript-based environments, such as browsers and [node.js](https://nodejs.org). This enables you to use Streamr as an over-the-internet pub/sub engine with powerful analytics and automation features.
 
-The client uses [socket.io](http://socket.io/) under the hood for streaming message delivery. It works in virtually all browsers by using websockets where available, or fallback methods on legacy browsers.
+The client uses websockets for streaming message delivery. It should work in all modern browsers.
 
 ### Installation
 
