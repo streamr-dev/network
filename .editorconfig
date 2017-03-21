@@ -1,0 +1,5 @@
+# Top-most EditorConfig file
+root = true
+
+[*.{js,html}]
+indent_style = tab

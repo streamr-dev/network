@@ -17,8 +17,7 @@
   "license": "",
   "dependencies": {
     "debug": "*",
-    "eventemitter3": "*",
-    "socket.io-client": "1.3.7"
+    "eventemitter3": "*"
   },
   "devDependencies": {
     "mocha": "*",
