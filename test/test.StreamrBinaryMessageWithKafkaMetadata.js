@@ -11,7 +11,7 @@ describe('StreamrBinaryMessageWithKafkaMetadata', function () {
 
 	var streamId = "streamId"
 	var streamPartition = 0
-	var content = {foo: "bar"}
+	var content = JSON.stringify({foo: "bar"})
 	var timestamp = Date.now()
 	var ttl = 100
 
