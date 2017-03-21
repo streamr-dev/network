@@ -112,7 +112,7 @@ describe('socketio-server', function () {
 
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: 'streamId',
+				stream: 'streamId',
 				partition: 0,
 				sub: 'sub',
 				type: 'resend',
@@ -121,7 +121,7 @@ describe('socketio-server', function () {
 
 			setTimeout(function() {
 				const payload = {
-					channel: 'streamId',
+					stream: 'streamId',
 					partition: 0,
 					sub: 'sub'
 				}
@@ -137,7 +137,7 @@ describe('socketio-server', function () {
 
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: 'streamId',
+				stream: 'streamId',
 				partition: 0,
 				sub: 'sub',
 				type: 'resend',
@@ -164,7 +164,7 @@ describe('socketio-server', function () {
 
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: 'streamId',
+				stream: 'streamId',
 				partition: 0,
 				sub: 'sub',
 				type: 'resend',
@@ -173,7 +173,7 @@ describe('socketio-server', function () {
 
 			setTimeout(function() {
 				const expectedMsg = JSON.stringify([
-					0, encoder.BROWSER_MSG_TYPE_RESENT, '', { channel: 'streamId', partition: 0, sub: 'sub'}
+					0, encoder.BROWSER_MSG_TYPE_RESENT, '', { stream: 'streamId', partition: 0, sub: 'sub'}
 				])
 				assert.deepEqual(mockSocket.sentMessages[2], expectedMsg)
 				done()
@@ -186,7 +186,7 @@ describe('socketio-server', function () {
 
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: 'streamId',
+				stream: 'streamId',
 				partition: 0,
 				sub: 'sub',
 				type: 'resend',
@@ -195,7 +195,7 @@ describe('socketio-server', function () {
 
 			setTimeout(function() {
 				const expectedMsg = JSON.stringify([
-					0, encoder.BROWSER_MSG_TYPE_NO_RESEND, '', { channel: 'streamId', partition: 0, sub: 'sub'}
+					0, encoder.BROWSER_MSG_TYPE_NO_RESEND, '', { stream: 'streamId', partition: 0, sub: 'sub'}
 				])
 				assert.deepEqual(mockSocket.sentMessages[0], expectedMsg)
 				done()
@@ -207,7 +207,7 @@ describe('socketio-server', function () {
 				wsMock.emit('connection', mockSocket)
 				mockSocket.receive({
 					type: 'resend',
-					channel: 'streamId',
+					stream: 'streamId',
 					partition: 0,
 					sub: 7,
 					resend_all: true
@@ -225,7 +225,7 @@ describe('socketio-server', function () {
 				wsMock.emit('connection', mockSocket)
 				mockSocket.receive({
 					type: 'resend',
-					channel: 'streamId',
+					stream: 'streamId',
 					partition: 0,
 					sub: 7,
 					resend_from: 333
@@ -243,7 +243,7 @@ describe('socketio-server', function () {
 				wsMock.emit('connection', mockSocket)
 				mockSocket.receive({
 					type: 'resend',
-					channel: 'streamId',
+					stream: 'streamId',
 					partition: 0,
 					sub: 7,
 					resend_from: 7,
@@ -263,7 +263,7 @@ describe('socketio-server', function () {
 				wsMock.emit('connection', mockSocket)
 				mockSocket.receive({
 					type: 'resend',
-					channel: 'streamId',
+					stream: 'streamId',
 					partition: 0,
 					sub: 7,
 					resend_from_time: timestamp
@@ -281,7 +281,7 @@ describe('socketio-server', function () {
 				wsMock.emit('connection', mockSocket)
 				mockSocket.receive({
 					type: 'resend',
-					channel: 'streamId',
+					stream: 'streamId',
 					partition: 0,
 					sub: 7,
 					resend_last: 10
@@ -300,7 +300,7 @@ describe('socketio-server', function () {
 		it('emits messages received from Redis to those sockets according to streamId', function (done) {
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 0,
 				type: 'subscribe'
 			})
@@ -321,11 +321,33 @@ describe('socketio-server', function () {
 		})
 	})
 
+	context('on invalid subscribe request', function() {
+		beforeEach(function() {
+			wsMock.emit('connection', mockSocket)
+			mockSocket.receive({
+				type: 'subscribe'
+			})
+		})
+
+		it('emits error', function (done) {
+			setTimeout(function() {
+				var msg = JSON.parse(mockSocket.sentMessages[0])
+				assert.equal(
+					msg[1], // message type
+					encoder.BROWSER_MSG_TYPE_ERROR
+				)
+				var content = msg[3]
+				assert(content.error !== undefined)
+				done()
+			})
+		})
+	})
+
 	context('on subscribe request', function() {
 		beforeEach(function() {
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 0,
 				type: 'subscribe'
 			})
@@ -342,7 +364,7 @@ describe('socketio-server', function () {
 			const socket2 = new createSocketMock()
 			wsMock.emit('connection', socket2)
 			socket2.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 1,
 				type: 'subscribe'
 			})
@@ -363,7 +385,7 @@ describe('socketio-server', function () {
 		it('emits \'subscribed\' after subscribing', function (done) {
 			setTimeout(function() {
 				assert.deepEqual(mockSocket.sentMessages[0], JSON.stringify([
-					0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { channel: 'streamId', partition: 0 }
+					0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { stream: 'streamId', partition: 0 }
 				]))
 				done()
 			})
@@ -373,7 +395,7 @@ describe('socketio-server', function () {
 			const socket2 = createSocketMock()
 			wsMock.emit('connection', socket2)
 			socket2.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 0,
 				type: 'subscribe'
 			})
@@ -392,7 +414,7 @@ describe('socketio-server', function () {
 
 			// subscribe
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 0,
 				type: 'subscribe'
 			})
@@ -400,7 +422,7 @@ describe('socketio-server', function () {
 			// unsubscribe
 			setTimeout(function() {
 				mockSocket.receive({
-					channel: "streamId",
+					stream: "streamId",
 					partition: 0,
 					type: 'unsubscribe'
 				})
@@ -410,23 +432,23 @@ describe('socketio-server', function () {
 
 		it('emits a unsubscribed event', function() {
 			assert.deepEqual(mockSocket.sentMessages[mockSocket.sentMessages.length - 1], JSON.stringify([
-				0, encoder.BROWSER_MSG_TYPE_UNSUBSCRIBED, '', { channel: 'streamId', partition: 0 }
+				0, encoder.BROWSER_MSG_TYPE_UNSUBSCRIBED, '', { stream: 'streamId', partition: 0 }
 			]))
 		})
 
-		it('unsubscribes from realtimeAdapter if there are no more sockets on the channel', function() {
+		it('unsubscribes from realtimeAdapter if there are no more sockets on the stream', function() {
 			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId', 0)
 		})
 
-		it('removes stream object if there are no more sockets on the channel', function() {
+		it('removes stream object if there are no more sockets on the stream', function() {
 			assert(server.getStreamObject('streamId', 0) == null)
 		})
 
-		it('does not unsubscribe from realtimeAdapter if there are sockets remaining on the channel', function(done) {
+		it('does not unsubscribe from realtimeAdapter if there are sockets remaining on the stream', function(done) {
 			realtimeAdapter.unsubscribe = sinon.spy()
 
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 0,
 				type: 'subscribe'
 			})
@@ -435,7 +457,7 @@ describe('socketio-server', function () {
 				const socket2 = createSocketMock()
 				wsMock.emit('connection', socket2)
 				socket2.receive({
-					channel: "streamId",
+					stream: "streamId",
 					partition: 0,
 					type: 'subscribe'
 				})
@@ -447,9 +469,9 @@ describe('socketio-server', function () {
 			})
 		})
 
-		it('does not remove stream object if there are sockets remaining on the channel', function(done) {
+		it('does not remove stream object if there are sockets remaining on the stream', function(done) {
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 0,
 				type: 'subscribe'
 			})
@@ -458,7 +480,7 @@ describe('socketio-server', function () {
 				const socket2 = createSocketMock()
 				wsMock.emit('connection', socket2)
 				socket2.receive({
-					channel: "streamId",
+					stream: "streamId",
 					partition: 0,
 					type: 'subscribe'
 				})
@@ -478,7 +500,7 @@ describe('socketio-server', function () {
 
 			// subscribe
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 0,
 				type: 'subscribe'
 			})
@@ -486,7 +508,7 @@ describe('socketio-server', function () {
 			setTimeout(function() {
 				// unsubscribe
 				mockSocket.receive({
-					channel: "streamId",
+					stream: "streamId",
 					partition: 0,
 					type: 'unsubscribe'
 				})
@@ -494,16 +516,16 @@ describe('socketio-server', function () {
 				setTimeout(function() {
 					// subscribed
 					mockSocket.receive({
-						channel: "streamId",
+						stream: "streamId",
 						partition: 0,
 						type: 'subscribe'
 					})
 
 					setTimeout(function() {
 						assert.deepEqual(mockSocket.sentMessages, [
-							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { channel: 'streamId', partition: 0}]),
-							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_UNSUBSCRIBED, '', { channel: 'streamId', partition: 0}]),
-							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { channel: 'streamId', partition: 0}])
+							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { stream: 'streamId', partition: 0}]),
+							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_UNSUBSCRIBED, '', { stream: 'streamId', partition: 0}]),
+							JSON.stringify([0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', { stream: 'streamId', partition: 0}])
 						])
 						done()
 					})
@@ -516,17 +538,17 @@ describe('socketio-server', function () {
 		beforeEach(function(done) {
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 6,
 				type: 'subscribe'
 			})
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 4,
 				type: 'subscribe'
 			})
 			mockSocket.receive({
-				channel: "streamId2",
+				stream: "streamId2",
 				partition: 0,
 				type: 'subscribe'
 			})
@@ -537,7 +559,7 @@ describe('socketio-server', function () {
 			})
 		})
 
-		it('unsubscribes from realtimeAdapter on channels where there are no more connections', function() {
+		it('unsubscribes from realtimeAdapter on streams where there are no more connections', function() {
 			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId', 6)
 			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId', 4)
 			sinon.assert.calledWith(realtimeAdapter.unsubscribe, 'streamId2', 0)
