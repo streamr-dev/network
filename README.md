@@ -1,22 +1,16 @@
 <!-- Note that this readme is embedded on API Documentation page within Streamr. Please don't use first-level headings (h1). You should write this document so that it will work both as a stand-alone document in the public GitHub repo and as a section in the API docs. -->
 <a name="js-client"></a>
-## Streamr JavaScript Client
+## Streamr Javascript Client
 
-By using this client, you can easily subscribe to realtime [Streamr](http://www.streamr.com) streams from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). This enables you to use Streamr as an over-the-internet pub/sub engine with powerful analytics and automation features.
+By using this client, you can easily subscribe to realtime [Streamr](http://www.streamr.com) streams from Javascript-based environments, such as browsers and [node.js](https://nodejs.org). This enables you to use Streamr as an over-the-internet pub/sub engine with powerful analytics and automation features.
 
-The client uses [web sockets](https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API) under the hood for streaming message delivery.
+The client uses websockets for streaming message delivery. It should work in all modern browsers.
 
 ### Installation
 
 The client is available on [npm](https://www.npmjs.com/package/streamr-client) and can be installed simpy by:
 
 `npm install streamr-client`
-
-### Dependencies
-
-* [debug](https://github.com/visionmedia/debug) (optional)
-
-In node.js, dependencies will be installed automatically with `npm install`. In the browser, make sure you include `socket.io-client` before `streamr-client` in your HTML.
 
 ### Usage
 
@@ -25,10 +19,7 @@ Here's a quick example. More detailed examples for the browser and node.js can b
 ```javascript
 // Create a StreamrClient instance
 var client = new StreamrClient({
-    // Connection options can be omitted, these are the default values
-    server: 'https://data.streamr.com',
-    autoConnect: true,
-    autoDisconnect: true
+    // See below for connection options
 })
 
 // Subscribe to a stream
@@ -60,12 +51,10 @@ counter  | (optional) A sequence number for this message, if available.
 
 Option | Default value | Description
 ------ | ------------- | -----------
-server | api.streamr.com | Address of the server to connect to.
+url | ws://www.streamr.com/api/v1/ws | Address of the Streamr websocket endpoint to connect to.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
-autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last channel is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
-transports | null | Override default transport selection / upgrade scheme. For example, value `["websocket"]` will force use of sockets right from the beginning, while value `["polling"]` will allow only long-polling to be used.
+autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
 authKey | null | Define default authKey to use when none is specified in subscribe
-
 
 ### Resend options
 
@@ -73,7 +62,7 @@ Note that only one of the resend options can be used for a particular subscripti
 
 Option | Default value | Description
 ------ | ------------- | -----------
-resend_all | undefined | Set to `true` if you want all the messages for the channel resent from the earliest available message.
+resend_all | undefined | Set to `true` if you want all the messages for the stream resent from the earliest available message.
 resend_last | undefined | Resend the previous `N` messages.
 resend_from | undefined | Resend from a specific message number.
 resend_from_time | undefined | Resend from a specific Date (or millisecond timestamp).
@@ -136,7 +125,7 @@ no_resend |  | Fired after `resending` in case there was nothing to resend.
 
 ### Logging
 
-The Streamr JavaScript client library supports [debug](https://github.com/visionmedia/debug) for logging.
+The Streamr JS client library supports [debug](https://github.com/visionmedia/debug) for logging.
 
 In node.js, start your app like this: `DEBUG=StreamrClient node your-app.js`
 

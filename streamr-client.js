@@ -390,7 +390,7 @@
 
 		createSubscribeRequest: function(stream, resendOptions) {
 			var req = {
-				channel: stream
+				stream: stream
 			}
 			Object.keys(resendOptions).forEach(function(key) {
 				req[key] = resendOptions[key]
@@ -405,7 +405,7 @@
 	function Connection(options) {
 		EventEmitter.call(this);
 		if (!options.url) {
-			throw "Server is not defined!"
+			throw "URL is not defined!"
 		}
 		this.options = options
 		this.connected = false
@@ -842,10 +842,10 @@
 
 		this.connection.on('subscribed', function(response) {
 			if (response.error) {
-				_this.handleError("Error subscribing to "+response.channel+": "+response.error)
+				_this.handleError("Error subscribing to "+response.stream+": "+response.error)
 			}
 			else {
-				var subs = _this.subsByStream[response.channel]
+				var subs = _this.subsByStream[response.stream]
 				delete subs._subscribing
 
 				debug('Client subscribed: %o', response)
@@ -862,9 +862,9 @@
 		this.connection.on('unsubscribed', function(response) {
 			debug("Client unsubscribed: %o", response)
 
-			if (_this.subsByStream[response.channel]) {
+			if (_this.subsByStream[response.stream]) {
 				// Copy the list to avoid concurrent modifications
-				var l = _this.subsByStream[response.channel].slice()
+				var l = _this.subsByStream[response.stream].slice()
 				l.forEach(function(sub) {
 					_this._removeSubscription(sub)
 					sub.emit('unsubscribed')
@@ -954,9 +954,9 @@
 	}
 
 	StreamrClient.prototype._checkAutoDisconnect = function() {
-		// Disconnect if no longer subscribed to any channels
+		// Disconnect if no longer subscribed to any streams
 		if (this.options.autoDisconnect && Object.keys(this.subsByStream).length === 0) {
-			debug("Disconnecting due to no longer being subscribed to any channels")
+			debug("Disconnecting due to no longer being subscribed to any streams")
 			this.disconnect()
 		}
 	}
@@ -987,7 +987,7 @@
 
 		// If this is the first subscription for this stream, send a subscription request to the server
 		if (!subs._subscribing && subscribedSubs.length === 0) {
-			var req = extend({}, sub.options, { type: 'subscribe', channel: sub.streamId, authKey: sub.authKey })
+			var req = extend({}, sub.options, { type: 'subscribe', stream: sub.streamId, authKey: sub.authKey })
 			debug("_requestSubscribe: subscribing client: %o", req)
 			subs._subscribing = true
 			_this.connection.send(req)
@@ -1006,7 +1006,7 @@
 		debug("Client unsubscribing stream %o", streamId)
 		this.connection.send({
 			type: 'unsubscribe',
-			channel: streamId
+			stream: streamId
 		})
 	}
 
@@ -1023,12 +1023,7 @@
 
 		sub.resending = true
 
-		var request = extend({}, options, resendOptions, {
-			type: 'resend',
-			channel: sub.streamId,
-			authKey: sub.authKey,
-			sub: sub.id
-		})
+		var request = extend({}, options, resendOptions, {type: 'resend', stream: sub.streamId, authKey: sub.authKey,sub: sub.id})
 		debug("_requestResend: %o", request)
 		this.connection.send(request)
 	}
