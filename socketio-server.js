@@ -24,7 +24,7 @@ var server = new SocketIoServer(http, redis, cassandra, redisOffsetFetcher, null
 
 app.use(cors());
 
-require('./lib/cassandra-rest-endpoints')(app, cassandra)
+require('./lib/rest-endpoints')(app, cassandra, redisOffsetFetcher)
 
 http.listen(argv.port, function() {
 	console.log("Server started on port "+argv.port)

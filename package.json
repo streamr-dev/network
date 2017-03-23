@@ -15,7 +15,7 @@
   "dependencies": {
     "buffer-reader": "^0.1.0",
     "bufferutil": "^1.2.1",
-    "cassandra-driver": "^3.1.1",
+    "cassandra-driver": "^3.2.0",
     "cors": "^2.7.1",
     "debug": "*",
     "express": "^4.14.0",
@@ -25,7 +25,7 @@
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
-    "ws": "^1.1.1"
+    "uws": "^0.13.0"
   },
   "devDependencies": {
     "buffermaker": "*",
