@@ -57,7 +57,7 @@ describe('socketio-server', function () {
 		}
 
 		streamFetcher = {
-			authenticatedFetch: function(streamId, authKey) {
+			authenticate: function(streamId, authKey) {
 				return new Promise(function(resolve, reject) {
 					if (authKey === 'correct') {
 						resolve({})
@@ -322,7 +322,7 @@ describe('socketio-server', function () {
 		beforeEach(function() {
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: 'streamId',
+				stream: 'streamId',
 				partition: 0,
 				authKey: 'wrong',
 				sub: 'sub',
@@ -469,7 +469,7 @@ describe('socketio-server', function () {
 		beforeEach(function() {
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
-				channel: "streamId",
+				stream: "streamId",
 				partition: 0,
 				authKey: 'wrong',
 				type: 'subscribe'
