@@ -2,7 +2,14 @@
   "apps" : [{
     "name"        : "socketio-server",
     "script"      : "socketio-server.js",
-    "args"        : ["--redis", "redis1", "--redis-pwd", "AFuPxeVMwBKHV5Hm5SK3PkRZA", "--cassandra", "cassandra1", "--keyspace", "streamr_prod", "--port", "8890"],
+    "args"        : [
+      "--redis", "redis1",
+      "--redis-pwd", "AFuPxeVMwBKHV5Hm5SK3PkRZA",
+      "--cassandra", "cassandra1",
+      "--keyspace", "streamr_prod",
+      "--streamr", "https://www.streamr.com",
+      "--port", "8890"
+    ],
     "watch"       : false,
     "node_args"   : "",
     "merge_logs"  : true,

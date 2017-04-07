@@ -1,40 +1,175 @@
 # streamr-socketio-server
 
-This app uses socket.io and Node to deliver UI updates or other Kafka messages to client browsers. Used by and included in (as a submodule) `unifina-core`.
-
-# Running
-
-First make sure you have all the dependencies installed:
-
-`npm install`
-
-Example of starting the server in dev:
-
-`node start-server.js --zookeeper dev.unifina:2181 --port 8889`
+This app delivers messages in streams to clients over websockets.
 
 # Protocol
 
-## Sent by client
+## Requests sent by client
 
-Event     | Arguments | Response Event(s) | Description
---------- | -------- | ----------- | ----
-subscribe | `{stream: 'id', partition: 0}` | subscribed, b | Requests that the client be subscribed to a `stream` from the next published message. The `partition` is optional and defaults to 0. Will result in a `subscribed` message, and a stream of `b` (broadcast) messages as they are published.
-unsubscribe | `{stream: 'id', partition: 0}` | unsubscribed | Requests an unsubscribe from the given `stream`. The `partition` is optional and defaults to 0.
-resend | `{stream: 'id', partition: 0, sub: 'subId', /*resend-options*/}` | (resending, u, resent) or no_resend | Requests a resend for a `stream`. The `partition` is optional and defaults to 0. If there is anything to resend, the server will respond with a `resending` message and the requested `u` (unicast) messages. The resend will end with a `resent` message. If there is nothing to resend, the server will send a `no_resend` message.
+Also see the [Javascript client](https://github.com/streamr-dev/streamr-client) documentation.
 
-For a description of the `resend-options`, see the [Javascript client](https://github.com/streamr-dev/streamr-client) documentation.
+### subscribe
+
+Requests that the client be subscribed to a stream-partition from the next published message. Will result in a `subscribed` message, and a stream of `b` (broadcast) messages as they are published.
+
+```
+{
+  "type": "subscribe",
+  "stream": "streamId",
+  "partition": 0,         // optional, defaults to 0
+  "authKey": "authKey"    // optional, defaults to undefined
+} 
+```
+
+Field     | Description
+--------- | --------
+type      | Always "subscribe"
+stream    | Stream id to subscribe to
+partition | Partition number to subscribe to. Optional, defaults to 0
+authKey   | User API key or anonymous stream key. Optional. Public streams can be subscribed to without authentication.
+
+### unsubscribe
+
+Unsubscribes the client from a stream-partition. The response message is `unsubscribed`.
+
+```
+{
+  "type": "unsubscribe",
+  "stream": "id", 
+  "partition": 0          // optional, defaults to 0
+}
+```
+
+Field     | Description
+--------- | --------
+type      | Always "unsubscribe"
+stream    | Stream id to unsubscribe
+partition | Partition number to unsubscribe. Optional, defaults to 0
+
+### resend
+
+Requests a resend for a stream-partition. Responses are either a sequence of a `resending`, one or more `u`, and a `resent`; or a `no_resend` if there is nothing to resend.
+
+```
+{
+  "type": "resend",
+  "stream": "id", 
+  "partition": 0          // optional, defaults to 0
+  "sub": "subId", 
+  // one of: "resend_all": true, "resend_last": (number), "resend_from": (offset)
+}
+```
+
+Field     | Description
+--------- | --------
+type       | Always "unsubscribe"
+stream     | Stream id to unsubscribe
+partition  | Partition number to unsubscribe. Optional, defaults to 0
+resend_all | Set to true to resend all messages in stream
+resend_last| Resend the latest N messages
+resend_from| Resend all messages from and including the given offset. Can be used in combination with `resend_to`
+resend_to  | Resend up to given offset
 
 ## Sent by server
 
-Event     | Arguments | Description
---------- | -------- |  ----
-`subscribed` | `{stream: 'id', partition: 0}` | Lets the client know that streams were subscribed to. May contain an `error` key if there was an error while subscribing.
-`unsubscribed` | `{stream: 'id', partition: 0}` | Lets the client know that a stream was unsubscribed. May contain an `error` key if there was an error.
-`resending` | `{stream: 'id', partition: 0, sub: 'subId'}` | Informs the client that a resend is starting.
-`resent` | `{stream: 'id', partition: 0, sub: 'subId'}` | Informs the client that a resend is complete.
-`no_resend` | `{stream: 'id', partition: 0, sub: 'subId'}` | Informs the client that there was nothing to resend.
-`b` | `[version, ...]` | Broadcast message. A message addressed to all subscriptions listening on the stream. An array whose first item is the message version, and the rest depends on the version.
-`u` | `{m: [version, ...], sub: 'subid'}` | Unicast message. Only intended for the subscription with id `sub`. Message in `m` is just like in the broadcast message.
+Messages sent by the server are arrays with the following structure:
+
+`[messageVersion, messageType, subId || "", messagePayload]`
+
+- `messageVersion` is 0 for all messages.
+- `messageType` identifies the message type as follows:
+
+messageType | Description
+----------- | -----------
+0 | broadcast
+1 | unicast
+2 | subscribed
+3 | unsubscribed
+4 | resending
+5 | resent
+6 | no resend
+7 | error
+
+- `subId` is non-empty on `unicast` messages and identifies the subscription by id
+- `messagePayload` is the message payload as described below.
+
+### broadcast (0)
+
+A message addressed to all subscriptions listening on the stream. The message payload is a an event in a stream, wrapped in a header array as follows:
+
+`[version (28), streamId, streamPartition, timestamp, ttl, offset, previousOffset, contentType, streamEvent]`
+
+- `version` is currently 28
+- `streamId` what stream this message belongs to
+- `streamPartition` what stream partition this message belongs to
+- `timestamp` of the message (milliseconds format)
+- `ttl` time-to-live of the message in seconds
+- `offset` is an increasing number that can be used for message ordering and gap detection
+- `previousOffset` is the `offset` of the previous message, used for gap detection
+- `contentType` determines how `streamEvent` should be parsed:
+
+contentType | Description
+----------- | -----------
+27          | `streamEvent` should be parsed as JSON
+
+### unicast (1)
+
+Unicast messages have non-empty `subId`. Content is just like in the broadcast message.
+
+### subscribed (2)
+
+Sent in response to a `subscribe` request. Lets the client know that streams were subscribed to.
+
+```
+{
+  "stream": "id", 
+  "partition": 0
+}
+```
+
+### unsubscribed (3)
+
+Sent in response to an `unsubscribe` request.
+
+```
+{
+  "stream": "id",
+  "partition": 0
+}
+```
+
+### resending (4)
+
+Sent in response to a `resend` request. Informs the client that a resend is starting.
+
+```
+{
+  "stream": "id", 
+  "partition": 0
+}
+```
+
+### resent (5)
+
+Informs the client that a resend for a particular subscription `subId` is complete.
+
+```
+{
+  "stream": "id", 
+  "partition": 0
+}
+```
+
+### no resend (6)
+
+Sent in response to a `resend` request. Informs the client that there was nothing to resend.
+
+```
+{
+  "stream": "id", 
+  "partition": 0
+}
+```
 
 ## Events emitted on server instance
 
