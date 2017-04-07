@@ -8,14 +8,14 @@ var StreamrClient = require('../streamr-client')
 var client = new StreamrClient()
 // Subscribe to a stream
 var subscription = client.subscribe(
-    '1ef8TbyGTFiAlZ8R2gCaJw', 
+	{
+		stream: '1ef8TbyGTFiAlZ8R2gCaJw',
+		// Resend the last 10 messages on connect
+		resend_last: 10
+	},
     function(message) {
     	// Handle the messages in this stream
 		console.log(message)
-    },
-    {
-    	// Resend the last 10 messages on connect
-        resend_last: 10
     }
 )
 
