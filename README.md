@@ -19,40 +19,40 @@ Here's a quick example. More detailed examples for the browser and node.js can b
 ```javascript
 // Create a StreamrClient instance
 var client = new StreamrClient({
-    // See below for connection options
+    // See below for options
 })
 
 // Subscribe to a stream
 var sub = client.subscribe(
-    'stream-id',
-    function(message, streamId, timestamp, counter) {
-        // Do something with a message, which is an object
-    },
     {
-        // Resend options, see below
+        stream: 'streamId',
+        partition: 0,           // Optional, defaults to zero. Use for partitioned streams to select partition.
+        authKey: 'authKey'      // Optional. If not given, uses the authKey given at client creation time.
+        // optional resend options here
+    },
+    function(message, metadata) {
+        // Do something with the message, which is an object
     }
 )
 ```
 
-### Handling messages
-
-The second argument to `client.subscribe(streamId, callback, resendOptions)` is the callback function that will be called for each message as they arrive. Its arguments are as follows:
-
-Argument | Description
--------- | -----------
-message  | A javascript object containing the message itself
-streamId | The id of the stream the message belongs to
-timestamp| (optional) A javascript Date object containing the timestamp for this message, if available.
-counter  | (optional) A sequence number for this message, if available.
-
-
-### Connection options
+### Client options
 
 Option | Default value | Description
 ------ | ------------- | -----------
 url | ws://www.streamr.com/api/v1/ws | Address of the Streamr websocket endpoint to connect to.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
+authKey | null | Define default authKey to use when none is specified in the call to `client.subscribe`.
+
+### Message handler callback
+
+The second argument to `client.subscribe(options, callback)` is the callback function that will be called for each message as they arrive. Its arguments are as follows:
+
+Argument | Description
+-------- | -----------
+message  | A javascript object containing the message itself
+metadata | Metadata for the message, for example `metadata.timestamp` etc.
 
 ### Resend options
 
@@ -73,7 +73,7 @@ Name | Description
 connect() | Connects to the server, and also subscribes to any streams for which `subscribe()` has been called before calling `connect()`.
 disconnect() | Disconnects from the server, clearing all subscriptions.
 pause() | Disconnects from the server without clearing subscriptions.
-subscribe(streamId, callback, resendOptions) | Subscribes to a stream identified by the string `streamId`. Messages in this stream are passed to the `callback` function. See the above table for `resendOptions`. Returns a `Subscription` object.
+subscribe(streamId, authId, callback, resendOptions) | Subscribes to a stream identified by the string `streamId`. Authentication key `authId` is used. Messages in this stream are passed to the `callback` function. See the above table for `resendOptions`. Returns a `Subscription` object.
 unsubscribe(Subscription) | Unsubscribes the given `Subscription`.
 unsubscribeAll(`streamId`) | Unsubscribes all `Subscriptions` for `streamId`.
 getSubscriptions(`streamId`) | Returns a list of `Subscriptions` for `streamId`.

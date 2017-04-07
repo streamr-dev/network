@@ -480,7 +480,7 @@
 		return id.toString()
 	};
 
-	function Subscription(streamId, callback, options) {
+	function Subscription(streamId, streamPartition, authKey, callback, options) {
 		EventEmitter.call(this); // call parent constructor
 
 		if (!streamId)
@@ -492,6 +492,8 @@
 
 		this.id = generateSubscriptionId()
 		this.streamId = streamId
+		this.streamPartition = streamPartition
+		this.authKey = authKey
 		this.callback = callback
 		this.options = options || {}
 		this.queue = []
@@ -607,7 +609,7 @@
 			// Normal case where prevOffset == null || lastReceivedOffset == null || prevOffset === lastReceivedOffset
 			else {
 				this.lastReceivedOffset = offset
-				this.callback(content, this.streamId, timestamp, offset)
+				this.callback(content, msg)
 				if (content[BYE_KEY]) {
 					this.emit('done')
 				}
@@ -679,7 +681,8 @@
 			// Automatically connect on first subscribe
 			autoConnect: true,
 			// Automatically disconnect on last unsubscribe
-			autoDisconnect: true
+			autoDisconnect: true,
+			authKey: null
 		}
 		this.subsByStream = {}
 		this.subById = {}
@@ -720,19 +723,33 @@
 		return this.subsByStream[streamId] || []
 	}
 
-	StreamrClient.prototype.subscribe = function(streamId, callback, options) {
+	StreamrClient.prototype.subscribe = function(options, callback, legacyOptions) {
 		var _this = this
 
-		if (!streamId)
-			throw "subscribe: Invalid arguments: stream id is required!"
-		else if (typeof streamId !== 'string')
-			throw "subscribe: stream id must be a string!"
-
-		if (!callback)
+		if (!options) {
+			throw "subscribe: Invalid arguments: subscription options is required!"
+		} else if (!callback) {
 			throw "subscribe: Invalid arguments: callback is required!"
+		}
+
+		// Backwards compatibility for giving a streamId as first argument
+		if (typeof options === 'string') {
+			options = {
+				stream: options
+			}
+		} else if (typeof options !== 'object') {
+			throw "subscribe: options must be an object"
+		}
+
+		// Backwards compatibility for giving an options object as third argument
+		extend(options, legacyOptions)
+
+		if (!options.stream) {
+			throw "subscribe: Invalid arguments: options.stream is not given"
+		}
 
 		// Create the Subscription object and bind handlers
-		var sub = new Subscription(streamId, callback, options)
+		var sub = new Subscription(options.stream, options.partition || 0, options.authKey || this.options.authKey, callback, options)
 		sub.on('gap', function(from, to) {
 			_this._requestResend(sub, {resend_from: from, resend_to: to})
 		})
@@ -985,7 +1002,7 @@
 
 		// If this is the first subscription for this stream, send a subscription request to the server
 		if (!subs._subscribing && subscribedSubs.length === 0) {
-			var req = extend({}, sub.options, {type: 'subscribe', stream: sub.streamId})
+			var req = extend({}, sub.options, { type: 'subscribe', stream: sub.streamId, authKey: sub.authKey })
 			debug("_requestSubscribe: subscribing client: %o", req)
 			subs._subscribing = true
 			_this.connection.send(req)
@@ -1021,7 +1038,7 @@
 
 		sub.resending = true
 
-		var request = extend({}, options, resendOptions, {type: 'resend', stream: sub.streamId, sub: sub.id})
+		var request = extend({}, options, resendOptions, {type: 'resend', stream: sub.streamId, partition: sub.streamPartition, authKey: sub.authKey, sub: sub.id})
 		debug("_requestResend: %o", request)
 		this.connection.send(request)
 	}
