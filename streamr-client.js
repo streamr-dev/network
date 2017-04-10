@@ -676,8 +676,7 @@
 		// Default options
 		this.options = {
 			// The server to connect to
-			url: "wss://data.streamr.com/api/v1/ws",
-			path: "/api/v1/ws",
+			url: "wss://www.streamr.com/api/v1/ws",
 			// Automatically connect on first subscribe
 			autoConnect: true,
 			// Automatically disconnect on last unsubscribe
