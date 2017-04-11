@@ -10,7 +10,7 @@ Also see the [Javascript client](https://github.com/streamr-dev/streamr-client) 
 
 ### subscribe
 
-Requests that the client be subscribed to a stream-partition from the next published message. Will result in a `subscribed` message, and a stream of `b` (broadcast) messages as they are published.
+Requests that the client be subscribed to a stream-partition from the next published message. Will result in a `subscribed` message, and a stream of `broadcast` messages as they are published.
 
 ```
 {
