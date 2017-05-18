@@ -9,16 +9,20 @@ describe('StreamFetcher', function () {
 	var expressApp
 	var server
 	var numOfRequests
+	var broken
 
 	beforeEach(function(done) {
 		numOfRequests = 0
+		broken = false
 
 		// Create fake server endpoint for testing purposes
 		expressApp = express()
 
 		expressApp.get('/api/v1/streams/:id/permissions/me', function(req, res) {
 			numOfRequests += 1
-			if (req.params.id !== 'streamId') {
+			if (broken) {
+				res.sendStatus(500)
+			} else if (req.params.id !== 'streamId') {
 				res.sendStatus(404)
 			} else if (req.get('Authorization') !== 'token key') {
 				res.sendStatus(403)
@@ -35,7 +39,9 @@ describe('StreamFetcher', function () {
 
 		expressApp.get('/api/v1/streams/:id', function(req, res) {
 			numOfRequests += 1
-			if (req.params.id !== 'streamId') {
+			if (broken) {
+				res.sendStatus(500)
+			} else if (req.params.id !== 'streamId') {
 				res.sendStatus(404)
 			} else if (req.get('Authorization') !== 'token key') {
 				res.sendStatus(403)
@@ -116,6 +122,28 @@ describe('StreamFetcher', function () {
 				done()
 			})
 		})
+
+		it('does not cache errors', function (done) {
+			broken = true
+			streamFetcher.authenticate('streamId', 'key', 'read').catch(function() {
+				streamFetcher.authenticate('streamId', 'key', 'read').catch(function() {
+					streamFetcher.authenticate('streamId', 'key', 'read').catch(function() {
+						assert.equal(numOfRequests, 3)
+						broken = false
+						Promise.all([
+							streamFetcher.authenticate('streamId', 'key', 'read'),
+							streamFetcher.authenticate('streamId', 'key', 'read'),
+							streamFetcher.authenticate('streamId', 'key', 'read'),
+							streamFetcher.authenticate('streamId', 'key', 'read'),
+							streamFetcher.authenticate('streamId', 'key', 'read')
+						]).then(function() {
+							assert.equal(numOfRequests, 3 + 1)
+							done()
+						})
+					})
+				})
+			})
+		})
 	})
 
 	describe('authenticatedFetch', function() {
@@ -158,17 +186,39 @@ describe('StreamFetcher', function () {
 		})
 
 		it('caches repeated invocations', function(done) {
-			Promise.all([streamFetcher.authenticatedFetch('streamId', 'key', 'read'),
-				streamFetcher.authenticatedFetch('streamId', 'key', 'read'),
-				streamFetcher.authenticatedFetch('streamId', 'key', 'read'),
-				streamFetcher.authenticatedFetch('streamId2', 'key', 'read'),
-				streamFetcher.authenticatedFetch('streamId', 'key', 'read'),
-				streamFetcher.authenticatedFetch('streamId2', 'key', 'read'),
-				streamFetcher.authenticatedFetch('streamId2', 'key', 'read'),
-				streamFetcher.authenticatedFetch('streamId2', 'key', 'read')
+			Promise.all([streamFetcher.authenticatedFetch('streamId', 'key'),
+				streamFetcher.authenticatedFetch('streamId', 'key'),
+				streamFetcher.authenticatedFetch('streamId', 'key'),
+				streamFetcher.authenticatedFetch('streamId2', 'key'),
+				streamFetcher.authenticatedFetch('streamId', 'key'),
+				streamFetcher.authenticatedFetch('streamId2', 'key'),
+				streamFetcher.authenticatedFetch('streamId2', 'key'),
+				streamFetcher.authenticatedFetch('streamId2', 'key')
 			]).catch(function() {
 				assert.equal(numOfRequests, 2)
 				done()
+			})
+		})
+
+		it('does not cache errors', function (done) {
+			broken = true
+			streamFetcher.authenticatedFetch('streamId', 'key').catch(function() {
+				streamFetcher.authenticatedFetch('streamId', 'key').catch(function() {
+					streamFetcher.authenticatedFetch('streamId', 'key').catch(function() {
+						assert.equal(numOfRequests, 3)
+						broken = false
+						Promise.all([
+							streamFetcher.authenticatedFetch('streamId', 'key'),
+							streamFetcher.authenticatedFetch('streamId', 'key'),
+							streamFetcher.authenticatedFetch('streamId', 'key'),
+							streamFetcher.authenticatedFetch('streamId', 'key'),
+							streamFetcher.authenticatedFetch('streamId', 'key')
+						]).then(function() {
+							assert.equal(numOfRequests, 3 + 1)
+							done()
+						})
+					})
+				})
 			})
 		})
 	})
