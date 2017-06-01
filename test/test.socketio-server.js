@@ -57,7 +57,17 @@ describe('socketio-server', function () {
 		}
 
 		streamFetcher = {
-			authenticate: function(streamId, authKey) {
+			authenticate: function(streamId, authKey, operation) {
+				return new Promise(function(resolve, reject) {
+					if (authKey === 'correct') {
+						resolve(true)
+					} else {
+						reject(403)
+					}
+				})
+			},
+
+			authenticatedFetch: function (streamId, authKey) {
 				return new Promise(function(resolve, reject) {
 					if (authKey === 'correct') {
 						resolve({})
