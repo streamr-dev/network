@@ -1,5 +1,5 @@
 {
-  "name": "streamr-socketio-server",
+  "name": "streamr-data-api",
   "version": "0.0.1",
   "description": "",
   "main": "start-server.js",
@@ -13,25 +13,31 @@
   "author": "",
   "license": "",
   "dependencies": {
+    "body-parser": "^1.15.2",
     "buffer-reader": "^0.1.0",
+    "buffermaker": "1.2.0",
     "bufferutil": "^1.2.1",
     "cassandra-driver": "^3.2.0",
     "cors": "^2.7.1",
     "debug": "*",
     "express": "^4.14.0",
+    "kafka-node": "^1.0.2",
+    "lolex": "^1.5.1",
     "memoizee": "^0.4.4",
+    "murmurhash-native": "^3.2.0",
     "node-fetch": "^1.6.3",
     "node-int64": "*",
     "node-uuid": "^1.4.7",
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
+    "sinon-test": "^1.0.2",
     "uws": "^0.14.1"
   },
   "devDependencies": {
-    "buffermaker": "*",
     "mocha": "*",
     "mockery": "^2.0.0",
+    "node-int64": "0.3.3",
     "sinon": "*"
   }
 }

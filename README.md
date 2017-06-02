@@ -1,6 +1,10 @@
-# streamr-socketio-server
+# streamr-data-api
 
 This app delivers messages in streams to clients over websockets.
+
+# Public api doc
+
+Is in file APIDOC.md
 
 # Protocol
 
@@ -18,7 +22,7 @@ Requests that the client be subscribed to a stream-partition from the next publi
   "stream": "streamId",
   "partition": 0,         // optional, defaults to 0
   "authKey": "authKey"    // optional, defaults to undefined
-} 
+}
 ```
 
 Field     | Description
@@ -35,7 +39,7 @@ Unsubscribes the client from a stream-partition. The response message is `unsubs
 ```
 {
   "type": "unsubscribe",
-  "stream": "id", 
+  "stream": "id",
   "partition": 0          // optional, defaults to 0
 }
 ```
@@ -53,9 +57,9 @@ Requests a resend for a stream-partition. Responses are either a sequence of a `
 ```
 {
   "type": "resend",
-  "stream": "id", 
+  "stream": "id",
   "partition": 0          // optional, defaults to 0
-  "sub": "subId", 
+  "sub": "subId",
   // one of: "resend_all": true, "resend_last": (number), "resend_from": (offset)
 }
 ```
@@ -122,7 +126,7 @@ Sent in response to a `subscribe` request. Lets the client know that streams wer
 
 ```
 {
-  "stream": "id", 
+  "stream": "id",
   "partition": 0
 }
 ```
@@ -144,7 +148,7 @@ Sent in response to a `resend` request. Informs the client that a resend is star
 
 ```
 {
-  "stream": "id", 
+  "stream": "id",
   "partition": 0
 }
 ```
@@ -155,7 +159,7 @@ Informs the client that a resend for a particular subscription `subId` is comple
 
 ```
 {
-  "stream": "id", 
+  "stream": "id",
   "partition": 0
 }
 ```
@@ -166,7 +170,7 @@ Sent in response to a `resend` request. Informs the client that there was nothin
 
 ```
 {
-  "stream": "id", 
+  "stream": "id",
   "partition": 0
 }
 ```

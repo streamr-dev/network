@@ -3,11 +3,13 @@
     "name"        : "socketio-server",
     "script"      : "socketio-server.js",
     "args"        : [
-      "--redis", "dev.streamr",
+      "--data-topic", "data-prod",
+      "--zookeeper", "zk1:2181",
+      "--redis", "redis1",
       "--redis-pwd", "AFuPxeVMwBKHV5Hm5SK3PkRZA",
-      "--cassandra", "dev.streamr",
-      "--keyspace", "streamr_dev",
-      "--streamr", "http://dev.streamr:8080",
+      "--cassandra", "cassandra1",
+      "--keyspace", "streamr_prod",
+      "--streamr", "https://www.streamr.com",
       "--port", "8890"
     ],
     "watch"       : false,

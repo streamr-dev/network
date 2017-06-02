@@ -1,0 +1,13 @@
+{
+  "apps" : [{
+    "name"        : "data-api",
+    "script"      : "data-api.js",
+    "args"        : "--data-topic data-dev --zookeeper dev.streamr:2182 --redis dev.streamr --redis-pwd AFuPxeVMwBKHV5Hm5SK3PkRZA --cassandra dev.streamr --keyspace streamr_dev --streamr http://dev.streamr:8080 --port 8890",
+    "watch"       : false,
+    "node_args"   : "",
+    "merge_logs"  : true,
+    "env": {
+        "DEBUG": ""
+    }
+  }]
+}
