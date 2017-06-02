@@ -32,6 +32,7 @@
     "buffermaker": "*",
     "mocha": "*",
     "mockery": "^2.0.0",
-    "sinon": "*"
+    "sinon": "*",
+    "supertest": "^3.0.0"
   }
 }
