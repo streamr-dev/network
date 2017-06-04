@@ -7,17 +7,30 @@ const restEndpointRouter = require('../lib/rest-endpoints')
 describe('RestEndpoints', function() {
 	let app
 	let historicalAdapterStub
+	let streamFetcher
 
-	function testGetRequest(url) {
+	function testGetRequest(url, key = 'authKey') {
 		return request(app)
 			.get(url)
 			.set('Accept', 'application/json')
+			.set('Authorization', `Token ${key}`)
 	}
 
 	beforeEach(function() {
 		app = express()
 		historicalAdapterStub = {}
-		app.use('/api/v1', restEndpointRouter(historicalAdapterStub))
+		streamFetcher = {
+			authenticate(streamId, authKey, operation) {
+				return new Promise(function(resolve, reject) {
+					if (authKey === 'authKey') {
+						resolve({})
+					} else {
+						reject("Authentication failed!")
+					}
+				})
+			}
+		}
+		app.use('/api/v1', restEndpointRouter(historicalAdapterStub, streamFetcher))
 	})
 
 	describe('GET /api/v1/streams/streamId/data/partitions/0/last', function() {
@@ -34,6 +47,12 @@ describe('RestEndpoints', function() {
 				testGetRequest('/api/v1/streams/streamId/data/partitions/zero/last')
 					.expect('Content-Type', /json/)
 					.expect(400, { error: 'Path parameter "partition" not a number: zero' }, done)
+			})
+
+			it('responds 403 and error message if not authorized', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/last', 'wrongKey')
+					.expect('Content-Type', /json/)
+					.expect(403, { error: 'Authentication failed.' }, done)
 			})
 
 			it('responds 400 and error message if optional param "count" not a number', function(done) {
@@ -124,6 +143,12 @@ describe('RestEndpoints', function() {
 				testGetRequest('/api/v1/streams/streamId/data/partitions/zero/range')
 					.expect('Content-Type', /json/)
 					.expect(400, { error: 'Path parameter "partition" not a number: zero' }, done)
+			})
+
+			it('responds 403 and error message if not authorized', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrongKey')
+					.expect('Content-Type', /json/)
+					.expect(403, { error: 'Authentication failed.' }, done)
 			})
 
 			it('responds 400 and error message if param "fromOffset" not a number', function(done) {
