@@ -1,5 +1,6 @@
 const assert = require('assert')
 const sinon = require('sinon')
+const EventEmitter = require('events');
 
 describe('server', function () {
 
@@ -8,7 +9,7 @@ describe('server', function () {
 	var kafka
 	var res
 
-	var handlers
+	var handler
 
 	const mockRequest = function(streamId, obj) {
 		return Object.assign({}, {
@@ -29,9 +30,9 @@ describe('server', function () {
 			authenticatedFetch: sinon.stub().resolves({streamId: "streamId", partitions: 10}),
             authenticate: sinon.stub().resolves(true)
 		}
-		kafka = {
-			send: sinon.stub().yields()
-		}
+		kafka = new EventEmitter()
+		kafka.send = sinon.stub().yields()
+
 		res = {}
 		res.status = sinon.stub().returns(res)
 		res.send = sinon.stub().returns(res)
@@ -40,21 +41,31 @@ describe('server', function () {
 			partition: sinon.stub().returns(0)
 		}
 
-		handlers = require('../lib/rest-produce-endpoints')(app, streamFetcher, kafka, partitioner)
+		handler = require('../lib/rest-produce-endpoints')(app, streamFetcher, kafka, partitioner)
 	})
 
-	it('should register the route handler', function() {
-		app.post.calledWith('/api/v1/streams/:id/data', handlers.handleProduceRequest)
+	describe('producing before kafka is ready', function() {
+		it('returns 503', function(done) {
+			handler(mockRequest("streamId"), res)
+			setTimeout(function() {
+				assert(res.status.calledWith(503))
+				done()
+			})
+		});
 	})
 
-	describe('handleProduceRequest', function() {
+	describe('producing after kafka is ready', function() {
+
+		beforeEach('kafka is ready', function() {
+			kafka.emit('ready')
+		})
 
 		afterEach('the response must be sent', function() {
 			assert(res.send.calledOnce)
 		})
 
 		it('should return 200 for valid requests', function(done) {
-			handlers.handleProduceRequest(mockRequest("streamId"), res)
+			handler(mockRequest("streamId"), res)
 			setTimeout(function() {
 				assert(res.status.calledWith(200))
 				done()
@@ -62,7 +73,7 @@ describe('server', function () {
 		});
 
 		it('should return 400 if there is no body', function(done) {
-			handlers.handleProduceRequest(mockRequest("streamId", {
+			handler(mockRequest("streamId", {
 				body: undefined,
 			}), res)
 			setTimeout(function() {
@@ -72,7 +83,7 @@ describe('server', function () {
 		});
 
 		it('should return 400 for malformed Authorization header without trying to authenticate', function() {
-			handlers.handleProduceRequest(mockRequest("test-auth", {
+			handler(mockRequest("test-auth", {
 				get: sinon.stub().withArgs("Authorization").returns("foo"),
 			}), res)
 			assert(res.status.calledWith(400))
@@ -80,7 +91,7 @@ describe('server', function () {
 		})
 
 		it('should authenticate with key given in headers', function(done) {
-			handlers.handleProduceRequest(mockRequest("test-auth", {
+			handler(mockRequest("test-auth", {
 				get: sinon.stub().withArgs("Authorization").returns("token secret")
 			}), res)
 			setTimeout(function() {
@@ -91,7 +102,7 @@ describe('server', function () {
 
 		it('should return whatever error code authenticate fails with', function(done) {
 			streamFetcher.authenticate = sinon.stub().rejects(999)
-			handlers.handleProduceRequest(mockRequest("test-auth"), res)
+			handler(mockRequest("test-auth"), res)
 			setTimeout(function() {
 				assert(res.status.calledWith(999))
 				done()
@@ -100,7 +111,7 @@ describe('server', function () {
 
 		it('should return whatever error code authenticatedFetch fails with', function(done) {
 			streamFetcher.authenticatedFetch = sinon.stub().rejects(999)
-			handlers.handleProduceRequest(mockRequest("test-auth"), res)
+			handler(mockRequest("test-auth"), res)
 			setTimeout(function() {
 				assert(res.status.calledWith(999))
 				done()
@@ -108,7 +119,7 @@ describe('server', function () {
 		})
 
 		it('should fetch stream after successful authentication', function(done) {
-			handlers.handleProduceRequest(mockRequest("test"), res)
+			handler(mockRequest("test"), res)
 			setTimeout(function() {
 				assert(streamFetcher.authenticatedFetch.calledWith('test', 'authKey'))
 				done()
@@ -116,7 +127,7 @@ describe('server', function () {
 		})
 
 		it('should give undefined partition key to partitioner if none is defined', function(done) {
-			handlers.handleProduceRequest(mockRequest("test"), res)
+			handler(mockRequest("test"), res)
 			setTimeout(function() {
 				assert(partitioner.partition.calledWith(10, undefined))
 				done()
@@ -124,7 +135,7 @@ describe('server', function () {
 		})
 
 		it('should call partitioner using a given partition key', function(done) {
-			handlers.handleProduceRequest(mockRequest("test", {
+			handler(mockRequest("test", {
 				query: {
 					pkey: "foo"
 				}
@@ -136,7 +147,7 @@ describe('server', function () {
 		})
 
 		it('should produce to kafka', function(done) {
-			handlers.handleProduceRequest(mockRequest("test"), res)
+			handler(mockRequest("test"), res)
 			setTimeout(function() {
 				assert(kafka.send.calledOnce)
 				done()
@@ -145,7 +156,7 @@ describe('server', function () {
 
 		it('should call kafka.send() with correct stream id and partition returned by the partitioner', function(done) {
 			partitioner.partition = sinon.stub().withArgs(10, "pkey").returns(5)
-			handlers.handleProduceRequest(mockRequest("test", {
+			handler(mockRequest("test", {
 				query: {
 					pkey: "pkey"
 				}
@@ -161,7 +172,7 @@ describe('server', function () {
 
 		it('should use current timestamp', function(done) {
 			var timestamp = Date.now()
-			handlers.handleProduceRequest(mockRequest("test"), res)
+			handler(mockRequest("test"), res)
 
 			setTimeout(function() {
 				var streamrBinaryMessage = kafka.send.getCall(0).args[0]
@@ -174,7 +185,7 @@ describe('server', function () {
 
 		it('should use ttl if given', function (done) {
 			var ttl = 30
-			handlers.handleProduceRequest(mockRequest("test", {
+			handler(mockRequest("test", {
 				query: {
 					ttl: ttl.toString()
 				}
@@ -188,7 +199,7 @@ describe('server', function () {
 		});
 
 		it('should return 400 for invalid ttl', function () {
-			handlers.handleProduceRequest(mockRequest("test", {
+			handler(mockRequest("test", {
 				query: {
 					ttl: "foo"
 				}
@@ -198,7 +209,7 @@ describe('server', function () {
 
 		it('returns 500 if there is an error producing to kafka', function (done) {
 			kafka.send = sinon.stub().yields("error")
-			handlers.handleProduceRequest(mockRequest("test"), res)
+			handler(mockRequest("test"), res)
 			setTimeout(function() {
 				assert(res.status.calledWith(500))
 				done()
