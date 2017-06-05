@@ -1,5 +1,5 @@
-var app = require('express')();
-var http = require('http').Server(app);
+var app = require('express')()
+var http = require('http').Server(app)
 var cors = require('cors')
 
 var StreamFetcher = require('./lib/stream-fetcher')
@@ -22,10 +22,10 @@ var cassandra = new CassandraHelper(argv.cassandra.split(","), argv.keyspace)
 var redisOffsetFetcher = new RedisOffsetFetcher(argv.redis.split(",")[0], argv['redis-pwd'])
 var server = new SocketIoServer(http, redis, cassandra, redisOffsetFetcher, null, streamFetcher)
 
-app.use(cors());
+app.use(cors())
 
-require('./lib/rest-endpoints')(app, cassandra, redisOffsetFetcher)
+app.use('/api/v1', require('./lib/rest-endpoints')(cassandra, streamFetcher))
 
 http.listen(argv.port, function() {
-	console.log("Server started on port "+argv.port)
+	console.log("Server started on port " + argv.port)
 });
