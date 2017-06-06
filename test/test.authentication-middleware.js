@@ -55,7 +55,7 @@ describe('AuthenticationMiddleware', function() {
 	context('given well-formed authorization token', function() {
 		beforeEach(function () {
 			request.headers.authorization = 'tOkEn authKey'
-			request.id = 'streamId' // Provided by previous middleware in real code
+			request.params = {id: 'streamId'}
 		})
 
 		it('delegates streamId and authKey to streamFetcher#authenticate', function() {
