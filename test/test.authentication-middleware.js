@@ -66,7 +66,7 @@ describe('AuthenticationMiddleware', function() {
 
 			sinon.assert.calledOnce(streamFetcherStub.authenticate)
 			sinon.assert.calledWithExactly(streamFetcherStub.authenticate,
-				'streamId', 'authKey', 'READ')
+				'streamId', 'authKey', 'read')
 		})
 
 		it('authenticates with an explicitly given permission', function() {
@@ -78,7 +78,7 @@ describe('AuthenticationMiddleware', function() {
 
 			sinon.assert.calledOnce(streamFetcherStub.authenticate)
 			sinon.assert.calledWithExactly(streamFetcherStub.authenticate,
-				'streamId', 'authKey', 'WRITE')
+				'streamId', 'authKey', 'write')
 		})
 
 		it('responds 403 and error message if streamFetcher#authenticate results in error', function(done) {

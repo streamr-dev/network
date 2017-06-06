@@ -11,7 +11,6 @@ var CassandraHelper = require('./lib/cassandra-helper')
 const StreamrKafkaProducer = require('./lib/StreamrKafkaProducer')
 const partitioner = require('./lib/partitioner')
 
-const bodyParser = require('body-parser')
 var cors = require('cors')
 var app = require('express')()
 var http = require('http').Server(app)
@@ -33,12 +32,7 @@ var server = new WebsocketServer(http, redis, cassandra, redisOffsetFetcher, nul
  * REST endpoints
  */
 app.use('/api/v1', require('./lib/rest-endpoints')(cassandra, streamFetcher))
-
-app.use(bodyParser.raw({
-	limit: '1024kb',                     // Increase body size limit, default is 100kb
-	type: function() { return true }     // Parse everything as raw
-}))                                      // Body becomes available as Buffer
-app.post('/api/v1/streams/:id/data', require('./lib/rest-produce-endpoints')(streamFetcher, kafka, partitioner))
+app.use('/api/v1', require('./lib/rest-produce-endpoints')(streamFetcher, kafka, partitioner))
 
 http.listen(argv.port, function() {
 	console.log("Listening on port "+argv.port)
