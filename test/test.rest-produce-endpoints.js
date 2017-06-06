@@ -2,7 +2,7 @@ const assert = require('assert')
 const sinon = require('sinon')
 const EventEmitter = require('events');
 
-describe('server', function () {
+describe('RESTful produce endpoint', function () {
 
 	var streamFetcher
 	var partitioner
@@ -23,9 +23,6 @@ describe('server', function () {
 	}
 
 	beforeEach(function() {
-		app = {
-			post: sinon.spy()
-		}
 		streamFetcher = {
 			authenticatedFetch: sinon.stub().resolves({streamId: "streamId", partitions: 10}),
             authenticate: sinon.stub().resolves(true)
@@ -41,7 +38,7 @@ describe('server', function () {
 			partition: sinon.stub().returns(0)
 		}
 
-		handler = require('../lib/rest-produce-endpoints')(app, streamFetcher, kafka, partitioner)
+		handler = require('../lib/rest-produce-endpoints')(streamFetcher, kafka, partitioner)
 	})
 
 	describe('producing before kafka is ready', function() {

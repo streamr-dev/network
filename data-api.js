@@ -38,7 +38,7 @@ app.use(bodyParser.raw({
 	limit: '1024kb',                     // Increase body size limit, default is 100kb
 	type: function() { return true }     // Parse everything as raw
 }))                                      // Body becomes available as Buffer
-app.post('/api/v1/streams/:id/data', require('./lib/rest-produce-endpoints')(app, streamFetcher, kafka, partitioner))
+app.post('/api/v1/streams/:id/data', require('./lib/rest-produce-endpoints')(streamFetcher, kafka, partitioner))
 
 http.listen(argv.port, function() {
 	console.log("Listening on port "+argv.port)

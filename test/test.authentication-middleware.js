@@ -69,6 +69,18 @@ describe('AuthenticationMiddleware', function() {
 				'streamId', 'authKey', 'READ')
 		})
 
+		it('authenticates with an explicitly given permission', function() {
+			streamFetcherStub.authenticate = sinon.stub()
+			streamFetcherStub.authenticate.returns(Promise.resolve({}))
+
+			middlewareInstance = authenticationMiddleware(streamFetcherStub, 'write')
+			middlewareInstance(request, response, next)
+
+			sinon.assert.calledOnce(streamFetcherStub.authenticate)
+			sinon.assert.calledWithExactly(streamFetcherStub.authenticate,
+				'streamId', 'authKey', 'WRITE')
+		})
+
 		it('responds 403 and error message if streamFetcher#authenticate results in error', function(done) {
 			streamFetcherStub.authenticate = function() {
 				return Promise.reject('error')

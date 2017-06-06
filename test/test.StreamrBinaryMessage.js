@@ -1,10 +1,10 @@
 const assert = require('assert')
 const sinon = require('sinon')
-var sinonTest = require('sinon-test')
 const BufferMaker = require('buffermaker')
 const StreamrBinaryMessage = require('../lib/protocol/StreamrBinaryMessage')
 
-sinon.test = sinonTest.configureTest(sinon);
+// For sinon sandboxing in newer sinon versions
+sinon.test = require('sinon-test').configureTest(sinon);
 
 describe('StreamrBinaryMessage', function () {
 

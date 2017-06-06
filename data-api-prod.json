@@ -15,6 +15,7 @@
     "watch"       : false,
     "node_args"   : "",
     "merge_logs"  : true,
+    "log_date_format": "YYYY-MM-DD HH:mm:ss",
     "env": {
         "DEBUG": ""
     }
