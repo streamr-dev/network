@@ -65,16 +65,6 @@ describe('WebsocketServer', function () {
 						reject(403)
 					}
 				})
-			},
-
-			authenticatedFetch: function (streamId, authKey) {
-				return new Promise(function(resolve, reject) {
-					if (authKey === 'correct') {
-						resolve({})
-					} else {
-						reject(403)
-					}
-				})
 			}
 		}
 
