@@ -10,9 +10,7 @@ describe('RESTful produce endpoint', function () {
 	let streamFetcher
 	let partitioner
 	let kafka
-	let res
 
-	// TODO: change args to object, add query params
 	function postRequest(opts = {}) {
 		opts = Object.assign({
 			streamId: 'streamId',
@@ -78,6 +76,15 @@ describe('RESTful produce endpoint', function () {
 				streamId: 'streamId',
 				body: ''
 			}).expect(400, done)
+		})
+
+		it('should return 413 (Payload Too Large) if body too large', function(done) {
+			const body = {}
+			for (let i=0; i < 20000; ++i) {
+				body["key-" + i] = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+			}
+			postRequest({ body: body })
+				.expect(413, done)
 		})
 
 		it('should give undefined partition key to partitioner if none is defined', function(done) {
