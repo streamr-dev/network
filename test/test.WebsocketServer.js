@@ -8,9 +8,9 @@ const StreamrBinaryMessage = require('../lib/protocol/StreamrBinaryMessage')
 const StreamrBinaryMessageWithKafkaMetadata = require('../lib/protocol/StreamrBinaryMessageWithKafkaMetadata')
 
 const createSocketMock = require('./helpers/socket-mock')
-var SocketIoServer
+var WebsocketServer
 
-describe('socketio-server', function () {
+describe('WebsocketServer', function () {
 
 	var server
 	var wsMock
@@ -28,7 +28,7 @@ describe('socketio-server', function () {
 				return "socket" + (this.idx++)
 			}
 		})
-		SocketIoServer = require('../lib/socketio-server')
+		WebsocketServer = require('../lib/WebsocketServer')
 	})
 
 	after(function() {
@@ -65,16 +65,6 @@ describe('socketio-server', function () {
 						reject(403)
 					}
 				})
-			},
-
-			authenticatedFetch: function (streamId, authKey) {
-				return new Promise(function(resolve, reject) {
-					if (authKey === 'correct') {
-						resolve({})
-					} else {
-						reject(403)
-					}
-				})
 			}
 		}
 
@@ -85,7 +75,7 @@ describe('socketio-server', function () {
 		mockSocket = createSocketMock()
 
 		// Create the server instance
-		server = new SocketIoServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wsMock,
+		server = new WebsocketServer(undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wsMock,
 			streamFetcher)
 	})
 

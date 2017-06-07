@@ -3,6 +3,9 @@ const sinon = require('sinon')
 const BufferMaker = require('buffermaker')
 const StreamrBinaryMessage = require('../lib/protocol/StreamrBinaryMessage')
 
+// For sinon sandboxing in newer sinon versions
+sinon.test = require('sinon-test').configureTest(sinon);
+
 describe('StreamrBinaryMessage', function () {
 
 	var version

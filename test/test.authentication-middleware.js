@@ -55,7 +55,7 @@ describe('AuthenticationMiddleware', function() {
 	context('given well-formed authorization token', function() {
 		beforeEach(function () {
 			request.headers.authorization = 'tOkEn authKey'
-			request.id = 'streamId' // Provided by previous middleware in real code
+			request.params = {id: 'streamId'}
 		})
 
 		it('delegates streamId and authKey to streamFetcher#authenticate', function() {
@@ -66,7 +66,19 @@ describe('AuthenticationMiddleware', function() {
 
 			sinon.assert.calledOnce(streamFetcherStub.authenticate)
 			sinon.assert.calledWithExactly(streamFetcherStub.authenticate,
-				'streamId', 'authKey', 'READ')
+				'streamId', 'authKey', 'read')
+		})
+
+		it('authenticates with an explicitly given permission', function() {
+			streamFetcherStub.authenticate = sinon.stub()
+			streamFetcherStub.authenticate.returns(Promise.resolve({}))
+
+			middlewareInstance = authenticationMiddleware(streamFetcherStub, 'write')
+			middlewareInstance(request, response, next)
+
+			sinon.assert.calledOnce(streamFetcherStub.authenticate)
+			sinon.assert.calledWithExactly(streamFetcherStub.authenticate,
+				'streamId', 'authKey', 'write')
 		})
 
 		it('responds 403 and error message if streamFetcher#authenticate results in error', function(done) {
