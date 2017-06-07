@@ -29,7 +29,7 @@ describe('RESTful produce endpoint', function () {
 
 		let req = request(app)
 			.post(`/streams/${opts.streamId}/data`)
-			req.query(opts.query)
+		req.query(opts.query)
 			.send(opts.body)
 
 		Object.keys(headers).forEach((key) => {
