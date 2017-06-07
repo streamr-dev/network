@@ -14,21 +14,17 @@ RUN apk add --update python build-base && npm install && apk del python build-ba
 EXPOSE 8890
 
 # Default environment variables
-ENV DATA_TOPIC ""
-ENV ZOOKEEPER ""
-ENV REDIS ""
-ENV REDIS_PWD ""
-ENV CASSANDRA ""
-ENV KEYSPACE ""
-ENV STREAMR ""
-
+ENV KAFKA_TOPIC data_dev
+ENV REDIS_PASSWORD ""
+ENV CASSANDRA_KEYSPACE streamr_dev
+ENV STREAMR_URL http://127.0.0.1:8081/unifina-core
 
 CMD node data-api.js \
-    --data-topic DATA_TOPIC \
-    --zookeeper ZOOKEEPER \
-    --redis REDIS \
-    --redis-pwd REDIS_PWD \
-    --cassandra CASSANDRA \
-    --keyspace KEYSPACE \
-    --streamr STREAMR \
+    --data-topic ${KAFKA_TOPIC} \
+    --zookeeper zookeeper \
+    --redis redis \
+    --redis-pwd ${REDIS_PASSWORD} \
+    --cassandra cassandra \
+    --keyspace ${CASSANDRA_KEYSPACE} \
+    --streamr ${STREAMR_URL} \
     --port 8890
