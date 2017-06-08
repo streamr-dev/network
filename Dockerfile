@@ -14,7 +14,7 @@ RUN apk add --update python build-base && npm install && apk del python build-ba
 EXPOSE 8890
 
 # Default environment variables
-ENV KAFKA_TOPIC data_dev
+ENV KAFKA_TOPIC data-dev
 ENV REDIS_PASSWORD ""
 ENV CASSANDRA_KEYSPACE streamr_dev
 ENV STREAMR_URL http://127.0.0.1:8081/unifina-core
