@@ -1,7 +1,7 @@
 {
   "apps" : [{
-    "name"        : "socketio-server",
-    "script"      : "socketio-server.js",
+    "name"        : "data-api",
+    "script"      : "data-api.js",
     "args"        : [
       "--data-topic", "data-prod",
       "--zookeeper", "zk1:2181",
