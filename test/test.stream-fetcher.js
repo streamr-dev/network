@@ -11,8 +11,8 @@ describe('StreamFetcher', function () {
 	var numOfRequests
 	var broken
 	var streamJson
-
 	var permissions
+	var requestHandlers
 
 	beforeEach(function(done) {
 		numOfRequests = 0
@@ -21,30 +21,40 @@ describe('StreamFetcher', function () {
 		// Create fake server endpoint for testing purposes
 		expressApp = express()
 
-		expressApp.get('/api/v1/streams/:id/permissions/me', function(req, res) {
-			numOfRequests += 1
-			if (broken) {
-				res.sendStatus(500)
-			} else if (req.params.id !== 'streamId') {
-				res.sendStatus(404)
-			} else if (req.get('Authorization') !== 'token key') {
-				res.sendStatus(403)
-			} else {
-				res.status(200).send(permissions)
+		// Override these functions to adjust endpoint behavior
+		requestHandlers = {
+			permissions: function(req, res) {
+				numOfRequests += 1
+				if (broken) {
+					res.sendStatus(500)
+				} else if (req.params.id !== 'streamId') {
+					res.sendStatus(404)
+				} else if (req.get('Authorization') !== 'token key') {
+					res.sendStatus(403)
+				} else {
+					res.status(200).send(permissions)
+				}
+			},
+			stream: function(req, res) {
+				numOfRequests += 1
+				if (broken) {
+					res.sendStatus(500)
+				} else if (req.params.id !== 'streamId') {
+					res.sendStatus(404)
+				} else if (req.get('Authorization') !== 'token key') {
+					res.sendStatus(403)
+				} else {
+					res.status(200).send(streamJson)
+				}
 			}
+		}
+
+		expressApp.get('/api/v1/streams/:id/permissions/me', function(req, res) {
+			return requestHandlers.permissions(req, res)
 		})
 
 		expressApp.get('/api/v1/streams/:id', function(req, res) {
-			numOfRequests += 1
-			if (broken) {
-				res.sendStatus(500)
-			} else if (req.params.id !== 'streamId') {
-				res.sendStatus(404)
-			} else if (req.get('Authorization') !== 'token key') {
-				res.sendStatus(403)
-			} else {
-				res.status(200).send(streamJson)
-			}
+			return requestHandlers.stream(req, res)
 		})
 
 		server = expressApp.listen(6194, function() {
@@ -108,6 +118,25 @@ describe('StreamFetcher', function () {
 
 		it('resolves with true if key provides privilege to stream', function(done) {
 			streamFetcher.checkPermission('streamId', 'key', 'read').then(function(response) {
+				assert.deepEqual(response, true)
+				done()
+			}).catch(function(err) {
+				done(err)
+			})
+		})
+
+		it('resolves with true if stream is publicly readable and read permission is requested', function(done) {
+			requestHandlers.permissions = function(req, res) {
+				assert.equal(req.params.id, 'publicStream')
+				res.status(200).send([
+					{
+						"id": null,
+						"user": null,
+						"operation": "read"
+					}
+				])
+			}
+			streamFetcher.checkPermission('publicStream', undefined, 'read').then(function(response) {
 				assert.deepEqual(response, true)
 				done()
 			}).catch(function(err) {
@@ -186,6 +215,20 @@ describe('StreamFetcher', function () {
 					},
 					config: {}
 				})
+				done()
+			}).catch(function(err) {
+				done(err)
+			})
+		})
+
+
+		it('resolves with stream if stream is publicly readable', function(done) {
+			requestHandlers.stream = function(req, res) {
+				assert.equal(req.params.id, 'publicStream')
+				res.status(200).send(streamJson)
+			}
+			streamFetcher.fetch('publicStream', undefined, 'read').then(function(response) {
+				assert.deepEqual(response, streamJson)
 				done()
 			}).catch(function(err) {
 				done(err)

@@ -1,6 +1,5 @@
 const assert = require('assert')
 const express = require('express')
-const request = require('supertest')
 const sinon = require('sinon')
 const authenticationMiddleware = require('../lib/authentication-middleware')
 
@@ -14,7 +13,8 @@ describe('AuthenticationMiddleware', function() {
 
 	beforeEach(function() {
 		request = {
-			headers: {}
+			headers: {},
+			params: {id: 'streamId'}
 		}
 		response = {
 			status: sinon.stub(),
@@ -26,24 +26,27 @@ describe('AuthenticationMiddleware', function() {
 		middlewareInstance = authenticationMiddleware(streamFetcherStub)
 	})
 
-	it('responds 400 and error message if authorization header not given', function() {
-		middlewareInstance(request, response, next)
+	context('given no authorization token', function() {
+		it('delegates streamId to streamFetcher#authenticate without key', function() {
+			streamFetcherStub.authenticate = sinon.stub()
+			streamFetcherStub.authenticate.returns(Promise.resolve({}))
 
-		sinon.assert.notCalled(next)
-		sinon.assert.calledOnce(response.status)
-		sinon.assert.calledOnce(response.send)
-		sinon.assert.calledWithExactly(response.status, 400)
-		sinon.assert.calledWithExactly(response.send, {
-			error: 'Header "Authorization" required.'
+			middlewareInstance(request, response, next)
+
+			sinon.assert.calledOnce(streamFetcherStub.authenticate)
+			sinon.assert.calledWithExactly(streamFetcherStub.authenticate,
+				'streamId', undefined, 'read')
 		})
 	})
 
 	it('responds 400 and error message if authorization header malformed', function() {
+		streamFetcherStub.authenticate = sinon.stub()
 		request.headers.authorization = "doken 90rjsdojg9823jtopsdjglsd"
 
 		middlewareInstance(request, response, next)
 
 		sinon.assert.notCalled(next)
+		sinon.assert.notCalled(streamFetcherStub.authenticate)
 		sinon.assert.calledOnce(response.status)
 		sinon.assert.calledOnce(response.send)
 		sinon.assert.calledWithExactly(response.status, 400)
