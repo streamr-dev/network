@@ -1,0 +1,23 @@
+{
+  "apps" : [{
+    "name"        : "data-api",
+    "script"      : "data-api.js",
+    "args"        : [
+      "--data-topic",  "data-dev",
+      "--zookeeper",   "127.0.0.1",
+      "--redis",       "127.0.0.1",
+      "--redis-pwd",   "",
+      "--cassandra",   "127.0.0.1",
+      "--keyspace",    "streamr_dev",
+      "--streamr",     "http://127.0.0.1:8081/unifina-core",
+      "--port",        "8890"
+    ],
+    "watch"       : false,
+    "node_args"   : "",
+    "merge_logs"  : true,
+    "log_date_format": "YYYY-MM-DD HH:mm:ss",
+    "env": {
+      "DEBUG": ""
+    }
+  }]
+}

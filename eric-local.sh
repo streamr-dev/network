@@ -1,1 +1,0 @@
-node data-api.js --data-topic=data-dev --zookeeper=127.0.0.1:2181 --streamr=http://localhost:8081/unifina-core --port=7777 --redis 127.0.0.1 --redis-pwd kakka --cassandra 127.0.0.1 --keyspace streamr_dev
