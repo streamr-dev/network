@@ -23,7 +23,7 @@ describe('StreamrBinaryMessageBundle', function () {
 			streamrBinaryMessages = []
 
 			for (var i=0; i<10; i++) {
-				streamrBinaryMessages.push(new StreamrBinaryMessage(streamId, streamPartition, new Date(), ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, content))
+				streamrBinaryMessages.push(new StreamrBinaryMessage(streamId, streamPartition, new Date(), ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, new Buffer(JSON.stringify(content), 'utf8')))
 			}
 
 			streamrBinaryMessagesWithKafkaMetadata = streamrBinaryMessages.map(function(streamrBinaryMessage) {

@@ -14,7 +14,7 @@ describe('MessageEncoder', function() {
 			numberOfTheBeast: 666
 		})
 		const streamrBinaryMessage = new StreamrBinaryMessage("streamId", 0, new Date(2017, 2, 24, 13, 45, 0), 0,
-			StreamrBinaryMessage.CONTENT_TYPE_JSON, payload)
+			StreamrBinaryMessage.CONTENT_TYPE_JSON, new Buffer(payload, 'utf8'))
 		const msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(streamrBinaryMessage, 25, 24, 0)
 		msgWithMetaDataAsArray = msgWithMetaData.toArray()
 	})

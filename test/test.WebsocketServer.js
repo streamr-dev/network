@@ -86,7 +86,7 @@ describe('WebsocketServer', function () {
 		const ttl = 0
 		const contentType = StreamrBinaryMessage.CONTENT_TYPE_JSON
 		const content = { hello: 'world' }
-		const msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, content)
+		const msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, new Buffer(JSON.stringify(content), 'utf8'))
 		return new StreamrBinaryMessageWithKafkaMetadata(msg.toBytes(), 2, 1, 0)
 	}
 
@@ -122,7 +122,7 @@ describe('WebsocketServer', function () {
 	context('on resend request', function() {
 		it('emits a resending event before starting the resend', function(done) {
 			historicalAdapter.getAll = sinon.stub()
-			historicalAdapter.getAll.callsArgAsync(2); // Async-invoke 2nd argument
+			historicalAdapter.getAll.callsArgWithAsync(2, kafkaMessage());
 
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
@@ -148,7 +148,7 @@ describe('WebsocketServer', function () {
 
 		it('adds the subscription id to messages', function(done) {
 			historicalAdapter.getAll = sinon.stub()
-			historicalAdapter.getAll.callsArgWithAsync(2, kafkaMessage().toArray());
+			historicalAdapter.getAll.callsArgWithAsync(2, kafkaMessage());
 
 			wsMock.emit('connection', mockSocket)
 			mockSocket.receive({
@@ -174,7 +174,7 @@ describe('WebsocketServer', function () {
 
 		it('emits a resent event when resend is complete', function(done) {
 			historicalAdapter.getAll = function(streamId, streamPartition, messageHandler, onDone) {
-				messageHandler(kafkaMessage().toArray())
+				messageHandler(kafkaMessage())
 				onDone()
 			}
 

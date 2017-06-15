@@ -31,8 +31,8 @@ CassandraDataInserter.prototype.timedBulkInsert = function(n, timeoutInMs) {
 
 CassandraDataInserter.prototype.bulkInsert = function(n) {
 	const promises = []
-	for (var i=0; i < n; ++i) {
-		promises.push.apply(promises, this.insertData())
+	for (let i=0; i < n; ++i) {
+		Array.prototype.push.apply(promises, this.insertData())
 	}
 	return Promise.all(promises)
 }
@@ -44,7 +44,7 @@ CassandraDataInserter.prototype.insertData = function() {
 	var ttl = 10
 	var contentType = StreamrBinaryMessage.CONTENT_TYPE_JSON
 	var content = { key: "msg-" + this.index }
-	var msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, content)
+	var msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, new Buffer(JSON.stringify(content), 'utf8'))
 
 	var promises = []
 	promises.push(this.client.execute("INSERT INTO stream_events" +
