@@ -4,6 +4,7 @@ const CassandraDataInserter = require('./helpers/cassandra-data-inserter')
 
 const CASSANDRA_HOST = '127.0.0.1'
 const KEYSPACE = 'streamr_dev'
+const BULK_INSERT_WAIT_MS = 100
 
 describe('CassandraHelper', function() {
 	var allMessages
@@ -89,7 +90,7 @@ describe('CassandraHelper', function() {
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getLast("fake-stream-1", 0, 5, msgHandler, assertion(110, expectedMessages, done), 110)
-			cassandraDataInserter.timedBulkInsert(2, 200)
+			cassandraDataInserter.timedBulkInsert(2, BULK_INSERT_WAIT_MS)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
@@ -139,7 +140,7 @@ describe('CassandraHelper', function() {
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getAll("fake-stream-1", 0, msgHandler, assertion(110, expectedMessages, done), 110)
-			cassandraDataInserter.timedBulkInsert(2, 200)
+			cassandraDataInserter.timedBulkInsert(2, BULK_INSERT_WAIT_MS)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
@@ -193,7 +194,7 @@ describe('CassandraHelper', function() {
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getFromOffset("fake-stream-1", 0, 53, msgHandler, assertion(110, expectedMessages, done), 110)
-			cassandraDataInserter.timedBulkInsert(2, 200)
+			cassandraDataInserter.timedBulkInsert(2, BULK_INSERT_WAIT_MS)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
@@ -255,7 +256,7 @@ describe('CassandraHelper', function() {
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getOffsetRange("fake-stream-1", 0, 25, 130, msgHandler, assertion(110, expectedMessages, done), 110)
-			cassandraDataInserter.timedBulkInsert(10, 200)
+			cassandraDataInserter.timedBulkInsert(10, BULK_INSERT_WAIT_MS)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {
@@ -323,7 +324,7 @@ describe('CassandraHelper', function() {
 				[28, "fake-stream-1", 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({ "key": "msg-22" })]
 			])
 			cassandraHelper.getFromTimestamp("fake-stream-1", 0, startDate, msgHandler, assertion(110, expectedMessages, done), 110)
-			cassandraDataInserter.timedBulkInsert(2, 200)
+			cassandraDataInserter.timedBulkInsert(2, BULK_INSERT_WAIT_MS)
 		})
 
 		it("eventually gives up if lastKnownOffset never appears", function(done) {

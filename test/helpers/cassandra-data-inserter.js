@@ -31,8 +31,8 @@ CassandraDataInserter.prototype.timedBulkInsert = function(n, timeoutInMs) {
 
 CassandraDataInserter.prototype.bulkInsert = function(n) {
 	const promises = []
-	for (var i=0; i < n; ++i) {
-		promises.push.apply(promises, this.insertData())
+	for (let i=0; i < n; ++i) {
+		Array.prototype.push.apply(promises, this.insertData())
 	}
 	return Promise.all(promises)
 }
