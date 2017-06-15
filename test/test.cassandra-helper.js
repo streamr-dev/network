@@ -42,7 +42,9 @@ describe('CassandraHelper', function() {
 			refetchInterval: 120
 		})
 		messagesReceived = []
-		msgHandler = messagesReceived.push.bind(messagesReceived)
+		msgHandler = function(msg) {
+			messagesReceived.push(msg.toArray())
+		}
 		cassandraDataInserter = new CassandraDataInserter(CASSANDRA_HOST, KEYSPACE)
 		return cassandraDataInserter.bulkInsert(20)
 	})

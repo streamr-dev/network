@@ -7,14 +7,13 @@ const RedisOffsetFetcher = require('../lib/redis-offset-fetcher')
 describe('RedisOffsetFetcher', function() {
 
 	const REDIS_HOST = "127.0.0.1"
-	const REDIS_PASS = "kakka"
 
 	var testRedisClient
 	var redisOffsetFetcher
 
 	beforeEach(function() {
-		testRedisClient = redis.createClient({ host: REDIS_HOST, password: REDIS_PASS })
-		redisOffsetFetcher = new RedisOffsetFetcher(REDIS_HOST, REDIS_PASS)
+		testRedisClient = redis.createClient({ host: REDIS_HOST})
+		redisOffsetFetcher = new RedisOffsetFetcher(REDIS_HOST, "")
 	})
 
 	afterEach(function() {
@@ -30,7 +29,7 @@ describe('RedisOffsetFetcher', function() {
 		})
 
 		it("returns value if key exists", function() {
-			testRedisClient.setex("stream-1-0", 10, "2487679201527")
+			testRedisClient.setex("stream-1-0", 15, "2487679201527")
 			return redisOffsetFetcher.fetchOffset("stream-1", 0).then(function(value) {
 				assert.equal(value, 2487679201527)
 			});

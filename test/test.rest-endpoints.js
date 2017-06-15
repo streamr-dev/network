@@ -2,6 +2,8 @@ const assert = require('assert')
 const express = require('express')
 const request = require('supertest')
 const sinon = require('sinon')
+const StreamrBinaryMessage = require('../lib/protocol/StreamrBinaryMessage')
+const StreamrBinaryMessageWithKafkaMetadata = require('../lib/protocol/StreamrBinaryMessageWithKafkaMetadata')
 const restEndpointRouter = require('../lib/rest-endpoints')
 
 describe('RestEndpoints', function() {
@@ -14,6 +16,16 @@ describe('RestEndpoints', function() {
 			.get(url)
 			.set('Accept', 'application/json')
 			.set('Authorization', `Token ${key}`)
+	}
+
+	function kafkaMessage(content) {
+		const streamId = "streamId"
+		const partition = 0
+		const timestamp = new Date(2017, 3, 1, 12, 0, 0)
+		const ttl = 0
+		const contentType = StreamrBinaryMessage.CONTENT_TYPE_JSON
+		const msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, content)
+		return new StreamrBinaryMessageWithKafkaMetadata(msg.toBytes(), 2, 1, 0)
 	}
 
 	beforeEach(function() {
@@ -34,10 +46,11 @@ describe('RestEndpoints', function() {
 	})
 
 	describe('GET /api/v1/streams/streamId/data/partitions/0/last', function() {
+
 		beforeEach(function() {
 			historicalAdapterStub.getLast = function (stream, streamPartition, count, msgHandler, doneCallback) {
-				msgHandler({ hello: 1 })
-				msgHandler({ world: 2 })
+				msgHandler(kafkaMessage({ hello: 1 }))
+				msgHandler(kafkaMessage({ world: 2 }))
 				doneCallback(null, null)
 			}
 		})
@@ -69,9 +82,24 @@ describe('RestEndpoints', function() {
 					.expect(200, done)
 			})
 
-			it('responds with data points as body', function(done) {
+			it('responds with arrays as body', function(done) {
 				testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
-					.expect([{ hello: 1 }, { world: 2 }], done)
+					.expect([kafkaMessage({ hello: 1 }).toArray(), kafkaMessage({ world: 2 }).toArray()], done)
+			})
+
+			it('responds with objects as body given ?wrapper=object', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=obJECt')
+					.expect([kafkaMessage({ hello: 1 }).toObject(), kafkaMessage({ world: 2 }).toObject()], done)
+			})
+
+			it('responds with arrays as body and parsed content given ?content=json', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?content=json')
+					.expect([kafkaMessage({ hello: 1 }).toArray(false), kafkaMessage({ world: 2 }).toArray(false)], done)
+			})
+
+			it('responds with objects as body and parsed content given ?wrapper=object&content=json', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=obJECt&content=json')
+					.expect([kafkaMessage({ hello: 1 }).toObject(false), kafkaMessage({ world: 2 }).toObject(false)], done)
 			})
 
 			it('invokes historicalAdapter#getLast once with correct arguments', function(done) {
@@ -115,25 +143,25 @@ describe('RestEndpoints', function() {
 	describe('GET /api/v1/streams/streamId/data/partitions/0/range', function() {
 		beforeEach(function() {
 			historicalAdapterStub.getFromOffset = function(stream, partition, from, msgHandler, doneCallback) {
-				msgHandler({ hello: 1 })
-				msgHandler({ world: 2 })
-				msgHandler({ beast: 666 })
+				msgHandler(kafkaMessage({ hello: 1 }))
+				msgHandler(kafkaMessage({ world: 2 }))
+				msgHandler(kafkaMessage({ beast: 666 }))
 				doneCallback(null, null)
 			}
 
 			historicalAdapterStub.getOffsetRange = function(stream, partition, from, to, msgHandler, doneCallback) {
-				msgHandler({ test: 1234 })
+				msgHandler(kafkaMessage({ test: 1234 }))
 				doneCallback(null, null)
 			}
 
 			historicalAdapterStub.getFromTimestamp = function(stream, partition, from, msgHandler, doneCallback) {
-				msgHandler({ a: 'a' })
-				msgHandler({ z: 'z' })
+				msgHandler(kafkaMessage({ a: 'a' }))
+				msgHandler(kafkaMessage({ z: 'z' }))
 				doneCallback(null, null)
 			}
 			historicalAdapterStub.getTimestampRange = function(stream, partition, from, to, msgHandler, doneCallback) {
-				msgHandler([6, 6, 6])
-				msgHandler({ '6': '6' })
+				msgHandler(kafkaMessage([6, 6, 6]))
+				msgHandler(kafkaMessage({ '6': '6' }))
 				doneCallback(null, null)
 			}
 		})
@@ -213,9 +241,40 @@ describe('RestEndpoints', function() {
 					.expect(200, done)
 			})
 
-			it('responds with data points as body', function(done) {
+			it('responds with arrays as body', function(done) {
 				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
-					.expect([{ hello: 1 }, { world: 2 }, { beast: 666 }], done)
+					.expect([
+						kafkaMessage({ hello: 1 }).toArray(),
+						kafkaMessage({ world: 2 }).toArray(),
+						kafkaMessage({ beast: 666 }).toArray()
+					], done)
+			})
+
+			it('responds with objects as body given ?wrapper=object', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&wrapper=object')
+					.expect([
+						kafkaMessage({ hello: 1 }).toObject(),
+						kafkaMessage({ world: 2 }).toObject(),
+						kafkaMessage({ beast: 666 }).toObject()
+					], done)
+			})
+
+			it('responds with arrays as body and parsed content given ?content=json', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&content=json')
+					.expect([
+						kafkaMessage({ hello: 1 }).toArray(false),
+						kafkaMessage({ world: 2 }).toArray(false),
+						kafkaMessage({ beast: 666 }).toArray(false)
+					], done)
+			})
+
+			it('responds with objects as body given and parsed content given ?wrapper=object&content=json', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&wrapper=object&content=json')
+					.expect([
+						kafkaMessage({ hello: 1 }).toObject(false),
+						kafkaMessage({ world: 2 }).toObject(false),
+						kafkaMessage({ beast: 666 }).toObject(false)
+					], done)
 			})
 
 			it('invokes historicalAdapter#getFromOffset once with correct arguments', function(done) {
@@ -250,7 +309,7 @@ describe('RestEndpoints', function() {
 
 			it('responds with data points as body', function(done) {
 				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
-					.expect([{ test: 1234 }], done)
+					.expect([kafkaMessage({ test: 1234 }).toArray()], done)
 			})
 
 			it('invokes historicalAdapter#getOffsetRange once with correct arguments', function(done) {
@@ -285,7 +344,7 @@ describe('RestEndpoints', function() {
 
 			it('responds with data points as body', function(done) {
 				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
-					.expect([{ a: "a" }, { z: "z" }], done)
+					.expect([kafkaMessage({ a: "a" }).toArray(), kafkaMessage({ z: "z" }).toArray()], done)
 			})
 
 			it('invokes historicalAdapter#getFromTimestamp once with correct arguments', function(done) {
@@ -321,7 +380,7 @@ describe('RestEndpoints', function() {
 
 			it('responds with data points as body', function(done) {
 				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
-					.expect([[6, 6, 6], {6 : "6"}], done)
+					.expect([kafkaMessage([6, 6, 6]).toArray(), kafkaMessage({6 : "6"}).toArray()], done)
 			})
 
 			it('invokes historicalAdapter#getTimestampRange once with correct arguments', function(done) {
