@@ -14,6 +14,12 @@ describe('RedisHelper', function() {
 	var testRedisClient
 	var redisHelper
 
+	function streamrMessage() {
+		var msg = new StreamrBinaryMessage('streamId', 1, 1488214484821, 0,
+			StreamrBinaryMessage.CONTENT_TYPE_JSON, new Buffer(JSON.stringify({hello: 'world'}), 'utf8'))
+		return new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
+	}
+
 	beforeEach(function(done) {
 		testRedisClient = redis.createClient({ host: REDIS_HOST, password: REDIS_PASS })
 		redisHelper = new RedisHelper([REDIS_HOST], REDIS_PASS, done)
@@ -62,28 +68,21 @@ describe('RedisHelper', function() {
 		})
 
 		it('emits a "message" event when receiving data from Redis', function(done) {
-			var msg = new StreamrBinaryMessage('streamId', 1, 1488214484821, 0,
-				StreamrBinaryMessage.CONTENT_TYPE_JSON, {hello: 'world'})
-			var msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
+			var m = streamrMessage()
 
-			testRedisClient.publish('streamId-1', msgWithMetaData.toBytes())
+			testRedisClient.publish('streamId-1', m.toBytes())
 			redisHelper.on('message', function(msg) {
-				assert.deepEqual(msg, [28, 'streamId', 1, 1488214484821, 0, 0, 0, 27, JSON.stringify({ hello: 'world'})])
+				assert.deepEqual(msg, m.toArray())
 				done()
 			})
 		})
 
 		it('does not emit a "message" event for a message sent to another Redis channel', function(done) {
-			var msg = new StreamrBinaryMessage('streamId', 1, 1488214484821, 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, {
-				hello: 'world'
-			})
-			var msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
-
 			redisHelper.on('message', function(msg) {
 				throw "Should not have received message: " + msg
 			})
 
-			testRedisClient.publish('streamId-2', msgWithMetaData.toBytes(), function() {
+			testRedisClient.publish('streamId-2', streamrMessage().toBytes(), function() {
 				setTimeout(done, 500)
 			})
 		})
@@ -97,16 +96,11 @@ describe('RedisHelper', function() {
 		})
 
 		it('does not emits a "message" event when receiving data from Redis', function(done) {
-			var msg = new StreamrBinaryMessage('streamId', 1, 1488214484821, 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, {
-				hello: 'world'
-			})
-			var msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
-
 			redisHelper.on('message', function(msg) {
 				throw "Should not have received message: " + msg
 			})
 
-			testRedisClient.publish('streamId-1', msgWithMetaData.toBytes(), function() {
+			testRedisClient.publish('streamId-1', streamrMessage().toBytes(), function() {
 				setTimeout(done, 500)
 			})
 		})
@@ -117,14 +111,11 @@ describe('RedisHelper', function() {
 			})
 
 			it('emits a "message" event when receiving data from Redis', function(done) {
-				var msg = new StreamrBinaryMessage('streamId', 1, 1488214484821, 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, {
-					hello: 'world'
-				})
-				var msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
+				var m = streamrMessage()
 
-				testRedisClient.publish('streamId-1', msgWithMetaData.toBytes())
+				testRedisClient.publish('streamId-1', m.toBytes())
 				redisHelper.on('message', function(msg) {
-					assert.deepEqual(msg, [28, 'streamId', 1, 1488214484821, 0, 0, 0, 27, JSON.stringify({ hello: 'world'})])
+					assert.deepEqual(msg, m.toArray())
 					done()
 				})
 			})

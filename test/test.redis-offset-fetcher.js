@@ -28,11 +28,16 @@ describe('RedisOffsetFetcher', function() {
 			})
 		})
 
-		it("returns value if key exists", function() {
-			testRedisClient.setex("stream-1-0", 15, "2487679201527")
-			return redisOffsetFetcher.fetchOffset("stream-1", 0).then(function(value) {
-				assert.equal(value, 2487679201527)
-			});
+		it("returns value if key exists", function(done) {
+			testRedisClient.setex("stream-1-0", 15, "2487679201527", function(err, res) {
+				if (err) {
+					done(err)
+				}
+				return redisOffsetFetcher.fetchOffset("stream-1", 0).then(function(value) {
+					assert.equal(value, 2487679201527)
+					done()
+				})
+			})
 		})
 	})
 })

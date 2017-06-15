@@ -86,7 +86,7 @@ describe('Connection', function () {
 
 		beforeEach(function() {
 			const streamrBinaryMessage = new StreamrBinaryMessage("streamId", 0, new Date(2017, 2, 24, 13, 45, 0), 0,
-				StreamrBinaryMessage.CONTENT_TYPE_JSON, '{}')
+				StreamrBinaryMessage.CONTENT_TYPE_JSON, new Buffer('{}', 'utf8'))
 			const msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(streamrBinaryMessage, 25, 24, 0)
 			msgWithMetaDataAsArray = msgWithMetaData.toArray()
 		})

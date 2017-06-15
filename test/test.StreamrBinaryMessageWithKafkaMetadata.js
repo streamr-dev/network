@@ -19,7 +19,7 @@ describe('StreamrBinaryMessageWithKafkaMetadata', function () {
 			const streamPartition = 0
 			const timestamp = 1497529459457
 			const ttl = 100
-			const content = '{"foo":"bar"}'
+			const content = new Buffer('{"foo":"bar"}', 'utf8')
 			const offset = 100
 			const previousOffset = 99
 			const kafkaPartition = 0

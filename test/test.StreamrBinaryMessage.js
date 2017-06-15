@@ -21,7 +21,7 @@ describe('StreamrBinaryMessage', function () {
 
 		beforeEach(function() {
 			version = 28
-			bytes = new StreamrBinaryMessage(streamId, streamPartition, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).toBytes()
+			bytes = new StreamrBinaryMessage(streamId, streamPartition, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, new Buffer(JSON.stringify(msg), 'utf8')).toBytes()
 		})
 
 		describe('toBytes/fromBytes', function() {
@@ -35,7 +35,7 @@ describe('StreamrBinaryMessage', function () {
 				assert.equal(m.timestamp, timestamp)
 				assert.equal(m.ttl, ttl)
 				assert.equal(m.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
-				assert.deepEqual(m.content, msg)
+				assert.deepEqual(m.getContentParsed(), msg)
 			})
 
 			it('must not parse the content with contentAsBuffer=true', function() {
@@ -61,12 +61,10 @@ describe('StreamrBinaryMessage', function () {
 				})
 			})
 
-			it('must not fail if content is already a buffer', function() {
-				var msgBuf = new BufferMaker().string(JSON.stringify(msg)).make()
-				bytes = new StreamrBinaryMessage(streamId, streamPartition, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, msgBuf).toBytes()
-				var m = StreamrBinaryMessage.fromBytes(bytes)
-
-				assert.deepEqual(m.content, msg)
+			it('must fail if content is not a buffer', function() {
+				assert.throws(() => {
+					new StreamrBinaryMessage(streamId, streamPartition, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, "I AM NOT A BUFFER")
+				})
 			})
 
 		})

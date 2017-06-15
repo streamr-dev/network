@@ -24,7 +24,7 @@ describe('RestEndpoints', function() {
 		const timestamp = new Date(2017, 3, 1, 12, 0, 0)
 		const ttl = 0
 		const contentType = StreamrBinaryMessage.CONTENT_TYPE_JSON
-		const msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, content)
+		const msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, new Buffer(JSON.stringify(content, 'utf8')))
 		return new StreamrBinaryMessageWithKafkaMetadata(msg.toBytes(), 2, 1, 0)
 	}
 
