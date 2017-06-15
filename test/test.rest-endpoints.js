@@ -73,6 +73,12 @@ describe('RestEndpoints', function() {
 					.expect('Content-Type', /json/)
 					.expect(400, { error: 'Query parameter "count" not a number: sixsixsix' }, done)
 			})
+
+			it('responds 400 and error message if optional param "wrapper" is a unknown string', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=2pac')
+					.expect('Content-Type', /json/)
+					.expect(400, { error: 'Invalid value for query parameter "wrapper": 2pac' }, done)
+			})
 		})
 
 		context('/', function() {
@@ -231,6 +237,12 @@ describe('RestEndpoints', function() {
 				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=13215215215&toOffset=666')
 					.expect('Content-Type', /json/)
 					.expect(400, { error: 'Using query parameters "fromTimestamp" and "toOffset" together is not yet supported.' }, done)
+			})
+
+			it('responds 400 and error message if optional param "wrapper" is a unknown string', function(done) {
+				testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=0&wrapper=2pac')
+					.expect('Content-Type', /json/)
+					.expect(400, { error: 'Invalid value for query parameter "wrapper": 2pac' }, done)
 			})
 		})
 
