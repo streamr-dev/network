@@ -17,7 +17,7 @@ EXPOSE 8890
 ENV KAFKA_TOPIC data-dev
 ENV REDIS_PASSWORD ""
 ENV CASSANDRA_KEYSPACE streamr_dev
-ENV STREAMR_URL http://127.0.0.1:8081/unifina-core
+ENV STREAMR_URL http://127.0.0.1:8081/streamr-core
 
 CMD node data-api.js \
     --data-topic ${KAFKA_TOPIC} \
