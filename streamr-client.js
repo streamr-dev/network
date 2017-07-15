@@ -3,14 +3,20 @@
 (function() {
 
 	var debug
-	if (typeof window !== 'undefined') {
+	if (typeof module !== 'undefined') {
+		debug = require('debug')('StreamrClient')
+	} else {
 		debug = (window.debug ? window.debug('StreamrClient') : function() {
 			if (window.consoleLoggingEnabled)
 				console.log.apply(console, arguments)
 		})
 	}
-	else {
-		debug = require('debug')('StreamrClient')
+	
+	var WebSocket
+	if (typeof module !== 'undefined') {
+		WebSocket = require('ws')
+	} else {
+		WebSocket = window.WebSocket
 	}
 
 	var BYE_KEY = "_bye"

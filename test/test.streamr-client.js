@@ -160,7 +160,6 @@ describe('StreamrClient', function() {
 			return socket
 		});
 
-		global.WebSocket = require('ws')
 		StreamrClient = require('../streamr-client')
 	})
 

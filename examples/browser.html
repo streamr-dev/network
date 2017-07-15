@@ -26,23 +26,23 @@
 			)
 
 			// Event binding examples
-			client.bind('connected', function() {
+			client.on('connected', function() {
 				log('A connection has been established!')
 			})
 
-			subscription.bind('subscribed', function() {
+			subscription.on('subscribed', function() {
 				log('Subscribed to '+subscription.streamId)
 			})
 
-			subscription.bind('resending', function() {
+			subscription.on('resending', function() {
 				log('Resending from '+subscription.streamId)
 			})
 
-			subscription.bind('resent', function() {
+			subscription.on('resent', function() {
 				log('Resend complete for '+subscription.streamId)
 			})
 
-			subscription.bind('no_resend', function() {
+			subscription.on('no_resend', function() {
 				log('Nothing to resend for '+subscription.streamId)
 			})
 		</script>

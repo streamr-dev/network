@@ -20,22 +20,22 @@ var subscription = client.subscribe(
 )
 
 // Event binding examples
-client.bind('connected', function() {
+client.on('connected', function() {
 	console.log('A connection has been established!')
 })
 
-subscription.bind('subscribed', function() {
+subscription.on('subscribed', function() {
 	console.log('Subscribed to '+subscription.streamId)
 })
 
-subscription.bind('resending', function() {
+subscription.on('resending', function() {
 	console.log('Resending from '+subscription.streamId)
 })
 
-subscription.bind('resent', function() {
+subscription.on('resent', function() {
 	console.log('Resend complete for '+subscription.streamId)
 })
 
-subscription.bind('no_resend', function() {
+subscription.on('no_resend', function() {
 	console.log('Nothing to resend for '+subscription.streamId)
 })

@@ -17,7 +17,8 @@
   "license": "",
   "dependencies": {
     "debug": "*",
-    "eventemitter3": "*"
+    "eventemitter3": "*",
+    "ws": "^3.0.0"
   },
   "devDependencies": {
     "mocha": "*",
