@@ -181,3 +181,4 @@ Event     | Arguments | Description
 --------- | -------- |  ----
 `stream-object-created` | Stream | Emitted when a Stream reference object is created
 `stream-object-deleted` | Stream | Emitted when a Stream reference object is deleted
+
