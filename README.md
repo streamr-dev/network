@@ -1,18 +1,42 @@
-# streamr-data-api
+# Data API
 
-This app delivers messages in streams to clients over websockets.
+An essential service of the Streamr cloud architecture responsible for inbound and outbound data to/from Streamr
+cloud. Provides HTTP and WebSocket APIs for producing data to and listening to data from Streamr. All external and 3rd
+party data communication with Streamr flows through this service.
 
-# Public api doc
+## Building
+Project uses npm for package management.
 
-Is in file APIDOC.md
+- Start off by installing required dependencies with `npm install`
+- To run tests `npm test`
 
-# Protocol
+## Running
+In most cases, you will want to run this service as a [pre-built Docker image](https://hub.docker.com/r/streamr/data-api/).
+See https://github.com/streamr-dev/streamr-docker-dev for more information on how to run the Streamr cloud architecture.
 
-## Requests sent by client
+If you are developing this service in particular, or are otherwise inclined, you can run this service with `npm run`.
+
+## Publishing
+A [Docker image](https://hub.docker.com/r/streamr/data-api/) is automatically built and pushed to DockerHub when commits
+are pushed to branch `master`.
+
+Currently project has no CI system configured nor are any packages published to npmjs.com. 
+
+## API Specification
+
+For production version refer to https://www.streamr.com/help/api#datainput and https://www.streamr.com/help/api#dataoutput.
+
+Otherwise see [APIDOC.md](APIDOC.md)
+
+## Protocol
+
+**PLEASE BE ADVISED: Below may be outdated!**
+
+### Requests sent by client
 
 Also see the [Javascript client](https://github.com/streamr-dev/streamr-client) documentation.
 
-### subscribe
+#### subscribe
 
 Requests that the client be subscribed to a stream-partition from the next published message. Will result in a `subscribed` message, and a stream of `broadcast` messages as they are published.
 
@@ -32,7 +56,7 @@ stream    | Stream id to subscribe to
 partition | Partition number to subscribe to. Optional, defaults to 0
 authKey   | User API key or anonymous stream key. Optional. Public streams can be subscribed to without authentication.
 
-### unsubscribe
+#### unsubscribe
 
 Unsubscribes the client from a stream-partition. The response message is `unsubscribed`.
 
@@ -50,7 +74,7 @@ type      | Always "unsubscribe"
 stream    | Stream id to unsubscribe
 partition | Partition number to unsubscribe. Optional, defaults to 0
 
-### resend
+#### resend
 
 Requests a resend for a stream-partition. Responses are either a sequence of a `resending`, one or more `u`, and a `resent`; or a `no_resend` if there is nothing to resend.
 
@@ -74,7 +98,7 @@ resend_last| Resend the latest N messages
 resend_from| Resend all messages from and including the given offset. Can be used in combination with `resend_to`
 resend_to  | Resend up to given offset
 
-## Sent by server
+### Responses sent by server
 
 Messages sent by the server are arrays with the following structure:
 
@@ -97,7 +121,7 @@ messageType | Description
 - `subId` is non-empty on `unicast` messages and identifies the subscription by id
 - `messagePayload` is the message payload as described below.
 
-### broadcast (0)
+#### broadcast (0)
 
 A message addressed to all subscriptions listening on the stream. The message payload is a an event in a stream, wrapped in a header array as follows:
 
@@ -116,11 +140,11 @@ contentType | Description
 ----------- | -----------
 27          | `streamEvent` should be parsed as JSON
 
-### unicast (1)
+#### unicast (1)
 
 Unicast messages have non-empty `subId`. Content is just like in the broadcast message.
 
-### subscribed (2)
+#### subscribed (2)
 
 Sent in response to a `subscribe` request. Lets the client know that streams were subscribed to.
 
@@ -131,7 +155,7 @@ Sent in response to a `subscribe` request. Lets the client know that streams wer
 }
 ```
 
-### unsubscribed (3)
+#### unsubscribed (3)
 
 Sent in response to an `unsubscribe` request.
 
@@ -142,7 +166,7 @@ Sent in response to an `unsubscribe` request.
 }
 ```
 
-### resending (4)
+#### resending (4)
 
 Sent in response to a `resend` request. Informs the client that a resend is starting.
 
@@ -153,7 +177,7 @@ Sent in response to a `resend` request. Informs the client that a resend is star
 }
 ```
 
-### resent (5)
+#### resent (5)
 
 Informs the client that a resend for a particular subscription `subId` is complete.
 
@@ -164,7 +188,7 @@ Informs the client that a resend for a particular subscription `subId` is comple
 }
 ```
 
-### no resend (6)
+#### no resend (6)
 
 Sent in response to a `resend` request. Informs the client that there was nothing to resend.
 
@@ -175,7 +199,7 @@ Sent in response to a `resend` request. Informs the client that there was nothin
 }
 ```
 
-## Events emitted on server instance
+### Events emitted on server instance
 
 Event     | Arguments | Description
 --------- | -------- |  ----
