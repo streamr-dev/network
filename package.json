@@ -12,6 +12,9 @@
   },
   "author": "",
   "license": "",
+  "engines": {
+    "node": ">= 8.0.0"
+  },
   "dependencies": {
     "body-parser": "^1.15.2",
     "buffer-reader": "^0.1.0",

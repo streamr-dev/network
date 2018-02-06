@@ -4,6 +4,8 @@ An essential service of the Streamr cloud architecture responsible for inbound a
 cloud. Provides HTTP and WebSocket APIs for producing data to and listening to data from Streamr. All external and 3rd
 party data communication with Streamr flows through this service.
 
+![Where Data API sits in Streamr cloud stack](high-level.png)
+
 ## Building
 Project uses npm for package management.
 
