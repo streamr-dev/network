@@ -30,6 +30,10 @@ For production version refer to https://www.streamr.com/help/api#datainput and h
 
 Otherwise see [APIDOC.md](APIDOC.md)
 
+## License
+
+This software is open source, and dual licensed under [AGPLv3](https://www.gnu.org/licenses/agpl.html) and an enterprise-friendly commercial license.
+
 ## Protocol
 
 **PLEASE BE ADVISED: Below may be outdated!**
