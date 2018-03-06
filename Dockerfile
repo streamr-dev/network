@@ -14,17 +14,20 @@ RUN apk add --update python build-base && npm install && apk del python build-ba
 EXPOSE 8890
 
 # Default environment variables
+ENV ZOOKEEPER_HOST localhost
 ENV KAFKA_TOPIC data-dev
+ENV REDIS_HOST localhost
 ENV REDIS_PASSWORD ""
+ENV CASSANDRA_HOST localhost
 ENV CASSANDRA_KEYSPACE streamr_dev
 ENV STREAMR_URL http://127.0.0.1:8081/streamr-core
 
 CMD node data-api.js \
     --data-topic ${KAFKA_TOPIC} \
-    --zookeeper zookeeper \
-    --redis redis \
+    --zookeeper ${ZOOKEEPER_HOST} \
+    --redis ${REDIS_HOST} \
     --redis-pwd ${REDIS_PASSWORD} \
-    --cassandra cassandra \
+    --cassandra ${CASSANDRA_HOST} \
     --keyspace ${CASSANDRA_KEYSPACE} \
     --streamr ${STREAMR_URL} \
     --port 8890
