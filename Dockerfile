@@ -14,11 +14,11 @@ RUN apk add --update python build-base && npm install && apk del python build-ba
 EXPOSE 8890
 
 # Default environment variables
-ENV ZOOKEEPER_HOST localhost
+ENV ZOOKEEPER_HOST zookeeper
 ENV KAFKA_TOPIC data-dev
-ENV REDIS_HOST localhost
+ENV REDIS_HOST redis
 ENV REDIS_PASSWORD ""
-ENV CASSANDRA_HOST localhost
+ENV CASSANDRA_HOST cassandra
 ENV CASSANDRA_KEYSPACE streamr_dev
 ENV STREAMR_URL http://127.0.0.1:8081/streamr-core
 
