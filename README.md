@@ -40,7 +40,7 @@ var sub = client.subscribe(
 
 Option | Default value | Description
 ------ | ------------- | -----------
-url | ws://www.streamr.com/api/v1/ws | Address of the Streamr websocket endpoint to connect to.
+url | wss://www.streamr.com/api/v1/ws | Address of the Streamr websocket endpoint to connect to.
 authKey | null | Define default authKey to use when none is specified in the call to `client.subscribe`.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
