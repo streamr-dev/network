@@ -78,6 +78,7 @@ stream.produce(msg)
 Option | Default value | Description
 ------ | ------------- | -----------
 url | wss://www.streamr.com/api/v1/ws | Address of the Streamr websocket endpoint to connect to.
+restUrl | https://www.streamr.com/api/v1/ws | Base URL of the Streamr REST API.
 apiKey | null | Define a default apiKey to use when none is specified in the individual function calls.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
