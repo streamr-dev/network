@@ -1,28 +1,64 @@
 {
   "name": "streamr-client",
-  "version": "0.9.3",
-  "description": "JS client for subscribing to Streamr streams",
+  "version": "0.10.0",
+  "description": "JavaScript client library for Streamr",
   "repository": {
     "type": "git",
     "url": "git://github.com/streamr-dev/streamr-client.git"
   },
-  "main": "streamr-client.js",
+  "main": "src/index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test"
+    "build": "webpack --env dev && webpack --env prod && npm run test",
+    "dev": "webpack --progress --colors --watch --env dev",
+    "test": "npm run test-unit && npm run test-integration",
+    "test:watch": "mocha --require babel-core/register --colors -w --recursive ./test",
+    "test-unit": "mocha --require babel-core/register --colors --recursive ./test/unit",
+    "test-integration": "mocha --require babel-core/register --colors --recursive ./test/integration"
   },
-  "author": "",
-  "license": "",
-  "dependencies": {
-    "debug": "*",
-    "eventemitter3": "*",
-    "ws": "^3.0.0"
+  "browser": {
+    "ws": "./src/shim/ws.js",
+    "node-fetch": "./src/shim/node-fetch.js"
   },
+  "engines": {
+    "node": ">= 8"
+  },
+  "author": "Streamr",
+  "license": "AGPL-3.0-or-later",
   "devDependencies": {
-    "mocha": "*",
-    "mockery": "*",
-    "sinon": "^1.17.5"
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.2.2",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-2017": "0.0.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "chai": "^4.1.2",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-streamr": "^1.1.5",
+    "eslint-loader": "^1.9.0",
+    "eslint-plugin-flowtype": "^2.46.1",
+    "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.7.0",
+    "mocha": "^4.0.1",
+    "mockery": "^2.1.0",
+    "sinon": "^4.5.0",
+    "uglifyjs-webpack-plugin": "^1.2.4",
+    "webpack": "^3.10.0",
+    "yargs": "^10.0.3"
+  },
+  "dependencies": {
+    "babel-runtime": "^6.26.0",
+    "debug": "^3.1.0",
+    "eventemitter3": "^3.0.1",
+    "node-fetch": "^2.1.2",
+    "querystring": "^0.2.0",
+    "ws": "^5.1.0"
   }
 }

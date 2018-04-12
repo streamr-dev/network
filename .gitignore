@@ -28,3 +28,5 @@ node_modules
 .lock-wscript
 .idea
 *.iml
+.DS_Store
+dist/*

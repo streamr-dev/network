@@ -1,7 +1,7 @@
 <html>
 	<head>
 		<!-- For debug messages, include debug.js and set localStorage.debug = 'StreamrClient'. See from https://github.com/visionmedia/debug -->
-		<script src="../streamr-client.js"></script>
+		<script src="../../dist/streamr-client.min.js"></script>
 
 		<script>
 			function log(msg) {
@@ -15,7 +15,7 @@
 			// Subscribe to a stream
 			var subscription = client.subscribe(
 				{
-					stream: '1ef8TbyGTFiAlZ8R2gCaJw',
+					stream: '7wa7APtlTq6EC5iTCBy6dw',
 					// Resend the last 10 messages on connect
 					resend_last: 10
 				},
@@ -45,6 +45,7 @@
 			subscription.on('no_resend', function() {
 				log('Nothing to resend for '+subscription.streamId)
 			})
+
 		</script>
 	</head>
 	<body>
