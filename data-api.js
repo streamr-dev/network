@@ -35,5 +35,9 @@ app.use('/api/v1', require('./lib/rest-endpoints')(cassandra, streamFetcher))
 app.use('/api/v1', require('./lib/rest-produce-endpoints')(streamFetcher, kafka, partitioner))
 
 http.listen(argv.port, function() {
+	console.log("Configured with Redis: " + argv.redis)
+	console.log("Configured with Cassandra: " + argv.cassandra)
+	console.log("Configured with Kafka: " + argv['zookeeper'] + " and topic '" + argv['data-topic'] + "'")
+	console.log("Configured with Streamr: " + argv['streamr'])
 	console.log("Listening on port "+argv.port)
 })
