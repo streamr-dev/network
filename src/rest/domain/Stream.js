@@ -36,7 +36,7 @@ module.exports = class Stream {
         return utils.authFetch(`${this._client.options.restUrl}/streams/${this.id}/detectFields`, apiKey)
     }
 
-    produce(data, apiKey = this._client.options.apiKey, requestOptions = {}) {
-        return this._client.produceToStream(this.id, data, apiKey, requestOptions)
+    produce(data, apiKey = this._client.options.apiKey, requestOptions = {}, keepAlive = true) {
+        return this._client.produceToStream(this.id, data, apiKey, requestOptions, keepAlive)
     }
 }

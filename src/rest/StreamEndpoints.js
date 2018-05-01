@@ -1,12 +1,32 @@
 const qs = require('querystring')
 const debug = require('debug')('StreamrClient')
+const http = require('http')
+const https = require('https')
+
+const agentSettings = {
+    keepAlive: true,
+    keepAliveMsecs: 5000,
+}
+const agentByProtocol = {
+    http: new http.Agent(agentSettings),
+    https: new https.Agent(agentSettings),
+}
 
 const Stream = require('./domain/Stream')
 const utils = require('./utils')
 
+function getKeepAliveAgentForUrl(url) {
+    if (url.startsWith('https')) {
+        return agentByProtocol.https
+    } else if (url.startsWith('http')) {
+        return agentByProtocol.http
+    }
+
+    throw new Error(`Unknown protocol in URL: ${url}`)
+}
+
 // These function are mixed in to StreamrClient.prototype.
 // In the below functions, 'this' is intended to be the StreamrClient
-
 module.exports = {
     async getStream(streamId, apiKey = this.options.apiKey) {
         const url = `${this.options.restUrl}/streams/${streamId}`
@@ -68,7 +88,7 @@ module.exports = {
         }
     },
 
-    produceToStream(streamObjectOrId, data, apiKey = this.options.apiKey, requestOptions = {}) {
+    produceToStream(streamObjectOrId, data, apiKey = this.options.apiKey, requestOptions = {}, keepAlive = true) {
         let streamId
         if (streamObjectOrId instanceof Stream) {
             streamId = streamObjectOrId.id
@@ -83,6 +103,7 @@ module.exports = {
             Object.assign({}, requestOptions, {
                 method: 'POST',
                 body: JSON.stringify(data),
+                agent: keepAlive ? getKeepAliveAgentForUrl(this.options.restUrl) : undefined,
             }),
         )
     },
