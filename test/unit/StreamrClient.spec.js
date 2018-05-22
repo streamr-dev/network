@@ -146,7 +146,8 @@ describe('StreamrClient', () => {
     before(() => {
         mockery.enable()
 
-        mockery.registerMock('ws', (uri, opts) => {
+        // Must return a function since it's called with new
+        mockery.registerMock('ws', function(uri, opts) {
             wsMockCalls++
 
             // Create new sockets for subsequent calls

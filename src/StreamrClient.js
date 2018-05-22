@@ -195,7 +195,9 @@ module.exports = class StreamrClient extends EventEmitter {
                 this.handleError(`Error subscribing to ${response.stream}: ${response.error}`)
             } else {
                 const subs = this.subsByStream[response.stream]
-                delete subs.subscribing
+                if (subs && typeof subs === 'object') {
+                    delete subs.subscribing
+                }
 
                 debug('Client subscribed: %o', response)
 
@@ -276,7 +278,9 @@ module.exports = class StreamrClient extends EventEmitter {
             Object.keys(this.subsByStream)
                 .forEach((streamId) => {
                     const subs = this.subsByStream[streamId]
-                    delete subs.subscribing
+                    if (subs && typeof subs === 'object') {
+                        delete subs.subscribing
+                    }
                     subs.forEach((sub) => {
                         sub.setState(Subscription.State.unsubscribed)
                     })

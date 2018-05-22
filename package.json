@@ -14,9 +14,9 @@
     "build": "webpack --env dev && webpack --env prod && npm run test",
     "dev": "webpack --progress --colors --watch --env dev",
     "test": "npm run test-unit && npm run test-integration",
-    "test:watch": "mocha --require babel-core/register --colors -w --recursive ./test",
-    "test-unit": "mocha --require babel-core/register --colors --recursive ./test/unit",
-    "test-integration": "mocha --require babel-core/register --colors --recursive ./test/integration"
+    "test:watch": "mocha -w ./test",
+    "test-unit": "mocha ./test/unit",
+    "test-integration": "mocha ./test/integration"
   },
   "browser": {
     "ws": "./src/shim/ws.js",
