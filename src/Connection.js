@@ -1,7 +1,9 @@
-const EventEmitter = require('eventemitter3')
-const debug = require('debug')('StreamrClient::Connection')
-const WebSocket = require('ws')
-const protocol = require('./Protocol')
+import EventEmitter from 'eventemitter3'
+import debugFactory from 'debug'
+import WebSocket from 'ws'
+import { decodeBrowserWrapper, decodeMessage } from './Protocol'
+
+const debug = debugFactory('StreamrClient::Connection')
 
 module.exports = class Connection extends EventEmitter {
     constructor(options) {
@@ -50,8 +52,8 @@ module.exports = class Connection extends EventEmitter {
             }
 
             this.socket.onmessage = (messageEvent) => {
-                const decoded = protocol.decodeBrowserWrapper(messageEvent.data)
-                this.emit(decoded.type, protocol.decodeMessage(decoded.type, decoded.msg), decoded.subId)
+                const decoded = decodeBrowserWrapper(messageEvent.data)
+                this.emit(decoded.type, decodeMessage(decoded.type, decoded.msg), decoded.subId)
             }
         }
     }

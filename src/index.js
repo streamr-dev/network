@@ -1,7 +1,7 @@
-const StreamrClient = require('./StreamrClient')
-const AllEndpoints = require('./rest/AllEndpoints')
+import StreamrClient from './StreamrClient'
+import * as AllEndpoints from './rest/AllEndpoints'
 
 // Mixin the rest endpoints to the StreamrClient
 Object.assign(StreamrClient.prototype, AllEndpoints)
 
-module.exports = StreamrClient
+export default StreamrClient

@@ -6,19 +6,21 @@
     "type": "git",
     "url": "git://github.com/streamr-dev/streamr-client.git"
   },
-  "main": "src/index.js",
+  "main": "dist/streamr-client.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "build": "webpack --env dev && webpack --env prod && npm run test",
-    "dev": "webpack --progress --colors --watch --env dev",
+    "build": "NODE_ENV=production webpack",
+    "dev": "webpack --progress --colors --watch",
     "test": "npm run test-unit && npm run test-integration",
     "test:watch": "mocha -w ./test",
     "test-unit": "mocha ./test/unit",
     "test-integration": "mocha ./test/integration"
   },
   "browser": {
+    "http": "./src/shim/http-https.js",
+    "https": "./src/shim/http-https.js",
     "ws": "./src/shim/ws.js",
     "node-fetch": "./src/shim/node-fetch.js"
   },
@@ -34,24 +36,25 @@
     "babel-loader": "^7.1.2",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-polyfill": "^6.26.0",
     "babel-preset-2017": "0.0.0",
     "babel-preset-env": "^1.6.1",
     "babel-preset-stage-2": "^6.24.1",
     "chai": "^4.1.2",
     "eslint": "^4.19.1",
     "eslint-config-airbnb": "^16.1.0",
-    "eslint-config-streamr": "^1.1.5",
+    "eslint-config-streamr": "^1.1.7",
     "eslint-loader": "^1.9.0",
     "eslint-plugin-flowtype": "^2.46.1",
     "eslint-plugin-import": "^2.10.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.7.0",
+    "lodash": "^4.17.10",
     "mocha": "^4.0.1",
     "mockery": "^2.1.0",
     "sinon": "^4.5.0",
     "uglifyjs-webpack-plugin": "^1.2.4",
-    "webpack": "^3.10.0",
-    "yargs": "^10.0.3"
+    "webpack": "^3.10.0"
   },
   "dependencies": {
     "babel-runtime": "^6.26.0",
@@ -59,6 +62,7 @@
     "eventemitter3": "^3.0.1",
     "node-fetch": "^2.1.2",
     "querystring": "^0.2.0",
+    "webpack-node-externals": "^1.7.2",
     "ws": "^5.1.0"
   }
 }

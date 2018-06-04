@@ -1,0 +1,42 @@
+<html>
+<head>
+    <!-- For debug messages, include debug.js and set localStorage.debug = 'StreamrClient'. See from https://github.com/visionmedia/debug -->
+    <script src="../../dist/streamr-client.web.min.js"></script>
+
+    <script>
+        const log = (msg) => {
+            var elem = document.createElement('p')
+            elem.innerHTML = msg
+            document.body.appendChild(elem)
+        }
+
+        const STREAM_ID = 'MY-STREAM-ID'
+        const API_KEY = 'MY-API-KEY'
+
+        // Create the client and give the API key to use by default
+        const client = new StreamrClient({
+            restUrl: 'http://localhost:8890/api/v1',
+            apiKey: API_KEY
+        })
+
+        function produce() {
+            // Here is the event we'll be sending
+            const msg = {
+                hello: 'world',
+                random: Math.random()
+            }
+
+            // Produce the event to the Stream
+            client.produceToStream(STREAM_ID, msg)
+                .then(() => console.log('Sent successfully: ', msg))
+                .catch((err) => log(err))
+        }
+    </script>
+</head>
+<body>
+    <button id="produce">Produce</button>
+    <script>
+        document.getElementById('produce').addEventListener('click', produce)
+    </script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "name": "streamr-client-webpack-example",
+  "version": "0.0.0",
+  "description": "Example of how streamr-client can be included in webpack projects",
+  "scripts": {
+    "build": "NODE_ENV=production webpack",
+    "dev": "webpack --progress --colors --watch"
+  },
+  "engines": {
+    "node": ">= 8"
+  },
+  "author": "Streamr",
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-preset-2017": "0.0.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "webpack": "^3.10.0"
+  },
+  "dependencies": {
+    "streamr-client": "^0.10.2"
+  }
+}

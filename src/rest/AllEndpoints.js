@@ -1,5 +1,5 @@
-const StreamEndpoints = require('./StreamEndpoints')
+import * as StreamEndpoints from './StreamEndpoints'
 
-const endpoints = Object.assign({}, StreamEndpoints)
-
-module.exports = endpoints
+module.exports = {
+    ...StreamEndpoints,
+}

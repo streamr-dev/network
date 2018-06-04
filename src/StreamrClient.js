@@ -1,10 +1,12 @@
-const EventEmitter = require('eventemitter3')
-const debug = require('debug')('StreamrClient')
+import EventEmitter from 'eventemitter3'
+import debugFactory from 'debug'
 
-const Subscription = require('./Subscription')
-const Connection = require('./Connection')
+const debug = debugFactory('StreamrClient')
 
-module.exports = class StreamrClient extends EventEmitter {
+import Subscription from './Subscription'
+import Connection from './Connection'
+
+export default class StreamrClient extends EventEmitter {
     constructor(options) {
         super()
 

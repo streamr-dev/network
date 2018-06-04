@@ -1,7 +1,8 @@
-const EventEmitter = require('eventemitter3')
-const debug = require('debug')('StreamrClient::Subscription')
+import EventEmitter from 'eventemitter3'
+import debugFactory from 'debug'
+import { isByeMessage } from './Protocol'
 
-const protocol = require('./Protocol')
+const debug = debugFactory('StreamrClient::Subscription')
 
 let subId = 0
 function generateSubscriptionId() {
@@ -10,7 +11,7 @@ function generateSubscriptionId() {
     return id.toString()
 }
 
-module.exports = class Subscription extends EventEmitter {
+export default class Subscription extends EventEmitter {
     static get State() {
         return {
             unsubscribed: 'unsubscribed',
@@ -131,7 +132,7 @@ module.exports = class Subscription extends EventEmitter {
             // Normal case where prevOffset == null || lastReceivedOffset == null || prevOffset === lastReceivedOffset
             this.lastReceivedOffset = msg.offset
             this.callback(msg.content, msg)
-            if (protocol.isByeMessage(msg.content)) {
+            if (isByeMessage(msg.content)) {
                 this.emit('done')
             }
         }

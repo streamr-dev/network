@@ -1,30 +1,31 @@
-const fetch = require('node-fetch')
-const debug = require('debug')('StreamrClient:utils')
+import fetch from 'node-fetch'
+import debugFactory from 'debug'
 
-module.exports = {
-    async authFetch(url, apiKey, opts = {}) {
-        debug('authFetch: ', url, opts)
+const debug = debugFactory('StreamrClient:utils')
 
-        const req = Object.assign({}, opts, {
-            headers: apiKey ? {
-                Authorization: `token ${apiKey}`,
-            } : undefined,
-        })
+export const authFetch = async (url, apiKey, opts = {}) => {
+    debug('authFetch: ', url, opts)
 
-        const res = await fetch(url, req)
+    const req = {
+        ...opts,
+        headers: apiKey ? {
+            Authorization: `token ${apiKey}`,
+        } : undefined,
+    }
 
-        const text = await res.text()
+    const res = await fetch(url, req)
 
-        if (res.ok && text.length) {
-            try {
-                return JSON.parse(text)
-            } catch (err) {
-                throw new Error(`Failed to parse JSON response: ${text}`)
-            }
-        } else if (res.ok) {
-            return {}
-        } else {
-            throw new Error(`Request to ${url} returned with error code ${res.status}: ${text}`)
+    const text = await res.text()
+
+    if (res.ok && text.length) {
+        try {
+            return JSON.parse(text)
+        } catch (err) {
+            throw new Error(`Failed to parse JSON response: ${text}`)
         }
-    },
+    } else if (res.ok) {
+        return {}
+    } else {
+        throw new Error(`Request to ${url} returned with error code ${res.status}: ${text}`)
+    }
 }

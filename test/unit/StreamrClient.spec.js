@@ -1,9 +1,9 @@
-const EventEmitter = require('eventemitter3')
-const assert = require('assert')
-const mockery = require('mockery')
-const sinon = require('sinon')
-const debug = require('debug')
-const Subscription = require('../../src/Subscription')
+import EventEmitter from 'eventemitter3'
+import assert from 'assert'
+import mockery from 'mockery'
+import sinon from 'sinon'
+import debug from 'debug'
+import Subscription from '../../src/Subscription'
 
 const mockDebug = debug('mock')
 
