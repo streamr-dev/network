@@ -21,7 +21,7 @@ Here are some quick examples. More detailed examples for the browser and node.js
 #### Creating a StreamrClient instance
 
 ```javascript
-var client = new StreamrClient({
+const client = new StreamrClient({
     // See below for more options
     apiKey: 'your-api-key'
 })
@@ -30,14 +30,14 @@ var client = new StreamrClient({
 #### Subscribing to real-time events in a stream
 
 ```javascript
-var sub = client.subscribe(
+const sub = client.subscribe(
     {
         stream: 'streamId',
         apiKey: 'secret',       // Optional. If not given, uses the apiKey given at client creation time.
         partition: 0,           // Optional, defaults to zero. Use for partitioned streams to select partition.
         // optional resend options here
     },
-    function(message, metadata) {
+    (message, metadata) => {
         // This is the message handler which gets called for every incoming message in the Stream.
         // Do something with the message here!
     }
@@ -51,7 +51,7 @@ client.getOrCreateStream({
     name: 'My awesome Stream created via the API',
 })
     .then((stream) => {
-        console.log('Stream ' + stream.id + 'has been created!')
+        console.log(`Stream ${stream.id} has been created!`)
         // Do something with the Stream
     })
 ```
@@ -60,7 +60,7 @@ client.getOrCreateStream({
 
 ```javascript
 // Here's our example data point
-var msg = {
+const msg = {
     temperature: 25.4,
     humidity: 10,
     happy: true
@@ -163,14 +163,14 @@ The client and the subscriptions can fire events as detailed below. You can bind
 
 ```javascript
     // The StreamrClient emits various events
-	client.on('connected', function() {
+	client.on('connected', () => {
 	    console.log('Yeah, we are connected now!')
 	})
 
     // So does the Subscription object
-	var sub = client.subscribe(...)
-	sub.on('subscribed', function() {
-		console.log('Subscribed to '+sub.streamId)
+	const sub = client.subscribe(...)
+	sub.on('subscribed', () => {
+	    console.log(`Subscribed to ${sub.streamId}`)
 	})
 ```
 
@@ -185,7 +185,7 @@ disconnected |  | Fired when the client has disconnected (or paused).
 
 Name | Handler Arguments | Description
 ---- | ----------------- | -----------
-subscribed | {from: number} | Fired when a subscription request is acknowledged by the server.
+subscribed | `{ from: number }` | Fired when a subscription request is acknowledged by the server.
 unsubscribed |  | Fired when an unsubscription is acknowledged by the server.
 resending |  | Fired when the subscription starts resending.
 resent |  | Fired after `resending` when the subscription has finished resending.
