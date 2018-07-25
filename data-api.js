@@ -3,13 +3,13 @@ var argv = require('optimist')
 	.demand(['data-topic', 'zookeeper', 'redis', 'redis-pwd', 'cassandra', 'keyspace', 'streamr', 'port'])
 	.argv
 
-var StreamFetcher = require('./lib/stream-fetcher')
-var WebsocketServer = require('./lib/WebsocketServer')
-var RedisHelper = require('./lib/redis-helper')
-var RedisOffsetFetcher = require('./lib/redis-offset-fetcher')
-var CassandraHelper = require('./lib/cassandra-helper')
-const StreamrKafkaProducer = require('./lib/StreamrKafkaProducer')
-const partitioner = require('./lib/partitioner')
+var StreamFetcher = require('./src/StreamFetcher')
+var WebsocketServer = require('./src/WebsocketServer')
+var RedisHelper = require('./src/RedisUtil')
+var RedisOffsetFetcher = require('./src/RedisOffsetFetcher')
+var CassandraHelper = require('./src/CassandraUtil')
+const StreamrKafkaProducer = require('./src/KafkaUtil')
+const partitioner = require('./src/Partitioner')
 
 var cors = require('cors')
 var app = require('express')()
@@ -31,8 +31,8 @@ var server = new WebsocketServer(http, redis, cassandra, redisOffsetFetcher, nul
 /**
  * REST endpoints
  */
-app.use('/api/v1', require('./lib/rest-endpoints')(cassandra, streamFetcher))
-app.use('/api/v1', require('./lib/rest-produce-endpoints')(streamFetcher, kafka, partitioner))
+app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(cassandra, streamFetcher))
+app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, kafka, partitioner))
 
 http.listen(argv.port, function() {
 	console.log("Configured with Redis: " + argv.redis)

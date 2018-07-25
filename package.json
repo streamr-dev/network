@@ -7,8 +7,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test",
-    "autotest": "supervisor -w . -n exit -x mocha -- test -b"
+    "test": "mocha test --recursive",
+    "test-unit": "mocha test/unit --recursive",
+    "test-integration": "mocha test/integration --recursive",
+    "autotest": "supervisor -w . -n exit -x mocha -- test --recursive -b",
+    "eslint": "eslint src && eslint test"
   },
   "author": "",
   "license": "",
@@ -29,19 +32,25 @@
     "memoizee": "^0.4.4",
     "murmurhash-native": "^3.2.0",
     "node-fetch": "^1.6.3",
-    "node-int64": "*",
+    "node-int64": "0.3.3",
     "node-uuid": "^1.4.7",
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
-    "sinon-test": "^1.0.2",
     "uws": "^0.14.1"
   },
   "devDependencies": {
+    "babel-eslint": "^8.2.2",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-streamr": "^1.1.7",
+    "eslint-loader": "^1.9.0",
+    "eslint-plugin-flowtype": "^2.46.1",
+    "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.7.0",
     "mocha": "*",
-    "mockery": "^2.0.0",
-    "node-int64": "0.3.3",
-    "sinon": "*",
+    "sinon": "^2.0.0",
     "supertest": "^3.0.0"
   }
 }
