@@ -211,7 +211,7 @@ module.exports = class CassandraUtil extends events.EventEmitter {
         ).then((result) => (result.rows.length > 0 ? result.rows[0].kafka_offset.toNumber() : null))
     }
 
-    close() {
-        this.client.shutdown()
+    close(cb) {
+        this.client.shutdown(cb)
     }
 }

@@ -101,7 +101,7 @@ describe('RedisUtil', () => {
             })
         })
 
-        it('does not emits a "message" event when receiving data from Redis', (done) => {
+        it('does not emit a "message" event when receiving data from Redis', (done) => {
             redisHelper.on('message', (msg) => {
                 throw new Error(`Should not have received message: ${msg}`)
             })
