@@ -76,7 +76,7 @@ describe('WebsocketServer', () => {
         return new StreamrBinaryMessageWithKafkaMetadata(msg.toBytes(), 2, 1, 0)
     }
 
-    context('on socket connection', () => {
+    describe('on socket connection', () => {
         let mockSocket2
 
         beforeEach(() => {
@@ -100,7 +100,7 @@ describe('WebsocketServer', () => {
         })
     })
 
-    context('on resend request', () => {
+    describe('on resend request', () => {
         it('emits a resending event before starting the resend', (done) => {
             historicalAdapter.getAll = sinon.stub()
             historicalAdapter.getAll.callsArgWithAsync(2, kafkaMessage())
@@ -207,7 +207,7 @@ describe('WebsocketServer', () => {
             })
         })
 
-        context('socket sends resend request with resend_all', () => {
+        describe('socket sends resend request with resend_all', () => {
             it('requests all messages from historicalAdapter', (done) => {
                 wsMock.emit('connection', mockSocket)
                 mockSocket.receive({
@@ -226,7 +226,7 @@ describe('WebsocketServer', () => {
             })
         })
 
-        context('socket sends resend request with resend_from', () => {
+        describe('socket sends resend request with resend_from', () => {
             it('requests messages from given offset from historicalAdapter', (done) => {
                 wsMock.emit('connection', mockSocket)
                 mockSocket.receive({
@@ -245,7 +245,7 @@ describe('WebsocketServer', () => {
             })
         })
 
-        context('socket sends resend request with resend_from AND resend_to', () => {
+        describe('socket sends resend request with resend_from AND resend_to', () => {
             it('requests messages from given range from historicalAdapter', (done) => {
                 wsMock.emit('connection', mockSocket)
                 mockSocket.receive({
@@ -305,7 +305,7 @@ describe('WebsocketServer', () => {
         })
     })
 
-    context('on resend request with invalid key', () => {
+    describe('on resend request with invalid key', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
             mockSocket.receive({
@@ -336,7 +336,7 @@ describe('WebsocketServer', () => {
         })
     })
 
-    context('message broadcasting', () => {
+    describe('message broadcasting', () => {
         it('emits messages received from Redis to those sockets according to streamId', (done) => {
             wsMock.emit('connection', mockSocket)
             mockSocket.receive({
@@ -364,7 +364,7 @@ describe('WebsocketServer', () => {
         })
     })
 
-    context('on invalid subscribe request', () => {
+    describe('on invalid subscribe request', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
             mockSocket.receive({
@@ -386,7 +386,7 @@ describe('WebsocketServer', () => {
         })
     })
 
-    context('on subscribe request', () => {
+    describe('on subscribe request', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
             mockSocket.receive({
@@ -455,7 +455,7 @@ describe('WebsocketServer', () => {
         })
     })
 
-    context('on subscribe request with invalid key', () => {
+    describe('on subscribe request with invalid key', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
             mockSocket.receive({

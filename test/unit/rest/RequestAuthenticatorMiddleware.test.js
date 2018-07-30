@@ -26,7 +26,7 @@ describe('AuthenticationMiddleware', () => {
         middlewareInstance = authenticationMiddleware(streamFetcherStub)
     })
 
-    context('given no authorization token', () => {
+    describe('given no authorization token', () => {
         it('delegates streamId to streamFetcher#authenticate without key', () => {
             streamFetcherStub.authenticate = sinon.stub()
             streamFetcherStub.authenticate.returns(Promise.resolve({}))
@@ -57,7 +57,7 @@ describe('AuthenticationMiddleware', () => {
         })
     })
 
-    context('given well-formed authorization token', () => {
+    describe('given well-formed authorization token', () => {
         beforeEach(() => {
             request.headers.authorization = 'tOkEn authKey'
             request.params = {
@@ -111,7 +111,7 @@ describe('AuthenticationMiddleware', () => {
             })
         })
 
-        context('given streamFetcher#authenticate authenticates successfully', () => {
+        describe('given streamFetcher#authenticate authenticates successfully', () => {
             beforeEach(() => {
                 streamFetcherStub.authenticate = function (streamId) {
                     return Promise.resolve({

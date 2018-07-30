@@ -63,7 +63,7 @@ describe('DataProduceEndpoints', () => {
     })
 
     describe('producing after kafka is ready', () => {
-        beforeEach('kafka is ready', () => {
+        beforeEach(() => {
             kafka.emit('ready')
         })
 

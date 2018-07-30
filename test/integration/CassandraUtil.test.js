@@ -19,7 +19,6 @@ describe('CassandraUtil', () => {
     beforeEach(() => {
         // Unique stream for each test
         streamId = `CassandraUtil.test.js-${Date.now()}`
-        console.log(`CassandraUtil.test.js using streamId ${streamId}`)
 
         allMessages = [
             [28, streamId, 0, 1490180460000, 10, 5, -1, 27, JSON.stringify({
@@ -96,11 +95,7 @@ describe('CassandraUtil', () => {
         })
 
         cassandraDataInserter = new CassandraDataInserter(cassandra.client, streamId)
-        return cassandraDataInserter.bulkInsert(20).then(() => {
-            console.log('Data inserted!')
-        }).catch((err) => {
-            throw new Error(err)
-        })
+        return cassandraDataInserter.bulkInsert(20)
     })
 
     afterEach((done) => {

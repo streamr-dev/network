@@ -7,10 +7,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test --recursive",
-    "test-unit": "mocha test/unit --recursive",
-    "test-integration": "mocha test/integration --recursive",
-    "autotest": "supervisor -w . -n exit -x mocha -- test --recursive -b",
+    "test": "jest --coverage",
+    "test-unit": "jest test/unit --coverage",
+    "test-integration": "jest test/integration --coverage",
     "eslint": "eslint src && eslint test"
   },
   "author": "",
@@ -33,7 +32,7 @@
     "murmurhash-native": "^3.2.0",
     "node-fetch": "^1.6.3",
     "node-int64": "0.3.3",
-    "node-uuid": "^1.4.7",
+    "node-uuid": "^1.4.8",
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
@@ -49,7 +48,7 @@
     "eslint-plugin-import": "^2.10.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.7.0",
-    "mocha": "*",
+    "jest": "^23.4.2",
     "sinon": "^2.0.0",
     "supertest": "^3.0.0"
   }

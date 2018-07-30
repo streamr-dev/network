@@ -26,4 +26,8 @@ module.exports = class RedisOffsetFetcher {
             })
         }))
     }
+
+    close() {
+        this.client.quit()
+    }
 }

@@ -57,7 +57,7 @@ describe('DataQueryEndpoints', () => {
             }
         })
 
-        context('user errors', () => {
+        describe('user errors', () => {
             it('responds 400 and error message if param "partition" not a number', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/zero/last')
                     .expect('Content-Type', /json/)
@@ -91,7 +91,7 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
-        context('/', () => {
+        describe('/', () => {
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .expect('Content-Type', /json/)
@@ -161,7 +161,7 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
-        context('?count=666', () => {
+        describe('?count=666', () => {
             it('passes count to historicalAdapter#getLast', (done) => {
                 sinon.spy(historicalAdapterStub, 'getLast')
 
@@ -216,7 +216,7 @@ describe('DataQueryEndpoints', () => {
             }
         })
 
-        context('user errors', () => {
+        describe('user errors', () => {
             it('responds 400 and error message if param "partition" not a number', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/zero/range')
                     .expect('Content-Type', /json/)
@@ -314,7 +314,7 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
-        context('?fromOffset=15', () => {
+        describe('?fromOffset=15', () => {
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
                     .expect('Content-Type', /json/)
@@ -408,7 +408,7 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
-        context('?fromOffset=15&toOffset=8196', () => {
+        describe('?fromOffset=15&toOffset=8196', () => {
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
                     .expect('Content-Type', /json/)
@@ -449,7 +449,7 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
-        context('?fromTimestamp=1496408255672', () => {
+        describe('?fromTimestamp=1496408255672', () => {
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
                     .expect('Content-Type', /json/)
@@ -495,7 +495,7 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
-        context('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
+        describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .expect('Content-Type', /json/)

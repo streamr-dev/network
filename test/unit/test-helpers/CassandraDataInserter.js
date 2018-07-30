@@ -23,9 +23,6 @@ module.exports = class CassandraDataInserter {
     timedBulkInsert(n, timeoutInMs) {
         setTimeout(() => {
             this.bulkInsert(n)
-                .then(() => {
-                    console.info(`Pushed ${n} additional events`)
-                })
                 .catch((e) => {
                     console.error(e)
                 })
