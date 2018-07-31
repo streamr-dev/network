@@ -10,7 +10,7 @@
     "test": "jest --coverage",
     "test-unit": "jest test/unit --coverage",
     "test-integration": "jest test/integration --coverage",
-    "eslint": "eslint src && eslint test"
+    "eslint": "eslint ."
   },
   "author": "",
   "license": "",
