@@ -1,43 +1,64 @@
-const argv = require('optimist')
-    .usage('Usage: $0 --data-topic <topic> --zookeeper <conn_string> --redis <redis_hosts_separated_by_commas> --redis-pwd <password> --cassandra <cassandra_hosts_separated_by_commas> --keyspace <cassandra_keyspace> --streamr <streamr> --port <port>')
-    .demand(['data-topic', 'zookeeper', 'redis', 'redis-pwd', 'cassandra', 'keyspace', 'streamr', 'port'])
-    .argv
-
+const http = require('http')
 const cors = require('cors')
+const express = require('express')
+const ws = require('uws')
+let optimist = require('optimist')
+
 const StreamFetcher = require('./src/StreamFetcher')
 const WebsocketServer = require('./src/WebsocketServer')
-const RedisHelper = require('./src/RedisUtil')
+const RedisUtil = require('./src/RedisUtil')
 const RedisOffsetFetcher = require('./src/RedisOffsetFetcher')
-const CassandraHelper = require('./src/CassandraUtil')
+const CassandraUtil = require('./src/CassandraUtil')
 const StreamrKafkaProducer = require('./src/KafkaUtil')
-const partitioner = require('./src/Partitioner')
+const Partitioner = require('./src/Partitioner')
 
-const app = require('express')()
-const http = require('http').Server(app)
+// Check command line args
+optimist = optimist.usage(`You must pass the following command line options:
+    --data-topic <topic> 
+    --zookeeper <conn_string> 
+    --redis <redis_hosts_separated_by_commas> 
+    --redis-pwd <password> 
+    --cassandra <cassandra_hosts_separated_by_commas> 
+    --keyspace <cassandra_keyspace> 
+    --streamr <streamr> 
+    --port <port>`)
+optimist = optimist.demand(['data-topic', 'zookeeper', 'redis', 'redis-pwd', 'cassandra', 'keyspace', 'streamr', 'port'])
 
-const streamFetcher = new StreamFetcher(argv.streamr)
-const redis = new RedisHelper(argv.redis.split(','), argv['redis-pwd'])
-const cassandra = new CassandraHelper(argv.cassandra.split(','), argv.keyspace)
-const redisOffsetFetcher = new RedisOffsetFetcher(argv.redis.split(',')[0], argv['redis-pwd'])
-const kafka = new StreamrKafkaProducer(argv['data-topic'], partitioner, argv.zookeeper)
+// Create some utils
+const streamFetcher = new StreamFetcher(optimist.argv.streamr)
+const redis = new RedisUtil(optimist.argv.redis.split(','), optimist.argv['redis-pwd'])
+const cassandra = new CassandraUtil(optimist.argv.cassandra.split(','), optimist.argv.keyspace)
+const redisOffsetFetcher = new RedisOffsetFetcher(optimist.argv.redis.split(',')[0], optimist.argv['redis-pwd'])
+const kafka = new StreamrKafkaProducer(optimist.argv['data-topic'], Partitioner, optimist.argv.zookeeper)
 
+// Create HTTP server
+const app = express()
+const httpServer = http.Server(app)
+
+// Add CORS headers
 app.use(cors())
 
-/**
- * Streaming endpoints
- */
-const server = new WebsocketServer(http, redis, cassandra, redisOffsetFetcher, null, streamFetcher)
+// Websocket endpoint is handled by WebsocketServer
+const server = new WebsocketServer(
+    new ws.Server({
+        server: http,
+        path: '/api/v1/ws',
+    }),
+    redis,
+    cassandra,
+    redisOffsetFetcher,
+    streamFetcher,
+)
 
-/**
- * REST endpoints
- */
+// Rest endpoints
 app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(cassandra, streamFetcher))
-app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, kafka, partitioner))
+app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, kafka, Partitioner))
 
-http.listen(argv.port, () => {
-    console.log(`Configured with Redis: ${argv.redis}`)
-    console.log(`Configured with Cassandra: ${argv.cassandra}`)
-    console.log(`Configured with Kafka: ${argv.zookeeper} and topic '${argv['data-topic']}'`)
-    console.log(`Configured with Streamr: ${argv.streamr}`)
-    console.log(`Listening on port ${argv.port}`)
+// Start the server
+httpServer.listen(optimist.argv.port, () => {
+    console.log(`Configured with Redis: ${optimist.argv.redis}`)
+    console.log(`Configured with Cassandra: ${optimist.argv.cassandra}`)
+    console.log(`Configured with Kafka: ${optimist.argv.zookeeper} and topic '${optimist.argv['data-topic']}'`)
+    console.log(`Configured with Streamr: ${optimist.argv.streamr}`)
+    console.log(`Listening on port ${optimist.argv.port}`)
 })

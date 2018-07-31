@@ -1,7 +1,6 @@
 const events = require('events')
 const debug = require('debug')('WebsocketServer')
 const debugProtocol = require('debug')('WebsocketServer:protocol')
-const WebSocketServer = require('uws').Server
 const Stream = require('./Stream')
 const Connection = require('./Connection')
 
@@ -12,8 +11,9 @@ function getStreamLookupKey(streamId, streamPartition) {
 }
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(http, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wss, streamFetcher) {
+    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher) {
         super()
+        this.wss = wss
         this.realtimeAdapter = realtimeAdapter
         this.historicalAdapter = historicalAdapter
         this.latestOffsetFetcher = latestOffsetFetcher
@@ -24,11 +24,6 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         // This handler is for realtime messages, not resends
         this.realtimeAdapter.on('message', (messageAsArray, streamId, streamPartition) => {
             this.broadcastMessage(messageAsArray, streamId, streamPartition)
-        })
-
-        this.wss = wss || new WebSocketServer({
-            server: http,
-            path: '/api/v1/ws',
         })
 
         const requestHandlersByType = {

@@ -57,10 +57,7 @@ describe('WebsocketServer', () => {
         mockSocket = new MockSocket()
 
         // Create the server instance
-        server = new WebsocketServer(
-            undefined, realtimeAdapter, historicalAdapter, latestOffsetFetcher, wsMock,
-            streamFetcher,
-        )
+        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher)
     })
 
     function kafkaMessage() {
