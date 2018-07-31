@@ -2,14 +2,14 @@
   "name": "streamr-data-api",
   "version": "0.0.1",
   "description": "",
-  "main": "start-server.js",
+  "main": "data-api.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "jest --coverage",
-    "test-unit": "jest test/unit --coverage",
-    "test-integration": "jest test/integration --coverage",
+    "test": "jest",
+    "test-unit": "jest test/unit",
+    "test-integration": "jest test/integration",
     "eslint": "eslint ."
   },
   "author": "",
