@@ -41,7 +41,7 @@ app.use(cors())
 // Websocket endpoint is handled by WebsocketServer
 const server = new WebsocketServer(
     new ws.Server({
-        server: http,
+        server: httpServer,
         path: '/api/v1/ws',
     }),
     redis,
