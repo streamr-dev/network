@@ -1,3 +1,5 @@
+const HttpError = require('../errors/HttpError')
+
 /**
  * Middleware used to authenticate REST API requests
  */
@@ -24,9 +26,17 @@ module.exports = function (streamFetcher, permission = 'read') {
                 next()
             })
             .catch((err) => {
-                console.error(err)
-                res.status(403).send({
-                    error: 'Authentication failed.',
+                let errorMsg
+                if (err instanceof HttpError && err.code === 403) {
+                    errorMsg = 'Authentication failed.'
+                } else if (err instanceof HttpError && err.code === 404) {
+                    errorMsg = `Stream ${req.params.id} not found.`
+                } else {
+                    errorMsg = 'Request failed.'
+                }
+
+                res.status(err.code || 403).send({
+                    error: errorMsg,
                 })
             })
     }

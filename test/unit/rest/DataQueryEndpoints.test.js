@@ -4,6 +4,7 @@ const sinon = require('sinon')
 const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage')
 const StreamrBinaryMessageWithKafkaMetadata = require('../../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
 const restEndpointRouter = require('../../../src/rest/DataQueryEndpoints')
+const HttpError = require('../../../src/errors/HttpError')
 
 describe('DataQueryEndpoints', () => {
     let app
@@ -36,7 +37,7 @@ describe('DataQueryEndpoints', () => {
                     if (authKey === 'authKey') {
                         resolve({})
                     } else {
-                        reject(new Error('Authentication failed!'))
+                        reject(new HttpError(403))
                     }
                 }))
             },

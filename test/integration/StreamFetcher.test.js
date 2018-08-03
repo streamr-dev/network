@@ -3,6 +3,7 @@ const express = require('express')
 const sinon = require('sinon')
 const uuid = require('node-uuid')
 const StreamFetcher = require('../../src/StreamFetcher')
+const HttpError = require('../../src/errors/HttpError')
 
 describe('StreamFetcher', () => {
     let streamFetcher
@@ -109,21 +110,24 @@ describe('StreamFetcher', () => {
 
         it('rejects with 404 if stream does not exist', (done) => {
             streamFetcher.checkPermission('nonExistingStreamId', 'key', 'read').catch((err) => {
-                assert.equal(err.message, '404')
+                assert(err instanceof HttpError)
+                assert.equal(err.code, 404)
                 done()
             })
         })
 
         it('rejects with 403 if key does not grant access to stream', (done) => {
             streamFetcher.checkPermission(streamId, 'nonExistantKey', 'read').catch((err) => {
-                assert.equal(err.message, '403')
+                assert(err instanceof HttpError)
+                assert.equal(err.code, 403)
                 done()
             })
         })
 
         it('rejects with 403 if key does not provides (desired level) privilege to stream', (done) => {
             streamFetcher.checkPermission(streamId, 'key', 'write').catch((err) => {
-                assert.equal(err.message, '403')
+                assert(err instanceof HttpError)
+                assert.equal(err.code, 403)
                 done()
             })
         })
@@ -211,14 +215,16 @@ describe('StreamFetcher', () => {
 
         it('rejects with 404 if stream does not exist', (done) => {
             streamFetcher.fetch('nonExistingStreamId', 'key').catch((err) => {
-                assert.equal(err.message, '404')
+                assert(err instanceof HttpError)
+                assert.equal(err.code, 404)
                 done()
             })
         })
 
         it('rejects with 403 if key does not grant access to stream', (done) => {
             streamFetcher.fetch(streamId, 'nonExistantKey').catch((err) => {
-                assert.equal(err.message, '403')
+                assert(err instanceof HttpError)
+                assert.equal(err.code, 403)
                 done()
             })
         })

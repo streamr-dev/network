@@ -1,6 +1,7 @@
 const fetch = require('node-fetch')
 const memoize = require('memoizee')
 const debug = require('debug')('StreamFetcher')
+const HttpError = require('./errors/HttpError')
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 
@@ -37,7 +38,7 @@ module.exports = class StreamFetcher {
             if (response.status !== 200) {
                 debug('fetch failed with status %d for streamId %s key %s: %o', response.status, streamId, authKey, response.text())
                 this.fetch.delete(streamId, authKey) // clear cache result
-                throw new Error(response.status)
+                throw new HttpError(response.status)
             } else {
                 return response.json()
             }
@@ -70,7 +71,7 @@ module.exports = class StreamFetcher {
                         response.status, streamId, authKey, operation, errorMsg,
                     )
                     this.checkPermission.delete(streamId, authKey, operation) // clear cache result
-                    throw new Error(response.status)
+                    throw new HttpError(response.status)
                 })
             }
 
@@ -86,7 +87,7 @@ module.exports = class StreamFetcher {
                     'checkPermission failed for streamId %s key %s operation %s. permissions were: %o',
                     streamId, authKey, operation, permissions,
                 )
-                throw new Error(403)
+                throw new HttpError(403)
             })
         })
     }

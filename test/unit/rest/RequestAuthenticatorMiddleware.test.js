@@ -1,6 +1,7 @@
 const assert = require('assert')
 const sinon = require('sinon')
 const authenticationMiddleware = require('../../../src/rest/RequestAuthenticatorMiddleware')
+const HttpError = require('../../../src/errors/HttpError')
 
 describe('AuthenticationMiddleware', () => {
     let request
@@ -92,9 +93,9 @@ describe('AuthenticationMiddleware', () => {
             )
         })
 
-        it('responds 403 and error message if streamFetcher#authenticate results in error', (done) => {
+        it('responds 403 and error message if streamFetcher#authenticate results in 403', (done) => {
             streamFetcherStub.authenticate = function () {
-                return Promise.reject(new Error('error from always-fail mock'))
+                return Promise.reject(new HttpError(403))
             }
 
             middlewareInstance(request, response, next)
@@ -107,6 +108,39 @@ describe('AuthenticationMiddleware', () => {
                 sinon.assert.calledWithExactly(response.send, {
                     error: 'Authentication failed.',
                 })
+                done()
+            })
+        })
+
+        it('responds with 404 if the stream is not found', (done) => {
+            streamFetcherStub.authenticate = function () {
+                return Promise.reject(new HttpError(404))
+            }
+
+            middlewareInstance(request, response, next)
+
+            setTimeout(() => {
+                sinon.assert.notCalled(next)
+                sinon.assert.calledOnce(response.status)
+                sinon.assert.calledOnce(response.send)
+                sinon.assert.calledWithExactly(response.status, 404)
+                sinon.assert.calledWithExactly(response.send, {
+                    error: 'Stream streamId not found.',
+                })
+                done()
+            })
+        })
+
+        it('responds with whatever status code the backend returns', (done) => {
+            streamFetcherStub.authenticate = function () {
+                return Promise.reject(new HttpError(123))
+            }
+
+            middlewareInstance(request, response, next)
+
+            setTimeout(() => {
+                sinon.assert.notCalled(next)
+                sinon.assert.calledWithExactly(response.status, 123)
                 done()
             })
         })
