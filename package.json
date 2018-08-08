@@ -2,13 +2,15 @@
   "name": "streamr-data-api",
   "version": "0.0.1",
   "description": "",
-  "main": "start-server.js",
+  "main": "data-api.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "mocha test",
-    "autotest": "supervisor -w . -n exit -x mocha -- test -b"
+    "test": "jest",
+    "test-unit": "jest test/unit",
+    "test-integration": "jest test/integration",
+    "eslint": "eslint ."
   },
   "author": "",
   "license": "",
@@ -29,19 +31,25 @@
     "memoizee": "^0.4.4",
     "murmurhash-native": "^3.2.0",
     "node-fetch": "^1.6.3",
-    "node-int64": "*",
-    "node-uuid": "^1.4.7",
+    "node-int64": "0.3.3",
+    "node-uuid": "^1.4.8",
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
-    "sinon-test": "^1.0.2",
     "uws": "^0.14.1"
   },
   "devDependencies": {
-    "mocha": "*",
-    "mockery": "^2.0.0",
-    "node-int64": "0.3.3",
-    "sinon": "*",
+    "babel-eslint": "^8.2.2",
+    "eslint": "^4.19.1",
+    "eslint-config-airbnb": "^16.1.0",
+    "eslint-config-streamr": "^1.1.7",
+    "eslint-loader": "^1.9.0",
+    "eslint-plugin-flowtype": "^2.46.1",
+    "eslint-plugin-import": "^2.10.0",
+    "eslint-plugin-jsx-a11y": "^6.0.3",
+    "eslint-plugin-react": "^7.7.0",
+    "jest": "^23.4.2",
+    "sinon": "^2.0.0",
     "supertest": "^3.0.0"
   }
 }

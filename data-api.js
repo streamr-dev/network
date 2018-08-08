@@ -1,43 +1,64 @@
-var argv = require('optimist')
-	.usage('Usage: $0 --data-topic <topic> --zookeeper <conn_string> --redis <redis_hosts_separated_by_commas> --redis-pwd <password> --cassandra <cassandra_hosts_separated_by_commas> --keyspace <cassandra_keyspace> --streamr <streamr> --port <port>')
-	.demand(['data-topic', 'zookeeper', 'redis', 'redis-pwd', 'cassandra', 'keyspace', 'streamr', 'port'])
-	.argv
+const http = require('http')
+const cors = require('cors')
+const express = require('express')
+const ws = require('uws')
+let optimist = require('optimist')
 
-var StreamFetcher = require('./lib/stream-fetcher')
-var WebsocketServer = require('./lib/WebsocketServer')
-var RedisHelper = require('./lib/redis-helper')
-var RedisOffsetFetcher = require('./lib/redis-offset-fetcher')
-var CassandraHelper = require('./lib/cassandra-helper')
-const StreamrKafkaProducer = require('./lib/StreamrKafkaProducer')
-const partitioner = require('./lib/partitioner')
+const StreamFetcher = require('./src/StreamFetcher')
+const WebsocketServer = require('./src/WebsocketServer')
+const RedisUtil = require('./src/RedisUtil')
+const RedisOffsetFetcher = require('./src/RedisOffsetFetcher')
+const CassandraUtil = require('./src/CassandraUtil')
+const StreamrKafkaProducer = require('./src/KafkaUtil')
+const Partitioner = require('./src/Partitioner')
 
-var cors = require('cors')
-var app = require('express')()
-var http = require('http').Server(app)
+// Check command line args
+optimist = optimist.usage(`You must pass the following command line options:
+    --data-topic <topic> 
+    --zookeeper <conn_string> 
+    --redis <redis_hosts_separated_by_commas> 
+    --redis-pwd <password> 
+    --cassandra <cassandra_hosts_separated_by_commas> 
+    --keyspace <cassandra_keyspace> 
+    --streamr <streamr> 
+    --port <port>`)
+optimist = optimist.demand(['data-topic', 'zookeeper', 'redis', 'redis-pwd', 'cassandra', 'keyspace', 'streamr', 'port'])
 
-var streamFetcher = new StreamFetcher(argv['streamr'])
-var redis = new RedisHelper(argv.redis.split(","), argv['redis-pwd'])
-var cassandra = new CassandraHelper(argv.cassandra.split(","), argv.keyspace)
-var redisOffsetFetcher = new RedisOffsetFetcher(argv.redis.split(",")[0], argv['redis-pwd'])
-const kafka = new StreamrKafkaProducer(argv['data-topic'], partitioner, argv['zookeeper'])
+// Create some utils
+const streamFetcher = new StreamFetcher(optimist.argv.streamr)
+const redis = new RedisUtil(optimist.argv.redis.split(','), optimist.argv['redis-pwd'])
+const cassandra = new CassandraUtil(optimist.argv.cassandra.split(','), optimist.argv.keyspace)
+const redisOffsetFetcher = new RedisOffsetFetcher(optimist.argv.redis.split(',')[0], optimist.argv['redis-pwd'])
+const kafka = new StreamrKafkaProducer(optimist.argv['data-topic'], Partitioner, optimist.argv.zookeeper)
 
+// Create HTTP server
+const app = express()
+const httpServer = http.Server(app)
+
+// Add CORS headers
 app.use(cors())
 
-/**
- * Streaming endpoints
- */
-var server = new WebsocketServer(http, redis, cassandra, redisOffsetFetcher, null, streamFetcher)
+// Websocket endpoint is handled by WebsocketServer
+const server = new WebsocketServer(
+    new ws.Server({
+        server: httpServer,
+        path: '/api/v1/ws',
+    }),
+    redis,
+    cassandra,
+    redisOffsetFetcher,
+    streamFetcher,
+)
 
-/**
- * REST endpoints
- */
-app.use('/api/v1', require('./lib/rest-endpoints')(cassandra, streamFetcher))
-app.use('/api/v1', require('./lib/rest-produce-endpoints')(streamFetcher, kafka, partitioner))
+// Rest endpoints
+app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(cassandra, streamFetcher))
+app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, kafka, Partitioner))
 
-http.listen(argv.port, function() {
-	console.log("Configured with Redis: " + argv.redis)
-	console.log("Configured with Cassandra: " + argv.cassandra)
-	console.log("Configured with Kafka: " + argv['zookeeper'] + " and topic '" + argv['data-topic'] + "'")
-	console.log("Configured with Streamr: " + argv['streamr'])
-	console.log("Listening on port "+argv.port)
+// Start the server
+httpServer.listen(optimist.argv.port, () => {
+    console.log(`Configured with Redis: ${optimist.argv.redis}`)
+    console.log(`Configured with Cassandra: ${optimist.argv.cassandra}`)
+    console.log(`Configured with Kafka: ${optimist.argv.zookeeper} and topic '${optimist.argv['data-topic']}'`)
+    console.log(`Configured with Streamr: ${optimist.argv.streamr}`)
+    console.log(`Listening on port ${optimist.argv.port}`)
 })
