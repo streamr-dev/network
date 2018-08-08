@@ -1,28 +1,21 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const debug = require('debug')('produce handler')
 const StreamrBinaryMessage = require('../protocol/StreamrBinaryMessage')
+const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
+const FailedToPublishError = require('../errors/FailedToPublishError')
+const NotReadyError = require('../errors/NotReadyError')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
 /**
  * Endpoint for POSTing data to streams
  */
-module.exports = (streamFetcher, kafka, partitioner) => {
+module.exports = (streamFetcher, publisher) => {
     if (!streamFetcher) {
         throw new Error('No StreamFetcher given! Must use: new StreamrDataApi(streamrUrl)')
     }
-    if (!kafka) {
-        throw new Error('No StreamrKafkaProducer given! Must use: new StreamrDataApi(authenticator, kafka)')
+    if (!publisher) {
+        throw new Error('Publisher not given!')
     }
-    if (!partitioner) {
-        throw new Error('Partitioner not given!')
-    }
-
-    let kafkaReady = false
-    kafka.on('ready', () => {
-        kafkaReady = true
-        debug('Kafka is ready')
-    })
 
     const router = express.Router()
 
@@ -37,6 +30,7 @@ module.exports = (streamFetcher, kafka, partitioner) => {
         authenticationMiddleware(streamFetcher, 'write'),
         // Produce request handler
         (req, res) => {
+            // Validate body
             if (!req.body || !req.body.length) {
                 res.status(400).send({
                     error: 'No request body or invalid request body.',
@@ -44,7 +38,8 @@ module.exports = (streamFetcher, kafka, partitioner) => {
                 return
             }
 
-            let ttl = 0
+            // Validate ttl if given
+            let ttl
             if (req.query.ttl) {
                 ttl = Number(req.query.ttl)
                 if (!ttl) {
@@ -55,29 +50,37 @@ module.exports = (streamFetcher, kafka, partitioner) => {
                 }
             }
 
-            // req.stream is written by authentication middleware
-            const streamPartition = partitioner.partition(req.stream.partitions, req.query.pkey)
-
-            if (!kafkaReady) {
-                console.error('Kafka not ready')
-                res.status(503).send({
-                    error: 'Server instance not ready to produce, please try again',
-                })
-            } else {
-                kafka.send(
-                    new StreamrBinaryMessage(req.params.id, streamPartition, new Date(), ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, req.body),
-                    (err) => {
-                        if (err) {
-                            console.error('Producing to Kafka failed: ', err)
-                            res.status(500).send({
-                                error: 'Internal error, sorry',
-                            })
-                        } else {
-                            res.status(200).send()
-                        }
-                    },
-                )
+            // Read timestamp if given
+            let timestamp
+            if (req.query.ts) {
+                // Try millis
+                timestamp = Number(req.query.ts) || Date.parse(req.query.ts)
+                if (Number.isNaN(timestamp)) {
+                    res.status(400).send({
+                        error: `Invalid timestamp: ${req.query.ts}`,
+                    })
+                    return
+                }
             }
+
+            // req.stream is written by authentication middleware
+            publisher.publish(req.stream, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, req.body, req.query.pkey).then(() => {
+                res.status(200).send(/* empty success response */)
+            }).catch((err) => {
+                if (err instanceof InvalidMessageContentError) {
+                    res.status(400).send({
+                        error: err.message,
+                    })
+                } else if (err instanceof FailedToPublishError) {
+                    res.status(500).send({
+                        error: 'Internal error, sorry',
+                    })
+                } else if (err instanceof NotReadyError) {
+                    res.status(503).send({
+                        error: err.message,
+                    })
+                }
+            })
         },
     )
 

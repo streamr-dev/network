@@ -1,15 +1,22 @@
-const assert = require('assert')
-const EventEmitter = require('events')
 const sinon = require('sinon')
 const express = require('express')
 const request = require('supertest')
+const BufferMaker = require('buffermaker')
 const router = require('../../../src/rest/DataProduceEndpoints')
+const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage')
+
+const FailedToPublishError = require('../../../src/errors/FailedToPublishError')
+const NotReadyError = require('../../../src/errors/NotReadyError')
 
 describe('DataProduceEndpoints', () => {
+    const stream = {
+        streamId: 'streamId',
+        partitions: 10,
+    }
+
     let app
     let streamFetcher
-    let partitioner
-    let kafka
+    let publisherMock
 
     function postRequest(overridingOptions = {}) {
         const opts = Object.assign({
@@ -41,143 +48,129 @@ describe('DataProduceEndpoints', () => {
         app = express()
 
         streamFetcher = {
-            authenticate: sinon.stub().resolves({
-                streamId: 'streamId', partitions: 10,
-            }),
-        }
-        kafka = new EventEmitter()
-        kafka.send = sinon.stub().yields()
-
-        partitioner = {
-            partition: sinon.stub().returns(0),
+            authenticate: sinon.stub().resolves(stream),
         }
 
-        app.use(router(streamFetcher, kafka, partitioner))
+        publisherMock = {
+            publish: sinon.stub().resolves(),
+        }
+
+        app.use(router(streamFetcher, publisherMock))
     })
 
-    describe('producing before kafka is ready', () => {
-        it('returns 503', (done) => {
-            postRequest()
-                .expect(503, done)
-        })
+    it('should call Publisher.publish() with correct arguments', () => {
+        postRequest()
+            .expect(200)
+            .end((err) => {
+                if (err) {
+                    throw err
+                }
+            })
+        publisherMock.publish.calledWith(
+            stream,
+            undefined, // timestamp
+            undefined, // ttl
+            StreamrBinaryMessage.CONTENT_TYPE_JSON,
+            new BufferMaker().string('{}').make(),
+            undefined,
+        )
     })
 
-    describe('producing after kafka is ready', () => {
-        beforeEach(() => {
-            kafka.emit('ready')
+    it('should read ttl from query params', () => {
+        postRequest({
+            query: {
+                ttl: '1000',
+            },
         })
-
-        it('should return 200 for valid requests', (done) => {
-            postRequest()
-                .expect(200, done)
-        })
-
-        it('should return 400 if the body is empty', (done) => {
-            postRequest({
-                streamId: 'streamId',
-                body: '',
-            }).expect(400, done)
-        })
-
-        it('should return 413 (Payload Too Large) if body too large', (done) => {
-            const body = {}
-            for (let i = 0; i < 20000; ++i) {
-                body[`key-${i}`] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
-            }
-            postRequest({
-                body,
+            .expect(200)
+            .end((err) => {
+                if (err) {
+                    throw err
+                }
             })
-                .expect(413, done)
-        })
+        publisherMock.publish.calledWith(
+            stream,
+            undefined, // timestamp
+            1000, // ttl
+            StreamrBinaryMessage.CONTENT_TYPE_JSON,
+            new BufferMaker().string('{}').make(),
+            undefined,
+        )
+    })
 
-        it('should give undefined partition key to partitioner if none is defined', (done) => {
-            postRequest()
-                .expect(200)
-                .end(() => {
-                    assert(partitioner.partition.calledWith(10, undefined))
-                    done()
-                })
-        })
+    it('should read timestamp from query params', () => {
+        const ts = new Date()
 
-        it('should call partitioner using a given partition key', (done) => {
-            postRequest({
-                query: {
-                    pkey: 'foo',
-                },
+        postRequest({
+            query: {
+                ts: ts.toISOString(),
+            },
+        })
+            .expect(200)
+            .end((err) => {
+                if (err) {
+                    throw err
+                }
             })
-                .expect(200)
-                .end(() => {
-                    assert(partitioner.partition.calledWith(10, 'foo'))
-                    done()
-                })
-        })
+        publisherMock.publish.calledWith(
+            stream,
+            ts.getTime(), // timestamp
+            undefined, // ttl
+            StreamrBinaryMessage.CONTENT_TYPE_JSON,
+            new BufferMaker().string('{}').make(),
+            undefined,
+        )
+    })
 
-        it('should produce to kafka', (done) => {
-            postRequest()
-                .expect(200)
-                .end(() => {
-                    assert(kafka.send.calledOnce)
-                    done()
-                })
-        })
+    it('should return 200 for valid requests', (done) => {
+        postRequest()
+            .expect(200, done)
+    })
 
-        it('should call kafka.send() with correct stream id and partition returned by the partitioner', (done) => {
-            partitioner.partition = sinon.stub().withArgs(10, 'pkey').returns(5)
-            postRequest({
-                query: {
-                    pkey: 'pkey',
-                },
-            })
-                .expect(200)
-                .end(() => {
-                    const streamrBinaryMessage = kafka.send.getCall(0).args[0]
-                    assert.equal(streamrBinaryMessage.streamId, 'streamId')
-                    assert.equal(streamrBinaryMessage.streamPartition, 5)
-                    done()
-                })
-        })
+    it('returns 503 if the publisher throws NotReadyError', (done) => {
+        publisherMock.publish = sinon.stub().rejects(new NotReadyError())
 
-        it('should use current timestamp by default', (done) => {
-            const timestamp = Date.now()
-            postRequest()
-                .expect(200)
-                .end(() => {
-                    const streamrBinaryMessage = kafka.send.getCall(0).args[0]
-                    assert(streamrBinaryMessage.timestamp >= timestamp, `${streamrBinaryMessage.timestamp} >= ${timestamp}`)
-                    const now = Date.now()
-                    assert(streamrBinaryMessage.timestamp <= now, `${streamrBinaryMessage} <= ${now}`)
-                    done()
-                })
-        })
+        postRequest()
+            .expect(503, done)
+    })
 
-        it('should use ttl if given', (done) => {
-            const ttl = 30
+    it('should return 400 if the body is empty', (done) => {
+        postRequest({
+            streamId: 'streamId',
+            body: '',
+        }).expect(400, done)
+    })
 
-            postRequest({
-                query: {
-                    ttl: ttl.toString(),
-                },
-            })
-                .expect(200)
-                .end(() => {
-                    const streamrBinaryMessage = kafka.send.getCall(0).args[0]
-                    assert.equal(streamrBinaryMessage.ttl, ttl)
-                    done()
-                })
-        })
+    it('should return 400 for invalid ttl', (done) => {
+        postRequest({
+            query: {
+                ttl: 'foo',
+            },
+        }).expect(400, done)
+    })
 
-        it('should return 400 for invalid ttl', (done) => {
-            postRequest({
-                query: {
-                    ttl: 'foo',
-                },
-            }).expect(400, done)
-        })
+    it('should return 400 for invalid timestamp', (done) => {
+        postRequest({
+            query: {
+                ts: 'foo',
+            },
+        }).expect(400, done)
+    })
 
-        it('returns 500 if there is an error producing to kafka', (done) => {
-            kafka.send = sinon.stub().yields('error')
-            postRequest()
-                .expect(500, done)
+    it('should return 413 (Payload Too Large) if body too large', (done) => {
+        const body = {}
+        for (let i = 0; i < 20000; ++i) {
+            body[`key-${i}`] = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
+        }
+        postRequest({
+            body,
         })
+            .expect(413, done)
+    })
+
+    it('returns 500 if there is an error producing to kafka', (done) => {
+        publisherMock.publish = sinon.stub().rejects(new FailedToPublishError())
+        postRequest()
+            .expect(500, done)
     })
 })
