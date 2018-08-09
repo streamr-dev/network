@@ -52,8 +52,13 @@ module.exports = class Connection extends EventEmitter {
             }
 
             this.socket.onmessage = (messageEvent) => {
-                const decoded = decodeBrowserWrapper(messageEvent.data)
-                this.emit(decoded.type, decodeMessage(decoded.type, decoded.msg), decoded.subId)
+                try {
+                    const decodedWrapper = decodeBrowserWrapper(messageEvent.data)
+                    const decodedMessage = decodeMessage(decodedWrapper.type, decodedWrapper.msg)
+                    this.emit(decodedWrapper.type, decodedMessage, decodedWrapper.subId)
+                } catch (err) {
+                    this.emit('error', err)
+                }
             }
         }
     }

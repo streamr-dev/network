@@ -1,9 +1,10 @@
-import EventEmitter from 'eventemitter3'
 import assert from 'assert'
+import EventEmitter from 'eventemitter3'
 import mockery from 'mockery'
 import sinon from 'sinon'
 import debug from 'debug'
 import Subscription from '../../src/Subscription'
+import { messageCodesByType } from '../../src/Protocol'
 
 const mockDebug = debug('mock')
 
@@ -38,9 +39,7 @@ describe('StreamrClient', () => {
 
     // ['version', 'streamId', 'streamPartition', 'timestamp', 'ttl', 'offset', 'previousOffset', 'contentType', 'content']
 
-    function msg(streamId, offset, content, subId, forcePreviousOffset) {
-        content = content || {}
-
+    function msg(streamId, offset, content = {}, subId, forcePreviousOffset) {
         // unicast message to subscription
         if (subId != null) {
             return [
@@ -80,13 +79,13 @@ describe('StreamrClient', () => {
     function createSocketMock() {
         const s = new EventEmitter()
 
-        s.connect = function () {
+        s.connect = () => {
             async(() => {
                 s.onopen()
             })
         }
 
-        s.disconnect = function () {
+        s.disconnect = () => {
             async(() => {
                 if (!s.done) {
                     mockDebug('socket.disconnect: emitting disconnect')
@@ -95,7 +94,7 @@ describe('StreamrClient', () => {
             })
         }
 
-        s.subscribeHandler = function (request) {
+        s.subscribeHandler = (request) => {
             async(() => {
                 s.fakeReceive([0, 2, null, {
                     stream: request.stream, partition: 0,
@@ -103,7 +102,7 @@ describe('StreamrClient', () => {
             })
         }
 
-        s.unsubscribeHandler = function (request) {
+        s.unsubscribeHandler = (request) => {
             async(() => {
                 s.fakeReceive([0, 3, null, {
                     stream: request.stream, partition: 0,
@@ -111,12 +110,12 @@ describe('StreamrClient', () => {
             })
         }
 
-        s.resendHandler = function (request) {
-            throw `Unexpected message ${request}`
+        s.resendHandler = (request) => {
+            throw new Error(`Unexpected message ${request}`)
         }
 
-        s.send = function (msg) {
-            const parsed = JSON.parse(msg)
+        s.send = (msgToSend) => {
+            const parsed = JSON.parse(msgToSend)
             if (parsed.type === 'subscribe') {
                 s.subscribeHandler(parsed)
             } else if (parsed.type === 'unsubscribe') {
@@ -124,19 +123,19 @@ describe('StreamrClient', () => {
             } else if (parsed.type === 'resend') {
                 s.resendHandler(parsed)
             } else {
-                throw `Unexpected message of type ${parsed.type}`
+                throw new Error(`Unexpected message of type ${parsed.type}`)
             }
         }
 
-        s.fakeReceive = function (msg) {
+        s.fakeReceive = (msgToReceive) => {
             if (!s.done) {
                 s.onmessage({
-                    data: JSON.stringify(msg),
+                    data: JSON.stringify(msgToReceive),
                 })
             }
         }
 
-        s.close = function () {
+        s.close = () => {
             s.disconnect()
         }
 
@@ -147,8 +146,8 @@ describe('StreamrClient', () => {
         mockery.enable()
 
         // Must return a function since it's called with new
-        mockery.registerMock('ws', function(uri, opts) {
-            wsMockCalls++
+        mockery.registerMock('ws', (uri, opts) => {
+            wsMockCalls += 1
 
             // Create new sockets for subsequent calls
             if (wsMockCalls > 1) {
@@ -181,7 +180,7 @@ describe('StreamrClient', () => {
 
     describe('connect', () => {
         it('should send pending subscribes', (done) => {
-            const subscription = client.subscribe('stream1', 'auth', (message) => {})
+            client.subscribe('stream1', 'auth', () => {})
             client.connect()
 
             client.connection.on('subscribed', (request) => {
@@ -194,9 +193,9 @@ describe('StreamrClient', () => {
         it('should not send anything on connect if not subscribed to anything', (done) => {
             client.connect()
 
-            client.connection.send = function () {
+            client.connection.send = () => {
                 if (this.event !== 'connect') {
-                    throw `Unexpected send: ${this.event}`
+                    throw new Error(`Unexpected send: ${this.event}`)
                 }
             }
 
@@ -224,8 +223,8 @@ describe('StreamrClient', () => {
 
         it('should not try to connect while connecting', (done) => {
             client.options.autoConnect = true
-            client.subscribe('stream1', 'auth', (message) => {})
-            client.subscribe('stream2', 'auth', (message) => {})
+            client.subscribe('stream1', 'auth', () => {})
+            client.subscribe('stream2', 'auth', () => {})
 
             assert.equal(wsMockCalls, 1)
             socket.done = true
@@ -235,7 +234,7 @@ describe('StreamrClient', () => {
 
     describe('reconnect', () => {
         it('should emit a subscribed event on reconnect', (done) => {
-            const subscription = client.subscribe('stream1', 'auth', (message) => {})
+            client.subscribe('stream1', 'auth', () => {})
             client.connect()
 
             // connect-disconnect-connect
@@ -257,15 +256,15 @@ describe('StreamrClient', () => {
         })
 
         it('should not emit a subscribed event for unsubscribed streams on reconnect', (done) => {
-            const sub1 = client.subscribe('stream1', 'auth', (message) => {})
-            const sub2 = client.subscribe('stream2', 'auth', (message) => {})
+            const sub1 = client.subscribe('stream1', 'auth', () => {})
+            const sub2 = client.subscribe('stream2', 'auth', () => {})
             client.connect()
 
             // when subscribed, a bye message is received, leading to an unsubscribe
-            client.connection.on('subscribed', (response) => {
+            client.connection.on('subscribed', () => {
                 if (sub1.getState() === Subscription.State.subscribed && sub2.getState() === Subscription.State.subscribed) {
                     client.unsubscribe(sub1)
-                    client.connection.once('unsubscribed', (response) => {
+                    client.connection.once('unsubscribed', () => {
                         socket.disconnect()
 
                         client.connection.on('subscribed', (request) => {
@@ -282,7 +281,7 @@ describe('StreamrClient', () => {
         it('should emit a subscribed event on reconnect for topics subscribed after initial connect', (done) => {
             client.connect()
             client.connection.once('connected', () => {
-                client.subscribe('stream1', 'auth', (message) => {})
+                client.subscribe('stream1', 'auth', () => {})
                 client.connection.once('subscribed', () => {
                     socket.disconnect()
                     client.connection.once('subscribed', (request) => {
@@ -325,7 +324,7 @@ describe('StreamrClient', () => {
                 })
                 client.subscribe({
                     stream: 'stream1', apiKey: 'auth',
-                }, (message) => {})
+                }, () => {})
             })
         })
 
@@ -337,12 +336,12 @@ describe('StreamrClient', () => {
                     socket.done = true
                     done()
                 })
-                client.subscribe('stream1', (message) => {})
+                client.subscribe('stream1', () => {})
             })
         })
 
         it('should add any subscription options to subscription request', (done) => {
-            socket.subscribeHandler = function (request) {
+            socket.subscribeHandler = (request) => {
                 assert.equal(request.foo, 'bar')
                 socket.done = true
                 done()
@@ -352,12 +351,12 @@ describe('StreamrClient', () => {
             client.connection.once('connected', () => {
                 client.subscribe({
                     stream: 'stream1', apiKey: 'auth', foo: 'bar',
-                }, (message) => {})
+                }, () => {})
             })
         })
 
         it('should add legacy subscription options to subscription request', (done) => {
-            socket.subscribeHandler = function (request) {
+            socket.subscribeHandler = (request) => {
                 assert.equal(request.foo, 'bar')
                 socket.done = true
                 done()
@@ -367,14 +366,14 @@ describe('StreamrClient', () => {
             client.connection.once('connected', () => {
                 client.subscribe({
                     stream: 'stream1', apiKey: 'auth',
-                }, (message) => {}, {
+                }, () => {}, {
                     foo: 'bar',
                 })
             })
         })
 
         it('should ignore any subscription options that conflict with required ones', (done) => {
-            socket.subscribeHandler = function (request) {
+            socket.subscribeHandler = (request) => {
                 assert.equal(request.stream, 'stream1')
                 socket.done = true
                 done()
@@ -382,14 +381,14 @@ describe('StreamrClient', () => {
 
             client.connect()
             client.connection.once('connected', () => {
-                client.subscribe('stream1', 'auth', (message) => {}, {
+                client.subscribe('stream1', 'auth', () => {}, {
                     stream: 'wrong',
                 })
             })
         })
 
         it('should mark Subscriptions as subscribed when the server responds with subscribed', (done) => {
-            const subscription = client.subscribe('stream1', 'auth', (message) => {})
+            const subscription = client.subscribe('stream1', 'auth', () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
@@ -399,17 +398,17 @@ describe('StreamrClient', () => {
         })
 
         it('should trigger an error event on the client if the subscribe fails', (done) => {
-            socket.subscribeHandler = function (request) {
-                socket.fakeReceive([0, 2, null, {
+            socket.subscribeHandler = (request) => {
+                socket.fakeReceive([0, messageCodesByType.subscribed, null, {
                     stream: request.stream, partition: 0, error: 'error message',
                 }])
             }
 
-            client.subscribe('stream1', 'auth', (message) => {})
+            client.subscribe('stream1', 'auth', () => {})
             client.connect()
 
-            client.on('error', (msg) => {
-                assert(msg.indexOf('error message' >= 0))
+            client.on('error', (err) => {
+                assert(err.indexOf('error message' >= 0))
                 done()
             })
         })
@@ -417,33 +416,35 @@ describe('StreamrClient', () => {
         it('should connect if autoConnect is set to true', (done) => {
             client.options.autoConnect = true
             client.connect = done
-            client.subscribe('stream1', 'auth', (message) => {})
+            client.subscribe('stream1', 'auth', () => {})
         })
 
         it('should send only one subscribe request to server even if there are multiple subscriptions for same stream', (done) => {
             let subscribeCount = 0
-            socket.on('subscribe', (request) => {
-                subscribeCount++
+            socket.on('subscribe', () => {
+                subscribeCount += 1
                 if (subscribeCount > 1) {
-                    throw 'Only one subscribe request should be sent to the server!'
+                    throw new Error('Only one subscribe request should be sent to the server!')
                 }
             })
 
-            const sub1 = client.subscribe('stream1', 'auth', (message) => {})
-            const sub2 = client.subscribe('stream1', 'auth', (message) => {})
+            const sub1 = client.subscribe('stream1', 'auth', () => {})
+            const sub2 = client.subscribe('stream1', 'auth', () => {})
             client.connect()
 
+            const checkedSubs = {}
+
             function check(sub) {
-                sub._ack = true
-                if (sub1._ack && sub2._ack) {
+                checkedSubs[sub.id] = true
+                if (checkedSubs[sub1.id] && checkedSubs[sub2.id]) {
                     done()
                 }
             }
 
-            sub1.on('subscribed', (response) => {
+            sub1.on('subscribed', () => {
                 check(sub1)
             })
-            sub2.on('subscribed', (response) => {
+            sub2.on('subscribed', () => {
                 check(sub2)
             })
         })
@@ -453,8 +454,8 @@ describe('StreamrClient', () => {
         it('should emit a resend request after subscribed', (done) => {
             const sub = client.subscribe({
                 stream: 'stream1', apiKey: 'auth', resend_all: true,
-            }, (message) => {})
-            socket.resendHandler = function (request) {
+            }, () => {})
+            socket.resendHandler = (request) => {
                 assert.equal(request.resend_all, true)
                 assert.equal(sub.getState() === Subscription.State.subscribed, true)
                 socket.done = true
@@ -464,7 +465,7 @@ describe('StreamrClient', () => {
         })
 
         it('should emit a resend request with given other options', (done) => {
-            socket.resendHandler = function (request) {
+            socket.resendHandler = (request) => {
                 assert.equal(request.resend_all, true)
                 assert.equal(request.foo, 'bar')
                 socket.done = true
@@ -472,7 +473,7 @@ describe('StreamrClient', () => {
             }
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth', resend_all: true, foo: 'bar',
-            }, (message) => {})
+            }, () => {})
             client.connect()
         })
 
@@ -480,34 +481,30 @@ describe('StreamrClient', () => {
             assert.throws(() => {
                 client.subscribe({
                     stream: 'stream1', apiKey: 'auth', resend_all: true, resend_last: 5,
-                }, (message) => {})
+                }, () => {})
             })
         })
 
         it('should resend to multiple subscriptions as per each resend option', (done) => {
-            socket.resendHandler = function (request) {
-                const unicastCode = 1
-                const resendingCode = 4
-                const resentCode = 5
-
+            socket.resendHandler = (request) => {
                 if (request.resend_all) {
                     async(() => {
-                        socket.fakeReceive([0, resendingCode, request.sub, {
+                        socket.fakeReceive([0, messageCodesByType.resending, request.sub, {
                             stream: 'stream1', partition: 0,
                         }])
-                        socket.fakeReceive([0, unicastCode, request.sub, msg('stream1', 0, request.sub)])
-                        socket.fakeReceive([0, unicastCode, request.sub, msg('stream1', 1, request.sub)])
-                        socket.fakeReceive([0, resentCode, request.sub, {
+                        socket.fakeReceive([0, messageCodesByType.u, request.sub, msg('stream1', 0, request.sub)])
+                        socket.fakeReceive([0, messageCodesByType.u, request.sub, msg('stream1', 1, request.sub)])
+                        socket.fakeReceive([0, messageCodesByType.resent, request.sub, {
                             stream: 'stream1', partition: 0,
                         }])
                     })
                 } else if (request.resend_last === 1) {
                     async(() => {
-                        socket.fakeReceive([0, resendingCode, request.sub, {
+                        socket.fakeReceive([0, messageCodesByType.resending, request.sub, {
                             stream: 'stream1', partition: 0,
                         }])
-                        socket.fakeReceive([0, unicastCode, request.sub, msg('stream1', 1, request.sub)])
-                        socket.fakeReceive([0, resentCode, request.sub, {
+                        socket.fakeReceive([0, messageCodesByType.u, request.sub, msg('stream1', 1, request.sub)])
+                        socket.fakeReceive([0, messageCodesByType.resent, request.sub, {
                             stream: 'stream1', partition: 0,
                         }])
                     })
@@ -517,22 +514,22 @@ describe('StreamrClient', () => {
             let sub1count = 0
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth', resend_all: true,
-            }, (message) => {
-                sub1count++
+            }, () => {
+                sub1count += 1
             })
 
             let sub2count = 0
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth', resend_last: 1,
-            }, (message) => {
-                sub2count++
+            }, () => {
+                sub2count += 1
             })
 
             client.connect()
 
             let subCount = 0
-            client.connection.on('disconnected', (request) => {
-                subCount++
+            client.connection.on('disconnected', () => {
+                subCount += 1
                 assert.equal(subCount, 1)
                 assert.equal(sub1count, 2)
                 assert.equal(sub2count, 1)
@@ -544,17 +541,13 @@ describe('StreamrClient', () => {
         })
 
         it('should not crash on resent if bye message is received while resending', (done) => {
-            socket.resendHandler = function (request) {
-                const broadcastCode = 0
-                const resendingCode = 4
-                const resentCode = 5
-
+            socket.resendHandler = (request) => {
                 async(() => {
-                    socket.fakeReceive([0, resendingCode, request.sub, {
+                    socket.fakeReceive([0, messageCodesByType.resending, request.sub, {
                         stream: 'stream1', partition: 0,
                     }])
-                    socket.fakeReceive([0, broadcastCode, null, byeMsg('stream1', 0)])
-                    socket.fakeReceive([0, resentCode, request.sub, {
+                    socket.fakeReceive([0, messageCodesByType.b, null, byeMsg('stream1', 0)])
+                    socket.fakeReceive([0, messageCodesByType.resent, request.sub, {
                         stream: 'stream1', partition: 0,
                     }])
                     done()
@@ -563,33 +556,30 @@ describe('StreamrClient', () => {
 
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth', resend_all: true,
-            }, (message) => {})
+            }, () => {})
             client.connect()
         })
 
         it('should not crash if messages exist after the bye message', (done) => {
-            socket.resendHandler = function (request) {
-                async(() => {
-                    const broadcastCode = 0
-                    const unicastCode = 1
-                    const resendingCode = 4
-                    const resentCode = 5
+            let sub
 
-                    socket.fakeReceive([0, resendingCode, request.sub, {
+            socket.resendHandler = (request) => {
+                async(() => {
+                    socket.fakeReceive([0, messageCodesByType.resending, request.sub, {
                         stream: 'stream1', partition: 0,
                     }])
-                    socket.fakeReceive([0, broadcastCode, request.sub, byeMsg('stream1', 0)])
-                    socket.fakeReceive([0, unicastCode, request.sub, msg('stream1', 1, sub.id)])
-                    socket.fakeReceive([0, resentCode, request.sub, {
+                    socket.fakeReceive([0, messageCodesByType.b, request.sub, byeMsg('stream1', 0)])
+                    socket.fakeReceive([0, messageCodesByType.u, request.sub, msg('stream1', 1, sub.id)])
+                    socket.fakeReceive([0, messageCodesByType.resent, request.sub, {
                         stream: 'stream1', sub: sub.id,
                     }])
                     done()
                 })
             }
 
-            let sub = client.subscribe({
+            sub = client.subscribe({
                 stream: 'stream1', apiKey: 'auth', resend_all: true,
-            }, (message) => {})
+            }, () => {})
             client.connect()
         })
     })
@@ -603,8 +593,7 @@ describe('StreamrClient', () => {
             })
             client.connect()
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
             })
         })
 
@@ -612,8 +601,8 @@ describe('StreamrClient', () => {
             let callbackCounter = 0
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {
-                ++callbackCounter
+            }, () => {
+                callbackCounter += 1
                 assert.equal(callbackCounter, 1)
                 done()
             })
@@ -621,13 +610,12 @@ describe('StreamrClient', () => {
 
             client.connection.once('subscribed', () => {
                 // Fake message
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
             })
         })
 
@@ -645,20 +633,19 @@ describe('StreamrClient', () => {
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0, {
                     count: 0,
                 })])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 1, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 1, {
                     count: 1,
                 })])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 2, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 2, {
                     count: 2,
                 })])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 3, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 3, {
                     count: 3,
                 })])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 4, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 4, {
                     count: 4,
                 })])
             })
@@ -668,14 +655,13 @@ describe('StreamrClient', () => {
             let processed = false
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {
+            }, () => {
                 processed = true
             })
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, byeMsg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, byeMsg('stream1', 0)])
             })
 
             client.connection.once('unsubscribed', (response) => {
@@ -685,33 +671,33 @@ describe('StreamrClient', () => {
             })
         })
 
-        it('should direct messages to specific subscriptions if the messages contain the _sub key', (done) => {
-            let numReceived = 0
+        it('should direct messages to specific subscriptions for unicast messages', (done) => {
+            let receiveCounterSub1 = 0
+            let receiveCounterSub2 = 0
             const sub1 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {
-                ++numReceived
-                if (numReceived === 2) {
+            }, () => {
+                receiveCounterSub1 += 1
+                if (receiveCounterSub1 === 2) {
                     done()
                 }
             })
 
             const sub2 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {
-                throw 'sub1 should not have received a message!'
+            }, () => {
+                receiveCounterSub2 += 1
+                if (receiveCounterSub2 > 1) {
+                    throw new Error('sub2 should not have received a second message!')
+                }
             })
 
             client.connect()
             sub2.on('subscribed', () => {
-                const broadcastCode = 0
-                const unicastCode = 1
-
-                assert.throws(() => {
-                    // Received by sub2
-                    socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                })
-                socket.fakeReceive([0, unicastCode, sub1.id, msg('stream1', 1)])
+                // Received by sub1 and sub2
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                // Received by sub1 only
+                socket.fakeReceive([0, messageCodesByType.u, sub1.id, msg('stream1', 1)])
             })
         })
 
@@ -727,8 +713,7 @@ describe('StreamrClient', () => {
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0, {
                     count: 0,
                 })])
             })
@@ -739,7 +724,7 @@ describe('StreamrClient', () => {
         it('should fire the unsubscribed event', (done) => {
             const sub = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
             sub.on('subscribed', () => {
                 client.unsubscribe(sub)
@@ -752,7 +737,7 @@ describe('StreamrClient', () => {
         it('should unsubscribe the client from a stream when there are no more subscriptions for that stream', (done) => {
             const sub = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
@@ -767,7 +752,7 @@ describe('StreamrClient', () => {
         it('should not send another unsubscribed event if the same Subscription is unsubscribed multiple times', (done) => {
             const sub = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
@@ -777,7 +762,7 @@ describe('StreamrClient', () => {
             client.connection.once('unsubscribed', () => {
                 setTimeout(() => {
                     client.connection.once('unsubscribed', () => {
-                        throw 'Unsubscribed event sent more than once for same Subscription!'
+                        throw new Error('Unsubscribed event sent more than once for same Subscription!')
                     })
                     client.unsubscribe(sub)
                     done()
@@ -788,18 +773,18 @@ describe('StreamrClient', () => {
         it('should not unsubscribe the client from a stream when there are subscriptions remaining for that stream', (done) => {
             const sub1 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             const sub2 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.on('unsubscribed', () => {
-                throw 'Socket should not have unsubscribed'
+                throw new Error('Socket should not have unsubscribed')
             })
 
             sub1.on('unsubscribed', () => {
-                throw 'sub1 should not have unsubscribed'
+                throw new Error('sub1 should not have unsubscribed')
             })
 
             sub2.on('unsubscribed', () => {
@@ -814,14 +799,14 @@ describe('StreamrClient', () => {
         it('should not send an unsubscribe request again if unsubscribe is called multiple times', (done) => {
             let count = 0
             const defaultUnusubscribeHandler = socket.unsubscribeHandler
-            socket.unsubscribeHandler = function (request) {
-                ++count
+            socket.unsubscribeHandler = (request) => {
+                count += 1
                 defaultUnusubscribeHandler(request)
             }
 
             const sub = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
@@ -838,7 +823,7 @@ describe('StreamrClient', () => {
         })
 
         it('should throw an error if no Subscription is given', () => {
-            const sub = client.subscribe('stream1', 'auth', (message) => {})
+            const sub = client.subscribe('stream1', 'auth', () => {})
             client.connect()
 
             sub.on('subscribed', () => {
@@ -851,7 +836,7 @@ describe('StreamrClient', () => {
         it('should throw error if Subscription is of wrong type', () => {
             const sub = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             sub.on('subscribed', () => {
@@ -864,8 +849,8 @@ describe('StreamrClient', () => {
         it('should handle messages after resubscribing', (done) => {
             const sub = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {
-                throw 'This message handler should not be called'
+            }, () => {
+                throw new Error('This message handler should not be called')
             })
             client.connect()
 
@@ -883,8 +868,7 @@ describe('StreamrClient', () => {
                     done()
                 })
                 newSub.on('subscribed', () => {
-                    const broadcastCode = 0
-                    socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0, {
+                    socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0, {
                         count: 0,
                     })])
                 })
@@ -896,11 +880,11 @@ describe('StreamrClient', () => {
 
             const sub1 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
-            const sub2 = client.subscribe('stream2', 'auth', (message) => {})
+            }, () => {})
+            const sub2 = client.subscribe('stream2', 'auth', () => {})
             client.connect()
 
-            client.connection.on('subscribed', (response) => {
+            client.connection.on('subscribed', () => {
                 if (sub1.getState() === Subscription.State.subscribed && sub2.getState() === Subscription.State.subscribed) {
                     client.unsubscribe(sub1)
                     client.unsubscribe(sub2)
@@ -917,26 +901,23 @@ describe('StreamrClient', () => {
         it('should disconnect if all subscriptions are done during resend', (done) => {
             client.options.autoDisconnect = true
 
-            socket.resendHandler = function (request) {
-                const resendingCode = 4
-                socket.fakeReceive([0, resendingCode, null, {
+            socket.resendHandler = (request) => {
+                socket.fakeReceive([0, messageCodesByType.resending, null, {
                     stream: request.stream, partition: 0, sub: request.sub,
                 }])
             }
 
-            const sub1 = client.subscribe({
+            client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {}, {
+            }, () => {}, {
                 resend_all: true,
             })
             client.connect()
 
             client.connection.on('resending', (request) => {
                 async(() => {
-                    const broadcastCode = 0
-                    const resentCode = 5
-                    socket.fakeReceive([0, broadcastCode, null, byeMsg(request.stream, 0)])
-                    socket.fakeReceive([0, resentCode, null, {
+                    socket.fakeReceive([0, messageCodesByType.b, null, byeMsg(request.stream, 0)])
+                    socket.fakeReceive([0, messageCodesByType.resent, null, {
                         stream: request.stream, partition: 0, sub: request.sub,
                     }])
                 })
@@ -952,15 +933,15 @@ describe('StreamrClient', () => {
 
             const sub1 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
-            const sub2 = client.subscribe('stream2', 'auth', (message) => {})
+            }, () => {})
+            const sub2 = client.subscribe('stream2', 'auth', () => {})
             client.connect()
 
             client.connection.on('disconnected', () => {
-                throw 'Should not have disconnected!'
+                throw new Error('Should not have disconnected!')
             })
 
-            client.connection.on('subscribed', (response) => {
+            client.connection.on('subscribed', () => {
                 if (sub1.getState() === Subscription.State.subscribed && sub2.getState() === Subscription.State.subscribed) {
                     client.unsubscribe(sub1)
                     client.unsubscribe(sub2)
@@ -997,7 +978,7 @@ describe('StreamrClient', () => {
         it('should reset subscriptions when calling disconnect()', (done) => {
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
@@ -1013,7 +994,7 @@ describe('StreamrClient', () => {
         it('should only subscribe to new subscriptions since calling disconnect()', (done) => {
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
@@ -1021,7 +1002,7 @@ describe('StreamrClient', () => {
             })
 
             client.connection.once('disconnected', () => {
-                client.subscribe('stream2', 'auth', (message) => {})
+                client.subscribe('stream2', 'auth', () => {})
                 client.connect()
 
                 client.connection.once('subscribed', (response) => {
@@ -1059,7 +1040,7 @@ describe('StreamrClient', () => {
         it('should not reset subscriptions', (done) => {
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
@@ -1073,12 +1054,10 @@ describe('StreamrClient', () => {
         })
 
         it('should subscribe to both old and new subscriptions after pause-and-connect', (done) => {
-            let sub1,
-                sub2
-
-            sub1 = client.subscribe({
+            let sub2
+            const sub1 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
@@ -1086,7 +1065,7 @@ describe('StreamrClient', () => {
             })
 
             client.connection.once('disconnected', () => {
-                sub2 = client.subscribe('stream2', 'auth', (message) => {})
+                sub2 = client.subscribe('stream2', 'auth', () => {})
 
                 assert(sub1.getState() !== Subscription.State.subscribed)
                 assert(sub2.getState() !== Subscription.State.subscribed)
@@ -1095,7 +1074,7 @@ describe('StreamrClient', () => {
                 assert.equal(client.getSubscriptions('stream2').length, 1)
 
                 client.connect()
-                client.connection.on('subscribed', (response) => {
+                client.connection.on('subscribed', () => {
                     if (sub1.getState() === Subscription.State.subscribed && sub2.getState() === Subscription.State.subscribed) {
                         socket.done = true
                         done()
@@ -1114,7 +1093,8 @@ describe('StreamrClient', () => {
             // all fields in the model request must be equal in actual request
             Object.keys(el).forEach((field) => {
                 if (request[field] !== el[field]) {
-                    throw `Resend request field ${field} does not match expected value! Was: ${JSON.stringify(request)}, expected: ${JSON.stringify(el)}`
+                    throw new Error(`Resend request field ${field} does not match expected value! 
+                    Was: ${JSON.stringify(request)}, expected: ${JSON.stringify(el)}`)
                 }
             })
             validResendRequests.shift()
@@ -1126,22 +1106,18 @@ describe('StreamrClient', () => {
             resendLimits = {}
 
             function resend(stream, sub, from, to) {
-                const unicastCode = 1
-                const resendingCode = 4
-                const resentCode = 5
-
-                socket.fakeReceive([0, resendingCode, null, {
+                socket.fakeReceive([0, messageCodesByType.resending, null, {
                     stream, sub,
                 }])
                 for (let i = from; i <= to; i++) {
-                    socket.fakeReceive([0, unicastCode, sub, msg(stream, i, {}, sub)])
+                    socket.fakeReceive([0, messageCodesByType.u, sub, msg(stream, i, {}, sub)])
                 }
-                socket.fakeReceive([0, resentCode, null, {
+                socket.fakeReceive([0, messageCodesByType.resent, null, {
                     stream, sub,
                 }])
             }
 
-            socket.resendHandler = function (request) {
+            socket.resendHandler = (request) => {
                 mockDebug(`defaultResendHandler: ${JSON.stringify(request)}`)
 
                 // Check that the request is allowed
@@ -1160,20 +1136,25 @@ describe('StreamrClient', () => {
                         }
                     } else if (request.resend_last) {
                         if (resendLimits[request.stream] === undefined) {
-                            throw 'Testing resend_last needs resendLimits.stream.to'
+                            throw new Error('Testing resend_last needs resendLimits.stream.to')
                         }
-                        resend(request.stream, request.sub, resendLimits[request.stream].to - (request.resend_last - 1), resendLimits[request.stream].to)
+                        resend(
+                            request.stream,
+                            request.sub,
+                            resendLimits[request.stream].to - (request.resend_last - 1),
+                            resendLimits[request.stream].to,
+                        )
                     } else if (request.resend_from != null && request.resend_to != null) {
                         resend(request.stream, request.sub, request.resend_from, request.resend_to)
                     } else if (request.resend_from != null) {
                         if (resendLimits[request.stream] === undefined) {
-                            throw 'Testing resend_from needs resendLimits.stream.to'
+                            throw new Error('Testing resend_from needs resendLimits.stream.to')
                         }
                         resend(request.stream, request.sub, request.resend_from, resendLimits[request.stream].to)
                     } else if (request.resend_from_time != null) {
                         resend(request.stream, request.sub, 99, 100)
                     } else {
-                        throw `Unknown kind of resend request: ${JSON.stringify(request)}`
+                        throw new Error(`Unknown kind of resend request: ${JSON.stringify(request)}`)
                     }
                 })
             }
@@ -1181,7 +1162,7 @@ describe('StreamrClient', () => {
 
         afterEach(() => {
             if (validResendRequests.length > 0) {
-                throw `resend requests remaining: ${JSON.stringify(validResendRequests)}`
+                throw new Error(`resend requests remaining: ${JSON.stringify(validResendRequests)}`)
             }
         })
 
@@ -1196,12 +1177,12 @@ describe('StreamrClient', () => {
 
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {}, {
+            }, () => {}, {
                 resend_all: true,
             })
             client.connect()
 
-            client.connection.once('resent', (response) => {
+            client.connection.once('resent', () => {
                 done()
             })
         })
@@ -1217,7 +1198,7 @@ describe('StreamrClient', () => {
 
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {}, {
+            }, () => {}, {
                 resend_from: 7,
             })
             client.connect()
@@ -1238,7 +1219,7 @@ describe('StreamrClient', () => {
 
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {}, {
+            }, () => {}, {
                 resend_last: 3,
             })
             client.connect()
@@ -1257,7 +1238,7 @@ describe('StreamrClient', () => {
 
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {}, {
+            }, () => {}, {
                 resend_from_time: d,
             })
             client.connect()
@@ -1275,7 +1256,7 @@ describe('StreamrClient', () => {
             })
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {}, {
+            }, () => {}, {
                 resend_from_time: d,
             })
             client.connect()
@@ -1289,7 +1270,7 @@ describe('StreamrClient', () => {
             assert.throws(() => {
                 client.subscribe({
                     stream: 'stream1', apiKey: 'auth',
-                }, (message) => {}, {
+                }, () => {}, {
                     resend_from_time: 'invalid',
                 })
             })
@@ -1306,13 +1287,12 @@ describe('StreamrClient', () => {
             client.connect()
 
             socket.once('resend', (req) => {
-                throw `Should not have made a resend request:${JSON.stringify(req)}`
+                throw new Error(`Should not have made a resend request:${JSON.stringify(req)}`)
             })
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 1, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 1, {
                     done: true,
                 }, undefined, 0)])
             })
@@ -1332,9 +1312,8 @@ describe('StreamrClient', () => {
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 10, {}, undefined, 9)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 10, {}, undefined, 9)])
             })
 
             client.connection.once('resent', () => {
@@ -1350,20 +1329,19 @@ describe('StreamrClient', () => {
 
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {}, {
+            }, () => {}, {
                 auth: 'foo',
             })
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 10, {}, undefined, 9)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 10, {}, undefined, 9)])
             })
 
             let resendRequest = null
             const defaultResendHandler = socket.resendHandler
-            socket.resendHandler = function (request) {
+            socket.resendHandler = (request) => {
                 resendRequest = request
                 defaultResendHandler(request)
             }
@@ -1384,20 +1362,19 @@ describe('StreamrClient', () => {
 
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {}, {
+            }, () => {}, {
                 auth: 'foo', resend_all: true,
             })
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 2, {}, undefined, 1)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 2, {}, undefined, 1)])
             })
 
             let resendRequest = null
             const defaultResendHandler = socket.resendHandler
-            socket.resendHandler = function (request) {
+            socket.resendHandler = (request) => {
                 resendRequest = request
                 defaultResendHandler(request)
             }
@@ -1415,20 +1392,19 @@ describe('StreamrClient', () => {
 
             client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 10, {}, undefined, 9)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 11, {}, undefined, 10)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 10, {}, undefined, 9)])
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 11, {}, undefined, 10)])
             })
 
             let counter = 0
             const defaultResendHandler = socket.resendHandler
-            socket.resendHandler = function (request) {
-                ++counter
+            socket.resendHandler = (request) => {
+                counter += 1
                 defaultResendHandler(request)
             }
 
@@ -1453,17 +1429,16 @@ describe('StreamrClient', () => {
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0, {
                     counter: 0,
                 })])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 10, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 10, {
                     counter: 10,
                 }, undefined, 9)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 11, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 11, {
                     counter: 11,
                 })])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 12, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 12, {
                     counter: 12,
                 })])
             })
@@ -1484,23 +1459,22 @@ describe('StreamrClient', () => {
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0, {
                     counter: 0,
                 })])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 10, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 10, {
                     counter: 10,
                 }, undefined, 9)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 11, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 11, {
                     counter: 11,
                 }, undefined, 10)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 11, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 11, {
                     counter: 11,
                 }, undefined, 10)]) // bogus message
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 5, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 5, {
                     counter: 5,
                 }, undefined, 4)]) // bogus message
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 12, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 12, {
                     counter: 12,
                 }, undefined, 11)])
             })
@@ -1524,14 +1498,13 @@ describe('StreamrClient', () => {
             client.connect()
 
             client.connection.once('subscribed', () => {
-                const broadcastCode = 0
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 0, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 0, {
                     counter: 0,
                 })])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 10, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 10, {
                     counter: 10,
                 }, undefined, 9)])
-                socket.fakeReceive([0, broadcastCode, null, msg('stream1', 12, {
+                socket.fakeReceive([0, messageCodesByType.b, null, msg('stream1', 12, {
                     counter: 12,
                 }, undefined, 11)])
             })
@@ -1551,8 +1524,7 @@ describe('StreamrClient', () => {
                 client.connect()
 
                 client.connection.on('subscribed', () => {
-                    const broadcastCode = 0
-                    socket.fakeReceive([0, broadcastCode, null, msg('stream', 0)])
+                    socket.fakeReceive([0, messageCodesByType.b, null, msg('stream', 0)])
                     socket.disconnect()
                 })
 
@@ -1560,7 +1532,7 @@ describe('StreamrClient', () => {
                     client.connect()
 
                     client.connection.on('resend', () => {
-                        throw 'Should not have made a resend request!'
+                        throw new Error('Should not have made a resend request!')
                     })
 
                     client.connection.on('subscribed', () => {
@@ -1585,12 +1557,12 @@ describe('StreamrClient', () => {
                 })
                 client.connect()
 
-                client.connection.on('subscribed', (response) => {
+                client.connection.on('subscribed', () => {
                     socket.disconnect()
                 })
 
                 client.connection.once('disconnected', () => {
-                    socket.resendHandler = function (request) {
+                    socket.resendHandler = (request) => {
                         assert.equal(request.resend_from, 6)
                         assert.equal(request.resend_to, undefined)
                         assert.equal(msgHandler.callCount, 6)
@@ -1616,12 +1588,12 @@ describe('StreamrClient', () => {
                 })
                 client.connect()
 
-                client.connection.on('subscribed', (response) => {
+                client.connection.on('subscribed', () => {
                     socket.disconnect()
                 })
 
                 client.connection.once('disconnected', () => {
-                    socket.resendHandler = function (request) {
+                    socket.resendHandler = (request) => {
                         assert.equal(request.resend_from, 6)
                         assert.equal(request.resend_to, undefined)
                         assert.equal(msgHandler.callCount, 3)
@@ -1645,12 +1617,12 @@ describe('StreamrClient', () => {
                 }, msgHandler)
                 client.connect()
 
-                client.connection.on('subscribed', (response) => {
+                client.connection.on('subscribed', () => {
                     socket.disconnect()
                 })
 
                 client.connection.once('disconnected', () => {
-                    socket.resendHandler = function (request) {
+                    socket.resendHandler = (request) => {
                         assert.equal(request.resend_last, 1)
                         assert.equal(msgHandler.callCount, 1)
                         socket.done = true
@@ -1673,23 +1645,19 @@ describe('StreamrClient', () => {
                 }, msgHandler)
                 client.connect()
 
-                client.connection.on('subscribed', (response) => {
+                client.connection.on('subscribed', () => {
                     socket.disconnect()
                 })
 
                 client.connection.once('disconnected', () => {
-                    socket.resendHandler = function (request) {
+                    socket.resendHandler = (request) => {
                         assert.equal(request.resend_last, 1)
 
-                        const unicastCode = 1
-                        const resendingCode = 4
-                        const resentCode = 5
-
-                        socket.fakeReceive([0, resendingCode, null, {
+                        socket.fakeReceive([0, messageCodesByType.resending, null, {
                             stream: request.stream, sub: request.sub,
                         }])
-                        socket.fakeReceive([0, unicastCode, request.sub, msg(request.stream, 10, {}, request.sub, 9)])
-                        socket.fakeReceive([0, resentCode, null, {
+                        socket.fakeReceive([0, messageCodesByType.u, request.sub, msg(request.stream, 10, {}, request.sub, 9)])
+                        socket.fakeReceive([0, messageCodesByType.resent, null, {
                             stream: request.stream, sub: request.sub,
                         }])
 
@@ -1709,12 +1677,13 @@ describe('StreamrClient', () => {
 
             const sub1 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             const sub2 = client.subscribe({
                 stream: 'stream2', apiKey: 'auth',
-            }, (message) => {})
-            const check = function (response) {
-                if (++subscribeCount === 2) {
+            }, () => {})
+            const check = () => {
+                subscribeCount += 1
+                if (subscribeCount === 2) {
                     done()
                 }
             }
@@ -1726,18 +1695,19 @@ describe('StreamrClient', () => {
 
         it('should trigger an unsubscribed event on unsubscribed', (done) => {
             let count = 0
-            const check = function (response) {
-                if (++count === 2) {
+            function check() {
+                count += 1
+                if (count === 2) {
                     done()
                 }
             }
 
             const sub1 = client.subscribe({
                 stream: 'stream1', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             const sub2 = client.subscribe({
                 stream: 'stream2', apiKey: 'auth',
-            }, (message) => {})
+            }, () => {})
             sub1.on('unsubscribed', check)
             sub2.on('unsubscribed', check)
 
@@ -1748,6 +1718,28 @@ describe('StreamrClient', () => {
                     client.unsubscribe(sub1)
                     client.unsubscribe(sub2)
                 }
+            })
+        })
+
+        it('emits an error event when a message contains invalid json', (done) => {
+            const sub = client.subscribe({
+                stream: 'stream1', apiKey: 'auth',
+            }, () => {
+                throw new Error('The invalid message should not have been received!')
+            })
+
+            sub.on('error', (err) => {
+                // error message must contain the message content
+                assert.notEqual(err.message.indexOf('this is invalid json'), -1)
+                done()
+            })
+
+            client.connect()
+            client.connection.once('subscribed', () => {
+                const invalidMessage = msg('stream1', 0)
+                // mutilate the message
+                invalidMessage[8] = 'this is invalid json'
+                socket.fakeReceive([0, messageCodesByType.b, null, invalidMessage])
             })
         })
     })

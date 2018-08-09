@@ -190,6 +190,7 @@ unsubscribed |  | Fired when an unsubscription is acknowledged by the server.
 resending |  | Fired when the subscription starts resending.
 resent |  | Fired after `resending` when the subscription has finished resending.
 no_resend |  | Fired after `resending` in case there was nothing to resend.
+error | Error object | Reports errors, for example problems with message content 
 
 ### Logging
 

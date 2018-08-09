@@ -1,8 +1,16 @@
-const CONTENT_TYPE_JSON = 27
-const FIELDS_BY_PROTOCOL_VERSION = {
+import InvalidJsonError from './errors/InvalidJsonError'
+
+const jsonContentTypeCode = 27
+const fieldsByProtocolVersion = {
     '28': ['version', 'streamId', 'streamPartition', 'timestamp', 'ttl', 'offset', 'previousOffset', 'contentType', 'content'],
 }
-const MESSAGE_TYPES = ['b', 'u', 'subscribed', 'unsubscribed', 'resending', 'resent', 'no_resend']
+export const messageTypesByCode = ['b', 'u', 'subscribed', 'unsubscribed', 'resending', 'resent', 'no_resend']
+
+export const messageCodesByType = {}
+messageTypesByCode.forEach((type, idx) => {
+    messageCodesByType[type] = idx
+})
+
 const BYE_KEY = '_bye'
 
 export const decodeBrowserWrapper = (rawMsg) => {
@@ -13,7 +21,7 @@ export const decodeBrowserWrapper = (rawMsg) => {
     }
 
     return {
-        type: MESSAGE_TYPES[jsonMsg[1]],
+        type: messageTypesByCode[jsonMsg[1]],
         subId: jsonMsg[2],
         msg: jsonMsg[3],
     }
@@ -21,17 +29,21 @@ export const decodeBrowserWrapper = (rawMsg) => {
 
 export const decodeMessage = (type, message) => {
     if (type === 'b' || type === 'u') {
-        if (FIELDS_BY_PROTOCOL_VERSION[message[0]] === undefined) {
+        if (fieldsByProtocolVersion[message[0]] === undefined) {
             throw new Error(`Unsupported version: ${message[0]}`)
         }
         const result = {}
-        const fields = FIELDS_BY_PROTOCOL_VERSION[message[0]]
+        const fields = fieldsByProtocolVersion[message[0]]
 
         for (let i = 0; i < message.length; i++) {
             // Parse content if necessary
             if (fields[i] === 'content') {
-                if (result.contentType === CONTENT_TYPE_JSON) {
-                    result[fields[i]] = JSON.parse(message[i])
+                if (result.contentType === jsonContentTypeCode) {
+                    try {
+                        result[fields[i]] = JSON.parse(message[i])
+                    } catch (err) {
+                        throw new InvalidJsonError(result.streamId, message[i], err)
+                    }
                 } else {
                     throw new Error(`Unknown content type: ${result.contentType}`)
                 }

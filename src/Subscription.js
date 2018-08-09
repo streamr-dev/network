@@ -199,4 +199,8 @@ export default class Subscription extends EventEmitter {
         debug(`Subscription: Stream ${this.streamId} resending: ${resending}`)
         this.resending = resending
     }
+
+    handleError(err) {
+        this.emit('error', err)
+    }
 }

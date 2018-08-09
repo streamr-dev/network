@@ -5,6 +5,7 @@ const debug = debugFactory('StreamrClient')
 
 import Subscription from './Subscription'
 import Connection from './Connection'
+import InvalidJsonError from './errors/InvalidJsonError'
 
 export default class StreamrClient extends EventEmitter {
     constructor(options) {
@@ -175,9 +176,9 @@ export default class StreamrClient extends EventEmitter {
             // is expecting, they will either ignore it or request resend via gap event.
             const subs = this.subsByStream[msg.streamId]
             if (subs) {
-                for (let i = 0; i < subs.length; i++) {
-                    subs[i].handleMessage(msg, false)
-                }
+                subs.forEach((sub) => {
+                    sub.handleMessage(msg, false)
+                })
             } else {
                 debug('WARN: message received for stream with no subscriptions: %s', msg.streamId)
             }
@@ -288,6 +289,22 @@ export default class StreamrClient extends EventEmitter {
                         sub.setState(Subscription.State.unsubscribed)
                     })
                 })
+        })
+
+        this.connection.on('error', (err) => {
+            // If there is an error parsing a json message in a stream, fire error events on the relevant subs
+            if (err instanceof InvalidJsonError) {
+                const subs = this.subsByStream[err.streamId]
+                if (subs) {
+                    subs.forEach((sub) => {
+                        sub.handleError(err)
+                    })
+                } else {
+                    debug('WARN: InvalidJsonError received for stream with no subscriptions: %s', err.streamId)
+                }
+            } else {
+                throw err
+            }
         })
 
         this.connection.connect()
