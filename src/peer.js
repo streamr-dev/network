@@ -7,13 +7,12 @@ const WS = require('libp2p-websockets')
 const Bootstrap = require('libp2p-railing')
 const Mplex = require('libp2p-mplex')
 const SECIO = require('libp2p-secio')
-
+const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
+
 const waterfall = require('async/waterfall')
 const defaultsDeep = require('defaults-deep')
-const PeerId = require('peer-id')
 const EventEmitter = require('events').EventEmitter
-const util = require('./util')
 
 const BOOTNODES = require('../bootstrapNodes.json').map((node) => {
     return node.full
@@ -39,18 +38,30 @@ class Node extends EventEmitter {
 
         this._host = options.host || '0.0.0.0'
         this._port = options.port || 0
+        this._privateKey = options.privateKey || ''
 
         let node
         waterfall([
-            (cb) => PeerInfo.create(cb),
+            (cb) => this._privateKey ? PeerId.createFromPrivKey(this._privateKey, cb) : cb(null, null),
+            (idPeer, cb) => {
+                if (this._privateKey) {
+                    const peerInfo = new PeerInfo(idPeer)
+                    cb(null, peerInfo)
+                }
+                else {
+                    PeerInfo.create(cb)
+                }
+            },
             (peerInfo, cb) => {
+                console.log('weww')
                 peerInfo.multiaddrs.add(`/ip4/${this._host}/tcp/${this._port}`)
 
-                node = new StreamrNode({
+                node = new StreamrNode({    
                     ...libp2pOptions,
                     peerInfo: peerInfo
                 })
                 this._node = node
+                
                 node.start(cb)
             }
         ], (err) => {
@@ -74,7 +85,9 @@ class Node extends EventEmitter {
         console.log('Connection established to:', peer.id.toB58String())
     }
 
+    handleMessage() {
 
+    }
 }
 
 class Peer extends Node {
@@ -86,7 +99,7 @@ class Peer extends Node {
             config: {
                 peerDiscovery: {
                     bootstrap: {
-                        interval: 1,
+                        interval: 1000,
                         enabled: true,
                         list: BOOTNODES
                     }
@@ -100,6 +113,16 @@ class Peer extends Node {
     _trackerDiscovery(peer) {
         console.log('Discovered:', peer.id.toB58String())
         this._node.dial(peer, () => {})
+        this._tracker = peer
+    }
+
+    _connectPeer(peer) {
+        super._connectPeer(peer)
+        this.sendStatus()
+    }
+
+    sendStatus() {
+        this._tracker
     }
 }
 
