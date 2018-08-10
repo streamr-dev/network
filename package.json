@@ -29,6 +29,8 @@
     "libp2p-tcp": "^0.12.1",
     "libp2p-websockets": "^0.12.0",
     "ms": "^2.1.1",
+    "pull-pushable": "^2.2.0",
+    "pull-stream": "^3.6.8",
     "safe-buffer": "^5.1.2",
     "secp256k1": "^3.5.0",
     "waterfall": "^1.0.0"

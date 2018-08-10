@@ -1,5 +1,7 @@
 'use strict'
 
+const EventEmitter = require('events').EventEmitter
+
 const MESSAGE_CODES = {
     STATUS: 0x00,
     PEERS: 0x01,
@@ -16,7 +18,7 @@ class StreamrProtocol extends EventEmitter {
     }
 
     sendStatus (status) {
-        
+
     }
 
     sendMessage(code, payload) {
