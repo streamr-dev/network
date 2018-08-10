@@ -3,6 +3,9 @@ const debug = require('debug')('WebsocketServer')
 const debugProtocol = require('debug')('WebsocketServer:protocol')
 const Stream = require('./Stream')
 const Connection = require('./Connection')
+const TimestampUtil = require('./utils/TimestampUtil')
+const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
+const HttpError = require('./errors/HttpError')
 
 const DEFAULT_PARTITION = 0
 
@@ -11,13 +14,14 @@ function getStreamLookupKey(streamId, streamPartition) {
 }
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher) {
+    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher) {
         super()
         this.wss = wss
         this.realtimeAdapter = realtimeAdapter
         this.historicalAdapter = historicalAdapter
         this.latestOffsetFetcher = latestOffsetFetcher
         this.streamFetcher = streamFetcher
+        this.publisher = publisher
         this.msgCounter = 0
         this.connectionCounter = 0
 
@@ -30,6 +34,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             subscribe: this.handleSubscribeRequest,
             unsubscribe: this.handleUnsubscribeRequest,
             resend: this.handleResendRequest,
+            publish: this.handlePublishRequest,
         }
 
         this.wss.on('connection', (socket) => {
@@ -69,6 +74,55 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             console.log('Connections: %d, Messages / min: %d (%d / sec)', this.connectionCounter, this.msgCounter, this.msgCounter / 60)
             this.msgCounter = 0
         }, 60 * 1000)
+    }
+
+    handlePublishRequest(connection, req) {
+        if (!req.stream) {
+            connection.sendError('Publish request is missing the stream id!')
+            return
+        }
+
+        // Read timestamp if given
+        let timestamp
+        if (req.ts) {
+            try {
+                timestamp = TimestampUtil.parse(req.ts)
+            } catch (err) {
+                connection.sendError(`Invalid timestamp: ${req.ts}`)
+                return
+            }
+        }
+
+        // Check that the payload is a string
+        if (typeof req.msg !== 'string') {
+            connection.sendError('Message must be stringified JSON!')
+            return
+        }
+
+        this.streamFetcher.authenticate(req.stream, req.authKey, 'write')
+            .then((stream) => {
+                console.log(stream)
+                this.publisher.publish(
+                    stream,
+                    timestamp,
+                    undefined, // ttl, read from stream when available
+                    StreamrBinaryMessage.CONTENT_TYPE_JSON,
+                    req.msg,
+                    req.pkey,
+                )
+            })
+            .catch((err) => {
+                let errorMsg
+                if (err instanceof HttpError && err.code === 403) {
+                    errorMsg = 'Authentication failed.'
+                } else if (err instanceof HttpError && err.code === 404) {
+                    errorMsg = `Stream ${req.stream} not found.`
+                } else {
+                    errorMsg = `Publish request failed: ${err}`
+                }
+
+                connection.sendError(errorMsg)
+            })
     }
 
     handleResendRequest(connection, req) {

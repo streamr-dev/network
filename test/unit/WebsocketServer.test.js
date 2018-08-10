@@ -12,10 +12,15 @@ describe('WebsocketServer', () => {
     let server
     let wsMock
     let streamFetcher
+    let publisher
     let realtimeAdapter
     let historicalAdapter
     let latestOffsetFetcher
     let mockSocket
+
+    const myStream = {
+        streamId: 'streamId',
+    }
 
     beforeEach(() => {
         realtimeAdapter = new events.EventEmitter()
@@ -33,16 +38,14 @@ describe('WebsocketServer', () => {
         }
 
         latestOffsetFetcher = {
-            fetchOffset() {
-                return Promise.resolve(0)
-            },
+            fetchOffset: sinon.stub().resolves(0),
         }
 
         streamFetcher = {
             authenticate(streamId, authKey) {
                 return new Promise(((resolve, reject) => {
                     if (authKey === 'correct') {
-                        resolve(true)
+                        resolve(myStream)
                     } else {
                         reject(new Error(403))
                     }
@@ -50,14 +53,18 @@ describe('WebsocketServer', () => {
             },
         }
 
-        // Mock socket.io
+        publisher = {
+            publish: sinon.stub().resolves(),
+        }
+
+        // Mock websocket lib
         wsMock = new events.EventEmitter()
 
         // Mock the socket
         mockSocket = new MockSocket()
 
         // Create the server instance
-        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher)
+        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher)
     })
 
     function kafkaMessage() {
@@ -304,6 +311,9 @@ describe('WebsocketServer', () => {
 
     describe('on resend request with invalid key', () => {
         beforeEach(() => {
+            // Expect error messages
+            mockSocket.throwOnError = false
+
             wsMock.emit('connection', mockSocket)
             mockSocket.receive({
                 stream: 'streamId',
@@ -364,6 +374,9 @@ describe('WebsocketServer', () => {
     describe('on invalid subscribe request', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
+
+            // Expect error messages
+            mockSocket.throwOnError = false
             mockSocket.receive({
                 type: 'subscribe',
             })
@@ -455,6 +468,9 @@ describe('WebsocketServer', () => {
     describe('on subscribe request with invalid key', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
+
+            // Expect error messages
+            mockSocket.throwOnError = false
             mockSocket.receive({
                 stream: 'streamId',
                 partition: 0,
@@ -624,6 +640,105 @@ describe('WebsocketServer', () => {
                         done()
                     })
                 })
+            })
+        })
+    })
+
+    describe('publish', () => {
+        beforeEach(() => {
+            // We are in connected state
+            wsMock.emit('connection', mockSocket)
+        })
+
+        it('calls the publisher for valid requests', (done) => {
+            const req = {
+                type: 'publish',
+                stream: 'streamId',
+                authKey: 'correct',
+                msg: '{}',
+            }
+
+            publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(timestamp, undefined)
+                assert.equal(ttl, undefined)
+                assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+                assert.equal(content, req.msg)
+                assert.equal(partitionKey, undefined)
+                done()
+            }
+
+            mockSocket.receive(req)
+        })
+
+        it('reads optional fields if specified', (done) => {
+            const req = {
+                type: 'publish',
+                stream: 'streamId',
+                authKey: 'correct',
+                msg: '{}',
+                ts: Date.now(),
+                pkey: 'foo',
+            }
+
+            publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(timestamp, req.ts)
+                assert.equal(ttl, undefined)
+                assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+                assert.equal(content, req.msg)
+                assert.equal(partitionKey, req.pkey)
+                done()
+            }
+
+            mockSocket.receive(req)
+        })
+
+        describe('error handling', () => {
+
+            beforeEach(() => {
+                // None of these tests may publish
+                publisher.publish = sinon.stub().throws()
+
+                // Expect error messages
+                mockSocket.throwOnError = false
+            })
+
+            afterEach(() => {
+                assert.equal(mockSocket.sentMessages.length, 1)
+                assert.equal(JSON.parse(mockSocket.sentMessages[0])[1], encoder.BROWSER_MSG_TYPE_ERROR)
+            })
+
+            it('responds with an error if the stream id is missing', () => {
+                const req = {
+                    type: 'publish',
+                    authKey: 'correct',
+                    msg: '{}',
+                }
+
+                mockSocket.receive(req)
+            })
+
+            it('responds with an error if the msg is missing', () => {
+                const req = {
+                    type: 'publish',
+                    stream: 'streamId',
+                    authKey: 'correct',
+                }
+
+                mockSocket.receive(req)
+            })
+
+
+            it('responds with an error if the msg is not a string', () => {
+                const req = {
+                    type: 'publish',
+                    stream: 'streamId',
+                    authKey: 'correct',
+                    msg: {},
+                }
+
+                mockSocket.receive(req)
             })
         })
     })

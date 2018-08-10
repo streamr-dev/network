@@ -50,6 +50,7 @@ const server = new WebsocketServer(
     cassandra,
     redisOffsetFetcher,
     streamFetcher,
+    publisher,
 )
 
 // Rest endpoints

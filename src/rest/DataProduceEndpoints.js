@@ -5,6 +5,7 @@ const InvalidMessageContentError = require('../errors/InvalidMessageContentError
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
+const TimestampUtil = require('../utils/TimestampUtil')
 
 /**
  * Endpoint for POSTing data to streams
@@ -38,33 +39,28 @@ module.exports = (streamFetcher, publisher) => {
                 return
             }
 
-            // Validate ttl if given
-            let ttl
-            if (req.query.ttl) {
-                ttl = Number(req.query.ttl)
-                if (!ttl) {
-                    res.status(400).send({
-                        error: `Invalid ttl: ${req.query.ttl}`,
-                    })
-                    return
-                }
-            }
-
             // Read timestamp if given
             let timestamp
             if (req.query.ts) {
-                // Try millis
-                timestamp = Number(req.query.ts) || Date.parse(req.query.ts)
-                if (Number.isNaN(timestamp)) {
+                try {
+                    timestamp = TimestampUtil.parse(req.query.ts)
+                } catch (err) {
                     res.status(400).send({
-                        error: `Invalid timestamp: ${req.query.ts}`,
+                        error: err.message,
                     })
                     return
                 }
             }
 
             // req.stream is written by authentication middleware
-            publisher.publish(req.stream, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, req.body, req.query.pkey).then(() => {
+            publisher.publish(
+                req.stream,
+                timestamp,
+                undefined, // ttl, read from stream when available
+                StreamrBinaryMessage.CONTENT_TYPE_JSON,
+                req.body,
+                req.query.pkey,
+            ).then(() => {
                 res.status(200).send(/* empty success response */)
             }).catch((err) => {
                 if (err instanceof InvalidMessageContentError) {
