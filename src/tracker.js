@@ -6,7 +6,7 @@ const ms = require('ms');
 const pVersion = require('../package.json').version;
 const os = require('os');
 const debug = require('debug')
-const Node = require('./peer').Node
+const Node = require("./abstract-node")
 const STRMR = require("./protocol");
 
 const log = debug('strmrp2p:tracker')
