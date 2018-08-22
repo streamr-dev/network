@@ -30,6 +30,11 @@ class Peer extends StreamrNode {
         super(options, libp2pOptions)
     }
 
+    nodeReady() {
+        this._node.on('peer:discovery', peer => this._trackerDiscovery(peer))
+        super.nodeReady()
+    }
+
     _trackerDiscovery(peer) {
         console.log('Discovered:', peer.id.toB58String())
         this._node.dial(peer, () => {})

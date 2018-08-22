@@ -1,17 +1,36 @@
 'use strict'
 
-const EventEmitter = require("events").EventEmitter
+const EventEmitter = require('events').EventEmitter
 
 class AbstractNode extends EventEmitter {
-    _trackerDiscovery(peer) {}
+    constructor() {
+        super()
+        
+        this._version = null
+        this._status = null
+        this._privateKey = null
+        this._port = null
+        this._host = null
+        this._node = null
 
-    _connectPeer(peer) {}
+        this.once('node:ready', () => this.nodeReady());
+    }
 
-    handleProtocol(protocol, conn) {}
+    _handleProtocol(protocol, conn) {}
 
-    handleMessage(peerInfo, message) {}
+    _handleMessage(peerInfo, message) {}
+
+    _handleStatus() {}
 
     sendMessage(code, recipient, data) {}
+
+    sendStatus(status) {}
+    
+    getCodeDescription(code) {}
+
+    nodeReady() {}
+
+    connect(peer) {}
 }
 
 module.exports = AbstractNode

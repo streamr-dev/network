@@ -25,7 +25,7 @@ class StreamrNode extends AbstractNode {
         this._privateKey = options.privateKey || ''
         this._status = null
 
-        let node
+        let node = null
         waterfall(
             [
                 cb =>
@@ -60,20 +60,21 @@ class StreamrNode extends AbstractNode {
                     throw err
                 }
 
-                console.log('node has started (true/false):', this._node.isStarted())
-                console.log('listening on:')
-
-                this._node.peerInfo.multiaddrs.forEach(ma =>
-                    console.log(ma.toString())
-                )
-
-                this._node.on('peer:discovery', peer => this._trackerDiscovery(peer))
-                this._node.on('peer:connect', peer => this._connectPeer(peer))
+                this.emit('node:ready')
             }
         )
     }
 
-    _trackerDiscovery(peer) {}
+    nodeReady() {
+        console.log('node has started (true/false):', this._node.isStarted())
+        console.log('listening on:')
+
+        this._node.peerInfo.multiaddrs.forEach(ma =>
+            console.log(ma.toString())
+        )
+
+        this._node.on('peer:connect', peer => this._connectPeer(peer))        
+    }
 
     _connectPeer(peer) {
         console.log('Connection established to:', peer.id.toB58String())
