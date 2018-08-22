@@ -8,7 +8,7 @@ const tracker = new Tracker({
   host: '127.0.0.1',
   port: 30300,
   privateKey: PRIVATE_KEY
-});
+})
 
 setInterval(() => {
   const peersCount = tracker.getPeers().length

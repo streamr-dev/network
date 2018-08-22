@@ -1,13 +1,12 @@
-"use strict";
+'use strict'
 
-const libp2p = require("libp2p")
+const libp2p = require('libp2p')
 
-const TCP = require("libp2p-tcp")
-const WS = require("libp2p-websockets")
+const TCP = require('libp2p-tcp')
+const WS = require('libp2p-websockets')
 const SPDY = require('libp2p-spdy')
-const SECIO = require("libp2p-secio")
-
-const defaultsDeep = require("defaults-deep")
+const SECIO = require('libp2p-secio')
+const defaultsDeep = require('defaults-deep')
 
 class Libp2pBundle extends libp2p {
     constructor(options) {
@@ -17,9 +16,9 @@ class Libp2pBundle extends libp2p {
                 connEncryption: [SECIO],
                 streamMuxer: [SPDY]
             }
-        };
+        }
 
-        super(defaultsDeep(options, defaults));
+        super(defaultsDeep(options, defaults))
     }
 }
 

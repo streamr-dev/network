@@ -1,25 +1,23 @@
 'use strict'
 
-const EventEmitter = require('events').EventEmitter
-const Buffer = require('safe-buffer').Buffer;
-const ms = require('ms');
-const pVersion = require('../package.json').version;
-const os = require('os');
+const Buffer = require('safe-buffer').Buffer
+const pVersion = require('../package.json').version
+const os = require('os')
+const ms = require('ms')
+const StreamrNode = require('./streamr-node')
+
 const debug = require('debug')
-const Node = require("./abstract-node")
-const STRMR = require("./protocol");
+const log = debug('strmr:p2p:tracker')
 
-const log = debug('strmrp2p:tracker')
-
-class Tracker extends Node {
+class Tracker extends StreamrNode {
     constructor(options) {
         super(options)
 
-        this._timeout = options.timeout || ms('10s');
+        this._timeout = options.timeout || ms('10s')
         this._peers = new Map()
 
-        this._clientId = Buffer.from(options.clientId || `strmr-net/v${pVersion}/${os.platform()}-${os.arch()}/nodejs`);
-        this._remoteClientIdFilter = options.remoteClientIdFilter;
+        this._clientId = Buffer.from(options.clientId || `strmr-net/v${pVersion}/${os.platform()}-${os.arch()}/nodejs`)
+        this._remoteClientIdFilter = options.remoteClientIdFilter
         this.on('peer:status', (peer) => this._handlePeerStatus(peer))
         
         log(`tracker started at ${this._host}:${this._port}`)
@@ -40,15 +38,15 @@ class Tracker extends Node {
     _handlePeerStatus(peer) {
         const peerInfo = peer.peerInfo
         const status = peer.status
-        this._peers.set(peerInfo.id.toB58String(), status);
+        this._peers.set(peerInfo.id.toB58String(), status)
 
         this._sendPeers(peer)
     }
 
     _sendPeers(peer) {
         console.log('sending peers')
-        super.sendMessage(STRMR.MESSAGE_CODES.PEERS, peer.peerInfo, this._getRandomPeers());
+        super.sendMessage(StreamrNode.MESSAGE_CODES.PEERS, peer.peerInfo, this._getRandomPeers())
     }
 }
 
-module.exports = Tracker;
+module.exports = Tracker

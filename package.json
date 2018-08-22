@@ -7,6 +7,10 @@
     "networking",
     "streamr"
   ],
+  "scripts": {
+    "tracker": "node tracker.js",
+    "node": "node node.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git"
