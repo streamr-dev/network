@@ -88,36 +88,18 @@ describe('StreamrClient', function () {
     })
 
     describe('Data production', () => {
-        let originalClient
-        let dataApiClient
-
-        before('Hack: Create new client with data-api port as restUrl, because we dont have nginx in front', () => {
-            if (!createdStream._client) {
-                throw 'Test broken: Assumption about implementation internals is wrong'
-            }
-            originalClient = createdStream._client
-            createdStream._client = dataApiClient = createClient({
-                restUrl: `http://${dataApi}/api/v1`,
-            })
-        })
-
-        after('Restore above hack', () => {
-            if (originalClient) {
-                createdStream._client = originalClient
-            }
-        })
 
         it('Stream.produce', () => createdStream.produce({
             foo: 'bar',
             count: 0,
         }))
 
-        it('client.produceToStream', () => dataApiClient.produceToStream(createdStream.id, {
+        it('client.produceToStream', () => client.produceToStream(createdStream.id, {
             foo: 'bar',
             count: 0,
         }))
 
-        it('client.produceToStream with Stream object as arg', () => dataApiClient.produceToStream(createdStream, {
+        it('client.produceToStream with Stream object as arg', () => client.produceToStream(createdStream, {
             foo: 'bar',
             count: 0,
         }))

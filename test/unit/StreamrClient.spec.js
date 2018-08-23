@@ -5,6 +5,7 @@ import sinon from 'sinon'
 import debug from 'debug'
 import Subscription from '../../src/Subscription'
 import { messageCodesByType } from '../../src/Protocol'
+import FailedToProduceError from '../../src/errors/FailedToProduceError'
 
 const mockDebug = debug('mock')
 
@@ -79,6 +80,8 @@ describe('StreamrClient', () => {
     function createSocketMock() {
         const s = new EventEmitter()
 
+        s.publishMessages = []
+
         s.connect = () => {
             async(() => {
                 s.onopen()
@@ -116,7 +119,9 @@ describe('StreamrClient', () => {
 
         s.send = (msgToSend) => {
             const parsed = JSON.parse(msgToSend)
-            if (parsed.type === 'subscribe') {
+            if (parsed.type === 'publish') {
+                s.publishMessages.push(parsed)
+            } else if (parsed.type === 'subscribe') {
                 s.subscribeHandler(parsed)
             } else if (parsed.type === 'unsubscribe') {
                 s.unsubscribeHandler(parsed)
@@ -1671,6 +1676,45 @@ describe('StreamrClient', () => {
         })
     })
 
+    describe('produceToStream', () => {
+        const pubMsg = {
+            foo: 'bar',
+        }
+
+        it('should send pending publishes once connected', (done) => {
+            client.options.autoConnect = true
+
+            // Produce 10 messages
+            for (let i = 0; i < 10; i++) {
+                client.produceToStream('stream1', pubMsg)
+            }
+
+            client.connection.on('connected', () => {
+                assert.equal(socket.publishMessages.length, 10)
+                for (let i = 0; i < 10; i++) {
+                    assert.equal(socket.publishMessages[i].msg, JSON.stringify(pubMsg))
+                }
+                done()
+            })
+        })
+
+        it('should return and resolve a promise', () => {
+            client.options.autoConnect = true
+            const promise = client.produceToStream('stream1', pubMsg)
+            assert(promise instanceof Promise)
+            return promise
+        })
+
+        it('should reject the promise if autoConnect is false and the client is not connected', (done) => {
+            client.options.autoConnect = false
+            assert.equal(client.connected, false)
+            client.produceToStream('stream1', pubMsg).catch((err) => {
+                assert(err instanceof FailedToProduceError)
+                done()
+            })
+        })
+    })
+
     describe('Subscription', () => {
         it('should trigger a subscribed event on subscribed', (done) => {
             let subscribeCount = 0
@@ -1756,6 +1800,17 @@ describe('StreamrClient', () => {
             client.connection.once('connected', () => {
                 client.disconnect()
             })
+        })
+
+        it('must emit an error event when the server sends an error message', (done) => {
+            client.on('connected', () => {
+                socket.fakeReceive([0, 7, '', 'Authentication failed.'])
+            })
+            client.on('error', (err) => {
+                assert(err instanceof Error)
+                done()
+            })
+            client.connect()
         })
     })
 })

@@ -4,7 +4,7 @@ const jsonContentTypeCode = 27
 const fieldsByProtocolVersion = {
     '28': ['version', 'streamId', 'streamPartition', 'timestamp', 'ttl', 'offset', 'previousOffset', 'contentType', 'content'],
 }
-export const messageTypesByCode = ['b', 'u', 'subscribed', 'unsubscribed', 'resending', 'resent', 'no_resend']
+export const messageTypesByCode = ['b', 'u', 'subscribed', 'unsubscribed', 'resending', 'resent', 'no_resend', 'error']
 
 export const messageCodesByType = {}
 messageTypesByCode.forEach((type, idx) => {

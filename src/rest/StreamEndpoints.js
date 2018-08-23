@@ -90,7 +90,7 @@ export async function getOrCreateStream(props, apiKey = this.options.apiKey) {
     }
 }
 
-export function produceToStream(streamObjectOrId, data, apiKey = this.options.apiKey, requestOptions = {}, keepAlive = true) {
+export function produceToStreamHttp(streamObjectOrId, data, apiKey = this.options.apiKey, requestOptions = {}, keepAlive = true) {
     let streamId
     if (streamObjectOrId instanceof Stream) {
         streamId = streamObjectOrId.id

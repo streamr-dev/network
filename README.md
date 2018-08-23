@@ -6,7 +6,7 @@ By using this client, you can easily interact with the [Streamr](http://www.stre
 
 This library is work-in-progress and doesn't provide wrapper functions for all the endpoints in the Streamr API. Currently it covers producing and subscribing to data as well as manipulating Stream objects.
 
-The client uses websockets for streaming message delivery. It should work in all modern browsers.
+The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
 
 ### Installation
 
