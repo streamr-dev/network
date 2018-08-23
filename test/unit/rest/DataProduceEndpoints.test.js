@@ -141,14 +141,6 @@ describe('DataProduceEndpoints', () => {
         }).expect(400, done)
     })
 
-    it('should return 400 for invalid ttl', (done) => {
-        postRequest({
-            query: {
-                ttl: 'foo',
-            },
-        }).expect(400, done)
-    })
-
     it('should return 400 for invalid timestamp', (done) => {
         postRequest({
             query: {

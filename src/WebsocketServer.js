@@ -101,8 +101,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         this.streamFetcher.authenticate(req.stream, req.authKey, 'write')
             .then((stream) => {
-                console.log(stream)
-                this.publisher.publish(
+                return this.publisher.publish(
                     stream,
                     timestamp,
                     undefined, // ttl, read from stream when available

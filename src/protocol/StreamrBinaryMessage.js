@@ -5,6 +5,16 @@ const BufferReader = require('buffer-reader')
 const VERSION = 28 // 0x1C
 const CONTENT_TYPE_JSON = 27 // 0x1B
 
+function ensureBuffer(content) {
+    if (Buffer.isBuffer(content)) {
+        return content
+    } else if (typeof content === 'string') {
+        return Buffer.from(content, 'utf8')
+    }
+
+    throw new Error(`Unable to convert content to a Buffer! Type is: ${typeof content}`)
+}
+
 class StreamrBinaryMessage {
     constructor(streamId, streamPartition, timestamp, ttl, contentType, content) {
         this.version = VERSION
@@ -13,11 +23,7 @@ class StreamrBinaryMessage {
         this.timestamp = (timestamp instanceof Date ? timestamp.getTime() : timestamp)
         this.ttl = ttl
         this.contentType = contentType
-
-        if (!Buffer.isBuffer(content)) {
-            throw new Error('content is not a Buffer!')
-        }
-        this.content = content
+        this.content = ensureBuffer(content)
     }
 
     toBytes() {
@@ -29,7 +35,7 @@ class StreamrBinaryMessage {
 
     toBufferMaker(bufferMaker) {
         const streamIdBuf = new BufferMaker().string(this.streamId).make()
-        const contentBuf = Buffer.isBuffer(this.content) ? this.content : new BufferMaker().string(JSON.stringify(this.content)).make()
+        const contentBuf = ensureBuffer(this.content)
 
         return bufferMaker
         // byte 0: version (1 byte)
