@@ -22,7 +22,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.latestOffsetFetcher = latestOffsetFetcher
         this.streamFetcher = streamFetcher
         this.publisher = publisher
-        this.msgCounter = 0
+        this.inMsgCounter = 0
+        this.outMsgCounter = 0
         this.connectionCounter = 0
 
         // This handler is for realtime messages, not resends
@@ -71,12 +72,23 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.streams = {}
 
         setInterval(() => {
-            console.log('Connections: %d, Messages / min: %d (%d / sec)', this.connectionCounter, this.msgCounter, this.msgCounter / 60)
-            this.msgCounter = 0
+            const inPerSecond = this.inMsgCounter / 60
+            const outPerSecond = this.outMsgCounter / 60
+
+            console.log(
+                'Connections: %d, Messages in/sec: %d, Messages out/sec: %d',
+                this.connectionCounter,
+                inPerSecond < 10 ? inPerSecond.toFixed(1) : Math.round(inPerSecond),
+                outPerSecond < 10 ? outPerSecond.toFixed(1) : Math.round(outPerSecond),
+            )
+            this.inMsgCounter = 0
+            this.outMsgCounter = 0
         }, 60 * 1000)
     }
 
     handlePublishRequest(connection, req) {
+        this.inMsgCounter += 1
+
         if (!req.stream) {
             connection.sendError('Publish request is missing the stream id!')
             return
@@ -135,7 +147,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         const sendMessage = (message) => {
             // "broadcast" to the socket of this connection (ie. this single client) and specific subscription id
-            this.msgCounter += 1
+            this.outMsgCounter += 1
             connection.sendUnicast(message, req.sub)
         }
 
@@ -265,7 +277,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 connection.sendBroadcast(message)
             })
 
-            this.msgCounter += connections.length
+            this.outMsgCounter += connections.length
         }
     }
 
