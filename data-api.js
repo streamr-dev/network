@@ -12,6 +12,7 @@ const CassandraUtil = require('./src/CassandraUtil')
 const StreamrKafkaProducer = require('./src/KafkaUtil')
 const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
+const VolumeLogger = require('./src/utils/VolumeLogger')
 
 // Check command line args
 optimist = optimist.usage(`You must pass the following command line options:
@@ -32,6 +33,7 @@ const cassandra = new CassandraUtil(optimist.argv.cassandra.split(','), optimist
 const redisOffsetFetcher = new RedisOffsetFetcher(optimist.argv.redis.split(',')[0], optimist.argv['redis-pwd'])
 const kafka = new StreamrKafkaProducer(optimist.argv['data-topic'], Partitioner, optimist.argv.zookeeper)
 const publisher = new Publisher(kafka, Partitioner)
+const volumeLogger = new VolumeLogger()
 
 // Create HTTP server
 const app = express()
@@ -51,11 +53,12 @@ const server = new WebsocketServer(
     redisOffsetFetcher,
     streamFetcher,
     publisher,
+    volumeLogger,
 )
 
 // Rest endpoints
-app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(cassandra, streamFetcher))
-app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, publisher))
+app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(cassandra, streamFetcher, volumeLogger))
+app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, publisher, volumeLogger))
 
 // Start the server
 httpServer.listen(optimist.argv.port, () => {

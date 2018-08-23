@@ -6,6 +6,7 @@ const Connection = require('./Connection')
 const TimestampUtil = require('./utils/TimestampUtil')
 const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
 const HttpError = require('./errors/HttpError')
+const VolumeLogger = require('./utils/VolumeLogger')
 
 const DEFAULT_PARTITION = 0
 
@@ -14,7 +15,7 @@ function getStreamLookupKey(streamId, streamPartition) {
 }
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher) {
+    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
         super()
         this.wss = wss
         this.realtimeAdapter = realtimeAdapter
@@ -22,9 +23,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.latestOffsetFetcher = latestOffsetFetcher
         this.streamFetcher = streamFetcher
         this.publisher = publisher
-        this.inMsgCounter = 0
-        this.outMsgCounter = 0
-        this.connectionCounter = 0
+        this.volumeLogger = volumeLogger
 
         // This handler is for realtime messages, not resends
         this.realtimeAdapter.on('message', (messageAsArray, streamId, streamPartition) => {
@@ -40,7 +39,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         this.wss.on('connection', (socket) => {
             debug('connection established: %o', socket)
-            this.connectionCounter += 1
+            this.volumeLogger.connectionCount += 1
 
             const connection = new Connection(socket)
 
@@ -64,30 +63,16 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             })
 
             socket.on('close', () => {
-                this.connectionCounter -= 1
+                this.volumeLogger.connectionCount -= 1
                 this.handleDisconnect(connection)
             })
         })
 
         this.streams = {}
-
-        setInterval(() => {
-            const inPerSecond = this.inMsgCounter / 60
-            const outPerSecond = this.outMsgCounter / 60
-
-            console.log(
-                'Connections: %d, Messages in/sec: %d, Messages out/sec: %d',
-                this.connectionCounter,
-                inPerSecond < 10 ? inPerSecond.toFixed(1) : Math.round(inPerSecond),
-                outPerSecond < 10 ? outPerSecond.toFixed(1) : Math.round(outPerSecond),
-            )
-            this.inMsgCounter = 0
-            this.outMsgCounter = 0
-        }, 60 * 1000)
     }
 
     handlePublishRequest(connection, req) {
-        this.inMsgCounter += 1
+        this.volumeLogger.inCount += 1
 
         if (!req.stream) {
             connection.sendError('Publish request is missing the stream id!')
@@ -147,7 +132,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         const sendMessage = (message) => {
             // "broadcast" to the socket of this connection (ie. this single client) and specific subscription id
-            this.outMsgCounter += 1
+            this.volumeLogger.outCount += 1
             connection.sendUnicast(message, req.sub)
         }
 
@@ -277,7 +262,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 connection.sendBroadcast(message)
             })
 
-            this.outMsgCounter += connections.length
+            this.volumeLogger.outCount += connections.length
         }
     }
 

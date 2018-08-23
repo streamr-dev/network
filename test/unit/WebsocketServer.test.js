@@ -102,7 +102,7 @@ describe('WebsocketServer', () => {
         })
 
         it('increments connection counter', () => {
-            assert.equal(server.connectionCounter, 2)
+            assert.equal(server.volumeLogger.connectionCount, 2)
         })
     })
 
@@ -802,7 +802,7 @@ describe('WebsocketServer', () => {
         })
 
         it('decrements connection counter', () => {
-            assert.equal(server.connectionCounter, 0)
+            assert.equal(server.volumeLogger.connectionCount, 0)
         })
     })
 

@@ -2,9 +2,10 @@
  * Endpoints for RESTful data requests
  */
 const express = require('express')
+const VolumeLogger = require('../utils/VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
-function onDataFetchDone(res, dataPoints, wrapper, content) {
+function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {
     return function (largestOffset, err) {
         if (err) {
             console.log(err)
@@ -14,9 +15,11 @@ function onDataFetchDone(res, dataPoints, wrapper, content) {
         } else {
             switch (wrapper.toLowerCase()) {
                 case 'array':
+                    volumeLogger.outCount += 1
                     res.send(dataPoints.map((message) => message.toArray(content !== 'json')))
                     break
                 case 'object':
+                    volumeLogger.outCount += 1
                     res.send(dataPoints.map((message) => message.toObject(content !== 'json')))
                     break
                 default:
@@ -33,7 +36,7 @@ function parseIntIfExists(x) {
     return x === undefined ? undefined : parseInt(x)
 }
 
-module.exports = (historicalAdapter, streamFetcher) => {
+module.exports = (historicalAdapter, streamFetcher, volumeLogger = new VolumeLogger(0)) => {
     const router = express.Router()
 
     router.use(
@@ -69,7 +72,7 @@ module.exports = (historicalAdapter, streamFetcher) => {
                 partition,
                 count,
                 dataPoints.push.bind(dataPoints),
-                onDataFetchDone(res, dataPoints, wrapper, content),
+                onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
             )
         }
     })
@@ -128,7 +131,7 @@ module.exports = (historicalAdapter, streamFetcher) => {
                     partition,
                     fromOffset,
                     dataPoints.push.bind(dataPoints),
-                    onDataFetchDone(res, dataPoints, wrapper, content),
+                    onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
                 )
             } else if (fromOffset !== undefined && toOffset !== undefined) {
                 historicalAdapter.getOffsetRange(
@@ -137,7 +140,7 @@ module.exports = (historicalAdapter, streamFetcher) => {
                     fromOffset,
                     toOffset,
                     dataPoints.push.bind(dataPoints),
-                    onDataFetchDone(res, dataPoints, wrapper, content),
+                    onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
                 )
             } else if (toTimestamp === undefined) {
                 historicalAdapter.getFromTimestamp(
@@ -145,7 +148,7 @@ module.exports = (historicalAdapter, streamFetcher) => {
                     partition,
                     new Date(fromTimestamp),
                     dataPoints.push.bind(dataPoints),
-                    onDataFetchDone(res, dataPoints, wrapper, content),
+                    onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
                 )
             } else {
                 historicalAdapter.getTimestampRange(
@@ -154,7 +157,7 @@ module.exports = (historicalAdapter, streamFetcher) => {
                     new Date(fromTimestamp),
                     new Date(toTimestamp),
                     dataPoints.push.bind(dataPoints),
-                    onDataFetchDone(res, dataPoints, wrapper, content),
+                    onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
                 )
             }
         }
