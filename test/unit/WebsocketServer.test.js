@@ -46,6 +46,8 @@ describe('WebsocketServer', () => {
                 return new Promise(((resolve, reject) => {
                     if (authKey === 'correct') {
                         resolve(myStream)
+                    } else if (authKey === 'correctButNoPermission') {
+                        reject(new Error(401))
                     } else {
                         reject(new Error(403))
                     }
@@ -736,6 +738,28 @@ describe('WebsocketServer', () => {
                     stream: 'streamId',
                     authKey: 'correct',
                     msg: {},
+                }
+
+                mockSocket.receive(req)
+            })
+
+            it('responds with an error if the api key is wrong', () => {
+                const req = {
+                    type: 'publish',
+                    stream: 'streamId',
+                    authKey: 'wrong',
+                    msg: '{}',
+                }
+
+                mockSocket.receive(req)
+            })
+
+            it('responds with an error if the user does not have permission', () => {
+                const req = {
+                    type: 'publish',
+                    stream: 'streamId',
+                    authKey: 'correctButNoPermission',
+                    msg: '{}',
                 }
 
                 mockSocket.receive(req)

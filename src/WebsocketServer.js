@@ -112,20 +112,20 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         }
 
         this.streamFetcher.authenticate(req.stream, req.authKey, 'write')
-            .then((stream) => {
-                return this.publisher.publish(
-                    stream,
-                    timestamp,
-                    undefined, // ttl, read from stream when available
-                    StreamrBinaryMessage.CONTENT_TYPE_JSON,
-                    req.msg,
-                    req.pkey,
-                )
-            })
+            .then((stream) => this.publisher.publish(
+                stream,
+                timestamp,
+                undefined, // ttl, read from stream when available
+                StreamrBinaryMessage.CONTENT_TYPE_JSON,
+                req.msg,
+                req.pkey,
+            ))
             .catch((err) => {
                 let errorMsg
-                if (err instanceof HttpError && err.code === 403) {
-                    errorMsg = 'Authentication failed.'
+                if (err instanceof HttpError && err.code === 401) {
+                    errorMsg = `You are not allowed to write to stream ${req.stream}`
+                } else if (err instanceof HttpError && err.code === 403) {
+                    errorMsg = `Authentication failed while trying to publish to stream ${req.stream}`
                 } else if (err instanceof HttpError && err.code === 404) {
                     errorMsg = `Stream ${req.stream} not found.`
                 } else {
