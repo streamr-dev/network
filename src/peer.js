@@ -1,59 +1,66 @@
-'use strict'
+"use strict";
 
-const Bootstrap = require('libp2p-railing')
-const StreamrNode = require('./streamr-node')
+const Bootstrap = require("libp2p-bootstrap");
+const StreamrNode = require("./streamr-node");
 
-const debug = require('debug')
-const log = debug('strmr:p2p:peer')
+const debug = require("debug");
+const log = debug("strmr:p2p:peer");
 
-const BOOTNODES = require('../bootstrapNodes.json').map(node => {
-    return node.full
-})
+const BOOTNODES = require("../bootstrapNodes.json").map(node => {
+  return node.full;
+});
 
 class Peer extends StreamrNode {
-    constructor(options) {
-        const libp2pOptions = {
-            modules: {
-                peerDiscovery: [Bootstrap]
-            },
-            config: {
-                peerDiscovery: {
-                    bootstrap: {
-                        interval: 1000,
-                        enabled: true,
-                        list: BOOTNODES
-                    }
-                }
-            }
+  constructor(options) {
+    const libp2pOptions = {
+      modules: {
+        peerDiscovery: [Bootstrap]
+      },
+      config: {
+        peerDiscovery: {
+          bootstrap: {
+            interval: 1000,
+            enabled: true,
+            list: BOOTNODES
+          }
         }
+      }
+    };
 
-        super(options, libp2pOptions)
-    }
+    super(options, libp2pOptions);
+  }
 
-    nodeReady() {
-        this._node.on('peer:discovery', peer => this._trackerDiscovery(peer))
-        super.nodeReady()
-    }
+  nodeReady() {
+    this._node.on("peer:discovery", peer => this._trackerDiscovery(peer));
+    super.nodeReady();
+  }
 
-    _trackerDiscovery(peer) {
-        console.log('Discovered:', peer.id.toB58String())
-        this._node.dial(peer, () => {})
-        this._tracker = peer
-    }
+  _trackerDiscovery(peer) {
+    console.log("Discovered:", peer.id.toB58String());
+    this._node.dial(peer, () => {});
+    this._tracker = peer;
+  }
 
-    connect(peer) {
-        super.connect(peer)
-        this.sendStatus()
-    }
+  connect(peer) {
+    super.connect(peer);
+    this.sendStatus();
+  }
 
-    sendStatus() {
-        this._status = {
-            started: new Date().toLocaleString(),
-            streams: ['stream' + Math.floor(Math.random() * 100), 'stream' + Math.floor(Math.random()) * 100]
-        }
+  sendStatus() {
+    this._status = {
+      started: new Date().toLocaleString(),
+      streams: [
+        "stream" + Math.floor(Math.random() * 100),
+        "stream" + Math.floor(Math.random()) * 100
+      ]
+    };
 
-        super.sendMessage(StreamrNode.MESSAGE_CODES.STATUS, this._tracker, this._status)
-    }
+    super.sendMessage(
+      StreamrNode.MESSAGE_CODES.STATUS,
+      this._tracker,
+      this._status
+    );
+  }
 }
 
-module.exports = Peer
+module.exports = Peer;

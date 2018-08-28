@@ -9,7 +9,9 @@
   ],
   "scripts": {
     "tracker": "node tracker.js",
-    "node": "node node.js"
+    "node": "node node.js",
+    "eslint-check": "eslint --print-config .eslintrc.json | eslint-config-prettier-check",
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -22,12 +24,12 @@
   },
   "homepage": "https://github.com/streamr-dev/network#readme",
   "dependencies": {
+    "async": "^2.6.1",
     "debug": "^3.1.0",
     "defaults-deep": "^0.2.4",
     "events": "^3.0.0",
-    "ip": "^1.1.5",
     "libp2p": "^0.23.0",
-    "libp2p-railing": "^0.9.2",
+    "libp2p-bootstrap": "^0.9.3",
     "libp2p-secio": "^0.10.0",
     "libp2p-spdy": "^0.12.1",
     "libp2p-tcp": "^0.12.1",
@@ -35,8 +37,16 @@
     "ms": "^2.1.1",
     "pull-pushable": "^2.2.0",
     "pull-stream": "^3.6.8",
-    "safe-buffer": "^5.1.2",
-    "secp256k1": "^3.5.0",
-    "waterfall": "^1.0.0"
+    "safe-buffer": "^5.1.2"
+  },
+  "devDependencies": {
+    "chai": "^4.1.2",
+    "chai-as-promised": "^7.1.1",
+    "dirty-chai": "^2.0.1",
+    "eslint": "^5.4.0",
+    "eslint-config-prettier": "^3.0.1",
+    "eslint-plugin-prettier": "^2.6.2",
+    "mocha": "^5.2.0",
+    "prettier": "^1.14.2"
   }
 }

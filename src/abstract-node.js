@@ -1,36 +1,36 @@
-'use strict'
+"use strict";
 
-const EventEmitter = require('events').EventEmitter
+const EventEmitter = require("events").EventEmitter;
 
 class AbstractNode extends EventEmitter {
-    constructor() {
-        super()
-        
-        this._version = null
-        this._status = null
-        this._privateKey = null
-        this._port = null
-        this._host = null
-        this._node = null
+  constructor() {
+    super();
 
-        this.once('node:ready', () => this.nodeReady());
-    }
+    this._version = null;
+    this._status = null;
+    this._privateKey = null;
+    this._port = null;
+    this._host = null;
+    this._node = null;
 
-    _handleProtocol(protocol, conn) {}
+    this.once("node:ready", () => this.nodeReady());
+  }
 
-    _handleMessage(peerInfo, message) {}
+  _handleProtocol(protocol, conn) {}
 
-    _handleStatus() {}
+  _handleMessage(peerInfo, message) {}
 
-    sendMessage(code, recipient, data) {}
+  _handleStatus() {}
 
-    sendStatus(status) {}
-    
-    getCodeDescription(code) {}
+  sendMessage(code, recipient, data) {}
 
-    nodeReady() {}
+  sendStatus(status) {}
 
-    connect(peer) {}
+  getCodeDescription(code) {}
+
+  nodeReady() {}
+
+  connect(peer) {}
 }
 
-module.exports = AbstractNode
+module.exports = AbstractNode;

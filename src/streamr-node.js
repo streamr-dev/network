@@ -66,6 +66,7 @@ class StreamrNode extends AbstractNode {
             console.log(ma.toString())
         )
 
+        this.emit('tracker:running')
         this._node.on('peer:connect', peer => this.connect(peer))
     }
 

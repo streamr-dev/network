@@ -5,7 +5,8 @@ Streamr P2P network
 npm install
 
 # run tracker
-`node tracker.js`
+`npm run tracker`
 
 # run node
-`node node.js port`
+`npm run node` default node with port 30301
+`npm run node port` default node with port N
