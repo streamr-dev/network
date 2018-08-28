@@ -6,6 +6,7 @@ const waterfall = require('async/waterfall')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const pull = require('pull-stream')
+const { callbackToPromise } = require('./util')
 
 const debug = require('debug')
 const log = debug('strmr:p2p:streamr-node')
@@ -25,44 +26,36 @@ class StreamrNode extends AbstractNode {
         this._privateKey = options.privateKey || ''
         this._status = null
 
-        let node = null
-        waterfall(
-            [
-                cb =>
-                (this._privateKey ?
-                    PeerId.createFromPrivKey(this._privateKey, cb) :
-                    cb(null, null)),
-                (idPeer, cb) => {
-                    if (this._privateKey) {
-                        const peerInfo = new PeerInfo(idPeer)
-                        cb(null, peerInfo)
-                    } else {
-                        PeerInfo.create(cb)
-                    }
-                },
-                (peerInfo, cb) => {
-                    peerInfo.multiaddrs.add(`/ip4/${this._host}/tcp/${this._port}`)
+        this.createNode(libp2pOptions)
+    }
 
-                    node = new Libp2pBundle({
-                        ...libp2pOptions,
-                        peerInfo: peerInfo
-                    })
-                    this._node = node
+    async createNode(libp2pOptions) {
+        let peerInfo
 
-                    node.handle('/message/', (protocol, conn) =>
-                        this.handleProtocol(protocol, conn)
-                    )
-                    node.start(cb)
-                }
-            ],
-            err => {
-                if (err) {
-                    throw err
-                }
+        if (this._privateKey) {
+            const idPeer = await callbackToPromise(PeerId.createFromPrivKey, this._privateKey)
+            peerInfo = new PeerInfo(idPeer)
+        } else {
+            peerInfo = await callbackToPromise(PeerInfo.create)
+        }
 
-                this.emit('node:ready')
-            }
+        peerInfo.multiaddrs.add(`/ip4/${this._host}/tcp/${this._port}`)
+
+        this._node = new Libp2pBundle({
+            ...libp2pOptions,
+            peerInfo: peerInfo
+        })
+
+        this._node.handle('/message/', (protocol, conn) =>
+            this.handleProtocol(protocol, conn)
         )
+        this._node.start((err) => {
+            if (err) {
+                throw err
+            }
+
+            this.emit('node:ready')
+        })
     }
 
     nodeReady() {
@@ -73,33 +66,34 @@ class StreamrNode extends AbstractNode {
             console.log(ma.toString())
         )
 
-        this._node.on('peer:connect', peer => this._connectPeer(peer))        
+        this._node.on('peer:connect', peer => this.connect(peer))
     }
 
-    _connectPeer(peer) {
+    connect(peer) {
         console.log('Connection established to:', peer.id.toB58String())
     }
 
-    handleProtocol(protocol, conn) {
-        let id = null
-        
-        waterfall(
-            [
-                cb => conn.getPeerInfo(cb),
-                (peerInfo, cb) => {
-                    pull(
-                        conn,
-                        pull.map(data => data.toString('utf8')),
-                        pull.drain(data => this.handleMessage(peerInfo, JSON.parse(data)))
-                    )
-                }
-            ],
-            err => {
-                if (err) {
-                    throw err
-                }
-            }
-        )
+    async getPeerInfo(conn) {
+        return new Promise((resolve, reject) => {
+            return conn.getPeerInfo((err, peerInfo) => {
+                return err ? reject(err) : resolve(peerInfo)
+            })
+        })
+    }
+
+    async handleProtocol(protocol, conn) {
+        try {
+            const peerInfo = await this.getPeerInfo(conn)
+
+            pull(
+                conn,
+                pull.map(data => data.toString('utf8')),
+                pull.drain(data => this.handleMessage(peerInfo, JSON.parse(data)))
+            )
+
+        } catch (err) {
+            console.log(err)
+        }
     }
 
     handleMessage(peerInfo, message) {

@@ -41,8 +41,8 @@ class Peer extends StreamrNode {
         this._tracker = peer
     }
 
-    _connectPeer(peer) {
-        super._connectPeer(peer)
+    connect(peer) {
+        super.connect(peer)
         this.sendStatus()
     }
 
