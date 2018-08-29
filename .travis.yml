@@ -1,0 +1,27 @@
+language: node_js
+node_js:
+- '8'
+sudo: true
+branches:
+  only:
+  - master
+  - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
+before_install:
+- npm i -g npm@6.0.0
+jobs:
+  include:
+  - stage: Unit tests
+    script:
+    - npm test
+  - stage: Build Staging
+    env:
+    - NODE_ENV=development
+    script:
+    - npm run build
+  - stage: Build Production
+    if: NOT type IN (pull_request)
+    env:
+    - NODE_ENV=production
+    - VERSION=$TRAVIS_TAG
+    script:
+    - npm run build
