@@ -30,8 +30,8 @@ class Peer extends StreamrNode {
 
     super(options, libp2pOptions);
 
-    this._streams = getStreams()
-    console.log(this._streams)
+    this._streams = getStreams();
+    console.log(this._streams);
   }
 
   nodeReady() {

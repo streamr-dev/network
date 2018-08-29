@@ -6,7 +6,8 @@ const waterfall = require('async/waterfall')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const pull = require('pull-stream')
-const { callbackToPromise } = require('./util')
+const { callbackToPromise, buildMessage } = require('./util')
+const { validate } = require("./validation")
 
 const debug = require('debug')
 const log = debug('strmr:p2p:streamr-node')
@@ -98,6 +99,7 @@ class StreamrNode extends AbstractNode {
     }
 
     handleMessage(peerInfo, message) {
+        message = validate('message', message);
         const code = message.code
 
         switch (code) {
@@ -122,17 +124,12 @@ class StreamrNode extends AbstractNode {
     }
 
     sendMessage(code, recipient, data) {
-        let msg = {
-            code: code,
-            msg: data
-        }
-
         this._node.dialProtocol(recipient, '/message/', (err, conn) => {
             if (err) {
                 throw err
             }
 
-            pull(pull.values([JSON.stringify(msg)]), conn)
+            pull(pull.values([buildMessage(code, data)]), conn)
         })
     }
 }

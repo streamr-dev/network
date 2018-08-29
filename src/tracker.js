@@ -6,6 +6,7 @@ const os = require("os");
 const ms = require("ms");
 const StreamrNode = require("./streamr-node");
 const { validate } = require("./validation");
+const { getAddress } = require("./util");
 
 const debug = require("debug");
 const log = debug("strmr:p2p:tracker");
@@ -43,7 +44,7 @@ class Tracker extends StreamrNode {
     const peerInfo = peer.peerInfo;
     const status = validate('status', peer.status);
 
-    this._peers.set(peerInfo.id.toB58String(), status);
+    this._peers.set(getAddress(peerInfo), status);
 
     this._sendPeers(peer);
   }

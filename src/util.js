@@ -20,7 +20,17 @@ const getStreams = (amount = 3) => {
   return streams;
 };
 
+const getAddress = (peerInfo) => {
+  return peerInfo.multiaddrs.toArray()[0].toString();
+};
+
+const buildMessage = (code, data) => {
+  return JSON.stringify({ code: code, msg: data });
+};
+
 module.exports = {
   callbackToPromise,
-  getStreams
+  getStreams,
+  getAddress,
+  buildMessage
 };
