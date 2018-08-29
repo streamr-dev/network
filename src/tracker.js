@@ -23,21 +23,24 @@ class Tracker extends StreamrNode {
         `strmr-net/v${pVersion}/${os.platform()}-${os.arch()}/nodejs`
     );
     this._remoteClientIdFilter = options.remoteClientIdFilter;
+
     this.on("peer:status", peer => this._handlePeerStatus(peer));
+    this.on("peer:send-peers", peer => this._sendPeers(peer));
 
     log(`tracker started at ${this._host}:${this._port}`);
   }
 
   getPeers() {
-    return this._node.peerBook.getAllArray();
+    return [...this._peers];
   }
 
   getPeersAndStreams() {
     return this._peers;
   }
 
-  _getRandomPeers() {
-    return this._node.peerBook.getAllArray();
+  _getRandomPeers(peerAddress) {
+    const peers = this._peers;
+    return [...peers.keys()].filter(k => k !== peerAddress); // randomize
   }
 
   _handlePeerStatus(peer) {
@@ -46,15 +49,18 @@ class Tracker extends StreamrNode {
 
     this._peers.set(getAddress(peerInfo), status);
 
-    this._sendPeers(peer);
+    this._sendPeers(peerInfo);
   }
 
-  _sendPeers(peer) {
+  _sendPeers(peerInfo) {
     console.log("sending peers");
-    super.sendMessage(
+
+    console.log(this._getRandomPeers(getAddress(peerInfo)))
+
+    super.sendMessage(  
       StreamrNode.MESSAGE_CODES.PEERS,
-      peer.peerInfo,
-      this._getRandomPeers()
+      peerInfo,
+      this._getRandomPeers(getAddress(peerInfo))
     );
   }
 }

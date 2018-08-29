@@ -17,4 +17,4 @@ setInterval(() => {
   console.log(tracker.getPeersAndStreams())
 
 
-}, ms('5s'))
+}, ms('10s'))

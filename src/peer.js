@@ -20,7 +20,7 @@ class Peer extends StreamrNode {
       config: {
         peerDiscovery: {
           bootstrap: {
-            interval: 1000,
+            interval: 5000,
             enabled: true,
             list: BOOTNODES
           }
@@ -51,11 +51,13 @@ class Peer extends StreamrNode {
   }
 
   sendStatus() {
-    this._status = {
-      started: new Date().toLocaleString(),
-      streams: this._streams
-    };
-
+    if (!this._status) {
+      this._status = {
+        started: new Date().toLocaleString(),
+        streams: this._streams
+      };
+    }
+    
     super.sendMessage(
       StreamrNode.MESSAGE_CODES.STATUS,
       this._tracker,
