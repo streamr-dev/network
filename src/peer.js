@@ -2,6 +2,7 @@
 
 const Bootstrap = require("libp2p-bootstrap");
 const StreamrNode = require("./streamr-node");
+const { getStreams } = require("./util");
 
 const debug = require("debug");
 const log = debug("strmr:p2p:peer");
@@ -28,6 +29,9 @@ class Peer extends StreamrNode {
     };
 
     super(options, libp2pOptions);
+
+    this._streams = getStreams()
+    console.log(this._streams)
   }
 
   nodeReady() {
@@ -49,10 +53,7 @@ class Peer extends StreamrNode {
   sendStatus() {
     this._status = {
       started: new Date().toLocaleString(),
-      streams: [
-        "stream" + Math.floor(Math.random() * 100),
-        "stream" + Math.floor(Math.random()) * 100
-      ]
+      streams: this._streams
     };
 
     super.sendMessage(

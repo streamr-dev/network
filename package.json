@@ -28,6 +28,7 @@
     "debug": "^3.1.0",
     "defaults-deep": "^0.2.4",
     "events": "^3.0.0",
+    "joi": "^13.6.0",
     "libp2p": "^0.23.0",
     "libp2p-bootstrap": "^0.9.3",
     "libp2p-secio": "^0.10.0",
@@ -37,7 +38,8 @@
     "ms": "^2.1.1",
     "pull-pushable": "^2.2.0",
     "pull-stream": "^3.6.8",
-    "safe-buffer": "^5.1.2"
+    "safe-buffer": "^5.1.2",
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "chai": "^4.1.2",

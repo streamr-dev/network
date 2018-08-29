@@ -5,6 +5,7 @@ const pVersion = require("../package.json").version;
 const os = require("os");
 const ms = require("ms");
 const StreamrNode = require("./streamr-node");
+const { validate } = require("./validation");
 
 const debug = require("debug");
 const log = debug("strmr:p2p:tracker");
@@ -40,7 +41,8 @@ class Tracker extends StreamrNode {
 
   _handlePeerStatus(peer) {
     const peerInfo = peer.peerInfo;
-    const status = peer.status;
+    const status = validate('status', peer.status);
+
     this._peers.set(peerInfo.id.toB58String(), status);
 
     this._sendPeers(peer);
