@@ -8,6 +8,10 @@ branches:
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
 - npm i -g npm@6.0.0
+env:
+  global: #1st and 2nd Docker credentials
+  - secure: dQzw5BnG8fOcOTJ5lb9ONMA+PyCS2hzq6wa8VZFIGwfdbe7voKnt6jHPesZqUKJbBV6eVCadJzkKMXrHkl6oB4SUqeYVD7YhIAg0XTLA5lqh8//g/LoxHAz1PKFvjqD4WdBxalZE0LAvx42rpuCGgoJYny3ORAiZRUp8PxcntNscBsDpW7jWa6LdXVxNUDuPDrmjq3UNZAihymKLFQRIGLFk4H8J/MOwaTGF0P1Z6U4kIJUEN1aiKFFZklLfQr2bndU93/BO+yKw1SEgNMZ8+10m7ykhDQxXSHDszlqNEdlDmlk9bpbHhc9j+RIO6PwzSkTsUAec9ckpi03UY7yjVAxrLwruDnRCe4u/Lc6jA0keGDAWYLdsjsQN+jR1jxKpvAUnUkHBmPvqQWdp+bnzk7R2uIduBeZhUWZViY/XLJqzeRdbJhEcfchpWckjiiGKQHmqUbFqgfjPOFV1ciWPrU+QRWp/Fp3f39gqUpQQK9kcWTs0bCZ9/HEqrqTCGfc+MGXtc8Dvvwrf/tfR0eyXHT7jWkXfR2tYuaef1D00XhrGGUu/KYVnP35EFHCV6V6yzQn21l4/7i3aiIpvoxC8ZdWfYBg2F5yUOfdLniaRJ/SAxnRQqLE797mwc5iSoeDbatquC8FO6fv39USj2ikU1BU1BFdaGMNw5w50OkL00U0=
+  - secure: PhxEE7lVV3Djb422l0qZSxwnNuEwfiJSkgwRogt7uvvJz81vO4ootm+Wf+PhaGpJenBDXpsjx2/vQNmibdk0ZUE+3d4xniOHu7Z9Dbl/rkavRclni00auD7Q6zdOmMP4S3jgbZsNw3BBwp8+wif47GibkBHi3tqr6USA4EIuqgTQ0f68oghJ6qxaAaXxF23ucJozK2t2t8TorFQI7kjJzrkmLYSBfawmcicWGUGfDwLoYr1oauyw625x2apjn9LJFcwSmVqVtz+bIQFNK2nttkpU63lblE4Xr9/d+r5yx3Gf0uzSe/3ziZN1baaVvue8xMlS7N6/rx4bvpxse45rfUW9MqkX9cxTCGqNdfh9EknteubpA+Yrsm6adOiewAU2m2AIkx1UzABbQ9EvnnQj/SYERMDL9b5dMyaT2bnPoF9EPEB2QWuoKHyqbFiGDsrgk8coTuh/CypYyXnC+51UlSzlfgA/o2WrjZ6FfY9gdj2DM/oaCdYSM8g7w/iTpG2Rr2LaX2aQyTgIYiGUgV6tBjISnMRZ4oJ1BWJtHHuNJrBQv+VzyJ8OMCA4NL7FGWTIo+nDkMPKDXmdtAvp8B7MATdnB44QVZwWPcSkoXyx8r3MoTGQw8enA3XU2txNQpdRB5aIhCSXWuBCSTvvXGOz0qkE+wUNyHbR5z5yo9U+HyI=
 jobs:
   include:
   - stage: Unit tests
@@ -17,6 +21,34 @@ jobs:
     script:
     - sudo /etc/init.d/mysql stop
     - git clone https://github.com/streamr-dev/streamr-docker-dev.git
-    - $TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 1
+    - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 1"
     - sleep 1m
     - npm run test-integration
+  - stage: Build docker (dev)
+    if: tag IS blank
+    install: true
+    env:
+    - OWNER=streamr
+    - IMAGE_NAME=data-api
+    - TAG=dev
+    script:
+    - docker build -t $OWNER/$IMAGE_NAME:$TAG .
+    deploy:
+    - provider: script
+      script:
+      - docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
+      - docker push $OWNER/$IMAGE_NAME:$TAG
+  - stage: Build docker (production)
+    if: tag IS present
+    install: true
+    env:
+    - OWNER=streamr
+    - IMAGE_NAME=data-api
+    - TAG=latest
+    script:
+    - docker build -t $OWNER/$IMAGE_NAME:$TAG .
+    - docker tag $OWNER/$IMAGE_NAME:$TAG $OWNER/$IMAGE_NAME:$TRAVIS_TAG
+    deploy:
+    - provider: script
+      script:
+      - echo "test"
