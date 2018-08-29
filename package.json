@@ -7,12 +7,12 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest",
+    "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
     "eslint": "eslint ."
   },
-  "author": "",
+  "author": "Streamr <contact@streamr.com>",
   "license": "",
   "engines": {
     "node": ">= 8.0.0"
