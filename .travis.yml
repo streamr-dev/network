@@ -12,16 +12,11 @@ jobs:
   include:
   - stage: Unit tests
     script:
-    - npm test
-  - stage: Build Staging
-    env:
-    - NODE_ENV=development
+    - npm run test-unit
+  - stage: Integration tests
     script:
-    - npm run build
-  - stage: Build Production
-    if: NOT type IN (pull_request)
-    env:
-    - NODE_ENV=production
-    - VERSION=$TRAVIS_TAG
-    script:
-    - npm run build
+    - sudo /etc/init.d/mysql stop
+    - git clone https://github.com/streamr-dev/streamr-docker-dev.git
+    - $TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 1
+    - sleep 1m
+    - npm run test-integration
