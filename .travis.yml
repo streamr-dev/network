@@ -24,6 +24,33 @@ jobs:
     - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 1"
     - sleep 1m
     - npm run test-integration
+  - stage: Publish version to npm (TODO)
+    if: tag IS blank
+    script:
+    - mkdir build
+    - mv $(pwd)/.codedeploy/.appspec.yml $(pwd)/build/appspec.yml
+    - mv $(pwd)/.codedeploy $(pwd)/build/
+    - tar -czvf $(pwd)/build/data-api-stg.tar -C $(pwd)/build appspec.yml .codedeploy
+    deploy:
+    - provider: s3
+      access_key_id: AKIAI3FGPGMK3EREJJTQ
+      secret_access_key:
+        secure: Kg4DzNrzbXqlkDlpeRDy0vaGtygX22PvMlhObrjbVjs9OdnM1mOjWlesCwhglXMVoQkMAdb27fH6q7t2LlI/FBf0w4YM9uJ7e8VZTMu313ryDgDsrs69rHsy/W/ZejBo0Jq9D90NrEIrBtnoC3jdVb8Bbr0LpvHRkeD5Kccqzy42U77sNLCe1bOvnC26mnGVcgF7DbgoSCwME1mMJbnbYAKCB2vOmo14ucvDI4zH0L/ndrQ06MBVhDQHap63lL36VoahxKO7MR6ohaBYgY6EV0du9k9XVWpQ2HqbTNbc7kNpoM+6uitWw49Gu0XWFkcls0EGzUatI/Gg5uZCMQtZ20ENNi0lNEZ15Q5WrQNDTb0pqqBgNGVgFR/wC6ehUKm63/XLYceMRoQSmnMOLoJ2HcLN7B5NmwM1IUcWXhi3kEGSpL8INZUb2ts960xoZgK9EdN9mYcJb8w2RtNks2jCClAZhDftVi36AvPmgYIxwQzj6Lw3nM6Sh6NmuVeSpwhZEogshqfWnz5+a1JDunnGOeYFQNVnNrtK2O4Q9pEkTlPHc6UGcxwGqqD4vZeJBMkax1DMMCuPcTPyzlk5b+I7cGmnBRWaZ/UpC/zzUDC91ALe9Xr9cIEe356siZG5pqjv90L9Ugl8YN/opmWD5ZEgShxeUIJIx+knH/PSGLl50pA=
+      bucket: eu-west-1-stg-streamr-vault
+      upload-dir: data-api/releases
+      acl: private
+      region: eu-west-1
+      skip_cleanup: true
+      local_dir: build
+    - provider: codedeploy
+      access_key_id: AKIAI3FGPGMK3EREJJTQ
+      secret_access_key:
+        secure: Kg4DzNrzbXqlkDlpeRDy0vaGtygX22PvMlhObrjbVjs9OdnM1mOjWlesCwhglXMVoQkMAdb27fH6q7t2LlI/FBf0w4YM9uJ7e8VZTMu313ryDgDsrs69rHsy/W/ZejBo0Jq9D90NrEIrBtnoC3jdVb8Bbr0LpvHRkeD5Kccqzy42U77sNLCe1bOvnC26mnGVcgF7DbgoSCwME1mMJbnbYAKCB2vOmo14ucvDI4zH0L/ndrQ06MBVhDQHap63lL36VoahxKO7MR6ohaBYgY6EV0du9k9XVWpQ2HqbTNbc7kNpoM+6uitWw49Gu0XWFkcls0EGzUatI/Gg5uZCMQtZ20ENNi0lNEZ15Q5WrQNDTb0pqqBgNGVgFR/wC6ehUKm63/XLYceMRoQSmnMOLoJ2HcLN7B5NmwM1IUcWXhi3kEGSpL8INZUb2ts960xoZgK9EdN9mYcJb8w2RtNks2jCClAZhDftVi36AvPmgYIxwQzj6Lw3nM6Sh6NmuVeSpwhZEogshqfWnz5+a1JDunnGOeYFQNVnNrtK2O4Q9pEkTlPHc6UGcxwGqqD4vZeJBMkax1DMMCuPcTPyzlk5b+I7cGmnBRWaZ/UpC/zzUDC91ALe9Xr9cIEe356siZG5pqjv90L9Ugl8YN/opmWD5ZEgShxeUIJIx+knH/PSGLl50pA=
+      bucket: eu-west-1-stg-streamr-vault
+      key: data-api/releases/data-api-stg.tar
+      application: staging-data-api-codedeploy
+      deployment_group: staging-data-api-deployment-group
+      region: eu-west-1
   - stage: Build docker (dev)
     if: tag IS blank
     install: true
