@@ -44,5 +44,4 @@ jobs:
     - IMAGE_NAME=data-api
     - TAG=latest
     script:
-    - docker build -t $OWNER/$IMAGE_NAME:$TAG .git status
-    - docker tag $OWNER/$IMAGE_NAME:$TAG $OWNER/$IMAGE_NAME:$TRAVIS_TAG
+      script: bash .travis_scripts/deploy_docker.sh production
