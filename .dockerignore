@@ -1,4 +1,13 @@
 node_modules
 npm-debug.log
+stress-test
+test
 .idea/
 *.iml
+coverage
+.*
+*.png
+*.md
+*.xml
+LICENSE
+jest.config.js
