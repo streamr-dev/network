@@ -12,9 +12,11 @@ module.exports = class StreamFetcher {
         this.streamResourceUrl = `${baseUrl}/api/v1/streams`
         this.fetch = memoize(this._fetch, {
             maxAge: MAX_AGE,
+            promise: true,
         })
         this.checkPermission = memoize(this._checkPermission, {
             maxAge: MAX_AGE,
+            promise: true,
         })
     }
 
