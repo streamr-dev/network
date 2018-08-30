@@ -19,7 +19,7 @@ Options for the data input can be provided in query parameters:
 
 Parameter | Required | Description
 --------- | -------- | -----------
-ttl       | no       | Time-To-Live, in seconds. The event will be deleted after this time has passed. If not given, the event storage period will be the stream default.
+ts        | no       | Event timestamp in either ISO 8601 string format or milliseconds since epoch. If not given, time on server will be used. Note: if you provide a timestamp, always send events in chronological order.
 pkey      | no       | For partitioned streams, provides the key to partition by. Can be eg. a customer id to make all events for that customer to go to the same Canvas for processing. If not given, a random partition is selected.
 
 

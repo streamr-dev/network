@@ -3,6 +3,10 @@ const debug = require('debug')('WebsocketServer')
 const debugProtocol = require('debug')('WebsocketServer:protocol')
 const Stream = require('./Stream')
 const Connection = require('./Connection')
+const TimestampUtil = require('./utils/TimestampUtil')
+const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
+const HttpError = require('./errors/HttpError')
+const VolumeLogger = require('./utils/VolumeLogger')
 
 const DEFAULT_PARTITION = 0
 
@@ -11,15 +15,15 @@ function getStreamLookupKey(streamId, streamPartition) {
 }
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher) {
+    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
         super()
         this.wss = wss
         this.realtimeAdapter = realtimeAdapter
         this.historicalAdapter = historicalAdapter
         this.latestOffsetFetcher = latestOffsetFetcher
         this.streamFetcher = streamFetcher
-        this.msgCounter = 0
-        this.connectionCounter = 0
+        this.publisher = publisher
+        this.volumeLogger = volumeLogger
 
         // This handler is for realtime messages, not resends
         this.realtimeAdapter.on('message', (messageAsArray, streamId, streamPartition) => {
@@ -30,11 +34,12 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             subscribe: this.handleSubscribeRequest,
             unsubscribe: this.handleUnsubscribeRequest,
             resend: this.handleResendRequest,
+            publish: this.handlePublishRequest,
         }
 
         this.wss.on('connection', (socket) => {
             debug('connection established: %o', socket)
-            this.connectionCounter += 1
+            this.volumeLogger.connectionCount += 1
 
             const connection = new Connection(socket)
 
@@ -58,17 +63,62 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             })
 
             socket.on('close', () => {
-                this.connectionCounter -= 1
+                this.volumeLogger.connectionCount -= 1
                 this.handleDisconnect(connection)
             })
         })
 
         this.streams = {}
+    }
 
-        setInterval(() => {
-            console.log('Connections: %d, Messages / min: %d (%d / sec)', this.connectionCounter, this.msgCounter, this.msgCounter / 60)
-            this.msgCounter = 0
-        }, 60 * 1000)
+    handlePublishRequest(connection, req) {
+        this.volumeLogger.inCount += 1
+
+        if (!req.stream) {
+            connection.sendError('Publish request is missing the stream id!')
+            return
+        }
+
+        // Read timestamp if given
+        let timestamp
+        if (req.ts) {
+            try {
+                timestamp = TimestampUtil.parse(req.ts)
+            } catch (err) {
+                connection.sendError(`Invalid timestamp: ${req.ts}`)
+                return
+            }
+        }
+
+        // Check that the payload is a string
+        if (typeof req.msg !== 'string') {
+            connection.sendError('Message must be stringified JSON!')
+            return
+        }
+
+        this.streamFetcher.authenticate(req.stream, req.authKey, 'write')
+            .then((stream) => this.publisher.publish(
+                stream,
+                timestamp,
+                undefined, // ttl, read from stream when available
+                StreamrBinaryMessage.CONTENT_TYPE_JSON,
+                req.msg,
+                req.pkey,
+            ))
+            .catch((err) => {
+                let errorMsg
+                if (err instanceof HttpError && err.code === 401) {
+                    errorMsg = `You are not allowed to write to stream ${req.stream}`
+                } else if (err instanceof HttpError && err.code === 403) {
+                    errorMsg = `Authentication failed while trying to publish to stream ${req.stream}`
+                } else if (err instanceof HttpError && err.code === 404) {
+                    errorMsg = `Stream ${req.stream} not found.`
+                } else {
+                    errorMsg = `Publish request failed: ${err}`
+                }
+
+                connection.sendError(errorMsg)
+            })
     }
 
     handleResendRequest(connection, req) {
@@ -82,7 +132,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         const sendMessage = (message) => {
             // "broadcast" to the socket of this connection (ie. this single client) and specific subscription id
-            this.msgCounter += 1
+            this.volumeLogger.outCount += 1
             connection.sendUnicast(message, req.sub)
         }
 
@@ -212,7 +262,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 connection.sendBroadcast(message)
             })
 
-            this.msgCounter += connections.length
+            this.volumeLogger.outCount += connections.length
         }
     }
 

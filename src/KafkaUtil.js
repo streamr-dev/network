@@ -1,6 +1,7 @@
 const events = require('events')
 const kafka = require('kafka-node')
 const debug = require('debug')('KafkaUtil')
+const FailedToPublishError = require('./errors/FailedToPublishError')
 
 module.exports = class KafkaUtil extends events.EventEmitter {
     constructor(dataTopic, partitioner, zookeeper, kafkaClient, kafkaProducer) {
@@ -36,28 +37,29 @@ module.exports = class KafkaUtil extends events.EventEmitter {
         })
     }
 
-    send(streamrBinaryMessage, cb) {
-        const produceRequest = {
-            topic: this.dataTopic,
-            // Directly set the partition using our custom partitioner for consistency with Java (KafkaService.CustomPartitioner)
-            partition: this.partitioner.partition(
-                this.dataTopicPartitionCount,
-                `${streamrBinaryMessage.streamId}-${streamrBinaryMessage.streamPartition}`,
-            ),
-            messages: streamrBinaryMessage.toBytes(),
-        }
-
-        debug('Kafka produce request: %o', produceRequest)
-
-        this.kafkaProducer.send([produceRequest], (err) => {
-            debug('Kafka producer send callback err: ', err)
-
-            if (err) {
-                console.log('Error producing to Kafka: ', err)
+    send(streamrBinaryMessage) {
+        return new Promise((resolve, reject) => {
+            const produceRequest = {
+                topic: this.dataTopic,
+                // Directly set the partition using our custom partitioner for consistency with Java (KafkaService.CustomPartitioner)
+                partition: this.partitioner.partition(
+                    this.dataTopicPartitionCount,
+                    `${streamrBinaryMessage.streamId}-${streamrBinaryMessage.streamPartition}`,
+                ),
+                messages: streamrBinaryMessage.toBytes(),
             }
-            if (cb) {
-                cb(err)
-            }
+
+            debug('Kafka produce request: %o', produceRequest)
+
+            this.kafkaProducer.send([produceRequest], (err) => {
+                debug('Kafka producer send callback err: ', err)
+
+                if (err) {
+                    reject(new FailedToPublishError(streamrBinaryMessage.streamId, `Producing to Kafka failed: ${err}`))
+                } else {
+                    resolve()
+                }
+            })
         })
     }
 }

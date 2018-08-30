@@ -64,12 +64,30 @@ describe('StreamrBinaryMessage', () => {
                     assert.equal(JSON.parse.callCount, 0)
                 })
             })
+        })
 
-            it('must fail if content is not a buffer', () => {
+        describe('constructor', () => {
+            it('must accept a buffer content', () => {
+                new StreamrBinaryMessage(
+                    streamId, streamPartition, timestamp, ttl,
+                    StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify(msg), 'utf8'),
+                )
+            })
+
+            it('must accept a string content', () => {
+                new StreamrBinaryMessage(
+                    streamId, streamPartition, timestamp, ttl,
+                    StreamrBinaryMessage.CONTENT_TYPE_JSON, 'I AM A STRING',
+                )
+            })
+
+            it('must throw if content is not a buffer or a string', () => {
                 assert.throws(() => {
-                    /* new */ StreamrBinaryMessage(
+                    new StreamrBinaryMessage(
                         streamId, streamPartition, timestamp, ttl,
-                        StreamrBinaryMessage.CONTENT_TYPE_JSON, 'I AM NOT A BUFFER',
+                        StreamrBinaryMessage.CONTENT_TYPE_JSON, {
+                            iam: 'an object',
+                        },
                     )
                 })
             })

@@ -1,6 +1,7 @@
 const assert = require('assert')
 const sinon = require('sinon')
 const KafkaUtil = require('../../src/KafkaUtil')
+const FailedToPublishError = require('../../src/errors/FailedToPublishError')
 
 describe('KafkaUtil', () => {
     const dataTopic = 'dataTopic'
@@ -38,53 +39,53 @@ describe('KafkaUtil', () => {
         kafkaUtil = new KafkaUtil(dataTopic, mockPartitioner, mockZookeeper, mockKafkaClient, mockKafkaProducer)
     })
 
-    it('should send an encoded message to the data topic with partitioning provided by the partitioner', (done) => {
-        kafkaUtil.kafkaProducer = {
-            send(arr) {
-                assert.equal(arr.length, 1)
-                assert.equal(arr[0].topic, dataTopic)
-                assert(mockPartitioner.partition.calledWith(
-                    kafkaUtil.dataTopicPartitionCount,
-                    `${streamrBinaryMessage.streamId}-${streamrBinaryMessage.streamPartition}`,
-                ))
-                assert.equal(arr[0].partition, 5)
-                assert.equal(arr[0].messages, 'bytes')
-                assert(streamrBinaryMessage.toBytes.calledOnce)
+    describe('send', () => {
+        it('should send an encoded message to the data topic with partitioning provided by the partitioner', (done) => {
+            kafkaUtil.kafkaProducer = {
+                send(arr) {
+                    assert.equal(arr.length, 1)
+                    assert.equal(arr[0].topic, dataTopic)
+                    assert(mockPartitioner.partition.calledWith(
+                        kafkaUtil.dataTopicPartitionCount,
+                        `${streamrBinaryMessage.streamId}-${streamrBinaryMessage.streamPartition}`,
+                    ))
+                    assert.equal(arr[0].partition, 5)
+                    assert.equal(arr[0].messages, 'bytes')
+                    assert(streamrBinaryMessage.toBytes.calledOnce)
+                    done()
+                },
+            }
+
+            kafkaUtil.send(streamrBinaryMessage)
+        })
+
+        it('should return a promise and resolve it on successful produce', () => {
+            kafkaUtil.kafkaProducer = {
+                send(arr, cb) {
+                    cb()
+                },
+            }
+
+            return kafkaUtil.send(streamrBinaryMessage)
+        })
+
+        it('should reject the promise on error', (done) => {
+            kafkaUtil.kafkaProducer = {
+                send(arr, cb) {
+                    cb('test error')
+                },
+            }
+
+            kafkaUtil.send(streamrBinaryMessage).catch((err) => {
+                assert(err instanceof FailedToPublishError)
+                assert(err.message.indexOf('test error') !== -1)
                 done()
-            },
-        }
-
-        kafkaUtil.send(streamrBinaryMessage)
-    })
-
-    it('should call the callback with no arguments on successful produce', (done) => {
-        kafkaUtil.kafkaProducer = {
-            send(arr, cb) {
-                cb()
-            },
-        }
-
-        kafkaUtil.send(streamrBinaryMessage, (err) => {
-            assert(!err)
-            done()
+            })
         })
-    })
 
-    it('should call the callback with the error on unsuccessful produce', (done) => {
-        kafkaUtil.kafkaProducer = {
-            send(arr, cb) {
-                cb('test error')
-            },
-        }
-
-        kafkaUtil.send(streamrBinaryMessage, (err) => {
-            assert.equal(err, 'test error')
-            done()
+        it('should register error handlers for kafka client and producer', () => {
+            mockKafkaClient.on.calledWith('error')
+            mockKafkaProducer.on.calledWith('error')
         })
-    })
-
-    it('should register error handlers for kafka client and producer', () => {
-        mockKafkaClient.on.calledWith('error')
-        mockKafkaProducer.on.calledWith('error')
     })
 })

@@ -1,10 +1,23 @@
 # Protocol
 
-**PLEASE BE ADVISED: Below may be outdated!**
-
 ### Requests sent by client
 
 Also see the [Javascript client](https://github.com/streamr-dev/streamr-client) documentation.
+
+#### publish
+
+Publishes a new message to a stream. Requires a write permission to the stream.
+
+```
+{
+  "type": "publish",
+  "stream": "streamId",
+  "authKey": "authKey",
+  "msg": "{}",                 // the message as stringified json
+  "ts": 1533924184016,         // timestamp (optional), defaults to current time on server
+  "pkey": "deviceId"           // partition key (optional), defaults to none (random partition)
+}
+```
 
 #### subscribe
 

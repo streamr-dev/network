@@ -1,10 +1,12 @@
 const events = require('events')
+const encoder = require('../../../src/MessageEncoder')
 
 module.exports = class MockSocket extends events.EventEmitter {
     constructor() {
         super()
         this.rooms = []
         this.sentMessages = []
+        this.throwOnError = true
     }
 
     join(channel, cb) {
@@ -19,6 +21,14 @@ module.exports = class MockSocket extends events.EventEmitter {
 
     send(message) {
         this.sentMessages.push(message)
+
+        // Inspect the message to catch errors
+        const parsedMessage = JSON.parse(message)
+
+        // If you expect error messages, set mockSocket.throwOnError to false for those tests
+        if (parsedMessage[1] === encoder.BROWSER_MSG_TYPE_ERROR && this.throwOnError) {
+            throw new Error(`Received unexpected error message: ${parsedMessage[3]}`)
+        }
     }
 
     disconnect() {
