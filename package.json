@@ -2,6 +2,14 @@
   "name": "streamr-p2p-network",
   "version": "1.0.0",
   "description": "Streamr P2P network",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/network.git"
+  },
+  "bugs": {
+    "url": "https://github.com/streamr-dev/network/issues"
+  },
+  "homepage": "https://github.com/streamr-dev/network#readme",
   "keywords": [
     "p2p",
     "networking",
@@ -9,20 +17,14 @@
   ],
   "scripts": {
     "tracker": "node tracker.js",
-    "node": "node node.js",
-    "eslint-check": "eslint --print-config .eslintrc.json | eslint-config-prettier-check",
-    "test": "mocha"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/streamr-dev/network.git"
+    "node": "node node.js", 
+    "test": "jest",
+    "test-unit": "jest test/unit",
+    "test-integration": "jest test/integration",
+    "eslint": "eslint ."
   },
   "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/streamr-dev/network/issues"
-  },
-  "homepage": "https://github.com/streamr-dev/network#readme",
+  "license": "",
   "dependencies": {
     "async": "^2.6.1",
     "debug": "^3.1.0",
@@ -42,13 +44,10 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "chai-as-promised": "^7.1.1",
-    "dirty-chai": "^2.0.1",
     "eslint": "^5.4.0",
     "eslint-config-prettier": "^3.0.1",
     "eslint-plugin-prettier": "^2.6.2",
-    "mocha": "^5.2.0",
+    "jest": "^23.5.0",
     "prettier": "^1.14.2"
   }
 }

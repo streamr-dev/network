@@ -1,13 +1,14 @@
 'use strict'
 
-const chai = require('chai')
-// chai.use(require('dirty-chai'))
-const expect = chai.expect
-const series = require('async/series')
-const Tracker = require('../src/tracker')
+const assert = require('assert')
+const Tracker = require('../../src/tracker')
+const Peer = require('../../src/peer')  
+
+jest.setTimeout(30000)
 
 describe('tracker creation', () => {
   let tracker;
+  let peer1;
   
   it('should be able to start and stop successfully', (done) => {
 
@@ -20,13 +21,21 @@ describe('tracker creation', () => {
       })  
       
       tracker.on('tracker:running', () => {
-        tracker._node.peerInfo.multiaddrs.forEach(ma => {
-          expect(ma.toString()).to.equal('/ip4/127.0.0.1/tcp/30300/ipfs/QmQ2zigjQikYnyYUSXZydNXrDRhBut2mubwJBaLXobMt3A')
-          done()
-        })
+        assert.equal(tracker.getPeers().length, 0)
         
+        peer1 = new Peer({host: '127.0.0.1', port: 30301})
+        
+        tracker.on('peer:status', peer => {
+            assert.equal(tracker.getPeers().length, 1)
 
-        tracker._node.stop(() => {})
-      })
+            peer1._node.hangUp(tracker._node, () => {
+                peer1._node.stop(() => {
+                    tracker._node.stop(() => {
+                        done()
+                    })
+                })
+            })
+        })
+      })      
   })
 })
