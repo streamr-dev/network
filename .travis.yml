@@ -35,9 +35,7 @@ jobs:
     - docker build -t $OWNER/$IMAGE_NAME:$TAG .
     deploy:
     - provider: script
-      script:
-      - docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
-      - docker push $OWNER/$IMAGE_NAME:$TAG
+      script: bash .travis_scripts/deploy_docker.sh staging
   - stage: Build docker (production)
     if: tag IS present
     install: true
@@ -46,9 +44,6 @@ jobs:
     - IMAGE_NAME=data-api
     - TAG=latest
     script:
-    - docker build -t $OWNER/$IMAGE_NAME:$TAG .
+    - docker build -t $OWNER/$IMAGE_NAME:$TAG .git status
     - docker tag $OWNER/$IMAGE_NAME:$TAG $OWNER/$IMAGE_NAME:$TRAVIS_TAG
-    deploy:
-    - provider: script
-      script:
-      - echo "test"
+
