@@ -25,7 +25,7 @@ module.exports = class Connection extends EventEmitter {
         if (!(this.connected || this.connecting)) {
             this.connecting = true
 
-            this.socket = new WebSocket(this.options.url)
+            this.socket = this.options.socket || new WebSocket(this.options.url)
             this.socket.binaryType = 'arraybuffer'
             this.emit('connecting')
 
@@ -71,6 +71,10 @@ module.exports = class Connection extends EventEmitter {
     }
 
     send(req) {
-        this.socket.send(JSON.stringify(req))
+        try {
+            this.socket.send(JSON.stringify(req))
+        } catch (err) {
+            this.emit('error', err)
+        }
     }
 }
