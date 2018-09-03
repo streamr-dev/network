@@ -1,6 +1,6 @@
 "use strict";
 
-const Joi = require('joi');
+const Joi = require("joi")
 
 const Status = Joi.object().keys({
     started: Joi.date().required(),
@@ -14,15 +14,14 @@ const Message = Joi.object().keys({
 
 const validate = (type, value) => {
     let scheme;
-    if (type === 'status') {
+  if (type === "status") {
         scheme = Status;
-    }
-    else if (type === 'message') {
+  } else if (type === "message") {
         scheme = Message;
-    }
-    
+  }
+
     return Joi.attempt(value, scheme)
-};
+}
 
 module.exports = {
     validate

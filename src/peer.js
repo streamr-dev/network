@@ -9,7 +9,7 @@ const log = debug("strmr:p2p:peer");
 
 const BOOTNODES = require("../bootstrapNodes.json").map(node => {
   return node.full;
-});
+})
 
 class Peer extends StreamrNode {
   constructor(options) {
@@ -30,25 +30,25 @@ class Peer extends StreamrNode {
 
     super(options, libp2pOptions);
 
-    this._streams = getStreams();
-    console.log(this._streams);
-  }
+        this._streams = getStreams();
+        console.log(this._streams);
+    }
 
   nodeReady() {
     this._node.on("peer:discovery", peer => this._trackerDiscovery(peer));
-    super.nodeReady();
-  }
+        super.nodeReady();
+    }
 
   _trackerDiscovery(peer) {
     console.log("Discovered:", peer.id.toB58String());
-    this._node.dial(peer, () => {});
-    this._tracker = peer;
-  }
+        this._node.dial(peer, () => {});
+        this._tracker = peer;
+    }
 
   connect(peer) {
     super.connect(peer);
-    this.sendStatus();
-  }
+        this.sendStatus();
+    }
 
   sendStatus() {
     if (!this._status) {
@@ -57,7 +57,7 @@ class Peer extends StreamrNode {
         streams: this._streams
       };
     }
-    
+
     super.sendMessage(
       StreamrNode.MESSAGE_CODES.STATUS,
       this._tracker,

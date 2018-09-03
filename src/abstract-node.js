@@ -6,15 +6,15 @@ class AbstractNode extends EventEmitter {
   constructor() {
     super();
 
-    this._version = null;
-    this._status = null;
-    this._privateKey = null;
-    this._port = null;
-    this._host = null;
-    this._node = null;
+        this._version = null;
+        this._status = null;
+        this._privateKey = null;
+        this._port = null;
+        this._host = null;
+        this._node = null;
 
-    this.once("node:ready", () => this.nodeReady());
-  }
+        this.once("node:ready", () => this.nodeReady());
+    }
 
   _handleProtocol(protocol, conn) {}
 

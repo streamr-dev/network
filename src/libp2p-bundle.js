@@ -19,7 +19,7 @@ class Libp2pBundle extends libp2p {
     };
 
     super(defaultsDeep(options, defaults));
-  }
+    }
 }
 
 module.exports = Libp2pBundle;
