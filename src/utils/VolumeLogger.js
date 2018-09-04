@@ -6,7 +6,7 @@ module.exports = class VolumeLogger {
         this.outCount = 0
 
         if (this.reportingIntervalSeconds > 0) {
-            setInterval(() => {
+            this.interval = setInterval(() => {
                 this.log()
             }, this.reportingIntervalSeconds * 1000)
         }
@@ -25,5 +25,10 @@ module.exports = class VolumeLogger {
 
         this.inCount = 0
         this.outCount = 0
+    }
+
+    stop() {
+        console.log('VolumeLogger stopping.')
+        clearInterval(this.interval)
     }
 }

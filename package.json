@@ -36,7 +36,7 @@
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
-    "uws": "^0.14.1"
+    "uws": "^0.14.5"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.2",
