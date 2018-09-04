@@ -4,6 +4,7 @@ const waterfall = require('async/waterfall')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const pull = require('pull-stream')
+
 const {
     callbackToPromise,
     buildMessage,
@@ -13,6 +14,7 @@ const {
 const {
     validate
 } = require("../validation")
+
 const ms = require('ms')
 
 const debug = require('debug')
