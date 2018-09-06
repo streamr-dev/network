@@ -1,9 +1,4 @@
-[
-    {
-      "ip": "127.0.0.1",
-      "port": "30300",
-      "id": "QmSVryyA9tE46vSxFz8snw6rnjQv7xQVVssMM8zbVscDeL",
-      "full": "/ip4/127.0.0.1/tcp/30300/ipfs/QmQ2zigjQikYnyYUSXZydNXrDRhBut2mubwJBaLXobMt3A",
-      "comment": "Streamr 1"  
-    }
-]
+[{
+  "path": "/ip4/127.0.0.1/tcp/30300/ipfs/QmQ2zigjQikYnyYUSXZydNXrDRhBut2mubwJBaLXobMt3A",
+  "comment": "Streamr main tracker №1"
+}]

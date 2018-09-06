@@ -1,72 +1,45 @@
-const Buffer = require('safe-buffer').Buffer
-const pVersion = require('../../package.json').version
-const os = require('os')
-const ms = require('ms')
-const StreamrNode = require('../protocol/streamr-node')
+const EventEmitter = require('events').EventEmitter
+const generateClientId = require('../util').generateClientId
+const TrackerServer = require('../protocol/TrackerServer')
+const getPeersTopology = require('../helpers/TopologyStrategy').getPeersTopology
+const encoder = require('../helpers/MessageEncoder')
+const getAddress = require('../util').getAddress
+const debug = require('debug')('streamr:tracker')
 
-const {
-    validate
-} = require('../validation')
+module.exports = class Tracker extends EventEmitter {
+    constructor(connection) {
+        super()
 
-const {
-    getAddress
-} = require('../util')
+        this.connection = connection
+        this.peers = new Map()
+        this.trackerId = generateClientId('tracker')
+        this.listners = {
+            trackerServerListner: new TrackerServer(this.connection)
+        }
 
-const debug = require('debug')
-const log = debug('strmr:p2p:tracker')
-
-class Tracker extends StreamrNode {
-    constructor(options) {
-        super(options)
-
-        this._timeout = options.timeout || ms('10s')
-        this._peers = new Map()
-
-        this._clientId = Buffer.from(
-            options.clientId ||
-            `strmr-net/v${pVersion}/${os.platform()}-${os.arch()}/nodejs`,
-        )
-        this._remoteClientIdFilter = options.remoteClientIdFilter
-
-        this.on('peer:status', peer => this._handlePeerStatus(peer))
-        this.on('peer:send-peers', peer => this._sendPeers(peer))
-
-        log(`tracker started at ${this._host}:${this._port}`)
+        this.connection.once('node:ready', () => this.trackerReady())
+        this.listners.trackerServerListner.on('streamr:tracker:send-peers', (peer) => this.sendPeers(peer))
+        this.listners.trackerServerListner.on('streamr:tracker:peer-status', ({
+            peer,
+            status
+        }) => {
+            this.statusPeer(peer, status)
+        })
     }
 
-    getPeers() {
-        return [...this._peers]
+    trackerReady() {
+        debug('tracker: %s is running', this.trackerId)
     }
 
-    getPeersAndStreams() {
-        return this._peers
+    sendPeers(peer) {
+        debug('sending peers')
+
+        const peers = getPeersTopology(this.peers, getAddress(peer))
+        this.connection.send(peer, encoder.peersMessage(peers))
     }
 
-    _getRandomPeers(peerAddress) {
-        const peers = this._peers
-        return [...peers.keys()].filter(k => k !== peerAddress) // randomize
-    }
-
-    _handlePeerStatus(peer) {
-        const peerInfo = peer.peerInfo
-        const status = validate('status', peer.status)
-
-        this._peers.set(getAddress(peerInfo), status)
-
-        this._sendPeers(peerInfo)
-    }
-
-    _sendPeers(peerInfo) {
-        console.log('sending peers')
-
-        console.log(this._getRandomPeers(getAddress(peerInfo)))
-
-        super.sendMessage(
-            StreamrNode.MESSAGE_CODES.PEERS,
-            peerInfo,
-            this._getRandomPeers(getAddress(peerInfo)),
-        )
+    statusPeer(peer, status) {
+        debug('recieved from %s status %s', getAddress(peer), JSON.stringify(status))
+        this.peers.set(getAddress(peer), status)
     }
 }
-
-module.exports = Tracker

@@ -1,4 +1,7 @@
 const uuidV1 = require('uuid/v1')
+const version = require('../package.json').version
+const PeerInfo = require('peer-info')
+const os = require('os')
 
 const callbackToPromise = (method, ...args) => {
     return new Promise((resolve, reject) => {
@@ -7,6 +10,10 @@ const callbackToPromise = (method, ...args) => {
         })
     })
 }
+
+const BOOTNODES = require('../bootstrapNodes.json').map(node => {
+    return node.path
+})
 
 const getStreams = (amount = 3) => {
     let streams = []
@@ -17,9 +24,9 @@ const getStreams = (amount = 3) => {
 
     return streams
 }
-
+// this.peerInfo.id.toB58String()
 const getAddress = peerInfo => {
-    return peerInfo.multiaddrs.toArray()[0].toString()
+    return peerInfo instanceof PeerInfo ? peerInfo.multiaddrs.toArray()[0].toString() : ''
 }
 
 const buildMessage = (code, data) => {
@@ -29,9 +36,19 @@ const buildMessage = (code, data) => {
     })
 }
 
+const generateClientId = (prefix = '') => {
+    prefix = prefix ? '-' + prefix : ''
+    return `streamr${prefix}/v${version}/${os.platform()}-${os.arch()}/nodejs`
+}
+
+const isTracker = tracker => BOOTNODES.includes(tracker)
+
 module.exports = {
     callbackToPromise,
     getStreams,
     getAddress,
-    buildMessage
+    buildMessage,
+    generateClientId,
+    isTracker,
+    BOOTNODES
 }
