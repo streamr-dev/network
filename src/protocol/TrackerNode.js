@@ -51,6 +51,21 @@ module.exports = class TrackerNode extends EventEmitter {
 
                 break;
 
+            case encoder.DATA:
+                this.emit('streamr:node-node:stream-data', {
+                    streamId: data[0],
+                    data: data[1]
+                })
+                break
+
+            case encoder.STREAM:
+                console.log('found node')
+                this.emit('streamr:node:found-stream', {
+                    streamId: data[0],
+                    nodeAddress: data[1]
+                })
+                break
+
             default:
                 throw new Error('Unhandled message type')
         }

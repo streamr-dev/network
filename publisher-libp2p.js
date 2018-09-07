@@ -10,13 +10,13 @@ const connection = new Connection('127.0.0.1', port, '', true)
 connection.once('node:ready', () => {
     connection.connect(nodeAddress)
 
-    const publisher = new Publisher(connection, nodeAddress)
+    const publisher = new Publisher(connection)
 
     setInterval(() => {
         const msg = 'Hello world, ' + new Date().toLocaleString()
 
         if (publisher.connection.isReady()) {
-            publisher.publish(streamId, msg, () => {})
+            publisher.publishLibP2P(streamId, Buffer.from(msg), () => {})
         }
     }, ms('1s'))
 })

@@ -42,6 +42,13 @@ module.exports = class TrackerServer extends EventEmitter {
 
                 break
 
+            case encoder.STREAM:
+                this.emit('streamr:tracker:find-stream', {
+                    sender: peer,
+                    streamId: data[0]
+                })
+                break
+
             case encoder.PEERS:
                 this.emit('streamr:tracker:send-peers', peer)
                 break

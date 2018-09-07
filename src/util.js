@@ -25,16 +25,7 @@ const getStreams = (amount = 3) => {
     return streams
 }
 // this.peerInfo.id.toB58String()
-const getAddress = peerInfo => {
-    return peerInfo instanceof PeerInfo ? peerInfo.multiaddrs.toArray()[0].toString() : ''
-}
-
-const buildMessage = (code, data) => {
-    return JSON.stringify({
-        code: code,
-        msg: data
-    })
-}
+const getAddress = peerInfo => peerInfo instanceof PeerInfo ? peerInfo.multiaddrs.toArray()[0].toString() : ''
 
 const generateClientId = (prefix = '') => {
     prefix = prefix ? '-' + prefix : ''
@@ -47,7 +38,6 @@ module.exports = {
     callbackToPromise,
     getStreams,
     getAddress,
-    buildMessage,
     generateClientId,
     isTracker,
     BOOTNODES

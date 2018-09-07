@@ -5,7 +5,8 @@ const msgTypes = {
     PEERS: 0x01,
     DATA: 0x02,
     SUBSCRIBE: 0x03,
-    PUBLISH: 0x04
+    PUBLISH: 0x04,
+    STREAM: 0x05,
 }
 
 const encode = (type, data) => {
@@ -35,5 +36,7 @@ module.exports = {
     decode,
     peersMessage: (peers) => encode(msgTypes.PEERS, peers),
     statusMessage: (status) => encode(msgTypes.STATUS, status),
+    dataMessage: (streamdId, data) => encode(msgTypes.DATA, [streamdId, data]),
+    streamMessage: (streamdId, nodeAddress) => encode(msgTypes.STREAM, [streamdId, nodeAddress]),
     ...msgTypes,
 }

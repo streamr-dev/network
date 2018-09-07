@@ -18,6 +18,10 @@ module.exports = class Tracker extends EventEmitter {
         }
 
         this.connection.once('node:ready', () => this.trackerReady())
+        this.listners.trackerServerListner.on('streamr:tracker:find-stream', ({
+            sender,
+            streamId
+        }) => this.findStream(sender, streamId))
         this.listners.trackerServerListner.on('streamr:tracker:send-peers', (peer) => this.sendPeers(peer))
         this.listners.trackerServerListner.on('streamr:tracker:peer-status', ({
             peer,
@@ -41,5 +45,16 @@ module.exports = class Tracker extends EventEmitter {
     statusPeer(peer, status) {
         debug('recieved from %s status %s', getAddress(peer), JSON.stringify(status))
         this.peers.set(getAddress(peer), status)
+    }
+
+    findStream(sender, streamId) {
+        debug('tracker looking for the stream %s', streamId)
+
+        this.peers.forEach((status, nodeAddress) => {
+            if (status.streams.includes(streamId)) {
+                this.connection.send(sender, encoder.streamMessage(streamId, nodeAddress))
+                return
+            }
+        })
     }
 }
