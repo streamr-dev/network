@@ -33,6 +33,16 @@ module.exports = class Node extends EventEmitter {
     nodeReady() {
         debug('node: %s is running\n\n\n', this.nodeId)
         this.status.started = new Date().toLocaleString()
+
+        this.subscribe()
+    }
+
+    subscribe() {
+        this.status.streams.forEach((stream) => {
+            this.connection.node.pubsub.subscribe(stream, (msg) => {
+                console.log(msg.from, msg.data.toString())
+            }, () => {})
+        })
     }
 
     sendStatusToTracker(tracker) {

@@ -55,6 +55,10 @@ module.exports = class Connection extends EventEmitter {
         })
     }
 
+    isReady() {
+        return this.node && this.node.isStarted()
+    }
+
     nodeReady() {
         if (!this.isStarted) {
             throw new Error('libP2P node is not ready')
