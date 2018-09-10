@@ -40,7 +40,7 @@ module.exports = class Connection extends EventEmitter {
 
         this.node = new Libp2pBundle(peerInfo, isNode)
         this.node.handle(HANDLER, (protocol, conn) =>
-            this.recieve(protocol, conn)
+            this.receive(protocol, conn)
         )
 
         this.node.start((err) => {
@@ -105,7 +105,7 @@ module.exports = class Connection extends EventEmitter {
         })
     }
 
-    async recieve(protocol, conn) {
+    async receive(protocol, conn) {
         try {
             const sender = await this.getPeerInfo(conn)
 
@@ -115,9 +115,9 @@ module.exports = class Connection extends EventEmitter {
                 pull.drain(message => {
 
                     const messageDecoded = encoder.decode(message)
-                    debug('recieved from %s, message %s with data "%s"', getAddress(sender), encoder.getMsgPrefix(messageDecoded.code), JSON.stringify(messageDecoded.data))
+                    debug('received from %s, message %s with data "%s"', getAddress(sender), encoder.getMsgPrefix(messageDecoded.code), JSON.stringify(messageDecoded.data))
 
-                    this.emit('streamr:message-recieved', {
+                    this.emit('streamr:message-received', {
                         sender,
                         message
                     })

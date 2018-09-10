@@ -43,7 +43,7 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     statusPeer(peer, status) {
-        debug('recieved from %s status %s', getAddress(peer), JSON.stringify(status))
+        debug('received from %s status %s', getAddress(peer), JSON.stringify(status))
         this.peers.set(getAddress(peer), status)
     }
 
