@@ -28,7 +28,7 @@ const libp2pNodeOptions = {
 }
 
 module.exports = class Libp2pBundle extends libp2p {
-    constructor(peerInfo, isNode = false) {
+    constructor(peerInfo, includeNodeOptions = false) {
         const defaults = {
             modules: {
                 transport: [TCP],
@@ -37,7 +37,7 @@ module.exports = class Libp2pBundle extends libp2p {
             }
         }
 
-        const params = !isNode ? {
+        const params = !includeNodeOptions ? {
             peerInfo: peerInfo
         } : {
             ...libp2pNodeOptions,
