@@ -18,6 +18,8 @@
   "scripts": {
     "tracker": "node tracker.js",
     "node": "node node.js",
+    "pub-libp2p": "node publisher-libp2p.js",
+    "pub": "node publisher.js",
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
