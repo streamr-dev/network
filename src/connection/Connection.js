@@ -60,10 +60,6 @@ module.exports = class Connection extends EventEmitter {
     }
 
     nodeReady() {
-        if (!this.isStarted) {
-            throw new Error('libP2P node is not ready')
-        }
-
         this.node.peerInfo.multiaddrs.forEach(ma =>
             debug('listening on: %s', ma.toString())
         )
