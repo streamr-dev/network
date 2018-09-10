@@ -1,0 +1,21 @@
+language: node_js
+node_js:
+- '9'
+sudo: true
+branches:
+  only:
+  - master
+  - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
+before_install:
+- npm i -g npm@6.0.0
+jobs:
+  include:
+  - stage: eslint
+    script:
+      - npm run eslint
+  - stage: unit tests
+    script:
+    - npm run test-unit
+  - stage: Integration tests
+    script:
+    - npm run test-integration
