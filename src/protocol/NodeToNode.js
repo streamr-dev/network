@@ -7,7 +7,7 @@ const {
 const encoder = require('../helpers/MessageEncoder')
 const debug = require('debug')('streamr:node-node')
 
-module.exports = class TrackerServer extends EventEmitter {
+module.exports = class NodeToNode extends EventEmitter {
     constructor(connection) {
         super()
 
