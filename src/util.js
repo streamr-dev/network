@@ -25,7 +25,13 @@ const getStreams = (amount = 3) => {
     return streams
 }
 // this.peerInfo.id.toB58String()
-const getAddress = peerInfo => peerInfo instanceof PeerInfo ? peerInfo.multiaddrs.toArray()[0].toString() : ''
+const getAddress = peerInfo => {
+    if (peerInfo instanceof PeerInfo) {
+        return peerInfo.multiaddrs.toArray()[0].toString()
+    } else {
+        throw new Error('Expected instance of PeerInfo')
+    }
+}
 
 const generateClientId = (prefix = '') => {
     prefix = prefix ? '-' + prefix : ''
