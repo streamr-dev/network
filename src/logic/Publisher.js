@@ -1,6 +1,4 @@
 const EventEmitter = require('events').EventEmitter
-const TrackerNode = require('../protocol/TrackerNode')
-const NodeToNode = require('../protocol/NodeToNode')
 const encoder = require('../helpers/MessageEncoder')
 const generateClientId = require('../util').generateClientId
 const debug = require('debug')('streamr:publisher')
@@ -13,10 +11,10 @@ module.exports = class Node extends EventEmitter {
         this.publisherId = generateClientId('publisher')
         this.nodeAddress = nodeAddress
 
-        this.connection.once('node:ready', () => this.nodeReady())
+        this.connection.once('node:ready', () => this.onNodeReady())
     }
 
-    nodeReady() {
+    onNodeReady() {
         debug('node: %s is running\n\n\n', this.publisherId)
     }
 

@@ -1,5 +1,5 @@
 const assert = require('assert')
-const Tracker = require('../../src/logic/tracker')
+const Tracker = require('../../src/logic/Tracker')
 const Peer = require('../../src/logic/peer')
 
 jest.setTimeout(30000)

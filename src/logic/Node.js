@@ -26,29 +26,29 @@ module.exports = class Node extends EventEmitter {
             nodeToNode: new NodeToNode(this.connection)
         }
 
-        this.connection.once('node:ready', () => this.nodeReady())
-        this.listners.trackerNodeListner.on('streamr:peer:send-status', (tracker) => this.sendStatusToTracker(tracker))
+        this.connection.once('node:ready', () => this.onNodeReady())
+        this.listners.trackerNodeListner.on('streamr:peer:send-status', (tracker) => this.onSendStatusToTracker(tracker))
         this.listners.trackerNodeListner.on('streamr:node-node:stream-data', ({
             streamId,
             data
-        }) => this.sendData(streamId, data))
+        }) => this.onSendData(streamId, data))
         this.listners.trackerNodeListner.on('streamr:node-node:connect', (peers) => this.listners.nodeToNode.emit('streamr:node-node:connect', peers))
         this.listners.trackerNodeListner.on('streamr:node:found-stream', ({
             streamId,
             nodeAddress
-        }) => this.addKnownStreams(streamId, nodeAddress))
+        }) => this.onAddKnownStreams(streamId, nodeAddress))
 
     }
 
-    nodeReady() {
+    onNodeReady() {
         debug('node: %s is running', this.nodeId)
         debug('handling streams: %s\n\n\n', JSON.stringify(this.status.streams))
         this.status.started = new Date().toLocaleString()
 
-        this.subscribe()
+        this._subscribe()
     }
 
-    subscribe() {
+    _subscribe() {
         this.status.streams.forEach((stream) => {
             this.connection.node.pubsub.subscribe(stream, (msg) => {
                 console.log(msg.from, msg.data.toString())
@@ -56,19 +56,19 @@ module.exports = class Node extends EventEmitter {
         })
     }
 
-    sendStatusToTracker(tracker) {
+    onSendStatusToTracker(tracker) {
         debug('sending status to tracker')
         this.tracker = tracker
         this.connection.send(tracker, encoder.statusMessage(this.status))
     }
 
     // add to cache of streams
-    addKnownStreams(streamId, nodeAddress) {
+    onAddKnownStreams(streamId, nodeAddress) {
         debug('add to known streams %s, node %s', streamId, nodeAddress)
         this.knownStreams.set(streamId, nodeAddress)
     }
 
-    sendData(streamId, data) {
+    onSendData(streamId, data) {
         let foundInPeers = false
         if (this.status.streams.includes(streamId)) {
             foundInPeers = true

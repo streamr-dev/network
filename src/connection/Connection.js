@@ -21,12 +21,12 @@ module.exports = class Connection extends EventEmitter {
         this.status = null
         this.isStarted = false
 
-        this.createNode(isNode)
+        this._createNode(isNode)
 
-        this.once('node:ready', () => this.nodeReady())
+        this.once('node:ready', () => this.onNodeReady())
     }
 
-    async createNode(isNode) {
+    async _createNode(isNode) {
         let peerInfo
 
         if (this.privateKey) {
@@ -40,7 +40,7 @@ module.exports = class Connection extends EventEmitter {
 
         this.node = new Libp2pBundle(peerInfo, isNode)
         this.node.handle(HANDLER, (protocol, conn) =>
-            this.receive(protocol, conn)
+            this.onReceive(protocol, conn)
         )
 
         this.node.start((err) => {
@@ -59,15 +59,15 @@ module.exports = class Connection extends EventEmitter {
         return this.node && this.node.isStarted()
     }
 
-    nodeReady() {
+    onNodeReady() {
         this.node.peerInfo.multiaddrs.forEach(ma =>
             debug('listening on: %s', ma.toString())
         )
 
-        this.bindEvents()
+        this._bindEvents()
     }
 
-    bindEvents() {
+    _bindEvents() {
         debug('binding events')
 
         this.node.on('peer:discovery', (peer) => this.emit('streamr:peer:discovery', peer))
@@ -79,8 +79,12 @@ module.exports = class Connection extends EventEmitter {
 
         this.on('streamr:send-message', ({
             recipient,
-            messages
-        }) => this.send(recipient, message))
+            message
+        }) => this._onSend(recipient, message))
+    }
+
+    _onSend(recipient, message) {
+        this.send(recipient, message)
     }
 
     send(recipient, message) {
@@ -101,9 +105,9 @@ module.exports = class Connection extends EventEmitter {
         })
     }
 
-    async receive(protocol, conn) {
+    async onReceive(protocol, conn) {
         try {
-            const sender = await this.getPeerInfo(conn)
+            const sender = await this._getPeerInfo(conn)
 
             pull(
                 conn,
@@ -125,7 +129,7 @@ module.exports = class Connection extends EventEmitter {
         }
     }
 
-    async getPeerInfo(conn) {
+    async _getPeerInfo(conn) {
         return new Promise((resolve, reject) => {
             return conn.getPeerInfo((err, peerInfo) => {
                 return err ? reject(err) : resolve(peerInfo)
@@ -145,12 +149,12 @@ module.exports = class Connection extends EventEmitter {
         }
 
         if (!this.isConnected(address)) {
-            await this.dial(address)
+            await this._dial(address)
             debug('connected to %s', address)
         }
     }
 
-    async dial(address) {
+    async _dial(address) {
         return new Promise((resolve, reject) => {
             return this.node.dial(address, (err, peerInfo) => {
                 return err ? reject(err) : resolve(peerInfo)

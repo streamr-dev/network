@@ -1,5 +1,5 @@
 const assert = require('assert')
-const Tracker = require('../../src/logic/tracker')
+const Tracker = require('../../src/logic/Tracker')
 
 describe('tracker creation', () => {
     let tracker

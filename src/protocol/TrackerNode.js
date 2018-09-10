@@ -12,14 +12,14 @@ module.exports = class TrackerNode extends EventEmitter {
 
         this.connection = connection
 
-        this.connection.on('streamr:peer:discovery', (tracker) => this.connectToTracker(tracker))
+        this.connection.on('streamr:peer:discovery', (tracker) => this.onConnectToTracker(tracker))
         this.connection.on('streamr:message-received', ({
             sender,
             message
-        }) => this.receive(sender, message))
+        }) => this.onReceive(sender, message))
     }
 
-    async connectToTracker(tracker) {
+    async onConnectToTracker(tracker) {
         if (isTracker(getAddress(tracker)) && !this.connection.isConnected(tracker)) {
             await this.connection.connect(tracker)
 
@@ -28,7 +28,7 @@ module.exports = class TrackerNode extends EventEmitter {
         }
     }
 
-    receive(sender, message) {
+    onReceive(sender, message) {
         const {
             code,
             data

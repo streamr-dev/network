@@ -31,7 +31,7 @@ module.exports = class Libp2pBundle extends libp2p {
     constructor(peerInfo, includeNodeOptions = false) {
         const defaults = {
             modules: {
-                transport: [TCP],
+                transport: [TCP, WS],
                 connEncryption: [SECIO],
                 streamMuxer: [SPDY]
             }
