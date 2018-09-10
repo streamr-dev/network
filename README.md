@@ -44,3 +44,15 @@ example:
 - validation
 - tests
 - async
+
+# Architecture
+
+The software consist of three layers, which are listed below from the lowest to the highest level.
+
+- _Connection layer_ deals with network-level concerns such as forming connections and sending text/binary messages
+over sockets etc. It wraps around a network library (currently libp2p) and provides a library-independent interface for
+the higher levels.
+- _Protocol layer_ is responsible for encoding messages to be sent via the network, as well as decoding received
+messages and interpreting them in terms of higher-level concerns.
+- _Logic layer_ is concerned with application-level concerns. It reacts to high-level events emitted from the protocol
+layer and pushes new data to the Streamr network with the interfaces provided by the protocol and connection layers.
