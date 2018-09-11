@@ -55,4 +55,4 @@ the higher levels.
 - _Protocol layer_ is responsible for encoding messages to be sent via the network, as well as decoding received
 messages and interpreting them in terms of higher-level concerns.
 - _Logic layer_ is concerned with application-level concerns. It reacts to high-level events emitted from the protocol
-layer and pushes new data to the Streamr network with the interfaces provided by the protocol and connection layers.
+layer and pushes new data to the Streamr network via the same layer.
