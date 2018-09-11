@@ -56,3 +56,8 @@ the higher levels.
 messages and interpreting them in terms of higher-level concerns.
 - _Logic layer_ is concerned with application-level concerns. It reacts to high-level events emitted from the protocol
 layer and pushes new data to the Streamr network via the same layer.
+
+# Glossary
+- A _peer_ is any participant in the peer-to-peer network.
+- A _node_ is a peer that forwards data in the Streamr network pub-sub.
+- A _tracker_ is a peer that assists nodes to discover other nodes.
