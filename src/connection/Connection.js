@@ -18,10 +18,6 @@ const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:message-received'
 })
 
-async function getPeerInfo(conn) {
-    return new Promise((resolve, reject) => conn.getPeerInfo((err, peerInfo) => (err ? reject(err) : resolve(peerInfo))))
-}
-
 module.exports = class Connection extends EventEmitter {
     constructor(host, port, privateKey = '', isNode = false) {
         super()
@@ -115,7 +111,7 @@ module.exports = class Connection extends EventEmitter {
 
     async onReceive(protocol, conn) {
         try {
-            const sender = await getPeerInfo(conn)
+            const sender = await Connection.getPeerInfo(conn)
 
             pull(
                 conn,
@@ -165,5 +161,11 @@ module.exports = class Connection extends EventEmitter {
 
     getPeers() {
         return this.node.peerBook.getAllArray()
+    }
+
+    static async getPeerInfo(connection) {
+        return new Promise((resolve, reject) => {
+            return connection.getPeerInfo((err, peerInfo) => (err ? reject(err) : resolve(peerInfo)))
+        })
     }
 }
