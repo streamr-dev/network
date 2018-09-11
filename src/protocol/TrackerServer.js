@@ -33,7 +33,7 @@ module.exports = class TrackerServer extends EventEmitter {
             case encoder.STATUS:
                 this.emit(events.NODE_STATUS_RECEIVED, {
                     peer,
-                    data // status
+                    status: data
                 })
                 break
 

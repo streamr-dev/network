@@ -91,7 +91,7 @@ module.exports = class Connection extends EventEmitter {
     send(recipient, message) {
         const messageDecoded = encoder.decode(message)
         debug('sending to the %s, message %s with data "%s"',
-            getAddress(recipient),
+            recipient instanceof PeerInfo ? getAddress(recipient) : '',
             encoder.getMsgPrefix(messageDecoded.code),
             JSON.stringify(messageDecoded.data))
 
