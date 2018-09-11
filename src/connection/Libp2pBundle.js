@@ -4,10 +4,9 @@ const TCP = require('libp2p-tcp')
 const WS = require('libp2p-websockets')
 const SPDY = require('libp2p-spdy')
 const SECIO = require('libp2p-secio')
-const Bootstrap = require('libp2p-bootstrap')
-const BOOTNODES = require('../util').BOOTNODES
-
 const defaultsDeep = require('defaults-deep')
+const Bootstrap = require('libp2p-bootstrap')
+const { BOOTNODES } = require('../util')
 
 const libp2pNodeOptions = {
     modules: {
@@ -38,10 +37,10 @@ module.exports = class Libp2pBundle extends libp2p {
         }
 
         const params = !includeNodeOptions ? {
-            peerInfo: peerInfo
+            peerInfo
         } : {
             ...libp2pNodeOptions,
-            peerInfo: peerInfo
+            peerInfo
         }
 
         super(defaultsDeep(params, defaults))

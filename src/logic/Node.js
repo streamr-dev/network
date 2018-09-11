@@ -1,13 +1,9 @@
-const EventEmitter = require('events').EventEmitter
+const { EventEmitter } = require('events')
+const debug = require('debug')('streamr:node')
 const TrackerNode = require('../protocol/TrackerNode')
 const NodeToNode = require('../protocol/NodeToNode')
 const encoder = require('../helpers/MessageEncoder')
-const {
-    generateClientId,
-    getStreams,
-    getAddress
-} = require('../util')
-const debug = require('debug')('streamr:node')
+const { generateClientId, getStreams } = require('../util')
 
 module.exports = class Node extends EventEmitter {
     constructor(connection) {
@@ -28,16 +24,9 @@ module.exports = class Node extends EventEmitter {
 
         this.connection.once('node:ready', () => this.onNodeReady())
         this.listners.trackerNodeListner.on('streamr:peer:send-status', (tracker) => this.onSendStatusToTracker(tracker))
-        this.listners.trackerNodeListner.on('streamr:node-node:stream-data', ({
-            streamId,
-            data
-        }) => this.onSendData(streamId, data))
+        this.listners.trackerNodeListner.on('streamr:node-node:stream-data', ({ streamId, data }) => this.onSendData(streamId, data))
         this.listners.trackerNodeListner.on('streamr:node-node:connect', (peers) => this.listners.nodeToNode.emit('streamr:node-node:connect', peers))
-        this.listners.trackerNodeListner.on('streamr:node:found-stream', ({
-            streamId,
-            nodeAddress
-        }) => this.onAddKnownStreams(streamId, nodeAddress))
-
+        this.listners.trackerNodeListner.on('streamr:node:found-stream', ({ streamId, nodeAddress }) => this.onAddKnownStreams(streamId, nodeAddress))
     }
 
     onNodeReady() {

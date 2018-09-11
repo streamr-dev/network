@@ -1,10 +1,7 @@
-const EventEmitter = require('events').EventEmitter
-const {
-    isTracker,
-    getAddress
-} = require('../util')
-const encoder = require('../helpers/MessageEncoder')
+const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:tracker-node')
+const { isTracker, getAddress } = require('../util')
+const encoder = require('../helpers/MessageEncoder')
 
 const events = Object.freeze({
     CONNECTED_TO_TRACKER: 'streamr:peer:send-status',
@@ -20,10 +17,7 @@ module.exports = class TrackerNode extends EventEmitter {
         this.connection = connection
 
         this.connection.on('streamr:peer:discovery', (tracker) => this.onConnectToTracker(tracker))
-        this.connection.on('streamr:message-received', ({
-            sender,
-            message
-        }) => this.onReceive(sender, message))
+        this.connection.on('streamr:message-received', ({ sender, message }) => this.onReceive(sender, message))
     }
 
     async onConnectToTracker(tracker) {
@@ -36,27 +30,21 @@ module.exports = class TrackerNode extends EventEmitter {
     }
 
     onReceive(sender, message) {
-        const {
-            code,
-            data
-        } = encoder.decode(message)
+        const { code, data } = encoder.decode(message)
 
         switch (code) {
             case encoder.PEERS:
-                const peers = data
-
                 // ask tacker again
-                if (!peers.length && this.tracker) {
+                if (!data.length && this.tracker) { // data = peers
                     debug('no available peers, ask again tracker')
 
                     setTimeout(() => {
                         this.connection.send(this.tracker, encoder.peersMessage([]))
                     }, 10000)
-                } else if (peers.length) {
-                    this.emit(events.NODE_LIST_RECEIVED, peers)
+                } else if (data.length) {
+                    this.emit(events.NODE_LIST_RECEIVED, data)
                 }
-
-                break;
+                break
 
             case encoder.DATA:
                 this.emit(events.DATA_RECEIVED, {

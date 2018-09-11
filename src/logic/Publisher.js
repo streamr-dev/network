@@ -1,7 +1,7 @@
-const EventEmitter = require('events').EventEmitter
-const encoder = require('../helpers/MessageEncoder')
-const generateClientId = require('../util').generateClientId
+const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:publisher')
+const encoder = require('../helpers/MessageEncoder')
+const { generateClientId } = require('../util')
 
 module.exports = class Node extends EventEmitter {
     constructor(connection, nodeAddress) {

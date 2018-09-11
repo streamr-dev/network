@@ -2,34 +2,59 @@ const DISABLED = 0
 const WARN = 1
 const ERROR = 2
 
-module.exports = {
-    "env": {
-        "es6": true,
-        "node": true
+module.exports = exports = {
+    extends: [
+        'eslint:recommended',
+        'airbnb-base'
+    ],
+    env: {
+        browser: false,
+        jest: true
     },
-    extends: ['eslint:recommended', 'prettier'], // extending recommended config and config derived from eslint-config-prettier
-    plugins: ['prettier', 'import-order'], // activating esling-plugin-prettier (--fix stuff)
     rules: {
-        'prettier/prettier': [ // customizing prettier rules (unfortunately not many of them are customizable)
-            'error',
-            {
-                singleQuote: true,
-                trailingComma: 'none',
-                tabWidth: 4,
-                semi: false
-            },
-        ],
+        'arrow-body-style': DISABLED,
+        'arrow-parens': [ERROR, 'always', {
+            requireForBlockBody: false
+        }],
+        'comma-dangle': DISABLED,
         'curly': [ERROR, 'all'],
-        'quote-props': [ERROR, 'as-needed', {
-            numbers: true
+        'import/first': DISABLED,
+        'import/no-named-as-default': DISABLED,
+        'import/prefer-default-export': DISABLED,
+        'import/order': [ERROR, 'always', {
+            'groups': [
+                'builtin', 'external', 'internal', 'parent', 'sibling', 'index'
+            ],
+            'newlines-between': 'always'
         }],
-        'no-console': [WARN, {
-            allow: ['warn', 'error']
+        'indent': [ERROR, 4, {
+            SwitchCase: WARN,
+            MemberExpression: WARN,
+            ObjectExpression: WARN
         }],
+        'max-len': [WARN, { code: 150 }],
+        'no-console': [WARN, { allow: ['warn', 'error'] }],
         'no-debugger': WARN,
         'no-multiple-empty-lines': [ERROR, {
             max: 1,
             maxBOF: 0
-        }]
+        }],
+        'no-plusplus': [ERROR, { 'allowForLoopAfterthoughts': true }],
+        'no-self-compare': DISABLED,
+        'no-underscore-dangle': [ERROR, { 'allowAfterThis': true }],
+        'no-unused-vars': WARN,
+        'object-curly-newline': [ERROR, {
+            ObjectExpression: {
+                minProperties: 1
+            },
+            ObjectPattern: {
+                minProperties: 5
+            }
+        }],
+        'prefer-template': DISABLED,
+        'quote-props': [ERROR, 'as-needed', {
+            numbers: true
+        }],
+        'semi': [ERROR, 'never'],
     }
-};
+}

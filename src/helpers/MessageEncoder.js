@@ -17,19 +17,20 @@ const encode = (type, data) => {
     return JSON.stringify({
         version: CURRENT_VERSION,
         code: type,
-        data: data
+        data
     })
 }
 
-const decode = message => {
-    return ({
+const decode = (message) => {
+    const { version, code, data } = JSON.parse(message)
+    return {
         version,
         code,
         data
-    } = JSON.parse(message))
+    }
 }
 
-const getMsgPrefix = msgCode => Object.keys(msgTypes).find(key => msgTypes[key] === msgCode)
+const getMsgPrefix = (msgCode) => Object.keys(msgTypes).find((key) => msgTypes[key] === msgCode)
 
 module.exports = {
     getMsgPrefix,

@@ -1,4 +1,4 @@
-const EventEmitter = require('events').EventEmitter
+const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:node-node')
 
 module.exports = class NodeToNode extends EventEmitter {

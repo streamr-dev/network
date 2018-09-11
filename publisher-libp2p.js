@@ -1,6 +1,6 @@
+const ms = require('ms')
 const Connection = require('./src/connection/Connection')
 const Publisher = require('./src/logic/Publisher')
-const ms = require('ms')
 
 const port = process.argv[2] || 30301
 const nodeAddress = process.argv[3] || ''
@@ -13,7 +13,7 @@ connection.once('node:ready', () => {
     const publisher = new Publisher(connection)
 
     setInterval(() => {
-        const msg = 'Hello world, ' + new Date().toLocaleString()
+        const msg = `Hello world, ${new Date().toLocaleString()}`
 
         if (publisher.connection.isReady()) {
             publisher.publishLibP2P(streamId, Buffer.from(msg), () => {})

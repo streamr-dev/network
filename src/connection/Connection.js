@@ -1,14 +1,12 @@
-const EventEmitter = require('events').EventEmitter
-const Libp2pBundle = require('./Libp2pBundle')
-const {
-    callbackToPromise,
-    getAddress
-} = require('../util')
+const { EventEmitter } = require('events')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const pull = require('pull-stream')
 const debug = require('debug')('streamr:connection')
+const { callbackToPromise, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
+const Libp2pBundle = require('./Libp2pBundle')
+
 const HANDLER = '/streamr/v1/'
 
 const events = Object.freeze({
@@ -19,6 +17,10 @@ const events = Object.freeze({
     MESSAGE_SENT: 'streamr:message-sent',
     MESSAGE_RECEIVED: 'streamr:message-received'
 })
+
+async function getPeerInfo(conn) {
+    return new Promise((resolve, reject) => conn.getPeerInfo((err, peerInfo) => (err ? reject(err) : resolve(peerInfo))))
+}
 
 module.exports = class Connection extends EventEmitter {
     constructor(host, port, privateKey = '', isNode = false) {
@@ -48,9 +50,7 @@ module.exports = class Connection extends EventEmitter {
         peerInfo.multiaddrs.add(`/ip4/${this.host}/tcp/${this.port}`)
 
         this.node = new Libp2pBundle(peerInfo, isNode)
-        this.node.handle(HANDLER, (protocol, conn) =>
-            this.onReceive(protocol, conn)
-        )
+        this.node.handle(HANDLER, (protocol, conn) => this.onReceive(protocol, conn))
 
         this.node.start((err) => {
             if (err) {
@@ -69,9 +69,7 @@ module.exports = class Connection extends EventEmitter {
     }
 
     onNodeReady() {
-        this.node.peerInfo.multiaddrs.forEach(ma =>
-            debug('listening on: %s', ma.toString())
-        )
+        this.node.peerInfo.multiaddrs.forEach((ma) => debug('listening on: %s', ma.toString()))
 
         this._bindEvents()
     }
@@ -86,10 +84,8 @@ module.exports = class Connection extends EventEmitter {
         })
         this.node.on('peer:disconnect', (peer) => this.emit(events.PEER_DISCONNECTED, peer))
 
-        this.on('streamr:send-message', ({
-            recipient,
-            message
-        }) => this._onSend(recipient, message))
+        this.on('streamr:send-message', ({ recipient,
+            message }) => this._onSend(recipient, message))
     }
 
     _onSend(recipient, message) {
@@ -98,7 +94,10 @@ module.exports = class Connection extends EventEmitter {
 
     send(recipient, message) {
         const messageDecoded = encoder.decode(message)
-        debug('sending to the %s, message %s with data "%s"', getAddress(recipient), encoder.getMsgPrefix(messageDecoded.code), JSON.stringify(messageDecoded.data))
+        debug('sending to the %s, message %s with data "%s"',
+            getAddress(recipient),
+            encoder.getMsgPrefix(messageDecoded.code),
+            JSON.stringify(messageDecoded.data))
 
         this.node.dialProtocol(recipient, HANDLER, (err, conn) => {
             if (err) {
@@ -116,15 +115,17 @@ module.exports = class Connection extends EventEmitter {
 
     async onReceive(protocol, conn) {
         try {
-            const sender = await this._getPeerInfo(conn)
+            const sender = await getPeerInfo(conn)
 
             pull(
                 conn,
-                pull.map(message => message.toString('utf8')),
-                pull.drain(message => {
-
+                pull.map((message) => message.toString('utf8')),
+                pull.drain((message) => {
                     const messageDecoded = encoder.decode(message)
-                    debug('received from %s, message %s with data "%s"', getAddress(sender), encoder.getMsgPrefix(messageDecoded.code), JSON.stringify(messageDecoded.data))
+                    debug('received from %s, message %s with data "%s"',
+                        getAddress(sender),
+                        encoder.getMsgPrefix(messageDecoded.code),
+                        JSON.stringify(messageDecoded.data))
 
                     this.emit(events.MESSAGE_RECEIVED, {
                         sender,
@@ -132,18 +133,9 @@ module.exports = class Connection extends EventEmitter {
                     })
                 })
             )
-
         } catch (err) {
             console.log(err)
         }
-    }
-
-    async _getPeerInfo(conn) {
-        return new Promise((resolve, reject) => {
-            return conn.getPeerInfo((err, peerInfo) => {
-                return err ? reject(err) : resolve(peerInfo)
-            })
-        })
     }
 
     async connect(peerInfo) {
@@ -164,11 +156,7 @@ module.exports = class Connection extends EventEmitter {
     }
 
     async _dial(address) {
-        return new Promise((resolve, reject) => {
-            return this.node.dial(address, (err, peerInfo) => {
-                return err ? reject(err) : resolve(peerInfo)
-            })
-        })
+        return new Promise((resolve, reject) => this.node.dial(address, (err, peerInfo) => (err ? reject(err) : resolve(peerInfo))))
     }
 
     isConnected(peerInfo) {

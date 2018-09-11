@@ -1,6 +1,6 @@
+const ms = require('ms')
 const Connection = require('./src/connection/Connection')
 const Publisher = require('./src/logic/Publisher')
-const ms = require('ms')
 
 const port = process.argv[2] || 30301
 const nodeAddress = process.argv[3] || ''

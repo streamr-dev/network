@@ -40,6 +40,8 @@
     "libp2p-tcp": "^0.12.1",
     "libp2p-websockets": "^0.12.0",
     "ms": "^2.1.1",
+    "peer-id": "^0.11.0",
+    "peer-info": "^0.14.1",
     "pull-pushable": "^2.2.0",
     "pull-stream": "^3.6.8",
     "safe-buffer": "^5.1.2",
@@ -47,7 +49,7 @@
   },
   "devDependencies": {
     "eslint": "^5.5.0",
-    "eslint-config-prettier": "^3.0.1",
+    "eslint-config-airbnb-base": "^13.1.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-import-order": "^2.1.4",
     "eslint-plugin-prettier": "^2.6.2",

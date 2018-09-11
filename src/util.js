@@ -1,7 +1,7 @@
-const uuidV1 = require('uuid/v1')
-const version = require('../package.json').version
-const PeerInfo = require('peer-info')
 const os = require('os')
+const uuidV1 = require('uuid/v1')
+const PeerInfo = require('peer-info')
+const { version } = require('../package.json')
 
 const callbackToPromise = (method, ...args) => {
     return new Promise((resolve, reject) => {
@@ -11,12 +11,10 @@ const callbackToPromise = (method, ...args) => {
     })
 }
 
-const BOOTNODES = require('../bootstrapNodes.json').map(node => {
-    return node.path
-})
+const BOOTNODES = require('../bootstrapNodes.json').map((node) => node.path)
 
 const getStreams = (amount = 3) => {
-    let streams = []
+    const streams = []
 
     for (let i = 0; i < amount; i++) {
         streams.push(uuidV1())
@@ -25,20 +23,19 @@ const getStreams = (amount = 3) => {
     return streams
 }
 // this.peerInfo.id.toB58String()
-const getAddress = peerInfo => {
+const getAddress = (peerInfo) => {
     if (peerInfo instanceof PeerInfo) {
         return peerInfo.multiaddrs.toArray()[0].toString()
-    } else {
-        throw new Error('Expected instance of PeerInfo')
     }
+    throw new Error('Expected instance of PeerInfo')
 }
 
 const generateClientId = (prefix = '') => {
-    prefix = prefix ? '-' + prefix : ''
-    return `streamr${prefix}/v${version}/${os.platform()}-${os.arch()}/nodejs`
+    const prefixFixed = prefix ? '-' + prefix : ''
+    return `streamr${prefixFixed}/v${version}/${os.platform()}-${os.arch()}/nodejs`
 }
 
-const isTracker = tracker => BOOTNODES.includes(tracker)
+const isTracker = (tracker) => BOOTNODES.includes(tracker)
 
 module.exports = {
     callbackToPromise,
