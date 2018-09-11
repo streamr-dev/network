@@ -3,6 +3,13 @@ const isTracker = require('../util').isTracker
 const encoder = require('../helpers/MessageEncoder')
 const debug = require('debug')('streamr:tracker-server')
 
+const events = Object.freeze({
+    NODE_CONNECTED: 'streamr:tracker:send-peers',
+    NODE_STATUS_RECEIVED: 'streamr:tracker:peer-status',
+    STREAM_INFO_REQUESTED: 'streamr:tracker:find-stream',
+    NODE_LIST_REQUESTED: 'streamr:tracker:send-peers'
+})
+
 module.exports = class TrackerServer extends EventEmitter {
     constructor(connection) {
         super()
@@ -18,7 +25,7 @@ module.exports = class TrackerServer extends EventEmitter {
 
     onNewConnection(peer) {
         if (!isTracker(peer)) {
-            this.emit('streamr:tracker:send-peers', peer)
+            this.emit(events.NODE_CONNECTED, peer)
         }
     }
 
@@ -31,22 +38,21 @@ module.exports = class TrackerServer extends EventEmitter {
         switch (code) {
             case encoder.STATUS:
                 const status = data
-                this.emit('streamr:tracker:peer-status', {
+                this.emit(events.NODE_STATUS_RECEIVED, {
                     peer,
                     status
                 })
-
                 break
 
             case encoder.STREAM:
-                this.emit('streamr:tracker:find-stream', {
+                this.emit(events.STREAM_INFO_REQUESTED, {
                     sender: peer,
                     streamId: data[0]
                 })
                 break
 
             case encoder.PEERS:
-                this.emit('streamr:tracker:send-peers', peer)
+                this.emit(events.NODE_LIST_REQUESTED, peer)
                 break
 
             default:

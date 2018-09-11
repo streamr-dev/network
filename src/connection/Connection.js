@@ -11,6 +11,15 @@ const debug = require('debug')('streamr:connection')
 const encoder = require('../helpers/MessageEncoder')
 const HANDLER = '/streamr/v1/'
 
+const events = Object.freeze({
+    READY: 'node:ready',
+    PEER_DISCOVERED: 'streamr:peer:discovery',
+    PEER_CONNECTED: 'streamr:peer:connect',
+    PEER_DISCONNECTED: 'streamr:peer:disconnect',
+    MESSAGE_SENT: 'streamr:message-sent',
+    MESSAGE_RECEIVED: 'streamr:message-received'
+})
+
 module.exports = class Connection extends EventEmitter {
     constructor(host, port, privateKey = '', isNode = false) {
         super()
@@ -23,7 +32,7 @@ module.exports = class Connection extends EventEmitter {
 
         this._createNode(isNode)
 
-        this.once('node:ready', () => this.onNodeReady())
+        this.once(events.READY, () => this.onNodeReady())
     }
 
     async _createNode(isNode) {
@@ -51,7 +60,7 @@ module.exports = class Connection extends EventEmitter {
             debug('node has started: %s', this.node.isStarted())
             this.isStarted = this.node.isStarted()
 
-            this.emit('node:ready')
+            this.emit(events.READY)
         })
     }
 
@@ -70,12 +79,12 @@ module.exports = class Connection extends EventEmitter {
     _bindEvents() {
         debug('binding events')
 
-        this.node.on('peer:discovery', (peer) => this.emit('streamr:peer:discovery', peer))
+        this.node.on('peer:discovery', (peer) => this.emit(events.PEER_DISCOVERED, peer))
         this.node.on('peer:connect', (peer) => {
             debug('new connection')
-            this.emit('streamr:peer:connect', peer)
+            this.emit(events.PEER_CONNECTED, peer)
         })
-        this.node.on('peer:disconnect', (peer) => this.emit('streamr:peer:disconnect', peer))
+        this.node.on('peer:disconnect', (peer) => this.emit(events.PEER_DISCONNECTED, peer))
 
         this.on('streamr:send-message', ({
             recipient,
@@ -98,7 +107,7 @@ module.exports = class Connection extends EventEmitter {
 
             pull(pull.values([message]), conn)
 
-            this.emit('streamr:message-sent', {
+            this.emit(events.MESSAGE_SENT, {
                 recipient,
                 message
             })
@@ -117,7 +126,7 @@ module.exports = class Connection extends EventEmitter {
                     const messageDecoded = encoder.decode(message)
                     debug('received from %s, message %s with data "%s"', getAddress(sender), encoder.getMsgPrefix(messageDecoded.code), JSON.stringify(messageDecoded.data))
 
-                    this.emit('streamr:message-received', {
+                    this.emit(events.MESSAGE_RECEIVED, {
                         sender,
                         message
                     })

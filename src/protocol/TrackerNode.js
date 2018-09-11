@@ -6,6 +6,13 @@ const {
 const encoder = require('../helpers/MessageEncoder')
 const debug = require('debug')('streamr:tracker-node')
 
+const events = Object.freeze({
+    CONNECTED_TO_TRACKER: 'streamr:peer:send-status',
+    NODE_LIST_RECEIVED: 'streamr:node-node:connect',
+    DATA_RECEIVED: 'streamr:node-node:stream-data',
+    STREAM_INFO_RECEIVED: 'streamr:node:found-stream'
+})
+
 module.exports = class TrackerNode extends EventEmitter {
     constructor(connection) {
         super()
@@ -24,7 +31,7 @@ module.exports = class TrackerNode extends EventEmitter {
             await this.connection.connect(tracker)
 
             this.tracker = tracker
-            this.emit('streamr:peer:send-status', tracker)
+            this.emit(events.CONNECTED_TO_TRACKER, tracker)
         }
     }
 
@@ -46,13 +53,13 @@ module.exports = class TrackerNode extends EventEmitter {
                         this.connection.send(this.tracker, encoder.peersMessage([]))
                     }, 10000)
                 } else if (peers.length) {
-                    this.emit('streamr:node-node:connect', peers)
+                    this.emit(events.NODE_LIST_RECEIVED, peers)
                 }
 
                 break;
 
             case encoder.DATA:
-                this.emit('streamr:node-node:stream-data', {
+                this.emit(events.DATA_RECEIVED, {
                     streamId: data[0],
                     data: data[1]
                 })
@@ -60,7 +67,7 @@ module.exports = class TrackerNode extends EventEmitter {
 
             case encoder.STREAM:
                 console.log('found node')
-                this.emit('streamr:node:found-stream', {
+                this.emit(events.STREAM_INFO_RECEIVED, {
                     streamId: data[0],
                     nodeAddress: data[1]
                 })
