@@ -10,19 +10,19 @@ module.exports = class Tracker extends EventEmitter {
         super()
 
         this.connection = connection
-        this.peers = new Map()
+        this.nodes = new Map()
         this.trackerId = generateClientId('tracker')
         this.listners = {
             trackerServerListner: new TrackerServer(this.connection)
         }
 
         this.connection.once('node:ready', () => this.trackerReady())
-        this.listners.trackerServerListner.on('streamr:tracker:find-stream', ({ sender, streamId }) => {
-            this.findStream(sender, streamId)
+        this.listners.trackerServerListner.on('streamr:tracker:find-stream', ({ sender, streamId }) => { // TODO: rename sender to requester/node
+            this.sendStreamInfo(sender, streamId)
         })
-        this.listners.trackerServerListner.on('streamr:tracker:send-peers', (peer) => this.sendPeers(peer))
-        this.listners.trackerServerListner.on('streamr:tracker:peer-status', ({ peer, status }) => {
-            this.statusPeer(peer, status)
+        this.listners.trackerServerListner.on('streamr:tracker:send-peers', (node) => this.sendListOfNodes(node))
+        this.listners.trackerServerListner.on('streamr:tracker:peer-status', ({ peer, status }) => { // TODO: rename peer to node
+            this.processNodeStatus(peer, status)
         })
     }
 
@@ -30,24 +30,24 @@ module.exports = class Tracker extends EventEmitter {
         debug('tracker: %s is running', this.trackerId)
     }
 
-    sendPeers(peer) {
-        debug('sending peers')
+    sendListOfNodes(node) {
+        debug('sending list of nodes')
 
-        const peers = getPeersTopology(this.peers, getAddress(peer))
-        this.connection.send(peer, encoder.peersMessage(peers))
+        const listOfNodes = getPeersTopology(this.nodes, getAddress(node))
+        this.connection.send(node, encoder.peersMessage(listOfNodes))
     }
 
-    statusPeer(peer, status) {
-        debug('received from %s status %s', getAddress(peer), JSON.stringify(status))
-        this.peers.set(getAddress(peer), status)
+    processNodeStatus(node, status) {
+        debug('received from %s status %s', getAddress(node), JSON.stringify(status))
+        this.nodes.set(getAddress(node), status)
     }
 
-    findStream(sender, streamId) {
+    sendStreamInfo(node, streamId) {
         debug('tracker looking for the stream %s', streamId)
 
-        this.peers.forEach((status, nodeAddress) => {
+        this.nodes.forEach((status, nodeAddress) => {
             if (status.streams.includes(streamId)) {
-                this.connection.send(sender, encoder.streamMessage(streamId, nodeAddress))
+                this.connection.send(node, encoder.streamMessage(streamId, nodeAddress))
             }
         })
     }

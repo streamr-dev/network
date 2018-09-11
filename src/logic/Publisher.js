@@ -3,7 +3,7 @@ const debug = require('debug')('streamr:publisher')
 const encoder = require('../helpers/MessageEncoder')
 const { generateClientId } = require('../util')
 
-module.exports = class Node extends EventEmitter {
+module.exports = class Publisher extends EventEmitter {
     constructor(connection, nodeAddress) {
         super()
 

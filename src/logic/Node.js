@@ -10,7 +10,6 @@ module.exports = class Node extends EventEmitter {
         super()
 
         this.connection = connection
-        this.peers = new Map()
         this.knownStreams = new Map()
         this.nodeId = generateClientId('node')
         this.status = {
@@ -23,10 +22,10 @@ module.exports = class Node extends EventEmitter {
         }
 
         this.connection.once('node:ready', () => this.onNodeReady())
-        this.listners.trackerNodeListner.on('streamr:peer:send-status', (tracker) => this.onSendStatusToTracker(tracker))
-        this.listners.trackerNodeListner.on('streamr:node-node:stream-data', ({ streamId, data }) => this.onSendData(streamId, data))
-        this.listners.trackerNodeListner.on('streamr:node-node:connect', (peers) => this.listners.nodeToNode.emit('streamr:node-node:connect', peers))
-        this.listners.trackerNodeListner.on('streamr:node:found-stream', ({ streamId, nodeAddress }) => this.onAddKnownStreams(streamId, nodeAddress))
+        this.listners.trackerNodeListner.on('streamr:peer:send-status', (tracker) => this.onConnectedToTracker(tracker))
+        this.listners.trackerNodeListner.on('streamr:node-node:stream-data', ({ streamId, data }) => this.onDataReceived(streamId, data))
+        this.listners.trackerNodeListner.on('streamr:node-node:connect', (nodes) => this.listners.nodeToNode.connectToNodes(nodes))
+        this.listners.trackerNodeListner.on('streamr:node:found-stream', ({ streamId, nodeAddress }) => this.addKnownStreams(streamId, nodeAddress))
     }
 
     onNodeReady() {
@@ -45,39 +44,34 @@ module.exports = class Node extends EventEmitter {
         })
     }
 
-    onSendStatusToTracker(tracker) {
-        debug('sending status to tracker')
+    onConnectedToTracker(tracker) {
+        debug('connected to tracker; sending status to tracker')
         this.tracker = tracker
         this.connection.send(tracker, encoder.statusMessage(this.status))
     }
 
     // add to cache of streams
-    onAddKnownStreams(streamId, nodeAddress) {
+    addKnownStreams(streamId, nodeAddress) {
         debug('add to known streams %s, node %s', streamId, nodeAddress)
         this.knownStreams.set(streamId, nodeAddress)
     }
 
-    onSendData(streamId, data) {
-        let foundInPeers = false
-        if (this.status.streams.includes(streamId)) {
-            foundInPeers = true
+    onDataReceived(streamId, data) {
+        if (this._isOwnStream(streamId)) {
             debug('received data for own streamId %s', streamId)
-            return
-        }
-
-        if (this.knownStreams.get(streamId) !== undefined) {
-            foundInPeers = true
+        } else if (this._isKnownStream(streamId)) {
             this.connection.send(this.knownStreams.get(streamId), encoder.dataMessage(streamId, data))
-            return
-        }
-
-        // [...this.peers].forEach((peer) => {
-        //     // check status and resend data
-        // })
-
-        if (!foundInPeers) {
+        } else {
             debug('ask tracker about node with that streamId')
             this.connection.send(this.tracker, encoder.streamMessage(streamId, ''))
         }
+    }
+
+    _isOwnStream(streamId) {
+        return this.status.streams.includes(streamId)
+    }
+
+    _isKnownStream(streamId) {
+        return this.knownStreams.get(streamId) !== undefined
     }
 }

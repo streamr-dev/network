@@ -27,13 +27,10 @@ const getAddress = (peerInfo) => {
     if (peerInfo instanceof PeerInfo) {
         return peerInfo.multiaddrs.toArray()[0].toString()
     }
-    throw new Error('Expected instance of PeerInfo')
+    throw new Error('Expected instance of PeerInfo, got ' + peerInfo)
 }
 
-const generateClientId = (prefix = '') => {
-    const prefixFixed = prefix ? '-' + prefix : ''
-    return `streamr${prefixFixed}/v${version}/${os.platform()}-${os.arch()}/nodejs`
-}
+const generateClientId = (suffix) => `streamr-${suffix}/v${version}/${os.platform()}-${os.arch()}/nodejs`
 
 const isTracker = (tracker) => BOOTNODES.includes(tracker)
 
