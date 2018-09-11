@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="node (30304)" type="js.build_tools.npm" factoryName="npm">
+    <package-json value="$PROJECT_DIR$/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="node" />
+    </scripts>
+    <arguments value="30304" />
+    <node-interpreter value="project" />
+    <envs>
+      <env name="DEBUG" value="streamr:*" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>
