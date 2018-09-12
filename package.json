@@ -1,8 +1,8 @@
 {
-  "name": "streamr-data-api",
+  "name": "streamr-broker",
   "version": "0.0.1",
   "description": "",
-  "main": "data-api.js",
+  "main": "broker.js",
   "directories": {
     "test": "test"
   },
