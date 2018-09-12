@@ -6,10 +6,6 @@ let optimist = require('optimist')
 
 const StreamFetcher = require('./src/StreamFetcher')
 const WebsocketServer = require('./src/WebsocketServer')
-const RedisUtil = require('./src/RedisUtil')
-const RedisOffsetFetcher = require('./src/RedisOffsetFetcher')
-const CassandraUtil = require('./src/CassandraUtil')
-const StreamrKafkaProducer = require('./src/KafkaUtil')
 const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
 const VolumeLogger = require('./src/utils/VolumeLogger')
@@ -20,15 +16,9 @@ module.exports = (externalConfig) => {
     if (!externalConfig) {
         // Check command line args
         optimist = optimist.usage(`You must pass the following command line options:
-        --data-topic <topic>
-        --zookeeper <conn_string>
-        --redis <redis_hosts_separated_by_commas>
-        --redis-pwd <password>
-        --cassandra <cassandra_hosts_separated_by_commas>
-        --keyspace <cassandra_keyspace>
         --streamr <streamr>
         --port <port>`)
-        optimist = optimist.demand(['data-topic', 'zookeeper', 'redis', 'redis-pwd', 'cassandra', 'keyspace', 'streamr', 'port'])
+        optimist = optimist.demand(['streamr', 'port'])
         config = optimist.argv
     } else {
         config = externalConfig
@@ -36,10 +26,10 @@ module.exports = (externalConfig) => {
 
     // Create some utils
     const streamFetcher = new StreamFetcher(config.streamr)
-    const redis = new RedisUtil(config.redis.split(','), config['redis-pwd'])
-    const cassandra = new CassandraUtil(config.cassandra.split(','), config.keyspace)
-    const redisOffsetFetcher = new RedisOffsetFetcher(config.redis.split(',')[0], config['redis-pwd'])
-    const kafka = new StreamrKafkaProducer(config['data-topic'], Partitioner, config.zookeeper)
+    const redis = null
+    const cassandra = null
+    const redisOffsetFetcher = null
+    const kafka = null
     const publisher = new Publisher(kafka, Partitioner)
     const volumeLogger = new VolumeLogger()
 
