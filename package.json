@@ -19,7 +19,7 @@
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
     "pub-libp2p": "node $NODE_DEBUG_OPTION publisher-libp2p.js",
-    "pub": "node publisher.js",
+    "pub": "node $NODE_DEBUG_OPTION publisher.js",
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
