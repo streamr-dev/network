@@ -20,10 +20,12 @@ module.exports = class Node extends EventEmitter {
         }
 
         connection.once('node:ready', () => this.onNodeReady())
-        this.protocols.trackerNode.on('streamr:peer:send-status', (tracker) => this.onConnectedToTracker(tracker))
-        this.protocols.trackerNode.on('streamr:node-node:stream-data', ({ streamId, data }) => this.onDataReceived(streamId, data))
-        this.protocols.trackerNode.on('streamr:node-node:connect', (nodes) => this.protocols.nodeToNode.connectToNodes(nodes))
-        this.protocols.trackerNode.on('streamr:node:found-stream', ({ streamId, nodeAddress }) => this.addKnownStreams(streamId, nodeAddress))
+        this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
+        this.protocols.trackerNode.on(TrackerNode.events.DATA_RECEIVED, ({ streamId, data }) => this.onDataReceived(streamId, data))
+        this.protocols.trackerNode.on(TrackerNode.events.NODE_LIST_RECEIVED, (nodes) => this.protocols.nodeToNode.connectToNodes(nodes))
+        this.protocols.trackerNode.on(TrackerNode.events.STREAM_INFO_RECEIVED, ({ streamId, nodeAddress }) => {
+            this.addKnownStreams(streamId, nodeAddress)
+        })
 
         debug('node: %s is running', this.nodeId)
         debug('handling streams: %s\n\n\n', JSON.stringify(this.status.streams))

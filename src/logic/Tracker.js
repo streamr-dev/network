@@ -14,11 +14,11 @@ module.exports = class Tracker extends EventEmitter {
             trackerServer: new TrackerServer(connection)
         }
 
-        this.protocols.trackerServer.on('streamr:tracker:find-stream', ({ sender, streamId }) => { // TODO: rename sender to requester/node
+        this.protocols.trackerServer.on(TrackerServer.events.STREAM_INFO_REQUESTED, ({ sender, streamId }) => { // TODO: rename sender to requester/node
             this.sendStreamInfo(sender, streamId)
         })
-        this.protocols.trackerServer.on('streamr:tracker:send-peers', (node) => this.sendListOfNodes(node))
-        this.protocols.trackerServer.on('streamr:tracker:peer-status', ({ peer, status }) => { // TODO: rename peer to node
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_LIST_REQUESTED, (node) => this.sendListOfNodes(node))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ peer, status }) => { // TODO: rename peer to node
             this.processNodeStatus(peer, status)
         })
 

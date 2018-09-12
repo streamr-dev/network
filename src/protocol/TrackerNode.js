@@ -1,5 +1,6 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:tracker-node')
+const connectionEvents = require('../connection/Connection').events
 const { isTracker, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
 
@@ -10,14 +11,14 @@ const events = Object.freeze({
     STREAM_INFO_RECEIVED: 'streamr:node:found-stream'
 })
 
-module.exports = class TrackerNode extends EventEmitter {
+class TrackerNode extends EventEmitter {
     constructor(connection) {
         super()
 
         this.connection = connection
 
-        this.connection.on('streamr:peer:discovery', (tracker) => this._onConnectToTracker(tracker))
-        this.connection.on('streamr:message-received', ({ sender, message }) => this._onReceive(sender, message))
+        this.connection.on(connectionEvents.MESSAGE_RECEIVED, ({ sender, message }) => this._onReceive(sender, message))
+        this.connection.on(connectionEvents.PEER_DISCOVERED, (tracker) => this._onConnectToTracker(tracker))
     }
 
     sendStatus(tracker, status) {
@@ -74,3 +75,7 @@ module.exports = class TrackerNode extends EventEmitter {
         }
     }
 }
+
+TrackerNode.events = events
+
+module.exports = TrackerNode

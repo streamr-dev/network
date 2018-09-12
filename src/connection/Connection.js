@@ -144,6 +144,7 @@ async function startLibp2pNode(host, port, privateKey, isNode) {
 }
 
 module.exports = {
+    events,
     async createConnection(host, port, privateKey, isNode = false) {
         return startLibp2pNode(host, port, privateKey, isNode).then((n) => new Connection(n))
     }
