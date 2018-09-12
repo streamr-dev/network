@@ -9,7 +9,7 @@ module.exports = class Publisher extends EventEmitter {
 
         this.publisherId = generateClientId('publisher')
         this.nodeAddress = nodeAddress
-        this.listeners = {
+        this.protocols = {
             nodeToNode: new NodeToNode(connection)
         }
 
@@ -22,13 +22,13 @@ module.exports = class Publisher extends EventEmitter {
 
     publishLibP2P(streamId, data) {
         debug('publishing data', streamId, data)
-        this.listeners.nodeToNode.publishToStream(streamId, data, () => {})
+        this.protocols.nodeToNode.publishToStream(streamId, data, () => {})
     }
 
     publish(streamId, data) {
         if (this.nodeAddress) {
             debug('publishing data', streamId, data)
-            this.listeners.nodeToNode.sendData(this.nodeAddress, streamId, data)
+            this.protocols.nodeToNode.sendData(this.nodeAddress, streamId, data)
         }
         throw new Error('Failed to publish because this.nodeAddress not defined.')
     }

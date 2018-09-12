@@ -10,16 +10,16 @@ module.exports = class Tracker extends EventEmitter {
 
         this.nodes = new Map()
         this.trackerId = generateClientId('tracker')
-        this.listners = {
-            trackerServerListner: new TrackerServer(connection)
+        this.protocols = {
+            trackerServer: new TrackerServer(connection)
         }
 
         connection.once('node:ready', () => this.trackerReady())
-        this.listners.trackerServerListner.on('streamr:tracker:find-stream', ({ sender, streamId }) => { // TODO: rename sender to requester/node
+        this.protocols.trackerServer.on('streamr:tracker:find-stream', ({ sender, streamId }) => { // TODO: rename sender to requester/node
             this.sendStreamInfo(sender, streamId)
         })
-        this.listners.trackerServerListner.on('streamr:tracker:send-peers', (node) => this.sendListOfNodes(node))
-        this.listners.trackerServerListner.on('streamr:tracker:peer-status', ({ peer, status }) => { // TODO: rename peer to node
+        this.protocols.trackerServer.on('streamr:tracker:send-peers', (node) => this.sendListOfNodes(node))
+        this.protocols.trackerServer.on('streamr:tracker:peer-status', ({ peer, status }) => { // TODO: rename peer to node
             this.processNodeStatus(peer, status)
         })
     }
@@ -32,7 +32,7 @@ module.exports = class Tracker extends EventEmitter {
         debug('sending list of nodes')
 
         const listOfNodes = getPeersTopology(this.nodes, getAddress(node))
-        this.listners.trackerServerListner.sendNodeList(node, listOfNodes)
+        this.protocols.trackerServer.sendNodeList(node, listOfNodes)
     }
 
     processNodeStatus(node, status) {
@@ -45,7 +45,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this.nodes.forEach((status, nodeAddress) => {
             if (status.streams.includes(streamId)) {
-                this.listners.trackerServerListner.sendStreamInfo(node, streamId, nodeAddress)
+                this.protocols.trackerServer.sendStreamInfo(node, streamId, nodeAddress)
             }
         })
     }
