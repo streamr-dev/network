@@ -3,20 +3,18 @@ const debug = require('debug')('streamr:tracker')
 const { generateClientId, getAddress } = require('../util')
 const TrackerServer = require('../protocol/TrackerServer')
 const { getPeersTopology } = require('../helpers/TopologyStrategy')
-const encoder = require('../helpers/MessageEncoder')
 
 module.exports = class Tracker extends EventEmitter {
     constructor(connection) {
         super()
 
-        this.connection = connection
         this.nodes = new Map()
         this.trackerId = generateClientId('tracker')
         this.listners = {
-            trackerServerListner: new TrackerServer(this.connection)
+            trackerServerListner: new TrackerServer(connection)
         }
 
-        this.connection.once('node:ready', () => this.trackerReady())
+        connection.once('node:ready', () => this.trackerReady())
         this.listners.trackerServerListner.on('streamr:tracker:find-stream', ({ sender, streamId }) => { // TODO: rename sender to requester/node
             this.sendStreamInfo(sender, streamId)
         })
@@ -34,7 +32,7 @@ module.exports = class Tracker extends EventEmitter {
         debug('sending list of nodes')
 
         const listOfNodes = getPeersTopology(this.nodes, getAddress(node))
-        this.connection.send(node, encoder.peersMessage(listOfNodes))
+        this.listners.trackerServerListner.sendNodeList(node, listOfNodes)
     }
 
     processNodeStatus(node, status) {
@@ -47,7 +45,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this.nodes.forEach((status, nodeAddress) => {
             if (status.streams.includes(streamId)) {
-                this.connection.send(node, encoder.streamMessage(streamId, nodeAddress))
+                this.listners.trackerServerListner.sendStreamInfo(node, streamId, nodeAddress)
             }
         })
     }

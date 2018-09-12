@@ -16,17 +16,25 @@ module.exports = class TrackerServer extends EventEmitter {
 
         this.connection = connection
 
-        this.connection.on('streamr:peer:connect', (peer) => this.onNewConnection(peer))
-        this.connection.on('streamr:message-received', ({ sender, message }) => this.onReceive(sender, message))
+        this.connection.on('streamr:peer:connect', (peer) => this._onNewConnection(peer))
+        this.connection.on('streamr:message-received', ({ sender, message }) => this._onReceive(sender, message))
     }
 
-    onNewConnection(peer) {
+    sendNodeList(receiverNode, nodeList) {
+        this.connection.send(receiverNode, encoder.peersMessage(nodeList))
+    }
+
+    sendStreamInfo(receiverNode, streamId, nodeAddress) {
+        this.connection.send(receiverNode, encoder.streamMessage(streamId, nodeAddress))
+    }
+
+    _onNewConnection(peer) {
         if (!isTracker(peer)) {
             this.emit(events.NODE_CONNECTED, peer)
         }
     }
 
-    onReceive(peer, message) {
+    _onReceive(peer, message) {
         const { code, data } = encoder.decode(message)
 
         switch (code) {

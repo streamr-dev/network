@@ -16,11 +16,19 @@ module.exports = class TrackerNode extends EventEmitter {
 
         this.connection = connection
 
-        this.connection.on('streamr:peer:discovery', (tracker) => this.onConnectToTracker(tracker))
-        this.connection.on('streamr:message-received', ({ sender, message }) => this.onReceive(sender, message))
+        this.connection.on('streamr:peer:discovery', (tracker) => this._onConnectToTracker(tracker))
+        this.connection.on('streamr:message-received', ({ sender, message }) => this._onReceive(sender, message))
     }
 
-    async onConnectToTracker(tracker) {
+    sendStatus(tracker, status) {
+        this.connection.send(tracker, encoder.statusMessage(status))
+    }
+
+    requestStreamInfo(tracker, streamId) {
+        this.connection.send(tracker, encoder.streamMessage(streamId, ''))
+    }
+
+    async _onConnectToTracker(tracker) {
         if (isTracker(getAddress(tracker)) && !this.connection.isConnected(tracker)) {
             await this.connection.connect(tracker)
 
@@ -29,7 +37,7 @@ module.exports = class TrackerNode extends EventEmitter {
         }
     }
 
-    onReceive(sender, message) {
+    _onReceive(sender, message) {
         const { code, data } = encoder.decode(message)
 
         switch (code) {

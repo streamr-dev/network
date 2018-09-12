@@ -2,14 +2,12 @@ const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:node')
 const TrackerNode = require('../protocol/TrackerNode')
 const NodeToNode = require('../protocol/NodeToNode')
-const encoder = require('../helpers/MessageEncoder')
 const { generateClientId, getStreams } = require('../util')
 
 module.exports = class Node extends EventEmitter {
     constructor(connection) {
         super()
 
-        this.connection = connection
         this.knownStreams = new Map()
         this.nodeId = generateClientId('node')
         this.status = {
@@ -17,11 +15,11 @@ module.exports = class Node extends EventEmitter {
         }
 
         this.listners = {
-            trackerNodeListner: new TrackerNode(this.connection),
-            nodeToNode: new NodeToNode(this.connection)
+            trackerNodeListner: new TrackerNode(connection),
+            nodeToNode: new NodeToNode(connection)
         }
 
-        this.connection.once('node:ready', () => this.onNodeReady())
+        connection.once('node:ready', () => this.onNodeReady())
         this.listners.trackerNodeListner.on('streamr:peer:send-status', (tracker) => this.onConnectedToTracker(tracker))
         this.listners.trackerNodeListner.on('streamr:node-node:stream-data', ({ streamId, data }) => this.onDataReceived(streamId, data))
         this.listners.trackerNodeListner.on('streamr:node-node:connect', (nodes) => this.listners.nodeToNode.connectToNodes(nodes))
@@ -38,7 +36,7 @@ module.exports = class Node extends EventEmitter {
 
     _subscribe() {
         this.status.streams.forEach((stream) => {
-            this.connection.node.pubsub.subscribe(stream, (msg) => {
+            this.listners.nodeToNode.subscribeToStream(stream, (msg) => {
                 console.log(msg.from, msg.data.toString())
             }, () => {})
         })
@@ -47,7 +45,7 @@ module.exports = class Node extends EventEmitter {
     onConnectedToTracker(tracker) {
         debug('connected to tracker; sending status to tracker')
         this.tracker = tracker
-        this.connection.send(tracker, encoder.statusMessage(this.status))
+        this.listners.trackerNodeListner.sendStatus(tracker, this.status)
     }
 
     // add to cache of streams
@@ -60,10 +58,11 @@ module.exports = class Node extends EventEmitter {
         if (this._isOwnStream(streamId)) {
             debug('received data for own streamId %s', streamId)
         } else if (this._isKnownStream(streamId)) {
-            this.connection.send(this.knownStreams.get(streamId), encoder.dataMessage(streamId, data))
+            const receiverNode = this.knownStreams.get(streamId)
+            this.listners.nodeToNode.sendData(receiverNode, streamId, data)
         } else {
             debug('ask tracker about node with that streamId')
-            this.connection.send(this.tracker, encoder.streamMessage(streamId, ''))
+            this.listners.trackerNodeListner.requestStreamInfo(this.tracker, streamId)
         }
     }
 
