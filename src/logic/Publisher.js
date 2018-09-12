@@ -13,10 +13,6 @@ module.exports = class Publisher extends EventEmitter {
             nodeToNode: new NodeToNode(connection)
         }
 
-        connection.once('node:ready', () => this._onNodeReady())
-    }
-
-    _onNodeReady() {
         debug('node: %s is running\n\n\n', this.publisherId)
     }
 

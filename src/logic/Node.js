@@ -24,9 +24,7 @@ module.exports = class Node extends EventEmitter {
         this.protocols.trackerNode.on('streamr:node-node:stream-data', ({ streamId, data }) => this.onDataReceived(streamId, data))
         this.protocols.trackerNode.on('streamr:node-node:connect', (nodes) => this.protocols.nodeToNode.connectToNodes(nodes))
         this.protocols.trackerNode.on('streamr:node:found-stream', ({ streamId, nodeAddress }) => this.addKnownStreams(streamId, nodeAddress))
-    }
 
-    onNodeReady() {
         debug('node: %s is running', this.nodeId)
         debug('handling streams: %s\n\n\n', JSON.stringify(this.status.streams))
         this.status.started = new Date().toLocaleString()

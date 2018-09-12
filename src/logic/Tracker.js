@@ -14,7 +14,6 @@ module.exports = class Tracker extends EventEmitter {
             trackerServer: new TrackerServer(connection)
         }
 
-        connection.once('node:ready', () => this.trackerReady())
         this.protocols.trackerServer.on('streamr:tracker:find-stream', ({ sender, streamId }) => { // TODO: rename sender to requester/node
             this.sendStreamInfo(sender, streamId)
         })
@@ -22,9 +21,7 @@ module.exports = class Tracker extends EventEmitter {
         this.protocols.trackerServer.on('streamr:tracker:peer-status', ({ peer, status }) => { // TODO: rename peer to node
             this.processNodeStatus(peer, status)
         })
-    }
 
-    trackerReady() {
         debug('tracker: %s is running', this.trackerId)
     }
 
