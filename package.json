@@ -16,9 +16,9 @@
     "streamr"
   ],
   "scripts": {
-    "tracker": "node tracker.js",
-    "node": "node node.js",
-    "pub-libp2p": "node publisher-libp2p.js",
+    "tracker": "node $NODE_DEBUG_OPTION tracker.js",
+    "node": "node $NODE_DEBUG_OPTION node.js",
+    "pub-libp2p": "node $NODE_DEBUG_OPTION publisher-libp2p.js",
     "pub": "node publisher.js",
     "test": "jest",
     "test-unit": "jest test/unit",
