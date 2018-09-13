@@ -22,9 +22,9 @@
   "author": "Streamr <contact@streamr.com>",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/harbu/streamr-listen-to-streamr/issues"
+    "url": "https://github.com/streamr-dev/listen-to-streamr/issues"
   },
-  "homepage": "https://github.com/harbu/streamr-listen-to-streamr#readme",
+  "homepage": "https://github.com/streamr-dev/listen-to-streamr#readme",
   "dependencies": {
     "streamr-client": "0.12.1"
   }
