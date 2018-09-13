@@ -15,10 +15,10 @@ function getStreamLookupKey(streamId, streamPartition) {
 }
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
+    constructor(wss, networkNode, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
         super()
         this.wss = wss
-        this.realtimeAdapter = realtimeAdapter
+        this.networkNode = networkNode
         this.historicalAdapter = historicalAdapter
         this.latestOffsetFetcher = latestOffsetFetcher
         this.streamFetcher = streamFetcher
@@ -26,7 +26,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.volumeLogger = volumeLogger
 
         // This handler is for realtime messages, not resends
-        this.realtimeAdapter.on('message', (messageAsArray, streamId, streamPartition) => {
+        this.networkNode.onMessage((messageAsArray, streamId, streamPartition) => {
             this.broadcastMessage(messageAsArray, streamId, streamPartition)
         })
 
@@ -293,7 +293,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     // Subscribe now if the stream is not already subscribed or subscribing
                     if (!(stream.state === 'subscribed' || stream.state === 'subscribing')) {
                         stream.state = 'subscribing'
-                        this.realtimeAdapter.subscribe(streamId, streamPartition, (err) => {
+                        this.networkNode.subscribe(streamId, streamPartition, (err) => {
                             if (err) {
                                 stream.emit('subscribed', err)
 
@@ -369,7 +369,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 debug('checkRoomEmpty: Clients remaining on %s partition %d: %d', streamId, streamPartition, stream.getConnections().length)
             } else {
                 debug('checkRoomEmpty: stream %s partition %d has no clients remaining, unsubscribing realtimeAdapter...', streamId, streamPartition)
-                this.realtimeAdapter.unsubscribe(streamId, streamPartition)
+                this.networkNode.unsubscribe(streamId, streamPartition)
                 this.deleteStreamObject(streamId, streamPartition)
             }
 

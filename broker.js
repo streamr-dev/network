@@ -24,13 +24,13 @@ module.exports = (externalConfig) => {
         config = externalConfig
     }
 
+    const networkNode = null
+    const historicalAdapter = null
+    const latestOffsetFetcher = null
+
     // Create some utils
     const streamFetcher = new StreamFetcher(config.streamr)
-    const redis = null
-    const cassandra = null
-    const redisOffsetFetcher = null
-    const kafka = null
-    const publisher = new Publisher(kafka, Partitioner)
+    const publisher = new Publisher(networkNode, Partitioner)
     const volumeLogger = new VolumeLogger()
 
     // Create HTTP server
@@ -63,23 +63,20 @@ module.exports = (externalConfig) => {
                 }
             },
         }),
-        redis,
-        cassandra,
-        redisOffsetFetcher,
+        networkNode,
+        historicalAdapter,
+        latestOffsetFetcher,
         streamFetcher,
         publisher,
         volumeLogger,
     )
 
     // Rest endpoints
-    app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(cassandra, streamFetcher, volumeLogger))
+    app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(historicalAdapter, streamFetcher, volumeLogger))
     app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, publisher, volumeLogger))
 
     // Start the server
     httpServer.listen(config.port, () => {
-        console.log(`Configured with Redis: ${config.redis}`)
-        console.log(`Configured with Cassandra: ${config.cassandra}`)
-        console.log(`Configured with Kafka: ${config.zookeeper} and topic '${config['data-topic']}'`)
         console.log(`Configured with Streamr: ${config.streamr}`)
         console.log(`Listening on port ${config.port}`)
         httpServer.emit('listening')
@@ -89,10 +86,7 @@ module.exports = (externalConfig) => {
         httpServer,
         close: () => {
             httpServer.close()
-            redis.quit()
-            redisOffsetFetcher.close()
-            cassandra.close()
-            kafka.close()
+            networkNode.close()
             volumeLogger.stop()
         },
     }
