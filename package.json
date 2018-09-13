@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/harbu/streamr-listen-to-streamr/issues"
   },
-  "homepage": "https://github.com/harbu/streamr-listen-to-streamr#readme"
+  "homepage": "https://github.com/harbu/streamr-listen-to-streamr#readme",
+  "dependencies": {
+    "streamr-client": "0.12.1"
+  }
 }
