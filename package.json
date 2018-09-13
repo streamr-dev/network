@@ -1,5 +1,5 @@
 {
-  "name": "streamr-p2p-network",
+  "name": "@streamr/streamr-p2p-network",
   "version": "1.0.0",
   "description": "Streamr P2P network",
   "repository": {
@@ -12,6 +12,7 @@
   "homepage": "https://github.com/streamr-dev/network#readme",
   "keywords": [
     "p2p",
+    "pubsub",
     "networking",
     "streamr"
   ],
