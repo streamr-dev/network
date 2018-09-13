@@ -1,6 +1,6 @@
 {
   "name": "@streamr/streamr-p2p-network",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Streamr P2P network",
   "repository": {
     "type": "git",
@@ -16,6 +16,7 @@
     "networking",
     "streamr"
   ],
+  "main": "index.js",
   "scripts": {
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
