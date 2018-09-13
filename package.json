@@ -1,0 +1,24 @@
+{
+  "name": "listen-to-stream",
+  "version": "1.0.0",
+  "description": "Tool that subscribes to a Streamr stream and prints events to stdout",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:streamr-dev/listen-to-stream.git"
+  },
+  "keywords": [
+    "streamr",
+    "tool",
+    "utility"
+  ],
+  "author": "Streamr <contact@streamr.com>",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/harbu/streamr-listen-to-streamr/issues"
+  },
+  "homepage": "https://github.com/harbu/streamr-listen-to-streamr#readme"
+}
