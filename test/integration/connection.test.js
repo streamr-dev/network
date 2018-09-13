@@ -26,7 +26,7 @@ describe('create two connections and init connection between them', () => {
         }
 
         // then wait a little bit, so first will receive connection from the last
-        await new Promise((resolve) => setTimeout(resolve, 1000)).then(() => {
+        await new Promise((resolve) => setTimeout(resolve, 3000)).then(() => {
             for (let i = 0; i < MAX; i++) {
                 assert.equal(connections[i].getPeers().length, 2)
             }
