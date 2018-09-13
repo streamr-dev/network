@@ -1,11 +1,11 @@
-# streamr-listen-to-streamr
+# listen-to-stream
 
-Command line tool for listening to Streamr streams. Outputs events to stdout.
+Command line tool for listening to [Streamr](https://www.streamr.com) streams. Outputs events to stdout.
 
 ## Installation
 
 ```
-npm install -g listen-to-stream
+npm install -g @streamr/listen-to-stream
 ```
 
 ## Usage
@@ -37,4 +37,10 @@ or
 
 ```
 listen-to-stream-dev streamId apiKey
+```
+
+## Publishing
+
+```
+npm publish --access=public
 ```

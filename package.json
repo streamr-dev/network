@@ -1,5 +1,5 @@
 {
-  "name": "listen-to-stream",
+  "name": "@streamr/listen-to-stream",
   "version": "1.0.0",
   "description": "Tool that subscribes to a Streamr stream and prints events to stdout",
   "main": "bin/cli.js",
