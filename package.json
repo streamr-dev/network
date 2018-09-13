@@ -2,7 +2,11 @@
   "name": "listen-to-stream",
   "version": "1.0.0",
   "description": "Tool that subscribes to a Streamr stream and prints events to stdout",
-  "main": "index.js",
+  "main": "bin/cli.js",
+  "bin": {
+    "listen-to-stream": "bin/cli.js",
+    "listen-to-stream-dev": "bin/cli-dev.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
