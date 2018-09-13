@@ -12,7 +12,7 @@ describe('create connection', () => {
         const connections = await getTestConnections(MAX, 30590)
 
         // stop all nodes
-        let promises = []
+        const promises = []
         for (let i = 0; i < MAX; i++) {
             // eslint-disable-next-line no-await-in-loop
             promises.push(await connections[i].stop(console.log(`closing ${i} connection`)))
