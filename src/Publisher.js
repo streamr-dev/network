@@ -1,4 +1,3 @@
-const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
 const InvalidMessageContentError = require('./errors/InvalidMessageContentError')
 
 module.exports = class Publisher {

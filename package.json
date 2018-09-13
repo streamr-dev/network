@@ -2,6 +2,10 @@
   "name": "streamr-broker",
   "version": "0.0.1",
   "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/streamr-dev/broker.git"
+  },
   "main": "broker.js",
   "directories": {
     "test": "test"
@@ -18,6 +22,7 @@
     "node": ">= 8.0.0"
   },
   "dependencies": {
+    "@streamr/streamr-p2p-network": "1.0.3",
     "body-parser": "^1.15.2",
     "buffer-reader": "^0.1.0",
     "buffermaker": "1.2.0",

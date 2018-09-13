@@ -4,13 +4,15 @@ const express = require('express')
 const ws = require('uws')
 let optimist = require('optimist')
 
+const { startNetworkNode } = require('@streamr/streamr-p2p-network')
+
 const StreamFetcher = require('./src/StreamFetcher')
 const WebsocketServer = require('./src/WebsocketServer')
 const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
 const VolumeLogger = require('./src/utils/VolumeLogger')
 
-module.exports = (externalConfig) => {
+module.exports = async (externalConfig) => {
     let config
 
     if (!externalConfig) {
@@ -24,7 +26,7 @@ module.exports = (externalConfig) => {
         config = externalConfig
     }
 
-    const networkNode = null
+    const networkNode = await startNetworkNode('127.0.0.1', '30333')
     const historicalAdapter = null
     const latestOffsetFetcher = null
 
@@ -94,5 +96,11 @@ module.exports = (externalConfig) => {
 
 // Start the server if we're not being required from another module
 if (require.main === module) {
+
     module.exports()
+        .then(() => {})
+        .catch((e) => {
+            console.error(e)
+            process.exit(1)
+        })
 }

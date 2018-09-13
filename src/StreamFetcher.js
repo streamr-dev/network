@@ -1,6 +1,6 @@
 const fetch = require('node-fetch')
 const memoize = require('memoizee')
-const debug = require('debug')('StreamFetcher')
+const debug = require('debug')('streamr:StreamFetcher')
 const HttpError = require('./errors/HttpError')
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
