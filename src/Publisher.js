@@ -7,20 +7,13 @@ module.exports = class Publisher {
         this.partitioner = partitioner
     }
 
-    async publish(stream, timestamp, ttl, contentType, content, partitionKey) {
+    async publish(stream, timestamp, content, partitionKey) {
         if (!content) {
             throw new InvalidMessageContentError(`Empty message content rejected for stream ${stream.id}`)
         }
 
         const streamPartition = this.partitioner.partition(stream.partitions, partitionKey)
 
-        return this.networkNode.publish(new StreamrBinaryMessage(
-            stream.id,
-            streamPartition,
-            timestamp || Date.now(),
-            ttl || 0,
-            contentType,
-            content,
-        ))
+        return this.networkNode.publish(stream.id, streamPartition, content)
     }
 }

@@ -63,8 +63,6 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
             publisher.publish(
                 req.stream,
                 timestamp,
-                undefined, // ttl, read from stream when available
-                StreamrBinaryMessage.CONTENT_TYPE_JSON,
                 req.body,
                 req.query.pkey,
             ).then(() => {

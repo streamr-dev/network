@@ -4,7 +4,6 @@ const debugProtocol = require('debug')('WebsocketServer:protocol')
 const Stream = require('./Stream')
 const Connection = require('./Connection')
 const TimestampUtil = require('./utils/TimestampUtil')
-const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
 const HttpError = require('./errors/HttpError')
 const VolumeLogger = require('./utils/VolumeLogger')
 
@@ -26,8 +25,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.volumeLogger = volumeLogger
 
         // This handler is for realtime messages, not resends
-        this.networkNode.onMessage((messageAsArray, streamId, streamPartition) => {
-            this.broadcastMessage(messageAsArray, streamId, streamPartition)
+        this.networkNode.addMessageListener((streamId, streamPartition, message) => {
+            this.broadcastMessage(streamId, streamPartition, message)
         })
 
         const requestHandlersByType = {
@@ -100,8 +99,6 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             .then((stream) => this.publisher.publish(
                 stream,
                 timestamp,
-                undefined, // ttl, read from stream when available
-                StreamrBinaryMessage.CONTENT_TYPE_JSON,
                 req.msg,
                 req.pkey,
             ))
@@ -253,7 +250,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         }
     }
 
-    broadcastMessage(message, streamId, streamPartition) {
+    broadcastMessage(streamId, streamPartition, message) {
         const stream = this.getStreamObject(streamId, streamPartition)
         if (stream) {
             const connections = stream.getConnections()
