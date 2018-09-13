@@ -31,10 +31,14 @@ class TrackerNode extends EventEmitter {
 
     async _onConnectToTracker(tracker) {
         if (isTracker(getAddress(tracker)) && !this.connection.isConnected(tracker)) {
-            await this.connection.connect(tracker)
-
-            this.tracker = tracker
-            this.emit(events.CONNECTED_TO_TRACKER, tracker)
+            await this.connection.connect(tracker).catch((err) => {
+                if (err) {
+                    debug('cannot connect to the tracker, probably not started')
+                } else {
+                    this.tracker = tracker
+                    this.emit(events.CONNECTED_TO_TRACKER, tracker)
+                }
+            })
         }
     }
 
@@ -44,7 +48,7 @@ class TrackerNode extends EventEmitter {
         switch (code) {
             case encoder.PEERS:
                 // ask tacker again
-                if (!data.length && this.tracker) { // data = peers
+                if (!data.length && this.tracker && this.connection.isConnected(this.tracker)) { // data = peers
                     debug('no available peers, ask again tracker')
 
                     setTimeout(() => {

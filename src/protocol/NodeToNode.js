@@ -1,5 +1,6 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:node-node')
+const { getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
 
 module.exports = class NodeToNode extends EventEmitter {
@@ -25,5 +26,13 @@ module.exports = class NodeToNode extends EventEmitter {
 
     publishToStream(streamId, data, cb) {
         this.connection.node.pubsub.publish(streamId, Buffer.from(data), cb)
+    }
+
+    getAddress() {
+        return getAddress(this.connection.node.peerInfo)
+    }
+
+    stop(cb) {
+        this.connection.node.stop(() => cb())
     }
 }

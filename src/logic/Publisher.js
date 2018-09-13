@@ -25,7 +25,16 @@ module.exports = class Publisher extends EventEmitter {
         if (this.nodeAddress) {
             debug('publishing data', streamId, data)
             this.protocols.nodeToNode.sendData(this.nodeAddress, streamId, data)
+        } else {
+            throw new Error('Failed to publish because this.nodeAddress not defined.')
         }
-        throw new Error('Failed to publish because this.nodeAddress not defined.')
+    }
+
+    stop(cb) {
+        this.protocols.nodeToNode.stop(cb)
+    }
+
+    getAddress() {
+        return this.protocols.nodeToNode.getAddress()
     }
 }

@@ -1,7 +1,7 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:tracker-server')
 const connectionEvents = require('../connection/Connection').events
-const { isTracker } = require('../util')
+const { isTracker, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
 
 const events = Object.freeze({
@@ -60,6 +60,14 @@ class TrackerServer extends EventEmitter {
             default:
                 throw new Error('Unhandled message type')
         }
+    }
+
+    getAddress() {
+        return getAddress(this.connection.node.peerInfo)
+    }
+
+    stop(cb) {
+        this.connection.node.stop(() => cb())
     }
 }
 

@@ -10,6 +10,7 @@ const Libp2pBundle = require('./Libp2pBundle')
 const HANDLER = '/streamr/v1/'
 
 const events = Object.freeze({
+    READY: 'node:ready',
     PEER_DISCOVERED: 'streamr:peer:discovery',
     PEER_CONNECTED: 'streamr:peer:connect',
     PEER_DISCONNECTED: 'streamr:peer:disconnect',
@@ -98,6 +99,10 @@ class Connection extends EventEmitter {
 
     async _dial(address) {
         return new Promise((resolve, reject) => this.node.dial(address, (err, peerInfo) => (err ? reject(err) : resolve(peerInfo))))
+    }
+
+    async stop(callback = true) {
+        return new Promise((resolve, reject) => this.node.stop((err) => (err ? reject(err) : resolve(callback))))
     }
 
     isConnected(peerInfo) {

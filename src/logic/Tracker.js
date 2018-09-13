@@ -46,4 +46,12 @@ module.exports = class Tracker extends EventEmitter {
             }
         })
     }
+
+    stop(cb) {
+        this.protocols.trackerServer.stop(cb)
+    }
+
+    getAddress() {
+        return this.protocols.trackerServer.getAddress()
+    }
 }
