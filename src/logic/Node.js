@@ -4,7 +4,11 @@ const TrackerNode = require('../protocol/TrackerNode')
 const NodeToNode = require('../protocol/NodeToNode')
 const { generateClientId, getStreams } = require('../util')
 
-module.exports = class Node extends EventEmitter {
+const events = Object.freeze({
+    MESSAGE_RECEIVED: 'streamr:node:message-received',
+})
+
+class Node extends EventEmitter {
     constructor(connection) {
         super()
 
@@ -57,6 +61,7 @@ module.exports = class Node extends EventEmitter {
     onDataReceived(streamId, data) {
         if (this._isOwnStream(streamId)) {
             debug('received data for own streamId %s', streamId)
+            this.emit(events.DATA_RECEIVED, streamId, data)
         } else if (this._isKnownStream(streamId)) {
             const receiverNode = this.knownStreams.get(streamId)
             this.protocols.nodeToNode.sendData(receiverNode, streamId, data)
@@ -74,3 +79,7 @@ module.exports = class Node extends EventEmitter {
         return this.knownStreams.get(streamId) !== undefined
     }
 }
+
+Node.events = events
+
+module.exports = Node
