@@ -1,5 +1,5 @@
-const NetworkNode = require('./NetworkNode')
+const startNetworkNode = require('./NetworkNode')
 
 module.exports = {
-    NetworkNode
+    startNetworkNode
 }
