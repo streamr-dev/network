@@ -1,5 +1,5 @@
 const { EventEmitter } = require('events')
-const debug = require('debug')('streamr:tracker')
+const debug = require('debug')('streamr:logic:tracker')
 const { generateClientId, getAddress } = require('../util')
 const TrackerServer = require('../protocol/TrackerServer')
 const { getPeersTopology } = require('../helpers/TopologyStrategy')

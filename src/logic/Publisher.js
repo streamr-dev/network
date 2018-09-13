@@ -1,5 +1,5 @@
 const { EventEmitter } = require('events')
-const debug = require('debug')('streamr:publisher')
+const debug = require('debug')('streamr:logic:publisher')
 const NodeToNode = require('../protocol/NodeToNode')
 const { generateClientId } = require('../util')
 

@@ -1,5 +1,6 @@
 const libp2p = require('libp2p')
 
+const debug = require('debug')('streamr:connection:libp2p')
 const TCP = require('libp2p-tcp')
 const WS = require('libp2p-websockets')
 const SPDY = require('libp2p-spdy')
@@ -44,5 +45,7 @@ module.exports = class Libp2pBundle extends libp2p {
         }
 
         super(defaultsDeep(params, defaults))
+
+        debug('libp2p bundle created')
     }
 }

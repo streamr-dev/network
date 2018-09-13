@@ -38,6 +38,17 @@ example:
 
 `npm run pub 30310 /ip4/127.0.0.1/tcp/30301/ipfs/QmSfv54RY4v1tzJbQgkZbJzuFggYfJTnY8C2sZLafWkrWN 5637cf21-b286-11e8-8f3e-8b5d43958c3e`
 
+# Debugging
+to get all debug messages run `export DEBUG=*`
+
+to get all streamr network debug messages `export DEBUG=streamr:`
+
+to get messages by layers run:
+
+- connection layer `export DEBUG=streamr:connection*`
+- logic layer `export DEBUG=streamr:logic*`
+- protocol layer `export DEBUG=streamr:protocol*`
+
 # Testing
 run tests
 
@@ -60,7 +71,6 @@ it's better to run integration tests one by one, for now they are using the same
 - validation
 - tests
 - async
-- export all events to use them in tests
 
 # Architecture
 

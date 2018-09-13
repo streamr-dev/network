@@ -1,7 +1,7 @@
 const { EventEmitter } = require('events')
-const debug = require('debug')('streamr:node-node')
-const { getAddress } = require('../util')
+const debug = require('debug')('streamr:protocol:node-node')
 const encoder = require('../helpers/MessageEncoder')
+const { getAddress } = require('../util')
 
 module.exports = class NodeToNode extends EventEmitter {
     constructor(connection) {

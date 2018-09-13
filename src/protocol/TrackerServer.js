@@ -1,5 +1,5 @@
 const { EventEmitter } = require('events')
-const debug = require('debug')('streamr:tracker-server')
+const debug = require('debug')('streamr:protocol:tracker-server')
 const connectionEvents = require('../connection/Connection').events
 const { isTracker, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')

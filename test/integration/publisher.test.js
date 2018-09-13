@@ -1,35 +1,33 @@
 const assert = require('assert')
-const { createConnection } = require('../../src/connection/Connection')
+const { getTestConnections } = require('../util')
 const Node = require('../../src/logic/Node')
 const Publisher = require('../../src/logic/Publisher')
 const { version } = require('../../package.json')
 
-jest.setTimeout(30000)
+jest.setTimeout(40000)
 
 describe('publisher and node connection', () => {
-    it('should be able to start publisher and node, send message, receive and then stop successfully', (done) => {
-        let conn1
-        let conn2
-        let node
-        let publisher
+    it('should be able to start publisher and node, send message, receive and then stop successfully', async (done) => {
+        const MAX = 2
 
-        createConnection('127.0.0.1', 30350, '', true).then((connection) => {
-            conn1 = connection
-            node = new Node(connection)
-        }).then(() => createConnection('127.0.0.1', 30351, '', true).then((connection2) => {
-            conn2 = connection2
+        // create MAX connections
+        const connections = await getTestConnections(MAX, 30990)
+        const conn1 = connections[0]
+        const conn2 = connections[1]
 
-            connection2.connect(conn1.node.peerInfo)
+        const node = new Node(conn1)
+        const publisher = new Publisher(conn2, conn1.node.peerInfo)
 
-            publisher = new Publisher(connection2, conn1.node.peerInfo)
-            publisher.publish(node.status.streams[0], 'Hello world, from Publisher ' + conn2.node.peerInfo.id.toB58String(), () => {})
+        publisher.publish(node.status.streams[0], 'Hello world, from Publisher ' + conn2.node.peerInfo.id.toB58String(), () => {})
 
-            conn1.on('streamr:message-received', ({ sender, message }) => {
-                assert.equal(message, `{"version":"${version}","code":2,"data":["${node.status.streams[0]}","Hello world, from Publisher ${connection2.node.peerInfo.id.toB58String()}"]}`)
-                conn1.node.stop(() => {
-                    conn2.node.stop(() => done())
-                })
+        conn1.on('streamr:message-received', ({ sender, message }) => {
+            console.log(message)
+
+            assert.equal(message, `{"version":"${version}","code":2,"data":["${node.status.streams[0]}","Hello world, from Publisher ${conn2.node.peerInfo.id.toB58String()}"]}`)
+
+            conn1.node.stop(() => {
+                conn2.node.stop(() => done())
             })
-        }))
+        })
     })
 })

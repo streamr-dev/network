@@ -2,9 +2,8 @@ const { EventEmitter } = require('events')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const pull = require('pull-stream')
-const debug = require('debug')('streamr:connection')
+const debug = require('debug')('streamr:connection:connection')
 const { callbackToPromise, getAddress } = require('../util')
-const encoder = require('../helpers/MessageEncoder')
 const Libp2pBundle = require('./Libp2pBundle')
 
 const HANDLER = '/streamr/v1/'
@@ -35,12 +34,7 @@ class Connection extends EventEmitter {
     }
 
     send(recipient, message) {
-        const messageDecoded = encoder.decode(message)
-        debug('sending to the %s, message %s with data "%s"',
-            recipient instanceof PeerInfo ? getAddress(recipient) : '',
-            encoder.getMsgPrefix(messageDecoded.code),
-            JSON.stringify(messageDecoded.data))
-
+        debug('sending to the %s, message with data "%s"', recipient instanceof PeerInfo ? getAddress(recipient) : '', message)
         this.node.dialProtocol(recipient, HANDLER, (err, conn) => {
             if (err) {
                 throw err
@@ -63,11 +57,7 @@ class Connection extends EventEmitter {
                 conn,
                 pull.map((message) => message.toString('utf8')),
                 pull.drain((message) => {
-                    const messageDecoded = encoder.decode(message)
-                    debug('received from %s, message %s with data "%s"',
-                        getAddress(sender),
-                        encoder.getMsgPrefix(messageDecoded.code),
-                        JSON.stringify(messageDecoded.data))
+                    debug('received from %s, message with data "%s"', sender instanceof PeerInfo ? getAddress(sender) : '', message)
 
                     this.emit(events.MESSAGE_RECEIVED, {
                         sender,
