@@ -18,12 +18,12 @@ class NetworkNode extends EventEmitter {
         this.node.onDataReceived(streamId, content)
     }
 
-    subscribe(streamId, streamPartition) {
+    subscribe(streamId, streamPartition, cb) {
         if (streamPartition !== 0) {
             throw new Error('Stream partitions not yet supported.')
         }
         this.subscribed = true
-        // TODO: Do we even need?
+        cb(null)
     }
 
     unsubscribe(streamId, streamPartition) {
