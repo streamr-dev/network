@@ -2,11 +2,13 @@ const debug = require('debug')('Publisher')
 const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
 const InvalidMessageContentError = require('./errors/InvalidMessageContentError')
 const NotReadyError = require('./errors/NotReadyError')
+const VolumeLogger = require('./utils/VolumeLogger')
 
 module.exports = class Publisher {
-    constructor(kafka, partitioner) {
+    constructor(kafka, partitioner, volumeLogger = new VolumeLogger(0)) {
         this.kafka = kafka
         this.partitioner = partitioner
+        this.volumeLogger = volumeLogger
 
         kafka.on('ready', () => {
             this.kafkaReady = true
@@ -26,13 +28,17 @@ module.exports = class Publisher {
             throw new NotReadyError('Server not ready. Please try again shortly.')
         }
 
-        return this.kafka.send(new StreamrBinaryMessage(
+        const streamrBinaryMessage = new StreamrBinaryMessage(
             stream.id,
             streamPartition,
             timestamp || Date.now(),
             ttl || 0,
             contentType,
             content,
-        ))
+        )
+
+        this.volumeLogger.logInput(streamrBinaryMessage.getContentBuffer().length)
+
+        return this.kafka.send(streamrBinaryMessage)
     }
 }

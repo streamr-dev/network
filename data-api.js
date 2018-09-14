@@ -40,8 +40,8 @@ module.exports = (externalConfig) => {
     const cassandra = new CassandraUtil(config.cassandra.split(','), config.keyspace)
     const redisOffsetFetcher = new RedisOffsetFetcher(config.redis.split(',')[0], config['redis-pwd'])
     const kafka = new StreamrKafkaProducer(config['data-topic'], Partitioner, config.zookeeper)
-    const publisher = new Publisher(kafka, Partitioner)
     const volumeLogger = new VolumeLogger()
+    const publisher = new Publisher(kafka, Partitioner, volumeLogger)
 
     // Create HTTP server
     const app = express()
@@ -84,6 +84,7 @@ module.exports = (externalConfig) => {
     // Rest endpoints
     app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(cassandra, streamFetcher, volumeLogger))
     app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, publisher, volumeLogger))
+    app.use('/api/v1', require('./src/rest/VolumeEndpoint')(volumeLogger))
 
     // Start the server
     httpServer.listen(config.port, () => {
