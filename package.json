@@ -22,7 +22,7 @@
     "node": ">= 8.0.0"
   },
   "dependencies": {
-    "@streamr/streamr-p2p-network": "1.0.3",
+    "@streamr/streamr-p2p-network": "git+ssh://git@github.com/streamr-dev/network.git",
     "body-parser": "^1.15.2",
     "buffer-reader": "^0.1.0",
     "buffermaker": "1.2.0",
