@@ -5,8 +5,6 @@ const HttpError = require('./errors/HttpError')
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 
-// TODO: expire cache item if stream changed / key compromised.
-
 module.exports = class StreamFetcher {
     constructor(baseUrl) {
         this.streamResourceUrl = `${baseUrl}/api/v1/streams`

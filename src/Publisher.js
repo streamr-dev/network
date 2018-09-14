@@ -4,6 +4,7 @@ module.exports = class Publisher {
     constructor(networkNode, partitioner) {
         this.networkNode = networkNode
         this.partitioner = partitioner
+        this.offsetByStream = {}
     }
 
     async publish(stream, timestamp, content, partitionKey) {
@@ -13,6 +14,19 @@ module.exports = class Publisher {
 
         const streamPartition = this.partitioner.partition(stream.partitions, partitionKey)
 
-        return this.networkNode.publish(stream.id, streamPartition, content)
+        // TODO: remove offset stamping when done elsewhere
+        const previousOffset = this.offsetByStream[stream]
+        if (previousOffset === undefined) {
+            this.offsetByStream[stream] = 0
+        }
+        this.offsetByStream[stream] += 1
+
+        const version = '28'
+        const ttl = undefined
+        const offset = this.offsetByStream[stream]
+        const contentType = 27
+        const protocolMessage = [version, stream.id, streamPartition, timestamp, ttl, offset, previousOffset, contentType, content]
+
+        return this.networkNode.publish(stream.id, streamPartition, protocolMessage)
     }
 }

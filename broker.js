@@ -27,6 +27,7 @@ module.exports = async (externalConfig) => {
     }
 
     const networkNode = await startNetworkNode('127.0.0.1', '30333')
+    networkNode.node.status.streams.push('ln2g8OKHSdi7BcL-bcnh2g', 'YpTAPDbvSAmj-iCUYz-dxA')
     const historicalAdapter = null
     const latestOffsetFetcher = null
 
