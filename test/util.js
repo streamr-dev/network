@@ -1,7 +1,7 @@
 const localhost = '127.0.0.1'
 const { createConnection } = require('../src/connection/Connection')
 
-exports.getTestConnections = async (numConn, basePort) => {
+const getTestConnections = async (numConn, basePort) => {
     const connections = []
 
     for (let i = 0; i < numConn; i++) {
@@ -11,4 +11,11 @@ exports.getTestConnections = async (numConn, basePort) => {
     }
 
     return connections
+}
+
+const getPeers = (max) => Array.from(Array(max), (d, i) => 'address-' + i)
+
+module.exports = {
+    getTestConnections,
+    getPeers
 }

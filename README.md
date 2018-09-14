@@ -84,6 +84,13 @@ messages and interpreting them in terms of higher-level concerns.
 - _Logic layer_ is concerned with application-level concerns. It reacts to high-level events emitted from the protocol
 layer and pushes new data to the Streamr network via the same layer.
 
+# Flow
+
+### Find node for the stream-id
+1. Producer connects to the node
+2. Node asks tracker who is responsible for stream.
+3. If no one is responsible, then tracker assigns responsibility to this node.
+
 # Glossary
 - A _peer_ is any participant in the peer-to-peer network.
 - A _node_ is a peer that forwards data in the Streamr network pub-sub.

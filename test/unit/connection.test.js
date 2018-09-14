@@ -1,5 +1,3 @@
-const { createConnection } = require('../../src/connection/Connection')
-
 const { getTestConnections } = require('../util')
 
 jest.setTimeout(50000)

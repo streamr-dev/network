@@ -1,4 +1,3 @@
-const ms = require('ms')
 const { createConnection } = require('./src/connection/Connection')
 const Publisher = require('./src/logic/Publisher')
 
@@ -14,7 +13,7 @@ createConnection('127.0.0.1', port, '', true).then((connection) => {
     setInterval(() => {
         const msg = 'Hello world, ' + new Date().toLocaleString()
         publisher.publish(streamId, msg, () => {})
-    }, ms('1s'))
+    }, 1000)
 }).catch((err) => {
     throw err
 })

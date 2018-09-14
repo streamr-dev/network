@@ -17,13 +17,15 @@ describe('publisher and node connection', () => {
 
         const node = new Node(conn1)
         const publisher = new Publisher(conn2, conn1.node.peerInfo)
+        const streamId = 'streamd-id'
 
-        publisher.publish(node.status.streams[0], 'Hello world, from Publisher ' + conn2.node.peerInfo.id.toB58String(), () => {})
+        assert(!node.isOwnStream(streamId))
+
+        publisher.publish(streamId, 'Hello world, from Publisher ' + conn2.node.peerInfo.id.toB58String(), () => {})
 
         conn1.on('streamr:message-received', ({ sender, message }) => {
-            console.log(message)
-
-            assert.equal(message, `{"version":"${version}","code":2,"data":["${node.status.streams[0]}","Hello world, from Publisher ${conn2.node.peerInfo.id.toB58String()}"]}`)
+            assert.equal(message, `{"version":"${version}","code":2,"data":["${streamId}","Hello world, from Publisher ${conn2.node.peerInfo.id.toB58String()}"]}`)
+            assert(!node.isOwnStream(streamId))
 
             conn1.node.stop(() => {
                 conn2.node.stop(() => done())

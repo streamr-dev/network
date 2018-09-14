@@ -1,5 +1,4 @@
 const assert = require('assert')
-const { createConnection, events } = require('../../src/connection/Connection')
 const { getTestConnections } = require('../util')
 
 jest.setTimeout(60000)
@@ -33,7 +32,6 @@ describe('create two connections and init connection between them', () => {
         })
 
         promises = []
-        console.log('shutdown')
         for (let i = 0; i < MAX; i++) {
             // eslint-disable-next-line no-await-in-loop
             promises.push(await connections[i].stop(console.log(`closing ${i} connection`)))

@@ -1,6 +1,5 @@
 const assert = require('assert')
 const encoder = require('../../src/helpers/MessageEncoder')
-const Connection = require('../../src/connection/Connection')
 const { version } = require('../../package.json')
 
 describe('encoder', () => {
@@ -26,12 +25,12 @@ describe('encoder', () => {
 
     it('check streamMessage encoding/decoding', (done) => {
         const json = encoder.streamMessage('stream-id', 'node-address')
-        assert.equal(json, `{"version":"${version}","code":5,"data":["stream-id","node-address"]}`)
+        assert.equal(json, `{"version":"${version}","code":${encoder.STREAM},"data":["stream-id","node-address"]}`)
 
         const result = encoder.decode(json)
         assert.deepEqual(result, {
             version,
-            code: 5,
+            code: encoder.STREAM,
             data: ['stream-id', 'node-address']
         })
 

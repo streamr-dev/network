@@ -8,7 +8,8 @@ const events = Object.freeze({
     CONNECTED_TO_TRACKER: 'streamr:peer:send-status',
     NODE_LIST_RECEIVED: 'streamr:node-node:connect',
     DATA_RECEIVED: 'streamr:node-node:stream-data',
-    STREAM_INFO_RECEIVED: 'streamr:node:found-stream'
+    STREAM_INFO_RECEIVED: 'streamr:node:found-stream',
+    STREAM_ASSIGNED: 'streamr:node:stream-assigned'
 })
 
 class TrackerNode extends EventEmitter {
@@ -31,12 +32,12 @@ class TrackerNode extends EventEmitter {
 
     async _onConnectToTracker(tracker) {
         if (isTracker(getAddress(tracker)) && !this.connection.isConnected(tracker)) {
-            await this.connection.connect(tracker).catch((err) => {
+            await this.connection.connect(tracker).then(() => {
+                this.tracker = tracker
+                this.emit(events.CONNECTED_TO_TRACKER, tracker)
+            }).catch((err) => {
                 if (err) {
                     debug('cannot connect to the tracker, probably not started')
-                } else {
-                    this.tracker = tracker
-                    this.emit(events.CONNECTED_TO_TRACKER, tracker)
                 }
             })
         }
@@ -67,11 +68,14 @@ class TrackerNode extends EventEmitter {
                 break
 
             case encoder.STREAM:
-                console.log('found node')
-                this.emit(events.STREAM_INFO_RECEIVED, {
-                    streamId: data[0],
-                    nodeAddress: data[1]
-                })
+                if (data[1] === getAddress(this.connection.node.peerInfo)) {
+                    this.emit(events.STREAM_ASSIGNED, data[0])
+                } else {
+                    this.emit(events.STREAM_INFO_RECEIVED, {
+                        streamId: data[0],
+                        nodeAddress: data[1]
+                    })
+                }
                 break
 
             default:

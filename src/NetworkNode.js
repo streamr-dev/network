@@ -1,6 +1,6 @@
 const { EventEmitter } = require('events')
-const { createConnection } = require('./src/connection/Connection')
-const Node = require('./src/logic/Node')
+const { createConnection } = require('./connection/Connection')
+const Node = require('./logic/Node')
 
 /*
 Convenience wrapper for broker/data-api. We can replace this with something else later.

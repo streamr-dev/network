@@ -20,7 +20,6 @@
   "scripts": {
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
-    "pub-libp2p": "node $NODE_DEBUG_OPTION publisher-libp2p.js",
     "pub": "node $NODE_DEBUG_OPTION publisher.js",
     "test": "jest",
     "test-unit": "jest test/unit",
@@ -34,20 +33,16 @@
     "debug": "^3.1.0",
     "defaults-deep": "^0.2.4",
     "events": "^3.0.0",
-    "joi": "^13.6.0",
     "libp2p": "^0.23.0",
     "libp2p-bootstrap": "^0.9.3",
     "libp2p-secio": "^0.10.0",
     "libp2p-spdy": "^0.12.1",
     "libp2p-tcp": "^0.12.1",
     "libp2p-websockets": "^0.12.0",
-    "ms": "^2.1.1",
     "peer-id": "^0.11.0",
     "peer-info": "^0.14.1",
     "pull-pushable": "^2.2.0",
-    "pull-stream": "^3.6.8",
-    "safe-buffer": "^5.1.2",
-    "uuid": "^3.3.2"
+    "pull-stream": "^3.6.8"
   },
   "devDependencies": {
     "eslint": "^5.5.0",
@@ -55,7 +50,6 @@
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-import-order": "^2.1.4",
     "eslint-plugin-prettier": "^2.6.2",
-    "jest": "^23.5.0",
-    "prettier": "^1.14.2"
+    "jest": "^23.5.0"
   }
 }

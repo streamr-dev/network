@@ -20,9 +20,6 @@ const libp2pNodeOptions = {
                 enabled: true,
                 list: BOOTNODES
             }
-        },
-        EXPERIMENTAL: {
-            pubsub: true
         }
     }
 }

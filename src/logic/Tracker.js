@@ -9,7 +9,7 @@ module.exports = class Tracker extends EventEmitter {
         super()
 
         this.nodes = new Map()
-        this.trackerId = generateClientId('tracker')
+        this.id = generateClientId('tracker')
         this.protocols = {
             trackerServer: new TrackerServer(connection)
         }
@@ -22,13 +22,13 @@ module.exports = class Tracker extends EventEmitter {
             this.processNodeStatus(peer, status)
         })
 
-        debug('tracker: %s is running', this.trackerId)
+        debug('tracker: %s is running\n\n\n', this.id)
     }
 
     sendListOfNodes(node) {
         debug('sending list of nodes')
 
-        const listOfNodes = getPeersTopology(this.nodes, getAddress(node))
+        const listOfNodes = getPeersTopology([...this.nodes.keys()], getAddress(node))
         this.protocols.trackerServer.sendNodeList(node, listOfNodes)
     }
 
@@ -40,11 +40,19 @@ module.exports = class Tracker extends EventEmitter {
     sendStreamInfo(node, streamId) {
         debug('tracker looking for the stream %s', streamId)
 
-        this.nodes.forEach((status, nodeAddress) => {
+        let nodeAddress
+        this.nodes.forEach((status, knownNodeAddress) => {
             if (status.streams.includes(streamId)) {
-                this.protocols.trackerServer.sendStreamInfo(node, streamId, nodeAddress)
+                nodeAddress = knownNodeAddress
             }
         })
+
+        if (nodeAddress === undefined) {
+            debug('author of request will be responsible for the streamId')
+            nodeAddress = getAddress(node)
+        }
+
+        this.protocols.trackerServer.sendStreamInfo(node, streamId, nodeAddress)
     }
 
     stop(cb) {

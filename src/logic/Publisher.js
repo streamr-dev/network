@@ -7,18 +7,13 @@ module.exports = class Publisher extends EventEmitter {
     constructor(connection, nodeAddress) {
         super()
 
-        this.publisherId = generateClientId('publisher')
+        this.id = generateClientId('publisher')
         this.nodeAddress = nodeAddress
         this.protocols = {
             nodeToNode: new NodeToNode(connection)
         }
 
-        debug('node: %s is running\n\n\n', this.publisherId)
-    }
-
-    publishLibP2P(streamId, data) {
-        debug('publishing data', streamId, data)
-        this.protocols.nodeToNode.publishToStream(streamId, data, () => {})
+        debug('node: %s is running\n\n\n', this.id)
     }
 
     publish(streamId, data) {
