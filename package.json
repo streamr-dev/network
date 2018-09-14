@@ -24,20 +24,14 @@
   "dependencies": {
     "@streamr/streamr-p2p-network": "git+ssh://git@github.com/streamr-dev/network.git",
     "body-parser": "^1.15.2",
-    "buffer-reader": "^0.1.0",
     "buffermaker": "1.2.0",
-    "bufferutil": "^1.2.1",
     "cors": "^2.7.1",
     "debug": "*",
     "express": "^4.14.0",
-    "lolex": "^1.5.1",
     "memoizee": "^0.4.4",
     "murmurhash-native": "^3.2.0",
     "node-fetch": "^1.6.3",
-    "node-int64": "0.3.3",
-    "node-uuid": "^1.4.8",
     "optimist": "*",
-    "promise": "^7.1.1",
     "uws": "^0.14.5"
   },
   "devDependencies": {
@@ -51,6 +45,7 @@
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.7.0",
     "jest": "^23.4.2",
+    "node-uuid": "^1.4.8",
     "sinon": "^2.0.0",
     "supertest": "^3.0.0"
   }
