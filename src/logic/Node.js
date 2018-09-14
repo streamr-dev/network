@@ -61,7 +61,7 @@ class Node extends EventEmitter {
     onDataReceived(streamId, data) {
         if (this._isOwnStream(streamId)) {
             debug('received data for own streamId %s', streamId)
-            this.emit(events.DATA_RECEIVED, streamId, data)
+            this.emit(events.MESSAGE_RECEIVED, streamId, data)
         } else if (this._isKnownStream(streamId)) {
             const receiverNode = this.knownStreams.get(streamId)
             this.protocols.nodeToNode.sendData(receiverNode, streamId, data)
