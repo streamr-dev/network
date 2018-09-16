@@ -1,5 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
+const StreamrBinaryMessage = require('../protocol/StreamrBinaryMessage')
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
