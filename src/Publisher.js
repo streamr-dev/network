@@ -25,7 +25,18 @@ module.exports = class Publisher {
         const ttl = undefined
         const offset = this.offsetByStream[stream]
         const contentType = 27
-        const protocolMessage = [version, stream.id, streamPartition, timestamp, ttl, offset, previousOffset, contentType, content]
+
+        const protocolMessage = [
+            version,
+            stream.id,
+            streamPartition,
+            timestamp || Date.now(),
+            ttl || 0,
+            offset,
+            previousOffset,
+            contentType,
+            content,
+        ]
 
         return this.networkNode.publish(stream.id, streamPartition, protocolMessage)
     }
