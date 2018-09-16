@@ -6,10 +6,8 @@ const BufferMaker = require('buffermaker')
 const Publisher = require('../../src/Publisher')
 const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
 const InvalidMessageContentError = require('../../src/errors/InvalidMessageContentError')
-const NotReadyError = require('../../src/errors/NotReadyError')
 
 describe('Publisher', () => {
-
     const stream = {
         id: 'streamId',
         partitions: 10,
@@ -18,79 +16,60 @@ describe('Publisher', () => {
     const msg = new BufferMaker().string('{}').make()
 
     let publisher
-    let kafkaMock
+    let networkNode
     let partitionerMock
 
     beforeEach(() => {
-        kafkaMock = new events.EventEmitter()
-        kafkaMock.send = sinon.stub().resolves()
+        networkNode = new events.EventEmitter()
+        networkNode.publish = sinon.stub().resolves()
         partitionerMock = {
             partition: sinon.stub().returns(9),
         }
 
-        publisher = new Publisher(kafkaMock, partitionerMock)
+        publisher = new Publisher(networkNode, partitionerMock)
     })
 
     describe('publish', () => {
         it('should return a promise', () => {
-            const promise = publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).catch(() => {})
+            const promise = publisher.publish(stream, Date.now(), msg).catch(() => {})
             assert(promise instanceof Promise)
         })
 
-        it('should throw FailedToPublishError if trying to publish before Kafka is ready', (done) => {
-            publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).catch((err) => {
-                assert(err instanceof NotReadyError, err)
+        it('should throw InvalidMessageContentError if no content is given', (done) => {
+            publisher.publish(stream, Date.now(), undefined).catch((err) => {
+                assert(err instanceof InvalidMessageContentError)
                 done()
             })
         })
 
-        describe('when kafka ready', () => {
-            beforeEach(() => {
-                kafkaMock.emit('ready')
-            })
+        it('should call the partitioner with a partition key if given', () => {
+            publisher.publish(stream, Date.now(), msg, 'key')
+            assert(partitionerMock.partition.calledWith(stream.partitions, 'key'))
+        })
 
-            it('should throw InvalidMessageContentError if no content is given', (done) => {
-                publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, undefined).catch((err) => {
-                    assert(err instanceof InvalidMessageContentError)
-                    done()
-                })
-            })
+        it('should call the partitioner with undefined partition key if not given', () => {
+            publisher.publish(stream, Date.now(), msg)
+            assert(partitionerMock.partition.calledWith(stream.partitions, undefined))
+        })
 
-            it('should call the partitioner with a partition key if given', () => {
-                publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg, 'key')
-                assert(partitionerMock.partition.calledWith(stream.partitions, 'key'))
-            })
+        it('should call networkNode.send with correct values', (done) => {
+            const timestamp = 135135135
 
-            it('should call the partitioner with undefined partition key if not given', () => {
-                publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg)
-                assert(partitionerMock.partition.calledWith(stream.partitions, undefined))
-            })
+            networkNode.publish = (streamId, streamPartition, protocolMessage) => {
+                assert.equal(streamId, 'streamId')
+                assert.equal(streamPartition, 9)
+                assert.deepEqual(protocolMessage, ['28', 'streamId', 9, 135135135, 0, 1, undefined, 27, msg])
+                done()
+            }
+            publisher.publish(stream, timestamp, msg)
+        })
 
-            it('should call KafkaUtil.send with a StreamrBinaryMessage with correct values', (done) => {
-                const timestamp = Date.now()
-                const ttl = 1000
-
-                kafkaMock.send = (streamrBinaryMessage) => {
-                    assert(streamrBinaryMessage instanceof StreamrBinaryMessage)
-                    assert.equal(streamrBinaryMessage.streamId, stream.id)
-                    assert.equal(streamrBinaryMessage.streamPartition, partitionerMock.partition())
-                    assert.equal(streamrBinaryMessage.timestamp, timestamp)
-                    assert.equal(streamrBinaryMessage.ttl, ttl)
-                    assert.equal(streamrBinaryMessage.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
-                    assert.equal(streamrBinaryMessage.content, msg)
-                    done()
-                }
-                publisher.publish(stream, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg)
-            })
-
-            it('should use default values for timestamp and ttl if not given', (done) => {
-                kafkaMock.send = (streamrBinaryMessage) => {
-                    assert(streamrBinaryMessage.timestamp > 0)
-                    assert(streamrBinaryMessage.ttl === 0)
-                    done()
-                }
-                publisher.publish(stream, undefined, undefined, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg, 'key')
-            })
+        it('should use default values for timestamp if not given', (done) => {
+            networkNode.publish = (streamId, streamPartition, protocolMessage) => {
+                assert(protocolMessage[3] > 0) // timestamp
+                done()
+            }
+            publisher.publish(stream, undefined, msg, 'key')
         })
     })
 })

@@ -27,6 +27,9 @@ describe('WebsocketServer', () => {
         realtimeAdapter.subscribe = sinon.stub()
         realtimeAdapter.subscribe.callsArgAsync(2)
         realtimeAdapter.unsubscribe = sinon.spy()
+        realtimeAdapter.addMessageListener = (cb) => {
+            realtimeAdapter.on('message', cb)
+        }
 
         historicalAdapter = {
             getLast: sinon.spy(),
@@ -356,7 +359,7 @@ describe('WebsocketServer', () => {
             })
 
             setTimeout(() => {
-                realtimeAdapter.emit('message', kafkaMessage().toArray(), 'streamId', 0)
+                realtimeAdapter.emit('message', 'streamId', 0, kafkaMessage().toArray())
             })
 
             setTimeout(() => {
@@ -660,11 +663,9 @@ describe('WebsocketServer', () => {
                 msg: '{}',
             }
 
-            publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey) => {
+            publisher.publish = (stream, timestamp, content, partitionKey) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(timestamp, undefined)
-                assert.equal(ttl, undefined)
-                assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.msg)
                 assert.equal(partitionKey, undefined)
                 done()
@@ -683,11 +684,9 @@ describe('WebsocketServer', () => {
                 pkey: 'foo',
             }
 
-            publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey) => {
+            publisher.publish = (stream, timestamp, content, partitionKey) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(timestamp, req.ts)
-                assert.equal(ttl, undefined)
-                assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.msg)
                 assert.equal(partitionKey, req.pkey)
                 done()

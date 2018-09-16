@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "babel-eslint": "^8.2.2",
+    "buffer-reader": "^0.1.0",
     "eslint": "^4.19.1",
     "eslint-config-airbnb": "^16.1.0",
     "eslint-config-streamr": "^1.1.7",

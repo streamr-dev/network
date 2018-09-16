@@ -1,6 +1,7 @@
 const assert = require('assert')
 const fetch = require('node-fetch')
 const WebSocket = require('ws')
+const createBroker = require('../../broker')
 
 const port = 12345
 
@@ -9,24 +10,12 @@ describe('data-api', () => {
 
     let dataApi
 
-    beforeAll((done) => {
+    beforeAll(async () => {
         // Start the app
-        dataApi = require('../../data-api')({
-            'data-topic': 'data-dev',
-            zookeeper: 'localhost',
-            redis: 'localhost',
-            'redis-pwd': 'not-set',
-            cassandra: 'localhost',
-            keyspace: 'streamr_dev',
+        dataApi = await createBroker({
             streamr: 'http://localhost:8081/streamr-core',
             port,
         })
-
-        if (!dataApi.httpServer.listening) {
-            dataApi.httpServer.once('listening', done)
-        } else {
-            done()
-        }
     })
 
     afterAll(() => {
