@@ -1,5 +1,8 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run Broker" type="NodeJSConfigurationType" factoryName="Node.js" application-parameters="--streamr http://localhost:8081/streamr-core --port 8890" path-to-js-file="broker.js" working-dir="$PROJECT_DIR$">
+    <envs>
+      <env name="DEBUG" value="streamr:*" />
+    </envs>
     <method v="2" />
   </configuration>
 </component>
