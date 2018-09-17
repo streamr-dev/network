@@ -38,7 +38,7 @@ module.exports = class Publisher {
             content,
         ), offset, previousOffset, 0)
 
-        //this.volumeLogger.logInput(streamrBinaryMessage.getStreamrBinaryMessage().getContentBuffer().length)
+        this.volumeLogger.logInput(streamrBinaryMessage.getStreamrBinaryMessage().getContentBuffer().length)
 
         return this.networkNode.publish(stream.id, streamPartition, streamrBinaryMessage.toArray())
     }
