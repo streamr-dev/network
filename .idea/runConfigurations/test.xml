@@ -1,0 +1,11 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="test" type="JavaScriptTestRunnerJest" factoryName="Jest">
+    <config-file value="$PROJECT_DIR$/jest.config.js" />
+    <node-interpreter value="project" />
+    <node-options value="" />
+    <working-dir value="$PROJECT_DIR$" />
+    <envs />
+    <scope-kind value="ALL" />
+    <method v="2" />
+  </configuration>
+</component>
