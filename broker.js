@@ -77,6 +77,7 @@ module.exports = async (externalConfig) => {
     // Rest endpoints
     app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(historicalAdapter, streamFetcher, volumeLogger))
     app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, publisher, volumeLogger))
+    app.use('/api/v1', require('./src/rest/VolumeEndpoint')(volumeLogger))
 
     // Start the server
     httpServer.listen(config.port, () => {

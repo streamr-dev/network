@@ -76,6 +76,10 @@ class StreamrBinaryMessage {
     }
 }
 
+/* static */ StreamrBinaryMessage.calculatePayloadBytesForArray = (messageArray) => {
+    return Buffer.from(messageArray[8]).length
+}
+
 /* static */ StreamrBinaryMessage.CONTENT_TYPE_JSON = CONTENT_TYPE_JSON
 
 /* static */ StreamrBinaryMessage.fromBytes = (buf) => {

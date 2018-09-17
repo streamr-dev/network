@@ -36,8 +36,6 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
         authenticationMiddleware(streamFetcher, 'write'),
         // Produce request handler
         (req, res) => {
-            this.volumeLogger.inCount += 1
-
             // Validate body
             if (!req.body || !req.body.length) {
                 res.status(400).send({

@@ -71,8 +71,6 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handlePublishRequest(connection, req) {
-        this.volumeLogger.inCount += 1
-
         if (!req.stream) {
             connection.sendError('Publish request is missing the stream id!')
             return
@@ -129,7 +127,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         const sendMessage = (message) => {
             // "broadcast" to the socket of this connection (ie. this single client) and specific subscription id
-            this.volumeLogger.outCount += 1
+            this.volumeLogger.logOutput(StreamrBinaryMessage.calculatePayloadBytesForArray(message))
             connection.sendUnicast(message, req.sub)
         }
 
@@ -259,7 +257,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 connection.sendBroadcast(message)
             })
 
-            this.volumeLogger.outCount += connections.length
+            this.volumeLogger.logOutput(StreamrBinaryMessage.calculatePayloadBytesForArray(message) * connections.length)
         }
     }
 

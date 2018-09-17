@@ -25,8 +25,9 @@ build/Release
 node_modules
 
 # Users Environment Variables
+.idea/workspace.xml
+.idea/usage.statistics.xml
+.idea/tasks.xml
+.idea/dictionaries/
 .lock-wscript
-.idea
-*.iml
 .DS_Store
-. node_modules
