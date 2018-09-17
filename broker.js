@@ -32,9 +32,9 @@ module.exports = async (externalConfig) => {
     const latestOffsetFetcher = null
 
     // Create some utils
-    const streamFetcher = new StreamFetcher(config.streamr)
-    const publisher = new Publisher(networkNode, Partitioner)
     const volumeLogger = new VolumeLogger()
+    const streamFetcher = new StreamFetcher(config.streamr)
+    const publisher = new Publisher(networkNode, Partitioner, volumeLogger)
 
     // Create HTTP server
     const app = express()

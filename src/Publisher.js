@@ -1,9 +1,13 @@
+const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
+const StreamrBinaryMessageWithKafkaMetadata = require('./protocol/StreamrBinaryMessageWithKafkaMetadata')
 const InvalidMessageContentError = require('./errors/InvalidMessageContentError')
+const VolumeLogger = require('./utils/VolumeLogger')
 
 module.exports = class Publisher {
-    constructor(networkNode, partitioner) {
+    constructor(networkNode, partitioner, volumeLogger = new VolumeLogger(0)) {
         this.networkNode = networkNode
         this.partitioner = partitioner
+        this.volumeLogger = volumeLogger
         this.offsetByStream = {}
     }
 
@@ -21,23 +25,21 @@ module.exports = class Publisher {
         }
         this.offsetByStream[stream] += 1
 
-        const version = '28'
         const ttl = undefined
         const offset = this.offsetByStream[stream]
         const contentType = 27
 
-        const protocolMessage = [
-            version,
+        const streamrBinaryMessage = new StreamrBinaryMessageWithKafkaMetadata(new StreamrBinaryMessage(
             stream.id,
             streamPartition,
             timestamp || Date.now(),
             ttl || 0,
-            offset,
-            previousOffset,
             contentType,
             content,
-        ]
+        ), offset, previousOffset, 0)
 
-        return this.networkNode.publish(stream.id, streamPartition, protocolMessage)
+        //this.volumeLogger.logInput(streamrBinaryMessage.getStreamrBinaryMessage().getContentBuffer().length)
+
+        return this.networkNode.publish(stream.id, streamPartition, streamrBinaryMessage.toArray())
     }
 }
