@@ -27,14 +27,13 @@ module.exports = class Publisher {
 
         const ttl = undefined
         const offset = this.offsetByStream[stream]
-        const contentType = 27
 
         const streamrBinaryMessage = new StreamrBinaryMessageWithKafkaMetadata(new StreamrBinaryMessage(
             stream.id,
             streamPartition,
             timestamp || Date.now(),
             ttl || 0,
-            contentType,
+            StreamrBinaryMessage.CONTENT_TYPE_JSON,
             content,
         ), offset, previousOffset, 0)
 
