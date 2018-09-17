@@ -26,9 +26,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.volumeLogger = volumeLogger
 
         // This handler is for realtime messages, not resends
-        this.networkNode.addMessageListener((streamId, streamPartition, message) => {
-            this.broadcastMessage(streamId, streamPartition, message)
-        })
+        this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
 
         const requestHandlersByType = {
             subscribe: this.handleSubscribeRequest,
