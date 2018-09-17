@@ -5,13 +5,13 @@ const TrackerServer = require('../protocol/TrackerServer')
 const { getPeersTopology } = require('../helpers/TopologyStrategy')
 
 module.exports = class Tracker extends EventEmitter {
-    constructor(connection) {
+    constructor(trackerServer) {
         super()
 
         this.nodes = new Map()
         this.id = generateClientId('tracker')
         this.protocols = {
-            trackerServer: new TrackerServer(connection)
+            trackerServer
         }
 
         this.protocols.trackerServer.on(TrackerServer.events.STREAM_INFO_REQUESTED, ({ sender, streamId }) => { // TODO: rename sender to requester/node

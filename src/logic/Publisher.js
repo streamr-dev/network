@@ -4,13 +4,13 @@ const NodeToNode = require('../protocol/NodeToNode')
 const { generateClientId } = require('../util')
 
 module.exports = class Publisher extends EventEmitter {
-    constructor(connection, nodeAddress) {
+    constructor(nodeToNode, nodeAddress) {
         super()
 
         this.id = generateClientId('publisher')
         this.nodeAddress = nodeAddress
         this.protocols = {
-            nodeToNode: new NodeToNode(connection)
+            nodeToNode
         }
 
         debug('node: %s is running\n\n\n', this.id)

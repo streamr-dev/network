@@ -10,7 +10,7 @@ const events = Object.freeze({
 })
 
 class Node extends EventEmitter {
-    constructor(connection) {
+    constructor(trackerNode, nodeToNode) {
         super()
 
         this.knownStreams = new Map()
@@ -22,11 +22,9 @@ class Node extends EventEmitter {
         }
 
         this.protocols = {
-            trackerNode: new TrackerNode(connection),
-            nodeToNode: new NodeToNode(connection)
+            trackerNode, nodeToNode
         }
 
-        connection.once('node:ready', () => this.onNodeReady())
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
         this.protocols.trackerNode.on(TrackerNode.events.DATA_RECEIVED, ({ streamId, data }) => this.onDataReceived(streamId, data))
         this.protocols.trackerNode.on(TrackerNode.events.NODE_LIST_RECEIVED, (nodes) => this.protocols.nodeToNode.connectToNodes(nodes))

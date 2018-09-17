@@ -1,6 +1,8 @@
 const { EventEmitter } = require('events')
 const { createConnection } = require('./connection/Connection')
 const Node = require('./logic/Node')
+const TrackerNode = require('./protocol/TrackerNode')
+const NodeToNode = require('./protocol/NodeToNode')
 
 /*
 Convenience wrapper for broker/data-api. We can replace this with something else later.
@@ -41,6 +43,6 @@ class NetworkNode extends EventEmitter {
 
 module.exports = async (host, port, key = '') => {
     const connection = await createConnection(host, port, key, true)
-    const node = new Node(connection)
+    const node = new Node(new TrackerNode(connection), new NodeToNode(connection))
     return new NetworkNode(node)
 }
