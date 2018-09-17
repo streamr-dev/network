@@ -24,6 +24,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.streamFetcher = streamFetcher
         this.publisher = publisher
         this.volumeLogger = volumeLogger
+        this.streams = {}
 
         // This handler is for realtime messages, not resends
         this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
@@ -65,8 +66,6 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 this.handleDisconnect(connection)
             })
         })
-
-        this.streams = {}
     }
 
     handlePublishRequest(connection, req) {
