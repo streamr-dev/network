@@ -181,10 +181,3 @@ Sent in response to a `resend` request. Informs the client that there was nothin
   "partition": 0
 }
 ```
-
-### Events emitted on server instance
-
-Event     | Arguments | Description
---------- | -------- |  ----
-`stream-object-created` | Stream | Emitted when a Stream reference object is created
-`stream-object-deleted` | Stream | Emitted when a Stream reference object is deleted

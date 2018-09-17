@@ -414,7 +414,7 @@ describe('WebsocketServer', () => {
 
         it('creates the Stream object with default partition', (done) => {
             setTimeout(() => {
-                assert(server.getStreamObject('streamId', 0) != null)
+                assert(server.streams.getStreamObject('streamId', 0) != null)
                 done()
             })
         })
@@ -430,7 +430,7 @@ describe('WebsocketServer', () => {
             })
 
             setTimeout(() => {
-                assert(server.getStreamObject('streamId', 1) != null)
+                assert(server.streams.getStreamObject('streamId', 1) != null)
                 done()
             })
         })
@@ -486,7 +486,7 @@ describe('WebsocketServer', () => {
 
         it('does not create the Stream object with default partition', (done) => {
             setTimeout(() => {
-                assert(server.getStreamObject('streamId', 0) == null)
+                assert(server.streams.getStreamObject('streamId', 0) == null)
                 done()
             })
         })
@@ -544,7 +544,7 @@ describe('WebsocketServer', () => {
         })
 
         it('removes stream object if there are no more sockets on the stream', () => {
-            assert(server.getStreamObject('streamId', 0) == null)
+            assert(server.streams.getStreamObject('streamId', 0) == null)
         })
 
         it('does not unsubscribe from realtimeAdapter if there are sockets remaining on the stream', (done) => {
@@ -593,7 +593,7 @@ describe('WebsocketServer', () => {
                 })
 
                 setTimeout(() => {
-                    assert(server.getStreamObject('streamId', 0) != null)
+                    assert(server.streams.getStreamObject('streamId', 0) != null)
                     done()
                 })
             })
@@ -807,41 +807,41 @@ describe('WebsocketServer', () => {
 
     describe('createStreamObject', () => {
         it('should return an object with the correct id, partition and state', () => {
-            const stream = server.createStreamObject('streamId', 3)
+            const stream = server.streams.createStreamObject('streamId', 3)
             assert.equal(stream.id, 'streamId')
             assert.equal(stream.partition, 3)
             assert.equal(stream.state, 'init')
         })
 
         it('should return an object that can be looked up', () => {
-            const stream = server.createStreamObject('streamId', 4)
-            assert.equal(server.getStreamObject('streamId', 4), stream)
+            const stream = server.streams.createStreamObject('streamId', 4)
+            assert.equal(server.streams.getStreamObject('streamId', 4), stream)
         })
     })
 
     describe('getStreamObject', () => {
         let stream
         beforeEach(() => {
-            stream = server.createStreamObject('streamId', 0)
+            stream = server.streams.createStreamObject('streamId', 0)
         })
 
         it('must return the requested stream', () => {
-            assert.equal(server.getStreamObject('streamId', 0), stream)
+            assert.equal(server.streams.getStreamObject('streamId', 0), stream)
         })
 
         it('must return undefined if the stream does not exist', () => {
-            assert.equal(server.getStreamObject('streamId', 1), undefined)
+            assert.equal(server.streams.getStreamObject('streamId', 1), undefined)
         })
     })
 
     describe('deleteStreamObject', () => {
         beforeEach(() => {
-            server.createStreamObject('streamId', 0)
+            server.streams.createStreamObject('streamId', 0)
         })
 
         it('must delete the requested stream', () => {
-            server.deleteStreamObject('streamId', 0)
-            assert.equal(server.getStreamObject('streamId', 0), undefined)
+            server.streams.deleteStreamObject('streamId', 0)
+            assert.equal(server.streams.getStreamObject('streamId', 0), undefined)
         })
     })
 })

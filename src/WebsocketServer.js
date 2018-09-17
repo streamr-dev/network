@@ -4,15 +4,12 @@ const debugProtocol = require('debug')('streamr:WebsocketServer:protocol')
 const Stream = require('./Stream')
 const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
 const Connection = require('./Connection')
+const StreamStateManager = require('./StreamStateManager')
 const TimestampUtil = require('./utils/TimestampUtil')
 const HttpError = require('./errors/HttpError')
 const VolumeLogger = require('./utils/VolumeLogger')
 
 const DEFAULT_PARTITION = 0
-
-function getStreamLookupKey(streamId, streamPartition) {
-    return `${streamId}-${streamPartition}`
-}
 
 module.exports = class WebsocketServer extends events.EventEmitter {
     constructor(wss, networkNode, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
@@ -24,7 +21,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.streamFetcher = streamFetcher
         this.publisher = publisher
         this.volumeLogger = volumeLogger
-        this.streams = {}
+        this.streams = new StreamStateManager()
 
         // This handler is for realtime messages, not resends
         this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
@@ -195,59 +192,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         })
     }
 
-    /**
-     * Creates and returns a Stream object, holding the Stream subscription state.
-     *
-     * In normal conditions, the Stream object is cleaned when no more
-     * clients are subscribed to it.
-     *
-     * However, ill-behaving clients could just ask for resends on a Stream
-     * and never subscribe to it, which would lead to leaking memory.
-     * To prevent this, clean up the Stream object if it doesn't
-     * end up in subscribed state within one minute (for example, ill-behaving)
-     * clients only asking for resends and never subscribing.
-     * */
-    createStreamObject(streamId, streamPartition) {
-        if (streamId == null || streamPartition == null) {
-            throw new Error('streamId or streamPartition not given!')
-        }
-
-        const stream = new Stream(streamId, streamPartition, 'init')
-        this.streams[getStreamLookupKey(streamId, streamPartition)] = stream
-
-        stream.stateTimeout = setTimeout(() => {
-            if (stream.state !== 'subscribed') {
-                debug('Stream %s never got to subscribed state, cleaning..', streamId)
-                this.deleteStreamObject(streamId, streamPartition)
-            }
-        }, 60 * 1000)
-
-        this.emit('stream-object-created', stream)
-        debug('Stream object created: %o', stream)
-
-        return stream
-    }
-
-    getStreamObject(streamId, streamPartition) {
-        return this.streams[getStreamLookupKey(streamId, streamPartition)]
-    }
-
-    deleteStreamObject(streamId, streamPartition) {
-        if (streamId == null || streamPartition == null) {
-            throw new Error('streamId or streamPartition not given!')
-        }
-
-        const stream = this.getStreamObject(streamId, streamPartition)
-        debug('Stream object deleted: %o', stream)
-        if (stream) {
-            clearTimeout(stream.stateTimeout)
-            delete this.streams[getStreamLookupKey(streamId, streamPartition)]
-            this.emit('stream-object-deleted', stream)
-        }
-    }
-
     broadcastMessage(streamId, streamPartition, message) {
-        const stream = this.getStreamObject(streamId, streamPartition)
+        const stream = this.streams.getStreamObject(streamId, streamPartition)
         if (stream) {
             const connections = stream.getConnections()
 
@@ -276,11 +222,11 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
             this.streamFetcher.authenticate(streamId, request.authKey)
                 .then((/* streamJson */) => {
-                    let stream = this.getStreamObject(streamId, streamPartition)
+                    let stream = this.streams.getStreamObject(streamId, streamPartition)
 
                     // Create Stream if it does not exist
                     if (!stream) {
-                        stream = this.createStreamObject(streamId, streamPartition)
+                        stream = this.streams.createStreamObject(streamId, streamPartition)
                     }
 
                     // Subscribe now if the stream is not already subscribed or subscribing
@@ -291,7 +237,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                                 stream.emit('subscribed', err)
 
                                 // Delete the stream ref on subscribe error
-                                this.deleteStreamObject(stream.id)
+                                this.streams.deleteStreamObject(stream.id)
 
                                 console.log(`Error subscribing to ${stream.id}: ${err}`)
                             } else {
@@ -345,7 +291,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     handleUnsubscribeRequest(connection, request, noAck) {
         const streamId = request.stream
         const streamPartition = request.partition || DEFAULT_PARTITION
-        const stream = this.getStreamObject(streamId, streamPartition)
+        const stream = this.streams.getStreamObject(streamId, streamPartition)
 
         if (stream) {
             debug('handleUnsubscribeRequest: socket %s unsubscribed from stream %s partition %d', connection.id, streamId, streamPartition)
@@ -363,7 +309,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             } else {
                 debug('checkRoomEmpty: stream %s partition %d has no clients remaining, unsubscribing realtimeAdapter...', streamId, streamPartition)
                 this.networkNode.unsubscribe(streamId, streamPartition)
-                this.deleteStreamObject(streamId, streamPartition)
+                this.streams.deleteStreamObject(streamId, streamPartition)
             }
 
             if (!noAck) {
