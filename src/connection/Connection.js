@@ -9,7 +9,6 @@ const Libp2pBundle = require('./Libp2pBundle')
 const HANDLER = '/streamr/v1/'
 
 const events = Object.freeze({
-    READY: 'node:ready',
     PEER_DISCOVERED: 'streamr:peer:discovery',
     PEER_CONNECTED: 'streamr:peer:connect',
     PEER_DISCONNECTED: 'streamr:peer:disconnect',
