@@ -1,6 +1,6 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:tracker-node')
-const connectionEvents = require('../connection/Connection').events
+const endpointEvents = require('../connection/Libp2pEndpoint').events
 const { isTracker, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
 
@@ -13,26 +13,26 @@ const events = Object.freeze({
 })
 
 class TrackerNode extends EventEmitter {
-    constructor(connection) {
+    constructor(endpoint) {
         super()
 
-        this.connection = connection
+        this.endpoint = endpoint
 
-        this.connection.on(connectionEvents.MESSAGE_RECEIVED, ({ sender, message }) => this._onReceive(sender, message))
-        this.connection.on(connectionEvents.PEER_DISCOVERED, (tracker) => this._onConnectToTracker(tracker))
+        this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => this._onReceive(sender, message))
+        this.endpoint.on(endpointEvents.PEER_DISCOVERED, (tracker) => this._onConnectToTracker(tracker))
     }
 
     sendStatus(tracker, status) {
-        this.connection.send(tracker, encoder.statusMessage(status))
+        this.endpoint.send(tracker, encoder.statusMessage(status))
     }
 
     requestStreamInfo(tracker, streamId) {
-        this.connection.send(tracker, encoder.streamMessage(streamId, ''))
+        this.endpoint.send(tracker, encoder.streamMessage(streamId, ''))
     }
 
     async _onConnectToTracker(tracker) {
-        if (isTracker(getAddress(tracker)) && !this.connection.isConnected(tracker)) {
-            await this.connection.connect(tracker).then(() => {
+        if (isTracker(getAddress(tracker)) && !this.endpoint.isConnected(tracker)) {
+            await this.endpoint.connect(tracker).then(() => {
                 this.tracker = tracker
                 this.emit(events.CONNECTED_TO_TRACKER, tracker)
             }).catch((err) => {
@@ -49,11 +49,11 @@ class TrackerNode extends EventEmitter {
         switch (code) {
             case encoder.PEERS:
                 // ask tacker again
-                if (!data.length && this.tracker && this.connection.isConnected(this.tracker)) { // data = peers
+                if (!data.length && this.tracker && this.endpoint.isConnected(this.tracker)) { // data = peers
                     debug('no available peers, ask again tracker')
 
                     setTimeout(() => {
-                        this.connection.send(this.tracker, encoder.peersMessage([]))
+                        this.endpoint.send(this.tracker, encoder.peersMessage([]))
                     }, 10000)
                 } else if (data.length) {
                     this.emit(events.NODE_LIST_RECEIVED, data)
@@ -68,7 +68,7 @@ class TrackerNode extends EventEmitter {
                 break
 
             case encoder.STREAM:
-                if (data[1] === getAddress(this.connection.node.peerInfo)) {
+                if (data[1] === getAddress(this.endpoint.node.peerInfo)) {
                     this.emit(events.STREAM_ASSIGNED, data[0])
                 } else {
                     this.emit(events.STREAM_INFO_RECEIVED, {
