@@ -18,6 +18,8 @@ class TrackerNode extends EventEmitter {
 
         this.connection = connection
 
+        this.peersInterval = null
+
         this.connection.on(connectionEvents.MESSAGE_RECEIVED, ({ sender, message }) => this._onReceive(sender, message))
         this.connection.on(connectionEvents.PEER_DISCOVERED, (tracker) => this._onConnectToTracker(tracker))
     }
@@ -43,6 +45,15 @@ class TrackerNode extends EventEmitter {
         }
     }
 
+    requestMorePeers() {
+        if (this.peersInterval === null) {
+            this.connection.send(this.tracker, encoder.peersMessage([]))
+            this.peersInterval = setInterval(() => {
+                this.connection.send(this.tracker, encoder.peersMessage([]))
+            }, 5000)
+        }
+    }
+
     _onReceive(sender, message) {
         const { code, data } = encoder.decode(message)
 
@@ -51,12 +62,10 @@ class TrackerNode extends EventEmitter {
                 // ask tacker again
                 if (!data.length && this.tracker && this.connection.isConnected(this.tracker)) { // data = peers
                     debug('no available peers, ask again tracker')
-
-                    setTimeout(() => {
-                        this.connection.send(this.tracker, encoder.peersMessage([]))
-                    }, 10000)
                 } else if (data.length) {
                     this.emit(events.NODE_LIST_RECEIVED, data)
+                    clearInterval(this.peersInterval)
+                    this.peersInterval = null
                 }
                 break
 

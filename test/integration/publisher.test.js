@@ -1,5 +1,6 @@
 const assert = require('assert')
-const { getTestConnections } = require('../util')
+const { getTestConnections, DEFAULT_TIMEOUT } = require('../util')
+const connectionEvents = require('../../src/connection/Connection').events
 const Node = require('../../src/logic/Node')
 const Publisher = require('../../src/logic/Publisher')
 const TrackerNode = require('../../src/protocol/TrackerNode')
@@ -7,7 +8,7 @@ const NodeToNode = require('../../src/protocol/NodeToNode')
 
 const { version } = require('../../package.json')
 
-jest.setTimeout(40000)
+jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('publisher and node connection', () => {
     it('should be able to start publisher and node, send message, receive and then stop successfully', async (done) => {
@@ -26,7 +27,7 @@ describe('publisher and node connection', () => {
 
         publisher.publish(streamId, 'Hello world, from Publisher ' + conn2.node.peerInfo.id.toB58String(), () => {})
 
-        conn1.on('streamr:message-received', ({ sender, message }) => {
+        conn1.on(connectionEvents.MESSAGE_RECEIVED, ({ sender, message }) => {
             assert.equal(message, `{"version":"${version}","code":2,"data":["${streamId}","Hello world, from Publisher ${conn2.node.peerInfo.id.toB58String()}"]}`)
             assert(!node.isOwnStream(streamId))
 

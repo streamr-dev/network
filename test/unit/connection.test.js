@@ -1,6 +1,6 @@
-const { getTestConnections } = require('../util')
+const { getTestConnections, DEFAULT_TIMEOUT } = require('../util')
 
-jest.setTimeout(50000)
+jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('create connection', () => {
     it('should be able to start and stop successfully', async (done) => {
