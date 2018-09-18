@@ -9,7 +9,7 @@ const defaultsDeep = require('defaults-deep')
 const Bootstrap = require('libp2p-bootstrap')
 const { BOOTNODES } = require('../util')
 
-const libp2pNodeOptions = {
+const libp2pNodeOptions = (bootstrapNodes) => ({
     modules: {
         peerDiscovery: [Bootstrap]
     },
@@ -18,14 +18,14 @@ const libp2pNodeOptions = {
             bootstrap: {
                 interval: 5000,
                 enabled: true,
-                list: BOOTNODES
+                list: bootstrapNodes
             }
         }
     }
-}
+})
 
 module.exports = class Libp2pBundle extends libp2p {
-    constructor(peerInfo, includeNodeOptions = false) {
+    constructor(peerInfo, enablePeerDiscovery = false, bootstrapNodes = BOOTNODES) {
         const defaults = {
             modules: {
                 transport: [TCP, WS],
@@ -34,10 +34,10 @@ module.exports = class Libp2pBundle extends libp2p {
             }
         }
 
-        const params = !includeNodeOptions ? {
+        const params = !enablePeerDiscovery ? {
             peerInfo
         } : {
-            ...libp2pNodeOptions,
+            ...libp2pNodeOptions(bootstrapNodes),
             peerInfo
         }
 

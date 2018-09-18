@@ -16,7 +16,7 @@
     "networking",
     "streamr"
   ],
-  "main": "index.js",
+  "main": "./src/composition.js",
   "scripts": {
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
