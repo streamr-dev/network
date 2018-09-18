@@ -20,14 +20,6 @@ module.exports = class NodeToNode extends EventEmitter {
         this.connection.send(receiverNode, encoder.dataMessage(streamId, data))
     }
 
-    subscribeToStream(streamId, messageHandler, doneHandler) {
-        this.connection.node.pubsub.subscribe(streamId, messageHandler, doneHandler) // TODO: leaky abstraction
-    }
-
-    publishToStream(streamId, data, cb) {
-        this.connection.node.pubsub.publish(streamId, Buffer.from(data), cb)
-    }
-
     getAddress() {
         return getAddress(this.connection.node.peerInfo)
     }
