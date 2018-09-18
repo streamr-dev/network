@@ -54,6 +54,10 @@ class TrackerNode extends EventEmitter {
         }
     }
 
+    stop() {
+        this._clearPeerRequestInterval()
+    }
+
     _onReceive(sender, message) {
         const { code, data } = encoder.decode(message)
 
@@ -64,8 +68,7 @@ class TrackerNode extends EventEmitter {
                     debug('no available peers, ask again tracker')
                 } else if (data.length) {
                     this.emit(events.NODE_LIST_RECEIVED, data)
-                    clearInterval(this.peersInterval)
-                    this.peersInterval = null
+                    this._clearPeerRequestInterval()
                 }
                 break
 
@@ -90,6 +93,11 @@ class TrackerNode extends EventEmitter {
             default:
                 throw new Error('Unhandled message type')
         }
+    }
+
+    _clearPeerRequestInterval() {
+        clearInterval(this.peersInterval)
+        this.peersInterval = null
     }
 }
 
