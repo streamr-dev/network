@@ -14,13 +14,8 @@ module.exports = class Connection extends events.EventEmitter {
     }
 
     removeStream(streamId, streamPartition) {
-        let i
-        for (i = 0; i < this.streams.length; i++) {
-            if (this.streams[i].id === streamId && this.streams[i].partition === streamPartition) {
-                break
-            }
-        }
-        if (i < this.streams.length) {
+        const i = this.streams.findIndex((s) => s.id === streamId && s.partition === streamPartition)
+        if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
