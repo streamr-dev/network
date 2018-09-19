@@ -14,7 +14,6 @@ module.exports = class Stream extends events.EventEmitter {
     }
 
     removeConnection(connection) {
-        // slow, but makes the common case (getConnections) fast
         const index = this.connections.indexOf(connection)
         if (index > -1) {
             this.connections.splice(index, 1)
