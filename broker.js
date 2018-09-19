@@ -12,21 +12,12 @@ const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
 const VolumeLogger = require('./src/utils/VolumeLogger')
 
-module.exports = async (externalConfig) => {
-    let config
+const createDataQueryEndpoints = require('./src/rest/DataQueryEndpoints')
+const createDataProduceEndpoints = require('./src/rest/DataProduceEndpoints')
+const createVolumeEndpoint = require('./src/rest/VolumeEndpoint')
 
-    if (!externalConfig) {
-        // Check command line args
-        optimist = optimist.usage(`You must pass the following command line options:
-        --streamr <streamr>
-        --port <port>`)
-        optimist = optimist.demand(['streamr', 'port'])
-        config = optimist.argv
-    } else {
-        config = externalConfig
-    }
-
-    const networkNode = await startNetworkNode('127.0.0.1', '30333')
+module.exports = async (config) => {
+    const networkNode = await startNetworkNode(config.networkHostname, config.networkPort)
     const historicalAdapter = null
     const latestOffsetFetcher = null
 
@@ -74,14 +65,15 @@ module.exports = async (externalConfig) => {
     )
 
     // Rest endpoints
-    app.use('/api/v1', require('./src/rest/DataQueryEndpoints')(historicalAdapter, streamFetcher, volumeLogger))
-    app.use('/api/v1', require('./src/rest/DataProduceEndpoints')(streamFetcher, publisher, volumeLogger))
-    app.use('/api/v1', require('./src/rest/VolumeEndpoint')(volumeLogger))
+    app.use('/api/v1', createDataQueryEndpoints(historicalAdapter, streamFetcher, volumeLogger))
+    app.use('/api/v1', createDataProduceEndpoints(streamFetcher, publisher, volumeLogger))
+    app.use('/api/v1', createVolumeEndpoint(volumeLogger))
 
     // Start the server
     httpServer.listen(config.port, () => {
-        console.log(`Configured with Streamr: ${config.streamr}`)
-        console.log(`Listening on port ${config.port}`)
+        console.info(`Configured with Streamr: ${config.streamr}`)
+        console.info(`Network node running on ${config.networkHostname}:${config.networkPort}`)
+        console.info(`Listening on port ${config.port}`)
         httpServer.emit('listening')
     })
 
@@ -97,7 +89,15 @@ module.exports = async (externalConfig) => {
 
 // Start the server if we're not being required from another module
 if (require.main === module) {
-    module.exports()
+    // Check command line args
+    optimist = optimist.usage(`You must pass the following command line options:
+        --networkHostname <networkHostname>
+        --networkPort <networkPort>
+        --streamr <streamr>
+        --port <port>`)
+    optimist = optimist.demand(['networkHostname', 'networkPort', 'streamr', 'port'])
+
+    module.exports(optimist.argv)
         .then(() => {})
         .catch((e) => {
             console.error(e)
