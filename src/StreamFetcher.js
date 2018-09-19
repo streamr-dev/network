@@ -36,7 +36,7 @@ module.exports = class StreamFetcher {
             headers,
         }).then((response) => {
             if (response.status !== 200) {
-                debug('fetch failed with status %d for streamId %s key %s: %o', response.status, streamId, authKey, response.text())
+                debug('fetch: failed for stream "%s" and key "%s" with status code "%d"', streamId, authKey, response.status)
                 this.fetch.delete(streamId, authKey) // clear cache result
                 throw new HttpError(response.status)
             } else {
@@ -66,10 +66,7 @@ module.exports = class StreamFetcher {
         }).then((response) => {
             if (response.status !== 200) {
                 return response.text().then((errorMsg) => {
-                    debug(
-                        'checkPermission failed with status %d for streamId %s key %s operation %s: %s',
-                        response.status, streamId, authKey, operation, errorMsg,
-                    )
+                    debug('checkPermission: failed for stream "%s", key "%s", operation "%s" with status code "%d" and response "%s"', streamId, authKey, operation, response.status, errorMsg)
                     this.checkPermission.delete(streamId, authKey, operation) // clear cache result
                     throw new HttpError(response.status)
                 })
@@ -83,10 +80,7 @@ module.exports = class StreamFetcher {
                 }
 
                 // Permission was not found
-                debug(
-                    'checkPermission failed for streamId %s key %s operation %s. permissions were: %o',
-                    streamId, authKey, operation, permissions,
-                )
+                debug('checkPermission: failed for stream "%s", key "%s", operation "%s". Permission not found in "%o"', streamId, authKey, operation, permissions)
                 throw new HttpError(403)
             })
         })

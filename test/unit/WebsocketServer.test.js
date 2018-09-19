@@ -66,7 +66,7 @@ describe('WebsocketServer', () => {
         wsMock = new events.EventEmitter()
 
         // Mock the socket
-        mockSocket = new MockSocket()
+        mockSocket = new MockSocket('mock-socket-1')
 
         // Create the server instance
         server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher)
@@ -89,7 +89,7 @@ describe('WebsocketServer', () => {
         let mockSocket2
 
         beforeEach(() => {
-            mockSocket2 = new MockSocket()
+            mockSocket2 = new MockSocket('mock-socket-2')
             wsMock.emit('connection', mockSocket)
             wsMock.emit('connection', mockSocket2)
         })
@@ -420,7 +420,7 @@ describe('WebsocketServer', () => {
         })
 
         it('creates the Stream object with given partition', (done) => {
-            const socket2 = new MockSocket()
+            const socket2 = new MockSocket('mock-socket-2')
             wsMock.emit('connection', socket2)
             socket2.receive({
                 stream: 'streamId',
@@ -454,7 +454,7 @@ describe('WebsocketServer', () => {
         })
 
         it('does not resubscribe to realtimeAdapter on new subscription to same stream', (done) => {
-            const socket2 = new MockSocket()
+            const socket2 = new MockSocket('mock-socket-2')
             wsMock.emit('connection', socket2)
             socket2.receive({
                 stream: 'streamId',
@@ -558,7 +558,7 @@ describe('WebsocketServer', () => {
             })
 
             setTimeout(() => {
-                const socket2 = new MockSocket()
+                const socket2 = new MockSocket('mock-socket-2')
                 wsMock.emit('connection', socket2)
                 socket2.receive({
                     stream: 'streamId',
@@ -583,7 +583,7 @@ describe('WebsocketServer', () => {
             })
 
             setTimeout(() => {
-                const socket2 = new MockSocket()
+                const socket2 = new MockSocket('mock-socket-2')
                 wsMock.emit('connection', socket2)
                 socket2.receive({
                     stream: 'streamId',

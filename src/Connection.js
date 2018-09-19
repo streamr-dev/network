@@ -1,4 +1,5 @@
 const events = require('events')
+const debug = require('debug')('streamr:Connection')
 const encoder = require('./MessageEncoder')
 
 module.exports = class Connection extends events.EventEmitter {
@@ -20,6 +21,10 @@ module.exports = class Connection extends events.EventEmitter {
         }
     }
 
+    forEachStream(cb) {
+        this.getStreams().forEach(cb)
+    }
+
     getStreams() {
         return this.streams.slice() // return copy
     }
@@ -33,6 +38,7 @@ module.exports = class Connection extends events.EventEmitter {
     }
 
     sendSubscribed(response) {
+        debug('sendSubscribed (%s): %o', this.id, response)
         this.socket.send(encoder.subscribedMessage(response))
     }
 
@@ -53,7 +59,12 @@ module.exports = class Connection extends events.EventEmitter {
     }
 
     sendError(response) {
+        debug('sendError (%s): %o', this.id, response)
         this.socket.send(encoder.errorMessage(response))
+    }
+
+    streamsAsString() {
+        return this.streams.map((s) => `${s.id}:${s.partition}`)
     }
 }
 

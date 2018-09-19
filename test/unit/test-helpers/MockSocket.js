@@ -2,8 +2,9 @@ const events = require('events')
 const encoder = require('../../../src/MessageEncoder')
 
 module.exports = class MockSocket extends events.EventEmitter {
-    constructor() {
+    constructor(id) {
         super()
+        this.id = id
         this.rooms = []
         this.sentMessages = []
         this.throwOnError = true

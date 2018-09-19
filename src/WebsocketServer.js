@@ -1,6 +1,5 @@
 const events = require('events')
 const debug = require('debug')('streamr:WebsocketServer')
-const debugProtocol = require('debug')('streamr:WebsocketServer:protocol')
 const Stream = require('./Stream')
 const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
 const Connection = require('./Connection')
@@ -23,45 +22,40 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.volumeLogger = volumeLogger
         this.streams = new StreamStateManager()
 
-        // This handler is for realtime messages, not resends
-        this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
-
-        const requestHandlersByType = {
+        this.requestHandlersByType = {
             subscribe: this.handleSubscribeRequest,
             unsubscribe: this.handleUnsubscribeRequest,
             resend: this.handleResendRequest,
             publish: this.handlePublishRequest,
         }
 
-        this.wss.on('connection', (socket) => {
-            debug('connection established: %o', socket)
-            this.volumeLogger.connectionCount += 1
+        this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
 
-            const connection = new Connection(socket)
+        this.wss.on('connection', this.handleConnection.bind(this))
+    }
 
-            socket.on('message', (data) => {
-                try {
-                    const request = JSON.parse(data)
-                    const handler = requestHandlersByType[request.type]
-                    if (!handler) {
-                        throw new Error(`Unknown request type: ${request.type}`)
-                    } else {
-                        debugProtocol('%s: %s: %o', request.type, connection.id, request)
-                        handler.call(this, connection, request)
-                    }
-                } catch (err) {
-                    console.log('Error handling message: ', data)
-                    console.log(err)
-                    connection.sendError({
-                        error: err,
-                    })
-                }
-            })
+    handleConnection(socket) {
+        const connection = new Connection(socket)
+        this.volumeLogger.connectionCount += 1
+        debug('handleConnection: socket "%s" connected', connection.id)
 
-            socket.on('close', () => {
-                this.volumeLogger.connectionCount -= 1
-                this.handleDisconnect(connection)
-            })
+        socket.on('message', (data) => {
+            const request = JSON.parse(data)
+            const handler = this.requestHandlersByType[request.type]
+            if (handler) {
+                debug('handleConnection: socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
+                handler.call(this, connection, request)
+            } else {
+                console.log(`Error handling message ${data} because of unknown request type ${request.type}`)
+                connection.sendError({
+                    error: `Unknown request type ${request.type}`,
+                })
+            }
+        })
+
+        socket.on('close', () => {
+            this.volumeLogger.connectionCount -= 1
+            this.handleDisconnect(connection)
         })
     }
 
@@ -127,17 +121,17 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         }
 
         const sendResending = () => {
-            debugProtocol('resending: %s: %o', connection.id, requestRef)
+            //debugProtocol('resending: %s: %o', connection.id, requestRef) TODO: fix
             connection.sendResending(requestRef)
         }
 
         const sendResent = () => {
-            debugProtocol('resent: %s: %o', connection.id, requestRef)
+            //debugProtocol('resent: %s: %o', connection.id, requestRef) TODO: fix
             connection.sendResent(requestRef)
         }
 
         const sendNoResend = () => {
-            debugProtocol('no_resend: %s: %o', connection.id, requestRef)
+            //debugProtocol('no_resend: %s: %o', connection.id, requestRef) TODO: fix
             connection.sendNoResend(requestRef)
         }
 
@@ -195,13 +189,13 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     broadcastMessage(streamId, streamPartition, message) {
         const stream = this.streams.getStreamObject(streamId, streamPartition)
         if (stream) {
-            const connections = stream.getConnections()
-
-            connections.forEach((connection) => {
+            stream.forEachConnection((connection) => {
                 connection.sendBroadcast(message)
             })
 
-            this.volumeLogger.logOutput(StreamrBinaryMessage.calculatePayloadBytesForArray(message) * connections.length)
+            this.volumeLogger.logOutput(StreamrBinaryMessage.calculatePayloadBytesForArray(message) * stream.getConnections().length)
+        } else {
+            debug('broadcastMessage: stream "%s:%d" not found', streamId, streamPartition)
         }
     }
 
@@ -211,7 +205,6 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             const response = {
                 error: 'Error: stream id not defined. Are you using an outdated client?',
             }
-            debugProtocol('subscribed (error): %s: %o', connection.id, response)
             connection.sendError(response)
         } else {
             const streamId = request.stream
@@ -221,17 +214,12 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             }
 
             this.streamFetcher.authenticate(streamId, request.authKey)
-                .then((/* streamJson */) => {
-                    let stream = this.streams.getStreamObject(streamId, streamPartition)
-
-                    // Create Stream if it does not exist
-                    if (!stream) {
-                        stream = this.streams.createStreamObject(streamId, streamPartition)
-                    }
+                .then(() => {
+                    const stream = this.streams.getOrCreateStreamObject(streamId, streamPartition)
 
                     // Subscribe now if the stream is not already subscribed or subscribing
-                    if (!(stream.state === 'subscribed' || stream.state === 'subscribing')) {
-                        stream.state = 'subscribing'
+                    if (!stream.isSubscribed() && !stream.isSubscribing()) {
+                        stream.setSubscribing()
                         this.networkNode.subscribe(streamId, streamPartition, (err) => {
                             if (err) {
                                 stream.emit('subscribed', err)
@@ -239,9 +227,9 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                                 // Delete the stream ref on subscribe error
                                 this.streams.deleteStreamObject(stream.id)
 
-                                console.log(`Error subscribing to ${stream.id}: ${err}`)
+                                console.error(`Error subscribing to ${stream.id}: ${err}`)
                             } else {
-                                stream.state = 'subscribed'
+                                stream.setSubscribed()
                                 stream.emit('subscribed')
                             }
                         })
@@ -251,10 +239,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                         // Join the room
                         stream.addConnection(connection)
                         connection.addStream(stream)
-
-                        debug('Socket %s is now subscribed to streams: %o', connection.id, connection.getStreams())
-                        debugProtocol('subscribed: %s: %o', connection.id, requestRef)
-
+                        debug('handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"', connection.id, connection.streamsAsString())
                         connection.sendSubscribed(requestRef)
                     }
 
@@ -267,11 +252,9 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     }
 
                     // If the Stream is subscribed, we're good to go
-                    if (stream.state === 'subscribed') {
+                    if (stream.isSubscribed()) {
                         onSubscribe()
-                    }
-                    // If the Stream is not yet subscribed, wait for the event
-                    if (stream.state !== 'subscribed') {
+                    } else {
                         stream.once('subscribed', (err) => {
                             if (err) {
                                 onError(err)
@@ -282,7 +265,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     }
                 })
                 .catch((response) => {
-                    debugProtocol('subscribed (error): %s: %o', connection.id, response)
+                    debug('handleSubscribeRequest: socket "%s" failed to subscribe to "%o" because of "%o"', connection.id, requestRef, response)
                     connection.sendError(`Not authorized to subscribe to stream ${streamId} and partition ${streamPartition}`)
                 })
         }
@@ -294,20 +277,17 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         const stream = this.streams.getStreamObject(streamId, streamPartition)
 
         if (stream) {
-            debug('handleUnsubscribeRequest: socket %s unsubscribed from stream %s partition %d', connection.id, streamId, streamPartition)
+            debug('handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"', connection.id, streamId, streamPartition)
 
             stream.removeConnection(connection)
             connection.removeStream(streamId, streamPartition)
 
-            debug('handleUnsubscribeRequest: Socket %s is now subscribed to streams: %o', connection.id, connection.getStreams())
+            debug('handleUnsubscribeRequest: socket "%s" is still subscribed to streams "%o"', connection.id, connection.streamsAsString())
 
-            /**
-             * Check whether anyone is subscribed to the stream anymore
-             */
-            if (stream.getConnections().length) {
-                debug('checkRoomEmpty: Clients remaining on %s partition %d: %d', streamId, streamPartition, stream.getConnections().length)
-            } else {
-                debug('checkRoomEmpty: stream %s partition %d has no clients remaining, unsubscribing realtimeAdapter...', streamId, streamPartition)
+            // Unsubscribe from stream if no connections left
+            debug('checkRoomEmpty: "%d" sockets remaining on stream "%s:%d"', stream.getConnections().length, streamId, streamPartition)
+            if (stream.getConnections().length === 0) {
+                debug('checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.', streamId, streamPartition)
                 this.networkNode.unsubscribe(streamId, streamPartition)
                 this.streams.deleteStreamObject(streamId, streamPartition)
             }
@@ -318,6 +298,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 })
             }
         } else {
+            debug('handleUnsubscribeRequest: stream "%s:%d" no longer exists', streamId, streamPartition)
             connection.sendError({
                 error: 'Not subscribed', request,
             })
@@ -325,14 +306,13 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handleDisconnect(connection) {
-        debug('handleDisconnect: socket %s was on streams: %o', connection.id, connection.getStreams())
-
-        const unsub = connection.getStreams()
+        debug('handleDisconnect: socket "%s" is on streams "%o"', connection.id, connection.streamsAsString())
 
         // Unsubscribe from all streams
-        unsub.forEach((stream) => {
+        connection.forEachStream((stream) => {
             this.handleUnsubscribeRequest(connection, {
-                stream: stream.id, partition: stream.partition,
+                stream: stream.id,
+                partition: stream.partition,
             }, true)
         })
     }

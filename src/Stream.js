@@ -20,7 +20,28 @@ module.exports = class Stream extends events.EventEmitter {
         }
     }
 
+    forEachConnection(cb) {
+        this.getConnections().forEach(cb)
+    }
+
     getConnections() {
         return this.connections
+    }
+
+    setSubscribing() {
+        this.state = 'subscribing'
+    }
+
+    setSubscribed() {
+        this.state = 'subscribed'
+    }
+
+    isSubscribing() {
+        return this.state === 'subscribing'
+    }
+
+
+    isSubscribed() {
+        return this.state === 'subscribed'
     }
 }

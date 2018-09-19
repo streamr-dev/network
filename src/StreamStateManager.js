@@ -12,6 +12,14 @@ module.exports = class StreamStateManager extends events.EventEmitter {
         this._streams = {}
     }
 
+    getOrCreateStreamObject(streamId, streamPartition) {
+        const stream = this.getStreamObject(streamId, streamPartition)
+        if (stream) {
+            return stream
+        }
+        return this.createStreamObject(streamId, streamPartition)
+    }
+
     getStreamObject(streamId, streamPartition) {
         return this._streams[getStreamLookupKey(streamId, streamPartition)]
     }
@@ -38,12 +46,12 @@ module.exports = class StreamStateManager extends events.EventEmitter {
 
         stream.stateTimeout = setTimeout(() => {
             if (stream.state !== 'subscribed') {
-                debug('Stream %s never got to subscribed state, cleaning..', streamId)
+                debug('Stream "%s:%d" never subscribed, cleaning..', streamId, streamPartition)
                 this.deleteStreamObject(streamId, streamPartition)
             }
         }, 60 * 1000)
 
-        debug('Stream object created: %o', stream)
+        debug('Stream object "%s:%d" created', stream.id, stream.partition)
         return stream
     }
 
@@ -53,7 +61,7 @@ module.exports = class StreamStateManager extends events.EventEmitter {
         }
 
         const stream = this.getStreamObject(streamId, streamPartition)
-        debug('Stream object deleted: %o', stream)
+        debug('Stream object "%s:%d" deleted', stream.id, stream.partition)
         if (stream) {
             clearTimeout(stream.stateTimeout)
             delete this._streams[getStreamLookupKey(streamId, streamPartition)]
