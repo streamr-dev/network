@@ -13,6 +13,8 @@ describe('data-api', () => {
     beforeAll(async () => {
         // Start the app
         dataApi = await createBroker({
+            networkHostname: '127.0.0.1',
+            networkPort: 31313,
             streamr: 'http://localhost:8081/streamr-core',
             port,
         })
