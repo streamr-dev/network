@@ -1,24 +1,24 @@
 const { EventEmitter } = require('events')
-const debug = require('debug')('streamr:logic:publisher')
-const NodeToNode = require('../protocol/NodeToNode')
-const { generateClientId } = require('../util')
+const createDebug = require('debug')
+const { getIdShort } = require('../util')
 
 module.exports = class Publisher extends EventEmitter {
     constructor(nodeToNode, nodeAddress) {
         super()
 
-        this.id = generateClientId('publisher')
+        this.id = getIdShort(nodeToNode.endpoint.node.peerInfo) // TODO: better way?
         this.nodeAddress = nodeAddress
         this.protocols = {
             nodeToNode
         }
 
-        debug('node: %s is running\n\n\n', this.id)
+        this.debug = createDebug(`streamr:logic:publisher:${this.id}`)
+        this.debug('node: %s is running', this.id)
     }
 
     publish(streamId, data) {
         if (this.nodeAddress) {
-            debug('publishing data', streamId, data)
+            this.debug('publishing data to stream  %s', streamId)
             this.protocols.nodeToNode.sendData(this.nodeAddress, streamId, data)
         } else {
             throw new Error('Failed to publish because this.nodeAddress not defined.')

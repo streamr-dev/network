@@ -18,6 +18,8 @@ class TrackerNode extends EventEmitter {
 
         this.endpoint = endpoint
 
+        this.peersInterval = null
+
         this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => this._onReceive(sender, message))
         this.endpoint.on(endpointEvents.PEER_DISCOVERED, (tracker) => this._onConnectToTracker(tracker))
     }
@@ -37,10 +39,23 @@ class TrackerNode extends EventEmitter {
                 this.emit(events.CONNECTED_TO_TRACKER, tracker)
             }).catch((err) => {
                 if (err) {
-                    debug('cannot connect to the tracker, probably not started')
+                    debug('cannot connect to the tracker: ' + err)
                 }
             })
         }
+    }
+
+    requestMorePeers() {
+        if (this.peersInterval === null) {
+            this.endpoint.send(this.tracker, encoder.peersMessage([]))
+            this.peersInterval = setInterval(() => {
+                this.endpoint.send(this.tracker, encoder.peersMessage([]))
+            }, 5000)
+        }
+    }
+
+    stop() {
+        this._clearPeerRequestInterval()
     }
 
     _onReceive(sender, message) {
@@ -51,12 +66,9 @@ class TrackerNode extends EventEmitter {
                 // ask tacker again
                 if (!data.length && this.tracker && this.endpoint.isConnected(this.tracker)) { // data = peers
                     debug('no available peers, ask again tracker')
-
-                    setTimeout(() => {
-                        this.endpoint.send(this.tracker, encoder.peersMessage([]))
-                    }, 10000)
                 } else if (data.length) {
                     this.emit(events.NODE_LIST_RECEIVED, data)
+                    this._clearPeerRequestInterval()
                 }
                 break
 
@@ -81,6 +93,11 @@ class TrackerNode extends EventEmitter {
             default:
                 throw new Error('Unhandled message type')
         }
+    }
+
+    _clearPeerRequestInterval() {
+        clearInterval(this.peersInterval)
+        this.peersInterval = null
     }
 }
 

@@ -1,5 +1,6 @@
 const assert = require('assert')
-const { getTestEndpoints } = require('../util')
+const { getTestEndpoints, DEFAULT_TIMEOUT } = require('../util')
+const endpointEvents = require('../../src/connection/Libp2pEndpoint').events
 const Node = require('../../src/logic/Node')
 const Publisher = require('../../src/logic/Publisher')
 const TrackerNode = require('../../src/protocol/TrackerNode')
@@ -7,7 +8,7 @@ const NodeToNode = require('../../src/protocol/NodeToNode')
 
 const { version } = require('../../package.json')
 
-jest.setTimeout(40000)
+jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('publisher and node connection', () => {
     it('should be able to start publisher and node, send message, receive and then stop successfully', async (done) => {
@@ -26,7 +27,7 @@ describe('publisher and node connection', () => {
 
         publisher.publish(streamId, 'Hello world, from Publisher ' + endpoint2.node.peerInfo.id.toB58String(), () => {})
 
-        endpoint1.on('streamr:message-received', ({ sender, message }) => {
+        endpoint1.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => {
             assert.equal(message, `{"version":"${version}","code":2,"data":["${streamId}","Hello world, from Publisher ${endpoint2.node.peerInfo.id.toB58String()}"]}`)
             assert(!node.isOwnStream(streamId))
 

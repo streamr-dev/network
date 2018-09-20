@@ -1,6 +1,6 @@
-const { getTestEndpoints } = require('../util')
+const { getTestEndpoints, DEFAULT_TIMEOUT } = require('../util')
 
-jest.setTimeout(50000)
+jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('create endpoint', () => {
     it('should be able to start and stop successfully', async (done) => {

@@ -1,7 +1,7 @@
 const assert = require('assert')
-const { getTestEndpoints } = require('../util')
+const { getTestEndpoints, DEFAULT_TIMEOUT } = require('../util')
 
-jest.setTimeout(60000)
+jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('create two endpoints and init connection between them', () => {
     it('should be able to start and stop successfully', async (done) => {
