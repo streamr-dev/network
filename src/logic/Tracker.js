@@ -9,7 +9,7 @@ module.exports = class Tracker extends EventEmitter {
         super()
 
         this.nodes = new Map()
-        this.id = getIdShort(trackerServer.connection.node.peerInfo) // TODO: Better way?
+        this.id = getIdShort(trackerServer.endpoint.node.peerInfo) // TODO: Better way?
         this.protocols = {
             trackerServer
         }

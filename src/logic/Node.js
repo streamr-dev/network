@@ -16,7 +16,7 @@ class Node extends EventEmitter {
         this.knownStreams = new Map()
         this.ownStreams = new Set()
 
-        this.id = getIdShort(nodeToNode.connection.node.peerInfo) // TODO: better way?
+        this.id = getIdShort(nodeToNode.endpoint.node.peerInfo) // TODO: better way?
         this.tracker = null
 
         this.protocols = {

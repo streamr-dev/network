@@ -4,27 +4,27 @@ const encoder = require('../helpers/MessageEncoder')
 const { getAddress } = require('../util')
 
 module.exports = class NodeToNode extends EventEmitter {
-    constructor(connection) {
+    constructor(endpoint) {
         super()
-        this.connection = connection
+        this.endpoint = endpoint
     }
 
     connectToNodes(nodes) {
         nodes.forEach((node) => {
             debug('connecting to new node %s', node)
-            this.connection.connect(node)
+            this.endpoint.connect(node)
         })
     }
 
     sendData(receiverNode, streamId, data) {
-        this.connection.send(receiverNode, encoder.dataMessage(streamId, data))
+        this.endpoint.send(receiverNode, encoder.dataMessage(streamId, data))
     }
 
     getAddress() {
-        return getAddress(this.connection.node.peerInfo)
+        return getAddress(this.endpoint.node.peerInfo)
     }
 
     stop(cb) {
-        this.connection.node.stop(() => cb())
+        this.endpoint.node.stop(() => cb())
     }
 }

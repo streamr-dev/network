@@ -2,7 +2,7 @@ const { EventEmitter } = require('events')
 const PeerId = require('peer-id')
 const PeerInfo = require('peer-info')
 const pull = require('pull-stream')
-const debug = require('debug')('streamr:connection:connection')
+const debug = require('debug')('streamr:connection:libp2pendpoint')
 const { callbackToPromise, getAddress } = require('../util')
 const Libp2pBundle = require('./Libp2pBundle')
 
@@ -16,7 +16,7 @@ const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:message-received'
 })
 
-class Connection extends EventEmitter {
+class Libp2pEndpoint extends EventEmitter {
     constructor(node) {
         super()
         this.node = node
@@ -56,7 +56,7 @@ class Connection extends EventEmitter {
 
     async onReceive(protocol, conn) {
         try {
-            const sender = await Connection.getPeerInfo(conn)
+            const sender = await Libp2pEndpoint.getPeerInfo(conn)
 
             pull(
                 conn,
@@ -108,9 +108,9 @@ class Connection extends EventEmitter {
         return this.node.peerBook.getAllArray()
     }
 
-    static async getPeerInfo(connection) {
+    static async getPeerInfo(endpoint) {
         return new Promise((resolve, reject) => {
-            return connection.getPeerInfo((err, peerInfo) => (err ? reject(err) : resolve(peerInfo)))
+            return endpoint.getPeerInfo((err, peerInfo) => (err ? reject(err) : resolve(peerInfo)))
         })
     }
 }
@@ -145,7 +145,7 @@ async function startLibp2pNode(host, port, privateKey, enablePeerDiscovery, boot
 
 module.exports = {
     events,
-    async createConnection(host, port, privateKey, enablePeerDiscovery = false, bootstrapNodes) {
-        return startLibp2pNode(host, port, privateKey, enablePeerDiscovery, bootstrapNodes).then((n) => new Connection(n))
+    async createEndpoint(host, port, privateKey, enablePeerDiscovery = false, bootstrapNodes) {
+        return startLibp2pNode(host, port, privateKey, enablePeerDiscovery, bootstrapNodes).then((n) => new Libp2pEndpoint(n))
     }
 }
