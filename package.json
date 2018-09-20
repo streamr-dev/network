@@ -18,6 +18,7 @@
   ],
   "main": "./src/composition.js",
   "scripts": {
+    "generate-key": "node $NODE_DEBUG_OPTION bin/generate-private-key.js",
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
     "pub": "node $NODE_DEBUG_OPTION publisher.js",
@@ -40,6 +41,7 @@
     "events": "3.0.0",
     "libp2p": "0.23.0",
     "libp2p-bootstrap": "0.9.3",
+    "libp2p-crypto": "0.14.0",
     "libp2p-secio": "0.10.0",
     "libp2p-spdy": "0.12.1",
     "libp2p-tcp": "0.12.1",
