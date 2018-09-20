@@ -1,8 +1,8 @@
 const { EventEmitter } = require('events')
-const debug = require('debug')('streamr:logic:node')
+const createDebug = require('debug')
 const TrackerNode = require('../protocol/TrackerNode')
 const NodeToNode = require('../protocol/NodeToNode')
-const { generateClientId } = require('../util')
+const { getIdShort } = require('../util')
 
 const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:node:message-received',
@@ -16,11 +16,12 @@ class Node extends EventEmitter {
         this.knownStreams = new Map()
         this.ownStreams = new Set()
 
-        this.id = generateClientId('node')
+        this.id = getIdShort(nodeToNode.connection.node.peerInfo) // TODO: better way?
         this.tracker = null
 
         this.protocols = {
-            trackerNode, nodeToNode
+            trackerNode,
+            nodeToNode
         }
 
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
@@ -31,42 +32,45 @@ class Node extends EventEmitter {
             this.addKnownStreams(streamId, nodeAddress)
         })
 
-        debug('node: %s is running\n\n\n', this.id)
+        this.debug = createDebug(`streamr:logic:node:${this.id}`)
+        this.debug('started %s', this.id)
 
         this.started = new Date().toLocaleString()
     }
 
     onConnectedToTracker(tracker) {
-        debug('connected to tracker; sending status to tracker')
+        this.debug('connected to tracker %s', getIdShort(tracker))
         this.tracker = tracker
         this._sendStatus(this.tracker)
+        this.debug('requesting more peers from tracker %s', getIdShort(tracker))
         this.protocols.trackerNode.requestMorePeers()
     }
 
     addOwnStream(streamId) {
-        debug('add to own streams streamId = %s', streamId)
+        this.debug('stream %s added to own streams', streamId)
         this.ownStreams.add(streamId)
         this._sendStatus(this.tracker)
     }
 
     // add to cache of streams
     addKnownStreams(streamId, nodeAddress) {
-        debug('add to known streams %s, node %s', streamId, nodeAddress)
+        this.debug('stream %s added to known streams for address %s', streamId, nodeAddress)
         this.knownStreams.set(streamId, nodeAddress)
     }
 
     onDataReceived(streamId, data) {
         if (this.isOwnStream(streamId)) {
-            debug('received data for own streamId %s', streamId)
+            this.debug('received data for own stream %s', streamId)
             this.emit(events.MESSAGE_RECEIVED, streamId, data)
         } else if (this._isKnownStream(streamId)) {
             const receiverNode = this.knownStreams.get(streamId)
+            this.debug('forwarding stream %s data to %s', streamId, receiverNode)
             this.protocols.nodeToNode.sendData(receiverNode, streamId, data)
         } else if (this.tracker === null) {
-            debug('no available trackers to ask about %s, waiting for discovery', streamId)
+            this.debug('no trackers available; attempted to ask about stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
         } else {
-            debug('ask tracker about node with that streamId')
+            this.debug('ask tracker %s who is responsible for stream %s', getIdShort(this.tracker), streamId)
             this.protocols.trackerNode.requestStreamInfo(this.tracker, streamId)
         }
     }
@@ -80,6 +84,7 @@ class Node extends EventEmitter {
     }
 
     stop(cb) {
+        this.debug('stopping')
         this.protocols.trackerNode.stop(cb)
         this.protocols.nodeToNode.stop(cb)
     }
@@ -92,6 +97,7 @@ class Node extends EventEmitter {
     }
 
     _sendStatus(tracker) {
+        this.debug('sending status to tracker %s', getIdShort(tracker))
         if (tracker) {
             this.protocols.trackerNode.sendStatus(tracker, this._getStatus())
         }

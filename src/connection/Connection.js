@@ -24,16 +24,22 @@ class Connection extends EventEmitter {
         node.peerInfo.multiaddrs.forEach((ma) => debug('listening on: %s', ma.toString()))
 
         node.handle(HANDLER, (protocol, conn) => this.onReceive(protocol, conn))
-        node.on('peer:discovery', (peer) => this.emit(events.PEER_DISCOVERED, peer))
+        node.on('peer:discovery', (peer) => {
+            debug('peer %s discovered', getAddress(peer))
+            this.emit(events.PEER_DISCOVERED, peer)
+        })
         node.on('peer:connect', (peer) => {
-            debug('new connection')
+            debug('peer %s connected', getAddress(peer))
             this.emit(events.PEER_CONNECTED, peer)
         })
-        node.on('peer:disconnect', (peer) => this.emit(events.PEER_DISCONNECTED, peer))
+        node.on('peer:disconnect', (peer) => {
+            debug('peer %s disconnected', getAddress(peer))
+            this.emit(events.PEER_DISCONNECTED, peer)
+        })
     }
 
     send(recipient, message) {
-        debug('sending to the %s, message with data "%s"', recipient instanceof PeerInfo ? getAddress(recipient) : '', message)
+        debug('sending to peer %s message with data "%s"', recipient instanceof PeerInfo ? getAddress(recipient) : '', message)
         this.node.dialProtocol(recipient, HANDLER, (err, conn) => {
             if (err) {
                 throw err
@@ -56,7 +62,7 @@ class Connection extends EventEmitter {
                 conn,
                 pull.map((message) => message.toString('utf8')),
                 pull.drain((message) => {
-                    debug('received from %s, message with data "%s"', sender instanceof PeerInfo ? getAddress(sender) : '', message)
+                    debug('received from peer %s message with data "%s"', sender instanceof PeerInfo ? getAddress(sender) : '', message)
 
                     this.emit(events.MESSAGE_RECEIVED, {
                         sender,

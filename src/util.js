@@ -19,13 +19,24 @@ const getAddress = (peerInfo) => {
     throw new Error('Expected instance of PeerInfo, got ' + peerInfo)
 }
 
-const generateClientId = (suffix) => `streamr-${suffix}/v${version}/${os.platform()}-${os.arch()}/nodejs`
+const getId = (peerInfo) => {
+    if (peerInfo instanceof PeerInfo) {
+        return peerInfo.id.toB58String()
+    }
+    throw new Error('Expected instance of PeerInfo, got ' + peerInfo)
+}
+
+const getIdShort = (peerInfo) => getId(peerInfo).slice(-4)
+
+const generateClientId = (suffix) => `${suffix}/v${version}/${os.platform()}-${os.arch()}/nodejs`
 
 const isTracker = (tracker) => BOOTNODES.includes(tracker)
 
 module.exports = {
     callbackToPromise,
     getAddress,
+    getId,
+    getIdShort,
     generateClientId,
     isTracker,
     BOOTNODES

@@ -43,6 +43,7 @@ module.exports = class Libp2pBundle extends libp2p {
 
         super(defaultsDeep(params, defaults))
 
-        debug('libp2p bundle created')
+        debug('libp2p bundle created with %s', enablePeerDiscovery ? `boostrap nodes ${bootstrapNodes}`
+            : 'no peer discovery')
     }
 }

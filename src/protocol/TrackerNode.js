@@ -39,7 +39,7 @@ class TrackerNode extends EventEmitter {
                 this.emit(events.CONNECTED_TO_TRACKER, tracker)
             }).catch((err) => {
                 if (err) {
-                    debug('cannot connect to the tracker, probably not started')
+                    debug('cannot connect to the tracker: ' + err)
                 }
             })
         }
