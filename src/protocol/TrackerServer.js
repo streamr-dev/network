@@ -1,7 +1,7 @@
 const { EventEmitter } = require('events')
-const endpointEvents = require('../connection/Libp2pEndpoint').events
 const { isTracker, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
+const EndpointListener = require('./EndpointListener')
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:tracker:send-peers',
@@ -16,8 +16,8 @@ class TrackerServer extends EventEmitter {
 
         this.endpoint = endpoint
 
-        this.endpoint.on(endpointEvents.PEER_CONNECTED, (peer) => this._onNewConnection(peer))
-        this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => this._onReceive(sender, message))
+        this._endpointListener = new EndpointListener()
+        this._endpointListener.implement(this, endpoint)
     }
 
     sendNodeList(receiverNode, nodeList) {
@@ -28,13 +28,22 @@ class TrackerServer extends EventEmitter {
         this.endpoint.send(receiverNode, encoder.streamMessage(streamId, nodeAddress))
     }
 
-    _onNewConnection(peer) {
+    getAddress() {
+        return getAddress(this.endpoint.node.peerInfo)
+    }
+
+    stop(cb) {
+        this.endpoint.node.stop(() => cb())
+    }
+
+    // EndpointListener implementation
+    onPeerConnected(peer) {
         if (!isTracker(peer)) {
             this.emit(events.NODE_CONNECTED, peer)
         }
     }
 
-    _onReceive(peer, message) {
+    onMessageReceived(peer, message) {
         const { code, data } = encoder.decode(message)
 
         switch (code) {
@@ -61,12 +70,7 @@ class TrackerServer extends EventEmitter {
         }
     }
 
-    getAddress() {
-        return getAddress(this.endpoint.node.peerInfo)
-    }
-
-    stop(cb) {
-        this.endpoint.node.stop(() => cb())
+    async onPeerDiscovered(peer) {
     }
 }
 

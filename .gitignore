@@ -67,3 +67,5 @@ typings/
 .idea/httpRequests
 
 .vscode
+
+.DS_Store

@@ -1,8 +1,8 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:tracker-node')
-const endpointEvents = require('../connection/Libp2pEndpoint').events
 const { isTracker, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
+const EndpointListener = require('./EndpointListener')
 
 const events = Object.freeze({
     CONNECTED_TO_TRACKER: 'streamr:peer:send-status',
@@ -18,10 +18,15 @@ class TrackerNode extends EventEmitter {
 
         this.endpoint = endpoint
 
-        this.peersInterval = null
+        this._endpointListener = new EndpointListener()
+        this._endpointListener.implement(this, endpoint)
 
-        this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => this._onReceive(sender, message))
-        this.endpoint.on(endpointEvents.PEER_DISCOVERED, (tracker) => this._onConnectToTracker(tracker))
+        this.peersInterval = null
+    }
+
+    _clearPeerRequestInterval() {
+        clearInterval(this.peersInterval)
+        this.peersInterval = null
     }
 
     sendStatus(tracker, status) {
@@ -30,19 +35,6 @@ class TrackerNode extends EventEmitter {
 
     requestStreamInfo(tracker, streamId) {
         this.endpoint.send(tracker, encoder.streamMessage(streamId, ''))
-    }
-
-    async _onConnectToTracker(tracker) {
-        if (isTracker(getAddress(tracker)) && !this.endpoint.isConnected(tracker)) {
-            await this.endpoint.connect(tracker).then(() => {
-                this.tracker = tracker
-                this.emit(events.CONNECTED_TO_TRACKER, tracker)
-            }).catch((err) => {
-                if (err) {
-                    debug('cannot connect to the tracker: ' + err)
-                }
-            })
-        }
     }
 
     requestMorePeers() {
@@ -58,7 +50,11 @@ class TrackerNode extends EventEmitter {
         this._clearPeerRequestInterval()
     }
 
-    _onReceive(sender, message) {
+    // EndpointListener implementation
+    onPeerConnected(peer) {
+    }
+
+    onMessageReceived(sender, message) {
         const { code, data } = encoder.decode(message)
 
         switch (code) {
@@ -95,9 +91,17 @@ class TrackerNode extends EventEmitter {
         }
     }
 
-    _clearPeerRequestInterval() {
-        clearInterval(this.peersInterval)
-        this.peersInterval = null
+    async onPeerDiscovered(peer) {
+        if (isTracker(getAddress(peer)) && !this.endpoint.isConnected(peer)) {
+            await this.endpoint.connect(peer).then(() => {
+                this.tracker = peer
+                this.emit(events.CONNECTED_TO_TRACKER, peer)
+            }).catch((err) => {
+                if (err) {
+                    debug('cannot connect to the tracker: ' + err)
+                }
+            })
+        }
     }
 }
 
