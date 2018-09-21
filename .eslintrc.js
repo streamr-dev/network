@@ -56,7 +56,7 @@ module.exports = exports = {
             numbers: true
         }],
         'semi': [ERROR, 'never'],
-        'max-len': DISABLED,
+        'max-len': WARN,
         'class-methods-use-this': DISABLED,
         'no-empty-function': WARN,
     }
