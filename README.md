@@ -1,10 +1,36 @@
-# network
+# Intro
 
 Streamr P2P network
 
-# install
+# Installation
 
-npm install
+### Mac OS
+
+#### install brew 
+`/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
+
+#### install nvm
+
+`brew update`
+
+`brew doctor`
+ 
+`brew install nvm`
+
+#### install current node lts (v8.12.0)
+
+`nvm install v8.12.0`
+
+`nvm use default v8.12.0`
+
+#### install npm (v6.4.1)
+
+`npm install -g npm@6.4.1`
+
+
+#### install packages
+
+`npm install`
 
 # run tracker
 

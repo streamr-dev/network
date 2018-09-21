@@ -19,13 +19,15 @@
   "main": "./src/composition.js",
   "scripts": {
     "generate-key": "node $NODE_DEBUG_OPTION bin/generate-private-key.js",
+    "postinstall": "npm run requirements-check",
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
     "pub": "node $NODE_DEBUG_OPTION publisher.js",
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "eslint": "eslint ."
+    "eslint": "eslint .",
+    "requirements-check": "node bin/check-versions.js"
   },
   "author": "",
   "license": "",
@@ -36,6 +38,7 @@
   "engineStrict": true,
   "dependencies": {
     "async": "2.6.1",
+    "check-node-version": "3.2.0",
     "debug": "3.1.0",
     "defaults-deep": "0.2.4",
     "events": "3.0.0",
