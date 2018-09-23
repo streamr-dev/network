@@ -2,11 +2,15 @@ const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
 const encoder = require('../helpers/MessageEncoder')
 const { getAddress } = require('../util')
+const EndpointListener = require('./EndpointListener')
 
 module.exports = class NodeToNode extends EventEmitter {
     constructor(endpoint) {
         super()
         this.endpoint = endpoint
+
+        this._endpointListener = new EndpointListener()
+        this._endpointListener.implement(this, endpoint)
     }
 
     connectToNodes(nodes) {
@@ -26,5 +30,16 @@ module.exports = class NodeToNode extends EventEmitter {
 
     stop(cb) {
         this.endpoint.node.stop(() => cb())
+    }
+
+    // EndpointListener implementation
+
+    onPeerConnected(peer) {
+    }
+
+    onMessageReceived(sender, message) {
+    }
+
+    async onPeerDiscovered(peer) {
     }
 }
