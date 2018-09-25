@@ -4,7 +4,9 @@
     <node-interpreter value="project" />
     <node-options value="" />
     <working-dir value="$PROJECT_DIR$" />
-    <envs />
+    <envs>
+      <env name="DEBUG" value="streamr:*" />
+    </envs>
     <scope-kind value="ALL" />
     <method v="2" />
   </configuration>
