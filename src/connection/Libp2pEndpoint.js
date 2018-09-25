@@ -39,7 +39,7 @@ class Libp2pEndpoint extends EventEmitter {
     }
 
     send(recipient, message) {
-        debug('sending to peer %s message with data "%s"', recipient instanceof PeerInfo ? getAddress(recipient) : '', message)
+        debug('sending to peer %s message with data "%s"', recipient instanceof PeerInfo ? getAddress(recipient) : recipient, message)
         this.node.dialProtocol(recipient, HANDLER, (err, conn) => {
             if (err) {
                 throw err

@@ -1,13 +1,15 @@
 const { EventEmitter } = require('events')
 const { isTracker, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
+const endpointEvents = require('../connection/Libp2pEndpoint').events
 const EndpointListener = require('./EndpointListener')
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:tracker:send-peers',
     NODE_STATUS_RECEIVED: 'streamr:tracker:peer-status',
     STREAM_INFO_REQUESTED: 'streamr:tracker:find-stream',
-    NODE_LIST_REQUESTED: 'streamr:tracker:send-peers'
+    NODE_LIST_REQUESTED: 'streamr:tracker:send-peers',
+    NODE_DISCONNECTED: 'streamr:tracker:node-disconnected'
 })
 
 class TrackerServer extends EventEmitter {
@@ -18,6 +20,8 @@ class TrackerServer extends EventEmitter {
 
         this._endpointListener = new EndpointListener()
         this._endpointListener.implement(this, endpoint)
+
+        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, (peer) => this.onPeerDisconnected(peer))
     }
 
     sendNodeList(receiverNode, nodeList) {
@@ -66,11 +70,15 @@ class TrackerServer extends EventEmitter {
                 break
 
             default:
-                throw new Error('Unhandled message type')
+                break
         }
     }
 
     async onPeerDiscovered(peer) {
+    }
+
+    async onPeerDisconnected(node) {
+        this.emit(events.NODE_DISCONNECTED, node)
     }
 }
 

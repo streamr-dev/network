@@ -4,7 +4,13 @@ const encoder = require('../helpers/MessageEncoder')
 const { getAddress } = require('../util')
 const EndpointListener = require('./EndpointListener')
 
-module.exports = class NodeToNode extends EventEmitter {
+const events = Object.freeze({
+    SUBSCRIBE_REQUEST: 'streamr:node-node:subscribe-request',
+    UNSUBSCRIBE_REQUEST: 'streamr:node-node:unsubscribe-request',
+    DATA_RECEIVED: 'streamr:node-node:stream-data'
+})
+
+class NodeToNode extends EventEmitter {
     constructor(endpoint) {
         super()
         this.endpoint = endpoint
@@ -24,6 +30,14 @@ module.exports = class NodeToNode extends EventEmitter {
         this.endpoint.send(receiverNode, encoder.dataMessage(streamId, data))
     }
 
+    sendSubscribe(receiverNode, streamId) {
+        this.endpoint.send(receiverNode, encoder.subscribeMessage(streamId))
+    }
+
+    sendUnsubscribe(receiverNode, streamId) {
+        this.endpoint.send(receiverNode, encoder.unsubscribeMessage(streamId))
+    }
+
     getAddress() {
         return getAddress(this.endpoint.node.peerInfo)
     }
@@ -38,8 +52,42 @@ module.exports = class NodeToNode extends EventEmitter {
     }
 
     onMessageReceived(sender, message) {
+        const { code, data } = encoder.decode(message)
+
+        switch (code) {
+            case encoder.SUBSCRIBE:
+                this.emit(events.SUBSCRIBE_REQUEST, {
+                    streamId: data,
+                    sender
+                })
+                break
+
+            case encoder.UNSUBSCRIBE:
+                this.emit(events.UNSUBSCRIBE_REQUEST, {
+                    streamId: data,
+                    sender
+                })
+                break
+
+            case encoder.DATA:
+                this.emit(events.DATA_RECEIVED, {
+                    streamId: data[0],
+                    data: data[1]
+                })
+                break
+
+            default:
+                break
+        }
     }
 
     async onPeerDiscovered(peer) {
     }
+
+    async onPeerDisconnected(peer) {
+    }
 }
+
+NodeToNode.events = events
+
+module.exports = NodeToNode

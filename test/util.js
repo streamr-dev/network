@@ -1,3 +1,4 @@
+const pEvent = require('p-event')
 const { createEndpoint } = require('../src/connection/Libp2pEndpoint')
 
 const DEFAULT_TIMEOUT = 60000
@@ -15,6 +16,12 @@ const getTestEndpoints = async (numEndpoints, basePort) => {
     return endpoints
 }
 
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+const waitForEvent = (emitter, event, timeout = 20 * 1000) => pEvent(emitter, event, {
+    timeout
+})
+
 const getPeers = (max) => Array.from(Array(max), (d, i) => 'address-' + i)
 
 // eslint-disable-next-line max-len
@@ -23,7 +30,9 @@ const PRIVATE_KEY = 'CAASpgkwggSiAgEAAoIBAQC2SKo/HMFZeBml1AF3XijzrxrfQXdJzjePBZA
 module.exports = {
     getTestEndpoints,
     getPeers,
-    PRIVATE_KEY,
+    wait,
+    waitForEvent,
+    DEFAULT_TIMEOUT,
     LOCALHOST,
-    DEFAULT_TIMEOUT
+    PRIVATE_KEY
 }

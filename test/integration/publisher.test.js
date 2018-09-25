@@ -2,7 +2,7 @@ const assert = require('assert')
 const { getTestEndpoints, DEFAULT_TIMEOUT } = require('../util')
 const endpointEvents = require('../../src/connection/Libp2pEndpoint').events
 const Node = require('../../src/logic/Node')
-const Publisher = require('../../src/logic/Publisher')
+const Client = require('../../src/logic/Client')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 
@@ -20,12 +20,12 @@ describe('publisher and node connection', () => {
         const endpoint2 = endpoints[1]
 
         const node = new Node(new TrackerNode(endpoint1), new NodeToNode(endpoint1))
-        const publisher = new Publisher(new NodeToNode(endpoint2), endpoint1.node.peerInfo)
+        const client = new Client(new NodeToNode(endpoint2), endpoint1.node.peerInfo)
         const streamId = 'streamd-id'
 
         assert(!node.isOwnStream(streamId))
 
-        publisher.publish(streamId, 'Hello world, from Publisher ' + endpoint2.node.peerInfo.id.toB58String(), () => {})
+        client.publish(streamId, 'Hello world, from Publisher ' + endpoint2.node.peerInfo.id.toB58String(), () => {})
 
         endpoint1.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => {
             assert.equal(message, `{"version":"${version}","code":2,"data":["${streamId}","Hello world, from Publisher ${endpoint2.node.peerInfo.id.toB58String()}"]}`)

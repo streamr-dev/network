@@ -18,6 +18,7 @@ module.exports = class Tracker extends EventEmitter {
             this.sendStreamInfo(sender, streamId)
         })
         this.protocols.trackerServer.on(TrackerServer.events.NODE_LIST_REQUESTED, (node) => this.sendListOfNodes(node))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ peer, status }) => { // TODO: rename peer to node
             this.processNodeStatus(peer, status)
         })
@@ -40,6 +41,11 @@ module.exports = class Tracker extends EventEmitter {
     processNodeStatus(node, status) {
         this.debug('received from %s status %s', getIdShort(node), JSON.stringify(status))
         this.nodes.set(getAddress(node), status)
+    }
+
+    onNodeDisconnected(node) {
+        this.debug('removing node %s from tracker node list', getIdShort(node))
+        this.nodes.delete(getAddress(node))
     }
 
     sendStreamInfo(node, streamId) {

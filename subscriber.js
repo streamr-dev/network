@@ -4,17 +4,24 @@ const NodeToNode = require('./src/protocol/NodeToNode')
 
 const port = process.argv[2] || 30301
 const nodeAddress = process.argv[3] || ''
-const streamId = process.argv[4] || ''
+const streamIdParam = process.argv[4] || ''
 
 createEndpoint('127.0.0.1', port, '', true).then((endpoint) => {
     endpoint.connect(nodeAddress)
 
     const client = new Client(new NodeToNode(endpoint), nodeAddress)
 
-    setInterval(() => {
-        const msg = 'Hello world, ' + new Date().toLocaleString()
-        client.publish(streamId, msg, () => {})
+    const subscribeInterval = setInterval(() => {
+        client.subscribe(streamIdParam)
     }, 1000)
+
+    client.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, ({ streamId, data }) => {
+        console.log('received for streamdId ' + streamId + ', data ' + data)
+
+        if (subscribeInterval !== null) {
+            clearInterval(subscribeInterval)
+        }
+    })
 }).catch((err) => {
     throw err
 })

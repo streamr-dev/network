@@ -12,8 +12,13 @@ module.exports = class EndpointListener {
             throw new Error('onPeerDiscovered() method not found in class implementing EndpointListener')
         }
 
+        if (typeof implementor.onPeerDisconnected !== 'function') {
+            throw new Error('onPeerDisconnected() method not found in class implementing EndpointListener')
+        }
+
         endpoint.on(endpointEvents.PEER_CONNECTED, (peer) => implementor.onPeerConnected(peer))
         endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => implementor.onMessageReceived(sender, message))
         endpoint.on(endpointEvents.PEER_DISCOVERED, (peer) => implementor.onPeerDiscovered(peer))
+        endpoint.on(endpointEvents.PEER_DISCONNECTED, (peer) => implementor.onPeerDisconnected(peer))
     }
 }
