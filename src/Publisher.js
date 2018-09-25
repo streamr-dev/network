@@ -8,7 +8,6 @@ module.exports = class Publisher {
         this.networkNode = networkNode
         this.partitioner = partitioner
         this.volumeLogger = volumeLogger
-        this.offsetByStream = {}
     }
 
     async publish(stream, timestamp, content, partitionKey) {
@@ -18,15 +17,9 @@ module.exports = class Publisher {
 
         const streamPartition = this.partitioner.partition(stream.partitions, partitionKey)
 
-        // TODO: remove offset stamping when done elsewhere
-        const previousOffset = this.offsetByStream[stream]
-        if (previousOffset === undefined) {
-            this.offsetByStream[stream] = 0
-        }
-        this.offsetByStream[stream] += 1
-
         const ttl = undefined
-        const offset = this.offsetByStream[stream]
+        const offset = null
+        const previousOffset = null
 
         const streamrBinaryMessage = new StreamrBinaryMessageWithKafkaMetadata(new StreamrBinaryMessage(
             stream.id,

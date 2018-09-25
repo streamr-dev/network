@@ -186,8 +186,13 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         })
     }
 
-    broadcastMessage(streamId, streamPartition, message) {
+    broadcastMessage(streamId, streamPartition, message, number, previousNumber) {
         const stream = this.streams.getStreamObject(streamId, streamPartition)
+
+        // TODO: do in a better way
+        message[5] = number
+        message[6] = previousNumber
+
         if (stream) {
             stream.forEachConnection((connection) => {
                 connection.sendBroadcast(message)
