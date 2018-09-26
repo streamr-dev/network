@@ -50,22 +50,15 @@ describe('Selecting leader for the stream and sending messages to two subscriber
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.STREAM_INFO_REQUESTED)
         await waitForEvent(nodeOne.protocols.trackerNode, TrackerNode.events.STREAM_ASSIGNED)
 
-        const subscribeInterval1 = setInterval(() => {
-            subscriber1.subscribe(streamId)
-        }, 1000)
-
-        const subscribeInterval2 = setInterval(() => {
-            subscriber2.subscribe(streamId)
-        }, 1000)
+        subscriber1.subscribe(streamId)
+        subscriber2.subscribe(streamId)
 
         await Promise.all([
             waitForEvent(subscriber1.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED),
             waitForEvent(subscriber2.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED)
         ]).then((res) => {
             console.log('==================================')
-            expect(nodeTwo.subscribers.get(streamId).length).toEqual(2)
-            clearInterval(subscribeInterval1)
-            clearInterval(subscribeInterval2)
+            expect(nodeTwo.subscribers.subscribersForStream(streamId).length).toEqual(2)
             clearInterval(publisherInterval)
 
             done()

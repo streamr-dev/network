@@ -2,6 +2,8 @@ const { EventEmitter } = require('events')
 const createDebug = require('debug')
 const TrackerNode = require('../protocol/TrackerNode')
 const NodeToNode = require('../protocol/NodeToNode')
+const SubscriberManager = require('../logic/SubscriberManager')
+const SubscriptionManager = require('../logic/SubscriptionManager')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const { getAddress, getIdShort } = require('../util')
 
@@ -17,7 +19,11 @@ class Node extends EventEmitter {
 
         this.knownStreams = new Map()
         this.ownStreams = new Set()
-        this.subscribers = new Map()
+        this.subscribers = new SubscriberManager(
+            this.subscribeToStream.bind(this),
+            this._unsubscribeFromStream.bind(this)
+        )
+        this.subscriptions = new SubscriptionManager()
         this.messageBuffer = new MessageBuffer(60 * 1000, (streamId) => {
             this.debug('failed to deliver buffered messages of stream %s because leader not found', streamId)
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
@@ -59,12 +65,14 @@ class Node extends EventEmitter {
         this._sendStatus(this.tracker)
         this.debug('requesting more peers from tracker %s', getIdShort(tracker))
         this.protocols.trackerNode.requestMorePeers()
+        this._handlePendingSubscriptions()
     }
 
     addOwnStream(streamId) {
         this.debug('stream %s added to own streams', streamId)
         this.ownStreams.add(streamId)
         this._sendStatus(this.tracker)
+        this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
     }
 
@@ -72,6 +80,7 @@ class Node extends EventEmitter {
     addKnownStreams(streamId, nodeAddress) {
         this.debug('stream %s added to known streams for address %s', streamId, nodeAddress)
         this.knownStreams.set(streamId, nodeAddress)
+        this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
     }
 
@@ -82,7 +91,9 @@ class Node extends EventEmitter {
             this._sendToSubscribers(streamId, data)
         } else if (this._isKnownStream(streamId)) {
             this.debug('received data for known stream %s', streamId)
-            this._sendToSubscribers(streamId, data)
+            const receiverNode = this.knownStreams.get(streamId)
+            this.protocols.nodeToNode.sendData(receiverNode, streamId, data) // TODO: only send to leader if not numbered
+            this._sendToSubscribers(streamId, data) // TODO: should only send if numbered
         } else if (this.tracker === null) {
             this.debug('no trackers available; attempted to ask about stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
@@ -94,46 +105,50 @@ class Node extends EventEmitter {
     }
 
     _sendToSubscribers(streamId, data) {
-        const subscribers = this.subscribers.get(streamId)
-
-        if (subscribers === undefined) {
-            this.debug('no subscribers for stream %s', streamId)
-        } else {
-            this.debug('sending data for streamId %s, to %d subscribers', streamId, subscribers.length)
-            subscribers.forEach((subscriber) => {
-                this.protocols.nodeToNode.sendData(subscriber, streamId, data)
-            })
-        }
+        const subscribers = this.subscribers.subscribersForStream(streamId)
+        this.debug('sending data for streamId %s to %d subscribers', streamId, subscribers.length)
+        subscribers.forEach((subscriber) => {
+            this.protocols.nodeToNode.sendData(subscriber, streamId, data)
+        })
     }
 
     onSubscribeRequest(streamId, sender) {
-        this._addToSubscribers(streamId, getAddress(sender))
-
-        if (this._isKnownStream(streamId)) {
-            this.debug('stream %s is in known; sending subscribe request to nodeAddress %s', streamId, this.knownStreams.get(streamId))
-            this.protocols.nodeToNode.sendSubscribe(this.knownStreams.get(streamId), streamId)
-        } else if (this.isOwnStream(streamId)) {
-            this.debug('stream %s is own stream; new subscriber will receive data', streamId)
-        } else if (this.tracker === null) {
-            this.debug('no trackers available; attempted to ask about stream %s', streamId)
-            this.emit(events.NO_AVAILABLE_TRACKERS)
-        } else {
-            this.debug('unknown stream %s; asking tracker about any info', streamId)
-            this.protocols.trackerNode.requestStreamInfo(this.tracker, streamId)
-        }
+        this.subscribers.addSubscriber(streamId, getAddress(sender))
+        this.debug('node %s added as a subscriber for the stream %s', getAddress(sender), streamId)
     }
 
     onUnsubscribeRequest(streamId, nodeAddress) {
-        this.debug('node %s unsubscribed from the stream %s', nodeAddress, streamId)
-        this._unsubscribeNode(streamId, nodeAddress)
+        this._removeSubscriber(streamId, nodeAddress)
     }
 
-    _unsubscribeNode(streamId, nodeAddress) {
-        if (this.subscribers.has(streamId)) {
-            this.subscribers.set(streamId, [...this.subscribers.get(streamId)].filter((node) => node !== nodeAddress))
-        }
+    _removeSubscriber(streamId, nodeAddress) {
+        this.subscribers.removeSubscriber(streamId, nodeAddress)
+        this.debug('node %s unsubscribed from the stream %s', nodeAddress, streamId)
+    }
 
-        // check and unsubscribe from that stream
+    subscribeToStream(streamId) {
+        if (this.subscriptions.hasSubscription(streamId)) {
+            this.debug('already subscribed to stream %s', streamId)
+        } else if (this.isOwnStream(streamId)) {
+            this.debug('stream %s is own stream; new subscriber will receive data', streamId)
+            this.subscriptions.addSubscription(streamId) // Subscription to "self"
+        } else if (this._isKnownStream(streamId)) {
+            this.debug('stream %s is in known; sending subscribe request to nodeAddress %s', streamId, this.knownStreams.get(streamId))
+            this.protocols.nodeToNode.sendSubscribe(this.knownStreams.get(streamId), streamId)
+            this.subscriptions.addSubscription(streamId) // Assuming subscribe went through
+        } else if (this.tracker === null) {
+            this.debug('no trackers available; attempted to ask about stream %s', streamId)
+            this.emit(events.NO_AVAILABLE_TRACKERS)
+            this.subscriptions.addPendingSubscription(streamId)
+        } else {
+            this.debug('unknown stream %s; asking tracker about any info', streamId)
+            this.protocols.trackerNode.requestStreamInfo(this.tracker, streamId)
+            this.subscriptions.addPendingSubscription(streamId)
+        }
+    }
+
+    _unsubscribeFromStream(streamId) {
+        this.subscriptions.removeSubscription(streamId)
     }
 
     isOwnStream(streamId) {
@@ -151,26 +166,6 @@ class Node extends EventEmitter {
         this.protocols.nodeToNode.stop(cb)
     }
 
-    _addToSubscribers(streamId, nodeAddress) {
-        if (this._checkPermissions(streamId, nodeAddress)) {
-            if (this.subscribers.has(streamId)) {
-                const currentSubscribersForTheStream = [...this.subscribers.get(streamId)]
-
-                if (!currentSubscribersForTheStream.includes(nodeAddress)) {
-                    this.debug('node %s added as a subscriber for the stream %s', nodeAddress, streamId)
-                    this.subscribers.set(streamId, [...currentSubscribersForTheStream, nodeAddress])
-                }
-            } else {
-                this.subscribers.set(streamId, [nodeAddress])
-            }
-        }
-    }
-
-    _checkPermissions(streamId, nodeAddress) {
-        this.debug('check that %s has permissions for streamId %s', nodeAddress, streamId)
-        return true
-    }
-
     _getStatus() {
         return {
             streams: [...this.ownStreams],
@@ -186,19 +181,27 @@ class Node extends EventEmitter {
     }
 
     onNodeDisconnected(node) {
-        this.debug('removing node %s from all subscriptions', getIdShort(node))
         this.nodes.delete(getAddress(node))
-
         const nodeAddress = getAddress(node)
-
-        this.subscribers.forEach((streamId) => {
-            this._unsubscribeNode(streamId, nodeAddress)
-        })
+        this.subscribers.removeSubscriberFromAllStreams(nodeAddress)
+        this.debug('removed node %s from all subscriptions', getIdShort(node))
     }
 
     _handleBufferedMessages(streamId) {
         this.messageBuffer.popAll(streamId)
             .forEach((data) => this.onDataReceived(streamId, data))
+    }
+
+    _handlePendingSubscriptions() {
+        this.subscriptions.getPendingSubscriptions().forEach((pendingStreamId) => {
+            this.subscribeToStream(pendingStreamId)
+        })
+    }
+
+    _handlePossiblePendingSubscription(pendingStreamId) {
+        if (this.subscriptions.hasPendingSubscription(pendingStreamId)) {
+            this.subscribeToStream(pendingStreamId)
+        }
     }
 }
 
