@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import { isByeMessage } from './Protocol'
+import InvalidJsonError from './errors/InvalidJsonError'
 
 const debug = debugFactory('StreamrClient::Subscription')
 
@@ -102,10 +103,10 @@ export default class Subscription extends EventEmitter {
      * Gap check: If the msg contains the previousOffset, and we know the lastReceivedOffset,
      * and the previousOffset is larger than what has been received, we have a gap!
      */
-    checkForGap(msg) {
-        return msg.previousOffset != null &&
+    checkForGap(previousOffset) {
+        return previousOffset != null &&
             this.lastReceivedOffset != null &&
-            msg.previousOffset > this.lastReceivedOffset
+            previousOffset > this.lastReceivedOffset
     }
 
     handleMessage(msg, isResend) {
@@ -117,7 +118,7 @@ export default class Subscription extends EventEmitter {
         // If resending, queue broadcasted messages
         if (this.resending && !isResend) {
             this.queue.push(msg)
-        } else if (this.checkForGap(msg) && !this.resending) {
+        } else if (this.checkForGap(msg.previousOffset) && !this.resending) {
             // Queue the message to be processed after resend
             this.queue.push(msg)
 
@@ -201,6 +202,13 @@ export default class Subscription extends EventEmitter {
     }
 
     handleError(err) {
+        /**
+         * If parsing the (expected) message failed, we should still mark it as received. Otherwise the
+         * gap detection will think a message was lost, and re-request the failing message.
+         */
+        if (err instanceof InvalidJsonError && !this.checkForGap(err.previousOffset)) {
+            this.lastReceivedOffset = err.offset
+        }
         this.emit('error', err)
     }
 }
