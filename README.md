@@ -1,6 +1,4 @@
-# Intro
-
-Streamr P2P network
+# Streamr P2P network  ![Travis](https://travis-ci.com/streamr-dev/network.svg?token=qNNVCnYJo1fz18VTNpPZ&branch=master)
 
 # Installation
 
