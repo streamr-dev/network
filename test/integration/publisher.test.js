@@ -23,13 +23,13 @@ describe('publisher and node connection', () => {
         const client = new Client(new NodeToNode(endpoint2), endpoint1.node.peerInfo)
         const streamId = 'streamd-id'
 
-        assert(!node.isOwnStream(streamId))
+        assert(!node.streams.isLeaderOf(streamId))
 
         client.publish(streamId, 'Hello world, from Publisher ' + endpoint2.node.peerInfo.id.toB58String(), () => {})
 
         endpoint1.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => {
             assert.equal(message, `{"version":"${version}","code":2,"data":["${streamId}","Hello world, from Publisher ${endpoint2.node.peerInfo.id.toB58String()}"]}`)
-            assert(!node.isOwnStream(streamId))
+            assert(!node.streams.isLeaderOf(streamId))
 
             endpoint1.node.stop(() => {
                 endpoint2.node.stop(() => done())
