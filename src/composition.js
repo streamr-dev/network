@@ -32,8 +32,11 @@ async function startClient(host, port, nodeAddress) {
 }
 
 async function startNetworkNode(host, port, privateKey, bootstrapTrackers) {
-    const node = await startNode(host, port, privateKey, bootstrapTrackers)
-    return new NetworkNode(node)
+    return createEndpoint(host, port, privateKey, true, bootstrapTrackers).then((endpoint) => {
+        return new NetworkNode(new TrackerNode(endpoint), new NodeToNode(endpoint))
+    }).catch((err) => {
+        throw err
+    })
 }
 
 module.exports = {
