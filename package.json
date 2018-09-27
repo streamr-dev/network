@@ -30,7 +30,7 @@
     "express": "^4.14.0",
     "memoizee": "^0.4.4",
     "murmurhash-native": "^3.2.0",
-    "node-fetch": "^1.6.3",
+    "node-fetch": "^2.2.0",
     "optimist": "*",
     "ws": "^6.0.0"
   },
