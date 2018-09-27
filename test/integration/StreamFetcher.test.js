@@ -1,7 +1,7 @@
 const assert = require('assert')
 const express = require('express')
 const sinon = require('sinon')
-const uuid = require('node-uuid')
+const uuid = require('uuid')
 const StreamFetcher = require('../../src/StreamFetcher')
 const HttpError = require('../../src/errors/HttpError')
 
