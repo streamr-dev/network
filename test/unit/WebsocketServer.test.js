@@ -25,7 +25,7 @@ describe('WebsocketServer', () => {
     beforeEach(() => {
         realtimeAdapter = new events.EventEmitter()
         realtimeAdapter.subscribe = sinon.stub()
-        realtimeAdapter.subscribe.callsArgAsync(2)
+        realtimeAdapter.subscribe.resolves()
         realtimeAdapter.unsubscribe = sinon.spy()
         realtimeAdapter.addMessageListener = (cb) => {
             realtimeAdapter.on('message', cb)
@@ -359,7 +359,7 @@ describe('WebsocketServer', () => {
             })
 
             setTimeout(() => {
-                realtimeAdapter.emit('message', 'streamId', 0, kafkaMessage().toArray())
+                realtimeAdapter.emit('message', 'streamId', 0, kafkaMessage().toArray(), 2, 1)
             })
 
             setTimeout(() => {

@@ -58,7 +58,7 @@ describe('Publisher', () => {
             networkNode.publish = (streamId, streamPartition, protocolMessage) => {
                 assert.equal(streamId, 'streamId')
                 assert.equal(streamPartition, 9)
-                assert.deepEqual(protocolMessage, ['28', 'streamId', 9, 135135135, 0, 1, undefined, 27, '{}'])
+                assert.deepEqual(protocolMessage, [28, 'streamId', 9, 135135135, 0, null, null, 27, '{}'])
                 done()
             }
             publisher.publish(stream, timestamp, msg)
