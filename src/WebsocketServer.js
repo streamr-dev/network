@@ -225,19 +225,17 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     // Subscribe now if the stream is not already subscribed or subscribing
                     if (!stream.isSubscribed() && !stream.isSubscribing()) {
                         stream.setSubscribing()
-                        this.networkNode.subscribe(streamId, streamPartition, (err) => {
-                            if (err) {
-                                stream.emit('subscribed', err)
-
-                                // Delete the stream ref on subscribe error
-                                this.streams.deleteStreamObject(stream.id)
-
-                                console.error(`Error subscribing to ${stream.id}: ${err}`)
-                            } else {
+                        this.networkNode.subscribe(streamId, streamPartition)
+                            .then(() => {
                                 stream.setSubscribed()
                                 stream.emit('subscribed')
-                            }
-                        })
+                            })
+                            .catch((err) => {
+                                stream.emit('subscribed', err)
+                                // Delete the stream ref on subscribe error
+                                this.streams.deleteStreamObject(stream.id)
+                                console.error(`Error subscribing to ${stream.id}: ${err}`)
+                            })
                     }
 
                     const onSubscribe = () => {
