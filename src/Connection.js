@@ -5,50 +5,46 @@ import { decodeBrowserWrapper, decodeMessage } from './Protocol'
 
 const debug = debugFactory('StreamrClient::Connection')
 
-module.exports = class Connection extends EventEmitter {
+class Connection extends EventEmitter {
     constructor(options) {
         super()
         if (!options.url) {
             throw new Error('URL is not defined!')
         }
         this.options = options
-        this.connected = false
-        this.connecting = false
-        this.disconnecting = false
+        this.state = Connection.State.DISCONNECTED
 
         if (options.autoConnect) {
             this.connect()
         }
     }
 
-    connect() {
-        if (!(this.connected || this.connecting)) {
-            this.connecting = true
+    updateState(state) {
+        this.state = state
+        this.emit(state)
+    }
 
+    connect() {
+        if (this.state !== Connection.State.CONNECTING && this.state !== Connection.State.CONNECTED) {
             this.socket = this.options.socket || new WebSocket(this.options.url)
             this.socket.binaryType = 'arraybuffer'
-            this.emit('connecting')
+
+            this.updateState(Connection.State.CONNECTING)
 
             this.socket.onopen = () => {
                 debug('Connected to ', this.options.url)
-                this.connected = true
-                this.connecting = false
-                this.emit('connected')
+                this.updateState(Connection.State.CONNECTED)
             }
 
             this.socket.onclose = () => {
-                if (!this.disconnecting) {
+                if (this.state !== Connection.State.DISCONNECTING) {
                     debug('Connection lost. Attempting to reconnect')
                     setTimeout(() => {
                         this.connect()
                     }, 2000)
-                } else {
-                    this.disconnecting = false
                 }
 
-                this.connected = false
-                this.connecting = false
-                this.emit('disconnected')
+                this.updateState(Connection.State.DISCONNECTED)
             }
 
             this.socket.onmessage = (messageEvent) => {
@@ -64,8 +60,8 @@ module.exports = class Connection extends EventEmitter {
     }
 
     disconnect() {
-        if (this.socket !== undefined && (this.connected || this.connecting)) {
-            this.disconnecting = true
+        if (this.socket !== undefined && (this.state === Connection.State.CONNECTED || this.state === Connection.State.CONNECTING)) {
+            this.updateState(Connection.State.DISCONNECTING)
             this.socket.close()
         }
     }
@@ -78,3 +74,12 @@ module.exports = class Connection extends EventEmitter {
         }
     }
 }
+
+Connection.State = {
+    DISCONNECTED: 'disconnected',
+    CONNECTING: 'connecting',
+    CONNECTED: 'connected',
+    DISCONNECTING: 'disconnecting',
+}
+
+module.exports = Connection
