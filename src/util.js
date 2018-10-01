@@ -26,7 +26,7 @@ const getId = (peerInfo) => {
     throw new Error('Expected instance of PeerInfo, got ' + peerInfo)
 }
 
-const getIdShort = (peerInfo) => getId(peerInfo).slice(-4)
+const getIdShort = (input) => (input instanceof PeerInfo ? getId(input) : input).slice(-4)
 
 const generateClientId = (suffix) => `${suffix}/v${version}/${os.platform()}-${os.arch()}/nodejs`
 

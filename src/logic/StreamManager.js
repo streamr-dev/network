@@ -1,16 +1,28 @@
 module.exports = class StreamManager {
     constructor() {
-        this.ownStreams = new Set()
+        this.ownStreams = {} // streamId => lastNumber
         this.knownStreams = new Map() // streamId => nodeAddress
+    }
+
+    fetchNextNumbers(streamId) {
+        if (!this.isLeaderOf(streamId)) {
+            throw new Error(`Not leader of stream ${streamId}`)
+        }
+        const previousNumber = this.ownStreams[streamId]
+        this.ownStreams[streamId] += 1
+        return {
+            previousNumber,
+            number: this.ownStreams[streamId]
+        }
     }
 
     markCurrentNodeAsLeaderOf(streamId) {
         this.knownStreams.delete(streamId)
-        this.ownStreams.add(streamId)
+        this.ownStreams[streamId] = null
     }
 
     markOtherNodeAsLeader(streamId, nodeAddress) {
-        this.ownStreams.delete(streamId)
+        delete this.ownStreams[streamId]
         this.knownStreams.set(streamId, nodeAddress)
     }
 
@@ -19,7 +31,7 @@ module.exports = class StreamManager {
     }
 
     isLeaderOf(streamId) {
-        return this.ownStreams.has(streamId)
+        return Object.prototype.hasOwnProperty.call(this.ownStreams, streamId)
     }
 
     isOtherNodeLeaderOf(streamId) {
@@ -27,6 +39,6 @@ module.exports = class StreamManager {
     }
 
     getOwnStreams() {
-        return [...this.ownStreams]
+        return [...Object.keys(this.ownStreams)]
     }
 }

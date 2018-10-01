@@ -43,5 +43,41 @@ describe('encoder', () => {
 
         done()
     })
+
+    it('creates expected dataMessage format (without numbers)', () => {
+        const actual = encoder.dataMessage('stream-id', {
+            hello: 'world'
+        })
+        expect(JSON.parse(actual)).toEqual({
+            code: encoder.DATA,
+            version,
+            payload: [
+                'stream-id',
+                {
+                    hello: 'world',
+                },
+                null,
+                null
+            ]
+        })
+    })
+
+    it('creates expected dataMessage format (with number)', () => {
+        const actual = encoder.dataMessage('stream-id', {
+            hello: 'world'
+        }, 958004, 958000)
+        expect(JSON.parse(actual)).toEqual({
+            code: encoder.DATA,
+            version,
+            payload: [
+                'stream-id',
+                {
+                    hello: 'world',
+                },
+                958004,
+                958000
+            ]
+        })
+    })
 })
 

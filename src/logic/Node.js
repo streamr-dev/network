@@ -1,7 +1,7 @@
 const { EventEmitter } = require('events')
 const createDebug = require('debug')
-const TrackerNode = require('../protocol/TrackerNode')
 const NodeToNode = require('../protocol/NodeToNode')
+const TrackerNode = require('../protocol/TrackerNode')
 const SubscriberManager = require('../logic/SubscriberManager')
 const SubscriptionManager = require('../logic/SubscriptionManager')
 const MessageBuffer = require('../helpers/MessageBuffer')
@@ -76,7 +76,7 @@ class Node extends EventEmitter {
         const streamId = streamMessage.getStreamId()
         const nodeAddress = streamMessage.getNodeAddress()
 
-        this.debug('stream %s added to known streams for address %s', streamId, nodeAddress)
+        this.debug('stream %s added to known streams for leader %s', streamId, getIdShort(nodeAddress))
         this.streams.markOtherNodeAsLeader(streamId, nodeAddress)
         this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
@@ -85,37 +85,62 @@ class Node extends EventEmitter {
     onDataReceived(dataMessage) {
         const streamId = dataMessage.getStreamId()
         const payload = dataMessage.getPayload()
+        const number = dataMessage.getNumber()
+        const previousNumber = dataMessage.getPreviousNumber()
 
-        if (this.streams.isLeaderOf(streamId)) {
-            this.debug('received data for own stream %s', streamId)
-            this.emit(events.MESSAGE_RECEIVED, dataMessage)
-            this._sendToSubscribers(streamId, payload)
+        if (number == null && previousNumber != null) {
+            this.debug('received invalid data with null number but non-null previous number %s; dropping', previousNumber)
+        } else if (this.streams.isLeaderOf(streamId)) {
+            if (number != null) {
+                this.debug('received already numbered data (#%s) for own stream %s; dropping', number, streamId)
+            } else {
+                this.debug('received data for own stream %s', streamId)
+                const assignment = this.streams.fetchNextNumbers(streamId)
+                dataMessage.setNumber(assignment.number)
+                dataMessage.setPreviousNumber(assignment.previousNumber)
+                this._sendToSubscribers(dataMessage)
+            }
         } else if (this.streams.isOtherNodeLeaderOf(streamId)) {
-            this.debug('received data for known stream %s', streamId)
-            const leaderNode = this.streams.getLeaderAddressFor(streamId)
-            this.protocols.nodeToNode.sendData(leaderNode, streamId, payload) // TODO: only send to leader if not numbered
-            this._sendToSubscribers(streamId, payload) // TODO: should only send if numbered
+            this.debug('received data (#%s) for known stream %s', number, streamId)
+            if (number == null) {
+                const leaderAddress = this.streams.getLeaderAddressFor(streamId)
+                this.protocols.nodeToNode.sendData(leaderAddress, streamId, payload, number, previousNumber)
+            } else {
+                this._sendToSubscribers(dataMessage)
+            }
         } else if (this.tracker === null) {
             this.debug('no trackers available; attempted to ask about stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
         } else {
-            this.messageBuffer.put(streamId, payload)
+            this.messageBuffer.put(streamId, {
+                payload,
+                number,
+                previousNumber
+            })
             this.debug('ask tracker %s who is responsible for stream %s', getIdShort(this.tracker), streamId)
             this.protocols.trackerNode.requestStreamInfo(this.tracker, streamId)
         }
     }
 
-    _sendToSubscribers(streamId, data) {
+    _sendToSubscribers(dataMessage) {
+        const streamId = dataMessage.getStreamId()
+        const payload = dataMessage.getPayload()
+        const number = dataMessage.getNumber()
+        const previousNumber = dataMessage.getPreviousNumber()
+
         const subscribers = this.subscribers.subscribersForStream(streamId)
-        this.debug('sending data for streamId %s to %d subscribers', streamId, subscribers.length)
+        this.debug('sending data (#%s) for stream %s to %d subscribers', number, streamId, subscribers.length)
         subscribers.forEach((subscriber) => {
-            this.protocols.nodeToNode.sendData(subscriber, streamId, data)
+            this.protocols.nodeToNode.sendData(subscriber, streamId, payload, number, previousNumber)
         })
+        if (this.subscriptions.hasSubscription(streamId)) {
+            this.emit(events.MESSAGE_RECEIVED, dataMessage)
+        }
     }
 
     onSubscribeRequest(subscribeMessage) {
         this.subscribers.addSubscriber(subscribeMessage.getStreamId(), getAddress(subscribeMessage.getSource()))
-        this.debug('node %s added as a subscriber for the stream %s', getAddress(subscribeMessage.getSource()), subscribeMessage.getStreamId())
+        this.debug('node %s added as a subscriber for stream %s', getIdShort(subscribeMessage.getSource()), subscribeMessage.getStreamId()) // TODO: verify that works
     }
 
     onUnsubscribeRequest(unsubscribeMessage) {
@@ -124,7 +149,7 @@ class Node extends EventEmitter {
 
     _removeSubscriber(streamId, nodeAddress) {
         this.subscribers.removeSubscriber(streamId, nodeAddress)
-        this.debug('node %s unsubscribed from the stream %s', nodeAddress, streamId)
+        this.debug('node %s unsubscribed from stream %s', nodeAddress, streamId)
     }
 
     subscribeToStream(streamId) {
@@ -137,7 +162,7 @@ class Node extends EventEmitter {
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
         } else if (this.streams.isOtherNodeLeaderOf(streamId)) {
             const leaderAddress = this.streams.getLeaderAddressFor(streamId)
-            this.debug('stream %s is known; sending subscribe request to leader %s', streamId, leaderAddress)
+            this.debug('stream %s is known; sending subscribe request to leader %s', streamId, getIdShort(leaderAddress))
             this.protocols.nodeToNode.sendSubscribe(leaderAddress, streamId)
             this.subscriptions.addSubscription(streamId) // Assuming subscribe went through
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
@@ -190,11 +215,12 @@ class Node extends EventEmitter {
 
     _handleBufferedMessages(streamId) {
         this.messageBuffer.popAll(streamId)
-            .forEach((payload) => {
+            .forEach((content) => {
                 const dataMessage = new DataMessage()
                 dataMessage.setStreamId(streamId)
-                dataMessage.setPayload(payload)
-
+                dataMessage.setPayload(content.payload)
+                dataMessage.setNumber(content.number)
+                dataMessage.setPreviousNumber(content.previousNumber)
                 // TODO bad idea to call events directly
                 this.onDataReceived(dataMessage)
             })

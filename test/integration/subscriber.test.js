@@ -1,5 +1,5 @@
 const { startClient, startNode, startTracker } = require('../../src/composition')
-const { BOOTNODES } = require('../../src/util')
+const { callbackToPromise, BOOTNODES } = require('../../src/util')
 const { waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
@@ -65,12 +65,12 @@ describe('Selecting leader for the stream and sending messages to two subscriber
     })
 
     // TODO test disconnect and more than one stream
-    afterAll(async (done) => {
-        await publisher.stop(() => {})
-        await nodeOne.stop(() => {})
-        await nodeTwo.stop(() => {})
-        await subscriber1.stop(() => {})
-        await subscriber2.stop(() => {})
-        tracker.stop(done)
+    afterAll(async () => {
+        await callbackToPromise(publisher.stop.bind(publisher))
+        await callbackToPromise(nodeOne.stop.bind(nodeOne))
+        await callbackToPromise(nodeTwo.stop.bind(nodeTwo))
+        await callbackToPromise(subscriber1.stop.bind(subscriber1))
+        await callbackToPromise(subscriber2.stop.bind(subscriber2))
+        await callbackToPromise(tracker.stop.bind(tracker))
     })
 })

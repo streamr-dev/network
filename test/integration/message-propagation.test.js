@@ -1,0 +1,132 @@
+const Node = require('../../src/logic/Node')
+const NodeToNode = require('../../src/protocol/NodeToNode')
+const TrackerNode = require('../../src/protocol/TrackerNode')
+const TrackerServer = require('../../src/protocol/TrackerServer')
+const DataMessage = require('../../src/messages/DataMessage')
+const { startTracker, startNode } = require('../../src/composition')
+const { callbackToPromise, BOOTNODES } = require('../../src/util')
+const { wait, waitForEvent, LOCALHOST } = require('../../test/util')
+
+jest.setTimeout(90000)
+
+describe('message propagation in network', () => {
+    let tracker
+    let n1
+    let n2
+    let n3
+    let n4
+
+    beforeAll(async () => {
+        tracker = await startTracker(LOCALHOST, 33300)
+        BOOTNODES.push(tracker.getAddress())
+
+        await Promise.all([
+            startNode('127.0.0.1', 33312, null),
+            startNode('127.0.0.1', 33313, null),
+            startNode('127.0.0.1', 33314, null),
+            startNode('127.0.0.1', 33315, null)
+        ]).then((res) => {
+            [n1, n2, n3, n4] = res
+        })
+
+        await Promise.all([
+            waitForEvent(n1.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
+            waitForEvent(n2.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
+            waitForEvent(n3.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
+            waitForEvent(n4.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED)
+        ])
+    })
+
+    afterAll(async (done) => {
+        await callbackToPromise(n1.stop.bind(n1))
+        await callbackToPromise(n1.stop.bind(n2))
+        await callbackToPromise(n1.stop.bind(n3))
+        await callbackToPromise(n1.stop.bind(n4))
+        tracker.stop(done)
+    })
+
+    it('messages are delivered to nodes in the network according to stream subscriptions', async () => {
+        const n1Messages = []
+        const n2Messages = []
+        const n3Messages = []
+        const n4Messages = []
+
+        n1.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n1Messages.push({
+            streamId: dataMessage.getStreamId(),
+            payload: dataMessage.getPayload()
+        }))
+        n2.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n2Messages.push({
+            streamId: dataMessage.getStreamId(),
+            payload: dataMessage.getPayload()
+        }))
+        n3.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n3Messages.push({
+            streamId: dataMessage.getStreamId(),
+            payload: dataMessage.getPayload()
+        }))
+        n4.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n4Messages.push({
+            streamId: dataMessage.getStreamId(),
+            payload: dataMessage.getPayload()
+        }))
+
+        n2.subscribeToStream('stream-1')
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+
+        n3.subscribeToStream('stream-1')
+        await waitForEvent(n2.protocols.nodeToNode, NodeToNode.events.SUBSCRIBE_REQUEST)
+
+        for (let i = 0; i < 5; ++i) {
+            const dataMessage = new DataMessage()
+            dataMessage.setStreamId('stream-1')
+            dataMessage.setPayload({
+                messageNo: i
+            })
+            n1.onDataReceived(dataMessage)
+
+            const dataMessage2 = new DataMessage()
+            dataMessage2.setStreamId('stream-2')
+            dataMessage2.setPayload({
+                messageNo: i * 100
+            })
+            n4.onDataReceived(dataMessage2)
+
+            // eslint-disable-next-line no-await-in-loop
+            await wait(500)
+        }
+
+        expect(n1Messages).toEqual([])
+        expect(n2Messages).toEqual([
+            {
+                streamId: 'stream-1',
+                payload: {
+                    messageNo: 0
+                }
+            },
+            {
+                streamId: 'stream-1',
+                payload: {
+                    messageNo: 1
+                }
+            },
+            {
+                streamId: 'stream-1',
+                payload: {
+                    messageNo: 2
+                }
+            },
+            {
+                streamId: 'stream-1',
+                payload: {
+                    messageNo: 3
+                }
+            },
+            {
+                streamId: 'stream-1',
+                payload: {
+                    messageNo: 4
+                }
+            }
+        ])
+        expect(n3Messages).toEqual(n2Messages)
+        expect(n4Messages).toEqual([])
+    })
+})

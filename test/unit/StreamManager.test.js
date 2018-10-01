@@ -42,4 +42,28 @@ describe('StreamManager', () => {
         expect(manager.isOtherNodeLeaderOf('stream-id')).toEqual(true)
         expect(manager.getLeaderAddressFor('stream-id')).toEqual('192.168.0.212')
     })
+
+    test('cannot fetch numbers for non-owned stream', () => {
+        manager.markOtherNodeAsLeader('stream-id')
+        expect(() => manager.fetchNextNumbers('stream-id'))
+            .toThrowError('Not leader of stream stream-id')
+        expect(() => manager.fetchNextNumbers('non-existing'))
+            .toThrowError('Not leader of stream non-existing')
+    })
+
+    test('can fetch expected numbers for owned stream', () => {
+        manager.markCurrentNodeAsLeaderOf('stream-id')
+        expect(manager.fetchNextNumbers('stream-id')).toEqual({
+            previousNumber: null,
+            number: 1
+        })
+        expect(manager.fetchNextNumbers('stream-id')).toEqual({
+            previousNumber: 1,
+            number: 2
+        })
+        expect(manager.fetchNextNumbers('stream-id')).toEqual({
+            previousNumber: 2,
+            number: 3
+        })
+    })
 })

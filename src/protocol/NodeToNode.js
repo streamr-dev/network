@@ -27,8 +27,8 @@ class NodeToNode extends EventEmitter {
         })
     }
 
-    sendData(receiverNode, streamId, data) {
-        this.endpoint.send(receiverNode, encoder.dataMessage(streamId, data))
+    sendData(receiverNode, streamId, payload, number, previousNumber) {
+        this.endpoint.send(receiverNode, encoder.dataMessage(streamId, payload, number, previousNumber))
     }
 
     sendSubscribe(receiverNode, streamId) {

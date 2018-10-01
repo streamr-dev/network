@@ -18,7 +18,9 @@ module.exports = class NetworkNode extends Node {
     }
 
     addMessageListener(cb) {
-        this.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => cb(dataMessage.getStreamId(), 0, dataMessage.getPayload()))
+        this.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => {
+            cb(dataMessage.getStreamId(), 0, dataMessage.getPayload(), dataMessage.getNumber(), dataMessage.getPreviousNumber())
+        })
     }
 
     subscribe(streamId, streamPartition) {

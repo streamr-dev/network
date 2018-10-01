@@ -104,6 +104,14 @@ class Libp2pEndpoint extends EventEmitter {
         return this.node.peerBook.has(peerInfo)
     }
 
+    getAddress() {
+        let address = null
+        this.node.peerInfo.multiaddrs.forEach((ma) => {
+            address = ma.toString()
+        })
+        return address
+    }
+
     getPeers() {
         return this.node.peerBook.getAllArray()
     }
