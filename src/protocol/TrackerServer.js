@@ -1,7 +1,6 @@
 const { EventEmitter } = require('events')
 const { isTracker, getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
-const endpointEvents = require('../connection/Libp2pEndpoint').events
 const EndpointListener = require('./EndpointListener')
 
 const events = Object.freeze({
@@ -20,8 +19,6 @@ class TrackerServer extends EventEmitter {
 
         this._endpointListener = new EndpointListener()
         this._endpointListener.implement(this, endpoint)
-
-        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, (peer) => this.onPeerDisconnected(peer))
     }
 
     sendNodeList(receiverNode, nodeList) {
