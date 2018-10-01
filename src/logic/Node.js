@@ -43,10 +43,11 @@ class Node extends EventEmitter {
         this.protocols.trackerNode.on(TrackerNode.events.NODE_LIST_RECEIVED, (nodes) => this.protocols.nodeToNode.connectToNodes(nodes))
         this.protocols.trackerNode.on(TrackerNode.events.STREAM_ASSIGNED, (streamId) => this.addOwnStream(streamId))
         this.protocols.trackerNode.on(TrackerNode.events.STREAM_INFO_RECEIVED, (streamMessage) => this.addKnownStreams(streamMessage))
+        this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, () => this.onTrackerDisconnected())
         this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (dataMessage) => this.onDataReceived(dataMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage) => this.onUnsubscribeRequest(unsubscribeMessage))
-        this.protocols.nodeToNode.on(TrackerNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
+        this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
 
         this.debug = createDebug(`streamr:logic:node:${this.id}`)
         this.debug('started %s', this.id)
@@ -177,10 +178,14 @@ class Node extends EventEmitter {
     }
 
     onNodeDisconnected(node) {
-        this.nodes.delete(getAddress(node))
         const nodeAddress = getAddress(node)
         this.subscribers.removeSubscriberFromAllStreams(nodeAddress)
-        this.debug('removed node %s from all subscriptions', getIdShort(node))
+        this.debug('removed all subscriptions of node %s', getIdShort(node))
+    }
+
+    onTrackerDisconnected() {
+        this.tracker = null
+        this.debug('no tracker available')
     }
 
     _handleBufferedMessages(streamId) {

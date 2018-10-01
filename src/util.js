@@ -32,6 +32,8 @@ const generateClientId = (suffix) => `${suffix}/v${version}/${os.platform()}-${o
 
 const isTracker = (tracker) => BOOTNODES.includes(tracker)
 
+const isNode = (peer) => !isTracker(peer)
+
 module.exports = {
     callbackToPromise,
     getAddress,
@@ -39,5 +41,6 @@ module.exports = {
     getIdShort,
     generateClientId,
     isTracker,
+    isNode,
     BOOTNODES
 }
