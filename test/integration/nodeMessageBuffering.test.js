@@ -8,6 +8,8 @@ const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 
+const DataMessage = require('../../src/messages/DataMessage')
+
 jest.setTimeout(DEFAULT_TIMEOUT)
 
 /**
@@ -38,9 +40,9 @@ describe('message buffering of Node', () => {
     })
 
     test('first message to unknown stream eventually gets delivered', async (done) => {
-        destinationNode.on(Node.events.MESSAGE_RECEIVED, (streamId, data) => {
-            expect(streamId).toEqual('stream-id')
-            expect(data).toEqual({
+        destinationNode.on(Node.events.MESSAGE_RECEIVED, (streamMessage) => {
+            expect(streamMessage.getStreamId()).toEqual('stream-id')
+            expect(streamMessage.getPayload()).toEqual({
                 hello: 'world'
             })
             done()
@@ -50,8 +52,12 @@ describe('message buffering of Node', () => {
         await wait(500) // TODO: required to not encounter issue #99 (concurrent subscription)
 
         // "Client" pushes data
-        sourceNode.onDataReceived('stream-id', {
+        const dataMessage = new DataMessage()
+        dataMessage.setStreamId('stream-id')
+        dataMessage.setPayload({
             hello: 'world'
         })
+
+        sourceNode.onDataReceived(dataMessage)
     })
 })

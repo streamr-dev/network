@@ -1,4 +1,5 @@
 const endpointEvents = require('../connection/Libp2pEndpoint').events
+const encoder = require('../helpers/MessageEncoder')
 
 module.exports = class EndpointListener {
     implement(implementor, endpoint) {
@@ -17,7 +18,7 @@ module.exports = class EndpointListener {
         }
 
         endpoint.on(endpointEvents.PEER_CONNECTED, (peer) => implementor.onPeerConnected(peer))
-        endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => implementor.onMessageReceived(sender, message))
+        endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => implementor.onMessageReceived(encoder.decode(sender, message)))
         endpoint.on(endpointEvents.PEER_DISCOVERED, (peer) => implementor.onPeerDiscovered(peer))
         endpoint.on(endpointEvents.PEER_DISCONNECTED, (peer) => implementor.onPeerDisconnected(peer))
     }

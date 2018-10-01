@@ -1,3 +1,4 @@
+const DataMessage = require('./messages/DataMessage')
 const Node = require('./logic/Node')
 
 /*
@@ -8,11 +9,16 @@ module.exports = class NetworkNode extends Node {
         if (streamPartition !== 0) {
             throw new Error('Stream partitions not yet supported.')
         }
-        this.onDataReceived(streamId, content)
+
+        const dataMessage = new DataMessage()
+        dataMessage.setStreamId(streamId)
+        dataMessage.setPayload(content)
+
+        this.onDataReceived(dataMessage)
     }
 
     addMessageListener(cb) {
-        this.on(Node.events.MESSAGE_RECEIVED, (streamId, content) => cb(streamId, 0, content))
+        this.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => cb(dataMessage.getStreamId(), 0, dataMessage.getPayload()))
     }
 
     subscribe(streamId, streamPartition) {

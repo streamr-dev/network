@@ -41,6 +41,6 @@ describe('tracker and node connection', () => {
                 })
             })
         })) */
-        done() // TODO: fix
+        done() // check status and streams flow
     })
 })

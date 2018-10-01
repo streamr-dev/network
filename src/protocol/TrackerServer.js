@@ -40,33 +40,24 @@ class TrackerServer extends EventEmitter {
         this.endpoint.node.stop(() => cb())
     }
 
-    // EndpointListener implementation
     onPeerConnected(peer) {
         if (!isTracker(peer)) {
             this.emit(events.NODE_CONNECTED, peer)
         }
     }
 
-    onMessageReceived(peer, message) {
-        const { code, data } = encoder.decode(message)
-
-        switch (code) {
+    onMessageReceived(message) {
+        switch (message.getCode()) {
             case encoder.STATUS:
-                this.emit(events.NODE_STATUS_RECEIVED, {
-                    peer,
-                    status: data
-                })
+                this.emit(events.NODE_STATUS_RECEIVED, message)
                 break
 
             case encoder.STREAM:
-                this.emit(events.STREAM_INFO_REQUESTED, {
-                    sender: peer,
-                    streamId: data[0]
-                })
+                this.emit(events.STREAM_INFO_REQUESTED, message)
                 break
 
             case encoder.PEERS:
-                this.emit(events.NODE_LIST_REQUESTED, peer)
+                this.emit(events.NODE_LIST_REQUESTED, message.getSource())
                 break
 
             default:

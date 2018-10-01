@@ -46,34 +46,21 @@ class NodeToNode extends EventEmitter {
         this.endpoint.node.stop(() => cb())
     }
 
-    // EndpointListener implementation
-
     onPeerConnected(peer) {
     }
 
-    onMessageReceived(sender, message) {
-        const { code, data } = encoder.decode(message)
-
-        switch (code) {
+    onMessageReceived(message) {
+        switch (message.getCode()) {
             case encoder.SUBSCRIBE:
-                this.emit(events.SUBSCRIBE_REQUEST, {
-                    streamId: data,
-                    sender
-                })
+                this.emit(events.SUBSCRIBE_REQUEST, message)
                 break
 
             case encoder.UNSUBSCRIBE:
-                this.emit(events.UNSUBSCRIBE_REQUEST, {
-                    streamId: data,
-                    sender
-                })
+                this.emit(events.UNSUBSCRIBE_REQUEST, message)
                 break
 
             case encoder.DATA:
-                this.emit(events.DATA_RECEIVED, {
-                    streamId: data[0],
-                    data: data[1]
-                })
+                this.emit(events.DATA_RECEIVED, message)
                 break
 
             default:

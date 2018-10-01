@@ -14,14 +14,10 @@ module.exports = class Tracker extends EventEmitter {
             trackerServer
         }
 
-        this.protocols.trackerServer.on(TrackerServer.events.STREAM_INFO_REQUESTED, ({ sender, streamId }) => { // TODO: rename sender to requester/node
-            this.sendStreamInfo(sender, streamId)
-        })
+        this.protocols.trackerServer.on(TrackerServer.events.STREAM_INFO_REQUESTED, (streamMessage) => this.sendStreamInfo(streamMessage))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_LIST_REQUESTED, (node) => this.sendListOfNodes(node))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ peer, status }) => { // TODO: rename peer to node
-            this.processNodeStatus(peer, status)
-        })
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => this.processNodeStatus(statusMessage))
 
         this.debug = createDebug(`streamr:logic:tracker:${this.id}`)
         this.debug('started %s', this.id)
@@ -38,9 +34,9 @@ module.exports = class Tracker extends EventEmitter {
         }
     }
 
-    processNodeStatus(node, status) {
-        this.debug('received from %s status %s', getIdShort(node), JSON.stringify(status))
-        this.nodes.set(getAddress(node), status)
+    processNodeStatus(statusMessage) {
+        this.debug('received from %s status %s', getIdShort(statusMessage.getSource()), JSON.stringify(statusMessage.getStatus()))
+        this.nodes.set(getAddress(statusMessage.getSource()), statusMessage.getStatus())
     }
 
     onNodeDisconnected(node) {
@@ -48,7 +44,10 @@ module.exports = class Tracker extends EventEmitter {
         this.nodes.delete(getAddress(node))
     }
 
-    sendStreamInfo(node, streamId) {
+    sendStreamInfo(streamMessage) {
+        const streamId = streamMessage.getStreamId()
+        const source = streamMessage.getSource()
+
         this.debug('looking for stream %s', streamId)
 
         let nodeAddress
@@ -59,13 +58,13 @@ module.exports = class Tracker extends EventEmitter {
         })
 
         if (nodeAddress === undefined) {
-            this.debug('stream %s assigned to %s', streamId, getIdShort(node))
-            nodeAddress = getAddress(node)
+            this.debug('stream %s assigned to %s', streamId, getIdShort(source))
+            nodeAddress = getAddress(source)
         } else {
-            this.debug('stream %s found, responding to %s', streamId, getIdShort(node))
+            this.debug('stream %s found, responding to %s', streamId, getIdShort(source))
         }
 
-        this.protocols.trackerServer.sendStreamInfo(node, streamId, nodeAddress)
+        this.protocols.trackerServer.sendStreamInfo(source, streamId, nodeAddress)
     }
 
     stop(cb) {

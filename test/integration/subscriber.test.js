@@ -57,7 +57,6 @@ describe('Selecting leader for the stream and sending messages to two subscriber
             waitForEvent(subscriber1.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED),
             waitForEvent(subscriber2.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED)
         ]).then((res) => {
-            console.log('==================================')
             expect(nodeTwo.subscribers.subscribersForStream(streamId).length).toEqual(2)
             clearInterval(publisherInterval)
 

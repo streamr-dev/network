@@ -1,35 +1,42 @@
-const assert = require('assert')
-const { getTestEndpoints, DEFAULT_TIMEOUT } = require('../util')
+const { DEFAULT_TIMEOUT, LOCALHOST, waitForEvent, wait } = require('../util')
+const endpointEvents = require('../../src/connection/Libp2pEndpoint').events
+const { createEndpoint } = require('../../src/connection/Libp2pEndpoint')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('create two endpoints and init connection between them', () => {
+    const MAX = 5
+    let promises = []
+    const endpoints = []
+
     it('should be able to start and stop successfully', async (done) => {
-        const MAX = 5
-
-        // create MAX endpoints
-        const endpoints = await getTestEndpoints(MAX, 30690)
-
-        // check zero endpoints
         for (let i = 0; i < MAX; i++) {
-            assert.equal(endpoints[i].getPeers().length, 0)
+            // eslint-disable-next-line no-await-in-loop
+            const endpoint = await createEndpoint(LOCALHOST, 30690 + i, '', true).catch((err) => { throw err })
+            endpoints.push(endpoint)
         }
 
-        // connect current to the next, so all will have two connections
-        let promises = []
+        for (let i = 0; i < MAX; i++) {
+            expect(endpoints[i].getPeers().length).toEqual(0)
+        }
+
         for (let i = 0; i < MAX; i++) {
             const nextEndpoint = i + 1 === MAX ? endpoints[0] : endpoints[i + 1]
 
             // eslint-disable-next-line no-await-in-loop
-            promises.push(await endpoints[i].connect(nextEndpoint.node.peerInfo))
+            endpoints[i].connect(nextEndpoint.node.peerInfo)
         }
 
-        // then wait a little bit, so first will receive connection from the last
-        await new Promise((resolve) => setTimeout(resolve, 3000)).then(() => {
-            for (let i = 0; i < MAX; i++) {
-                assert.equal(endpoints[i].getPeers().length, 2)
-            }
-        })
+        promises = []
+        for (let i = 0; i < MAX; i++) {
+            promises.push(waitForEvent(endpoints[i], endpointEvents.PEER_CONNECTED))
+        }
+
+        await wait(1000)
+
+        for (let i = 0; i < MAX; i++) {
+            expect(endpoints[i].getPeers().length).toEqual(2)
+        }
 
         promises = []
         for (let i = 0; i < MAX; i++) {
