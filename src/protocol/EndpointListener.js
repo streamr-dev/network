@@ -1,4 +1,4 @@
-const endpointEvents = require('../connection/Libp2pEndpoint').events
+const endpointEvents = require('../connection/Endpoint').events
 const encoder = require('../helpers/MessageEncoder')
 
 module.exports = class EndpointListener {

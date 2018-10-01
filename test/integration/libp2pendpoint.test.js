@@ -1,5 +1,5 @@
 const { DEFAULT_TIMEOUT, LOCALHOST, waitForEvent, wait } = require('../util')
-const endpointEvents = require('../../src/connection/Libp2pEndpoint').events
+const endpointEvents = require('../../src/connection/Endpoint').events
 const { createEndpoint } = require('../../src/connection/Libp2pEndpoint')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
