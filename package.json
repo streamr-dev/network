@@ -12,6 +12,7 @@
   },
   "scripts": {
     "build": "NODE_ENV=production webpack",
+    "prepare": "npm run build",
     "dev": "webpack --progress --colors --watch",
     "test": "npm run test-unit && npm run test-integration",
     "test:watch": "mocha -w ./test",
