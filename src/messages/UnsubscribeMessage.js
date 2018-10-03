@@ -1,16 +1,15 @@
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
-module.exports = class StreamMessage {
-    constructor(streamId, nodeAddress = '', source = null) {
+module.exports = class UnsubscribeMessage {
+    constructor(streamId, source = null) {
         if (typeof streamId === 'undefined') {
             throw new Error('streamId cant be undefined')
         }
         this.version = CURRENT_VERSION
-        this.code = msgTypes.STREAM
+        this.code = msgTypes.UNSUBSCRIBE
         this.source = source
 
         this.streamId = streamId
-        this.nodeAddress = nodeAddress
     }
 
     getVersion() {
@@ -39,22 +38,12 @@ module.exports = class StreamMessage {
         return this
     }
 
-    getNodeAddress() {
-        return this.nodeAddress
-    }
-
-    setNodeAddress(nodeAddress) {
-        this.nodeAddress = nodeAddress
-        return this
-    }
-
     toJSON() {
         return {
             version: this.getVersion(),
             code: this.getCode(),
             source: this.getSource(),
-            streamId: this.getStreamId(),
-            nodeAddress: this.getNodeAddress()
+            streamId: this.getStreamId()
         }
     }
 }

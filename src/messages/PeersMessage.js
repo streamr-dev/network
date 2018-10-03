@@ -1,14 +1,14 @@
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
-module.exports = class StatusMessage {
-    constructor(status, source = null) {
-        if (typeof status === 'undefined') {
-            throw new Error('status cant be undefined')
+module.exports = class PeersMessage {
+    constructor(peers, source = null) {
+        if (typeof peers === 'undefined') {
+            throw new Error('peers cant be undefined')
         }
         this.version = CURRENT_VERSION
-        this.code = msgTypes.STATUS
+        this.code = msgTypes.PEERS
         this.source = source
-        this.status = status
+        this.peers = peers
     }
 
     getVersion() {
@@ -19,12 +19,12 @@ module.exports = class StatusMessage {
         return this.code
     }
 
-    getStatus() {
-        return this.status
+    getPeers() {
+        return this.peers
     }
 
-    setStatus(status) {
-        this.status = status
+    setPeers(peers) {
+        this.peers = peers
         return this
     }
 
@@ -42,7 +42,7 @@ module.exports = class StatusMessage {
             version: this.getVersion(),
             code: this.getCode(),
             source: this.getSource(),
-            status: this.getStatus()
+            peers: this.getPeers()
         }
     }
 }

@@ -40,7 +40,7 @@ describe('message buffering of Node', () => {
     test('first message to unknown stream eventually gets delivered', async (done) => {
         destinationNode.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => {
             expect(dataMessage.getStreamId()).toEqual('stream-id')
-            expect(dataMessage.getPayload()).toEqual({
+            expect(dataMessage.getData()).toEqual({
                 hello: 'world'
             })
             done()
@@ -51,12 +51,9 @@ describe('message buffering of Node', () => {
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
 
         // "Client" pushes data
-        const dataMessage = new DataMessage()
-        dataMessage.setStreamId('stream-id')
-        dataMessage.setPayload({
+        const dataMessage = new DataMessage('stream-id', {
             hello: 'world'
         })
-
         sourceNode.onDataReceived(dataMessage)
     })
 })

@@ -20,7 +20,8 @@ class NodeToNode extends EventEmitter {
         this._endpointListener.implement(this, endpoint)
     }
 
-    connectToNodes(nodes) {
+    connectToNodes(peersMessage) {
+        const nodes = peersMessage.getPeers()
         nodes.forEach((node) => {
             debug('connecting to new node %s', node)
             this.endpoint.connect(node)

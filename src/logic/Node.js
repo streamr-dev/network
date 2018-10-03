@@ -40,7 +40,7 @@ class Node extends EventEmitter {
         }
 
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
-        this.protocols.trackerNode.on(TrackerNode.events.NODE_LIST_RECEIVED, (nodes) => this.protocols.nodeToNode.connectToNodes(nodes))
+        this.protocols.trackerNode.on(TrackerNode.events.NODE_LIST_RECEIVED, (peersMessage) => this.protocols.nodeToNode.connectToNodes(peersMessage))
         this.protocols.trackerNode.on(TrackerNode.events.STREAM_ASSIGNED, (streamId) => this.addOwnStream(streamId))
         this.protocols.trackerNode.on(TrackerNode.events.STREAM_INFO_RECEIVED, (streamMessage) => this.addKnownStreams(streamMessage))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, () => this.onTrackerDisconnected())
@@ -84,7 +84,7 @@ class Node extends EventEmitter {
 
     onDataReceived(dataMessage) {
         const streamId = dataMessage.getStreamId()
-        const payload = dataMessage.getPayload()
+        const data = dataMessage.getData()
         const number = dataMessage.getNumber()
         const previousNumber = dataMessage.getPreviousNumber()
 
@@ -104,7 +104,7 @@ class Node extends EventEmitter {
             this.debug('received data (#%s) for known stream %s', number, streamId)
             if (number == null) {
                 const leaderAddress = this.streams.getLeaderAddressFor(streamId)
-                this.protocols.nodeToNode.sendData(leaderAddress, streamId, payload, number, previousNumber)
+                this.protocols.nodeToNode.sendData(leaderAddress, streamId, data, number, previousNumber)
             } else {
                 this._sendToSubscribers(dataMessage)
             }
@@ -112,8 +112,9 @@ class Node extends EventEmitter {
             this.debug('no trackers available; attempted to ask about stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
         } else {
+            // TODO store data object?
             this.messageBuffer.put(streamId, {
-                payload,
+                data,
                 number,
                 previousNumber
             })
@@ -124,14 +125,14 @@ class Node extends EventEmitter {
 
     _sendToSubscribers(dataMessage) {
         const streamId = dataMessage.getStreamId()
-        const payload = dataMessage.getPayload()
+        const data = dataMessage.getData()
         const number = dataMessage.getNumber()
         const previousNumber = dataMessage.getPreviousNumber()
 
         const subscribers = this.subscribers.subscribersForStream(streamId)
         this.debug('sending data (#%s) for stream %s to %d subscribers', number, streamId, subscribers.length)
         subscribers.forEach((subscriber) => {
-            this.protocols.nodeToNode.sendData(subscriber, streamId, payload, number, previousNumber)
+            this.protocols.nodeToNode.sendData(subscriber, streamId, data, number, previousNumber)
         })
         if (this.subscriptions.hasSubscription(streamId)) {
             this.emit(events.MESSAGE_RECEIVED, dataMessage)
@@ -216,11 +217,7 @@ class Node extends EventEmitter {
     _handleBufferedMessages(streamId) {
         this.messageBuffer.popAll(streamId)
             .forEach((content) => {
-                const dataMessage = new DataMessage()
-                dataMessage.setStreamId(streamId)
-                dataMessage.setPayload(content.payload)
-                dataMessage.setNumber(content.number)
-                dataMessage.setPreviousNumber(content.previousNumber)
+                const dataMessage = new DataMessage(streamId, content.data, content.number, content.previousNumber)
                 // TODO bad idea to call events directly
                 this.onDataReceived(dataMessage)
             })

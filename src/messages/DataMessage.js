@@ -1,35 +1,84 @@
-const BasicMessage = require('./BasicMessage')
+const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
-module.exports = class DataMessage extends BasicMessage {
+module.exports = class DataMessage {
+    constructor(streamId, data, number = null, previousNumber = null, source = null) {
+        if (typeof streamId === 'undefined') {
+            throw new Error('streamId cant be undefined')
+        }
+        if (typeof data === 'undefined') {
+            throw new Error('data cant be undefined')
+        }
+
+        this.version = CURRENT_VERSION
+        this.code = msgTypes.DATA
+        this.source = source
+
+        this.streamId = streamId
+        this.data = data
+        this.number = number
+        this.previousNumber = number
+    }
+
+    getVersion() {
+        return this.version
+    }
+
+    getCode() {
+        return this.code
+    }
+
+    getSource() {
+        return this.source
+    }
+
+    setSource(source) {
+        this.source = source
+        return this
+    }
+
     getStreamId() {
-        return this.payload[0]
+        return this.streamId
     }
 
     setStreamId(streamId) {
-        this.payload[0] = streamId
+        this.streamId = streamId
+        return this
     }
 
-    getPayload() {
-        return this.payload[1]
+    getData() {
+        return this.data
     }
 
-    setPayload(payload) {
-        this.payload[1] = payload
+    setData(data) {
+        this.data = data
     }
 
     getNumber() {
-        return this.payload[2]
+        return this.number
     }
 
     setNumber(number) {
-        this.payload[2] = number
+        this.number = number
     }
 
     getPreviousNumber() {
-        return this.payload[3]
+        return this.previousNumber
     }
 
     setPreviousNumber(previousNumber) {
-        this.payload[3] = previousNumber
+        this.previousNumber = previousNumber
+    }
+
+    toJSON() {
+        return {
+            version: this.getVersion(),
+            code: this.getCode(),
+            source: this.getSource(),
+            streamId: this.getStreamId(),
+            data: this.getData(),
+            number: this.getNumber(),
+            previousNumber: this.getPreviousNumber()
+        }
     }
 }
+

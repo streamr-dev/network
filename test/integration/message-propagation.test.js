@@ -53,19 +53,19 @@ describe('message propagation in network', () => {
 
         n1.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n1Messages.push({
             streamId: dataMessage.getStreamId(),
-            payload: dataMessage.getPayload()
+            payload: dataMessage.getData()
         }))
         n2.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n2Messages.push({
             streamId: dataMessage.getStreamId(),
-            payload: dataMessage.getPayload()
+            payload: dataMessage.getData()
         }))
         n3.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n3Messages.push({
             streamId: dataMessage.getStreamId(),
-            payload: dataMessage.getPayload()
+            payload: dataMessage.getData()
         }))
         n4.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n4Messages.push({
             streamId: dataMessage.getStreamId(),
-            payload: dataMessage.getPayload()
+            payload: dataMessage.getData()
         }))
 
         n2.subscribeToStream('stream-1')
@@ -75,16 +75,12 @@ describe('message propagation in network', () => {
         await waitForEvent(n2.protocols.nodeToNode, NodeToNode.events.SUBSCRIBE_REQUEST)
 
         for (let i = 0; i < 5; ++i) {
-            const dataMessage = new DataMessage()
-            dataMessage.setStreamId('stream-1')
-            dataMessage.setPayload({
+            const dataMessage = new DataMessage('stream-1', {
                 messageNo: i
             })
             n1.onDataReceived(dataMessage)
 
-            const dataMessage2 = new DataMessage()
-            dataMessage2.setStreamId('stream-2')
-            dataMessage2.setPayload({
+            const dataMessage2 = new DataMessage('stream-2', {
                 messageNo: i * 100
             })
             n4.onDataReceived(dataMessage2)

@@ -54,16 +54,15 @@ class TrackerNode extends EventEmitter {
     }
 
     onMessageReceived(message) {
-        const code = message.getCode()
-        const data = message.getPayload()
-
-        switch (code) {
+        switch (message.getCode()) {
             case encoder.PEERS:
+                // eslint-disable-next-line no-case-declarations
+                const peers = message.getPeers()
                 // ask tacker again
-                if (!data.length && this.tracker && this.endpoint.isConnected(this.tracker)) { // data = peers
+                if (!peers.length && this.tracker && this.endpoint.isConnected(this.tracker)) { // data = peers
                     debug('no available peers, ask again tracker')
-                } else if (data.length) {
-                    this.emit(events.NODE_LIST_RECEIVED, data)
+                } else if (peers.length) {
+                    this.emit(events.NODE_LIST_RECEIVED, message)
                     this._clearPeerRequestInterval()
                 }
                 break

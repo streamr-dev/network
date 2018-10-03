@@ -10,16 +10,13 @@ module.exports = class NetworkNode extends Node {
             throw new Error('Stream partitions not yet supported.')
         }
 
-        const dataMessage = new DataMessage()
-        dataMessage.setStreamId(streamId)
-        dataMessage.setPayload(content)
-
+        const dataMessage = new DataMessage(streamId, content)
         this.onDataReceived(dataMessage)
     }
 
     addMessageListener(cb) {
         this.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => {
-            cb(dataMessage.getStreamId(), 0, dataMessage.getPayload(), dataMessage.getNumber(), dataMessage.getPreviousNumber())
+            cb(dataMessage.getStreamId(), 0, dataMessage.getData(), dataMessage.getNumber(), dataMessage.getPreviousNumber())
         })
     }
 
