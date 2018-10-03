@@ -16,7 +16,7 @@ module.exports = class DataMessage {
         this.streamId = streamId
         this.data = data
         this.number = number
-        this.previousNumber = number
+        this.previousNumber = previousNumber
     }
 
     getVersion() {

@@ -44,9 +44,8 @@ describe('message numbering', () => {
             actualPreviousNumbers.push(dataMessage.getPreviousNumber())
 
             if (actualNumbers.length === 4) {
-                // TODO fix
-                // expect(actualNumbers).toEqual([1, 2, 3, 4])
-                // expect(actualPreviousNumbers).toEqual([null, 1, 2, 3])
+                expect(actualNumbers).toEqual([1, 2, 3, 4])
+                expect(actualPreviousNumbers).toEqual([null, 1, 2, 3])
                 done()
             }
         })
