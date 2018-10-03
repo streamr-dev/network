@@ -68,7 +68,7 @@ class TrackerNode extends EventEmitter {
                 break
 
             case encoder.STREAM:
-                if (message.getNodeAddress() === getAddress(this.endpoint.node.peerInfo)) {
+                if (message.getLeaderAddress() === getAddress(this.endpoint.node.peerInfo)) {
                     this.emit(events.STREAM_ASSIGNED, message.getStreamId())
                 } else {
                     this.emit(events.STREAM_INFO_RECEIVED, message)

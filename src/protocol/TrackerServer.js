@@ -25,8 +25,8 @@ class TrackerServer extends EventEmitter {
         this.endpoint.send(receiverNode, encoder.peersMessage(nodeList))
     }
 
-    sendStreamInfo(receiverNode, streamId, nodeAddress) {
-        this.endpoint.send(receiverNode, encoder.streamMessage(streamId, nodeAddress))
+    sendStreamInfo(receiverNode, streamId, leaderAddress, repeaterAddresses) {
+        this.endpoint.send(receiverNode, encoder.streamMessage(streamId, leaderAddress, repeaterAddresses))
     }
 
     getAddress() {

@@ -33,6 +33,25 @@ describe('StreamManager', () => {
         expect(manager.getLeaderAddressFor('stream-2')).toEqual('192.168.0.6')
     })
 
+    test('can mark and query repeater nodes', () => {
+        manager.markRepeaterNodes('stream-1', ['192.168.0.1', '192.168.0.2'])
+        manager.markRepeaterNodes('stream-2', ['192.168.0.4'])
+
+        expect(manager.isAnyRepeaterKnownFor('stream-1')).toEqual(true)
+        expect(manager.isAnyRepeaterKnownFor('stream-2')).toEqual(true)
+        expect(manager.isAnyRepeaterKnownFor('non-existing-stream')).toEqual(false)
+        expect(manager.getRepeatersFor('stream-1')).toEqual(['192.168.0.1', '192.168.0.2'])
+        expect(manager.getRepeatersFor('stream-2')).toEqual(['192.168.0.4'])
+        expect(manager.getRepeatersFor('non-existing-stream')).toEqual([])
+    })
+
+    test('marking repeater nodes replaces old ones', () => {
+        manager.markRepeaterNodes('stream-1', ['192.168.0.1', '192.168.0.2'])
+        manager.markRepeaterNodes('stream-1', ['192.168.0.4'])
+
+        expect(manager.getRepeatersFor('stream-1')).toEqual(['192.168.0.4'])
+    })
+
     test('a stream can only have one leader', () => {
         manager.markCurrentNodeAsLeaderOf('stream-id')
         manager.markOtherNodeAsLeader('stream-id', '192.168.0.8')

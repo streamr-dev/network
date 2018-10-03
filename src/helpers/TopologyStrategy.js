@@ -18,7 +18,7 @@ const getRandomPeers = (peers, max = 10) => {
 
 const filterOutPeer = (peers, currentPeer) => peers.filter((k) => k !== currentPeer)
 
-const getPeersTopology = (peers, currentPeer) => getRandomPeers(filterOutPeer(peers, currentPeer))
+const getPeersTopology = (peers, currentPeer, max) => getRandomPeers(filterOutPeer(peers, currentPeer), max)
 
 module.exports = {
     getPeersTopology

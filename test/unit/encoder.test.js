@@ -1,5 +1,6 @@
 const encoder = require('../../src/helpers/MessageEncoder')
 const { version } = require('../../package.json')
+const StreamMessage = require('../../src/messages/StreamMessage')
 
 describe('encoder', () => {
     it('check all codes', (done) => {
@@ -24,25 +25,29 @@ describe('encoder', () => {
         done()
     })
 
-    it('check streamMessage encoding/decoding', (done) => {
-        const json = encoder.streamMessage('stream-id', 'node-address')
-        expect(json).toEqual(`{"version":"${version}","code":${encoder.STREAM},"payload":{"streamId":"stream-id","nodeAddress":"node-address"}}`)
-
-        const source = null
-        const streamMessage = encoder.decode(source, json)
-        expect(streamMessage.toJSON()).toEqual({
-            version,
+    it('check streamMessage encoding/decoding', () => {
+        const json = encoder.streamMessage('stream-id', 'leader', ['repeater-1', 'repeater-2'])
+        expect(JSON.parse(json)).toEqual({
             code: encoder.STREAM,
-            source,
-            streamId: 'stream-id',
-            nodeAddress: 'node-address'
+            version,
+            payload: {
+                streamId: 'stream-id',
+                leaderAddress: 'leader',
+                repeaterAddresses: [
+                    'repeater-1',
+                    'repeater-2'
+                ]
+            }
         })
 
-        expect(streamMessage.constructor.name).toEqual('StreamMessage')
-        expect(streamMessage.getStreamId()).toEqual('stream-id')
-        expect(streamMessage.getNodeAddress()).toEqual('node-address')
+        const source = '127.0.0.1'
+        const streamMessage = encoder.decode(source, json)
 
-        done()
+        expect(streamMessage).toBeInstanceOf(StreamMessage)
+        expect(streamMessage.getSource()).toEqual('127.0.0.1')
+        expect(streamMessage.getStreamId()).toEqual('stream-id')
+        expect(streamMessage.getLeaderAddress()).toEqual('leader')
+        expect(streamMessage.getRepeaterAddresses()).toEqual(['repeater-1', 'repeater-2'])
     })
 
     it('creates expected dataMessage format (without numbers)', () => {

@@ -58,26 +58,30 @@ class Node extends EventEmitter {
     onConnectedToTracker(tracker) {
         this.debug('connected to tracker %s', getIdShort(tracker))
         this.tracker = tracker
-        this._sendStatus(this.tracker)
+        this._sendStatus()
         this.debug('requesting more peers from tracker %s', getIdShort(tracker))
         this.protocols.trackerNode.requestMorePeers()
         this._handlePendingSubscriptions()
     }
 
     addOwnStream(streamId) {
-        this.debug('stream %s added to own streams', streamId)
+        this.debug('set self as leader of stream %s', streamId)
         this.streams.markCurrentNodeAsLeaderOf(streamId)
-        this._sendStatus(this.tracker)
+        this._sendStatus()
         this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
     }
 
     addKnownStreams(streamMessage) {
         const streamId = streamMessage.getStreamId()
-        const nodeAddress = streamMessage.getNodeAddress()
+        const leaderAddress = streamMessage.getLeaderAddress()
+        const repeaterAddresses = streamMessage.getRepeaterAddresses()
 
-        this.debug('stream %s added to known streams for leader %s', streamId, getIdShort(nodeAddress))
-        this.streams.markOtherNodeAsLeader(streamId, nodeAddress)
+        this.streams.markOtherNodeAsLeader(streamId, leaderAddress)
+        this.debug('stream %s leader set to %s', streamId, getIdShort(leaderAddress))
+        this.streams.markRepeaterNodes(streamId, repeaterAddresses)
+        this.debug('stream %s repeater nodes set to %j', streamId, repeaterAddresses.map((a) => getIdShort(a)))
+
         this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
     }
@@ -160,12 +164,17 @@ class Node extends EventEmitter {
         } else if (this.streams.isLeaderOf(streamId)) {
             this.debug('stream %s is own stream; new subscriber will receive data', streamId)
             this.subscriptions.addSubscription(streamId) // Subscription to "self"
+            this._sendStatus()
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
-        } else if (this.streams.isOtherNodeLeaderOf(streamId)) {
-            const leaderAddress = this.streams.getLeaderAddressFor(streamId)
-            this.debug('stream %s is known; sending subscribe request to leader %s', streamId, getIdShort(leaderAddress))
-            this.protocols.nodeToNode.sendSubscribe(leaderAddress, streamId)
-            this.subscriptions.addSubscription(streamId) // Assuming subscribe went through
+        } else if (this.streams.isAnyRepeaterKnownFor(streamId)) {
+            const repeaterAddresses = this.streams.getRepeatersFor(streamId)
+            this.debug('stream %s is known; sending subscribe requests to repeaters %j', streamId,
+                repeaterAddresses.map((a) => getIdShort(a)))
+            repeaterAddresses.forEach((address) => {
+                this.protocols.nodeToNode.sendSubscribe(address, streamId)
+            })
+            this.subscriptions.addSubscription(streamId) // Assuming subscribes went through
+            this._sendStatus()
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
         } else if (this.tracker === null) {
             this.debug('no trackers available; attempted to ask about stream %s', streamId)
@@ -191,15 +200,16 @@ class Node extends EventEmitter {
 
     _getStatus() {
         return {
-            streams: this.streams.getOwnStreams(),
+            leaderOfStreams: this.streams.getOwnStreams(),
+            subscribedToStreams: this.subscriptions.getSubscriptions(),
             started: this.started
         }
     }
 
-    _sendStatus(tracker) {
-        this.debug('sending status to tracker %s', getIdShort(tracker))
-        if (tracker) {
-            this.protocols.trackerNode.sendStatus(tracker, this._getStatus())
+    _sendStatus() {
+        this.debug('sending status to tracker %s', getIdShort(this.tracker))
+        if (this.tracker) {
+            this.protocols.trackerNode.sendStatus(this.tracker, this._getStatus())
         }
     }
 

@@ -1,7 +1,7 @@
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
 module.exports = class StreamMessage {
-    constructor(streamId, nodeAddress = '', source = null) {
+    constructor(streamId, leaderAddress = '', repeaterAddresses = [], source = null) {
         if (typeof streamId === 'undefined') {
             throw new Error('streamId cant be undefined')
         }
@@ -10,7 +10,8 @@ module.exports = class StreamMessage {
         this.source = source
 
         this.streamId = streamId
-        this.nodeAddress = nodeAddress
+        this.leaderAddress = leaderAddress
+        this.repeaterAddresses = repeaterAddresses
     }
 
     getVersion() {
@@ -39,12 +40,21 @@ module.exports = class StreamMessage {
         return this
     }
 
-    getNodeAddress() {
-        return this.nodeAddress
+    getLeaderAddress() {
+        return this.leaderAddress
     }
 
-    setNodeAddress(nodeAddress) {
-        this.nodeAddress = nodeAddress
+    setLeaderAddress(nodeAddress) {
+        this.leaderAddress = nodeAddress
+        return this
+    }
+
+    getRepeaterAddresses() {
+        return this.repeaterAddresses
+    }
+
+    setRepeaterAddresses(nodeAddresses) {
+        this.repeaterAddresses = nodeAddresses
         return this
     }
 
@@ -54,7 +64,7 @@ module.exports = class StreamMessage {
             code: this.getCode(),
             source: this.getSource(),
             streamId: this.getStreamId(),
-            nodeAddress: this.getNodeAddress()
+            leaderAddress: this.getLeaderAddress()
         }
     }
 }

@@ -127,3 +127,22 @@ layer and pushes new data to the Streamr network via the same layer.
 - A _stream_ is an ordered list of messages uniquely identified by an id (and a partition).
 - A _publisher_ is a client that connects to a broker and publishes messages to stream(s).
 - A _subscriber_ is a client that connects to a broker and subscribes to the messages of stream(s).
+
+### Leaders, repeaters, and message numbering
+
+Given a stream and a set of nodes, one node is elected to be the _leader_ of the stream. The _leader node_ is responsible
+for assigning unique numbers from a strictly increasing integer sequence to the messages being published to the stream
+(by one or more publishers). Thus a leader provides messages with identity (for duplicate detection) and ordering (for
+gap detection).
+
+Only after a message has been numbered will it be delivered to the subscribers of the stream. The
+subscribers are clients that are either connected directly to the leader or to a _repeater_. A _repeater node_ subscribes
+to the leader or another repeater of the stream, and simply propagates the numbered message to its subscribers
+(including other repeaters). Hence a rooted graph emerges with the _leader_ as root and _repeaters_ as nodes.
+
+When a leader quits or becomes unavailable, a new one must be elected if the stream in question
+still actively being published or subscribed to.
+
+A _leader_ and _repeater_ are roles that a node may take given a specific stream. Thus a node may at the same time be a
+leader for a certain set of streams and a repeater for another set of streams. Also a node may not play any role
+for a given stream. Hence the logical network topology varies from one stream to another.
