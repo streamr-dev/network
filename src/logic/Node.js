@@ -145,7 +145,8 @@ class Node extends EventEmitter {
 
     onSubscribeRequest(subscribeMessage) {
         this.subscribers.addSubscriber(subscribeMessage.getStreamId(), getAddress(subscribeMessage.getSource()))
-        this.debug('node %s added as a subscriber for stream %s', getIdShort(subscribeMessage.getSource()), subscribeMessage.getStreamId()) // TODO: verify that works
+        this.debug('node %s added as a subscriber for stream %s',
+            getIdShort(subscribeMessage.getSource()), subscribeMessage.getStreamId())
     }
 
     onUnsubscribeRequest(unsubscribeMessage) {
