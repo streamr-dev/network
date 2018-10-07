@@ -24,6 +24,8 @@ describe('Protocol', () => {
                 assert(err instanceof InvalidJsonError)
                 assert.equal(err.streamId, 'TsvTbqshTsuLg_HyUjxigA')
                 assert.equal(err.jsonString, '{"invalid\njson"}')
+                assert.equal(err.offset, 941516902)
+                assert.equal(err.previousOffset, 941499898)
                 return true
             })
         })

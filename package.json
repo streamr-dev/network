@@ -13,10 +13,9 @@
   "scripts": {
     "build": "NODE_ENV=production webpack",
     "dev": "webpack --progress --colors --watch",
-    "test": "npm run test-unit && npm run test-integration",
-    "test:watch": "mocha -w ./test",
-    "test-unit": "mocha ./test/unit",
-    "test-integration": "mocha ./test/integration"
+    "test": "jest",
+    "test-unit": "jest test/unit",
+    "test-integration": "jest test/integration"
   },
   "browser": {
     "http": "./src/shim/http-https.js",
@@ -49,10 +48,9 @@
     "eslint-plugin-import": "^2.10.0",
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.7.0",
+    "jest": "^23.6.0",
     "lodash": "^4.17.10",
-    "mocha": "^4.0.1",
-    "mockery": "^2.1.0",
-    "sinon": "^4.5.0",
+    "sinon": "^6.3.5",
     "uglifyjs-webpack-plugin": "^1.2.4",
     "webpack": "^3.10.0"
   },

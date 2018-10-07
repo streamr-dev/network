@@ -13,6 +13,11 @@ messageTypesByCode.forEach((type, idx) => {
 
 const BYE_KEY = '_bye'
 
+// Slow, use only in exceptional situations
+function getField(fieldName, msg) {
+    return msg[fieldsByProtocolVersion[msg[0]].indexOf(fieldName)]
+}
+
 export const decodeBrowserWrapper = (rawMsg) => {
     const jsonMsg = JSON.parse(rawMsg)
     const version = jsonMsg[0]
@@ -42,7 +47,13 @@ export const decodeMessage = (type, message) => {
                     try {
                         result[fields[i]] = JSON.parse(message[i])
                     } catch (err) {
-                        throw new InvalidJsonError(result.streamId, message[i], err)
+                        throw new InvalidJsonError(
+                            result.streamId,
+                            message[i],
+                            err,
+                            getField('offset', message),
+                            getField('previousOffset', message),
+                        )
                     }
                 } else {
                     throw new Error(`Unknown content type: ${result.contentType}`)
