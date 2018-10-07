@@ -6,13 +6,14 @@ import { decodeBrowserWrapper, decodeMessage } from './Protocol'
 const debug = debugFactory('StreamrClient::Connection')
 
 class Connection extends EventEmitter {
-    constructor(options) {
+    constructor(options, socket) {
         super()
         if (!options.url) {
             throw new Error('URL is not defined!')
         }
         this.options = options
         this.state = Connection.State.DISCONNECTED
+        this.socket = socket
 
         if (options.autoConnect) {
             this.connect()
@@ -25,18 +26,25 @@ class Connection extends EventEmitter {
     }
 
     connect() {
-        if (this.state !== Connection.State.CONNECTING && this.state !== Connection.State.CONNECTED) {
-            this.socket = this.options.socket || new WebSocket(this.options.url)
+        if (this.state === Connection.State.CONNECTING) {
+            return Promise.reject(new Error('Already connecting!'))
+        } else if (this.state === Connection.State.CONNECTED) {
+            return Promise.reject(new Error('Already connected!'))
+        } else {
+            this.socket = this.socket || new WebSocket(this.options.url)
             this.socket.binaryType = 'arraybuffer'
+            this.socket.events = new EventEmitter()
+            this.socket.onopen = () => this.socket.events.emit('open')
+            this.socket.onclose = () => this.socket.events.emit('close')
 
             this.updateState(Connection.State.CONNECTING)
 
-            this.socket.onopen = () => {
+            this.socket.events.on('open', () => {
                 debug('Connected to ', this.options.url)
                 this.updateState(Connection.State.CONNECTED)
-            }
+            })
 
-            this.socket.onclose = () => {
+            this.socket.events.on('close', () => {
                 if (this.state !== Connection.State.DISCONNECTING) {
                     debug('Connection lost. Attempting to reconnect')
                     setTimeout(() => {
@@ -45,7 +53,7 @@ class Connection extends EventEmitter {
                 }
 
                 this.updateState(Connection.State.DISCONNECTED)
-            }
+            })
 
             this.socket.onmessage = (messageEvent) => {
                 try {
@@ -56,14 +64,29 @@ class Connection extends EventEmitter {
                     this.emit('error', err)
                 }
             }
+
+            return new Promise((resolve) => {
+                this.socket.events.once('open', () => {
+                    resolve()
+                })
+            })
         }
     }
 
     disconnect() {
-        if (this.socket !== undefined && (this.state === Connection.State.CONNECTED || this.state === Connection.State.CONNECTING)) {
-            this.updateState(Connection.State.DISCONNECTING)
-            this.socket.close()
+        if (this.state === Connection.State.DISCONNECTING) {
+            return Promise.reject(new Error('Already disconnecting!'))
+        } else if (this.state === Connection.State.DISCONNECTED) {
+            return Promise.reject(new Error('Already disconnected!'))
+        } else if (this.socket === undefined) {
+            return Promise.reject(new Error('Something is wrong: socket is undefined!'))
         }
+
+        return new Promise((resolve) => {
+            this.updateState(Connection.State.DISCONNECTING)
+            this.socket.events.once('close', resolve)
+            this.socket.close()
+        })
     }
 
     send(req) {
