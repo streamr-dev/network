@@ -30,47 +30,46 @@ class Connection extends EventEmitter {
             return Promise.reject(new Error('Already connecting!'))
         } else if (this.state === Connection.State.CONNECTED) {
             return Promise.reject(new Error('Already connected!'))
-        } else {
-            this.socket = this.socket || new WebSocket(this.options.url)
-            this.socket.binaryType = 'arraybuffer'
-            this.socket.events = new EventEmitter()
-            this.socket.onopen = () => this.socket.events.emit('open')
-            this.socket.onclose = () => this.socket.events.emit('close')
+        }
+        this.socket = this.socket || new WebSocket(this.options.url)
+        this.socket.binaryType = 'arraybuffer'
+        this.socket.events = new EventEmitter()
+        this.socket.onopen = () => this.socket.events.emit('open')
+        this.socket.onclose = () => this.socket.events.emit('close')
 
-            this.updateState(Connection.State.CONNECTING)
+        this.updateState(Connection.State.CONNECTING)
 
-            this.socket.events.on('open', () => {
-                debug('Connected to ', this.options.url)
-                this.updateState(Connection.State.CONNECTED)
-            })
+        this.socket.events.on('open', () => {
+            debug('Connected to ', this.options.url)
+            this.updateState(Connection.State.CONNECTED)
+        })
 
-            this.socket.events.on('close', () => {
-                if (this.state !== Connection.State.DISCONNECTING) {
-                    debug('Connection lost. Attempting to reconnect')
-                    setTimeout(() => {
-                        this.connect()
-                    }, 2000)
-                }
-
-                this.updateState(Connection.State.DISCONNECTED)
-            })
-
-            this.socket.onmessage = (messageEvent) => {
-                try {
-                    const decodedWrapper = decodeBrowserWrapper(messageEvent.data)
-                    const decodedMessage = decodeMessage(decodedWrapper.type, decodedWrapper.msg)
-                    this.emit(decodedWrapper.type, decodedMessage, decodedWrapper.subId)
-                } catch (err) {
-                    this.emit('error', err)
-                }
+        this.socket.events.on('close', () => {
+            if (this.state !== Connection.State.DISCONNECTING) {
+                debug('Connection lost. Attempting to reconnect')
+                setTimeout(() => {
+                    this.connect()
+                }, 2000)
             }
 
-            return new Promise((resolve) => {
-                this.socket.events.once('open', () => {
-                    resolve()
-                })
-            })
+            this.updateState(Connection.State.DISCONNECTED)
+        })
+
+        this.socket.onmessage = (messageEvent) => {
+            try {
+                const decodedWrapper = decodeBrowserWrapper(messageEvent.data)
+                const decodedMessage = decodeMessage(decodedWrapper.type, decodedWrapper.msg)
+                this.emit(decodedWrapper.type, decodedMessage, decodedWrapper.subId)
+            } catch (err) {
+                this.emit('error', err)
+            }
         }
+
+        return new Promise((resolve) => {
+            this.socket.events.once('open', () => {
+                resolve()
+            })
+        })
     }
 
     disconnect() {

@@ -13,6 +13,7 @@
   "scripts": {
     "build": "NODE_ENV=production webpack",
     "dev": "webpack --progress --colors --watch",
+    "eslint": "eslint src/** test/**",
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration"

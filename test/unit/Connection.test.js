@@ -145,7 +145,11 @@ describe('Connection', () => {
             })
             conn.socket.onmessage({
                 data: JSON.stringify([0, 0, '',
-                    [28, 'L9xDhrevS_CE3_OA6pLVuQ', 0, 1538926879033, 0, 3445690152, 3445690148, 27, '{"t":"p","id":437.0,"lat":60.16314,"lng":24.908923,"color":"rgba(233, 87, 15, 1.0)"}']]),
+                    [28, 'L9xDhrevS_CE3_OA6pLVuQ', 0, 1538926879033, 0,
+                        3445690152, 3445690148, 27,
+                        JSON.stringify({
+                            t: 'p', id: 437.0, lat: 60.16314, lng: 24.908923, color: 'rgba(233, 87, 15, 1.0)',
+                        })]]),
             })
         })
 

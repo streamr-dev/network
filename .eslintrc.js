@@ -1,7 +1,7 @@
 module.exports = exports = {
     extends: 'streamr',
     env: {
-        mocha: true,
+        jest: true,
     },
     rules: {
         'no-plusplus': ["error", { "allowForLoopAfterthoughts": true }],

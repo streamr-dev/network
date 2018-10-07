@@ -90,7 +90,12 @@ describe('StreamrClient', () => {
 
         c.send = (msgToSend) => {
             const next = c.expectedMessagesToSend.shift()
-            assert.deepEqual(msgToSend, next, `Sending unexpected message: ${JSON.stringify(msgToSend)}. Expected: ${JSON.stringify(next)}, Queue: ${JSON.stringify(c.expectedMessagesToSend)}`)
+            assert.deepEqual(
+                msgToSend, next,
+                `Sending unexpected message: ${JSON.stringify(msgToSend)}
+                Expected: ${JSON.stringify(next)}
+                Queue: ${JSON.stringify(c.expectedMessagesToSend)}`,
+            )
         }
 
         c.expect = (msgToExpect) => {
