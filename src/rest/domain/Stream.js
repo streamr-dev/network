@@ -12,10 +12,20 @@ export default class Stream {
             apiKey,
             {
                 method: 'PUT',
-                body: JSON.stringify(this),
+                body: JSON.stringify(this.toObject()),
             },
         )
         return json ? new Stream(this._client, json) : undefined
+    }
+
+    toObject() {
+        const result = {}
+        Object.keys(this).forEach((key) => {
+            if (!key.startsWith('_')) {
+                result[key] = this[key]
+            }
+        })
+        return result
     }
 
     delete(apiKey = this._client.options.apiKey) {

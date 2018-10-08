@@ -4,9 +4,10 @@ import fetch from 'node-fetch'
 
 import StreamrClient from '../../src'
 
-describe('StreamrClient', function () {
-    this.timeout(10 * 1000)
-
+/**
+ * These tests should be run in sequential order!
+ */
+describe('StreamrClient', () => {
     const dataApi = 'localhost:8890'
     const engineAndEditor = 'localhost:8081/streamr-core'
     const name = `StreamrClient-integration-${Date.now()}`
@@ -18,13 +19,19 @@ describe('StreamrClient', function () {
         url: `ws://${dataApi}/api/v1/ws`,
         restUrl: `http://${engineAndEditor}/api/v1`,
         apiKey: 'tester1-api-key',
+        autoConnect: false,
+        autoDisconnect: false,
         ...opts,
     })
 
-    before(() => Promise.all([ // TODO: Figure out how to handle this when setting up a CI
+    beforeAll(() => Promise.all([ // TODO: Figure out how to handle this when setting up a CI
         fetch(`http://${engineAndEditor}`),
         fetch(`http://${dataApi}`),
     ])
+        .then(() => {
+            client = createClient()
+            return client.connect()
+        })
         .catch((e) => {
             if (e.errno === 'ENOTFOUND' || e.errno === 'ECONNREFUSED') {
                 throw new Error('Integration testing requires that engine-and-editor ' +
@@ -35,17 +42,10 @@ describe('StreamrClient', function () {
             }
         }))
 
-    beforeEach(() => {
-        client = createClient()
-    })
-
-    afterEach((done) => {
+    afterAll((done) => {
         if (client && client.isConnected()) {
-            client.once('disconnected', done)
-            client.disconnect()
-            client = null
+            client.disconnect().then(done)
         } else {
-            client = null
             done()
         }
     })
@@ -88,73 +88,90 @@ describe('StreamrClient', function () {
     })
 
     describe('Data production', () => {
+        beforeAll(() => {
+            assert(client.isConnected())
+        })
 
         it('Stream.produce', () => createdStream.produce({
-            foo: 'bar',
-            count: 0,
+            test: 'Stream.produce',
         }))
 
         it('client.produceToStream', () => client.produceToStream(createdStream.id, {
-            foo: 'bar',
-            count: 0,
+            test: 'client.produceToStream',
         }))
 
         it('client.produceToStream with Stream object as arg', () => client.produceToStream(createdStream, {
-            foo: 'bar',
-            count: 0,
+            test: 'client.produceToStream with Stream object as arg',
         }))
 
         it('client.subscribe with resend', (done) => {
             // This test needs some time because the write needs to have time to go to Cassandra
             setTimeout(() => {
-                client.subscribe({
+                const sub = client.subscribe({
                     stream: createdStream.id,
                     resend_last: 1,
-                }, (message) => {
-                    done()
+                }, () => {
+                    client.unsubscribe(sub)
+                    sub.on('unsubscribed', () => {
+                        done()
+                    })
                 })
-            }, 5000)
-        })
+            })
+        }, 10000)
 
         it('client.subscribe (realtime)', (done) => {
-            // Hack due to not having nginx in front: produce call needs to go to data-api port
-            client.options.restUrl = `http://${dataApi}/api/v1`
-
             const id = Date.now()
 
-            const sub = client.subscribe({
-                stream: createdStream.id,
-            }, (message) => {
-                assert.equal(message.id, id)
-                done()
-            })
+            // Make a new stream for this test to avoid conflicts
+            client.getOrCreateStream({
+                name: `StreamrClient client.subscribe (realtime) - ${Date.now()}`,
+            }).then((stream) => {
+                const sub = client.subscribe({
+                    stream: stream.id,
+                }, (message) => {
+                    assert.equal(message.id, id)
+                    client.unsubscribe(sub)
+                    sub.on('unsubscribed', () => {
+                        done()
+                    })
+                })
 
-            sub.on('subscribed', () => {
-                createdStream.produce({
-                    id,
+                sub.on('subscribed', () => {
+                    stream.produce({
+                        id,
+                    })
                 })
             })
         })
     })
 
     describe('Stream configuration', () => {
-        it('Stream.detectFields', () =>
-            // What does this return?
-            createdStream.detectFields().then((stream) => {
-                assert.deepEqual(
-                    stream.config.fields,
-                    [
-                        {
-                            name: 'foo',
-                            type: 'string',
-                        },
-                        {
-                            name: 'count',
-                            type: 'number',
-                        },
-                    ],
-                )
-            }))
+        it('Stream.detectFields', (done) => {
+            client.produceToStream(createdStream.id, {
+                foo: 'bar',
+                count: 0,
+            })
+
+            // Need time to propagate to storage
+            setTimeout(() => {
+                createdStream.detectFields().then((stream) => {
+                    assert.deepEqual(
+                        stream.config.fields,
+                        [
+                            {
+                                name: 'foo',
+                                type: 'string',
+                            },
+                            {
+                                name: 'count',
+                                type: 'number',
+                            },
+                        ],
+                    )
+                    done()
+                })
+            }, 5000)
+        }, 10000)
     })
 
     describe('Stream permissions', () => {

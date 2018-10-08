@@ -109,7 +109,7 @@ export default class Subscription extends EventEmitter {
             previousOffset > this.lastReceivedOffset
     }
 
-    handleMessage(msg, isResend) {
+    handleMessage(msg, isResend = false) {
         if (msg.previousOffset == null) {
             debug('handleMessage: prevOffset is null, gap detection is impossible! message: %o', msg)
         }
