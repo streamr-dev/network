@@ -72,7 +72,7 @@ module.exports = class Tracker extends EventEmitter {
             selectedRepeaters = [leaderNode]
             this.debug('stream %s not found; assigning %s as leader', streamId, getIdShort(source))
         } else {
-            selectedRepeaters = getPeersTopology(repeaterNodes, source, 3)
+            selectedRepeaters = getPeersTopology(repeaterNodes, source)
             this.debug('stream %s found; responding to %s with leader %s and repeaters %j',
                 streamId, getIdShort(source), getIdShort(leaderNode), selectedRepeaters.map((s) => getIdShort(s)))
         }

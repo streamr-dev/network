@@ -1,3 +1,4 @@
+const DataMessage = require('../../src/messages/DataMessage')
 const StreamManager = require('../../src/logic/StreamManager')
 
 describe('StreamManager', () => {
@@ -84,5 +85,48 @@ describe('StreamManager', () => {
             previousNumber: 2,
             number: 3
         })
+    })
+
+    test('cannot duplicate detect on own stream', () => {
+        manager.markCurrentNodeAsLeaderOf('stream-id')
+        expect(() => {
+            manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
+        }).toThrowError('Should not be leader of stream stream-id')
+    })
+
+    test('cannot duplicate detect on unknown stream', () => {
+        expect(() => {
+            manager.markNumbersAndCheckThatIsNotDuplicate('unknown-id', {}, 2, 1)
+        }).toThrowError('Unknown stream unknown-id')
+    })
+
+    test('can duplicate detect on other leader\'s stream', () => {
+        manager.markOtherNodeAsLeader('stream-id', '192.168.0.2')
+        expect(() => {
+            manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
+        }).not.toThrowError()
+    })
+
+    test('can duplicate detect on stream whose repeaters are only known', () => {
+        manager.markRepeaterNodes('stream-id', ['192.168.0.2', '192.168.0.4'])
+        expect(() => {
+            manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
+        }).not.toThrowError()
+    })
+
+    test('can duplicate detect on stream that is no longer own', () => {
+        manager.markCurrentNodeAsLeaderOf('stream-id')
+        manager.markOtherNodeAsLeader('stream-id', '192.168.0.2')
+        expect(() => {
+            manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
+        }).not.toThrowError()
+    })
+
+    test('can no longer duplicate detect after becoming leader of stream', () => {
+        manager.markOtherNodeAsLeader('stream-id', '192.168.0.2')
+        manager.markCurrentNodeAsLeaderOf('stream-id')
+        expect(() => {
+            manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
+        }).toThrowError('Should not be leader of stream stream-id')
     })
 })
