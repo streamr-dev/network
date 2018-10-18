@@ -1,4 +1,8 @@
 [{
-  "path": "/ip4/127.0.0.1/tcp/30300/ipfs/QmQ2zigjQikYnyYUSXZydNXrDRhBut2mubwJBaLXobMt3A",
-  "comment": "Streamr main tracker №1"
+  "path": "ws://127.0.0.1:30299",
+  "comment": "Streamr main WS tracker №1"
+},
+{
+  "path": "ws://127.0.0.1:30300",
+  "comment": "Streamr main WS tracker №2"
 }]

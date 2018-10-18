@@ -18,8 +18,6 @@
   ],
   "main": "./src/composition.js",
   "scripts": {
-    "generate-key": "node $NODE_DEBUG_OPTION bin/generate-private-key.js",
-    "postinstall": "npm run requirements-check",
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
     "pub": "node $NODE_DEBUG_OPTION publisher.js",
@@ -27,8 +25,7 @@
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "eslint": "eslint .",
-    "requirements-check": "node bin/check-versions.js"
+    "eslint": "eslint ."
   },
   "author": "",
   "license": "",
@@ -38,22 +35,10 @@
   },
   "engineStrict": true,
   "dependencies": {
-    "async": "2.6.1",
-    "check-node-version": "3.2.0",
     "debug": "4.0.1",
-    "defaults-deep": "0.2.4",
     "events": "3.0.0",
-    "libp2p": "0.23.1",
-    "libp2p-bootstrap": "0.9.3",
-    "libp2p-crypto": "0.14.0",
-    "libp2p-secio": "0.10.0",
-    "libp2p-spdy": "0.12.1",
-    "libp2p-tcp": "0.13.0",
-    "libp2p-websockets": "0.12.0",
-    "peer-id": "0.11.0",
-    "peer-info": "0.14.1",
-    "pull-pushable": "2.2.0",
-    "pull-stream": "3.6.9"
+    "uuid": "3.3.2",
+    "ws": "6.0.0"
   },
   "devDependencies": {
     "eslint": "5.6.0",

@@ -1,16 +1,11 @@
-const { createEndpoint } = require('./src/connection/Libp2pEndpoint')
-const Client = require('./src/logic/Client')
+const { startClient } = require('./src/composition')
 const NodeToNode = require('./src/protocol/NodeToNode')
 
 const port = process.argv[2] || 30301
 const nodeAddress = process.argv[3] || ''
 const streamIdParam = process.argv[4] || ''
 
-createEndpoint('127.0.0.1', port, '', true).then((endpoint) => {
-    endpoint.connect(nodeAddress)
-
-    const client = new Client(new NodeToNode(endpoint), nodeAddress)
-
+startClient('127.0.0.1', port, null, nodeAddress).then((client) => {
     const subscribeInterval = setInterval(() => {
         client.subscribe(streamIdParam)
     }, 1000)

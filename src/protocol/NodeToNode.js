@@ -1,7 +1,7 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
 const encoder = require('../helpers/MessageEncoder')
-const { getAddress, isNode } = require('../util')
+const { getAddress } = require('../util')
 const EndpointListener = require('./EndpointListener')
 
 const events = Object.freeze({
@@ -22,10 +22,12 @@ class NodeToNode extends EventEmitter {
 
     connectToNodes(peersMessage) {
         const nodes = peersMessage.getPeers()
+        const promises = []
         nodes.forEach((node) => {
             debug('connecting to new node %s', node)
-            this.endpoint.connect(node)
+            promises.push(this.endpoint.connect(node))
         })
+        return Promise.all(promises)
     }
 
     sendData(receiverNode, streamId, payload, number, previousNumber) {
@@ -41,11 +43,11 @@ class NodeToNode extends EventEmitter {
     }
 
     getAddress() {
-        return getAddress(this.endpoint.node.peerInfo)
+        return getAddress(this.endpoint.getAddress())
     }
 
     stop(cb) {
-        this.endpoint.node.stop(() => cb())
+        this.endpoint.stop(cb)
     }
 
     onPeerConnected(peer) {
@@ -70,13 +72,8 @@ class NodeToNode extends EventEmitter {
         }
     }
 
-    async onPeerDiscovered(peer) {
-    }
-
     async onPeerDisconnected(peer) {
-        if (isNode(peer)) {
-            this.emit(events.NODE_DISCONNECTED, peer)
-        }
+        this.emit(events.NODE_DISCONNECTED, peer)
     }
 }
 

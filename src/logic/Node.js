@@ -1,4 +1,5 @@
 const { EventEmitter } = require('events')
+const uuidv4 = require('uuid/v4')
 const createDebug = require('debug')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
@@ -17,8 +18,12 @@ const events = Object.freeze({
 })
 
 class Node extends EventEmitter {
-    constructor(trackerNode, nodeToNode) {
+    constructor(id, trackerNode, nodeToNode) {
         super()
+
+        this.nodeRequestInterval = null
+        this.trackerDiscoveryInterval = null
+        this.bootstrapTrackers = []
 
         this.streams = new StreamManager()
         this.subscribers = new SubscriberManager(
@@ -31,8 +36,8 @@ class Node extends EventEmitter {
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
         })
 
-        this.id = getIdShort(nodeToNode.endpoint.node.peerInfo) // TODO: better way?
-        this.tracker = null
+        this.id = id || uuidv4()
+        this.trackers = new Map()
 
         this.protocols = {
             trackerNode,
@@ -40,10 +45,13 @@ class Node extends EventEmitter {
         }
 
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
-        this.protocols.trackerNode.on(TrackerNode.events.NODE_LIST_RECEIVED, (peersMessage) => this.protocols.nodeToNode.connectToNodes(peersMessage))
+        this.protocols.trackerNode.on(TrackerNode.events.NODE_LIST_RECEIVED, (peersMessage) => {
+            this._clearNodeRequestInterval()
+            this.protocols.nodeToNode.connectToNodes(peersMessage)
+        })
         this.protocols.trackerNode.on(TrackerNode.events.STREAM_ASSIGNED, (streamId) => this.addOwnStream(streamId))
         this.protocols.trackerNode.on(TrackerNode.events.STREAM_INFO_RECEIVED, (streamMessage) => this.addKnownStreams(streamMessage))
-        this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, () => this.onTrackerDisconnected())
+        this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, (tracker) => this.onTrackerDisconnected(tracker))
         this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (dataMessage) => this.onDataReceived(dataMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage) => this.onUnsubscribeRequest(unsubscribeMessage))
@@ -56,18 +64,20 @@ class Node extends EventEmitter {
     }
 
     onConnectedToTracker(tracker) {
-        this.debug('connected to tracker %s', getIdShort(tracker))
-        this.tracker = tracker
-        this._sendStatus()
-        this.debug('requesting more peers from tracker %s', getIdShort(tracker))
-        this.protocols.trackerNode.requestMorePeers()
-        this._handlePendingSubscriptions()
+        if (this._isTracker(tracker)) {
+            this.debug('connected to tracker %s', getIdShort(tracker))
+            this.trackers.set(tracker, tracker)
+            this._sendStatus(tracker)
+            this.debug('requesting more peers from tracker %s', getIdShort(tracker))
+            this.requestMorePeers()
+            this._handlePendingSubscriptions()
+        }
     }
 
     addOwnStream(streamId) {
         this.debug('set self as leader of stream %s', streamId)
         this.streams.markCurrentNodeAsLeaderOf(streamId)
-        this._sendStatus()
+        this._sendStatusToAllTrackers()
         this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
     }
@@ -91,6 +101,7 @@ class Node extends EventEmitter {
         const data = dataMessage.getData()
         const number = dataMessage.getNumber()
         const previousNumber = dataMessage.getPreviousNumber()
+        const tracker = this._getTracker()
 
         if (number == null && previousNumber != null) {
             this.debug('received invalid data with null number but non-null previous number %s; dropping', previousNumber)
@@ -112,7 +123,7 @@ class Node extends EventEmitter {
             } else {
                 this._sendToSubscribers(dataMessage)
             }
-        } else if (this.tracker === null) {
+        } else if (tracker === null) {
             this.debug('no trackers available; attempted to ask about stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
         } else {
@@ -122,8 +133,8 @@ class Node extends EventEmitter {
                 number,
                 previousNumber
             })
-            this.debug('ask tracker %s who is responsible for stream %s', getIdShort(this.tracker), streamId)
-            this.protocols.trackerNode.requestStreamInfo(this.tracker, streamId)
+            this.debug('ask tracker %s who is responsible for stream %s', getIdShort(tracker), streamId)
+            this.protocols.trackerNode.requestStreamInfo(tracker, streamId)
         }
     }
 
@@ -145,8 +156,7 @@ class Node extends EventEmitter {
 
     onSubscribeRequest(subscribeMessage) {
         this.subscribers.addSubscriber(subscribeMessage.getStreamId(), getAddress(subscribeMessage.getSource()))
-        this.debug('node %s added as a subscriber for stream %s',
-            getIdShort(subscribeMessage.getSource()), subscribeMessage.getStreamId())
+        this.debug('node %s added as a subscriber for stream %s', getIdShort(subscribeMessage.getSource()), subscribeMessage.getStreamId())
     }
 
     onUnsubscribeRequest(unsubscribeMessage) {
@@ -159,13 +169,15 @@ class Node extends EventEmitter {
     }
 
     subscribeToStream(streamId) {
+        const tracker = this._getTracker()
+
         if (this.subscriptions.hasSubscription(streamId)) {
             this.debug('already subscribed to stream %s', streamId)
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
         } else if (this.streams.isLeaderOf(streamId)) {
             this.debug('stream %s is own stream; new subscriber will receive data', streamId)
             this.subscriptions.addSubscription(streamId) // Subscription to "self"
-            this._sendStatus()
+            this._sendStatusToAllTrackers()
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
         } else if (this.streams.isAnyRepeaterKnownFor(streamId)) {
             const repeaterAddresses = this.streams.getRepeatersFor(streamId)
@@ -175,15 +187,15 @@ class Node extends EventEmitter {
                 this.protocols.nodeToNode.sendSubscribe(address, streamId)
             })
             this.subscriptions.addSubscription(streamId) // Assuming subscribes went through
-            this._sendStatus()
+            this._sendStatusToAllTrackers()
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
-        } else if (this.tracker === null) {
+        } else if (tracker === null) {
             this.debug('no trackers available; attempted to ask about stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
             this.subscriptions.addPendingSubscription(streamId)
         } else {
             this.debug('unknown stream %s; asking tracker about any info', streamId)
-            this.protocols.trackerNode.requestStreamInfo(this.tracker, streamId)
+            this.protocols.trackerNode.requestStreamInfo(tracker, streamId)
             this.subscriptions.addPendingSubscription(streamId)
         }
     }
@@ -194,8 +206,9 @@ class Node extends EventEmitter {
 
     stop(cb) {
         this.debug('stopping')
+        this._clearTrackerDiscoveryInterval()
+        this._clearNodeRequestInterval()
         this.messageBuffer.clear()
-        this.protocols.trackerNode.stop(cb)
         this.protocols.nodeToNode.stop(cb)
     }
 
@@ -207,24 +220,32 @@ class Node extends EventEmitter {
         }
     }
 
-    _sendStatus() {
-        if (this.tracker) {
-            this.protocols.trackerNode.sendStatus(this.tracker, this._getStatus())
-            this.debug('status sent to tracker %s', getIdShort(this.tracker))
-        } else {
-            this.debug('cannot send status because tracker is not set')
-        }
+    _sendStatusToAllTrackers() {
+        this.trackers.forEach((tracker, _) => this._sendStatus(tracker))
+    }
+
+    _sendStatus(tracker) {
+        this.debug('sending status to tracker %s', getIdShort(tracker))
+        this.protocols.trackerNode.sendStatus(tracker, this._getStatus())
     }
 
     onNodeDisconnected(node) {
-        const nodeAddress = getAddress(node)
-        this.subscribers.removeSubscriberFromAllStreams(nodeAddress)
-        this.debug('removed all subscriptions of node %s', getIdShort(node))
+        if (this._isNode(node)) {
+            const nodeAddress = getAddress(node)
+            this.subscribers.removeSubscriberFromAllStreams(nodeAddress)
+            this.debug('removed all subscriptions of node %s', getIdShort(node))
+        }
     }
 
-    onTrackerDisconnected() {
-        this.tracker = null
-        this.debug('no tracker available')
+    onTrackerDisconnected(tracker) {
+        if (this._isTracker(tracker)) {
+            this.trackers.delete(tracker)
+
+            if (this.trackers.size === 0) {
+                this.debug('no tracker available')
+                this._clearNodeRequestInterval()
+            }
+        }
     }
 
     _handleBufferedMessages(streamId) {
@@ -246,6 +267,56 @@ class Node extends EventEmitter {
         if (this.subscriptions.hasPendingSubscription(pendingStreamId)) {
             this.subscribeToStream(pendingStreamId)
         }
+    }
+
+    _clearNodeRequestInterval() {
+        if (this.nodeRequestInterval) {
+            clearInterval(this.nodeRequestInterval)
+            this.nodeRequestInterval = null
+        }
+    }
+
+    setBootstrapTrackers(bootstrapTrackers) {
+        // TODO validate ws path
+        this.bootstrapTrackers = bootstrapTrackers
+
+        const discoverTrackers = () => {
+            this.bootstrapTrackers.forEach((tracker) => {
+                this.protocols.trackerNode.connectToTracker(tracker)
+            })
+        }
+
+        discoverTrackers()
+        this.trackerDiscoveryInterval = setInterval(discoverTrackers, 5000)
+    }
+
+    _clearTrackerDiscoveryInterval() {
+        if (this.trackerDiscoveryInterval) {
+            clearInterval(this.trackerDiscoveryInterval)
+            this.trackerDiscoveryInterval = null
+        }
+    }
+
+    requestMorePeers() {
+        const tracker = this._getTracker()
+        if (this.nodeRequestInterval === null) {
+            this.protocols.trackerNode.requestPeers(tracker)
+            this.nodeRequestInterval = setInterval(() => {
+                this.protocols.trackerNode.requestPeers(this._getTracker())
+            }, 5000)
+        }
+    }
+
+    _getTracker() {
+        return this.trackers.get([...this.trackers.keys()][Math.floor(Math.random() * this.trackers.size)])
+    }
+
+    _isTracker(tracker) {
+        return this.bootstrapTrackers.includes(tracker)
+    }
+
+    _isNode(peer) {
+        return !this._isTracker(peer)
     }
 }
 

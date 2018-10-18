@@ -1,4 +1,3 @@
-const assert = require('assert')
 const { startNetworkNode } = require('../../src/composition')
 const { LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 

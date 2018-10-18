@@ -1,15 +1,17 @@
 const { EventEmitter } = require('events')
+const uuidv4 = require('uuid/v4')
 const createDebug = require('debug')
 const { getAddress, getIdShort } = require('../util')
 const TrackerServer = require('../protocol/TrackerServer')
 const { getPeersTopology } = require('../helpers/TopologyStrategy')
 
 module.exports = class Tracker extends EventEmitter {
-    constructor(trackerServer) {
+    constructor(id, trackerServer) {
         super()
 
         this.nodes = new Map()
-        this.id = getIdShort(trackerServer.endpoint.node.peerInfo) // TODO: Better way?
+
+        this.id = id || uuidv4()
         this.protocols = {
             trackerServer
         }
@@ -36,7 +38,7 @@ module.exports = class Tracker extends EventEmitter {
 
     processNodeStatus(statusMessage) {
         this.debug('received from %s status %s', getIdShort(statusMessage.getSource()), JSON.stringify(statusMessage.getStatus()))
-        this.nodes.set(getAddress(statusMessage.getSource()), statusMessage.getStatus())
+        this.nodes.set(statusMessage.getSource(), statusMessage.getStatus())
     }
 
     onNodeDisconnected(node) {
@@ -79,7 +81,7 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     stop(cb) {
-        this.debug('stopping')
+        this.debug('stopping tracker')
         this.protocols.trackerServer.stop(cb)
     }
 

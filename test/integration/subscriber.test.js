@@ -1,5 +1,5 @@
 const { startClient, startNode, startTracker } = require('../../src/composition')
-const { callbackToPromise, BOOTNODES } = require('../../src/util')
+const { callbackToPromise } = require('../../src/util')
 const { waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
@@ -14,25 +14,28 @@ describe('Selecting leader for the stream and sending messages to two subscriber
     let publisher
     let subscriber1
     let subscriber2
+    const BOOTNODES = []
 
     const streamId = 'stream-2018'
 
     it('should be select leader and get two active subscribers', async (done) => {
-        tracker = await startTracker(LOCALHOST, 32300)
+        tracker = await startTracker(LOCALHOST, 32300, 'tracker')
         BOOTNODES.push(tracker.getAddress())
 
         await Promise.all([
-            startNode(LOCALHOST, 32312, null),
-            startNode(LOCALHOST, 32313, null)
+            startNode(LOCALHOST, 32312, 'node1'),
+            startNode(LOCALHOST, 32313, 'node2')
         ]).then((res) => {
             [nodeOne, nodeTwo] = res
+            nodeOne.setBootstrapTrackers(BOOTNODES)
+            nodeTwo.setBootstrapTrackers(BOOTNODES)
         })
 
-        publisher = await startClient(LOCALHOST, 32301, nodeOne.protocols.nodeToNode.getAddress())
+        publisher = await startClient(LOCALHOST, 32301, 'publisher1', nodeOne.protocols.nodeToNode.getAddress())
 
         await Promise.all([
-            startClient(LOCALHOST, 32302, nodeTwo.protocols.nodeToNode.getAddress()),
-            startClient(LOCALHOST, 32303, nodeTwo.protocols.nodeToNode.getAddress())
+            startClient(LOCALHOST, 32302, 'subscriber1', nodeTwo.protocols.nodeToNode.getAddress()),
+            startClient(LOCALHOST, 32303, 'subscriber2', nodeTwo.protocols.nodeToNode.getAddress())
         ]).then((res) => {
             [subscriber1, subscriber2] = res
         })

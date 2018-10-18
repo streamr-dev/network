@@ -1,12 +1,13 @@
 const { EventEmitter } = require('events')
+const uuidv4 = require('uuid/v4')
 const createDebug = require('debug')
 const { getIdShort } = require('../util')
 
 module.exports = class Client extends EventEmitter {
-    constructor(nodeToNode, nodeAddress) {
+    constructor(id, nodeToNode, nodeAddress) {
         super()
 
-        this.id = getIdShort(nodeToNode.endpoint.node.peerInfo) // TODO: better way?
+        this.id = id || uuidv4()
         this.nodeAddress = nodeAddress
         this.protocols = {
             nodeToNode
@@ -14,6 +15,10 @@ module.exports = class Client extends EventEmitter {
 
         this.debug = createDebug(`streamr:logic:client:${this.id}`)
         this.debug('node: %s is running', this.id)
+
+        if (this.nodeAddress) {
+            this.protocols.nodeToNode.endpoint.connect(this.nodeAddress)
+        }
     }
 
     publish(streamId, data) {
@@ -35,6 +40,7 @@ module.exports = class Client extends EventEmitter {
     }
 
     stop(cb) {
+        this.debug('stopping client')
         this.protocols.nodeToNode.stop(cb)
     }
 

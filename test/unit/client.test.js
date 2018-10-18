@@ -1,18 +1,12 @@
-const Client = require('../../src/logic/Client')
-const { createEndpoint } = require('../../src/connection/Libp2pEndpoint')
-const { PRIVATE_KEY, LOCALHOST } = require('../util')
-const NodeToNode = require('../../src/protocol/NodeToNode')
+const { LOCALHOST } = require('../util')
+const { startClient } = require('../../src/composition')
 
 describe('publisher creation', () => {
-    it('should be able to start and stop successfully', (done) => {
-        createEndpoint(LOCALHOST, 30335, PRIVATE_KEY).then((endpoint) => {
-            const client = new Client(new NodeToNode(endpoint))
-
-            expect(client.getAddress()).toEqual('/ip4/127.0.0.1/tcp/30335/ipfs/QmQ2zigjQikYnyYUSXZydNXrDRhBut2mubwJBaLXobMt3A')
-
-            client.stop(() => done())
-        }).catch((err) => {
-            throw err
-        })
+    it('should be able to start and stop successfully', async (done) => {
+        startClient(LOCALHOST, 30335, 'publisher1', null)
+            .then((client) => {
+                expect(client.protocols.nodeToNode.endpoint.getAddress()).toEqual('ws://127.0.0.1:30335')
+                client.stop(() => done())
+            })
     })
 })
