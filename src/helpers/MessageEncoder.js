@@ -32,7 +32,7 @@ const decode = (source, message) => {
             return new StreamMessage(payload.streamId, payload.leaderAddress, payload.repeaterAddresses, source)
 
         case msgTypes.DATA:
-            return new DataMessage(payload.streamId, payload.data, payload.number, payload.previousNumber)
+            return new DataMessage(payload.streamId, payload.data, payload.number, payload.previousNumber, source)
 
         case msgTypes.SUBSCRIBE:
             return new SubscribeMessage(payload, source)
