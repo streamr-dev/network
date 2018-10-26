@@ -113,7 +113,7 @@ class WsEndpoint extends EventEmitter {
         this.emit(Endpoint.events.PEER_CONNECTED, address)
     }
 
-    async stop(callback = true) {
+    async stop(callback = () => {}) {
         // close all connections
         this.connections.forEach((connection) => {
             connection.terminate()
