@@ -294,6 +294,9 @@ class Node extends EventEmitter {
         const discoverTrackers = () => {
             this.bootstrapTrackers.forEach((tracker) => {
                 this.protocols.trackerNode.connectToTracker(tracker)
+                    .catch((err) => {
+                        console.error(`Could not connect to tracker ${tracker} because '${err}'`)
+                    })
             })
         }
 
