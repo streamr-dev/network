@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-protocol-js.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-protocol-js)
+
 This repository contains ES6 JS implementations of the Streamr [client-to-node protocol](PROTOCOL.md) messages. This is shared code used by:
  
  - [streamr-client](https://github.com/streamr-dev/streamr-client)
