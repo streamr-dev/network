@@ -13,10 +13,3 @@ jobs:
   - stage: Unit tests
     script:
     - npm run test-unit
-  - stage: Integration tests
-    script:
-    - sudo /etc/init.d/mysql stop
-    - git clone https://github.com/streamr-dev/streamr-docker-dev.git
-    - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 5"
-    - sleep 5m
-    - npm run test-integration
