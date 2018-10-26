@@ -12,4 +12,4 @@ jobs:
   include:
   - stage: Unit tests
     script:
-    - npm run test-unit
+    - npm run test
