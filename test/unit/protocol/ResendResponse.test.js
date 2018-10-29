@@ -1,7 +1,7 @@
 import assert from 'assert'
-import ResendResponse from '../../../src/protocol/ResendResponse'
+import ResendResponseMessage from '../../../src/protocol/ResendResponseMessage'
 
-describe('ResendResponse', () => {
+describe('ResendResponseMessage', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
             const msg = {
@@ -9,9 +9,9 @@ describe('ResendResponse', () => {
                 partition: 0,
                 sub: '0',
             }
-            const result = ResendResponse.deserialize(JSON.stringify(msg))
+            const result = ResendResponseMessage.deserialize(JSON.stringify(msg))
 
-            assert(result instanceof ResendResponse)
+            assert(result instanceof ResendResponseMessage)
             assert.equal(result.streamId, msg.stream)
             assert.equal(result.streamPartition, msg.partition)
             assert.equal(result.subId, msg.sub)
@@ -26,7 +26,7 @@ describe('ResendResponse', () => {
                 sub: '0',
             }
 
-            const serialized = new ResendResponse('id', 0, 0).serialize()
+            const serialized = new ResendResponseMessage('id', 0, 0).serialize()
 
             assert(typeof serialized === 'string')
             assert.deepEqual(msg, JSON.parse(serialized))

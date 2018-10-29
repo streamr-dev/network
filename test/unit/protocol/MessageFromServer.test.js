@@ -1,6 +1,9 @@
+/* eslint-disable no-new */
 import assert from 'assert'
 import MessageFromServer from '../../../src/protocol/MessageFromServer'
 import StreamMessage from '../../../src/protocol/StreamMessage'
+import StreamAndPartition from '../../../src/protocol/StreamAndPartition'
+import ResendResponseMessage from '../../../src/protocol/ResendResponseMessage'
 import BroadcastMessage from '../../../src/protocol/BroadcastMessage'
 import UnicastMessage from '../../../src/protocol/UnicastMessage'
 import SubscribeResponse from '../../../src/protocol/SubscribeResponse'
@@ -9,223 +12,155 @@ import ResendResponseResending from '../../../src/protocol/ResendResponseResendi
 import ResendResponseResent from '../../../src/protocol/ResendResponseResent'
 import ResendResponseNoResend from '../../../src/protocol/ResendResponseNoResend'
 import ErrorResponse from '../../../src/protocol/ErrorResponse'
+import ErrorMessage from '../../../src/protocol/ErrorMessage'
+import ValidationError from '../../../src/errors/ValidationError'
+
+const examplesByType = {
+    '0': [0, 0, null, [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+        941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']],
+    '1': [0, 1, 'subId', [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+        941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']],
+    '2': [0, 2, null, {
+        stream: 'id',
+        partition: 0,
+    }],
+    '3': [0, 3, null, {
+        stream: 'id',
+        partition: 0,
+    }],
+    '4': [0, 4, null, {
+        stream: 'id',
+        partition: 0,
+        sub: 'subId',
+    }],
+    '5': [0, 5, null, {
+        stream: 'id',
+        partition: 0,
+        sub: 'subId',
+    }],
+    '6': [0, 6, null, {
+        stream: 'id',
+        partition: 0,
+        sub: 'subId',
+    }],
+    '7': [0, 7, null, {
+        error: 'foo',
+    }],
+}
 
 describe('MessageFromServer', () => {
     describe('version 0', () => {
         describe('deserialize', () => {
-            it('correctly parses broadcast messages', () => {
-                const msg = [0, BroadcastMessage.getMessageType(), null, [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
-                    941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']]
-
-                const result = MessageFromServer.deserialize(JSON.stringify(msg))
-
-                assert(result instanceof MessageFromServer)
-                assert(result.payload instanceof BroadcastMessage)
+            it('BroadcastMessage', () => {
+                const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[0]))
+                assert(result instanceof BroadcastMessage)
+                assert(result.payload instanceof StreamMessage)
             })
 
-            it('correctly parses unicast messages', () => {
-                const msg = [0, UnicastMessage.getMessageType(), 'subId', [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
-                    941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']]
-
-                const result = MessageFromServer.deserialize(JSON.stringify(msg))
-
-                assert(result instanceof MessageFromServer)
-                assert(result.payload instanceof UnicastMessage)
+            it('UnicastMessage', () => {
+                const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[1]))
+                assert(result instanceof UnicastMessage)
+                assert(result.payload instanceof StreamMessage)
                 assert.equal(result.subId, 'subId')
             })
 
-            it('correctly parses subscribed messages', () => {
-                const msg = [0, SubscribeResponse.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                }]
-
-                const result = MessageFromServer.deserialize(JSON.stringify(msg))
-
-                assert(result instanceof MessageFromServer)
-                assert(result.payload instanceof SubscribeResponse)
-                assert.equal(result.subId, 'subId')
+            it('SubscribeResponse', () => {
+                const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[2]))
+                assert(result instanceof SubscribeResponse)
+                assert(result.payload instanceof StreamAndPartition)
             })
 
-            it('correctly parses unsubscribed messages', () => {
-                const msg = [0, UnsubscribeResponse.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                }]
-
-                const result = MessageFromServer.deserialize(JSON.stringify(msg))
-
-                assert(result instanceof MessageFromServer)
-                assert(result.payload instanceof UnsubscribeResponse)
-                assert.equal(result.subId, 'subId')
+            it('UnsubscribeResponse', () => {
+                const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[3]))
+                assert(result instanceof UnsubscribeResponse)
+                assert(result.payload instanceof StreamAndPartition)
             })
 
-            it('correctly parses resending messages', () => {
-                const msg = [0, ResendResponseResending.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                    sub: 'subId',
-                }]
-
-                const result = MessageFromServer.deserialize(JSON.stringify(msg))
-
-                assert(result instanceof MessageFromServer)
-                assert(result.payload instanceof ResendResponseResending)
-                assert.equal(result.subId, 'subId')
+            it('ResendResponseResending', () => {
+                const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[4]))
+                assert(result instanceof ResendResponseResending)
+                assert(result.payload instanceof ResendResponseMessage)
+                assert.equal(result.payload.subId, 'subId')
             })
 
-            it('correctly parses resent messages', () => {
-                const msg = [0, ResendResponseResent.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                    sub: 'subId',
-                }]
-
-                const result = MessageFromServer.deserialize(JSON.stringify(msg))
-
-                assert(result instanceof MessageFromServer)
-                assert(result.payload instanceof ResendResponseResent)
-                assert.equal(result.subId, 'subId')
+            it('ResendResponseResent', () => {
+                const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[5]))
+                assert(result instanceof ResendResponseResent)
+                assert(result.payload instanceof ResendResponseMessage)
+                assert.equal(result.payload.subId, 'subId')
             })
 
-            it('correctly parses no_resend messages', () => {
-                const msg = [0, ResendResponseNoResend.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                    sub: 'subId',
-                }]
-
-                const result = MessageFromServer.deserialize(JSON.stringify(msg))
-
-                assert(result instanceof MessageFromServer)
-                assert(result.payload instanceof ResendResponseNoResend)
-                assert.equal(result.subId, 'subId')
+            it('ResendResponseNoResend', () => {
+                const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[6]))
+                assert(result instanceof ResendResponseNoResend)
+                assert(result.payload instanceof ResendResponseMessage)
+                assert.equal(result.payload.subId, 'subId')
             })
 
-            it('correctly parses error messages', () => {
-                const msg = [0, ErrorResponse.getMessageType(), null, {
-                    error: 'foo',
-                }]
-
-                const result = MessageFromServer.deserialize(JSON.stringify(msg))
-
-                assert(result instanceof MessageFromServer)
-                assert(result.payload instanceof ErrorResponse)
+            it('ErrorResponse', () => {
+                const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[7]))
+                assert(result instanceof ErrorResponse)
+                assert(result.payload instanceof ErrorMessage)
+                assert.equal(result.payload.error, 'foo')
             })
         })
 
         describe('serialize', () => {
-            it('correctly serializes broadcast messages', () => {
-                const msg = [0, BroadcastMessage.getMessageType(), null, [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
-                    941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']]
-
-                const serialized = new MessageFromServer(BroadcastMessage.deserialize(msg[3])).serialize()
-
+            let serialized
+            beforeEach(() => {
+                serialized = null
+            })
+            afterEach(() => {
                 assert(typeof serialized === 'string')
-                assert.deepEqual(msg, JSON.parse(serialized))
+            })
+
+            it('correctly serializes broadcast messages', () => {
+                serialized = MessageFromServer.deserialize(examplesByType[0]).serialize()
+                assert.deepEqual(examplesByType[0], JSON.parse(serialized))
             })
 
             it('correctly serializes unicast messages', () => {
-                const msg = [0, UnicastMessage.getMessageType(), 'subId', [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
-                    941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']]
-
-                const serialized = new MessageFromServer(
-                    UnicastMessage.deserialize(msg[3]),
-                    'subId',
-                ).serialize()
-
-                assert(typeof serialized === 'string')
-                assert.deepEqual(msg, JSON.parse(serialized))
+                serialized = MessageFromServer.deserialize(examplesByType[1]).serialize()
+                assert.deepEqual(examplesByType[1], JSON.parse(serialized))
             })
 
             it('correctly serializes subscribed messages', () => {
-                const msg = [0, SubscribeResponse.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                }]
-
-                const serialized = new MessageFromServer(
-                    SubscribeResponse.deserialize(msg[3]),
-                    'subId',
-                ).serialize()
-
-                assert(typeof serialized === 'string')
-                assert.deepEqual(msg, JSON.parse(serialized))
+                serialized = MessageFromServer.deserialize(examplesByType[2]).serialize()
+                assert.deepEqual(examplesByType[2], JSON.parse(serialized))
             })
 
             it('correctly serializes unsubscribed messages', () => {
-                const msg = [0, UnsubscribeResponse.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                }]
-
-                const serialized = new MessageFromServer(
-                    UnsubscribeResponse.deserialize(msg[3]),
-                    'subId',
-                ).serialize()
-
-                assert(typeof serialized === 'string')
-                assert.deepEqual(msg, JSON.parse(serialized))
+                serialized = MessageFromServer.deserialize(examplesByType[3]).serialize()
+                assert.deepEqual(examplesByType[3], JSON.parse(serialized))
             })
 
             it('correctly serializes resending messages', () => {
-                const msg = [0, ResendResponseResending.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                    sub: 'subId',
-                }]
-
-                const serialized = new MessageFromServer(
-                    ResendResponseResending.deserialize(msg[3]),
-                    'subId',
-                ).serialize()
-
-                assert(typeof serialized === 'string')
-                assert.deepEqual(msg, JSON.parse(serialized))
+                serialized = MessageFromServer.deserialize(examplesByType[4]).serialize()
+                assert.deepEqual(examplesByType[4], JSON.parse(serialized))
             })
 
             it('correctly serializes resent messages', () => {
-                const msg = [0, ResendResponseResent.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                    sub: 'subId',
-                }]
-
-                const serialized = new MessageFromServer(
-                    ResendResponseResent.deserialize(msg[3]),
-                    'subId',
-                ).serialize()
-
-                assert(typeof serialized === 'string')
-                assert.deepEqual(msg, JSON.parse(serialized))
+                serialized = MessageFromServer.deserialize(examplesByType[5]).serialize()
+                assert.deepEqual(examplesByType[5], JSON.parse(serialized))
             })
 
             it('correctly serializes no_resend messages', () => {
-                const msg = [0, ResendResponseNoResend.getMessageType(), 'subId', {
-                    stream: 'id',
-                    partition: 0,
-                    sub: 'subId',
-                }]
-
-                const serialized = new MessageFromServer(
-                    ResendResponseNoResend.deserialize(msg[3]),
-                    'subId',
-                ).serialize()
-
-                assert(typeof serialized === 'string')
-                assert.deepEqual(msg, JSON.parse(serialized))
+                serialized = MessageFromServer.deserialize(examplesByType[6]).serialize()
+                assert.deepEqual(examplesByType[6], JSON.parse(serialized))
             })
 
             it('correctly serializes error messages', () => {
-                const msg = [0, ErrorResponse.getMessageType(), null, {
-                    error: 'foo',
-                }]
-
-                const serialized = new MessageFromServer(ErrorResponse.deserialize(msg[3])).serialize()
-
-                assert(typeof serialized === 'string')
-                assert.deepEqual(msg, JSON.parse(serialized))
+                serialized = MessageFromServer.deserialize(examplesByType[7]).serialize()
+                assert.deepEqual(examplesByType[7], JSON.parse(serialized))
             })
+        })
+    })
+
+    describe('constructor', () => {
+        it('throws if conflicting payload is passed', () => {
+            assert.throws(() => {
+                new MessageFromServer(0, StreamAndPartition.deserialize(examplesByType[2][3]))
+            }, (err) => err instanceof ValidationError)
         })
     })
 })

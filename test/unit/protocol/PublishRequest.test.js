@@ -8,7 +8,9 @@ describe('PublishRequest', () => {
                 type: 'publish',
                 stream: 'streamId',
                 authKey: 'authKey',
-                msg: '{}',
+                msg: JSON.stringify({
+                    foo: 'bar',
+                }),
                 ts: 1533924184016,
                 pkey: 'deviceId',
             }

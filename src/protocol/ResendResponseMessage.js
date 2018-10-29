@@ -1,6 +1,6 @@
 import StreamAndPartition from './StreamAndPartition'
 
-module.exports = class ResendResponse extends StreamAndPartition {
+module.exports = class ResendResponseMessage extends StreamAndPartition {
     constructor(streamId, streamPartition, subId) {
         super(streamId, streamPartition)
         if (subId == null) {

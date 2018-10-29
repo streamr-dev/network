@@ -1,29 +1,33 @@
 import UnsupportedVersionError from '../errors/UnsupportedVersionError'
-import BroadcastMessage from './BroadcastMessage'
-import UnicastMessage from './UnicastMessage'
-import SubscribeResponse from './SubscribeResponse'
-import UnsubscribeResponse from './UnsubscribeResponse'
-import ResendResponseResending from './ResendResponseResending'
-import ResendResponseResent from './ResendResponseResent'
-import ResendResponseNoResend from './ResendResponseNoResend'
-import ErrorResponse from './ErrorResponse'
+import ValidationError from '../errors/ValidationError'
+import ParseUtil from '../utils/ParseUtil'
 
-const payloadClassByMessageType = [
-    BroadcastMessage, // 0: broadcast
-    UnicastMessage, // 1: unicast
-    SubscribeResponse, // 2: subscribed
-    UnsubscribeResponse, // 3: unsubscribed
-    ResendResponseResending, // 4: resending
-    ResendResponseResent, // 5: resent
-    ResendResponseNoResend, // 6: no_resend
-    ErrorResponse, // 7: error
-]
+const messageClassByMessageType = {}
 
-class MessageFromServer {
-    constructor(payload, subId) {
-        this.messageType = payload.constructor.getMessageType() // call static method
+module.exports = class MessageFromServer {
+    constructor(messageType, payload, subId) {
+        this.messageType = messageType
         this.payload = payload
         this.subId = subId
+
+        const messageClass = messageClassByMessageType[messageType]
+        if (!(payload instanceof messageClass.getPayloadClass())) {
+            throw new ValidationError(`An unexpected payload was passed to ${
+                messageClass.getMessageName()
+            }! Expected: ${
+                messageClass.getPayloadClass()
+            }, was: ${
+                payload.constructor.name
+            }`)
+        }
+    }
+
+    static getPayloadClass() {
+        throw new Error('Abstract method called - please override in subclass!')
+    }
+
+    static getMessageName() {
+        throw new Error('Abstract method called - please override in subclass!')
     }
 
     toObject(version = 0) {
@@ -37,15 +41,21 @@ class MessageFromServer {
         return JSON.stringify(this.toObject(version))
     }
 
-    static deserialize(stringOrArray) {
-        const message = (typeof stringOrArray === 'string' ? JSON.parse(stringOrArray) : stringOrArray)
-
-        if (message[0] === 0) {
-            const payload = payloadClassByMessageType[message[1]].deserialize(message[3])
-            return new MessageFromServer(payload, message[2])
+    static checkVersion(message) {
+        if (message[0] !== 0) {
+            throw UnsupportedVersionError(message[0], 'Supported versions: [0]')
         }
-        throw UnsupportedVersionError(message[0], 'Supported versions: [0]')
+    }
+
+    static deserialize(stringOrArray) {
+        const message = ParseUtil.ensureParsed(stringOrArray)
+        this.checkVersion(message)
+        const deserializedPayload = messageClassByMessageType[message[1]].getPayloadClass().deserialize(message[3])
+        return new messageClassByMessageType[message[1]](deserializedPayload, message[2])
+    }
+
+    // Need to register subclasses like this to avoid circular dependencies
+    static registerMessageClass(clazz, messageType) {
+        messageClassByMessageType[messageType] = clazz
     }
 }
-
-module.exports = MessageFromServer

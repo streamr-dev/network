@@ -16,6 +16,8 @@ import UnsubscribeResponse from './protocol/UnsubscribeResponse'
 import InvalidJsonError from './errors/InvalidJsonError'
 import UnsupportedVersionError from './errors/UnsupportedVersionError'
 
+import TimestampUtil from './utils/TimestampUtil'
+
 module.exports = {
     MessageFromServer,
     StreamMessage,
@@ -34,5 +36,8 @@ module.exports = {
     Errors: {
         InvalidJsonError,
         UnsupportedVersionError,
+    },
+    Utils: {
+        TimestampUtil,
     },
 }

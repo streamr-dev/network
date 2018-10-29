@@ -1,10 +1,16 @@
+import ValidationError from '../errors/ValidationError'
 import WebsocketRequest from './WebsocketRequest'
 
 const TYPE = 'subscribe'
 
 class SubscribeRequest extends WebsocketRequest {
-    constructor(streamId, streamPartition, apiKey) {
+    constructor(streamId, streamPartition = 0, apiKey) {
         super(TYPE, streamId, apiKey)
+
+        if (streamPartition == null) {
+            throw new ValidationError('Stream partition not given!')
+        }
+
         this.streamPartition = streamPartition
     }
 

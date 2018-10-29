@@ -1,30 +1,19 @@
-module.exports = class ErrorResponse {
-    constructor(errorMessage) {
-        this.errorMessage = errorMessage
-    }
+import MessageFromServer from './MessageFromServer'
+import ErrorMessage from './ErrorMessage'
 
-    static getMessageType() {
-        return 7
+const TYPE = 7
+
+class ErrorResponse extends MessageFromServer {
+    constructor(errorMessage) {
+        super(TYPE, errorMessage)
     }
     static getMessageName() {
         return 'ErrorResponse'
     }
-
-    toObject() {
-        return {
-            error: this.errorMessage,
-        }
-    }
-
-    serialize() {
-        return JSON.stringify(this.toObject())
-    }
-
-    static deserialize(stringOrObject) {
-        const msg = (typeof stringOrObject === 'string' ? JSON.parse(stringOrObject) : stringOrObject)
-        if (!msg.error) {
-            throw new Error(`Invalid error message received: ${JSON.stringify(msg)}`)
-        }
-        return new ErrorResponse(msg.error)
+    static getPayloadClass() {
+        return ErrorMessage
     }
 }
+
+MessageFromServer.registerMessageClass(ErrorResponse, TYPE)
+module.exports = ErrorResponse

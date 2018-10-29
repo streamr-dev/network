@@ -1,5 +1,15 @@
+import ParseUtil from '../utils/ParseUtil'
+import ValidationError from '../errors/ValidationError'
+
 class StreamAndPartition {
-    constructor(streamId, streamPartition) {
+    constructor(streamId, streamPartition = 0) {
+        if (!streamId) {
+            throw new ValidationError('Stream ID not given!')
+        }
+        if (!streamPartition == null) {
+            throw new ValidationError('Stream partition not given!')
+        }
+
         this.streamId = streamId
         this.streamPartition = streamPartition
     }
@@ -20,7 +30,7 @@ class StreamAndPartition {
     }
 
     static deserialize(stringOrObject) {
-        const msg = (typeof stringOrObject === 'string' ? JSON.parse(stringOrObject) : stringOrObject)
+        const msg = ParseUtil.ensureParsed(stringOrObject)
 
         // calling this.prototype.constructor instead of new StreamAndPartition(...) works for subclasses too
         return new this.prototype.constructor(...this.objectToConstructorArgs(msg))

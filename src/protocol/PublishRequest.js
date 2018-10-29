@@ -1,3 +1,5 @@
+import TimestampUtil from '../utils/TimestampUtil'
+import ValidationError from '../errors/ValidationError'
 import WebsocketRequest from './WebsocketRequest'
 
 const TYPE = 'publish'
@@ -5,9 +7,21 @@ const TYPE = 'publish'
 class PublishRequest extends WebsocketRequest {
     constructor(streamId, apiKey, content, timestamp, partitionKey) {
         super(TYPE, streamId, apiKey)
+
+        if (!content) {
+            throw new ValidationError('No content given!')
+        }
         this.content = content
-        this.timestamp = timestamp
+
+        if (timestamp) {
+            this.timestamp = TimestampUtil.parse(timestamp)
+        }
+
         this.partitionKey = partitionKey
+    }
+
+    getTimestampAsNumber() {
+        return TimestampUtil.parse(this.timestamp)
     }
 
     getSerializedContent() {
@@ -23,7 +37,7 @@ class PublishRequest extends WebsocketRequest {
         return {
             ...super.toObject(),
             msg: this.getSerializedContent(),
-            ts: this.timestamp,
+            ts: this.getTimestampAsNumber(),
             pkey: this.partitionKey,
         }
     }

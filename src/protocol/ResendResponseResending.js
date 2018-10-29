@@ -1,10 +1,19 @@
-import ResendResponse from './ResendResponse'
+import ResendResponseMessage from './ResendResponseMessage'
+import MessageFromServer from './MessageFromServer'
 
-module.exports = class ResendResponseResending extends ResendResponse {
-    static getMessageType() {
-        return 4
+const TYPE = 4
+
+class ResendResponseResending extends MessageFromServer {
+    constructor(streamAndPartition) {
+        super(TYPE, streamAndPartition)
     }
     static getMessageName() {
         return 'ResendResponseResending'
     }
+    static getPayloadClass() {
+        return ResendResponseMessage
+    }
 }
+
+MessageFromServer.registerMessageClass(ResendResponseResending, TYPE)
+module.exports = ResendResponseResending
