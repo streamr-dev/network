@@ -7,7 +7,8 @@ class ResendRequest extends WebsocketRequest {
     constructor(streamId, streamPartition = 0, subId, resendOptions, apiKey) {
         super(TYPE, streamId, apiKey)
 
-        if (!resendOptions.resend_all && resendOptions.resend_from == null && resendOptions.resend_from_time == null) {
+        if (!resendOptions.resend_all && !resendOptions.resend_last
+          && resendOptions.resend_from == null && resendOptions.resend_from_time == null) {
             throw new ValidationError('Invalid resend options!')
         }
         if (!subId) {

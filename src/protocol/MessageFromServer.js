@@ -15,7 +15,7 @@ module.exports = class MessageFromServer {
             throw new ValidationError(`An unexpected payload was passed to ${
                 messageClass.getMessageName()
             }! Expected: ${
-                messageClass.getPayloadClass()
+                messageClass.getPayloadClass().name
             }, was: ${
                 payload.constructor.name
             }`)
