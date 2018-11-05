@@ -4,7 +4,7 @@ import BroadcastMessage from './protocol/BroadcastMessage'
 import UnicastMessage from './protocol/UnicastMessage'
 import PublishRequest from './protocol/PublishRequest'
 import ErrorResponse from './protocol/ErrorResponse'
-import ErrorMessage from './protocol/ErrorMessage'
+import ErrorPayload from './protocol/ErrorPayload'
 import ResendRequest from './protocol/ResendRequest'
 import ResendResponseNoResend from './protocol/ResendResponseNoResend'
 import ResendResponseResending from './protocol/ResendResponseResending'
@@ -14,7 +14,7 @@ import SubscribeResponse from './protocol/SubscribeResponse'
 import UnsubscribeRequest from './protocol/UnsubscribeRequest'
 import UnsubscribeResponse from './protocol/UnsubscribeResponse'
 import StreamAndPartition from './protocol/StreamAndPartition'
-import ResendResponseMessage from './protocol/ResendResponseMessage'
+import ResendResponsePayload from './protocol/ResendResponsePayload'
 import InvalidJsonError from './errors/InvalidJsonError'
 import UnsupportedVersionError from './errors/UnsupportedVersionError'
 
@@ -27,12 +27,12 @@ module.exports = {
     UnicastMessage,
     PublishRequest,
     ErrorResponse,
-    ErrorMessage,
+    ErrorPayload,
     ResendRequest,
     ResendResponseNoResend,
     ResendResponseResending,
     ResendResponseResent,
-    ResendResponseMessage,
+    ResendResponsePayload,
     SubscribeRequest,
     SubscribeResponse,
     UnsubscribeRequest,

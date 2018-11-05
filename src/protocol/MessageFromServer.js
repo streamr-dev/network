@@ -51,7 +51,8 @@ module.exports = class MessageFromServer {
         const message = ParseUtil.ensureParsed(stringOrArray)
         this.checkVersion(message)
         const deserializedPayload = messageClassByMessageType[message[1]].getPayloadClass().deserialize(message[3])
-        return new messageClassByMessageType[message[1]](deserializedPayload, message[2])
+        const constructorArgs = messageClassByMessageType[message[1]].getConstructorArguments(message, deserializedPayload)
+        return new messageClassByMessageType[message[1]](...constructorArgs)
     }
 
     // Need to register subclasses like this to avoid circular dependencies

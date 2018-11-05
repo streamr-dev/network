@@ -3,7 +3,7 @@ import assert from 'assert'
 import MessageFromServer from '../../../src/protocol/MessageFromServer'
 import StreamMessage from '../../../src/protocol/StreamMessage'
 import StreamAndPartition from '../../../src/protocol/StreamAndPartition'
-import ResendResponseMessage from '../../../src/protocol/ResendResponseMessage'
+import ResendResponsePayload from '../../../src/protocol/ResendResponsePayload'
 import BroadcastMessage from '../../../src/protocol/BroadcastMessage'
 import UnicastMessage from '../../../src/protocol/UnicastMessage'
 import SubscribeResponse from '../../../src/protocol/SubscribeResponse'
@@ -12,7 +12,7 @@ import ResendResponseResending from '../../../src/protocol/ResendResponseResendi
 import ResendResponseResent from '../../../src/protocol/ResendResponseResent'
 import ResendResponseNoResend from '../../../src/protocol/ResendResponseNoResend'
 import ErrorResponse from '../../../src/protocol/ErrorResponse'
-import ErrorMessage from '../../../src/protocol/ErrorMessage'
+import ErrorPayload from '../../../src/protocol/ErrorPayload'
 import ValidationError from '../../../src/errors/ValidationError'
 
 const examplesByType = {
@@ -79,28 +79,28 @@ describe('MessageFromServer', () => {
             it('ResendResponseResending', () => {
                 const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[4]))
                 assert(result instanceof ResendResponseResending)
-                assert(result.payload instanceof ResendResponseMessage)
+                assert(result.payload instanceof ResendResponsePayload)
                 assert.equal(result.payload.subId, 'subId')
             })
 
             it('ResendResponseResent', () => {
                 const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[5]))
                 assert(result instanceof ResendResponseResent)
-                assert(result.payload instanceof ResendResponseMessage)
+                assert(result.payload instanceof ResendResponsePayload)
                 assert.equal(result.payload.subId, 'subId')
             })
 
             it('ResendResponseNoResend', () => {
                 const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[6]))
                 assert(result instanceof ResendResponseNoResend)
-                assert(result.payload instanceof ResendResponseMessage)
+                assert(result.payload instanceof ResendResponsePayload)
                 assert.equal(result.payload.subId, 'subId')
             })
 
             it('ErrorResponse', () => {
                 const result = MessageFromServer.deserialize(JSON.stringify(examplesByType[7]))
                 assert(result instanceof ErrorResponse)
-                assert(result.payload instanceof ErrorMessage)
+                assert(result.payload instanceof ErrorPayload)
                 assert.equal(result.payload.error, 'foo')
             })
         })

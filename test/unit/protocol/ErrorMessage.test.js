@@ -1,15 +1,15 @@
 import assert from 'assert'
-import ErrorMessage from '../../../src/protocol/ErrorMessage'
+import ErrorPayload from '../../../src/protocol/ErrorPayload'
 
-describe('ErrorMessage', () => {
+describe('ErrorPayload', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
             const msg = {
                 error: 'foo',
             }
-            const result = ErrorMessage.deserialize(JSON.stringify(msg))
+            const result = ErrorPayload.deserialize(JSON.stringify(msg))
 
-            assert(result instanceof ErrorMessage)
+            assert(result instanceof ErrorPayload)
             assert.equal(result.error, msg.error)
         })
     })
@@ -20,7 +20,7 @@ describe('ErrorMessage', () => {
                 error: 'foo',
             }
 
-            const object = new ErrorMessage(msg.error).toObject()
+            const object = new ErrorPayload(msg.error).toObject()
 
             assert.deepEqual(msg, object)
         })

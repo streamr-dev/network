@@ -4,14 +4,17 @@ import StreamAndPartition from './StreamAndPartition'
 const TYPE = 2
 
 class SubscribeResponse extends MessageFromServer {
-    constructor(streamAndPartition) {
-        super(TYPE, streamAndPartition)
+    constructor(streamId, streamPartition) {
+        super(TYPE, new StreamAndPartition(streamId, streamPartition))
     }
     static getMessageName() {
         return 'SubscribeResponse'
     }
     static getPayloadClass() {
         return StreamAndPartition
+    }
+    static getConstructorArguments(message, payload) {
+        return [payload.streamId, payload.streamPartition]
     }
 }
 

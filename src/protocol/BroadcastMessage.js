@@ -13,6 +13,9 @@ class BroadcastMessage extends MessageFromServer {
     static getPayloadClass() {
         return StreamMessage
     }
+    static getConstructorArguments(message, payload) {
+        return [payload]
+    }
 }
 
 MessageFromServer.registerMessageClass(BroadcastMessage, TYPE)

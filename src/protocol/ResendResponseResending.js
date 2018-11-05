@@ -1,17 +1,14 @@
-import ResendResponseMessage from './ResendResponseMessage'
+import ResendResponse from './ResendResponse'
 import MessageFromServer from './MessageFromServer'
 
 const TYPE = 4
 
-class ResendResponseResending extends MessageFromServer {
-    constructor(streamAndPartition) {
-        super(TYPE, streamAndPartition)
+class ResendResponseResending extends ResendResponse {
+    constructor(streamId, streamPartition, subId) {
+        super(TYPE, streamId, streamPartition, subId)
     }
     static getMessageName() {
         return 'ResendResponseResending'
-    }
-    static getPayloadClass() {
-        return ResendResponseMessage
     }
 }
 

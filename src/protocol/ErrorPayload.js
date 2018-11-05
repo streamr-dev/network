@@ -1,6 +1,6 @@
 import ParseUtil from '../utils/ParseUtil'
 
-module.exports = class ErrorMessage {
+module.exports = class ErrorPayload {
     constructor(errorString) {
         this.error = errorString
     }
@@ -14,8 +14,8 @@ module.exports = class ErrorMessage {
     static deserialize(stringOrObject) {
         const msg = ParseUtil.ensureParsed(stringOrObject)
         if (!msg.error) {
-            throw new Error(`Invalid error message received: ${JSON.stringify(msg)}`)
+            throw new Error(`Invalid error payload received: ${JSON.stringify(msg)}`)
         }
-        return new ErrorMessage(msg.error)
+        return new ErrorPayload(msg.error)
     }
 }

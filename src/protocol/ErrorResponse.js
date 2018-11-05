@@ -1,17 +1,20 @@
 import MessageFromServer from './MessageFromServer'
-import ErrorMessage from './ErrorMessage'
+import ErrorPayload from './ErrorPayload'
 
 const TYPE = 7
 
 class ErrorResponse extends MessageFromServer {
     constructor(errorMessage) {
-        super(TYPE, errorMessage)
+        super(TYPE, new ErrorPayload(errorMessage))
     }
     static getMessageName() {
         return 'ErrorResponse'
     }
     static getPayloadClass() {
-        return ErrorMessage
+        return ErrorPayload
+    }
+    static getConstructorArguments(message, payload) {
+        return [payload.error]
     }
 }
 

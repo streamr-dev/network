@@ -13,6 +13,9 @@ class UnicastMessage extends MessageFromServer {
     static getPayloadClass() {
         return StreamMessage
     }
+    static getConstructorArguments(message, payload) {
+        return [payload, message[2]] // message[2] is subId
+    }
 }
 
 MessageFromServer.registerMessageClass(UnicastMessage, TYPE)
