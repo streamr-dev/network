@@ -9,6 +9,7 @@ describe('SubscribeRequest', () => {
                 stream: 'streamId',
                 partition: 0,
                 authKey: 'authKey',
+                sessionToken: 'sessionToken',
             }
             const result = SubscribeRequest.deserialize(JSON.stringify(msg))
 
@@ -16,6 +17,7 @@ describe('SubscribeRequest', () => {
             assert.equal(result.streamId, msg.stream)
             assert.equal(result.streamPartition, msg.partition)
             assert.equal(result.apiKey, msg.authKey)
+            assert.equal(result.sessionToken, msg.sessionToken)
         })
     })
 
@@ -26,9 +28,10 @@ describe('SubscribeRequest', () => {
                 stream: 'streamId',
                 partition: 0,
                 authKey: 'authKey',
+                sessionToken: 'sessionToken',
             }
 
-            const serialized = new SubscribeRequest('streamId', 0, 'authKey').serialize()
+            const serialized = new SubscribeRequest('streamId', 0, 'authKey', 'sessionToken').serialize()
 
             assert(typeof serialized === 'string')
             assert.deepEqual(msg, JSON.parse(serialized))
