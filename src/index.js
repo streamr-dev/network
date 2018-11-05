@@ -1,3 +1,4 @@
+import WebsocketRequest from './protocol/WebsocketRequest'
 import WebsocketResponse from './protocol/WebsocketResponse'
 import StreamMessage from './protocol/StreamMessage'
 import BroadcastMessage from './protocol/BroadcastMessage'
@@ -21,6 +22,7 @@ import UnsupportedVersionError from './errors/UnsupportedVersionError'
 import TimestampUtil from './utils/TimestampUtil'
 
 module.exports = {
+    WebsocketRequest,
     WebsocketResponse,
     StreamMessage,
     BroadcastMessage,

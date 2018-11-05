@@ -20,21 +20,11 @@ class SubscribeRequest extends WebsocketRequest {
             partition: this.streamPartition,
         }
     }
-}
 
-SubscribeRequest.deserialize = (stringOrObject) => {
-    const msg = (typeof stringOrObject === 'string' ? JSON.parse(stringOrObject) : stringOrObject)
-
-    if (msg.type !== TYPE) {
-        throw new Error(`Invalid SubscribeRequest: ${JSON.stringify(stringOrObject)}`)
+    static getConstructorArguments(msg) {
+        return [msg.stream, msg.partition, msg.authKey, msg.sessionToken]
     }
-
-    return new SubscribeRequest(
-        msg.stream,
-        msg.partition,
-        msg.authKey,
-        msg.sessionToken,
-    )
 }
 
+WebsocketRequest.registerMessageClass(SubscribeRequest, TYPE)
 module.exports = SubscribeRequest

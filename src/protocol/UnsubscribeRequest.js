@@ -20,19 +20,10 @@ class UnsubscribeRequest extends WebsocketRequest {
             partition: this.streamPartition,
         }
     }
-}
 
-UnsubscribeRequest.deserialize = (stringOrObject) => {
-    const msg = (typeof stringOrObject === 'string' ? JSON.parse(stringOrObject) : stringOrObject)
-
-    if (msg.type !== TYPE) {
-        throw new Error(`Invalid UnsubscribeRequest: ${JSON.stringify(stringOrObject)}`)
+    static getConstructorArguments(msg) {
+        return [msg.stream, msg.partition]
     }
-
-    return new UnsubscribeRequest(
-        msg.stream,
-        msg.partition,
-    )
 }
-
+WebsocketRequest.registerMessageClass(UnsubscribeRequest, TYPE)
 module.exports = UnsubscribeRequest

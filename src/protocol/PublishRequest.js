@@ -45,22 +45,17 @@ class PublishRequest extends WebsocketRequest {
         }
     }
 
-    static deserialize(stringOrObject) {
-        const msg = super.deserialize(stringOrObject)
-
-        if (msg.type !== TYPE) {
-            throw new Error(`Invalid PublishRequest: ${JSON.stringify(stringOrObject)}`)
-        }
-
-        return new PublishRequest(
+    static getConstructorArguments(msg) {
+        return [
             msg.stream,
             msg.authKey,
             msg.sessionToken,
             msg.msg,
             msg.ts,
             msg.pkey,
-        )
+        ]
     }
 }
 
+WebsocketRequest.registerMessageClass(PublishRequest, TYPE)
 module.exports = PublishRequest

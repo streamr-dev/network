@@ -28,31 +28,26 @@ class ResendRequest extends WebsocketRequest {
             ...this.resendOptions,
         }
     }
-}
 
-ResendRequest.deserialize = (stringOrObject) => {
-    const msg = (typeof stringOrObject === 'string' ? JSON.parse(stringOrObject) : stringOrObject)
+    static getConstructorArguments(msg) {
+        // Every property that starts with resend_ is a resend option
+        const resendOptions = {}
+        Object.keys(msg).forEach((key) => {
+            if (key.startsWith('resend_')) {
+                resendOptions[key] = msg[key]
+            }
+        })
 
-    if (msg.type !== TYPE) {
-        throw new Error(`Invalid ResendRequest: ${JSON.stringify(stringOrObject)}`)
+        return [
+            msg.stream,
+            msg.partition,
+            msg.sub,
+            resendOptions,
+            msg.authKey,
+            msg.sessionToken,
+        ]
     }
-
-    // Every property that starts with resend_ is a resend option
-    const resendOptions = {}
-    Object.keys(msg).forEach((key) => {
-        if (key.startsWith('resend_')) {
-            resendOptions[key] = msg[key]
-        }
-    })
-
-    return new ResendRequest(
-        msg.stream,
-        msg.partition,
-        msg.sub,
-        resendOptions,
-        msg.authKey,
-        msg.sessionToken,
-    )
 }
 
+WebsocketRequest.registerMessageClass(ResendRequest, TYPE)
 module.exports = ResendRequest
