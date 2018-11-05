@@ -50,25 +50,37 @@ class StreamMessage {
         }
     }
 
-    toObject(version = 28) {
+    toObject(version = 28, parsedContent = false, compact = true) {
         if (version === 28) {
-            return [
-                version,
-                this.streamId,
-                this.streamPartition,
-                this.timestamp,
-                this.ttl,
-                this.offset,
-                this.previousOffset,
-                this.contentType,
-                this.getSerializedContent(),
-            ]
+            if (compact) {
+                return [
+                    version,
+                    this.streamId,
+                    this.streamPartition,
+                    this.timestamp,
+                    this.ttl,
+                    this.offset,
+                    this.previousOffset,
+                    this.contentType,
+                    (parsedContent ? this.getParsedContent() : this.getSerializedContent()),
+                ]
+            }
+            return {
+                streamId: this.streamId,
+                streamPartition: this.streamPartition,
+                timestamp: this.timestamp,
+                ttl: this.ttl,
+                offset: this.offset,
+                previousOffset: this.previousOffset,
+                contentType: this.contentType,
+                content: (parsedContent ? this.getParsedContent() : this.getSerializedContent()),
+            }
         }
         throw new UnsupportedVersionError(version, 'Supported versions: [28]')
     }
 
     serialize(version = 28) {
-        return JSON.stringify(this.toObject(version))
+        return JSON.stringify(this.toObject(version, false, false))
     }
 
     static deserialize(stringOrArray, parseContent = true) {
