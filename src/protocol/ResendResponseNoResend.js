@@ -1,10 +1,16 @@
 import ResendResponse from './ResendResponse'
+import WebsocketResponse from './WebsocketResponse'
 
-module.exports = class ResendResponseNoResend extends ResendResponse {
-    static getMessageType() {
-        return 6
+const TYPE = 6
+
+class ResendResponseNoResend extends ResendResponse {
+    constructor(streamId, streamPartition, subId) {
+        super(TYPE, streamId, streamPartition, subId)
     }
     static getMessageName() {
         return 'ResendResponseNoResend'
     }
 }
+
+WebsocketResponse.registerMessageClass(ResendResponseNoResend, TYPE)
+module.exports = ResendResponseNoResend

@@ -92,4 +92,62 @@ describe('StreamMessage', () => {
             assert.deepEqual(msg.getParsedContent(), content)
         })
     })
+
+    describe('toObject()', () => {
+        it('parseContent == true', () => {
+            const object = [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+                941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, {
+                    valid: 'json',
+                }]
+
+            const msg = new StreamMessage(
+                'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+                941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}',
+            )
+
+            assert.deepEqual(msg.toObject(28, true), object)
+        })
+
+        it('compact == false', () => {
+            const object = {
+                streamId: 'TsvTbqshTsuLg_HyUjxigA',
+                streamPartition: 0,
+                timestamp: 1529549961116,
+                ttl: 0,
+                offset: 941516902,
+                previousOffset: 941499898,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
+                content: '{"valid": "json"}',
+            }
+
+            const msg = new StreamMessage(
+                'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+                941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}',
+            )
+
+            assert.deepEqual(msg.toObject(28, undefined, false), object)
+        })
+
+        it('parseContent == true, compact == false', () => {
+            const object = {
+                streamId: 'TsvTbqshTsuLg_HyUjxigA',
+                streamPartition: 0,
+                timestamp: 1529549961116,
+                ttl: 0,
+                offset: 941516902,
+                previousOffset: 941499898,
+                contentType: StreamMessage.CONTENT_TYPES.JSON,
+                content: {
+                    valid: 'json',
+                },
+            }
+
+            const msg = new StreamMessage(
+                'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+                941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}',
+            )
+
+            assert.deepEqual(msg.toObject(28, true, false), object)
+        })
+    })
 })

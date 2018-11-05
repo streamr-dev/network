@@ -1,22 +1,15 @@
-import StreamAndPartition from './StreamAndPartition'
+import ResendResponsePayload from './ResendResponsePayload'
+import WebsocketResponse from './WebsocketResponse'
 
-module.exports = class ResendResponse extends StreamAndPartition {
-    constructor(streamId, streamPartition, subId) {
-        super(streamId, streamPartition)
-        if (subId == null) {
-            throw new Error('Subscription id cannot be null!')
-        }
-        this.subId = subId
+export default class ResendResponse extends WebsocketResponse {
+    constructor(TYPE, streamId, streamPartition, subId) {
+        super(TYPE, new ResendResponsePayload(streamId, streamPartition, subId))
     }
-
-    toObject() {
-        return {
-            ...super.toObject(),
-            sub: this.subId,
-        }
+    static getPayloadClass() {
+        return ResendResponsePayload
     }
-
-    static objectToConstructorArgs(msg) {
-        return [msg.stream, msg.partition, msg.sub]
+    // Subclasses must have a constructor of this form
+    static getConstructorArguments(serializedMessage, payload) {
+        return [payload.streamId, payload.streamPartition, payload.subId]
     }
 }

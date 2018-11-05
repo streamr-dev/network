@@ -1,13 +1,30 @@
+import TimestampUtil from '../utils/TimestampUtil'
+import ValidationError from '../errors/ValidationError'
 import WebsocketRequest from './WebsocketRequest'
 
 const TYPE = 'publish'
 
 class PublishRequest extends WebsocketRequest {
-    constructor(streamId, apiKey, content, timestamp, partitionKey) {
-        super(TYPE, streamId, apiKey)
+    constructor(streamId, apiKey, sessionToken, content, timestamp, partitionKey) {
+        super(TYPE, streamId, apiKey, sessionToken)
+
+        if (!content) {
+            throw new ValidationError('No content given!')
+        }
         this.content = content
-        this.timestamp = timestamp
+
+        if (timestamp) {
+            this.timestamp = TimestampUtil.parse(timestamp)
+        }
+
         this.partitionKey = partitionKey
+    }
+
+    getTimestampAsNumber() {
+        if (this.timestamp) {
+            return TimestampUtil.parse(this.timestamp)
+        }
+        return undefined
     }
 
     getSerializedContent() {
@@ -23,26 +40,22 @@ class PublishRequest extends WebsocketRequest {
         return {
             ...super.toObject(),
             msg: this.getSerializedContent(),
-            ts: this.timestamp,
+            ts: this.getTimestampAsNumber(),
             pkey: this.partitionKey,
         }
     }
 
-    static deserialize(stringOrObject) {
-        const msg = super.deserialize(stringOrObject)
-
-        if (msg.type !== TYPE) {
-            throw new Error(`Invalid PublishRequest: ${JSON.stringify(stringOrObject)}`)
-        }
-
-        return new PublishRequest(
+    static getConstructorArguments(msg) {
+        return [
             msg.stream,
             msg.authKey,
+            msg.sessionToken,
             msg.msg,
             msg.ts,
             msg.pkey,
-        )
+        ]
     }
 }
 
+WebsocketRequest.registerMessageClass(PublishRequest, TYPE)
 module.exports = PublishRequest

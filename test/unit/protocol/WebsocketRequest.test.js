@@ -1,5 +1,6 @@
 import assert from 'assert'
 import WebsocketRequest from '../../../src/protocol/WebsocketRequest'
+import SubscribeRequest from '../../../src/protocol/SubscribeRequest'
 
 describe('WebsocketRequest', () => {
     describe('serialize', () => {
@@ -8,9 +9,10 @@ describe('WebsocketRequest', () => {
                 type: 'unsubscribe',
                 stream: 'id',
                 authKey: 'authKey',
+                sessionToken: 'sessionToken',
             }
 
-            const serialized = new WebsocketRequest(msg.type, msg.stream, msg.authKey).serialize()
+            const serialized = new WebsocketRequest(msg.type, msg.stream, msg.authKey, msg.sessionToken).serialize()
 
             assert(typeof serialized === 'string')
             assert.deepEqual(msg, JSON.parse(serialized))
@@ -18,18 +20,9 @@ describe('WebsocketRequest', () => {
     })
 
     describe('deserialize', () => {
-        it('returns objects as they are', () => {
-            const msg = {
-                foo: 'bar',
-            }
-            const result = WebsocketRequest.deserialize(msg)
-            assert.deepEqual(msg, result)
-        })
-        it('parses strings', () => {
-            const msg = {
-                foo: 'bar',
-            }
-            const result = WebsocketRequest.deserialize(JSON.stringify(msg))
+        it('correctly parses any subclass instance', () => {
+            const msg = new SubscribeRequest('streamId', 1, 'apiKey')
+            const result = WebsocketRequest.deserialize(msg.serialize())
             assert.deepEqual(msg, result)
         })
     })
