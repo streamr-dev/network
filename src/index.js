@@ -1,4 +1,4 @@
-import MessageFromServer from './protocol/MessageFromServer'
+import WebsocketResponse from './protocol/WebsocketResponse'
 import StreamMessage from './protocol/StreamMessage'
 import BroadcastMessage from './protocol/BroadcastMessage'
 import UnicastMessage from './protocol/UnicastMessage'
@@ -21,7 +21,7 @@ import UnsupportedVersionError from './errors/UnsupportedVersionError'
 import TimestampUtil from './utils/TimestampUtil'
 
 module.exports = {
-    MessageFromServer,
+    WebsocketResponse,
     StreamMessage,
     BroadcastMessage,
     UnicastMessage,

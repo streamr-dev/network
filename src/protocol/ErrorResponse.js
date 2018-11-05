@@ -1,9 +1,9 @@
-import MessageFromServer from './MessageFromServer'
+import WebsocketResponse from './WebsocketResponse'
 import ErrorPayload from './ErrorPayload'
 
 const TYPE = 7
 
-class ErrorResponse extends MessageFromServer {
+class ErrorResponse extends WebsocketResponse {
     constructor(errorMessage) {
         super(TYPE, new ErrorPayload(errorMessage))
     }
@@ -18,5 +18,5 @@ class ErrorResponse extends MessageFromServer {
     }
 }
 
-MessageFromServer.registerMessageClass(ErrorResponse, TYPE)
+WebsocketResponse.registerMessageClass(ErrorResponse, TYPE)
 module.exports = ErrorResponse

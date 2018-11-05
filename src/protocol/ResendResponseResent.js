@@ -1,5 +1,5 @@
 import ResendResponse from './ResendResponse'
-import MessageFromServer from './MessageFromServer'
+import WebsocketResponse from './WebsocketResponse'
 
 const TYPE = 5
 
@@ -12,5 +12,5 @@ class ResendResponseResent extends ResendResponse {
     }
 }
 
-MessageFromServer.registerMessageClass(ResendResponseResent, TYPE)
+WebsocketResponse.registerMessageClass(ResendResponseResent, TYPE)
 module.exports = ResendResponseResent

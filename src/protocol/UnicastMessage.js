@@ -1,9 +1,9 @@
-import MessageFromServer from './MessageFromServer'
+import WebsocketResponse from './WebsocketResponse'
 import StreamMessage from './StreamMessage'
 
 const TYPE = 1
 
-class UnicastMessage extends MessageFromServer {
+class UnicastMessage extends WebsocketResponse {
     constructor(streamMessage, subId) {
         super(TYPE, streamMessage, subId)
     }
@@ -18,5 +18,5 @@ class UnicastMessage extends MessageFromServer {
     }
 }
 
-MessageFromServer.registerMessageClass(UnicastMessage, TYPE)
+WebsocketResponse.registerMessageClass(UnicastMessage, TYPE)
 module.exports = UnicastMessage

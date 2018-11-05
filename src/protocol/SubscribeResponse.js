@@ -1,9 +1,9 @@
-import MessageFromServer from './MessageFromServer'
+import WebsocketResponse from './WebsocketResponse'
 import StreamAndPartition from './StreamAndPartition'
 
 const TYPE = 2
 
-class SubscribeResponse extends MessageFromServer {
+class SubscribeResponse extends WebsocketResponse {
     constructor(streamId, streamPartition) {
         super(TYPE, new StreamAndPartition(streamId, streamPartition))
     }
@@ -18,5 +18,5 @@ class SubscribeResponse extends MessageFromServer {
     }
 }
 
-MessageFromServer.registerMessageClass(SubscribeResponse, TYPE)
+WebsocketResponse.registerMessageClass(SubscribeResponse, TYPE)
 module.exports = SubscribeResponse

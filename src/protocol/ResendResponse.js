@@ -1,7 +1,7 @@
 import ResendResponsePayload from './ResendResponsePayload'
-import MessageFromServer from './MessageFromServer'
+import WebsocketResponse from './WebsocketResponse'
 
-export default class ResendResponse extends MessageFromServer {
+export default class ResendResponse extends WebsocketResponse {
     constructor(TYPE, streamId, streamPartition, subId) {
         super(TYPE, new ResendResponsePayload(streamId, streamPartition, subId))
     }

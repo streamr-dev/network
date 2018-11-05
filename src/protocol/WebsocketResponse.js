@@ -4,7 +4,7 @@ import ParseUtil from '../utils/ParseUtil'
 
 const messageClassByMessageType = {}
 
-module.exports = class MessageFromServer {
+module.exports = class WebsocketResponse {
     constructor(messageType, payload, subId) {
         this.messageType = messageType
         this.payload = payload
