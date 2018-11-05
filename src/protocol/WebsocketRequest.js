@@ -1,7 +1,7 @@
 import ValidationError from '../errors/ValidationError'
 
 class WebsocketRequest {
-    constructor(type, streamId, apiKey) {
+    constructor(type, streamId, apiKey, sessionToken) {
         if (!streamId) {
             throw new ValidationError('No stream ID given!')
         }
@@ -12,6 +12,7 @@ class WebsocketRequest {
         this.type = type
         this.streamId = streamId
         this.apiKey = apiKey
+        this.sessionToken = sessionToken
     }
 
     toObject() {
@@ -19,6 +20,7 @@ class WebsocketRequest {
             type: this.type,
             stream: this.streamId,
             authKey: this.apiKey,
+            sessionToken: this.sessionToken,
         }
     }
 

@@ -8,9 +8,10 @@ describe('WebsocketRequest', () => {
                 type: 'unsubscribe',
                 stream: 'id',
                 authKey: 'authKey',
+                sessionToken: 'sessionToken',
             }
 
-            const serialized = new WebsocketRequest(msg.type, msg.stream, msg.authKey).serialize()
+            const serialized = new WebsocketRequest(msg.type, msg.stream, msg.authKey, msg.sessionToken).serialize()
 
             assert(typeof serialized === 'string')
             assert.deepEqual(msg, JSON.parse(serialized))

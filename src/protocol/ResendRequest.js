@@ -4,8 +4,8 @@ import WebsocketRequest from './WebsocketRequest'
 const TYPE = 'resend'
 
 class ResendRequest extends WebsocketRequest {
-    constructor(streamId, streamPartition = 0, subId, resendOptions, apiKey) {
-        super(TYPE, streamId, apiKey)
+    constructor(streamId, streamPartition = 0, subId, resendOptions, apiKey, sessionToken) {
+        super(TYPE, streamId, apiKey, sessionToken)
 
         if (!resendOptions.resend_all && !resendOptions.resend_last
           && resendOptions.resend_from == null && resendOptions.resend_from_time == null) {
@@ -51,6 +51,7 @@ ResendRequest.deserialize = (stringOrObject) => {
         msg.sub,
         resendOptions,
         msg.authKey,
+        msg.sessionToken,
     )
 }
 
