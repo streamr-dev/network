@@ -80,7 +80,7 @@ class StreamMessage {
     }
 
     serialize(version = 28) {
-        return JSON.stringify(this.toObject(version, false, false))
+        return JSON.stringify(this.toObject(version))
     }
 
     static deserialize(stringOrArray, parseContent = true) {
