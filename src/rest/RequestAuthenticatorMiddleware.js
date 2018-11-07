@@ -6,21 +6,30 @@ const HttpError = require('../errors/HttpError')
 module.exports = function (streamFetcher, permission = 'read') {
     return function (req, res, next) {
         let authKey
+        let sessionToken
 
         // Try to parse authorization header if defined
         if (req.headers.authorization !== undefined) {
-            if (!req.headers.authorization.toLowerCase().startsWith('token')) {
+            const apiKeyHeaderValid = req.headers.authorization.toLowerCase().startsWith('token ')
+            const sessionTokenHeaderValid = req.headers.authorization.startsWith('Bearer ')
+            if (!(apiKeyHeaderValid || sessionTokenHeaderValid)) {
                 res.status(400).send({
-                    error: 'Authorization header malformed. Should be of form "token authKey".',
+                    error: 'Authorization header malformed. Should be of form "[Bearer|token] authKey".',
                 })
                 return
             }
-            authKey = req.headers.authorization
-                .substring(5)
-                .trim()
+            if (apiKeyHeaderValid) {
+                authKey = req.headers.authorization
+                    .substring(6)
+                    .trim()
+            } else {
+                sessionToken = req.headers.authorization
+                    .substring(7)
+                    .trim()
+            }
         }
 
-        streamFetcher.authenticate(req.params.id, authKey, permission)
+        streamFetcher.authenticate(req.params.id, authKey, sessionToken, permission)
             .then((streamJson) => {
                 req.stream = streamJson
                 next()

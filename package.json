@@ -29,14 +29,15 @@
     "kafka-node": "^1.0.2",
     "lolex": "^1.5.1",
     "memoizee": "^0.4.4",
-    "murmurhash-native": "^3.2.0",
+    "murmurhash-native": "^3.2.4",
     "node-fetch": "^1.6.3",
     "node-int64": "0.3.3",
     "node-uuid": "^1.4.8",
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
-    "uws": "^0.14.5"
+    "sc-uws": "^10.148.2",
+    "uws": "^10.148.1"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.2",
