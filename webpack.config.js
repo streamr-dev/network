@@ -4,8 +4,8 @@
 const path = require('path')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 const merge = require('lodash').merge
-const pkg = require('./package.json')
 const nodeExternals = require('webpack-node-externals')
+const pkg = require('./package.json')
 
 const libraryName = pkg.name
 
@@ -34,7 +34,7 @@ const commonConfig = {
             {
                 test: /(\.jsx|\.js)$/,
                 loader: 'eslint-loader',
-                exclude: /node_modules/,
+                exclude: /(node_modules|streamr-client-protocol)/, // excluding streamr-client-protocol makes build work when 'npm link'ed
             },
         ],
     },

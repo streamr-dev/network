@@ -1,7 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
-import { isByeMessage } from './Protocol'
-import InvalidJsonError from './errors/InvalidJsonError'
+import { Errors } from 'streamr-client-protocol'
 
 const debug = debugFactory('StreamrClient::Subscription')
 
@@ -132,8 +131,8 @@ export default class Subscription extends EventEmitter {
         } else {
             // Normal case where prevOffset == null || lastReceivedOffset == null || prevOffset === lastReceivedOffset
             this.lastReceivedOffset = msg.offset
-            this.callback(msg.content, msg)
-            if (isByeMessage(msg.content)) {
+            this.callback(msg.getParsedContent(), msg)
+            if (msg.isByeMessage()) {
                 this.emit('done')
             }
         }
@@ -165,17 +164,21 @@ export default class Subscription extends EventEmitter {
      * - resend_last stays the same
      */
     getEffectiveResendOptions() {
-        if (this.hasReceivedMessages() && this.hasResendOptions()) {
-            if (this.options.resend_all || this.options.resend_from || this.options.resend_from_time) {
-                return {
-                    resend_from: this.lastReceivedOffset + 1,
-                }
-            } else if (this.options.resend_last) {
-                return this.options
+        if (this.hasReceivedMessages() && this.hasResendOptions()
+            && (this.options.resend_all || this.options.resend_from || this.options.resend_from_time)) {
+            return {
+                resend_from: this.lastReceivedOffset + 1,
             }
         }
 
-        return this.options
+        // Pick resend options from the options
+        const result = {}
+        Object.keys(this.options).forEach((key) => {
+            if (key.startsWith('resend_')) {
+                result[key] = this.options[key]
+            }
+        })
+        return result
     }
 
     hasReceivedMessages() {
@@ -206,8 +209,8 @@ export default class Subscription extends EventEmitter {
          * If parsing the (expected) message failed, we should still mark it as received. Otherwise the
          * gap detection will think a message was lost, and re-request the failing message.
          */
-        if (err instanceof InvalidJsonError && !this.checkForGap(err.previousOffset)) {
-            this.lastReceivedOffset = err.offset
+        if (err instanceof Errors.InvalidJsonError && !this.checkForGap(err.streamMessage.previousOffset)) {
+            this.lastReceivedOffset = err.streamMessage.offset
         }
         this.emit('error', err)
     }

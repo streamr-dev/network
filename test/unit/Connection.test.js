@@ -1,8 +1,14 @@
 import assert from 'assert'
 import sinon from 'sinon'
 
+import {
+    WebsocketResponse,
+    UnicastMessage,
+    StreamMessage,
+    Errors,
+} from 'streamr-client-protocol'
+
 import Connection from '../../src/Connection'
-import InvalidJsonError from '../../src/errors/InvalidJsonError'
 
 describe('Connection', () => {
     let conn
@@ -121,46 +127,91 @@ describe('Connection', () => {
             conn.connect()
         })
 
-        it('emits error event if socket.send throws', (done) => {
-            conn.socket.send = sinon.stub().throws()
+        it('sends the serialized message over the socket', () => {
+            const request = {
+                serialize: sinon.stub().returns('foo'),
+            }
+            conn.socket.send = sinon.stub()
 
-            const msg = {}
-            conn.on('error', () => {
+            conn.send(request)
+            assert(request.serialize.calledOnce)
+            assert(conn.socket.send.calledWith('foo'))
+        })
+
+        it('emits error event if socket.send throws', (done) => {
+            const request = {
+                serialize: sinon.stub(),
+            }
+            conn.socket.send = sinon.stub().throws(new Error('test'))
+
+            conn.on('error', (err) => {
+                assert.equal(err.message, 'test')
                 done()
             })
-            conn.send(msg)
+            conn.send(request)
         })
     })
 
-    describe('message handling on socket', () => {
+    describe('event handling on socket', () => {
         beforeEach(() => {
             conn.connect()
             conn.socket.onopen()
         })
 
-        it('emits decoded messages', (done) => {
-            conn.on('b', (decodedMessage) => {
-                assert.equal(decodedMessage.offset, 3445690152)
-                done()
+        describe('message', () => {
+            it('emits events named by messateTypeName and the WebsocketResponse as an argument', (done) => {
+                conn.on('UnicastMessage', (message) => {
+                    assert(message instanceof UnicastMessage)
+                    assert.equal(message.payload.offset, 10)
+                    assert.equal(message.payload.getParsedContent().hello, 'world')
+                    assert.equal(message.subId, 'subId')
+                    done()
+                })
+
+                const message = new UnicastMessage(
+                    new StreamMessage('streamId', 0, Date.now(), 0, 10, 9, 27, {
+                        hello: 'world',
+                    }),
+                    'subId',
+                )
+
+                conn.socket.onmessage({
+                    data: message.serialize(),
+                })
             })
-            conn.socket.onmessage({
-                data: JSON.stringify([0, 0, '',
-                    [28, 'L9xDhrevS_CE3_OA6pLVuQ', 0, 1538926879033, 0,
-                        3445690152, 3445690148, 27,
-                        JSON.stringify({
-                            t: 'p', id: 437.0, lat: 60.16314, lng: 24.908923, color: 'rgba(233, 87, 15, 1.0)',
-                        })]]),
+
+            it('emits an error event when a message contains invalid json', (done) => {
+                conn.on('error', (err) => {
+                    assert(err instanceof Errors.InvalidJsonError)
+                    done()
+                })
+
+                const message = new UnicastMessage(
+                    new StreamMessage('streamId', 0, Date.now(), 0, 10, 9, 27, 'invalid json'),
+                    'subId',
+                )
+
+                conn.socket.onmessage({
+                    data: message.serialize(),
+                })
             })
         })
 
-        it('emits an error event when a message contains invalid json', (done) => {
-            conn.on('error', (err) => {
-                assert(err instanceof InvalidJsonError)
-                done()
+        describe('close', () => {
+            let clock
+            beforeAll(() => {
+                clock = sinon.useFakeTimers()
             })
-            conn.socket.onmessage({
-                data: JSON.stringify([0, 0, '',
-                    [28, 'L9xDhrevS_CE3_OA6pLVuQ', 0, 1538926879033, 0, 3445690152, 3445690148, 27, 'invalid json']]),
+
+            afterAll(() => {
+                clock.restore()
+            })
+
+            it('tries to reconnect after 2 seconds', () => {
+                conn.connect = sinon.stub()
+                conn.socket.events.emit('close')
+                clock.tick(2100)
+                assert(conn.connect.calledOnce)
             })
         })
     })

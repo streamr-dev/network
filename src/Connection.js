@@ -1,7 +1,8 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import WebSocket from 'ws'
-import { decodeBrowserWrapper, decodeMessage } from './Protocol'
+
+import { WebsocketResponse } from 'streamr-client-protocol'
 
 const debug = debugFactory('StreamrClient::Connection')
 
@@ -57,9 +58,8 @@ class Connection extends EventEmitter {
 
         this.socket.onmessage = (messageEvent) => {
             try {
-                const decodedWrapper = decodeBrowserWrapper(messageEvent.data)
-                const decodedMessage = decodeMessage(decodedWrapper.type, decodedWrapper.msg)
-                this.emit(decodedWrapper.type, decodedMessage, decodedWrapper.subId)
+                const websocketResponse = WebsocketResponse.deserialize(messageEvent.data)
+                this.emit(websocketResponse.constructor.getMessageName(), websocketResponse)
             } catch (err) {
                 this.emit('error', err)
             }
@@ -88,9 +88,9 @@ class Connection extends EventEmitter {
         })
     }
 
-    send(req) {
+    send(websocketRequest) {
         try {
-            this.socket.send(JSON.stringify(req))
+            this.socket.send(websocketRequest.serialize())
         } catch (err) {
             this.emit('error', err)
         }

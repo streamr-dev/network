@@ -63,6 +63,7 @@
     "eventemitter3": "^3.0.1",
     "node-fetch": "^2.1.2",
     "querystring": "^0.2.0",
+    "streamr-client-protocol": "^1.1.0",
     "webpack-node-externals": "^1.7.2",
     "ws": "^5.1.0"
   }
