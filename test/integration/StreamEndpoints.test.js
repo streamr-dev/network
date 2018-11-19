@@ -1,4 +1,3 @@
-import 'babel-polyfill' // Needed because of mocha
 import assert from 'assert'
 
 import StreamrClient from '../../src'
@@ -16,14 +15,17 @@ describe('StreamEndpoints', () => {
     const createClient = (opts = {}) => new StreamrClient({
         url: config.websocketUrl,
         restUrl: config.restUrl,
-        apiKey: 'tester1-api-key',
         autoConnect: false,
         autoDisconnect: false,
         ...opts,
     })
 
     beforeAll(() => {
-        client = createClient()
+        client = createClient({
+            auth: {
+                apiKey: 'tester1-api-key',
+            },
+        })
     })
 
     describe('Stream creation', () => {
@@ -69,28 +71,27 @@ describe('StreamEndpoints', () => {
                 client.produceToStream(createdStream.id, {
                     foo: 'bar',
                     count: 0,
+                }).then(() => {
+                    // Need time to propagate to storage
+                    setTimeout(() => {
+                        createdStream.detectFields().then((stream) => {
+                            assert.deepEqual(
+                                stream.config.fields,
+                                [
+                                    {
+                                        name: 'foo',
+                                        type: 'string',
+                                    },
+                                    {
+                                        name: 'count',
+                                        type: 'number',
+                                    },
+                                ],
+                            )
+                            done()
+                        })
+                    }, 5000)
                 })
-                client.disconnect()
-
-                // Need time to propagate to storage
-                setTimeout(() => {
-                    createdStream.detectFields().then((stream) => {
-                        assert.deepEqual(
-                            stream.config.fields,
-                            [
-                                {
-                                    name: 'foo',
-                                    type: 'string',
-                                },
-                                {
-                                    name: 'count',
-                                    type: 'number',
-                                },
-                            ],
-                        )
-                        done()
-                    })
-                }, 5000)
             })
         }, 10000)
     })

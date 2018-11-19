@@ -12,7 +12,6 @@ import Connection from '../../src/Connection'
 
 describe('Connection', () => {
     let conn
-
     beforeEach(() => {
         conn = new Connection({
             url: 'foo',

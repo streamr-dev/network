@@ -1,4 +1,3 @@
-import 'babel-polyfill' // Needed because of mocha
 import assert from 'assert'
 import fetch from 'node-fetch'
 
@@ -16,7 +15,9 @@ describe('StreamrClient', () => {
     const createClient = (opts = {}) => new StreamrClient({
         url: config.websocketUrl,
         restUrl: config.restUrl,
-        apiKey: 'tester1-api-key',
+        auth: {
+            privateKey: '12345564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
+        },
         autoConnect: false,
         autoDisconnect: false,
         ...opts,
@@ -105,7 +106,6 @@ describe('StreamrClient', () => {
                         done()
                     })
                 })
-
                 sub.on('subscribed', () => {
                     stream.produce({
                         id,

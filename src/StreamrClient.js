@@ -13,6 +13,7 @@ const debug = debugFactory('StreamrClient')
 import Subscription from './Subscription'
 import Stream from './rest/domain/Stream'
 import Connection from './Connection'
+import Session from './Session'
 import FailedToProduceError from './errors/FailedToProduceError'
 
 export default class StreamrClient extends EventEmitter {
@@ -28,7 +29,7 @@ export default class StreamrClient extends EventEmitter {
             autoConnect: true,
             // Automatically disconnect on last unsubscribe
             autoDisconnect: true,
-            apiKey: null,
+            auth: {},
         }
         this.subsByStream = {}
         this.subById = {}
@@ -40,6 +41,11 @@ export default class StreamrClient extends EventEmitter {
         if (this.options.authKey && !this.options.apiKey) {
             this.options.apiKey = this.options.authKey
         }
+        if (this.options.apiKey) {
+            this.options.auth.apiKey = this.options.apiKey
+        }
+
+        this.session = new Session(this, options.auth)
 
         // Event handling on connection object
         this.connection = connection || new Connection(this.options)
@@ -213,7 +219,8 @@ export default class StreamrClient extends EventEmitter {
         return this.subsByStream[streamId] || []
     }
 
-    async produceToStream(streamObjectOrId, data, apiKey = this.options.apiKey) {
+    async produceToStream(streamObjectOrId, data, apiKey = this.options.auth.apiKey) {
+        const sessionToken = await this.session.getSessionToken()
         // Validate streamObjectOrId
         let streamId
         if (streamObjectOrId instanceof Stream) {
@@ -231,7 +238,7 @@ export default class StreamrClient extends EventEmitter {
 
         // If connected, emit a publish request
         if (this.isConnected()) {
-            this._requestPublish(streamId, data, apiKey)
+            this._requestPublish(streamId, data, apiKey, sessionToken)
         } else if (this.options.autoConnect) {
             this.publishQueue.push([streamId, data, apiKey])
             this.connect().catch(() => {}) // ignore
@@ -271,7 +278,7 @@ export default class StreamrClient extends EventEmitter {
         }
 
         // Create the Subscription object and bind handlers
-        const sub = new Subscription(options.stream, options.partition || 0, options.apiKey || this.options.apiKey, callback, options)
+        const sub = new Subscription(options.stream, options.partition || 0, options.apiKey || this.options.auth.apiKey, callback, options)
         sub.on('gap', (from, to) => {
             if (!sub.resending) {
                 this._requestResend(sub, {
@@ -389,20 +396,22 @@ export default class StreamrClient extends EventEmitter {
 
         const subscribedSubs = subs.filter((it) => it.getState() === Subscription.State.subscribed)
 
-        // If this is the first subscription for this stream, send a subscription request to the server
-        if (!subs.subscribing && subscribedSubs.length === 0) {
-            const request = new SubscribeRequest(sub.streamId, undefined, sub.apiKey)
-            debug('_requestSubscribe: subscribing client: %o', request)
-            subs.subscribing = true
-            this.connection.send(request)
-        } else if (subscribedSubs.length > 0) {
-            // If there already is a subscribed subscription for this stream, this new one will just join it immediately
-            debug('_requestSubscribe: another subscription for same stream: %s, insta-subscribing', sub.streamId)
+        return this.session.getSessionToken().then((sessionToken) => {
+            // If this is the first subscription for this stream, send a subscription request to the server
+            if (!subs.subscribing && subscribedSubs.length === 0) {
+                const request = new SubscribeRequest(sub.streamId, undefined, sub.apiKey, sessionToken)
+                debug('_requestSubscribe: subscribing client: %o', request)
+                subs.subscribing = true
+                this.connection.send(request)
+            } else if (subscribedSubs.length > 0) {
+                // If there already is a subscribed subscription for this stream, this new one will just join it immediately
+                debug('_requestSubscribe: another subscription for same stream: %s, insta-subscribing', sub.streamId)
 
-            setTimeout(() => {
-                sub.setState(Subscription.State.subscribed)
-            })
-        }
+                setTimeout(() => {
+                    sub.setState(Subscription.State.subscribed)
+                })
+            }
+        })
     }
 
     _requestUnsubscribe(streamId) {
@@ -412,14 +421,22 @@ export default class StreamrClient extends EventEmitter {
 
     _requestResend(sub, resendOptions) {
         sub.setResending(true)
-
-        const request = new ResendRequest(sub.streamId, sub.streamPartition, sub.id, resendOptions || sub.getEffectiveResendOptions(), sub.apiKey)
-        debug('_requestResend: %o', request)
-        this.connection.send(request)
+        return this.session.getSessionToken().then((sessionToken) => {
+            const request = new ResendRequest(
+                sub.streamId,
+                sub.streamPartition,
+                sub.id,
+                resendOptions || sub.getEffectiveResendOptions(),
+                sub.apiKey,
+                sessionToken,
+            )
+            debug('_requestResend: %o', request)
+            this.connection.send(request)
+        })
     }
 
-    _requestPublish(streamId, data, apiKey) {
-        const request = new PublishRequest(streamId, apiKey, undefined, data)
+    _requestPublish(streamId, data, apiKey, sessionToken) {
+        const request = new PublishRequest(streamId, apiKey, sessionToken, data)
         debug('_requestResend: %o', request)
         this.connection.send(request)
     }

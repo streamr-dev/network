@@ -23,7 +23,9 @@ Here are some quick examples. More detailed examples for the browser and node.js
 ```javascript
 const client = new StreamrClient({
     // See below for more options
-    apiKey: 'your-api-key'
+    auth: {
+        apiKey: 'your-api-key'
+    }
 })
 ```
 
@@ -79,9 +81,19 @@ Option | Default value | Description
 ------ | ------------- | -----------
 url | wss://www.streamr.com/api/v1/ws | Address of the Streamr websocket endpoint to connect to.
 restUrl | https://www.streamr.com/api/v1/ws | Base URL of the Streamr REST API.
-apiKey | null | Define a default apiKey to use when none is specified in the individual function calls.
+auth | {} | Object that can contain different information to authenticate. More details below.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
+
+### Authentication options
+
+Option | Default value | Description
+------ | ------------- | -----------
+auth.apiKey | null | Default API key to use to authenticate.
+auth.privateKey | null | Ethereum private key to use to authenticate.
+auth.provider | null | Ethereum provider used to connect to an account to use to authenticate.
+auth.username | null | Username to use to authenticate. Needs `auth.password` as well.
+auth.password | null | Password to use to authenticate. Needs `auth.username` as well.
 
 ### Message handler callback
 

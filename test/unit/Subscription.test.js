@@ -132,7 +132,12 @@ describe('Subscription', () => {
     describe('handleError()', () => {
         it('emits an error event', (done) => {
             const err = new Error('Test error')
-            const sub = new Subscription(msg.streamId, msg.streamPartition, 'apiKey', sinon.stub().throws('Msg handler should not be called!'))
+            const sub = new Subscription(
+                msg.streamId,
+                msg.streamPartition,
+                'apiKey',
+                sinon.stub().throws('Msg handler should not be called!'),
+            )
             sub.on('error', (thrown) => {
                 assert(err === thrown)
                 done()

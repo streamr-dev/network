@@ -13,10 +13,12 @@
         const STREAM_ID = 'MY-STREAM-ID'
         const API_KEY = 'MY-API-KEY'
 
-        // Create the client and give the API key to use by default
+            // Create the client and give the API key to use by default
         const client = new StreamrClient({
-            restUrl: 'http://localhost:8890/api/v1',
-            apiKey: API_KEY
+            restUrl: 'http://localhost:8081/streamr-core/api/v1',
+            auth: {
+                apiKey: API_KEY,
+            }
         })
 
         function produce() {
@@ -28,7 +30,9 @@
 
             // Produce the event to the Stream
             client.produceToStream(STREAM_ID, msg)
-                .then(() => console.log('Sent successfully: ', msg))
+                .then(() => {
+                    console.log('Sent successfully: ', msg)
+                })
                 .catch((err) => log(err))
         }
     </script>

@@ -30,34 +30,34 @@ function getKeepAliveAgentForUrl(url) {
 
 // These function are mixed in to StreamrClient.prototype.
 // In the below functions, 'this' is intended to be the StreamrClient
-export async function getStream(streamId, apiKey = this.options.apiKey) {
+export async function getStream(streamId) {
     const url = `${this.options.restUrl}/streams/${streamId}`
-    const json = await authFetch(url, apiKey)
+    const json = await authFetch(url, this.session)
     return json ? new Stream(this, json) : undefined
 }
 
-export async function listStreams(query = {}, apiKey = this.options.apiKey) {
+export async function listStreams(query = {}) {
     const url = `${this.options.restUrl}/streams?${qs.stringify(query)}`
-    const json = await authFetch(url, apiKey)
+    const json = await authFetch(url, this.session)
     return json ? json.map((stream) => new Stream(this, stream)) : []
 }
 
-export async function getStreamByName(name, apiKey = this.options.apiKey) {
+export async function getStreamByName(name) {
     const json = await this.listStreams({
         name,
         public: false,
-    }, apiKey)
+    })
     return json[0] ? new Stream(this, json[0]) : undefined
 }
 
-export async function createStream(props, apiKey = this.options.apiKey) {
+export async function createStream(props) {
     if (!props || !props.name) {
         throw new Error('Stream properties must contain a "name" field!')
     }
 
     const json = await authFetch(
         `${this.options.restUrl}/streams`,
-        apiKey,
+        this.session,
         {
             method: 'POST',
             body: JSON.stringify(props),
@@ -66,19 +66,19 @@ export async function createStream(props, apiKey = this.options.apiKey) {
     return json ? new Stream(this, json) : undefined
 }
 
-export async function getOrCreateStream(props, apiKey = this.options.apiKey) {
+export async function getOrCreateStream(props) {
     let json
 
     // Try looking up the stream by id or name, whichever is defined
     if (props.id) {
-        json = await this.getStream(props.id, apiKey)
+        json = await this.getStream(props.id)
     } else if (props.name) {
-        json = await this.getStreamByName(props.name, apiKey)
+        json = await this.getStreamByName(props.name)
     }
 
     // If not found, try creating the stream
     if (!json) {
-        json = await this.createStream(props, apiKey)
+        json = await this.createStream(props)
         debug('Created stream: %s (%s)', props.name, json.id)
     }
 
@@ -90,7 +90,7 @@ export async function getOrCreateStream(props, apiKey = this.options.apiKey) {
     }
 }
 
-export function produceToStreamHttp(streamObjectOrId, data, apiKey = this.options.apiKey, requestOptions = {}, keepAlive = true) {
+export function produceToStreamHttp(streamObjectOrId, data, requestOptions = {}, keepAlive = true) {
     let streamId
     if (streamObjectOrId instanceof Stream) {
         streamId = streamObjectOrId.id
@@ -101,7 +101,7 @@ export function produceToStreamHttp(streamObjectOrId, data, apiKey = this.option
     // Send data to the stream
     return authFetch(
         `${this.options.restUrl}/streams/${streamId}/data`,
-        apiKey,
+        this.session,
         Object.assign({}, requestOptions, {
             method: 'POST',
             body: JSON.stringify(data),
