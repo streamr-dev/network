@@ -38,7 +38,7 @@
     "debug": "4.1.0",
     "events": "3.0.0",
     "uuid": "3.3.2",
-    "ws": "6.1.0"
+    "ws": "6.1.2"
   },
   "devDependencies": {
     "eslint": "5.7.0",
