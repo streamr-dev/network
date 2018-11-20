@@ -8,15 +8,7 @@ const callbackToPromise = (method, ...args) => {
 
 const BOOTNODES = require('../bootstrapNodes.json').map((node) => node.path)
 
-// TODO remove both
-const getAddress = (peerInfo) => peerInfo
-
-const getIdShort = (input) => input
-// (input.length > 15 ? input.slice(-4) : input)
-
 module.exports = {
     callbackToPromise,
-    getAddress,
-    getIdShort,
     BOOTNODES
 }

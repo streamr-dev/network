@@ -18,14 +18,14 @@ describe('message propagation in network', () => {
     const BOOTNODES = []
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 33300)
+        tracker = await startTracker(LOCALHOST, 33300, 'tracker')
         BOOTNODES.push(tracker.getAddress())
 
         await Promise.all([
-            startNode('127.0.0.1', 33312, null),
-            startNode('127.0.0.1', 33313, null),
-            startNode('127.0.0.1', 33314, null),
-            startNode('127.0.0.1', 33315, null)
+            startNode('127.0.0.1', 33312, 'node-1'),
+            startNode('127.0.0.1', 33313, 'node-2'),
+            startNode('127.0.0.1', 33314, 'node-3'),
+            startNode('127.0.0.1', 33315, 'node-4')
         ]).then((res) => {
             [n1, n2, n3, n4] = res
             n1.setBootstrapTrackers(BOOTNODES)

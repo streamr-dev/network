@@ -6,7 +6,8 @@ const LOCALHOST = '127.0.0.1'
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const waitForEvent = (emitter, event, timeout = 20 * 1000) => pEvent(emitter, event, {
-    timeout
+    timeout,
+    multiArgs: true
 })
 
 const getPeers = (max) => Array.from(Array(max), (d, i) => 'address-' + i)

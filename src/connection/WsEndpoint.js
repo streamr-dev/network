@@ -6,10 +6,53 @@ const WebSocket = require('ws')
 
 const Endpoint = require('./Endpoint')
 
+class CustomHeaders {
+    constructor(headers) {
+        this.headers = this._transformToObjectWithLowerCaseKeys(headers)
+    }
+
+    pluckCustomHeadersFromObject(object) {
+        const headerNames = Object.keys(this.headers)
+        const objectWithLowerCaseKeys = this._transformToObjectWithLowerCaseKeys(object)
+        return headerNames.reduce((acc, headerName) => {
+            return {
+                ...acc,
+                [headerName]: objectWithLowerCaseKeys[headerName]
+            }
+        }, {})
+    }
+
+    asObject() {
+        return this.headers
+    }
+
+    asArray() {
+        return Object.entries(this.headers)
+            .map(([name, value]) => `${name}: ${value}`)
+    }
+
+    _transformToObjectWithLowerCaseKeys(o) {
+        const transformedO = {}
+        Object.entries(o).forEach(([k, v]) => {
+            transformedO[k.toLowerCase()] = v
+        })
+        return transformedO
+    }
+}
+
 class WsEndpoint extends EventEmitter {
-    constructor(wss) {
+    constructor(wss, customHeaders) {
         super()
+
+        if (!wss) {
+            throw new Error('wss not given')
+        }
+        if (!customHeaders) {
+            throw new Error('customHeaders not given')
+        }
+
         this.wss = wss
+        this.customHeaders = new CustomHeaders(customHeaders)
 
         this.endpoint = new Endpoint()
         this.endpoint.implement(this)
@@ -19,14 +62,20 @@ class WsEndpoint extends EventEmitter {
         this.wss.on('connection', (ws, req) => {
             const parameters = url.parse(req.url, true)
             const { address } = parameters.query
+            const customHeadersOfClient = this.customHeaders.pluckCustomHeadersFromObject(req.headers)
 
             if (!address) {
                 ws.terminate()
                 debug('dropped connection to me because address parameter not given')
             } else {
                 debug('%s connected to me', address)
-                this._onConnected(ws, address)
+                this._onConnected(ws, address, customHeadersOfClient)
             }
+        })
+
+        // Add identity to server response headers before they are sent to client
+        this.wss.on('headers', (headers) => {
+            headers.push(...this.customHeaders.asArray())
         })
 
         debug('node started')
@@ -75,11 +124,22 @@ class WsEndpoint extends EventEmitter {
                 resolve()
             } else {
                 try {
-                    const ws = new WebSocket(`${peerAddress}?address=${this.getAddress()}`)
+                    let customHeadersOfServer
+                    const ws = new WebSocket(`${peerAddress}?address=${this.getAddress()}`, {
+                        headers: this.customHeaders.asObject()
+                    })
+
+                    ws.on('upgrade', (response) => {
+                        customHeadersOfServer = this.customHeaders.pluckCustomHeadersFromObject(response.headers)
+                    })
 
                     ws.on('open', () => {
-                        this._onConnected(ws, peerAddress)
-                        resolve()
+                        if (!customHeadersOfServer) {
+                            reject(new Error('upgrade event never received?'))
+                        } else {
+                            this._onConnected(ws, peerAddress, customHeadersOfServer)
+                            resolve()
+                        }
                     })
 
                     ws.on('error', (err) => {
@@ -94,7 +154,7 @@ class WsEndpoint extends EventEmitter {
         })
     }
 
-    _onConnected(ws, address) {
+    _onConnected(ws, address, customHeaders) {
         ws.on('message', (message) => {
             // TODO check message.type [utf8|binary]
             this.onReceive(address, message)
@@ -108,9 +168,9 @@ class WsEndpoint extends EventEmitter {
         })
 
         this.connections.set(address, ws)
-        debug('added %s to peer book', address)
+        debug('added %s to peer book (headers %o)', address, customHeaders)
 
-        this.emit(Endpoint.events.PEER_CONNECTED, address)
+        this.emit(Endpoint.events.PEER_CONNECTED, address, customHeaders)
     }
 
     async stop(callback = () => {}) {
@@ -152,11 +212,12 @@ async function startWebsocketServer(host, port) {
     })
 }
 
-async function startEndpoint(host, port) {
-    return startWebsocketServer(host, port).then((n) => new WsEndpoint(n))
+async function startEndpoint(host, port, customHeaders) {
+    return startWebsocketServer(host, port).then((n) => new WsEndpoint(n, customHeaders))
 }
 
 module.exports = {
+    CustomHeaders,
     WsEndpoint,
     startEndpoint
 }

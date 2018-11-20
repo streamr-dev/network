@@ -1,7 +1,6 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
 const encoder = require('../helpers/MessageEncoder')
-const { getAddress } = require('../util')
 const EndpointListener = require('./EndpointListener')
 
 const events = Object.freeze({
@@ -43,7 +42,7 @@ class NodeToNode extends EventEmitter {
     }
 
     getAddress() {
-        return getAddress(this.endpoint.getAddress())
+        return this.endpoint.getAddress()
     }
 
     stop(cb) {

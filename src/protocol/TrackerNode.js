@@ -1,6 +1,5 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:tracker-node')
-const { getAddress } = require('../util')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
 
@@ -47,7 +46,7 @@ class TrackerNode extends EventEmitter {
                 break
 
             case encoder.STREAM:
-                if (message.getLeaderAddress() === getAddress(this.endpoint.getAddress())) {
+                if (message.getLeaderAddress() === this.endpoint.getAddress()) {
                     this.emit(events.STREAM_ASSIGNED, message.getStreamId())
                 } else {
                     this.emit(events.STREAM_INFO_RECEIVED, message)

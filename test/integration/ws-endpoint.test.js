@@ -12,7 +12,7 @@ describe('create five endpoints and init connection between them', () => {
     it('should be able to start and stop successfully', async () => {
         for (let i = 0; i < MAX; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const endpoint = await startEndpoint(LOCALHOST, 30690 + i, '', true).catch((err) => { throw err })
+            const endpoint = await startEndpoint(LOCALHOST, 30690 + i, {}).catch((err) => { throw err })
             endpoints.push(endpoint)
         }
 
@@ -45,5 +45,38 @@ describe('create five endpoints and init connection between them', () => {
             // eslint-disable-next-line no-await-in-loop
             await endpoints[i].stop(console.log(`closing ${i} endpoint`))
         }
+    })
+
+    it('address and custom headers are exchanged between connecting endpoints', async () => {
+        const endpointOne = await startEndpoint(LOCALHOST, 30695, {
+            'my-identity': 'endpoint-1'
+        })
+        const endpointTwo = await startEndpoint(LOCALHOST, 30696, {
+            'my-identity': 'endpoint-2'
+        })
+
+        const e1 = waitForEvent(endpointOne, endpointEvents.PEER_CONNECTED)
+        const e2 = waitForEvent(endpointTwo, endpointEvents.PEER_CONNECTED)
+
+        endpointOne.connect(endpointTwo.getAddress())
+
+        const endpointOneArguments = await e1
+        const endpointTwoArguments = await e2
+
+        expect(endpointOneArguments).toEqual([
+            'ws://127.0.0.1:30696',
+            {
+                'my-identity': 'endpoint-2'
+            }
+        ])
+        expect(endpointTwoArguments).toEqual([
+            'ws://127.0.0.1:30695',
+            {
+                'my-identity': 'endpoint-1'
+            }
+        ])
+
+        await endpointOne.stop()
+        await endpointTwo.stop()
     })
 })

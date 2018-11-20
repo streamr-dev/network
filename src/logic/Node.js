@@ -1,5 +1,4 @@
 const { EventEmitter } = require('events')
-const uuidv4 = require('uuid/v4')
 const createDebug = require('debug')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
@@ -7,7 +6,6 @@ const SubscriberManager = require('../logic/SubscriberManager')
 const SubscriptionManager = require('../logic/SubscriptionManager')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const DataMessage = require('../messages/DataMessage')
-const { getAddress, getIdShort } = require('../util')
 const StreamManager = require('./StreamManager')
 
 const events = Object.freeze({
@@ -18,7 +16,7 @@ const events = Object.freeze({
 })
 
 class Node extends EventEmitter {
-    constructor(id, trackerNode, nodeToNode) {
+    constructor(id, peerBook, trackerNode, nodeToNode) {
         super()
 
         this.nodeRequestInterval = null
@@ -36,7 +34,8 @@ class Node extends EventEmitter {
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
         })
 
-        this.id = id || uuidv4()
+        this.id = id
+        this.peerBook = peerBook
         this.trackers = new Map()
 
         this.protocols = {
@@ -70,10 +69,10 @@ class Node extends EventEmitter {
 
     onConnectedToTracker(tracker) {
         if (this._isTracker(tracker)) {
-            this.debug('connected to tracker %s', getIdShort(tracker))
+            this.debug('connected to tracker %s', this.peerBook.getShortId(tracker))
             this.trackers.set(tracker, tracker)
             this._sendStatus(tracker)
-            this.debug('requesting more peers from tracker %s', getIdShort(tracker))
+            this.debug('requesting more peers from tracker %s', this.peerBook.getShortId(tracker))
             this.requestMorePeers()
             this._handlePendingSubscriptions()
         }
@@ -93,9 +92,9 @@ class Node extends EventEmitter {
         const repeaterAddresses = streamMessage.getRepeaterAddresses()
 
         this.streams.markOtherNodeAsLeader(streamId, leaderAddress)
-        this.debug('stream %s leader set to %s', streamId, getIdShort(leaderAddress))
+        this.debug('stream %s leader set to %s', streamId, this.peerBook.getShortId(leaderAddress))
         this.streams.markRepeaterNodes(streamId, repeaterAddresses)
-        this.debug('stream %s repeater nodes set to %j', streamId, repeaterAddresses.map((a) => getIdShort(a)))
+        this.debug('stream %s repeater nodes set to %j', streamId, repeaterAddresses.map((a) => this.peerBook.getShortId(a)))
 
         this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
@@ -144,7 +143,7 @@ class Node extends EventEmitter {
                 number,
                 previousNumber
             })
-            this.debug('ask tracker %s who is responsible for stream %s', getIdShort(tracker), streamId)
+            this.debug('ask tracker %s who is responsible for stream %s', this.peerBook.getShortId(tracker), streamId)
             this.protocols.trackerNode.requestStreamInfo(tracker, streamId)
         }
     }
@@ -166,8 +165,8 @@ class Node extends EventEmitter {
     }
 
     onSubscribeRequest(subscribeMessage) {
-        this.subscribers.addSubscriber(subscribeMessage.getStreamId(), getAddress(subscribeMessage.getSource()))
-        this.debug('node %s added as a subscriber for stream %s', getIdShort(subscribeMessage.getSource()), subscribeMessage.getStreamId())
+        this.subscribers.addSubscriber(subscribeMessage.getStreamId(), subscribeMessage.getSource())
+        this.debug('node %s added as a subscriber for stream %s', this.peerBook.getShortId(subscribeMessage.getSource()), subscribeMessage.getStreamId())
     }
 
     onUnsubscribeRequest(unsubscribeMessage) {
@@ -193,7 +192,7 @@ class Node extends EventEmitter {
         } else if (this.streams.isAnyRepeaterKnownFor(streamId)) {
             const repeaterAddresses = this.streams.getRepeatersFor(streamId)
             this.debug('stream %s is known; sending subscribe requests to repeaters %j', streamId,
-                repeaterAddresses.map((a) => getIdShort(a)))
+                repeaterAddresses.map((a) => this.peerBook.getShortId(a)))
             repeaterAddresses.forEach((address) => {
                 this.protocols.nodeToNode.sendSubscribe(address, streamId)
             })
@@ -236,15 +235,15 @@ class Node extends EventEmitter {
     }
 
     _sendStatus(tracker) {
-        this.debug('sending status to tracker %s', getIdShort(tracker))
+        this.debug('sending status to tracker %s', this.peerBook.getShortId(tracker))
         this.protocols.trackerNode.sendStatus(tracker, this._getStatus())
     }
 
     onNodeDisconnected(node) {
         if (this._isNode(node)) {
-            const nodeAddress = getAddress(node)
+            const nodeAddress = node
             this.subscribers.removeSubscriberFromAllStreams(nodeAddress)
-            this.debug('removed all subscriptions of node %s', getIdShort(node))
+            this.debug('removed all subscriptions of node %s', this.peerBook.getShortId(node))
         }
     }
 

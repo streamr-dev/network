@@ -1,17 +1,16 @@
 const { EventEmitter } = require('events')
-const uuidv4 = require('uuid/v4')
 const createDebug = require('debug')
-const { getAddress, getIdShort } = require('../util')
 const TrackerServer = require('../protocol/TrackerServer')
 const { getPeersTopology } = require('../helpers/TopologyStrategy')
 
 module.exports = class Tracker extends EventEmitter {
-    constructor(id, trackerServer) {
+    constructor(id, peerBook, trackerServer) {
         super()
 
         this.nodes = new Map()
 
-        this.id = id || uuidv4()
+        this.id = id
+        this.peerBook = peerBook
         this.protocols = {
             trackerServer
         }
@@ -26,24 +25,24 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     sendListOfNodes(node) {
-        const listOfNodes = getPeersTopology([...this.nodes.keys()], getAddress(node))
+        const listOfNodes = getPeersTopology([...this.nodes.keys()], node)
 
         if (listOfNodes.length) {
-            this.debug('sending list of %d nodes to %s', listOfNodes.length, getIdShort(node))
+            this.debug('sending list of %d nodes to %s', listOfNodes.length, this.peerBook.getShortId(node))
             this.protocols.trackerServer.sendNodeList(node, listOfNodes)
         } else {
-            this.debug('no available nodes to send to %s', getIdShort(node))
+            this.debug('no available nodes to send to %s', this.peerBook.getShortId(node))
         }
     }
 
     processNodeStatus(statusMessage) {
-        this.debug('received from %s status %s', getIdShort(statusMessage.getSource()), JSON.stringify(statusMessage.getStatus()))
+        this.debug('received from %s status %s', this.peerBook.getShortId(statusMessage.getSource()), JSON.stringify(statusMessage.getStatus()))
         this.nodes.set(statusMessage.getSource(), statusMessage.getStatus())
     }
 
     onNodeDisconnected(node) {
-        this.debug('removing node %s from tracker node list', getIdShort(node))
-        this.nodes.delete(getAddress(node))
+        this.debug('removing node %s from tracker node list', this.peerBook.getShortId(node))
+        this.nodes.delete(node)
     }
 
     sendStreamInfo(streamMessage) {
@@ -68,13 +67,16 @@ module.exports = class Tracker extends EventEmitter {
 
         let selectedRepeaters
         if (leaderNode === null) {
-            leaderNode = getAddress(source)
+            leaderNode = source
             selectedRepeaters = [leaderNode]
-            this.debug('stream %s not found; assigning %s as leader', streamId, getIdShort(source))
+            this.debug('stream %s not found; assigning %s as leader', streamId, this.peerBook.getShortId(source))
         } else {
             selectedRepeaters = getPeersTopology(repeaterNodes, source)
             this.debug('stream %s found; responding to %s with leader %s and repeaters %j',
-                streamId, getIdShort(source), getIdShort(leaderNode), selectedRepeaters.map((s) => getIdShort(s)))
+                streamId,
+                this.peerBook.getShortId(source),
+                this.peerBook.getShortId(leaderNode),
+                selectedRepeaters.map((s) => this.peerBook.getShortId(s)))
         }
 
         this.protocols.trackerServer.sendStreamInfo(source, streamId, leaderNode, selectedRepeaters)
