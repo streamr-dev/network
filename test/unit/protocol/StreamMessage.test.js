@@ -50,6 +50,43 @@ describe('StreamMessage', () => {
         })
     })
 
+    describe('version 29', () => {
+        describe('deserialize', () => {
+            it('correctly parses messages', () => {
+                const arr = [29, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+                    941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', 1, 'address', 'signature']
+                const result = StreamMessage.deserialize(arr)
+
+                assert(result instanceof StreamMessage)
+                assert.equal(result.streamId, 'TsvTbqshTsuLg_HyUjxigA')
+                assert.equal(result.streamPartition, 0)
+                assert.equal(result.timestamp, 1529549961116)
+                assert.equal(result.ttl, 0)
+                assert.equal(result.offset, 941516902)
+                assert.equal(result.previousOffset, 941499898)
+                assert.equal(result.contentType, StreamMessage.CONTENT_TYPES.JSON)
+                assert.equal(result.content, '{"valid": "json"}')
+                assert.equal(result.signatureType, 1)
+                assert.equal(result.publisherAddress, 'address')
+                assert.equal(result.signature, 'signature')
+            })
+        })
+
+        describe('serialize', () => {
+            it('correctly serializes messages', () => {
+                const arr = [29, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+                    941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', 1, 'address', 'signature']
+
+                const serialized = new StreamMessage(
+                    'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
+                    941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', 1, 'address', 'signature',
+                ).serialize(29)
+
+                assert.deepEqual(serialized, JSON.stringify(arr))
+            })
+        })
+    })
+
     describe('unsupported version', () => {
         describe('deserialize', () => {
             it('throws', () => {

@@ -30,15 +30,15 @@ module.exports = class WebsocketResponse {
         throw new Error('Abstract method called - please override in subclass!')
     }
 
-    toObject(version = 0) {
+    toObject(version = 0, payloadVersion = 28) {
         if (version === 0) {
-            return [version, this.messageType, this.subId, this.payload.toObject()]
+            return [version, this.messageType, this.subId, this.payload.toObject(payloadVersion)]
         }
         throw UnsupportedVersionError(version, 'Supported versions: [0]')
     }
 
-    serialize(version = 0) {
-        return JSON.stringify(this.toObject(version))
+    serialize(version = 0, payloadVersion = 28) {
+        return JSON.stringify(this.toObject(version, payloadVersion))
     }
 
     static checkVersion(message) {
