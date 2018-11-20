@@ -1,3 +1,4 @@
+/* eslint-disable no-new */
 const assert = require('assert')
 const sinon = require('sinon')
 const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage')

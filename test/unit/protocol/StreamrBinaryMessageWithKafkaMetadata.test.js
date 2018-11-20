@@ -72,38 +72,6 @@ describe('StreamrBinaryMessageWithKafkaMetadata', () => {
             })
         })
 
-        describe('toArray(contentAsBuffer)', () => {
-            it('returns data in array format given contentAsBuffer=true', () => {
-                assert.deepEqual(msgWithMetadata.toArray(true), [
-                    28,
-                    'streamId',
-                    0,
-                    1497529459457,
-                    100,
-                    100,
-                    99,
-                    StreamrBinaryMessage.CONTENT_TYPE_JSON,
-                    '{"foo":"bar"}',
-                ])
-            })
-
-            it('returns data in array format with pre-parsed content contentAsBuffer=false', () => {
-                assert.deepEqual(msgWithMetadata.toArray(false), [
-                    28,
-                    'streamId',
-                    0,
-                    1497529459457,
-                    100,
-                    100,
-                    99,
-                    StreamrBinaryMessage.CONTENT_TYPE_JSON,
-                    {
-                        foo: 'bar',
-                    },
-                ])
-            })
-        })
-
         describe('toObject(contentAsBuffer)', () => {
             it('returns data in object format given contentAsBuffer=true', () => {
                 assert.deepEqual(msgWithMetadata.toObject(true), {

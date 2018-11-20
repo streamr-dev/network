@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/streamr-dev/data-api.svg?branch=master)](https://travis-ci.org/streamr-dev/data-api)
+
 # Data API
 
 An essential service of the Streamr cloud architecture responsible for inbound and outbound data to/from Streamr

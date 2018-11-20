@@ -1,4 +1,5 @@
 const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage')
+const StreamrBinaryMessageWithKafkaMetadata = require('../../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
 
 /**
  * Used to populate Cassandra with pre-defined messages for testing purposes.
@@ -18,15 +19,18 @@ module.exports = class CassandraDataInserter {
         this.index = 1
         this.offset = 5
         this.previousOffset = -1
+
+        this.insertedMessages = []
     }
 
     timedBulkInsert(n, timeoutInMs) {
-        setTimeout(() => {
-            this.bulkInsert(n)
-                .catch((e) => {
-                    console.error(e)
-                })
-        }, timeoutInMs)
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                this.bulkInsert(n)
+                    .then(resolve)
+                    .catch(reject)
+            }, timeoutInMs)
+        })
     }
 
     bulkInsert(n) {
@@ -46,6 +50,7 @@ module.exports = class CassandraDataInserter {
             key: `msg-${this.index}`,
         }
         const msg = new StreamrBinaryMessage(this.streamId, partition, timestamp, ttl, contentType, Buffer.from(JSON.stringify(content), 'utf8'))
+        this.insertedMessages.push(new StreamrBinaryMessageWithKafkaMetadata(msg, this.offset, this.previousOffset, 0))
 
         const promises = []
         promises.push(this.client.execute(

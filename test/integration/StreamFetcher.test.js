@@ -170,7 +170,7 @@ describe('StreamFetcher', () => {
         })
 
         it('resolves with true if stream is publicly readable and read permission is requested', (done) => {
-            requestHandlers.permissions = function (req, res) {
+            requestHandlers.permissions = (req, res) => {
                 assert.equal(req.params.id, 'publicStream')
                 res.status(200).send([
                     {
@@ -296,7 +296,7 @@ describe('StreamFetcher', () => {
         })
 
         it('resolves with stream if stream is publicly readable', (done) => {
-            requestHandlers.stream = function (req, res) {
+            requestHandlers.stream = (req, res) => {
                 assert.equal(req.params.id, 'publicStream')
                 res.status(200).send(streamJson)
             }

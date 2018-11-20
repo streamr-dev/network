@@ -6,7 +6,6 @@ const CASSANDRA_HOST = '127.0.0.1'
 const KEYSPACE = 'streamr_dev'
 const BULK_INSERT_WAIT_MS = 100
 
-// don't put arrow function here, mocha timeout can only be set this way
 describe('CassandraUtil', () => {
     let allMessages
     let expectedMessages
@@ -16,91 +15,9 @@ describe('CassandraUtil', () => {
     let streamId
     let cassandraDataInserter
 
-    beforeEach(() => {
-        // Unique stream for each test
-        streamId = `CassandraUtil.test.js-${Date.now()}`
-
-        allMessages = [
-            [28, streamId, 0, 1490180460000, 10, 5, -1, 27, JSON.stringify({
-                key: 'msg-1',
-            })],
-            [28, streamId, 0, 1490180520000, 10, 10, 5, 27, JSON.stringify({
-                key: 'msg-2',
-            })],
-            [28, streamId, 0, 1490180580000, 10, 15, 10, 27, JSON.stringify({
-                key: 'msg-3',
-            })],
-            [28, streamId, 0, 1490180640000, 10, 20, 15, 27, JSON.stringify({
-                key: 'msg-4',
-            })],
-            [28, streamId, 0, 1490180700000, 10, 25, 20, 27, JSON.stringify({
-                key: 'msg-5',
-            })],
-            [28, streamId, 0, 1490180760000, 10, 30, 25, 27, JSON.stringify({
-                key: 'msg-6',
-            })],
-            [28, streamId, 0, 1490180820000, 10, 35, 30, 27, JSON.stringify({
-                key: 'msg-7',
-            })],
-            [28, streamId, 0, 1490180880000, 10, 40, 35, 27, JSON.stringify({
-                key: 'msg-8',
-            })],
-            [28, streamId, 0, 1490180940000, 10, 45, 40, 27, JSON.stringify({
-                key: 'msg-9',
-            })],
-            [28, streamId, 0, 1490181000000, 10, 50, 45, 27, JSON.stringify({
-                key: 'msg-10',
-            })],
-            [28, streamId, 0, 1490181060000, 10, 55, 50, 27, JSON.stringify({
-                key: 'msg-11',
-            })],
-            [28, streamId, 0, 1490181120000, 10, 60, 55, 27, JSON.stringify({
-                key: 'msg-12',
-            })],
-            [28, streamId, 0, 1490181180000, 10, 65, 60, 27, JSON.stringify({
-                key: 'msg-13',
-            })],
-            [28, streamId, 0, 1490181240000, 10, 70, 65, 27, JSON.stringify({
-                key: 'msg-14',
-            })],
-            [28, streamId, 0, 1490181300000, 10, 75, 70, 27, JSON.stringify({
-                key: 'msg-15',
-            })],
-            [28, streamId, 0, 1490181360000, 10, 80, 75, 27, JSON.stringify({
-                key: 'msg-16',
-            })],
-            [28, streamId, 0, 1490181420000, 10, 85, 80, 27, JSON.stringify({
-                key: 'msg-17',
-            })],
-            [28, streamId, 0, 1490181480000, 10, 90, 85, 27, JSON.stringify({
-                key: 'msg-18',
-            })],
-            [28, streamId, 0, 1490181540000, 10, 95, 90, 27, JSON.stringify({
-                key: 'msg-19',
-            })],
-            [28, streamId, 0, 1490181600000, 10, 100, 95, 27, JSON.stringify({
-                key: 'msg-20',
-            })],
-        ]
-        expectedMessages = allMessages
-
-        messagesReceived = []
-        msgHandler = (msg) => {
-            messagesReceived.push(msg.toArray())
-        }
-
-        cassandra = new CassandraUtil([CASSANDRA_HOST], KEYSPACE, {
-            maxRefetchRetries: 2,
-            refetchInterval: 120,
-        })
-
-        cassandraDataInserter = new CassandraDataInserter(cassandra.client, streamId)
-        return cassandraDataInserter.bulkInsert(20)
-    })
-
-    afterEach((done) => {
-        cassandra.close(done)
-    })
+    function insertedMessagesToStreamMessages() {
+        return cassandraDataInserter.insertedMessages.map((binaryMsg) => binaryMsg.toStreamMessage())
+    }
 
     function assertMessages(expectedLastOffsetSent, expectedMsgs, done) {
         return (lastOffsetSent) => {
@@ -109,6 +26,31 @@ describe('CassandraUtil', () => {
             done()
         }
     }
+
+    beforeEach(() => {
+        // Unique stream for each test
+        streamId = `CassandraUtil.test.js-${Date.now()}`
+
+        messagesReceived = []
+        msgHandler = (msg) => {
+            messagesReceived.push(msg)
+        }
+
+        cassandra = new CassandraUtil([CASSANDRA_HOST], KEYSPACE, {
+            maxRefetchRetries: 2,
+            refetchInterval: 120,
+        })
+
+        cassandraDataInserter = new CassandraDataInserter(cassandra.client, streamId)
+        return cassandraDataInserter.bulkInsert(20).then(() => {
+            allMessages = insertedMessagesToStreamMessages()
+            expectedMessages = allMessages
+        })
+    })
+
+    afterEach((done) => {
+        cassandra.close(done)
+    })
 
     describe('getLast', () => {
         beforeEach(() => {
@@ -131,16 +73,11 @@ describe('CassandraUtil', () => {
             cassandra.getLast(streamId, 0, 5, msgHandler, assertMessages(100, expectedMessages, done), 100)
         })
 
-        it('produces correct messages when lastKnownOffset > cassandraLastOffset', (done) => {
-            expectedMessages = expectedMessages.concat([
-                [28, streamId, 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({
-                    key: 'msg-21',
-                })],
-                [28, streamId, 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({
-                    key: 'msg-22',
-                })],
-            ])
-            cassandra.getLast(streamId, 0, 5, msgHandler, assertMessages(110, expectedMessages, done), 110)
+        it('produces N + pending messages when lastKnownOffset > cassandraLastOffset', (done) => {
+            cassandra.getLast(streamId, 0, 5, msgHandler, (lastOffsetSent) => {
+                expectedMessages = insertedMessagesToStreamMessages().slice(15, 22)
+                assertMessages(110, expectedMessages, done)(lastOffsetSent)
+            }, 110)
             cassandraDataInserter.timedBulkInsert(2, BULK_INSERT_WAIT_MS)
         })
 
@@ -185,15 +122,10 @@ describe('CassandraUtil', () => {
         })
 
         it('produces correct messages when lastKnownOffset > cassandraLastOffset', (done) => {
-            expectedMessages = expectedMessages.concat([
-                [28, streamId, 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({
-                    key: 'msg-21',
-                })],
-                [28, streamId, 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({
-                    key: 'msg-22',
-                })],
-            ])
-            cassandra.getAll(streamId, 0, msgHandler, assertMessages(110, expectedMessages, done), 110)
+            cassandra.getAll(streamId, 0, msgHandler, (lastOffsetSent) => {
+                expectedMessages = insertedMessagesToStreamMessages()
+                assertMessages(110, expectedMessages, done)(lastOffsetSent)
+            }, 110)
             cassandraDataInserter.timedBulkInsert(2, BULK_INSERT_WAIT_MS)
         })
 
@@ -242,15 +174,10 @@ describe('CassandraUtil', () => {
         })
 
         it('produces correct messages when lastKnownOffset > cassandraLastOffset', (done) => {
-            expectedMessages = expectedMessages.concat([
-                [28, streamId, 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({
-                    key: 'msg-21',
-                })],
-                [28, streamId, 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({
-                    key: 'msg-22',
-                })],
-            ])
-            cassandra.getFromOffset(streamId, 0, 53, msgHandler, assertMessages(110, expectedMessages, done), 110)
+            cassandra.getFromOffset(streamId, 0, 53, msgHandler, (lastOffsetSent) => {
+                expectedMessages = insertedMessagesToStreamMessages().slice(10, 22)
+                assertMessages(110, expectedMessages, done)(lastOffsetSent)
+            }, 110)
             cassandraDataInserter.timedBulkInsert(2, BULK_INSERT_WAIT_MS)
         })
 
@@ -307,15 +234,10 @@ describe('CassandraUtil', () => {
         })
 
         it('produces correct messages when min < lastKnownOffset < max (incoming data to [min, max] range)', (done) => {
-            expectedMessages = allMessages.slice(4).concat([
-                [28, streamId, 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({
-                    key: 'msg-21',
-                })],
-                [28, streamId, 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({
-                    key: 'msg-22',
-                })],
-            ])
-            cassandra.getOffsetRange(streamId, 0, 25, 130, msgHandler, assertMessages(110, expectedMessages, done), 110)
+            cassandra.getOffsetRange(streamId, 0, 25, 130, msgHandler, (lastOffsetSent) => {
+                expectedMessages = insertedMessagesToStreamMessages().filter((msg) => msg.offset >= 25 && msg.offset <= 110)
+                assertMessages(110, expectedMessages, done)(lastOffsetSent)
+            }, 110)
             cassandraDataInserter.timedBulkInsert(10, BULK_INSERT_WAIT_MS)
         })
 
@@ -377,15 +299,10 @@ describe('CassandraUtil', () => {
         })
 
         it('produces correct messages when lastKnownOffset > cassandraLastOffset', (done) => {
-            expectedMessages = expectedMessages.concat([
-                [28, streamId, 0, 1490181660000, 10, 105, 100, 27, JSON.stringify({
-                    key: 'msg-21',
-                })],
-                [28, streamId, 0, 1490181720000, 10, 110, 105, 27, JSON.stringify({
-                    key: 'msg-22',
-                })],
-            ])
-            cassandra.getFromTimestamp(streamId, 0, startDate, msgHandler, assertMessages(110, expectedMessages, done), 110)
+            cassandra.getFromTimestamp(streamId, 0, startDate, msgHandler, (lastOffsetSent) => {
+                expectedMessages = insertedMessagesToStreamMessages().filter((msg) => msg.timestamp >= startDate.getTime() && msg.offset <= 110)
+                assertMessages(110, expectedMessages, done)(lastOffsetSent)
+            }, 110)
             cassandraDataInserter.timedBulkInsert(2, BULK_INSERT_WAIT_MS)
         })
 

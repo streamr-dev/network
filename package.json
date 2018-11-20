@@ -36,7 +36,8 @@
     "optimist": "*",
     "promise": "^7.1.1",
     "redis": "^2.6.2",
-    "sc-uws": "^10.148.2"
+    "sc-uws": "^10.148.2",
+    "streamr-client-protocol": "^1.1.0"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.2",

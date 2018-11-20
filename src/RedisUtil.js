@@ -87,14 +87,7 @@ module.exports = class RedisUtil extends events.EventEmitter {
                 })
                 .on('message', (channel, buffer) => {
                     const streamrBinaryMessageWithKafkaMetadata = StreamrBinaryMessageWithKafkaMetadata.fromBytes(buffer)
-                    const streamrBinaryMessage = streamrBinaryMessageWithKafkaMetadata.getStreamrBinaryMessage(true)
-
-                    this.emit(
-                        'message',
-                        streamrBinaryMessageWithKafkaMetadata.toArray(), // convert to array for efficient emission to client
-                        streamrBinaryMessage.streamId,
-                        streamrBinaryMessage.streamPartition,
-                    )
+                    this.emit('message', streamrBinaryMessageWithKafkaMetadata.toStreamMessage())
                 })
         }))
     }

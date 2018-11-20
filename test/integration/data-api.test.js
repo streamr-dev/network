@@ -1,6 +1,7 @@
 const assert = require('assert')
 const fetch = require('node-fetch')
 const WebSocket = require('sc-uws')
+const createDataApi = require('../../data-api')
 
 const port = 12345
 
@@ -11,7 +12,7 @@ describe('data-api', () => {
 
     beforeAll((done) => {
         // Start the app
-        dataApi = require('../../data-api')({
+        dataApi = createDataApi({
             'data-topic': 'data-dev',
             zookeeper: 'localhost',
             redis: 'localhost',

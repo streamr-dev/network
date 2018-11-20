@@ -24,7 +24,7 @@ jobs:
     - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 1"
     - sleep 1m
     - npm run test-integration
-  - stage: Publish version to npm (TODO)
+  - stage: Deploy to staging
     if: tag IS blank
     script:
     - mkdir build

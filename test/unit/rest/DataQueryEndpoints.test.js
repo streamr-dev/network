@@ -1,8 +1,7 @@
 const express = require('express')
 const request = require('supertest')
 const sinon = require('sinon')
-const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage')
-const StreamrBinaryMessageWithKafkaMetadata = require('../../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
+const Protocol = require('streamr-client-protocol')
 const restEndpointRouter = require('../../../src/rest/DataQueryEndpoints')
 const HttpError = require('../../../src/errors/HttpError')
 
@@ -10,6 +9,7 @@ describe('DataQueryEndpoints', () => {
     let app
     let historicalAdapterStub
     let streamFetcher
+    let volumeLogger
 
     function testGetRequest(url, key = 'authKey') {
         return request(app)
@@ -18,14 +18,17 @@ describe('DataQueryEndpoints', () => {
             .set('Authorization', `Token ${key}`)
     }
 
-    function kafkaMessage(content) {
-        const streamId = 'streamId'
-        const partition = 0
-        const timestamp = new Date(2017, 3, 1, 12, 0, 0)
-        const ttl = 0
-        const contentType = StreamrBinaryMessage.CONTENT_TYPE_JSON
-        const msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, Buffer.from(JSON.stringify(content, 'utf8')))
-        return new StreamrBinaryMessageWithKafkaMetadata(msg.toBytes(), 2, 1, 0)
+    function streamMessage(content) {
+        return new Protocol.StreamMessage(
+            'streamId',
+            0, // partition
+            new Date(2017, 3, 1, 12, 0, 0).getTime(),
+            0, // ttl
+            2, // offset
+            1, // previousOffset
+            Protocol.StreamMessage.CONTENT_TYPES.JSON,
+            content,
+        )
     }
 
     beforeEach(() => {
@@ -42,18 +45,25 @@ describe('DataQueryEndpoints', () => {
                 }))
             },
         }
-        app.use('/api/v1', restEndpointRouter(historicalAdapterStub, streamFetcher))
+        volumeLogger = {
+            logOutput: sinon.stub(),
+        }
+        app.use('/api/v1', restEndpointRouter(historicalAdapterStub, streamFetcher, volumeLogger))
     })
 
-    describe('GET /api/v1/streams/streamId/data/partitions/0/last', () => {
+    describe('Getting last events', () => {
+        const messages = [
+            streamMessage({
+                hello: 1,
+            }),
+            streamMessage({
+                world: 2,
+            }),
+        ]
+
         beforeEach(() => {
             historicalAdapterStub.getLast = (stream, streamPartition, count, msgHandler, doneCallback) => {
-                msgHandler(kafkaMessage({
-                    hello: 1,
-                }))
-                msgHandler(kafkaMessage({
-                    world: 2,
-                }))
+                messages.forEach((msg) => msgHandler(msg))
                 doneCallback(null, null)
             }
         })
@@ -82,17 +92,9 @@ describe('DataQueryEndpoints', () => {
                         error: 'Query parameter "count" not a number: sixsixsix',
                     }, done)
             })
-
-            it('responds 400 and error message if optional param "wrapper" is a unknown string', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=2pac')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Invalid value for query parameter "wrapper": 2pac',
-                    }, done)
-            })
         })
 
-        describe('/', () => {
+        describe('GET /api/v1/streams/streamId/data/partitions/0/last', () => {
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .expect('Content-Type', /json/)
@@ -101,38 +103,30 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with arrays as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
-                    .expect([kafkaMessage({
-                        hello: 1,
-                    }).toArray(), kafkaMessage({
-                        world: 2,
-                    }).toArray()], done)
+                    .expect(messages.map((msg) => msg.toObject()), done)
+            })
+
+            it('reports to volumeLogger', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
+                    .expect(200, () => {
+                        sinon.assert.calledWith(volumeLogger.logOutput, 22)
+                        done()
+                    })
             })
 
             it('responds with objects as body given ?wrapper=object', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=obJECt')
-                    .expect([kafkaMessage({
-                        hello: 1,
-                    }).toObject(), kafkaMessage({
-                        world: 2,
-                    }).toObject()], done)
+                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ false, /* compact */ false)), done)
             })
 
             it('responds with arrays as body and parsed content given ?content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?content=json')
-                    .expect([kafkaMessage({
-                        hello: 1,
-                    }).toArray(false), kafkaMessage({
-                        world: 2,
-                    }).toArray(false)], done)
+                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ true, /* compact */ true)), done)
             })
 
             it('responds with objects as body and parsed content given ?wrapper=object&content=json', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=obJECt&content=json')
-                    .expect([kafkaMessage({
-                        hello: 1,
-                    }).toObject(false), kafkaMessage({
-                        world: 2,
-                    }).toObject(false)], done)
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=object&content=json')
+                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ true, /* compact */ false)), done)
             })
 
             it('invokes historicalAdapter#getLast once with correct arguments', (done) => {
@@ -148,7 +142,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getLast = function (stream, streamPartition, count, msgHandler, doneCallback) {
+                historicalAdapterStub.getLast = (stream, streamPartition, count, msgHandler, doneCallback) => {
                     doneCallback(null, {
                         error: 'error ',
                     })
@@ -177,46 +171,7 @@ describe('DataQueryEndpoints', () => {
         })
     })
 
-    describe('GET /api/v1/streams/streamId/data/partitions/0/range', () => {
-        beforeEach(() => {
-            historicalAdapterStub.getFromOffset = (stream, partition, from, msgHandler, doneCallback) => {
-                msgHandler(kafkaMessage({
-                    hello: 1,
-                }))
-                msgHandler(kafkaMessage({
-                    world: 2,
-                }))
-                msgHandler(kafkaMessage({
-                    beast: 666,
-                }))
-                doneCallback(null, null)
-            }
-
-            historicalAdapterStub.getOffsetRange = (stream, partition, from, to, msgHandler, doneCallback) => {
-                msgHandler(kafkaMessage({
-                    test: 1234,
-                }))
-                doneCallback(null, null)
-            }
-
-            historicalAdapterStub.getFromTimestamp = (stream, partition, from, msgHandler, doneCallback) => {
-                msgHandler(kafkaMessage({
-                    a: 'a',
-                }))
-                msgHandler(kafkaMessage({
-                    z: 'z',
-                }))
-                doneCallback(null, null)
-            }
-            historicalAdapterStub.getTimestampRange = (stream, partition, from, to, msgHandler, doneCallback) => {
-                msgHandler(kafkaMessage([6, 6, 6]))
-                msgHandler(kafkaMessage({
-                    '6': '6',
-                }))
-                doneCallback(null, null)
-            }
-        })
-
+    describe('Range queries', () => {
         describe('user errors', () => {
             it('responds 400 and error message if param "partition" not a number', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/zero/range')
@@ -305,17 +260,28 @@ describe('DataQueryEndpoints', () => {
                         error: 'Using query parameters "fromTimestamp" and "toOffset" together is not yet supported.',
                     }, done)
             })
-
-            it('responds 400 and error message if optional param "wrapper" is a unknown string', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=0&wrapper=2pac')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Invalid value for query parameter "wrapper": 2pac',
-                    }, done)
-            })
         })
 
-        describe('?fromOffset=15', () => {
+        describe('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15', () => {
+            const messages = [
+                streamMessage({
+                    hello: 1,
+                }),
+                streamMessage({
+                    world: 2,
+                }),
+                streamMessage({
+                    beast: 666,
+                }),
+            ]
+
+            beforeEach(() => {
+                historicalAdapterStub.getFromOffset = (stream, partition, from, msgHandler, doneCallback) => {
+                    messages.forEach((msg) => msgHandler(msg))
+                    doneCallback(null, null)
+                }
+            })
+
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
                     .expect('Content-Type', /json/)
@@ -324,62 +290,22 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with arrays as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
-                    .expect([
-                        kafkaMessage({
-                            hello: 1,
-                        }).toArray(),
-                        kafkaMessage({
-                            world: 2,
-                        }).toArray(),
-                        kafkaMessage({
-                            beast: 666,
-                        }).toArray(),
-                    ], done)
+                    .expect(messages.map((msg) => msg.toObject()), done)
             })
 
             it('responds with objects as body given ?wrapper=object', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&wrapper=object')
-                    .expect([
-                        kafkaMessage({
-                            hello: 1,
-                        }).toObject(),
-                        kafkaMessage({
-                            world: 2,
-                        }).toObject(),
-                        kafkaMessage({
-                            beast: 666,
-                        }).toObject(),
-                    ], done)
+                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ false, /* compact */ false)), done)
             })
 
             it('responds with arrays as body and parsed content given ?content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&content=json')
-                    .expect([
-                        kafkaMessage({
-                            hello: 1,
-                        }).toArray(false),
-                        kafkaMessage({
-                            world: 2,
-                        }).toArray(false),
-                        kafkaMessage({
-                            beast: 666,
-                        }).toArray(false),
-                    ], done)
+                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ true, /* compact */ true)), done)
             })
 
             it('responds with objects as body given and parsed content given ?wrapper=object&content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&wrapper=object&content=json')
-                    .expect([
-                        kafkaMessage({
-                            hello: 1,
-                        }).toObject(false),
-                        kafkaMessage({
-                            world: 2,
-                        }).toObject(false),
-                        kafkaMessage({
-                            beast: 666,
-                        }).toObject(false),
-                    ], done)
+                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ true, /* compact */ false)), done)
             })
 
             it('invokes historicalAdapter#getFromOffset once with correct arguments', (done) => {
@@ -395,7 +321,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getFromOffset = function (stream, partition, from, msgHandler, doneCallback) {
+                historicalAdapterStub.getFromOffset = (stream, partition, from, msgHandler, doneCallback) => {
                     doneCallback(null, {
                         error: 'error ',
                     })
@@ -410,6 +336,19 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?fromOffset=15&toOffset=8196', () => {
+            const messages = [
+                streamMessage({
+                    test: 1234,
+                }),
+            ]
+
+            beforeEach(() => {
+                historicalAdapterStub.getOffsetRange = (stream, partition, from, to, msgHandler, doneCallback) => {
+                    messages.forEach((msg) => msgHandler(msg))
+                    doneCallback(null, null)
+                }
+            })
+
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
                     .expect('Content-Type', /json/)
@@ -418,9 +357,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
-                    .expect([kafkaMessage({
-                        test: 1234,
-                    }).toArray()], done)
+                    .expect(messages.map((msg) => msg.toObject()), done)
             })
 
             it('invokes historicalAdapter#getOffsetRange once with correct arguments', (done) => {
@@ -436,7 +373,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getOffsetRange = function (stream, partition, from, to, msgHandler, doneCb) {
+                historicalAdapterStub.getOffsetRange = (stream, partition, from, to, msgHandler, doneCb) => {
                     doneCb(null, {
                         error: 'error ',
                     })
@@ -451,6 +388,22 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?fromTimestamp=1496408255672', () => {
+            const messages = [
+                streamMessage({
+                    a: 'a',
+                }),
+                streamMessage({
+                    z: 'z',
+                }),
+            ]
+
+            beforeEach(() => {
+                historicalAdapterStub.getFromTimestamp = (stream, partition, from, msgHandler, doneCallback) => {
+                    messages.forEach((msg) => msgHandler(msg))
+                    doneCallback(null, null)
+                }
+            })
+
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
                     .expect('Content-Type', /json/)
@@ -459,11 +412,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
-                    .expect([kafkaMessage({
-                        a: 'a',
-                    }).toArray(), kafkaMessage({
-                        z: 'z',
-                    }).toArray()], done)
+                    .expect(messages.map((msg) => msg.toObject()), done)
             })
 
             it('invokes historicalAdapter#getFromTimestamp once with correct arguments', (done) => {
@@ -482,7 +431,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getFromTimestamp = function (stream, partition, from, msgHandler, doneCallback) {
+                historicalAdapterStub.getFromTimestamp = (stream, partition, from, msgHandler, doneCallback) => {
                     doneCallback(null, {
                         error: 'error ',
                     })
@@ -497,6 +446,20 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
+            const messages = [
+                streamMessage([6, 6, 6]),
+                streamMessage({
+                    '6': '6',
+                }),
+            ]
+
+            beforeEach(() => {
+                historicalAdapterStub.getTimestampRange = (stream, partition, from, to, msgHandler, doneCallback) => {
+                    messages.forEach((msg) => msgHandler(msg))
+                    doneCallback(null, null)
+                }
+            })
+
             it('responds 200 and Content-Type JSON', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .expect('Content-Type', /json/)
@@ -505,9 +468,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
-                    .expect([kafkaMessage([6, 6, 6]).toArray(), kafkaMessage({
-                        '6': '6',
-                    }).toArray()], done)
+                    .expect(messages.map((msg) => msg.toObject()), done)
             })
 
             it('invokes historicalAdapter#getTimestampRange once with correct arguments', (done) => {
@@ -526,7 +487,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getTimestampRange = function (stream, streamPartition, from, to, msgHandler, doneCallback) {
+                historicalAdapterStub.getTimestampRange = (stream, streamPartition, from, to, msgHandler, doneCallback) => {
                     doneCallback(null, {
                         error: 'error ',
                     })

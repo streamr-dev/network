@@ -94,9 +94,7 @@ describe('AuthenticationMiddleware', () => {
         })
 
         it('responds 403 and error message if streamFetcher#authenticate results in 403', (done) => {
-            streamFetcherStub.authenticate = function () {
-                return Promise.reject(new HttpError(403))
-            }
+            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(403))
 
             middlewareInstance(request, response, next)
 
@@ -113,9 +111,7 @@ describe('AuthenticationMiddleware', () => {
         })
 
         it('responds with 404 if the stream is not found', (done) => {
-            streamFetcherStub.authenticate = function () {
-                return Promise.reject(new HttpError(404))
-            }
+            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(404))
 
             middlewareInstance(request, response, next)
 
@@ -132,9 +128,7 @@ describe('AuthenticationMiddleware', () => {
         })
 
         it('responds with whatever status code the backend returns', (done) => {
-            streamFetcherStub.authenticate = function () {
-                return Promise.reject(new HttpError(123))
-            }
+            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(123))
 
             middlewareInstance(request, response, next)
 
@@ -147,17 +141,15 @@ describe('AuthenticationMiddleware', () => {
 
         describe('given streamFetcher#authenticate authenticates successfully', () => {
             beforeEach(() => {
-                streamFetcherStub.authenticate = function (streamId) {
-                    return Promise.resolve({
-                        id: streamId,
-                        partitions: 5,
-                        name: 'my stream',
-                        feed: {},
-                        config: {},
-                        description: 'description',
-                        uiChannel: null,
-                    })
-                }
+                streamFetcherStub.authenticate = (streamId) => Promise.resolve({
+                    id: streamId,
+                    partitions: 5,
+                    name: 'my stream',
+                    feed: {},
+                    config: {},
+                    description: 'description',
+                    uiChannel: null,
+                })
             })
 
             it('invokes callback "next"', (done) => {

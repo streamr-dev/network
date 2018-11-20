@@ -62,6 +62,14 @@ class StreamrBinaryMessage {
         return this.content
     }
 
+    getContentAsString() {
+        return this.getContentBuffer().toString('utf8')
+    }
+
+    getContentLength() {
+        return this.getContentBuffer().length
+    }
+
     getContentParsed() {
         if (!this.contentParsed) {
             if (this.contentType === 27) {
@@ -74,10 +82,6 @@ class StreamrBinaryMessage {
 
         return this.contentParsed
     }
-}
-
-/* static */ StreamrBinaryMessage.calculatePayloadBytesForArray = (messageArray) => {
-    return Buffer.from(messageArray[8]).length
 }
 
 /* static */ StreamrBinaryMessage.CONTENT_TYPE_JSON = CONTENT_TYPE_JSON

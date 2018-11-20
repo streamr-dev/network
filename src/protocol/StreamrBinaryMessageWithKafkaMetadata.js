@@ -1,6 +1,7 @@
 const Int64 = require('node-int64')
 const BufferMaker = require('buffermaker')
 const BufferReader = require('buffer-reader')
+const Protocol = require('streamr-client-protocol')
 const StreamrBinaryMessage = require('./StreamrBinaryMessage')
 
 const VERSION = 0
@@ -41,23 +42,6 @@ class StreamrBinaryMessageWithKafkaMetadata {
         return this.streamrBinaryMessage
     }
 
-    toArray(contentAsBuffer = true) {
-        // Ensure the StreamrBinaryMessage is parsed
-        const m = this.getStreamrBinaryMessage(contentAsBuffer)
-        return [
-            m.version,
-            m.streamId,
-            m.streamPartition,
-            m.timestamp,
-            m.ttl,
-            this.offset,
-            this.previousOffset,
-            m.contentType,
-            contentAsBuffer ? m.getContentBuffer()
-                .toString('utf8') : m.getContentParsed(),
-        ]
-    }
-
     toObject(contentAsBuffer = true) {
         // Ensure the StreamrBinaryMessage is parsed
         const m = this.getStreamrBinaryMessage(contentAsBuffer)
@@ -73,6 +57,21 @@ class StreamrBinaryMessageWithKafkaMetadata {
             content: contentAsBuffer ? m.getContentBuffer()
                 .toString('utf8') : m.getContentParsed(),
         }
+    }
+
+    toStreamMessage() {
+        const streamrBinaryMessage = this.getStreamrBinaryMessage()
+
+        return new Protocol.StreamMessage(
+            streamrBinaryMessage.streamId,
+            streamrBinaryMessage.streamPartition,
+            streamrBinaryMessage.timestamp,
+            streamrBinaryMessage.ttl,
+            this.offset,
+            this.previousOffset,
+            streamrBinaryMessage.contentType,
+            streamrBinaryMessage.getContentAsString(),
+        )
     }
 }
 

@@ -85,7 +85,7 @@ describe('MessageCache', () => {
         })
 
         it('must add the resent messages to the cache', () => {
-            resender.resend = function (topic, fromOffset, toOffset, handler, cb) {
+            resender.resend = (topic, fromOffset, toOffset, handler, cb) => {
                 assert(cache.resending)
 
                 for (let i = fromOffset; i <= toOffset; i++) {

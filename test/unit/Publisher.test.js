@@ -9,7 +9,6 @@ const InvalidMessageContentError = require('../../src/errors/InvalidMessageConte
 const NotReadyError = require('../../src/errors/NotReadyError')
 
 describe('Publisher', () => {
-
     const stream = {
         id: 'streamId',
         partitions: 10,

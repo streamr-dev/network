@@ -29,11 +29,15 @@ module.exports = class KafkaUtil extends events.EventEmitter {
         this.kafkaProducer = kafkaProducer || new kafka.HighLevelProducer(this.kafkaClient)
 
         this.kafkaClient.on('error', (err) => {
-            throw err
+            if (!this.closing) {
+                throw err
+            }
         })
 
         this.kafkaProducer.on('error', (err) => {
-            throw err
+            if (!this.closing) {
+                throw err
+            }
         })
     }
 
@@ -64,7 +68,7 @@ module.exports = class KafkaUtil extends events.EventEmitter {
     }
 
     close(cb) {
+        this.closing = true
         this.kafkaClient.close(cb)
     }
-
 }
