@@ -12,7 +12,7 @@
   },
   "scripts": {
     "build": "NODE_ENV=production webpack",
-    "prepare": "npm run build",
+    "prepack": "npm run build",
     "dev": "webpack --progress --colors --watch",
     "eslint": "eslint src/** test/**",
     "test": "jest",
