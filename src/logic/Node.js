@@ -30,7 +30,7 @@ class Node extends EventEmitter {
         )
         this.subscriptions = new SubscriptionManager()
         this.messageBuffer = new MessageBuffer(60 * 1000, (streamId) => {
-            this.debug('failed to deliver buffered messages of stream %s because leader not found', streamId)
+            this.debug('failed to deliver buffered messages of stream %s because responsible nodes not found', streamId)
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
         })
 
@@ -49,7 +49,7 @@ class Node extends EventEmitter {
             this.protocols.nodeToNode.connectToNodes(peersMessage)
         })
         this.protocols.trackerNode.on(TrackerNode.events.STREAM_ASSIGNED, (streamId) => this.addOwnStream(streamId))
-        this.protocols.trackerNode.on(TrackerNode.events.STREAM_INFO_RECEIVED, (streamMessage) => this.addKnownStreams(streamMessage))
+        this.protocols.trackerNode.on(TrackerNode.events.STREAM_INFO_RECEIVED, (streamMessage) => this.addKnownStream(streamMessage))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, (tracker) => this.onTrackerDisconnected(tracker))
         this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (dataMessage) => this.onDataReceived(dataMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
@@ -79,22 +79,19 @@ class Node extends EventEmitter {
     }
 
     addOwnStream(streamId) {
-        this.debug('set self as leader of stream %s', streamId)
-        this.streams.markCurrentNodeAsLeaderOf(streamId)
+        this.debug('add %s to own streams', streamId)
+        this.streams.markOwnStream(streamId)
         this._sendStatusToAllTrackers()
         this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
     }
 
-    addKnownStreams(streamMessage) {
+    addKnownStream(streamMessage) {
         const streamId = streamMessage.getStreamId()
-        const leaderAddress = streamMessage.getLeaderAddress()
-        const repeaterAddresses = streamMessage.getRepeaterAddresses()
+        const nodeAddresses = streamMessage.getNodeAddresses()
 
-        this.streams.markOtherNodeAsLeader(streamId, leaderAddress)
-        this.debug('stream %s leader set to %s', streamId, this.peerBook.getShortId(leaderAddress))
-        this.streams.markRepeaterNodes(streamId, repeaterAddresses)
-        this.debug('stream %s repeater nodes set to %j', streamId, repeaterAddresses.map((a) => this.peerBook.getShortId(a)))
+        this.streams.markKnownStream(streamId, nodeAddresses)
+        this.debug('known stream %s nodes set to %j', streamId, nodeAddresses.map((a) => this.peerBook.getShortId(a)))
 
         this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
@@ -107,34 +104,22 @@ class Node extends EventEmitter {
         const previousNumber = dataMessage.getPreviousNumber()
         const tracker = this._getTracker()
 
-        if (number == null && previousNumber != null) {
-            this.debug('received invalid data with null number but non-null previous number %s; dropping', previousNumber)
-        } else if (this.streams.isLeaderOf(streamId)) {
-            if (number != null) {
-                this.debug('received already numbered data (#%s) for own stream %s; dropping', number, streamId)
-            } else {
-                this.debug('received data for own stream %s', streamId)
-                const assignment = this.streams.fetchNextNumbers(streamId)
-                dataMessage.setNumber(assignment.number)
-                dataMessage.setPreviousNumber(assignment.previousNumber)
+        if (this.streams.isOwnStream(streamId)) {
+            this.debug('received data for own stream %s', streamId)
+            const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(streamId, number, previousNumber)
+            if (isUnseen) {
                 this._sendToSubscribers(dataMessage)
-            }
-        } else if (this.streams.isOtherNodeLeaderOf(streamId)) {
-            this.debug('received data (#%s) for known stream %s', number, streamId)
-            if (number == null) {
-                const leaderAddress = this.streams.getLeaderAddressFor(streamId)
-                this.protocols.nodeToNode.sendData(leaderAddress, streamId, data, number, previousNumber)
             } else {
-                const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(streamId, number, previousNumber)
-                if (isUnseen) {
-                    this._sendToSubscribers(dataMessage)
-                } else {
-                    this.metrics.received.duplicates += 1
-                    this.debug('ignoring duplicate data (#%s) for stream %s', number, streamId)
-                }
+                this.metrics.received.duplicates += 1
+                this.debug('ignoring duplicate data (#%s) for stream %s', number, streamId)
             }
+        } else if (this.streams.isKnownStream(streamId)) {
+            this.debug('received data for other node\'s stream %s', streamId)
+            const otherNodeAddress = this.streams.getNodesForKnownStream(streamId)[0] // TODO: randomization or what?
+            this.protocols.nodeToNode.sendData(otherNodeAddress, streamId, data, number, previousNumber)
+            this._sendToSubscribers(dataMessage) // TODO: remove or what?
         } else if (tracker === null) {
-            this.debug('no trackers available; attempted to ask about stream %s', streamId)
+            this.debug('no trackers available; received data for stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
         } else {
             // TODO store data object?
@@ -166,7 +151,9 @@ class Node extends EventEmitter {
 
     onSubscribeRequest(subscribeMessage) {
         this.subscribers.addSubscriber(subscribeMessage.getStreamId(), subscribeMessage.getSource())
-        this.debug('node %s added as a subscriber for stream %s', this.peerBook.getShortId(subscribeMessage.getSource()), subscribeMessage.getStreamId())
+        this.debug('node %s added as a subscriber for stream %s',
+            this.peerBook.getShortId(subscribeMessage.getSource()),
+            subscribeMessage.getStreamId())
     }
 
     onUnsubscribeRequest(unsubscribeMessage) {
@@ -184,23 +171,23 @@ class Node extends EventEmitter {
         if (this.subscriptions.hasSubscription(streamId)) {
             this.debug('already subscribed to stream %s', streamId)
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
-        } else if (this.streams.isLeaderOf(streamId)) {
+        } else if (this.streams.isOwnStream(streamId)) {
             this.debug('stream %s is own stream; new subscriber will receive data', streamId)
             this.subscriptions.addSubscription(streamId) // Subscription to "self"
             this._sendStatusToAllTrackers()
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
-        } else if (this.streams.isAnyRepeaterKnownFor(streamId)) {
-            const repeaterAddresses = this.streams.getRepeatersFor(streamId)
-            this.debug('stream %s is known; sending subscribe requests to repeaters %j', streamId,
-                repeaterAddresses.map((a) => this.peerBook.getShortId(a)))
-            repeaterAddresses.forEach((address) => {
+        } else if (this.streams.isKnownStream(streamId)) {
+            const otherNodeAddresses = this.streams.getNodesForKnownStream(streamId)
+            this.debug('stream %s is known; sending subscribe requests to responsible nodes %j',
+                streamId, otherNodeAddresses.map((a) => this.peerBook.getShortId(a)))
+            otherNodeAddresses.forEach((address) => {
                 this.protocols.nodeToNode.sendSubscribe(address, streamId)
             })
             this.subscriptions.addSubscription(streamId) // Assuming subscribes went through
             this._sendStatusToAllTrackers()
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
         } else if (tracker === null) {
-            this.debug('no trackers available; attempted to ask about stream %s', streamId)
+            this.debug('no trackers available; attempted to subscribe to stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
             this.subscriptions.addPendingSubscription(streamId)
         } else {
@@ -224,8 +211,7 @@ class Node extends EventEmitter {
 
     _getStatus() {
         return {
-            leaderOfStreams: this.streams.getOwnStreams(),
-            subscribedToStreams: this.subscriptions.getSubscriptions(),
+            ownStreams: this.streams.getOwnStreams(),
             started: this.started
         }
     }

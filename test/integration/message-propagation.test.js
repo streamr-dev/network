@@ -82,12 +82,12 @@ describe('message propagation in network', () => {
         for (let i = 0; i < 5; ++i) {
             const dataMessage = new DataMessage('stream-1', {
                 messageNo: i
-            })
+            }, i, i - 1)
             n1.onDataReceived(dataMessage)
 
             const dataMessage2 = new DataMessage('stream-2', {
                 messageNo: i * 100
-            })
+            }, i * 100, (i - 1) * 100)
             n4.onDataReceived(dataMessage2)
 
             // eslint-disable-next-line no-await-in-loop

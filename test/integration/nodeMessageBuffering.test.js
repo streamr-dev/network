@@ -58,7 +58,7 @@ describe('message buffering of Node', () => {
         // "Client" pushes data
         const dataMessage = new DataMessage('stream-id', {
             hello: 'world'
-        })
+        }, 1, null)
         sourceNode.onDataReceived(dataMessage)
     })
 })

@@ -14,28 +14,26 @@ describe('Selecting leader for the stream and sending messages to two subscriber
     let publisher
     let subscriber1
     let subscriber2
-    const BOOTNODES = []
 
     const streamId = 'stream-2018'
 
     it('should be select leader and get two active subscribers', async (done) => {
         tracker = await startTracker(LOCALHOST, 32300, 'tracker')
-        BOOTNODES.push(tracker.getAddress())
 
         await Promise.all([
-            startNode(LOCALHOST, 32312, 'node1'),
-            startNode(LOCALHOST, 32313, 'node2')
+            startNode(LOCALHOST, 32312, 'node-1'),
+            startNode(LOCALHOST, 32313, 'node-2')
         ]).then((res) => {
             [nodeOne, nodeTwo] = res
-            nodeOne.setBootstrapTrackers(BOOTNODES)
-            nodeTwo.setBootstrapTrackers(BOOTNODES)
+            nodeOne.setBootstrapTrackers([tracker.getAddress()])
+            nodeTwo.setBootstrapTrackers([tracker.getAddress()])
         })
 
-        publisher = await startClient(LOCALHOST, 32301, 'publisher1', nodeOne.protocols.nodeToNode.getAddress())
+        publisher = await startClient(LOCALHOST, 32301, 'publisher-1', nodeOne.protocols.nodeToNode.getAddress())
 
         await Promise.all([
-            startClient(LOCALHOST, 32302, 'subscriber1', nodeTwo.protocols.nodeToNode.getAddress()),
-            startClient(LOCALHOST, 32303, 'subscriber2', nodeTwo.protocols.nodeToNode.getAddress())
+            startClient(LOCALHOST, 32302, 'subscriber-1', nodeTwo.protocols.nodeToNode.getAddress()),
+            startClient(LOCALHOST, 32303, 'subscriber-2', nodeTwo.protocols.nodeToNode.getAddress())
         ]).then((res) => {
             [subscriber1, subscriber2] = res
         })
@@ -45,8 +43,10 @@ describe('Selecting leader for the stream and sending messages to two subscriber
             waitForEvent(nodeTwo.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED)
         ])
 
+        let msgNo = 0
         const publisherInterval = setInterval(() => {
-            publisher.publish(streamId, 'Hello world, from Publisher ' + publisher.protocols.nodeToNode.getAddress(), () => {})
+            msgNo += 1
+            publisher.publish(streamId, `Hello world ${msgNo}!`, msgNo, msgNo - 1)
         }, 1000)
 
         await waitForEvent(nodeOne.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED)
@@ -59,7 +59,7 @@ describe('Selecting leader for the stream and sending messages to two subscriber
         await Promise.all([
             waitForEvent(subscriber1.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED),
             waitForEvent(subscriber2.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED)
-        ]).then((res) => {
+        ]).then(() => {
             expect(nodeTwo.subscribers.subscribersForStream(streamId).length).toEqual(2)
             clearInterval(publisherInterval)
 

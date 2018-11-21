@@ -26,16 +26,15 @@ describe('encoder', () => {
     })
 
     it('check streamMessage encoding/decoding', () => {
-        const json = encoder.streamMessage('stream-id', 'leader', ['repeater-1', 'repeater-2'])
+        const json = encoder.streamMessage('stream-id', ['node-1', 'node-2'])
         expect(JSON.parse(json)).toEqual({
             code: encoder.STREAM,
             version,
             payload: {
                 streamId: 'stream-id',
-                leaderAddress: 'leader',
-                repeaterAddresses: [
-                    'repeater-1',
-                    'repeater-2'
+                nodeAddresses: [
+                    'node-1',
+                    'node-2'
                 ]
             }
         })
@@ -46,8 +45,7 @@ describe('encoder', () => {
         expect(streamMessage).toBeInstanceOf(StreamMessage)
         expect(streamMessage.getSource()).toEqual('127.0.0.1')
         expect(streamMessage.getStreamId()).toEqual('stream-id')
-        expect(streamMessage.getLeaderAddress()).toEqual('leader')
-        expect(streamMessage.getRepeaterAddresses()).toEqual(['repeater-1', 'repeater-2'])
+        expect(streamMessage.getNodeAddresses()).toEqual(['node-1', 'node-2'])
     })
 
     it('creates expected dataMessage format (without numbers)', () => {

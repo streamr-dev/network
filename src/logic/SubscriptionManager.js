@@ -25,10 +25,6 @@ module.exports = class SubscriptionManager {
         return this.pendingSubscriptions.has(streamId)
     }
 
-    getSubscriptions() {
-        return [...this.subscriptions]
-    }
-
     getPendingSubscriptions() {
         return [...this.pendingSubscriptions]
     }

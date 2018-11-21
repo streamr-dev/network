@@ -1,12 +1,18 @@
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
 module.exports = class DataMessage {
-    constructor(streamId, data, number = null, previousNumber = null, source = null) {
+    constructor(streamId, data, number, previousNumber, source = null) {
         if (typeof streamId === 'undefined') {
             throw new Error('streamId cant be undefined')
         }
         if (typeof data === 'undefined') {
             throw new Error('data cant be undefined')
+        }
+        if (typeof number === 'undefined') {
+            throw new Error('number cant be undefined')
+        }
+        if (typeof previousNumber === 'undefined') {
+            throw new Error('previousNumber cant be undefined')
         }
 
         this.version = CURRENT_VERSION

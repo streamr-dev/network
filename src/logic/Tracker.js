@@ -7,7 +7,8 @@ module.exports = class Tracker extends EventEmitter {
     constructor(id, peerBook, trackerServer) {
         super()
 
-        this.nodes = new Map()
+        this.nodes = new Set()
+        this.streamIdToNodes = new Map()
 
         this.id = id
         this.peerBook = peerBook
@@ -25,7 +26,7 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     sendListOfNodes(node) {
-        const listOfNodes = getPeersTopology([...this.nodes.keys()], node)
+        const listOfNodes = getPeersTopology([...this.nodes], node)
 
         if (listOfNodes.length) {
             this.debug('sending list of %d nodes to %s', listOfNodes.length, this.peerBook.getShortId(node))
@@ -36,13 +37,15 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     processNodeStatus(statusMessage) {
-        this.debug('received from %s status %s', this.peerBook.getShortId(statusMessage.getSource()), JSON.stringify(statusMessage.getStatus()))
-        this.nodes.set(statusMessage.getSource(), statusMessage.getStatus())
+        const source = statusMessage.getSource()
+        const status = statusMessage.getStatus()
+        this.debug('received from %s status %s', this.peerBook.getShortId(source), JSON.stringify(status))
+        this._addNode(source, status.ownStreams)
     }
 
     onNodeDisconnected(node) {
         this.debug('removing node %s from tracker node list', this.peerBook.getShortId(node))
-        this.nodes.delete(node)
+        this._removeNode(node)
     }
 
     sendStreamInfo(streamMessage) {
@@ -51,35 +54,20 @@ module.exports = class Tracker extends EventEmitter {
 
         this.debug('looking for stream %s', streamId)
 
-        let leaderNode = null
-        const repeaterNodes = []
-        this.nodes.forEach((status, nodeAddress) => {
-            if (status.leaderOfStreams.includes(streamId)) {
-                if (leaderNode) {
-                    throw new Error('Duplicate leaders detected.')
-                }
-                leaderNode = nodeAddress
-                repeaterNodes.push(nodeAddress)
-            } else if (status.subscribedToStreams.includes(streamId)) {
-                repeaterNodes.push(nodeAddress)
-            }
-        })
+        const nodesForStream = this.streamIdToNodes.get(streamId) || new Set()
 
-        let selectedRepeaters
-        if (leaderNode === null) {
-            leaderNode = source
-            selectedRepeaters = [leaderNode]
-            this.debug('stream %s not found; assigning %s as leader', streamId, this.peerBook.getShortId(source))
+        if (nodesForStream.size === 0) {
+            // TODO: stream assignment to node
+            this.debug('assigning stream %s to node %s', streamId, this.peerBook.getShortId(source))
+            this._addNode(source, [streamId])
+            this.protocols.trackerServer.sendStreamInfo(source, streamId, [source])
         } else {
-            selectedRepeaters = getPeersTopology(repeaterNodes, source)
-            this.debug('stream %s found; responding to %s with leader %s and repeaters %j',
-                streamId,
-                this.peerBook.getShortId(source),
-                this.peerBook.getShortId(leaderNode),
-                selectedRepeaters.map((s) => this.peerBook.getShortId(s)))
-        }
+            const selectedNodes = getPeersTopology([...nodesForStream], source)
+            this.debug('stream %s found; responding to %s with nodes %j',
+                streamId, this.peerBook.getShortId(source), selectedNodes.map((s) => this.peerBook.getShortId(s)))
 
-        this.protocols.trackerServer.sendStreamInfo(source, streamId, leaderNode, selectedRepeaters)
+            this.protocols.trackerServer.sendStreamInfo(source, streamId, selectedNodes)
+        }
     }
 
     stop(cb) {
@@ -89,5 +77,25 @@ module.exports = class Tracker extends EventEmitter {
 
     getAddress() {
         return this.protocols.trackerServer.getAddress()
+    }
+
+    _addNode(nodeAddress, streams) {
+        this.nodes.add(nodeAddress)
+        streams.forEach((streamId) => {
+            if (!this.streamIdToNodes.has(streamId)) {
+                this.streamIdToNodes.set(streamId, new Set())
+            }
+            this.streamIdToNodes.get(streamId).add(nodeAddress)
+        })
+    }
+
+    _removeNode(nodeAddress) {
+        this.nodes.delete(nodeAddress)
+        this.streamIdToNodes.forEach((_, streamId) => {
+            this.streamIdToNodes.get(streamId).delete(nodeAddress)
+            if (this.streamIdToNodes.get(streamId).size === 0) {
+                this.streamIdToNodes.delete(streamId)
+            }
+        })
     }
 }

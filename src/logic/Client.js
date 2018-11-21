@@ -20,10 +20,10 @@ module.exports = class Client extends EventEmitter {
         }
     }
 
-    publish(streamId, data) {
+    publish(streamId, data, number, previousNumber) {
         if (this.nodeAddress) {
             this.debug('publishing data to stream %s', streamId)
-            this.protocols.nodeToNode.sendData(this.nodeAddress, streamId, data)
+            this.protocols.nodeToNode.sendData(this.nodeAddress, streamId, data, number, previousNumber)
         } else {
             throw new Error('Failed to publish because this.nodeAddress not defined.')
         }

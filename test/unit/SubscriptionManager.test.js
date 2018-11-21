@@ -47,13 +47,6 @@ describe('SubscriptionManager', () => {
         expect(manager.hasPendingSubscription('stream-id')).toBe(true)
     })
 
-    test('can list subscriptions', () => {
-        manager.addSubscription('stream-1')
-        manager.addSubscription('stream-2')
-        manager.addPendingSubscription('should-not-appear')
-        expect(manager.getSubscriptions()).toEqual(['stream-1', 'stream-2'])
-    })
-
     test('can list pending subscriptions', () => {
         manager.addPendingSubscription('stream-1')
         manager.addPendingSubscription('stream-2')
