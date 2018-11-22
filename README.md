@@ -54,7 +54,7 @@ client.getOrCreateStream({
 })
     .then((stream) => {
         console.log(`Stream ${stream.id} has been created!`)
-        // Do something with the Stream
+        // Do something with the Stream, for example call stream.publish(message)
     })
 ```
 
@@ -68,11 +68,11 @@ const msg = {
     happy: true
 }
 
-// Produce using the Stream id only
-client.produceToStream('my-stream-id', msg)
+// Publish using the Stream id only
+client.publish('my-stream-id', msg)
 
 // Or alternatively, via the Stream object (from e.g. getOrCreateStream)
-stream.produce(msg)
+stream.publish(msg)
 ```
 
 ### Client options
@@ -134,7 +134,7 @@ listStreams(query) | Fetches an array of Stream objects from the API. For the qu
 getStreamByName(name) | Fetches a Stream which exactly matches the given name.
 createStream(properties) | Creates a Stream with the given properties. For more information on the Stream properties, consult the API docs.
 getOrCreateStream(properties) | Gets a Stream with the id or name given in `properties`, or creates it if one is not found.
-produceToStream(streamId, message) | Produces a new message (data point) to the given Stream.
+publish(streamId, message) | Publishes a new message (data point) to the given Stream.
 
 #### Listening to state changes of the client 
 
@@ -152,7 +152,7 @@ update() | Updates the properties of this Stream object by sending them to the A
 delete() | Deletes this Stream.
 getPermissions() | Returns the list of permissions for this Stream.
 detectFields() | Updates the Stream field config (schema) to match the latest data point in the Stream.
-produce(message) | Produces a new message (data point) to this Stream.
+publish(message) | Publishes a new message (data point) to this Stream.
 
 ### Subscription options
 

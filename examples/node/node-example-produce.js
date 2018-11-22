@@ -18,7 +18,7 @@ const msg = {
     random: Math.random()
 }
 
-// Produce the event to the Stream
-client.produceToStream(STREAM_ID, msg)
+// Publish the event to the Stream
+client.publish(STREAM_ID, msg)
     .then(() => console.log('Sent successfully: ', msg))
     .catch((err) => console.error(err))

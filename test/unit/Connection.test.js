@@ -2,7 +2,6 @@ import assert from 'assert'
 import sinon from 'sinon'
 
 import {
-    WebsocketResponse,
     UnicastMessage,
     StreamMessage,
     Errors,

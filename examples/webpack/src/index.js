@@ -42,15 +42,15 @@ document.getElementById('subscribe').addEventListener('click', () => {
     })
 })
 
-document.getElementById('produce').addEventListener('click', () => {
+document.getElementById('publish').addEventListener('click', () => {
     // Here is the event we'll be sending
     const msg = {
         hello: 'world',
         random: Math.random(),
     }
 
-    // Produce the event to the Stream
-    client.produceToStream('MY-STREAM-ID', msg, 'MY-API-KEY')
+    // Publish the event to the Stream
+    client.publish('MY-STREAM-ID', msg, 'MY-API-KEY')
         .then(() => log('Sent successfully: ', msg))
         .catch((err) => log(err))
 })

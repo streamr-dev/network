@@ -14,7 +14,7 @@ import Subscription from './Subscription'
 import Stream from './rest/domain/Stream'
 import Connection from './Connection'
 import Session from './Session'
-import FailedToProduceError from './errors/FailedToProduceError'
+import FailedToPublishError from './errors/FailedToPublishError'
 
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
@@ -148,7 +148,7 @@ export default class StreamrClient extends EventEmitter {
             const publishQueueCopy = this.publishQueue.slice(0)
             this.publishQueue = []
             publishQueueCopy.forEach((args) => {
-                this.produceToStream(...args)
+                this.publish(...args)
             })
         })
 
@@ -219,7 +219,7 @@ export default class StreamrClient extends EventEmitter {
         return this.subsByStream[streamId] || []
     }
 
-    async produceToStream(streamObjectOrId, data, apiKey = this.options.auth.apiKey) {
+    async publish(streamObjectOrId, data, apiKey = this.options.auth.apiKey) {
         const sessionToken = await this.session.getSessionToken()
         // Validate streamObjectOrId
         let streamId
@@ -243,10 +243,10 @@ export default class StreamrClient extends EventEmitter {
             this.publishQueue.push([streamId, data, apiKey])
             this.connect().catch(() => {}) // ignore
         } else {
-            throw new FailedToProduceError(
+            throw new FailedToPublishError(
                 streamId,
                 data,
-                'Wait for the "connected" event before calling produceToStream, or set autoConnect to true!',
+                'Wait for the "connected" event before calling publish, or set autoConnect to true!',
             )
         }
     }

@@ -68,7 +68,7 @@ describe('StreamEndpoints', () => {
     describe('Stream configuration', () => {
         it('Stream.detectFields', (done) => {
             client.connect().then(() => {
-                client.produceToStream(createdStream.id, {
+                client.publish(createdStream.id, {
                     foo: 'bar',
                     count: 0,
                 }).then(() => {

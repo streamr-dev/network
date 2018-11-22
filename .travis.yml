@@ -29,3 +29,6 @@ jobs:
     - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 5"
     - sleep 10s
     - npm run test-integration
+  - stage: Eslint
+    script:
+    - npm run eslint

@@ -9,15 +9,12 @@ import {
     UnsubscribeResponse,
     PublishRequest,
     StreamMessage,
-    StreamAndPartition,
     BroadcastMessage,
     UnicastMessage,
     ResendRequest,
-    ResendResponseMessage,
     ResendResponseResending,
     ResendResponseResent,
     ResendResponseNoResend,
-    ErrorMessage,
     ErrorResponse,
     Errors,
 } from 'streamr-client-protocol'
@@ -25,7 +22,7 @@ import {
 import StreamrClient from '../../src'
 import Connection from '../../src/Connection'
 import Subscription from '../../src/Subscription'
-import FailedToProduceError from '../../src/errors/FailedToProduceError'
+import FailedToPublishError from '../../src/errors/FailedToPublishError'
 
 const mockDebug = debug('mock')
 
@@ -799,7 +796,7 @@ describe('StreamrClient', () => {
         })
     })
 
-    describe('produceToStream', () => {
+    describe('publish', () => {
         const pubMsg = {
             foo: 'bar',
         }
@@ -812,7 +809,7 @@ describe('StreamrClient', () => {
                 connection.expect(new PublishRequest('stream1', undefined, undefined, {
                     foo: 'bar',
                 }))
-                const promise = client.produceToStream('stream1', pubMsg)
+                const promise = client.publish('stream1', pubMsg)
                 assert(promise instanceof Promise)
                 return promise
             })
@@ -826,7 +823,7 @@ describe('StreamrClient', () => {
                 for (let i = 0; i < 10; i++) {
                     connection.expect(new PublishRequest('stream1', undefined, undefined, pubMsg))
                     // Messages will be queued until connected
-                    client.produceToStream('stream1', pubMsg)
+                    client.publish('stream1', pubMsg)
                 }
 
                 connection.on('connected', done)
@@ -835,8 +832,8 @@ describe('StreamrClient', () => {
             it('rejects the promise if autoConnect is false and the client is not connected', (done) => {
                 client.options.autoConnect = false
                 assert.equal(client.isConnected(), false)
-                client.produceToStream('stream1', pubMsg).catch((err) => {
-                    assert(err instanceof FailedToProduceError)
+                client.publish('stream1', pubMsg).catch((err) => {
+                    assert(err instanceof FailedToPublishError)
                     done()
                 })
             })

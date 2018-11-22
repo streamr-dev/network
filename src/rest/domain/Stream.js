@@ -52,7 +52,7 @@ export default class Stream {
         )
     }
 
-    produce(data) {
-        return this._client.produceToStream(this.id, data)
+    publish(data) {
+        return this._client.publish(this.id, data)
     }
 }
