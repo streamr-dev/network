@@ -45,7 +45,7 @@ export default class StreamrClient extends EventEmitter {
             this.options.auth.apiKey = this.options.apiKey
         }
 
-        this.session = new Session(this, options.auth)
+        this.session = new Session(this, this.options.auth)
 
         // Event handling on connection object
         this.connection = connection || new Connection(this.options)

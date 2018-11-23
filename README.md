@@ -94,6 +94,7 @@ auth.privateKey | null | Ethereum private key to use to authenticate.
 auth.provider | null | Ethereum provider used to connect to an account to use to authenticate.
 auth.username | null | Username to use to authenticate. Needs `auth.password` as well.
 auth.password | null | Password to use to authenticate. Needs `auth.username` as well.
+auth.sessionToken | null | Session token to authenticate directly without fetching a token with credentials. If the token expires, a new token cannot be retrieved.
 
 ### Message handler callback
 

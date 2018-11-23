@@ -8,7 +8,6 @@ describe('Session', () => {
     let clientWrongApiKey
     let clientPrivateKey
     let clientUsernamePassword
-    let clientNone
 
     const createClient = (opts = {}) => new StreamrClient({
         url: config.websocketUrl,
@@ -40,9 +39,6 @@ describe('Session', () => {
                 password: 'tester2',
             },
         })
-        clientNone = createClient({
-            auth: {},
-        })
     })
 
     describe('Token retrievals', () => {
@@ -61,11 +57,6 @@ describe('Session', () => {
         it('should get token from username/password', () => clientUsernamePassword.session.getSessionToken()
             .then((sessionToken) => {
                 assert(sessionToken)
-            }))
-        it('should fail to get token with no authentication', (done) => clientNone.session.getSessionToken()
-            .catch((err) => {
-                assert.equal(err.toString(), 'Error: Need either "privateKey", "apiKey" or "username"+"password" to login.')
-                done()
             }))
     })
 })

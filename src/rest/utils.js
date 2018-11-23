@@ -6,7 +6,7 @@ const debug = debugFactory('StreamrClient:utils')
 export const authFetch = async (url, session, opts = {}, requireNewToken = false) => {
     debug('authFetch: ', url, opts)
     const authHeader = {}
-    if (session) {
+    if (session && !session.options.unauthenticated) {
         const token = await session.getSessionToken(requireNewToken)
         authHeader.Authorization = `Bearer ${token}`
     }

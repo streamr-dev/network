@@ -13,6 +13,7 @@ describe('utils', () => {
 
     beforeAll((done) => {
         session = sinon.stub()
+        session.options = {}
         expressApp = express()
 
         function handle(req, res) {

@@ -128,7 +128,6 @@ describe('StreamrClient', () => {
             autoConnect: false,
             autoDisconnect: false,
         }, connection)
-        client.session.getSessionToken = sinon.stub().resolves(undefined)
     })
 
     afterEach(() => {
@@ -840,7 +839,7 @@ describe('StreamrClient', () => {
         })
     })
 
-    describe('Backwards compatibility for apiKey and authKey', () => {
+    describe('Fields set', () => {
         it('sets auth.apiKey from authKey', () => {
             const c = new StreamrClient({
                 authKey: 'authKey',
@@ -852,6 +851,10 @@ describe('StreamrClient', () => {
                 apiKey: 'apiKey',
             })
             assert(c.options.auth.apiKey)
+        })
+        it('sets unauthenticated', () => {
+            const c = new StreamrClient()
+            assert(c.session.options.unauthenticated)
         })
     })
 })

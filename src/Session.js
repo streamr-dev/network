@@ -26,6 +26,9 @@ export default class Session {
         } else if (this.options.username && this.options.password) {
             this.loginFunction = async () => this._client.loginWithUsernamePassword(this.options.username, this.options.password)
         } else {
+            if (!this.options.sessionToken) {
+                this.options.unauthenticated = true
+            }
             this.loginFunction = async () => {
                 throw new Error('Need either "privateKey", "apiKey" or "username"+"password" to login.')
             }
@@ -35,6 +38,9 @@ export default class Session {
     async getSessionToken(requireNewToken = false) {
         if (this.options.sessionToken && !requireNewToken) {
             return this.options.sessionToken
+        }
+        if (this.options.unauthenticated) {
+            return undefined
         }
         if (this.state !== Session.State.LOGGING_IN) {
             this.state = Session.State.LOGGING_IN
