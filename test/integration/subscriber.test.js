@@ -39,8 +39,8 @@ describe('Selecting leader for the stream and sending messages to two subscriber
         })
 
         await Promise.all([
-            waitForEvent(nodeOne.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(nodeTwo.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED)
+            waitForEvent(nodeOne.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(nodeTwo.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED)
         ])
 
         let msgNo = 0

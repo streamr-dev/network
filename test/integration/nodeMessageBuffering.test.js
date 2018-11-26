@@ -2,8 +2,8 @@ const { startNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const { callbackToPromise } = require('../../src/util')
 const { waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
-const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
+const NodeToNode = require('../../src/protocol/NodeToNode')
 
 const DataMessage = require('../../src/messages/DataMessage')
 
@@ -31,8 +31,8 @@ describe('message buffering of Node', () => {
         destinationNode.setBootstrapTrackers(BOOTNODES)
 
         await Promise.all([
-            waitForEvent(sourceNode.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(destinationNode.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED)
+            waitForEvent(sourceNode.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(destinationNode.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED)
         ])
     })
 

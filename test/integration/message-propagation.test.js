@@ -1,6 +1,5 @@
 const Node = require('../../src/logic/Node')
 const NodeToNode = require('../../src/protocol/NodeToNode')
-const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const DataMessage = require('../../src/messages/DataMessage')
 const { startTracker, startNode } = require('../../src/composition')
@@ -35,10 +34,10 @@ describe('message propagation in network', () => {
         })
 
         await Promise.all([
-            waitForEvent(n1.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(n2.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(n3.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(n4.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED)
+            waitForEvent(n1.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(n2.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(n3.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(n4.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED)
         ])
     })
 

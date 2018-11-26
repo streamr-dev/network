@@ -17,23 +17,11 @@ module.exports = class Tracker extends EventEmitter {
         }
 
         this.protocols.trackerServer.on(TrackerServer.events.STREAM_INFO_REQUESTED, (streamMessage) => this.sendStreamInfo(streamMessage))
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_LIST_REQUESTED, (node) => this.sendListOfNodes(node))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => this.processNodeStatus(statusMessage))
 
         this.debug = createDebug(`streamr:logic:tracker:${this.id}`)
         this.debug('started %s', this.id)
-    }
-
-    sendListOfNodes(node) {
-        const listOfNodes = getPeersTopology([...this.nodes], node)
-
-        if (listOfNodes.length) {
-            this.debug('sending list of %d nodes to %s', listOfNodes.length, this.peerBook.getShortId(node))
-            this.protocols.trackerServer.sendNodeList(node, listOfNodes)
-        } else {
-            this.debug('no available nodes to send to %s', this.peerBook.getShortId(node))
-        }
     }
 
     processNodeStatus(statusMessage) {

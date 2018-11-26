@@ -1,7 +1,6 @@
 const { startNode, startTracker } = require('../../src/composition')
 const { LOCALHOST, waitForEvent } = require('../../test/util')
 const { callbackToPromise } = require('../../src/util')
-const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 
 jest.setTimeout(20000)
@@ -30,10 +29,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         node2 = await startNode(LOCALHOST, 33372, 'node2')
         node2.setBootstrapTrackers(BOOTNODES)
 
-        await Promise.all([
-            waitForEvent(node1.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(node2.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED)
-        ])
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
 
         expect(tracker.nodes.size).toBe(2)
 

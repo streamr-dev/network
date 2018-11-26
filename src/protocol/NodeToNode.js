@@ -4,6 +4,7 @@ const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
 
 const events = Object.freeze({
+    NODE_CONNECTED: 'streamr:node-node:node-connected',
     SUBSCRIBE_REQUEST: 'streamr:node-node:subscribe-request',
     UNSUBSCRIBE_REQUEST: 'streamr:node-node:unsubscribe-request',
     DATA_RECEIVED: 'streamr:node-node:stream-data',
@@ -19,12 +20,13 @@ class NodeToNode extends EventEmitter {
         this._endpointListener.implement(this, endpoint)
     }
 
-    connectToNodes(peersMessage) {
-        const nodes = peersMessage.getPeers()
+    connectToNodes(nodes) {
         const promises = []
         nodes.forEach((node) => {
             debug('connecting to new node %s', node)
-            promises.push(this.endpoint.connect(node))
+            promises.push(this.endpoint.connect(node).then(() => {
+                this.emit(events.NODE_CONNECTED, node)
+            }))
         })
         return Promise.all(promises)
     }
@@ -50,6 +52,7 @@ class NodeToNode extends EventEmitter {
     }
 
     onPeerConnected(peer) {
+        this.emit(events.NODE_CONNECTED, peer)
     }
 
     onMessageReceived(message) {

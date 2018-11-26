@@ -1,6 +1,7 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { wait, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
+const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 
@@ -33,12 +34,12 @@ describe('duplicate message detection and avoidance', () => {
 
         // Wait for nodes to connect to each other
         await Promise.all([
-            waitForEvent(contactNode.protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(otherNodes[0].protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(otherNodes[1].protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(otherNodes[2].protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(otherNodes[3].protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
-            waitForEvent(otherNodes[4].protocols.trackerNode, TrackerNode.events.NODE_LIST_RECEIVED),
+            waitForEvent(contactNode.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(otherNodes[0].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(otherNodes[1].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(otherNodes[2].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(otherNodes[3].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
+            waitForEvent(otherNodes[4].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
         ])
 
         // Make contactNode responsible for stream

@@ -5,7 +5,6 @@ const StreamMessage = require('../../src/messages/StreamMessage')
 describe('encoder', () => {
     it('check all codes', (done) => {
         expect(encoder.STATUS).toEqual(0)
-        expect(encoder.PEERS).toEqual(1)
         expect(encoder.DATA).toEqual(2)
         expect(encoder.SUBSCRIBE).toEqual(3)
         expect(encoder.UNSUBSCRIBE).toEqual(4)
@@ -17,7 +16,6 @@ describe('encoder', () => {
 
     it('check all code messages', (done) => {
         expect(encoder.getMsgPrefix(encoder.STATUS)).toEqual('STATUS')
-        expect(encoder.getMsgPrefix(encoder.PEERS)).toEqual('PEERS')
         expect(encoder.getMsgPrefix(encoder.SUBSCRIBE)).toEqual('SUBSCRIBE')
         expect(encoder.getMsgPrefix(encoder.PUBLISH)).toEqual('PUBLISH')
         expect(encoder.getMsgPrefix(encoder.STREAM)).toEqual('STREAM')

@@ -1,4 +1,3 @@
-const PeersMessage = require('../messages/PeersMessage')
 const StatusMessage = require('../messages/StatusMessage')
 const StreamMessage = require('../messages/StreamMessage')
 const DataMessage = require('../messages/DataMessage')
@@ -22,9 +21,6 @@ const decode = (source, message) => {
     const { code, payload } = JSON.parse(message)
 
     switch (code) {
-        case msgTypes.PEERS:
-            return new PeersMessage(payload, source)
-
         case msgTypes.STATUS:
             return new StatusMessage(payload, source)
 
@@ -50,7 +46,6 @@ const getMsgPrefix = (msgCode) => Object.keys(msgTypes).find((key) => msgTypes[k
 module.exports = {
     getMsgPrefix,
     decode,
-    peersMessage: (peers) => encode(msgTypes.PEERS, peers),
     statusMessage: (status) => encode(msgTypes.STATUS, status),
     dataMessage: (streamId, data, number = null, previousNumber = null) => encode(msgTypes.DATA, {
         streamId, data, number, previousNumber

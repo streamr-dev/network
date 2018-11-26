@@ -6,7 +6,6 @@ const events = Object.freeze({
     NODE_CONNECTED: 'streamr:tracker:send-peers',
     NODE_STATUS_RECEIVED: 'streamr:tracker:peer-status',
     STREAM_INFO_REQUESTED: 'streamr:tracker:find-stream',
-    NODE_LIST_REQUESTED: 'streamr:tracker:send-peers',
     NODE_DISCONNECTED: 'streamr:tracker:node-disconnected'
 })
 
@@ -18,10 +17,6 @@ class TrackerServer extends EventEmitter {
 
         this._endpointListener = new EndpointListener()
         this._endpointListener.implement(this, endpoint)
-    }
-
-    sendNodeList(receiverNode, nodeList) {
-        this.endpoint.send(receiverNode, encoder.peersMessage(nodeList))
     }
 
     sendStreamInfo(receiverNode, streamId, nodeAddresses) {
@@ -49,11 +44,6 @@ class TrackerServer extends EventEmitter {
             case encoder.STREAM:
                 this.emit(events.STREAM_INFO_REQUESTED, message)
                 break
-
-            case encoder.PEERS:
-                this.emit(events.NODE_LIST_REQUESTED, message.getSource())
-                break
-
             default:
                 break
         }
