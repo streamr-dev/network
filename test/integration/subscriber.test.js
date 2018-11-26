@@ -1,8 +1,6 @@
 const { startClient, startNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
-const TrackerNode = require('../../src/protocol/TrackerNode')
-const TrackerServer = require('../../src/protocol/TrackerServer')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
@@ -25,9 +23,10 @@ describe('Selecting leader for the stream and sending messages to two subscriber
             startNode(LOCALHOST, 32313, 'node-2')
         ]).then((res) => {
             [nodeOne, nodeTwo] = res
-            nodeOne.setBootstrapTrackers([tracker.getAddress()])
-            nodeTwo.setBootstrapTrackers([tracker.getAddress()])
         })
+
+        await nodeOne.addBootstrapTracker(tracker.getAddress())
+        await nodeTwo.addBootstrapTracker(tracker.getAddress())
 
         publisher = await startClient(LOCALHOST, 32301, 'publisher-1', nodeOne.protocols.nodeToNode.getAddress())
 
@@ -44,10 +43,6 @@ describe('Selecting leader for the stream and sending messages to two subscriber
             publisher.publish(streamId, `Hello world ${msgNo}!`, msgNo, msgNo - 1)
         }, 1000)
 
-        await waitForEvent(nodeOne.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.STREAM_INFO_REQUESTED)
-        await waitForEvent(nodeOne.protocols.trackerNode, TrackerNode.events.STREAM_ASSIGNED)
-
         subscriber1.subscribe(streamId)
         subscriber2.subscribe(streamId)
 
@@ -55,7 +50,8 @@ describe('Selecting leader for the stream and sending messages to two subscriber
             waitForEvent(subscriber1.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED),
             waitForEvent(subscriber2.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED)
         ]).then(() => {
-            expect(nodeTwo.subscribers.subscribersForStream(streamId).length).toEqual(2)
+            expect(nodeTwo.streams.getOutboundNodesForStream(streamId)).toContain('subscriber-1')
+            expect(nodeTwo.streams.getOutboundNodesForStream(streamId)).toContain('subscriber-2')
             clearInterval(publisherInterval)
 
             done()

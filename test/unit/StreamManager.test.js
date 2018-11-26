@@ -8,57 +8,84 @@ describe('StreamManager', () => {
     })
 
     test('starts out empty', () => {
-        expect(manager.isOwnStream('stream-id')).toEqual(false)
-        expect(manager.isKnownStream('stream-id')).toEqual(false)
-        expect(manager.getOwnStreams()).toEqual([])
-        expect(manager.getNodesForKnownStream('stream-id')).toEqual([])
+        expect(manager.isSetUp('stream-id')).toEqual(false)
+        expect(manager.getStreams()).toEqual([])
     })
 
-    test('can mark and query own streams', () => {
-        manager.markOwnStream('stream-1')
-        manager.markOwnStream('stream-2')
+    test('setting up streams', () => {
+        manager.setUpStream('stream-1')
+        manager.setUpStream('stream-2')
 
-        expect(manager.isOwnStream('stream-1')).toEqual(true)
-        expect(manager.isOwnStream('stream-2')).toEqual(true)
-        expect(manager.getOwnStreams()).toEqual(['stream-1', 'stream-2'])
+        expect(manager.isSetUp('stream-1')).toEqual(true)
+        expect(manager.isSetUp('stream-2')).toEqual(true)
+        expect(manager.getStreams()).toEqual(['stream-1', 'stream-2'])
+        expect(manager.getInboundNodesForStream('stream-1')).toEqual([])
+        expect(manager.getOutboundNodesForStream('stream-1')).toEqual([])
+        expect(manager.getInboundNodesForStream('stream-2')).toEqual([])
+        expect(manager.getOutboundNodesForStream('stream-2')).toEqual([])
     })
 
-    test('can mark and query known streams (and nodes)', () => {
-        manager.markKnownStream('stream-1', ['192.168.0.1', '192.168.0.2'])
-        manager.markKnownStream('stream-2', ['192.168.0.4'])
+    test('cannot re-setup same stream', () => {
+        manager.setUpStream('stream-id')
 
-        expect(manager.isKnownStream('stream-1')).toEqual(true)
-        expect(manager.isKnownStream('stream-2')).toEqual(true)
-        expect(manager.isKnownStream('non-existing-stream')).toEqual(false)
-        expect(manager.getNodesForKnownStream('stream-1')).toEqual(['192.168.0.1', '192.168.0.2'])
-        expect(manager.getNodesForKnownStream('stream-2')).toEqual(['192.168.0.4'])
-        expect(manager.getNodesForKnownStream('non-existing-stream')).toEqual([])
-    })
-
-    test('marking known streams (and nodes) replaces old ones', () => {
-        manager.markKnownStream('stream-1', ['192.168.0.1', '192.168.0.2'])
-        manager.markKnownStream('stream-1', ['192.168.0.4'])
-
-        expect(manager.getNodesForKnownStream('stream-1')).toEqual(['192.168.0.4'])
-    })
-
-    test('cannot duplicate detect on non-own stream', () => {
         expect(() => {
-            manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
-        }).toThrowError('Not own stream stream-id')
+            manager.setUpStream('stream-id')
+        }).toThrowError('Stream stream-id already set up')
     })
 
-    test('cannot duplicate detect on only known stream', () => {
-        manager.markKnownStream('stream-id', ['192.168.0.2'])
-        expect(() => {
-            manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
-        }).toThrowError('Not own stream stream-id')
-    })
+    test('can duplicate detect on previously set up stream', () => {
+        manager.setUpStream('stream-id')
 
-    test('can duplicate detect on own stream', () => {
-        manager.markOwnStream('stream-id')
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
         }).not.toThrowError()
+    })
+
+    test('cannot duplicate detect on non-existing stream', () => {
+        expect(() => {
+            manager.markNumbersAndCheckThatIsNotDuplicate('stream-id', {}, 2, 1)
+        }).toThrowError('Stream stream-id is not set up')
+    })
+
+    test('adding inbound and outbound nodes to a set-up stream', () => {
+        manager.setUpStream('stream-id')
+        manager.addInboundNode('stream-id', 'node-1')
+        manager.addInboundNode('stream-id', 'node-2')
+        manager.addOutboundNode('stream-id', 'node-1')
+        manager.addOutboundNode('stream-id', 'node-3')
+
+        expect(manager.getInboundNodesForStream('stream-id')).toEqual(['node-1', 'node-2'])
+        expect(manager.getOutboundNodesForStream('stream-id')).toEqual(['node-1', 'node-3'])
+    })
+
+    test('removing node from stream removes it from both inbound and outbound nodes', () => {
+        manager.setUpStream('stream-id')
+        manager.addInboundNode('stream-id', 'node-1')
+        manager.addInboundNode('stream-id', 'node-2')
+        manager.addOutboundNode('stream-id', 'node-1')
+        manager.addOutboundNode('stream-id', 'node-3')
+
+        manager.removeNodeFromStream('stream-id', 'node-1')
+
+        expect(manager.getInboundNodesForStream('stream-id')).toEqual(['node-2'])
+        expect(manager.getOutboundNodesForStream('stream-id')).toEqual(['node-3'])
+    })
+
+    test('remove node from all streams', () => {
+        manager.setUpStream('stream-1')
+        manager.setUpStream('stream-2')
+        manager.addOutboundNode('stream-1', 'node')
+        manager.addOutboundNode('stream-1', 'should-not-be-removed')
+        manager.addOutboundNode('stream-2', 'node')
+        manager.addInboundNode('stream-1', 'node')
+        manager.addInboundNode('stream-2', 'node')
+        manager.addInboundNode('stream-2', 'should-not-be-removed')
+
+        manager.removeNodeFromAllStreams('node')
+
+        expect(manager.getInboundNodesForStream('stream-1')).toEqual([])
+        expect(manager.getInboundNodesForStream('stream-2')).toEqual(['should-not-be-removed'])
+        expect(manager.getOutboundNodesForStream('stream-1')).toEqual(['should-not-be-removed'])
+        expect(manager.getOutboundNodesForStream('stream-2')).toEqual([])
     })
 })

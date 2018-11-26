@@ -1,11 +1,8 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
-const { wait, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
-const NodeToNode = require('../../src/protocol/NodeToNode')
-const TrackerNode = require('../../src/protocol/TrackerNode')
-const TrackerServer = require('../../src/protocol/TrackerServer')
+const { wait, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 
-jest.setTimeout(DEFAULT_TIMEOUT * 600) // TODO: remove 600
+jest.setTimeout(DEFAULT_TIMEOUT)
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
@@ -19,7 +16,7 @@ describe('duplicate message detection and avoidance', () => {
     beforeAll(async () => {
         tracker = await startTracker(LOCALHOST, 30350, 'tracker')
         contactNode = await startNetworkNode(LOCALHOST, 30351, 'node-0')
-        contactNode.setBootstrapTrackers([tracker.getAddress()])
+        await contactNode.addBootstrapTracker(tracker.getAddress())
 
         otherNodes = await Promise.all([
             startNetworkNode(LOCALHOST, 30352, 'node-1'),
@@ -28,36 +25,14 @@ describe('duplicate message detection and avoidance', () => {
             startNetworkNode(LOCALHOST, 30355, 'node-4'),
             startNetworkNode(LOCALHOST, 30356, 'node-5'),
         ])
-        otherNodes.forEach((node) => {
-            node.setBootstrapTrackers([tracker.getAddress()])
-        })
-
-        // Wait for nodes to connect to each other
-        await Promise.all([
-            waitForEvent(contactNode.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(otherNodes[0].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(otherNodes[1].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(otherNodes[2].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(otherNodes[3].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(otherNodes[4].protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-        ])
-
-        // Make contactNode responsible for stream
-        contactNode.publish('stream-id', 0, {}, 90, null)
-        await waitForEvent(contactNode.protocols.trackerNode, TrackerNode.events.STREAM_ASSIGNED)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await Promise.all(otherNodes.map((node) => node.addBootstrapTracker(tracker.getAddress())))
 
         // Become subscribers (one-by-one, for well connected graph)
-        await otherNodes[0].subscribe('stream-id', 0)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        await otherNodes[1].subscribe('stream-id', 0)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        await otherNodes[2].subscribe('stream-id', 0)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        await otherNodes[3].subscribe('stream-id', 0)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        await otherNodes[4].subscribe('stream-id', 0)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        otherNodes[0].subscribe('stream-id', 0)
+        otherNodes[1].subscribe('stream-id', 0)
+        otherNodes[2].subscribe('stream-id', 0)
+        otherNodes[3].subscribe('stream-id', 0)
+        otherNodes[4].subscribe('stream-id', 0)
 
         // Set up 1st test case
         numOfReceivedMessages = [0, 0, 0, 0, 0]

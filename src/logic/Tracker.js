@@ -26,12 +26,10 @@ module.exports = class Tracker extends EventEmitter {
     processNodeStatus(statusMessage) {
         const source = statusMessage.getSource()
         const status = statusMessage.getStatus()
-        this.debug('received from %s status %s', source, JSON.stringify(status))
-        this._addNode(source, status.ownStreams)
+        this._addNode(source, status.streams)
     }
 
     onNodeDisconnected(node) {
-        this.debug('removing node %s from tracker node list', node)
         this._removeNode(node)
     }
 
@@ -39,20 +37,10 @@ module.exports = class Tracker extends EventEmitter {
         const streamId = streamMessage.getStreamId()
         const source = streamMessage.getSource()
 
-        this.debug('looking for stream %s', streamId)
-
         const nodesForStream = this.streamIdToNodes.get(streamId) || new Set()
-
-        if (nodesForStream.size === 0) {
-            // TODO: stream assignment to node
-            this.debug('assigning stream %s to node %s', streamId, source)
-            this._addNode(source, [streamId])
-            this.protocols.trackerServer.sendStreamInfo(source, streamId, [source])
-        } else {
-            const selectedNodes = getPeersTopology([...nodesForStream], source)
-            this.debug('stream %s found; responding to %s with nodes %j', streamId, source, selectedNodes)
-            this.protocols.trackerServer.sendStreamInfo(source, streamId, selectedNodes)
-        }
+        const selectedNodes = getPeersTopology([...nodesForStream], source)
+        this.protocols.trackerServer.sendStreamInfo(source, streamId, selectedNodes)
+        this.debug('sent stream info to %s: stream %s with nodes %j', source, streamId, selectedNodes)
     }
 
     stop(cb) {
@@ -72,6 +60,7 @@ module.exports = class Tracker extends EventEmitter {
             }
             this.streamIdToNodes.get(streamId).add(node)
         })
+        this.debug('registered node %s for streams %j', node, streams)
     }
 
     _removeNode(node) {
@@ -82,5 +71,6 @@ module.exports = class Tracker extends EventEmitter {
                 this.streamIdToNodes.delete(streamId)
             }
         })
+        this.debug('unregistered node %s from tracker', node)
     }
 }

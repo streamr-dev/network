@@ -34,7 +34,7 @@ module.exports = class Client extends EventEmitter {
     subscribe(streamId) {
         if (this.nodeId) {
             this.debug('subscribing to stream %s', streamId)
-            this.protocols.nodeToNode.sendSubscribe(this.nodeId, streamId)
+            this.protocols.nodeToNode.sendSubscribe(this.nodeId, streamId, true)
         } else {
             throw new Error('Failed to subscribe because node not set.')
         }

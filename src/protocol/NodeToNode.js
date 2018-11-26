@@ -23,15 +23,6 @@ class NodeToNode extends EventEmitter {
         this._endpointListener.implement(this, endpoint)
     }
 
-    connectToNodes(nodeAddresses) {
-        const promises = []
-        nodeAddresses.forEach((address) => {
-            promises.push(this.connectToNode(address))
-        })
-        debug('connecting to %d nodes', promises.length)
-        return Promise.all(promises)
-    }
-
     connectToNode(address) {
         return this.endpoint.connect(address).then(() => this.peerBook.getPeerId(address))
     }
@@ -41,9 +32,9 @@ class NodeToNode extends EventEmitter {
         this.endpoint.send(receiverNodeAddress, encoder.dataMessage(streamId, payload, number, previousNumber))
     }
 
-    sendSubscribe(receiverNodeId, streamId) {
+    sendSubscribe(receiverNodeId, streamId, leechOnly) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId))
+        this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId, leechOnly))
     }
 
     sendUnsubscribe(receiverNodeId, streamId) {
@@ -60,11 +51,15 @@ class NodeToNode extends EventEmitter {
     }
 
     onPeerConnected(peerId) {
-        this.emit(events.NODE_CONNECTED, peerId)
+        if (this.peerBook.isNode(peerId)) {
+            this.emit(events.NODE_CONNECTED, peerId)
+        }
     }
 
     onPeerDisconnected(peerId) {
-        this.emit(events.NODE_DISCONNECTED, peerId)
+        if (this.peerBook.isNode(peerId)) {
+            this.emit(events.NODE_DISCONNECTED, peerId)
+        }
     }
 
     onMessageReceived(message) {

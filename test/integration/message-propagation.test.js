@@ -1,10 +1,8 @@
 const Node = require('../../src/logic/Node')
-const NodeToNode = require('../../src/protocol/NodeToNode')
-const TrackerServer = require('../../src/protocol/TrackerServer')
 const DataMessage = require('../../src/messages/DataMessage')
 const { startTracker, startNode } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
-const { wait, waitForEvent, LOCALHOST } = require('../../test/util')
+const { wait, LOCALHOST } = require('../../test/util')
 
 jest.setTimeout(90000)
 
@@ -14,11 +12,9 @@ describe('message propagation in network', () => {
     let n2
     let n3
     let n4
-    const BOOTNODES = []
 
     beforeAll(async () => {
         tracker = await startTracker(LOCALHOST, 33300, 'tracker')
-        BOOTNODES.push(tracker.getAddress())
 
         await Promise.all([
             startNode('127.0.0.1', 33312, 'node-1'),
@@ -27,17 +23,13 @@ describe('message propagation in network', () => {
             startNode('127.0.0.1', 33315, 'node-4')
         ]).then((res) => {
             [n1, n2, n3, n4] = res
-            n1.setBootstrapTrackers(BOOTNODES)
-            n2.setBootstrapTrackers(BOOTNODES)
-            n3.setBootstrapTrackers(BOOTNODES)
-            n4.setBootstrapTrackers(BOOTNODES)
         })
 
         await Promise.all([
-            waitForEvent(n1.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(n2.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(n3.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(n4.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED)
+            n1.addBootstrapTracker(tracker.getAddress()),
+            n2.addBootstrapTracker(tracker.getAddress()),
+            n3.addBootstrapTracker(tracker.getAddress()),
+            n4.addBootstrapTracker(tracker.getAddress())
         ])
     })
 
@@ -72,11 +64,10 @@ describe('message propagation in network', () => {
             payload: dataMessage.getData()
         }))
 
-        n2.subscribeToStream('stream-1')
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        n2.subscribeToStreamIfHaveNotYet('stream-1')
+        n3.subscribeToStreamIfHaveNotYet('stream-1')
 
-        n3.subscribeToStream('stream-1')
-        await waitForEvent(n2.protocols.nodeToNode, NodeToNode.events.SUBSCRIBE_REQUEST)
+        await wait(1000)
 
         for (let i = 0; i < 5; ++i) {
             const dataMessage = new DataMessage('stream-1', {
@@ -93,8 +84,7 @@ describe('message propagation in network', () => {
             await wait(500)
         }
 
-        expect(n1Messages).toEqual([])
-        expect(n2Messages).toEqual([
+        expect(n1Messages).toEqual([
             {
                 streamId: 'stream-1',
                 payload: {
@@ -126,6 +116,7 @@ describe('message propagation in network', () => {
                 }
             }
         ])
+        expect(n2Messages).toEqual(n1Messages)
         expect(n3Messages).toEqual(n2Messages)
         expect(n4Messages).toEqual([])
     })

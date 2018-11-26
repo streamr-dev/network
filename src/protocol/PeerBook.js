@@ -35,14 +35,28 @@ module.exports = class PeerBook {
         return this.addressToId[address]
     }
 
-    getType(peerId) {
-        if (!this.hasPeerId(peerId)) {
-            throw new Error(`Id ${peerId} not found in peer book`)
-        }
-        return this.idToType[peerId]
-    }
-
     hasPeerId(address) {
         return this.idToAddress[address] != null
+    }
+
+    isTracker(peerId) {
+        if (!this.idToType[peerId]) {
+            throw new Error(`Id ${peerId} not found in peer book`)
+        }
+        return this.idToType[peerId] === 'tracker'
+    }
+
+    isNode(peerId) {
+        if (!this.idToType[peerId]) {
+            throw new Error(`Id ${peerId} not found in peer book`)
+        }
+        return this.idToType[peerId] === 'node'
+    }
+
+    isClient(peerId) {
+        if (!this.idToType[peerId]) {
+            throw new Error(`Id ${peerId} not found in peer book`)
+        }
+        return this.idToType[peerId] === 'client'
     }
 }
