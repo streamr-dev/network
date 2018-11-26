@@ -6,7 +6,6 @@ const Tracker = require('./logic/Tracker')
 const Node = require('./logic/Node')
 const Client = require('./logic/Client')
 const NetworkNode = require('./NetworkNode')
-const PeerBook = require('./PeerBook')
 const { startEndpoint } = require('./connection/WsEndpoint')
 
 async function startTracker(host, port, id = uuidv4()) {
@@ -15,7 +14,7 @@ async function startTracker(host, port, id = uuidv4()) {
         'streamr-peer-type': 'tracker'
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new Tracker(id, new PeerBook(endpoint), new TrackerServer(endpoint))
+        return new Tracker(id, new TrackerServer(endpoint))
     }).catch((err) => {
         throw err
     })
@@ -27,7 +26,7 @@ async function startNode(host, port, id = uuidv4()) {
         'streamr-peer-type': 'node'
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new Node(id, new PeerBook(endpoint), new TrackerNode(endpoint), new NodeToNode(endpoint))
+        return new Node(id, new TrackerNode(endpoint), new NodeToNode(endpoint))
     }).catch((err) => {
         throw err
     })
@@ -38,8 +37,12 @@ async function startClient(host, port, id = uuidv4(), nodeAddress) {
         'streamr-peer-id': id,
         'streamr-peer-type': 'client'
     }
-    return startEndpoint(host, port, identity).then((endpoint) => {
-        return new Client(id, new PeerBook(endpoint), new NodeToNode(endpoint), nodeAddress)
+    return startEndpoint(host, port, identity).then(async (endpoint) => {
+        const client = new Client(id, new NodeToNode(endpoint))
+        if (nodeAddress) {
+            await client.connectToNode(nodeAddress)
+        }
+        return client
     }).catch((err) => {
         throw err
     })
@@ -51,7 +54,7 @@ async function startNetworkNode(host, port, id = uuidv4()) {
         'streamr-peer-type': 'node'
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new NetworkNode(id, new PeerBook(endpoint), new TrackerNode(endpoint), new NodeToNode(endpoint))
+        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint))
     }).catch((err) => {
         throw err
     })

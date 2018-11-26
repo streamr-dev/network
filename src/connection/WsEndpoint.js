@@ -1,9 +1,7 @@
 const { EventEmitter } = require('events')
-
 const url = require('url')
 const debug = require('debug')('streamr:connection:ws-endpoint')
 const WebSocket = require('ws')
-
 const Endpoint = require('./Endpoint')
 
 class CustomHeaders {
@@ -59,34 +57,21 @@ class WsEndpoint extends EventEmitter {
 
         this.connections = new Map()
 
-        this.wss.on('connection', (ws, req) => {
-            const parameters = url.parse(req.url, true)
-            const { address } = parameters.query
-            const customHeadersOfClient = this.customHeaders.pluckCustomHeadersFromObject(req.headers)
+        this.wss.on('connection', this._onIncomingConnection.bind(this))
 
-            if (!address) {
-                ws.terminate()
-                debug('dropped connection to me because address parameter not given')
-            } else {
-                debug('%s connected to me', address)
-                this._onConnected(ws, address, customHeadersOfClient)
-            }
-        })
-
-        // Add identity to server response headers before they are sent to client
+        // Attach custom headers to headers before they are sent to client
         this.wss.on('headers', (headers) => {
             headers.push(...this.customHeaders.asArray())
         })
 
-        debug('node started')
         debug('listening on: %s', this.getAddress())
     }
 
-    async send(recipientAddress, message) {
+    send(recipientAddress, message) {
         return new Promise((resolve, reject) => {
             if (!this.isConnected(recipientAddress)) {
-                debug('cannot send to %s because not in peer book', recipientAddress)
-                reject(new Error(`cannot send to ${recipientAddress} because not in peer book`))
+                debug('cannot send to %s because not connected', recipientAddress)
+                reject(new Error(`cannot send to ${recipientAddress} because not connected`))
             } else {
                 try {
                     const ws = this.connections.get(recipientAddress)
@@ -106,11 +91,8 @@ class WsEndpoint extends EventEmitter {
         })
     }
 
-    isConnected(address) {
-        return this.connections.has(address)
-    }
-
     onReceive(sender, message) {
+        debug('received from %s message "%s"', sender, message)
         this.emit(Endpoint.events.MESSAGE_RECEIVED, {
             sender,
             message
@@ -120,7 +102,7 @@ class WsEndpoint extends EventEmitter {
     connect(peerAddress) {
         return new Promise((resolve, reject) => {
             if (this.isConnected(peerAddress)) {
-                debug('found %s already in peer book', peerAddress)
+                debug('already connected to %s', peerAddress)
                 resolve()
             } else {
                 try {
@@ -135,9 +117,10 @@ class WsEndpoint extends EventEmitter {
 
                     ws.on('open', () => {
                         if (!customHeadersOfServer) {
-                            reject(new Error('upgrade event never received?'))
+                            reject(new Error('dropping outgoing connection because upgrade event never received'))
+                            ws.terminate()
                         } else {
-                            this._onConnected(ws, peerAddress, customHeadersOfServer)
+                            this._onNewConnection(ws, peerAddress, customHeadersOfServer)
                             resolve()
                         }
                     })
@@ -154,32 +137,16 @@ class WsEndpoint extends EventEmitter {
         })
     }
 
-    _onConnected(ws, address, customHeaders) {
-        ws.on('message', (message) => {
-            // TODO check message.type [utf8|binary]
-            this.onReceive(address, message)
-        })
-
-        ws.on('close', (code, reason) => {
-            debug('socket to %s closed (code %d, reason %s)', address, code, reason)
-            this.connections.delete(address)
-            debug('removed %s from peer book', address)
-            this.emit(Endpoint.events.PEER_DISCONNECTED, address)
-        })
-
-        this.connections.set(address, ws)
-        debug('added %s to peer book (headers %o)', address, customHeaders)
-
-        this.emit(Endpoint.events.PEER_CONNECTED, address, customHeaders)
-    }
-
-    async stop(callback = () => {}) {
-        // close all connections
+    stop(callback = () => {}) {
         this.connections.forEach((connection) => {
             connection.terminate()
         })
 
         return this.wss.close(callback)
+    }
+
+    isConnected(address) {
+        return this.connections.has(address)
     }
 
     getAddress() {
@@ -190,9 +157,42 @@ class WsEndpoint extends EventEmitter {
     getPeers() {
         return this.connections
     }
+
+    _onIncomingConnection(ws, req) {
+        const parameters = url.parse(req.url, true)
+        const { address } = parameters.query
+
+        if (!address) {
+            ws.terminate()
+            debug('dropped incoming connection from %s because address parameter missing',
+                req.connection.remoteAddress)
+        } else {
+            debug('%s connected to me', address)
+            const customHeadersOfClient = this.customHeaders.pluckCustomHeadersFromObject(req.headers)
+            this._onNewConnection(ws, address, customHeadersOfClient)
+        }
+    }
+
+    _onNewConnection(ws, address, customHeaders) {
+        ws.on('message', (message) => {
+            // TODO check message.type [utf8|binary]
+            this.onReceive(address, message)
+        })
+
+        ws.on('close', (code, reason) => {
+            debug('socket to %s closed (code %d, reason %s)', address, code, reason)
+            this.connections.delete(address)
+            debug('removed %s from connection list', address)
+            this.emit(Endpoint.events.PEER_DISCONNECTED, address)
+        })
+
+        this.connections.set(address, ws)
+        debug('added %s to connection list (headers %o)', address, customHeaders)
+        this.emit(Endpoint.events.PEER_CONNECTED, address, customHeaders)
+    }
 }
 
-async function startWebsocketServer(host, port) {
+async function startWebSocketServer(host, port) {
     return new Promise((resolve, reject) => {
         const wss = new WebSocket.Server(
             {
@@ -213,11 +213,10 @@ async function startWebsocketServer(host, port) {
 }
 
 async function startEndpoint(host, port, customHeaders) {
-    return startWebsocketServer(host, port).then((n) => new WsEndpoint(n, customHeaders))
+    return startWebSocketServer(host, port).then((wss) => new WsEndpoint(wss, customHeaders))
 }
 
 module.exports = {
     CustomHeaders,
-    WsEndpoint,
     startEndpoint
 }

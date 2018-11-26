@@ -2,6 +2,7 @@ const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
+const PeerBook = require('./PeerBook')
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:node-node:node-connected',
@@ -14,33 +15,40 @@ const events = Object.freeze({
 class NodeToNode extends EventEmitter {
     constructor(endpoint) {
         super()
+
         this.endpoint = endpoint
+        this.peerBook = new PeerBook()
 
         this._endpointListener = new EndpointListener()
         this._endpointListener.implement(this, endpoint)
     }
 
-    connectToNodes(nodes) {
+    connectToNodes(nodeAddresses) {
         const promises = []
-        nodes.forEach((node) => {
-            debug('connecting to new node %s', node)
-            promises.push(this.endpoint.connect(node).then(() => {
-                this.emit(events.NODE_CONNECTED, node)
-            }))
+        nodeAddresses.forEach((address) => {
+            promises.push(this.connectToNode(address))
         })
+        debug('connecting to %d nodes', promises.length)
         return Promise.all(promises)
     }
 
-    sendData(receiverNode, streamId, payload, number, previousNumber) {
-        this.endpoint.send(receiverNode, encoder.dataMessage(streamId, payload, number, previousNumber))
+    connectToNode(address) {
+        return this.endpoint.connect(address).then(() => this.peerBook.getPeerId(address))
     }
 
-    sendSubscribe(receiverNode, streamId) {
-        this.endpoint.send(receiverNode, encoder.subscribeMessage(streamId))
+    sendData(receiverNodeId, streamId, payload, number, previousNumber) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        this.endpoint.send(receiverNodeAddress, encoder.dataMessage(streamId, payload, number, previousNumber))
     }
 
-    sendUnsubscribe(receiverNode, streamId) {
-        this.endpoint.send(receiverNode, encoder.unsubscribeMessage(streamId))
+    sendSubscribe(receiverNodeId, streamId) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId))
+    }
+
+    sendUnsubscribe(receiverNodeId, streamId) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        this.endpoint.send(receiverNodeAddress, encoder.unsubscribeMessage(streamId))
     }
 
     getAddress() {
@@ -51,8 +59,12 @@ class NodeToNode extends EventEmitter {
         this.endpoint.stop(cb)
     }
 
-    onPeerConnected(peer) {
-        this.emit(events.NODE_CONNECTED, peer)
+    onPeerConnected(peerId) {
+        this.emit(events.NODE_CONNECTED, peerId)
+    }
+
+    onPeerDisconnected(peerId) {
+        this.emit(events.NODE_DISCONNECTED, peerId)
     }
 
     onMessageReceived(message) {
@@ -72,10 +84,6 @@ class NodeToNode extends EventEmitter {
             default:
                 break
         }
-    }
-
-    async onPeerDisconnected(peer) {
-        this.emit(events.NODE_DISCONNECTED, peer)
     }
 }
 

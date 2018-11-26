@@ -16,7 +16,7 @@ const events = Object.freeze({
 })
 
 class Node extends EventEmitter {
-    constructor(id, peerBook, trackerNode, nodeToNode) {
+    constructor(id, trackerNode, nodeToNode) {
         super()
 
         this.trackerDiscoveryInterval = null
@@ -34,7 +34,6 @@ class Node extends EventEmitter {
         })
 
         this.id = id
-        this.peerBook = peerBook
         this.trackers = new Map()
 
         this.protocols = {
@@ -64,7 +63,7 @@ class Node extends EventEmitter {
 
     onConnectedToTracker(tracker) {
         if (this._isTracker(tracker)) {
-            this.debug('connected to tracker %s', this.peerBook.getShortId(tracker))
+            this.debug('connected to tracker %s', tracker)
             this.trackers.set(tracker, tracker)
             this._sendStatus(tracker)
             this._handlePendingSubscriptions()
@@ -83,9 +82,9 @@ class Node extends EventEmitter {
         const streamId = streamMessage.getStreamId()
         const nodeAddresses = streamMessage.getNodeAddresses()
 
-        await this.protocols.nodeToNode.connectToNodes(nodeAddresses)
-        this.streams.markKnownStream(streamId, nodeAddresses)
-        this.debug('known stream %s nodes set to %j', streamId, nodeAddresses.map((a) => this.peerBook.getShortId(a)))
+        const nodeIds = await this.protocols.nodeToNode.connectToNodes(nodeAddresses)
+        this.streams.markKnownStream(streamId, nodeIds)
+        this.debug('known stream %s nodes set to %j', streamId, nodeIds)
 
         this._handlePossiblePendingSubscription(streamId)
         this._handleBufferedMessages(streamId)
@@ -109,10 +108,10 @@ class Node extends EventEmitter {
             }
         } else if (this.streams.isKnownStream(streamId)) {
             this.debug('received data for other node\'s stream %s', streamId)
-            const otherNodeAddress = this.streams.getNodesForKnownStream(streamId)[0] // TODO: randomization or what?
-            this.protocols.nodeToNode.sendData(otherNodeAddress, streamId, data, number, previousNumber)
+            const knownNode = this.streams.getNodesForKnownStream(streamId)[0] // TODO: randomization or what?
+            this.protocols.nodeToNode.sendData(knownNode, streamId, data, number, previousNumber)
             this._sendToSubscribers(dataMessage) // TODO: remove or what?
-        } else if (tracker === null) {
+        } else if (tracker === undefined) {
             this.debug('no trackers available; received data for stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
         } else {
@@ -122,7 +121,7 @@ class Node extends EventEmitter {
                 number,
                 previousNumber
             })
-            this.debug('ask tracker %s who is responsible for stream %s', this.peerBook.getShortId(tracker), streamId)
+            this.debug('ask tracker %s who is responsible for stream %s', tracker, streamId)
             this.protocols.trackerNode.requestStreamInfo(tracker, streamId)
         }
     }
@@ -144,19 +143,19 @@ class Node extends EventEmitter {
     }
 
     onSubscribeRequest(subscribeMessage) {
-        this.subscribers.addSubscriber(subscribeMessage.getStreamId(), subscribeMessage.getSource())
-        this.debug('node %s added as a subscriber for stream %s',
-            this.peerBook.getShortId(subscribeMessage.getSource()),
-            subscribeMessage.getStreamId())
+        const streamId = subscribeMessage.getStreamId()
+        const source = subscribeMessage.getSource()
+        this.subscribers.addSubscriber(streamId, source)
+        this.debug('node %s added as a subscriber for stream %s', subscribeMessage, streamId)
     }
 
     onUnsubscribeRequest(unsubscribeMessage) {
         this._removeSubscriber(unsubscribeMessage.getStreamId(), unsubscribeMessage.getSender())
     }
 
-    _removeSubscriber(streamId, nodeAddress) {
-        this.subscribers.removeSubscriber(streamId, nodeAddress)
-        this.debug('node %s unsubscribed from stream %s', nodeAddress, streamId)
+    _removeSubscriber(streamId, node) {
+        this.subscribers.removeSubscriber(streamId, node)
+        this.debug('node %s unsubscribed from stream %s', node, streamId)
     }
 
     subscribeToStream(streamId) {
@@ -171,16 +170,15 @@ class Node extends EventEmitter {
             this._sendStatusToAllTrackers()
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
         } else if (this.streams.isKnownStream(streamId)) {
-            const otherNodeAddresses = this.streams.getNodesForKnownStream(streamId)
-            this.debug('stream %s is known; sending subscribe requests to responsible nodes %j',
-                streamId, otherNodeAddresses.map((a) => this.peerBook.getShortId(a)))
-            otherNodeAddresses.forEach((address) => {
-                this.protocols.nodeToNode.sendSubscribe(address, streamId)
+            const knownNodes = this.streams.getNodesForKnownStream(streamId)
+            this.debug('stream %s is known; sending subscribe requests to responsible nodes %j', streamId, knownNodes)
+            knownNodes.forEach((n) => {
+                this.protocols.nodeToNode.sendSubscribe(n, streamId)
             })
             this.subscriptions.addSubscription(streamId) // Assuming subscribes went through
             this._sendStatusToAllTrackers()
             this.emit(events.SUBSCRIBED_TO_STREAM, streamId)
-        } else if (tracker === null) {
+        } else if (tracker === undefined) {
             this.debug('no trackers available; attempted to subscribe to stream %s', streamId)
             this.emit(events.NO_AVAILABLE_TRACKERS)
             this.subscriptions.addPendingSubscription(streamId)
@@ -214,15 +212,14 @@ class Node extends EventEmitter {
     }
 
     _sendStatus(tracker) {
-        this.debug('sending status to tracker %s', this.peerBook.getShortId(tracker))
+        this.debug('sending status to tracker %s', tracker)
         this.protocols.trackerNode.sendStatus(tracker, this._getStatus())
     }
 
     onNodeDisconnected(node) {
         if (this._isNode(node)) {
-            const nodeAddress = node
-            this.subscribers.removeSubscriberFromAllStreams(nodeAddress)
-            this.debug('removed all subscriptions of node %s', this.peerBook.getShortId(node))
+            this.subscribers.removeSubscriberFromAllStreams(node)
+            this.debug('removed all subscriptions of node %s', node)
         }
     }
 
@@ -282,7 +279,7 @@ class Node extends EventEmitter {
     }
 
     _isTracker(tracker) {
-        return this.bootstrapTrackers.includes(tracker)
+        return this.protocols.trackerNode.isTracker(tracker)
     }
 
     _isNode(peer) {

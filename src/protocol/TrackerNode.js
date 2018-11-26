@@ -2,6 +2,7 @@ const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:tracker-node')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
+const PeerBook = require('./PeerBook')
 
 const events = Object.freeze({
     CONNECTED_TO_TRACKER: 'streamr:peer:send-status',
@@ -15,16 +16,20 @@ class TrackerNode extends EventEmitter {
         super()
 
         this.endpoint = endpoint
+        this.peerBook = new PeerBook()
+
         this._endpointListener = new EndpointListener()
         this._endpointListener.implement(this, endpoint)
     }
 
-    sendStatus(tracker, status) {
-        this.endpoint.send(tracker, encoder.statusMessage(status))
+    sendStatus(trackerId, status) {
+        const trackerAddress = this.peerBook.getAddress(trackerId)
+        this.endpoint.send(trackerAddress, encoder.statusMessage(status))
     }
 
-    requestStreamInfo(tracker, streamId) {
-        this.endpoint.send(tracker, encoder.streamMessage(streamId, ''))
+    requestStreamInfo(trackerId, streamId) {
+        const trackerAddress = this.peerBook.getAddress(trackerId)
+        this.endpoint.send(trackerAddress, encoder.streamMessage(streamId, ''))
     }
 
     onMessageReceived(message) {
@@ -36,23 +41,25 @@ class TrackerNode extends EventEmitter {
                     this.emit(events.STREAM_INFO_RECEIVED, message)
                 }
                 break
-
             default:
                 break
         }
     }
 
-    connectToTracker(tracker) {
-        return this.endpoint.connect(tracker)
+    connectToTracker(trackerAddress) {
+        return this.endpoint.connect(trackerAddress)
     }
 
-    async onPeerConnected(peer) {
-        // TODO just on peer connected?
-        this.emit(events.CONNECTED_TO_TRACKER, peer)
+    onPeerConnected(peerId) {
+        this.emit(events.CONNECTED_TO_TRACKER, peerId)
     }
 
-    async onPeerDisconnected(peer) {
-        this.emit(events.TRACKER_DISCONNECTED, peer)
+    onPeerDisconnected(peerId) {
+        this.emit(events.TRACKER_DISCONNECTED, peerId)
+    }
+
+    isTracker(peerId) {
+        return this.peerBook.hasPeerId(peerId) && this.peerBook.getType(peerId) === 'tracker'
     }
 }
 

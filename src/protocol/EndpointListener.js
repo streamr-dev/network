@@ -1,5 +1,6 @@
 const endpointEvents = require('../connection/Endpoint').events
 const encoder = require('../helpers/MessageEncoder')
+const PeerBook = require('./PeerBook')
 
 module.exports = class EndpointListener {
     implement(implementor, endpoint) {
@@ -12,9 +13,23 @@ module.exports = class EndpointListener {
         if (typeof implementor.onPeerDisconnected !== 'function') {
             throw new Error('onPeerDisconnected() method not found in class implementing EndpointListener')
         }
+        if (typeof implementor.peerBook instanceof PeerBook) {
+            throw new Error('instance variable peerBook of type PeerBook not found in class implementing EndpointListener')
+        }
 
-        endpoint.on(endpointEvents.PEER_CONNECTED, (peer) => implementor.onPeerConnected(peer))
-        endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => implementor.onMessageReceived(encoder.decode(sender, message)))
-        endpoint.on(endpointEvents.PEER_DISCONNECTED, (peer) => implementor.onPeerDisconnected(peer))
+        endpoint.on(endpointEvents.PEER_CONNECTED, (address, metadata) => {
+            implementor.peerBook.add(address, metadata)
+            implementor.onPeerConnected(implementor.peerBook.getPeerId(address))
+        })
+
+        endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => {
+            const senderId = implementor.peerBook.getPeerId(sender)
+            implementor.onMessageReceived(encoder.decode(senderId, message))
+        })
+
+        endpoint.on(endpointEvents.PEER_DISCONNECTED, (address) => {
+            implementor.onPeerDisconnected(implementor.peerBook.getPeerId(address))
+            implementor.peerBook.remove(address)
+        })
     }
 }

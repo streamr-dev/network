@@ -38,11 +38,6 @@ describe('Selecting leader for the stream and sending messages to two subscriber
             [subscriber1, subscriber2] = res
         })
 
-        await Promise.all([
-            waitForEvent(nodeOne.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED),
-            waitForEvent(nodeTwo.protocols.nodeToNode, NodeToNode.events.NODE_CONNECTED)
-        ])
-
         let msgNo = 0
         const publisherInterval = setInterval(() => {
             msgNo += 1
