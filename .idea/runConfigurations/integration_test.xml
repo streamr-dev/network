@@ -1,8 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="integration test" type="JavaScriptTestRunnerJest" factoryName="Jest">
+  <configuration default="false" name="integration test" type="JavaScriptTestRunnerJest">
     <config-file value="$PROJECT_DIR$/jest.config.js" />
     <node-interpreter value="project" />
     <node-options value="" />
+    <jest-package value="$PROJECT_DIR$/node_modules/jest" />
     <working-dir value="$PROJECT_DIR$" />
     <jest-options value="test/integration" />
     <envs />
