@@ -15,8 +15,8 @@
     "prepack": "npm run build",
     "dev": "webpack --progress --colors --watch",
     "eslint": "eslint src/** test/**",
-    "test": "jest",
-    "test-unit": "jest test/unit",
+    "test": "jest --detectOpenHandles",
+    "test-unit": "jest --detectOpenHandles test/unit",
     "test-integration": "jest --detectOpenHandles --maxWorkers=2 test/integration"
   },
   "browser": {
