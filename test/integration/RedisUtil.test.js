@@ -3,6 +3,8 @@ const redis = require('redis')
 
 const RedisUtil = require('../../src/RedisUtil')
 const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
+const StreamrBinaryMessageV28 = require('../../src/protocol/StreamrBinaryMessageV28')
+const StreamrBinaryMessageV29 = require('../../src/protocol/StreamrBinaryMessageV29')
 const StreamrBinaryMessageWithKafkaMetadata = require('../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
 
 describe('RedisUtil', () => {
@@ -14,11 +16,23 @@ describe('RedisUtil', () => {
     let streamId
 
     function streamrBinaryMessage() {
-        const msg = new StreamrBinaryMessage(
+        const msg = new StreamrBinaryMessageV28(
             streamId, 1, 1488214484821, 0,
             StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify({
                 hello: 'world',
             }), 'utf8'),
+        )
+        return new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
+    }
+
+    function streamrBinaryMessageSigned() {
+        const msg = new StreamrBinaryMessageV29(
+            streamId, 1, 1488214484821, 0,
+            StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify({
+                hello: 'world',
+            }), 'utf8'), StreamrBinaryMessageV29.SIGNATURE_TYPE_ETH,
+            '0xf915ed664e43c50eb7b9ca7cfeb992703ede55c4',
+            '0xcb1fa20f2f8e75f27d3f171d236c071f0de39e4b497c51b390306fc6e7e112bb415ecea1bd093320dd91fd91113748286711122548c52a15179822a014dc14931b',
         )
         return new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
     }
@@ -78,6 +92,17 @@ describe('RedisUtil', () => {
 
         it('emits a "message" event when receiving data from Redis', (done) => {
             const m = streamrBinaryMessage()
+
+            redisHelper.on('message', (msg) => {
+                assert.deepEqual(msg, m.toStreamMessage())
+                done()
+            })
+
+            testRedisClient.publish(`${streamId}-1`, m.toBytes())
+        })
+
+        it('emits a signed "message" event when receiving data from Redis', (done) => {
+            const m = streamrBinaryMessageSigned()
 
             redisHelper.on('message', (msg) => {
                 assert.deepEqual(msg, m.toStreamMessage())

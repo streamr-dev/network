@@ -27,7 +27,9 @@ module.exports = class CassandraUtil extends events.EventEmitter {
             currentOffset: null,
             msgHandler,
             onDone,
-            onMsgEnd: onMsgEnd || (() => {}),
+            // eslint-disable-next-line func-names
+            onMsgEnd: onMsgEnd || function () {
+            },
             refetchCount: 0,
         }
         this._doQuery(query, queryParams, msgHandler, (lastOffset) => {
@@ -64,8 +66,8 @@ module.exports = class CassandraUtil extends events.EventEmitter {
         let largestOffset = null
         this.client.stream(query, queryParams, {
             prepare: true, autoPage: true,
-            // eslint-disable-next-line space-before-function-paren
-        }).on('readable', function() {
+            // eslint-disable-next-line func-names
+        }).on('readable', function () {
             // Invoked as soon a row is received
             let row = this.read()
             while (row) {

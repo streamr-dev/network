@@ -2,11 +2,14 @@ const events = require('events')
 const Protocol = require('streamr-client-protocol')
 
 module.exports = class MockSocket extends events.EventEmitter {
-    constructor() {
+    constructor(version = 28) {
         super()
         this.rooms = []
         this.sentMessages = []
         this.throwOnError = true
+        this.upgradeReq = {
+            url: `some-url?payloadVersion=${version}`,
+        }
     }
 
     join(channel, cb) {

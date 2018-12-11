@@ -79,6 +79,9 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 StreamrBinaryMessage.CONTENT_TYPE_JSON,
                 request.content,
                 request.partitionKey,
+                request.signatureType,
+                request.publisherAddress,
+                request.signature,
             ))
             .catch((err) => {
                 let errorMsg

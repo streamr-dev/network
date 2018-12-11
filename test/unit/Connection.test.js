@@ -14,12 +14,31 @@ describe('Connection', () => {
             send(msg) {
                 this.received.push(msg)
             },
+            upgradeReq: {
+                url: 'url',
+            },
         }
         connection = new Connection(fakeSocket)
     })
 
     it('id returns socket id', () => {
         assert.equal(connection.id, 'socketId')
+    })
+
+    it('parses undefined version properly', () => {
+        assert.equal(connection.protocolVersion, undefined)
+        assert.equal(connection.payloadVersion, undefined)
+    })
+
+    it('parses defined version properly', () => {
+        const fakeSocket2 = {
+            upgradeReq: {
+                url: 'url?protocolVersion=0&payloadVersion=29',
+            },
+        }
+        const conn2 = new Connection(fakeSocket2)
+        assert.strictEqual(conn2.protocolVersion, 0)
+        assert.strictEqual(conn2.payloadVersion, 29)
     })
 
     describe('stream management', () => {

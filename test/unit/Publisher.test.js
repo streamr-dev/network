@@ -5,6 +5,7 @@ const BufferMaker = require('buffermaker')
 
 const Publisher = require('../../src/Publisher')
 const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
+const MessageNotSignedError = require('../../src/errors/MessageNotSignedError')
 const InvalidMessageContentError = require('../../src/errors/InvalidMessageContentError')
 const NotReadyError = require('../../src/errors/NotReadyError')
 
@@ -12,6 +13,9 @@ describe('Publisher', () => {
     const stream = {
         id: 'streamId',
         partitions: 10,
+    }
+    const signedStream = {
+        requireSignedData: true,
     }
 
     const msg = new BufferMaker().string('{}').make()
@@ -39,6 +43,13 @@ describe('Publisher', () => {
         it('should throw FailedToPublishError if trying to publish before Kafka is ready', (done) => {
             publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).catch((err) => {
                 assert(err instanceof NotReadyError, err)
+                done()
+            })
+        })
+
+        it('should throw MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData flag', (done) => {
+            publisher.publish(signedStream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).catch((err) => {
+                assert(err instanceof MessageNotSignedError, err)
                 done()
             })
         })

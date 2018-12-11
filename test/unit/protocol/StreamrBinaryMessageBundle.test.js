@@ -1,6 +1,7 @@
 const assert = require('assert')
 
 const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage')
+const StreamrBinaryMessageV28 = require('../../../src/protocol/StreamrBinaryMessageV28')
 const StreamrBinaryMessageWithKafkaMetadata = require('../../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
 const StreamrBinaryMessageBundle = require('../../../src/protocol/StreamrBinaryMessageBundle')
 
@@ -23,7 +24,7 @@ describe('StreamrBinaryMessageBundle', () => {
             streamrBinaryMessages = []
 
             for (let i = 0; i < 10; i++) {
-                streamrBinaryMessages.push(new StreamrBinaryMessage(
+                streamrBinaryMessages.push(new StreamrBinaryMessageV28(
                     streamId, streamPartition, new Date(),
                     ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify(content), 'utf8'),
                 ))

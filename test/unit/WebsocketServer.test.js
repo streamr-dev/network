@@ -51,7 +51,8 @@ describe('WebsocketServer', () => {
         }
 
         latestOffsetFetcher = {
-            fetchOffset: sinon.stub().resolves(0),
+            fetchOffset: sinon.stub()
+                .resolves(0),
         }
 
         streamFetcher = {
@@ -69,7 +70,8 @@ describe('WebsocketServer', () => {
         }
 
         publisher = {
-            publish: sinon.stub().resolves(),
+            publish: sinon.stub()
+                .resolves(),
         }
 
         // Mock websocket lib
@@ -518,6 +520,42 @@ describe('WebsocketServer', () => {
         })
     })
 
+    describe('subscribe-subscribe-unsubscribe', () => {
+        beforeEach((done) => {
+            realtimeAdapter.unsubscribe = sinon.mock()
+
+            // subscribe
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
+
+            // subscribe 2
+            const socket2 = new MockSocket()
+            wsMock.emit('connection', socket2)
+            socket2.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
+
+            // unsubscribe 1
+            setTimeout(() => {
+                mockSocket.receive(new Protocol.UnsubscribeRequest('streamId', 0))
+                done()
+            })
+
+            it('does not unsubscribe from realtimeAdapter if there are other subscriptions to it', () => {
+                sinon.assert.notCalled(realtimeAdapter.unsubscribe)
+            })
+
+            it('does not remove stream object if there are other subscriptions to it', () => {
+                assert(server.getStreamObject('streamId', 0) != null)
+            })
+        })
+    })
+
     describe('subscribe-unsubscribe-subscribe', () => {
         it('should work', (done) => {
             // connect
@@ -594,6 +632,26 @@ describe('WebsocketServer', () => {
             }
 
             mockSocket.receive(req)
+        })
+
+        it('reads signature fields if specified', (done) => {
+            const req = new Protocol.PublishRequest(myStream.streamId, 'correct', undefined, '{}', undefined, undefined, 'address', 1, 'signature')
+
+            publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey, signatureType, publisherAddress, signature) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(timestamp, req.timestamp)
+                assert.equal(ttl, undefined)
+                assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+                assert.equal(content, req.content)
+                assert.equal(partitionKey, undefined)
+                assert.equal(publisherAddress, req.publisherAddress)
+                assert.equal(signatureType, req.signatureType)
+                assert.equal(signature, req.signature)
+                done()
+            }
+            const mockSocket3 = new MockSocket(29)
+            wsMock.emit('connection', mockSocket3)
+            mockSocket3.receive(req)
         })
 
         describe('error handling', () => {
