@@ -1,14 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="tracker" type="js.build_tools.npm" factoryName="npm">
+  <configuration default="false" name="publisher (30308)" type="js.build_tools.npm">
     <package-json value="$PROJECT_DIR$/package.json" />
     <command value="run" />
     <scripts>
-      <script value="tracker" />
+      <script value="pub" />
     </scripts>
+    <arguments value="30308 ws://127.0.0.1:30301 streamId" />
     <node-interpreter value="project" />
-    <envs>
-      <env name="DEBUG" value="streamr:*" />
-    </envs>
+    <envs />
     <method v="2" />
   </configuration>
 </component>
