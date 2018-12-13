@@ -8,9 +8,12 @@ startClient('127.0.0.1', port, 'publisher1', nodeAddress)
     .then((client) => {
         client.protocols.nodeToNode.endpoint.connect(nodeAddress)
 
+        let messageNo = 1
+
         setInterval(() => {
             const msg = 'Hello world, ' + new Date().toLocaleString()
-            client.publish(streamId, msg, () => {})
+            client.publish(streamId, msg, messageNo, messageNo - 1)
+            messageNo += 1
         }, 1000)
     })
     .catch((err) => {
