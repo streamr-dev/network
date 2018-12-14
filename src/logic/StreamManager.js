@@ -65,6 +65,16 @@ module.exports = class StreamManager {
         return [...this.streams.get(streamId).inboundNodes]
     }
 
+    hasOutboundNode(streamId, node) {
+        this._verifyThatIsSetUp(streamId)
+        return this.streams.get(streamId).outboundNodes.has(node)
+    }
+
+    hasInboundNode(streamId, node) {
+        this._verifyThatIsSetUp(streamId)
+        return this.streams.get(streamId).inboundNodes.has(node)
+    }
+
     _verifyThatIsSetUp(streamId) {
         if (!this.isSetUp(streamId)) {
             throw new Error(`Stream ${streamId} is not set up`)
