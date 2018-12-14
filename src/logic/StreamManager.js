@@ -1,3 +1,4 @@
+const { StreamID } = require('../identifiers')
 const DuplicateMessageDetector = require('./DuplicateMessageDetector')
 
 module.exports = class StreamManager {
@@ -6,10 +7,13 @@ module.exports = class StreamManager {
     }
 
     setUpStream(streamId) {
+        if (!(streamId instanceof StreamID)) {
+            throw new Error('streamId not instance of StreamID')
+        }
         if (this.isSetUp(streamId)) {
             throw new Error(`Stream ${streamId} already set up`)
         }
-        this.streams.set(streamId, {
+        this.streams.set(streamId.key(), {
             duplicateDetector: new DuplicateMessageDetector(),
             inboundNodes: new Set(), // Nodes that I am subscribed to for messages
             outboundNodes: new Set() // Nodes (and clients) that subscribe to me for messages
@@ -18,61 +22,62 @@ module.exports = class StreamManager {
 
     markNumbersAndCheckThatIsNotDuplicate(streamId, number, previousNumber) {
         this._verifyThatIsSetUp(streamId)
-        const { duplicateDetector } = this.streams.get(streamId)
+        const { duplicateDetector } = this.streams.get(streamId.key())
         return duplicateDetector.markAndCheck(previousNumber, number)
     }
 
     addInboundNode(streamId, node) {
         this._verifyThatIsSetUp(streamId)
-        const { inboundNodes } = this.streams.get(streamId)
+        const { inboundNodes } = this.streams.get(streamId.key())
         inboundNodes.add(node)
     }
 
     addOutboundNode(streamId, node) {
         this._verifyThatIsSetUp(streamId)
-        const { outboundNodes } = this.streams.get(streamId)
+        const { outboundNodes } = this.streams.get(streamId.key())
         outboundNodes.add(node)
     }
 
     removeNodeFromStream(streamId, node) {
         this._verifyThatIsSetUp(streamId)
-        const { inboundNodes, outboundNodes } = this.streams.get(streamId)
+        const { inboundNodes, outboundNodes } = this.streams.get(streamId.key())
         inboundNodes.delete(node)
         outboundNodes.delete(node)
     }
 
     removeNodeFromAllStreams(node) {
-        [...this.streams.keys()].forEach((streamId) => {
-            this.removeNodeFromStream(streamId, node)
+        this.streams.forEach(({ inboundNodes, outboundNodes }) => {
+            inboundNodes.delete(node)
+            outboundNodes.delete(node)
         })
     }
 
     isSetUp(streamId) {
-        return this.streams.has(streamId)
+        return this.streams.has(streamId.key())
     }
 
     getStreams() {
-        return [...this.streams.keys()]
+        return [...this.streams.keys()].sort()
     }
 
     getOutboundNodesForStream(streamId) {
         this._verifyThatIsSetUp(streamId)
-        return [...this.streams.get(streamId).outboundNodes]
+        return [...this.streams.get(streamId.key()).outboundNodes]
     }
 
     getInboundNodesForStream(streamId) {
         this._verifyThatIsSetUp(streamId)
-        return [...this.streams.get(streamId).inboundNodes]
+        return [...this.streams.get(streamId.key()).inboundNodes]
     }
 
     hasOutboundNode(streamId, node) {
         this._verifyThatIsSetUp(streamId)
-        return this.streams.get(streamId).outboundNodes.has(node)
+        return this.streams.get(streamId.key()).outboundNodes.has(node)
     }
 
     hasInboundNode(streamId, node) {
         this._verifyThatIsSetUp(streamId)
-        return this.streams.get(streamId).inboundNodes.has(node)
+        return this.streams.get(streamId.key()).inboundNodes.has(node)
     }
 
     _verifyThatIsSetUp(streamId) {

@@ -3,6 +3,7 @@ const StreamMessage = require('../messages/StreamMessage')
 const DataMessage = require('../messages/DataMessage')
 const SubscribeMessage = require('../messages/SubscribeMessage')
 const UnsubscribeMessage = require('../messages/UnsubscribeMessage')
+const { StreamID } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
 
 const encode = (type, payload) => {
@@ -25,16 +26,33 @@ const decode = (source, message) => {
             return new StatusMessage(payload, source)
 
         case msgTypes.STREAM:
-            return new StreamMessage(payload.streamId, payload.nodeAddresses, source)
+            return new StreamMessage(
+                new StreamID(payload.streamId, payload.streamPartition),
+                payload.nodeAddresses,
+                source
+            )
 
         case msgTypes.DATA:
-            return new DataMessage(payload.streamId, payload.data, payload.number, payload.previousNumber, source)
+            return new DataMessage(
+                new StreamID(payload.streamId, payload.streamPartition),
+                payload.data,
+                payload.number,
+                payload.previousNumber,
+                source
+            )
 
         case msgTypes.SUBSCRIBE:
-            return new SubscribeMessage(payload.streamId, payload.leechOnly, source)
+            return new SubscribeMessage(
+                new StreamID(payload.streamId, payload.streamPartition),
+                payload.leechOnly,
+                source
+            )
 
         case msgTypes.UNSUBSCRIBE:
-            return new UnsubscribeMessage(payload, source)
+            return new UnsubscribeMessage(
+                new StreamID(payload.streamId, payload.streamPartition),
+                source
+            )
 
         default:
             throw new Error(`Unknown message type: ${code}`)
@@ -48,14 +66,25 @@ module.exports = {
     decode,
     statusMessage: (status) => encode(msgTypes.STATUS, status),
     dataMessage: (streamId, data, number = null, previousNumber = null) => encode(msgTypes.DATA, {
-        streamId, data, number, previousNumber
+        streamId: streamId.id,
+        streamPartition: streamId.partition,
+        data,
+        number,
+        previousNumber
     }),
     subscribeMessage: (streamId, leechOnly) => encode(msgTypes.SUBSCRIBE, {
-        streamId, leechOnly
+        streamId: streamId.id,
+        streamPartition: streamId.partition,
+        leechOnly
     }),
-    unsubscribeMessage: (streamId) => encode(msgTypes.UNSUBSCRIBE, streamId),
+    unsubscribeMessage: (streamId) => encode(msgTypes.UNSUBSCRIBE, {
+        streamId: streamId.id,
+        streamPartition: streamId.partition,
+    }),
     streamMessage: (streamId, nodeAddresses) => encode(msgTypes.STREAM, {
-        streamId, nodeAddresses
+        streamId: streamId.id,
+        streamPartition: streamId.partition,
+        nodeAddresses
     }),
     ...msgTypes,
     CURRENT_VERSION

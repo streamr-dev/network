@@ -2,6 +2,7 @@ const { startClient, startNode, startTracker } = require('../../src/composition'
 const { callbackToPromise } = require('../../src/util')
 const { waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 const NodeToNode = require('../../src/protocol/NodeToNode')
+const { StreamID } = require('../../src/identifiers')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
 
@@ -13,7 +14,7 @@ describe('Selecting leader for the stream and sending messages to two subscriber
     let subscriber1
     let subscriber2
 
-    const streamId = 'stream-2018'
+    const streamId = new StreamID('stream-id', 0)
 
     it('should be select leader and get two active subscribers', async (done) => {
         tracker = await startTracker(LOCALHOST, 32300, 'tracker')

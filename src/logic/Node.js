@@ -24,7 +24,7 @@ class Node extends EventEmitter {
 
         this.streams = new StreamManager()
         this.messageBuffer = new MessageBuffer(60 * 1000, (streamId) => {
-            this.debug('failed to deliver buffered messages of stream %s because responsible nodes not found', streamId)
+            this.debug('failed to deliver buffered messages of stream %s', streamId)
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
         })
 
@@ -97,7 +97,7 @@ class Node extends EventEmitter {
                 this.metrics.received.duplicates += 1
             }
         } else {
-            this.messageBuffer.put(streamId, dataMessage)
+            this.messageBuffer.put(streamId.key(), dataMessage)
         }
     }
 
@@ -191,7 +191,7 @@ class Node extends EventEmitter {
     }
 
     _handleBufferedMessages(streamId) {
-        this.messageBuffer.popAll(streamId)
+        this.messageBuffer.popAll(streamId.key())
             .forEach((dataMessage) => {
                 // TODO bad idea to call events directly
                 this.onDataReceived(dataMessage)

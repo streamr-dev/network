@@ -8,7 +8,7 @@ module.exports = class Tracker extends EventEmitter {
         super()
 
         this.nodes = new Set()
-        this.streamIdToNodes = new Map()
+        this.streamKeyToNodes = new Map()
 
         this.id = id
         this.protocols = {
@@ -37,7 +37,7 @@ module.exports = class Tracker extends EventEmitter {
         const streamId = streamMessage.getStreamId()
         const source = streamMessage.getSource()
 
-        const nodesForStream = this.streamIdToNodes.get(streamId) || new Set()
+        const nodesForStream = this.streamKeyToNodes.get(streamId.key()) || new Set()
         const selectedNodes = getPeersTopology([...nodesForStream], source)
         this.protocols.trackerServer.sendStreamInfo(source, streamId, selectedNodes)
         this.debug('sent stream info to %s: stream %s with nodes %j', source, streamId, selectedNodes)
@@ -52,23 +52,23 @@ module.exports = class Tracker extends EventEmitter {
         return this.protocols.trackerServer.getAddress()
     }
 
-    _addNode(node, streams) {
+    _addNode(node, streamKeys) {
         this.nodes.add(node)
-        streams.forEach((streamId) => {
-            if (!this.streamIdToNodes.has(streamId)) {
-                this.streamIdToNodes.set(streamId, new Set())
+        streamKeys.forEach((streamKey) => {
+            if (!this.streamKeyToNodes.has(streamKey)) {
+                this.streamKeyToNodes.set(streamKey, new Set())
             }
-            this.streamIdToNodes.get(streamId).add(node)
+            this.streamKeyToNodes.get(streamKey).add(node)
         })
-        this.debug('registered node %s for streams %j', node, streams)
+        this.debug('registered node %s for streams %j', node, streamKeys)
     }
 
     _removeNode(node) {
         this.nodes.delete(node)
-        this.streamIdToNodes.forEach((_, streamId) => {
-            this.streamIdToNodes.get(streamId).delete(node)
-            if (this.streamIdToNodes.get(streamId).size === 0) {
-                this.streamIdToNodes.delete(streamId)
+        this.streamKeyToNodes.forEach((_, streamKey) => {
+            this.streamKeyToNodes.get(streamKey).delete(node)
+            if (this.streamKeyToNodes.get(streamKey).size === 0) {
+                this.streamKeyToNodes.delete(streamKey)
             }
         })
         this.debug('unregistered node %s from tracker', node)

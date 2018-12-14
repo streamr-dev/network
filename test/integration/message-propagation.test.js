@@ -1,5 +1,6 @@
 const Node = require('../../src/logic/Node')
 const DataMessage = require('../../src/messages/DataMessage')
+const { StreamID } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { wait, LOCALHOST } = require('../../test/util')
@@ -64,18 +65,18 @@ describe('message propagation in network', () => {
             payload: dataMessage.getData()
         }))
 
-        n2.subscribeToStreamIfHaveNotYet('stream-1')
-        n3.subscribeToStreamIfHaveNotYet('stream-1')
+        n2.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
+        n3.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
 
         await wait(1000)
 
         for (let i = 0; i < 5; ++i) {
-            const dataMessage = new DataMessage('stream-1', {
+            const dataMessage = new DataMessage(new StreamID('stream-1', 0), {
                 messageNo: i
             }, i, i - 1)
             n1.onDataReceived(dataMessage)
 
-            const dataMessage2 = new DataMessage('stream-2', {
+            const dataMessage2 = new DataMessage(new StreamID('stream-2', 0), {
                 messageNo: i * 100
             }, i * 100, (i - 1) * 100)
             n4.onDataReceived(dataMessage2)
@@ -86,31 +87,31 @@ describe('message propagation in network', () => {
 
         expect(n1Messages).toEqual([
             {
-                streamId: 'stream-1',
+                streamId: new StreamID('stream-1', 0),
                 payload: {
                     messageNo: 0
                 }
             },
             {
-                streamId: 'stream-1',
+                streamId: new StreamID('stream-1', 0),
                 payload: {
                     messageNo: 1
                 }
             },
             {
-                streamId: 'stream-1',
+                streamId: new StreamID('stream-1', 0),
                 payload: {
                     messageNo: 2
                 }
             },
             {
-                streamId: 'stream-1',
+                streamId: new StreamID('stream-1', 0),
                 payload: {
                     messageNo: 3
                 }
             },
             {
-                streamId: 'stream-1',
+                streamId: new StreamID('stream-1', 0),
                 payload: {
                     messageNo: 4
                 }

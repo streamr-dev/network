@@ -1,6 +1,7 @@
 const encoder = require('../../src/helpers/MessageEncoder')
 const { version } = require('../../package.json')
 const StreamMessage = require('../../src/messages/StreamMessage')
+const { StreamID } = require('../../src/identifiers')
 
 describe('encoder', () => {
     it('check all codes', (done) => {
@@ -24,12 +25,13 @@ describe('encoder', () => {
     })
 
     it('check streamMessage encoding/decoding', () => {
-        const json = encoder.streamMessage('stream-id', ['node-1', 'node-2'])
+        const json = encoder.streamMessage(new StreamID('stream-id', 0), ['node-1', 'node-2'])
         expect(JSON.parse(json)).toEqual({
             code: encoder.STREAM,
             version,
             payload: {
                 streamId: 'stream-id',
+                streamPartition: 0,
                 nodeAddresses: [
                     'node-1',
                     'node-2'
@@ -42,12 +44,12 @@ describe('encoder', () => {
 
         expect(streamMessage).toBeInstanceOf(StreamMessage)
         expect(streamMessage.getSource()).toEqual('127.0.0.1')
-        expect(streamMessage.getStreamId()).toEqual('stream-id')
+        expect(streamMessage.getStreamId()).toEqual(new StreamID('stream-id', 0))
         expect(streamMessage.getNodeAddresses()).toEqual(['node-1', 'node-2'])
     })
 
     it('creates expected dataMessage format (without numbers)', () => {
-        const actual = encoder.dataMessage('stream-id', {
+        const actual = encoder.dataMessage(new StreamID('stream-id', 0), {
             hello: 'world'
         })
         expect(JSON.parse(actual)).toEqual({
@@ -55,6 +57,7 @@ describe('encoder', () => {
             version,
             payload: {
                 streamId: 'stream-id',
+                streamPartition: 0,
                 data: {
                     hello: 'world',
                 },
@@ -65,7 +68,7 @@ describe('encoder', () => {
     })
 
     it('creates expected dataMessage format (with number)', () => {
-        const actual = encoder.dataMessage('stream-id', {
+        const actual = encoder.dataMessage(new StreamID('stream-id', 5), {
             hello: 'world'
         }, 958004, 958000)
         expect(JSON.parse(actual)).toEqual({
@@ -73,6 +76,7 @@ describe('encoder', () => {
             version,
             payload: {
                 streamId: 'stream-id',
+                streamPartition: 5,
                 data: {
                     hello: 'world',
                 },
