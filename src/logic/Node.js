@@ -7,6 +7,7 @@ const StreamManager = require('./StreamManager')
 
 const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:node:message-received',
+    SUBSCRIPTION_RECEIVED: 'streamr:node:subscription-received',
     MESSAGE_DELIVERY_FAILED: 'streamr:node:message-delivery-failed'
 })
 
@@ -105,12 +106,13 @@ class Node extends EventEmitter {
     }
 
     _propagateMessage(dataMessage) {
+        const source = dataMessage.getSource()
         const streamId = dataMessage.getStreamId()
         const data = dataMessage.getData()
         const number = dataMessage.getNumber()
         const previousNumber = dataMessage.getPreviousNumber()
 
-        const subscribers = this.streams.getOutboundNodesForStream(streamId)
+        const subscribers = this.streams.getOutboundNodesForStream(streamId).filter((n) => n !== source)
         subscribers.forEach((subscriber) => {
             this.protocols.nodeToNode.sendData(subscriber, streamId, data, number, previousNumber)
         })
@@ -131,6 +133,7 @@ class Node extends EventEmitter {
         }
         this._handleBufferedMessages(streamId)
         this.debug('node %s subscribed to stream %s', source, streamId)
+        this.emit(events.SUBSCRIPTION_RECEIVED, streamId, source)
     }
 
     onUnsubscribeRequest(unsubscribeMessage) {
