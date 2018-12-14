@@ -4,7 +4,7 @@ const { callbackToPromise } = require('../../src/util')
 const { LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 
 const DataMessage = require('../../src/messages/DataMessage')
-const { StreamID } = require('../../src/identifiers')
+const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
 
@@ -37,7 +37,7 @@ describe('message buffering of Node', () => {
 
     test('first message to unknown stream eventually gets delivered', (done) => {
         destinationNode.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => {
-            expect(dataMessage.getStreamId()).toEqual(new StreamID('id', 0))
+            expect(dataMessage.getMessageId()).toEqual(new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id'))
             expect(dataMessage.getData()).toEqual({
                 hello: 'world'
             })
@@ -47,9 +47,13 @@ describe('message buffering of Node', () => {
         destinationNode.subscribeToStreamIfHaveNotYet(new StreamID('id', 0))
 
         // "Client" pushes data
-        const dataMessage = new DataMessage(new StreamID('id', 0), {
-            hello: 'world'
-        }, 1, null)
+        const dataMessage = new DataMessage(
+            new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id'),
+            new MessageReference(0, 0),
+            {
+                hello: 'world'
+            }
+        )
         sourceNode.onDataReceived(dataMessage)
     })
 })

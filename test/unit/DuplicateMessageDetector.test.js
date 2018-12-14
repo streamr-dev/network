@@ -1,4 +1,6 @@
-const DuplicateMessageDetector = require('../../src/logic/DuplicateMessageDetector')
+const { DuplicateMessageDetector,
+    NumberPair,
+    GapMisMatchError } = require('../../src/logic/DuplicateMessageDetector')
 
 test('starts empty', () => {
     const detector = new DuplicateMessageDetector()
@@ -7,76 +9,76 @@ test('starts empty', () => {
 
 test('first check initializes default gap', () => {
     const detector = new DuplicateMessageDetector()
-    const result = detector.markAndCheck(1, 10)
+    const result = detector.markAndCheck(new NumberPair(1, 5), new NumberPair(10, 10))
     const state = detector.toString()
     expect(result).toEqual(true)
-    expect(state).toEqual('(10,Infinity]')
+    expect(state).toEqual('(10|10, Infinity|Infinity]')
 })
 
 test('checking numbers in order introduces no new gaps', () => {
     const detector = new DuplicateMessageDetector()
-    detector.markAndCheck(1, 10)
-    expect(detector.markAndCheck(10, 15)).toEqual(true)
-    expect(detector.markAndCheck(15, 17)).toEqual(true)
-    expect(detector.markAndCheck(17, 20)).toEqual(true)
+    detector.markAndCheck(null, new NumberPair(10, 0))
+    expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0))).toEqual(true)
+    expect(detector.markAndCheck(new NumberPair(20, 0), new NumberPair(30, 0))).toEqual(true)
+    expect(detector.markAndCheck(new NumberPair(30, 0), new NumberPair(30, 1))).toEqual(true)
     const state = detector.toString()
-    expect(state).toEqual('(20,Infinity]')
+    expect(state).toEqual('(30|1, Infinity|Infinity]')
 })
 
 test('skipping next expected messages creates gaps', () => {
     const detector = new DuplicateMessageDetector()
-    detector.markAndCheck(1, 10)
+    detector.markAndCheck(null, new NumberPair(10, 0))
 
-    expect(detector.markAndCheck(15, 20)).toEqual(true)
-    expect(detector.toString()).toEqual('(10,15], (20,Infinity]')
+    expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(20, 0))).toEqual(true)
+    expect(detector.toString()).toEqual('(10|0, 15|0], (20|0, Infinity|Infinity]')
 
-    expect(detector.markAndCheck(30, 40)).toEqual(true)
-    expect(detector.toString()).toEqual('(10,15], (20,30], (40,Infinity]')
+    expect(detector.markAndCheck(new NumberPair(30, 0), new NumberPair(40, 0))).toEqual(true)
+    expect(detector.toString()).toEqual('(10|0, 15|0], (20|0, 30|0], (40|0, Infinity|Infinity]')
 
-    expect(detector.markAndCheck(80, 100)).toEqual(true)
-    expect(detector.toString()).toEqual('(10,15], (20,30], (40,80], (100,Infinity]')
+    expect(detector.markAndCheck(new NumberPair(40, 10), new NumberPair(80, 20))).toEqual(true)
+    expect(detector.toString()).toEqual('(10|0, 15|0], (20|0, 30|0], (40|0, 40|10], (80|20, Infinity|Infinity]')
 })
 
 describe('gap handling', () => {
     let detector
     beforeEach(() => {
         detector = new DuplicateMessageDetector()
-        detector.markAndCheck(1, 10)
-        detector.markAndCheck(20, 40)
-        detector.markAndCheck(80, 100)
-        expect(detector.toString()).toEqual('(10,20], (40,80], (100,Infinity]')
+        detector.markAndCheck(null, new NumberPair(10, 0))
+        detector.markAndCheck(new NumberPair(20, 0), new NumberPair(40, 0))
+        detector.markAndCheck(new NumberPair(80, 10), new NumberPair(100, 0))
+        expect(detector.toString()).toEqual('(10|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
     })
 
     test('gap division', () => {
-        expect(detector.markAndCheck(15, 18))
-        expect(detector.toString()).toEqual('(10,15], (18,20], (40,80], (100,Infinity]')
+        expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(18, 0)))
+        expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
-        expect(detector.markAndCheck(60, 79))
-        expect(detector.toString()).toEqual('(10,15], (18,20], (40,60], (79,80], (100,Infinity]')
+        expect(detector.markAndCheck(new NumberPair(60, 0), new NumberPair(79, 5)))
+        expect(detector.toString()).toEqual('(10|0, 15|0], (18|0, 20|0], (40|0, 60|0], (79|5, 80|10], (100|0, Infinity|Infinity]')
     })
 
     test('left-side gap contraction', () => {
-        expect(detector.markAndCheck(10, 15)).toEqual(true)
-        expect(detector.toString()).toEqual('(15,20], (40,80], (100,Infinity]')
+        expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(15, 0))).toEqual(true)
+        expect(detector.toString()).toEqual('(15|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
-        expect(detector.markAndCheck(40, 79)).toEqual(true)
-        expect(detector.toString()).toEqual('(15,20], (79,80], (100,Infinity]')
+        expect(detector.markAndCheck(new NumberPair(40, 0), new NumberPair(80, 9))).toEqual(true)
+        expect(detector.toString()).toEqual('(15|0, 20|0], (80|9, 80|10], (100|0, Infinity|Infinity]')
     })
 
     test('right-side gap contraction', () => {
-        expect(detector.markAndCheck(15, 20)).toEqual(true)
-        expect(detector.toString()).toEqual('(10,15], (40,80], (100,Infinity]')
+        expect(detector.markAndCheck(new NumberPair(15, 0), new NumberPair(20, 0))).toEqual(true)
+        expect(detector.toString()).toEqual('(10|0, 15|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
-        expect(detector.markAndCheck(41, 80)).toEqual(true)
-        expect(detector.toString()).toEqual('(10,15], (40,41], (100,Infinity]')
+        expect(detector.markAndCheck(new NumberPair(40, 1), new NumberPair(80, 10))).toEqual(true)
+        expect(detector.toString()).toEqual('(10|0, 15|0], (40|0, 40|1], (100|0, Infinity|Infinity]')
     })
 
     test('full contraction', () => {
-        expect(detector.markAndCheck(40, 80))
-        expect(detector.toString()).toEqual('(10,20], (100,Infinity]')
+        expect(detector.markAndCheck(new NumberPair(40, 0), new NumberPair(80, 10)))
+        expect(detector.toString()).toEqual('(10|0, 20|0], (100|0, Infinity|Infinity]')
 
-        expect(detector.markAndCheck(10, 20))
-        expect(detector.toString()).toEqual('(100,Infinity]')
+        expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0)))
+        expect(detector.toString()).toEqual('(100|0, Infinity|Infinity]')
     })
 })
 
@@ -85,35 +87,35 @@ describe('duplicates return false and do not change state', () => {
     let expectedState
     beforeEach(() => {
         detector = new DuplicateMessageDetector()
-        detector.markAndCheck(1, 10)
-        detector.markAndCheck(20, 40)
-        detector.markAndCheck(80, 100)
+        detector.markAndCheck(new NumberPair(1, 0), new NumberPair(10, 0))
+        detector.markAndCheck(new NumberPair(20, 0), new NumberPair(40, 0))
+        detector.markAndCheck(new NumberPair(80, 10), new NumberPair(100, 0))
         expectedState = detector.toString()
-        expect(expectedState).toEqual('(10,20], (40,80], (100,Infinity]')
+        expect(expectedState).toEqual('(10|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
     })
 
     it('way below 1st gap', () => {
-        expect(detector.markAndCheck(5, 7)).toEqual(false)
+        expect(detector.markAndCheck(new NumberPair(5, 0), new NumberPair(7, 0))).toEqual(false)
         expect(detector.toString()).toEqual(expectedState)
     })
 
     it('number touches lower bound of 1st gap', () => {
-        expect(detector.markAndCheck(8, 10)).toEqual(false)
+        expect(detector.markAndCheck(new NumberPair(8, 0), new NumberPair(10, 0))).toEqual(false)
         expect(detector.toString()).toEqual(expectedState)
     })
 
     it('in-between gaps', () => {
-        expect(detector.markAndCheck(25, 30)).toEqual(false)
+        expect(detector.markAndCheck(new NumberPair(25, 5), new NumberPair(30, 0))).toEqual(false)
         expect(detector.toString()).toEqual(expectedState)
     })
 
     it('number touches lower bound of 2nd gap', () => {
-        expect(detector.markAndCheck(25, 40)).toEqual(false)
+        expect(detector.markAndCheck(new NumberPair(25, 0), new NumberPair(40, 0))).toEqual(false)
         expect(detector.toString()).toEqual(expectedState)
     })
 
     it('previous number touches upper bound of 2nd gap', () => {
-        expect(detector.markAndCheck(80, 90)).toEqual(false)
+        expect(detector.markAndCheck(new NumberPair(80, 10), new NumberPair(90, 0))).toEqual(false)
         expect(detector.toString()).toEqual(expectedState)
     })
 })
@@ -123,46 +125,48 @@ describe('erroneous messages that overlap gaps', () => {
     let expectedState
     beforeEach(() => {
         detector = new DuplicateMessageDetector()
-        detector.markAndCheck(1, 10)
-        detector.markAndCheck(20, 40)
-        detector.markAndCheck(80, 100)
+        detector.markAndCheck(new NumberPair(1, 0), new NumberPair(10, 0))
+        detector.markAndCheck(new NumberPair(20, 0), new NumberPair(40, 0))
+        detector.markAndCheck(new NumberPair(80, 10), new NumberPair(100, 0))
         expectedState = detector.toString()
-        expect(expectedState).toEqual('(10,20], (40,80], (100,Infinity]')
+        expect(expectedState).toEqual('(10|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
     })
 
     it('completely around gap', () => {
-        expect(() => detector.markAndCheck(5, 30)).toThrowError()
+        expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(30, 0))).toThrowError(GapMisMatchError)
     })
 
     it('previousNumber below gap while number in gap', () => {
-        expect(() => detector.markAndCheck(5, 15)).toThrowError()
+        expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(15))).toThrowError(GapMisMatchError)
     })
 
     it('previousNumber in gap while number over gap', () => {
-        expect(() => detector.markAndCheck(15, 21)).toThrowError()
+        expect(() => detector.markAndCheck(new NumberPair(15, 0), new NumberPair(20, 5))).toThrowError(GapMisMatchError)
     })
 
     it('completely around multiple gaps', () => {
-        expect(() => detector.markAndCheck(10, 200)).toThrowError()
+        expect(() => detector.markAndCheck(new NumberPair(10, 0), new NumberPair(200, 0))).toThrowError(GapMisMatchError)
     })
 })
 
 test('checks that number > previousNumber', () => {
     const detector = new DuplicateMessageDetector()
-    expect(() => detector.markAndCheck(5, 1)).toThrowError()
-    expect(() => detector.markAndCheck(5, 5)).toThrowError()
+    expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(1, 0)))
+        .toThrowError('pre-condition: previousNumber < number')
+    expect(() => detector.markAndCheck(new NumberPair(5, 5), new NumberPair(5, 5)))
+        .toThrowError('pre-condition: previousNumber < number')
 })
 
 test('lowest gaps get dropped when reaching maximum number of gaps', () => {
     const detector = new DuplicateMessageDetector(3)
-    detector.markAndCheck(1, 10)
-    detector.markAndCheck(20, 40)
-    detector.markAndCheck(80, 100)
-    expect(detector.toString()).toEqual('(10,20], (40,80], (100,Infinity]')
+    detector.markAndCheck(new NumberPair(1, 0), new NumberPair(10, 0))
+    detector.markAndCheck(new NumberPair(20, 0), new NumberPair(40, 0))
+    detector.markAndCheck(new NumberPair(80, 10), new NumberPair(100, 0))
+    expect(detector.toString()).toEqual('(10|0, 20|0], (40|0, 80|10], (100|0, Infinity|Infinity]')
 
-    detector.markAndCheck(150, 200)
-    expect(detector.toString()).toEqual('(40,80], (100,150], (200,Infinity]')
+    detector.markAndCheck(new NumberPair(150, 0), new NumberPair(200, 0))
+    expect(detector.toString()).toEqual('(40|0, 80|10], (100|0, 150|0], (200|0, Infinity|Infinity]')
 
-    detector.markAndCheck(50, 70)
-    expect(detector.toString()).toEqual('(70,80], (100,150], (200,Infinity]')
+    detector.markAndCheck(new NumberPair(50, 0), new NumberPair(70, 0))
+    expect(detector.toString()).toEqual('(70|0, 80|10], (100|0, 150|0], (200|0, Infinity|Infinity]')
 })

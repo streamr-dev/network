@@ -22,10 +22,10 @@ module.exports = class Client extends EventEmitter {
             })
     }
 
-    publish(streamId, data, number, previousNumber) {
+    publish(messageId, previousMessageReference, data) {
         if (this.nodeId) {
-            this.debug('publishing data to stream %s', streamId)
-            this.protocols.nodeToNode.sendData(this.nodeId, streamId, data, number, previousNumber)
+            this.debug('publishing data %s', messageId)
+            this.protocols.nodeToNode.sendData(this.nodeId, messageId, previousMessageReference, data)
         } else {
             throw new Error('Failed to publish because node not set.')
         }

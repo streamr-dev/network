@@ -1,28 +1,25 @@
+const { MessageID, MessageReference } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
 module.exports = class DataMessage {
-    constructor(streamId, data, number, previousNumber, source = null) {
-        if (typeof streamId === 'undefined') {
-            throw new Error('streamId cant be undefined')
+    constructor(messageId, previousMessageReference, data, source = null) {
+        if (!(messageId instanceof MessageID)) {
+            throw new Error(`invalid messageId: ${messageId}`)
+        }
+        if (!(previousMessageReference instanceof MessageReference) && previousMessageReference !== null) {
+            throw new Error(`invalid previousMessageReference: ${previousMessageReference}`)
         }
         if (typeof data === 'undefined') {
-            throw new Error('data cant be undefined')
-        }
-        if (typeof number === 'undefined') {
-            throw new Error('number cant be undefined')
-        }
-        if (typeof previousNumber === 'undefined') {
-            throw new Error('previousNumber cant be undefined')
+            throw new Error(`invalid data: ${data}`)
         }
 
         this.version = CURRENT_VERSION
         this.code = msgTypes.DATA
         this.source = source
 
-        this.streamId = streamId
+        this.messageId = messageId
+        this.previousMessageReference = previousMessageReference
         this.data = data
-        this.number = number
-        this.previousNumber = previousNumber
     }
 
     getVersion() {
@@ -37,54 +34,16 @@ module.exports = class DataMessage {
         return this.source
     }
 
-    setSource(source) {
-        this.source = source
-        return this
+    getMessageId() {
+        return this.messageId
     }
 
-    getStreamId() {
-        return this.streamId
-    }
-
-    setStreamId(streamId) {
-        this.streamId = streamId
-        return this
+    getPreviousMessageReference() {
+        return this.previousMessageReference
     }
 
     getData() {
         return this.data
-    }
-
-    setData(data) {
-        this.data = data
-    }
-
-    getNumber() {
-        return this.number
-    }
-
-    setNumber(number) {
-        this.number = number
-    }
-
-    getPreviousNumber() {
-        return this.previousNumber
-    }
-
-    setPreviousNumber(previousNumber) {
-        this.previousNumber = previousNumber
-    }
-
-    toJSON() {
-        return {
-            version: this.getVersion(),
-            code: this.getCode(),
-            source: this.getSource(),
-            streamId: this.getStreamId(),
-            data: this.getData(),
-            number: this.getNumber(),
-            previousNumber: this.getPreviousNumber()
-        }
     }
 }
 

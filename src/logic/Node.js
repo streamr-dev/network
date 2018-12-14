@@ -81,19 +81,19 @@ class Node extends EventEmitter {
     }
 
     onDataReceived(dataMessage) {
-        const streamId = dataMessage.getStreamId()
-        const number = dataMessage.getNumber()
-        const previousNumber = dataMessage.getPreviousNumber()
+        const messageId = dataMessage.getMessageId()
+        const previousMessageReference = dataMessage.getPreviousMessageReference()
+        const { streamId } = messageId
 
         this.subscribeToStreamIfHaveNotYet(streamId)
 
         if (this._isReadyToPropagate(streamId)) {
-            const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(streamId, number, previousNumber)
+            const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(messageId, previousMessageReference)
             if (isUnseen) {
-                this.debug('received data (#%s) for stream %s', number, streamId)
+                this.debug('received from %s data %s', dataMessage.getSource(), messageId)
                 this._propagateMessage(dataMessage)
             } else {
-                this.debug('ignoring duplicate data (#%s) for stream %s', number, streamId)
+                this.debug('ignoring duplicate data %s (from %s)', messageId, dataMessage.getSource())
                 this.metrics.received.duplicates += 1
             }
         } else {
@@ -107,16 +107,16 @@ class Node extends EventEmitter {
 
     _propagateMessage(dataMessage) {
         const source = dataMessage.getSource()
-        const streamId = dataMessage.getStreamId()
+        const messageId = dataMessage.getMessageId()
+        const previousMessageReference = dataMessage.getPreviousMessageReference()
         const data = dataMessage.getData()
-        const number = dataMessage.getNumber()
-        const previousNumber = dataMessage.getPreviousNumber()
+        const { streamId } = messageId
 
         const subscribers = this.streams.getOutboundNodesForStream(streamId).filter((n) => n !== source)
         subscribers.forEach((subscriber) => {
-            this.protocols.nodeToNode.sendData(subscriber, streamId, data, number, previousNumber)
+            this.protocols.nodeToNode.sendData(subscriber, messageId, previousMessageReference, data)
         })
-        this.debug('propagated data (#%s) for stream %s to %j', number, streamId, subscribers)
+        this.debug('propagated data %s to %j', messageId, subscribers)
         this.emit(events.MESSAGE_RECEIVED, dataMessage)
     }
 

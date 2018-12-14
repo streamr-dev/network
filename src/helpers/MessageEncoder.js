@@ -3,7 +3,7 @@ const StreamMessage = require('../messages/StreamMessage')
 const DataMessage = require('../messages/DataMessage')
 const SubscribeMessage = require('../messages/SubscribeMessage')
 const UnsubscribeMessage = require('../messages/UnsubscribeMessage')
-const { StreamID } = require('../identifiers')
+const { StreamID, MessageID, MessageReference } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
 
 const encode = (type, payload) => {
@@ -34,10 +34,11 @@ const decode = (source, message) => {
 
         case msgTypes.DATA:
             return new DataMessage(
-                new StreamID(payload.streamId, payload.streamPartition),
+                MessageID.fromObject(payload.messageId),
+                payload.previousMessageReference === null
+                    ? null
+                    : MessageReference.fromObject(payload.previousMessageReference),
                 payload.data,
-                payload.number,
-                payload.previousNumber,
                 source
             )
 
@@ -65,12 +66,10 @@ module.exports = {
     getMsgPrefix,
     decode,
     statusMessage: (status) => encode(msgTypes.STATUS, status),
-    dataMessage: (streamId, data, number = null, previousNumber = null) => encode(msgTypes.DATA, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        data,
-        number,
-        previousNumber
+    dataMessage: (messageId, previousMessageReference, data) => encode(msgTypes.DATA, {
+        messageId,
+        previousMessageReference,
+        data
     }),
     subscribeMessage: (streamId, leechOnly) => encode(msgTypes.SUBSCRIBE, {
         streamId: streamId.id,

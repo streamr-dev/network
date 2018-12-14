@@ -2,7 +2,7 @@ const { startClient, startNode, startTracker } = require('../../src/composition'
 const { callbackToPromise } = require('../../src/util')
 const { waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 const NodeToNode = require('../../src/protocol/NodeToNode')
-const { StreamID } = require('../../src/identifiers')
+const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
 
@@ -38,10 +38,13 @@ describe('Selecting leader for the stream and sending messages to two subscriber
             [subscriber1, subscriber2] = res
         })
 
-        let msgNo = 0
+        let timestamp = 1000
+        let previousMessageReference = null
         const publisherInterval = setInterval(() => {
-            msgNo += 1
-            publisher.publish(streamId, `Hello world ${msgNo}!`, msgNo, msgNo - 1)
+            const messageId = new MessageID(streamId, timestamp, 0, 'publisher-id')
+            publisher.publish(messageId, previousMessageReference, `Hello world ${timestamp}!`)
+            previousMessageReference = new MessageReference(timestamp, 0)
+            timestamp += 1000
         }, 1000)
 
         subscriber1.subscribe(streamId)

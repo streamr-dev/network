@@ -1,6 +1,6 @@
 const Node = require('../../src/logic/Node')
 const DataMessage = require('../../src/messages/DataMessage')
-const { StreamID } = require('../../src/identifiers')
+const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { wait, LOCALHOST } = require('../../test/util')
@@ -49,19 +49,19 @@ describe('message propagation in network', () => {
         const n4Messages = []
 
         n1.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n1Messages.push({
-            streamId: dataMessage.getStreamId(),
+            streamId: dataMessage.getMessageId().streamId,
             payload: dataMessage.getData()
         }))
         n2.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n2Messages.push({
-            streamId: dataMessage.getStreamId(),
+            streamId: dataMessage.getMessageId().streamId,
             payload: dataMessage.getData()
         }))
         n3.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n3Messages.push({
-            streamId: dataMessage.getStreamId(),
+            streamId: dataMessage.getMessageId().streamId,
             payload: dataMessage.getData()
         }))
         n4.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n4Messages.push({
-            streamId: dataMessage.getStreamId(),
+            streamId: dataMessage.getMessageId().streamId,
             payload: dataMessage.getData()
         }))
 
@@ -70,15 +70,23 @@ describe('message propagation in network', () => {
 
         await wait(1000)
 
-        for (let i = 0; i < 5; ++i) {
-            const dataMessage = new DataMessage(new StreamID('stream-1', 0), {
-                messageNo: i
-            }, i, i - 1)
+        for (let i = 1; i <= 5; ++i) {
+            const dataMessage = new DataMessage(
+                new MessageID(new StreamID('stream-1', 0), i, 0, 'publisher-id'),
+                i === 1 ? null : new MessageReference(i - 1, 0),
+                {
+                    messageNo: i
+                }
+            )
             n1.onDataReceived(dataMessage)
 
-            const dataMessage2 = new DataMessage(new StreamID('stream-2', 0), {
-                messageNo: i * 100
-            }, i * 100, (i - 1) * 100)
+            const dataMessage2 = new DataMessage(
+                new MessageID(new StreamID('stream-2', 0), i * 100, 0, 'publisher-id'),
+                i === 1 ? null : new MessageReference((i - 1) * 100, 0),
+                {
+                    messageNo: i * 100
+                }
+            )
             n4.onDataReceived(dataMessage2)
 
             // eslint-disable-next-line no-await-in-loop
@@ -86,12 +94,6 @@ describe('message propagation in network', () => {
         }
 
         expect(n1Messages).toEqual([
-            {
-                streamId: new StreamID('stream-1', 0),
-                payload: {
-                    messageNo: 0
-                }
-            },
             {
                 streamId: new StreamID('stream-1', 0),
                 payload: {
@@ -114,6 +116,12 @@ describe('message propagation in network', () => {
                 streamId: new StreamID('stream-1', 0),
                 payload: {
                     messageNo: 4
+                }
+            },
+            {
+                streamId: new StreamID('stream-1', 0),
+                payload: {
+                    messageNo: 5
                 }
             }
         ])

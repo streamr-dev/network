@@ -1,4 +1,57 @@
 /**
+ * Represent a pair of numbers (a,b). Ordering between two pairs is defined as
+ * follows. First compare first numbers. Compare second numbers if first are
+ * equal.
+ */
+class NumberPair {
+    constructor(a, b) {
+        this.a = a
+        this.b = b
+    }
+
+    greaterThanOrEqual(otherPair) {
+        return this.greaterThan(otherPair) || this.equalTo(otherPair)
+    }
+
+    greaterThan(otherPair) {
+        return this._compareTo(otherPair) === 1
+    }
+
+    equalTo(otherPair) {
+        return this._compareTo(otherPair) === 0
+    }
+
+    _compareTo(otherPair) {
+        if (this.a > otherPair.a) {
+            return 1
+        }
+        if (this.a < otherPair.a) {
+            return -1
+        }
+        if (this.b > otherPair.b) {
+            return 1
+        }
+        if (this.b < otherPair.b) {
+            return -1
+        }
+        return 0
+    }
+
+    toString() {
+        return `${this.a}|${this.b}`
+    }
+}
+
+const NULL_NUMBER_PAIR = new NumberPair(-Infinity, -Infinity)
+
+class GapMisMatchError extends Error {
+    constructor(...args) {
+        super(...args)
+        Error.captureStackTrace(this, GapMisMatchError) // exclude this constructor from stack trace
+    }
+}
+
+/**
  *
  * Keeps track of a stream's message numbers and reports already seen numbers
  * as duplicates.
@@ -21,7 +74,7 @@
  * intervals when storage limits are hit.
  *
  */
-module.exports = class DuplicateMessageDetector {
+class DuplicateMessageDetector {
     constructor(maxNumberOfGaps = 10000) {
         this.maxNumberOfGaps = maxNumberOfGaps
         this.gaps = [] // ascending order of half-closed intervals (x,y] representing gaps that contain unseen message(s)
@@ -31,12 +84,15 @@ module.exports = class DuplicateMessageDetector {
      * returns true if number has not yet been seen (i.e. is not a duplicate)
      */
     markAndCheck(previousNumber, number) {
-        if (previousNumber >= number) {
+        if (previousNumber === null) {
+            previousNumber = NULL_NUMBER_PAIR // eslint-disable-line no-param-reassign
+        }
+        if (previousNumber.greaterThanOrEqual(number)) {
             throw new Error('pre-condition: previousNumber < number')
         }
 
         if (this.gaps.length === 0) {
-            this.gaps.push([number, Infinity])
+            this.gaps.push([number, new NumberPair(Infinity, Infinity)])
             return true
         }
 
@@ -44,20 +100,20 @@ module.exports = class DuplicateMessageDetector {
             const [lowerBound, upperBound] = this.gaps[i] // invariant: upperBound > lowerBound
 
             // implies nextNumber > upperBound (would've been handled in previous iteration if gap exists)
-            if (previousNumber >= upperBound) {
+            if (previousNumber.greaterThanOrEqual(upperBound)) {
                 return false
             }
-            if (previousNumber >= lowerBound) {
-                if (number > upperBound) {
-                    throw new Error('pre-condition: gap overlap in given numbers')
+            if (previousNumber.greaterThanOrEqual(lowerBound)) {
+                if (number.greaterThan(upperBound)) {
+                    throw new GapMisMatchError('pre-condition: gap overlap in given numbers')
                 }
-                if (previousNumber === lowerBound) {
-                    if (number === upperBound) {
+                if (previousNumber.equalTo(lowerBound)) {
+                    if (number.equalTo(upperBound)) {
                         this.gaps.splice(i, 1)
                     } else {
                         this.gaps[i] = [number, upperBound]
                     }
-                } else if (number === upperBound) {
+                } else if (number.equalTo(upperBound)) {
                     this.gaps[i] = [lowerBound, previousNumber]
                 } else {
                     this.gaps.splice(i, 1, [lowerBound, previousNumber], [number, upperBound])
@@ -73,8 +129,8 @@ module.exports = class DuplicateMessageDetector {
                 this._dropLowestGapIfOverMaxNumberOfGaps()
                 return true
             }
-            if (number > lowerBound) {
-                throw new Error('pre-condition: gap overlap in given numbers')
+            if (number.greaterThan(lowerBound)) {
+                throw new GapMisMatchError('pre-condition: gap overlap in given numbers')
             }
         }
         return false
@@ -88,6 +144,12 @@ module.exports = class DuplicateMessageDetector {
     }
 
     toString() {
-        return this.gaps.map(([lower, upper]) => `(${lower},${upper}]`).join(', ')
+        return this.gaps.map(([lower, upper]) => `(${lower}, ${upper}]`).join(', ')
     }
+}
+
+module.exports = {
+    NumberPair,
+    GapMisMatchError,
+    DuplicateMessageDetector
 }

@@ -1,7 +1,8 @@
 const encoder = require('../../src/helpers/MessageEncoder')
 const { version } = require('../../package.json')
+const DataMessage = require('../../src/messages/DataMessage')
 const StreamMessage = require('../../src/messages/StreamMessage')
-const { StreamID } = require('../../src/identifiers')
+const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 
 describe('encoder', () => {
     it('check all codes', (done) => {
@@ -48,41 +49,133 @@ describe('encoder', () => {
         expect(streamMessage.getNodeAddresses()).toEqual(['node-1', 'node-2'])
     })
 
-    it('creates expected dataMessage format (without numbers)', () => {
-        const actual = encoder.dataMessage(new StreamID('stream-id', 0), {
-            hello: 'world'
-        })
+    it('check dataMessage encoding (without previousMessageReference)', () => {
+        const actual = encoder.dataMessage(
+            new MessageID(new StreamID('stream-id', 0), 666666666, 133, 'publisher-id'),
+            null,
+            {
+                hello: 'world'
+            }
+        )
         expect(JSON.parse(actual)).toEqual({
             code: encoder.DATA,
             version,
             payload: {
-                streamId: 'stream-id',
-                streamPartition: 0,
+                messageId: {
+                    streamId: {
+                        id: 'stream-id',
+                        partition: 0
+                    },
+                    timestamp: 666666666,
+                    sequenceNo: 133,
+                    publisherId: 'publisher-id'
+                },
+                previousMessageReference: null,
                 data: {
                     hello: 'world',
-                },
-                number: null,
-                previousNumber: null
+                }
             }
         })
     })
 
-    it('creates expected dataMessage format (with number)', () => {
-        const actual = encoder.dataMessage(new StreamID('stream-id', 5), {
-            hello: 'world'
-        }, 958004, 958000)
+    it('check dataMessage encoding (with previousMessageReference)', () => {
+        const actual = encoder.dataMessage(
+            new MessageID(new StreamID('stream-id', 0), 666666666, 133, 'publisher-id'),
+            new MessageReference(555555555, 0),
+            {
+                hello: 'world'
+            }
+        )
         expect(JSON.parse(actual)).toEqual({
             code: encoder.DATA,
             version,
             payload: {
-                streamId: 'stream-id',
-                streamPartition: 5,
+                messageId: {
+                    streamId: {
+                        id: 'stream-id',
+                        partition: 0
+                    },
+                    timestamp: 666666666,
+                    sequenceNo: 133,
+                    publisherId: 'publisher-id'
+                },
+                previousMessageReference: {
+                    timestamp: 555555555,
+                    sequenceNo: 0
+                },
                 data: {
                     hello: 'world',
-                },
-                number: 958004,
-                previousNumber: 958000
+                }
             }
+        })
+    })
+
+    it('decoding dataMessage json returns DataMessage (without previousMessageReference)', () => {
+        const payload = {
+            code: encoder.DATA,
+            version,
+            payload: {
+                messageId: {
+                    streamId: {
+                        id: 'stream-id',
+                        partition: 0
+                    },
+                    timestamp: 666666666,
+                    sequenceNo: 133,
+                    publisherId: 'publisher-id'
+                },
+                previousMessageReference: null,
+                data: {
+                    hello: 'world',
+                }
+            }
+        }
+
+        const dataMessage = encoder.decode('source-id', JSON.stringify(payload))
+
+        expect(dataMessage).toBeInstanceOf(DataMessage)
+        expect(dataMessage.getSource()).toEqual('source-id')
+        expect(dataMessage.getMessageId())
+            .toEqual(new MessageID(new StreamID('stream-id', 0), 666666666, 133, 'publisher-id'))
+        expect(dataMessage.getPreviousMessageReference()).toBeNull()
+        expect(dataMessage.getData()).toEqual({
+            hello: 'world'
+        })
+    })
+
+    it('decoding dataMessage json returns DataMessage (with previousMessageReference)', () => {
+        const payload = {
+            code: encoder.DATA,
+            version,
+            payload: {
+                messageId: {
+                    streamId: {
+                        id: 'stream-id',
+                        partition: 0
+                    },
+                    timestamp: 666666666,
+                    sequenceNo: 133,
+                    publisherId: 'publisher-id'
+                },
+                previousMessageReference: {
+                    timestamp: 555555555,
+                    sequenceNo: 0
+                },
+                data: {
+                    hello: 'world',
+                }
+            }
+        }
+
+        const dataMessage = encoder.decode('source-id', JSON.stringify(payload))
+
+        expect(dataMessage).toBeInstanceOf(DataMessage)
+        expect(dataMessage.getSource()).toEqual('source-id')
+        expect(dataMessage.getMessageId())
+            .toEqual(new MessageID(new StreamID('stream-id', 0), 666666666, 133, 'publisher-id'))
+        expect(dataMessage.getPreviousMessageReference()).toEqual(new MessageReference(555555555, 0))
+        expect(dataMessage.getData()).toEqual({
+            hello: 'world'
         })
     })
 })
