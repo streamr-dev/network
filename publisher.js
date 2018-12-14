@@ -1,3 +1,4 @@
+const { MessageID, StreamID, MessageReference } = require('./src/identifiers')
 const { startClient } = require('./src/composition')
 
 const port = process.argv[2] || 30301
@@ -8,12 +9,18 @@ startClient('127.0.0.1', port, 'publisher1', nodeAddress)
     .then((client) => {
         client.protocols.nodeToNode.endpoint.connect(nodeAddress)
 
-        let messageNo = 1
+        let lastTime = 0
 
         setInterval(() => {
             const msg = 'Hello world, ' + new Date().toLocaleString()
-            client.publish(streamId, msg, messageNo, messageNo - 1)
-            messageNo += 1
+            const time = Date.now()
+
+            client.publish(
+                new MessageID(new StreamID(streamId, 0), time, 0, 'publisher'),
+                new MessageReference(lastTime, 0),
+                msg
+            )
+            lastTime = time
         }, 1000)
     })
     .catch((err) => {
