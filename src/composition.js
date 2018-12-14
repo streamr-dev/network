@@ -7,6 +7,7 @@ const Node = require('./logic/Node')
 const Client = require('./logic/Client')
 const NetworkNode = require('./NetworkNode')
 const { startEndpoint } = require('./connection/WsEndpoint')
+const { MessageID, MessageReference, StreamID } = require('./identifiers')
 
 async function startTracker(host, port, id = uuidv4()) {
     const identity = {
@@ -64,5 +65,8 @@ module.exports = {
     startTracker,
     startNode,
     startClient,
-    startNetworkNode
+    startNetworkNode,
+    MessageID,
+    MessageReference,
+    StreamID
 }
