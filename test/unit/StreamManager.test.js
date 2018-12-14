@@ -11,6 +11,7 @@ describe('StreamManager', () => {
     test('starts out empty', () => {
         expect(manager.isSetUp(new StreamID('streamId', 0))).toEqual(false)
         expect(manager.getStreams()).toEqual([])
+        expect(manager.getStreamsAsKeys()).toEqual([])
     })
 
     test('setting up streams and testing values', () => {
@@ -21,7 +22,14 @@ describe('StreamManager', () => {
         expect(manager.isSetUp(new StreamID('stream-1', 0))).toEqual(true)
         expect(manager.isSetUp(new StreamID('stream-1', 1))).toEqual(true)
         expect(manager.isSetUp(new StreamID('stream-2', 0))).toEqual(true)
-        expect(manager.getStreams()).toEqual(['stream-1::0', 'stream-1::1', 'stream-2::0'])
+
+        expect(manager.getStreams()).toEqual([
+            new StreamID('stream-1', 0),
+            new StreamID('stream-1', 1),
+            new StreamID('stream-2', 0)
+        ])
+        expect(manager.getStreamsAsKeys()).toEqual(['stream-1::0', 'stream-1::1', 'stream-2::0'])
+
         expect(manager.getInboundNodesForStream(new StreamID('stream-1', 0))).toEqual([])
         expect(manager.getOutboundNodesForStream(new StreamID('stream-1', 0))).toEqual([])
         expect(manager.getInboundNodesForStream(new StreamID('stream-1', 1))).toEqual([])

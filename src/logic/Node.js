@@ -153,7 +153,7 @@ class Node extends EventEmitter {
 
     _getStatus() {
         return {
-            streams: this.streams.getStreams(),
+            streams: this.streams.getStreamsAsKeys(),
             started: this.started
         }
     }

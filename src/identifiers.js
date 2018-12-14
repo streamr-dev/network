@@ -24,6 +24,11 @@ class StreamID {
     static fromObject({ id, partition }) {
         return new StreamID(id, partition)
     }
+
+    static fromKey(key) {
+        const [id, partition] = key.split('::')
+        return new StreamID(id, Number.parseInt(partition, 10))
+    }
 }
 
 /**

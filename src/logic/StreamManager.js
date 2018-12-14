@@ -67,6 +67,10 @@ module.exports = class StreamManager {
     }
 
     getStreams() {
+        return this.getStreamsAsKeys().map((key) => StreamID.fromKey(key))
+    }
+
+    getStreamsAsKeys() {
         return [...this.streams.keys()].sort()
     }
 
