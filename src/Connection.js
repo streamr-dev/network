@@ -1,6 +1,7 @@
 const events = require('events')
 const debug = require('debug')('Connection')
 const qs = require('qs')
+const Protocol = require('streamr-client-protocol')
 
 module.exports = class Connection extends events.EventEmitter {
     constructor(socket) {
@@ -11,8 +12,8 @@ module.exports = class Connection extends events.EventEmitter {
         const parts = socket.upgradeReq.url.split('?')
         if (parts.length === 2) {
             const queryObj = qs.parse(parts[1])
-            this.protocolVersion = queryObj.protocolVersion ? parseInt(queryObj.protocolVersion) : undefined
-            this.payloadVersion = queryObj.payloadVersion ? parseInt(queryObj.payloadVersion) : undefined
+            this.controlLayerVersion = queryObj.controlLayerVersion ? parseInt(queryObj.controlLayerVersion) : undefined
+            this.messageLayerVersion = queryObj.messageLayerVersion ? parseInt(queryObj.messageLayerVersion) : undefined
         }
     }
 
@@ -37,8 +38,12 @@ module.exports = class Connection extends events.EventEmitter {
     }
 
     send(msg) {
-        const serialized = msg.serialize(this.protocolVersion, this.payloadVersion)
+        const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         debug('send: %s: %o', this.id, serialized)
         this.socket.send(serialized)
+    }
+
+    sendError(errorMessage) {
+        this.send(new Protocol.ControlLayer.ErrorResponseV1(errorMessage))
     }
 }

@@ -22,14 +22,14 @@ describe('WebsocketServer', () => {
         streamId: 'streamId',
     }
 
-    const streamMessage = new Protocol.StreamMessage(
+    const streamMessage = new Protocol.MessageLayer.StreamMessageV28(
         'streamId',
         0, // partition
         new Date(1491037200000),
         0, // ttl
         2, // offset
         1,
-        Protocol.StreamMessage.CONTENT_TYPES.JSON,
+        Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
         {
             hello: 'world',
         },
@@ -56,11 +56,11 @@ describe('WebsocketServer', () => {
         }
 
         streamFetcher = {
-            authenticate(streamId, authKey) {
+            authenticate(streamId, authKey, sessionToken) {
                 return new Promise(((resolve, reject) => {
-                    if (authKey === 'correct') {
+                    if (authKey === 'correct' || sessionToken === 'correct') {
                         resolve(myStream)
-                    } else if (authKey === 'correctButNoPermission') {
+                    } else if (authKey === 'correctButNoPermission' || sessionToken === 'correctButNoPermission') {
                         reject(new Error(401))
                     } else {
                         reject(new Error(403))
@@ -117,10 +117,10 @@ describe('WebsocketServer', () => {
             historicalAdapter.getAll = sinon.stub()
             historicalAdapter.getAll.callsArgWithAsync(2, streamMessage)
 
-            const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+            const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                 resend_all: true,
             }, 'correct')
-            const expectedResponse = new Protocol.ResendResponseResending(
+            const expectedResponse = new Protocol.ControlLayer.ResendResponseResendingV1(
                 request.streamId,
                 request.streamPartition,
                 request.subId,
@@ -137,12 +137,12 @@ describe('WebsocketServer', () => {
             historicalAdapter.getAll = sinon.stub()
             historicalAdapter.getAll.callsArgWithAsync(2, streamMessage)
 
-            const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+            const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                 resend_all: true,
             }, 'correct')
-            const expectedResponse = new Protocol.UnicastMessage(
-                streamMessage,
+            const expectedResponse = new Protocol.ControlLayer.UnicastMessageV1(
                 request.subId,
+                streamMessage,
             )
 
             mockSocket.receive(request)
@@ -159,10 +159,10 @@ describe('WebsocketServer', () => {
                 onDone()
             }
 
-            const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+            const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                 resend_all: true,
             }, 'correct')
-            const expectedResponse = new Protocol.ResendResponseResent(
+            const expectedResponse = new Protocol.ControlLayer.ResendResponseResentV1(
                 request.streamId,
                 request.streamPartition,
                 request.subId,
@@ -179,10 +179,10 @@ describe('WebsocketServer', () => {
             historicalAdapter.getAll = sinon.stub()
             historicalAdapter.getAll.callsArgAsync(3)
 
-            const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+            const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                 resend_all: true,
             }, 'correct')
-            const expectedResponse = new Protocol.ResendResponseNoResend(
+            const expectedResponse = new Protocol.ControlLayer.ResendResponseNoResendV1(
                 request.streamId,
                 request.streamPartition,
                 request.subId,
@@ -197,7 +197,7 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_all', () => {
             it('requests all messages from historicalAdapter', (done) => {
-                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+                const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                     resend_all: true,
                 }, 'correct')
 
@@ -212,7 +212,7 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_from', () => {
             it('requests messages from given offset from historicalAdapter', (done) => {
-                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+                const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                     resend_from: 333,
                 }, 'correct')
 
@@ -230,7 +230,7 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_from AND resend_to', () => {
             it('requests messages from given range from historicalAdapter', (done) => {
-                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+                const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                     resend_from: 7,
                     resend_to: 10,
                 }, 'correct')
@@ -249,7 +249,7 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_from_time', () => {
             it('requests messages from given timestamp from historicalAdapter', (done) => {
-                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+                const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                     resend_from_time: Date.now(),
                 }, 'correct')
 
@@ -267,7 +267,7 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_last', () => {
             it('requests last N messages from historicalAdapter', (done) => {
-                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+                const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                     resend_last: 10,
                 }, 'correct')
 
@@ -287,13 +287,13 @@ describe('WebsocketServer', () => {
             mockSocket.throwOnError = false
 
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive(new Protocol.ResendRequest('streamId', 0, 'sub', {
+            mockSocket.receive(new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                 resend_all: true,
             }, 'wrong'))
         })
 
         it('sends only error message to socket', (done) => {
-            const expectedResponse = new Protocol.ErrorResponse('Failed to request resend from stream streamId and partition 0: 403')
+            const expectedResponse = new Protocol.ControlLayer.ErrorResponseV1('Failed to request resend from stream streamId and partition 0: 403')
 
             setTimeout(() => {
                 assert.deepEqual(mockSocket.sentMessages, [expectedResponse.serialize()])
@@ -315,14 +315,14 @@ describe('WebsocketServer', () => {
         })
 
         it('emits messages received from Redis to those sockets according to streamId', (done) => {
-            mockSocket.receive(new Protocol.SubscribeRequest('streamId', 0, 'correct'))
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1('streamId', 0, 'correct'))
 
             setTimeout(() => {
                 realtimeAdapter.emit('message', streamMessage)
             })
 
             setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages[1], new Protocol.BroadcastMessage(streamMessage).serialize())
+                assert.deepEqual(mockSocket.sentMessages[1], new Protocol.ControlLayer.BroadcastMessageV1(streamMessage).serialize())
                 done()
             })
         })
@@ -342,8 +342,8 @@ describe('WebsocketServer', () => {
             })
 
             setTimeout(() => {
-                const msg = Protocol.WebsocketResponse.deserialize(mockSocket.sentMessages[0])
-                assert(msg instanceof Protocol.ErrorResponse)
+                const msg = Protocol.ControlLayer.ControlMessageFactory.deserialize(mockSocket.sentMessages[0])
+                assert(msg instanceof Protocol.ControlLayer.ErrorResponseV1)
                 done()
             })
         })
@@ -352,9 +352,9 @@ describe('WebsocketServer', () => {
     describe('on subscribe request', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
-                undefined,
+                0,
                 'correct',
             ))
         })
@@ -369,7 +369,7 @@ describe('WebsocketServer', () => {
         it('creates the Stream object with given partition', (done) => {
             const socket2 = new MockSocket()
             wsMock.emit('connection', socket2)
-            socket2.receive(new Protocol.SubscribeRequest(
+            socket2.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 1,
                 'correct',
@@ -392,7 +392,7 @@ describe('WebsocketServer', () => {
             setTimeout(() => {
                 assert.deepEqual(
                     mockSocket.sentMessages[0],
-                    new Protocol.SubscribeResponse('streamId', 0).serialize(),
+                    new Protocol.ControlLayer.SubscribeResponseV1('streamId', 0).serialize(),
                 )
                 done()
             })
@@ -401,7 +401,7 @@ describe('WebsocketServer', () => {
         it('does not resubscribe to realtimeAdapter on new subscription to same stream', (done) => {
             const socket2 = new MockSocket()
             wsMock.emit('connection', socket2)
-            socket2.receive(new Protocol.SubscribeRequest(
+            socket2.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 0,
                 'correct',
@@ -420,7 +420,7 @@ describe('WebsocketServer', () => {
 
             // Expect error messages
             mockSocket.throwOnError = false
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 0,
                 'wrongApiKey',
@@ -443,7 +443,8 @@ describe('WebsocketServer', () => {
 
         it('sends error message to socket', (done) => {
             setTimeout(() => {
-                assert(Protocol.WebsocketResponse.deserialize(mockSocket.sentMessages[0]) instanceof Protocol.ErrorResponse)
+                const err = Protocol.ControlLayer.ControlMessageFactory.deserialize(mockSocket.sentMessages[0])
+                assert(err instanceof Protocol.ControlLayer.ErrorResponseV1)
                 done()
             })
         })
@@ -455,7 +456,7 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket)
 
             // subscribe
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 0,
                 'correct',
@@ -463,7 +464,7 @@ describe('WebsocketServer', () => {
 
             // unsubscribe
             setTimeout(() => {
-                mockSocket.receive(new Protocol.UnsubscribeRequest('streamId', 0))
+                mockSocket.receive(new Protocol.ControlLayer.UnsubscribeRequestV1('streamId', 0))
                 done()
             })
         })
@@ -471,7 +472,7 @@ describe('WebsocketServer', () => {
         it('emits a unsubscribed event', () => {
             assert.deepEqual(
                 mockSocket.sentMessages[1],
-                new Protocol.UnsubscribeResponse('streamId', 0).serialize(),
+                new Protocol.ControlLayer.UnsubscribeResponseV1('streamId', 0).serialize(),
             )
         })
 
@@ -489,7 +490,7 @@ describe('WebsocketServer', () => {
             realtimeAdapter.unsubscribe = sinon.mock()
 
             // subscribe
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 0,
                 'correct',
@@ -498,7 +499,7 @@ describe('WebsocketServer', () => {
             // subscribe 2
             const socket2 = new MockSocket()
             wsMock.emit('connection', socket2)
-            socket2.receive(new Protocol.SubscribeRequest(
+            socket2.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 0,
                 'correct',
@@ -506,7 +507,7 @@ describe('WebsocketServer', () => {
 
             // unsubscribe 1
             setTimeout(() => {
-                mockSocket.receive(new Protocol.UnsubscribeRequest('streamId', 0))
+                mockSocket.receive(new Protocol.ControlLayer.UnsubscribeRequestV1('streamId', 0))
                 done()
             })
         })
@@ -525,7 +526,7 @@ describe('WebsocketServer', () => {
             realtimeAdapter.unsubscribe = sinon.mock()
 
             // subscribe
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 0,
                 'correct',
@@ -534,7 +535,7 @@ describe('WebsocketServer', () => {
             // subscribe 2
             const socket2 = new MockSocket()
             wsMock.emit('connection', socket2)
-            socket2.receive(new Protocol.SubscribeRequest(
+            socket2.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 0,
                 'correct',
@@ -542,7 +543,7 @@ describe('WebsocketServer', () => {
 
             // unsubscribe 1
             setTimeout(() => {
-                mockSocket.receive(new Protocol.UnsubscribeRequest('streamId', 0))
+                mockSocket.receive(new Protocol.ControlLayer.UnsubscribeRequestV1('streamId', 0))
                 done()
             })
 
@@ -562,7 +563,7 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket)
 
             // subscribe
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 0,
                 'correct',
@@ -570,14 +571,14 @@ describe('WebsocketServer', () => {
 
             setTimeout(() => {
                 // unsubscribe
-                mockSocket.receive(new Protocol.UnsubscribeRequest(
+                mockSocket.receive(new Protocol.ControlLayer.UnsubscribeRequestV1(
                     'streamId',
                     0,
                 ))
 
                 setTimeout(() => {
                     // subscribed
-                    mockSocket.receive(new Protocol.SubscribeRequest(
+                    mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                         'streamId',
                         0,
                         'correct',
@@ -585,9 +586,9 @@ describe('WebsocketServer', () => {
 
                     setTimeout(() => {
                         assert.deepEqual(mockSocket.sentMessages, [
-                            new Protocol.SubscribeResponse('streamId', 0).serialize(),
-                            new Protocol.UnsubscribeResponse('streamId', 0).serialize(),
-                            new Protocol.SubscribeResponse('streamId', 0).serialize(),
+                            new Protocol.ControlLayer.SubscribeResponseV1('streamId', 0).serialize(),
+                            new Protocol.ControlLayer.UnsubscribeResponseV1('streamId', 0).serialize(),
+                            new Protocol.ControlLayer.SubscribeResponseV1('streamId', 0).serialize(),
                         ])
                         done()
                     })
@@ -603,7 +604,7 @@ describe('WebsocketServer', () => {
         })
 
         it('calls the publisher for valid requests', (done) => {
-            const req = new Protocol.PublishRequest(myStream.streamId, 'correct', undefined, '{}')
+            const req = new Protocol.ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}')
 
             publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey) => {
                 assert.deepEqual(stream, myStream)
@@ -619,7 +620,7 @@ describe('WebsocketServer', () => {
         })
 
         it('reads optional fields if specified', (done) => {
-            const req = new Protocol.PublishRequest(myStream.streamId, 'correct', undefined, '{}', Date.now(), 'foo')
+            const req = new Protocol.ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}', Date.now(), 'foo')
 
             publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey) => {
                 assert.deepEqual(stream, myStream)
@@ -635,7 +636,10 @@ describe('WebsocketServer', () => {
         })
 
         it('reads signature fields if specified', (done) => {
-            const req = new Protocol.PublishRequest(myStream.streamId, 'correct', undefined, '{}', undefined, undefined, 'address', 1, 'signature')
+            const req = new Protocol.ControlLayer.PublishRequestV0(
+                myStream.streamId, 'correct', undefined, '{}',
+                undefined, undefined, 'address', 1, 'signature',
+            )
 
             publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey, signatureType, publisherAddress, signature) => {
                 assert.deepEqual(stream, myStream)
@@ -665,7 +669,8 @@ describe('WebsocketServer', () => {
 
             afterEach(() => {
                 assert.equal(mockSocket.sentMessages.length, 1)
-                assert(Protocol.WebsocketResponse.deserialize(mockSocket.sentMessages[0]) instanceof Protocol.ErrorResponse)
+                const err = Protocol.ControlLayer.ControlMessageFactory.deserialize(mockSocket.sentMessages[0])
+                assert(err instanceof Protocol.ControlLayer.ErrorResponseV1)
             })
 
             it('responds with an error if the stream id is missing', () => {
@@ -726,17 +731,17 @@ describe('WebsocketServer', () => {
     describe('disconnect', () => {
         beforeEach((done) => {
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 6,
                 'correct',
             ))
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId',
                 4,
                 'correct',
             ))
-            mockSocket.receive(new Protocol.SubscribeRequest(
+            mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1(
                 'streamId2',
                 0,
                 'correct',

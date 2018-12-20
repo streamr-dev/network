@@ -1,7 +1,6 @@
 const Int64 = require('node-int64')
 const BufferMaker = require('buffermaker')
 const BufferReader = require('buffer-reader')
-const Protocol = require('streamr-client-protocol')
 const StreamrBinaryMessage = require('./StreamrBinaryMessage')
 const StreamrBinaryMessageFactory = require('./StreamrBinaryMessageFactory')
 
@@ -53,21 +52,7 @@ class StreamrBinaryMessageWithKafkaMetadata {
     }
 
     toStreamMessage() {
-        const streamrBinaryMessage = this.getStreamrBinaryMessage()
-
-        return new Protocol.StreamMessage(
-            streamrBinaryMessage.streamId,
-            streamrBinaryMessage.streamPartition,
-            streamrBinaryMessage.timestamp,
-            streamrBinaryMessage.ttl,
-            this.offset,
-            this.previousOffset,
-            streamrBinaryMessage.contentType,
-            streamrBinaryMessage.getContentAsString(),
-            streamrBinaryMessage.signatureType,
-            streamrBinaryMessage.address,
-            streamrBinaryMessage.signature,
-        )
+        return this.getStreamrBinaryMessage().toStreamMessage()
     }
 
     static fromBytes(buf) {

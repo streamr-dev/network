@@ -37,11 +37,11 @@ module.exports = class MockSocket extends events.EventEmitter {
         this.sentMessages.push(response)
 
         // Inspect the message to catch errors
-        const msg = Protocol.WebsocketResponse.deserialize(response)
+        const msg = Protocol.ControlLayer.ControlMessageFactory.deserialize(response)
 
         // If you expect error messages, set mockSocket.throwOnError to false for those tests
-        if (msg instanceof Protocol.ErrorResponse && this.throwOnError) {
-            throw new Error(`Received unexpected error message: ${msg.payload.error}`)
+        if (msg instanceof Protocol.ControlLayer.ErrorResponseV1 && this.throwOnError) {
+            throw new Error(`Received unexpected error message: ${msg.errorMessage}`)
         }
     }
 

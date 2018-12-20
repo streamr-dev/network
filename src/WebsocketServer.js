@@ -27,12 +27,15 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         // This handler is for realtime messages, not resends
         this.realtimeAdapter.on('message', (streamMessage) => this.broadcastMessage(streamMessage))
 
-        const requestHandlersByMessage = {
-            SubscribeRequest: this.handleSubscribeRequest,
-            UnsubscribeRequest: this.handleUnsubscribeRequest,
-            ResendRequest: this.handleResendRequest,
-            PublishRequest: this.handlePublishRequest,
-        }
+        const subscribeRequestType = Protocol.ControlLayer.SubscribeRequest.TYPE
+        const unsubscribeRequestType = Protocol.ControlLayer.UnsubscribeRequest.TYPE
+        const resendRequestType = Protocol.ControlLayer.ResendRequestV0.TYPE
+        const publishRequestType = Protocol.ControlLayer.PublishRequest.TYPE
+        const requestHandlersByMessageType = {}
+        requestHandlersByMessageType[subscribeRequestType] = this.handleSubscribeRequest
+        requestHandlersByMessageType[unsubscribeRequestType] = this.handleUnsubscribeRequest
+        requestHandlersByMessageType[resendRequestType] = this.handleResendRequest
+        requestHandlersByMessageType[publishRequestType] = this.handlePublishRequest
 
         this.wss.on('connection', (socket) => {
             debug('connection established: %o', socket)
@@ -42,8 +45,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
             socket.on('message', (data) => {
                 try {
-                    const request = Protocol.WebsocketRequest.deserialize(data)
-                    const handler = requestHandlersByMessage[request.constructor.name]
+                    const request = Protocol.ControlLayer.ControlMessageFactory.deserialize(data)
+                    const handler = requestHandlersByMessageType[request.type]
                     if (!handler) {
                         throw new Error(`Unknown request type: ${request.type}`)
                     } else {
@@ -51,7 +54,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                         handler.call(this, connection, request)
                     }
                 } catch (err) {
-                    connection.send(new Protocol.ErrorResponse(err.message || err))
+                    connection.sendError(err.message || err)
                 }
             })
 
@@ -65,12 +68,6 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handlePublishRequest(connection, request) {
-        // Check that the payload is a string
-        if (typeof request.content !== 'string') {
-            connection.send(new Protocol.ErrorResponse('Message must be stringified JSON!'))
-            return
-        }
-
         this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken, 'write')
             .then((stream) => this.publisher.publish(
                 stream,
@@ -95,7 +92,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     errorMsg = `Publish request failed: ${err}`
                 }
 
-                connection.send(new Protocol.ErrorResponse(errorMsg))
+                connection.sendError(errorMsg)
             })
     }
 
@@ -105,26 +102,26 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         const msgHandler = (streamMessage) => {
             if (nothingToResend) {
                 nothingToResend = false
-                connection.send(new Protocol.ResendResponseResending(
+                connection.send(new Protocol.ControlLayer.ResendResponseResendingV1(
                     request.streamId,
                     request.streamPartition,
                     request.subId,
                 ))
             }
 
-            this.volumeLogger.logOutput(streamMessage.content.length)
-            connection.send(new Protocol.UnicastMessage(streamMessage, request.subId))
+            this.volumeLogger.logOutput(streamMessage.getContent().length)
+            connection.send(new Protocol.ControlLayer.UnicastMessageV1(request.subId, streamMessage))
         }
 
         const doneHandler = () => {
             if (nothingToResend) {
-                connection.send(new Protocol.ResendResponseNoResend(
+                connection.send(new Protocol.ControlLayer.ResendResponseNoResendV1(
                     request.streamId,
                     request.streamPartition,
                     request.subId,
                 ))
             } else {
-                connection.send(new Protocol.ResendResponseResent(
+                connection.send(new Protocol.ControlLayer.ResendResponseResentV1(
                     request.streamId,
                     request.streamPartition,
                     request.subId,
@@ -178,14 +175,14 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 )
             } else {
                 debug('handleResendRequest: unknown resend request: %o', JSON.stringify(request))
-                connection.send(new Protocol.ErrorResponse(`Unknown resend options: ${JSON.stringify(request.resendOptions)}`))
+                connection.sendError(`Unknown resend options: ${JSON.stringify(request.resendOptions)}`)
             }
         }).catch((err) => {
-            connection.send(new Protocol.ErrorResponse(`Failed to request resend from stream ${
+            connection.sendError(`Failed to request resend from stream ${
                 request.streamId
             } and partition ${
                 request.streamPartition
-            }: ${err.message}`))
+            }: ${err.message}`)
         })
     }
 
@@ -246,7 +243,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             const connections = stream.getConnections()
 
             connections.forEach((connection) => {
-                connection.send(new Protocol.BroadcastMessage(streamMessage))
+                connection.send(new Protocol.ControlLayer.BroadcastMessageV1(streamMessage))
             })
 
             this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * connections.length)
@@ -286,7 +283,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     connection.addStream(stream)
 
                     debug('Socket %s is now subscribed to streams: %o', connection.id, connection.getStreams())
-                    connection.send(new Protocol.SubscribeResponse(request.streamId, request.streamPartition))
+                    connection.send(new Protocol.ControlLayer.SubscribeResponseV1(request.streamId, request.streamPartition))
                 }
 
                 // If the Stream is subscribed, we're good to go
@@ -297,7 +294,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 if (stream.state !== 'subscribed') {
                     stream.once('subscribed', (err) => {
                         if (err) {
-                            connection.send(new Protocol.ErrorResponse(err))
+                            connection.sendError(err)
                         } else {
                             onSubscribe()
                         }
@@ -305,11 +302,11 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 }
             })
             .catch(() => {
-                connection.send(new Protocol.ErrorResponse(`Not authorized to subscribe to stream ${
+                connection.sendError(`Not authorized to subscribe to stream ${
                     request.streamId
                 } and partition ${
                     request.streamPartition
-                }`))
+                }`)
             })
     }
 
@@ -345,10 +342,10 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             }
 
             if (ack) {
-                connection.send(new Protocol.UnsubscribeResponse(request.streamId, request.streamPartition))
+                connection.send(new Protocol.ControlLayer.UnsubscribeResponseV1(request.streamId, request.streamPartition))
             }
         } else {
-            connection.send(new Protocol.ErrorResponse(`Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`))
+            connection.sendError(`Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`)
         }
     }
 
@@ -359,7 +356,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         // Unsubscribe from all streams
         unsub.forEach((stream) => {
-            this.handleUnsubscribeRequest(connection, new Protocol.UnsubscribeRequest(stream.id, stream.partition), false)
+            this.handleUnsubscribeRequest(connection, new Protocol.ControlLayer.UnsubscribeRequestV1(stream.id, stream.partition), false)
         })
     }
 }

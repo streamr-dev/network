@@ -1,5 +1,8 @@
+const Protocol = require('streamr-client-protocol')
 const StreamrBinaryMessage = require('./StreamrBinaryMessage')
 const StreamrBinaryMessageV28 = require('./StreamrBinaryMessageV28')
+
+const VERSION = 29 // 0x1D
 
 const SIGNATURE_TYPE_NONE = 0
 const SIGNATURE_TYPE_ETH = 1
@@ -14,13 +17,28 @@ function bytesToHex(bytes) {
     return `0x${bytes.toString('hex')}`
 }
 
-class StreamrBinaryMessageV29 extends StreamrBinaryMessageV28 {
+class StreamrBinaryMessageV29 extends StreamrBinaryMessage {
     constructor(streamId, streamPartition, timestamp, ttl, contentType, content, signatureType, address, signature) {
-        super(streamId, streamPartition, timestamp, ttl, contentType, content)
-        this.version = StreamrBinaryMessage.VERSION_SIGNED
+        super(VERSION, streamId, streamPartition, timestamp, ttl, contentType, content)
         this.signatureType = signatureType
         this.address = address
         this.signature = signature
+    }
+
+    toStreamMessage(offset, previousOffset) {
+        return new Protocol.MessageLayer.StreamMessageV29(
+            this.streamId,
+            this.streamPartition,
+            this.timestamp,
+            this.ttl,
+            offset,
+            previousOffset,
+            this.contentType,
+            this.getContentAsString(),
+            this.signatureType,
+            this.address,
+            this.signature,
+        )
     }
 
     toBufferMaker(bufferMaker) {
@@ -69,6 +87,8 @@ class StreamrBinaryMessageV29 extends StreamrBinaryMessageV28 {
         )
     }
 }
+
+/* static */ StreamrBinaryMessageV29.VERSION = VERSION
 
 /* static */ StreamrBinaryMessageV29.SIGNATURE_TYPE_NONE = SIGNATURE_TYPE_NONE
 /* static */ StreamrBinaryMessageV29.SIGNATURE_TYPE_ETH = SIGNATURE_TYPE_ETH

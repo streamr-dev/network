@@ -1,4 +1,5 @@
 /* eslint-disable no-new */
+const Protocol = require('streamr-client-protocol')
 const assert = require('assert')
 const sinon = require('sinon')
 const BufferReader = require('buffer-reader')
@@ -78,6 +79,29 @@ describe('StreamrBinaryMessageV29', () => {
                 assert.equal(JSON.parse.callCount, 0)
                 assert.equal(JSON.parse.callCount, 0)
             })
+        })
+    })
+    describe('toStreamMessage', () => {
+        it('correctly converts to StreamMessageV28', () => {
+            const offset = 1
+            const previousOffset = 0
+            const streamMessage = new StreamrBinaryMessageV29(
+                streamId, streamPartition, timestamp, ttl,
+                StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify(msg), 'utf8'), signatureType, address, signature,
+            ).toStreamMessage(offset, previousOffset)
+            assert(streamMessage instanceof Protocol.MessageLayer.StreamMessageV29)
+            assert.strictEqual(streamMessage.version, 29)
+            assert.strictEqual(streamMessage.streamId, streamId)
+            assert.strictEqual(streamMessage.streamPartition, streamPartition)
+            assert.strictEqual(streamMessage.timestamp, timestamp)
+            assert.strictEqual(streamMessage.ttl, ttl)
+            assert.strictEqual(streamMessage.offset, offset)
+            assert.strictEqual(streamMessage.previousOffset, previousOffset)
+            assert.strictEqual(streamMessage.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+            assert.deepStrictEqual(streamMessage.getContent(true), msg)
+            assert.strictEqual(streamMessage.signatureType, signatureType)
+            assert.strictEqual(streamMessage.publisherAddress, address)
+            assert.strictEqual(streamMessage.signature, signature)
         })
     })
 })

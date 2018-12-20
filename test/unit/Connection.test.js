@@ -26,19 +26,19 @@ describe('Connection', () => {
     })
 
     it('parses undefined version properly', () => {
-        assert.equal(connection.protocolVersion, undefined)
-        assert.equal(connection.payloadVersion, undefined)
+        assert.equal(connection.controlLayerVersion, undefined)
+        assert.equal(connection.messageLayerVersion, undefined)
     })
 
     it('parses defined version properly', () => {
         const fakeSocket2 = {
             upgradeReq: {
-                url: 'url?protocolVersion=0&payloadVersion=29',
+                url: 'url?controlLayerVersion=0&messageLayerVersion=29',
             },
         }
         const conn2 = new Connection(fakeSocket2)
-        assert.strictEqual(conn2.protocolVersion, 0)
-        assert.strictEqual(conn2.payloadVersion, 29)
+        assert.strictEqual(conn2.controlLayerVersion, 0)
+        assert.strictEqual(conn2.messageLayerVersion, 29)
     })
 
     describe('stream management', () => {
@@ -100,18 +100,18 @@ describe('Connection', () => {
 
     describe('send()', () => {
         it('sends a serialized message to the socket', () => {
-            const msg = new Protocol.UnicastMessage(new Protocol.StreamMessage(
+            const msg = new Protocol.ControlLayer.UnicastMessageV1('subId', new Protocol.MessageLayer.StreamMessageV28(
                 'streamId',
                 0, // partition
                 Date.now(),
                 undefined, // ttl
                 1, // offset
                 0, // previousOffset
-                Protocol.StreamMessage.CONTENT_TYPES.JSON,
+                Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
                 {
                     foo: 'bar',
                 },
-            ), 'subId')
+            ))
             connection.send(msg)
             assert.deepEqual(fakeSocket.received, [msg.serialize()])
         })
