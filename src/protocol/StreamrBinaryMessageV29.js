@@ -55,12 +55,11 @@ class StreamrBinaryMessageV29 extends StreamrBinaryMessage {
     }
 
     toObject(contentAsBuffer) {
-        const v28 = super.toObject(contentAsBuffer)
-        v28.version = StreamrBinaryMessage.VERSION_SIGNED
-        v28.signatureType = this.signatureType
-        v28.address = this.address
-        v28.signature = this.signature
-        return v28
+        const obj = super.toObject(contentAsBuffer)
+        obj.signatureType = this.signatureType
+        obj.address = this.address
+        obj.signature = this.signature
+        return obj
     }
 
     static fromBytes(reader) {

@@ -4,6 +4,7 @@ const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage
 const StreamrBinaryMessageFactory = require('../../../src/protocol/StreamrBinaryMessageFactory')
 const StreamrBinaryMessageV28 = require('../../../src/protocol/StreamrBinaryMessageV29')
 const StreamrBinaryMessageV29 = require('../../../src/protocol/StreamrBinaryMessageV29')
+const StreamrBinaryMessageV30 = require('../../../src/protocol/StreamrBinaryMessageV30')
 
 describe('StreamrBinaryMessageFactory', () => {
     const streamId = 'streamId'
@@ -12,6 +13,9 @@ describe('StreamrBinaryMessageFactory', () => {
         foo: 'bar',
     }
     const timestamp = Date.now()
+    const sequenceNumber = 0
+    const prevTimestamp = timestamp - 5
+    const prevSequenceNumber = 0
     const ttl = 100
 
     const address = '0xf915ed664e43c50eb7b9ca7cfeb992703ede55c4'
@@ -32,6 +36,13 @@ describe('StreamrBinaryMessageFactory', () => {
                 StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify(msg), 'utf8'), signatureType, address, signature,
             ).toBytes()
             assert(StreamrBinaryMessageFactory.fromBytes(bytes) instanceof StreamrBinaryMessageV29)
+        })
+        it('should call StreamrBinaryMessageV30.fromBytes', () => {
+            const bytes = new StreamrBinaryMessageV30(
+                streamId, streamPartition, timestamp, sequenceNumber, address, prevTimestamp, prevSequenceNumber, ttl,
+                StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify(msg), 'utf8'), signatureType, signature,
+            ).toBytes()
+            assert(StreamrBinaryMessageFactory.fromBytes(bytes) instanceof StreamrBinaryMessageV30)
         })
     })
 })
