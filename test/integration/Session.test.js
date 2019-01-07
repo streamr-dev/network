@@ -1,3 +1,4 @@
+import Web3 from 'web3'
 import StreamrClient from '../../src'
 import config from './config'
 
@@ -35,7 +36,7 @@ describe('Session', () => {
             expect.assertions(1)
             await expect(createClient({
                 auth: {
-                    privateKey: '348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
+                    privateKey: new Web3().eth.accounts.create().privateKey,
                 },
             }).session.getSessionToken()).resolves.toBeTruthy()
         })

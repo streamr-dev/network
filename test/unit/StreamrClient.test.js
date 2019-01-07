@@ -127,6 +127,7 @@ describe('StreamrClient', () => {
         client = new StreamrClient({
             autoConnect: false,
             autoDisconnect: false,
+            verifySignatures: 'never',
         }, connection)
     })
 
@@ -321,22 +322,36 @@ describe('StreamrClient', () => {
         describe('BroadcastMessage', () => {
             beforeEach(() => client.connect())
 
-            it('should call the message handler of each subscription', () => {
+            it('should call the message handler of each subscription', (done) => {
                 connection.expect(new SubscribeRequest('stream1'))
 
                 const counter = sinon.stub()
+                counter.onFirstCall().returns(1)
+                counter.onSecondCall().returns(2)
 
                 client.subscribe({
                     stream: 'stream1',
-                }, counter)
+                }, () => {
+                    const c = counter()
+                    if (c === 2) {
+                        done()
+                    } else {
+                        assert.strictEqual(c, 1)
+                    }
+                })
                 client.subscribe({
                     stream: 'stream1',
-                }, counter)
+                }, () => {
+                    const c = counter()
+                    if (c === 2) {
+                        done()
+                    } else {
+                        assert.strictEqual(c, 1)
+                    }
+                })
 
                 connection.emitMessage(new SubscribeResponse('stream1'))
                 connection.emitMessage(msg())
-
-                assert.equal(counter.callCount, 2)
             })
 
             it('should not crash if messages are received for unknown streams', () => {
@@ -799,6 +814,7 @@ describe('StreamrClient', () => {
         const pubMsg = {
             foo: 'bar',
         }
+        const ts = Date.now()
 
         describe('when connected', () => {
             beforeEach(() => client.connect())
@@ -807,8 +823,8 @@ describe('StreamrClient', () => {
                 client.options.autoConnect = true
                 connection.expect(new PublishRequest('stream1', undefined, undefined, {
                     foo: 'bar',
-                }))
-                const promise = client.publish('stream1', pubMsg)
+                }, ts))
+                const promise = client.publish('stream1', pubMsg, ts)
                 assert(promise instanceof Promise)
                 return promise
             })
@@ -820,9 +836,9 @@ describe('StreamrClient', () => {
 
                 // Produce 10 messages
                 for (let i = 0; i < 10; i++) {
-                    connection.expect(new PublishRequest('stream1', undefined, undefined, pubMsg))
+                    connection.expect(new PublishRequest('stream1', undefined, undefined, pubMsg, ts))
                     // Messages will be queued until connected
-                    client.publish('stream1', pubMsg)
+                    client.publish('stream1', pubMsg, ts)
                 }
 
                 connection.on('connected', done)
@@ -851,6 +867,14 @@ describe('StreamrClient', () => {
                 apiKey: 'apiKey',
             })
             assert(c.options.auth.apiKey)
+        })
+        it('sets private key with 0x prefix', () => {
+            const c = new StreamrClient({
+                auth: {
+                    privateKey: '12345564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
+                },
+            })
+            assert(c.options.auth.privateKey.startsWith('0x'))
         })
         it('sets unauthenticated', () => {
             const c = new StreamrClient()

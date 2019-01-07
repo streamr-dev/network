@@ -1,4 +1,5 @@
 import assert from 'assert'
+import Web3 from 'web3'
 
 import StreamrClient from '../../src'
 import config from './config'
@@ -23,7 +24,7 @@ describe('StreamEndpoints', () => {
     beforeAll(() => {
         client = createClient({
             auth: {
-                apiKey: 'tester1-api-key',
+                privateKey: new Web3().eth.accounts.create().privateKey,
             },
         })
     })
@@ -31,12 +32,13 @@ describe('StreamEndpoints', () => {
     describe('Stream creation', () => {
         it('createStream', () => client.createStream({
             name,
-        })
-            .then((stream) => {
-                createdStream = stream
-                assert(stream.id)
-                assert.equal(stream.name, name)
-            }))
+            requireSignedData: true,
+        }).then((stream) => {
+            createdStream = stream
+            assert(createdStream.id)
+            assert.equal(createdStream.name, name)
+            assert.strictEqual(createdStream.requireSignedData, true)
+        }).catch((err) => { throw err }))
 
         it('getOrCreate an existing Stream', () => client.getOrCreateStream({
             name,
@@ -56,6 +58,11 @@ describe('StreamEndpoints', () => {
                     assert.notEqual(newStream.id, createdStream.id)
                 })
         })
+    })
+
+    it('client.getStreamPublishers should retrieve itself', async () => {
+        const publishers = await client.getStreamPublishers(createdStream.id)
+        assert.deepStrictEqual(publishers, [client.signer.address.toLowerCase()])
     })
 
     describe('Stream.update', () => {
@@ -90,10 +97,10 @@ describe('StreamEndpoints', () => {
                             )
                             done()
                         })
-                    }, 5000)
-                })
+                    }, 10000)
+                }).catch((err) => { throw err })
             })
-        }, 10000)
+        }, 15000)
     })
 
     describe('Stream permissions', () => {

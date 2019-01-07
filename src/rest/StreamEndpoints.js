@@ -90,6 +90,12 @@ export async function getOrCreateStream(props) {
     }
 }
 
+export async function getStreamPublishers(streamId) {
+    const url = `${this.options.restUrl}/streams/${streamId}/publishers`
+    const json = await authFetch(url, this.session)
+    return json.addresses.map((a) => a.toLowerCase())
+}
+
 export function publishHttp(streamObjectOrId, data, requestOptions = {}, keepAlive = true) {
     let streamId
     if (streamObjectOrId instanceof Stream) {

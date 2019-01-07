@@ -52,12 +52,12 @@ describe('Session', () => {
             }))
         it('login function should throw if only session token provided', (done) => clientSessionToken.session.loginFunction()
             .catch((err) => {
-                assert.equal(err.toString(), 'Error: Need either "privateKey", "apiKey" or "username"+"password" to login.')
+                assert.equal(err.toString(), 'Error: Need either "privateKey", "provider", "apiKey" or "username"+"password" to login.')
                 done()
             }))
         it('login function should throw if no authentication', (done) => clientNone.session.loginFunction()
             .catch((err) => {
-                assert.equal(err.toString(), 'Error: Need either "privateKey", "apiKey" or "username"+"password" to login.')
+                assert.equal(err.toString(), 'Error: Need either "privateKey", "provider", "apiKey" or "username"+"password" to login.')
                 done()
             }))
     })

@@ -82,6 +82,7 @@ Option | Default value | Description
 url | wss://www.streamr.com/api/v1/ws | Address of the Streamr websocket endpoint to connect to.
 restUrl | https://www.streamr.com/api/v1/ws | Base URL of the Streamr REST API.
 auth | {} | Object that can contain different information to authenticate. More details below.
+publishWithSignature | 'auto' | Determines if data points published to streams are signed or not. Possible values are: 'auto', 'always' and 'never'. Signing requires `auth.privateKey` or `auth.provider`.  'auto' will sign only if one of them is set. 'always' will throw an exception if none of them is set.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
 

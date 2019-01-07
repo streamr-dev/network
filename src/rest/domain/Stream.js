@@ -52,7 +52,7 @@ export default class Stream {
         )
     }
 
-    publish(data) {
-        return this._client.publish(this.id, data)
+    publish(data, timestamp = Date.now()) {
+        return this._client.publish(this.id, data, timestamp)
     }
 }
