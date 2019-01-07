@@ -8,10 +8,10 @@ export default class Session {
         this.options = options || {}
         this.state = Session.State.LOGGED_OUT
 
-        if (this.options.privateKey) {
+        if (typeof this.options.privateKey !== 'undefined') {
             const account = web3.eth.accounts.privateKeyToAccount(this.options.privateKey)
             this.loginFunction = async () => this._client.loginWithChallengeResponse((d) => account.sign(d).signature, account.address)
-        } else if (this.options.provider) {
+        } else if (typeof this.options.provider !== 'undefined') {
             const w3 = new Web3(this.options.provider)
             this.loginFunction = async () => {
                 const accounts = await w3.eth.getAccounts()
@@ -21,9 +21,9 @@ export default class Session {
                 }
                 return this._client.loginWithChallengeResponse((d) => w3.eth.personal.sign(d, address), address)
             }
-        } else if (this.options.apiKey) {
+        } else if (typeof this.options.apiKey !== 'undefined') {
             this.loginFunction = async () => this._client.loginWithApiKey(this.options.apiKey)
-        } else if (this.options.username && this.options.password) {
+        } else if (typeof this.options.username !== 'undefined' && typeof this.options.password !== 'undefined') {
             this.loginFunction = async () => this._client.loginWithUsernamePassword(this.options.username, this.options.password)
         } else {
             if (!this.options.sessionToken) {

@@ -1,14 +1,7 @@
-import assert from 'assert'
-
 import StreamrClient from '../../src'
 import config from './config'
 
 describe('Session', () => {
-    let clientApiKey
-    let clientWrongApiKey
-    let clientPrivateKey
-    let clientUsernamePassword
-
     const createClient = (opts = {}) => new StreamrClient({
         url: config.websocketUrl,
         restUrl: config.restUrl,
@@ -17,46 +10,63 @@ describe('Session', () => {
         ...opts,
     })
 
-    beforeAll(() => {
-        clientApiKey = createClient({
-            auth: {
-                apiKey: 'tester1-api-key',
-            },
-        })
-        clientWrongApiKey = createClient({
-            auth: {
-                apiKey: 'wrong-api-key',
-            },
-        })
-        clientPrivateKey = createClient({
-            auth: {
-                privateKey: '348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
-            },
-        })
-        clientUsernamePassword = createClient({
-            auth: {
-                username: 'tester2@streamr.com',
-                password: 'tester2',
-            },
-        })
-    })
-
     describe('Token retrievals', () => {
-        it('should get token from API key', () => clientApiKey.session.getSessionToken()
-            .then((sessionToken) => {
-                assert(sessionToken)
-            }))
-        it('should fail to get token from wrong API key', () => clientWrongApiKey.session.getSessionToken()
-            .catch((err) => {
-                assert(err)
-            }))
-        it('should get token from private key', () => clientPrivateKey.session.getSessionToken()
-            .then((sessionToken) => {
-                assert(sessionToken)
-            }))
-        it('should get token from username/password', () => clientUsernamePassword.session.getSessionToken()
-            .then((sessionToken) => {
-                assert(sessionToken)
-            }))
+        it('gets the token using api key', async () => {
+            expect.assertions(1)
+            await expect(createClient({
+                auth: {
+                    apiKey: 'tester1-api-key',
+                },
+            }).session.getSessionToken()).resolves.toBeTruthy()
+        })
+
+        it('fails when the used api key is ivalid', async () => {
+            expect.assertions(1)
+            await expect(createClient({
+                auth: {
+                    apiKey: 'wrong-api-key',
+                },
+            }).session.getSessionToken()).rejects.toMatchObject({
+                message: expect.stringMatching(/invalid api key/i),
+            })
+        })
+
+        it('gets the token using private key', async () => {
+            expect.assertions(1)
+            await expect(createClient({
+                auth: {
+                    privateKey: '348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
+                },
+            }).session.getSessionToken()).resolves.toBeTruthy()
+        })
+
+        it('gets the token using username and password', async () => {
+            expect.assertions(1)
+            await expect(createClient({
+                auth: {
+                    username: 'tester2@streamr.com',
+                    password: 'tester2',
+                },
+            }).session.getSessionToken()).resolves.toBeTruthy()
+        })
+
+        it('fails when the used username and password is invalid', async () => {
+            expect.assertions(1)
+            await expect(createClient({
+                auth: {
+                    username: 'tester2@streamr.com',
+                    password: 'WRONG',
+                },
+            }).session.getSessionToken()).rejects.toMatchObject({
+                message: expect.stringMatching(/invalid username or password/i),
+            })
+        })
+
+        it('gets no token (undefined) when the auth object is empty', async () => {
+            expect.assertions(1)
+            await expect(createClient({
+                auth: {},
+            }).session.getSessionToken()).resolves.toBeUndefined()
+        })
     })
 })
