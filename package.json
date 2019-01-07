@@ -16,8 +16,8 @@
     "dev": "webpack --progress --colors --watch",
     "eslint": "eslint src/** test/**",
     "test": "jest --detectOpenHandles",
-    "test-unit": "jest --detectOpenHandles test/unit",
-    "test-integration": "jest --detectOpenHandles --maxWorkers=2 test/integration"
+    "test-unit": "jest --detectOpenHandles --forceExit test/unit",
+    "test-integration": "jest --detectOpenHandles --forceExit --maxWorkers=1 test/integration"
   },
   "browser": {
     "http": "./src/shim/http-https.js",
