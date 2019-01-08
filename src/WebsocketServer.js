@@ -71,17 +71,36 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
     handlePublishRequest(connection, request) {
         this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken, 'write')
-            .then((stream) => this.publisher.publish(
-                stream,
-                request.timestamp,
-                undefined, // ttl, read from stream when available
-                StreamrBinaryMessage.CONTENT_TYPE_JSON,
-                request.content,
-                request.partitionKey,
-                request.signatureType,
-                request.publisherAddress,
-                request.signature,
-            ))
+            .then((stream) => {
+                if (request.version === 0) {
+                    const streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
+                    this.publisher.publish(
+                        stream,
+                        request.timestamp,
+                        undefined, // ttl, read from stream when available
+                        StreamrBinaryMessage.CONTENT_TYPE_JSON,
+                        request.content,
+                        streamPartition,
+                        request.signatureType,
+                        request.publisherAddress,
+                        request.signature,
+                    )
+                } else if (request.version === 1) {
+                    this.publisher.publish(
+                        stream,
+                        request.streamMessage.getTimestamp(),
+                        request.streamMessage.ttl,
+                        StreamrBinaryMessage.CONTENT_TYPE_JSON,
+                        request.streamMessage.getContent(),
+                        request.streamMessage.getStreamPartition(),
+                        request.streamMessage.signatureType,
+                        request.streamMessage.getPublisherId(),
+                        request.streamMessage.signature,
+                    )
+                } else {
+                    throw new Error(`Unrecognized version: ${request.version}`)
+                }
+            })
             .catch((err) => {
                 let errorMsg
                 if (err instanceof HttpError && err.code === 401) {

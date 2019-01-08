@@ -17,16 +17,17 @@ module.exports = class Publisher {
         })
     }
 
-    async publish(stream, timestamp = Date.now(), ttl = 0, contentType, content, partitionKey, signatureType, address, signature) {
+    getStreamPartition(stream, partitionKey) {
+        return this.partitioner.partition(stream.partitions, partitionKey)
+    }
+
+    async publish(stream, timestamp = Date.now(), ttl = 0, contentType, content, streamPartition, signatureType, address, signature) {
         if (stream.requireSignedData && !signature) {
             throw new MessageNotSignedError('This stream requires published data to be signed.')
         }
         if (!content) {
             throw new InvalidMessageContentError(`Empty message content rejected for stream ${stream.id}`)
         }
-
-        // req.stream is written by authentication middleware
-        const streamPartition = this.partitioner.partition(stream.partitions, partitionKey)
 
         if (!this.kafkaReady) {
             throw new NotReadyError('Server not ready. Please try again shortly.')

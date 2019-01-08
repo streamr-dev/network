@@ -28,7 +28,7 @@ describe('WebsocketServer', () => {
     const streamMessage = new Protocol.MessageLayer.StreamMessageV29(
         'streamId',
         0, // partition
-        new Date(1491037200000),
+        1491037200000,
         0, // ttl
         2, // offset
         1,
@@ -611,16 +611,39 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket)
         })
 
+        it('calls the publisher for valid requests (V1)', (done) => {
+            const req = new Protocol.ControlLayer.PublishRequestV1(streamMessage, 'correct')
+
+            publisher.publish = (stream, timestamp, ttl, contentType, content, streamPartition, signatureType, publisherAddress, signature) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(timestamp, req.streamMessage.getTimestamp())
+                assert.equal(ttl, req.streamMessage.ttl)
+                assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+                assert.equal(content, req.streamMessage.getContent())
+                assert.equal(streamPartition, req.streamMessage.getStreamPartition())
+                assert.equal(publisherAddress, req.streamMessage.getPublisherId())
+                assert.equal(signatureType, req.streamMessage.signatureType)
+                assert.equal(signature, req.streamMessage.signature)
+                done()
+            }
+
+            mockSocket.receive(req)
+        })
+
         it('calls the publisher for valid requests', (done) => {
             const req = new Protocol.ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}')
-
-            publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey) => {
+            publisher.getStreamPartition = (stream, partitionKey) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(partitionKey, undefined)
+                return 0
+            }
+            publisher.publish = (stream, timestamp, ttl, contentType, content, streamPartition) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(timestamp, undefined)
                 assert.equal(ttl, undefined)
                 assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.content)
-                assert.equal(partitionKey, undefined)
+                assert.equal(streamPartition, 0)
                 done()
             }
 
@@ -629,14 +652,18 @@ describe('WebsocketServer', () => {
 
         it('reads optional fields if specified', (done) => {
             const req = new Protocol.ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}', Date.now(), 'foo')
-
-            publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey) => {
+            publisher.getStreamPartition = (stream, partitionKey) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(partitionKey, 'foo')
+                return 0
+            }
+            publisher.publish = (stream, timestamp, ttl, contentType, content, streamPartition) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(timestamp, req.timestamp)
                 assert.equal(ttl, undefined)
                 assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.content)
-                assert.equal(partitionKey, req.partitionKey)
+                assert.equal(streamPartition, 0)
                 done()
             }
 
@@ -648,14 +675,18 @@ describe('WebsocketServer', () => {
                 myStream.streamId, 'correct', undefined, '{}',
                 undefined, undefined, 'address', 1, 'signature',
             )
-
-            publisher.publish = (stream, timestamp, ttl, contentType, content, partitionKey, signatureType, publisherAddress, signature) => {
+            publisher.getStreamPartition = (stream, partitionKey) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(partitionKey, undefined)
+                return 0
+            }
+            publisher.publish = (stream, timestamp, ttl, contentType, content, streamPartition, signatureType, publisherAddress, signature) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(timestamp, req.timestamp)
                 assert.equal(ttl, undefined)
                 assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.content)
-                assert.equal(partitionKey, undefined)
+                assert.equal(streamPartition, 0)
                 assert.equal(publisherAddress, req.publisherAddress)
                 assert.equal(signatureType, req.signatureType)
                 assert.equal(signature, req.signature)
@@ -669,6 +700,7 @@ describe('WebsocketServer', () => {
 
             beforeEach(() => {
                 // None of these tests may publish
+                publisher.getStreamPartition = sinon.stub().returns(0)
                 publisher.publish = sinon.stub().throws()
 
                 // Expect error messages
