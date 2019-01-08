@@ -2,13 +2,13 @@ const events = require('events')
 const Protocol = require('streamr-client-protocol')
 
 module.exports = class MockSocket extends events.EventEmitter {
-    constructor(version = 28) {
+    constructor(controlLayerVersion = 1, messageLayerVersion = 29) {
         super()
         this.rooms = []
         this.sentMessages = []
         this.throwOnError = true
         this.upgradeReq = {
-            url: `some-url?payloadVersion=${version}`,
+            url: `some-url?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`,
         }
     }
 

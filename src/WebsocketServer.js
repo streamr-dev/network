@@ -30,11 +30,13 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         const subscribeRequestType = Protocol.ControlLayer.SubscribeRequest.TYPE
         const unsubscribeRequestType = Protocol.ControlLayer.UnsubscribeRequest.TYPE
         const resendRequestType = Protocol.ControlLayer.ResendRequestV0.TYPE
+        const resendLastRequestType = Protocol.ControlLayer.ResendLastRequestV1.TYPE
         const publishRequestType = Protocol.ControlLayer.PublishRequest.TYPE
         const requestHandlersByMessageType = {}
         requestHandlersByMessageType[subscribeRequestType] = this.handleSubscribeRequest
         requestHandlersByMessageType[unsubscribeRequestType] = this.handleUnsubscribeRequest
         requestHandlersByMessageType[resendRequestType] = this.handleResendRequest
+        requestHandlersByMessageType[resendLastRequestType] = this.handleResendLastRequest
         requestHandlersByMessageType[publishRequestType] = this.handlePublishRequest
 
         this.wss.on('connection', (socket) => {

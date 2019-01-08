@@ -12,8 +12,8 @@ module.exports = class Connection extends events.EventEmitter {
         const parts = socket.upgradeReq.url.split('?')
         if (parts.length === 2) {
             const queryObj = qs.parse(parts[1])
-            this.controlLayerVersion = queryObj.controlLayerVersion ? parseInt(queryObj.controlLayerVersion) : undefined
-            this.messageLayerVersion = queryObj.messageLayerVersion ? parseInt(queryObj.messageLayerVersion) : undefined
+            this.controlLayerVersion = queryObj.controlLayerVersion ? parseInt(queryObj.controlLayerVersion) : 0
+            this.messageLayerVersion = queryObj.messageLayerVersion ? parseInt(queryObj.messageLayerVersion) : 29
         }
     }
 
