@@ -55,9 +55,14 @@ describe('Publisher', () => {
         it('should call networkNode.send with correct values', (done) => {
             const timestamp = 135135135
 
-            networkNode.publish = (streamId, streamPartition, protocolMessage) => {
+            networkNode.publish = (streamId, streamPartition, ts, sequenceNo, publisherId, prevTs, previousSequenceNo, protocolMessage) => {
                 assert.equal(streamId, 'streamId')
                 assert.equal(streamPartition, 9)
+                assert.equal(ts, 135135135)
+                assert.equal(sequenceNo, 0)
+                assert.equal(publisherId, 'publisherId')
+                assert.equal(prevTs, -1)
+                assert.equal(previousSequenceNo, 0)
                 assert.deepEqual(protocolMessage, [28, 'streamId', 9, 135135135, 0, null, null, 27, '{}'])
                 done()
             }
@@ -65,7 +70,8 @@ describe('Publisher', () => {
         })
 
         it('should use default values for timestamp if not given', (done) => {
-            networkNode.publish = (streamId, streamPartition, protocolMessage) => {
+            networkNode.publish = (streamId, streamPartition, ts, sequenceNo, publisherId, prevTs, previousSequenceNo, protocolMessage) => {
+                assert(ts > 0) // timestamp
                 assert(protocolMessage[3] > 0) // timestamp
                 done()
             }

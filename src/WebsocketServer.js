@@ -186,12 +186,12 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         })
     }
 
-    broadcastMessage(streamId, streamPartition, message, number, previousNumber) {
+    broadcastMessage(streamId, streamPartition, timestamp, sequenceNo, publisherId, prevTimestamp, prevSequenceNo, message) {
         const stream = this.streams.getStreamObject(streamId, streamPartition)
 
         // TODO: do in a better way
-        message[5] = number
-        message[6] = previousNumber
+        message[5] = timestamp
+        message[6] = prevTimestamp
 
         if (stream) {
             stream.forEachConnection((connection) => {
@@ -226,16 +226,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     if (!stream.isSubscribed() && !stream.isSubscribing()) {
                         stream.setSubscribing()
                         this.networkNode.subscribe(streamId, streamPartition)
-                            .then(() => {
-                                stream.setSubscribed()
-                                stream.emit('subscribed')
-                            })
-                            .catch((err) => {
-                                stream.emit('subscribed', err)
-                                // Delete the stream ref on subscribe error
-                                this.streams.deleteStreamObject(stream.id)
-                                console.error(`Error subscribing to ${stream.id}: ${err}`)
-                            })
+                        stream.setSubscribed()
+                        stream.emit('subscribed')
                     }
 
                     const onSubscribe = () => {

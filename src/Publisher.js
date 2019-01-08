@@ -8,6 +8,7 @@ module.exports = class Publisher {
         this.networkNode = networkNode
         this.partitioner = partitioner
         this.volumeLogger = volumeLogger
+        this.previousTimestamps = {}
     }
 
     async publish(stream, timestamp, content, partitionKey) {
@@ -15,16 +16,23 @@ module.exports = class Publisher {
             throw new InvalidMessageContentError(`Empty message content rejected for stream ${stream.id}`)
         }
 
+        const streamId = stream.id
         const streamPartition = this.partitioner.partition(stream.partitions, partitionKey)
+        const ts = timestamp || Date.now()
+        const sequenceNo = 0
+        const publisherId = 'publisherId'
+        const previousTimestamp = this.previousTimestamps[streamId] || -1
+        const previousSequenceNo = 0
+        this.previousTimestamps[streamId] = ts
 
         const ttl = undefined
         const offset = null
         const previousOffset = null
 
         const streamrBinaryMessage = new StreamrBinaryMessageWithKafkaMetadata(new StreamrBinaryMessage(
-            stream.id,
+            streamId,
             streamPartition,
-            timestamp || Date.now(),
+            ts,
             ttl || 0,
             StreamrBinaryMessage.CONTENT_TYPE_JSON,
             content,
@@ -32,6 +40,15 @@ module.exports = class Publisher {
 
         this.volumeLogger.logInput(streamrBinaryMessage.getStreamrBinaryMessage().getContentBuffer().length)
 
-        return this.networkNode.publish(stream.id, streamPartition, streamrBinaryMessage.toArray())
+        return this.networkNode.publish(
+            streamId,
+            streamPartition,
+            ts,
+            sequenceNo,
+            publisherId,
+            previousTimestamp,
+            previousSequenceNo,
+            streamrBinaryMessage.toArray(),
+        )
     }
 }

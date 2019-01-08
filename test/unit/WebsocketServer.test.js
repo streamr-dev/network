@@ -359,7 +359,8 @@ describe('WebsocketServer', () => {
             })
 
             setTimeout(() => {
-                realtimeAdapter.emit('message', 'streamId', 0, kafkaMessage().toArray(), 2, 1)
+                const m = kafkaMessage()
+                realtimeAdapter.emit('message', 'streamId', 0, m.offset, 0, 'publisher', m.previousOffset, 0, m.toArray())
             })
 
             setTimeout(() => {

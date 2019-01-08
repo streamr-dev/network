@@ -22,7 +22,7 @@
     "node": ">= 8.0.0"
   },
   "dependencies": {
-    "@streamr/streamr-p2p-network": "git+ssh://git@github.com/streamr-dev/network.git#message-numbering",
+    "@streamr/streamr-p2p-network": "^3.0.4",
     "body-parser": "^1.15.2",
     "buffermaker": "1.2.0",
     "cors": "^2.7.1",
