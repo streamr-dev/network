@@ -36,7 +36,7 @@ describe('WebsocketServer', () => {
         {
             hello: 'world',
         },
-        1,
+        Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
         'signature',
     )
 
@@ -250,6 +250,22 @@ describe('WebsocketServer', () => {
                     done()
                 })
             })
+            it('requests messages from given timestamp range from historicalAdapter (V1)', (done) => {
+                const request = new Protocol.ControlLayer.ResendRangeRequestV1(
+                    'streamId', 0, 'sub', [Date.now().toString(), 0],
+                    [Date.now().toString(), 0], 'publisherId', 'correct',
+                )
+
+                mockSocket.receive(request)
+
+                setTimeout(() => {
+                    sinon.assert.calledWith(
+                        historicalAdapter.getTimestampRange, request.streamId, request.streamPartition,
+                        request.fromMsgRef.timestamp, request.toMsgRef.timestamp,
+                    )
+                    done()
+                })
+            })
         })
 
         describe('socket sends resend request with resend_from_time', () => {
@@ -268,6 +284,22 @@ describe('WebsocketServer', () => {
                     done()
                 })
             })
+            it('requests messages from given timestamp from historicalAdapter (V1)', (done) => {
+                const request = new Protocol.ControlLayer.ResendFromRequestV1(
+                    'streamId', 0, 'sub',
+                    [Date.now().toString(), 0], 'publisherId', 'correct',
+                )
+
+                mockSocket.receive(request)
+
+                setTimeout(() => {
+                    sinon.assert.calledWith(
+                        historicalAdapter.getFromTimestamp, request.streamId, request.streamPartition,
+                        request.fromMsgRef.timestamp,
+                    )
+                    done()
+                })
+            })
         })
 
         describe('socket sends resend request with resend_last', () => {
@@ -280,6 +312,16 @@ describe('WebsocketServer', () => {
 
                 setTimeout(() => {
                     sinon.assert.calledWith(historicalAdapter.getLast, request.streamId, request.streamPartition, request.resendOptions.resend_last)
+                    done()
+                })
+            })
+            it('requests last N messages from historicalAdapter (V1)', (done) => {
+                const request = new Protocol.ControlLayer.ResendLastRequestV1('streamId', 0, 'sub', 10, 'correct')
+
+                mockSocket.receive(request)
+
+                setTimeout(() => {
+                    sinon.assert.calledWith(historicalAdapter.getLast, request.streamId, request.streamPartition, request.numberLast)
                     done()
                 })
             })
@@ -348,7 +390,7 @@ describe('WebsocketServer', () => {
                 type: 'subscribe',
             })
 
-            const expectedResponse = new Protocol.ControlLayer.ErrorResponseV1('Stream partition not given!')
+            const expectedResponse = new Protocol.ControlLayer.ErrorResponseV1('Not authorized to subscribe to stream undefined and partition 0')
 
             setTimeout(() => {
                 assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize(controlLayerVersion, messageLayerVersion))
@@ -673,7 +715,7 @@ describe('WebsocketServer', () => {
         it('reads signature fields if specified', (done) => {
             const req = new Protocol.ControlLayer.PublishRequestV0(
                 myStream.streamId, 'correct', undefined, '{}',
-                undefined, undefined, 'address', 1, 'signature',
+                undefined, undefined, 'address', Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
             publisher.getStreamPartition = (stream, partitionKey) => {
                 assert.deepEqual(stream, myStream)

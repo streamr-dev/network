@@ -29,14 +29,18 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         const subscribeRequestType = Protocol.ControlLayer.SubscribeRequest.TYPE
         const unsubscribeRequestType = Protocol.ControlLayer.UnsubscribeRequest.TYPE
-        const resendRequestType = Protocol.ControlLayer.ResendRequestV0.TYPE
+        const resendRequestV0Type = Protocol.ControlLayer.ResendRequestV0.TYPE
         const resendLastRequestType = Protocol.ControlLayer.ResendLastRequestV1.TYPE
+        const resendFromRequestType = Protocol.ControlLayer.ResendFromRequestV1.TYPE
+        const resendRangeRequestType = Protocol.ControlLayer.ResendRangeRequestV1.TYPE
         const publishRequestType = Protocol.ControlLayer.PublishRequest.TYPE
         const requestHandlersByMessageType = {}
         requestHandlersByMessageType[subscribeRequestType] = this.handleSubscribeRequest
         requestHandlersByMessageType[unsubscribeRequestType] = this.handleUnsubscribeRequest
-        requestHandlersByMessageType[resendRequestType] = this.handleResendRequest
+        requestHandlersByMessageType[resendRequestV0Type] = this.handleResendRequestV0
         requestHandlersByMessageType[resendLastRequestType] = this.handleResendLastRequest
+        requestHandlersByMessageType[resendFromRequestType] = this.handleResendFromRequest
+        requestHandlersByMessageType[resendRangeRequestType] = this.handleResendRangeRequest
         requestHandlersByMessageType[publishRequestType] = this.handlePublishRequest
 
         this.wss.on('connection', (socket) => {
@@ -50,7 +54,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     const request = Protocol.ControlLayer.ControlMessageFactory.deserialize(data)
                     const handler = requestHandlersByMessageType[request.type]
                     if (!handler) {
-                        throw new Error(`Unknown request type: ${request.type}`)
+                        connection.sendError(`Unknown request type: ${request.type}`)
                     } else {
                         debugProtocol('%s: %s: %o', request.type, connection.id, request)
                         handler.call(this, connection, request)
@@ -70,7 +74,17 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handlePublishRequest(connection, request) {
-        this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken, 'write')
+        let streamId
+        if (request.version === 0) {
+            /* eslint-disable prefer-destructuring */
+            streamId = request.streamId
+            /* eslint-enable prefer-destructuring */
+        } else if (request.version === 1) {
+            streamId = request.streamMessage.getStreamId()
+        } else {
+            throw new Error(`Unrecognized version: ${request.version}`)
+        }
+        this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'write')
             .then((stream) => {
                 if (request.version === 0) {
                     const streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
@@ -117,7 +131,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             })
     }
 
-    handleResendRequest(connection, request) {
+    handleResendRequest(connection, request, resendTypeHandler) {
         let nothingToResend = true
 
         const msgHandler = (streamMessage) => {
@@ -155,7 +169,53 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             this.latestOffsetFetcher.fetchOffset(request.streamId, request.streamPartition),
         ]).then((results) => {
             const latestKnownOffset = results[1]
+            resendTypeHandler(msgHandler, doneHandler, latestKnownOffset)
+        }).catch((err) => {
+            connection.sendError(`Failed to request resend from stream ${
+                request.streamId
+            } and partition ${
+                request.streamPartition
+            }: ${err.message}`)
+        })
+    }
 
+    handleResendLastRequest(connection, request) {
+        const handler = (msgHandler, doneHandler, latestKnownOffset) => this.historicalAdapter.getLast(
+            request.streamId,
+            request.streamPartition,
+            request.numberLast,
+            msgHandler,
+            doneHandler,
+            latestKnownOffset,
+        )
+        this.handleResendRequest(connection, request, handler)
+    }
+
+    handleResendFromRequest(connection, request) {
+        const handler = (msgHandler, doneHandler) => this.historicalAdapter.getFromTimestamp(
+            request.streamId,
+            request.streamPartition,
+            request.fromMsgRef.timestamp,
+            msgHandler,
+            doneHandler,
+        )
+        this.handleResendRequest(connection, request, handler)
+    }
+
+    handleResendRangeRequest(connection, request) {
+        const handler = (msgHandler, doneHandler) => this.historicalAdapter.getTimestampRange(
+            request.streamId,
+            request.streamPartition,
+            request.fromMsgRef.timestamp,
+            request.toMsgRef.timestamp,
+            msgHandler,
+            doneHandler,
+        )
+        this.handleResendRequest(connection, request, handler)
+    }
+
+    handleResendRequestV0(connection, request) {
+        const handler = (msgHandler, doneHandler, latestKnownOffset) => {
             if (request.resendOptions.resend_all === true) {
                 // Resend all
                 this.historicalAdapter.getAll(request.streamId, request.streamPartition, msgHandler, doneHandler, latestKnownOffset)
@@ -198,13 +258,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 debug('handleResendRequest: unknown resend request: %o', JSON.stringify(request))
                 connection.sendError(`Unknown resend options: ${JSON.stringify(request.resendOptions)}`)
             }
-        }).catch((err) => {
-            connection.sendError(`Failed to request resend from stream ${
-                request.streamId
-            } and partition ${
-                request.streamPartition
-            }: ${err.message}`)
-        })
+        }
+        this.handleResendRequest(connection, request, handler)
     }
 
     /**
