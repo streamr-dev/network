@@ -52,7 +52,7 @@ class StreamrBinaryMessageWithKafkaMetadata {
     }
 
     toStreamMessage() {
-        return this.getStreamrBinaryMessage().toStreamMessage()
+        return this.getStreamrBinaryMessage().toStreamMessage(this.offset, this.previousOffset)
     }
 
     static fromBytes(buf) {

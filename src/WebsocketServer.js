@@ -90,26 +90,33 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     const streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
                     this.publisher.publish(
                         stream,
+                        streamPartition,
                         request.timestamp,
+                        0, // sequenceNumber
+                        request.publisherAddress,
+                        null, // prevTimestamp
+                        0, // prevSequenceNumber
                         undefined, // ttl, read from stream when available
                         StreamrBinaryMessage.CONTENT_TYPE_JSON,
                         request.content,
-                        streamPartition,
                         request.signatureType,
-                        request.publisherAddress,
                         request.signature,
                     )
                 } else if (request.version === 1) {
+                    const streamMessageV30 = request.streamMessage.version === 30 ? request.streamMessage : request.streamMessage.toOtherVersion(30)
                     this.publisher.publish(
                         stream,
-                        request.streamMessage.getTimestamp(),
-                        request.streamMessage.ttl,
+                        streamMessageV30.getStreamPartition(),
+                        streamMessageV30.getTimestamp(),
+                        streamMessageV30.messageId.sequenceNumber,
+                        streamMessageV30.getPublisherId(),
+                        streamMessageV30.prevMsgRef.timestamp,
+                        streamMessageV30.prevMsgRef.sequenceNumber,
+                        streamMessageV30.ttl,
                         StreamrBinaryMessage.CONTENT_TYPE_JSON,
-                        request.streamMessage.getContent(),
-                        request.streamMessage.getStreamPartition(),
-                        request.streamMessage.signatureType,
-                        request.streamMessage.getPublisherId(),
-                        request.streamMessage.signature,
+                        streamMessageV30.getContent(),
+                        streamMessageV30.signatureType,
+                        streamMessageV30.signature,
                     )
                 } else {
                     throw new Error(`Unrecognized version: ${request.version}`)
@@ -192,6 +199,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handleResendFromRequest(connection, request) {
+        // TODO: once new Cassandra schema set, rename getFromTimestamp --> getFromMsgRef
+        // + use request.fromMsgRef.sequenceNumber and request.publisherId in the query
         const handler = (msgHandler, doneHandler) => this.historicalAdapter.getFromTimestamp(
             request.streamId,
             request.streamPartition,
@@ -203,6 +212,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handleResendRangeRequest(connection, request) {
+        // TODO: once new Cassandra schema set, rename getTimestampRange --> getMsgRefRange
+        // + use request.fromMsgRef.sequenceNumber, request.toMsgRef.sequenceNumber and request.publisherId in the query
         const handler = (msgHandler, doneHandler) => this.historicalAdapter.getTimestampRange(
             request.streamId,
             request.streamPartition,
@@ -314,7 +325,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     broadcastMessage(streamMessage) {
-        const stream = this.getStreamObject(streamMessage.streamId, streamMessage.streamPartition)
+        const stream = this.getStreamObject(streamMessage.getStreamId(), streamMessage.getStreamPartition())
         if (stream) {
             const connections = stream.getConnections()
 

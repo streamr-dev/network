@@ -53,6 +53,7 @@ describe('DataProduceEndpoints', () => {
 
         publisherMock = {
             publish: sinon.stub().resolves(),
+            getStreamPartition: sinon.stub.returns(0),
         }
 
         app.use(router(streamFetcher, publisherMock))
@@ -68,11 +69,17 @@ describe('DataProduceEndpoints', () => {
             })
         publisherMock.publish.calledWith(
             stream,
+            0, // streamPartition
             undefined, // timestamp
+            0, // sequenceNumber
+            null, // publisherId
+            undefined, // prevTimestamp
+            0, // prevSequenceNumber
             undefined, // ttl
             StreamrBinaryMessage.CONTENT_TYPE_JSON,
             new BufferMaker().string('{}').make(),
-            undefined,
+            undefined, // signatureType
+            undefined, // signature
         )
     })
 

@@ -19,19 +19,31 @@ describe('WebsocketServer', () => {
     let mockSocket
 
     const controlLayerVersion = 1
-    const messageLayerVersion = 29
+    const messageLayerVersion = 30
 
     const myStream = {
         streamId: 'streamId',
     }
 
-    const streamMessage = new Protocol.MessageLayer.StreamMessageV29(
+    const streamMessagev29 = new Protocol.MessageLayer.StreamMessageV29(
         'streamId',
         0, // partition
         1491037200000,
         0, // ttl
         2, // offset
         1,
+        Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+        {
+            hello: 'world',
+        },
+        Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
+        'signature',
+    )
+
+    const streamMessagev30 = new Protocol.MessageLayer.StreamMessageV30(
+        ['streamId', 0, 1491037200100, 0, 'publisherId'],
+        [1491037200000, 0],
+        0, // ttl
         Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
         {
             hello: 'world',
@@ -120,7 +132,7 @@ describe('WebsocketServer', () => {
 
         it('sends a resending message before starting a resend', (done) => {
             historicalAdapter.getAll = sinon.stub()
-            historicalAdapter.getAll.callsArgWithAsync(2, streamMessage)
+            historicalAdapter.getAll.callsArgWithAsync(2, streamMessagev30)
 
             const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                 resend_all: true,
@@ -140,14 +152,14 @@ describe('WebsocketServer', () => {
 
         it('adds the subscription id to messages', (done) => {
             historicalAdapter.getAll = sinon.stub()
-            historicalAdapter.getAll.callsArgWithAsync(2, streamMessage)
+            historicalAdapter.getAll.callsArgWithAsync(2, streamMessagev30)
 
             const request = new Protocol.ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
                 resend_all: true,
             }, 'correct')
             const expectedResponse = new Protocol.ControlLayer.UnicastMessageV1(
                 request.subId,
-                streamMessage,
+                streamMessagev30,
             )
 
             mockSocket.receive(request)
@@ -160,7 +172,7 @@ describe('WebsocketServer', () => {
 
         it('emits a resent event when resend is complete', (done) => {
             historicalAdapter.getAll = (streamId, streamPartition, messageHandler, onDone) => {
-                messageHandler(streamMessage)
+                messageHandler(streamMessagev30)
                 onDone()
             }
 
@@ -365,10 +377,10 @@ describe('WebsocketServer', () => {
             mockSocket.receive(new Protocol.ControlLayer.SubscribeRequestV1('streamId', 0, 'correct'))
 
             setTimeout(() => {
-                realtimeAdapter.emit('message', streamMessage)
+                realtimeAdapter.emit('message', streamMessagev30)
             })
 
-            const expectedResponse = new Protocol.ControlLayer.BroadcastMessageV1(streamMessage)
+            const expectedResponse = new Protocol.ControlLayer.BroadcastMessageV1(streamMessagev30)
 
             setTimeout(() => {
                 assert.deepEqual(mockSocket.sentMessages[1], expectedResponse.serialize(controlLayerVersion, messageLayerVersion))
@@ -653,17 +665,20 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket)
         })
 
-        it('calls the publisher for valid requests (V1)', (done) => {
-            const req = new Protocol.ControlLayer.PublishRequestV1(streamMessage, 'correct')
+        it('calls the publisher for valid requests (V1&V29)', (done) => {
+            const req = new Protocol.ControlLayer.PublishRequestV1(streamMessagev29, 'correct')
 
-            publisher.publish = (stream, timestamp, ttl, contentType, content, streamPartition, signatureType, publisherAddress, signature) => {
+            publisher.publish = (
+                stream, streamPartition, timestamp, sequenceNumber, publisherId, prevTimestamp, prevSequenceNumber,
+                ttl, contentType, content, signatureType, signature,
+            ) => {
                 assert.deepEqual(stream, myStream)
+                assert.equal(streamPartition, req.streamMessage.getStreamPartition())
                 assert.equal(timestamp, req.streamMessage.getTimestamp())
+                assert.equal(publisherId, req.streamMessage.getPublisherId())
                 assert.equal(ttl, req.streamMessage.ttl)
                 assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.streamMessage.getContent())
-                assert.equal(streamPartition, req.streamMessage.getStreamPartition())
-                assert.equal(publisherAddress, req.streamMessage.getPublisherId())
                 assert.equal(signatureType, req.streamMessage.signatureType)
                 assert.equal(signature, req.streamMessage.signature)
                 done()
@@ -672,47 +687,78 @@ describe('WebsocketServer', () => {
             mockSocket.receive(req)
         })
 
-        it('calls the publisher for valid requests', (done) => {
+        it('calls the publisher for valid requests (V1&V30)', (done) => {
+            const req = new Protocol.ControlLayer.PublishRequestV1(streamMessagev30, 'correct')
+
+            publisher.publish = (
+                stream, streamPartition, timestamp, sequenceNumber, publisherId, prevTimestamp, prevSequenceNumber,
+                ttl, contentType, content, signatureType, signature,
+            ) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(streamPartition, req.streamMessage.getStreamPartition())
+                assert.equal(timestamp, req.streamMessage.getTimestamp())
+                assert.equal(sequenceNumber, req.streamMessage.messageId.sequenceNumber)
+                assert.equal(publisherId, req.streamMessage.getPublisherId())
+                assert.equal(prevTimestamp, req.streamMessage.prevMsgRef.timestamp)
+                assert.equal(prevSequenceNumber, req.streamMessage.prevMsgRef.sequenceNumber)
+                assert.equal(ttl, req.streamMessage.ttl)
+                assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
+                assert.equal(content, req.streamMessage.getContent())
+                assert.equal(signatureType, req.streamMessage.signatureType)
+                assert.equal(signature, req.streamMessage.signature)
+                done()
+            }
+
+            mockSocket.receive(req)
+        })
+
+        it('calls the publisher for valid requests (V0)', (done) => {
             const req = new Protocol.ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}')
             publisher.getStreamPartition = (stream, partitionKey) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(partitionKey, undefined)
                 return 0
             }
-            publisher.publish = (stream, timestamp, ttl, contentType, content, streamPartition) => {
+            publisher.publish = (
+                stream, streamPartition, timestamp, sequenceNumber, publisherId, prevTimestamp, prevSequenceNumber,
+                ttl, contentType, content,
+            ) => {
                 assert.deepEqual(stream, myStream)
+                assert.equal(streamPartition, 0)
                 assert.equal(timestamp, undefined)
                 assert.equal(ttl, undefined)
                 assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.content)
-                assert.equal(streamPartition, 0)
                 done()
             }
 
             mockSocket.receive(req)
         })
 
-        it('reads optional fields if specified', (done) => {
+        it('reads optional fields if specified (V0)', (done) => {
             const req = new Protocol.ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}', Date.now(), 'foo')
             publisher.getStreamPartition = (stream, partitionKey) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(partitionKey, 'foo')
                 return 0
             }
-            publisher.publish = (stream, timestamp, ttl, contentType, content, streamPartition) => {
+            publisher.publish = (
+                stream, streamPartition, timestamp, sequenceNumber, publisherId, prevTimestamp, prevSequenceNumber,
+                ttl, contentType, content,
+            ) => {
                 assert.deepEqual(stream, myStream)
+                assert.equal(streamPartition, 0)
                 assert.equal(timestamp, req.timestamp)
                 assert.equal(ttl, undefined)
                 assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.content)
-                assert.equal(streamPartition, 0)
                 done()
             }
 
             mockSocket.receive(req)
         })
 
-        it('reads signature fields if specified', (done) => {
+        it('reads signature fields if specified (V0)', (done) => {
             const req = new Protocol.ControlLayer.PublishRequestV0(
                 myStream.streamId, 'correct', undefined, '{}',
                 undefined, undefined, 'address', Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
@@ -722,14 +768,17 @@ describe('WebsocketServer', () => {
                 assert.equal(partitionKey, undefined)
                 return 0
             }
-            publisher.publish = (stream, timestamp, ttl, contentType, content, streamPartition, signatureType, publisherAddress, signature) => {
+            publisher.publish = (
+                stream, streamPartition, timestamp, sequenceNumber, publisherId, prevTimestamp, prevSequenceNumber,
+                ttl, contentType, content, signatureType, signature,
+            ) => {
                 assert.deepEqual(stream, myStream)
+                assert.equal(streamPartition, 0)
                 assert.equal(timestamp, req.timestamp)
+                assert.equal(publisherId, req.publisherAddress)
                 assert.equal(ttl, undefined)
                 assert.equal(contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
                 assert.equal(content, req.content)
-                assert.equal(streamPartition, 0)
-                assert.equal(publisherAddress, req.publisherAddress)
                 assert.equal(signatureType, req.signatureType)
                 assert.equal(signature, req.signature)
                 done()

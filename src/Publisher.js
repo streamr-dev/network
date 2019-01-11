@@ -1,5 +1,6 @@
 const debug = require('debug')('Publisher')
 const StreamrBinaryMessageV29 = require('./protocol/StreamrBinaryMessageV29')
+const StreamrBinaryMessageV30 = require('./protocol/StreamrBinaryMessageV30')
 const MessageNotSignedError = require('./errors/MessageNotSignedError')
 const InvalidMessageContentError = require('./errors/InvalidMessageContentError')
 const NotReadyError = require('./errors/NotReadyError')
@@ -21,7 +22,10 @@ module.exports = class Publisher {
         return this.partitioner.partition(stream.partitions, partitionKey)
     }
 
-    async publish(stream, timestamp = Date.now(), ttl = 0, contentType, content, streamPartition, signatureType, address, signature) {
+    async publish(
+        stream, streamPartition, timestamp = Date.now(), sequenceNumber, publisherId, prevTimestamp,
+        prevSequenceNumber, ttl = 0, contentType, content, signatureType, signature,
+    ) {
         if (stream.requireSignedData && !signature) {
             throw new MessageNotSignedError('This stream requires published data to be signed.')
         }
@@ -33,15 +37,18 @@ module.exports = class Publisher {
             throw new NotReadyError('Server not ready. Please try again shortly.')
         }
 
-        const streamrBinaryMessage = new StreamrBinaryMessageV29(
+        const streamrBinaryMessage = new StreamrBinaryMessageV30(
             stream.id,
             streamPartition,
             timestamp || Date.now(),
+            sequenceNumber,
+            publisherId,
+            prevTimestamp,
+            prevSequenceNumber,
             ttl || 0,
             contentType,
             content,
             signatureType || StreamrBinaryMessageV29.SIGNATURE_TYPE_NONE,
-            address,
             signature,
         )
 

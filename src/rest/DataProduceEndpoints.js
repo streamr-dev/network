@@ -60,13 +60,16 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
             // req.stream is written by authentication middleware
             publisher.publish(
                 req.stream,
+                publisher.getStreamPartition(req.stream, req.query.pkey),
                 timestamp,
+                0, // sequenceNumber
+                req.query.address, // publisherId
+                null, // prevTimestamp
+                0, // prevSequenceNumber
                 undefined, // ttl, read from stream when available
                 StreamrBinaryMessage.CONTENT_TYPE_JSON,
                 req.body,
-                req.query.pkey,
                 req.query.signatureType,
-                req.query.address,
                 req.query.signature,
             ).then(() => {
                 res.status(200).send(/* empty success response */)

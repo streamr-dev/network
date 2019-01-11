@@ -19,15 +19,13 @@ describe('DataQueryEndpoints', () => {
     }
 
     function streamMessage(content) {
-        return new Protocol.StreamMessage(
-            'streamId',
-            0, // partition
-            new Date(2017, 3, 1, 12, 0, 0).getTime(),
+        return new Protocol.MessageLayer.StreamMessageV30(
+            ['streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId'],
+            [null, 0],
             0, // ttl
-            2, // offset
-            1, // previousOffset
-            Protocol.StreamMessage.CONTENT_TYPES.JSON,
+            Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
             content,
+            Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
         )
     }
 
@@ -103,7 +101,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with arrays as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
-                    .expect(messages.map((msg) => msg.toObject()), done)
+                    .expect(messages.map((msg) => msg.toArray()), done)
             })
 
             it('reports to volumeLogger', (done) => {
@@ -116,17 +114,17 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with objects as body given ?wrapper=object', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=obJECt')
-                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ false, /* compact */ false)), done)
+                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ false)), done)
             })
 
             it('responds with arrays as body and parsed content given ?content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?content=json')
-                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ true, /* compact */ true)), done)
+                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ true)), done)
             })
 
             it('responds with objects as body and parsed content given ?wrapper=object&content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=object&content=json')
-                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ true, /* compact */ false)), done)
+                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ true)), done)
             })
 
             it('invokes historicalAdapter#getLast once with correct arguments', (done) => {
@@ -290,22 +288,22 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with arrays as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
-                    .expect(messages.map((msg) => msg.toObject()), done)
+                    .expect(messages.map((msg) => msg.toArray()), done)
             })
 
             it('responds with objects as body given ?wrapper=object', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&wrapper=object')
-                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ false, /* compact */ false)), done)
+                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ false)), done)
             })
 
             it('responds with arrays as body and parsed content given ?content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&content=json')
-                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ true, /* compact */ true)), done)
+                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ true)), done)
             })
 
             it('responds with objects as body given and parsed content given ?wrapper=object&content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&wrapper=object&content=json')
-                    .expect(messages.map((msg) => msg.toObject(undefined, /* parseContent */ true, /* compact */ false)), done)
+                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ true)), done)
             })
 
             it('invokes historicalAdapter#getFromOffset once with correct arguments', (done) => {
@@ -357,7 +355,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
-                    .expect(messages.map((msg) => msg.toObject()), done)
+                    .expect(messages.map((msg) => msg.toArray()), done)
             })
 
             it('invokes historicalAdapter#getOffsetRange once with correct arguments', (done) => {
@@ -412,7 +410,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
-                    .expect(messages.map((msg) => msg.toObject()), done)
+                    .expect(messages.map((msg) => msg.toArray()), done)
             })
 
             it('invokes historicalAdapter#getFromTimestamp once with correct arguments', (done) => {
@@ -468,7 +466,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
-                    .expect(messages.map((msg) => msg.toObject()), done)
+                    .expect(messages.map((msg) => msg.toArray()), done)
             })
 
             it('invokes historicalAdapter#getTimestampRange once with correct arguments', (done) => {

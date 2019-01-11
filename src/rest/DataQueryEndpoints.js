@@ -16,8 +16,10 @@ function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {
             let volumeBytes = 0
             res.send(dataPoints.map((streamMessage) => {
                 volumeBytes += streamMessage.getSerializedContent().length
+                if (streamMessage.version === 30) {
+                    return streamMessage.toArray(content === 'json')
+                }
                 return streamMessage.toObject(
-                    undefined, // default version
                     content === 'json', // parseContent
                     wrapper !== 'object', // compact
                 )

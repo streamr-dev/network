@@ -131,7 +131,7 @@ class StreamrBinaryMessageV30 extends StreamrBinaryMessage {
             timestamp,
             sequenceNumber,
             publisherId,
-            prevTimestamp,
+            prevTimestamp === 0 ? null : prevTimestamp,
             prevSequenceNumber,
             ttl,
             contentType,
