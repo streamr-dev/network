@@ -5,7 +5,9 @@ const port = process.argv[2] || 30301
 const nodeAddress = process.argv[3] || ''
 const streamId = process.argv[4] || ''
 
-startClient('127.0.0.1', port, 'publisher1', nodeAddress)
+const id = `publisher-${port}`
+
+startClient('127.0.0.1', port, id, nodeAddress)
     .then((client) => {
         client.protocols.nodeToNode.endpoint.connect(nodeAddress)
 
@@ -16,7 +18,7 @@ startClient('127.0.0.1', port, 'publisher1', nodeAddress)
             const time = Date.now()
 
             client.publish(
-                new MessageID(new StreamID(streamId, 0), time, 0, 'publisher'),
+                new MessageID(new StreamID(streamId, 0), time, 0, id),
                 new MessageReference(lastTime, 0),
                 msg
             )
