@@ -1,24 +1,25 @@
-// To enable debug logging:
-// DEBUG=StreamrClient node examples/node.js
-
 const StreamrClient = require('streamr-client')
 
-const STREAM_ID = 'MY-STREAM-ID'
-const API_KEY = 'MY-API-KEY'
-
-// Create the client and give the API key to use by default
+// Create the client and supply either an API key or an Ethereum private key to authenticate
 const client = new StreamrClient({
-    restUrl: 'http://localhost:8890/api/v1',
-    apiKey: API_KEY
+    auth: {
+        apiKey: 'YOUR-API-KEY',
+        // Or to cryptographically authenticate with Ethereum and enable data signing:
+        // privateKey: 'ETHEREUM-PRIVATE-KEY',
+    },
 })
 
-// Here is the event we'll be sending
-const msg = {
-    hello: 'world',
-    random: Math.random()
-}
+// Create a stream for this example if it doesn't exist
+client.getOrCreateStream({
+    name: 'node-example-data',
+}).then((stream) => setInterval(() => {
+    // Generate a message payload with a random number
+    const msg = {
+        random: Math.random(),
+    }
 
-// Publish the event to the Stream
-client.publish(STREAM_ID, msg)
-    .then(() => console.log('Sent successfully: ', msg))
-    .catch((err) => console.error(err))
+    // Publish the message to the Stream
+    stream.publish(msg)
+        .then(() => console.log('Sent successfully: ', msg))
+        .catch((err) => console.error(err))
+}, 1000))

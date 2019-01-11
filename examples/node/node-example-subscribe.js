@@ -1,41 +1,27 @@
-// To enable debug logging:
-// DEBUG=StreamrClient node examples/node.js
-
 const StreamrClient = require('streamr-client')
 
-// Create the client with default options
-const client = new StreamrClient()
-
-// Subscribe to a stream
-const subscription = client.subscribe(
-    {
-        stream: '7wa7APtlTq6EC5iTCBy6dw',
-        // Resend the last 10 messages on connect
-        resend_last: 10
+// Create the client and supply either an API key or an Ethereum private key to authenticate
+const client = new StreamrClient({
+    auth: {
+        apiKey: 'YOUR-API-KEY',
+        // Or to cryptographically authenticate with Ethereum and enable data signing:
+        // privateKey: 'ETHEREUM-PRIVATE-KEY',
     },
-    function(message) {
-        // Handle the messages in this stream
-        console.log(JSON.stringify(message))
-    }
-)
-
-// Event binding examples
-client.on('connected', function() {
-    console.log('A connection has been established!')
 })
 
-subscription.on('subscribed', function() {
-    console.log('Subscribed to '+subscription.streamId)
-})
-
-subscription.on('resending', function() {
-    console.log('Resending from '+subscription.streamId)
-})
-
-subscription.on('resent', function() {
-    console.log('Resend complete for '+subscription.streamId)
-})
-
-subscription.on('no_resend', function() {
-    console.log('Nothing to resend for '+subscription.streamId)
+// Create a stream for this example if it doesn't exist
+client.getOrCreateStream({
+    name: 'node-example-data',
+}).then((stream) => {
+    client.subscribe(
+        {
+            stream: stream.id,
+            // Resend the last 10 messages on connect
+            resend_last: 10,
+        },
+        (message) => {
+            // Do something with the messages as they are received
+            console.log(JSON.stringify(message))
+        },
+    )
 })
