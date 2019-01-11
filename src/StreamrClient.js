@@ -445,7 +445,7 @@ export default class StreamrClient extends EventEmitter {
         const request = new PublishRequest(streamId, apiKey, sessionToken, data, timestamp)
         const requestToSendPromise = this.signer ? this.signer.getSignedPublishRequest(request) : Promise.resolve(request)
         return requestToSendPromise.then((requestToSend) => {
-            debug('_requestResend: %o', requestToSend)
+            debug('_requestPublish: %o', requestToSend)
             return this.connection.send(requestToSend)
         })
     }

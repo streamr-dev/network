@@ -1,6 +1,7 @@
 import { PublishRequest } from 'streamr-client-protocol'
 
 const Web3 = require('web3')
+const debug = require('debug')('StreamrClient::Signer')
 
 const web3 = new Web3()
 
@@ -70,8 +71,10 @@ export default class Signer {
 
     static verifyStreamMessage(msg, trustedPublishers = new Set()) {
         const payload = this.getPayloadToSign(msg.streamId, msg.timestamp, msg.publisherAddress, msg.getSerializedContent())
-        return this.verifySignature(payload, msg.signature, msg.publisherAddress, msg.signatureType)
+        const result = this.verifySignature(payload, msg.signature, msg.publisherAddress, msg.signatureType)
             && trustedPublishers.has(msg.publisherAddress.toLowerCase())
+        debug('verifyStreamMessage: pass: %o, message: %o', result, msg)
+        return result
     }
 
     static createSigner(options, publishWithSignature) {
