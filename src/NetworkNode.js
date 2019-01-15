@@ -23,7 +23,7 @@ module.exports = class NetworkNode extends Node {
     }
 
     addMessageListener(cb) {
-        this.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => {
+        this.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => {
             const messageId = dataMessage.getMessageId()
             const previousMessageReference = dataMessage.getPreviousMessageReference()
             const { streamId } = messageId

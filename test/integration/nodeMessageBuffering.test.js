@@ -36,7 +36,7 @@ describe('message buffering of Node', () => {
     })
 
     test('first message to unknown stream eventually gets delivered', (done) => {
-        destinationNode.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => {
+        destinationNode.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => {
             expect(dataMessage.getMessageId()).toEqual(new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id'))
             expect(dataMessage.getData()).toEqual({
                 hello: 'world'

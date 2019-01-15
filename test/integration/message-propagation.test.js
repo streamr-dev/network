@@ -48,19 +48,19 @@ describe('message propagation in network', () => {
         const n3Messages = []
         const n4Messages = []
 
-        n1.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n1Messages.push({
+        n1.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => n1Messages.push({
             streamId: dataMessage.getMessageId().streamId,
             payload: dataMessage.getData()
         }))
-        n2.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n2Messages.push({
+        n2.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => n2Messages.push({
             streamId: dataMessage.getMessageId().streamId,
             payload: dataMessage.getData()
         }))
-        n3.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n3Messages.push({
+        n3.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => n3Messages.push({
             streamId: dataMessage.getMessageId().streamId,
             payload: dataMessage.getData()
         }))
-        n4.on(Node.events.MESSAGE_RECEIVED, (dataMessage) => n4Messages.push({
+        n4.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => n4Messages.push({
             streamId: dataMessage.getMessageId().streamId,
             payload: dataMessage.getData()
         }))

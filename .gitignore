@@ -69,3 +69,5 @@ typings/
 .vscode
 
 .DS_Store
+
+bin/.idea

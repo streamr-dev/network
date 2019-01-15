@@ -7,6 +7,7 @@ const StreamManager = require('./StreamManager')
 
 const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:node:message-received',
+    MESSAGE_PROPAGATED: 'streamr:node:message-propagated',
     SUBSCRIPTION_RECEIVED: 'streamr:node:subscription-received',
     MESSAGE_DELIVERY_FAILED: 'streamr:node:message-delivery-failed'
 })
@@ -85,6 +86,8 @@ class Node extends EventEmitter {
         const previousMessageReference = dataMessage.getPreviousMessageReference()
         const { streamId } = messageId
 
+        this.emit(events.MESSAGE_RECEIVED, dataMessage)
+
         this.subscribeToStreamIfHaveNotYet(streamId)
 
         if (this._isReadyToPropagate(streamId)) {
@@ -117,7 +120,7 @@ class Node extends EventEmitter {
             this.protocols.nodeToNode.sendData(subscriber, messageId, previousMessageReference, data)
         })
         this.debug('propagated data %s to %j', messageId, subscribers)
-        this.emit(events.MESSAGE_RECEIVED, dataMessage)
+        this.emit(events.MESSAGE_PROPAGATED, dataMessage)
     }
 
     onSubscribeRequest(subscribeMessage) {
