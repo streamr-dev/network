@@ -172,7 +172,12 @@ class Node extends EventEmitter {
 
     _requestStreamInfo(streamId) {
         const randomTracker = this._getTracker()
-        this.protocols.trackerNode.requestStreamInfo(randomTracker, streamId)
+
+        if (randomTracker) {
+            this.protocols.trackerNode.requestStreamInfo(randomTracker, streamId)
+        } else {
+            console.error('Not connected to any tracker')
+        }
     }
 
     async _subscribeToStreamOnNode(node, streamId) {
@@ -203,7 +208,7 @@ class Node extends EventEmitter {
 
     async addBootstrapTracker(trackerAddress) {
         this.bootstrapTrackerAddresses.push(trackerAddress)
-        await this.protocols.trackerNode.connectToTracker(trackerAddress)
+        return this.protocols.trackerNode.connectToTracker(trackerAddress)
     }
 
     _connectToBootstrapTrackers() {

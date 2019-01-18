@@ -7,6 +7,7 @@ module.exports = class Client extends EventEmitter {
 
         this.id = id
         this.nodeId = null
+        this.nodeAddress = null
         this.protocols = {
             nodeToNode
         }
@@ -16,6 +17,7 @@ module.exports = class Client extends EventEmitter {
     }
 
     connectToNode(nodeAddress) {
+        this.nodeAddress = nodeAddress
         return this.protocols.nodeToNode.connectToNode(nodeAddress)
             .then((nodeId) => {
                 this.nodeId = nodeId
@@ -25,7 +27,12 @@ module.exports = class Client extends EventEmitter {
     publish(messageId, previousMessageReference, data) {
         if (this.nodeId) {
             this.debug('publishing data %s', messageId)
-            this.protocols.nodeToNode.sendData(this.nodeId, messageId, previousMessageReference, data)
+            this.protocols.nodeToNode.sendData(this.nodeId, messageId, previousMessageReference, data).catch((err) => {
+                console.error(`Failed to send data to node ${this.nodeId} because of ${err}, trying to reconnect`)
+                this.connectToNode(this.nodeAddress).catch((errr) => {
+                    console.error(`Still problems "${errr}" with connection to ${this.nodeId}`)
+                })
+            })
         } else {
             throw new Error('Failed to publish because node not set.')
         }

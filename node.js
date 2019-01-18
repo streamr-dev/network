@@ -10,10 +10,12 @@ startNode(ip, port, 'node' + port)
         if (tracker) {
             node.addBootstrapTracker(tracker)
         } else {
-            BOOTNODES.forEach((trackerAddress) => node.addBootstrapTracker(trackerAddress))
+            BOOTNODES.forEach((trackerAddress) => node.addBootstrapTracker(trackerAddress)
+                .catch((err) => console.error(`Could not connect to tracker ${trackerAddress} because '${err}'`)))
         }
     })
     .catch((err) => {
         console.error(err)
         process.exit(1)
     })
+
