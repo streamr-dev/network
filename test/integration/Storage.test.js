@@ -1,4 +1,5 @@
 const cassandra = require('cassandra-driver')
+const toArray = require('stream-to-array')
 const { startCassandraStorage } = require('../../src/Storage')
 
 const contactPoints = ['127.0.0.1']
@@ -10,7 +11,6 @@ describe('Storage', () => {
     let cassandraClient
 
     beforeAll(async () => {
-        streamId = `stream-id-${Date.now()}`
         cassandraClient = new cassandra.Client({
             contactPoints,
             localDataCenter,
@@ -22,7 +22,11 @@ describe('Storage', () => {
         cassandraClient.shutdown()
     })
 
-    test('store DataMessage into Cassandra', async () => {
+    beforeEach(() => {
+        streamId = `stream-id-${Date.now()}`
+    })
+
+    test('store messages into Cassandra', async () => {
         const data = {
             hello: 'world',
             value: 6,
@@ -41,5 +45,49 @@ describe('Storage', () => {
             publisher_id: 'publisher',
             payload: Buffer.from(JSON.stringify(data)),
         })
+    })
+
+    test('fetch messages starting from a timestamp', async () => {
+        let storage = await startCassandraStorage(contactPoints, localDataCenter, keyspace)
+        await storage.store(streamId, 10, 0, 0, 'publisher', {})
+        await storage.store(streamId, 10, 1000, 0, 'publisher', {})
+        await storage.store(streamId, 10, 2000, 0, 'publisher', {})
+        await storage.store(streamId, 10, 2001, 0, 'publisher', {})
+        await storage.store(streamId, 10, 3000, 0, 'publisher', {})
+        await storage.store(streamId, 10, 4000, 0, 'publisher', {})
+        await storage.store(streamId, 666, 8000, 0, 'publisher', {})
+        await storage.store(`${streamId}-wrong`, 10, 8000, 0, 'publisher', {})
+        await storage.close()
+
+        storage = await startCassandraStorage(contactPoints, localDataCenter, keyspace)
+        const stream = storage.fetchFromTimestamp(streamId, 10, 2001)
+        const results = await toArray(stream)
+
+        expect(results).toEqual([
+            {
+                streamId,
+                streamPartition: 10,
+                ts: 2001,
+                sequenceNo: 0,
+                publisherId: 'publisher',
+                payload: '{}',
+            },
+            {
+                streamId,
+                streamPartition: 10,
+                ts: 3000,
+                sequenceNo: 0,
+                publisherId: 'publisher',
+                payload: '{}',
+            },
+            {
+                streamId,
+                streamPartition: 10,
+                ts: 4000,
+                sequenceNo: 0,
+                publisherId: 'publisher',
+                payload: '{}',
+            },
+        ])
     })
 })

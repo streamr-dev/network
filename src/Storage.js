@@ -1,3 +1,4 @@
+const { Transform } = require('stream')
 const cassandra = require('cassandra-driver')
 
 const callbackToPromise = (method, ...args) => {
@@ -8,10 +9,25 @@ const callbackToPromise = (method, ...args) => {
     })
 }
 
+const transformRowToMessage = new Transform({
+    objectMode: true,
+    transform: (row, _, done) => {
+        done(null, {
+            streamId: row.id,
+            streamPartition: row.partition,
+            ts: row.ts.getTime(),
+            sequenceNo: row.sequence_no,
+            publisherId: row.publisher_id,
+            payload: row.payload.toString(),
+        })
+    },
+})
+
 class Storage {
     constructor(cassandraClient) {
         this.execute = cassandraClient.execute.bind(cassandraClient)
         this.shutdown = cassandraClient.shutdown.bind(cassandraClient)
+        this.stream = cassandraClient.stream.bind(cassandraClient)
     }
 
     store(streamId, streamPartition, timestamp, sequenceNo, publisherId, payload) {
@@ -28,6 +44,20 @@ class Storage {
         ], {
             prepare: true,
         })
+    }
+
+    fetchFromTimestamp(streamId, streamPartition, from) {
+        if (!Number.isInteger(from)) {
+            throw new Error('from is not an integer')
+        }
+
+        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? ORDER BY ts ASC'
+        const queryParams = [streamId, streamPartition, from]
+
+        return this.stream(query, queryParams, {
+            prepare: true,
+            autoPage: true,
+        }).pipe(transformRowToMessage)
     }
 
     close() {
