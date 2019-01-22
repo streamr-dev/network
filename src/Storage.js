@@ -9,20 +9,6 @@ const callbackToPromise = (method, ...args) => {
     })
 }
 
-const transformRowToMessage = new Transform({
-    objectMode: true,
-    transform: (row, _, done) => {
-        done(null, {
-            streamId: row.id,
-            streamPartition: row.partition,
-            ts: row.ts.getTime(),
-            sequenceNo: row.sequence_no,
-            publisherId: row.publisher_id,
-            payload: row.payload.toString(),
-        })
-    },
-})
-
 class Storage {
     constructor(cassandraClient) {
         this.execute = cassandraClient.execute.bind(cassandraClient)
@@ -53,15 +39,43 @@ class Storage {
 
         const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? ORDER BY ts ASC'
         const queryParams = [streamId, streamPartition, from]
+        return this._queryWithStreamingResults(query, queryParams)
+    }
 
-        return this.stream(query, queryParams, {
-            prepare: true,
-            autoPage: true,
-        }).pipe(transformRowToMessage)
+    fetchBetweenTimestamps(streamId, streamPartition, from, to) {
+        if (!Number.isInteger(from)) {
+            throw new Error('from is not an integer')
+        }
+        if (!Number.isInteger(to)) {
+            throw new Error('to is not an integer')
+        }
+
+        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? AND ts <= ? ORDER BY ts ASC'
+        const queryParams = [streamId, streamPartition, from, to]
+        return this._queryWithStreamingResults(query, queryParams)
     }
 
     close() {
         return this.shutdown()
+    }
+
+    _queryWithStreamingResults(query, queryParams) {
+        return this.stream(query, queryParams, {
+            prepare: true,
+            autoPage: true,
+        }).pipe(new Transform({
+            objectMode: true,
+            transform: (row, _, done) => {
+                done(null, {
+                    streamId: row.id,
+                    streamPartition: row.partition,
+                    ts: row.ts.getTime(),
+                    sequenceNo: row.sequence_no,
+                    publisherId: row.publisher_id,
+                    payload: row.payload.toString(),
+                })
+            },
+        }))
     }
 }
 
