@@ -1,9 +1,8 @@
 const sinon = require('sinon')
 const express = require('express')
 const request = require('supertest')
-const BufferMaker = require('buffermaker')
+const Protocol = require('streamr-client-protocol')
 const router = require('../../../src/rest/DataProduceEndpoints')
-const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage')
 
 const FailedToPublishError = require('../../../src/errors/FailedToPublishError')
 const NotReadyError = require('../../../src/errors/NotReadyError')
@@ -67,42 +66,15 @@ describe('DataProduceEndpoints', () => {
                     throw err
                 }
             })
-        publisherMock.publish.calledWith(
-            stream,
-            0, // streamPartition
-            undefined, // timestamp
-            0, // sequenceNumber
-            null, // publisherId
-            undefined, // prevTimestamp
-            0, // prevSequenceNumber
-            undefined, // ttl
-            StreamrBinaryMessage.CONTENT_TYPE_JSON,
-            new BufferMaker().string('{}').make(),
-            undefined, // signatureType
-            undefined, // signature
+        const streamMessage = new Protocol.MessageLayer.StreamMessageV30(
+            [stream.streamId, 0, Date.now(), 0, ''],
+            [null, 0],
+            Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+            '{}',
+            Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
+            null,
         )
-    })
-
-    it('should read ttl from query params', () => {
-        postRequest({
-            query: {
-                ttl: '1000',
-            },
-        })
-            .expect(200)
-            .end((err) => {
-                if (err) {
-                    throw err
-                }
-            })
-        publisherMock.publish.calledWith(
-            stream,
-            undefined, // timestamp
-            1000, // ttl
-            StreamrBinaryMessage.CONTENT_TYPE_JSON,
-            new BufferMaker().string('{}').make(),
-            undefined,
-        )
+        publisherMock.publish.calledWith(stream, streamMessage)
     })
 
     it('should read timestamp from query params', () => {
@@ -119,14 +91,15 @@ describe('DataProduceEndpoints', () => {
                     throw err
                 }
             })
-        publisherMock.publish.calledWith(
-            stream,
-            ts.getTime(), // timestamp
-            undefined, // ttl
-            StreamrBinaryMessage.CONTENT_TYPE_JSON,
-            new BufferMaker().string('{}').make(),
-            undefined,
+        const streamMessage = new Protocol.MessageLayer.StreamMessageV30(
+            [stream.streamId, 0, ts, 0, ''],
+            [null, 0],
+            Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+            '{}',
+            Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
+            null,
         )
+        publisherMock.publish.calledWith(stream, streamMessage)
     })
 
     it('should read signature-related fields from query params', () => {
@@ -143,17 +116,15 @@ describe('DataProduceEndpoints', () => {
                     throw err
                 }
             })
-        publisherMock.publish.calledWith(
-            stream,
-            undefined, // timestamp
-            undefined, // ttl
-            StreamrBinaryMessage.CONTENT_TYPE_JSON,
-            new BufferMaker().string('{}').make(),
-            undefined,
-            1,
-            'publisher-address',
+        const streamMessage = new Protocol.MessageLayer.StreamMessageV30(
+            [stream.streamId, 0, Date.now(), 0, 'publisher-address'],
+            [null, 0],
+            Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+            '{}',
+            Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
             'signature',
         )
+        publisherMock.publish.calledWith(stream, streamMessage)
     })
 
     it('should return 200 for valid requests', (done) => {

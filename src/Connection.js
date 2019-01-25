@@ -44,6 +44,6 @@ module.exports = class Connection extends events.EventEmitter {
     }
 
     sendError(errorMessage) {
-        this.send(new Protocol.ControlLayer.ErrorResponseV1(errorMessage))
+        this.send(Protocol.ControlLayer.ErrorResponse.create(errorMessage))
     }
 }

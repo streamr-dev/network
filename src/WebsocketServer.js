@@ -3,9 +3,10 @@ const debug = require('debug')('WebsocketServer')
 const debugProtocol = require('debug')('WebsocketServer:protocol')
 const Protocol = require('streamr-client-protocol')
 
+const { ControlLayer } = Protocol
+
 const Stream = require('./Stream')
 const Connection = require('./Connection')
-const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
 const HttpError = require('./errors/HttpError')
 const VolumeLogger = require('./utils/VolumeLogger')
 
@@ -27,13 +28,13 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         // This handler is for realtime messages, not resends
         this.realtimeAdapter.on('message', (streamMessage) => this.broadcastMessage(streamMessage))
 
-        const subscribeRequestType = Protocol.ControlLayer.SubscribeRequest.TYPE
-        const unsubscribeRequestType = Protocol.ControlLayer.UnsubscribeRequest.TYPE
-        const resendRequestV0Type = Protocol.ControlLayer.ResendRequestV0.TYPE
-        const resendLastRequestType = Protocol.ControlLayer.ResendLastRequestV1.TYPE
-        const resendFromRequestType = Protocol.ControlLayer.ResendFromRequestV1.TYPE
-        const resendRangeRequestType = Protocol.ControlLayer.ResendRangeRequestV1.TYPE
-        const publishRequestType = Protocol.ControlLayer.PublishRequest.TYPE
+        const subscribeRequestType = ControlLayer.SubscribeRequest.TYPE
+        const unsubscribeRequestType = ControlLayer.UnsubscribeRequest.TYPE
+        const resendRequestV0Type = ControlLayer.ResendRequestV0.TYPE
+        const resendLastRequestType = ControlLayer.ResendLastRequestV1.TYPE
+        const resendFromRequestType = ControlLayer.ResendFromRequestV1.TYPE
+        const resendRangeRequestType = ControlLayer.ResendRangeRequestV1.TYPE
+        const publishRequestType = ControlLayer.PublishRequest.TYPE
         const requestHandlersByMessageType = {}
         requestHandlersByMessageType[subscribeRequestType] = this.handleSubscribeRequest
         requestHandlersByMessageType[unsubscribeRequestType] = this.handleUnsubscribeRequest
@@ -51,7 +52,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
             socket.on('message', (data) => {
                 try {
-                    const request = Protocol.ControlLayer.ControlMessageFactory.deserialize(data)
+                    const request = ControlLayer.ControlMessage.deserialize(data)
                     const handler = requestHandlersByMessageType[request.type]
                     if (!handler) {
                         connection.sendError(`Unknown request type: ${request.type}`)
@@ -86,41 +87,25 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         }
         this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'write')
             .then((stream) => {
+                let streamMessage
                 if (request.version === 0) {
                     const streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
-                    this.publisher.publish(
-                        stream,
-                        streamPartition,
-                        request.timestamp,
-                        0, // sequenceNumber
-                        request.publisherAddress,
-                        null, // prevTimestamp
-                        0, // prevSequenceNumber
-                        undefined, // ttl, read from stream when available
-                        StreamrBinaryMessage.CONTENT_TYPE_JSON,
+                    streamMessage = new Protocol.MessageLayer.StreamMessageV30(
+                        [stream.id, streamPartition, request.timestamp || Date.now(), 0, request.publisherAddress],
+                        [null, 0],
+                        Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
                         request.content,
                         request.signatureType,
                         request.signature,
                     )
                 } else if (request.version === 1) {
-                    const streamMessageV30 = request.streamMessage.version === 30 ? request.streamMessage : request.streamMessage.toOtherVersion(30)
-                    this.publisher.publish(
-                        stream,
-                        streamMessageV30.getStreamPartition(),
-                        streamMessageV30.getTimestamp(),
-                        streamMessageV30.messageId.sequenceNumber,
-                        streamMessageV30.getPublisherId(),
-                        streamMessageV30.prevMsgRef.timestamp,
-                        streamMessageV30.prevMsgRef.sequenceNumber,
-                        streamMessageV30.ttl,
-                        StreamrBinaryMessage.CONTENT_TYPE_JSON,
-                        streamMessageV30.getContent(),
-                        streamMessageV30.signatureType,
-                        streamMessageV30.signature,
-                    )
+                    /* eslint-disable prefer-destructuring */
+                    streamMessage = request.streamMessage
+                    /* eslint-enable prefer-destructuring */
                 } else {
                     throw new Error(`Unrecognized version: ${request.version}`)
                 }
+                this.publisher.publish(stream, streamMessage)
             })
             .catch((err) => {
                 let errorMsg
@@ -144,7 +129,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         const msgHandler = (streamMessage) => {
             if (nothingToResend) {
                 nothingToResend = false
-                connection.send(new Protocol.ControlLayer.ResendResponseResendingV1(
+                connection.send(ControlLayer.ResendResponseResending.create(
                     request.streamId,
                     request.streamPartition,
                     request.subId,
@@ -152,18 +137,18 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             }
 
             this.volumeLogger.logOutput(streamMessage.getContent().length)
-            connection.send(new Protocol.ControlLayer.UnicastMessageV1(request.subId, streamMessage))
+            connection.send(ControlLayer.UnicastMessage.create(request.subId, streamMessage))
         }
 
         const doneHandler = () => {
             if (nothingToResend) {
-                connection.send(new Protocol.ControlLayer.ResendResponseNoResendV1(
+                connection.send(ControlLayer.ResendResponseNoResend.create(
                     request.streamId,
                     request.streamPartition,
                     request.subId,
                 ))
             } else {
-                connection.send(new Protocol.ControlLayer.ResendResponseResentV1(
+                connection.send(ControlLayer.ResendResponseResent.create(
                     request.streamId,
                     request.streamPartition,
                     request.subId,
@@ -330,7 +315,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             const connections = stream.getConnections()
 
             connections.forEach((connection) => {
-                connection.send(new Protocol.ControlLayer.BroadcastMessageV1(streamMessage))
+                connection.send(ControlLayer.BroadcastMessage.create(streamMessage))
             })
 
             this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * connections.length)
@@ -370,7 +355,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     connection.addStream(stream)
 
                     debug('Socket %s is now subscribed to streams: %o', connection.id, connection.getStreams())
-                    connection.send(new Protocol.ControlLayer.SubscribeResponseV1(request.streamId, request.streamPartition))
+                    connection.send(ControlLayer.SubscribeResponse.create(request.streamId, request.streamPartition))
                 }
 
                 // If the Stream is subscribed, we're good to go
@@ -429,7 +414,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             }
 
             if (ack) {
-                connection.send(new Protocol.ControlLayer.UnsubscribeResponseV1(request.streamId, request.streamPartition))
+                connection.send(ControlLayer.UnsubscribeResponse.create(request.streamId, request.streamPartition))
             }
         } else {
             connection.sendError(`Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`)
@@ -443,7 +428,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         // Unsubscribe from all streams
         unsub.forEach((stream) => {
-            this.handleUnsubscribeRequest(connection, new Protocol.ControlLayer.UnsubscribeRequestV1(stream.id, stream.partition), false)
+            this.handleUnsubscribeRequest(connection, ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition), false)
         })
     }
 }

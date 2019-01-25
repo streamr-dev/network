@@ -12,7 +12,7 @@ describe('KafkaUtil', () => {
     let mockZookeeper
     let mockPartitioner
 
-    let streamrBinaryMessage
+    let streamMessage
 
     beforeEach(() => {
         mockKafkaClient = {
@@ -30,10 +30,10 @@ describe('KafkaUtil', () => {
             partition: sinon.stub().returns(5),
         }
 
-        streamrBinaryMessage = {
-            streamId: 'streamId',
-            streamPartition: 0,
-            toBytes: sinon.stub().returns('bytes'),
+        streamMessage = {
+            getStreamId: sinon.stub().returns('streamId'),
+            getStreamPartition: sinon.stub().returns(0),
+            serialize: sinon.stub().returns('bytes'),
         }
 
         kafkaUtil = new KafkaUtil(dataTopic, mockPartitioner, mockZookeeper, mockKafkaClient, mockKafkaProducer)
@@ -47,16 +47,16 @@ describe('KafkaUtil', () => {
                     assert.equal(arr[0].topic, dataTopic)
                     assert(mockPartitioner.partition.calledWith(
                         kafkaUtil.dataTopicPartitionCount,
-                        `${streamrBinaryMessage.streamId}-${streamrBinaryMessage.streamPartition}`,
+                        `${streamMessage.getStreamId()}-${streamMessage.getStreamPartition()}`,
                     ))
                     assert.equal(arr[0].partition, 5)
                     assert.equal(arr[0].messages, 'bytes')
-                    assert(streamrBinaryMessage.toBytes.calledOnce)
+                    assert(streamMessage.serialize.calledOnce)
                     done()
                 },
             }
 
-            kafkaUtil.send(streamrBinaryMessage)
+            kafkaUtil.send(streamMessage)
         })
 
         it('should return a promise and resolve it on successful produce', () => {
@@ -66,7 +66,7 @@ describe('KafkaUtil', () => {
                 },
             }
 
-            return kafkaUtil.send(streamrBinaryMessage)
+            return kafkaUtil.send(streamMessage)
         })
 
         it('should reject the promise on error', (done) => {
@@ -76,7 +76,7 @@ describe('KafkaUtil', () => {
                 },
             }
 
-            kafkaUtil.send(streamrBinaryMessage).catch((err) => {
+            kafkaUtil.send(streamMessage).catch((err) => {
                 assert(err instanceof FailedToPublishError)
                 assert(err.message.indexOf('test error') !== -1)
                 done()

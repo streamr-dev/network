@@ -22,10 +22,10 @@ describe('DataQueryEndpoints', () => {
         return new Protocol.MessageLayer.StreamMessageV30(
             ['streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId'],
             [null, 0],
-            0, // ttl
             Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
             content,
             Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
+            null,
         )
     }
 

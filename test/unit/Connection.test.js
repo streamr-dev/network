@@ -100,7 +100,7 @@ describe('Connection', () => {
 
     describe('send()', () => {
         it('sends a serialized message to the socket', () => {
-            const msg = new Protocol.ControlLayer.UnicastMessageV1('subId', new Protocol.MessageLayer.StreamMessageV28(
+            const msg = Protocol.ControlLayer.UnicastMessage.create('subId', new Protocol.MessageLayer.StreamMessageV28(
                 'streamId',
                 0, // partition
                 Date.now(),
