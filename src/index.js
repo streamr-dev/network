@@ -12,8 +12,11 @@ import PublishRequestV0 from './protocol/control_layer/publish_request/PublishRe
 import PublishRequestV1 from './protocol/control_layer/publish_request/PublishRequestV1'
 
 import ResendFromRequestV1 from './protocol/control_layer/resend_request/ResendFromRequestV1'
+import ResendFromRequest from './protocol/control_layer/resend_request/ResendFromRequest'
 import ResendLastRequestV1 from './protocol/control_layer/resend_request/ResendLastRequestV1'
+import ResendLastRequest from './protocol/control_layer/resend_request/ResendLastRequest'
 import ResendRangeRequestV1 from './protocol/control_layer/resend_request/ResendRangeRequestV1'
+import ResendRangeRequest from './protocol/control_layer/resend_request/ResendRangeRequest'
 import ResendRequestV0 from './protocol/control_layer/resend_request/ResendRequestV0'
 
 import ResendResponseNoResend from './protocol/control_layer/resend_response_no_resend/ResendResponseNoResend'
@@ -76,8 +79,11 @@ module.exports = {
         PublishRequest,
         PublishRequestV0,
         PublishRequestV1,
+        ResendFromRequest,
         ResendFromRequestV1,
+        ResendLastRequest,
         ResendLastRequestV1,
+        ResendRangeRequest,
         ResendRangeRequestV1,
         ResendRequestV0,
         ResendResponseNoResend,

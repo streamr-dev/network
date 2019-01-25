@@ -11,7 +11,7 @@ export default class StreamMessageV30 extends StreamMessage {
     constructor(messageIdArgsArray, prevMessageRefArgsArray, contentType, content, signatureType, signature) {
         super(VERSION, undefined, contentType, content)
         this.messageId = new MessageID(...messageIdArgsArray)
-        this.prevMsgRef = new MessageRef(...prevMessageRefArgsArray)
+        this.prevMsgRef = prevMessageRefArgsArray ? new MessageRef(...prevMessageRefArgsArray) : null
         this.signatureType = signatureType
         this.signature = signature
     }
@@ -36,7 +36,7 @@ export default class StreamMessageV30 extends StreamMessage {
         return [
             this.version,
             this.messageId.toArray(),
-            this.prevMsgRef.toArray(),
+            this.prevMsgRef ? this.prevMsgRef.toArray() : null,
             this.contentType,
             this.getContent(parsedContent),
             this.signatureType,
@@ -45,17 +45,18 @@ export default class StreamMessageV30 extends StreamMessage {
     }
 
     toOtherVersion(version) {
+        const prevTimestamp = this.prevMsgRef ? this.prevMsgRef.timestamp : null
         if (version === 28) {
             // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
             return new StreamMessageV28(
                 this.messageId.streamId, this.messageId.streamPartition, this.messageId.timestamp,
-                0, this.messageId.timestamp, this.prevMsgRef.timestamp, this.contentType, this.getContent(),
+                0, this.messageId.timestamp, prevTimestamp, this.contentType, this.getContent(),
             )
         } else if (version === 29) {
             // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
             return new StreamMessageV29(
                 this.messageId.streamId, this.messageId.streamPartition, this.messageId.timestamp,
-                0, this.messageId.timestamp, this.prevMsgRef.timestamp, this.contentType, this.getContent(),
+                0, this.messageId.timestamp, prevTimestamp, this.contentType, this.getContent(),
                 this.signatureType, this.messageId.publisherId, this.signature,
             )
         }
