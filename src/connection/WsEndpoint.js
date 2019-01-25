@@ -99,6 +99,24 @@ class WsEndpoint extends EventEmitter {
         })
     }
 
+    close(recipientAddress, reason) {
+        return new Promise((resolve, reject) => {
+            if (!this.isConnected(recipientAddress)) {
+                debug('cannot close connection to %s because not connected', recipientAddress)
+                reject(new Error(`cannot close connection to ${recipientAddress} because not connected`))
+            } else {
+                try {
+                    debug('closing connection to %s, reason %s', recipientAddress, reason)
+                    const ws = this.connections.get(recipientAddress)
+                    ws.close(1000, reason)
+                } catch (e) {
+                    console.error('closing connection to %s failed because of %s', recipientAddress, e)
+                    reject(e)
+                }
+            }
+        })
+    }
+
     connect(peerAddress) {
         return new Promise((resolve, reject) => {
             if (this.isConnected(peerAddress)) {
@@ -183,7 +201,9 @@ class WsEndpoint extends EventEmitter {
             debug('socket to %s closed (code %d, reason %s)', address, code, reason)
             this.connections.delete(address)
             debug('removed %s from connection list', address)
-            this.emit(Endpoint.events.PEER_DISCONNECTED, address)
+            this.emit(Endpoint.events.PEER_DISCONNECTED, {
+                address, reason
+            })
         })
 
         this.connections.set(address, ws)

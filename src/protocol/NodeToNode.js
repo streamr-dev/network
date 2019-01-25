@@ -48,6 +48,13 @@ class NodeToNode extends EventEmitter {
         this.endpoint.send(receiverNodeAddress, encoder.unsubscribeMessage(streamId))
     }
 
+    disconnectFromNode(receiverNodeId, reason) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        this.endpoint.close(receiverNodeAddress, reason).catch((err) => {
+            console.info(`Could not close connection ${receiverNodeAddress} because '${err}'`)
+        })
+    }
+
     getAddress() {
         return this.endpoint.getAddress()
     }
@@ -62,7 +69,7 @@ class NodeToNode extends EventEmitter {
         }
     }
 
-    onPeerDisconnected(peerId) {
+    onPeerDisconnected(peerId, reason) {
         if (this.peerBook.isNode(peerId)) {
             this.emit(events.NODE_DISCONNECTED, peerId)
         }

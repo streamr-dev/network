@@ -41,7 +41,7 @@ class TrackerServer extends EventEmitter {
         }
     }
 
-    onPeerDisconnected(peerId) {
+    onPeerDisconnected(peerId, reason) {
         if (this.peerBook.isNode(peerId)) {
             this.emit(events.NODE_DISCONNECTED, peerId)
         }
