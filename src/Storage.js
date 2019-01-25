@@ -45,7 +45,7 @@ class Storage {
         if (!Number.isInteger(n)) {
             throw new Error('n is not an integer')
         }
-        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? ORDER BY ts DESC LIMIT ?'
+        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? ORDER BY ts DESC, sequence_no DESC LIMIT ?'
         const queryParams = [streamId, streamPartition, n]
 
         // Wrap as stream for consistency with other fetch functions
@@ -73,7 +73,7 @@ class Storage {
             throw new Error('from is not an integer')
         }
 
-        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? ORDER BY ts ASC'
+        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? ORDER BY ts ASC, sequence_no ASC'
         const queryParams = [streamId, streamPartition, from]
         return this._queryWithStreamingResults(query, queryParams)
     }
@@ -86,7 +86,7 @@ class Storage {
             throw new Error('to is not an integer')
         }
 
-        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? AND ts <= ? ORDER BY ts ASC'
+        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? AND ts <= ? ORDER BY ts ASC, sequence_no ASC'
         const queryParams = [streamId, streamPartition, from, to]
         return this._queryWithStreamingResults(query, queryParams)
     }
