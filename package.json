@@ -30,8 +30,8 @@
   "author": "",
   "license": "",
   "engines": {
-    "node": "8.12.0",
-    "npm": "6.4.1"
+    "node": "10.15.1",
+    "npm": "6.7.0"
   },
   "engineStrict": true,
   "dependencies": {
@@ -43,9 +43,9 @@
   "devDependencies": {
     "eslint": "5.12.1",
     "eslint-config-airbnb-base": "13.1.0",
-    "eslint-plugin-import": "2.15.0",
+    "eslint-plugin-import": "2.16.0",
     "eslint-plugin-import-order": "2.1.4",
-    "jest": "23.6.0",
+    "jest": "24.0.0",
     "p-event": "2.2.0"
   }
 }

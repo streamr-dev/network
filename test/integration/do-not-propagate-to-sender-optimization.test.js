@@ -1,7 +1,6 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const Node = require('../../src/logic/Node')
-const { StreamID, MessageID } = require('../../src/identifiers')
 const { wait, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 
 jest.setTimeout(DEFAULT_TIMEOUT)

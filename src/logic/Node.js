@@ -57,6 +57,11 @@ class Node extends EventEmitter {
                 duplicates: 0
             }
         }
+
+        this.connectionLimits = {
+            maxInBound: MAX_NUM_NODES_INBOUND_PER_STREAM,
+            maxOutBound: MAX_NUM_NODES_OUTBOUND_PER_STREAM
+        }
     }
 
     onConnectedToTracker(tracker) {
@@ -133,11 +138,11 @@ class Node extends EventEmitter {
 
         const isSetup = this.streams.isSetUp(streamId)
 
-        if (isSetup && this.streams.getOutboundNodesForStream(streamId).length >= MAX_NUM_NODES_OUTBOUND_PER_STREAM) {
-            this.debug('reached max number "%d" for outbound connections for stream %s', MAX_NUM_NODES_OUTBOUND_PER_STREAM, streamId)
+        if (isSetup && this.streams.getOutboundNodesForStream(streamId).length >= this.connectionLimits.maxOutBound) {
+            this.debug('reached max number "%d" for outbound connections for stream %s', this.connectionLimits.maxOutBound, streamId)
             this.protocols.nodeToNode.disconnectFromNode(source, disconnectionReasons.MAX_OUTBOUND_CONNECTIONS)
-        } else if (isSetup && !leechOnly && this.streams.getInboundNodesForStream(streamId).length >= MAX_NUM_NODES_INBOUND_PER_STREAM) {
-            this.debug('reached max number "%d" for inbound connections for stream %s', MAX_NUM_NODES_INBOUND_PER_STREAM, streamId)
+        } else if (isSetup && !leechOnly && this.streams.getInboundNodesForStream(streamId).length >= this.connectionLimits.maxInBound) {
+            this.debug('reached max number "%d" for inbound connections for stream %s', this.connectionLimits.maxInBound, streamId)
             this.protocols.nodeToNode.disconnectFromNode(source, disconnectionReasons.MAX_INBOUND_CONNECTIONS)
         } else {
             this.subscribeToStreamIfHaveNotYet(streamId)
@@ -259,6 +264,15 @@ class Node extends EventEmitter {
 
     _getTracker() {
         return [...this.trackers][Math.floor(Math.random() * this.trackers.size)]
+    }
+
+    setConnectionLimitsPerStream(maxNumNodesInBound = MAX_NUM_NODES_OUTBOUND_PER_STREAM, maxNumNodesOutBound = MAX_NUM_NODES_OUTBOUND_PER_STREAM) {
+        this.connectionLimits.maxInBound = maxNumNodesInBound
+        this.connectionLimits.maxOutBound = maxNumNodesOutBound
+    }
+
+    getConnectionLimitsPerStream() {
+        return this.connectionLimits
     }
 }
 

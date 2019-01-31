@@ -6,7 +6,6 @@ jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('create five endpoints and init connection between them', () => {
     const MAX = 5
-    let promises = []
     const endpoints = []
 
     it('should be able to start and stop successfully', async () => {
@@ -20,6 +19,8 @@ describe('create five endpoints and init connection between them', () => {
             expect(endpoints[i].getPeers().size).toBe(0)
         }
 
+        const promises = []
+
         for (let i = 0; i < MAX; i++) {
             promises.push(waitForEvent(endpoints[i], endpointEvents.PEER_CONNECTED))
 
@@ -27,12 +28,6 @@ describe('create five endpoints and init connection between them', () => {
 
             // eslint-disable-next-line no-await-in-loop
             endpoints[i].connect(nextEndpoint.getAddress())
-        }
-
-        promises = []
-        for (let i = 0; i < MAX; i++) {
-            // eslint-disable-next-line no-await-in-loop
-            promises.push(await waitForEvent(endpoints[i], endpointEvents.PEER_CONNECTED))
         }
 
         await Promise.all(promises)
@@ -43,7 +38,7 @@ describe('create five endpoints and init connection between them', () => {
 
         for (let i = 0; i < MAX; i++) {
             // eslint-disable-next-line no-await-in-loop
-            await endpoints[i].stop(console.log(`closing ${i} endpoint`))
+            await endpoints[i].stop()
         }
     })
 

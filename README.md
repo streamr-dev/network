@@ -15,15 +15,15 @@
  
 `brew install nvm`
 
-#### install current node lts (v8.12.0)
+#### install current node lts (v10.15.1)
 
-`nvm install v8.12.0`
+`nvm install v10.15.1`
 
-`nvm use default v8.12.0`
+`nvm use default v10.15.1`
 
 #### install npm (v6.4.1)
 
-`npm install -g npm@6.4.1`
+`npm install -g npm@6.7.0`
 
 
 #### install packages
@@ -48,10 +48,6 @@ and etc
 
 # run publisher
 
-`npm run pub port libp2p-address streamId`
-
-example:
-
 `npm run pub`
 
 # run subscriber
@@ -59,38 +55,36 @@ example:
 `npm run sub`
 
 # Debugging
-to get all streamr network debug messages `export DEBUG=streamr*`
+to get all streamr network debug messages `export DEBUG=streamr:*`
 
 to get messages by layers run:
 
-- connection layer `export DEBUG=streamr:connection*`
-- logic layer `export DEBUG=streamr:logic*`
-- protocol layer `export DEBUG=streamr:protocol*`
+- connection layer `export DEBUG=streamr:connection:*`
+- logic layer `export DEBUG=streamr:logic:*`
+- protocol layer `export DEBUG=streamr:protocol:*`
 
 to get all debug messages run `export DEBUG=*`
 
 # Testing
-run tests
+run all tests
 
-`npm test`
+`npm run test`
+
+run unit tests
+
+`npm run test-unit`
+
+run integration tests
+
+`npm run test-integration`
 
 code coverage
 
-`./node_modules/jest/bin/jest.js --coverage --collectCoverageFrom=src/**/*.js`
+`./node_modules/jest/bin/jest.js --coverage`
 
 run one test
 
-`./node_modules/jest/bin/jest.js test/integration/publisher.test.js`
-
-### node
-it's better to run integration tests one by one, for now they are using the same port for tracker, so it can cause `listen EADDRINUSE` errors  
-
-# TODO
-
-- validation
-- tests:
-    - disconnect event
-    - unsubscribing
+`./node_modules/jest/bin/jest.js ./test/integration/message-duplication.test.js`
 
 # Architecture
 
