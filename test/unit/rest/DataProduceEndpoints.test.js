@@ -1,7 +1,7 @@
 const sinon = require('sinon')
 const express = require('express')
 const request = require('supertest')
-const Protocol = require('streamr-client-protocol')
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const router = require('../../../src/rest/DataProduceEndpoints')
 
 const FailedToPublishError = require('../../../src/errors/FailedToPublishError')
@@ -66,12 +66,12 @@ describe('DataProduceEndpoints', () => {
                     throw err
                 }
             })
-        const streamMessage = new Protocol.MessageLayer.StreamMessageV30(
+        const streamMessage = new StreamMessageV30(
             [stream.streamId, 0, Date.now(), 0, ''],
             [null, 0],
-            Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+            StreamMessage.CONTENT_TYPES.JSON,
             '{}',
-            Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
+            StreamMessage.SIGNATURE_TYPES.NONE,
             null,
         )
         publisherMock.publish.calledWith(stream, streamMessage)
@@ -91,12 +91,12 @@ describe('DataProduceEndpoints', () => {
                     throw err
                 }
             })
-        const streamMessage = new Protocol.MessageLayer.StreamMessageV30(
+        const streamMessage = new StreamMessageV30(
             [stream.streamId, 0, ts, 0, ''],
             [null, 0],
-            Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+            StreamMessage.CONTENT_TYPES.JSON,
             '{}',
-            Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
+            StreamMessage.SIGNATURE_TYPES.NONE,
             null,
         )
         publisherMock.publish.calledWith(stream, streamMessage)
@@ -116,12 +116,12 @@ describe('DataProduceEndpoints', () => {
                     throw err
                 }
             })
-        const streamMessage = new Protocol.MessageLayer.StreamMessageV30(
+        const streamMessage = new StreamMessageV30(
             [stream.streamId, 0, Date.now(), 0, 'publisher-address'],
             [null, 0],
-            Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+            StreamMessage.CONTENT_TYPES.JSON,
             '{}',
-            Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
+            StreamMessage.SIGNATURE_TYPES.ETH,
             'signature',
         )
         publisherMock.publish.calledWith(stream, streamMessage)

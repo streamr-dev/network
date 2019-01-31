@@ -1,8 +1,6 @@
 const { Readable, Transform } = require('stream')
 const cassandra = require('cassandra-driver')
-const Protocol = require('streamr-client-protocol')
-
-const { MessageLayer } = Protocol
+const { StreamMessageFactory } = require('streamr-client-protocol').MessageLayer
 
 const callbackToPromise = (method, ...args) => {
     return new Promise((resolve, reject) => {
@@ -12,7 +10,7 @@ const callbackToPromise = (method, ...args) => {
     })
 }
 
-const parseRow = (row) => MessageLayer.StreamMessageFactory.deserialize(row.payload.toString())
+const parseRow = (row) => StreamMessageFactory.deserialize(row.payload.toString())
 
 class Storage {
     constructor(cassandraClient) {

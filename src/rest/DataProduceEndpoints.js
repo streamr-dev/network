@@ -1,9 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const Protocol = require('streamr-client-protocol')
-
-const { MessageLayer } = Protocol
-
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
@@ -70,7 +67,7 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
                 null, // prevTimestamp
                 0, // prevSequenceNumber
                 undefined, // ttl, read from stream when available
-                MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+                StreamMessage.CONTENT_TYPES.JSON,
                 req.body,
                 req.query.signatureType,
                 req.query.signature,

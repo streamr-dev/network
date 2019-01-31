@@ -1,5 +1,5 @@
 const assert = require('assert')
-const Protocol = require('streamr-client-protocol')
+const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 const Connection = require('../../src/Connection.js')
 const Stream = require('../../src/Stream.js')
 
@@ -15,7 +15,7 @@ describe('Connection', () => {
                 this.received.push(msg)
             },
             upgradeReq: {
-                url: 'url',
+                url: 'url?controlLayerVersion=1&messageLayerVersion=30',
             },
         }
         connection = new Connection(fakeSocket)
@@ -25,15 +25,15 @@ describe('Connection', () => {
         assert.equal(connection.id, 'socketId')
     })
 
-    it('parses undefined version properly', () => {
-        assert.equal(connection.controlLayerVersion, undefined)
-        assert.equal(connection.messageLayerVersion, undefined)
+    it('parses defined version properly', () => {
+        assert.equal(connection.controlLayerVersion, 1)
+        assert.equal(connection.messageLayerVersion, 30)
     })
 
-    it('parses defined version properly', () => {
+    it('parses undefined version properly', () => {
         const fakeSocket2 = {
             upgradeReq: {
-                url: 'url?controlLayerVersion=0&messageLayerVersion=29',
+                url: 'url',
             },
         }
         const conn2 = new Connection(fakeSocket2)
@@ -100,20 +100,35 @@ describe('Connection', () => {
 
     describe('send()', () => {
         it('sends a serialized message to the socket', () => {
-            const msg = Protocol.ControlLayer.UnicastMessage.create('subId', new Protocol.MessageLayer.StreamMessageV28(
-                'streamId',
-                0, // partition
-                Date.now(),
-                undefined, // ttl
-                1, // offset
-                0, // previousOffset
-                Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-                {
+            const msg = ControlLayer.UnicastMessage.create('subId', new MessageLayer.StreamMessageV30(
+                ['streamId', 0, Date.now(), 0, 'publisherId'], null,
+                MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {
                     foo: 'bar',
-                },
+                }, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
             ))
             connection.send(msg)
-            assert.deepEqual(fakeSocket.received, [msg.serialize()])
+            assert.deepEqual(fakeSocket.received, [msg.serialize(1, 30)])
+        })
+        it('sends an old version serialized message to the socket of an old client', () => {
+            const msg = ControlLayer.UnicastMessage.create('subId', new MessageLayer.StreamMessageV30(
+                ['streamId', 0, Date.now(), 0, 'publisherId'], null,
+                MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {
+                    foo: 'bar',
+                }, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
+            ))
+            const fakeSocket2 = {
+                id: 'socketId2',
+                received: [],
+                send(msg2) {
+                    this.received.push(msg2)
+                },
+                upgradeReq: {
+                    url: 'url',
+                },
+            }
+            const connection2 = new Connection(fakeSocket2)
+            connection2.send(msg)
+            assert.deepEqual(fakeSocket2.received, [msg.serialize(0, 29)])
         })
     })
 })

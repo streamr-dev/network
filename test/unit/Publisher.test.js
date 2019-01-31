@@ -1,10 +1,7 @@
 const assert = require('assert')
 const events = require('events')
 const sinon = require('sinon')
-const Protocol = require('streamr-client-protocol')
-
-const { MessageLayer } = Protocol
-
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const Publisher = require('../../src/Publisher')
 const MessageNotSignedError = require('../../src/errors/MessageNotSignedError')
 const NotReadyError = require('../../src/errors/NotReadyError')
@@ -22,9 +19,9 @@ describe('Publisher', () => {
         hello: 'world',
     }
 
-    const streamMessageUnsigned = new MessageLayer.StreamMessageV30(
-        [stream.id, 0, Date.now(), 0, 'publisherId'], [null, 0], MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-        msg, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
+    const streamMessageUnsigned = new StreamMessageV30(
+        [stream.id, 0, Date.now(), 0, 'publisherId'], [null, 0], StreamMessage.CONTENT_TYPES.JSON,
+        msg, StreamMessage.SIGNATURE_TYPES.NONE, null,
     )
 
     let publisher
@@ -67,13 +64,12 @@ describe('Publisher', () => {
             })
 
             it('should call KafkaUtil.send with a StreamMessage with correct values', (done) => {
-
                 kafkaMock.send = (streamMessage) => {
-                    assert(streamMessage instanceof MessageLayer.StreamMessage)
+                    assert(streamMessage instanceof StreamMessage)
                     assert.equal(streamMessage.getStreamId(), stream.id)
                     assert.equal(streamMessage.getStreamPartition(), 0)
                     assert.equal(streamMessage.getTimestamp(), streamMessageUnsigned.getTimestamp())
-                    assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.JSON)
+                    assert.equal(streamMessage.contentType, StreamMessage.CONTENT_TYPES.JSON)
                     assert.equal(streamMessage.getContent(), JSON.stringify(msg))
                     done()
                 }

@@ -1,7 +1,6 @@
 const events = require('events')
 const kafka = require('kafka-node')
 const debug = require('debug')('KafkaUtil')
-const BufferMaker = require('buffermaker')
 const FailedToPublishError = require('./errors/FailedToPublishError')
 
 module.exports = class KafkaUtil extends events.EventEmitter {
@@ -44,8 +43,6 @@ module.exports = class KafkaUtil extends events.EventEmitter {
 
     send(streamMessage) {
         return new Promise((resolve, reject) => {
-            const jsonString = streamMessage.serialize(30) // always push latest version to kafka
-            const bytes = new BufferMaker().string(jsonString).make()
             const produceRequest = {
                 topic: this.dataTopic,
                 // Directly set the partition using our custom partitioner for consistency with Java (KafkaService.CustomPartitioner)
@@ -53,7 +50,7 @@ module.exports = class KafkaUtil extends events.EventEmitter {
                     this.dataTopicPartitionCount,
                     `${streamMessage.getStreamId()}-${streamMessage.getStreamPartition()}`,
                 ),
-                messages: bytes,
+                messages: Buffer.from(streamMessage.serialize(30)), // always push latest version to kafka,
             }
 
             debug('Kafka produce request: %o', produceRequest)

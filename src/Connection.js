@@ -1,7 +1,7 @@
 const events = require('events')
 const debug = require('debug')('Connection')
 const qs = require('qs')
-const Protocol = require('streamr-client-protocol')
+const { ErrorResponse } = require('streamr-client-protocol').ControlLayer
 
 module.exports = class Connection extends events.EventEmitter {
     constructor(socket) {
@@ -10,10 +10,15 @@ module.exports = class Connection extends events.EventEmitter {
         this.socket = socket
         this.streams = []
         const parts = socket.upgradeReq.url.split('?')
+        // default versions for old clients
+        this.controlLayerVersion = 0
+        this.messageLayerVersion = 29
         if (parts.length === 2) {
             const queryObj = qs.parse(parts[1])
-            this.controlLayerVersion = queryObj.controlLayerVersion ? parseInt(queryObj.controlLayerVersion) : 0
-            this.messageLayerVersion = queryObj.messageLayerVersion ? parseInt(queryObj.messageLayerVersion) : 29
+            if (queryObj.controlLayerVersion && queryObj.messageLayerVersion) {
+                this.controlLayerVersion = parseInt(queryObj.controlLayerVersion)
+                this.messageLayerVersion = parseInt(queryObj.messageLayerVersion)
+            }
         }
     }
 
@@ -44,6 +49,6 @@ module.exports = class Connection extends events.EventEmitter {
     }
 
     sendError(errorMessage) {
-        this.send(Protocol.ControlLayer.ErrorResponse.create(errorMessage))
+        this.send(ErrorResponse.create(errorMessage))
     }
 }

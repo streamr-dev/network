@@ -1,12 +1,8 @@
 const assert = require('assert')
 const events = require('events')
 const sinon = require('sinon')
-const Protocol = require('streamr-client-protocol')
-
-const { ControlLayer, MessageLayer } = Protocol
-
+const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 const WebsocketServer = require('../../src/WebsocketServer')
-
 const MockSocket = require('./test-helpers/MockSocket')
 
 describe('WebsocketServer', () => {
@@ -97,6 +93,10 @@ describe('WebsocketServer', () => {
 
         // Create the server instance
         server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, streamFetcher, publisher)
+    })
+
+    afterEach(() => {
+        mockSocket.disconnect()
     })
 
     describe('on socket connection', () => {
@@ -281,6 +281,7 @@ describe('WebsocketServer', () => {
 
             setTimeout(() => {
                 assert(server.getStreamObject('streamId', 1) != null)
+                socket2.disconnect()
                 done()
             })
         })
@@ -313,6 +314,7 @@ describe('WebsocketServer', () => {
 
             setTimeout(() => {
                 sinon.assert.calledOnce(realtimeAdapter.subscribe)
+                socket2.disconnect()
                 done()
             })
         })
@@ -390,6 +392,7 @@ describe('WebsocketServer', () => {
     })
 
     describe('subscribe-subscribe-unsubscribe', () => {
+        let socket2
         beforeEach((done) => {
             realtimeAdapter.unsubscribe = sinon.mock()
 
@@ -401,7 +404,48 @@ describe('WebsocketServer', () => {
             ))
 
             // subscribe 2
-            const socket2 = new MockSocket()
+            socket2 = new MockSocket()
+            wsMock.emit('connection', socket2)
+            socket2.receive(ControlLayer.SubscribeRequest.create(
+                'streamId',
+                0,
+                'correct',
+            ))
+
+            // unsubscribe 1
+            setTimeout(() => {
+                mockSocket.receive(ControlLayer.UnsubscribeRequest.create('streamId', 0))
+                done()
+            })
+        })
+
+        afterEach(() => {
+            socket2.disconnect()
+        })
+
+        it('does not unsubscribe from realtimeAdapter if there are other subscriptions to it', () => {
+            sinon.assert.notCalled(realtimeAdapter.unsubscribe)
+        })
+
+        it('does not remove stream object if there are other subscriptions to it', () => {
+            assert(server.getStreamObject('streamId', 0) != null)
+        })
+    })
+
+    describe('subscribe-subscribe-unsubscribe', () => {
+        let socket2
+        beforeEach((done) => {
+            realtimeAdapter.unsubscribe = sinon.mock()
+
+            // subscribe
+            mockSocket.receive(ControlLayer.SubscribeRequest.create(
+                'streamId',
+                0,
+                'correct',
+            ))
+
+            // subscribe 2
+            socket2 = new MockSocket()
             wsMock.emit('connection', socket2)
             socket2.receive(ControlLayer.SubscribeRequest.create(
                 'streamId',
@@ -423,41 +467,9 @@ describe('WebsocketServer', () => {
         it('does not remove stream object if there are other subscriptions to it', () => {
             assert(server.getStreamObject('streamId', 0) != null)
         })
-    })
 
-    describe('subscribe-subscribe-unsubscribe', () => {
-        beforeEach((done) => {
-            realtimeAdapter.unsubscribe = sinon.mock()
-
-            // subscribe
-            mockSocket.receive(ControlLayer.SubscribeRequest.create(
-                'streamId',
-                0,
-                'correct',
-            ))
-
-            // subscribe 2
-            const socket2 = new MockSocket()
-            wsMock.emit('connection', socket2)
-            socket2.receive(ControlLayer.SubscribeRequest.create(
-                'streamId',
-                0,
-                'correct',
-            ))
-
-            // unsubscribe 1
-            setTimeout(() => {
-                mockSocket.receive(ControlLayer.UnsubscribeRequest.create('streamId', 0))
-                done()
-            })
-
-            it('does not unsubscribe from realtimeAdapter if there are other subscriptions to it', () => {
-                sinon.assert.notCalled(realtimeAdapter.unsubscribe)
-            })
-
-            it('does not remove stream object if there are other subscriptions to it', () => {
-                assert(server.getStreamObject('streamId', 0) != null)
-            })
+        afterEach(() => {
+            socket2.disconnect()
         })
     })
 
@@ -729,11 +741,13 @@ describe('WebsocketServer', () => {
             assert.equal(stream.id, 'streamId')
             assert.equal(stream.partition, 3)
             assert.equal(stream.state, 'init')
+            server.deleteStreamObject('streamId', 3)
         })
 
         it('should return an object that can be looked up', () => {
             const stream = server.createStreamObject('streamId', 4)
             assert.equal(server.getStreamObject('streamId', 4), stream)
+            server.deleteStreamObject('streamId', 4)
         })
     })
 
@@ -741,6 +755,9 @@ describe('WebsocketServer', () => {
         let stream
         beforeEach(() => {
             stream = server.createStreamObject('streamId', 0)
+        })
+        afterEach(() => {
+            server.deleteStreamObject('streamId', 0)
         })
 
         it('must return the requested stream', () => {

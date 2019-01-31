@@ -1,9 +1,8 @@
 const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
-const Protocol = require('streamr-client-protocol')
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const { startCassandraStorage } = require('../../src/Storage')
 
-const { MessageLayer } = Protocol
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev'
@@ -15,9 +14,9 @@ describe('Storage', () => {
     let streamIdx = 1
 
     function buildMsg(id, streamPartition, timestamp, sequenceNumber, publisherId, content) {
-        return new MessageLayer.StreamMessageV30(
+        return new StreamMessageV30(
             [id, streamPartition, timestamp, sequenceNumber, publisherId], [null, 0],
-            MessageLayer.StreamMessage.CONTENT_TYPES.JSON, content, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
+            StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.NONE, null,
         )
     }
 

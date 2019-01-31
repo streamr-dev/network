@@ -1,10 +1,7 @@
 const events = require('events')
 const debug = require('debug')('WebsocketServer')
 const debugProtocol = require('debug')('WebsocketServer:protocol')
-const Protocol = require('streamr-client-protocol')
-
-const { ControlLayer } = Protocol
-
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const Stream = require('./Stream')
 const Connection = require('./Connection')
 const HttpError = require('./errors/HttpError')
@@ -89,10 +86,10 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 let streamMessage
                 if (request.version === 0) {
                     const streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
-                    streamMessage = new Protocol.MessageLayer.StreamMessageV30(
+                    streamMessage = new MessageLayer.StreamMessageV30(
                         [stream.id, streamPartition, request.timestamp || Date.now(), 0, request.publisherAddress],
                         [null, 0],
-                        Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+                        MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
                         request.content,
                         request.signatureType,
                         request.signature,
@@ -227,7 +224,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         stream.stateTimeout = setTimeout(() => {
             if (stream.state !== 'subscribed') {
                 debug('Stream %s never got to subscribed state, cleaning..', streamId)
-                this.deleteStreamObject(streamId)
+                this.deleteStreamObject(streamId, streamPartition)
             }
         }, 60 * 1000)
 
@@ -286,7 +283,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                             stream.emit('subscribed', err)
 
                             // Delete the stream ref on subscribe error
-                            this.deleteStreamObject(stream.id)
+                            this.deleteStreamObject(stream.id, request.streamPartition)
 
                             console.log(`Error subscribing to ${stream.id}: ${err}`)
                         } else {

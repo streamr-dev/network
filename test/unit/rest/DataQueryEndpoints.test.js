@@ -2,7 +2,7 @@ const { Readable } = require('stream')
 const express = require('express')
 const request = require('supertest')
 const sinon = require('sinon')
-const Protocol = require('streamr-client-protocol')
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const restEndpointRouter = require('../../../src/rest/DataQueryEndpoints')
 const HttpError = require('../../../src/errors/HttpError')
 
@@ -20,12 +20,12 @@ describe('DataQueryEndpoints', () => {
     }
 
     function streamMessage(content) {
-        return new Protocol.MessageLayer.StreamMessageV30(
+        return new StreamMessageV30(
             ['streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId'],
             [null, 0],
-            Protocol.MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+            StreamMessage.CONTENT_TYPES.JSON,
             content,
-            Protocol.MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
+            StreamMessage.SIGNATURE_TYPES.NONE,
             null,
         )
     }

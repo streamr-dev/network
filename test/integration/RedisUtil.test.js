@@ -1,8 +1,6 @@
 const assert = require('assert')
 const redis = require('redis')
-const Protocol = require('streamr-client-protocol')
-
-const { MessageLayer } = Protocol
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 
 const RedisUtil = require('../../src/RedisUtil')
 
@@ -15,20 +13,20 @@ describe('RedisUtil', () => {
     let streamId
 
     function streamMessage() {
-        return new MessageLayer.StreamMessageV30(
+        return new StreamMessageV30(
             [streamId, 1, 1488214484821, 0, 'publisherId'], null,
-            MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {
+            StreamMessage.CONTENT_TYPES.JSON, {
                 hello: 'world',
-            }, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
+            }, StreamMessage.SIGNATURE_TYPES.NONE, null,
         )
     }
 
     function streamMessageSigned() {
-        return new MessageLayer.StreamMessageV30(
+        return new StreamMessageV30(
             [streamId, 1, 1488214484821, 0, '0xf915ed664e43c50eb7b9ca7cfeb992703ede55c4'], null,
-            MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {
+            StreamMessage.CONTENT_TYPES.JSON, {
                 hello: 'world',
-            }, MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
+            }, StreamMessage.SIGNATURE_TYPES.ETH,
             '0xcb1fa20f2f8e75f27d3f171d236c071f0de39e4b497c51b390306fc6e7e112bb415ecea1bd093320dd91fd91113748286711122548c52a15179822a014dc14931b',
         )
     }
