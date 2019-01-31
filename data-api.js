@@ -7,7 +7,6 @@ const Optimist = require('optimist')
 const StreamFetcher = require('./src/StreamFetcher')
 const WebsocketServer = require('./src/WebsocketServer')
 const RedisUtil = require('./src/RedisUtil')
-const RedisOffsetFetcher = require('./src/RedisOffsetFetcher')
 const { startCassandraStorage } = require('./src/Storage')
 const StreamrKafkaProducer = require('./src/KafkaUtil')
 const Partitioner = require('./src/Partitioner')
@@ -35,7 +34,6 @@ module.exports = async (externalConfig) => {
     const streamFetcher = new StreamFetcher(config.streamr)
     const redis = new RedisUtil(config.redis.split(','), config['redis-pwd'])
     const storage = await startCassandraStorage(config.cassandra.split(','), 'datacenter1', config.keyspace)
-    const redisOffsetFetcher = new RedisOffsetFetcher(config.redis.split(',')[0], config['redis-pwd'])
     const kafka = new StreamrKafkaProducer(config['data-topic'], Partitioner, config.zookeeper)
     const volumeLogger = new VolumeLogger()
     const publisher = new Publisher(kafka, Partitioner, volumeLogger)
@@ -68,7 +66,6 @@ module.exports = async (externalConfig) => {
         }),
         redis,
         storage,
-        redisOffsetFetcher,
         streamFetcher,
         publisher,
         volumeLogger,
@@ -95,7 +92,6 @@ module.exports = async (externalConfig) => {
         close: () => {
             httpServer.close()
             redis.quit()
-            redisOffsetFetcher.close()
             storage.close()
             kafka.close()
             volumeLogger.stop()

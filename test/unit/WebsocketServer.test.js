@@ -16,7 +16,6 @@ describe('WebsocketServer', () => {
     let publisher
     let realtimeAdapter
     let historicalAdapter
-    let latestOffsetFetcher
     let mockSocket
 
     const controlLayerVersion = 1
@@ -71,11 +70,6 @@ describe('WebsocketServer', () => {
             }),
         }
 
-        latestOffsetFetcher = {
-            fetchOffset: sinon.stub()
-                .resolves(0),
-        }
-
         streamFetcher = {
             authenticate(streamId, authKey, sessionToken) {
                 return new Promise(((resolve, reject) => {
@@ -102,7 +96,7 @@ describe('WebsocketServer', () => {
         mockSocket = new MockSocket(controlLayerVersion, messageLayerVersion)
 
         // Create the server instance
-        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher)
+        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, streamFetcher, publisher)
     })
 
     describe('on socket connection', () => {

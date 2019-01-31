@@ -3,7 +3,7 @@ const debug = require('debug')('WebsocketServer')
 const debugProtocol = require('debug')('WebsocketServer:protocol')
 const Protocol = require('streamr-client-protocol')
 
-const { ControlLayer, MessageLayer } = Protocol
+const { ControlLayer } = Protocol
 
 const Stream = require('./Stream')
 const Connection = require('./Connection')
@@ -15,12 +15,11 @@ function getStreamLookupKey(streamId, streamPartition) {
 }
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(wss, realtimeAdapter, storage, latestOffsetFetcher, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
+    constructor(wss, realtimeAdapter, storage, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
         super()
         this.wss = wss
         this.realtimeAdapter = realtimeAdapter
         this.storage = storage
-        this.latestOffsetFetcher = latestOffsetFetcher
         this.streamFetcher = streamFetcher
         this.publisher = publisher
         this.volumeLogger = volumeLogger
@@ -126,7 +125,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     handleResendRequest(connection, request, resendTypeHandler) {
         let nothingToResend = true
 
-        const msgHandler = (data) => {
+        const msgHandler = (streamMessage) => {
             if (nothingToResend) {
                 nothingToResend = false
                 connection.send(ControlLayer.ResendResponseResending.create(
@@ -135,8 +134,6 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     request.subId,
                 ))
             }
-
-            const streamMessage = MessageLayer.StreamMessageFactory.deserialize(data)
 
             this.volumeLogger.logOutput(streamMessage.getContent().length)
             connection.send(ControlLayer.UnicastMessage.create(request.subId, streamMessage))

@@ -1,7 +1,9 @@
 const events = require('events')
 const redis = require('redis')
 const debug = require('debug')('RedisUtil')
-const StreamrBinaryMessageWithKafkaMetadata = require('./protocol/StreamrBinaryMessageWithKafkaMetadata')
+const Protocol = require('streamr-client-protocol')
+
+const { MessageLayer } = Protocol
 
 function getRedisKey(streamId, streamPartition) {
     return `${streamId}-${streamPartition}`
@@ -86,8 +88,8 @@ module.exports = class RedisUtil extends events.EventEmitter {
                     reject()
                 })
                 .on('message', (channel, buffer) => {
-                    const streamrBinaryMessageWithKafkaMetadata = StreamrBinaryMessageWithKafkaMetadata.fromBytes(buffer)
-                    this.emit('message', streamrBinaryMessageWithKafkaMetadata.toStreamMessage())
+                    const streamMessage = MessageLayer.StreamMessageFactory.deserialize(buffer.toString())
+                    this.emit('message', streamMessage)
                 })
         }))
     }

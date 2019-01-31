@@ -1,6 +1,9 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const StreamrBinaryMessage = require('../protocol/StreamrBinaryMessage')
+const Protocol = require('streamr-client-protocol')
+
+const { MessageLayer } = Protocol
+
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
@@ -67,7 +70,7 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
                 null, // prevTimestamp
                 0, // prevSequenceNumber
                 undefined, // ttl, read from stream when available
-                StreamrBinaryMessage.CONTENT_TYPE_JSON,
+                MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
                 req.body,
                 req.query.signatureType,
                 req.query.signature,
