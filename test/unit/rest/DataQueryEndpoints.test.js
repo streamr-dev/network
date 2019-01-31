@@ -1,3 +1,4 @@
+const { Readable } = require('stream')
 const express = require('express')
 const request = require('supertest')
 const sinon = require('sinon')
@@ -60,9 +61,14 @@ describe('DataQueryEndpoints', () => {
         ]
 
         beforeEach(() => {
-            historicalAdapterStub.getLast = (stream, streamPartition, count, msgHandler, doneCallback) => {
-                messages.forEach((msg) => msgHandler(msg))
-                doneCallback(null, null)
+            historicalAdapterStub.fetchLatest = () => {
+                const readableStream = new Readable({
+                    objectMode: true,
+                    read() {},
+                })
+                messages.map((msg) => readableStream.push(msg))
+                readableStream.push(null)
+                return readableStream
             }
         })
 
@@ -94,7 +100,9 @@ describe('DataQueryEndpoints', () => {
 
         describe('GET /api/v1/streams/streamId/data/partitions/0/last', () => {
             it('responds 200 and Content-Type JSON', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
+                const res = testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
+                console.log(res)
+                res
                     .expect('Content-Type', /json/)
                     .expect(200, done)
             })
@@ -128,22 +136,30 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('invokes historicalAdapter#getLast once with correct arguments', (done) => {
-                sinon.spy(historicalAdapterStub, 'getLast')
+                sinon.spy(historicalAdapterStub, 'fetchLatest')
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .then(() => {
-                        sinon.assert.calledOnce(historicalAdapterStub.getLast)
-                        sinon.assert.calledWith(historicalAdapterStub.getLast, 'streamId', 0, 1)
+                        sinon.assert.calledOnce(historicalAdapterStub.fetchLatest)
+                        sinon.assert.calledWith(historicalAdapterStub.fetchLatest, 'streamId', 0, 1)
                         done()
                     })
                     .catch(done)
             })
 
             it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getLast = (stream, streamPartition, count, msgHandler, doneCallback) => {
-                    doneCallback(null, {
-                        error: 'error ',
+                historicalAdapterStub.fetchLatest = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
                     })
+                    readableStream.once('newListener', (event, listener) => {
+                        if (event === 'error') {
+                            readableStream.addListener('error', listener)
+                            readableStream.emit('error', new Error('error'))
+                        }
+                    })
+                    return readableStream
                 }
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
@@ -155,13 +171,13 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?count=666', () => {
-            it('passes count to historicalAdapter#getLast', (done) => {
-                sinon.spy(historicalAdapterStub, 'getLast')
+            it('passes count to historicalAdapter#fetchLatest', (done) => {
+                sinon.spy(historicalAdapterStub, 'fetchLatest')
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=666')
                     .then(() => {
-                        sinon.assert.calledOnce(historicalAdapterStub.getLast)
-                        sinon.assert.calledWith(historicalAdapterStub.getLast, 'streamId', 0, 666)
+                        sinon.assert.calledOnce(historicalAdapterStub.fetchLatest)
+                        sinon.assert.calledWith(historicalAdapterStub.fetchLatest, 'streamId', 0, 666)
                         done()
                     })
                     .catch(done)
@@ -260,131 +276,6 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
-        describe('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15', () => {
-            const messages = [
-                streamMessage({
-                    hello: 1,
-                }),
-                streamMessage({
-                    world: 2,
-                }),
-                streamMessage({
-                    beast: 666,
-                }),
-            ]
-
-            beforeEach(() => {
-                historicalAdapterStub.getFromOffset = (stream, partition, from, msgHandler, doneCallback) => {
-                    messages.forEach((msg) => msgHandler(msg))
-                    doneCallback(null, null)
-                }
-            })
-
-            it('responds 200 and Content-Type JSON', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
-                    .expect('Content-Type', /json/)
-                    .expect(200, done)
-            })
-
-            it('responds with arrays as body', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
-                    .expect(messages.map((msg) => msg.toArray()), done)
-            })
-
-            it('responds with objects as body given ?wrapper=object', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&wrapper=object')
-                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ false)), done)
-            })
-
-            it('responds with arrays as body and parsed content given ?content=json', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&content=json')
-                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ true)), done)
-            })
-
-            it('responds with objects as body given and parsed content given ?wrapper=object&content=json', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&wrapper=object&content=json')
-                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ true)), done)
-            })
-
-            it('invokes historicalAdapter#getFromOffset once with correct arguments', (done) => {
-                sinon.spy(historicalAdapterStub, 'getFromOffset')
-
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
-                    .then(() => {
-                        sinon.assert.calledOnce(historicalAdapterStub.getFromOffset)
-                        sinon.assert.calledWith(historicalAdapterStub.getFromOffset, 'streamId', 0, 15)
-                        done()
-                    })
-                    .catch(done)
-            })
-
-            it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getFromOffset = (stream, partition, from, msgHandler, doneCallback) => {
-                    doneCallback(null, {
-                        error: 'error ',
-                    })
-                }
-
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15')
-                    .expect('Content-Type', /json/)
-                    .expect(500, {
-                        error: 'Failed to fetch data!',
-                    }, done)
-            })
-        })
-
-        describe('?fromOffset=15&toOffset=8196', () => {
-            const messages = [
-                streamMessage({
-                    test: 1234,
-                }),
-            ]
-
-            beforeEach(() => {
-                historicalAdapterStub.getOffsetRange = (stream, partition, from, to, msgHandler, doneCallback) => {
-                    messages.forEach((msg) => msgHandler(msg))
-                    doneCallback(null, null)
-                }
-            })
-
-            it('responds 200 and Content-Type JSON', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
-                    .expect('Content-Type', /json/)
-                    .expect(200, done)
-            })
-
-            it('responds with data points as body', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
-                    .expect(messages.map((msg) => msg.toArray()), done)
-            })
-
-            it('invokes historicalAdapter#getOffsetRange once with correct arguments', (done) => {
-                sinon.spy(historicalAdapterStub, 'getOffsetRange')
-
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
-                    .then(() => {
-                        sinon.assert.calledOnce(historicalAdapterStub.getOffsetRange)
-                        sinon.assert.calledWith(historicalAdapterStub.getOffsetRange, 'streamId', 0, 15, 8196)
-                        done()
-                    })
-                    .catch(done)
-            })
-
-            it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getOffsetRange = (stream, partition, from, to, msgHandler, doneCb) => {
-                    doneCb(null, {
-                        error: 'error ',
-                    })
-                }
-
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=15&toOffset=8196')
-                    .expect('Content-Type', /json/)
-                    .expect(500, {
-                        error: 'Failed to fetch data!',
-                    }, done)
-            })
-        })
-
         describe('?fromTimestamp=1496408255672', () => {
             const messages = [
                 streamMessage({
@@ -396,9 +287,14 @@ describe('DataQueryEndpoints', () => {
             ]
 
             beforeEach(() => {
-                historicalAdapterStub.getFromTimestamp = (stream, partition, from, msgHandler, doneCallback) => {
-                    messages.forEach((msg) => msgHandler(msg))
-                    doneCallback(null, null)
+                historicalAdapterStub.fetchFromTimestamp = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
+                    })
+                    messages.map((msg) => readableStream.push(msg))
+                    readableStream.push(null)
+                    return readableStream
                 }
             })
 
@@ -414,13 +310,13 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('invokes historicalAdapter#getFromTimestamp once with correct arguments', (done) => {
-                sinon.spy(historicalAdapterStub, 'getFromTimestamp')
+                sinon.spy(historicalAdapterStub, 'fetchFromTimestamp')
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
                     .then(() => {
-                        sinon.assert.calledOnce(historicalAdapterStub.getFromTimestamp)
+                        sinon.assert.calledOnce(historicalAdapterStub.fetchFromTimestamp)
                         sinon.assert.calledWith(
-                            historicalAdapterStub.getFromTimestamp, 'streamId', 0,
+                            historicalAdapterStub.fetchFromTimestamp, 'streamId', 0,
                             new Date(1496408255672),
                         )
                         done()
@@ -429,10 +325,18 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getFromTimestamp = (stream, partition, from, msgHandler, doneCallback) => {
-                    doneCallback(null, {
-                        error: 'error ',
+                historicalAdapterStub.fetchFromTimestamp = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
                     })
+                    readableStream.once('newListener', (event, listener) => {
+                        if (event === 'error') {
+                            readableStream.addListener('error', listener)
+                            readableStream.emit('error', new Error('error'))
+                        }
+                    })
+                    return readableStream
                 }
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
@@ -452,9 +356,14 @@ describe('DataQueryEndpoints', () => {
             ]
 
             beforeEach(() => {
-                historicalAdapterStub.getTimestampRange = (stream, partition, from, to, msgHandler, doneCallback) => {
-                    messages.forEach((msg) => msgHandler(msg))
-                    doneCallback(null, null)
+                historicalAdapterStub.fetchBetweenTimestamps = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
+                    })
+                    messages.map((msg) => readableStream.push(msg))
+                    readableStream.push(null)
+                    return readableStream
                 }
             })
 
@@ -470,13 +379,13 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('invokes historicalAdapter#getTimestampRange once with correct arguments', (done) => {
-                sinon.spy(historicalAdapterStub, 'getTimestampRange')
+                sinon.spy(historicalAdapterStub, 'fetchBetweenTimestamps')
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .then(() => {
-                        sinon.assert.calledOnce(historicalAdapterStub.getTimestampRange)
+                        sinon.assert.calledOnce(historicalAdapterStub.fetchBetweenTimestamps)
                         sinon.assert.calledWith(
-                            historicalAdapterStub.getTimestampRange, 'streamId', 0,
+                            historicalAdapterStub.fetchBetweenTimestamps, 'streamId', 0,
                             new Date(1496408255672), new Date(1496415670909),
                         )
                         done()
@@ -485,10 +394,18 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
-                historicalAdapterStub.getTimestampRange = (stream, streamPartition, from, to, msgHandler, doneCallback) => {
-                    doneCallback(null, {
-                        error: 'error ',
+                historicalAdapterStub.fetchBetweenTimestamps = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
                     })
+                    readableStream.once('newListener', (event, listener) => {
+                        if (event === 'error') {
+                            readableStream.addListener('error', listener)
+                            readableStream.emit('error', new Error('error'))
+                        }
+                    })
+                    return readableStream
                 }
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')

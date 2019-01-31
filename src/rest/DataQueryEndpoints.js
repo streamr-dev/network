@@ -6,7 +6,7 @@ const VolumeLogger = require('../utils/VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
 function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {
-    return (largestOffset, err) => {
+    return (err) => {
         if (err) {
             console.log(err)
             res.status(500).send({
@@ -33,7 +33,7 @@ function parseIntIfExists(x) {
     return x === undefined ? undefined : parseInt(x)
 }
 
-module.exports = (historicalAdapter, streamFetcher, volumeLogger = new VolumeLogger(0)) => {
+module.exports = (storage, streamFetcher, volumeLogger = new VolumeLogger(0)) => {
     const router = express.Router()
 
     router.use(
@@ -64,13 +64,14 @@ module.exports = (historicalAdapter, streamFetcher, volumeLogger = new VolumeLog
             })
         } else {
             const dataPoints = []
-            historicalAdapter.getLast(
+            const streamingData = storage.fetchLatest(
                 req.params.id,
                 partition,
                 count,
-                dataPoints.push.bind(dataPoints),
-                onDataFetchDone(res, dataPoints, wrapperOption.toLowerCase(), contentOption.toLowerCase(), volumeLogger),
             )
+            streamingData.on('error', onDataFetchDone(res))
+            streamingData.on('data', dataPoints.push.bind(dataPoints))
+            streamingData.on('end', onDataFetchDone(res, dataPoints, wrapperOption.toLowerCase(), contentOption.toLowerCase(), volumeLogger))
         }
     })
 
@@ -123,39 +124,28 @@ module.exports = (historicalAdapter, streamFetcher, volumeLogger = new VolumeLog
             const dataPoints = []
 
             if (fromOffset !== undefined && toOffset === undefined) {
-                historicalAdapter.getFromOffset(
-                    req.params.id,
-                    partition,
-                    fromOffset,
-                    dataPoints.push.bind(dataPoints),
-                    onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
-                )
+                throw new Error('no longer supported') // TODO: support?
             } else if (fromOffset !== undefined && toOffset !== undefined) {
-                historicalAdapter.getOffsetRange(
-                    req.params.id,
-                    partition,
-                    fromOffset,
-                    toOffset,
-                    dataPoints.push.bind(dataPoints),
-                    onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
-                )
+                throw new Error('no longer supported') // TODO: support?
             } else if (toTimestamp === undefined) {
-                historicalAdapter.getFromTimestamp(
+                const streamingData = storage.fetchFromTimestamp(
                     req.params.id,
                     partition,
                     new Date(fromTimestamp),
-                    dataPoints.push.bind(dataPoints),
-                    onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
                 )
+                streamingData.on('error', onDataFetchDone(res))
+                streamingData.on('data', dataPoints.push.bind(dataPoints))
+                streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
             } else {
-                historicalAdapter.getTimestampRange(
+                const streamingData = storage.fetchBetweenTimestamps(
                     req.params.id,
                     partition,
                     new Date(fromTimestamp),
                     new Date(toTimestamp),
-                    dataPoints.push.bind(dataPoints),
-                    onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
                 )
+                streamingData.on('error', onDataFetchDone(res))
+                streamingData.on('data', dataPoints.push.bind(dataPoints))
+                streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
             }
         }
     })

@@ -3,7 +3,7 @@ const debug = require('debug')('WebsocketServer')
 const debugProtocol = require('debug')('WebsocketServer:protocol')
 const Protocol = require('streamr-client-protocol')
 
-const { ControlLayer } = Protocol
+const { ControlLayer, MessageLayer } = Protocol
 
 const Stream = require('./Stream')
 const Connection = require('./Connection')
@@ -15,11 +15,11 @@ function getStreamLookupKey(streamId, streamPartition) {
 }
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(wss, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
+    constructor(wss, realtimeAdapter, storage, latestOffsetFetcher, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
         super()
         this.wss = wss
         this.realtimeAdapter = realtimeAdapter
-        this.historicalAdapter = historicalAdapter
+        this.storage = storage
         this.latestOffsetFetcher = latestOffsetFetcher
         this.streamFetcher = streamFetcher
         this.publisher = publisher
@@ -126,7 +126,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     handleResendRequest(connection, request, resendTypeHandler) {
         let nothingToResend = true
 
-        const msgHandler = (streamMessage) => {
+        const msgHandler = (data) => {
             if (nothingToResend) {
                 nothingToResend = false
                 connection.send(ControlLayer.ResendResponseResending.create(
@@ -135,6 +135,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     request.subId,
                 ))
             }
+
+            const streamMessage = MessageLayer.StreamMessageFactory.deserialize(data)
 
             this.volumeLogger.logOutput(streamMessage.getContent().length)
             connection.send(ControlLayer.UnicastMessage.create(request.subId, streamMessage))
@@ -156,12 +158,10 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             }
         }
 
-        Promise.all([
-            this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken),
-            this.latestOffsetFetcher.fetchOffset(request.streamId, request.streamPartition),
-        ]).then((results) => {
-            const latestKnownOffset = results[1]
-            resendTypeHandler(msgHandler, doneHandler, latestKnownOffset)
+        this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken).then(() => {
+            const streamingStorageData = resendTypeHandler()
+            streamingStorageData.on('data', msgHandler)
+            streamingStorageData.on('end', doneHandler)
         }).catch((err) => {
             connection.sendError(`Failed to request resend from stream ${
                 request.streamId
@@ -172,91 +172,40 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handleResendLastRequest(connection, request) {
-        const handler = (msgHandler, doneHandler, latestKnownOffset) => this.historicalAdapter.getLast(
+        this.handleResendRequest(connection, request, () => this.storage.fetchLatest(
             request.streamId,
             request.streamPartition,
             request.numberLast,
-            msgHandler,
-            doneHandler,
-            latestKnownOffset,
-        )
-        this.handleResendRequest(connection, request, handler)
+        ))
     }
 
     handleResendFromRequest(connection, request) {
         // TODO: once new Cassandra schema set, rename getFromTimestamp --> getFromMsgRef
         // + use request.fromMsgRef.sequenceNumber and request.publisherId in the query
-        const handler = (msgHandler, doneHandler) => this.historicalAdapter.getFromTimestamp(
+        this.handleResendRequest(connection, request, () => this.storage.fetchFromTimestamp(
             request.streamId,
             request.streamPartition,
             request.fromMsgRef.timestamp,
-            msgHandler,
-            doneHandler,
-        )
-        this.handleResendRequest(connection, request, handler)
+        ))
     }
 
     handleResendRangeRequest(connection, request) {
         // TODO: once new Cassandra schema set, rename getTimestampRange --> getMsgRefRange
         // + use request.fromMsgRef.sequenceNumber, request.toMsgRef.sequenceNumber and request.publisherId in the query
-        const handler = (msgHandler, doneHandler) => this.historicalAdapter.getTimestampRange(
+        this.handleResendRequest(connection, request, () => this.storage.fetchBetweenTimestamps(
             request.streamId,
             request.streamPartition,
             request.fromMsgRef.timestamp,
             request.toMsgRef.timestamp,
-            msgHandler,
-            doneHandler,
-        )
-        this.handleResendRequest(connection, request, handler)
+        ))
     }
 
-    handleResendRequestV0(connection, request) {
-        const handler = (msgHandler, doneHandler, latestKnownOffset) => {
-            if (request.resendOptions.resend_all === true) {
-                // Resend all
-                this.historicalAdapter.getAll(request.streamId, request.streamPartition, msgHandler, doneHandler, latestKnownOffset)
-            } else if (request.resendOptions.resend_from != null && request.resendOptions.resend_to != null) {
-                // Resend range
-                this.historicalAdapter.getOffsetRange(
-                    request.streamId, request.streamPartition, request.resendOptions.resend_from, request.resendOptions.resend_to,
-                    msgHandler, doneHandler, latestKnownOffset,
-                )
-            } else if (request.resendOptions.resend_from != null) {
-                // Resend from a given offset
-                this.historicalAdapter.getFromOffset(
-                    request.streamId,
-                    request.streamPartition,
-                    request.resendOptions.resend_from,
-                    msgHandler,
-                    doneHandler,
-                    latestKnownOffset,
-                )
-            } else if (request.resendOptions.resend_last != null) {
-                // Resend the last N messages
-                this.historicalAdapter.getLast(
-                    request.streamId,
-                    request.streamPartition,
-                    request.resendOptions.resend_last,
-                    msgHandler,
-                    doneHandler,
-                    latestKnownOffset,
-                )
-            } else if (request.resendOptions.resend_from_time != null) {
-                // Resend from a given time
-                this.historicalAdapter.getFromTimestamp(
-                    request.streamId,
-                    request.streamPartition,
-                    request.resendOptions.resend_from_time,
-                    msgHandler,
-                    doneHandler,
-                )
-            } else {
-                debug('handleResendRequest: unknown resend request: %o', JSON.stringify(request))
-                connection.sendError(`Unknown resend options: ${JSON.stringify(request.resendOptions)}`)
-            }
-        }
-        this.handleResendRequest(connection, request, handler)
+    /* eslint-disable class-methods-use-this */
+    handleResendRequestV0(connection) {
+        connection.sendError('ResendRequestV0 is not supported anymore. Please update your Streamr client.')
+        return null
     }
+    /* eslint-enable class-methods-use-this */
 
     /**
      * Creates and returns a Stream object, holding the Stream subscription state.
