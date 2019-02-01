@@ -1,4 +1,5 @@
 const { Readable, Transform } = require('stream')
+const merge2 = require('merge2')
 const cassandra = require('cassandra-driver')
 const { StreamMessageFactory } = require('streamr-client-protocol').MessageLayer
 
@@ -70,6 +71,18 @@ class Storage {
         return this._queryWithStreamingResults(query, queryParams)
     }
 
+    fetchFromMessageRefForPublisher(streamId, streamPartition, fromMsgRef, publisherId) {
+        const query1 = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? ' +
+            'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
+        const query2 = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts > ? AND publisher_id = ? ' +
+            'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
+        const queryParams1 = [streamId, streamPartition, fromMsgRef.timestamp, fromMsgRef.sequenceNumber, publisherId]
+        const queryParams2 = [streamId, streamPartition, fromMsgRef.timestamp, publisherId]
+        const stream1 = this._queryWithStreamingResults(query1, queryParams1)
+        const stream2 = this._queryWithStreamingResults(query2, queryParams2)
+        return merge2(stream1, stream2)
+    }
+
     fetchBetweenTimestamps(streamId, streamPartition, from, to) {
         if (!Number.isInteger(from)) {
             throw new Error('from is not an integer')
@@ -81,6 +94,22 @@ class Storage {
         const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? AND ts <= ? ORDER BY ts ASC, sequence_no ASC'
         const queryParams = [streamId, streamPartition, from, to]
         return this._queryWithStreamingResults(query, queryParams)
+    }
+
+    fetchBetweenMessageRefsForPublisher(streamId, streamPartition, fromMsgRef, toMsgRef, publisherId) {
+        const query1 = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? ' +
+            'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
+        const query2 = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts > ? AND ts < ? AND publisher_id = ? ' +
+            'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
+        const query3 = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts = ? AND sequence_no <= ? AND publisher_id = ? ' +
+            'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
+        const queryParams1 = [streamId, streamPartition, fromMsgRef.timestamp, fromMsgRef.sequenceNumber, publisherId]
+        const queryParams2 = [streamId, streamPartition, fromMsgRef.timestamp, toMsgRef.timestamp, publisherId]
+        const queryParams3 = [streamId, streamPartition, toMsgRef.timestamp, toMsgRef.sequenceNumber, publisherId]
+        const stream1 = this._queryWithStreamingResults(query1, queryParams1)
+        const stream2 = this._queryWithStreamingResults(query2, queryParams2)
+        const stream3 = this._queryWithStreamingResults(query3, queryParams3)
+        return merge2(stream1, stream2, stream3)
     }
 
     close() {

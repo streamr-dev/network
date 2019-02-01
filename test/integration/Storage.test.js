@@ -1,6 +1,6 @@
 const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
-const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, StreamMessageV30, MessageRef } = require('streamr-client-protocol').MessageLayer
 const { startCassandraStorage } = require('../../src/Storage')
 
 const contactPoints = ['127.0.0.1']
@@ -15,7 +15,7 @@ describe('Storage', () => {
 
     function buildMsg(id, streamPartition, timestamp, sequenceNumber, publisherId, content) {
         return new StreamMessageV30(
-            [id, streamPartition, timestamp, sequenceNumber, publisherId], [null, 0],
+            [id, streamPartition, timestamp, sequenceNumber, publisherId], null,
             StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.NONE, null,
         )
     }
@@ -104,6 +104,52 @@ describe('Storage', () => {
         const results = await toArray(streamingResults)
 
         expect(results).toEqual([from1, from2, from3, from4, from5])
+    })
+
+    test('fetch messages starting from a message reference for a particular publisher', async () => {
+        await storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1', {}))
+        await storage.store(buildMsg(streamId, 10, 1000, 0, 'publisher2', {}))
+        await storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3', {}))
+        await storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1', {}))
+        const from2 = buildMsg(streamId, 10, 3000, 3, 'publisher1', {})
+        await storage.store(from2)
+        await storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher2', {}))
+        const from1 = buildMsg(streamId, 10, 3000, 1, 'publisher1', {})
+        await storage.store(from1)
+        await storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3', {}))
+        const from3 = buildMsg(streamId, 10, 8000, 0, 'publisher1', {})
+        await storage.store(from3)
+        await storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1', {}))
+
+        const streamingResults = storage.fetchFromMessageRefForPublisher(streamId, 10, new MessageRef(3000, 1), 'publisher1')
+        const results = await toArray(streamingResults)
+
+        expect(results).toEqual([from1, from2, from3])
+    })
+
+    test('fetch messages between two message references for a particular publisher', async () => {
+        await storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1', {}))
+        await storage.store(buildMsg(streamId, 10, 1500, 0, 'publisher1', {}))
+        const range1 = buildMsg(streamId, 10, 2000, 0, 'publisher1', {})
+        await storage.store(range1)
+        await storage.store(buildMsg(streamId, 10, 2500, 0, 'publisher3', {}))
+        const range2 = buildMsg(streamId, 10, 3000, 0, 'publisher1', {})
+        await storage.store(range2)
+        await storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1', {}))
+        const range4 = buildMsg(streamId, 10, 3000, 2, 'publisher1', {})
+        await storage.store(range4)
+        const range3 = buildMsg(streamId, 10, 3000, 1, 'publisher1', {})
+        await storage.store(range3)
+        await storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1', {}))
+        await storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1', {}))
+
+        const streamingResults = storage.fetchBetweenMessageRefsForPublisher(
+            streamId, 10, new MessageRef(1500, 3),
+            new MessageRef(3000, 2), 'publisher1',
+        )
+        const results = await toArray(streamingResults)
+
+        expect(results).toEqual([range1, range2, range3, range4])
     })
 
     test('fetch messages in a timestamp range', async () => {

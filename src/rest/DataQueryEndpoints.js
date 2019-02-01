@@ -84,6 +84,9 @@ module.exports = (storage, streamFetcher, volumeLogger = new VolumeLogger(0)) =>
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const toTimestamp = parseIntIfExists(req.query.toTimestamp)
 
+        // TODO: do we just drop offsets (like done below) and keep the rest the same?
+        // or do we modify the REST API to support from/range with message refs and publisherId like in WebSocket?
+
         if (fromOffset !== undefined && Number.isNaN(fromOffset)) {
             res.status(400).send({
                 error: `Query parameter "fromOffset" not a number: ${req.query.fromOffset}`,

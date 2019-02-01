@@ -61,7 +61,13 @@ describe('WebsocketServer', () => {
             fetchFromTimestamp: sinon.stub().returns({
                 on: sinon.stub(),
             }),
+            fetchFromMessageRefForPublisher: sinon.stub().returns({
+                on: sinon.stub(),
+            }),
             fetchBetweenTimestamps: sinon.stub().returns({
+                on: sinon.stub(),
+            }),
+            fetchBetweenMessageRefsForPublisher: sinon.stub().returns({
                 on: sinon.stub(),
             }),
         }
@@ -128,11 +134,11 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket)
         })
 
-        describe('socket sends resend request with resend_from AND resend_to', () => {
+        describe('socket sends ResendRangeRequest', () => {
             it('requests messages from given timestamp range from historicalAdapter (V1)', (done) => {
                 const request = ControlLayer.ResendRangeRequest.create(
-                    'streamId', 0, 'sub', [Date.now().toString(), 0],
-                    [Date.now().toString(), 0], 'publisherId', 'correct',
+                    'streamId', 0, 'sub', [Date.now().toString(), null],
+                    [Date.now().toString(), null], null, 'correct',
                 )
 
                 mockSocket.receive(request)
@@ -145,10 +151,42 @@ describe('WebsocketServer', () => {
                     done()
                 })
             })
+            it('requests messages from given message refs range from historicalAdapter (V1)', (done) => {
+                const request = ControlLayer.ResendRangeRequest.create(
+                    'streamId', 0, 'sub', [Date.now().toString(), 0],
+                    [Date.now().toString(), 0], 'publisherId', 'correct',
+                )
+
+                mockSocket.receive(request)
+
+                setTimeout(() => {
+                    sinon.assert.calledWith(
+                        historicalAdapter.fetchBetweenMessageRefsForPublisher, request.streamId, request.streamPartition,
+                        request.fromMsgRef, request.toMsgRef, request.publisherId,
+                    )
+                    done()
+                })
+            })
         })
 
-        describe('socket sends resend request with resend_from_time', () => {
+        describe('socket sends ResendFromRequest', () => {
             it('requests messages from given timestamp from historicalAdapter (V1)', (done) => {
+                const request = ControlLayer.ResendFromRequest.create(
+                    'streamId', 0, 'sub',
+                    [Date.now().toString(), null], null, 'correct',
+                )
+
+                mockSocket.receive(request)
+
+                setTimeout(() => {
+                    sinon.assert.calledWith(
+                        historicalAdapter.fetchFromTimestamp, request.streamId, request.streamPartition,
+                        request.fromMsgRef.timestamp,
+                    )
+                    done()
+                })
+            })
+            it('requests messages from given message ref from historicalAdapter (V1)', (done) => {
                 const request = ControlLayer.ResendFromRequest.create(
                     'streamId', 0, 'sub',
                     [Date.now().toString(), 0], 'publisherId', 'correct',
@@ -158,8 +196,8 @@ describe('WebsocketServer', () => {
 
                 setTimeout(() => {
                     sinon.assert.calledWith(
-                        historicalAdapter.fetchFromTimestamp, request.streamId, request.streamPartition,
-                        request.fromMsgRef.timestamp,
+                        historicalAdapter.fetchFromMessageRefForPublisher, request.streamId, request.streamPartition,
+                        request.fromMsgRef, request.publisherId,
                     )
                     done()
                 })
@@ -203,8 +241,10 @@ describe('WebsocketServer', () => {
         it('historicalAdapter is not called', (done) => {
             setTimeout(() => {
                 sinon.assert.notCalled(historicalAdapter.fetchLatest)
-                sinon.assert.notCalled(historicalAdapter.fetchBetweenTimestamps)
                 sinon.assert.notCalled(historicalAdapter.fetchFromTimestamp)
+                sinon.assert.notCalled(historicalAdapter.fetchFromMessageRefForPublisher)
+                sinon.assert.notCalled(historicalAdapter.fetchBetweenTimestamps)
+                sinon.assert.notCalled(historicalAdapter.fetchBetweenMessageRefsForPublisher)
                 done()
             })
         })
@@ -615,8 +655,7 @@ describe('WebsocketServer', () => {
                 assert.equal(streamMessage.getTimestamp(), ts)
                 assert.equal(streamMessage.messageId.sequenceNumber, 0)
                 assert.equal(streamMessage.getPublisherId(), 'address')
-                assert.equal(streamMessage.prevMsgRef.timestamp, null)
-                assert.equal(streamMessage.prevMsgRef.sequenceNumber, 0)
+                assert.equal(streamMessage.prevMsgRef, null)
                 assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.JSON)
                 assert.equal(streamMessage.getContent(), '{}')
                 assert.equal(streamMessage.signatureType, MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)

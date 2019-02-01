@@ -24,21 +24,14 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         // This handler is for realtime messages, not resends
         this.realtimeAdapter.on('message', (streamMessage) => this.broadcastMessage(streamMessage))
 
-        const subscribeRequestType = ControlLayer.SubscribeRequest.TYPE
-        const unsubscribeRequestType = ControlLayer.UnsubscribeRequest.TYPE
-        const resendRequestV0Type = ControlLayer.ResendRequestV0.TYPE
-        const resendLastRequestType = ControlLayer.ResendLastRequestV1.TYPE
-        const resendFromRequestType = ControlLayer.ResendFromRequestV1.TYPE
-        const resendRangeRequestType = ControlLayer.ResendRangeRequestV1.TYPE
-        const publishRequestType = ControlLayer.PublishRequest.TYPE
         const requestHandlersByMessageType = {}
-        requestHandlersByMessageType[subscribeRequestType] = this.handleSubscribeRequest
-        requestHandlersByMessageType[unsubscribeRequestType] = this.handleUnsubscribeRequest
-        requestHandlersByMessageType[resendRequestV0Type] = this.handleResendRequestV0
-        requestHandlersByMessageType[resendLastRequestType] = this.handleResendLastRequest
-        requestHandlersByMessageType[resendFromRequestType] = this.handleResendFromRequest
-        requestHandlersByMessageType[resendRangeRequestType] = this.handleResendRangeRequest
-        requestHandlersByMessageType[publishRequestType] = this.handlePublishRequest
+        requestHandlersByMessageType[ControlLayer.SubscribeRequest.TYPE] = this.handleSubscribeRequest
+        requestHandlersByMessageType[ControlLayer.UnsubscribeRequest.TYPE] = this.handleUnsubscribeRequest
+        requestHandlersByMessageType[ControlLayer.ResendRequestV0.TYPE] = this.handleResendRequestV0
+        requestHandlersByMessageType[ControlLayer.ResendLastRequestV1.TYPE] = this.handleResendLastRequest
+        requestHandlersByMessageType[ControlLayer.ResendFromRequestV1.TYPE] = this.handleResendFromRequest
+        requestHandlersByMessageType[ControlLayer.ResendRangeRequestV1.TYPE] = this.handleResendRangeRequest
+        requestHandlersByMessageType[ControlLayer.PublishRequest.TYPE] = this.handlePublishRequest
 
         this.wss.on('connection', (socket) => {
             debug('connection established: %o', socket)
@@ -88,7 +81,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     const streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
                     streamMessage = new MessageLayer.StreamMessageV30(
                         [stream.id, streamPartition, request.timestamp || Date.now(), 0, request.publisherAddress],
-                        [null, 0],
+                        null,
                         MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
                         request.content,
                         request.signatureType,
@@ -174,24 +167,39 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handleResendFromRequest(connection, request) {
-        // TODO: once new Cassandra schema set, rename getFromTimestamp --> getFromMsgRef
-        // + use request.fromMsgRef.sequenceNumber and request.publisherId in the query
-        this.handleResendRequest(connection, request, () => this.storage.fetchFromTimestamp(
-            request.streamId,
-            request.streamPartition,
-            request.fromMsgRef.timestamp,
-        ))
+        if (request.publisherId) {
+            this.handleResendRequest(connection, request, () => this.storage.fetchFromMessageRefForPublisher(
+                request.streamId,
+                request.streamPartition,
+                request.fromMsgRef,
+                request.publisherId,
+            ))
+        } else {
+            this.handleResendRequest(connection, request, () => this.storage.fetchFromTimestamp(
+                request.streamId,
+                request.streamPartition,
+                request.fromMsgRef.timestamp,
+            ))
+        }
     }
 
     handleResendRangeRequest(connection, request) {
-        // TODO: once new Cassandra schema set, rename getTimestampRange --> getMsgRefRange
-        // + use request.fromMsgRef.sequenceNumber, request.toMsgRef.sequenceNumber and request.publisherId in the query
-        this.handleResendRequest(connection, request, () => this.storage.fetchBetweenTimestamps(
-            request.streamId,
-            request.streamPartition,
-            request.fromMsgRef.timestamp,
-            request.toMsgRef.timestamp,
-        ))
+        if (request.publisherId) {
+            this.handleResendRequest(connection, request, () => this.storage.fetchBetweenMessageRefsForPublisher(
+                request.streamId,
+                request.streamPartition,
+                request.fromMsgRef,
+                request.toMsgRef,
+                request.publisherId,
+            ))
+        } else {
+            this.handleResendRequest(connection, request, () => this.storage.fetchBetweenTimestamps(
+                request.streamId,
+                request.streamPartition,
+                request.fromMsgRef.timestamp,
+                request.toMsgRef.timestamp,
+            ))
+        }
     }
 
     /* eslint-disable class-methods-use-this */
