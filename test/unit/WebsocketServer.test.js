@@ -293,27 +293,61 @@ describe('WebsocketServer', () => {
             mockSocket.throwOnError = false
 
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive(new ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
-                resend_all: true,
-            }, 'correct'))
         })
 
-        it('returns unsupported version error', (done) => {
-            const expectedResponse = ControlLayer.ErrorResponse.create('ResendRequestV0 is not supported anymore. Please update your Streamr client.')
-
+        it('resend_all is not supported anymore.', (done) => {
+            const request = new ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
+                resend_all: true,
+            }, 'correct')
+            mockSocket.receive(request)
+            const expectedResponse = ControlLayer.ErrorResponse.create('Unknown resend options: {"resend_all":true}')
             setTimeout(() => {
                 assert.deepEqual(mockSocket.sentMessages, [expectedResponse.serialize(controlLayerVersion, messageLayerVersion)])
-                done()
-            })
-        })
-
-        it('historicalAdapter is not called', (done) => {
-            setTimeout(() => {
                 sinon.assert.notCalled(historicalAdapter.fetchLatest)
                 sinon.assert.notCalled(historicalAdapter.fetchFromTimestamp)
                 sinon.assert.notCalled(historicalAdapter.fetchFromMessageRefForPublisher)
                 sinon.assert.notCalled(historicalAdapter.fetchBetweenTimestamps)
                 sinon.assert.notCalled(historicalAdapter.fetchBetweenMessageRefsForPublisher)
+                done()
+            })
+        })
+
+        it('resend_last calls fetchLatest', (done) => {
+            const request = new ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
+                resend_last: 1,
+            }, 'correct')
+            mockSocket.receive(request)
+            setTimeout(() => {
+                sinon.assert.calledWith(historicalAdapter.fetchLatest, request.streamId, request.streamPartition, request.resendOptions.resend_last)
+                done()
+            })
+        })
+
+        it('resend_from calls fetchFromTimestamp', (done) => {
+            const request = new ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
+                resend_from: 132452,
+            }, 'correct')
+            mockSocket.receive(request)
+            setTimeout(() => {
+                sinon.assert.calledWith(
+                    historicalAdapter.fetchFromTimestamp, request.streamId,
+                    request.streamPartition, request.resendOptions.resend_from,
+                )
+                done()
+            })
+        })
+
+        it('resend_from+resend_to calls fetchBetweenTimestamps', (done) => {
+            const request = new ControlLayer.ResendRequestV0('streamId', 0, 'sub', {
+                resend_from: 132452,
+                resend_to: 654323,
+            }, 'correct')
+            mockSocket.receive(request)
+            setTimeout(() => {
+                sinon.assert.calledWith(
+                    historicalAdapter.fetchBetweenTimestamps, request.streamId,
+                    request.streamPartition, request.resendOptions.resend_from, request.resendOptions.resend_to,
+                )
                 done()
             })
         })
