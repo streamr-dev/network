@@ -63,10 +63,17 @@ export default class StreamMessageV30 extends StreamMessage {
         throw new UnsupportedVersionError(version, 'Supported versions: [28, 29, 30]')
     }
 
-    serialize(version = VERSION) {
+    serialize(version = VERSION, options = {
+        stringify: true,
+        parsedContent: false,
+    }) {
         if (version === VERSION) {
-            return JSON.stringify(this.toArray())
+            if (options.stringify) {
+                return JSON.stringify(this.toArray(options.parsedContent))
+            }
+            return this.toArray(options.parsedContent)
         }
-        return this.toOtherVersion(version).serialize()
+        return this.toOtherVersion(version).serialize(version, options)
     }
 }
+StreamMessage.latestClass = StreamMessageV30

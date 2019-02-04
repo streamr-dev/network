@@ -29,9 +29,13 @@ export default class PublishRequestV0 extends PublishRequest {
         this.signature = signature
     }
 
+    getStreamId() {
+        return this.streamId
+    }
+
     getStreamMessage(streamPartition) {
         return new StreamMessageV30(
-            [this.streamId, streamPartition, this.timestamp, 0, this.publisherAddress], [null, null],
+            [this.streamId, streamPartition, this.timestamp || Date.now(), 0, this.publisherAddress], null,
             StreamMessage.CONTENT_TYPES.JSON, this.content, this.signatureType, this.signature,
         )
     }

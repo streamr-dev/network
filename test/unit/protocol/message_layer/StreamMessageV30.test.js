@@ -39,6 +39,22 @@ describe('StreamMessageV30', () => {
 
             assert.deepEqual(serialized, JSON.stringify(arr))
         })
+        it('correctly serializes messages without stringify', () => {
+            const content = {
+                foo: 'bar',
+            }
+            const arr = [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId'],
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
+
+            const serialized = new StreamMessageV30(
+                ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId'],
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+            ).serialize(30, {
+                stringify: false,
+            })
+
+            assert.deepEqual(serialized, arr)
+        })
         it('correctly serializes messages with no signature', () => {
             const content = {
                 foo: 'bar',

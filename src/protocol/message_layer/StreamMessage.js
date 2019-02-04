@@ -1,6 +1,7 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
 
 const BYE_KEY = '_bye'
+const LATEST_VERSION = 30
 
 export default class StreamMessage {
     constructor(version, streamId, contentType, content) {
@@ -80,7 +81,13 @@ export default class StreamMessage {
     isByeMessage() {
         return !!this.getParsedContent()[BYE_KEY]
     }
+
+    static create(messageIdArgsArray, prevMessageRefArgsArray, contentType, content, signatureType, signature) {
+        const C = StreamMessage.latestClass
+        return new C(messageIdArgsArray, prevMessageRefArgsArray, contentType, content, signatureType, signature)
+    }
 }
+/* static */ StreamMessage.LATEST_VERSION = LATEST_VERSION
 
 StreamMessage.CONTENT_TYPES = {
     JSON: 27,

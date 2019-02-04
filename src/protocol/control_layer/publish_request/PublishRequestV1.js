@@ -10,6 +10,10 @@ export default class PublishRequestV1 extends PublishRequest {
         this.streamMessage = streamMessage
     }
 
+    getStreamId() {
+        return this.streamMessage.getStreamId()
+    }
+
     getStreamMessage() {
         return this.streamMessage
     }
