@@ -38,7 +38,7 @@ describe('Connection', () => {
         }
         const conn2 = new Connection(fakeSocket2)
         assert.strictEqual(conn2.controlLayerVersion, 0)
-        assert.strictEqual(conn2.messageLayerVersion, 29)
+        assert.strictEqual(conn2.messageLayerVersion, 28)
     })
 
     describe('stream management', () => {
@@ -128,7 +128,7 @@ describe('Connection', () => {
             }
             const connection2 = new Connection(fakeSocket2)
             connection2.send(msg)
-            assert.deepEqual(fakeSocket2.received, [msg.serialize(0, 29)])
+            assert.deepEqual(fakeSocket2.received, [msg.serialize(0, 28)])
         })
     })
 })

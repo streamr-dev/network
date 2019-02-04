@@ -2,6 +2,7 @@
  * Endpoints for RESTful data requests
  */
 const express = require('express')
+const { MessageRef } = require('streamr-client-protocol').MessageLayer
 const VolumeLogger = require('../utils/VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
@@ -16,13 +17,11 @@ function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {
             let volumeBytes = 0
             res.send(dataPoints.map((streamMessage) => {
                 volumeBytes += streamMessage.getSerializedContent().length
-                if (streamMessage.version === 30) {
-                    return streamMessage.toArray(content === 'json')
-                }
-                return streamMessage.toObject(
-                    content === 'json', // parseContent
-                    wrapper !== 'object', // compact
-                )
+                return streamMessage.serialize(streamMessage.version, {
+                    stringify: false,
+                    parsedContent: content === 'json',
+                    compact: wrapper !== 'object',
+                })
             }))
             volumeLogger.logOutput(volumeBytes)
         }
@@ -75,81 +74,98 @@ module.exports = (storage, streamFetcher, volumeLogger = new VolumeLogger(0)) =>
         }
     })
 
-    router.get('/streams/:id/data/partitions/:partition/range', (req, res) => {
+    router.get('/streams/:id/data/partitions/:partition/from', (req, res) => {
         const partition = parseInt(req.params.partition)
         const wrapper = req.query.wrapper || 'array'
         const content = req.query.content || 'string'
-        const fromOffset = parseIntIfExists(req.query.fromOffset)
-        const toOffset = parseIntIfExists(req.query.toOffset)
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
-        const toTimestamp = parseIntIfExists(req.query.toTimestamp)
+        const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
+        const { publisherId } = req.query
 
-        // TODO: do we just drop offsets (like done below) and keep the rest the same?
-        // or do we modify the REST API to support from/range with message refs and publisherId like in WebSocket?
-
-        if (fromOffset !== undefined && Number.isNaN(fromOffset)) {
+        if (fromTimestamp === undefined) {
             res.status(400).send({
-                error: `Query parameter "fromOffset" not a number: ${req.query.fromOffset}`,
+                error: 'Query parameter "fromTimestamp" required.',
             })
-        } else if (fromTimestamp !== undefined && Number.isNaN(fromTimestamp)) {
+        } else if (Number.isNaN(fromTimestamp)) {
             res.status(400).send({
                 error: `Query parameter "fromTimestamp" not a number: ${req.query.fromTimestamp}`,
             })
-        } else if (toOffset !== undefined && Number.isNaN(toOffset)) {
-            res.status(400).send({
-                error: `Query parameter "toOffset" not a number: ${req.query.toOffset}`,
-            })
-        } else if (toTimestamp !== undefined && Number.isNaN(toTimestamp)) {
-            res.status(400).send({
-                error: `Query parameter "toTimestamp" not a number: ${req.query.toTimestamp}`,
-            })
-        } else if (fromOffset === undefined && fromTimestamp === undefined) {
-            res.status(400).send({
-                error: 'Query parameter "fromOffset" or "fromTimestamp" required.',
-            })
-        } else if (fromOffset !== undefined && fromTimestamp !== undefined) {
-            res.status(400).send({
-                error: 'Query parameters "fromOffset" and "fromTimestamp" cannot be used simultaneously.',
-            })
-        } else if (toOffset !== undefined && toTimestamp !== undefined) {
-            res.status(400).send({
-                error: 'Query parameters "toOffset" and "toTimestamp" cannot be used simultaneously.',
-            })
-        } else if (fromOffset !== undefined && toTimestamp !== undefined) {
-            res.status(400).send({
-                error: 'Using query parameters "fromOffset" and "toTimestamp" together is not yet supported.',
-            })
-        } else if (fromTimestamp !== undefined && toOffset !== undefined) {
-            res.status(400).send({
-                error: 'Using query parameters "fromTimestamp" and "toOffset" together is not yet supported.',
-            })
         } else {
             const dataPoints = []
-
-            if (fromOffset !== undefined && toOffset === undefined) {
-                throw new Error('no longer supported') // TODO: support?
-            } else if (fromOffset !== undefined && toOffset !== undefined) {
-                throw new Error('no longer supported') // TODO: support?
-            } else if (toTimestamp === undefined) {
-                const streamingData = storage.fetchFromTimestamp(
+            let streamingData
+            if (fromSequenceNumber && publisherId) {
+                streamingData = storage.fetchFromMessageRefForPublisher(
+                    req.params.id,
+                    partition,
+                    new MessageRef(fromTimestamp, fromSequenceNumber),
+                    publisherId,
+                )
+            } else {
+                streamingData = storage.fetchFromTimestamp(
                     req.params.id,
                     partition,
                     new Date(fromTimestamp),
                 )
-                streamingData.on('error', onDataFetchDone(res))
-                streamingData.on('data', dataPoints.push.bind(dataPoints))
-                streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
+            }
+            streamingData.on('error', onDataFetchDone(res))
+            streamingData.on('data', dataPoints.push.bind(dataPoints))
+            streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
+        }
+    })
+
+    router.get('/streams/:id/data/partitions/:partition/range', (req, res) => {
+        const partition = parseInt(req.params.partition)
+        const wrapper = req.query.wrapper || 'array'
+        const content = req.query.content || 'string'
+        const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
+        const toTimestamp = parseIntIfExists(req.query.toTimestamp)
+        const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
+        const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber)
+        const { publisherId } = req.query
+
+        if (req.query.fromOffset !== undefined || req.query.toOffset !== undefined) {
+            res.status(400).send({
+                error: 'Query parameters "fromOffset" and "toOffset" are no longer supported. Please use "fromTimestamp" and "toTimestamp".',
+            })
+        } else if (fromTimestamp === undefined) {
+            res.status(400).send({
+                error: 'Query parameter "fromTimestamp" required.',
+            })
+        } else if (Number.isNaN(fromTimestamp)) {
+            res.status(400).send({
+                error: `Query parameter "fromTimestamp" not a number: ${req.query.fromTimestamp}`,
+            })
+        } else if (toTimestamp === undefined) {
+            res.status(400).send({
+                error: 'Query parameter "toTimestamp" required as well. To request all messages since a timestamp,' +
+                    'use the endpoint /streams/:id/data/partitions/:partition/from',
+            })
+        } else if (Number.isNaN(toTimestamp)) {
+            res.status(400).send({
+                error: `Query parameter "toTimestamp" not a number: ${req.query.toTimestamp}`,
+            })
+        } else {
+            const dataPoints = []
+            let streamingData
+            if (fromSequenceNumber && toSequenceNumber && publisherId) {
+                streamingData = storage.fetchBetweenMessageRefsForPublisher(
+                    req.params.id,
+                    partition,
+                    new MessageRef(fromTimestamp, fromSequenceNumber),
+                    new MessageRef(toTimestamp, toSequenceNumber),
+                    publisherId,
+                )
             } else {
-                const streamingData = storage.fetchBetweenTimestamps(
+                streamingData = storage.fetchBetweenTimestamps(
                     req.params.id,
                     partition,
                     new Date(fromTimestamp),
                     new Date(toTimestamp),
                 )
-                streamingData.on('error', onDataFetchDone(res))
-                streamingData.on('data', dataPoints.push.bind(dataPoints))
-                streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
             }
+            streamingData.on('error', onDataFetchDone(res))
+            streamingData.on('data', dataPoints.push.bind(dataPoints))
+            streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
         }
     })
 

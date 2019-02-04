@@ -2,7 +2,7 @@ const { Readable } = require('stream')
 const express = require('express')
 const request = require('supertest')
 const sinon = require('sinon')
-const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, StreamMessageV30, MessageRef } = require('streamr-client-protocol').MessageLayer
 const restEndpointRouter = require('../../../src/rest/DataQueryEndpoints')
 const HttpError = require('../../../src/errors/HttpError')
 
@@ -185,107 +185,16 @@ describe('DataQueryEndpoints', () => {
         })
     })
 
-    describe('Range queries', () => {
-        describe('user errors', () => {
-            it('responds 400 and error message if param "partition" not a number', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/zero/range')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Path parameter "partition" not a number: zero',
-                    }, done)
-            })
-
-            it('responds 403 and error message if not authorized', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrongKey')
-                    .expect('Content-Type', /json/)
-                    .expect(403, {
-                        error: 'Authentication failed.',
-                    }, done)
-            })
-
-            it('responds 400 and error message if param "fromOffset" not a number', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=numberOfTheBeast')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Query parameter "fromOffset" not a number: numberOfTheBeast',
-                    }, done)
-            })
-
-            it('responds 400 and error message if param "fromTimestamp" not a number', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=endOfTime')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Query parameter "fromTimestamp" not a number: endOfTime',
-                    }, done)
-            })
-
-            it('responds 400 and error message if optional param "toOffset" not a number', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=1&toOffset=sixsixsix')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Query parameter "toOffset" not a number: sixsixsix',
-                    }, done)
-            })
-
-            it('responds 400 and error message if optional param "toTimestamp" not a number', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=1&toTimestamp=endOfLife')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Query parameter "toTimestamp" not a number: endOfLife',
-                    }, done)
-            })
-
-            it('responds 400 and error message if param "fromOffset" or "fromTimestamp" not given', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Query parameter "fromOffset" or "fromTimestamp" required.',
-                    }, done)
-            })
-
-            it('responds 400 and error message if both params "fromOffset" and "fromTimestamp" given', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=2&fromTimestamp=1')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Query parameters "fromOffset" and "fromTimestamp" cannot be used simultaneously.',
-                    }, done)
-            })
-
-            it('responds 400 and error message if both optional params "toOffset" and "toTimestamp" given', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=1&toOffset=15&toTimestamp=1321525')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Query parameters "toOffset" and "toTimestamp" cannot be used simultaneously.',
-                    }, done)
-            })
-
-            it('responds 400 and error message if param "fromOffset" used with "toTimestamp"', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromOffset=1&toTimestamp=1321525')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Using query parameters "fromOffset" and "toTimestamp" together is not yet supported.',
-                    }, done)
-            })
-
-            it('responds 400 and error message if param "fromTimestamp" used with "toOffset"', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=13215215215&toOffset=666')
-                    .expect('Content-Type', /json/)
-                    .expect(400, {
-                        error: 'Using query parameters "fromTimestamp" and "toOffset" together is not yet supported.',
-                    }, done)
-            })
-        })
-
+    describe('From queries', () => {
+        const messages = [
+            streamMessage({
+                a: 'a',
+            }),
+            streamMessage({
+                z: 'z',
+            }),
+        ]
         describe('?fromTimestamp=1496408255672', () => {
-            const messages = [
-                streamMessage({
-                    a: 'a',
-                }),
-                streamMessage({
-                    z: 'z',
-                }),
-            ]
-
             beforeEach(() => {
                 historicalAdapterStub.fetchFromTimestamp = () => {
                     const readableStream = new Readable({
@@ -299,20 +208,20 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
                     .expect('Content-Type', /json/)
                     .expect(200, done)
             })
 
             it('responds with data points as body', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
                     .expect(messages.map((msg) => msg.toArray()), done)
             })
 
             it('invokes historicalAdapter#getFromTimestamp once with correct arguments', (done) => {
                 sinon.spy(historicalAdapterStub, 'fetchFromTimestamp')
 
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
                     .then(() => {
                         sinon.assert.calledOnce(historicalAdapterStub.fetchFromTimestamp)
                         sinon.assert.calledWith(
@@ -339,7 +248,7 @@ describe('DataQueryEndpoints', () => {
                     return readableStream
                 }
 
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
                     .expect('Content-Type', /json/)
                     .expect(500, {
                         error: 'Failed to fetch data!',
@@ -347,14 +256,125 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
-        describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
-            const messages = [
-                streamMessage([6, 6, 6]),
-                streamMessage({
-                    '6': '6',
-                }),
-            ]
+        describe('?fromTimestamp=1496408255672&fromSequenceNumber=1&publisherId=publisherId', () => {
+            beforeEach(() => {
+                historicalAdapterStub.fetchFromMessageRefForPublisher = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
+                    })
+                    messages.map((msg) => readableStream.push(msg))
+                    readableStream.push(null)
+                    return readableStream
+                }
+            })
 
+            const query = 'fromTimestamp=1496408255672&fromSequenceNumber=1&publisherId=publisherId'
+
+            it('responds 200 and Content-Type JSON', (done) => {
+                testGetRequest(`/api/v1/streams/streamId/data/partitions/0/from?${query}`)
+                    .expect('Content-Type', /json/)
+                    .expect(200, done)
+            })
+
+            it('responds with data points as body', (done) => {
+                testGetRequest(`/api/v1/streams/streamId/data/partitions/0/from?${query}`)
+                    .expect(messages.map((msg) => msg.toArray()), done)
+            })
+
+            it('invokes historicalAdapter#getFromTimestamp once with correct arguments', (done) => {
+                sinon.spy(historicalAdapterStub, 'fetchFromMessageRefForPublisher')
+
+                testGetRequest(`/api/v1/streams/streamId/data/partitions/0/from?${query}`)
+                    .then(() => {
+                        sinon.assert.calledOnce(historicalAdapterStub.fetchFromMessageRefForPublisher)
+                        sinon.assert.calledWith(
+                            historicalAdapterStub.fetchFromMessageRefForPublisher, 'streamId', 0,
+                            new MessageRef(1496408255672, 1), 'publisherId',
+                        )
+                        done()
+                    })
+                    .catch(done)
+            })
+
+            it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
+                historicalAdapterStub.fetchFromMessageRefForPublisher = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
+                    })
+                    readableStream.once('newListener', (event, listener) => {
+                        if (event === 'error') {
+                            readableStream.addListener('error', listener)
+                            readableStream.emit('error', new Error('error'))
+                        }
+                    })
+                    return readableStream
+                }
+
+                testGetRequest(`/api/v1/streams/streamId/data/partitions/0/from?${query}`)
+                    .expect('Content-Type', /json/)
+                    .expect(500, {
+                        error: 'Failed to fetch data!',
+                    }, done)
+            })
+        })
+    })
+
+    describe('Range queries', () => {
+        const messages = [
+            streamMessage([6, 6, 6]),
+            streamMessage({
+                '6': '6',
+            }),
+        ]
+        describe('user errors', () => {
+            it('responds 400 and error message if param "partition" not a number', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/zero/range')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Path parameter "partition" not a number: zero',
+                    }, done)
+            })
+            it('responds 403 and error message if not authorized', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrongKey')
+                    .expect('Content-Type', /json/)
+                    .expect(403, {
+                        error: 'Authentication failed.',
+                    }, done)
+            })
+            it('responds 400 and error message if param "fromTimestamp" not given', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Query parameter "fromTimestamp" required.',
+                    }, done)
+            })
+            it('responds 400 and error message if param "fromTimestamp" not a number', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=endOfTime')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Query parameter "fromTimestamp" not a number: endOfTime',
+                    }, done)
+            })
+            it('responds 400 and error message if param "toTimestamp" not given', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Query parameter "toTimestamp" required as well. To request all messages since a timestamp,' +
+                            'use the endpoint /streams/:id/data/partitions/:partition/from',
+                    }, done)
+            })
+            it('responds 400 and error message if optional param "toTimestamp" not a number', (done) => {
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1&toTimestamp=endOfLife')
+                    .expect('Content-Type', /json/)
+                    .expect(400, {
+                        error: 'Query parameter "toTimestamp" not a number: endOfLife',
+                    }, done)
+            })
+        })
+
+        describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
             beforeEach(() => {
                 historicalAdapterStub.fetchBetweenTimestamps = () => {
                     const readableStream = new Readable({
@@ -409,6 +429,70 @@ describe('DataQueryEndpoints', () => {
                 }
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
+                    .expect('Content-Type', /json/)
+                    .expect(500, {
+                        error: 'Failed to fetch data!',
+                    }, done)
+            })
+        })
+
+        describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId', () => {
+            const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId'
+
+            beforeEach(() => {
+                historicalAdapterStub.fetchBetweenMessageRefsForPublisher = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
+                    })
+                    messages.map((msg) => readableStream.push(msg))
+                    readableStream.push(null)
+                    return readableStream
+                }
+            })
+
+            it('responds 200 and Content-Type JSON', (done) => {
+                testGetRequest(`/api/v1/streams/streamId/data/partitions/0/range?${query}`)
+                    .expect('Content-Type', /json/)
+                    .expect(200, done)
+            })
+
+            it('responds with data points as body', (done) => {
+                testGetRequest(`/api/v1/streams/streamId/data/partitions/0/range?${query}`)
+                    .expect(messages.map((msg) => msg.toArray()), done)
+            })
+
+            it('invokes historicalAdapter#getTimestampRange once with correct arguments', (done) => {
+                sinon.spy(historicalAdapterStub, 'fetchBetweenMessageRefsForPublisher')
+
+                testGetRequest(`/api/v1/streams/streamId/data/partitions/0/range?${query}`)
+                    .then(() => {
+                        sinon.assert.calledOnce(historicalAdapterStub.fetchBetweenMessageRefsForPublisher)
+                        sinon.assert.calledWith(
+                            historicalAdapterStub.fetchBetweenMessageRefsForPublisher, 'streamId', 0,
+                            new MessageRef(1496408255672, 1), new MessageRef(1496415670909, 2), 'publisherId',
+                        )
+                        done()
+                    })
+                    .catch(done)
+            })
+
+            it('responds 500 and error message if historicalDataAdapter signals error', (done) => {
+                historicalAdapterStub.fetchBetweenMessageRefsForPublisher = () => {
+                    const readableStream = new Readable({
+                        objectMode: true,
+                        read() {},
+                    })
+                    readableStream.once('newListener', (event, listener) => {
+                        if (event === 'error') {
+                            readableStream.addListener('error', listener)
+                            readableStream.emit('error', new Error('error'))
+                        }
+                    })
+                    return readableStream
+                }
+
+                testGetRequest(`/api/v1/streams/streamId/data/partitions/0/range?${query}`)
                     .expect('Content-Type', /json/)
                     .expect(500, {
                         error: 'Failed to fetch data!',

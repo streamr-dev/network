@@ -1,7 +1,7 @@
 const events = require('events')
 const debug = require('debug')('WebsocketServer')
 const debugProtocol = require('debug')('WebsocketServer:protocol')
-const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
+const { ControlLayer } = require('streamr-client-protocol')
 const Stream = require('./Stream')
 const Connection = require('./Connection')
 const HttpError = require('./errors/HttpError')
@@ -64,37 +64,14 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handlePublishRequest(connection, request) {
-        let streamId
-        if (request.version === 0) {
-            /* eslint-disable prefer-destructuring */
-            streamId = request.streamId
-            /* eslint-enable prefer-destructuring */
-        } else if (request.version === 1) {
-            streamId = request.streamMessage.getStreamId()
-        } else {
-            throw new Error(`Unrecognized version: ${request.version}`)
-        }
+        const streamId = request.getStreamId()
         this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'write')
             .then((stream) => {
-                let streamMessage
+                let streamPartition
                 if (request.version === 0) {
-                    const streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
-                    streamMessage = new MessageLayer.StreamMessageV30(
-                        [stream.id, streamPartition, request.timestamp || Date.now(), 0, request.publisherAddress],
-                        null,
-                        MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-                        request.content,
-                        request.signatureType,
-                        request.signature,
-                    )
-                } else if (request.version === 1) {
-                    /* eslint-disable prefer-destructuring */
-                    streamMessage = request.streamMessage
-                    /* eslint-enable prefer-destructuring */
-                } else {
-                    throw new Error(`Unrecognized version: ${request.version}`)
+                    streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
                 }
-                this.publisher.publish(stream, streamMessage)
+                this.publisher.publish(stream, request.getStreamMessage(streamPartition))
             })
             .catch((err) => {
                 let errorMsg
@@ -203,9 +180,30 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     /* eslint-disable class-methods-use-this */
-    handleResendRequestV0(connection) {
-        connection.sendError('ResendRequestV0 is not supported anymore. Please update your Streamr client.')
-        return null
+    handleResendRequestV0(connection, request) {
+        if (request.resendOptions.resend_last != null) {
+            this.handleResendRequest(connection, request, () => this.storage.fetchLatest(
+                request.streamId,
+                request.streamPartition,
+                request.resendOptions.resend_last,
+            ))
+        } else if (request.resendOptions.resend_from != null && request.resendOptions.resend_to != null) {
+            this.handleResendRequest(connection, request, () => this.storage.fetchBetweenTimestamps(
+                request.streamId,
+                request.streamPartition,
+                request.resendOptions.resend_from, // use offset as timestamp
+                request.resendOptions.resend_to, // use offset as timestamp
+            ))
+        } else if (request.resendOptions.resend_from != null) {
+            this.handleResendRequest(connection, request, () => this.storage.fetchFromTimestamp(
+                request.streamId,
+                request.streamPartition,
+                request.resendOptions.resend_from, // use offset as timestamp
+            ))
+        } else {
+            debug('handleResendRequest: unknown resend request: %o', JSON.stringify(request))
+            connection.sendError(`Unknown resend options: ${JSON.stringify(request.resendOptions)}`)
+        }
     }
     /* eslint-enable class-methods-use-this */
 

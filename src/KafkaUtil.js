@@ -1,6 +1,7 @@
 const events = require('events')
 const kafka = require('kafka-node')
 const debug = require('debug')('KafkaUtil')
+const { StreamMessage} = require('streamr-client-protocol').MessageLayer
 const FailedToPublishError = require('./errors/FailedToPublishError')
 
 module.exports = class KafkaUtil extends events.EventEmitter {
@@ -50,7 +51,7 @@ module.exports = class KafkaUtil extends events.EventEmitter {
                     this.dataTopicPartitionCount,
                     `${streamMessage.getStreamId()}-${streamMessage.getStreamPartition()}`,
                 ),
-                messages: Buffer.from(streamMessage.serialize(30)), // always push latest version to kafka,
+                messages: Buffer.from(streamMessage.serialize(StreamMessage.LATEST_VERSION)), // always push latest version to kafka,
             }
 
             debug('Kafka produce request: %o', produceRequest)

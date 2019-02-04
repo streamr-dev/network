@@ -1,3 +1,4 @@
+const { Readable } = require('stream')
 const assert = require('assert')
 const events = require('events')
 const sinon = require('sinon')
@@ -55,9 +56,15 @@ describe('WebsocketServer', () => {
         realtimeAdapter.unsubscribe = sinon.spy()
 
         historicalAdapter = {
-            fetchLatest: sinon.stub().returns({
-                on: sinon.stub(),
-            }),
+            fetchLatest: sinon.stub().returns((() => {
+                const readableStream = new Readable({
+                    objectMode: true,
+                    read() {},
+                })
+                readableStream.push(streamMessagev30)
+                readableStream.push(null)
+                return readableStream
+            })()),
             fetchFromTimestamp: sinon.stub().returns({
                 on: sinon.stub(),
             }),
@@ -132,6 +139,68 @@ describe('WebsocketServer', () => {
     describe('on resend request', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
+        })
+
+        it('sends a resending message before starting a resend', (done) => {
+            const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
+            const expectedResponse = ControlLayer.ResendResponseResending.create(
+                request.streamId,
+                request.streamPartition,
+                request.subId,
+            )
+            mockSocket.receive(request)
+            setTimeout(() => {
+                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize())
+                done()
+            })
+        })
+
+        it('adds the subscription id to messages', (done) => {
+            const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
+            const expectedResponse = ControlLayer.UnicastMessage.create(request.subId, streamMessagev30)
+            mockSocket.receive(request)
+            setTimeout(() => {
+                assert.deepEqual(mockSocket.sentMessages[1], expectedResponse.serialize())
+                done()
+            })
+        })
+
+        it('emits a resent event when resend is complete', (done) => {
+            const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
+            const expectedResponse = ControlLayer.ResendResponseResent.create(
+                request.streamId,
+                request.streamPartition,
+                request.subId,
+            )
+            mockSocket.receive(request)
+            setTimeout(() => {
+                assert.deepEqual(mockSocket.sentMessages[2], expectedResponse.serialize())
+                done()
+            })
+        })
+
+        it('emits no_resend if there is nothing to resend', (done) => {
+            historicalAdapter.fetchLatest = sinon.stub().returns((() => {
+                const readableStream = new Readable({
+                    objectMode: true,
+                    read() {},
+                })
+                readableStream.push(null)
+                return readableStream
+            })())
+
+            const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
+            const expectedResponse = ControlLayer.ResendResponseNoResend.create(
+                request.streamId,
+                request.streamPartition,
+                request.subId,
+            )
+            mockSocket.receive(request)
+
+            setTimeout(() => {
+                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize())
+                done()
+            })
         })
 
         describe('socket sends ResendRangeRequest', () => {

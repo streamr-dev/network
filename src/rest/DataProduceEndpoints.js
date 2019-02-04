@@ -1,6 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
@@ -60,17 +60,19 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
             // req.stream is written by authentication middleware
             publisher.publish(
                 req.stream,
-                publisher.getStreamPartition(req.stream, req.query.pkey),
-                timestamp,
-                0, // sequenceNumber
-                req.query.address, // publisherId
-                null, // prevTimestamp
-                0, // prevSequenceNumber
-                undefined, // ttl, read from stream when available
-                StreamMessage.CONTENT_TYPES.JSON,
-                req.body,
-                req.query.signatureType,
-                req.query.signature,
+                new StreamMessageV30(
+                    [req.stream.id,
+                        publisher.getStreamPartition(req.stream, req.query.pkey),
+                        timestamp,
+                        req.query.seq, // sequenceNumber
+                        req.query.address], // publisherId
+                    [req.query.prev_ts || null, // prevTimestamp
+                        req.query.prev_seq], // prevSequenceNumber
+                    StreamMessage.CONTENT_TYPES.JSON,
+                    req.body,
+                    req.query.signatureType,
+                    req.query.signature,
+                ),
             ).then(() => {
                 res.status(200).send(/* empty success response */)
             }).catch((err) => {

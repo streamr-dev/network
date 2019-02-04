@@ -32,7 +32,7 @@ module.exports = class Publisher {
             throw new NotReadyError('Server not ready. Please try again shortly.')
         }
 
-        this.volumeLogger.logInput(streamMessage.serialize().length)
+        this.volumeLogger.logInput(streamMessage.getContent().length)
 
         return this.kafka.send(streamMessage)
     }
