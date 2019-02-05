@@ -1,6 +1,5 @@
 const debug = require('debug')('Publisher')
 const MessageNotSignedError = require('./errors/MessageNotSignedError')
-const InvalidMessageContentError = require('./errors/InvalidMessageContentError')
 const NotReadyError = require('./errors/NotReadyError')
 const VolumeLogger = require('./utils/VolumeLogger')
 
@@ -23,9 +22,6 @@ module.exports = class Publisher {
     async publish(stream, streamMessage) {
         if (stream.requireSignedData && !streamMessage.signature) {
             throw new MessageNotSignedError('This stream requires published data to be signed.')
-        }
-        if (!streamMessage.getContent()) {
-            throw new InvalidMessageContentError(`Empty message content rejected for stream ${stream.id}`)
         }
 
         if (!this.kafkaReady) {
