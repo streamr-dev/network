@@ -11,6 +11,9 @@ export default class StreamMessage {
         this.version = version
         this.streamId = streamId
         this.contentType = contentType
+        if (!content) {
+            throw new Error('Content cannot be empty.')
+        }
         this.serializedContent = this.serializeContent(content)
         this.parsedContent = this.parseContent(content)
     }
