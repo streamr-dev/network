@@ -11,8 +11,8 @@ module.exports = class Connection extends events.EventEmitter {
         this.streams = []
         const parts = socket.upgradeReq.url.split('?')
         // default versions for old clients
-        this.controlLayerVersion = this.protocolVersion || 0
-        this.messageLayerVersion = this.payloadVersion || 28
+        this.controlLayerVersion = 0
+        this.messageLayerVersion = 28
         if (parts.length === 2) {
             const queryObj = qs.parse(parts[1])
             if (queryObj.controlLayerVersion && queryObj.messageLayerVersion) {

@@ -182,24 +182,38 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     /* eslint-disable class-methods-use-this */
     handleResendRequestV0(connection, request) {
         if (request.resendOptions.resend_last != null) {
-            this.handleResendRequest(connection, request, () => this.storage.fetchLatest(
+            const requestV1 = ControlLayer.ResendLastRequest.create(
                 request.streamId,
                 request.streamPartition,
+                request.subId,
                 request.resendOptions.resend_last,
-            ))
+                request.sessionToken,
+            )
+            requestV1.apiKey = request.apiKey
+            this.handleResendLastRequest(connection, requestV1)
         } else if (request.resendOptions.resend_from != null && request.resendOptions.resend_to != null) {
-            this.handleResendRequest(connection, request, () => this.storage.fetchBetweenTimestamps(
+            const requestV1 = ControlLayer.ResendRangeRequest.create(
                 request.streamId,
                 request.streamPartition,
-                request.resendOptions.resend_from, // use offset as timestamp
-                request.resendOptions.resend_to, // use offset as timestamp
-            ))
+                request.subId,
+                [request.resendOptions.resend_from, 0], // use offset as timestamp
+                [request.resendOptions.resend_to, 0], // use offset as timestamp)
+                null,
+                request.sessionToken,
+            )
+            requestV1.apiKey = request.apiKey
+            this.handleResendRangeRequest(connection, requestV1)
         } else if (request.resendOptions.resend_from != null) {
-            this.handleResendRequest(connection, request, () => this.storage.fetchFromTimestamp(
+            const requestV1 = ControlLayer.ResendFromRequest.create(
                 request.streamId,
                 request.streamPartition,
-                request.resendOptions.resend_from, // use offset as timestamp
-            ))
+                request.subId,
+                [request.resendOptions.resend_from, 0], // use offset as timestamp
+                null,
+                request.sessionToken,
+            )
+            requestV1.apiKey = request.apiKey
+            this.handleResendFromRequest(connection, requestV1)
         } else {
             debug('handleResendRequest: unknown resend request: %o', JSON.stringify(request))
             connection.sendError(`Unknown resend options: ${JSON.stringify(request.resendOptions)}`)

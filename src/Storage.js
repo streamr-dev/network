@@ -7,14 +7,12 @@ const parseRow = (row) => StreamMessageFactory.deserialize(row.payload.toString(
 
 class Storage {
     constructor(cassandraClient) {
-        this.execute = cassandraClient.execute.bind(cassandraClient)
-        this.shutdown = cassandraClient.shutdown.bind(cassandraClient)
-        this.stream = cassandraClient.stream.bind(cassandraClient)
+        this.cassandraClient = cassandraClient
     }
 
     store(streamMessage) {
         const insertStatement = 'INSERT INTO stream_data (id, partition, ts, sequence_no, publisher_id, payload) VALUES (?, ?, ?, ?, ?, ?)'
-        return this.execute(insertStatement, [
+        return this.cassandraClient.execute(insertStatement, [
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition(),
             streamMessage.getTimestamp(),
@@ -39,7 +37,7 @@ class Storage {
             read() {},
         })
 
-        this.execute(query, queryParams, {
+        this.cassandraClient.execute(query, queryParams, {
             prepare: true,
         })
             .then((resultSet) => {
@@ -109,11 +107,11 @@ class Storage {
     }
 
     close() {
-        return this.shutdown()
+        return this.cassandraClient.shutdown()
     }
 
     _queryWithStreamingResults(query, queryParams) {
-        return this.stream(query, queryParams, {
+        return this.cassandraClient.stream(query, queryParams, {
             prepare: true,
             autoPage: true,
         }).pipe(new Transform({
@@ -131,7 +129,7 @@ const startCassandraStorage = async (contactPoints, localDataCenter, keyspace) =
         localDataCenter,
         keyspace,
     })
-    await cassandraClient.connect.bind(cassandraClient)
+    await cassandraClient.connect()
     return new Storage(cassandraClient)
 }
 

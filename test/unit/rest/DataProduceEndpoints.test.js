@@ -1,7 +1,7 @@
 const sinon = require('sinon')
 const express = require('express')
 const request = require('supertest')
-const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const router = require('../../../src/rest/DataProduceEndpoints')
 
 const FailedToPublishError = require('../../../src/errors/FailedToPublishError')
@@ -52,79 +52,79 @@ describe('DataProduceEndpoints', () => {
 
         publisherMock = {
             publish: sinon.stub().resolves(),
-            getStreamPartition: sinon.stub.returns(0),
+            getStreamPartition: sinon.stub().returns(0),
         }
 
         app.use(router(streamFetcher, publisherMock))
     })
 
-    it('should call Publisher.publish() with correct arguments', () => {
-        postRequest()
-            .expect(200)
-            .end((err) => {
-                if (err) {
-                    throw err
-                }
-            })
-        const streamMessage = new StreamMessageV30(
-            [stream.streamId, 0, Date.now(), 0, ''],
-            [null, 0],
+    it('should call Publisher.publish() with correct arguments', (done) => {
+        const streamMessage = StreamMessage.create(
+            [stream.streamId, 0, Date.now(), 0, 'publisherId'],
+            null,
             StreamMessage.CONTENT_TYPES.JSON,
             '{}',
             StreamMessage.SIGNATURE_TYPES.NONE,
             null,
         )
-        publisherMock.publish.calledWith(stream, streamMessage)
-    })
-
-    it('should read timestamp from query params', () => {
-        const ts = new Date()
-
         postRequest({
             query: {
-                ts: ts.toISOString(),
+                ts: streamMessage.getTimestamp(),
+                address: 'publisherId',
+                signatureType: streamMessage.signatureType,
+                signature: streamMessage.signature,
             },
+        }).expect(200).then(() => {
+            sinon.assert.calledWith(publisherMock.publish, stream, streamMessage)
+            done()
         })
-            .expect(200)
-            .end((err) => {
-                if (err) {
-                    throw err
-                }
-            })
-        const streamMessage = new StreamMessageV30(
-            [stream.streamId, 0, ts, 0, ''],
-            [null, 0],
-            StreamMessage.CONTENT_TYPES.JSON,
-            '{}',
-            StreamMessage.SIGNATURE_TYPES.NONE,
+    })
+
+    it('should read signature-related fields', (done) => {
+        const streamMessage = StreamMessage.create(
+            [stream.streamId, 0, Date.now(), 0, 'publisherId'],
             null,
-        )
-        publisherMock.publish.calledWith(stream, streamMessage)
-    })
-
-    it('should read signature-related fields from query params', () => {
-        postRequest({
-            query: {
-                signatureType: '1',
-                address: 'publisher-address',
-                signature: 'signature',
-            },
-        })
-            .expect(200)
-            .end((err) => {
-                if (err) {
-                    throw err
-                }
-            })
-        const streamMessage = new StreamMessageV30(
-            [stream.streamId, 0, Date.now(), 0, 'publisher-address'],
-            [null, 0],
             StreamMessage.CONTENT_TYPES.JSON,
             '{}',
             StreamMessage.SIGNATURE_TYPES.ETH,
             'signature',
         )
-        publisherMock.publish.calledWith(stream, streamMessage)
+        postRequest({
+            query: {
+                ts: streamMessage.getTimestamp(),
+                address: 'publisherId',
+                signatureType: streamMessage.signatureType,
+                signature: streamMessage.signature,
+            },
+        }).expect(200).then(() => {
+            sinon.assert.calledWith(publisherMock.publish, stream, streamMessage)
+            done()
+        })
+    })
+
+    it('should read sequence number and previous reference fields', (done) => {
+        const streamMessage = StreamMessage.create(
+            [stream.streamId, 0, Date.now(), 1, 'publisherId'],
+            [325656645, 3],
+            StreamMessage.CONTENT_TYPES.JSON,
+            '{}',
+            StreamMessage.SIGNATURE_TYPES.NONE,
+            null,
+        )
+        postRequest({
+            query: {
+                ts: streamMessage.getTimestamp(),
+                seq: streamMessage.messageId.sequenceNumber,
+                prev_ts: streamMessage.prevMsgRef.timestamp,
+                prev_seq: streamMessage.prevMsgRef.sequenceNumber,
+                address: 'publisherId',
+                signatureType: streamMessage.signatureType,
+                signature: streamMessage.signature,
+            },
+        }).expect(200).then(() => {
+            sinon.assert.calledWith(publisherMock.publish, stream, streamMessage)
+            done()
+        })
     })
 
     it('should return 200 for valid requests', (done) => {
@@ -150,6 +150,47 @@ describe('DataProduceEndpoints', () => {
         postRequest({
             query: {
                 ts: 'foo',
+            },
+        }).expect(400, done)
+    })
+
+    it('should return 400 for invalid sequence number', (done) => {
+        postRequest({
+            query: {
+                seq: 'foo',
+            },
+        }).expect(400, done)
+    })
+
+    it('should return 400 for invalid sequence number (negative number)', (done) => {
+        postRequest({
+            query: {
+                seq: '-6',
+            },
+        }).expect(400, done)
+    })
+
+    it('should return 400 for invalid previous timestamp', (done) => {
+        postRequest({
+            query: {
+                prev_ts: 'foo',
+            },
+        }).expect(400, done)
+    })
+
+    it('should return 400 for invalid previous sequence number', (done) => {
+        postRequest({
+            query: {
+                prev_ts: 0,
+                prev_seq: 'foo',
+            },
+        }).expect(400, done)
+    })
+
+    it('should return 400 for invalid signature type', (done) => {
+        postRequest({
+            query: {
+                signatureType: 'foo',
             },
         }).expect(400, done)
     })
