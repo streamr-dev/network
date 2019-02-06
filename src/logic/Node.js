@@ -9,7 +9,8 @@ const StreamManager = require('./StreamManager')
 const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:node:message-received',
     MESSAGE_PROPAGATED: 'streamr:node:message-propagated',
-    SUBSCRIPTION_RECEIVED: 'streamr:node:subscription-received',
+    NODE_SUBSCRIBED: 'streamr:node:subscribed-successfully',
+    SUBSCRIPTION_REQUEST: 'streamr:node:subscription-received',
     MESSAGE_DELIVERY_FAILED: 'streamr:node:message-delivery-failed'
 })
 
@@ -47,6 +48,7 @@ class Node extends EventEmitter {
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage) => this.onUnsubscribeRequest(unsubscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
+        this.on(events.NODE_SUBSCRIBED, () => this._sendStatusToAllTrackers())
 
         this.debug = createDebug(`streamr:logic:node:${this.id}`)
         this.debug('started %s', this.id)
@@ -136,6 +138,11 @@ class Node extends EventEmitter {
         const source = subscribeMessage.getSource()
         const leechOnly = subscribeMessage.getLeechOnly()
 
+        this.emit(events.SUBSCRIPTION_REQUEST, {
+            streamId,
+            source
+        })
+
         const isSetup = this.streams.isSetUp(streamId)
 
         if (isSetup && this.streams.getOutboundNodesForStream(streamId).length >= this.connectionLimits.maxOutBound) {
@@ -155,7 +162,10 @@ class Node extends EventEmitter {
 
             this._handleBufferedMessages(streamId)
             this.debug('node %s subscribed to stream %s', source, streamId)
-            this.emit(events.SUBSCRIPTION_RECEIVED, streamId, source)
+            this.emit(events.NODE_SUBSCRIBED, {
+                streamId,
+                source
+            })
         }
     }
 
@@ -175,9 +185,13 @@ class Node extends EventEmitter {
     }
 
     _getStatus() {
+        const { allInboundNodes, allOutboundNodes } = this.streams.getAllNodes()
+
         return {
             streams: this.streams.getStreamsAsKeys(),
-            started: this.started
+            started: this.started,
+            outboundNodes: [...allOutboundNodes],
+            inboundNodes: [...allInboundNodes],
         }
     }
 
@@ -203,15 +217,23 @@ class Node extends EventEmitter {
     async _subscribeToStreamOnNode(node, streamId) {
         if (!this.streams.hasInboundNode(streamId, node)) {
             await this.protocols.nodeToNode.sendSubscribe(node, streamId, false)
+
+            this.streams.addInboundNode(streamId, node)
+            this.streams.addOutboundNode(streamId, node)
+            this._handleBufferedMessages(streamId)
+
+            // TODO get prove message from node that we successfully subscribed
+            this.emit(events.NODE_SUBSCRIBED, {
+                streamId,
+                node
+            })
         }
-        this.streams.addInboundNode(streamId, node)
-        this.streams.addOutboundNode(streamId, node)
-        this._handleBufferedMessages(streamId)
     }
 
     onNodeDisconnected(node) {
         this.streams.removeNodeFromAllStreams(node)
         this.debug('removed all subscriptions of node %s', node)
+        this._sendStatusToAllTrackers()
     }
 
     onTrackerDisconnected(tracker) {
@@ -244,8 +266,11 @@ class Node extends EventEmitter {
         const streamsRequiringMoreNodes = this.streams.getStreams().filter((streamId) => {
             return this.streams.getInboundNodesForStream(streamId).length < TARGET_NUM_OF_INBOUND_NODES_PER_STREAM
         })
-        this.debug('searching for more nodes for streams %j', streamsRequiringMoreNodes)
-        streamsRequiringMoreNodes.forEach((streamId) => this._requestStreamInfo(streamId))
+
+        if (streamsRequiringMoreNodes.length) {
+            this.debug('searching for more nodes for streams %j', streamsRequiringMoreNodes)
+            streamsRequiringMoreNodes.forEach((streamId) => this._requestStreamInfo(streamId))
+        }
     }
 
     _clearConnectToBootstrapTrackersInterval() {
@@ -263,7 +288,7 @@ class Node extends EventEmitter {
     }
 
     _getTracker() {
-        return [...this.trackers][Math.floor(Math.random() * this.trackers.size)]
+        return this.trackers.size ? [...this.trackers][Math.floor(Math.random() * this.trackers.size)] : null
     }
 
     setConnectionLimitsPerStream(maxNumNodesInBound = MAX_NUM_NODES_OUTBOUND_PER_STREAM, maxNumNodesOutBound = MAX_NUM_NODES_OUTBOUND_PER_STREAM) {

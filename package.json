@@ -1,6 +1,6 @@
 {
   "name": "@streamr/streamr-p2p-network",
-  "version": "3.0.4",
+  "version": "3.0.7",
   "description": "Streamr P2P network",
   "repository": {
     "type": "git",
@@ -22,6 +22,7 @@
     "node": "node $NODE_DEBUG_OPTION node.js",
     "pub": "node $NODE_DEBUG_OPTION publisher.js",
     "sub": "node $NODE_DEBUG_OPTION subscriber.js",
+    "test": "jest",
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",

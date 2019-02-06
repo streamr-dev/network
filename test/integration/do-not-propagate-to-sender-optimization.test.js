@@ -32,9 +32,9 @@ describe('optimization: do not propagate to sender', () => {
         n2.subscribe('stream-id', 0)
         n3.subscribe('stream-id', 0)
 
-        await waitForEvent(n1, Node.events.SUBSCRIPTION_RECEIVED)
-        await waitForEvent(n1, Node.events.SUBSCRIPTION_RECEIVED)
-        await waitForEvent(n2, Node.events.SUBSCRIPTION_RECEIVED)
+        await waitForEvent(n1, Node.events.NODE_SUBSCRIBED)
+        await waitForEvent(n1, Node.events.NODE_SUBSCRIBED)
+        await waitForEvent(n2, Node.events.NODE_SUBSCRIBED)
     })
 
     afterAll(async () => {

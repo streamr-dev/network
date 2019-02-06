@@ -1,7 +1,6 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:tracker-node')
 const encoder = require('../helpers/MessageEncoder')
-const { disconnectionReasons } = require('../messages/messageTypes')
 const EndpointListener = require('./EndpointListener')
 const PeerBook = require('./PeerBook')
 
@@ -22,9 +21,11 @@ class TrackerNode extends EventEmitter {
         this._endpointListener.implement(this, endpoint)
     }
 
-    sendStatus(trackerId, status) {
+    async sendStatus(trackerId, status) {
         const trackerAddress = this.peerBook.getAddress(trackerId)
-        this.endpoint.send(trackerAddress, encoder.statusMessage(status))
+        await this.endpoint.send(trackerAddress, encoder.statusMessage(status)).catch((err) => {
+            console.error(`Could not send status to tracker ${trackerAddress} because '${err}'`)
+        })
     }
 
     requestStreamInfo(trackerId, streamId) {
