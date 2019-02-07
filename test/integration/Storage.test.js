@@ -7,10 +7,8 @@ const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev'
 
 describe('Storage', () => {
-    let storage
     let streamId
     let cassandraClient
-    let streamIdx = 1
 
     beforeAll(async () => {
         cassandraClient = new cassandra.Client({
@@ -24,14 +22,8 @@ describe('Storage', () => {
         cassandraClient.shutdown()
     })
 
-    beforeEach(async () => {
-        storage = await startCassandraStorage(contactPoints, localDataCenter, keyspace)
-        streamId = `stream-id-${Date.now()}-${streamIdx}`
-        streamIdx += 1
-    })
-
-    afterEach(async () => {
-        await storage.close()
+    beforeEach(() => {
+        streamId = `stream-id-${Date.now()}`
     })
 
     test('store messages into Cassandra', async () => {
@@ -39,7 +31,9 @@ describe('Storage', () => {
             hello: 'world',
             value: 6,
         }
+        const storage = await startCassandraStorage(contactPoints, localDataCenter, keyspace)
         await storage.store(streamId, 10, 1545144750494, 0, 'publisher', data)
+        await storage.close()
 
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE id = ? AND partition = 10', [streamId])
         expect(result.rows.length).toEqual(1)
@@ -54,6 +48,7 @@ describe('Storage', () => {
     })
 
     test('fetch messages starting from a timestamp', async () => {
+        let storage = await startCassandraStorage(contactPoints, localDataCenter, keyspace)
         await storage.store(streamId, 10, 0, 0, 'publisher', {})
         await storage.store(streamId, 10, 1000, 0, 'publisher', {})
         await storage.store(streamId, 10, 2000, 0, 'publisher', {})
@@ -62,9 +57,11 @@ describe('Storage', () => {
         await storage.store(streamId, 10, 4000, 0, 'publisher', {})
         await storage.store(streamId, 666, 8000, 0, 'publisher', {})
         await storage.store(`${streamId}-wrong`, 10, 8000, 0, 'publisher', {})
+        await storage.close()
 
-        const streamingResults = storage.fetchFromTimestamp(streamId, 10, 2001)
-        const results = await toArray(streamingResults)
+        storage = await startCassandraStorage(contactPoints, localDataCenter, keyspace)
+        const stream = storage.fetchFromTimestamp(streamId, 10, 2001)
+        const results = await toArray(stream)
 
         expect(results).toEqual([
             {
@@ -87,47 +84,6 @@ describe('Storage', () => {
                 streamId,
                 streamPartition: 10,
                 ts: 4000,
-                sequenceNo: 0,
-                publisherId: 'publisher',
-                payload: '{}',
-            },
-        ])
-    })
-
-    test('fetch messages in a timestamp range', async () => {
-        await storage.store(streamId, 10, 0, 0, 'publisher', {})
-        await storage.store(streamId, 10, 1000, 0, 'publisher', {})
-        await storage.store(streamId, 10, 2000, 0, 'publisher', {})
-        await storage.store(streamId, 10, 2001, 0, 'publisher', {})
-        await storage.store(streamId, 10, 3000, 0, 'publisher', {})
-        await storage.store(streamId, 10, 4000, 0, 'publisher', {})
-        await storage.store(streamId, 666, 2500, 0, 'publisher', {})
-        await storage.store(`${streamId}-wrong`, 10, 3000, 0, 'publisher', {})
-
-        const streamingResults = storage.fetchBetweenTimestamps(streamId, 10, 1500, 3500)
-        const results = await toArray(streamingResults)
-
-        expect(results).toEqual([
-            {
-                streamId,
-                streamPartition: 10,
-                ts: 2000,
-                sequenceNo: 0,
-                publisherId: 'publisher',
-                payload: '{}',
-            },
-            {
-                streamId,
-                streamPartition: 10,
-                ts: 2001,
-                sequenceNo: 0,
-                publisherId: 'publisher',
-                payload: '{}',
-            },
-            {
-                streamId,
-                streamPartition: 10,
-                ts: 3000,
                 sequenceNo: 0,
                 publisherId: 'publisher',
                 payload: '{}',
