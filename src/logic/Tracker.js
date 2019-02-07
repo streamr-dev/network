@@ -9,6 +9,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this.nodes = new Set()
         this.streamKeyToNodes = new Map()
+        this.connectionsToNodes = new Map()
 
         this.id = id
         this.protocols = {
@@ -26,7 +27,7 @@ module.exports = class Tracker extends EventEmitter {
     processNodeStatus(statusMessage) {
         const source = statusMessage.getSource()
         const status = statusMessage.getStatus()
-        this._addNode(source, status.streams)
+        this._addNode(source, status)
     }
 
     onNodeDisconnected(node) {
@@ -52,19 +53,29 @@ module.exports = class Tracker extends EventEmitter {
         return this.protocols.trackerServer.getAddress()
     }
 
-    _addNode(node, streamKeys) {
+    _addNode(node, status) {
         this.nodes.add(node)
+
+        const streamKeys = status.streams
         streamKeys.forEach((streamKey) => {
             if (!this.streamKeyToNodes.has(streamKey)) {
                 this.streamKeyToNodes.set(streamKey, new Set())
             }
             this.streamKeyToNodes.get(streamKey).add(node)
         })
+
+        this.connectionsToNodes.set(node, {
+            outboundNodes: status.outboundNodes,
+            inboundNodes: status.inboundNodes,
+        })
+
         this.debug('registered node %s for streams %j', node, streamKeys)
     }
 
     _removeNode(node) {
         this.nodes.delete(node)
+        this.connectionsToNodes.delete(node)
+
         this.streamKeyToNodes.forEach((_, streamKey) => {
             this.streamKeyToNodes.get(streamKey).delete(node)
             if (this.streamKeyToNodes.get(streamKey).size === 0) {
