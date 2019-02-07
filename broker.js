@@ -6,7 +6,6 @@ let optimist = require('optimist')
 
 const { startNetworkNode } = require('@streamr/streamr-p2p-network')
 
-const { startCassandraStorage } = require('./src/Storage')
 const StreamFetcher = require('./src/StreamFetcher')
 const WebsocketServer = require('./src/WebsocketServer')
 const Partitioner = require('./src/Partitioner')
@@ -18,13 +17,8 @@ const createDataProduceEndpoints = require('./src/rest/DataProduceEndpoints')
 const createVolumeEndpoint = require('./src/rest/VolumeEndpoint')
 
 module.exports = async (config) => {
-    const storage = await startCassandraStorage([config.cassandraHost], 'datacenter1', config.cassandraKeyspace)
     const networkNode = await startNetworkNode(config.networkHostname, config.networkPort)
     await networkNode.addBootstrapTracker('ws://127.0.0.1:30300')
-
-    networkNode.addMessageListener((streamId, streamPartition, timestamp, sequenceNo, publisherId, prevTimestamp, prevSequenceNo, payload) => {
-        storage.store(streamId, streamPartition, timestamp, sequenceNo, publisherId, payload)
-    })
 
     const historicalAdapter = null
     const latestOffsetFetcher = null
@@ -101,11 +95,9 @@ if (require.main === module) {
     optimist = optimist.usage(`You must pass the following command line options:
         --networkHostname <networkHostname>
         --networkPort <networkPort>
-        --cassandraHost <cassandraHost>
-        --cassandraKeyspace <cassandraKeyspace>
         --streamr <streamr>
         --port <port>`)
-    optimist = optimist.demand(['networkHostname', 'networkPort', 'cassandraHost', 'cassandraKeyspace', 'streamr', 'port'])
+    optimist = optimist.demand(['networkHostname', 'networkPort', 'streamr', 'port'])
 
     module.exports(optimist.argv)
         .then(() => {})
