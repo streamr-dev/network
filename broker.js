@@ -91,7 +91,6 @@ module.exports = async (config) => {
             httpServer.close()
             networkNode.close()
             volumeLogger.stop()
-            storage.stop()
         },
     }
 }
