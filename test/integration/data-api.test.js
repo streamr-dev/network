@@ -17,8 +17,6 @@ describe('data-api', () => {
             networkPort: 31313,
             streamr: 'http://localhost:8081/streamr-core',
             port,
-            cassandraHost: ['127.0.0.1'],
-            cassandraKeyspace: 'streamr_dev',
         })
     })
 
