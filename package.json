@@ -47,9 +47,8 @@
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.7.0",
     "jest": "^23.4.2",
+    "uuid": "^3.3.2",
     "sinon": "^6.3.0",
-    "stream-to-array": "^2.3.0",
-    "supertest": "^3.0.0",
-    "uuid": "^3.3.2"
+    "supertest": "^3.0.0"
   }
 }
