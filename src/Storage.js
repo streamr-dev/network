@@ -1,4 +1,4 @@
-const { Readable, Transform } = require('stream')
+const { Transform } = require('stream')
 const cassandra = require('cassandra-driver')
 
 const callbackToPromise = (method, ...args) => {
@@ -8,15 +8,6 @@ const callbackToPromise = (method, ...args) => {
         })
     })
 }
-
-const parseRow = (row) => ({
-    streamId: row.id,
-    streamPartition: row.partition,
-    ts: row.ts.getTime(),
-    sequenceNo: row.sequence_no,
-    publisherId: row.publisher_id,
-    payload: row.payload.toString(),
-})
 
 class Storage {
     constructor(cassandraClient) {
@@ -39,33 +30,6 @@ class Storage {
         ], {
             prepare: true,
         })
-    }
-
-    async fetchLatest(streamId, streamPartition, n) {
-        if (!Number.isInteger(n)) {
-            throw new Error('n is not an integer')
-        }
-        const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? ORDER BY ts DESC LIMIT ?'
-        const queryParams = [streamId, streamPartition, n]
-
-        // Wrap as stream for consistency with other fetch functions
-        const readableStream = new Readable({
-            objectMode: true,
-            read() {},
-        })
-
-        callbackToPromise(this.execute, query, queryParams, {
-            prepare: true,
-        })
-            .then((resultSet) => {
-                resultSet.rows.reverse().forEach((r) => readableStream.push(parseRow(r)))
-                readableStream.push(null)
-            })
-            .catch((err) => {
-                readableStream.emit('error', err)
-            })
-
-        return readableStream
     }
 
     fetchFromTimestamp(streamId, streamPartition, from) {
@@ -102,7 +66,14 @@ class Storage {
         }).pipe(new Transform({
             objectMode: true,
             transform: (row, _, done) => {
-                done(null, parseRow(row))
+                done(null, {
+                    streamId: row.id,
+                    streamPartition: row.partition,
+                    ts: row.ts.getTime(),
+                    sequenceNo: row.sequence_no,
+                    publisherId: row.publisher_id,
+                    payload: row.payload.toString(),
+                })
             },
         }))
     }

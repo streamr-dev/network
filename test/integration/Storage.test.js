@@ -53,48 +53,6 @@ describe('Storage', () => {
         })
     })
 
-    test('fetch latest messages', async () => {
-        await storage.store(streamId, 10, 0, 0, 'publisher', {})
-        await storage.store(streamId, 10, 1000, 0, 'publisher', {})
-        await storage.store(streamId, 10, 2000, 0, 'publisher', {})
-        await storage.store(streamId, 10, 2001, 0, 'publisher', {})
-        await storage.store(streamId, 10, 3000, 0, 'publisher', {})
-        await storage.store(streamId, 10, 3000, 1, 'publisher', {})
-        await storage.store(streamId, 10, 4000, 0, 'publisher', {})
-        await storage.store(streamId, 666, 8000, 0, 'publisher', {})
-        await storage.store(`${streamId}-wrong`, 10, 8000, 0, 'publisher', {})
-
-        const streamingResults = await storage.fetchLatest(streamId, 10, 3)
-        const results = await toArray(streamingResults)
-
-        expect(results).toEqual([
-            {
-                streamId,
-                streamPartition: 10,
-                ts: 3000,
-                sequenceNo: 0,
-                publisherId: 'publisher',
-                payload: '{}',
-            },
-            {
-                streamId,
-                streamPartition: 10,
-                ts: 3000,
-                sequenceNo: 1,
-                publisherId: 'publisher',
-                payload: '{}',
-            },
-            {
-                streamId,
-                streamPartition: 10,
-                ts: 4000,
-                sequenceNo: 0,
-                publisherId: 'publisher',
-                payload: '{}',
-            },
-        ])
-    })
-
     test('fetch messages starting from a timestamp', async () => {
         await storage.store(streamId, 10, 0, 0, 'publisher', {})
         await storage.store(streamId, 10, 1000, 0, 'publisher', {})
