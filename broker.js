@@ -2,7 +2,7 @@ const http = require('http')
 const cors = require('cors')
 const express = require('express')
 const ws = require('ws')
-let optimist = require('optimist')
+const Optimist = require('optimist')
 
 const { startNetworkNode } = require('@streamr/streamr-p2p-network')
 
@@ -12,9 +12,9 @@ const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
 const VolumeLogger = require('./src/utils/VolumeLogger')
 
-const createDataQueryEndpoints = require('./src/rest/DataQueryEndpoints')
-const createDataProduceEndpoints = require('./src/rest/DataProduceEndpoints')
-const createVolumeEndpoint = require('./src/rest/VolumeEndpoint')
+const dataQueryEndpoints = require('./src/rest/DataQueryEndpoints')
+const dataProduceEndpoints = require('./src/rest/DataProduceEndpoints')
+const volumeEndpoint = require('./src/rest/VolumeEndpoint')
 
 module.exports = async (config) => {
     const networkNode = await startNetworkNode(config.networkHostname, config.networkPort)
@@ -36,7 +36,7 @@ module.exports = async (config) => {
     app.use(cors())
 
     // Websocket endpoint is handled by WebsocketServer
-    const server = new WebsocketServer(
+    const websocketServer = new WebsocketServer(
         new ws.Server({
             server: httpServer,
             path: '/api/v1/ws',
@@ -50,11 +50,7 @@ module.exports = async (config) => {
                 if (info.req.headers['sec-websocket-key']) {
                     cb(true)
                 } else {
-                    cb(
-                        false,
-                        400, // bad request
-                        'Invalid headers on websocket request. Please upgrade your browser or websocket library!',
-                    )
+                    cb(false, 400, 'Invalid headers on websocket request. Please upgrade your browser or websocket library!')
                 }
             },
         }),
@@ -67,9 +63,9 @@ module.exports = async (config) => {
     )
 
     // Rest endpoints
-    app.use('/api/v1', createDataQueryEndpoints(historicalAdapter, streamFetcher, volumeLogger))
-    app.use('/api/v1', createDataProduceEndpoints(streamFetcher, publisher, volumeLogger))
-    app.use('/api/v1', createVolumeEndpoint(volumeLogger))
+    app.use('/api/v1', dataQueryEndpoints(historicalAdapter, streamFetcher, volumeLogger))
+    app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher, volumeLogger))
+    app.use('/api/v1', volumeEndpoint(volumeLogger))
 
     // Start the server
     httpServer.listen(config.port, () => {
@@ -81,6 +77,7 @@ module.exports = async (config) => {
 
     return {
         httpServer,
+        websocketServer,
         close: () => {
             httpServer.close()
             networkNode.close()
@@ -92,7 +89,7 @@ module.exports = async (config) => {
 // Start the server if we're not being required from another module
 if (require.main === module) {
     // Check command line args
-    optimist = optimist.usage(`You must pass the following command line options:
+    let optimist = Optimist.usage(`You must pass the following command line options:
         --networkHostname <networkHostname>
         --networkPort <networkPort>
         --streamr <streamr>

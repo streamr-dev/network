@@ -1,6 +1,8 @@
-const StreamrBinaryMessage = require('./protocol/StreamrBinaryMessage')
-const StreamrBinaryMessageWithKafkaMetadata = require('./protocol/StreamrBinaryMessageWithKafkaMetadata')
+const debug = require('debug')('Publisher')
+const StreamrBinaryMessageV29 = require('./protocol/StreamrBinaryMessageV29')
+const MessageNotSignedError = require('./errors/MessageNotSignedError')
 const InvalidMessageContentError = require('./errors/InvalidMessageContentError')
+const NotReadyError = require('./errors/NotReadyError')
 const VolumeLogger = require('./utils/VolumeLogger')
 
 module.exports = class Publisher {
@@ -11,7 +13,10 @@ module.exports = class Publisher {
         this.previousTimestamps = {}
     }
 
-    async publish(stream, timestamp, content, partitionKey) {
+    async publish(stream, timestamp, content, partitionKey, signatureType, address, signature) {
+        if (stream.requireSignedData && !signature) {
+            throw new MessageNotSignedError('This stream requires published data to be signed.')
+        }
         if (!content) {
             throw new InvalidMessageContentError(`Empty message content rejected for stream ${stream.id}`)
         }
@@ -29,16 +34,19 @@ module.exports = class Publisher {
         const offset = null
         const previousOffset = null
 
-        const streamrBinaryMessage = new StreamrBinaryMessageWithKafkaMetadata(new StreamrBinaryMessage(
+        const streamrBinaryMessage = new StreamrBinaryMessageV29(
             streamId,
             streamPartition,
             ts,
             ttl || 0,
-            StreamrBinaryMessage.CONTENT_TYPE_JSON,
+            27, // JSON content type
             content,
-        ), offset, previousOffset, 0)
+            signatureType || StreamrBinaryMessageV29.SIGNATURE_TYPE_NONE,
+            address,
+            signature,
+        )
 
-        this.volumeLogger.logInput(streamrBinaryMessage.getStreamrBinaryMessage().getContentBuffer().length)
+        this.volumeLogger.logInput(streamrBinaryMessage.getContentBuffer().length)
 
         return this.networkNode.publish(
             streamId,

@@ -122,6 +122,33 @@ describe('DataProduceEndpoints', () => {
         )
     })
 
+    it('should read signature-related fields from query params', () => {
+        postRequest({
+            query: {
+                signatureType: '1',
+                address: 'publisher-address',
+                signature: 'signature',
+            },
+        })
+            .expect(200)
+            .end((err) => {
+                if (err) {
+                    throw err
+                }
+            })
+        publisherMock.publish.calledWith(
+            stream,
+            undefined, // timestamp
+            undefined, // ttl
+            StreamrBinaryMessage.CONTENT_TYPE_JSON,
+            new BufferMaker().string('{}').make(),
+            undefined,
+            1,
+            'publisher-address',
+            'signature',
+        )
+    })
+
     it('should return 200 for valid requests', (done) => {
         postRequest()
             .expect(200, done)

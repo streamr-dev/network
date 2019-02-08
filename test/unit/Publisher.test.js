@@ -5,12 +5,16 @@ const BufferMaker = require('buffermaker')
 
 const Publisher = require('../../src/Publisher')
 const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
+const MessageNotSignedError = require('../../src/errors/MessageNotSignedError')
 const InvalidMessageContentError = require('../../src/errors/InvalidMessageContentError')
 
 describe('Publisher', () => {
     const stream = {
         id: 'streamId',
         partitions: 10,
+    }
+    const signedStream = {
+        requireSignedData: true,
     }
 
     const msg = new BufferMaker().string('{}').make()
@@ -35,6 +39,12 @@ describe('Publisher', () => {
             assert(promise instanceof Promise)
         })
 
+        it('should throw MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData flag', (done) => {
+            publisher.publish(signedStream, Date.now(), msg).catch((err) => {
+                assert(err instanceof MessageNotSignedError, err)
+                done()
+            })
+        })
         it('should throw InvalidMessageContentError if no content is given', (done) => {
             publisher.publish(stream, Date.now(), undefined).catch((err) => {
                 assert(err instanceof InvalidMessageContentError)

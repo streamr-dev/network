@@ -1,6 +1,8 @@
 const assert = require('assert')
 const sinon = require('sinon')
 const StreamrBinaryMessage = require('../../../src/protocol/StreamrBinaryMessage')
+const StreamrBinaryMessageFactory = require('../../../src/protocol/StreamrBinaryMessageFactory')
+const StreamrBinaryMessageV28 = require('../../../src/protocol/StreamrBinaryMessageV28')
 const StreamrBinaryMessageWithKafkaMetadata = require('../../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
 
 describe('StreamrBinaryMessageWithKafkaMetadata', () => {
@@ -18,7 +20,7 @@ describe('StreamrBinaryMessageWithKafkaMetadata', () => {
             const previousOffset = 99
             const kafkaPartition = 0
 
-            msg = new StreamrBinaryMessage(
+            msg = new StreamrBinaryMessageV28(
                 streamId,
                 streamPartition,
                 timestamp,
@@ -56,51 +58,19 @@ describe('StreamrBinaryMessageWithKafkaMetadata', () => {
 
             describe('optimisation', () => {
                 beforeEach(() => {
-                    sinon.spy(StreamrBinaryMessage, 'fromBytes')
+                    sinon.spy(StreamrBinaryMessageFactory, 'fromBytes')
                 })
 
                 afterEach(() => {
-                    StreamrBinaryMessage.fromBytes.restore()
+                    StreamrBinaryMessageFactory.fromBytes.restore()
                 })
 
                 it('does not call StreamrBinaryMessage.fromBytes() when StreamrBinaryMessage passed as buffer when toBytes', () => {
                     const msgAsBytes = new StreamrBinaryMessageWithKafkaMetadata(msg.toBytes(), 100, 99, 0)
                     msgAsBytes.toBytes()
 
-                    assert.equal(StreamrBinaryMessage.fromBytes.callCount, 0)
+                    assert.equal(StreamrBinaryMessageFactory.fromBytes.callCount, 0)
                 })
-            })
-        })
-
-        describe('toArray(contentAsBuffer)', () => {
-            it('returns data in array format given contentAsBuffer=true', () => {
-                assert.deepEqual(msgWithMetadata.toArray(true), [
-                    28,
-                    'streamId',
-                    0,
-                    1497529459457,
-                    100,
-                    100,
-                    99,
-                    StreamrBinaryMessage.CONTENT_TYPE_JSON,
-                    '{"foo":"bar"}',
-                ])
-            })
-
-            it('returns data in array format with pre-parsed content contentAsBuffer=false', () => {
-                assert.deepEqual(msgWithMetadata.toArray(false), [
-                    28,
-                    'streamId',
-                    0,
-                    1497529459457,
-                    100,
-                    100,
-                    99,
-                    StreamrBinaryMessage.CONTENT_TYPE_JSON,
-                    {
-                        foo: 'bar',
-                    },
-                ])
             })
         })
 

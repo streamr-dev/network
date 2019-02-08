@@ -1,13 +1,15 @@
 const events = require('events')
-const encoder = require('../../../src/MessageEncoder')
+const Protocol = require('streamr-client-protocol')
 
 module.exports = class MockSocket extends events.EventEmitter {
-    constructor(id) {
+    constructor(version = 28) {
         super()
-        this.id = id
         this.rooms = []
         this.sentMessages = []
         this.throwOnError = true
+        this.upgradeReq = {
+            url: `some-url?payloadVersion=${version}`,
+        }
     }
 
     join(channel, cb) {
@@ -16,19 +18,30 @@ module.exports = class MockSocket extends events.EventEmitter {
         cb()
     }
 
-    receive(message) {
-        this.emit('message', JSON.stringify(message))
+    receive(requestObject) {
+        if (requestObject.serialize != null) {
+            this.emit('message', requestObject.serialize())
+        } else {
+            throw new Error(`Unexpected argument to MockSocket.receive: ${JSON.stringify(requestObject)}`)
+        }
     }
 
-    send(message) {
-        this.sentMessages.push(message)
+    receiveRaw(stringOrObject) {
+        this.emit('message', JSON.stringify(stringOrObject))
+    }
+
+    send(response) {
+        if (typeof response !== 'string') {
+            throw new Error(`Tried to send a non-string to the socket: ${response}`)
+        }
+        this.sentMessages.push(response)
 
         // Inspect the message to catch errors
-        const parsedMessage = JSON.parse(message)
+        const msg = Protocol.WebsocketResponse.deserialize(response)
 
         // If you expect error messages, set mockSocket.throwOnError to false for those tests
-        if (parsedMessage[1] === encoder.BROWSER_MSG_TYPE_ERROR && this.throwOnError) {
-            throw new Error(`Received unexpected error message: ${parsedMessage[3]}`)
+        if (msg instanceof Protocol.ErrorResponse && this.throwOnError) {
+            throw new Error(`Received unexpected error message: ${msg.payload.error}`)
         }
     }
 

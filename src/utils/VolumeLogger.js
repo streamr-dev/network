@@ -16,12 +16,12 @@ module.exports = class VolumeLogger {
     }
 
     logInput(bytes) {
-        this.inCount++
+        this.inCount += 1
         this.inBytes += bytes
     }
 
     logOutput(bytes) {
-        this.outCount++
+        this.outCount += 1
         this.outBytes += bytes
     }
 
@@ -36,12 +36,12 @@ module.exports = class VolumeLogger {
             numOfOpenWebsockets: this.connectionCount,
             input: {
                 eventsPerSecond: Math.round(inPerSecond),
-                kbPerSecond: Math.round(kbInPerSecond)
+                kbPerSecond: Math.round(kbInPerSecond),
             },
             output: {
                 eventsPerSecond: Math.round(outPerSecond),
-                kbPerSecond: Math.round(kbOutPerSecond)
-            }
+                kbPerSecond: Math.round(kbOutPerSecond),
+            },
         }
 
         console.log(

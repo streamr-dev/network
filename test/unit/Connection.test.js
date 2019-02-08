@@ -1,8 +1,7 @@
 const assert = require('assert')
+const Protocol = require('streamr-client-protocol')
 const Connection = require('../../src/Connection.js')
 const Stream = require('../../src/Stream.js')
-const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
-const StreamrBinaryMessageWithKafkaMetadata = require('../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
 
 describe('Connection', () => {
     let connection
@@ -15,12 +14,31 @@ describe('Connection', () => {
             send(msg) {
                 this.received.push(msg)
             },
+            upgradeReq: {
+                url: 'url',
+            },
         }
         connection = new Connection(fakeSocket)
     })
 
     it('id returns socket id', () => {
         assert.equal(connection.id, 'socketId')
+    })
+
+    it('parses undefined version properly', () => {
+        assert.equal(connection.protocolVersion, undefined)
+        assert.equal(connection.payloadVersion, undefined)
+    })
+
+    it('parses defined version properly', () => {
+        const fakeSocket2 = {
+            upgradeReq: {
+                url: 'url?protocolVersion=0&payloadVersion=29',
+            },
+        }
+        const conn2 = new Connection(fakeSocket2)
+        assert.strictEqual(conn2.protocolVersion, 0)
+        assert.strictEqual(conn2.payloadVersion, 29)
     })
 
     describe('stream management', () => {
@@ -80,61 +98,22 @@ describe('Connection', () => {
         })
     })
 
-    describe('send functions', () => {
-        const timestamp = 1490355900000
-        let msgWithMetaDataAsArray
-
-        beforeEach(() => {
-            const streamrBinaryMessage = new StreamrBinaryMessage(
-                'streamId', 0, new Date(timestamp), 0,
-                StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from('{}', 'utf8'),
-            )
-            const msgWithMetaData = new StreamrBinaryMessageWithKafkaMetadata(streamrBinaryMessage, 25, 24, 0)
-            msgWithMetaDataAsArray = msgWithMetaData.toArray()
-        })
-
-        function expectedMessage(msgCode) {
-            return JSON.stringify([0, msgCode, '', [28, 'streamId', 0, timestamp, 0, 25, 24, 27, '{}']])
-        }
-
-        it('sendBroadcast sends expected message to socket', () => {
-            connection.sendBroadcast(msgWithMetaDataAsArray)
-            assert.deepEqual(fakeSocket.received, [expectedMessage(0)])
-        })
-
-        it('sendUnicast sends expected message to socket', () => {
-            connection.sendUnicast(msgWithMetaDataAsArray)
-            assert.deepEqual(fakeSocket.received, [expectedMessage(1)])
-        })
-
-        it('sendSubscribed sends expected message to socket', () => {
-            connection.sendSubscribed(msgWithMetaDataAsArray)
-            assert.deepEqual(fakeSocket.received, [expectedMessage(2)])
-        })
-
-        it('sendUnsubscribed sends expected message to socket', () => {
-            connection.sendUnsubscribed(msgWithMetaDataAsArray)
-            assert.deepEqual(fakeSocket.received, [expectedMessage(3)])
-        })
-
-        it('sendResending sends expected message to socket', () => {
-            connection.sendResending(msgWithMetaDataAsArray)
-            assert.deepEqual(fakeSocket.received, [expectedMessage(4)])
-        })
-
-        it('sendResent sends expected message to socket', () => {
-            connection.sendResent(msgWithMetaDataAsArray)
-            assert.deepEqual(fakeSocket.received, [expectedMessage(5)])
-        })
-
-        it('sendNoResend sends expected message to socket', () => {
-            connection.sendNoResend(msgWithMetaDataAsArray)
-            assert.deepEqual(fakeSocket.received, [expectedMessage(6)])
-        })
-
-        it('sendError sends expected message to socket', () => {
-            connection.sendError(msgWithMetaDataAsArray)
-            assert.deepEqual(fakeSocket.received, [expectedMessage(7)])
+    describe('send()', () => {
+        it('sends a serialized message to the socket', () => {
+            const msg = new Protocol.UnicastMessage(new Protocol.StreamMessage(
+                'streamId',
+                0, // partition
+                Date.now(),
+                undefined, // ttl
+                1, // offset
+                0, // previousOffset
+                Protocol.StreamMessage.CONTENT_TYPES.JSON,
+                {
+                    foo: 'bar',
+                },
+            ), 'subId')
+            connection.send(msg)
+            assert.deepEqual(fakeSocket.received, [msg.serialize()])
         })
     })
 })

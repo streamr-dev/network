@@ -6,28 +6,23 @@ const VolumeLogger = require('../utils/VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
 function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {
-    return function (largestOffset, err) {
+    return (largestOffset, err) => {
         if (err) {
             console.log(err)
             res.status(500).send({
                 error: 'Failed to fetch data!',
             })
         } else {
-            switch (wrapper.toLowerCase()) {
-                case 'array':
-                    volumeLogger.outCount += 1
-                    res.send(dataPoints.map((message) => message.toArray(content !== 'json')))
-                    break
-                case 'object':
-                    volumeLogger.outCount += 1
-                    res.send(dataPoints.map((message) => message.toObject(content !== 'json')))
-                    break
-                default:
-                    console.log(err)
-                    res.status(400).send({
-                        error: `Invalid value for query parameter "wrapper": ${wrapper}`,
-                    })
-            }
+            let volumeBytes = 0
+            res.send(dataPoints.map((streamMessage) => {
+                volumeBytes += streamMessage.getSerializedContent().length
+                return streamMessage.toObject(
+                    undefined, // default version
+                    content === 'json', // parseContent
+                    wrapper !== 'object', // compact
+                )
+            }))
+            volumeLogger.logOutput(volumeBytes)
         }
     }
 }
@@ -58,8 +53,8 @@ module.exports = (historicalAdapter, streamFetcher, volumeLogger = new VolumeLog
     router.get('/streams/:id/data/partitions/:partition/last', (req, res) => {
         const partition = parseInt(req.params.partition)
         const count = req.query.count === undefined ? 1 : parseInt(req.query.count)
-        const wrapper = req.query.wrapper || 'array'
-        const content = req.query.content || 'string'
+        const wrapperOption = req.query.wrapper || 'array'
+        const contentOption = req.query.content || 'string'
 
         if (Number.isNaN(count)) {
             res.status(400).send({
@@ -72,7 +67,7 @@ module.exports = (historicalAdapter, streamFetcher, volumeLogger = new VolumeLog
                 partition,
                 count,
                 dataPoints.push.bind(dataPoints),
-                onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger),
+                onDataFetchDone(res, dataPoints, wrapperOption.toLowerCase(), contentOption.toLowerCase(), volumeLogger),
             )
         }
     })

@@ -63,6 +63,9 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
                 timestamp,
                 req.body,
                 req.query.pkey,
+                req.query.signatureType,
+                req.query.address,
+                req.query.signature,
             ).then(() => {
                 res.status(200).send(/* empty success response */)
             }).catch((err) => {

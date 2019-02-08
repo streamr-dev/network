@@ -1,6 +1,6 @@
 const events = require('events')
 const debug = require('debug')('streamr:Connection')
-const encoder = require('./MessageEncoder')
+const qs = require('qs')
 
 module.exports = class Connection extends events.EventEmitter {
     constructor(socket) {
@@ -8,6 +8,12 @@ module.exports = class Connection extends events.EventEmitter {
         this.id = socket.id
         this.socket = socket
         this.streams = []
+        const parts = socket.upgradeReq.url.split('?')
+        if (parts.length === 2) {
+            const queryObj = qs.parse(parts[1])
+            this.protocolVersion = queryObj.protocolVersion ? parseInt(queryObj.protocolVersion) : undefined
+            this.payloadVersion = queryObj.payloadVersion ? parseInt(queryObj.payloadVersion) : undefined
+        }
     }
 
     addStream(stream) {
@@ -29,42 +35,10 @@ module.exports = class Connection extends events.EventEmitter {
         return this.streams.slice() // return copy
     }
 
-    sendBroadcast(msg) {
-        this.socket.send(encoder.broadcastMessage(msg))
-    }
-
-    sendUnicast(msg, subId) {
-        this.socket.send(encoder.unicastMessage(msg, subId))
-    }
-
-    sendSubscribed(response) {
-        debug('sendSubscribed (%s): %o', this.id, response)
-        this.socket.send(encoder.subscribedMessage(response))
-    }
-
-    sendUnsubscribed(response) {
-        this.socket.send(encoder.unsubscribedMessage(response))
-    }
-
-    sendResending(response) {
-        this.socket.send(encoder.resendingMessage(response))
-    }
-
-    sendResent(response) {
-        this.socket.send(encoder.resentMessage(response))
-    }
-
-    sendNoResend(response) {
-        this.socket.send(encoder.noResendMessage(response))
-    }
-
-    sendError(response) {
-        debug('sendError (%s): %o', this.id, response)
-        this.socket.send(encoder.errorMessage(response))
-    }
-
-    streamsAsString() {
-        return this.streams.map((s) => `${s.id}:${s.partition}`)
+    send(msg) {
+        const serialized = msg.serialize(this.protocolVersion, this.payloadVersion)
+        debug('send: %s: %o', this.id, serialized)
+        this.socket.send(serialized)
     }
 }
 

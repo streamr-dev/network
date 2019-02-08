@@ -1,9 +1,9 @@
 const assert = require('assert')
 const events = require('events')
 const sinon = require('sinon')
-const encoder = require('../../src/MessageEncoder')
+const Protocol = require('streamr-client-protocol')
+
 const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
-const StreamrBinaryMessageWithKafkaMetadata = require('../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
 const WebsocketServer = require('../../src/WebsocketServer')
 
 const MockSocket = require('./test-helpers/MockSocket')
@@ -21,6 +21,19 @@ describe('WebsocketServer', () => {
     const myStream = {
         streamId: 'streamId',
     }
+
+    const streamMessage = new Protocol.StreamMessage(
+        'streamId',
+        0, // partition
+        new Date(1491037200000),
+        0, // ttl
+        2, // offset
+        1,
+        Protocol.StreamMessage.CONTENT_TYPES.JSON,
+        {
+            hello: 'world',
+        },
+    )
 
     beforeEach(() => {
         realtimeAdapter = new events.EventEmitter()
@@ -41,7 +54,8 @@ describe('WebsocketServer', () => {
         }
 
         latestOffsetFetcher = {
-            fetchOffset: sinon.stub().resolves(0),
+            fetchOffset: sinon.stub()
+                .resolves(0),
         }
 
         streamFetcher = {
@@ -59,37 +73,25 @@ describe('WebsocketServer', () => {
         }
 
         publisher = {
-            publish: sinon.stub().resolves(),
+            publish: sinon.stub()
+                .resolves(),
         }
 
         // Mock websocket lib
         wsMock = new events.EventEmitter()
 
         // Mock the socket
-        mockSocket = new MockSocket('mock-socket-1')
+        mockSocket = new MockSocket()
 
         // Create the server instance
         server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, latestOffsetFetcher, streamFetcher, publisher)
     })
 
-    function kafkaMessage() {
-        const streamId = 'streamId'
-        const partition = 0
-        const timestamp = new Date(1491037200000)
-        const ttl = 0
-        const contentType = StreamrBinaryMessage.CONTENT_TYPE_JSON
-        const content = {
-            hello: 'world',
-        }
-        const msg = new StreamrBinaryMessage(streamId, partition, timestamp, ttl, contentType, Buffer.from(JSON.stringify(content), 'utf8'))
-        return new StreamrBinaryMessageWithKafkaMetadata(msg.toBytes(), 2, 1, 0)
-    }
-
     describe('on socket connection', () => {
         let mockSocket2
 
         beforeEach(() => {
-            mockSocket2 = new MockSocket('mock-socket-2')
+            mockSocket2 = new MockSocket()
             wsMock.emit('connection', mockSocket)
             wsMock.emit('connection', mockSocket2)
         })
@@ -110,83 +112,68 @@ describe('WebsocketServer', () => {
     })
 
     describe('on resend request', () => {
-        it('emits a resending event before starting the resend', (done) => {
-            historicalAdapter.getAll = sinon.stub()
-            historicalAdapter.getAll.callsArgWithAsync(2, kafkaMessage())
-
+        beforeEach(() => {
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                sub: 'sub',
-                type: 'resend',
+        })
+
+        it('sends a resending message before starting a resend', (done) => {
+            historicalAdapter.getAll = sinon.stub()
+            historicalAdapter.getAll.callsArgWithAsync(2, streamMessage)
+
+            const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
                 resend_all: true,
-            })
+            }, 'correct')
+            const expectedResponse = new Protocol.ResendResponseResending(
+                request.streamId,
+                request.streamPartition,
+                request.subId,
+            )
+            mockSocket.receive(request)
 
             setTimeout(() => {
-                const payload = {
-                    stream: 'streamId',
-                    partition: 0,
-                    sub: 'sub',
-                }
-                const expectedMsg = JSON.stringify([0, encoder.BROWSER_MSG_TYPE_RESENDING, '', payload])
-                assert.deepEqual(mockSocket.sentMessages[0], expectedMsg)
+                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize())
                 done()
             })
         })
 
         it('adds the subscription id to messages', (done) => {
             historicalAdapter.getAll = sinon.stub()
-            historicalAdapter.getAll.callsArgWithAsync(2, kafkaMessage())
+            historicalAdapter.getAll.callsArgWithAsync(2, streamMessage)
 
-            wsMock.emit('connection', mockSocket)
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                sub: 'sub',
-                type: 'resend',
+            const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
                 resend_all: true,
-            })
+            }, 'correct')
+            const expectedResponse = new Protocol.UnicastMessage(
+                streamMessage,
+                request.subId,
+            )
+
+            mockSocket.receive(request)
 
             setTimeout(() => {
-                const expectedMsg = JSON.stringify([
-                    0,
-                    encoder.BROWSER_MSG_TYPE_UNICAST,
-                    'sub',
-                    [28, 'streamId', 0, 1491037200000, 0, 2, 1, 27, JSON.stringify({
-                        hello: 'world',
-                    })],
-                ])
-                assert.deepEqual(mockSocket.sentMessages[1], expectedMsg)
+                assert.deepEqual(mockSocket.sentMessages[1], expectedResponse.serialize())
                 done()
             })
         })
 
         it('emits a resent event when resend is complete', (done) => {
-            historicalAdapter.getAll = function (streamId, streamPartition, messageHandler, onDone) {
-                messageHandler(kafkaMessage())
+            historicalAdapter.getAll = (streamId, streamPartition, messageHandler, onDone) => {
+                messageHandler(streamMessage)
                 onDone()
             }
 
-            wsMock.emit('connection', mockSocket)
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                sub: 'sub',
-                type: 'resend',
+            const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
                 resend_all: true,
-            })
+            }, 'correct')
+            const expectedResponse = new Protocol.ResendResponseResent(
+                request.streamId,
+                request.streamPartition,
+                request.subId,
+            )
+            mockSocket.receive(request)
 
             setTimeout(() => {
-                const expectedMsg = JSON.stringify([
-                    0, encoder.BROWSER_MSG_TYPE_RESENT, '', {
-                        stream: 'streamId', partition: 0, sub: 'sub',
-                    },
-                ])
-                assert.deepEqual(mockSocket.sentMessages[2], expectedMsg)
+                assert.deepEqual(mockSocket.sentMessages[2], expectedResponse.serialize())
                 done()
             })
         })
@@ -195,41 +182,32 @@ describe('WebsocketServer', () => {
             historicalAdapter.getAll = sinon.stub()
             historicalAdapter.getAll.callsArgAsync(3)
 
-            wsMock.emit('connection', mockSocket)
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                sub: 'sub',
-                type: 'resend',
+            const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
                 resend_all: true,
-            })
+            }, 'correct')
+            const expectedResponse = new Protocol.ResendResponseNoResend(
+                request.streamId,
+                request.streamPartition,
+                request.subId,
+            )
+            mockSocket.receive(request)
 
             setTimeout(() => {
-                const expectedMsg = JSON.stringify([
-                    0, encoder.BROWSER_MSG_TYPE_NO_RESEND, '', {
-                        stream: 'streamId', partition: 0, sub: 'sub',
-                    },
-                ])
-                assert.deepEqual(mockSocket.sentMessages[0], expectedMsg)
+                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize())
                 done()
             })
         })
 
         describe('socket sends resend request with resend_all', () => {
             it('requests all messages from historicalAdapter', (done) => {
-                wsMock.emit('connection', mockSocket)
-                mockSocket.receive({
-                    type: 'resend',
-                    stream: 'streamId',
-                    partition: 0,
-                    authKey: 'correct',
-                    sub: 7,
+                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
                     resend_all: true,
-                })
+                }, 'correct')
+
+                mockSocket.receive(request)
 
                 setTimeout(() => {
-                    sinon.assert.calledWith(historicalAdapter.getAll, 'streamId', 0)
+                    sinon.assert.calledWith(historicalAdapter.getAll, request.streamId, request.streamPartition)
                     done()
                 })
             })
@@ -237,18 +215,17 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_from', () => {
             it('requests messages from given offset from historicalAdapter', (done) => {
-                wsMock.emit('connection', mockSocket)
-                mockSocket.receive({
-                    type: 'resend',
-                    stream: 'streamId',
-                    partition: 0,
-                    authKey: 'correct',
-                    sub: 7,
+                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
                     resend_from: 333,
-                })
+                }, 'correct')
+
+                mockSocket.receive(request)
 
                 setTimeout(() => {
-                    sinon.assert.calledWith(historicalAdapter.getFromOffset, 'streamId', 0, 333)
+                    sinon.assert.calledWith(
+                        historicalAdapter.getFromOffset, request.streamId, request.streamPartition,
+                        request.resendOptions.resend_from,
+                    )
                     done()
                 })
             })
@@ -256,19 +233,18 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_from AND resend_to', () => {
             it('requests messages from given range from historicalAdapter', (done) => {
-                wsMock.emit('connection', mockSocket)
-                mockSocket.receive({
-                    type: 'resend',
-                    stream: 'streamId',
-                    partition: 0,
-                    authKey: 'correct',
-                    sub: 7,
+                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
                     resend_from: 7,
                     resend_to: 10,
-                })
+                }, 'correct')
+
+                mockSocket.receive(request)
 
                 setTimeout(() => {
-                    sinon.assert.calledWith(historicalAdapter.getOffsetRange, 'streamId', 0, 7, 10)
+                    sinon.assert.calledWith(
+                        historicalAdapter.getOffsetRange, request.streamId, request.streamPartition,
+                        request.resendOptions.resend_from, request.resendOptions.resend_to,
+                    )
                     done()
                 })
             })
@@ -276,19 +252,17 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_from_time', () => {
             it('requests messages from given timestamp from historicalAdapter', (done) => {
-                const timestamp = Date.now()
-                wsMock.emit('connection', mockSocket)
-                mockSocket.receive({
-                    type: 'resend',
-                    stream: 'streamId',
-                    partition: 0,
-                    authKey: 'correct',
-                    sub: 7,
-                    resend_from_time: timestamp,
-                })
+                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
+                    resend_from_time: Date.now(),
+                }, 'correct')
+
+                mockSocket.receive(request)
 
                 setTimeout(() => {
-                    sinon.assert.calledWith(historicalAdapter.getFromTimestamp, 'streamId', 0, timestamp)
+                    sinon.assert.calledWith(
+                        historicalAdapter.getFromTimestamp, request.streamId, request.streamPartition,
+                        request.resendOptions.resend_from_time,
+                    )
                     done()
                 })
             })
@@ -296,18 +270,14 @@ describe('WebsocketServer', () => {
 
         describe('socket sends resend request with resend_last', () => {
             it('requests last N messages from historicalAdapter', (done) => {
-                wsMock.emit('connection', mockSocket)
-                mockSocket.receive({
-                    type: 'resend',
-                    stream: 'streamId',
-                    partition: 0,
-                    authKey: 'correct',
-                    sub: 7,
+                const request = new Protocol.ResendRequest('streamId', 0, 'sub', {
                     resend_last: 10,
-                })
+                }, 'correct')
+
+                mockSocket.receive(request)
 
                 setTimeout(() => {
-                    sinon.assert.calledWith(historicalAdapter.getLast, 'streamId', 0, 10)
+                    sinon.assert.calledWith(historicalAdapter.getLast, request.streamId, request.streamPartition, request.resendOptions.resend_last)
                     done()
                 })
             })
@@ -320,22 +290,16 @@ describe('WebsocketServer', () => {
             mockSocket.throwOnError = false
 
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'wrong',
-                sub: 'sub',
-                type: 'resend',
+            mockSocket.receive(new Protocol.ResendRequest('streamId', 0, 'sub', {
                 resend_all: true,
-            })
+            }, 'wrong'))
         })
 
         it('sends only error message to socket', (done) => {
+            const expectedResponse = new Protocol.ErrorResponse('Failed to request resend from stream streamId and partition 0: 403')
+
             setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages, [JSON.stringify([
-                    0, encoder.BROWSER_MSG_TYPE_ERROR, '',
-                    'Failed to request resend from stream streamId and partition 0: 403',
-                ])])
+                assert.deepEqual(mockSocket.sentMessages, [expectedResponse.serialize()])
                 done()
             })
         })
@@ -349,29 +313,19 @@ describe('WebsocketServer', () => {
     })
 
     describe('message broadcasting', () => {
-        it('emits messages received from Redis to those sockets according to streamId', (done) => {
+        beforeEach(() => {
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                type: 'subscribe',
+        })
+
+        it('emits messages received from Redis to those sockets according to streamId', (done) => {
+            mockSocket.receive(new Protocol.SubscribeRequest('streamId', 0, 'correct'))
+
+            setTimeout(() => {
+                realtimeAdapter.emit('message', streamMessage, 'streamId', 0)
             })
 
             setTimeout(() => {
-                const m = kafkaMessage()
-                realtimeAdapter.emit('message', 'streamId', 0, m.offset, 0, 'publisher', m.previousOffset, 0, m.toArray())
-            })
-
-            setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages[1], JSON.stringify([
-                    0,
-                    encoder.BROWSER_MSG_TYPE_BROADCAST,
-                    '',
-                    [28, 'streamId', 0, 1491037200000, 0, 2, 1, 27, JSON.stringify({
-                        hello: 'world',
-                    })],
-                ]))
+                assert.deepEqual(mockSocket.sentMessages[1], new Protocol.BroadcastMessage(streamMessage).serialize())
                 done()
             })
         })
@@ -383,20 +337,16 @@ describe('WebsocketServer', () => {
 
             // Expect error messages
             mockSocket.throwOnError = false
-            mockSocket.receive({
-                type: 'subscribe',
-            })
         })
 
         it('emits error', (done) => {
+            mockSocket.receiveRaw({
+                type: 'subscribe',
+            })
+
             setTimeout(() => {
-                const msg = JSON.parse(mockSocket.sentMessages[0])
-                assert.equal(
-                    msg[1], // message type
-                    encoder.BROWSER_MSG_TYPE_ERROR,
-                )
-                const content = msg[3]
-                assert(content.error !== undefined)
+                const msg = Protocol.WebsocketResponse.deserialize(mockSocket.sentMessages[0])
+                assert(msg instanceof Protocol.ErrorResponse)
                 done()
             })
         })
@@ -405,12 +355,11 @@ describe('WebsocketServer', () => {
     describe('on subscribe request', () => {
         beforeEach(() => {
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                undefined,
+                'correct',
+            ))
         })
 
         it('creates the Stream object with default partition', (done) => {
@@ -421,14 +370,13 @@ describe('WebsocketServer', () => {
         })
 
         it('creates the Stream object with given partition', (done) => {
-            const socket2 = new MockSocket('mock-socket-2')
+            const socket2 = new MockSocket()
             wsMock.emit('connection', socket2)
-            socket2.receive({
-                stream: 'streamId',
-                partition: 1,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
+            socket2.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                1,
+                'correct',
+            ))
 
             setTimeout(() => {
                 assert(server.streams.getStreamObject('streamId', 1) != null)
@@ -445,24 +393,22 @@ describe('WebsocketServer', () => {
 
         it('emits \'subscribed\' after subscribing', (done) => {
             setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages[0], JSON.stringify([
-                    0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', {
-                        stream: 'streamId', partition: 0,
-                    },
-                ]))
+                assert.deepEqual(
+                    mockSocket.sentMessages[0],
+                    new Protocol.SubscribeResponse('streamId', 0).serialize(),
+                )
                 done()
             })
         })
 
         it('does not resubscribe to realtimeAdapter on new subscription to same stream', (done) => {
-            const socket2 = new MockSocket('mock-socket-2')
+            const socket2 = new MockSocket()
             wsMock.emit('connection', socket2)
-            socket2.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
+            socket2.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
 
             setTimeout(() => {
                 sinon.assert.calledOnce(realtimeAdapter.subscribe)
@@ -477,12 +423,11 @@ describe('WebsocketServer', () => {
 
             // Expect error messages
             mockSocket.throwOnError = false
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'wrong',
-                type: 'subscribe',
-            })
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'wrongApiKey',
+            ))
         })
 
         it('does not create the Stream object with default partition', (done) => {
@@ -501,8 +446,7 @@ describe('WebsocketServer', () => {
 
         it('sends error message to socket', (done) => {
             setTimeout(() => {
-                assert.equal(mockSocket.sentMessages[0], JSON.stringify([0, encoder.BROWSER_MSG_TYPE_ERROR, '',
-                    'Not authorized to subscribe to stream streamId and partition 0']))
+                assert(Protocol.WebsocketResponse.deserialize(mockSocket.sentMessages[0]) instanceof Protocol.ErrorResponse)
                 done()
             })
         })
@@ -514,30 +458,24 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket)
 
             // subscribe
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
 
             // unsubscribe
             setTimeout(() => {
-                mockSocket.receive({
-                    stream: 'streamId',
-                    partition: 0,
-                    type: 'unsubscribe',
-                })
+                mockSocket.receive(new Protocol.UnsubscribeRequest('streamId', 0))
                 done()
             })
         })
 
         it('emits a unsubscribed event', () => {
-            assert.deepEqual(mockSocket.sentMessages[mockSocket.sentMessages.length - 1], JSON.stringify([
-                0, encoder.BROWSER_MSG_TYPE_UNSUBSCRIBED, '', {
-                    stream: 'streamId', partition: 0,
-                },
-            ]))
+            assert.deepEqual(
+                mockSocket.sentMessages[1],
+                new Protocol.UnsubscribeResponse('streamId', 0).serialize(),
+            )
         })
 
         it('unsubscribes from realtimeAdapter if there are no more sockets on the stream', () => {
@@ -547,56 +485,76 @@ describe('WebsocketServer', () => {
         it('removes stream object if there are no more sockets on the stream', () => {
             assert(server.streams.getStreamObject('streamId', 0) == null)
         })
+    })
 
-        it('does not unsubscribe from realtimeAdapter if there are sockets remaining on the stream', (done) => {
-            realtimeAdapter.unsubscribe = sinon.spy()
+    describe('subscribe-subscribe-unsubscribe', () => {
+        beforeEach((done) => {
+            realtimeAdapter.unsubscribe = sinon.mock()
 
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
+            // subscribe
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
 
+            // subscribe 2
+            const socket2 = new MockSocket()
+            wsMock.emit('connection', socket2)
+            socket2.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
+
+            // unsubscribe 1
             setTimeout(() => {
-                const socket2 = new MockSocket('mock-socket-2')
-                wsMock.emit('connection', socket2)
-                socket2.receive({
-                    stream: 'streamId',
-                    partition: 0,
-                    authKey: 'correct',
-                    type: 'subscribe',
-                })
-
-                setTimeout(() => {
-                    sinon.assert.notCalled(realtimeAdapter.unsubscribe)
-                    done()
-                })
+                mockSocket.receive(new Protocol.UnsubscribeRequest('streamId', 0))
+                done()
             })
         })
 
-        it('does not remove stream object if there are sockets remaining on the stream', (done) => {
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                type: 'subscribe',
+        it('does not unsubscribe from realtimeAdapter if there are other subscriptions to it', () => {
+            sinon.assert.notCalled(realtimeAdapter.unsubscribe)
+        })
+
+        it('does not remove stream object if there are other subscriptions to it', () => {
+            assert(server.getStreamObject('streamId', 0) != null)
+        })
+    })
+
+    describe('subscribe-subscribe-unsubscribe', () => {
+        beforeEach((done) => {
+            realtimeAdapter.unsubscribe = sinon.mock()
+
+            // subscribe
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
+
+            // subscribe 2
+            const socket2 = new MockSocket()
+            wsMock.emit('connection', socket2)
+            socket2.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
+
+            // unsubscribe 1
+            setTimeout(() => {
+                mockSocket.receive(new Protocol.UnsubscribeRequest('streamId', 0))
+                done()
             })
 
-            setTimeout(() => {
-                const socket2 = new MockSocket('mock-socket-2')
-                wsMock.emit('connection', socket2)
-                socket2.receive({
-                    stream: 'streamId',
-                    partition: 0,
-                    authKey: 'correct',
-                    type: 'subscribe',
-                })
+            it('does not unsubscribe from realtimeAdapter if there are other subscriptions to it', () => {
+                sinon.assert.notCalled(realtimeAdapter.unsubscribe)
+            })
 
-                setTimeout(() => {
-                    assert(server.streams.getStreamObject('streamId', 0) != null)
-                    done()
-                })
+            it('does not remove stream object if there are other subscriptions to it', () => {
+                assert(server.streams.getStreamObject('streamId', 0) != null)
             })
         })
     })
@@ -607,41 +565,32 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket)
 
             // subscribe
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 0,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                0,
+                'correct',
+            ))
 
             setTimeout(() => {
                 // unsubscribe
-                mockSocket.receive({
-                    stream: 'streamId',
-                    partition: 0,
-                    type: 'unsubscribe',
-                })
+                mockSocket.receive(new Protocol.UnsubscribeRequest(
+                    'streamId',
+                    0,
+                ))
 
                 setTimeout(() => {
                     // subscribed
-                    mockSocket.receive({
-                        stream: 'streamId',
-                        partition: 0,
-                        authKey: 'correct',
-                        type: 'subscribe',
-                    })
+                    mockSocket.receive(new Protocol.SubscribeRequest(
+                        'streamId',
+                        0,
+                        'correct',
+                    ))
 
                     setTimeout(() => {
                         assert.deepEqual(mockSocket.sentMessages, [
-                            JSON.stringify([0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', {
-                                stream: 'streamId', partition: 0,
-                            }]),
-                            JSON.stringify([0, encoder.BROWSER_MSG_TYPE_UNSUBSCRIBED, '', {
-                                stream: 'streamId', partition: 0,
-                            }]),
-                            JSON.stringify([0, encoder.BROWSER_MSG_TYPE_SUBSCRIBED, '', {
-                                stream: 'streamId', partition: 0,
-                            }]),
+                            new Protocol.SubscribeResponse('streamId', 0).serialize(),
+                            new Protocol.UnsubscribeResponse('streamId', 0).serialize(),
+                            new Protocol.SubscribeResponse('streamId', 0).serialize(),
                         ])
                         done()
                     })
@@ -657,17 +606,12 @@ describe('WebsocketServer', () => {
         })
 
         it('calls the publisher for valid requests', (done) => {
-            const req = {
-                type: 'publish',
-                stream: 'streamId',
-                authKey: 'correct',
-                msg: '{}',
-            }
+            const req = new Protocol.PublishRequest(myStream.streamId, 'correct', undefined, '{}')
 
             publisher.publish = (stream, timestamp, content, partitionKey) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(timestamp, undefined)
-                assert.equal(content, req.msg)
+                assert.equal(content, req.content)
                 assert.equal(partitionKey, undefined)
                 done()
             }
@@ -676,28 +620,38 @@ describe('WebsocketServer', () => {
         })
 
         it('reads optional fields if specified', (done) => {
-            const req = {
-                type: 'publish',
-                stream: 'streamId',
-                authKey: 'correct',
-                msg: '{}',
-                ts: Date.now(),
-                pkey: 'foo',
-            }
+            const req = new Protocol.PublishRequest(myStream.streamId, 'correct', undefined, '{}', Date.now(), 'foo')
 
             publisher.publish = (stream, timestamp, content, partitionKey) => {
                 assert.deepEqual(stream, myStream)
-                assert.equal(timestamp, req.ts)
-                assert.equal(content, req.msg)
-                assert.equal(partitionKey, req.pkey)
+                assert.equal(timestamp, req.timestamp)
+                assert.equal(content, req.content)
+                assert.equal(partitionKey, req.partitionKey)
                 done()
             }
 
             mockSocket.receive(req)
         })
 
-        describe('error handling', () => {
+        it('reads signature fields if specified', (done) => {
+            const req = new Protocol.PublishRequest(myStream.streamId, 'correct', undefined, '{}', undefined, undefined, 'address', 1, 'signature')
 
+            publisher.publish = (stream, timestamp, content, partitionKey, signatureType, publisherAddress, signature) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(timestamp, req.timestamp)
+                assert.equal(content, req.content)
+                assert.equal(partitionKey, undefined)
+                assert.equal(publisherAddress, req.publisherAddress)
+                assert.equal(signatureType, req.signatureType)
+                assert.equal(signature, req.signature)
+                done()
+            }
+            const mockSocket3 = new MockSocket(29)
+            wsMock.emit('connection', mockSocket3)
+            mockSocket3.receive(req)
+        })
+
+        describe('error handling', () => {
             beforeEach(() => {
                 // None of these tests may publish
                 publisher.publish = sinon.stub().throws()
@@ -708,7 +662,7 @@ describe('WebsocketServer', () => {
 
             afterEach(() => {
                 assert.equal(mockSocket.sentMessages.length, 1)
-                assert.equal(JSON.parse(mockSocket.sentMessages[0])[1], encoder.BROWSER_MSG_TYPE_ERROR)
+                assert(Protocol.WebsocketResponse.deserialize(mockSocket.sentMessages[0]) instanceof Protocol.ErrorResponse)
             })
 
             it('responds with an error if the stream id is missing', () => {
@@ -718,7 +672,7 @@ describe('WebsocketServer', () => {
                     msg: '{}',
                 }
 
-                mockSocket.receive(req)
+                mockSocket.receiveRaw(req)
             })
 
             it('responds with an error if the msg is missing', () => {
@@ -728,9 +682,8 @@ describe('WebsocketServer', () => {
                     authKey: 'correct',
                 }
 
-                mockSocket.receive(req)
+                mockSocket.receiveRaw(req)
             })
-
 
             it('responds with an error if the msg is not a string', () => {
                 const req = {
@@ -740,7 +693,7 @@ describe('WebsocketServer', () => {
                     msg: {},
                 }
 
-                mockSocket.receive(req)
+                mockSocket.receiveRaw(req)
             })
 
             it('responds with an error if the api key is wrong', () => {
@@ -751,7 +704,7 @@ describe('WebsocketServer', () => {
                     msg: '{}',
                 }
 
-                mockSocket.receive(req)
+                mockSocket.receiveRaw(req)
             })
 
             it('responds with an error if the user does not have permission', () => {
@@ -762,7 +715,7 @@ describe('WebsocketServer', () => {
                     msg: '{}',
                 }
 
-                mockSocket.receive(req)
+                mockSocket.receiveRaw(req)
             })
         })
     })
@@ -770,24 +723,21 @@ describe('WebsocketServer', () => {
     describe('disconnect', () => {
         beforeEach((done) => {
             wsMock.emit('connection', mockSocket)
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 6,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
-            mockSocket.receive({
-                stream: 'streamId',
-                partition: 4,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
-            mockSocket.receive({
-                stream: 'streamId2',
-                partition: 0,
-                authKey: 'correct',
-                type: 'subscribe',
-            })
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                6,
+                'correct',
+            ))
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId',
+                4,
+                'correct',
+            ))
+            mockSocket.receive(new Protocol.SubscribeRequest(
+                'streamId2',
+                0,
+                'correct',
+            ))
 
             setTimeout(() => {
                 mockSocket.disconnect()
