@@ -35,6 +35,10 @@ module.exports = class Connection extends events.EventEmitter {
         return this.streams.slice() // return copy
     }
 
+    streamsAsString() {
+        return this.streams.map((s) => `${s.id}:${s.partition}`)
+    }
+
     send(msg) {
         const serialized = msg.serialize(this.protocolVersion, this.payloadVersion)
         debug('send: %s: %o', this.id, serialized)

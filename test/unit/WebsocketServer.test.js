@@ -519,7 +519,7 @@ describe('WebsocketServer', () => {
         })
 
         it('does not remove stream object if there are other subscriptions to it', () => {
-            assert(server.getStreamObject('streamId', 0) != null)
+            assert(server.streams.getStreamObject('streamId', 0) != null)
         })
     })
 

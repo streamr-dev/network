@@ -1,6 +1,6 @@
 const assert = require('assert')
 const fetch = require('node-fetch')
-const WebSocket = require('ws')
+const WebSocket = require('sc-uws')
 const createBroker = require('../../broker')
 
 const port = 12345

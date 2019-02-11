@@ -56,7 +56,7 @@ module.exports = class Publisher {
             publisherId,
             previousTimestamp,
             previousSequenceNo,
-            streamrBinaryMessage.toArray(),
+            streamrBinaryMessage.toObject(false),
         )
     }
 }

@@ -40,7 +40,6 @@ module.exports = class Stream extends events.EventEmitter {
         return this.state === 'subscribing'
     }
 
-
     isSubscribed() {
         return this.state === 'subscribed'
     }

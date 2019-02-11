@@ -25,6 +25,7 @@
     "@streamr/streamr-p2p-network": "^3.0.4",
     "body-parser": "^1.15.2",
     "buffermaker": "1.2.0",
+    "cassandra-driver": "^3.2.0",
     "cors": "^2.7.1",
     "debug": "*",
     "express": "^4.14.0",
@@ -34,8 +35,8 @@
     "optimist": "*",
     "qs": "^6.5.2",
     "redis": "^2.6.2",
-    "streamr-client-protocol": "^1.2.0",
-    "ws": "^6.0.0"
+    "sc-uws": "^10.148.2",
+    "streamr-client-protocol": "^1.2.0"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.2",

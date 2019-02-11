@@ -1,6 +1,7 @@
 const events = require('events')
 const debug = require('debug')('streamr:WebsocketServer')
 const Protocol = require('streamr-client-protocol')
+const StreamrBinaryMessageV29 = require('./protocol/StreamrBinaryMessageV29')
 
 const Stream = require('./Stream')
 const Connection = require('./Connection')
@@ -182,19 +183,16 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         })
     }
 
-    broadcastMessage(streamId, streamPartition, timestamp, sequenceNo, publisherId, prevTimestamp, prevSequenceNo, message) {
+    broadcastMessage(streamMessage) {
+        const { streamId, streamPartition } = streamMessage
         const stream = this.streams.getStreamObject(streamId, streamPartition)
 
-        // TODO: do in a better way
-        message[5] = timestamp
-        message[6] = prevTimestamp
-
         if (stream) {
-            connections.forEachConnection((connection) => {
-                connection.send(new Protocol.BroadcastMessage(streamMessage)) // TODO: instantiate streamMessage
+            stream.forEachConnection((connection) => {
+                connection.send(new Protocol.BroadcastMessage(streamMessage))
             })
 
-            this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * connections.length)
+            this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * stream.getConnections().length)
         } else {
             debug('broadcastMessage: stream "%s:%d" not found', streamId, streamPartition)
         }
@@ -261,7 +259,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             // Unsubscribe from stream if no connections left
             debug('checkRoomEmpty: "%d" sockets remaining on stream "%s:%d"', stream.getConnections().length, request.streamId, request.streamPartition)
             if (stream.getConnections().length === 0) {
-                debug('checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.', request.streamId, requset.streamPartition)
+                debug('checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.', request.streamId, request.streamPartition)
                 this.networkNode.unsubscribe(request.streamId, request.streamPartition)
                 this.streams.deleteStreamObject(request.streamId, request.streamPartition)
             }
