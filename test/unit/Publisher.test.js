@@ -1,12 +1,9 @@
 const assert = require('assert')
 const events = require('events')
 const sinon = require('sinon')
-const BufferMaker = require('buffermaker')
-
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const Publisher = require('../../src/Publisher')
-const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
 const MessageNotSignedError = require('../../src/errors/MessageNotSignedError')
-const InvalidMessageContentError = require('../../src/errors/InvalidMessageContentError')
 
 describe('Publisher', () => {
     const stream = {
@@ -17,7 +14,14 @@ describe('Publisher', () => {
         requireSignedData: true,
     }
 
-    const msg = new BufferMaker().string('{}').make()
+    const msg = {
+        hello: 'world',
+    }
+
+    const streamMessageUnsigned = new StreamMessageV30(
+        [stream.id, 9, 135135135, 0, 'publisherId'], [null, 0], StreamMessage.CONTENT_TYPES.JSON,
+        msg, StreamMessage.SIGNATURE_TYPES.NONE, null,
+    )
 
     let publisher
     let networkNode
@@ -35,60 +39,32 @@ describe('Publisher', () => {
 
     describe('publish', () => {
         it('should return a promise', () => {
-            const promise = publisher.publish(stream, Date.now(), msg).catch(() => {})
+            const promise = publisher.publish(stream, streamMessageUnsigned).catch(() => {})
             assert(promise instanceof Promise)
         })
 
         it('should throw MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData flag', (done) => {
-            publisher.publish(signedStream, Date.now(), msg).catch((err) => {
+            publisher.publish(signedStream, streamMessageUnsigned).catch((err) => {
                 assert(err instanceof MessageNotSignedError, err)
                 done()
             })
         })
-        it('should throw InvalidMessageContentError if no content is given', (done) => {
-            publisher.publish(stream, Date.now(), undefined).catch((err) => {
-                assert(err instanceof InvalidMessageContentError)
-                done()
-            })
-        })
 
-        it('should call the partitioner with a partition key if given', () => {
-            publisher.publish(stream, Date.now(), msg, 'key')
-            assert(partitionerMock.partition.calledWith(stream.partitions, 'key'))
-        })
-
-        it('should call the partitioner with undefined partition key if not given', () => {
-            publisher.publish(stream, Date.now(), msg)
-            assert(partitionerMock.partition.calledWith(stream.partitions, undefined))
-        })
-
-        it('should call networkNode.send with correct values', (done) => {
-            const timestamp = 135135135
-
+        it('should call NetworkNode.send with correct values', (done) => {
             networkNode.publish = (streamId, streamPartition, ts, sequenceNo, publisherId, prevTs, previousSequenceNo, message) => {
                 assert.equal(streamId, 'streamId')
                 assert.equal(streamPartition, 9)
                 assert.equal(ts, 135135135)
                 assert.equal(sequenceNo, 0)
                 assert.equal(publisherId, 'publisherId')
-                assert.equal(prevTs, -1)
+                assert.equal(prevTs, null)
                 assert.equal(previousSequenceNo, 0)
                 assert.deepEqual(message, {
-                    version: 29,
-                    streamId: 'streamId',
-                    partition: 9,
-                    timestamp: 135135135,
-                    ttl: 0,
-                    address: undefined,
-                    signature: undefined,
-                    signatureType: 0,
-                    contentType: 27,
-                    content: {},
-
+                    hello: 'world',
                 })
                 done()
             }
-            publisher.publish(stream, timestamp, msg)
+            publisher.publish(stream, streamMessageUnsigned)
         })
     })
 })

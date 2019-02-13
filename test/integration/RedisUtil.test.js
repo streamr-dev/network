@@ -1,11 +1,8 @@
 const assert = require('assert')
 const redis = require('redis')
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 
 const RedisUtil = require('../../src/RedisUtil')
-const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
-const StreamrBinaryMessageV28 = require('../../src/protocol/StreamrBinaryMessageV28')
-const StreamrBinaryMessageV29 = require('../../src/protocol/StreamrBinaryMessageV29')
-const StreamrBinaryMessageWithKafkaMetadata = require('../../src/protocol/StreamrBinaryMessageWithKafkaMetadata')
 
 describe('RedisUtil', () => {
     const REDIS_HOST = '127.0.0.1'
@@ -15,26 +12,23 @@ describe('RedisUtil', () => {
     let redisHelper
     let streamId
 
-    function streamrBinaryMessage() {
-        const msg = new StreamrBinaryMessageV28(
-            streamId, 1, 1488214484821, 0,
-            StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify({
+    function streamMessage() {
+        return new StreamMessageV30(
+            [streamId, 1, 1488214484821, 0, 'publisherId'], null,
+            StreamMessage.CONTENT_TYPES.JSON, {
                 hello: 'world',
-            }), 'utf8'),
+            }, StreamMessage.SIGNATURE_TYPES.NONE, null,
         )
-        return new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
     }
 
-    function streamrBinaryMessageSigned() {
-        const msg = new StreamrBinaryMessageV29(
-            streamId, 1, 1488214484821, 0,
-            StreamrBinaryMessage.CONTENT_TYPE_JSON, Buffer.from(JSON.stringify({
+    function streamMessageSigned() {
+        return new StreamMessageV30(
+            [streamId, 1, 1488214484821, 0, '0xf915ed664e43c50eb7b9ca7cfeb992703ede55c4'], null,
+            StreamMessage.CONTENT_TYPES.JSON, {
                 hello: 'world',
-            }), 'utf8'), StreamrBinaryMessageV29.SIGNATURE_TYPE_ETH,
-            '0xf915ed664e43c50eb7b9ca7cfeb992703ede55c4',
+            }, StreamMessage.SIGNATURE_TYPES.ETH,
             '0xcb1fa20f2f8e75f27d3f171d236c071f0de39e4b497c51b390306fc6e7e112bb415ecea1bd093320dd91fd91113748286711122548c52a15179822a014dc14931b',
         )
-        return new StreamrBinaryMessageWithKafkaMetadata(msg, 0, null, 0)
     }
 
     beforeEach((done) => {
@@ -91,25 +85,25 @@ describe('RedisUtil', () => {
         })
 
         it('emits a "message" event when receiving data from Redis', (done) => {
-            const m = streamrBinaryMessage()
+            const m = streamMessage()
 
             redisHelper.on('message', (msg) => {
-                assert.deepEqual(msg, m.toStreamMessage())
+                assert.deepEqual(msg, m)
                 done()
             })
 
-            testRedisClient.publish(`${streamId}-1`, m.toBytes())
+            testRedisClient.publish(`${streamId}-1`, Buffer.from(m.serialize()))
         })
 
         it('emits a signed "message" event when receiving data from Redis', (done) => {
-            const m = streamrBinaryMessageSigned()
+            const m = streamMessageSigned()
 
             redisHelper.on('message', (msg) => {
-                assert.deepEqual(msg, m.toStreamMessage())
+                assert.deepEqual(msg, m)
                 done()
             })
 
-            testRedisClient.publish(`${streamId}-1`, m.toBytes())
+            testRedisClient.publish(`${streamId}-1`, Buffer.from(m.serialize()))
         })
 
         it('does not emit a "message" event for a message sent to another Redis channel', (done) => {
@@ -117,7 +111,7 @@ describe('RedisUtil', () => {
                 throw new Error(`Should not have received message: ${msg}`)
             })
 
-            testRedisClient.publish(`${streamId}-2`, streamrBinaryMessage().toBytes(), () => {
+            testRedisClient.publish(`${streamId}-2`, Buffer.from(streamMessage().serialize()), () => {
                 setTimeout(done, 500)
             })
         })
@@ -135,7 +129,7 @@ describe('RedisUtil', () => {
                 throw new Error(`Should not have received message: ${msg}`)
             })
 
-            testRedisClient.publish(`${streamId}-1`, streamrBinaryMessage().toBytes(), () => {
+            testRedisClient.publish(`${streamId}-1`, Buffer.from(streamMessage().serialize()), () => {
                 setTimeout(done, 500)
             })
         })
@@ -146,11 +140,11 @@ describe('RedisUtil', () => {
             })
 
             it('emits a "message" event when receiving data from Redis', (done) => {
-                const m = streamrBinaryMessage()
+                const m = streamMessage()
 
-                testRedisClient.publish(`${streamId}-1`, m.toBytes())
+                testRedisClient.publish(`${streamId}-1`, Buffer.from(m.serialize()))
                 redisHelper.on('message', (msg) => {
-                    assert.deepEqual(msg, m.toStreamMessage())
+                    assert.deepEqual(msg, m)
                     done()
                 })
             })

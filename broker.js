@@ -8,6 +8,7 @@ const { startNetworkNode } = require('@streamr/streamr-p2p-network')
 
 const StreamFetcher = require('./src/StreamFetcher')
 const WebsocketServer = require('./src/WebsocketServer')
+const { startCassandraStorage } = require('./src/Storage')
 const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
 const VolumeLogger = require('./src/utils/VolumeLogger')
@@ -24,6 +25,7 @@ module.exports = async (config) => {
     const latestOffsetFetcher = null
 
     // Create some utils
+    const storage = await startCassandraStorage(config.cassandra.split(','), 'datacenter1', config.keyspace)
     const volumeLogger = new VolumeLogger()
     const streamFetcher = new StreamFetcher(config.streamr)
     const publisher = new Publisher(networkNode, Partitioner, volumeLogger)
@@ -55,15 +57,14 @@ module.exports = async (config) => {
             },
         }),
         networkNode,
-        historicalAdapter,
-        latestOffsetFetcher,
+        storage,
         streamFetcher,
         publisher,
         volumeLogger,
     )
 
     // Rest endpoints
-    app.use('/api/v1', dataQueryEndpoints(historicalAdapter, streamFetcher, volumeLogger))
+    app.use('/api/v1', dataQueryEndpoints(storage, streamFetcher, volumeLogger))
     app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher, volumeLogger))
     app.use('/api/v1', volumeEndpoint(volumeLogger))
 
@@ -81,6 +82,7 @@ module.exports = async (config) => {
         close: () => {
             httpServer.close()
             networkNode.close()
+            storage.close()
             volumeLogger.stop()
         },
     }
@@ -90,11 +92,13 @@ module.exports = async (config) => {
 if (require.main === module) {
     // Check command line args
     let optimist = Optimist.usage(`You must pass the following command line options:
+        --cassandra <cassandra_hosts_separated_by_commas>
+        --keyspace <cassandra_keyspace>
         --networkHostname <networkHostname>
         --networkPort <networkPort>
         --streamr <streamr>
         --port <port>`)
-    optimist = optimist.demand(['networkHostname', 'networkPort', 'streamr', 'port'])
+    optimist = optimist.demand(['cassandra', 'keyspace', 'networkHostname', 'networkPort', 'streamr', 'port'])
 
     module.exports(optimist.argv)
         .then(() => {})

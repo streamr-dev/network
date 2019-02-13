@@ -1,6 +1,6 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const StreamrBinaryMessage = require('../protocol/StreamrBinaryMessage')
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
@@ -46,26 +46,48 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
 
             // Read timestamp if given
             let timestamp
-            if (req.query.ts) {
-                try {
-                    timestamp = TimestampUtil.parse(req.query.ts)
-                } catch (err) {
-                    res.status(400).send({
-                        error: err.message,
-                    })
-                    return
+            let sequenceNumber
+            let previousMessageRef = null
+            let signatureType
+
+            function parseInteger(n) {
+                const parsed = parseInt(n)
+                if (!Number.isInteger(parsed) || parsed < 0) {
+                    throw new Error(`${n} is not a valid positive integer`)
                 }
+                return parsed
+            }
+
+            try {
+                timestamp = req.query.ts ? TimestampUtil.parse(req.query.ts) : Date.now()
+                sequenceNumber = req.query.seq ? parseInteger(req.query.seq) : 0
+                if (req.query.prev_ts) {
+                    const previousSequenceNumber = req.query.prev_seq ? parseInteger(req.query.prev_seq) : 0
+                    previousMessageRef = [parseInteger(req.query.prev_ts), previousSequenceNumber]
+                }
+                signatureType = req.query.signatureType ? parseInteger(req.query.signatureType) : 0
+            } catch (err) {
+                res.status(400).send({
+                    error: err.message,
+                })
+                return
             }
 
             // req.stream is written by authentication middleware
             publisher.publish(
                 req.stream,
-                timestamp,
-                req.body,
-                req.query.pkey,
-                req.query.signatureType,
-                req.query.address,
-                req.query.signature,
+                StreamMessage.create(
+                    [req.stream.streamId,
+                        publisher.getStreamPartition(req.stream, req.query.pkey),
+                        timestamp,
+                        sequenceNumber, // sequenceNumber
+                        req.query.address], // publisherId
+                    previousMessageRef,
+                    StreamMessage.CONTENT_TYPES.JSON,
+                    req.body.toString(),
+                    signatureType,
+                    req.query.signature || null,
+                ),
             ).then(() => {
                 res.status(200).send(/* empty success response */)
             }).catch((err) => {
