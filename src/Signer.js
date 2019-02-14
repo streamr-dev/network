@@ -15,14 +15,16 @@ export default class Signer {
             this.address = account.address.toLowerCase()
             this.sign = (d) => account.sign(d).signature
         } else if (this.options.provider) {
-            const w3 = new Web3(this.options.provider)
-            const accounts = w3.eth.getAccounts()
-            const address = accounts[0]
-            if (!address) {
-                throw new Error('Cannot access account from provider')
+            this.sign = async (d) => {
+                const w3 = new Web3(this.options.provider)
+                const accounts = await w3.eth.getAccounts()
+                const address = accounts[0]
+                if (!address) {
+                    throw new Error('Cannot access account from provider')
+                }
+                this.address = address
+                return w3.eth.personal.sign(d, this.address)
             }
-            this.address = address
-            this.sign = async (d) => w3.eth.personal.sign(d, this.address)
         } else {
             throw new Error('Need either "privateKey" or "provider".')
         }
