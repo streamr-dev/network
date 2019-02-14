@@ -4,6 +4,6 @@
   "description": "Using streamr-client in node",
   "main": "node.js",
   "dependencies": {
-    "streamr-client": "^1.3.0"
+    "streamr-client": "^1.0.0"
   }
 }
