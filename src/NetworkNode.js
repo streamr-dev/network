@@ -16,7 +16,7 @@ module.exports = class NetworkNode extends Node {
         content) {
         const dataMessage = new DataMessage(
             new MessageID(new StreamID(streamId, streamPartition), timestamp, sequenceNo, publisherId),
-            new MessageReference(previousTimestamp, previousSequenceNo),
+            previousTimestamp != null ? new MessageReference(previousTimestamp, previousSequenceNo) : null,
             content
         )
         this.onDataReceived(dataMessage)
@@ -34,8 +34,8 @@ module.exports = class NetworkNode extends Node {
                 messageId.timestamp,
                 messageId.sequenceNo,
                 messageId.publisherId,
-                previousMessageReference.timestamp,
-                previousMessageReference.sequenceNo,
+                previousMessageReference ? previousMessageReference.timestamp : null,
+                previousMessageReference ? previousMessageReference.sequenceNo : null,
                 dataMessage.getData()
             )
         })
