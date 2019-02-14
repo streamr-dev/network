@@ -71,7 +71,7 @@ export default class StreamMessageV29 extends StreamMessage {
         } else if (version === 30) {
             // null fields in order: prevMsgRef.timestamp, prevMsgRef.sequenceNumber
             return new StreamMessageV30(
-                [this.streamId, this.streamPartition, this.timestamp, 0, this.publisherAddress],
+                [this.streamId, this.streamPartition, this.timestamp, 0, this.publisherAddress, ''],
                 [null, null], this.contentType, this.getContent(), this.signatureType, this.signature,
             )
         }

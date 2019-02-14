@@ -338,7 +338,7 @@ Field    | Type | Description
 -------- | ---- | --------
 `version` | `number` | Is currently 30.
 `msgId` | MessageID |Array representation of the `MessageID` to uniquely identify this message. 
-`prevMsgRef` | MessageRef | Array representation of the `MessageRef` of the previous message. Used to detect missing messages.
+`prevMsgRef` | MessageRef | Array representation of the `MessageRef` of the previous message on a message chain (defined in the `msgId`). Used to detect missing messages.
 `contentType` | `number` | Determines how the content should be parsed according to the table below.
 `content` | `string` | Content data of the message.
 `signatureType` | `number` | Signature type as defined by the table below.
@@ -358,11 +358,11 @@ Signature Type | Description
 Uniquely identifies a `StreamMessage`.
 
 ```
-[streamId, streamPartition, timestamp, sequenceNumber, publisherId]
+[streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId]
 ```
 Example:
 ```
-["stream-id", 0, 425354887214, 0, "0xAd23Ba54d26D3f0Ac057..."]
+["stream-id", 0, 425354887214, 0, "0xAd23Ba54d26D3f0Ac057...", "msg-chain-id"]
 ```
 
 Field    | Type | Description
@@ -372,10 +372,11 @@ Field    | Type | Description
 `timestamp` | `number` | Timestamp of the `StreamMessage` (milliseconds format).
 `sequenceNumber` | `number` | Sequence number of the `StreamMessage` within the same timestamp. Defaults to 0.
 `publisherId` | `string` | Id of the publisher of the `StreamMessage`. Must be an Ethereum address if the `StreamMessage` has an Ethereum signature (`signatureType` = 1).
+`msgChainId` | `string` | Id of the message chain this `StreamMessage` is part of. This message chain id is chosen by the publisher and defined locally for the `streamId`-`streamPartition`-`publisherId` triplet.
 
 ### MessageRef
 
-Used inside a `StreamMessage` to identify the previous message on the same stream-partition published by the same producer.
+Used inside a `StreamMessage` to identify the previous message on the same `msgChainId` (defined above).
 
 ```
 [timestamp, sequenceNumber]

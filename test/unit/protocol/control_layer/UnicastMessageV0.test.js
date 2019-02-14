@@ -7,7 +7,7 @@ import UnicastMessageV0 from '../../../../src/protocol/control_layer/unicast_mes
 describe('UnicastMessageV0', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
-            const arr = ['subId', [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'address'], [1529549961000, 0],
+            const arr = ['subId', [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
                 StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']]
             const streamMsg = StreamMessageFactory.deserialize(arr[1])
             const result = new UnicastMessageV0(streamMsg, arr[0])
@@ -21,7 +21,7 @@ describe('UnicastMessageV0', () => {
             let expectedPayloadArray
             let serialized
             beforeEach(() => {
-                const streamMessageArray = [30, ['streamId', 0, 1529549961116, 0, 'address'], [1529549961000, 0],
+                const streamMessageArray = [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
                     StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
                 unicastMessage = new UnicastMessageV0(StreamMessageFactory.deserialize(streamMessageArray), 'subId')
             })
@@ -31,7 +31,7 @@ describe('UnicastMessageV0', () => {
                 assert.deepEqual(arr, JSON.parse(serialized))
             })
             it('correctly serializes messages with default version (30) payload', () => {
-                expectedPayloadArray = [30, ['streamId', 0, 1529549961116, 0, 'address'], [1529549961000, 0],
+                expectedPayloadArray = [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
                     StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
                 serialized = unicastMessage.serialize()
             })
@@ -47,7 +47,7 @@ describe('UnicastMessageV0', () => {
             })
         })
         it('correctly serializes to version 1', () => {
-            const streamMessageArray = [30, ['streamId', 0, 1529549961116, 0, 'address'], [1529549961000, 0],
+            const streamMessageArray = [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
                 StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
             const arr = [1, 1, 'subId', streamMessageArray]
             const serialized = new UnicastMessageV0(StreamMessageFactory.deserialize(streamMessageArray), 'subId').serialize(1)
@@ -55,7 +55,7 @@ describe('UnicastMessageV0', () => {
             assert.deepEqual(arr, JSON.parse(serialized))
         })
         it('correctly serializes to version 1 with non-default payload version', () => {
-            const streamMessageArray = [30, ['streamId', 0, 1529549961116, 0, 'address'], [1529549961000, 0],
+            const streamMessageArray = [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
                 StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
             const serialized = new UnicastMessageV0(StreamMessageFactory.deserialize(streamMessageArray), 'subId').serialize(1, 29)
             assert(typeof serialized === 'string')
