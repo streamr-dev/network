@@ -6,7 +6,7 @@ import ResendRangeRequest from './ResendRangeRequest'
 const VERSION = 1
 
 export default class ResendRangeRequestV1 extends ResendRangeRequest {
-    constructor(streamId, streamPartition, subId, fromMsgRefArgsArray, toMsgRefArgsArray, publisherId, sessionToken) {
+    constructor(streamId, streamPartition, subId, fromMsgRefArgsArray, toMsgRefArgsArray, publisherId, msgChainId, sessionToken) {
         super(VERSION)
         this.streamId = streamId
         this.streamPartition = streamPartition
@@ -17,6 +17,7 @@ export default class ResendRangeRequestV1 extends ResendRangeRequest {
             throw new ValidationError('fromMsgRef.timestamp must be less than or equal to toMsgRef.timestamp')
         }
         this.publisherId = publisherId
+        this.msgChainId = msgChainId
         this.sessionToken = sessionToken
     }
 
@@ -29,6 +30,7 @@ export default class ResendRangeRequestV1 extends ResendRangeRequest {
             JSON.parse(this.fromMsgRef.serialize(messageLayerVersion)),
             JSON.parse(this.toMsgRef.serialize(messageLayerVersion)),
             this.publisherId,
+            this.msgChainId,
             this.sessionToken,
         ])
         return array

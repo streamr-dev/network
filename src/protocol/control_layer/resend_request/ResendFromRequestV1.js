@@ -5,13 +5,14 @@ import ResendFromRequest from './ResendFromRequest'
 const VERSION = 1
 
 export default class ResendFromRequestV1 extends ResendFromRequest {
-    constructor(streamId, streamPartition, subId, msgRefArgsArray, publisherId, sessionToken) {
+    constructor(streamId, streamPartition, subId, msgRefArgsArray, publisherId, msgChainId, sessionToken) {
         super(VERSION)
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.subId = subId
         this.fromMsgRef = new MessageRef(...msgRefArgsArray)
         this.publisherId = publisherId
+        this.msgChainId = msgChainId
         this.sessionToken = sessionToken
     }
 
@@ -23,6 +24,7 @@ export default class ResendFromRequestV1 extends ResendFromRequest {
             this.subId,
             JSON.parse(this.fromMsgRef.serialize(messageLayerVersion)),
             this.publisherId,
+            this.msgChainId,
             this.sessionToken,
         ])
         return array

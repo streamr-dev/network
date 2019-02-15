@@ -112,8 +112,8 @@ const examplesByTypeV1 = {
     '9': [1, 9, 'streamId', 0, 'sessionToken'],
     '10': [1, 10, 'streamId', 0],
     '11': [1, 11, 'streamId', 0, 'subId', 100, 'sessionToken'],
-    '12': [1, 12, 'streamId', 0, 'subId', [132846894, 0], 'producerId', 'sessionToken'],
-    '13': [1, 13, 'streamId', 0, 'subId', [132846894, 0], [132847000, 0], 'publisherId', 'sessionToken'],
+    '12': [1, 12, 'streamId', 0, 'subId', [132846894, 0], 'publisherId', 'msgChainId', 'sessionToken'],
+    '13': [1, 13, 'streamId', 0, 'subId', [132846894, 0], [132847000, 0], 'publisherId', 'msgChainId', 'sessionToken'],
 }
 
 describe('ControlMessage', () => {
