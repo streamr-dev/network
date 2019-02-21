@@ -33,6 +33,10 @@ export default class StreamMessage {
     getPublisherId() {
         throw new Error('getPublisherId must be implemented')
     }
+
+    getMessageRef() {
+        throw new Error('getMessageRef must be implemented')
+    }
     /* eslint-enable class-methods-use-this */
 
     serializeContent(content) {

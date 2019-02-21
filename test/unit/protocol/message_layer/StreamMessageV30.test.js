@@ -1,5 +1,6 @@
 import assert from 'assert'
 import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
+import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessageV30 from '../../../../src/protocol/message_layer/StreamMessageV30'
 
 describe('StreamMessageV30', () => {
@@ -15,6 +16,7 @@ describe('StreamMessageV30', () => {
             assert.equal(result.getTimestamp(), 1529549961116)
             assert.equal(result.messageId.sequenceNumber, 0)
             assert.equal(result.getPublisherId(), 'publisherId')
+            assert.deepStrictEqual(result.getMessageRef(), new MessageRef(1529549961116, 0))
             assert.equal(result.messageId.msgChainId, 'msg-chain-id')
             assert.equal(result.prevMsgRef.timestamp, 1529549961000)
             assert.equal(result.prevMsgRef.sequenceNumber, 0)

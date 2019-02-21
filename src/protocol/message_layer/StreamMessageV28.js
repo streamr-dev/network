@@ -26,6 +26,9 @@ export default class StreamMessageV28 extends StreamMessage {
     getPublisherId() {
         return undefined
     }
+    getMessageRef() {
+        return undefined
+    }
     /* eslint-enable class-methods-use-this */
 
     toObject(parsedContent = false, compact = true) {
