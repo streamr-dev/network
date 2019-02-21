@@ -348,10 +348,11 @@ Content Type | Description
 -------------- | --------
 27 | JSON content. The `content` can either be a JSON string to be parsed or a JSON object.
 
-Signature Type | Description
--------------- | --------
-0 | No signature. signature field is empty in this case.
-1 | Ethereum signature. signature field is encoded as a hex string.
+Signature Type | Name | Description | Signature payload fields to be concatenated in order
+-------------- | ---- |------------ | -----------------------
+0 | `NONE` | No signature. signature field is empty in this case. | None.
+1 | `ETH_LEGACY` | Ethereum signature produced by old clients (Message Layer version 29). The signature field is encoded as a hex string. | `streamId`, `streamPartition`, `timestamp`, `publisherId`, `content`
+2 | `ETH` | Ethereum signature produced by current clients (Message Layer version 30). The signature field is encoded as a hex string. | all the `msgId` fields, (`streamId`, `streamPartition`, `timestamp`, `sequenceNumber`, `publisherId`, `msgChainId`), `content`
 
 ### MessageID
 

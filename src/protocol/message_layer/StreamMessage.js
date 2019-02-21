@@ -102,5 +102,6 @@ StreamMessage.CONTENT_TYPES = {
 
 StreamMessage.SIGNATURE_TYPES = {
     NONE: 0,
-    ETH: 1,
+    ETH_LEGACY: 1,
+    ETH: 2,
 }
