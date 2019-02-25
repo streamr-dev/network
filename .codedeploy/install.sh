@@ -2,3 +2,4 @@
 cd /srv/data-api/
 git reset --hard HEAD
 git pull origin master
+npm install
