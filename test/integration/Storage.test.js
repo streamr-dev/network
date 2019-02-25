@@ -56,7 +56,11 @@ describe('Storage', () => {
             id: streamId,
             partition: 10,
             ts: new Date(1545144750494),
-            sequence_no: 0,
+            sequence_no: {
+                high: 0,
+                low: 0,
+                unsigned: false,
+            },
             publisher_id: 'publisher',
             msg_chain_id: '1',
             payload: Buffer.from(msg.serialize()),
