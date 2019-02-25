@@ -10,9 +10,9 @@ describe('data-api', () => {
 
     let dataApi
 
-    beforeAll((done) => {
+    beforeAll(async (done) => {
         // Start the app
-        dataApi = createDataApi({
+        dataApi = await createDataApi({
             'data-topic': 'data-dev',
             zookeeper: 'localhost',
             redis: 'localhost',

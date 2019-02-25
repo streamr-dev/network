@@ -7,8 +7,7 @@ const Optimist = require('optimist')
 const StreamFetcher = require('./src/StreamFetcher')
 const WebsocketServer = require('./src/WebsocketServer')
 const RedisUtil = require('./src/RedisUtil')
-const RedisOffsetFetcher = require('./src/RedisOffsetFetcher')
-const CassandraUtil = require('./src/CassandraUtil')
+const { startCassandraStorage } = require('./src/Storage')
 const StreamrKafkaProducer = require('./src/KafkaUtil')
 const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
@@ -18,7 +17,7 @@ const dataQueryEndpoints = require('./src/rest/DataQueryEndpoints')
 const dataProduceEndpoints = require('./src/rest/DataProduceEndpoints')
 const volumeEndpoint = require('./src/rest/VolumeEndpoint')
 
-module.exports = (externalConfig) => {
+module.exports = async (externalConfig) => {
     const config = (externalConfig || Optimist.usage(`You must pass the following command line options:
         --data-topic <topic>
         --zookeeper <conn_string>
@@ -34,8 +33,7 @@ module.exports = (externalConfig) => {
     // Create some utils
     const streamFetcher = new StreamFetcher(config.streamr)
     const redis = new RedisUtil(config.redis.split(','), config['redis-pwd'])
-    const cassandra = new CassandraUtil(config.cassandra.split(','), config.keyspace)
-    const redisOffsetFetcher = new RedisOffsetFetcher(config.redis.split(',')[0], config['redis-pwd'])
+    const storage = await startCassandraStorage(config.cassandra.split(','), 'datacenter1', config.keyspace)
     const kafka = new StreamrKafkaProducer(config['data-topic'], Partitioner, config.zookeeper)
     const volumeLogger = new VolumeLogger()
     const publisher = new Publisher(kafka, Partitioner, volumeLogger)
@@ -67,15 +65,14 @@ module.exports = (externalConfig) => {
             },
         }),
         redis,
-        cassandra,
-        redisOffsetFetcher,
+        storage,
         streamFetcher,
         publisher,
         volumeLogger,
     )
 
     // Rest endpoints
-    app.use('/api/v1', dataQueryEndpoints(cassandra, streamFetcher, volumeLogger))
+    app.use('/api/v1', dataQueryEndpoints(storage, streamFetcher, volumeLogger))
     app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher, volumeLogger))
     app.use('/api/v1', volumeEndpoint(volumeLogger))
 
@@ -95,8 +92,7 @@ module.exports = (externalConfig) => {
         close: () => {
             httpServer.close()
             redis.quit()
-            redisOffsetFetcher.close()
-            cassandra.close()
+            storage.close()
             kafka.close()
             volumeLogger.stop()
         },

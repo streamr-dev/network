@@ -1,14 +1,14 @@
 const events = require('events')
-const Protocol = require('streamr-client-protocol')
+const { ControlLayer } = require('streamr-client-protocol')
 
 module.exports = class MockSocket extends events.EventEmitter {
-    constructor(version = 28) {
+    constructor(controlLayerVersion = 1, messageLayerVersion = 29) {
         super()
         this.rooms = []
         this.sentMessages = []
         this.throwOnError = true
         this.upgradeReq = {
-            url: `some-url?payloadVersion=${version}`,
+            url: `some-url?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`,
         }
     }
 
@@ -37,11 +37,11 @@ module.exports = class MockSocket extends events.EventEmitter {
         this.sentMessages.push(response)
 
         // Inspect the message to catch errors
-        const msg = Protocol.WebsocketResponse.deserialize(response)
+        const msg = ControlLayer.ControlMessage.deserialize(response)
 
         // If you expect error messages, set mockSocket.throwOnError to false for those tests
-        if (msg instanceof Protocol.ErrorResponse && this.throwOnError) {
-            throw new Error(`Received unexpected error message: ${msg.payload.error}`)
+        if (msg instanceof ControlLayer.ErrorResponse && this.throwOnError) {
+            throw new Error(`Received unexpected error message: ${msg.errorMessage}`)
         }
     }
 

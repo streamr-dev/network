@@ -1,12 +1,9 @@
 const assert = require('assert')
 const events = require('events')
 const sinon = require('sinon')
-const BufferMaker = require('buffermaker')
-
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const Publisher = require('../../src/Publisher')
-const StreamrBinaryMessage = require('../../src/protocol/StreamrBinaryMessage')
 const MessageNotSignedError = require('../../src/errors/MessageNotSignedError')
-const InvalidMessageContentError = require('../../src/errors/InvalidMessageContentError')
 const NotReadyError = require('../../src/errors/NotReadyError')
 
 describe('Publisher', () => {
@@ -18,7 +15,14 @@ describe('Publisher', () => {
         requireSignedData: true,
     }
 
-    const msg = new BufferMaker().string('{}').make()
+    const msg = {
+        hello: 'world',
+    }
+
+    const streamMessageUnsigned = new StreamMessageV30(
+        [stream.id, 0, Date.now(), 0, 'publisherId', '1'], [null, 0], StreamMessage.CONTENT_TYPES.JSON,
+        msg, StreamMessage.SIGNATURE_TYPES.NONE, null,
+    )
 
     let publisher
     let kafkaMock
@@ -36,19 +40,19 @@ describe('Publisher', () => {
 
     describe('publish', () => {
         it('should return a promise', () => {
-            const promise = publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).catch(() => {})
+            const promise = publisher.publish(stream, streamMessageUnsigned).catch(() => {})
             assert(promise instanceof Promise)
         })
 
         it('should throw FailedToPublishError if trying to publish before Kafka is ready', (done) => {
-            publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).catch((err) => {
+            publisher.publish(stream, streamMessageUnsigned).catch((err) => {
                 assert(err instanceof NotReadyError, err)
                 done()
             })
         })
 
         it('should throw MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData flag', (done) => {
-            publisher.publish(signedStream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg).catch((err) => {
+            publisher.publish(signedStream, streamMessageUnsigned).catch((err) => {
                 assert(err instanceof MessageNotSignedError, err)
                 done()
             })
@@ -59,47 +63,17 @@ describe('Publisher', () => {
                 kafkaMock.emit('ready')
             })
 
-            it('should throw InvalidMessageContentError if no content is given', (done) => {
-                publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, undefined).catch((err) => {
-                    assert(err instanceof InvalidMessageContentError)
-                    done()
-                })
-            })
-
-            it('should call the partitioner with a partition key if given', () => {
-                publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg, 'key')
-                assert(partitionerMock.partition.calledWith(stream.partitions, 'key'))
-            })
-
-            it('should call the partitioner with undefined partition key if not given', () => {
-                publisher.publish(stream, Date.now(), 0, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg)
-                assert(partitionerMock.partition.calledWith(stream.partitions, undefined))
-            })
-
-            it('should call KafkaUtil.send with a StreamrBinaryMessage with correct values', (done) => {
-                const timestamp = Date.now()
-                const ttl = 1000
-
-                kafkaMock.send = (streamrBinaryMessage) => {
-                    assert(streamrBinaryMessage instanceof StreamrBinaryMessage)
-                    assert.equal(streamrBinaryMessage.streamId, stream.id)
-                    assert.equal(streamrBinaryMessage.streamPartition, partitionerMock.partition())
-                    assert.equal(streamrBinaryMessage.timestamp, timestamp)
-                    assert.equal(streamrBinaryMessage.ttl, ttl)
-                    assert.equal(streamrBinaryMessage.contentType, StreamrBinaryMessage.CONTENT_TYPE_JSON)
-                    assert.equal(streamrBinaryMessage.content, msg)
+            it('should call KafkaUtil.send with a StreamMessage with correct values', (done) => {
+                kafkaMock.send = (streamMessage) => {
+                    assert(streamMessage instanceof StreamMessage)
+                    assert.equal(streamMessage.getStreamId(), stream.id)
+                    assert.equal(streamMessage.getStreamPartition(), 0)
+                    assert.equal(streamMessage.getTimestamp(), streamMessageUnsigned.getTimestamp())
+                    assert.equal(streamMessage.contentType, StreamMessage.CONTENT_TYPES.JSON)
+                    assert.equal(streamMessage.getContent(), JSON.stringify(msg))
                     done()
                 }
-                publisher.publish(stream, timestamp, ttl, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg)
-            })
-
-            it('should use default values for timestamp and ttl if not given', (done) => {
-                kafkaMock.send = (streamrBinaryMessage) => {
-                    assert(streamrBinaryMessage.timestamp > 0)
-                    assert(streamrBinaryMessage.ttl === 0)
-                    done()
-                }
-                publisher.publish(stream, undefined, undefined, StreamrBinaryMessage.CONTENT_TYPE_JSON, msg, 'key')
+                publisher.publish(stream, streamMessageUnsigned)
             })
         })
     })

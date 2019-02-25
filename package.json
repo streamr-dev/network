@@ -29,6 +29,7 @@
     "kafka-node": "^1.0.2",
     "lolex": "^1.5.1",
     "memoizee": "^0.4.4",
+    "merge2": "^1.2.3",
     "murmurhash-native": "^3.2.4",
     "node-fetch": "^1.6.3",
     "node-int64": "0.3.3",
@@ -38,7 +39,7 @@
     "qs": "^6.5.2",
     "redis": "^2.6.2",
     "sc-uws": "^10.148.2",
-    "streamr-client-protocol": "^1.2.0"
+    "streamr-client-protocol": "^2.0.0-beta.1"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.2",
@@ -52,6 +53,7 @@
     "eslint-plugin-react": "^7.7.0",
     "jest": "^23.4.2",
     "sinon": "^2.0.0",
+    "stream-to-array": "^2.3.0",
     "supertest": "^3.0.0"
   }
 }

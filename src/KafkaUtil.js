@@ -1,6 +1,7 @@
 const events = require('events')
 const kafka = require('kafka-node')
 const debug = require('debug')('KafkaUtil')
+const { StreamMessage} = require('streamr-client-protocol').MessageLayer
 const FailedToPublishError = require('./errors/FailedToPublishError')
 
 module.exports = class KafkaUtil extends events.EventEmitter {
@@ -41,16 +42,16 @@ module.exports = class KafkaUtil extends events.EventEmitter {
         })
     }
 
-    send(streamrBinaryMessage) {
+    send(streamMessage) {
         return new Promise((resolve, reject) => {
             const produceRequest = {
                 topic: this.dataTopic,
                 // Directly set the partition using our custom partitioner for consistency with Java (KafkaService.CustomPartitioner)
                 partition: this.partitioner.partition(
                     this.dataTopicPartitionCount,
-                    `${streamrBinaryMessage.streamId}-${streamrBinaryMessage.streamPartition}`,
+                    `${streamMessage.getStreamId()}-${streamMessage.getStreamPartition()}`,
                 ),
-                messages: streamrBinaryMessage.toBytes(),
+                messages: Buffer.from(streamMessage.serialize(StreamMessage.LATEST_VERSION)), // always push latest version to kafka,
             }
 
             debug('Kafka produce request: %o', produceRequest)
@@ -59,7 +60,7 @@ module.exports = class KafkaUtil extends events.EventEmitter {
                 debug('Kafka producer send callback err: ', err)
 
                 if (err) {
-                    reject(new FailedToPublishError(streamrBinaryMessage.streamId, `Producing to Kafka failed: ${err}`))
+                    reject(new FailedToPublishError(streamMessage.getStreamId(), `Producing to Kafka failed: ${err}`))
                 } else {
                     resolve()
                 }
