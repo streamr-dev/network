@@ -1,21 +1,21 @@
 class MessageID {
     constructor(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId) {
-        if (typeof streamId === 'undefined') {
+        if (streamId == null) {
             throw new Error('streamId must be defined!')
         }
-        if (typeof streamPartition === 'undefined') {
+        if (streamPartition == null) {
             throw new Error('streamPartition must be defined!')
         }
-        if (typeof timestamp === 'undefined') {
+        if (timestamp == null) {
             throw new Error('timestamp must be defined!')
         }
-        if (typeof sequenceNumber === 'undefined') {
+        if (sequenceNumber == null) {
             throw new Error('sequenceNumber must be defined!')
         }
-        if (typeof publisherId === 'undefined') {
+        if (publisherId == null) {
             throw new Error('publisherId must be defined!')
         }
-        if (typeof msgChainId === 'undefined') {
+        if (msgChainId == null) {
             throw new Error('msgChainId must be defined!')
         }
         this.streamId = streamId
