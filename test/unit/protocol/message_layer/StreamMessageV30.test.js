@@ -160,4 +160,16 @@ describe('StreamMessageV30', () => {
             assert.deepEqual(msg.toArray(), array)
         })
     })
+
+    describe('validation', () => {
+        it('should throw if id does not define all fields', () => {
+            assert.throws(() => StreamMessage.create(
+                [undefined, 0], null, StreamMessage.CONTENT_TYPES.JSON, {},
+                StreamMessage.SIGNATURE_TYPES.NONE, null,
+            ), (err) => {
+                assert.equal(err.message, 'streamId must be defined!')
+                return true
+            })
+        })
+    })
 })
