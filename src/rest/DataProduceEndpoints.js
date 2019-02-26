@@ -77,7 +77,7 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
             publisher.publish(
                 req.stream,
                 StreamMessage.create(
-                    [req.stream.streamId,
+                    [req.stream.id,
                         publisher.getStreamPartition(req.stream, req.query.pkey),
                         timestamp,
                         sequenceNumber, // sequenceNumber
