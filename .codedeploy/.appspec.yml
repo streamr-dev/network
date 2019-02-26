@@ -7,8 +7,9 @@ files:
   - source: /
     destination: /srv/
 hooks:
-  Install:
-    - location: /.codedeploy/install.sh
+  # This script will actually do the installation
+  BeforeInstall:
+    - location: /.codedeploy/before_install.sh
       timeout: 300
       runas: root
   AfterInstall:
