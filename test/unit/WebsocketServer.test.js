@@ -793,7 +793,7 @@ describe('WebsocketServer', () => {
                     msg: '{}',
                 }
                 mockSocket.receiveRaw(req)
-                errorMessage = 'Publish request failed: Error: Error'
+                errorMessage = 'Publish request failed: Error: streamId must be defined!'
             })
 
             it('responds with an error if the msg is missing', () => {
