@@ -36,10 +36,6 @@ describe('StreamManager', () => {
         expect(manager.getOutboundNodesForStream(new StreamID('stream-1', 1))).toEqual([])
         expect(manager.getInboundNodesForStream(new StreamID('stream-2', 0))).toEqual([])
         expect(manager.getOutboundNodesForStream(new StreamID('stream-2', 0))).toEqual([])
-        expect(manager.getAllNodes()).toEqual({
-            allInboundNodes: new Set(),
-            allOutboundNodes: new Set()
-        })
     })
 
     test('cannot re-setup same stream', () => {
@@ -99,10 +95,12 @@ describe('StreamManager', () => {
 
         expect(manager.getInboundNodesForStream(streamId)).toEqual(['node-1', 'node-2'])
         expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-1', 'node-3'])
-        expect(manager.getAllNodes()).toEqual({
-            allInboundNodes: new Set(['node-1', 'node-2']),
-            allOutboundNodes: new Set(['node-1', 'node-3'])
-        })
+        expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-1', 'node-3'])
+        expect(manager.getStreamsWithConnections()).toEqual([{
+            streamId: 'stream-id::0',
+            inboundNodes: ['node-1', 'node-2'],
+            outboundNodes: ['node-1', 'node-3']
+        }])
 
         expect(manager.hasInboundNode(streamId, 'node-1')).toEqual(true)
         expect(manager.hasInboundNode(streamId, 'node-3')).toEqual(false)
@@ -124,10 +122,11 @@ describe('StreamManager', () => {
 
         expect(manager.getInboundNodesForStream(streamId)).toEqual(['node-2'])
         expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-3'])
-        expect(manager.getAllNodes()).toEqual({
-            allInboundNodes: new Set(['node-2']),
-            allOutboundNodes: new Set(['node-3'])
-        })
+        expect(manager.getStreamsWithConnections()).toEqual([{
+            streamId: 'stream-id::0',
+            inboundNodes: ['node-2'],
+            outboundNodes: ['node-3']
+        }])
 
         expect(manager.hasInboundNode(streamId, 'node-1')).toEqual(false)
         expect(manager.hasOutboundNode(streamId, 'node-1')).toEqual(false)
@@ -159,11 +158,21 @@ describe('StreamManager', () => {
         expect(manager.getOutboundNodesForStream(new StreamID('stream-1', 1))).toEqual(['should-not-be-removed'])
         expect(manager.getInboundNodesForStream(new StreamID('stream-2', 0))).toEqual(['should-not-be-removed'])
         expect(manager.getOutboundNodesForStream(new StreamID('stream-2', 0))).toEqual([])
-
-        expect(manager.getAllNodes()).toEqual({
-            allInboundNodes: new Set(['should-not-be-removed']),
-            allOutboundNodes: new Set(['should-not-be-removed'])
-        })
+        expect(manager.getStreamsWithConnections()).toEqual([{
+            streamId: 'stream-1::0',
+            inboundNodes: [],
+            outboundNodes: ['should-not-be-removed']
+        },
+        {
+            streamId: 'stream-1::1',
+            inboundNodes: ['should-not-be-removed'],
+            outboundNodes: ['should-not-be-removed']
+        },
+        {
+            streamId: 'stream-2::0',
+            inboundNodes: ['should-not-be-removed'],
+            outboundNodes: []
+        }])
 
         expect(manager.hasInboundNode(new StreamID('stream-1', 0), 'node')).toEqual(false)
         expect(manager.hasOutboundNode(new StreamID('stream-2', 0), 'node')).toEqual(false)

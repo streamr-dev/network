@@ -185,13 +185,9 @@ class Node extends EventEmitter {
     }
 
     _getStatus() {
-        const { allInboundNodes, allOutboundNodes } = this.streams.getAllNodes()
-
         return {
-            streams: this.streams.getStreamsAsKeys(),
-            started: this.started,
-            outboundNodes: [...allOutboundNodes],
-            inboundNodes: [...allInboundNodes],
+            streams: this.streams.getStreamsWithConnections(),
+            started: this.started
         }
     }
 
