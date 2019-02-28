@@ -6,6 +6,7 @@ const Tracker = require('./logic/Tracker')
 const Node = require('./logic/Node')
 const Client = require('./logic/Client')
 const NetworkNode = require('./NetworkNode')
+const OverlayTopology = require('./logic/OverlayTopology')
 const { startEndpoint } = require('./connection/WsEndpoint')
 const { MessageID, MessageReference, StreamID } = require('./identifiers')
 
@@ -68,5 +69,6 @@ module.exports = {
     startNetworkNode,
     MessageID,
     MessageReference,
-    StreamID
+    StreamID,
+    OverlayTopology
 }

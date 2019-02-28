@@ -7,13 +7,12 @@ const shuffleArray = (arr) => arr
 const pickRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
 module.exports = class OverlayTopology {
-    constructor(maxNeighborsPerNode, randomFunction, shuffleArrayFunction, pickRandomElementFunction) {
+    constructor(maxNeighborsPerNode, shuffleArrayFunction, pickRandomElementFunction) {
         if (!Number.isInteger(maxNeighborsPerNode)) {
             throw new Error('maxNeighborsPerNode is not an integer')
         }
         this.maxNeighborsPerNode = maxNeighborsPerNode
         this.nodes = {}
-        this.random = randomFunction || Math.random
         this.shuffleArray = shuffleArrayFunction || shuffleArray
         this.pickRandomElement = pickRandomElementFunction || pickRandomElement
     }
@@ -34,53 +33,76 @@ module.exports = class OverlayTopology {
     state() {
         return Object.assign(...Object.entries(this.nodes).map(([nodeId, neighbors]) => {
             return {
-                [nodeId]: [...neighbors]
+                [nodeId]: [...neighbors].sort()
             }
         }))
     }
 
     formInstructions(nodeId) {
-        const excessNeighbors = this.nodes[nodeId].size - this.maxNeighborsPerNode
+        const updatedNodes = new Set()
+
+        const excessNeighbors = -this._numOfMissingNeighbors(nodeId)
         if (excessNeighbors > 0) {
-            return {
-                [nodeId]: this.shuffleArray([...this.nodes[nodeId]]).slice(0, this.maxNeighborsPerNode)
+            const reducedNeighbors = this.shuffleArray([...this.nodes[nodeId]]).slice(0, this.maxNeighborsPerNode)
+            this.update(nodeId, reducedNeighbors)
+            updatedNodes.add(nodeId)
+        }
+
+        if (this._numOfMissingNeighbors(nodeId) > 0) {
+            const candidates = Object.entries(this.nodes)
+                .filter(([n, neighbors]) => neighbors.size < this.maxNeighborsPerNode) // nodes with open slots
+                .filter(([n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not yet neighbors
+                .filter(([n, _]) => n !== nodeId) // remove self
+                .map(([n, _]) => n)
+
+            const neighborsToAdd = this.shuffleArray(candidates).slice(0, this._numOfMissingNeighbors(nodeId))
+            if (neighborsToAdd.length > 0) {
+                this.update(nodeId, [...this.nodes[nodeId], ...neighborsToAdd])
+                updatedNodes.add(nodeId)
             }
         }
 
-        const instructions = {
-            [nodeId]: [...this.nodes[nodeId]]
-        }
-        let missingNeighbors = -excessNeighbors
-
-        if (missingNeighbors > 0) {
+        // At this point in code, if numOfMissingNeighbors > 0, we can assume that all nodes that we aren't yet
+        // neighbor with are full. Disconnecting any existing link in this set of nodes will open 2 free slots into the
+        // network overall. Thus we want to make sure that we have at least 2 free slots ourselves otherwise we will
+        // leave one slot free which could lead to a never-ending chain of disconnects and connects, one node at a time.
+        if (this._numOfMissingNeighbors(nodeId) > 1) {
             const candidates = Object.entries(this.nodes)
-                .filter(([n, neighbors]) => neighbors.size < this.maxNeighborsPerNode) // nodes with open slots
-                .filter(([n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not already neighbors
-                .filter(([n, _]) => n !== nodeId) // remove self
-                .sort(([n1, neighbors1], [n2, neighbors2]) => neighbors1.size - neighbors2.size) // sort by reserved slots (ascending)
-                .map(([n, _]) => n)
-
-            const neighborsToAdd = this.shuffleArray(candidates).slice(0, missingNeighbors)
-            instructions[nodeId].push(...neighborsToAdd)
-            missingNeighbors -= neighborsToAdd.length
-        }
-
-        if (missingNeighbors > 0) {
-            const candidates = Object.entries(this.nodes)
-                .filter(([n, neighbors]) => neighbors.size >= this.maxNeighborsPerNode) // nodes with no open slots
-                .filter(([n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not already neighbors
+                .filter(([n, neighbors]) => neighbors.size >= this.maxNeighborsPerNode) // full nodes
+                .filter(([n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not yet neighbors
                 .filter(([n, _]) => n !== nodeId) // remove self
                 .map(([n, _]) => n)
 
-            // TODO: if nodeId is already connected to one participant of a connection that will be disconnected, we will
-            //  not be freeing up 2 slots but instead only 1. Should this be taken into consideration?
-            const disconnectionTargets = this.shuffleArray(candidates).slice(0, Math.floor(missingNeighbors / 2))
-            disconnectionTargets.forEach((n) => {
-                const randomNeighbor = this.pickRandomElement([...this.nodes[n]])
-                instructions[n] = [...this.nodes[n]].filter((neighbor) => neighbor !== randomNeighbor)
-            })
+            const disconnectionTargets = this.shuffleArray(candidates).reverse()
+            while (this._numOfMissingNeighbors(nodeId) > 1 && disconnectionTargets.length > 0) {
+                const n1 = disconnectionTargets.pop()
+                const n2candidates = [...this.nodes[n1]].filter((n) => !this.nodes[n].has(nodeId))
+
+                if (n2candidates.length > 0) {
+                    const n2 = this.pickRandomElement(n2candidates)
+
+                    this.nodes[n1].delete(n2)
+                    this.nodes[n2].delete(n1)
+                    this.nodes[n1].add(nodeId)
+                    this.nodes[n2].add(nodeId)
+                    this.nodes[nodeId].add(n1)
+                    this.nodes[nodeId].add(n2)
+
+                    updatedNodes.add(nodeId)
+                    updatedNodes.add(n1)
+                    updatedNodes.add(n2)
+                }
+            }
         }
 
-        return instructions
+        return updatedNodes.size === 0 ? {} : Object.assign(...[...updatedNodes].map((n) => {
+            return {
+                [n]: [...this.nodes[n]]
+            }
+        }))
+    }
+
+    _numOfMissingNeighbors(nodeId) {
+        return this.maxNeighborsPerNode - this.nodes[nodeId].size
     }
 }
