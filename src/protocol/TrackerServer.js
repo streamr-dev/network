@@ -21,10 +21,10 @@ class TrackerServer extends EventEmitter {
         this._endpointListener.implement(this, endpoint)
     }
 
-    sendStreamInfo(receiverNodeId, streamId, listOfNodeIds) {
+    async sendStreamInfo(receiverNodeId, streamId, listOfNodeIds) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
         const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.peerBook.getAddress(nodeId))
-        this.endpoint.send(receiverNodeAddress, encoder.streamMessage(streamId, listOfNodeAddresses))
+        await this.endpoint.send(receiverNodeAddress, encoder.streamMessage(streamId, listOfNodeAddresses))
     }
 
     getAddress() {

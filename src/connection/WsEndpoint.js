@@ -75,14 +75,19 @@ class WsEndpoint extends EventEmitter {
             } else {
                 try {
                     const ws = this.connections.get(recipientAddress)
-                    ws.send(message, (err) => {
-                        if (err) {
-                            reject(err)
-                        } else {
-                            debug('sent to %s message "%s"', recipientAddress, message)
-                            resolve()
-                        }
-                    })
+                    if (ws.readyState === ws.OPEN) {
+                        ws.send(message, (err) => {
+                            if (err) {
+                                reject(err)
+                            } else {
+                                debug('sent to %s message "%s"', recipientAddress, message)
+                                resolve()
+                            }
+                        })
+                    } else {
+                        debug('sent failed because readyState of socket is %d', ws.readyState)
+                        resolve()
+                    }
                 } catch (e) {
                     console.error('sending to %s failed because of %s', recipientAddress, e)
                     reject(e)

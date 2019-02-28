@@ -81,13 +81,25 @@ class Node extends EventEmitter {
         }
     }
 
-    onStreamInfoReceived(streamMessage) {
+    async onStreamInfoReceived(streamMessage) {
         const streamId = streamMessage.getStreamId()
         const nodeAddresses = streamMessage.getNodeAddresses()
+        const alreadyConnectedNode = this.streams.getAllNodes()
+        const nodeIds = []
 
-        nodeAddresses.forEach(async (nodeAddress) => {
+        await Promise.all(nodeAddresses.map(async (nodeAddress) => {
             const node = await this.protocols.nodeToNode.connectToNode(nodeAddress)
-            return this._subscribeToStreamOnNode(node, streamId)
+            await this._subscribeToStreamOnNode(node, streamId)
+            nodeIds.push(node)
+        })).catch((err) => {
+            console.error(`Could not connect to the node because '${err}'`)
+        })
+
+        const nodesToDisconnect = alreadyConnectedNode.filter((node) => !nodeIds.includes(node))
+
+        nodesToDisconnect.forEach((node) => {
+            this.debug('disconnecting from node %s based on tracker instructions', node)
+            this.protocols.nodeToNode.disconnectFromNode(node, disconnectionReasons.TRACKER_INSTRUCTION)
         })
     }
 
@@ -180,8 +192,22 @@ class Node extends EventEmitter {
         this.debug('stopping')
         this._clearConnectToBootstrapTrackersInterval()
         this._clearMaintainStreamsInterval()
+        this._disconnectFromAllNodes()
+        this._disconnectFromTrackers()
         this.messageBuffer.clear()
         this.protocols.nodeToNode.stop(cb)
+    }
+
+    _disconnectFromTrackers() {
+        this.trackers.forEach((tracker) => {
+            this.protocols.nodeToNode.disconnectFromNode(tracker, disconnectionReasons.GRACEFUL_SHUTDOWN)
+        })
+    }
+
+    _disconnectFromAllNodes() {
+        this.streams.getAllNodes().forEach((node) => {
+            this.protocols.nodeToNode.disconnectFromNode(node, disconnectionReasons.GRACEFUL_SHUTDOWN)
+        })
     }
 
     _getStatus() {
@@ -290,6 +316,7 @@ class Node extends EventEmitter {
     setConnectionLimitsPerStream(maxNumNodesInBound = MAX_NUM_NODES_OUTBOUND_PER_STREAM, maxNumNodesOutBound = MAX_NUM_NODES_OUTBOUND_PER_STREAM) {
         this.connectionLimits.maxInBound = maxNumNodesInBound
         this.connectionLimits.maxOutBound = maxNumNodesOutBound
+        this.debug('changed connection limits to %o', this.getConnectionLimitsPerStream())
     }
 
     getConnectionLimitsPerStream() {

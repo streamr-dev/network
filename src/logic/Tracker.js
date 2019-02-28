@@ -1,7 +1,7 @@
 const { EventEmitter } = require('events')
 const createDebug = require('debug')
 const TrackerServer = require('../protocol/TrackerServer')
-const { getPeersTopology } = require('../helpers/TopologyStrategy')
+const { getPeersTopology, filterOutRandomPeer } = require('../helpers/TopologyStrategy')
 
 module.exports = class Tracker extends EventEmitter {
     constructor(id, trackerServer) {
@@ -9,7 +9,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this.nodes = new Set()
         this.streamKeyToNodes = new Map()
-        this.nodesToStreams = new Map()
+        this.nodeStatus = new Map()
 
         this.id = id
         this.protocols = {
@@ -40,6 +40,7 @@ module.exports = class Tracker extends EventEmitter {
 
         const nodesForStream = this.streamKeyToNodes.get(streamId.key()) || new Set()
         const selectedNodes = getPeersTopology([...nodesForStream], source)
+
         this.protocols.trackerServer.sendStreamInfo(source, streamId, selectedNodes)
         this.debug('sent stream info to %s: stream %s with nodes %j', source, streamId, selectedNodes)
     }
@@ -56,23 +57,21 @@ module.exports = class Tracker extends EventEmitter {
     _addNode(node, status) {
         this.nodes.add(node)
 
-        const streamKeys = []
-        status.streams.forEach((stream) => {
-            const streamKey = stream.streamId
-            streamKeys.push(streamKey)
+        Object.keys(status.streams).forEach((streamKey) => {
             if (!this.streamKeyToNodes.has(streamKey)) {
                 this.streamKeyToNodes.set(streamKey, new Set())
             }
             this.streamKeyToNodes.get(streamKey).add(node)
+            return streamKey
         })
 
-        this.nodesToStreams.set(node, status.streams)
-        this.debug('registered node %s for streams %j', node, streamKeys)
+        this.nodeStatus.set(node, status.streams)
+        this.debug('registered node %s for streams %j', node, Object.keys(status.streams))
     }
 
     _removeNode(node) {
         this.nodes.delete(node)
-        this.nodesToStreams.delete(node)
+        this.nodeStatus.delete(node)
 
         this.streamKeyToNodes.forEach((_, streamKey) => {
             this.streamKeyToNodes.get(streamKey).delete(node)

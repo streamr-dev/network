@@ -47,11 +47,12 @@ describe('check status message flow between tracker and two nodes', () => {
             // eslint-disable-next-line no-underscore-dangle
             const status = nodeOne._getStatus()
 
-            expect(status.streams).toEqual([{
-                streamId: 'stream-1::0',
-                inboundNodes: ['node-2'],
-                outboundNodes: ['node-2']
-            }])
+            expect(status.streams).toEqual({
+                'stream-1::0': {
+                    inboundNodes: ['node-2'],
+                    outboundNodes: ['node-2']
+                }
+            })
 
             let receivedTotal = 0
             tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => {

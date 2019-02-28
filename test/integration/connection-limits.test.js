@@ -49,7 +49,7 @@ describe('check maxInBound and maxOutBound limits', () => {
             // update limits and connect again
             otherNodes.forEach((node) => {
                 const limits = node.getConnectionLimitsPerStream()
-                node.setConnectionLimitsPerStream(limits.maxInBound + 2, limits.maxOutBound + 2)
+                node.setConnectionLimitsPerStream(limits.maxInBound + 1, limits.maxOutBound + 1)
             })
 
             otherNodes[7].protocols.trackerNode.once(TrackerNode.events.STREAM_INFO_RECEIVED, async () => {
@@ -65,7 +65,6 @@ describe('check maxInBound and maxOutBound limits', () => {
 
     afterAll(async () => {
         await callbackToPromise(contactNode.stop.bind(contactNode))
-        await wait(1000)
         await Promise.all(otherNodes.map((node) => callbackToPromise(node.stop.bind(node))))
         await callbackToPromise(tracker.stop.bind(tracker))
     })
