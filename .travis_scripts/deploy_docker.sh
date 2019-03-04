@@ -4,7 +4,7 @@ if [ $1 = "staging" ]; then
     docker push $OWNER/$IMAGE_NAME:$TAG
 elif [ $1 = "production" ]; then
     docker build -t $OWNER/$IMAGE_NAME:$TAG .
-    docker tag $OWNER/$IMAGE_NAME:$TAG $OWNER/$IMAGE_NAME:$TRAVIS_TAG
+    #docker tag $OWNER/$IMAGE_NAME:$TAG $OWNER/$IMAGE_NAME:$TRAVIS_TAG
     docker push $OWNER/$IMAGE_NAME:$TAG
-    docker push $OWNER/$IMAGE_NAME:$TRAVIS_TAG
+    #docker push $OWNER/$IMAGE_NAME:$TRAVIS_TAG
 fi

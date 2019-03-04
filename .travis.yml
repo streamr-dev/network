@@ -64,11 +64,10 @@ jobs:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh staging
   - stage: Build docker (production)
-    if: tag IS present
+    #if: tag IS present - Removing this while transition to better versioning is in progress
     install: true
     env:
     - OWNER=streamr
     - IMAGE_NAME=data-api
     - TAG=latest
-    script:
-      script: bash .travis_scripts/deploy_docker.sh production
+    script: bash .travis_scripts/deploy_docker.sh production
