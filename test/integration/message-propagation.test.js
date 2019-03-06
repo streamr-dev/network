@@ -68,7 +68,7 @@ describe('message propagation in network', () => {
         n2.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
         n3.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
 
-        await wait(1000)
+        await wait(2000)
 
         for (let i = 1; i <= 5; ++i) {
             const dataMessage = new DataMessage(

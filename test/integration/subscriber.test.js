@@ -35,11 +35,6 @@ describe('Selecting leader for the stream and sending messages to two subscriber
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
 
-        await Promise.all([
-            waitForEvent(nodeOne.protocols.trackerNode, TrackerNode.events.STREAM_INFO_RECEIVED),
-            waitForEvent(nodeTwo.protocols.trackerNode, TrackerNode.events.STREAM_INFO_RECEIVED)
-        ])
-
         let timestamp = 1000
         let previousMessageReference = null
         const publisherInterval = setInterval(() => {

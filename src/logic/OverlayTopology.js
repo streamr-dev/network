@@ -6,7 +6,7 @@ const shuffleArray = (arr) => arr
 
 const pickRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)]
 
-module.exports = class OverlayTopology {
+class OverlayTopology {
     constructor(maxNeighborsPerNode, shuffleArrayFunction, pickRandomElementFunction) {
         if (!Number.isInteger(maxNeighborsPerNode)) {
             throw new Error('maxNeighborsPerNode is not an integer')
@@ -26,8 +26,10 @@ module.exports = class OverlayTopology {
     }
 
     leave(nodeId) {
-        this.nodes[nodeId].forEach((neighbor) => this.nodes[neighbor].delete(nodeId)) // assumption: neighbor already initialized in tracker
-        delete this.nodes[nodeId]
+        if (this.nodes[nodeId] != null) {
+            this.nodes[nodeId].forEach((neighbor) => this.nodes[neighbor].delete(nodeId)) // assumption: neighbor already initialized in tracker
+            delete this.nodes[nodeId]
+        }
     }
 
     state() {
@@ -105,4 +107,9 @@ module.exports = class OverlayTopology {
     _numOfMissingNeighbors(nodeId) {
         return this.maxNeighborsPerNode - this.nodes[nodeId].size
     }
+}
+
+// Enable importing into browser
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = OverlayTopology
 }

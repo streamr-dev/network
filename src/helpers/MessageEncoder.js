@@ -1,5 +1,5 @@
 const StatusMessage = require('../messages/StatusMessage')
-const StreamMessage = require('../messages/StreamMessage')
+const InstructionMessage = require('../messages/InstructionMessage')
 const DataMessage = require('../messages/DataMessage')
 const SubscribeMessage = require('../messages/SubscribeMessage')
 const UnsubscribeMessage = require('../messages/UnsubscribeMessage')
@@ -25,8 +25,8 @@ const decode = (source, message) => {
         case msgTypes.STATUS:
             return new StatusMessage(payload, source)
 
-        case msgTypes.STREAM:
-            return new StreamMessage(
+        case msgTypes.INSTRUCTION:
+            return new InstructionMessage(
                 new StreamID(payload.streamId, payload.streamPartition),
                 payload.nodeAddresses,
                 source
@@ -80,7 +80,7 @@ module.exports = {
         streamId: streamId.id,
         streamPartition: streamId.partition,
     }),
-    streamMessage: (streamId, nodeAddresses) => encode(msgTypes.STREAM, {
+    instructionMessage: (streamId, nodeAddresses) => encode(msgTypes.INSTRUCTION, {
         streamId: streamId.id,
         streamPartition: streamId.partition,
         nodeAddresses

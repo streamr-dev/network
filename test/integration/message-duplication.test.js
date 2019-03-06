@@ -63,7 +63,7 @@ describe('duplicate message detection and avoidance', () => {
         expect(numOfReceivedMessages).toEqual([2, 2, 2, 2, 2])
     })
 
-    test('maximum times a node receives duplicates of message is bounded sby total number of repeaters', () => {
+    test('maximum times a node receives duplicates of message is bounded by total number of repeaters', () => {
         const numOfDuplicates = otherNodes.map((n) => n.metrics.received.duplicates)
         expect(numOfDuplicates).toHaveLength(5)
         numOfDuplicates.forEach((n) => {

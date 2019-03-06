@@ -1,7 +1,7 @@
 const encoder = require('../../src/helpers/MessageEncoder')
 const { version } = require('../../package.json')
 const DataMessage = require('../../src/messages/DataMessage')
-const StreamMessage = require('../../src/messages/StreamMessage')
+const InstructionMessage = require('../../src/messages/InstructionMessage')
 const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 
 describe('encoder', () => {
@@ -11,7 +11,7 @@ describe('encoder', () => {
         expect(encoder.SUBSCRIBE).toEqual(3)
         expect(encoder.UNSUBSCRIBE).toEqual(4)
         expect(encoder.PUBLISH).toEqual(5)
-        expect(encoder.STREAM).toEqual(6)
+        expect(encoder.INSTRUCTION).toEqual(6)
 
         done()
     })
@@ -20,15 +20,15 @@ describe('encoder', () => {
         expect(encoder.getMsgPrefix(encoder.STATUS)).toEqual('STATUS')
         expect(encoder.getMsgPrefix(encoder.SUBSCRIBE)).toEqual('SUBSCRIBE')
         expect(encoder.getMsgPrefix(encoder.PUBLISH)).toEqual('PUBLISH')
-        expect(encoder.getMsgPrefix(encoder.STREAM)).toEqual('STREAM')
+        expect(encoder.getMsgPrefix(encoder.INSTRUCTION)).toEqual('INSTRUCTION')
 
         done()
     })
 
     it('check streamMessage encoding/decoding', () => {
-        const json = encoder.streamMessage(new StreamID('stream-id', 0), ['node-1', 'node-2'])
+        const json = encoder.instructionMessage(new StreamID('stream-id', 0), ['node-1', 'node-2'])
         expect(JSON.parse(json)).toEqual({
-            code: encoder.STREAM,
+            code: encoder.INSTRUCTION,
             version,
             payload: {
                 streamId: 'stream-id',
@@ -43,7 +43,7 @@ describe('encoder', () => {
         const source = '127.0.0.1'
         const streamMessage = encoder.decode(source, json)
 
-        expect(streamMessage).toBeInstanceOf(StreamMessage)
+        expect(streamMessage).toBeInstanceOf(InstructionMessage)
         expect(streamMessage.getSource()).toEqual('127.0.0.1')
         expect(streamMessage.getStreamId()).toEqual(new StreamID('stream-id', 0))
         expect(streamMessage.getNodeAddresses()).toEqual(['node-1', 'node-2'])

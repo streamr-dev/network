@@ -6,14 +6,13 @@ const msgTypes = {
     SUBSCRIBE: 0x03,
     UNSUBSCRIBE: 0x04,
     PUBLISH: 0x05,
-    STREAM: 0x06
+    INSTRUCTION: 0x06
 }
 
 const disconnectionReasons = Object.freeze({
-    MAX_OUTBOUND_CONNECTIONS: 'streamr:node:max-outbound-connections',
-    MAX_INBOUND_CONNECTIONS: 'streamr:node:max-inbound-connections',
     TRACKER_INSTRUCTION: 'streamr:node:tracker-instruction',
     GRACEFUL_SHUTDOWN: 'streamr:node:graceful-shutdown',
+    DUPLICATE_SOCKET: 'streamr:endpoint:duplicate-connection'
 })
 
 module.exports = {

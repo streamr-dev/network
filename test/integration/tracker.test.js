@@ -12,14 +12,12 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     it('should be able to start tracker, two nodes, receive statuses, then stop them successfully', async (done) => {
         tracker = await startTracker(LOCALHOST, 32400, 'tracker')
-        expect(tracker.nodes.size).toBe(0)
         expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(0)
 
         node1 = await startNode(LOCALHOST, 33371, 'node1')
         await node1.addBootstrapTracker(tracker.getAddress())
 
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        expect(tracker.nodes.size).toBe(1)
         expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(1)
 
         expect(node1.protocols.trackerNode.endpoint.connections.size).toBe(1)
@@ -28,8 +26,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
         await node2.addBootstrapTracker(tracker.getAddress())
 
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-
-        expect(tracker.nodes.size).toBe(2)
 
         // TODO add status checkes - leaders and etc
         done()

@@ -2,11 +2,11 @@ const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:tracker-node')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
-const PeerBook = require('./PeerBook')
+const { PeerBook } = require('./PeerBook')
 
 const events = Object.freeze({
-    CONNECTED_TO_TRACKER: 'streamr:peer:send-status',
-    STREAM_INFO_RECEIVED: 'streamr:node:found-stream',
+    CONNECTED_TO_TRACKER: 'streamr:tracker-node:send-status',
+    TRACKER_INSTRUCTION_RECEIVED: 'streamr:tracker-node:tracker-instruction-received',
     TRACKER_DISCONNECTED: 'streamr:tracker-node:tracker-disconnected'
 })
 
@@ -28,15 +28,10 @@ class TrackerNode extends EventEmitter {
         })
     }
 
-    requestStreamInfo(trackerId, streamId) {
-        const trackerAddress = this.peerBook.getAddress(trackerId)
-        this.endpoint.send(trackerAddress, encoder.streamMessage(streamId, ''))
-    }
-
     onMessageReceived(message) {
         switch (message.getCode()) {
-            case encoder.STREAM:
-                this.emit(events.STREAM_INFO_RECEIVED, message)
+            case encoder.INSTRUCTION:
+                this.emit(events.TRACKER_INSTRUCTION_RECEIVED, message)
                 break
             default:
                 break

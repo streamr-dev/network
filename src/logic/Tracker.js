@@ -1,22 +1,22 @@
 const { EventEmitter } = require('events')
 const createDebug = require('debug')
 const TrackerServer = require('../protocol/TrackerServer')
-const { getPeersTopology, filterOutRandomPeer } = require('../helpers/TopologyStrategy')
+const OverlayTopology = require('../logic/OverlayTopology')
+const { StreamID } = require('../identifiers')
+
+const NEIGHBORS_PER_NODE = 4
 
 module.exports = class Tracker extends EventEmitter {
     constructor(id, trackerServer) {
         super()
-
-        this.nodes = new Set()
-        this.streamKeyToNodes = new Map()
-        this.nodeStatus = new Map()
+        this.overlayPerStream = {} // streamKey => overlayTopology
+        this.lastTimestampPerNode = {}
 
         this.id = id
         this.protocols = {
             trackerServer
         }
 
-        this.protocols.trackerServer.on(TrackerServer.events.STREAM_INFO_REQUESTED, (streamMessage) => this.sendStreamInfo(streamMessage))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => this.processNodeStatus(statusMessage))
 
@@ -27,22 +27,12 @@ module.exports = class Tracker extends EventEmitter {
     processNodeStatus(statusMessage) {
         const source = statusMessage.getSource()
         const status = statusMessage.getStatus()
-        this._addNode(source, status)
+        this._addNode(source, status.streams)
+        this._formAndSendInstructions(source, status.streams)
     }
 
     onNodeDisconnected(node) {
         this._removeNode(node)
-    }
-
-    sendStreamInfo(streamMessage) {
-        const streamId = streamMessage.getStreamId()
-        const source = streamMessage.getSource()
-
-        const nodesForStream = this.streamKeyToNodes.get(streamId.key()) || new Set()
-        const selectedNodes = getPeersTopology([...nodesForStream], source)
-
-        this.protocols.trackerServer.sendStreamInfo(source, streamId, selectedNodes)
-        this.debug('sent stream info to %s: stream %s with nodes %j', source, streamId, selectedNodes)
     }
 
     stop(cb) {
@@ -54,31 +44,33 @@ module.exports = class Tracker extends EventEmitter {
         return this.protocols.trackerServer.getAddress()
     }
 
-    _addNode(node, status) {
-        this.nodes.add(node)
-
-        Object.keys(status.streams).forEach((streamKey) => {
-            if (!this.streamKeyToNodes.has(streamKey)) {
-                this.streamKeyToNodes.set(streamKey, new Set())
+    _addNode(node, streams) {
+        Object.entries(streams).forEach(([streamKey, { inboundNodes, outboundNodes }]) => {
+            if (this.overlayPerStream[streamKey] == null) {
+                this.overlayPerStream[streamKey] = new OverlayTopology(NEIGHBORS_PER_NODE)
             }
-            this.streamKeyToNodes.get(streamKey).add(node)
-            return streamKey
+            const neighbors = new Set([...inboundNodes, ...outboundNodes])
+            this.overlayPerStream[streamKey].update(node, neighbors)
         })
 
-        this.nodeStatus.set(node, status.streams)
-        this.debug('registered node %s for streams %j', node, Object.keys(status.streams))
+        this.debug('registered node %s for streams %j', node, Object.keys(streams))
+    }
+
+    _formAndSendInstructions(node, streams) {
+        Object.keys(streams).forEach((streamKey) => {
+            const instructions = this.overlayPerStream[streamKey].formInstructions(node)
+            this.debug('sending stream %s instructions %j', streamKey, instructions)
+            Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
+                if (this.lastTimestampPerNode[nodeId] == null || Date.now() - this.lastTimestampPerNode[nodeId] > 250) {
+                    this.lastTimestampPerNode[nodeId] = Date.now()
+                    this.protocols.trackerServer.sendInstruction(nodeId, StreamID.fromKey(streamKey), newNeighbors)
+                }
+            })
+        })
     }
 
     _removeNode(node) {
-        this.nodes.delete(node)
-        this.nodeStatus.delete(node)
-
-        this.streamKeyToNodes.forEach((_, streamKey) => {
-            this.streamKeyToNodes.get(streamKey).delete(node)
-            if (this.streamKeyToNodes.get(streamKey).size === 0) {
-                this.streamKeyToNodes.delete(streamKey)
-            }
-        })
+        Object.values(this.overlayPerStream).forEach((overlay) => overlay.leave(node))
         this.debug('unregistered node %s from tracker', node)
     }
 }

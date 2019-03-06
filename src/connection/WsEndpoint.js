@@ -2,6 +2,7 @@ const { EventEmitter } = require('events')
 const url = require('url')
 const debug = require('debug')('streamr:connection:ws-endpoint')
 const WebSocket = require('ws')
+const { disconnectionReasons } = require('../messages/messageTypes')
 const Endpoint = require('./Endpoint')
 
 class CustomHeaders {
@@ -202,7 +203,7 @@ class WsEndpoint extends EventEmitter {
         // thereby leaving no connection behind.
         if (this.isConnected(address) && this.getAddress().localeCompare(address) === 1) {
             debug('dropped new connection with %s because an existing connection already exists', address)
-            this.close(address, 'streamr:endpoint:duplicate-connection')
+            this.close(address, disconnectionReasons.DUPLICATE_SOCKET)
             return
         }
 
@@ -212,6 +213,10 @@ class WsEndpoint extends EventEmitter {
         })
 
         ws.on('close', (code, reason) => {
+            if (reason === disconnectionReasons.DUPLICATE_SOCKET) {
+                debug('socket %s dropped from other side because existing connection already exists')
+                return
+            }
             debug('socket to %s closed (code %d, reason %s)', address, code, reason)
             this.connections.delete(address)
             debug('removed %s from connection list', address)
