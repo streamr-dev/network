@@ -125,14 +125,33 @@ class Storage {
     }
 }
 
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 const startCassandraStorage = async (contactPoints, localDataCenter, keyspace) => {
     const cassandraClient = new cassandra.Client({
         contactPoints,
         localDataCenter,
         keyspace,
     })
-    await cassandraClient.connect()
-    return new Storage(cassandraClient)
+    const nbTrials = 20
+    let retryCount = nbTrials
+    let lastError = ''
+    while (retryCount > 0) {
+        /* eslint-disable no-await-in-loop */
+        try {
+            await cassandraClient.connect().catch((err) => { throw err })
+            return new Storage(cassandraClient)
+        } catch (err) {
+            console.log('Cassandra not responding yet...')
+            retryCount -= 1
+            await sleep(5000)
+            lastError = err
+        }
+        /* eslint-enable no-await-in-loop */
+    }
+    throw new Error(`Failed to connect to Cassandra after ${nbTrials} trials: ${lastError.toString()}`)
 }
 
 module.exports = {
