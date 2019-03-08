@@ -221,3 +221,25 @@ test('forming overlay topology', () => {
         ]
     })
 })
+
+test('unknown nodes are discarded', () => {
+    const topology = new OverlayTopology(3)
+
+    topology.update('node-1', [])
+    topology.update('node-2', [])
+    topology.update('node-3', [])
+
+    topology.update('node-1', ['node-2', 'node-3', 'node-4'])
+    expect(topology.state()).toEqual({
+        'node-1': [
+            'node-2',
+            'node-3'
+        ],
+        'node-2': [
+            'node-1'
+        ],
+        'node-3': [
+            'node-1'
+        ]
+    })
+})

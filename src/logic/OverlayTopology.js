@@ -18,8 +18,10 @@ class OverlayTopology {
     }
 
     update(nodeId, neighbors) {
-        this.nodes[nodeId] = new Set(neighbors)
-        neighbors.forEach((neighbor) => this.nodes[neighbor].add(nodeId)) // assumption: neighbor already initialized in tracker
+        const knownNeighbors = [...neighbors].filter((n) => n in this.nodes)
+
+        this.nodes[nodeId] = new Set(knownNeighbors)
+        knownNeighbors.forEach((neighbor) => this.nodes[neighbor].add(nodeId))
         Object.keys(this.nodes)
             .filter((n) => !this.nodes[nodeId].has(n))
             .forEach((n) => this.nodes[n].delete(nodeId))
@@ -27,7 +29,7 @@ class OverlayTopology {
 
     leave(nodeId) {
         if (this.nodes[nodeId] != null) {
-            this.nodes[nodeId].forEach((neighbor) => this.nodes[neighbor].delete(nodeId)) // assumption: neighbor already initialized in tracker
+            this.nodes[nodeId].forEach((neighbor) => this.nodes[neighbor].delete(nodeId))
             delete this.nodes[nodeId]
         }
     }
