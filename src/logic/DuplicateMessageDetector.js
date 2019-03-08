@@ -42,8 +42,6 @@ class NumberPair {
     }
 }
 
-const NULL_NUMBER_PAIR = new NumberPair(-Infinity, -Infinity)
-
 class GapMisMatchError extends Error {
     constructor(...args) {
         super(...args)
@@ -84,10 +82,7 @@ class DuplicateMessageDetector {
      * returns true if number has not yet been seen (i.e. is not a duplicate)
      */
     markAndCheck(previousNumber, number) {
-        if (previousNumber === null) {
-            previousNumber = NULL_NUMBER_PAIR // eslint-disable-line no-param-reassign
-        }
-        if (previousNumber.greaterThanOrEqual(number)) {
+        if (previousNumber && previousNumber.greaterThanOrEqual(number)) {
             throw new Error('pre-condition: previousNumber < number')
         }
 
@@ -96,10 +91,21 @@ class DuplicateMessageDetector {
             return true
         }
 
+        // Handle special case where previousNumber is not provided. Only
+        // minimal duplicate detection is provided (comparing against latest
+        // known message number).
+        if (previousNumber === null) {
+            if (number.greaterThan(this.gaps[this.gaps.length - 1][0])) {
+                this.gaps[this.gaps.length - 1][0] = number
+                return true
+            }
+            return false
+        }
+
         for (let i = this.gaps.length - 1; i >= 0; --i) {
             const [lowerBound, upperBound] = this.gaps[i] // invariant: upperBound > lowerBound
 
-            // implies nextNumber > upperBound (would've been handled in previous iteration if gap exists)
+            // implies number > upperBound (would've been handled in previous iteration if gap exists)
             if (previousNumber.greaterThanOrEqual(upperBound)) {
                 return false
             }

@@ -20,9 +20,10 @@ test('checking numbers in order introduces no new gaps', () => {
     detector.markAndCheck(null, new NumberPair(10, 0))
     expect(detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0))).toEqual(true)
     expect(detector.markAndCheck(new NumberPair(20, 0), new NumberPair(30, 0))).toEqual(true)
-    expect(detector.markAndCheck(new NumberPair(30, 0), new NumberPair(30, 1))).toEqual(true)
+    expect(detector.markAndCheck(null, new NumberPair(30, 1))).toEqual(true)
+    expect(detector.markAndCheck(new NumberPair(30, 1), new NumberPair(30, 5))).toEqual(true)
     const state = detector.toString()
-    expect(state).toEqual('(30|1, Infinity|Infinity]')
+    expect(state).toEqual('(30|5, Infinity|Infinity]')
 })
 
 test('skipping next expected messages creates gaps', () => {
@@ -37,6 +38,17 @@ test('skipping next expected messages creates gaps', () => {
 
     expect(detector.markAndCheck(new NumberPair(40, 10), new NumberPair(80, 20))).toEqual(true)
     expect(detector.toString()).toEqual('(10|0, 15|0], (20|0, 30|0], (40|0, 40|10], (80|20, Infinity|Infinity]')
+})
+
+test('only last gap is checked if no previous number given', () => {
+    const detector = new DuplicateMessageDetector()
+    detector.markAndCheck(null, new NumberPair(10, 0))
+    detector.markAndCheck(new NumberPair(10, 0), new NumberPair(20, 0))
+
+    expect(detector.markAndCheck(null, new NumberPair(15, 0))).toEqual(false)
+    expect(detector.markAndCheck(null, new NumberPair(30, 5))).toEqual(true)
+    const state = detector.toString()
+    expect(state).toEqual('(30|5, Infinity|Infinity]')
 })
 
 describe('gap handling', () => {
@@ -116,6 +128,16 @@ describe('duplicates return false and do not change state', () => {
 
     it('previous number touches upper bound of 2nd gap', () => {
         expect(detector.markAndCheck(new NumberPair(80, 10), new NumberPair(90, 0))).toEqual(false)
+        expect(detector.toString()).toEqual(expectedState)
+    })
+
+    it('previous number not provided, number is below last gap', () => {
+        expect(detector.markAndCheck(null, new NumberPair(80, 10))).toEqual(false)
+        expect(detector.toString()).toEqual(expectedState)
+    })
+
+    it('previous number not provided, number touches lower bound of last gap', () => {
+        expect(detector.markAndCheck(null, new NumberPair(100, 0))).toEqual(false)
         expect(detector.toString()).toEqual(expectedState)
     })
 })
