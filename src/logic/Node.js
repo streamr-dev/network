@@ -44,7 +44,10 @@ class Node extends EventEmitter {
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage) => this.onUnsubscribeRequest(unsubscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
-        this.on(events.NODE_SUBSCRIBED, () => this._sendStatusToAllTrackers())
+        this.on(events.NODE_SUBSCRIBED, ({ streamId }) => {
+            this._handleBufferedMessages(streamId)
+            this._sendStatusToAllTrackers()
+        })
 
         this.debug = createDebug(`streamr:logic:node:${this.id}`)
         this.debug('started %s', this.id)
@@ -77,19 +80,32 @@ class Node extends EventEmitter {
         const currentNodes = this.streams.getAllNodes()
         const nodeIds = []
 
+        this.debug('received instructions for %s', streamId)
+
         await Promise.all(nodeAddresses.map(async (nodeAddress) => {
-            const node = await this.protocols.nodeToNode.connectToNode(nodeAddress)
-            await this._subscribeToStreamOnNode(node, streamId)
+            let node
+            try {
+                node = await this.protocols.nodeToNode.connectToNode(nodeAddress)
+            } catch (e) {
+                this.debug('failed to connect to node at %s (%s)', nodeAddress, e)
+                return
+            }
+            try {
+                await this._subscribeToStreamOnNode(node, streamId)
+            } catch (e) {
+                this.debug('failed to subscribe to node %s (%s)', node, e)
+                return
+            }
             nodeIds.push(node)
-        })).catch((err) => {
-            console.error(`Could not connect to the node because '${err}'`)
-        })
+        }))
+
+        this.debug('connected and subscribed to %j for stream %s', nodeIds, streamId)
 
         const nodesToDisconnect = currentNodes.filter((node) => !nodeIds.includes(node))
 
-        nodesToDisconnect.forEach((node) => {
-            this.debug('disconnecting from node %s based on tracker instructions', node)
-            this.protocols.nodeToNode.disconnectFromNode(node, disconnectionReasons.TRACKER_INSTRUCTION)
+        nodesToDisconnect.forEach(async (node) => {
+            await this.protocols.nodeToNode.disconnectFromNode(node, disconnectionReasons.TRACKER_INSTRUCTION)
+            this.debug('disconnected from node %s (tracker instruction)', node)
         })
     }
 
@@ -120,7 +136,7 @@ class Node extends EventEmitter {
         return this.streams.getOutboundNodesForStream(streamId).length >= MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION
     }
 
-    _propagateMessage(dataMessage) {
+    async _propagateMessage(dataMessage) {
         const source = dataMessage.getSource()
         const messageId = dataMessage.getMessageId()
         const previousMessageReference = dataMessage.getPreviousMessageReference()
@@ -128,10 +144,16 @@ class Node extends EventEmitter {
         const { streamId } = messageId
 
         const subscribers = this.streams.getOutboundNodesForStream(streamId).filter((n) => n !== source)
-        subscribers.forEach((subscriber) => {
-            this.protocols.nodeToNode.sendData(subscriber, messageId, previousMessageReference, data)
-        })
-        this.debug('propagated data %s to %j', messageId, subscribers)
+        const successfulSends = []
+        await Promise.all(subscribers.map(async (subscriber) => {
+            try {
+                await this.protocols.nodeToNode.sendData(subscriber, messageId, previousMessageReference, data)
+                successfulSends.push(subscriber)
+            } catch (e) {
+                this.debug('failed to propagate data %s to node %s (%s)', messageId, subscriber, e)
+            }
+        }))
+        this.debug('propagated data %s to %j', messageId, successfulSends)
         this.emit(events.MESSAGE_PROPAGATED, dataMessage)
     }
 
@@ -152,7 +174,6 @@ class Node extends EventEmitter {
             this.streams.addInboundNode(streamId, source)
         }
 
-        this._handleBufferedMessages(streamId)
         this.debug('node %s subscribed to stream %s', source, streamId)
         this.emit(events.NODE_SUBSCRIBED, {
             streamId,
@@ -199,9 +220,14 @@ class Node extends EventEmitter {
         this.trackers.forEach((tracker) => this._sendStatus(tracker))
     }
 
-    _sendStatus(tracker) {
-        this.protocols.trackerNode.sendStatus(tracker, this._getStatus())
-        this.debug('sent status to tracker %s', tracker)
+    async _sendStatus(tracker) {
+        const status = this._getStatus()
+        try {
+            await this.protocols.trackerNode.sendStatus(tracker, status)
+            this.debug('sent status %j to tracker %s', status.streams, tracker)
+        } catch (e) {
+            this.debug('failed to send status to tracker %s (%s)', tracker, e)
+        }
     }
 
     async _subscribeToStreamOnNode(node, streamId) {
@@ -210,7 +236,6 @@ class Node extends EventEmitter {
 
             this.streams.addInboundNode(streamId, node)
             this.streams.addOutboundNode(streamId, node)
-            this._handleBufferedMessages(streamId)
 
             // TODO get prove message from node that we successfully subscribed
             this.emit(events.NODE_SUBSCRIBED, {

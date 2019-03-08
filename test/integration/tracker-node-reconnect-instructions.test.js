@@ -18,7 +18,7 @@ describe('Check tracker instructions to node', () => {
     let otherNodes
     const streamId = 'stream-1'
 
-    it('init tracker and nodes, tracker receives stream info', async () => {
+    beforeAll(async () => {
         tracker = await startTracker(LOCALHOST, 30950, 'tracker')
 
         otherNodes = await Promise.all([
@@ -36,7 +36,7 @@ describe('Check tracker instructions to node', () => {
         await callbackToPromise(tracker.stop.bind(tracker))
     })
 
-    it('tracker should receive statuses from both', async (done) => {
+    it('tracker should receive statuses from both nodes', (done) => {
         let receivedTotal = 0
         tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, () => {
             receivedTotal += 1
@@ -47,9 +47,16 @@ describe('Check tracker instructions to node', () => {
         })
     })
 
-    it('tracker sends empty list of nodes, so node-one will disconnect from node two', (done) => {
+    it('tracker sends empty list of nodes, so node-one will disconnect from node two', async (done) => {
+        let firstCheck = false
+        let secondCheck = false
+
         otherNodes[1].protocols.nodeToNode.endpoint.once(endpointEvents.PEER_DISCONNECTED, ({ _, reason }) => {
             expect(reason).toBe(disconnectionReasons.TRACKER_INSTRUCTION)
+            firstCheck = true
+            if (firstCheck && secondCheck) {
+                done()
+            }
         })
 
         let receivedTotal = 0
@@ -66,11 +73,17 @@ describe('Check tracker instructions to node', () => {
 
             receivedTotal += 1
             if (receivedTotal === otherNodes.length) {
-                done()
+                secondCheck = true
+                if (firstCheck && secondCheck) {
+                    done()
+                }
             }
         })
 
         // send empty list
-        tracker.protocols.trackerServer.endpoint.send(otherNodes[0].protocols.nodeToNode.getAddress(), encoder.instructionMessage(new StreamID(streamId, 0), []))
+        await tracker.protocols.trackerServer.endpoint.send(
+            otherNodes[0].protocols.nodeToNode.getAddress(),
+            encoder.instructionMessage(new StreamID(streamId, 0), [])
+        )
     })
 })

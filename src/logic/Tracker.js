@@ -10,7 +10,6 @@ module.exports = class Tracker extends EventEmitter {
     constructor(id, trackerServer) {
         super()
         this.overlayPerStream = {} // streamKey => overlayTopology
-        this.lastTimestampPerNode = {}
 
         this.id = id
         this.protocols = {
@@ -59,12 +58,9 @@ module.exports = class Tracker extends EventEmitter {
     _formAndSendInstructions(node, streams) {
         Object.keys(streams).forEach((streamKey) => {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
-            this.debug('sending stream %s instructions %j', streamKey, instructions)
+            this.debug('sending instructions %j for stream %s', instructions, streamKey)
             Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
-                if (this.lastTimestampPerNode[nodeId] == null || Date.now() - this.lastTimestampPerNode[nodeId] > 250) {
-                    this.lastTimestampPerNode[nodeId] = Date.now()
-                    this.protocols.trackerServer.sendInstruction(nodeId, StreamID.fromKey(streamKey), newNeighbors)
-                }
+                this.protocols.trackerServer.sendInstruction(nodeId, StreamID.fromKey(streamKey), newNeighbors)
             })
         })
     }

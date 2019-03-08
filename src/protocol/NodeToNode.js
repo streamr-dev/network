@@ -28,19 +28,13 @@ class NodeToNode extends EventEmitter {
     }
 
     sendData(receiverNodeId, messageId, previousMessageReference, payload) {
-        try {
-            const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-            return this.endpoint.send(receiverNodeAddress, encoder.dataMessage(messageId, previousMessageReference, payload))
-        } catch (err) {
-            return new Promise((resolve, reject) => {
-                reject(err)
-            })
-        }
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(receiverNodeAddress, encoder.dataMessage(messageId, previousMessageReference, payload))
     }
 
     sendSubscribe(receiverNodeId, streamId, leechOnly) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId, leechOnly))
+        return this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId, leechOnly))
     }
 
     sendUnsubscribe(receiverNodeId, streamId) {
@@ -50,7 +44,7 @@ class NodeToNode extends EventEmitter {
 
     disconnectFromNode(receiverNodeId, reason) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        this.endpoint.close(receiverNodeAddress, reason).catch((err) => {
+        return this.endpoint.close(receiverNodeAddress, reason).catch((err) => {
             console.info(`Could not close connection ${receiverNodeAddress} because '${err}'`)
         })
     }
