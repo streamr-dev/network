@@ -20,9 +20,10 @@
   "scripts": {
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
-    "pub": "node $NODE_DEBUG_OPTION publisher.js",
-    "sub": "node $NODE_DEBUG_OPTION subscriber.js",
-    "test": "jest",
+    "pub-1": "node $NODE_DEBUG_OPTION publisher.js",
+    "pub-2": "node $NODE_DEBUG_OPTION publisher.js 127.0.0.1 30303",
+    "sub-1": "node $NODE_DEBUG_OPTION subscriber.js",
+    "sub-2": "node $NODE_DEBUG_OPTION subscriber.js 127.0.0.1 30305",
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",

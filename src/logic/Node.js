@@ -128,6 +128,7 @@ class Node extends EventEmitter {
                 this.metrics.received.duplicates += 1
             }
         } else {
+            this.debug('Not outbound nodes to propagate')
             this.messageBuffer.put(streamId.key(), dataMessage)
         }
     }

@@ -1,9 +1,8 @@
-const { startNetworkNode, startTracker, startClient } = require('../../src/composition')
+const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 const NodeToNode = require('../../src/protocol/NodeToNode')
-const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
-const TrackerNode = require('../../src/protocol/TrackerNode')
+const { StreamID } = require('../../src/identifiers')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
 
@@ -18,6 +17,8 @@ describe('Selecting leader for the stream and sending messages to two subscriber
 
     it('should be select leader and get two active subscribers', async (done) => {
         tracker = await startTracker(LOCALHOST, 32300, 'tracker')
+        publisher = await startNetworkNode(LOCALHOST, 32301, 'publisher-1')
+        await publisher.addBootstrapTracker(tracker.getAddress())
 
         await Promise.all([
             startNetworkNode(LOCALHOST, 32312, 'node-1'),
@@ -29,20 +30,12 @@ describe('Selecting leader for the stream and sending messages to two subscriber
         await nodeOne.addBootstrapTracker(tracker.getAddress())
         await nodeTwo.addBootstrapTracker(tracker.getAddress())
 
-        publisher = await startClient(LOCALHOST, 32301, 'publisher-1', nodeOne.protocols.nodeToNode.getAddress())
-        await publisher.protocols.nodeToNode.endpoint.connect(nodeOne.protocols.nodeToNode.getAddress())
-
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
 
-        let timestamp = 1000
-        let previousMessageReference = null
-        const publisherInterval = setInterval(() => {
-            const messageId = new MessageID(streamIdObj, timestamp, 0, 'publisher-id')
-            publisher.publish(messageId, previousMessageReference, `Hello world ${timestamp}!`)
-            previousMessageReference = new MessageReference(timestamp, 0)
-            timestamp += 1000
-        }, 1000)
+        publisher.publish(streamId, 0, 100, 0, 'publisher-id', 90, 0, {
+            hello: 'world'
+        })
 
         await Promise.all([
             waitForEvent(nodeOne.protocols.nodeToNode, NodeToNode.events.DATA_RECEIVED),
@@ -50,7 +43,6 @@ describe('Selecting leader for the stream and sending messages to two subscriber
         ]).then(() => {
             expect(nodeOne.streams.getOutboundNodesForStream(streamIdObj)).toContain('node-2')
             expect(nodeTwo.streams.getOutboundNodesForStream(streamIdObj)).toContain('node-1')
-            clearInterval(publisherInterval)
 
             done()
         })
