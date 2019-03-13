@@ -21,6 +21,7 @@ class Node extends EventEmitter {
         super()
 
         this.connectToBoostrapTrackersInterval = setInterval(this._connectToBootstrapTrackers.bind(this), 5000)
+        this.sendStatusTimeout = null
         this.bootstrapTrackerAddresses = []
 
         this.streams = new StreamManager()
@@ -218,7 +219,10 @@ class Node extends EventEmitter {
     }
 
     _sendStatusToAllTrackers() {
-        this.trackers.forEach((tracker) => this._sendStatus(tracker))
+        clearTimeout(this.sendStatusTimeout)
+        this.sendStatusTimeout = setTimeout(() => {
+            this.trackers.forEach((tracker) => this._sendStatus(tracker))
+        }, 500)
     }
 
     async _sendStatus(tracker) {
