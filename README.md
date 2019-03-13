@@ -28,7 +28,12 @@
 
 #### install packages
 
-`npm install`
+`npm ci`
+
+# run network
+`npm run network 2`
+
+where 2 is a number of nodes in network
 
 # run tracker
 

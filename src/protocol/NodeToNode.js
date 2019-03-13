@@ -2,7 +2,7 @@ const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
-const { PeerBook, NotFoundInPeerBookError } = require('./PeerBook')
+const { PeerBook } = require('./PeerBook')
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:node-node:node-connected',

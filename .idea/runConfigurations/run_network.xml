@@ -1,0 +1,15 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="run network" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="network" />
+    </scripts>
+    <arguments value="10" />
+    <node-interpreter value="project" />
+    <envs>
+      <env name="DEBUG" value="streamr:*" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>

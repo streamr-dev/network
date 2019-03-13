@@ -9,3 +9,7 @@ startTracker(ip, port, 'tracker' + port)
         console.error(err)
         process.exit(1)
     })
+
+if (process.env.checkUncaughtException === 'true') {
+    process.on('uncaughtException', (err) => console.error((err && err.stack) ? err.stack : err))
+}

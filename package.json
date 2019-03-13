@@ -27,7 +27,8 @@
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
-    "eslint": "eslint ."
+    "eslint": "eslint .",
+    "network": "node $NODE_DEBUG_OPTION run.js"
   },
   "author": "",
   "license": "",
