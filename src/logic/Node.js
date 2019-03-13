@@ -77,7 +77,6 @@ class Node extends EventEmitter {
     async onTrackerInstructionReceived(streamMessage) {
         const streamId = streamMessage.getStreamId()
         const nodeAddresses = streamMessage.getNodeAddresses()
-        const currentNodes = this.streams.getAllNodes()
         const nodeIds = []
 
         this.debug('received instructions for %s', streamId)
@@ -101,6 +100,7 @@ class Node extends EventEmitter {
 
         this.debug('connected and subscribed to %j for stream %s', nodeIds, streamId)
 
+        const currentNodes = this.streams.getAllNodes()
         const nodesToDisconnect = currentNodes.filter((node) => !nodeIds.includes(node))
 
         nodesToDisconnect.forEach(async (node) => {
