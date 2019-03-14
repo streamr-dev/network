@@ -5,7 +5,7 @@
     <scripts>
       <script value="sub-1" />
     </scripts>
-    <arguments value="127.0.0.1 30311" />
+    <arguments value="30311" />
     <node-interpreter value="project" />
     <envs>
       <env name="DEBUG" value="streamr:*" />
