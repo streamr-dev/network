@@ -72,7 +72,7 @@ describe('message propagation in network', () => {
 
         for (let i = 1; i <= 5; ++i) {
             const dataMessage = new DataMessage(
-                new MessageID(new StreamID('stream-1', 0), i, 0, 'publisher-id'),
+                new MessageID(new StreamID('stream-1', 0), i, 0, 'publisher-id', 'sessionId'),
                 i === 1 ? null : new MessageReference(i - 1, 0),
                 {
                     messageNo: i
@@ -81,7 +81,7 @@ describe('message propagation in network', () => {
             n1.onDataReceived(dataMessage)
 
             const dataMessage2 = new DataMessage(
-                new MessageID(new StreamID('stream-2', 0), i * 100, 0, 'publisher-id'),
+                new MessageID(new StreamID('stream-2', 0), i * 100, 0, 'publisher-id', 'sessionId'),
                 i === 1 ? null : new MessageReference((i - 1) * 100, 0),
                 {
                     messageNo: i * 100

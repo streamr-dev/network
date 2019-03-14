@@ -39,6 +39,8 @@ const decode = (source, message) => {
                     ? null
                     : MessageReference.fromObject(payload.previousMessageReference),
                 payload.data,
+                payload.signature,
+                payload.signatureType,
                 source
             )
 
@@ -66,10 +68,12 @@ module.exports = {
     getMsgPrefix,
     decode,
     statusMessage: (status) => encode(msgTypes.STATUS, status),
-    dataMessage: (messageId, previousMessageReference, data) => encode(msgTypes.DATA, {
+    dataMessage: (messageId, previousMessageReference, data, signature, signatureType) => encode(msgTypes.DATA, {
         messageId,
         previousMessageReference,
-        data
+        data,
+        signature,
+        signatureType
     }),
     subscribeMessage: (streamId, leechOnly) => encode(msgTypes.SUBSCRIBE, {
         streamId: streamId.id,

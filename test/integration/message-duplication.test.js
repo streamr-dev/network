@@ -44,10 +44,10 @@ describe('duplicate message detection and avoidance', () => {
         }
 
         // Produce data
-        contactNode.publish('stream-id', 0, 100, 0, 'publisher-id', 90, 0, {
+        contactNode.publish('stream-id', 0, 100, 0, 'publisher-id', 'session-id', 90, 0, {
             hello: 'world'
         })
-        contactNode.publish('stream-id', 0, 120, 0, 'publisher-id', 100, 0, {
+        contactNode.publish('stream-id', 0, 120, 0, 'publisher-id', 'session-id', 100, 0, {
             foo: 'bar'
         })
         await wait(2000)

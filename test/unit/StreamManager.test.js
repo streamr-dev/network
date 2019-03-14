@@ -51,7 +51,7 @@ describe('StreamManager', () => {
 
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
-                new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-id'),
+                new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-id', 'session-id'),
                 new MessageReference(5, 0)
             )
         }).not.toThrowError()
@@ -60,7 +60,7 @@ describe('StreamManager', () => {
     test('cannot duplicate detect on non-existing stream', () => {
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
-                new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-id'),
+                new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-id', 'session-id'),
                 new MessageReference(5, 0)
             )
         }).toThrowError('Stream stream-id::0 is not set up')
@@ -69,17 +69,17 @@ describe('StreamManager', () => {
     test('duplicate detection is per publisher', () => {
         manager.setUpStream(new StreamID('stream-id', 0))
         manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-1'),
+            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-1', 'session-id'),
             new MessageReference(5, 0)
         )
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-1'),
+            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-1', 'session-id'),
             new MessageReference(5, 0)
         )).toEqual(false)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-2'),
+            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-2', 'session-id'),
             new MessageReference(5, 0)
         )).toEqual(true)
     })

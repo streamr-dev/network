@@ -37,7 +37,9 @@ describe('message buffering of Node', () => {
 
     test('first message to unknown stream eventually gets delivered', (done) => {
         destinationNode.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => {
-            expect(dataMessage.getMessageId()).toEqual(new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id'))
+            expect(dataMessage.getMessageId()).toEqual(
+                new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id', 'session-id')
+            )
             expect(dataMessage.getData()).toEqual({
                 hello: 'world'
             })
@@ -48,7 +50,7 @@ describe('message buffering of Node', () => {
 
         // "Client" pushes data
         const dataMessage = new DataMessage(
-            new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id'),
+            new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id', 'session-id'),
             new MessageReference(0, 0),
             {
                 hello: 'world'

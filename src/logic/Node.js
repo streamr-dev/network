@@ -143,13 +143,15 @@ class Node extends EventEmitter {
         const messageId = dataMessage.getMessageId()
         const previousMessageReference = dataMessage.getPreviousMessageReference()
         const data = dataMessage.getData()
+        const signature = dataMessage.getSignature()
+        const signatureType = dataMessage.getSignatureType()
         const { streamId } = messageId
 
         const subscribers = this.streams.getOutboundNodesForStream(streamId).filter((n) => n !== source)
         const successfulSends = []
         await Promise.all(subscribers.map(async (subscriber) => {
             try {
-                await this.protocols.nodeToNode.sendData(subscriber, messageId, previousMessageReference, data)
+                await this.protocols.nodeToNode.sendData(subscriber, messageId, previousMessageReference, data, signature, signatureType)
                 successfulSends.push(subscriber)
             } catch (e) {
                 this.debug('failed to propagate data %s to node %s (%s)', messageId, subscriber, e)

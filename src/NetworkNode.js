@@ -11,13 +11,18 @@ module.exports = class NetworkNode extends Node {
         timestamp,
         sequenceNo,
         publisherId,
+        msgChainId,
         previousTimestamp,
         previousSequenceNo,
-        content) {
+        content,
+        signature,
+        signatureType) {
         const dataMessage = new DataMessage(
-            new MessageID(new StreamID(streamId, streamPartition), timestamp, sequenceNo, publisherId),
+            new MessageID(new StreamID(streamId, streamPartition), timestamp, sequenceNo, publisherId, msgChainId),
             previousTimestamp != null ? new MessageReference(previousTimestamp, previousSequenceNo) : null,
-            content
+            content,
+            signature,
+            signatureType
         )
         this.onDataReceived(dataMessage)
     }

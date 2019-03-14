@@ -32,11 +32,11 @@ class StreamID {
 }
 
 /**
- * Tuple (streamId, timestamp, sequenceNo, publisherId) provides unique
+ * Tuple (streamId, timestamp, sequenceNo, publisherId, msgChainId) provides unique
  * identity and ordering for messages.
  */
 class MessageID {
-    constructor(streamId, timestamp, sequenceNo, publisherId) {
+    constructor(streamId, timestamp, sequenceNo, publisherId, msgChainId) {
         if (!(streamId instanceof StreamID)) {
             throw new Error(`invalid streamId: ${streamId}`)
         }
@@ -49,19 +49,29 @@ class MessageID {
         if (typeof publisherId !== 'string') {
             throw new Error(`invalid publisherId: ${publisherId}`)
         }
+        if (typeof msgChainId !== 'string') {
+            throw new Error(`invalid msgChainId: ${msgChainId}`)
+        }
 
         this.streamId = streamId
         this.timestamp = timestamp
         this.sequenceNo = sequenceNo
         this.publisherId = publisherId
+        this.msgChainId = msgChainId
     }
 
     toString() {
-        return `(${this.streamId}, ${this.timestamp}, ${this.sequenceNo}, ${this.publisherId})`
+        return `(${this.streamId}, ${this.timestamp}, ${this.sequenceNo}, ${this.publisherId}, ${this.msgChainId})`
     }
 
-    static fromObject({ streamId, timestamp, sequenceNo, publisherId }) {
-        return new MessageID(StreamID.fromObject(streamId), timestamp, sequenceNo, publisherId)
+    static fromObject({
+        streamId,
+        timestamp,
+        sequenceNo,
+        publisherId,
+        msgChainId
+    }) {
+        return new MessageID(StreamID.fromObject(streamId), timestamp, sequenceNo, publisherId, msgChainId)
     }
 }
 

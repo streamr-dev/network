@@ -2,7 +2,7 @@ const { MessageID, MessageReference } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
 module.exports = class DataMessage {
-    constructor(messageId, previousMessageReference, data, source = null) {
+    constructor(messageId, previousMessageReference, data, signature, signatureType, source = null) {
         if (!(messageId instanceof MessageID)) {
             throw new Error(`invalid messageId: ${messageId}`)
         }
@@ -20,6 +20,8 @@ module.exports = class DataMessage {
         this.messageId = messageId
         this.previousMessageReference = previousMessageReference
         this.data = data
+        this.signature = signature
+        this.signatureType = signatureType
     }
 
     getVersion() {
@@ -44,6 +46,14 @@ module.exports = class DataMessage {
 
     getData() {
         return this.data
+    }
+
+    getSignature() {
+        return this.signature
+    }
+
+    getSignatureType() {
+        return this.signatureType
     }
 }
 

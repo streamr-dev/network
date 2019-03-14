@@ -33,7 +33,7 @@ describe('Selecting leader for the stream and sending messages to two subscriber
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
 
-        publisher.publish(streamId, 0, 100, 0, 'publisher-id', 90, 0, {
+        publisher.publish(streamId, 0, 100, 0, 'publisher-id', 'msg-chain-id', 90, 0, {
             hello: 'world'
         })
 

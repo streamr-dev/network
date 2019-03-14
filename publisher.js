@@ -7,6 +7,7 @@ const streamId = process.argv[5] || 'default-stream-id'
 const intervalInMs = process.argv[6] || 200
 
 const id = `publisher-${port}`
+const messageChainId = 'message-chain-id'
 
 startNetworkNode(host, port, id)
     .then(async (publisher) => {
@@ -18,7 +19,7 @@ startNetworkNode(host, port, id)
             const timestamp = Date.now()
             const msg = 'Hello world, ' + new Date().toLocaleString()
 
-            publisher.publish(streamId, 0, timestamp, 0, publisher.id, lastTimestamp, 0, {
+            publisher.publish(streamId, 0, timestamp, 0, publisher.id, messageChainId, lastTimestamp, 0, {
                 msg
             })
             lastTimestamp = timestamp

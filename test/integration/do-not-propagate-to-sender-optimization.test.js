@@ -47,9 +47,9 @@ describe('optimization: do not propagate to sender', () => {
     // In a fully-connected network the number of duplicates should be (n-1)(n-2) instead of (n-1)^2 when not
     // propagating received messages back to their source
     test('total duplicates == 2 in a fully-connected network of 3 nodes', async () => {
-        n1.publish('stream-id', 0, 100, 0, 'publisher', 99, 0, {
+        n1.publish('stream-id', 0, 100, 0, 'publisher', 'session', 99, 0, {
             hello: 'world'
-        })
+        }, null, 0)
         await wait(250)
 
         expect(n1.metrics.received.duplicates + n2.metrics.received.duplicates + n3.metrics.received.duplicates)
