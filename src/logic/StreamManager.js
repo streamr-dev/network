@@ -1,6 +1,8 @@
 const { StreamID } = require('../identifiers')
 const { DuplicateMessageDetector, NumberPair } = require('./DuplicateMessageDetector')
 
+const keyForDetector = ({ publisherId, msgChainId }) => `${publisherId}-${msgChainId}`
+
 module.exports = class StreamManager {
     constructor() {
         this.streams = new Map() // streamKey => {}
@@ -14,7 +16,7 @@ module.exports = class StreamManager {
             throw new Error(`Stream ${streamId} already set up`)
         }
         this.streams.set(streamId.key(), {
-            detectorPerPublisher: new Map(), // publisherId => DuplicateMessageDetector
+            detectors: new Map(), // "publisherId-msgChainId" => DuplicateMessageDetector
             inboundNodes: new Set(), // Nodes that I am subscribed to for messages
             outboundNodes: new Set() // Nodes (and clients) that subscribe to me for messages
         })
@@ -23,12 +25,13 @@ module.exports = class StreamManager {
     markNumbersAndCheckThatIsNotDuplicate(messageId, previousMessageReference) {
         this._verifyThatIsSetUp(messageId.streamId)
 
-        const { detectorPerPublisher } = this.streams.get(messageId.streamId.key())
-        if (!detectorPerPublisher.has(messageId.publisherId)) {
-            detectorPerPublisher.set(messageId.publisherId, new DuplicateMessageDetector())
+        const detectorKey = keyForDetector(messageId)
+        const { detectors } = this.streams.get(messageId.streamId.key())
+        if (!detectors.has(detectorKey)) {
+            detectors.set(detectorKey, new DuplicateMessageDetector())
         }
 
-        return detectorPerPublisher.get(messageId.publisherId).markAndCheck(
+        return detectors.get(detectorKey).markAndCheck(
             previousMessageReference === null
                 ? null
                 : new NumberPair(previousMessageReference.timestamp, previousMessageReference.sequenceNo),
