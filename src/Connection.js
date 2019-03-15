@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import WebSocket from 'ws'
 
-import { WebsocketResponse } from 'streamr-client-protocol'
+import { ControlLayer } from 'streamr-client-protocol'
 
 const debug = debugFactory('StreamrClient::Connection')
 
@@ -58,8 +58,8 @@ class Connection extends EventEmitter {
 
         this.socket.onmessage = (messageEvent) => {
             try {
-                const websocketResponse = WebsocketResponse.deserialize(messageEvent.data)
-                this.emit(websocketResponse.constructor.getMessageName(), websocketResponse)
+                const controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
+                this.emit(controlMessage.type, controlMessage)
             } catch (err) {
                 this.emit('error', err)
             }
@@ -88,9 +88,9 @@ class Connection extends EventEmitter {
         })
     }
 
-    send(websocketRequest) {
+    send(controlLayerRequest) {
         try {
-            this.socket.send(websocketRequest.serialize())
+            this.socket.send(controlLayerRequest.serialize())
         } catch (err) {
             this.emit('error', err)
         }

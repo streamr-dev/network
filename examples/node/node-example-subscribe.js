@@ -17,7 +17,9 @@ client.getOrCreateStream({
         {
             stream: stream.id,
             // Resend the last 10 messages on connect
-            resend_last: 10,
+            resend: {
+                last: 10,
+            },
         },
         (message) => {
             // Do something with the messages as they are received

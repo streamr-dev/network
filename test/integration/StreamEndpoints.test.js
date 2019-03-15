@@ -98,6 +98,7 @@ describe('StreamEndpoints', () => {
                             )
                             done()
                         })
+                        client.disconnect()
                     }, 10000)
                 }).catch((err) => { throw err })
             })

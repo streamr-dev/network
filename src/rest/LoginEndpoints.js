@@ -57,3 +57,7 @@ export async function loginWithUsernamePassword(username, password) {
     }
     return getSessionToken(url, props)
 }
+
+export async function getUserInfo() {
+    return authFetch(`${this.options.restUrl}/users/me`, this.session)
+}

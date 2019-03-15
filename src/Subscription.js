@@ -21,7 +21,7 @@ export default class Subscription extends EventEmitter {
         }
     }
 
-    constructor(streamId, streamPartition, apiKey, callback, options) {
+    constructor(streamId, streamPartition, callback, options) {
         super()
 
         if (!streamId) {
@@ -34,40 +34,21 @@ export default class Subscription extends EventEmitter {
         this.id = generateSubscriptionId()
         this.streamId = streamId
         this.streamPartition = streamPartition
-        this.apiKey = apiKey
         this.callback = callback
-        this.options = options || {}
+        this.resendOptions = options || {}
         this.queue = []
         this.state = Subscription.State.unsubscribed
         this.resending = false
-        this.lastReceivedOffset = null
+        this.lastReceivedMsgRef = {}
 
-        // Check that multiple resend options are not given
-        let resendOptionCount = 0
-        if (this.options.resend_all) {
-            resendOptionCount += 1
+        if (this.resendOptions.from != null && this.resendOptions.last != null) {
+            throw new Error(`Multiple resend options active! Please use only one: ${JSON.stringify(this.resendOptions)}`)
         }
-        if (this.options.resend_from != null) {
-            resendOptionCount += 1
+        if (this.resendOptions.msgChainId != null && typeof this.resendOptions.publisherId === 'undefined') {
+            throw new Error('publisherId must be defined as well if msgChainId is defined.')
         }
-        if (this.options.resend_last != null) {
-            resendOptionCount += 1
-        }
-        if (this.options.resend_from_time != null) {
-            resendOptionCount += 1
-        }
-        if (resendOptionCount > 1) {
-            throw new Error(`Multiple resend options active! Please use only one: ${JSON.stringify(options)}`)
-        }
-
-        // Automatically convert Date objects to numbers for resend_from_time
-        if (this.options.resend_from_time != null
-            && typeof this.options.resend_from_time !== 'number') {
-            if (typeof this.options.resend_from_time.getTime === 'function') {
-                this.options.resend_from_time = this.options.resend_from_time.getTime()
-            } else {
-                throw new Error('resend_from_time option must be a Date object or a number representing time!')
-            }
+        if (this.resendOptions.from == null && this.resendOptions.to != null) {
+            throw new Error('"from" must be defined as well if "to" is defined.')
         }
 
         /** * Message handlers ** */
@@ -99,41 +80,64 @@ export default class Subscription extends EventEmitter {
     }
 
     /**
-     * Gap check: If the msg contains the previousOffset, and we know the lastReceivedOffset,
-     * and the previousOffset is larger than what has been received, we have a gap!
+     * Gap check: If the msg contains the previousMsgRef, and we know the lastReceivedMsgRef,
+     * and the previousMsgRef is larger than what has been received, we have a gap!
      */
-    checkForGap(previousOffset) {
-        return previousOffset != null &&
-            this.lastReceivedOffset != null &&
-            previousOffset > this.lastReceivedOffset
+    checkForGap(previousMsgRef, key) {
+        return previousMsgRef != null &&
+            this.lastReceivedMsgRef[key] !== undefined &&
+            previousMsgRef.compareTo(this.lastReceivedMsgRef[key]) === 1
     }
 
     handleMessage(msg, isResend = false) {
-        if (msg.previousOffset == null) {
+        if (msg.version !== 30) {
+            throw new Error(`Can handle only StreamMessageV30, not version ${msg.version}`)
+        }
+        if (msg.prevMsgRef == null) {
             debug('handleMessage: prevOffset is null, gap detection is impossible! message: %o', msg)
         }
 
+        const key = msg.getPublisherId() + msg.messageId.msgChainId
+
         // TODO: check this.options.resend_last ?
-        // If resending, queue broadcasted messages
+        // If resending, queue broadcast messages
         if (this.resending && !isResend) {
             this.queue.push(msg)
-        } else if (this.checkForGap(msg.previousOffset) && !this.resending) {
+        } else if (this.checkForGap(msg.prevMsgRef, key) && !this.resending) {
             // Queue the message to be processed after resend
             this.queue.push(msg)
 
-            const from = this.lastReceivedOffset + 1
-            const to = msg.previousOffset
-            debug('Gap detected, requesting resend for stream %s from %d to %d', this.streamId, from, to)
-            this.emit('gap', from, to)
-        } else if (this.lastReceivedOffset != null && msg.offset <= this.lastReceivedOffset) {
-            // Prevent double-processing of messages for any reason
-            debug('Sub %s already received message: %d, lastReceivedOffset: %d. Ignoring message.', this.id, msg.offset, this.lastReceivedOffset)
+            const from = this.lastReceivedMsgRef[key] // cannot know the first missing message so there will be a duplicate received
+            const fromObject = {
+                timestamp: from.timestamp,
+                sequenceNumber: from.sequenceNumber,
+            }
+            const to = msg.prevMsgRef
+            const toObject = {
+                timestamp: to.timestamp,
+                sequenceNumber: to.sequenceNumber,
+            }
+            debug('Gap detected, requesting resend for stream %s from %o to %o', this.streamId, from, to)
+            this.emit('gap', fromObject, toObject, msg.getPublisherId(), msg.messageId.msgChainId)
         } else {
-            // Normal case where prevOffset == null || lastReceivedOffset == null || prevOffset === lastReceivedOffset
-            this.lastReceivedOffset = msg.offset
-            this.callback(msg.getParsedContent(), msg)
-            if (msg.isByeMessage()) {
-                this.emit('done')
+            const messageRef = msg.getMessageRef()
+            let res
+            if (this.lastReceivedMsgRef[key] !== undefined) {
+                res = messageRef.compareTo(this.lastReceivedMsgRef[key])
+            }
+            if (res <= 0) {
+                // Prevent double-processing of messages for any reason
+                debug(
+                    'Sub %s already received message: %o, lastReceivedMsgRef: %d. Ignoring message.', this.id, messageRef,
+                    this.lastReceivedMsgRef[key],
+                )
+            } else {
+                // Normal case where prevMsgRef == null || lastReceivedMsgRef == null || prevMsgRef === lastReceivedMsgRef
+                this.lastReceivedMsgRef[key] = messageRef
+                this.callback(msg.getParsedContent(), msg)
+                if (msg.isByeMessage()) {
+                    this.emit('done')
+                }
             }
         }
     }
@@ -150,7 +154,7 @@ export default class Subscription extends EventEmitter {
     }
 
     hasResendOptions() {
-        return this.options.resend_all === true || this.options.resend_from >= 0 || this.options.resend_from_time >= 0 || this.options.resend_last > 0
+        return this.resendOptions.from || this.resendOptions.last > 0
     }
 
     /**
@@ -158,31 +162,28 @@ export default class Subscription extends EventEmitter {
      * This function always returns the effective resend options:
      *
      * If messages have been received:
-     * - resend_all becomes resend_from
-     * - resend_from becomes resend_from the latest received message
-     * - resend_from_time becomes resend_from the latest received message
-     * - resend_last stays the same
+     * - 'from' option becomes 'from' option the latest received message
+     * - 'last' option stays the same
      */
     getEffectiveResendOptions() {
-        if (this.hasReceivedMessages() && this.hasResendOptions()
-            && (this.options.resend_all || this.options.resend_from || this.options.resend_from_time)) {
+        const key = this.resendOptions.publisherId + this.resendOptions.msgChainId
+        if (this.hasReceivedMessagesFrom(key) && this.hasResendOptions()
+            && (this.resendOptions.from)) {
             return {
-                resend_from: this.lastReceivedOffset + 1,
+                // cannot know the first missing message so there will be a duplicate received
+                from: {
+                    timestamp: this.lastReceivedMsgRef[key].timestamp,
+                    sequenceNumber: this.lastReceivedMsgRef[key].sequenceNumber,
+                },
+                publisherId: this.resendOptions.publisherId,
+                msgChainId: this.resendOptions.msgChainId,
             }
         }
-
-        // Pick resend options from the options
-        const result = {}
-        Object.keys(this.options).forEach((key) => {
-            if (key.startsWith('resend_')) {
-                result[key] = this.options[key]
-            }
-        })
-        return result
+        return this.resendOptions
     }
 
-    hasReceivedMessages() {
-        return this.lastReceivedOffset != null
+    hasReceivedMessagesFrom(key) {
+        return this.lastReceivedMsgRef[key] !== undefined
     }
 
     getState() {
@@ -209,8 +210,9 @@ export default class Subscription extends EventEmitter {
          * If parsing the (expected) message failed, we should still mark it as received. Otherwise the
          * gap detection will think a message was lost, and re-request the failing message.
          */
-        if (err instanceof Errors.InvalidJsonError && !this.checkForGap(err.streamMessage.previousOffset)) {
-            this.lastReceivedOffset = err.streamMessage.offset
+        if (err instanceof Errors.InvalidJsonError && !this.checkForGap(err.streamMessage.prevMsgRef)) {
+            const key = err.streamMessage.getPublisherId() + err.streamMessage.messageId.msgChainId
+            this.lastReceivedMsgRef[key] = err.streamMessage.getMessageRef()
         }
         this.emit('error', err)
     }

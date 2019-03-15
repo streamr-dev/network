@@ -14,7 +14,9 @@ document.getElementById('subscribe').addEventListener('click', () => {
     const subscription = client.subscribe({
         stream: '7wa7APtlTq6EC5iTCBy6dw',
         // Resend the last 10 messages on connect
-        resend_last: 10,
+        resend: {
+            last: 10,
+        },
     }, (message) => {
         // Handle the messages in this stream
         log(JSON.stringify(message))

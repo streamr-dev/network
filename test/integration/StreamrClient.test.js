@@ -2,9 +2,11 @@ import assert from 'assert'
 import fetch from 'node-fetch'
 import Web3 from 'web3'
 import FakeProvider from 'web3-fake-provider'
-
+import { MessageLayer } from 'streamr-client-protocol'
 import StreamrClient from '../../src'
 import config from './config'
+
+const { StreamMessage } = MessageLayer
 
 describe('StreamrClient', () => {
     let client
@@ -14,7 +16,7 @@ describe('StreamrClient', () => {
     jest.setTimeout(15 * 1000)
 
     const createClient = (opts = {}) => new StreamrClient({
-        url: `${config.websocketUrl}?controlLayerVersion=0&messageLayerVersion=29`,
+        url: config.websocketUrl,
         restUrl: config.restUrl,
         auth: {
             privateKey: new Web3(new FakeProvider()).eth.accounts.create().privateKey,
@@ -67,8 +69,9 @@ describe('StreamrClient', () => {
 
     afterEach(() => {
         if (client && client.isConnected()) {
-            client.disconnect()
+            return client.disconnect()
         }
+        return Promise.resolve()
     })
 
     describe('Pub/Sub', () => {
@@ -82,7 +85,7 @@ describe('StreamrClient', () => {
 
         it('client.publish with Stream object as arg', () => {
             client.publish(stream, {
-                test: 'client.publish with Stream object as arg',
+                test: 'client.publish.Stream.object',
             })
         })
 
@@ -99,7 +102,9 @@ describe('StreamrClient', () => {
             setTimeout(() => {
                 const sub = client.subscribe({
                     stream: stream.id,
-                    resend_last: 1,
+                    resend: {
+                        last: 1,
+                    },
                 }, async (parsedContent, streamMessage) => {
                     // Check message content
                     assert.strictEqual(parsedContent.test, 'client.subscribe with resend')
@@ -110,8 +115,8 @@ describe('StreamrClient', () => {
                     const requireVerification = await subStream.getVerifySignatures()
                     assert.strictEqual(requireVerification, true)
                     assert.deepStrictEqual(publishers, [client.signer.address.toLowerCase()])
-                    assert.strictEqual(streamMessage.signatureType, 1)
-                    assert(streamMessage.publisherAddress)
+                    assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+                    assert(streamMessage.getPublisherId())
                     assert(streamMessage.signature)
 
                     // All good, unsubscribe
@@ -132,8 +137,8 @@ describe('StreamrClient', () => {
                 assert.equal(parsedContent.id, id)
 
                 // Check signature stuff
-                assert.strictEqual(streamMessage.signatureType, 1)
-                assert(streamMessage.publisherAddress)
+                assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+                assert(streamMessage.getPublisherId())
                 assert(streamMessage.signature)
 
                 // All good, unsubscribe

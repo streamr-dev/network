@@ -1,8 +1,10 @@
 import assert from 'assert'
 import sinon from 'sinon'
-import { PublishRequest, StreamMessage } from 'streamr-client-protocol'
+import { MessageLayer } from 'streamr-client-protocol'
 import SubscribedStream from '../../src/SubscribedStream'
 import Signer from '../../src/Signer'
+
+const { StreamMessage } = MessageLayer
 
 describe('SubscribedStream', () => {
     let subscribedStream
@@ -113,12 +115,11 @@ describe('SubscribedStream', () => {
                     field: 'some-data',
                 }
                 const timestamp = Date.now()
-                const request = new PublishRequest(streamId, undefined, undefined, data, timestamp)
-                const signedRequest = await signer.getSignedPublishRequest(request)
-                msg = new StreamMessage(
-                    streamId, 0, timestamp, 0, 0, 0, StreamMessage.CONTENT_TYPES.JSON,
-                    data, 1, signedRequest.publisherAddress, signedRequest.signature,
+                msg = StreamMessage.create(
+                    [streamId, 0, timestamp, 0, '', ''], null, StreamMessage.CONTENT_TYPES.JSON,
+                    data, StreamMessage.SIGNATURE_TYPES.NONE,
                 )
+                await signer.signStreamMessage(msg)
                 spiedVerifyStreamMessage = sinon.spy(Signer, 'verifyStreamMessage')
             })
             afterEach(async () => {
@@ -155,7 +156,10 @@ describe('SubscribedStream', () => {
                     field: 'some-data',
                 }
                 const timestamp = Date.now()
-                msg = new StreamMessage(streamId, 0, timestamp, 0, 0, 0, StreamMessage.CONTENT_TYPES.JSON, data, 0)
+                msg = StreamMessage.create(
+                    [streamId, 0, timestamp, 0, '', ''], null, StreamMessage.CONTENT_TYPES.JSON,
+                    data, StreamMessage.SIGNATURE_TYPES.NONE,
+                )
             })
             afterEach(async () => {
                 subscribedStream = new SubscribedStream(client, 'streamId')

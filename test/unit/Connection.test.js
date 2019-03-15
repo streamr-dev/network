@@ -1,13 +1,10 @@
 import assert from 'assert'
 import sinon from 'sinon'
-
-import {
-    UnicastMessage,
-    StreamMessage,
-    Errors,
-} from 'streamr-client-protocol'
-
+import { ControlLayer, Errors, MessageLayer } from 'streamr-client-protocol'
 import Connection from '../../src/Connection'
+
+const { UnicastMessage } = ControlLayer
+const { StreamMessage } = MessageLayer
 
 describe('Connection', () => {
     let conn
@@ -157,20 +154,24 @@ describe('Connection', () => {
         })
 
         describe('message', () => {
-            it('emits events named by messateTypeName and the WebsocketResponse as an argument', (done) => {
-                conn.on('UnicastMessage', (message) => {
+            it('emits events named by messageTypeName and the ControlMessage as an argument', (done) => {
+                const timestamp = Date.now()
+                const content = {
+                    hello: 'world',
+                }
+                conn.on(UnicastMessage.TYPE, (message) => {
                     assert(message instanceof UnicastMessage)
-                    assert.equal(message.payload.offset, 10)
-                    assert.equal(message.payload.getParsedContent().hello, 'world')
+                    assert.equal(message.streamMessage.getTimestamp(), timestamp)
+                    assert.equal(message.streamMessage.getParsedContent().hello, 'world')
                     assert.equal(message.subId, 'subId')
                     done()
                 })
-
-                const message = new UnicastMessage(
-                    new StreamMessage('streamId', 0, Date.now(), 0, 10, 9, 27, {
-                        hello: 'world',
-                    }),
+                const message = UnicastMessage.create(
                     'subId',
+                    StreamMessage.create(
+                        ['streamId', 0, timestamp, 0, '', ''], [timestamp - 100, 0], StreamMessage.CONTENT_TYPES.JSON,
+                        content, StreamMessage.SIGNATURE_TYPES.NONE,
+                    ),
                 )
 
                 conn.socket.onmessage({
@@ -184,13 +185,8 @@ describe('Connection', () => {
                     done()
                 })
 
-                const message = new UnicastMessage(
-                    new StreamMessage('streamId', 0, Date.now(), 0, 10, 9, 27, 'invalid json'),
-                    'subId',
-                )
-
                 conn.socket.onmessage({
-                    data: message.serialize(),
+                    data: [0, 1, 'subId', [30, ['streamId', 0, Date.now(), 0, '', ''], [Date.now() - 100, 0], 27, 'invalid json', 0]],
                 })
             })
         })

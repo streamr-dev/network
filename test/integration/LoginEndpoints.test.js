@@ -105,4 +105,11 @@ describe('LoginEndpoints', () => {
                 assert(sessionToken.expires)
             }))
     })
+
+    describe('UserInfo', () => {
+        it('should get user info', () => client.getUserInfo().then((userInfo) => {
+            assert(userInfo.name)
+            assert(userInfo.username)
+        }))
+    })
 })
