@@ -101,7 +101,7 @@ describe('Connection', () => {
     describe('send()', () => {
         it('sends a serialized message to the socket', () => {
             const msg = ControlLayer.UnicastMessage.create('subId', new MessageLayer.StreamMessageV30(
-                ['streamId', 0, Date.now(), 0, 'publisherId'], null,
+                ['streamId', 0, Date.now(), 0, 'publisherId', '1'], null,
                 MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {
                     foo: 'bar',
                 }, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
@@ -111,7 +111,7 @@ describe('Connection', () => {
         })
         it('sends an old version serialized message to the socket of an old client', () => {
             const msg = ControlLayer.UnicastMessage.create('subId', new MessageLayer.StreamMessageV30(
-                ['streamId', 0, Date.now(), 0, 'publisherId'], null,
+                ['streamId', 0, Date.now(), 0, 'publisherId', '1'], null,
                 MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {
                     foo: 'bar',
                 }, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,

@@ -9,7 +9,7 @@ const NotReadyError = require('../../../src/errors/NotReadyError')
 
 describe('DataProduceEndpoints', () => {
     const stream = {
-        streamId: 'streamId',
+        id: 'streamId',
         partitions: 10,
     }
 
@@ -60,7 +60,7 @@ describe('DataProduceEndpoints', () => {
 
     it('should call Publisher.publish() with correct arguments', (done) => {
         const streamMessage = StreamMessage.create(
-            [stream.streamId, 0, Date.now(), 0, 'publisherId'],
+            [stream.id, 0, Date.now(), 0, 'publisherId', '1'],
             null,
             StreamMessage.CONTENT_TYPES.JSON,
             '{}',
@@ -71,6 +71,7 @@ describe('DataProduceEndpoints', () => {
             query: {
                 ts: streamMessage.getTimestamp(),
                 address: 'publisherId',
+                msgChainId: '1',
                 signatureType: streamMessage.signatureType,
                 signature: streamMessage.signature,
             },
@@ -82,7 +83,7 @@ describe('DataProduceEndpoints', () => {
 
     it('should read signature-related fields', (done) => {
         const streamMessage = StreamMessage.create(
-            [stream.streamId, 0, Date.now(), 0, 'publisherId'],
+            [stream.id, 0, Date.now(), 0, 'publisherId', ''],
             null,
             StreamMessage.CONTENT_TYPES.JSON,
             '{}',
@@ -104,7 +105,7 @@ describe('DataProduceEndpoints', () => {
 
     it('should read sequence number and previous reference fields', (done) => {
         const streamMessage = StreamMessage.create(
-            [stream.streamId, 0, Date.now(), 1, 'publisherId'],
+            [stream.id, 0, Date.now(), 1, 'publisherId', ''],
             [325656645, 3],
             StreamMessage.CONTENT_TYPES.JSON,
             '{}',

@@ -81,7 +81,9 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
                         publisher.getStreamPartition(req.stream, req.query.pkey),
                         timestamp,
                         sequenceNumber, // sequenceNumber
-                        req.query.address], // publisherId
+                        req.query.address || '', // publisherId
+                        req.query.msgChainId || '',
+                    ],
                     previousMessageRef,
                     StreamMessage.CONTENT_TYPES.JSON,
                     req.body.toString(),
