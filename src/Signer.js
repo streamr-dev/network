@@ -1,9 +1,11 @@
 import { PublishRequest } from 'streamr-client-protocol'
 
-const Web3 = require('web3')
+import Web3 from 'web3'
+import FakeProvider from 'web3-fake-provider'
+
 const debug = require('debug')('StreamrClient::Signer')
 
-const web3 = new Web3()
+const web3 = new Web3(new FakeProvider())
 
 const SIGNATURE_TYPE_ETH = 1
 

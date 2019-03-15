@@ -17,7 +17,7 @@
     "eslint": "eslint src/** test/**",
     "test": "jest --detectOpenHandles",
     "test-unit": "jest --detectOpenHandles --forceExit test/unit",
-    "test-integration": "jest --detectOpenHandles --forceExit --maxWorkers=1 test/integration"
+    "test-integration": "jest --detectOpenHandles --forceExit --runInBand test/integration"
   },
   "browser": {
     "http": "./src/shim/http-https.js",
@@ -65,7 +65,8 @@
     "node-fetch": "^2.1.2",
     "querystring": "^0.2.0",
     "streamr-client-protocol": "^1.2.0",
-    "web3": "^1.0.0-beta.36",
+    "web3": "^1.0.0-beta.48",
+    "web3-fake-provider": "^0.1.0",
     "webpack-node-externals": "^1.7.2",
     "websocket": "^1.0.28",
     "ws": "^6.1.2"

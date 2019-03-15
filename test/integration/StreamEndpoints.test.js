@@ -1,5 +1,6 @@
 import assert from 'assert'
 import Web3 from 'web3'
+import FakeProvider from 'web3-fake-provider'
 
 import StreamrClient from '../../src'
 import config from './config'
@@ -24,7 +25,7 @@ describe('StreamEndpoints', () => {
     beforeAll(() => {
         client = createClient({
             auth: {
-                privateKey: new Web3().eth.accounts.create().privateKey,
+                privateKey: new Web3(new FakeProvider()).eth.accounts.create().privateKey,
             },
         })
     })
