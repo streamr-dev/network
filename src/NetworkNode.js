@@ -39,6 +39,7 @@ module.exports = class NetworkNode extends Node {
                 messageId.timestamp,
                 messageId.sequenceNo,
                 messageId.publisherId,
+                messageId.msgChainId,
                 previousMessageReference ? previousMessageReference.timestamp : null,
                 previousMessageReference ? previousMessageReference.sequenceNo : null,
                 dataMessage.getData()
