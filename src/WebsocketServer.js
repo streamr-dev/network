@@ -1,6 +1,6 @@
 const events = require('events')
 const debug = require('debug')('streamr:WebsocketServer')
-const { ControlLayer } = require('streamr-client-protocol')
+const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 const Stream = require('./Stream')
 const Connection = require('./Connection')
 const StreamStateManager = require('./StreamStateManager')
@@ -219,12 +219,26 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         }
     }
 
-    broadcastMessage(streamMessage) {
-        const streamId = streamMessage.getStreamId()
-        const streamPartition = streamMessage.getStreamPartition()
+    broadcastMessage(streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId, previousTimestamp, previousSequenceNo, payload) {
         const stream = this.streams.getStreamObject(streamId, streamPartition)
 
         if (stream) {
+            const streamMessage = MessageLayer.StreamMessage.create(
+                [
+                    streamId,
+                    streamPartition,
+                    timestamp,
+                    sequenceNo, // sequenceNumber
+                    publisherId,
+                    msgChainId,
+                ],
+                [previousTimestamp, previousSequenceNo],
+                MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+                payload,
+                null, // signatureType
+                null, // signature
+            )
+
             stream.forEachConnection((connection) => {
                 connection.send(ControlLayer.BroadcastMessage.create(streamMessage))
             })
