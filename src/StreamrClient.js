@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
+import qs from 'qs'
 import { MessageLayer, ControlLayer, Errors } from 'streamr-client-protocol'
 
 const {
@@ -36,7 +37,7 @@ export default class StreamrClient extends EventEmitter {
         // Default options
         this.options = {
             // The server to connect to
-            url: 'wss://www.streamr.com/api/v1/ws?controlLayerVersion=1&messageLayerVersion=30',
+            url: 'wss://www.streamr.com/api/v1/ws',
             restUrl: 'https://www.streamr.com/api/v1',
             // Automatically connect on first subscribe
             autoConnect: true,
@@ -49,6 +50,19 @@ export default class StreamrClient extends EventEmitter {
         this.subscribedStreams = {}
 
         Object.assign(this.options, options || {})
+
+        const parts = this.options.url.split('?')
+        if (parts.length === 1) { // there is no query string
+            this.options.url = `${this.options.url}?controlLayerVersion=1&messageLayerVersion=30`
+        } else {
+            const queryObj = qs.parse(parts[1])
+            if (!queryObj.controlLayerVersion) {
+                this.options.url = `${this.options.url}&controlLayerVersion=1`
+            }
+            if (!queryObj.messageLayerVersion) {
+                this.options.url = `${this.options.url}&messageLayerVersion=30`
+            }
+        }
 
         // Backwards compatibility for option 'authKey' => 'apiKey'
         if (this.options.authKey && !this.options.apiKey) {
