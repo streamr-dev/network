@@ -1,6 +1,6 @@
 {
   "name": "@streamr/streamr-p2p-network",
-  "version": "3.0.16",
+  "version": "3.0.17",
   "description": "Streamr P2P network",
   "repository": {
     "type": "git",
@@ -20,10 +20,12 @@
   "scripts": {
     "tracker": "node $NODE_DEBUG_OPTION tracker.js",
     "node": "node $NODE_DEBUG_OPTION node.js",
-    "pub-1": "node $NODE_DEBUG_OPTION publisher.js",
-    "pub-2": "node $NODE_DEBUG_OPTION publisher.js 127.0.0.1 30303",
-    "sub-1": "node $NODE_DEBUG_OPTION subscriber.js",
-    "sub-2": "node $NODE_DEBUG_OPTION subscriber.js 127.0.0.1 30305",
+    "pub": "node $NODE_DEBUG_OPTION publisher.js",
+    "pub-1": "node $NODE_DEBUG_OPTION publisher.js 30323 127.0.0.1",
+    "pub-2": "node $NODE_DEBUG_OPTION publisher.js 30333 127.0.0.1",
+    "sub": "node $NODE_DEBUG_OPTION subscriber.js",
+    "sub-1": "node $NODE_DEBUG_OPTION subscriber.js 30335 127.0.0.1",
+    "sub-2": "node $NODE_DEBUG_OPTION subscriber.js 30345 127.0.0.1",
     "test": "jest",
     "test-unit": "jest test/unit",
     "test-integration": "jest test/integration",
@@ -41,14 +43,14 @@
     "debug": "4.1.1",
     "events": "3.0.0",
     "uuid": "3.3.2",
-    "ws": "6.1.3"
+    "ws": "^6.2.0"
   },
   "devDependencies": {
-    "eslint": "5.12.1",
+    "eslint": "^5.15.3",
     "eslint-config-airbnb-base": "13.1.0",
     "eslint-plugin-import": "2.16.0",
     "eslint-plugin-import-order": "2.1.4",
-    "jest": "24.0.0",
-    "p-event": "2.2.0"
+    "jest": "^24.5.0",
+    "p-event": "^4.0.0"
   }
 }

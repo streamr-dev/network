@@ -3,8 +3,10 @@ const OverlayTopology = require('../../src/logic/OverlayTopology')
 test('forming overlay topology', () => {
     const topology = new OverlayTopology(3, (arr) => arr, (arr) => arr[0])
 
+    expect(topology.hasNode('node-1')).toEqual(false)
     topology.update('node-1', [])
     expect(topology.formInstructions('node-1')).toEqual({})
+    expect(topology.hasNode('node-1')).toEqual(true)
 
     topology.update('node-2', [])
     expect(topology.formInstructions('node-2')).toEqual({
@@ -208,6 +210,7 @@ test('forming overlay topology', () => {
     })
 
     topology.leave('node-1')
+    expect(topology.hasNode('node-1')).toEqual(false)
     expect(topology.state()).toEqual({
         'node-2': [
             'node-4',

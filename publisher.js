@@ -10,8 +10,8 @@ const id = `publisher-${port}`
 const messageChainId = 'message-chain-id'
 
 startNetworkNode(host, port, id)
-    .then(async (publisher) => {
-        await Promise.all(trackers.map((trackerAddress) => publisher.addBootstrapTracker(trackerAddress)))
+    .then((publisher) => {
+        trackers.map((trackerAddress) => publisher.addBootstrapTracker(trackerAddress))
 
         let lastTimestamp = null
 

@@ -224,7 +224,7 @@ class Node extends EventEmitter {
         clearTimeout(this.sendStatusTimeout)
         this.sendStatusTimeout = setTimeout(() => {
             this.trackers.forEach((tracker) => this._sendStatus(tracker))
-        }, 500)
+        }, 1000)
     }
 
     async _sendStatus(tracker) {
@@ -270,9 +270,8 @@ class Node extends EventEmitter {
             })
     }
 
-    async addBootstrapTracker(trackerAddress) {
+    addBootstrapTracker(trackerAddress) {
         this.bootstrapTrackerAddresses.push(trackerAddress)
-        return this.protocols.trackerNode.connectToTracker(trackerAddress)
     }
 
     _connectToBootstrapTrackers() {

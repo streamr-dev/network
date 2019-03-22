@@ -17,6 +17,10 @@ class OverlayTopology {
         this.pickRandomElement = pickRandomElementFunction || pickRandomElement
     }
 
+    hasNode(nodeId) {
+        return nodeId in this.nodes
+    }
+
     update(nodeId, neighbors) {
         const knownNeighbors = [...neighbors].filter((n) => n in this.nodes)
 

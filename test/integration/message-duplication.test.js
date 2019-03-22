@@ -1,6 +1,7 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
-const { wait, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
+const { wait, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
+const TrackerNode = require('../../src/protocol/TrackerNode')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
 
@@ -25,7 +26,9 @@ describe('duplicate message detection and avoidance', () => {
             startNetworkNode(LOCALHOST, 30355, 'node-4'),
             startNetworkNode(LOCALHOST, 30356, 'node-5'),
         ])
+
         await Promise.all(otherNodes.map((node) => node.addBootstrapTracker(tracker.getAddress())))
+        await Promise.all(otherNodes.map((node) => waitForEvent(node.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER)))
 
         // Become subscribers (one-by-one, for well connected graph)
         otherNodes[0].subscribe('stream-id', 0)

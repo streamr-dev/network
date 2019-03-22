@@ -1,9 +1,10 @@
 const Node = require('../../src/logic/Node')
 const DataMessage = require('../../src/messages/DataMessage')
+const TrackerNode = require('../../src/protocol/TrackerNode')
 const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
-const { wait, LOCALHOST } = require('../../test/util')
+const { wait, waitForEvent, LOCALHOST } = require('../../test/util')
 
 jest.setTimeout(90000)
 
@@ -26,11 +27,13 @@ describe('message propagation in network', () => {
             [n1, n2, n3, n4] = res
         })
 
+        await Promise.all([n1, n2, n3, n4].map((node) => node.addBootstrapTracker(tracker.getAddress())))
+
         await Promise.all([
-            n1.addBootstrapTracker(tracker.getAddress()),
-            n2.addBootstrapTracker(tracker.getAddress()),
-            n3.addBootstrapTracker(tracker.getAddress()),
-            n4.addBootstrapTracker(tracker.getAddress())
+            waitForEvent(n1.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER),
+            waitForEvent(n2.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER),
+            waitForEvent(n3.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER),
+            waitForEvent(n4.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER)
         ])
     })
 

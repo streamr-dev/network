@@ -70,6 +70,8 @@ to get messages by layers run:
 
 to get all debug messages run `export DEBUG=*`
 
+to exclude level `export DEBUG=streamr:*,-streamr:connection:*`
+
 # Testing
 run all tests
 

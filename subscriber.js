@@ -8,19 +8,12 @@ const streamId = process.argv[5] || 'default-stream-id'
 
 const id = `subscriber-${port}`
 
-startNetworkNode(host, port, id).then(async (subscriber) => {
-    await Promise.all(trackers.map((trackerAddress) => subscriber.addBootstrapTracker(trackerAddress)))
-
-    const subscribeInterval = setInterval(() => {
-        subscriber.subscribe(streamId, 0)
-    }, 1000)
+startNetworkNode(host, port, id).then((subscriber) => {
+    subscriber.subscribe(streamId, 0)
+    trackers.map((trackerAddress) => subscriber.addBootstrapTracker(trackerAddress))
 
     subscriber.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (dataMessage) => {
-        console.log('received ' + dataMessage.getMessageId() + ', data ' + dataMessage.getData())
-
-        if (subscribeInterval !== null) {
-            clearInterval(subscribeInterval)
-        }
+        console.log('received %s, data %j', dataMessage.getMessageId(), dataMessage.getData())
     })
 }).catch((err) => {
     throw err
