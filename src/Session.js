@@ -1,7 +1,4 @@
-import Web3 from 'web3'
-import FakeProvider from 'web3-fake-provider'
-
-const web3 = new Web3(new FakeProvider())
+import { ethers } from 'ethers'
 
 export default class Session {
     constructor(client, options) {
@@ -10,18 +7,12 @@ export default class Session {
         this.state = Session.State.LOGGED_OUT
 
         if (typeof this.options.privateKey !== 'undefined') {
-            const account = web3.eth.accounts.privateKeyToAccount(this.options.privateKey)
-            this.loginFunction = async () => this._client.loginWithChallengeResponse((d) => account.sign(d).signature, account.address)
+            const wallet = new ethers.Wallet(this.options.privateKey)
+            this.loginFunction = async () => this._client.loginWithChallengeResponse((d) => wallet.signMessage(d), wallet.address)
         } else if (typeof this.options.provider !== 'undefined') {
-            const w3 = new Web3(this.options.provider)
-            this.loginFunction = async () => {
-                const accounts = await w3.eth.getAccounts()
-                const address = accounts[0]
-                if (!address) {
-                    throw new Error('Cannot access account from provider')
-                }
-                return this._client.loginWithChallengeResponse((d) => w3.eth.personal.sign(d, address), address)
-            }
+            const provider = new ethers.providers.Web3Provider(this.options.provider)
+            const signer = provider.getSigner()
+            this.loginFunction = async () => this._client.loginWithChallengeResponse((d) => signer.signMessage(d), await signer.getAddress())
         } else if (typeof this.options.apiKey !== 'undefined') {
             this.loginFunction = async () => this._client.loginWithApiKey(this.options.apiKey)
         } else if (typeof this.options.username !== 'undefined' && typeof this.options.password !== 'undefined') {

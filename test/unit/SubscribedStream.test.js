@@ -8,7 +8,7 @@ const { StreamMessage } = MessageLayer
 
 describe('SubscribedStream', () => {
     let subscribedStream
-    const publishers = ['0x9f93732db3a246b18805aa745dbd494e6784e811', 'publisher2', 'publisher3']
+    const publishers = ['0xb8CE9ab6943e0eCED004cDe8e3bBed6568B2Fa01'.toLowerCase(), 'publisher2', 'publisher3']
 
     function setupClientAndStream(verifySignatures = 'auto', requireSignedData = true) {
         const client = {
@@ -108,7 +108,7 @@ describe('SubscribedStream', () => {
             let spiedExpectedCall
             beforeEach(async () => {
                 const signer = new Signer({
-                    privateKey: '348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
+                    privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
                 })
                 const streamId = 'streamId'
                 const data = {

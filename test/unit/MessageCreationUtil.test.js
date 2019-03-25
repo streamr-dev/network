@@ -1,21 +1,20 @@
 import assert from 'assert'
 import sinon from 'sinon'
-import Web3 from 'web3'
+import { ethers } from 'ethers'
 import { MessageLayer } from 'streamr-client-protocol'
-import FakeProvider from 'web3-fake-provider'
 import MessageCreationUtil from '../../src/MessageCreationUtil'
 
 const { StreamMessage } = MessageLayer
 
 describe('MessageCreationUtil', () => {
-    const hashedUsername = '16F78A7D6317F102BBD95FC9A4F3FF2E3249287690B8BDAD6B7810F82B34ACE3'.toLowerCase()
+    const hashedUsername = '0x16F78A7D6317F102BBD95FC9A4F3FF2E3249287690B8BDAD6B7810F82B34ACE3'.toLowerCase()
     describe('getPublisherId', () => {
         it('use address', async () => {
-            const account = new Web3(new FakeProvider()).eth.accounts.create()
+            const wallet = ethers.Wallet.createRandom()
             const client = {
                 options: {
                     auth: {
-                        privateKey: account.privateKey,
+                        privateKey: wallet.privateKey,
                     },
                 },
                 getUserInfo: sinon.stub().resolves({
@@ -24,7 +23,7 @@ describe('MessageCreationUtil', () => {
             }
             const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
             const publisherId = await msgCreationUtil.getPublisherId()
-            assert.strictEqual(publisherId, account.address)
+            assert.strictEqual(publisherId, wallet.address)
         })
         it('use hash of username', async () => {
             const client = {
@@ -76,31 +75,31 @@ describe('MessageCreationUtil', () => {
     describe('partitioner', () => {
         it('should throw if partition count is not defined', () => {
             assert.throws(() => {
-                MessageCreationUtil.computeStreamPartition(undefined, 'foo')
+                new MessageCreationUtil().computeStreamPartition(undefined, 'foo')
             })
         })
 
         it('should always return partition 0 for all keys if partition count is 1', () => {
             for (let i = 0; i < 100; i++) {
-                assert.equal(MessageCreationUtil.computeStreamPartition(1, `foo${i}`), 0)
+                assert.equal(new MessageCreationUtil().computeStreamPartition(1, `foo${i}`), 0)
             }
         })
 
-        it('should use murmur2 partitioner and produce same results as org.apache.kafka.common.utils.Utils.murmur2(byte[])', () => {
+        it('should use md5 partitioner and produce same results as crypto.createHash(md5).update(string).digest()', () => {
             const keys = []
             for (let i = 0; i < 100; i++) {
                 keys.push(`key-${i}`)
             }
-            // Results must be the same as those produced by StreamService#partition()
-            const correctResults = [5, 6, 3, 9, 3, 0, 2, 8, 2, 6, 9, 5, 5, 8, 5, 0, 0, 7, 2, 8, 5, 6,
-                8, 1, 7, 9, 2, 1, 8, 5, 6, 4, 3, 3, 1, 7, 1, 5, 2, 8, 3, 3, 8, 6, 8, 7, 4, 8, 2, 3, 5,
-                2, 8, 8, 8, 9, 8, 2, 7, 7, 0, 8, 8, 5, 9, 9, 9, 7, 2, 7, 0, 4, 4, 6, 4, 8, 5, 5, 0, 8,
-                2, 5, 1, 8, 6, 8, 8, 1, 2, 0, 7, 3, 2, 2, 5, 7, 9, 6, 4, 7]
+            // Results must be the same as those produced by md5
+            const correctResults = [6, 7, 4, 4, 9, 1, 8, 0, 6, 6, 7, 6, 7, 3, 2, 2, 0, 9, 4, 9, 9, 5, 5,
+                1, 7, 3, 0, 6, 5, 6, 3, 6, 3, 5, 6, 2, 3, 6, 7, 2, 1, 3, 2, 7, 1, 1, 5, 1, 4, 0, 1, 9, 7,
+                4, 2, 3, 2, 9, 7, 7, 4, 3, 5, 4, 5, 3, 9, 0, 4, 8, 1, 7, 4, 8, 1, 2, 9, 9, 5, 3, 5, 0, 9,
+                4, 3, 9, 6, 7, 8, 6, 4, 6, 0, 1, 1, 5, 8, 3, 9, 7]
 
             assert.equal(correctResults.length, keys.length, 'key array and result array are different size!')
 
             for (let i = 0; i < keys.length; i++) {
-                const partition = MessageCreationUtil.computeStreamPartition(10, keys[i])
+                const partition = new MessageCreationUtil().computeStreamPartition(10, keys[i])
                 assert.equal(
                     correctResults[i], partition,
                     `Partition is incorrect for key: ${keys[i]}. Was: ${partition}, should be: ${correctResults[i]}`,

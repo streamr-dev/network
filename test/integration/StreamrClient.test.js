@@ -1,8 +1,7 @@
 import assert from 'assert'
 import fetch from 'node-fetch'
-import Web3 from 'web3'
-import FakeProvider from 'web3-fake-provider'
 import { MessageLayer } from 'streamr-client-protocol'
+import { ethers } from 'ethers'
 import StreamrClient from '../../src'
 import config from './config'
 
@@ -19,7 +18,7 @@ describe('StreamrClient', () => {
         url: config.websocketUrl,
         restUrl: config.restUrl,
         auth: {
-            privateKey: new Web3(new FakeProvider()).eth.accounts.create().privateKey,
+            privateKey: ethers.Wallet.createRandom().privateKey,
         },
         autoConnect: false,
         autoDisconnect: false,

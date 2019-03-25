@@ -1,13 +1,9 @@
-import sha256 from 'js-sha256'
+import crypto from 'crypto'
 import randomstring from 'randomstring'
 import { MessageLayer } from 'streamr-client-protocol'
-import FakeProvider from 'web3-fake-provider'
-
-const murmur = require('murmurhash-native').murmurHash
-const Web3 = require('web3')
+import { ethers } from 'ethers'
 
 const { StreamMessage } = MessageLayer
-const web3 = new Web3(new FakeProvider())
 
 export default class MessageCreationUtil {
     constructor(auth, signer, userInfoPromise) {
@@ -16,6 +12,7 @@ export default class MessageCreationUtil {
         this.userInfoPromise = userInfoPromise
         this.publishedStreams = {}
         this.msgChainId = randomstring.generate(20)
+        this.cachedHashes = {}
     }
 
     async getUsername() {
@@ -28,18 +25,19 @@ export default class MessageCreationUtil {
     async getPublisherId() {
         if (!this.publisherId) {
             if (this.auth.privateKey !== undefined) {
-                this.publisherId = web3.eth.accounts.privateKeyToAccount(this.auth.privateKey).address
+                this.publisherId = ethers.utils.computeAddress(this.auth.privateKey)
             } else if (this.auth.provider !== undefined) {
-                const w3 = new Web3(this.auth.provider)
-                const accounts = await w3.eth.getAccounts()
-                /* eslint-disable prefer-destructuring */
-                this.publisherId = accounts[0]
+                const provider = new ethers.providers.Web3Provider(this.auth.provider)
+                this.publisherId = provider.getSigner().address
             } else if (this.auth.apiKey !== undefined) {
-                this.publisherId = sha256(await this.getUsername())
+                const hexString = ethers.utils.hexlify(Buffer.from(await this.getUsername(), 'utf8'))
+                this.publisherId = ethers.utils.sha256(hexString)
             } else if (this.auth.username !== undefined) {
-                this.publisherId = sha256(this.auth.username)
+                const hexString = ethers.utils.hexlify(Buffer.from(this.auth.username, 'utf8'))
+                this.publisherId = ethers.utils.sha256(hexString)
             } else if (this.auth.sessionToken !== undefined) {
-                this.publisherId = sha256(await this.getUsername())
+                const hexString = ethers.utils.hexlify(Buffer.from(await this.getUsername(), 'utf8'))
+                this.publisherId = ethers.utils.sha256(hexString)
             } else {
                 throw new Error('Need either "privateKey", "provider", "apiKey", "username"+"password" or "sessionToken" to derive the publisher Id.')
             }
@@ -76,7 +74,7 @@ export default class MessageCreationUtil {
         if (typeof data !== 'object') {
             throw new Error(`Message data must be an object! Was: ${data}`)
         }
-        const streamPartition = MessageCreationUtil.computeStreamPartition(stream.partitions, partitionKey)
+        const streamPartition = this.computeStreamPartition(stream.partitions, partitionKey)
         const publisherId = await this.getPublisherId()
 
         const key = stream.id + streamPartition
@@ -100,16 +98,22 @@ export default class MessageCreationUtil {
         return streamMessage
     }
 
-    static computeStreamPartition(partitionCount, partitionKey) {
+    hash(stringToHash) {
+        if (this.cachedHashes[stringToHash] === undefined) {
+            this.cachedHashes[stringToHash] = crypto.createHash('md5').update(stringToHash).digest()
+        }
+        return this.cachedHashes[stringToHash]
+    }
+
+    computeStreamPartition(partitionCount, partitionKey) {
         if (!partitionCount) {
             throw new Error('partitionCount is falsey!')
         } else if (partitionCount === 1) {
             // Fast common case
             return 0
         } else if (partitionKey) {
-            const bytes = Buffer.from(partitionKey, 'utf8')
-            const resultBytes = murmur(bytes, 0, 'buffer')
-            const intHash = resultBytes.readInt32LE()
+            const buffer = this.hash(partitionKey)
+            const intHash = buffer.readInt32LE()
             return Math.abs(intHash) % partitionCount
         } else {
             // Fallback to random partition if no key

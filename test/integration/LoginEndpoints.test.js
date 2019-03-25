@@ -1,11 +1,7 @@
 import assert from 'assert'
-
-import Web3 from 'web3'
-import FakeProvider from 'web3-fake-provider'
+import { ethers } from 'ethers'
 import StreamrClient from '../../src'
 import config from './config'
-
-const web3 = new Web3(new FakeProvider())
 
 describe('LoginEndpoints', () => {
     let client
@@ -58,12 +54,12 @@ describe('LoginEndpoints', () => {
             ), /Error/)
         })
         it('should get a session token', () => {
-            const account = web3.eth.accounts.create()
-            return client.getChallenge(account.address)
-                .then((challenge) => {
+            const wallet = ethers.Wallet.createRandom()
+            return client.getChallenge(wallet.address)
+                .then(async (challenge) => {
                     assert(challenge.challenge)
-                    const signatureObject = account.sign(challenge.challenge)
-                    client.sendChallengeResponse(challenge, signatureObject.signature, account.address)
+                    const signature = await wallet.signMessage(challenge.challenge)
+                    return client.sendChallengeResponse(challenge, signature, wallet.address)
                         .then((sessionToken) => {
                             assert(sessionToken)
                             assert(sessionToken.token)
@@ -72,8 +68,8 @@ describe('LoginEndpoints', () => {
                 })
         })
         it('should get a session token with combined function', () => {
-            const account = web3.eth.accounts.create()
-            return client.loginWithChallengeResponse((d) => account.sign(d).signature, account.address)
+            const wallet = ethers.Wallet.createRandom()
+            return client.loginWithChallengeResponse((d) => wallet.signMessage(d), wallet.address)
                 .then((sessionToken) => {
                     assert(sessionToken)
                     assert(sessionToken.token)

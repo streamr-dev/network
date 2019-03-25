@@ -3,31 +3,22 @@ import { MessageLayer } from 'streamr-client-protocol'
 const { StreamMessage } = MessageLayer
 const { SIGNATURE_TYPES } = StreamMessage
 
-import Web3 from 'web3'
-import FakeProvider from 'web3-fake-provider'
+import { ethers } from 'ethers'
 
 const debug = require('debug')('StreamrClient::Signer')
-
-const web3 = new Web3(new FakeProvider())
 
 export default class Signer {
     constructor(options = {}) {
         this.options = options
         if (this.options.privateKey) {
-            const account = web3.eth.accounts.privateKeyToAccount(this.options.privateKey)
-            this.address = account.address.toLowerCase()
-            this.sign = (d) => account.sign(d).signature
+            const wallet = new ethers.Wallet(this.options.privateKey)
+            this.address = wallet.address
+            this.sign = (d) => wallet.signMessage(d)
         } else if (this.options.provider) {
-            this.sign = async (d) => {
-                const w3 = new Web3(this.options.provider)
-                const accounts = await w3.eth.getAccounts()
-                const address = accounts[0]
-                if (!address) {
-                    throw new Error('Cannot access account from provider')
-                }
-                this.address = address
-                return w3.eth.personal.sign(d, this.address)
-            }
+            const provider = new ethers.providers.Web3Provider(this.options.provider)
+            const signer = provider.getSigner()
+            this.address = signer.address
+            this.sign = async (d) => signer.signMessage(d)
         } else {
             throw new Error('Need either "privateKey" or "provider".')
         }
@@ -68,7 +59,7 @@ export default class Signer {
 
     static verifySignature(data, signature, address, signatureType = SIGNATURE_TYPES.ETH) {
         if (signatureType === SIGNATURE_TYPES.ETH_LEGACY || signatureType === SIGNATURE_TYPES.ETH) {
-            return web3.eth.accounts.recover(data, signature).toLowerCase() === address.toLowerCase()
+            return ethers.utils.verifyMessage(data, signature).toLowerCase() === address.toLowerCase()
         }
         throw new Error(`Unrecognized signature type: ${signatureType}`)
     }
