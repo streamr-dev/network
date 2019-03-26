@@ -205,6 +205,32 @@ describe('Subscription', () => {
             // Receive msg3 successfully
             sub.handleMessage(msg3)
         })
+
+        it('if an InvalidJsonError AND a gap occur, does not mark it as received and emits gap at the next message', (done) => {
+            const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
+
+            sub.on('gap', (from, to, publisherId) => {
+                assert.equal(from.timestamp, 1) // cannot know the first missing message so there will be a duplicate received
+                assert.equal(from.sequenceNumber, 0)
+                assert.equal(to.timestamp, 3)
+                assert.equal(to.sequenceNumber, 0)
+                assert.equal(publisherId, 'publisherId')
+                done()
+            })
+
+            const msg1 = msg
+            const msg4 = createMsg(4, undefined, 3)
+
+            // Receive msg1 successfully
+            sub.handleMessage(msg1)
+
+            // Get notified of invalid msg3 (msg2 is missing)
+            const err = new Errors.InvalidJsonError(msg.getStreamId(), 'invalid json', 'test error msg', createMsg(3, undefined, 2))
+            sub.handleError(err)
+
+            // Receive msg4 and should emit gap
+            sub.handleMessage(msg4)
+        })
     })
 
     describe('getEffectiveResendOptions()', () => {

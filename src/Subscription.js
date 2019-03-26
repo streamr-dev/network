@@ -210,8 +210,11 @@ export default class Subscription extends EventEmitter {
          * If parsing the (expected) message failed, we should still mark it as received. Otherwise the
          * gap detection will think a message was lost, and re-request the failing message.
          */
-        if (err instanceof Errors.InvalidJsonError && !this.checkForGap(err.streamMessage.prevMsgRef)) {
-            const key = err.streamMessage.getPublisherId() + err.streamMessage.messageId.msgChainId
+        let key
+        if (err.streamMessage) {
+            key = err.streamMessage.getPublisherId() + err.streamMessage.messageId.msgChainId
+        }
+        if (err instanceof Errors.InvalidJsonError && !this.checkForGap(err.streamMessage.prevMsgRef, key)) {
             this.lastReceivedMsgRef[key] = err.streamMessage.getMessageRef()
         }
         this.emit('error', err)
