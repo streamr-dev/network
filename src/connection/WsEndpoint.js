@@ -63,6 +63,7 @@ class WsEndpoint extends EventEmitter {
         this.endpoint.implement(this)
 
         this.connections = new Map()
+        this.pendingConnections = new Map()
 
         this.wss.on('connection', this._onIncomingConnection.bind(this))
 
@@ -134,7 +135,17 @@ class WsEndpoint extends EventEmitter {
             if (this.isConnected(peerAddress)) {
                 debug('already connected to %s', peerAddress)
                 resolve()
+            } else if (this.pendingConnections.has(peerAddress)) {
+                debug('pending connection to %s', peerAddress)
+                this.pendingConnections.get(peerAddress).push({
+                    resolve,
+                    reject
+                })
             } else {
+                this.pendingConnections.set(peerAddress, [{
+                    resolve,
+                    reject
+                }])
                 try {
                     let customHeadersOfServer
                     const ws = new WebSocket(`${peerAddress}?address=${this.getAddress()}`, {
@@ -147,21 +158,25 @@ class WsEndpoint extends EventEmitter {
 
                     ws.on('open', () => {
                         if (!customHeadersOfServer) {
-                            reject(new Error('dropping outgoing connection because upgrade event never received'))
+                            const err = new Error('dropping outgoing connection because upgrade event never received')
                             ws.terminate()
+                            this.pendingConnections.get(peerAddress).forEach(({ reject: r }) => r(err))
                         } else {
                             this._onNewConnection(ws, peerAddress, customHeadersOfServer)
-                            resolve()
+                            this.pendingConnections.get(peerAddress).forEach(({ resolve: r }) => r())
                         }
+                        this.pendingConnections.delete(peerAddress)
                     })
 
                     ws.on('error', (err) => {
                         debug('failed to connect to %s, error: %o', peerAddress, err)
-                        reject(err)
+                        this.pendingConnections.get(peerAddress).forEach(({ reject: r }) => r(new Error(err)))
+                        this.pendingConnections.delete(peerAddress)
                     })
                 } catch (err) {
                     debug('failed to connect to %s, error: %o', peerAddress, err)
-                    reject(err)
+                    this.pendingConnections.get(peerAddress).forEach(({ reject: r }) => r(new Error(err)))
+                    this.pendingConnections.delete(peerAddress)
                 }
             }
         })
