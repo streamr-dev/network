@@ -80,26 +80,6 @@ describe('SubscribedStream', () => {
                     })
                 })
             })
-            describe('getVerifySignatures', () => {
-                it('should set signature verification flag to true', async () => {
-                    assert.strictEqual(subscribedStream.verifySignatures, undefined)
-                    const retrievedFlag = await subscribedStream.getVerifySignatures()
-                    assert(client.getStream.calledOnce)
-                    assert.strictEqual(retrievedFlag, true)
-                    assert.strictEqual(subscribedStream.verifySignatures, true)
-                })
-                it('should set signature verification flag to false', async () => {
-                    client.getStream = sinon.stub()
-                    client.getStream.withArgs('streamId').resolves({
-                        requireSignedData: false,
-                    })
-                    assert.strictEqual(subscribedStream.verifySignatures, undefined)
-                    const retrievedFlag = await subscribedStream.getVerifySignatures()
-                    assert(client.getStream.calledOnce)
-                    assert.strictEqual(retrievedFlag, false)
-                    assert.strictEqual(subscribedStream.verifySignatures, false)
-                })
-            })
         })
         describe('verifyStreamMessage, signed message', () => {
             let msg
@@ -126,16 +106,16 @@ describe('SubscribedStream', () => {
                 subscribedStream = new SubscribedStream(client, 'streamId')
                 const valid = await subscribedStream.verifyStreamMessage(msg)
                 assert.strictEqual(valid, true)
-                assert(spiedExpectedCall)
+                assert(spiedExpectedCall())
                 spiedVerifyStreamMessage.restore()
             })
             it('should verify when "auto" verification and stream requires signed data', async () => {
                 ({ client } = setupClientAndStream('auto', true))
                 spiedExpectedCall = () => spiedVerifyStreamMessage.calledOnce
             })
-            it('should return true without verifying when "auto" verification and stream does not require signed data', async () => {
+            it('should verify anyway when "auto" verification even if stream does not require signed data', async () => {
                 ({ client } = setupClientAndStream('auto', false))
-                spiedExpectedCall = () => spiedVerifyStreamMessage.notCalled
+                spiedExpectedCall = () => spiedVerifyStreamMessage.called
             })
             it('should verify with "always" verification mode even if stream does not require signed data', async () => {
                 ({ client } = setupClientAndStream('auto', true))

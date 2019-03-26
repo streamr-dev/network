@@ -5,15 +5,6 @@ export default class SubscribedStream {
         this._client = client
         this.streamId = streamId
         this.subscriptions = {}
-        if (client.options.verifySignatures === 'always') {
-            this.verifySignatures = true
-        } else if (client.options.verifySignatures === 'never') {
-            this.verifySignatures = false
-        } else if (client.options.verifySignatures === 'auto') {
-            this.verifySignatures = undefined // Will retrieve it from the stream's metadata in getVerifySignatures() method
-        } else {
-            throw new Error(`Unrecognized verifySignatures parameter value: ${client.options.verifySignatures}`)
-        }
     }
 
     getPublishers() {
@@ -24,7 +15,17 @@ export default class SubscribedStream {
     }
 
     async verifyStreamMessage(msg) {
-        if (msg.signatureType && msg.signatureType !== 0) { // always verify in case the message is signed
+        if (this._client.options.verifySignatures === 'always') {
+            if (msg.signatureType && msg.signatureType !== 0 && msg.signature) {
+                const publishers = await this.getPublishers()
+                return Signer.verifyStreamMessage(msg, new Set(publishers))
+            }
+            return false
+        } else if (this._client.options.verifySignatures === 'never') {
+            return true
+        }
+        // if this._client.options.verifySignatures === 'auto'
+        if (msg.signatureType && msg.signatureType !== 0 && msg.signature) { // always verify in case the message is signed
             const publishers = await this.getPublishers()
             return Signer.verifyStreamMessage(msg, new Set(publishers))
         }
@@ -39,11 +40,11 @@ export default class SubscribedStream {
     }
 
     async getVerifySignatures() {
-        if (this.verifySignatures === undefined) { // client.options.verifySignatures === 'auto'
+        if (this.requireSignedData === undefined) {
             const stream = await this.getStream()
-            this.verifySignatures = stream.requireSignedData
+            this.requireSignedData = stream.requireSignedData
         }
-        return this.verifySignatures
+        return this.requireSignedData
     }
 
     getSubscription(subId) {
