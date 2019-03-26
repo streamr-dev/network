@@ -65,6 +65,13 @@ module.exports = class StreamManager {
         })
     }
 
+    removeStream(streamId) {
+        this._verifyThatIsSetUp(streamId)
+        const { inboundNodes, outboundNodes } = this.streams.get(streamId.key())
+        this.streams.delete(streamId.key())
+        return [...new Set([...inboundNodes, ...outboundNodes])]
+    }
+
     isSetUp(streamId) {
         return this.streams.has(streamId.key())
     }

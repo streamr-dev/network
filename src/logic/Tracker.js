@@ -26,7 +26,7 @@ module.exports = class Tracker extends EventEmitter {
     processNodeStatus(statusMessage) {
         const source = statusMessage.getSource()
         const status = statusMessage.getStatus()
-        this._addNode(source, status.streams)
+        this._updateNode(source, status.streams)
         this._formAndSendInstructions(source, status.streams)
     }
 
@@ -43,9 +43,10 @@ module.exports = class Tracker extends EventEmitter {
         return this.protocols.trackerServer.getAddress()
     }
 
-    _addNode(node, streams) {
+    _updateNode(node, streams) {
         let newNode = true
 
+        // Add or update
         Object.entries(streams).forEach(([streamKey, { inboundNodes, outboundNodes }]) => {
             if (this.overlayPerStream[streamKey] == null) {
                 this.overlayPerStream[streamKey] = new OverlayTopology(NEIGHBORS_PER_NODE)
@@ -56,6 +57,12 @@ module.exports = class Tracker extends EventEmitter {
             const neighbors = new Set([...inboundNodes, ...outboundNodes])
             this.overlayPerStream[streamKey].update(node, neighbors)
         })
+
+        // Remove
+        const currentStreamKeys = new Set(Object.keys(streams))
+        Object.entries(this.overlayPerStream)
+            .filter(([streamKey, _]) => !currentStreamKeys.has(streamKey))
+            .forEach(([_, overlayTopology]) => overlayTopology.leave(node))
 
         if (newNode) {
             this.debug('registered new node %s for streams %j', node, Object.keys(streams))
