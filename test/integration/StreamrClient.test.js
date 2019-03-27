@@ -88,7 +88,49 @@ describe('StreamrClient', () => {
             })
         })
 
-        it('client.subscribe with resend', (done) => {
+        it('client.subscribe with resend from', (done) => {
+            // Publish message
+            client.publish(stream.id, {
+                test: 'client.subscribe with resend',
+            })
+
+            // Check that we're not subscribed yet
+            assert.strictEqual(client.subscribedStreams[stream.id], undefined)
+
+            // Add delay: this test needs some time to allow the message to be written to Cassandra
+            setTimeout(() => {
+                const sub = client.subscribe({
+                    stream: stream.id,
+                    resend: {
+                        from: {
+                            timestamp: 0,
+                        },
+                    },
+                }, async (parsedContent, streamMessage) => {
+                    // Check message content
+                    assert.strictEqual(parsedContent.test, 'client.subscribe with resend')
+
+                    // Check signature stuff
+                    const subStream = client.subscribedStreams[stream.id]
+                    const publishers = await subStream.getPublishers()
+                    const requireVerification = await subStream.getVerifySignatures()
+                    assert.strictEqual(requireVerification, true)
+                    assert.deepStrictEqual(publishers, [client.signer.address.toLowerCase()])
+                    assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+                    assert(streamMessage.getPublisherId())
+                    assert(streamMessage.signature)
+
+                    // All good, unsubscribe
+                    client.unsubscribe(sub)
+                    sub.on('unsubscribed', () => {
+                        assert.strictEqual(client.subscribedStreams[stream.id], undefined)
+                        done()
+                    })
+                })
+            }, 10000)
+        })
+
+        it('client.subscribe with resend last', (done) => {
             // Publish message
             client.publish(stream.id, {
                 test: 'client.subscribe with resend',
