@@ -623,7 +623,7 @@ describe('StreamrClient', () => {
                             msgChainId: '1',
                         },
                     })
-                    connection.expect(ResendFromRequest.create(sub.streamId, sub.streamPartition, sub.id, ref, 'publisherId', '1'))
+                    connection.expect(ResendFromRequest.create(sub.streamId, sub.streamPartition, sub.id, ref.toArray(), 'publisherId', '1'))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
                 })
 
@@ -661,7 +661,7 @@ describe('StreamrClient', () => {
                         const toRef = new MessageRef(5, 0)
                         connection.expect(ResendRangeRequest.create(
                             sub.streamId, sub.streamPartition, sub.id,
-                            fromRef, toRef, 'publisherId', 'msgChainId',
+                            fromRef.toArray(), toRef.toArray(), 'publisherId', 'msgChainId',
                         ))
                         const fromRefObject = {
                             timestamp: fromRef.timestamp,
@@ -680,7 +680,7 @@ describe('StreamrClient', () => {
                         const toRef = new MessageRef(5, 0)
                         connection.expect(ResendRangeRequest.create(
                             sub.streamId, sub.streamPartition, sub.id,
-                            fromRef, toRef, 'publisherId', 'msgChainId',
+                            fromRef.toArray(), toRef.toArray(), 'publisherId', 'msgChainId',
                         ))
                         const fromRefObject = {
                             timestamp: fromRef.timestamp,

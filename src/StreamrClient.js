@@ -1,7 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import qs from 'qs'
-import { MessageLayer, ControlLayer, Errors } from 'streamr-client-protocol'
+import { ControlLayer, Errors } from 'streamr-client-protocol'
 
 const {
     BroadcastMessage,
