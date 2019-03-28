@@ -80,7 +80,7 @@ stream.publish(msg)
 Option | Default value | Description
 ------ | ------------- | -----------
 url | wss://www.streamr.com/api/v1/ws | Address of the Streamr websocket endpoint to connect to.
-restUrl | https://www.streamr.com/api/v1/ws | Base URL of the Streamr REST API.
+restUrl | https://www.streamr.com/api/v1 | Base URL of the Streamr REST API.
 auth | {} | Object that can contain different information to authenticate. More details below.
 publishWithSignature | 'auto' | Determines if data points published to streams are signed or not. Possible values are: 'auto', 'always' and 'never'. Signing requires `auth.privateKey` or `auth.provider`.  'auto' will sign only if one of them is set. 'always' will throw an exception if none of them is set.
 verifySignatures | 'auto' | Determines under which conditions signed and unsigned data points are accepted or rejected. 'always' accepts only signed and verified data points. 'never' accepts all data points. 'auto' verifies all signed data points before accepting them and accepts unsigned data points only for streams not supposed to contain signed data.
