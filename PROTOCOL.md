@@ -352,7 +352,7 @@ Signature Type | Name | Description | Signature payload fields to be concatenate
 -------------- | ---- |------------ | -----------------------
 0 | `NONE` | No signature. signature field is empty in this case. | None.
 1 | `ETH_LEGACY` | Ethereum signature produced by old clients (Message Layer version 29). The signature field is encoded as a hex string. | `streamId`, `streamPartition`, `timestamp`, `publisherId`, `content`
-2 | `ETH` | Ethereum signature produced by current clients (Message Layer version 30). The signature field is encoded as a hex string. | all the `msgId` fields, (`streamId`, `streamPartition`, `timestamp`, `sequenceNumber`, `publisherId`, `msgChainId`), `content`
+2 | `ETH` | Ethereum signature produced by current clients (Message Layer version 30). The signature field is encoded as a hex string. | all the `msgId` fields, (`streamId`, `streamPartition`, `timestamp`, `sequenceNumber`, `publisherId`, `msgChainId`), `prevMsgRef`, `content`
 
 ### MessageID
 
