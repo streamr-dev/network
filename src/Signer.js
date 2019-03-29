@@ -48,8 +48,12 @@ export default class Signer {
 
     static getPayloadToSign(msg, address = msg.getPublisherId(), signatureType = SIGNATURE_TYPES.ETH) {
         if (signatureType === SIGNATURE_TYPES.ETH) {
+            let prev = ''
+            if (msg.prevMsgRef) {
+                prev = `${msg.prevMsgRef.timestamp}${msg.prevMsgRef.sequenceNumber}`
+            }
             return `${msg.getStreamId()}${msg.getStreamPartition()}${msg.getTimestamp()}${msg.messageId.sequenceNumber}` +
-                `${address.toLowerCase()}${msg.messageId.msgChainId}${msg.getSerializedContent()}`
+                `${address.toLowerCase()}${msg.messageId.msgChainId}${prev}${msg.getSerializedContent()}`
         } else if (signatureType === SIGNATURE_TYPES.ETH_LEGACY) {
             // verification of messages signed by old clients
             return `${msg.getStreamId()}${msg.getTimestamp()}${msg.getPublisherId().toLowerCase()}${msg.getSerializedContent()}`
