@@ -67,7 +67,7 @@
     "qs": "^6.6.0",
     "querystring": "^0.2.0",
     "randomstring": "^1.1.5",
-    "streamr-client-protocol": "^2.0.0",
+    "streamr-client-protocol": "^2.1.0",
     "webpack-node-externals": "^1.7.2",
     "websocket": "^1.0.28",
     "ws": "^6.1.2"
