@@ -216,7 +216,7 @@ export default class StreamrClient extends EventEmitter {
         this.connection.on(ErrorResponse.TYPE, (err) => {
             const errorObject = new Error(err.errorMessage)
             this.emit('error', errorObject)
-            console.error(errorObject.message)
+            console.error(errorObject)
         })
 
         this.connection.on('error', (err) => {
@@ -231,7 +231,7 @@ export default class StreamrClient extends EventEmitter {
             } else {
                 const errorObject = err instanceof Error ? err : new Error(err)
                 this.emit('error', errorObject)
-                console.error(errorObject.message)
+                console.error(errorObject)
             }
         })
     }
