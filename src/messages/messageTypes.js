@@ -12,7 +12,8 @@ const msgTypes = {
 const disconnectionReasons = Object.freeze({
     TRACKER_INSTRUCTION: 'streamr:node:tracker-instruction',
     GRACEFUL_SHUTDOWN: 'streamr:node:graceful-shutdown',
-    DUPLICATE_SOCKET: 'streamr:endpoint:duplicate-connection'
+    DUPLICATE_SOCKET: 'streamr:endpoint:duplicate-connection',
+    NO_SHARED_STREAMS: 'streamr:node:no-shared-streams'
 })
 
 module.exports = {

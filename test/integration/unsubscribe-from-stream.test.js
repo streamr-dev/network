@@ -13,7 +13,7 @@ describe('node unsubscribing from a stream', () => {
     const s1 = new StreamID('s', 1)
     const s2 = new StreamID('s', 2)
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         tracker = await startTracker(LOCALHOST, 30450, 'tracker')
         nodeA = await startNetworkNode(LOCALHOST, 30451, 'a')
         nodeB = await startNetworkNode(LOCALHOST, 30452, 'b')
@@ -30,7 +30,7 @@ describe('node unsubscribing from a stream', () => {
         await waitForEvent(nodeA, Node.events.NODE_SUBSCRIBED)
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await callbackToPromise(nodeA.stop.bind(nodeA))
         await callbackToPromise(nodeB.stop.bind(nodeB))
         await callbackToPromise(tracker.stop.bind(tracker))
@@ -51,5 +51,21 @@ describe('node unsubscribing from a stream', () => {
         await wait(150)
 
         expect(actual).toEqual(['s::1'])
+    })
+
+    test('connection between nodes is not kept if no shared streams', async () => {
+        nodeB.unsubscribeFromStream(s2)
+        await waitForEvent(nodeA, Node.events.NODE_UNSUBSCRIBED)
+
+        nodeA.unsubscribeFromStream(s1)
+        await waitForEvent(nodeB, Node.events.NODE_UNSUBSCRIBED)
+
+        const [aEventArgs, bEventArgs] = await Promise.all([
+            waitForEvent(nodeA, Node.events.NODE_DISCONNECTED),
+            waitForEvent(nodeB, Node.events.NODE_DISCONNECTED)
+        ])
+
+        expect(aEventArgs).toEqual(['b'])
+        expect(bEventArgs).toEqual(['a'])
     })
 })

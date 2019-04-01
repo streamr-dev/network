@@ -11,6 +11,7 @@ const events = Object.freeze({
     MESSAGE_PROPAGATED: 'streamr:node:message-propagated',
     NODE_SUBSCRIBED: 'streamr:node:subscribed-successfully',
     NODE_UNSUBSCRIBED: 'streamr:node:node-unsubscribed',
+    NODE_DISCONNECTED: 'streamr:node:node-disconnected',
     SUBSCRIPTION_REQUEST: 'streamr:node:subscription-received',
     MESSAGE_DELIVERY_FAILED: 'streamr:node:message-delivery-failed'
 })
@@ -200,6 +201,9 @@ class Node extends EventEmitter {
         this.debug('node %s unsubscribed from stream %s', source, streamId)
         this.emit(events.NODE_UNSUBSCRIBED, source, streamId)
         this._sendStatusToAllTrackers()
+        if (!this.streams.isNodePresent(source)) {
+            this.protocols.nodeToNode.disconnectFromNode(source, disconnectionReasons.NO_SHARED_STREAMS)
+        }
     }
 
     stop(cb) {
@@ -266,6 +270,7 @@ class Node extends EventEmitter {
         this.streams.removeNodeFromAllStreams(node)
         this.debug('removed all subscriptions of node %s', node)
         this._sendStatusToAllTrackers()
+        this.emit(events.NODE_DISCONNECTED, node)
     }
 
     onTrackerDisconnected(tracker) {

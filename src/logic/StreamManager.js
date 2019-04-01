@@ -76,6 +76,12 @@ module.exports = class StreamManager {
         return this.streams.has(streamId.key())
     }
 
+    isNodePresent(node) {
+        return [...this.streams.values()].some(({ inboundNodes, outboundNodes }) => {
+            return inboundNodes.has(node) || outboundNodes.has(node)
+        })
+    }
+
     getStreams() {
         return this.getStreamsAsKeys().map((key) => StreamID.fromKey(key))
     }

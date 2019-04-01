@@ -118,6 +118,11 @@ describe('StreamManager', () => {
         expect(manager.hasOutboundNode(streamId, 'node-3')).toEqual(true)
         expect(manager.hasOutboundNode(streamId, 'node-2')).toEqual(false)
         expect(manager.hasOutboundNode(streamId, 'node-2')).toEqual(false)
+
+        expect(manager.isNodePresent('node-1')).toEqual(true)
+        expect(manager.isNodePresent('node-2')).toEqual(true)
+        expect(manager.isNodePresent('node-3')).toEqual(true)
+        expect(manager.isNodePresent('node-not-present')).toEqual(false)
     })
 
     test('removing node from stream removes it from both inbound and outbound nodes', () => {
@@ -142,6 +147,7 @@ describe('StreamManager', () => {
 
         expect(manager.hasInboundNode(streamId, 'node-1')).toEqual(false)
         expect(manager.hasOutboundNode(streamId, 'node-1')).toEqual(false)
+        expect(manager.isNodePresent('node-1')).toEqual(false)
     })
 
     test('remove node from all streams', () => {
@@ -187,6 +193,9 @@ describe('StreamManager', () => {
 
         expect(manager.hasInboundNode(new StreamID('stream-1', 0), 'node')).toEqual(false)
         expect(manager.hasOutboundNode(new StreamID('stream-2', 0), 'node')).toEqual(false)
+
+        expect(manager.isNodePresent('should-not-be-removed')).toEqual(true)
+        expect(manager.isNodePresent('node')).toEqual(false)
     })
 
     test('remove stream', () => {
