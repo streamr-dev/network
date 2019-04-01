@@ -67,12 +67,35 @@ class WsEndpoint extends EventEmitter {
 
         this.wss.on('connection', this._onIncomingConnection.bind(this))
 
+        this.wss.options.verifyClient = (info) => {
+            const parameters = url.parse(info.req.url, true)
+            const { address } = parameters.query
+
+            if (this.isConnected(address)) {
+                debug('already connected to %s, readyState %d', address, this.connections.get(address).readyState)
+                debug('closing existing socket')
+                this.connections.get(address).close()
+            }
+
+            return true
+        }
+
         // Attach custom headers to headers before they are sent to client
         this.wss.on('headers', (headers) => {
             headers.push(...this.customHeaders.asArray())
         })
 
         debug('listening on: %s', this.getAddress())
+        this.checkConnectionsInterval = setInterval(this._checkConnections.bind(this), 2000)
+    }
+
+    _checkConnections() {
+        // eslint-disable-next-line no-restricted-syntax
+        for (const [address, ws] of this.connections) {
+            if (ws.readyState !== 1) {
+                console.log(address + '\t\t\t' + ws.readyState)
+            }
+        }
     }
 
     send(recipientAddress, message) {
@@ -183,6 +206,7 @@ class WsEndpoint extends EventEmitter {
     }
 
     stop(callback = () => {}) {
+        clearInterval(this.checkConnectionsInterval)
         this.connections.forEach((connection) => {
             connection.terminate()
         })
