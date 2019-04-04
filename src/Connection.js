@@ -59,12 +59,14 @@ class Connection extends EventEmitter {
         })
 
         this.socket.onmessage = (messageEvent) => {
+            let controlMessage
             try {
-                const controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
-                this.emit(controlMessage.type, controlMessage)
+                controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
             } catch (err) {
                 this.emit('error', err)
+                return
             }
+            this.emit(controlMessage.type, controlMessage)
         }
 
         return new Promise((resolve) => {
