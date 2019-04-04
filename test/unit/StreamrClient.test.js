@@ -47,9 +47,14 @@ describe('StreamrClient', () => {
         asyncs = []
     }
 
-    function setupSubscription(streamId, emitSubscribed = true, subscribeOptions = {}, handler = sinon.stub()) {
+    function setupSubscription(
+        streamId, emitSubscribed = true, subscribeOptions = {}, handler = sinon.stub(),
+        expectSubscribeRequest = !client.getSubscriptions(streamId).length,
+    ) {
         assert(client.isConnected(), 'setupSubscription: Client is not connected!')
-        connection.expect(SubscribeRequest.create(streamId))
+        if (expectSubscribeRequest) {
+            connection.expect(SubscribeRequest.create(streamId))
+        }
         const sub = client.subscribe({
             stream: streamId,
             ...subscribeOptions,
@@ -328,156 +333,146 @@ describe('StreamrClient', () => {
         })
 
         describe('BroadcastMessage', () => {
-            beforeEach(() => client.connect())
+            let sub
 
-            it('should call the message handler of each subscription', (done) => {
-                connection.expect(SubscribeRequest.create('stream1'))
+            beforeEach(async () => {
+                await client.connect()
+                sub = setupSubscription('stream1')
+            })
 
-                const counter = sinon.stub()
-                counter.onFirstCall().returns(1)
-                counter.onSecondCall().returns(2)
+            it('should call the message handler of each subscription', () => {
+                sub.handleBroadcastMessage = sinon.stub()
 
-                client.subscribe({
-                    stream: 'stream1',
-                }, () => {
-                    const c = counter()
-                    if (c === 2) {
-                        done()
-                    } else {
-                        assert.strictEqual(c, 1)
-                    }
-                })
-                client.subscribe({
-                    stream: 'stream1',
-                }, () => {
-                    const c = counter()
-                    if (c === 2) {
-                        done()
-                    } else {
-                        assert.strictEqual(c, 1)
-                    }
-                })
+                const sub2 = setupSubscription('stream1')
+                sub2.handleBroadcastMessage = sinon.stub()
 
-                connection.emitMessage(SubscribeRequest.create('stream1'))
-                connection.emitMessage(msg())
+                const msg1 = msg()
+                connection.emitMessage(msg1)
+
+                sinon.assert.calledWithMatch(sub.handleBroadcastMessage, msg1.streamMessage, sinon.match.func)
             })
 
             it('should not crash if messages are received for unknown streams', () => {
-                setupSubscription('stream1', true, {}, sinon.stub().throws())
                 connection.emitMessage(msg('unexpected-stream'))
             })
 
-            it('does not mutate messages', (done) => {
-                const sentContent = {
-                    foo: 'bar',
+            it('should ensure that the promise returned by the verification function is cached and returned for all handlers', (done) => {
+                let firstResult
+                sub.handleBroadcastMessage = (message, verifyFn) => {
+                    firstResult = verifyFn()
+                    assert(firstResult instanceof Promise, `firstResult is: ${firstResult}`)
+                    assert.strictEqual(firstResult, verifyFn())
                 }
-
-                const sub = setupSubscription('stream1', true, {}, (receivedContent) => {
-                    assert.deepEqual(sentContent, receivedContent)
+                const sub2 = setupSubscription('stream1')
+                sub2.handleBroadcastMessage = (message, verifyFn) => {
+                    const secondResult = verifyFn()
+                    assert(secondResult instanceof Promise)
+                    assert.strictEqual(firstResult, secondResult)
                     done()
-                })
-
-                connection.emitMessage(msg(sub.streamId, sentContent))
+                }
+                const msg1 = msg()
+                connection.emitMessage(msg1)
             })
         })
 
         describe('UnicastMessage', () => {
-            beforeEach(() => client.connect())
+            let sub
 
-            it('should call the message handler of specified Subscription', (done) => {
-                connection.expect(SubscribeRequest.create('stream1'))
+            beforeEach(async () => {
+                await client.connect()
+                sub = setupSubscription('stream1')
+            })
+
+            it('should call the message handler of specified Subscription', () => {
+                // this sub's handler must be called
+                sub.handleResentMessage = sinon.stub()
 
                 // this sub's handler must not be called
-                client.subscribe({
-                    stream: 'stream1',
-                }, sinon.stub().throws())
+                const sub2 = setupSubscription('stream1')
+                sub2.handleResentMessage = sinon.stub().throws()
 
-                // this sub's handler must be called
-                const sub2 = client.subscribe({
-                    stream: 'stream1',
-                }, () => {
-                    done()
-                })
+                const msg1 = msg(sub.streamId, {}, sub.id)
+                connection.emitMessage(msg1, sub.id)
 
-                connection.emitMessage(SubscribeResponse.create(sub2.streamId))
-                connection.emitMessage(msg(sub2.streamId, {}, sub2.id), sub2.id)
+                sinon.assert.calledWithMatch(sub.handleResentMessage, msg1.streamMessage, sinon.match.func)
             })
 
             it('ignores messages for unknown Subscriptions', () => {
-                const sub = setupSubscription('stream1', true, {}, sinon.stub().throws())
+                sub.handleResentMessage = sinon.stub().throws()
                 connection.emitMessage(msg(sub.streamId, {}, 'unknown subId'), 'unknown subId')
             })
 
-            it('does not mutate messages', (done) => {
-                const sentContent = {
-                    foo: 'bar',
-                }
-
-                const sub = setupSubscription('stream1', true, {}, (receivedContent) => {
-                    assert.deepEqual(sentContent, receivedContent)
+            it('should ensure that the promise returned by the verification function is cached', (done) => {
+                sub.handleResentMessage = (message, verifyFn) => {
+                    const firstResult = verifyFn()
+                    assert(firstResult instanceof Promise)
+                    assert.strictEqual(firstResult, verifyFn())
                     done()
-                })
-
-                connection.emitMessage(msg(sub.streamId, sentContent, sub.id), sub.id)
+                }
+                const msg1 = msg(sub.streamId, {}, sub.id)
+                connection.emitMessage(msg1, sub.id)
             })
         })
 
         describe('ResendResponseResending', () => {
-            beforeEach(() => client.connect())
+            let sub
 
-            it('emits event on associated subscription', (done) => {
-                const sub = setupSubscription('stream1')
+            beforeEach(async () => {
+                await client.connect()
+                sub = setupSubscription('stream1')
+            })
+
+            it('emits event on associated subscription', () => {
+                sub.handleResending = sinon.stub()
                 const resendResponse = ResendResponseResending.create(sub.streamId, sub.streamPartition, sub.id)
-                sub.on('resending', (event) => {
-                    assert.deepEqual(event, [resendResponse.streamId, resendResponse.streamPartition, resendResponse.subId])
-                    done()
-                })
                 connection.emitMessage(resendResponse)
+                sinon.assert.calledWith(sub.handleResending, resendResponse)
             })
             it('ignores messages for unknown subscriptions', () => {
-                const sub = setupSubscription('stream1')
+                sub.handleResending = sinon.stub().throws()
                 const resendResponse = ResendResponseResending.create(sub.streamId, sub.streamPartition, 'unknown subid')
-                sub.on('resending', sinon.stub().throws())
                 connection.emitMessage(resendResponse)
             })
         })
 
         describe('ResendResponseNoResend', () => {
-            beforeEach(() => client.connect())
+            let sub
 
-            it('emits event on associated subscription', (done) => {
-                const sub = setupSubscription('stream1')
+            beforeEach(async () => {
+                await client.connect()
+                sub = setupSubscription('stream1')
+            })
+
+            it('calls event handler on subscription', () => {
+                sub.handleNoResend = sinon.stub()
                 const resendResponse = ResendResponseNoResend.create(sub.streamId, sub.streamPartition, sub.id)
-                sub.on('no_resend', (event) => {
-                    assert.deepEqual(event, [resendResponse.streamId, resendResponse.streamPartition, resendResponse.subId])
-                    done()
-                })
                 connection.emitMessage(resendResponse)
+                sinon.assert.calledWith(sub.handleNoResend, resendResponse)
             })
             it('ignores messages for unknown subscriptions', () => {
-                const sub = setupSubscription('stream1')
+                sub.handleNoResend = sinon.stub().throws()
                 const resendResponse = ResendResponseNoResend.create(sub.streamId, sub.streamPartition, 'unknown subid')
-                sub.on('no_resend', sinon.stub().throws())
                 connection.emitMessage(resendResponse)
             })
         })
 
         describe('ResendResponseResent', () => {
-            beforeEach(() => client.connect())
+            let sub
 
-            it('emits event on associated subscription', (done) => {
-                const sub = setupSubscription('stream1')
-                const resendResponse = ResendResponseResent.create(sub.streamId, sub.streamPartition, sub.id)
-                sub.on('resent', (event) => {
-                    assert.deepEqual(event, [resendResponse.streamId, resendResponse.streamPartition, resendResponse.subId])
-                    done()
-                })
-                connection.emitMessage(resendResponse)
+            beforeEach(async () => {
+                await client.connect()
+                sub = setupSubscription('stream1')
             })
-            it('ignores messages for unknown subscriptions', () => {
-                const sub = setupSubscription('stream1')
+
+            it('calls event handler on subscription', () => {
+                sub.handleResent = sinon.stub()
+                const resendResponse = ResendResponseResent.create(sub.streamId, sub.streamPartition, sub.id)
+                connection.emitMessage(resendResponse)
+                sinon.assert.calledWith(sub.handleResent, resendResponse)
+            })
+            it('does not call event handler for unknown subscriptions', () => {
+                sub.handleResent = sinon.stub().throws()
                 const resendResponse = ResendResponseResent.create(sub.streamId, sub.streamPartition, 'unknown subid')
-                sub.on('resent', sinon.stub().throws())
                 connection.emitMessage(resendResponse)
             })
         })

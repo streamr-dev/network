@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import qs from 'qs'
+import once from 'once'
 import { ControlLayer, Errors } from 'streamr-client-protocol'
 
 const {
@@ -24,7 +25,6 @@ import Subscription from './Subscription'
 import Connection from './Connection'
 import Session from './Session'
 import Signer from './Signer'
-import InvalidSignatureError from './errors/InvalidSignatureError'
 import SubscribedStream from './SubscribedStream'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
@@ -85,18 +85,12 @@ export default class StreamrClient extends EventEmitter {
         this.msgCreationUtil = new MessageCreationUtil(this.options.auth, this.signer, this.getUserInfo().catch((err) => this.emit('error', err)))
 
         // Broadcast messages to all subs listening on stream
-        this.connection.on(BroadcastMessage.TYPE, async (msg) => {
+        this.connection.on(BroadcastMessage.TYPE, (msg) => {
             const stream = this.subscribedStreams[msg.streamMessage.getStreamId()]
             if (stream) {
-                const valid = await stream.verifyStreamMessage(msg.streamMessage)
-                if (valid) {
-                    // Notify the Subscriptions for this stream. If this is not the message each individual Subscription
-                    // is expecting, they will either ignore it or request resend via gap event.
-                    stream.getSubscriptions().forEach((sub) => sub.handleMessage(msg.streamMessage, false))
-                } else {
-                    const error = new InvalidSignatureError(msg.streamMessage)
-                    stream.getSubscriptions().forEach((sub) => sub.handleError(error))
-                }
+                const verifyFn = once(() => stream.verifyStreamMessage(msg.streamMessage)) // ensure verification occurs only once
+                // sub.handleBroadcastMessage never rejects: on any error it emits an 'error' event on the Subscription
+                stream.getSubscriptions().forEach((sub) => sub.handleBroadcastMessage(msg.streamMessage, verifyFn))
             } else {
                 debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
             }
@@ -108,12 +102,11 @@ export default class StreamrClient extends EventEmitter {
             if (stream) {
                 const sub = stream.getSubscription(msg.subId)
                 if (sub) {
-                    const valid = await stream.verifyStreamMessage(msg.streamMessage)
-                    if (valid) {
-                        sub.handleMessage(msg.streamMessage, true)
-                    } else {
-                        sub.handleError(new InvalidSignatureError(msg.streamMessage))
-                    }
+                    // sub.handleResentMessage never rejects: on any error it emits an 'error' event on the Subscription
+                    sub.handleResentMessage(
+                        msg.streamMessage,
+                        once(() => stream.verifyStreamMessage(msg.streamMessage)), // ensure verification occurs only once
+                    )
                 } else {
                     debug('WARN: subscription not found for stream: %s, sub: %s', msg.streamMessage.getStreamId(), msg.subId)
                 }
@@ -149,7 +142,7 @@ export default class StreamrClient extends EventEmitter {
         this.connection.on(ResendResponseResending.TYPE, (response) => {
             const stream = this.subscribedStreams[response.streamId]
             if (stream && stream.getSubscription(response.subId)) {
-                stream.getSubscription(response.subId).emit('resending', [response.streamId, response.streamPartition, response.subId])
+                stream.getSubscription(response.subId).handleResending(response)
             } else {
                 debug('resent: Subscription %s is gone already', response.subId)
             }
@@ -158,7 +151,7 @@ export default class StreamrClient extends EventEmitter {
         this.connection.on(ResendResponseNoResend.TYPE, (response) => {
             const stream = this.subscribedStreams[response.streamId]
             if (stream && stream.getSubscription(response.subId)) {
-                stream.getSubscription(response.subId).emit('no_resend', [response.streamId, response.streamPartition, response.subId])
+                stream.getSubscription(response.subId).handleNoResend(response)
             } else {
                 debug('resent: Subscription %s is gone already', response.subId)
             }
@@ -167,7 +160,7 @@ export default class StreamrClient extends EventEmitter {
         this.connection.on(ResendResponseResent.TYPE, (response) => {
             const stream = this.subscribedStreams[response.streamId]
             if (stream && stream.getSubscription(response.subId)) {
-                stream.getSubscription(response.subId).emit('resent', [response.streamId, response.streamPartition, response.subId])
+                stream.getSubscription(response.subId).handleResent(response)
             } else {
                 debug('resent: Subscription %s is gone already', response.subId)
             }

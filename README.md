@@ -89,14 +89,47 @@ autoDisconnect | true  | If set to `true`, the client automatically disconnects
 
 ### Authentication options
 
-Option | Default value | Description
------- | ------------- | -----------
-auth.apiKey | null | Default API key to use to authenticate.
-auth.privateKey | null | Ethereum private key to use to authenticate.
-auth.provider | null | Ethereum provider used to connect to an account to use to authenticate.
-auth.username | null | Username to use to authenticate. Needs `auth.password` as well.
-auth.password | null | Password to use to authenticate. Needs `auth.username` as well.
-auth.sessionToken | null | Session token to authenticate directly without fetching a token with credentials. If the token expires, a new token cannot be retrieved.
+Authenticating with an API key (you can manage your API keys in the [Streamr web app](https://www.streamr.com)):
+```
+new StreamrClient({
+    auth: {
+        apiKey: 'your-api-key'
+    }
+})
+```
+Authenticating with an Ethereum private key by cryptographically signing a challenge (also automatically creates an associated user account):
+```
+new StreamrClient({
+    auth: {
+        privateKey: 'your-private-key'
+    }
+})
+```
+Authenticating with an Ethereum private key contained in an Ethereum (web3) provider:
+```
+new StreamrClient({
+    auth: {
+        provider: web3.currentProvider,
+    }
+})
+```
+(Authenticating with an username and password, for internal use by the Streamr app):
+```
+new StreamrClient({
+    auth: {
+        username: 'my@email.com',
+        password: 'password'
+    }
+})
+```
+(Authenticating with a pre-existing session token, for internal use by the Streamr app):
+```
+new StreamrClient({
+    auth: {
+        sessionToken: 'session-token'
+    }
+})
+```
 
 ### Message handler callback
 
@@ -104,8 +137,8 @@ The second argument to `client.subscribe(options, callback)` is the callback fun
 
 Argument | Description
 -------- | -----------
-message  | A javascript object containing the message itself
-metadata | Metadata for the message, for example `metadata.timestamp` etc.
+payload  | A JS object containing the message payload itself
+streamMessage | The whole [StreamMessage](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/message_layer/StreamMessage.js) object containing various metadata, for example `streamMessage.getTimestamp()` etc.
 
 ### StreamrClient object
 
@@ -164,7 +197,6 @@ Note that only one of the resend options can be used for a particular subscripti
 Name | Description
 ---- | -----------
 stream    | Stream id to subscribe to
-apiKey   | User key or stream key that authorizes the subscription. If defined, overrides the client's `apiKey`.
 partition | Partition number to subscribe to. Defaults to the default partition (0).
 resend | Object defining the resend options. Below are examples of its contents.
 
@@ -227,11 +259,11 @@ disconnected |  | Fired when the client has disconnected (or paused).
 
 Name | Handler Arguments | Description
 ---- | ----------------- | -----------
-subscribed | `{ from: number }` | Fired when a subscription request is acknowledged by the server.
-unsubscribed |  | Fired when an unsubscription is acknowledged by the server.
-resending |  | Fired when the subscription starts resending.
-resent |  | Fired after `resending` when the subscription has finished resending.
-no_resend |  | Fired after `resending` in case there was nothing to resend.
+subscribed | | Fired when a subscription request is acknowledged by the server.
+unsubscribed | | Fired when an unsubscription is acknowledged by the server.
+resending | [ResendResponseResending](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resending/ResendResponseResendingV1.js) | Fired when the subscription starts resending. Followed by the `resent` event to mark completion of the resend after resent messages have been processed by the message handler function.
+resent | [ResendResponseResent](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resent/ResendResponseResentV1.js) | Fired after `resending` when the subscription has finished resending.
+no_resend | [ResendResponseNoResend](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_no_resend/ResendResponseNoResendV1.js) | This will occur instead of the `resending` - `resent` sequence in case there were no messages to resend. 
 error | Error object | Reports errors, for example problems with message content 
 
 ### Logging

@@ -15,7 +15,7 @@
     "prepack": "npm run build",
     "dev": "webpack --progress --colors --watch",
     "eslint": "eslint src/** test/**",
-    "test": "jest --detectOpenHandles",
+    "test": "npm run eslint && jest --detectOpenHandles",
     "test-unit": "jest --detectOpenHandles --forceExit test/unit",
     "test-integration": "jest --detectOpenHandles --forceExit --runInBand test/integration"
   },
@@ -64,6 +64,7 @@
     "ethers": "^4.0.27",
     "eventemitter3": "^3.0.1",
     "node-fetch": "^2.1.2",
+    "once": "^1.4.0",
     "qs": "^6.6.0",
     "querystring": "^0.2.0",
     "randomstring": "^1.1.5",
