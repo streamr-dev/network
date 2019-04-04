@@ -111,11 +111,10 @@ class Node extends EventEmitter {
         this.debug('connected and subscribed to %j for stream %s', nodeIds, streamId)
 
         const currentNodes = this.streams.getAllNodes()
-        const nodesToDisconnect = currentNodes.filter((node) => !nodeIds.includes(node))
+        const nodesToUnsubscribeFrom = currentNodes.filter((node) => !nodeIds.includes(node))
 
-        nodesToDisconnect.forEach(async (node) => {
-            await this.protocols.nodeToNode.disconnectFromNode(node, disconnectionReasons.TRACKER_INSTRUCTION)
-            this.debug('disconnected from node %s (tracker instruction)', node)
+        nodesToUnsubscribeFrom.forEach((node) => {
+            this._unsubscribeFromStreamOnNode(node, streamId)
         })
     }
 
@@ -264,6 +263,12 @@ class Node extends EventEmitter {
                 node
             })
         }
+    }
+
+    async _unsubscribeFromStreamOnNode(node, streamId) {
+        this.streams.removeNodeFromStream(streamId, node)
+        await this.protocols.nodeToNode.sendUnsubscribe(node, streamId)
+        this.debug('unsubscribed from node %s (tracker instruction)', node)
     }
 
     onNodeDisconnected(node) {

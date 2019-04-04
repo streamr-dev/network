@@ -52,7 +52,7 @@ describe('Check tracker instructions to node', () => {
         let secondCheck = false
 
         otherNodes[1].protocols.nodeToNode.endpoint.once(endpointEvents.PEER_DISCONNECTED, ({ _, reason }) => {
-            expect(reason).toBe(disconnectionReasons.TRACKER_INSTRUCTION)
+            expect(reason).toBe(disconnectionReasons.NO_SHARED_STREAMS)
             firstCheck = true
             if (firstCheck && secondCheck) {
                 done()
