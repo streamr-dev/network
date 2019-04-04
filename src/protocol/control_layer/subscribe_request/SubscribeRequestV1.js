@@ -26,13 +26,6 @@ export default class SubscribeRequestV1 extends SubscribeRequest {
         }
         throw new UnsupportedVersionError(version, 'Supported versions: [0, 1]')
     }
-
-    serialize(version = VERSION) {
-        if (version === VERSION) {
-            return JSON.stringify(this.toArray())
-        }
-        return this.toOtherVersion(version).serialize()
-    }
 }
 
 ControlMessage.registerClass(VERSION, SubscribeRequest.TYPE, SubscribeRequestV1)
