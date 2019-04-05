@@ -59,13 +59,6 @@ class PeerBook {
         }
         return this.idToType[peerId] === 'node'
     }
-
-    isClient(peerId) {
-        if (!this.idToType[peerId]) {
-            throw new NotFoundInPeerBookError(`Id ${peerId} not found in peer book`)
-        }
-        return this.idToType[peerId] === 'client'
-    }
 }
 
 module.exports = {
