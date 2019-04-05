@@ -34,6 +34,98 @@ describe('StreamrClient Connection', () => {
             })
         })
     })
+
+    describe('connect during disconnect', () => {
+        let client
+        async function teardown() {
+            if (client) {
+                if (client.connection.state !== 'disconnected') {
+                    await client.disconnect()
+                }
+                client = undefined
+            }
+        }
+
+        beforeEach(async () => {
+            await teardown()
+        })
+
+        afterEach(async () => {
+            await teardown()
+        })
+
+        it('can connect', async (done) => {
+            client = createClient()
+            await client.connect()
+
+            client.connection.once('disconnecting', async () => {
+                await client.connect()
+                await client.disconnect()
+                done()
+            })
+
+            client.disconnect()
+        }, 5000)
+
+        it('will resolve original disconnect', async (done) => {
+            client = createClient()
+
+            await client.connect()
+
+            client.connection.once('disconnecting', async () => {
+                await client.connect()
+            })
+            await client.disconnect()
+            done() // ok if it ever gets here
+        }, 5000)
+
+        it('has connection state transitions in correct order', async (done) => {
+            client = createClient()
+            const connectionEventSpy = jest.spyOn(client.connection, 'emit')
+
+            await client.connect()
+
+            client.connection.once('disconnecting', async () => {
+                await client.connect()
+                const eventNames = connectionEventSpy.mock.calls.map(([eventName]) => eventName)
+                expect(eventNames).toEqual([
+                    'connecting',
+                    'connected',
+                    'disconnecting',
+                    'disconnected', // should disconnect before re-connecting
+                    'connecting',
+                    'connected',
+                ])
+                done()
+            })
+            await client.disconnect()
+        }, 5000)
+
+        it('does not try to reconnect', async (done) => {
+            client = createClient()
+
+            await client.connect()
+
+            client.connection.once('disconnecting', async () => {
+                await client.connect()
+
+                // should not try connecting after disconnect (or any other reason)
+                const onConnecting = () => {
+                    done(new Error('should not be connecting'))
+                }
+                client.once('connecting', onConnecting)
+
+                client.disconnect()
+                // wait for possible reconnections
+                setTimeout(() => {
+                    client.off('connecting', onConnecting)
+                    expect(client.isConnected()).toBe(false)
+                    done()
+                }, 2000)
+            })
+            client.disconnect()
+        }, 6000)
+    })
 })
 
 describe('StreamrClient', () => {

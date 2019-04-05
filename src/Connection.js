@@ -32,6 +32,11 @@ class Connection extends EventEmitter {
         } else if (this.state === Connection.State.CONNECTED) {
             return Promise.reject(new Error('Already connected!'))
         }
+        if (this.state === Connection.State.DISCONNECTING) {
+            return new Promise((resolve) => {
+                this.once('disconnected', () => resolve(this.connect()))
+            })
+        }
         if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
             this.socket = new WebSocket(this.options.url)
         }
@@ -83,6 +88,11 @@ class Connection extends EventEmitter {
             return Promise.reject(new Error('Already disconnected!'))
         } else if (this.socket === undefined) {
             return Promise.reject(new Error('Something is wrong: socket is undefined!'))
+        }
+        if (this.state === Connection.State.CONNECTING) {
+            return new Promise((resolve) => {
+                this.once('connected', () => resolve(this.disconnect()))
+            })
         }
 
         return new Promise((resolve) => {
