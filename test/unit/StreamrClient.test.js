@@ -780,7 +780,7 @@ describe('StreamrClient', () => {
         const pubMsg = {
             foo: 'bar',
         }
-        const hashedUsername = '16F78A7D6317F102BBD95FC9A4F3FF2E3249287690B8BDAD6B7810F82B34ACE3'.toLowerCase()
+        const hashedUsername = '0x16F78A7D6317F102BBD95FC9A4F3FF2E3249287690B8BDAD6B7810F82B34ACE3'.toLowerCase()
         function getPublishRequest(streamId, timestamp, sequenceNumber, prevMsgRef) {
             const streamMessage = StreamMessage.create(
                 [streamId, 0, timestamp, sequenceNumber, hashedUsername, client.msgCreationUtil.msgChainId], prevMsgRef,
@@ -800,7 +800,7 @@ describe('StreamrClient', () => {
                 prevMsgRef = [ts, i]
             }
             connection.on('connected', () => {
-                done()
+                setTimeout(done, 2000)
             })
         })
 
@@ -810,6 +810,20 @@ describe('StreamrClient', () => {
                 assert(err instanceof FailedToPublishError)
                 done()
             })
+        })
+
+        it('subsequent calls to "publish()" should not call "getStream()" (must be cached)', async () => {
+            client.options.auth.username = 'username'
+            await client.connect()
+
+            const ts = Date.now()
+            connection.expect(getPublishRequest('streamId', ts, 0, null))
+            await client.publish('streamId', pubMsg, ts)
+            assert(client.getStream.called)
+
+            connection.expect(getPublishRequest('streamId', ts, 1, [ts, 0]))
+            await client.publish('streamId', pubMsg, ts)
+            assert(client.getStream.calledOnce)
         })
     })
 

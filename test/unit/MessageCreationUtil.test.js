@@ -3,6 +3,7 @@ import sinon from 'sinon'
 import { ethers } from 'ethers'
 import { MessageLayer } from 'streamr-client-protocol'
 import MessageCreationUtil from '../../src/MessageCreationUtil'
+import Stream from '../../src/rest/domain/Stream'
 
 const { StreamMessage } = MessageLayer
 
@@ -113,10 +114,10 @@ describe('MessageCreationUtil', () => {
             foo: 'bar',
         }
 
-        const stream = {
+        const stream = new Stream(null, {
             id: 'streamId',
             partitions: 1,
-        }
+        })
         let client
         let msgCreationUtil
         beforeEach(() => {
@@ -138,8 +139,9 @@ describe('MessageCreationUtil', () => {
                 getUserInfo: () => Promise.resolve({
                     username: 'username',
                 }),
+                getStream: sinon.stub().resolves(stream),
             }
-            msgCreationUtil = new MessageCreationUtil(client.options.auth, client.signer, client.getUserInfo())
+            msgCreationUtil = new MessageCreationUtil(client.options.auth, client.signer, client.getUserInfo(), client.getStream)
         })
 
         function getStreamMessage(streamId, timestamp, sequenceNumber, prevMsgRef) {
@@ -185,14 +187,14 @@ describe('MessageCreationUtil', () => {
 
         it('should publish messages with sequence number 0 (different streams)', async () => {
             const ts = Date.now()
-            const stream2 = {
+            const stream2 = new Stream(null, {
                 id: 'streamId2',
                 partitions: 1,
-            }
-            const stream3 = {
+            })
+            const stream3 = new Stream(null, {
                 id: 'streamId3',
                 partitions: 1,
-            }
+            })
             const msg1 = await msgCreationUtil.createStreamMessage(stream, pubMsg, ts)
             const msg2 = await msgCreationUtil.createStreamMessage(stream2, pubMsg, ts)
             const msg3 = await msgCreationUtil.createStreamMessage(stream3, pubMsg, ts)
@@ -204,6 +206,12 @@ describe('MessageCreationUtil', () => {
         it('should sign messages if signer is defined', async () => {
             const msg1 = await msgCreationUtil.createStreamMessage(stream, pubMsg, Date.now())
             assert.strictEqual(msg1.signature, 'signature')
+        })
+
+        it('should create message from a stream id by fetching the stream', async () => {
+            const ts = Date.now()
+            const streamMessage = await msgCreationUtil.createStreamMessage(stream.id, pubMsg, ts)
+            assert.deepStrictEqual(streamMessage, getStreamMessage(stream.id, ts, 0, null))
         })
     })
 })

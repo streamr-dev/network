@@ -1,4 +1,6 @@
+import sinon from 'sinon'
 import StreamrClient from '../../src/StreamrClient'
+import Stream from '../../src/rest/domain/Stream'
 
 export default class StubbedStreamrClient extends StreamrClient {
     /* eslint-disable class-methods-use-this */
@@ -7,11 +9,9 @@ export default class StubbedStreamrClient extends StreamrClient {
             username: 'username',
         })
     }
-    getStream() {
-        return Promise.resolve({
-            id: 'streamId',
-            partitions: 1,
-        })
-    }
+    getStream = sinon.stub().resolves(new Stream(null, {
+        id: 'streamId',
+        partitions: 1,
+    }))
     /* eslint-enable class-methods-use-this */
 }

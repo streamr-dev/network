@@ -82,7 +82,10 @@ export default class StreamrClient extends EventEmitter {
         // Event handling on connection object
         this.connection = connection || new Connection(this.options)
 
-        this.msgCreationUtil = new MessageCreationUtil(this.options.auth, this.signer, this.getUserInfo().catch((err) => this.emit('error', err)))
+        this.msgCreationUtil = new MessageCreationUtil(
+            this.options.auth, this.signer, this.getUserInfo().catch((err) => this.emit('error', err)),
+            (streamId) => this.getStream(streamId).catch((err) => this.emit('error', err)),
+        )
 
         // Broadcast messages to all subs listening on stream
         this.connection.on(BroadcastMessage.TYPE, (msg) => {
@@ -265,8 +268,7 @@ export default class StreamrClient extends EventEmitter {
 
         // If connected, emit a publish request
         if (this.isConnected()) {
-            const stream = (streamObjectOrId instanceof Stream) ? streamObjectOrId : await this.getStream(streamId)
-            const streamMessage = await this.msgCreationUtil.createStreamMessage(stream, data, timestamp, partitionKey)
+            const streamMessage = await this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestamp, partitionKey)
             return this._requestPublish(streamMessage, sessionToken)
         } else if (this.options.autoConnect) {
             this.publishQueue.push([streamId, data, timestamp, partitionKey])
@@ -469,7 +471,7 @@ export default class StreamrClient extends EventEmitter {
 
     _requestPublish(streamMessage, sessionToken) {
         const request = ControlLayer.PublishRequest.create(streamMessage, sessionToken)
-        debug('_requestResend: %o', request)
+        debug('_requestPublish: %o', request)
         return this.connection.send(request)
     }
 
