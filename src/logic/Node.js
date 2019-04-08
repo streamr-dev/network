@@ -61,6 +61,8 @@ class Node extends EventEmitter {
                 duplicates: 0
             }
         }
+
+        this.seenButNotPropagated = new Set()
     }
 
     onConnectedToTracker(tracker) {
@@ -129,7 +131,7 @@ class Node extends EventEmitter {
 
         if (this._isReadyToPropagate(streamId)) {
             const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(messageId, previousMessageReference)
-            if (isUnseen) {
+            if (isUnseen || this.seenButNotPropagated.has(messageId)) {
                 this.debug('received from %s data %s', dataMessage.getSource(), messageId)
                 this._propagateMessage(dataMessage)
             } else {
@@ -165,8 +167,18 @@ class Node extends EventEmitter {
                 this.debug('failed to propagate data %s to node %s (%s)', messageId, subscriber, e)
             }
         }))
-        this.debug('propagated data %s to %j', messageId, successfulSends)
-        this.emit(events.MESSAGE_PROPAGATED, dataMessage)
+        if (successfulSends.length >= Math.min(MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION, subscribers.length)) {
+            this.debug('propagated data %s to %j', messageId, successfulSends)
+            this.seenButNotPropagated.delete(messageId)
+            this.emit(events.MESSAGE_PROPAGATED, dataMessage)
+        } else {
+            // Handle scenario in which we were unable to propagate message to enough nodes. This often happens when
+            // socket.readyState=2 (closing)
+            this.debug('put %s back to buffer because could not propagated %d nodes or more',
+                messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
+            this.seenButNotPropagated.add(messageId)
+            this.messageBuffer.put(streamId.key(), dataMessage)
+        }
     }
 
     onSubscribeRequest(subscribeMessage) {

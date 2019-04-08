@@ -1,6 +1,7 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { wait, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
+const Node = require('../../src/logic/Node')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
@@ -53,6 +54,8 @@ describe('duplicate message detection and avoidance', () => {
         contactNode.publish('stream-id', 0, 120, 0, 'publisher-id', 'session-id', 100, 0, {
             foo: 'bar'
         })
+
+        await waitForEvent(contactNode, Node.events.MESSAGE_PROPAGATED)
         await wait(2000)
     })
 
