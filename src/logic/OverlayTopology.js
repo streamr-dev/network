@@ -81,13 +81,17 @@ class OverlayTopology {
                 .filter(([n, _]) => n !== nodeId) // remove self
                 .map(([n, _]) => n)
 
-            const disconnectionTargets = this.shuffleArray(candidates).reverse()
+            let disconnectionTargets = this.shuffleArray(candidates).reverse()
             while (this._numOfMissingNeighbors(nodeId) > 1 && disconnectionTargets.length > 0) {
                 const n1 = disconnectionTargets.pop()
                 const n2candidates = [...this.nodes[n1]].filter((n) => !this.nodes[n].has(nodeId))
 
                 if (n2candidates.length > 0) {
                     const n2 = this.pickRandomElement(n2candidates)
+
+                    // Since we link nodeId to n2 as well, make sure to remove n2 from disconnectionTargets if it is
+                    // present. If this not done a node may get assigned as its own neighbour in subsequent iterations.
+                    disconnectionTargets = disconnectionTargets.filter((t) => t !== n2)
 
                     this.nodes[n1].delete(n2)
                     this.nodes[n2].delete(n1)
@@ -102,6 +106,14 @@ class OverlayTopology {
                 }
             }
         }
+
+        // check invariant: no node should be a neighbor of itself
+        // TODO: can be removed for performance optimization
+        updatedNodes.forEach((n) => {
+            if (this.nodes[n].has(n)) {
+                throw new Error(`invariant violated: ${n} neighbor of itself`)
+            }
+        })
 
         return updatedNodes.size === 0 ? {} : Object.assign(...[...updatedNodes].map((n) => {
             return {

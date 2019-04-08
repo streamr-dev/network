@@ -246,3 +246,21 @@ test('unknown nodes are discarded', () => {
         ]
     })
 })
+
+// TODO: remove or write better, since not the best way to test randomness
+test('100 rounds of typical operation does not lead to invariant exception', () => {
+    for (let i = 0; i < 100; ++i) {
+        const topology = new OverlayTopology(4)
+        topology.update('node-1', [])
+        topology.update('node-2', [])
+        topology.formInstructions('node-2')
+        topology.update('node-3', [])
+        topology.formInstructions('node-3')
+        topology.update('node-4', [])
+        topology.formInstructions('node-4')
+        topology.update('node-5', [])
+        topology.formInstructions('node-5')
+        topology.update('node-0', [])
+        topology.formInstructions('node-0')
+    }
+})
