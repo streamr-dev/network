@@ -26,6 +26,10 @@ class TrackerNode extends EventEmitter {
         return this.endpoint.send(trackerAddress, encoder.statusMessage(status))
     }
 
+    stop(cb) {
+        this.endpoint.stop(cb)
+    }
+
     onMessageReceived(message) {
         switch (message.getCode()) {
             case encoder.INSTRUCTION:

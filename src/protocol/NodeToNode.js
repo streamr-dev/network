@@ -9,7 +9,10 @@ const events = Object.freeze({
     SUBSCRIBE_REQUEST: 'streamr:node-node:subscribe-request',
     UNSUBSCRIBE_REQUEST: 'streamr:node-node:unsubscribe-request',
     DATA_RECEIVED: 'streamr:node-node:stream-data',
-    NODE_DISCONNECTED: 'streamr:node-node:node-disconnected'
+    NODE_DISCONNECTED: 'streamr:node-node:node-disconnected',
+    RESEND_REQUEST: 'streamr:node-node:resend-request',
+    RESEND_RESPONSE: 'streamr:node-node:resend-response',
+    UNICAST_RECEIVED: 'streamr:node-node:unicast-received'
 })
 
 class NodeToNode extends EventEmitter {
@@ -35,6 +38,14 @@ class NodeToNode extends EventEmitter {
         )
     }
 
+    sendUnicast(receiverNodeId, messageId, previousMessageReference, payload, signature, signatureType, subId) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(
+            receiverNodeAddress,
+            encoder.unicastMessage(messageId, previousMessageReference, payload, signature, signatureType, subId)
+        )
+    }
+
     sendSubscribe(receiverNodeId, streamId, leechOnly) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
         return this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId, leechOnly))
@@ -43,6 +54,39 @@ class NodeToNode extends EventEmitter {
     sendUnsubscribe(receiverNodeId, streamId) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
         this.endpoint.send(receiverNodeAddress, encoder.unsubscribeMessage(streamId))
+    }
+
+    requestResendLast(receiverNodeId, streamId, subId, numberLast) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(receiverNodeAddress, encoder.resendLastRequest(streamId, subId, numberLast))
+    }
+
+    requestResendFrom(receiverNodeId, streamId, subId, fromMsgRef, publisherId) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(receiverNodeAddress, encoder.resendFromRequest(streamId, subId, fromMsgRef, publisherId))
+    }
+
+    requestResendRange(receiverNodeId, streamId, subId, fromMsgRef, toMsgRef, publisherId) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(
+            receiverNodeAddress,
+            encoder.resendRangeRequest(streamId, subId, fromMsgRef, toMsgRef, publisherId)
+        )
+    }
+
+    respondResending(receiverNodeId, streamId, subId) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseResending(streamId, subId))
+    }
+
+    respondResent(receiverNodeId, streamId, subId) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseResent(streamId, subId))
+    }
+
+    respondNoResend(receiverNodeId, streamId, subId) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseNoResend(streamId, subId))
     }
 
     disconnectFromNode(receiverNodeId, reason) {
@@ -84,6 +128,22 @@ class NodeToNode extends EventEmitter {
 
             case encoder.DATA:
                 this.emit(events.DATA_RECEIVED, message)
+                break
+
+            case encoder.UNICAST:
+                this.emit(events.UNICAST_RECEIVED, message)
+                break
+
+            case encoder.RESEND_LAST:
+            case encoder.RESEND_FROM:
+            case encoder.RESEND_RANGE:
+                this.emit(events.RESEND_REQUEST, message)
+                break
+
+            case encoder.RESEND_RESPONSE_RESENDING:
+            case encoder.RESEND_RESPONSE_RESENT:
+            case encoder.RESEND_RESPONSE_NO_RESEND:
+                this.emit(events.RESEND_RESPONSE, message)
                 break
 
             default:
