@@ -111,6 +111,10 @@ module.exports = class StreamManager {
         return [...this.streams.get(streamId.key()).inboundNodes]
     }
 
+    getAllNodesForStream(streamId) {
+        return [...new Set([...this.getInboundNodesForStream(streamId), ...this.getOutboundNodesForStream(streamId)])].sort()
+    }
+
     getAllNodes() {
         const nodes = []
         this.streams.forEach(({ inboundNodes, outboundNodes }) => {
