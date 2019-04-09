@@ -81,6 +81,7 @@ describe('StreamrClient', () => {
 
     function createConnectionMock() {
         const c = new EventEmitter()
+        c.state = Connection.State.DISCONNECTED
 
         c.expectedMessagesToSend = []
 
