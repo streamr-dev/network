@@ -141,7 +141,7 @@ describe('StreamrClient', () => {
     let stream
 
     // These tests will take time, especially on Travis
-    jest.setTimeout(15 * 1000)
+    const TIMEOUT = 15 * 1000
 
     const createStream = async () => {
         const name = `StreamrClient-integration-${Date.now()}`
@@ -194,17 +194,17 @@ describe('StreamrClient', () => {
     describe('Pub/Sub', () => {
         it('client.publish', () => client.publish(stream.id, {
             test: 'client.publish',
-        }))
+        }), TIMEOUT)
 
         it('Stream.publish', () => stream.publish({
             test: 'Stream.publish',
-        }))
+        }), TIMEOUT)
 
         it('client.publish with Stream object as arg', () => {
             client.publish(stream, {
                 test: 'client.publish.Stream.object',
             })
-        })
+        }, TIMEOUT)
 
         it('client.subscribe with resend from', (done) => {
             // Publish message
@@ -246,7 +246,7 @@ describe('StreamrClient', () => {
                     })
                 })
             }, 10000)
-        })
+        }, TIMEOUT)
 
         it('client.subscribe with resend last', (done) => {
             // Publish message
@@ -286,7 +286,7 @@ describe('StreamrClient', () => {
                     })
                 })
             }, 10000)
-        })
+        }, TIMEOUT)
 
         it('client.subscribe (realtime)', (done) => {
             const id = Date.now()
