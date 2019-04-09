@@ -1,13 +1,13 @@
 language: node_js
 node_js:
-- '10.15.1'
+- '10.15.3'
 sudo: true
 branches:
   only:
   - master
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
-- npm i -g npm@6.7.0
+- npm i -g npm@6.9.0
 jobs:
   include:
   - stage: tests

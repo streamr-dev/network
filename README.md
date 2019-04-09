@@ -15,15 +15,15 @@
  
 `brew install nvm`
 
-#### install current node lts (v10.15.1)
+#### install current node lts (v10.15.3)
 
-`nvm install v10.15.1`
+`nvm install v10.15.3`
 
-`nvm use default v10.15.1`
+`nvm use default v10.15.3`
 
-#### install npm (v6.4.1)
+#### install npm (v6.9.0)
 
-`npm install -g npm@6.7.0`
+`npm install -g npm@6.9.0`
 
 
 #### install packages
