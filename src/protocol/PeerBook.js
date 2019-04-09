@@ -5,6 +5,12 @@ class NotFoundInPeerBookError extends Error {
     }
 }
 
+class MetadataNotSetError extends Error {
+    constructor(fieldName) {
+        super(`metadata ${fieldName} not set`)
+    }
+}
+
 class PeerBook {
     constructor() {
         this.idToAddress = {}
@@ -15,6 +21,13 @@ class PeerBook {
     add(peerAddress, metadata) {
         const peerId = metadata['streamr-peer-id']
         const peerType = metadata['streamr-peer-type']
+
+        if (peerId == null) {
+            throw new MetadataNotSetError('streamr-peer-id')
+        }
+        if (peerType == null) {
+            throw new MetadataNotSetError('streamr-peer-type')
+        }
 
         this.idToAddress[peerId] = peerAddress
         this.idToType[peerId] = peerType
