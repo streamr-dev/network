@@ -61,3 +61,9 @@ export async function loginWithUsernamePassword(username, password) {
 export async function getUserInfo() {
     return authFetch(`${this.options.restUrl}/users/me`, this.session)
 }
+
+export async function logoutEndpoint() {
+    return authFetch(`${this.options.restUrl}/logout`, this.session, {
+        method: 'POST',
+    })
+}

@@ -18,19 +18,20 @@ describe('Session', () => {
         ...opts,
     })
 
-    beforeAll(() => {
+    beforeEach(() => {
         clientSessionToken = createClient({
             auth: {
                 sessionToken: 'session-token',
             },
         })
+        clientSessionToken.logoutEndpoint = sinon.stub().resolves()
         clientNone = createClient({
             auth: {},
         })
     })
 
     beforeEach(() => {
-        session = new Session()
+        session = new Session(clientSessionToken)
         session.options.unauthenticated = false
         session.loginFunction = sinon.stub()
         session.loginFunction.onCall(0).resolves({
@@ -134,6 +135,52 @@ describe('Session', () => {
                     })
                 })
             })
+        })
+    })
+
+    describe('logout', () => {
+        it('should call the logout endpoint', async () => {
+            await session.getSessionToken()
+            await session.logout()
+            assert(clientSessionToken.logoutEndpoint.calledOnce)
+        })
+        it('should call the logout endpoint again', async () => {
+            await session.getSessionToken()
+            await session.logout()
+            await session.getSessionToken()
+            await session.logout()
+            assert(clientSessionToken.logoutEndpoint.calledTwice)
+        })
+        it('should throw if already logging out', async (done) => {
+            await session.getSessionToken()
+            session.logout()
+            session.logout().catch((err) => {
+                assert.strictEqual(err.toString(), 'Error: Already logging out!')
+                done()
+            })
+        })
+        it('should throw if already logged out', async (done) => {
+            await session.getSessionToken()
+            await session.logout()
+            session.logout().catch((err) => {
+                assert.strictEqual(err.toString(), 'Error: Already logged out!')
+                done()
+            })
+        })
+        it('can logout while logging in', (done) => {
+            session.once('logging in', async () => {
+                await session.logout()
+                done()
+            })
+            session.getSessionToken()
+        })
+        it('can login while logging out', async (done) => {
+            session.once('logging out', async () => {
+                await session.getSessionToken()
+                done()
+            })
+            await session.getSessionToken()
+            session.logout()
         })
     })
 })

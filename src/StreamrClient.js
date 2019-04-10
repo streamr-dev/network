@@ -400,6 +400,10 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.disconnect()
     }
 
+    logout() {
+        return this.session.logout()
+    }
+
     _checkAutoDisconnect() {
         // Disconnect if no longer subscribed to any streams
         if (this.options.autoDisconnect && Object.keys(this.subscribedStreams).length === 0) {
