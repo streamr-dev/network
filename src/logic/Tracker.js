@@ -4,10 +4,8 @@ const TrackerServer = require('../protocol/TrackerServer')
 const OverlayTopology = require('../logic/OverlayTopology')
 const { StreamID } = require('../identifiers')
 
-const NEIGHBORS_PER_NODE = 4
-
 module.exports = class Tracker extends EventEmitter {
-    constructor(id, trackerServer) {
+    constructor(id, trackerServer, maxNeighborsPerNode) {
         super()
         this.overlayPerStream = {} // streamKey => overlayTopology
 
@@ -15,6 +13,12 @@ module.exports = class Tracker extends EventEmitter {
         this.protocols = {
             trackerServer
         }
+
+        if (!Number.isInteger(maxNeighborsPerNode)) {
+            throw new Error('maxNeighborsPerNode is not an integer')
+        }
+
+        this.maxNeighborsPerNode = maxNeighborsPerNode
 
         this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => this.processNodeStatus(statusMessage))
@@ -49,7 +53,7 @@ module.exports = class Tracker extends EventEmitter {
         // Add or update
         Object.entries(streams).forEach(([streamKey, { inboundNodes, outboundNodes }]) => {
             if (this.overlayPerStream[streamKey] == null) {
-                this.overlayPerStream[streamKey] = new OverlayTopology(NEIGHBORS_PER_NODE)
+                this.overlayPerStream[streamKey] = new OverlayTopology(this.maxNeighborsPerNode)
             }
 
             newNode = this.overlayPerStream[streamKey].hasNode(node)

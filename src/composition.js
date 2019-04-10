@@ -8,13 +8,13 @@ const NetworkNode = require('./NetworkNode')
 const { startEndpoint } = require('./connection/WsEndpoint')
 const { MessageID, MessageReference, StreamID } = require('./identifiers')
 
-async function startTracker(host, port, id = uuidv4()) {
+async function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': 'tracker'
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new Tracker(id, new TrackerServer(endpoint))
+        return new Tracker(id, new TrackerServer(endpoint), maxNeighborsPerNode)
     }).catch((err) => {
         throw err
     })
