@@ -22,7 +22,7 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     it('tracker should receive status message from node', async (done) => {
-        tracker.protocols.trackerServer.once(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => {
+        tracker.protocols.trackerServer.once(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => {
             expect(statusMessage.getSource()).toEqual(nodeOne.id)
             // eslint-disable-next-line no-underscore-dangle
             expect(statusMessage.getStatus()).toEqual(nodeOne._getStatus())
@@ -33,7 +33,7 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     it('tracker should receive status from second node', async (done) => {
-        tracker.protocols.trackerServer.once(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => {
+        tracker.protocols.trackerServer.once(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => {
             expect(statusMessage.getSource()).toEqual(nodeTwo.id)
             // eslint-disable-next-line no-underscore-dangle
             expect(statusMessage.getStatus()).toEqual(nodeTwo._getStatus())
@@ -55,7 +55,7 @@ describe('check status message flow between tracker and two nodes', () => {
             })
 
             let receivedTotal = 0
-            tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => {
+            tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => {
                 if (statusMessage.getSource() === nodeOne.id) {
                     // eslint-disable-next-line no-underscore-dangle
                     expect(statusMessage.getStatus()).toEqual(nodeOne._getStatus())

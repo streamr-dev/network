@@ -3,11 +3,14 @@ const createDebug = require('debug')
 const TrackerServer = require('../protocol/TrackerServer')
 const OverlayTopology = require('../logic/OverlayTopology')
 const { StreamID } = require('../identifiers')
+const { peerTypes } = require('../protocol/PeerBook')
 
 module.exports = class Tracker extends EventEmitter {
     constructor(id, trackerServer, maxNeighborsPerNode) {
         super()
+
         this.overlayPerStream = {} // streamKey => overlayTopology
+        this.storageNodes = new Map()
 
         this.id = id
         this.protocols = {
@@ -20,21 +23,28 @@ module.exports = class Tracker extends EventEmitter {
 
         this.maxNeighborsPerNode = maxNeighborsPerNode
 
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage) => this.processNodeStatus(statusMessage))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, ({ peerId, nodeType }) => this.onNodeDisconnected(peerId, nodeType))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => this.processNodeStatus(statusMessage, nodeType))
 
         this.debug = createDebug(`streamr:logic:tracker:${this.id}`)
         this.debug('started %s', this.id)
     }
 
-    processNodeStatus(statusMessage) {
+    processNodeStatus(statusMessage, nodeType) {
         const source = statusMessage.getSource()
         const status = statusMessage.getStatus()
+
+        if (nodeType === peerTypes.STORAGE) {
+            this.storageNodes.set(source, status)
+        }
+
         this._updateNode(source, status.streams)
         this._formAndSendInstructions(source, status.streams)
+        this._formAndSendInstructionsToStorages()
     }
 
-    onNodeDisconnected(node) {
+    onNodeDisconnected(node, nodeType) {
+        this.storageNodes.delete(node)
         this._removeNode(node)
     }
 
@@ -87,6 +97,35 @@ module.exports = class Tracker extends EventEmitter {
                 }
             })
         })
+    }
+
+    _formAndSendInstructionsToStorages() {
+        const existingStreams = Object.keys(this.overlayPerStream)
+
+        if (existingStreams.length) {
+            let streamsToSubscribe
+
+            this.storageNodes.forEach(async (status, storageNode) => {
+                const alreadyConnected = Object.keys(status.streams)
+
+                if (!alreadyConnected.length) {
+                    streamsToSubscribe = existingStreams
+                } else {
+                    streamsToSubscribe = existingStreams.filter((x) => !alreadyConnected.includes(x))
+                }
+
+                if (streamsToSubscribe.length) {
+                    streamsToSubscribe.forEach(async (streamKey) => {
+                        try {
+                            await this.protocols.trackerServer.sendInstruction(storageNode, StreamID.fromKey(streamKey), [])
+                            this.debug('sent instruction %j for stream %s to storage node %s', [], streamKey, storageNode)
+                        } catch (e) {
+                            this.debug('failed to send instruction %j for stream %s to storage node %s because of %s', [], streamKey, storageNode, e)
+                        }
+                    })
+                }
+            })
+        }
     }
 
     _removeNode(node) {

@@ -1,4 +1,3 @@
-const { MessageID, MessageReference } = require('../identifiers')
 const DataMessage = require('./DataMessage')
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
@@ -9,6 +8,7 @@ module.exports = class UnicastMessage extends DataMessage {
             throw new Error('subId not given')
         }
 
+        this.version = CURRENT_VERSION
         this.code = msgTypes.UNICAST
         this.subId = subId
     }

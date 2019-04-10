@@ -11,6 +11,12 @@ class MetadataNotSetError extends Error {
     }
 }
 
+const peerTypes = Object.freeze({
+    TRACKER: 'tracker',
+    NODE: 'node',
+    STORAGE: 'storage'
+})
+
 class PeerBook {
     constructor() {
         this.idToAddress = {}
@@ -60,21 +66,28 @@ class PeerBook {
     }
 
     isTracker(peerId) {
-        if (!this.idToType[peerId]) {
-            throw new NotFoundInPeerBookError(`Id ${peerId} not found in peer book`)
-        }
-        return this.idToType[peerId] === 'tracker'
+        return this.getTypeById(peerId) === peerTypes.TRACKER
     }
 
     isNode(peerId) {
+        return this.getTypeById(peerId) === peerTypes.NODE || this.isStorage(peerId)
+    }
+
+    isStorage(peerId) {
+        return this.getTypeById(peerId) === peerTypes.STORAGE
+    }
+
+    getTypeById(peerId) {
         if (!this.idToType[peerId]) {
             throw new NotFoundInPeerBookError(`Id ${peerId} not found in peer book`)
         }
-        return this.idToType[peerId] === 'node'
+
+        return this.idToType[peerId]
     }
 }
 
 module.exports = {
     PeerBook,
+    peerTypes,
     NotFoundInPeerBookError
 }

@@ -35,21 +35,31 @@ class TrackerServer extends EventEmitter {
     }
 
     onPeerConnected(peerId) {
+        const nodeType = this.peerBook.getTypeById(peerId)
         if (this.peerBook.isNode(peerId)) {
-            this.emit(events.NODE_CONNECTED, peerId)
+            this.emit(events.NODE_CONNECTED, {
+                peerId, nodeType
+            })
         }
     }
 
     onPeerDisconnected(peerId, reason) {
+        const nodeType = this.peerBook.getTypeById(peerId)
+
         if (this.peerBook.isNode(peerId)) {
-            this.emit(events.NODE_DISCONNECTED, peerId)
+            this.emit(events.NODE_DISCONNECTED, {
+                peerId, nodeType
+            })
         }
     }
 
     onMessageReceived(message) {
+        const nodeType = this.peerBook.getTypeById(message.getSource())
         switch (message.getCode()) {
             case encoder.STATUS:
-                this.emit(events.NODE_STATUS_RECEIVED, message)
+                this.emit(events.NODE_STATUS_RECEIVED, {
+                    statusMessage: message, nodeType
+                })
                 break
             default:
                 break

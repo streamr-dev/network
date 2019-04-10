@@ -2,7 +2,7 @@ const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
-const { PeerBook } = require('./PeerBook')
+const { PeerBook, peerTypes } = require('./PeerBook')
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:node-node:node-connected',
@@ -92,7 +92,7 @@ class NodeToNode extends EventEmitter {
     disconnectFromNode(receiverNodeId, reason) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
         return this.endpoint.close(receiverNodeAddress, reason).catch((err) => {
-            console.info(`Could not close connection ${receiverNodeAddress} because '${err}'`)
+            console.error(`Could not close connection ${receiverNodeAddress} because '${err}'`)
         })
     }
 
@@ -114,6 +114,10 @@ class NodeToNode extends EventEmitter {
         if (this.peerBook.isNode(peerId)) {
             this.emit(events.NODE_DISCONNECTED, peerId)
         }
+    }
+
+    isStorage() {
+        return this.endpoint.customHeaders.headers['streamr-peer-type'] === peerTypes.STORAGE
     }
 
     onMessageReceived(message) {

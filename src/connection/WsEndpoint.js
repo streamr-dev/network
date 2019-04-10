@@ -93,7 +93,7 @@ class WsEndpoint extends EventEmitter {
         // eslint-disable-next-line no-restricted-syntax
         for (const [address, ws] of this.connections) {
             if (ws.readyState !== 1) {
-                console.log(address + '\t\t\t' + ws.readyState)
+                console.error(address + '\t\t\t' + ws.readyState)
             }
         }
     }
