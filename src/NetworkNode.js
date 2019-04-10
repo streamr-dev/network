@@ -1,4 +1,7 @@
 const DataMessage = require('./messages/DataMessage')
+const ResendLastRequest = require('./messages/ResendLastRequest')
+const ResendFromRequest = require('./messages/ResendFromRequest')
+const ResendRangeRequest = require('./messages/ResendRangeRequest')
 const Node = require('./logic/Node')
 const { StreamID, MessageID, MessageReference } = require('./identifiers')
 
@@ -53,5 +56,37 @@ module.exports = class NetworkNode extends Node {
 
     unsubscribe(streamId, streamPartition) {
         this.unsubscribeFromStream(new StreamID(streamId, streamPartition))
+    }
+
+    requestResendLast(streamId, streamPartition, subId, number) {
+        this.requestResend(new ResendLastRequest(new StreamID(streamId, streamPartition), subId, number, null))
+    }
+
+    requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId) {
+        this.requestResend(new ResendFromRequest(
+            new StreamID(streamId, streamPartition),
+            subId,
+            new MessageReference(fromTimestamp, fromSequenceNo),
+            publisherId,
+            null
+        ))
+    }
+
+    requestResendRange(streamId,
+        streamPartition,
+        subId,
+        fromTimestamp,
+        fromSequenceNo,
+        toTimestamp,
+        toSequenceNo,
+        publisherId) {
+        this.requestResend(new ResendRangeRequest(
+            new StreamID(streamId, streamPartition),
+            subId,
+            new MessageReference(fromTimestamp, fromSequenceNo),
+            new MessageReference(toTimestamp, toSequenceNo),
+            publisherId,
+            null
+        ))
     }
 }

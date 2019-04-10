@@ -5,6 +5,7 @@ const NodeToNode = require('./protocol/NodeToNode')
 const Tracker = require('./logic/Tracker')
 const Node = require('./logic/Node')
 const NetworkNode = require('./NetworkNode')
+const NoOpStorage = require('./NoOpStorage')
 const { startEndpoint } = require('./connection/WsEndpoint')
 const { MessageID, MessageReference, StreamID } = require('./identifiers')
 
@@ -20,25 +21,25 @@ async function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) 
     })
 }
 
-async function startNode(host, port, id = uuidv4()) {
+async function startNode(host, port, id = uuidv4(), storage = new NoOpStorage()) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': 'node'
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new Node(id, new TrackerNode(endpoint), new NodeToNode(endpoint))
+        return new Node(id, new TrackerNode(endpoint), new NodeToNode(endpoint), storage)
     }).catch((err) => {
         throw err
     })
 }
 
-async function startNetworkNode(host, port, id = uuidv4()) {
+async function startNetworkNode(host, port, id = uuidv4(), storage = new NoOpStorage()) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': 'node'
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint))
+        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), storage)
     }).catch((err) => {
         throw err
     })

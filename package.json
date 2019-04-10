@@ -50,6 +50,7 @@
     "eslint-config-airbnb-base": "13.1.0",
     "eslint-plugin-import": "2.16.0",
     "eslint-plugin-import-order": "2.1.4",
+    "into-stream": "^5.1.0",
     "jest": "^24.5.0",
     "p-event": "^4.0.0"
   }

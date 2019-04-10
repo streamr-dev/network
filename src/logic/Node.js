@@ -5,6 +5,7 @@ const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
 const StreamManager = require('./StreamManager')
+const ResendHandler = require('./ResendHandler')
 
 const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:node:message-received',
@@ -13,13 +14,18 @@ const events = Object.freeze({
     NODE_UNSUBSCRIBED: 'streamr:node:node-unsubscribed',
     NODE_DISCONNECTED: 'streamr:node:node-disconnected',
     SUBSCRIPTION_REQUEST: 'streamr:node:subscription-received',
-    MESSAGE_DELIVERY_FAILED: 'streamr:node:message-delivery-failed'
+    MESSAGE_DELIVERY_FAILED: 'streamr:node:message-delivery-failed',
+    UNICAST_RECEIVED: 'streamr:node:unicast-received',
+    RESPONSE_NO_RESEND: 'streamr:node:resend-response-no-resend',
+    RESPONSE_RESENDING: 'streamr:node:resend-response-resending',
+    RESPONSE_RESENT: 'streamr:node:resend-response-resent'
+
 })
 
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
 
 class Node extends EventEmitter {
-    constructor(id, trackerNode, nodeToNode) {
+    constructor(id, trackerNode, nodeToNode, storage) {
         super()
 
         this.connectToBoostrapTrackersInterval = setInterval(this._connectToBootstrapTrackers.bind(this), 5000)
@@ -31,6 +37,8 @@ class Node extends EventEmitter {
             this.debug('failed to deliver buffered messages of stream %s', streamId)
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
         })
+        this.resendHandler = new ResendHandler(storage)
+        this._bindResendHandlerEventsToNodeEvents()
 
         this.id = id
         this.trackers = new Set()
@@ -47,6 +55,7 @@ class Node extends EventEmitter {
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage) => this.onUnsubscribeRequest(unsubscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
+        this.protocols.nodeToNode.on(NodeToNode.events.RESEND_REQUEST, (request) => this.requestResend(request))
         this.on(events.NODE_SUBSCRIBED, ({ streamId }) => {
             this._handleBufferedMessages(streamId)
             this._sendStatusToAllTrackers()
@@ -84,6 +93,10 @@ class Node extends EventEmitter {
         const nodes = this.streams.removeStream(streamId)
         nodes.forEach((n) => this.protocols.nodeToNode.sendUnsubscribe(n, streamId))
         this._sendStatusToAllTrackers()
+    }
+
+    requestResend(request) {
+        this.resendHandler.handleRequest(request)
     }
 
     async onTrackerInstructionReceived(streamMessage) {
@@ -320,6 +333,44 @@ class Node extends EventEmitter {
             clearInterval(this.connectToBoostrapTrackersInterval)
             this.connectToBoostrapTrackersInterval = null
         }
+    }
+
+    _bindResendHandlerEventsToNodeEvents() {
+        this.resendHandler.on(ResendHandler.events.NO_RESEND, (args) => {
+            const { source, ...restOfArgs } = args
+            if (source === null) {
+                this.emit(events.RESPONSE_NO_RESEND, restOfArgs)
+            } else {
+                throw new Error('L2 resend not yet implemented.')
+            }
+        })
+        this.resendHandler.on(ResendHandler.events.RESENDING, (args) => {
+            const { source, ...restOfArgs } = args
+            if (source === null) {
+                this.emit(events.RESPONSE_RESENDING, restOfArgs)
+            } else {
+                throw new Error('L2 resend not yet implemented.')
+            }
+        })
+        this.resendHandler.on(ResendHandler.events.RESENT, (args) => {
+            const { source, ...restOfArgs } = args
+            if (source === null) {
+                this.emit(events.RESPONSE_RESENT, restOfArgs)
+            } else {
+                throw new Error('L2 resend not yet implemented.')
+            }
+        })
+        this.resendHandler.on(ResendHandler.events.UNICAST, (args) => {
+            const { source, ...restOfArgs } = args
+            if (source === null) {
+                this.emit(events.UNICAST_RECEIVED, restOfArgs)
+            } else {
+                throw new Error('L2 resend not yet implemented.')
+            }
+        })
+        this.resendHandler.on(ResendHandler.events.ERROR, (args) => {
+            console.error(args)
+        })
     }
 }
 
