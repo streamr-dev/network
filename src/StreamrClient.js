@@ -47,6 +47,7 @@ export default class StreamrClient extends EventEmitter {
             auth: {},
             publishWithSignature: 'auto',
             verifySignatures: 'auto',
+            maxPublishQueueSize: 10000,
         }
         this.subscribedStreams = {}
 
@@ -188,12 +189,7 @@ export default class StreamrClient extends EventEmitter {
             // Check pending publish requests
             const publishQueueCopy = this.publishQueue.slice(0)
             this.publishQueue = []
-            publishQueueCopy.forEach((args) => {
-                this.publish(...args).catch((err) => {
-                    debug(`Error: ${err}`)
-                    this.emit(err)
-                })
-            })
+            publishQueueCopy.forEach((publishFn) => publishFn())
         })
 
         this.connection.on('disconnected', () => {
@@ -272,8 +268,30 @@ export default class StreamrClient extends EventEmitter {
             const streamMessage = await this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestamp, partitionKey)
             return this._requestPublish(streamMessage, sessionToken)
         } else if (this.options.autoConnect) {
-            this.publishQueue.push([streamId, data, timestamp, partitionKey])
-            return this.ensureConnected()
+            if (this.publishQueue.length >= this.options.maxPublishQueueSize) {
+                throw new FailedToPublishError(
+                    streamId,
+                    data,
+                    `publishQueue exceeded maxPublishQueueSize=${this.options.maxPublishQueueSize}`,
+                )
+            }
+
+            const published = new Promise((resolve, reject) => {
+                this.publishQueue.push(async () => {
+                    try {
+                        await this.publish(streamId, data, timestamp, partitionKey)
+                    } catch (err) {
+                        debug(`Error: ${err}`)
+                        this.emit('error', err)
+                        reject(err)
+                        return
+                    }
+                    resolve()
+                })
+            })
+            // be sure to trigger connection *after* queueing publish
+            await this.ensureConnected() // await to ensure connection error fails publish
+            return published
         }
 
         throw new FailedToPublishError(
