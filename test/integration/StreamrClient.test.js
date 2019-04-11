@@ -19,6 +19,75 @@ const createClient = (opts = {}) => new StreamrClient({
 })
 
 describe('StreamrClient Connection', () => {
+    describe('ensureConnected', () => {
+        it('connects the client', async () => {
+            const client = createClient()
+            await client.ensureConnected()
+            expect(client.isConnected()).toBeTruthy()
+            // no error if already connected
+            await client.ensureConnected()
+            expect(client.isConnected()).toBeTruthy()
+            await client.disconnect()
+        })
+
+        it('does not error if connecting', async (done) => {
+            const client = createClient()
+            client.connection.once('connecting', async () => {
+                await client.ensureConnected()
+                expect(client.isConnected()).toBeTruthy()
+                await client.disconnect()
+                done()
+            })
+
+            await client.connect()
+        })
+
+        it('connects if disconnecting', async (done) => {
+            const client = createClient()
+            client.connection.once('disconnecting', async () => {
+                await client.ensureConnected()
+                expect(client.isConnected()).toBeTruthy()
+                await client.disconnect()
+                done()
+            })
+
+            await client.connect()
+            await client.disconnect()
+        })
+    })
+
+    describe('ensureDisconnected', () => {
+        it('disconnects the client', async () => {
+            const client = createClient()
+            // no error if already disconnected
+            await client.ensureDisconnected()
+            await client.connect()
+            await client.ensureDisconnected()
+            expect(client.isDisconnected()).toBeTruthy()
+        })
+
+        it('does not error if disconnecting', async (done) => {
+            const client = createClient()
+            client.connection.once('disconnecting', async () => {
+                await client.ensureDisconnected()
+                expect(client.isDisconnected()).toBeTruthy()
+                done()
+            })
+            await client.connect()
+            await client.disconnect()
+        })
+
+        it('disconnects if connecting', async (done) => {
+            const client = createClient()
+            client.connection.once('connecting', async () => {
+                await client.ensureDisconnected()
+                expect(client.isDisconnected()).toBeTruthy()
+                done()
+            })
+            await client.connect()
+        })
+    })
+
     it('can disconnect before connected', async (done) => {
         const client = createClient()
         client.once('error', done)

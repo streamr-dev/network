@@ -29,6 +29,7 @@ import SubscribedStream from './SubscribedStream'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
 import MessageCreationUtil from './MessageCreationUtil'
+import { waitFor } from './utils'
 
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
@@ -272,10 +273,7 @@ export default class StreamrClient extends EventEmitter {
             return this._requestPublish(streamMessage, sessionToken)
         } else if (this.options.autoConnect) {
             this.publishQueue.push([streamId, data, timestamp, partitionKey])
-            if (this.connection.state === Connection.State.CONNECTING) {
-                return new Promise((resolve) => this.connection.once('connected', resolve))
-            }
-            return this.connect()
+            return this.ensureConnected()
         }
 
         throw new FailedToPublishError(
@@ -331,8 +329,8 @@ export default class StreamrClient extends EventEmitter {
         // If connected, emit a subscribe request
         if (this.isConnected()) {
             this._resendAndSubscribe(sub)
-        } else if (this.options.autoConnect && this.connection.state !== Connection.State.CONNECTING) {
-            this.connect()
+        } else if (this.options.autoConnect) {
+            this.ensureConnected()
         }
 
         return sub
@@ -376,6 +374,18 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.state === Connection.State.CONNECTED
     }
 
+    isConnecting() {
+        return this.connection.state === Connection.State.CONNECTING
+    }
+
+    isDisconnecting() {
+        return this.connection.state === Connection.State.DISCONNECTING
+    }
+
+    isDisconnected() {
+        return this.connection.state === Connection.State.DISCONNECTED
+    }
+
     reconnect() {
         return this.connect()
     }
@@ -402,6 +412,34 @@ export default class StreamrClient extends EventEmitter {
 
     logout() {
         return this.session.logout()
+    }
+
+    /**
+     * Starts new connection if disconnected.
+     * Waits for connection if connecting.
+     * No-op if already connected.
+     */
+
+    async ensureConnected() {
+        if (this.isConnected()) { return Promise.resolve() }
+        if (this.isConnecting()) {
+            return waitFor(this, 'connected')
+        }
+        return this.connect()
+    }
+
+    /**
+     * Starts disconnection if connected.
+     * Waits for disconnection if disconnecting.
+     * No-op if already disconnected.
+     */
+
+    async ensureDisconnected() {
+        if (this.isDisconnected()) { return Promise.resolve() }
+        if (this.isDisconnecting()) {
+            return waitFor(this, 'disconnected')
+        }
+        return this.disconnect()
     }
 
     _checkAutoDisconnect() {
