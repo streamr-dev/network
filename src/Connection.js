@@ -15,10 +15,6 @@ class Connection extends EventEmitter {
         this.options = options
         this.state = Connection.State.DISCONNECTED
         this.socket = socket
-
-        if (options.autoConnect) {
-            this.connect()
-        }
     }
 
     updateState(state) {
@@ -38,7 +34,12 @@ class Connection extends EventEmitter {
             })
         }
         if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
-            this.socket = new WebSocket(this.options.url)
+            try {
+                this.socket = new WebSocket(this.options.url)
+            } catch (err) {
+                this.emit('error', err)
+                return Promise.reject(err)
+            }
         }
         this.socket.binaryType = 'arraybuffer'
         this.socket.events = new EventEmitter()

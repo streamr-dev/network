@@ -19,6 +19,86 @@ const createClient = (opts = {}) => new StreamrClient({
 })
 
 describe('StreamrClient Connection', () => {
+    describe('bad config.url', () => {
+        it('emits error without autoconnect', async (done) => {
+            const client = createClient({
+                url: 'asdasd',
+                autoConnect: false,
+                autoDisconnect: false,
+            })
+            client.once('error', async (error) => {
+                expect(error).toBeTruthy()
+                done()
+            })
+            await client.connect().catch(async (error) => {
+                expect(error).toBeTruthy()
+            })
+        })
+
+        it('rejects on connect without autoconnect', async (done) => {
+            const client = createClient({
+                url: 'asdasd',
+                autoConnect: false,
+                autoDisconnect: false,
+            })
+
+            await client.connect().catch(async (error) => {
+                expect(error).toBeTruthy()
+                done()
+            })
+        })
+
+        it('emits error with autoconnect after first call that triggers connect()', async (done) => {
+            const client = createClient({
+                url: 'asdasd',
+                autoConnect: true,
+                autoDisconnect: true,
+            })
+            client.once('error', async (error) => {
+                expect(error).toBeTruthy()
+                done()
+            })
+            await client.publish('stream-id', {}).catch(async (error) => {
+                expect(error).toBeTruthy()
+                done()
+            })
+        })
+    })
+
+    describe('bad config.restUrl', () => {
+        it('emits error without autoconnect', async (done) => {
+            const client = createClient({
+                restUrl: 'asdasd',
+                autoConnect: false,
+                autoDisconnect: false,
+            })
+            client.once('error', async (error) => {
+                expect(error).toBeTruthy()
+                done()
+            })
+        })
+
+        it('emits error with autoconnect', (done) => {
+            const client = createClient({
+                restUrl: 'asdasd',
+                autoConnect: true,
+                autoDisconnect: true,
+            })
+            client.once('error', async (error) => {
+                expect(error).toBeTruthy()
+                done()
+            })
+        })
+    })
+
+    it('can disconnect before connected', async (done) => {
+        const client = createClient()
+        client.once('error', done)
+        client.connect()
+        await client.disconnect()
+        done()
+    })
+
     describe('ensureConnected', () => {
         it('connects the client', async () => {
             const client = createClient()
@@ -88,30 +168,6 @@ describe('StreamrClient Connection', () => {
         })
     })
 
-    it('can disconnect before connected', async (done) => {
-        const client = createClient()
-        client.once('error', done)
-        client.connect()
-        await client.disconnect()
-        done()
-    })
-
-    it('can reconnect after disconnect', (done) => {
-        const client = createClient()
-        client.on('error', done)
-        client.connect()
-        client.once('connected', () => {
-            client.disconnect()
-        })
-        client.once('disconnected', () => {
-            client.connect()
-            client.once('connected', () => {
-                client.disconnect()
-                done()
-            })
-        })
-    })
-
     describe('connect during disconnect', () => {
         let client
         async function teardown() {
@@ -129,6 +185,32 @@ describe('StreamrClient Connection', () => {
 
         afterEach(async () => {
             await teardown()
+        })
+
+        it('can reconnect after disconnect', (done) => {
+            client = createClient()
+            client.once('error', done)
+            client.connect()
+            client.once('connected', () => {
+                client.disconnect()
+            })
+            client.once('disconnected', () => {
+                client.connect()
+                client.once('connected', async () => {
+                    await client.disconnect()
+                    client.off('error', done)
+                    done()
+                })
+            })
+        })
+
+        it('can disconnect before connected', async (done) => {
+            client = createClient()
+            client.once('error', done)
+            client.connect()
+            await client.disconnect()
+            client.off('error', done)
+            done()
         })
 
         it('can connect', async (done) => {

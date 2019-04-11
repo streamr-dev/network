@@ -89,6 +89,8 @@ export default class StreamrClient extends EventEmitter {
             (streamId) => this.getStream(streamId).catch((err) => this.emit('error', err)),
         )
 
+        this.on('error', () => this.ensureDisconnected())
+
         // Broadcast messages to all subs listening on stream
         this.connection.on(BroadcastMessage.TYPE, (msg) => {
             const stream = this.subscribedStreams[msg.streamMessage.getStreamId()]
