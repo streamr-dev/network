@@ -1,6 +1,8 @@
 const { Readable } = require('stream')
 
 module.exports = class NoOpStorage {
+    store() {}
+
     requestLast() {
         const stream = new Readable({
             objectMode: true

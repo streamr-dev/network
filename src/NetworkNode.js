@@ -2,13 +2,19 @@ const DataMessage = require('./messages/DataMessage')
 const ResendLastRequest = require('./messages/ResendLastRequest')
 const ResendFromRequest = require('./messages/ResendFromRequest')
 const ResendRangeRequest = require('./messages/ResendRangeRequest')
+const ResendHandler = require('./logic/ResendHandler')
 const Node = require('./logic/Node')
 const { StreamID, MessageID, MessageReference } = require('./identifiers')
 
 /*
-Convenience wrapper for broker/data-api. We can replace this with something else later.
+Convenience wrapper for building client-facing functionality. Used by broker.
  */
 module.exports = class NetworkNode extends Node {
+    constructor(id, trackerNode, nodeToNode, storage) {
+        super(id, trackerNode, nodeToNode, new ResendHandler(storage))
+        this.addMessageListener(storage.store)
+    }
+
     publish(streamId,
         streamPartition,
         timestamp,
