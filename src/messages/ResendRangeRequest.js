@@ -1,7 +1,7 @@
 const { StreamID, MessageReference } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
-module.exports = class ResendFromRequest {
+module.exports = class ResendRangeRequest {
     constructor(streamId, subId, fromMsgRef, toMsgRef, publisherId, source = null) {
         if (!(streamId instanceof StreamID)) {
             throw new Error(`invalid streamId: ${streamId}`)

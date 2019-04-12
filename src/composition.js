@@ -5,9 +5,7 @@ const NodeToNode = require('./protocol/NodeToNode')
 const { peerTypes } = require('./protocol/PeerBook')
 const Tracker = require('./logic/Tracker')
 const Node = require('./logic/Node')
-const ResendHandler = require('./logic/ResendHandler')
 const NetworkNode = require('./NetworkNode')
-const NoOpStorage = require('./NoOpStorage')
 const { startEndpoint } = require('./connection/WsEndpoint')
 const { MessageID, MessageReference, StreamID } = require('./identifiers')
 
@@ -23,25 +21,25 @@ async function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) 
     })
 }
 
-async function startNode(host, port, id = uuidv4(), resendHandler = new ResendHandler(new NoOpStorage())) {
+async function startNode(host, port, id = uuidv4(), resendStrategies = []) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.NODE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new Node(id, new TrackerNode(endpoint), new NodeToNode(endpoint), resendHandler)
+        return new Node(id, new TrackerNode(endpoint), new NodeToNode(endpoint), resendStrategies)
     }).catch((err) => {
         throw err
     })
 }
 
-async function startNetworkNode(host, port, id = uuidv4(), storage = new NoOpStorage()) {
+async function startNetworkNode(host, port, id = uuidv4(), storages = []) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.NODE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), storage)
+        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), storages)
     }).catch((err) => {
         throw err
     })
@@ -53,7 +51,7 @@ async function startStorageNode(host, port, id = uuidv4()) {
         'streamr-peer-type': peerTypes.STORAGE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), ['interface1', 'interface2'])
+        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), [])
     }).catch((err) => {
         throw err
     })

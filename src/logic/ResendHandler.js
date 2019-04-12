@@ -1,127 +1,89 @@
-const { EventEmitter } = require('events')
-const ResendLastRequest = require('../messages/ResendLastRequest')
-const ResendFromRequest = require('../messages/ResendFromRequest')
-const ResendRangeRequest = require('../messages/ResendRangeRequest')
-const { MessageID, MessageReference } = require('../identifiers')
+const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
+const ResendResponseResent = require('../../src/messages/ResendResponseResent')
+const ResendResponseResending = require('../../src/messages/ResendResponseResending')
 
-const events = Object.freeze({
-    NO_RESEND: 'streamr:resendHandler:no-resend',
-    RESENDING: 'streamr:resendHandler:resending',
-    RESENT: 'streamr:resendHandler:resent',
-    UNICAST: 'streamr:resendHandler:unicast',
-    ERROR: 'streamr:resendHandler:error'
-})
-
-class ResendHandler extends EventEmitter {
-    constructor(storage) {
-        super()
-        if (storage == null) {
-            throw new Error('storage not given')
+class ResendHandler {
+    constructor(resendStrategies, sendResponse, sendUnicast, notifyError) {
+        if (resendStrategies == null) {
+            throw new Error('resendStrategies not given')
         }
-        this.storage = storage
+        if (sendResponse == null) {
+            throw new Error('sendResponse not given')
+        }
+        if (sendUnicast == null) {
+            throw new Error('sendUnicast not given')
+        }
+        if (notifyError == null) {
+            throw new Error('notifyError not given')
+        }
+
+        this.resendStrategies = [...resendStrategies]
+        this.sendResponse = sendResponse
+        this.sendUnicast = sendUnicast
+        this.notifyError = notifyError
     }
 
-    handleRequest(request) {
-        const storageStream = this._getStorageStream(request)
-        this._attachEventEmittingListeners(storageStream, request)
+    async handleRequest(request) {
+        let isRequestFulfilled = false
+
+        for (let i = 0; i < this.resendStrategies.length && !isRequestFulfilled; ++i) {
+            const responseStream = this.resendStrategies[i].getResendResponseStream(request)
+            // eslint-disable-next-line no-await-in-loop
+            isRequestFulfilled = await this._readStreamUntilEndOrError(responseStream, request)
+        }
+
+        if (isRequestFulfilled) {
+            this._emitResent(request)
+        } else {
+            this._emitNoResend(request)
+        }
+        return isRequestFulfilled
     }
 
-    _getStorageStream(request) {
-        const { id, partition } = request.getStreamId()
-
-        if (request instanceof ResendLastRequest) {
-            return this.storage.requestLast(
-                id,
-                partition,
-                request.getNumberLast()
-            )
-        }
-        if (request instanceof ResendFromRequest) {
-            const fromMsgRef = request.getFromMsgRef()
-            return this.storage.requestFrom(
-                id,
-                partition,
-                fromMsgRef.timestamp,
-                fromMsgRef.sequenceNo,
-                request.getPublisherId()
-            )
-        }
-        if (request instanceof ResendRangeRequest) {
-            const fromMsgRef = request.getFromMsgRef()
-            const toMsgRef = request.getToMsgRef()
-            return this.storage.requestRange(
-                id,
-                partition,
-                fromMsgRef.timestamp,
-                fromMsgRef.sequenceNo,
-                toMsgRef.timestamp,
-                toMsgRef.sequenceNo,
-                request.getPublisherId()
-            )
-        }
-        throw new Error(`unknown resend request ${request}`)
-    }
-
-    _attachEventEmittingListeners(storageStream, request) {
-        const streamId = request.getStreamId()
-        const subId = request.getSubId()
-        const source = request.getSource()
-
+    _readStreamUntilEndOrError(responseStream, request) {
         let numOfMessages = 0
-
-        storageStream.once('data', () => {
-            this.emit(events.RESENDING, {
-                streamId,
-                subId,
-                source
-            })
+        return new Promise((resolve) => {
+            responseStream
+                .once('data', () => {
+                    this._emitResending(request)
+                })
+                .on('data', () => {
+                    numOfMessages += 1
+                })
+                .on('data', (data) => {
+                    this._emitUnicast(request, data)
+                })
+                .on('error', (error) => {
+                    this._emitError(request, error)
+                })
+                .on('error', () => {
+                    resolve(false)
+                })
+                .on('end', () => {
+                    resolve(numOfMessages > 0)
+                })
         })
+    }
 
-        storageStream.on('data', () => {
-            numOfMessages += 1
-        })
+    _emitResending(request) {
+        this.sendResponse(request.getSource(), new ResendResponseResending(request.getStreamId(), request.getSubId()))
+    }
 
-        storageStream.on('data', ({
-            timestamp,
-            sequenceNo,
-            publisherId,
-            msgChainId,
-            previousTimestamp,
-            previousSequenceNo,
-            data,
-            signature,
-            signatureType
-        }) => {
-            this.emit(events.UNICAST, {
-                messageId: new MessageID(streamId, timestamp, sequenceNo, publisherId, msgChainId),
-                previousMessageReference: previousTimestamp != null ? new MessageReference(previousTimestamp, previousSequenceNo) : null,
-                data,
-                signature,
-                signatureType,
-                subId,
-                source
-            })
-        })
+    _emitUnicast(request, unicastMessage) {
+        this.sendUnicast(request.getSource(), unicastMessage)
+    }
 
-        storageStream.on('end', () => {
-            this.emit(numOfMessages === 0 ? events.NO_RESEND : events.RESENT, {
-                streamId,
-                subId,
-                source
-            })
-        })
+    _emitResent(request) {
+        this.sendResponse(request.getSource(), new ResendResponseResent(request.getStreamId(), request.getSubId()))
+    }
 
-        storageStream.on('error', (error) => {
-            this.emit(events.ERROR, {
-                streamId,
-                subId,
-                error,
-                source
-            })
-        })
+    _emitNoResend(request) {
+        this.sendResponse(request.getSource(), new ResendResponseNoResend(request.getStreamId(), request.getSubId()))
+    }
+
+    _emitError(request, error) {
+        this.notifyError(request, error)
     }
 }
-
-ResendHandler.events = events
 
 module.exports = ResendHandler

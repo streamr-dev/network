@@ -3,6 +3,7 @@ const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { eventsToArray, waitForEvent, LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
+const NetworkNode = require('../../src/NetworkNode')
 
 jest.setTimeout(5000)
 
@@ -19,7 +20,8 @@ describe('resend requests are fulfilled at L1', () => {
 
     beforeAll(async () => {
         tracker = await startTracker(LOCALHOST, 28600, 'tracker')
-        contactNode = await startNetworkNode(LOCALHOST, 28601, 'contactNode', {
+        contactNode = await startNetworkNode(LOCALHOST, 28601, 'contactNode', [{
+            store: () => {},
             requestLast: () => intoStream.object([
                 {
                     timestamp: 666,
@@ -57,7 +59,7 @@ describe('resend requests are fulfilled at L1', () => {
                 },
             ]),
             requestRange: () => intoStream.object([]),
-        })
+        }])
         contactNode.addBootstrapTracker(tracker.getAddress())
         contactNode.subscribe('streamId', 0)
     })
@@ -68,38 +70,38 @@ describe('resend requests are fulfilled at L1', () => {
     })
 
     test('requestResendLast', async () => {
-        const actualEvents = eventsToArray(contactNode, Object.values(Node.events))
+        const actualEvents = eventsToArray(contactNode, Object.values(NetworkNode.events))
         contactNode.requestResendLast('streamId', 0, 'subId', 10)
 
-        await waitForEvent(contactNode, Node.events.RESPONSE_RESENT)
-        expect(actualEvents.map(([e]) => e)).toEqual([
-            Node.events.RESPONSE_RESENDING,
-            Node.events.UNICAST_RECEIVED,
-            Node.events.UNICAST_RECEIVED,
-            Node.events.UNICAST_RECEIVED,
-            Node.events.RESPONSE_RESENT,
+        await waitForEvent(contactNode, NetworkNode.events.RESENT)
+        expect(actualEvents).toEqual([
+            NetworkNode.events.RESENDING,
+            NetworkNode.events.UNICAST,
+            NetworkNode.events.UNICAST,
+            NetworkNode.events.UNICAST,
+            NetworkNode.events.RESENT,
         ])
     })
 
     test('requestResendFrom', async () => {
-        const actualEvents = eventsToArray(contactNode, Object.values(Node.events))
+        const actualEvents = eventsToArray(contactNode, Object.values(NetworkNode.events))
         contactNode.requestResendFrom('streamId', 0, 'subId', 666, 0, 'publisherId')
 
-        await waitForEvent(contactNode, Node.events.RESPONSE_RESENT)
-        expect(actualEvents.map(([e]) => e)).toEqual([
-            Node.events.RESPONSE_RESENDING,
-            Node.events.UNICAST_RECEIVED,
-            Node.events.RESPONSE_RESENT,
+        await waitForEvent(contactNode, NetworkNode.events.RESENT)
+        expect(actualEvents).toEqual([
+            NetworkNode.events.RESENDING,
+            NetworkNode.events.UNICAST,
+            NetworkNode.events.RESENT,
         ])
     })
 
     test('requestResendRange', async () => {
-        const actualEvents = eventsToArray(contactNode, Object.values(Node.events))
+        const actualEvents = eventsToArray(contactNode, Object.values(NetworkNode.events))
         contactNode.requestResendRange('streamId', 0, 'subId', 666, 0, 999, 0, 'publisherId')
 
-        await waitForEvent(contactNode, Node.events.RESPONSE_NO_RESEND)
-        expect(actualEvents.map(([e]) => e)).toEqual([
-            Node.events.RESPONSE_NO_RESEND
+        await waitForEvent(contactNode, NetworkNode.events.NO_RESEND)
+        expect(actualEvents).toEqual([
+            NetworkNode.events.NO_RESEND
         ])
     })
 })

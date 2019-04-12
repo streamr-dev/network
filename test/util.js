@@ -15,6 +15,14 @@ const getPeers = (max) => Array.from(Array(max), (d, i) => 'address-' + i)
 const eventsToArray = (emitter, events) => {
     const array = []
     events.forEach((e) => {
+        emitter.on(e, () => array.push(e))
+    })
+    return array
+}
+
+const eventsWithArgsToArray = (emitter, events) => {
+    const array = []
+    events.forEach((e) => {
         emitter.on(e, (...args) => array.push([e, ...args]))
     })
     return array
@@ -22,6 +30,7 @@ const eventsToArray = (emitter, events) => {
 
 module.exports = {
     eventsToArray,
+    eventsWithArgsToArray,
     getPeers,
     wait,
     waitForEvent,
