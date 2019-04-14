@@ -1,7 +1,6 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
-const { wait, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
-const Node = require('../../src/logic/Node')
+const { waitForCondition, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 
 jest.setTimeout(DEFAULT_TIMEOUT)
@@ -39,8 +38,10 @@ describe('duplicate message detection and avoidance', () => {
         otherNodes[4].subscribe('stream-id', 0)
 
         // Set up 1st test case
+        let totalMessages = 0
         numOfReceivedMessages = [0, 0, 0, 0, 0]
         const updater = (i) => () => {
+            totalMessages += 1
             numOfReceivedMessages[i] += 1
         }
         for (let i = 0; i < otherNodes.length; ++i) {
@@ -55,8 +56,7 @@ describe('duplicate message detection and avoidance', () => {
             foo: 'bar'
         })
 
-        await waitForEvent(contactNode, Node.events.MESSAGE_PROPAGATED)
-        await wait(2000)
+        await waitForCondition(() => totalMessages > 9)
     })
 
     afterAll(async () => {

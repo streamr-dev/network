@@ -1,10 +1,9 @@
 const Node = require('../../src/logic/Node')
 const DataMessage = require('../../src/messages/DataMessage')
-const TrackerNode = require('../../src/protocol/TrackerNode')
 const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
-const { wait, waitForEvent, LOCALHOST } = require('../../test/util')
+const { waitForCondition, LOCALHOST } = require('../../test/util')
 
 jest.setTimeout(90000)
 
@@ -25,16 +24,9 @@ describe('message propagation in network', () => {
             startNode('127.0.0.1', 33315, 'node-4')
         ]).then((res) => {
             [n1, n2, n3, n4] = res
-        })
+        });
 
-        await Promise.all([n1, n2, n3, n4].map((node) => node.addBootstrapTracker(tracker.getAddress())))
-
-        await Promise.all([
-            waitForEvent(n1.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER),
-            waitForEvent(n2.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER),
-            waitForEvent(n3.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER),
-            waitForEvent(n4.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER)
-        ])
+        [n1, n2, n3, n4].forEach((node) => node.addBootstrapTracker(tracker.getAddress()))
     })
 
     afterAll(async (done) => {
@@ -71,8 +63,6 @@ describe('message propagation in network', () => {
         n2.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
         n3.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
 
-        await wait(2000)
-
         for (let i = 1; i <= 5; ++i) {
             const dataMessage = new DataMessage(
                 new MessageID(new StreamID('stream-1', 0), i, 0, 'publisher-id', 'sessionId'),
@@ -91,10 +81,11 @@ describe('message propagation in network', () => {
                 }
             )
             n4.onDataReceived(dataMessage2)
-
-            // eslint-disable-next-line no-await-in-loop
-            await wait(500)
         }
+
+        await waitForCondition(() => n1Messages.length === 5)
+        await waitForCondition(() => n2Messages.length === 5)
+        await waitForCondition(() => n3Messages.length === 5)
 
         expect(n1Messages).toEqual([
             {

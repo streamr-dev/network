@@ -333,6 +333,7 @@ class Node extends EventEmitter {
 
     addBootstrapTracker(trackerAddress) {
         this.bootstrapTrackerAddresses.push(trackerAddress)
+        this._connectToBootstrapTrackers()
     }
 
     _connectToBootstrapTrackers() {
