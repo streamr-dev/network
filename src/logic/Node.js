@@ -233,7 +233,7 @@ class Node extends EventEmitter {
             })
         } else {
             this.debug('node %s tried to subscribe to stream %s, but it is not setup', source, streamId)
-            this.protocols.nodeToNode.disconnectFromNode(source, disconnectionReasons.NO_SHARED_STREAMS)
+            this.protocols.nodeToNode.sendUnsubscribe(source, streamId)
         }
     }
 
