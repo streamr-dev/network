@@ -2,10 +2,7 @@ const intoStream = require('into-stream')
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { eventsToArray, waitForEvent, LOCALHOST } = require('../util')
-const Node = require('../../src/logic/Node')
 const NetworkNode = require('../../src/NetworkNode')
-
-jest.setTimeout(5000)
 
 /**
  * This test verifies that a node can fulfill resend requests at L1. This means

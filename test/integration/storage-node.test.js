@@ -3,10 +3,8 @@ const TrackerNode = require('../../src/protocol/TrackerNode')
 const Node = require('../../src/logic/Node')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const { callbackToPromise } = require('../../src/util')
-const { wait, LOCALHOST, DEFAULT_TIMEOUT, waitForEvent } = require('../util')
+const { LOCALHOST, waitForEvent } = require('../util')
 const { StreamID } = require('../../src/identifiers')
-
-jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('Check tracker will subscribe storage node to all streams', () => {
     const trackerId = 'tracker'

@@ -19,8 +19,6 @@ const UnicastMessage = require('../../src/messages/UnicastMessage')
 const UnsubscribeMessage = require('../../src/messages/UnsubscribeMessage')
 const { peerTypes } = require('../../src/protocol/PeerBook')
 
-jest.setTimeout(5000)
-
 describe('delivery of messages in protocol layer', () => {
     let nodeToNode1
     let nodeToNode2

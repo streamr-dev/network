@@ -1,9 +1,7 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
-const { waitForCondition, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
+const { waitForCondition, waitForEvent, LOCALHOST } = require('../util')
 const TrackerNode = require('../../src/protocol/TrackerNode')
-
-jest.setTimeout(DEFAULT_TIMEOUT)
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.

@@ -1,12 +1,10 @@
 const { startNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const { callbackToPromise } = require('../../src/util')
-const { LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
+const { LOCALHOST } = require('../util')
 
 const DataMessage = require('../../src/messages/DataMessage')
 const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
-
-jest.setTimeout(DEFAULT_TIMEOUT)
 
 /**
  * When a node receives a message for a stream it hasn't still subscribed to, it

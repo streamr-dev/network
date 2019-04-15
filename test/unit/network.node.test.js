@@ -1,7 +1,5 @@
 const { startNetworkNode } = require('../../src/composition')
-const { LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
-
-jest.setTimeout(DEFAULT_TIMEOUT)
+const { LOCALHOST } = require('../util')
 
 describe('NetworkNode creation', () => {
     it('should be able to start and stop successfully', async (done) => {

@@ -1,6 +1,5 @@
 const pEvent = require('p-event')
 
-const DEFAULT_TIMEOUT = 60000
 const LOCALHOST = '127.0.0.1'
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -57,6 +56,5 @@ module.exports = {
     wait,
     waitForEvent,
     waitForCondition,
-    DEFAULT_TIMEOUT,
     LOCALHOST,
 }

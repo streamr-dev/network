@@ -1,8 +1,6 @@
 const { wait } = require('../util')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 
-jest.setTimeout(5000)
-
 describe('duplicate connections are closed', () => {
     let wss1
     let wss2

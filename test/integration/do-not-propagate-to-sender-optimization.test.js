@@ -1,9 +1,7 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const Node = require('../../src/logic/Node')
-const { wait, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
-
-jest.setTimeout(DEFAULT_TIMEOUT)
+const { wait, waitForEvent, LOCALHOST } = require('../util')
 
 /**
  * This test verifies that on receiving a message, the receiver will not propagate the message to the sender as they

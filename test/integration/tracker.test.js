@@ -3,8 +3,6 @@ const { LOCALHOST, waitForEvent } = require('../../test/util')
 const { callbackToPromise } = require('../../src/util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 
-jest.setTimeout(20000)
-
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker
     let node1

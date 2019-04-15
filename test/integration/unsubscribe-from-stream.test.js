@@ -1,10 +1,8 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const Node = require('../../src/logic/Node')
-const { wait, waitForEvent, LOCALHOST, DEFAULT_TIMEOUT } = require('../util')
+const { wait, waitForEvent, LOCALHOST } = require('../util')
 const { StreamID } = require('../../src/identifiers')
-
-jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('node unsubscribing from a stream', () => {
     let tracker

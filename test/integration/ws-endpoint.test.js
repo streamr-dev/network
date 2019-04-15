@@ -1,8 +1,6 @@
-const { DEFAULT_TIMEOUT, LOCALHOST, waitForEvent } = require('../util')
+const { LOCALHOST, waitForEvent } = require('../util')
 const endpointEvents = require('../../src/connection/Endpoint').events
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
-
-jest.setTimeout(DEFAULT_TIMEOUT)
 
 describe('create five endpoints and init connection between them', () => {
     const MAX = 5

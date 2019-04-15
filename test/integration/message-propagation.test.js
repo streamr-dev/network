@@ -5,8 +5,6 @@ const { startTracker, startNode } = require('../../src/composition')
 const { callbackToPromise } = require('../../src/util')
 const { waitForCondition, LOCALHOST } = require('../../test/util')
 
-jest.setTimeout(90000)
-
 describe('message propagation in network', () => {
     let tracker
     let n1
