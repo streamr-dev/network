@@ -139,8 +139,6 @@ class Node extends EventEmitter {
             nodeIds.push(node)
         }))
 
-        this.debug('connected and subscribed to %j for stream %s', nodeIds, streamId)
-
         const currentNodes = this.streams.getAllNodesForStream(streamId)
         const nodesToUnsubscribeFrom = currentNodes.filter((node) => !nodeIds.includes(node))
 
@@ -220,18 +218,23 @@ class Node extends EventEmitter {
             source
         })
 
-        this.subscribeToStreamIfHaveNotYet(streamId)
+        if (this.streams.isSetUp(streamId)) {
+            this.subscribeToStreamIfHaveNotYet(streamId)
 
-        this.streams.addOutboundNode(streamId, source)
-        if (!leechOnly) {
-            this.streams.addInboundNode(streamId, source)
+            this.streams.addOutboundNode(streamId, source)
+            if (!leechOnly) {
+                this.streams.addInboundNode(streamId, source)
+            }
+
+            this.debug('node %s subscribed to stream %s', source, streamId)
+            this.emit(events.NODE_SUBSCRIBED, {
+                streamId,
+                source
+            })
+        } else {
+            this.debug('node %s tried to subscribe to stream %s, but it is not setup', source, streamId)
+            this.protocols.nodeToNode.disconnectFromNode(source, disconnectionReasons.NO_SHARED_STREAMS)
         }
-
-        this.debug('node %s subscribed to stream %s', source, streamId)
-        this.emit(events.NODE_SUBSCRIBED, {
-            streamId,
-            source
-        })
     }
 
     onUnsubscribeRequest(unsubscribeMessage) {
