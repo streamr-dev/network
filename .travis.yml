@@ -18,6 +18,7 @@ jobs:
   - name: integration tests
     script: npm run test-integration
   - stage: publish
+    if: tag IS present
     deploy:
       provider: npm
       email: devtools@streamr.com
@@ -25,5 +26,4 @@ jobs:
         secure: nJ84rCNGItZ/BJ6QhRpgK/CEmOtR0g/d0SHcWZULdDOvSjGgkXMaqR4dige6ITDMxyHsQ/dlojn1s9LmS83nfk8GlB6TSM5pazPmS+nqByvHurfOlGmZpFqb1gZb/VymrGAtdsDqquwfZ3Lhe64FgVSTLi133Lu44pLKa3PBy6rkNtHC1hG7SqhOzlm4F2MYyUdsMunu8Q6cSvyRdS9O4IALZg69fJooqNlUXNfk2wPJYNa4yMf2TEZ3duayjQFfqO0fy7j8p5293r7hejepVs6rRcZS4rkgtMDOrySR2TWgsmnOPNytORjqXeeKTSRTfgK77KLvY+fj31FGQd61H5UVhzWgZ0Rx2PhM+9Wque0JLDU21GGjdYR3ijSa93ycIr/m3IJq0TM3Ajj7TNFV5yZSrq1pb9ik0SqPXZfyvPdggo8k7RWKvk4A8jQxTelrY2/hXq2cHLfkHMNnLhPYZ8biq9SMuRbYLO/AeSpIDBXCCneH78TTVp3apFktI1fIhOOv1Vvm62SyO0O9QoDZsa11wwQ7Bxca0oiUTBGDXvMMhujFeLUFAwx0CsCfhHLiGO0HL2Pjq5MQ/6LqswmWMItzDHkoRj6SAhc61wDieczVo+zPG9SAW6Ql5XWqWFVpSoGCc789LiMWIx1V5nlQ/vi36USV+Obnq4BXOUvurvk=
       on:
         tags: true
-        branch: master
         repo: streamr-dev/network
