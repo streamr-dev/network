@@ -154,55 +154,50 @@ class WsEndpoint extends EventEmitter {
     }
 
     connect(peerAddress) {
-        return new Promise((resolve, reject) => {
-            if (this.isConnected(peerAddress)) {
-                debug('already connected to %s', peerAddress)
-                resolve()
-            } else if (this.pendingConnections.has(peerAddress)) {
-                debug('pending connection to %s', peerAddress)
-                this.pendingConnections.get(peerAddress).push({
-                    resolve,
-                    reject
+        if (this.isConnected(peerAddress)) {
+            debug('already connected to %s', peerAddress)
+            return Promise.resolve()
+        }
+        if (this.pendingConnections.has(peerAddress)) {
+            debug('pending connection to %s', peerAddress)
+            return this.pendingConnections.get(peerAddress)
+        }
+
+        const p = new Promise((resolve, reject) => {
+            try {
+                let customHeadersOfServer
+                const ws = new WebSocket(`${peerAddress}?address=${this.getAddress()}`, {
+                    headers: this.customHeaders.asObject()
                 })
-            } else {
-                this.pendingConnections.set(peerAddress, [{
-                    resolve,
-                    reject
-                }])
-                try {
-                    let customHeadersOfServer
-                    const ws = new WebSocket(`${peerAddress}?address=${this.getAddress()}`, {
-                        headers: this.customHeaders.asObject()
-                    })
 
-                    ws.on('upgrade', (response) => {
-                        customHeadersOfServer = this.customHeaders.pluckCustomHeadersFromObject(response.headers)
-                    })
+                ws.on('upgrade', (response) => {
+                    customHeadersOfServer = this.customHeaders.pluckCustomHeadersFromObject(response.headers)
+                })
 
-                    ws.on('open', () => {
-                        if (!customHeadersOfServer) {
-                            const err = new Error('dropping outgoing connection because upgrade event never received')
-                            ws.terminate()
-                            this.pendingConnections.get(peerAddress).forEach(({ reject: r }) => r(err))
-                        } else {
-                            this._onNewConnection(ws, peerAddress, customHeadersOfServer)
-                            this.pendingConnections.get(peerAddress).forEach(({ resolve: r }) => r())
-                        }
-                        this.pendingConnections.delete(peerAddress)
-                    })
+                ws.on('open', () => {
+                    if (!customHeadersOfServer) {
+                        ws.terminate()
+                        reject(new Error('dropping outgoing connection because upgrade event never received'))
+                    } else {
+                        this._onNewConnection(ws, peerAddress, customHeadersOfServer)
+                        resolve()
+                    }
+                })
 
-                    ws.on('error', (err) => {
-                        debug('failed to connect to %s, error: %o', peerAddress, err)
-                        this.pendingConnections.get(peerAddress).forEach(({ reject: r }) => r(new Error(err)))
-                        this.pendingConnections.delete(peerAddress)
-                    })
-                } catch (err) {
+                ws.on('error', (err) => {
                     debug('failed to connect to %s, error: %o', peerAddress, err)
-                    this.pendingConnections.get(peerAddress).forEach(({ reject: r }) => r(new Error(err)))
-                    this.pendingConnections.delete(peerAddress)
-                }
+                    reject(new Error(err))
+                })
+            } catch (err) {
+                debug('failed to connect to %s, error: %o', peerAddress, err)
+                reject(new Error(err))
             }
+        }).finally(() => {
+            this.pendingConnections.delete(peerAddress)
         })
+
+        this.pendingConnections.set(peerAddress, p)
+        return p
     }
 
     stop(callback = () => {}) {
