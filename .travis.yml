@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- '10.15.3'
+- 10.15.3
 sudo: true
 branches:
   only:
@@ -8,6 +8,10 @@ branches:
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
 - npm i -g npm@6.9.0
+- npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+env:
+  global:
+  - secure: opL3vm0mTZl9g9TI+53d04AlTVYq7OA38WUMJQJWHVgPmmyfobOoFvT6+9xDXzbnh4NAgXrqtJGOxnQKkK2o+gyT2e78dLWZx1RfeeLwntgVCTEYLl844tOtgc1bwivy7ND9HfPam1yfBjYQ6UmpsgkILrPbzzHfcDwWvFXLHANk/3IiCE705gtvdC5c1/JXdUtzhYmpmsQ9JOkAg0+n6qmNvYwU7VrIixogojnEP0U3yDSbwJ+yPiWNzZpnwwe4jI/G1KE193rbEQjEOURGiyoxeyBrFOANDYT5BohRGjwsi2MTs/PEl9WDXlNfliOadtjUFI0Y3ByatLpPzWzz5aVVSxifW1YbG+WbVfqw7S4VP3ebnsHiY5uFm0f1o6wVLlNFdQtRxVi1w8mSi90C7hqs3SjFQWtStGYhiNOnqYGpSz74HOEojTUdIsT9DqOXE7tVIdH/PcnNAflHG5kbvNPv8sW5FX4Vw2ECCuT73LuYXYZ+aW0ykogFcsP84rX6yw4P4z+VS758zJ7LeJapxXzS5C0lGR9ISzg91/tSR+4RhsurwRPPRGntQULm9WBfE6QKTPxfFE8/Pprxm2kPWt3svrsNBdCgR4nTEaYF1AbX2SRQJZ4gcJF5ojfkCaP9s3YtTedJ3aV7070OoT7qReksz4A3QSKpc75uTKR8yQ8=
 jobs:
   include:
   - stage: tests
@@ -19,12 +23,4 @@ jobs:
     script: npm run test-integration
   - stage: publish
     if: tag IS present
-    deploy:
-      provider: npm
-      email: devtools@streamr.com
-      api_key:
-        secure: nJ84rCNGItZ/BJ6QhRpgK/CEmOtR0g/d0SHcWZULdDOvSjGgkXMaqR4dige6ITDMxyHsQ/dlojn1s9LmS83nfk8GlB6TSM5pazPmS+nqByvHurfOlGmZpFqb1gZb/VymrGAtdsDqquwfZ3Lhe64FgVSTLi133Lu44pLKa3PBy6rkNtHC1hG7SqhOzlm4F2MYyUdsMunu8Q6cSvyRdS9O4IALZg69fJooqNlUXNfk2wPJYNa4yMf2TEZ3duayjQFfqO0fy7j8p5293r7hejepVs6rRcZS4rkgtMDOrySR2TWgsmnOPNytORjqXeeKTSRTfgK77KLvY+fj31FGQd61H5UVhzWgZ0Rx2PhM+9Wque0JLDU21GGjdYR3ijSa93ycIr/m3IJq0TM3Ajj7TNFV5yZSrq1pb9ik0SqPXZfyvPdggo8k7RWKvk4A8jQxTelrY2/hXq2cHLfkHMNnLhPYZ8biq9SMuRbYLO/AeSpIDBXCCneH78TTVp3apFktI1fIhOOv1Vvm62SyO0O9QoDZsa11wwQ7Bxca0oiUTBGDXvMMhujFeLUFAwx0CsCfhHLiGO0HL2Pjq5MQ/6LqswmWMItzDHkoRj6SAhc61wDieczVo+zPG9SAW6Ql5XWqWFVpSoGCc789LiMWIx1V5nlQ/vi36USV+Obnq4BXOUvurvk=
-      on:
-        tags: true
-        branch: master
-        repo: streamr-dev/network
+    script: npm publish
