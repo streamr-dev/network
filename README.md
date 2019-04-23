@@ -92,3 +92,11 @@ code coverage
 run one test
 
 `./node_modules/jest/bin/jest.js ./test/integration/message-duplication.test.js`
+
+# Releasing
+To release a new version of network onto NPM
+1. Update version with either `npm version patch`, `npm version minor`, or `npm version major`. Use semantic version
+https://semver.org/.
+2. `git tag X.Y.Z` replacing `X.Y.Z` with the output of the previous command.
+3. `git push --follow-tags`
+4. Wait for Travis CI to run tests and to publish to npm if successful.
