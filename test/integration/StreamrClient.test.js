@@ -2,6 +2,8 @@ import assert from 'assert'
 import fetch from 'node-fetch'
 import { MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
+import uniqueId from 'lodash/uniqueId'
+
 import StreamrClient from '../../src'
 import config from './config'
 
@@ -54,15 +56,24 @@ describe('StreamrClient Connection', () => {
                 autoConnect: true,
                 autoDisconnect: true,
             })
-            client.once('error', async (error) => {
+
+            const onError = jest.fn()
+            client.once('error', onError)
+
+            const stream = await client.createStream({
+                name: uniqueId(),
+            }) // this will succeed because it uses restUrl config, not url
+
+            // publish should trigger connect
+            await client.publish(stream, {}).catch((error) => {
                 expect(error).toBeTruthy()
+                // check error is emitted with same error before rejection
+                // not clear if emit or reject *should* occur first
+                expect(onError).toHaveBeenCalledTimes(1)
+                expect(onError).toHaveBeenCalledWith(error)
                 done()
             })
-            await client.publish('stream-id', {}).catch(async (error) => {
-                expect(error).toBeTruthy()
-                done()
-            })
-        })
+        }, 10000)
     })
 
     describe('bad config.restUrl', () => {
@@ -172,9 +183,8 @@ describe('StreamrClient Connection', () => {
         let client
         async function teardown() {
             if (client) {
-                if (client.connection.state !== 'disconnected') {
-                    await client.disconnect()
-                }
+                client.removeAllListeners('error')
+                await client.ensureDisconnected()
                 client = undefined
             }
         }
@@ -198,7 +208,6 @@ describe('StreamrClient Connection', () => {
                 client.connect()
                 client.once('connected', async () => {
                     await client.disconnect()
-                    client.off('error', done)
                     done()
                 })
             })
@@ -209,7 +218,6 @@ describe('StreamrClient Connection', () => {
             client.once('error', done)
             client.connect()
             await client.disconnect()
-            client.off('error', done)
             done()
         })
 
@@ -285,6 +293,126 @@ describe('StreamrClient Connection', () => {
             client.disconnect()
         }, 6000)
     })
+
+    describe('publish/subscribe connection handling', () => {
+        let client
+        async function teardown() {
+            if (!client) { return }
+            client.removeAllListeners('error')
+            await client.ensureDisconnected()
+            client = undefined
+        }
+
+        beforeEach(async () => {
+            await teardown()
+        })
+
+        afterEach(async () => {
+            await teardown()
+        })
+        describe('publish', () => {
+            it('will connect if not connected if autoconnect set', async (done) => {
+                client = createClient({
+                    autoConnect: true,
+                    autoDisconnect: true,
+                })
+
+                client.once('error', done)
+
+                const stream = await client.createStream({
+                    name: uniqueId(),
+                })
+                await client.ensureDisconnected()
+
+                const message = {
+                    id2: uniqueId(),
+                }
+                client.once('connected', () => {
+                    // wait in case of delayed errors
+                    setTimeout(() => done(), 500)
+                })
+                await client.publish(stream.id, message)
+            })
+
+            it('will connect if disconnecting & autoconnect set', async (done) => {
+                client = createClient({
+                    autoConnect: true,
+                    autoDisconnect: true,
+                })
+
+                client.once('error', done)
+                await client.ensureConnected()
+                const stream = await client.createStream({
+                    name: uniqueId(),
+                })
+
+                const message = {
+                    id1: uniqueId(),
+                }
+                const p = client.publish(stream.id, message)
+                setTimeout(() => {
+                    client.disconnect() // start async disconnect after publish started
+                })
+                await p
+                // wait in case of delayed errors
+                setTimeout(() => done(), 500)
+            })
+
+            it('will error if disconnecting & autoconnect not set', async (done) => {
+                client = createClient({
+                    autoConnect: false,
+                    autoDisconnect: false,
+                })
+
+                client.once('error', done)
+                await client.ensureConnected()
+                const stream = await client.createStream({
+                    name: uniqueId(),
+                })
+
+                const message = {
+                    id1: uniqueId(),
+                }
+
+                client.publish(stream.id, message).catch((err) => {
+                    expect(err).toBeTruthy()
+                    done()
+                })
+
+                setTimeout(() => {
+                    client.disconnect() // start async disconnect after publish started
+                })
+            })
+        })
+        describe('subscribe', () => {
+            it('does not error if disconnect after subscribe', async (done) => {
+                client = createClient({
+                    autoConnect: true,
+                    autoDisconnect: true,
+                })
+
+                client.once('error', done)
+                await client.ensureConnected()
+                const stream = await client.createStream({
+                    name: uniqueId(),
+                })
+
+                const sub = client.subscribe({
+                    stream: stream.id,
+                    resend: {
+                        from: {
+                            timestamp: 0,
+                        },
+                    },
+                }, () => {})
+                sub.once('subscribed', async () => {
+                    await client.disconnect()
+                    // wait in case of delayed errors
+                    setTimeout(() => done(), 500)
+                })
+            })
+        })
+    })
 })
 
 describe('StreamrClient', () => {
@@ -309,11 +437,6 @@ describe('StreamrClient', () => {
         return s
     }
 
-    const ensureConnected = () => new Promise((resolve) => {
-        client.on('connected', resolve)
-        client.connect()
-    })
-
     beforeEach(async () => {
         try {
             await Promise.all([
@@ -331,33 +454,44 @@ describe('StreamrClient', () => {
         }
 
         client = createClient()
-        await ensureConnected()
+        await client.ensureConnected()
         stream = await createStream()
     })
 
-    afterEach(() => {
-        if (client && client.isConnected()) {
-            return client.disconnect()
+    afterEach(async () => {
+        if (client) {
+            client.removeAllListeners('error')
+            await client.ensureDisconnected()
         }
-        return Promise.resolve()
     })
 
     describe('Pub/Sub', () => {
-        it('client.publish', () => client.publish(stream.id, {
-            test: 'client.publish',
-        }), TIMEOUT)
+        it('client.publish', async (done) => {
+            client.once('error', done)
+            await client.publish(stream.id, {
+                test: 'client.publish',
+            })
+            setTimeout(() => done(), TIMEOUT * 0.8)
+        }, TIMEOUT)
 
-        it('Stream.publish', () => stream.publish({
-            test: 'Stream.publish',
-        }), TIMEOUT)
+        it('Stream.publish', async (done) => {
+            client.once('error', done)
+            await stream.publish({
+                test: 'Stream.publish',
+            })
+            setTimeout(() => done(), TIMEOUT * 0.8)
+        }, TIMEOUT)
 
-        it('client.publish with Stream object as arg', () => {
-            client.publish(stream, {
+        it('client.publish with Stream object as arg', async (done) => {
+            client.once('error', done)
+            await client.publish(stream, {
                 test: 'client.publish.Stream.object',
             })
+            setTimeout(() => done(), TIMEOUT * 0.8)
         }, TIMEOUT)
 
         it('client.subscribe with resend from', (done) => {
+            client.once('error', done)
             // Publish message
             client.publish(stream.id, {
                 test: 'client.subscribe with resend',
@@ -400,6 +534,7 @@ describe('StreamrClient', () => {
         }, TIMEOUT)
 
         it('client.subscribe with resend last', (done) => {
+            client.once('error', done)
             // Publish message
             client.publish(stream.id, {
                 test: 'client.subscribe with resend',
@@ -440,6 +575,7 @@ describe('StreamrClient', () => {
         }, TIMEOUT)
 
         it('client.subscribe (realtime)', (done) => {
+            client.once('error', done)
             const id = Date.now()
             const sub = client.subscribe({
                 stream: stream.id,

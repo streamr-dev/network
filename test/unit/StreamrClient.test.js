@@ -806,6 +806,7 @@ describe('StreamrClient', () => {
         })
 
         it('rejects the promise if autoConnect is false and the client is not connected', (done) => {
+            client.options.auth.username = 'username'
             client.options.autoConnect = false
             client.publish('stream1', pubMsg).catch((err) => {
                 assert(err instanceof FailedToPublishError)

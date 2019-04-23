@@ -224,7 +224,8 @@ export default class StreamrClient extends EventEmitter {
                     debug('WARN: InvalidJsonError received for stream with no subscriptions: %s', err.streamId)
                 }
             } else {
-                const errorObject = err instanceof Error ? err : new Error(err)
+                // if it looks like an error emit as-is, otherwise wrap in new Error
+                const errorObject = (err && err.stack && err.message) ? err : new Error(err)
                 this.emit('error', errorObject)
                 console.error(errorObject)
             }
@@ -254,7 +255,6 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async publish(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null) {
-        const sessionToken = await this.session.getSessionToken()
         // Validate streamObjectOrId
         let streamId
         if (streamObjectOrId instanceof Stream) {
@@ -265,9 +265,13 @@ export default class StreamrClient extends EventEmitter {
             throw new Error(`First argument must be a Stream object or the stream id! Was: ${streamObjectOrId}`)
         }
 
-        // If connected, emit a publish request
+        const [sessionToken, streamMessage] = await Promise.all([
+            this.session.getSessionToken(),
+            this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestamp, partitionKey),
+        ])
+
         if (this.isConnected()) {
-            const streamMessage = await this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestamp, partitionKey)
+            // If connected, emit a publish request
             return this._requestPublish(streamMessage, sessionToken)
         } else if (this.options.autoConnect) {
             if (this.publishQueue.length >= this.options.maxPublishQueueSize) {
@@ -281,7 +285,7 @@ export default class StreamrClient extends EventEmitter {
             const published = new Promise((resolve, reject) => {
                 this.publishQueue.push(async () => {
                     try {
-                        await this.publish(streamId, data, timestamp, partitionKey)
+                        await this._requestPublish(streamMessage, sessionToken)
                     } catch (err) {
                         debug(`Error: ${err}`)
                         this.emit('error', err)
@@ -511,28 +515,29 @@ export default class StreamrClient extends EventEmitter {
         this.connection.send(UnsubscribeRequest.create(streamId))
     }
 
-    _requestResend(sub, resendOptions) {
+    async _requestResend(sub, resendOptions) {
         sub.setResending(true)
         const options = resendOptions || sub.getEffectiveResendOptions()
-        return this.session.getSessionToken().then((sessionToken) => {
-            let request
-            if (options.last > 0) {
-                request = ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, options.last, sessionToken)
-            } else if (options.from && !options.to) {
-                request = ResendFromRequest.create(
-                    sub.streamId, sub.streamPartition, sub.id, [options.from.timestamp, options.from.sequenceNumber],
-                    options.publisherId || null, options.msgChainId || '', sessionToken,
-                )
-            } else if (options.from && options.to) {
-                request = ResendRangeRequest.create(
-                    sub.streamId, sub.streamPartition, sub.id, [options.from.timestamp, options.from.sequenceNumber],
-                    [options.to.timestamp, options.to.sequenceNumber],
-                    options.publisherId || null, options.msgChainId || '', sessionToken,
-                )
-            }
-            debug('_requestResend: %o', request)
-            this.connection.send(request)
-        })
+        const sessionToken = await this.session.getSessionToken()
+        // don't bother requesting resend if not connected
+        if (!this.isConnected()) { return }
+        let request
+        if (options.last > 0) {
+            request = ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, options.last, sessionToken)
+        } else if (options.from && !options.to) {
+            request = ResendFromRequest.create(
+                sub.streamId, sub.streamPartition, sub.id, [options.from.timestamp, options.from.sequenceNumber],
+                options.publisherId || null, options.msgChainId || '', sessionToken,
+            )
+        } else if (options.from && options.to) {
+            request = ResendRangeRequest.create(
+                sub.streamId, sub.streamPartition, sub.id, [options.from.timestamp, options.from.sequenceNumber],
+                [options.to.timestamp, options.to.sequenceNumber],
+                options.publisherId || null, options.msgChainId || '', sessionToken,
+            )
+        }
+        debug('_requestResend: %o', request)
+        this.connection.send(request)
     }
 
     _requestPublish(streamMessage, sessionToken) {
