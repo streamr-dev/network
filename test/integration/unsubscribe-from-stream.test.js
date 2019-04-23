@@ -28,9 +28,9 @@ describe('node unsubscribing from a stream', () => {
     })
 
     afterEach(async () => {
-        await callbackToPromise(nodeA.stop.bind(nodeA))
-        await callbackToPromise(nodeB.stop.bind(nodeB))
-        await callbackToPromise(tracker.stop.bind(tracker))
+        await nodeA.stop()
+        await nodeB.stop()
+        await tracker.stop()
     })
 
     test('node still receives data for subscribed streams thru existing connections', async () => {

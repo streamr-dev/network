@@ -31,7 +31,7 @@ class TrackerServer extends EventEmitter {
     }
 
     stop(cb) {
-        this.endpoint.stop(cb)
+        return this.endpoint.stop(cb)
     }
 
     onPeerConnected(peerId) {

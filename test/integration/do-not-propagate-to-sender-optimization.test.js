@@ -37,10 +37,10 @@ describe('optimization: do not propagate to sender', () => {
     })
 
     afterAll(async () => {
-        await callbackToPromise(n1.stop.bind(n1))
-        await callbackToPromise(n2.stop.bind(n2))
-        await callbackToPromise(n3.stop.bind(n3))
-        await callbackToPromise(tracker.stop.bind(tracker))
+        await n1.stop()
+        await n2.stop()
+        await n3.stop()
+        await tracker.stop()
     })
 
     // In a fully-connected network the number of duplicates should be (n-1)(n-2) instead of (n-1)^2 when not

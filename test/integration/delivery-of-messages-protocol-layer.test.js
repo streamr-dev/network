@@ -1,4 +1,4 @@
-const { callbackToPromise, waitForEvent } = require('../util')
+const { waitForEvent } = require('../util')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 const { MessageID, MessageReference, StreamID } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
@@ -61,10 +61,10 @@ describe('delivery of messages in protocol layer', () => {
 
     afterAll(() => {
         return Promise.all([
-            callbackToPromise(nodeToNode2.stop.bind(nodeToNode2)),
-            callbackToPromise(nodeToNode1.stop.bind(nodeToNode1)),
-            callbackToPromise(trackerNode.stop.bind(trackerNode)),
-            callbackToPromise(trackerServer.stop.bind(trackerServer))
+            nodeToNode2.stop(),
+            nodeToNode1.stop(),
+            trackerNode.stop(),
+            trackerServer.stop()
         ])
     })
 

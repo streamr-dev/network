@@ -2,7 +2,7 @@ const Node = require('../../src/logic/Node')
 const DataMessage = require('../../src/messages/DataMessage')
 const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')
-const { callbackToPromise, waitForCondition, LOCALHOST } = require('../../test/util')
+const { waitForCondition, LOCALHOST } = require('../../test/util')
 
 describe('message propagation in network', () => {
     let tracker
@@ -26,12 +26,12 @@ describe('message propagation in network', () => {
         [n1, n2, n3, n4].forEach((node) => node.addBootstrapTracker(tracker.getAddress()))
     })
 
-    afterAll(async (done) => {
-        await callbackToPromise(n1.stop.bind(n1))
-        await callbackToPromise(n1.stop.bind(n2))
-        await callbackToPromise(n1.stop.bind(n3))
-        await callbackToPromise(n1.stop.bind(n4))
-        tracker.stop(done)
+    afterAll(async () => {
+        await n1.stop()
+        await n2.stop()
+        await n3.stop()
+        await n4.stop()
+        await tracker.stop()
     })
 
     it('messages are delivered to nodes in the network according to stream subscriptions', async () => {

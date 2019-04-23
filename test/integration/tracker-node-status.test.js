@@ -1,5 +1,5 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { callbackToPromise, LOCALHOST } = require('../util')
+const { LOCALHOST } = require('../util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
 
@@ -75,8 +75,8 @@ describe('check status message flow between tracker and two nodes', () => {
     })
 
     afterAll(async () => {
-        await callbackToPromise(nodeOne.stop.bind(nodeOne))
-        await callbackToPromise(nodeTwo.stop.bind(nodeTwo))
-        await callbackToPromise(tracker.stop.bind(tracker))
+        await nodeOne.stop()
+        await nodeTwo.stop()
+        await tracker.stop()
     })
 })

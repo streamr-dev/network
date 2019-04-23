@@ -50,7 +50,7 @@ module.exports = class Tracker extends EventEmitter {
 
     stop(cb) {
         this.debug('stopping tracker')
-        this.protocols.trackerServer.stop(cb)
+        return this.protocols.trackerServer.stop(cb)
     }
 
     getAddress() {

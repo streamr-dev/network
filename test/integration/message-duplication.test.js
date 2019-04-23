@@ -1,5 +1,5 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { callbackToPromise, waitForCondition, waitForEvent, LOCALHOST } = require('../util')
+const { waitForCondition, waitForEvent, LOCALHOST } = require('../util')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 
 /**
@@ -57,9 +57,9 @@ describe('duplicate message detection and avoidance', () => {
     })
 
     afterAll(async () => {
-        await callbackToPromise(contactNode.stop.bind(contactNode))
-        await Promise.all(otherNodes.map((node) => callbackToPromise(node.stop.bind(node))))
-        await callbackToPromise(tracker.stop.bind(tracker))
+        await contactNode.stop()
+        await Promise.all(otherNodes.map((node) => node.stop()))
+        await tracker.stop()
     })
 
     test('same message is emitted by a node exactly once', () => {

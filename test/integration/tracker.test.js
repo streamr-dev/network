@@ -1,5 +1,5 @@
 const { startNode, startTracker } = require('../../src/composition')
-const { callbackToPromise, LOCALHOST, waitForEvent } = require('../../test/util')
+const { LOCALHOST, waitForEvent } = require('../../test/util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 
 describe('check tracker, nodes and statuses from nodes', () => {
@@ -28,9 +28,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
         done()
     })
 
-    afterAll(async (done) => {
-        await callbackToPromise(node1.stop.bind(node1))
-        await callbackToPromise(node2.stop.bind(node2))
-        tracker.stop(done)
+    afterAll(async () => {
+        await node1.stop()
+        await node2.stop()
+        await tracker.stop()
     })
 })
