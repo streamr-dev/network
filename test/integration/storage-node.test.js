@@ -2,8 +2,7 @@ const { startNetworkNode, startTracker, startStorageNode } = require('../../src/
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const Node = require('../../src/logic/Node')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const { callbackToPromise } = require('../../src/util')
-const { LOCALHOST, waitForEvent } = require('../util')
+const { callbackToPromise, LOCALHOST, waitForEvent } = require('../util')
 const { StreamID } = require('../../src/identifiers')
 
 describe('Check tracker will subscribe storage node to all streams', () => {

@@ -2,8 +2,7 @@ const Node = require('../../src/logic/Node')
 const DataMessage = require('../../src/messages/DataMessage')
 const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')
-const { callbackToPromise } = require('../../src/util')
-const { waitForCondition, LOCALHOST } = require('../../test/util')
+const { callbackToPromise, waitForCondition, LOCALHOST } = require('../../test/util')
 
 describe('message propagation in network', () => {
     let tracker

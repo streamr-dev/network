@@ -9,51 +9,43 @@ const NetworkNode = require('./NetworkNode')
 const { startEndpoint } = require('./connection/WsEndpoint')
 const { MessageID, MessageReference, StreamID } = require('./identifiers')
 
-async function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) {
+function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.TRACKER
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
         return new Tracker(id, new TrackerServer(endpoint), maxNeighborsPerNode)
-    }).catch((err) => {
-        throw err
     })
 }
 
-async function startNode(host, port, id = uuidv4(), resendStrategies = []) {
+function startNode(host, port, id = uuidv4(), resendStrategies = []) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.NODE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
         return new Node(id, new TrackerNode(endpoint), new NodeToNode(endpoint), resendStrategies)
-    }).catch((err) => {
-        throw err
     })
 }
 
-async function startNetworkNode(host, port, id = uuidv4(), storages = []) {
+function startNetworkNode(host, port, id = uuidv4(), storages = []) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.NODE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
         return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), storages)
-    }).catch((err) => {
-        throw err
     })
 }
 
-async function startStorageNode(host, port, id = uuidv4()) {
+function startStorageNode(host, port, id = uuidv4()) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.STORAGE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
         return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), [])
-    }).catch((err) => {
-        throw err
     })
 }
 

@@ -1,6 +1,5 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { callbackToPromise } = require('../../src/util')
-const { LOCALHOST, waitForEvent } = require('../util')
+const { callbackToPromise, LOCALHOST, waitForEvent } = require('../util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
 const encoder = require('../../src/helpers/MessageEncoder')

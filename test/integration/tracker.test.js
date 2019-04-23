@@ -1,6 +1,5 @@
 const { startNode, startTracker } = require('../../src/composition')
-const { LOCALHOST, waitForEvent } = require('../../test/util')
-const { callbackToPromise } = require('../../src/util')
+const { callbackToPromise, LOCALHOST, waitForEvent } = require('../../test/util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 
 describe('check tracker, nodes and statuses from nodes', () => {

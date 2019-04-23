@@ -1,7 +1,6 @@
 const { startNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
-const { callbackToPromise } = require('../../src/util')
-const { LOCALHOST } = require('../util')
+const { callbackToPromise, LOCALHOST } = require('../util')
 
 const DataMessage = require('../../src/messages/DataMessage')
 const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')

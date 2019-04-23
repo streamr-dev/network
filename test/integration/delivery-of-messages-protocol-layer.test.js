@@ -1,5 +1,4 @@
-const { waitForEvent } = require('../util')
-const { callbackToPromise } = require('../../src/util')
+const { callbackToPromise, waitForEvent } = require('../util')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 const { MessageID, MessageReference, StreamID } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
