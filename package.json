@@ -13,7 +13,7 @@
   "scripts": {
     "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration",
+    "test-integration": "jest --detectOpenHandles --forceExit test/integration",
     "eslint": "eslint ."
   },
   "author": "Streamr <contact@streamr.com>",
@@ -37,7 +37,7 @@
     "qs": "^6.5.2",
     "redis": "^2.6.2",
     "sc-uws": "^10.148.2",
-    "streamr-client-protocol": "^2.0.0-beta.6"
+    "streamr-client-protocol": "^2.1.0"
   },
   "devDependencies": {
     "babel-eslint": "^8.2.2",

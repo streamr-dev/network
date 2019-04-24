@@ -25,7 +25,13 @@ module.exports = async (config) => {
     const latestOffsetFetcher = null
 
     // Create some utils
-    const storage = await startCassandraStorage(config.cassandra.split(','), 'datacenter1', config.keyspace)
+    const storage = await startCassandraStorage(
+        config.cassandra.split(','),
+        'datacenter1',
+        config.keyspace,
+        config['cassandra-username'],
+        config['cassandra-pwd']
+    )
     const volumeLogger = new VolumeLogger()
     const streamFetcher = new StreamFetcher(config.streamr)
     const publisher = new Publisher(networkNode, Partitioner, volumeLogger)
@@ -93,12 +99,14 @@ if (require.main === module) {
     // Check command line args
     let optimist = Optimist.usage(`You must pass the following command line options:
         --cassandra <cassandra_hosts_separated_by_commas>
+        --cassandra-username <cassandra_username>
+        --cassandra-pwd <cassandra_password>
         --keyspace <cassandra_keyspace>
         --networkHostname <networkHostname>
         --networkPort <networkPort>
         --streamr <streamr>
         --port <port>`)
-    optimist = optimist.demand(['cassandra', 'keyspace', 'networkHostname', 'networkPort', 'streamr', 'port'])
+    optimist = optimist.demand(['cassandra', 'cassandra-username', 'cassandra-pwd', 'keyspace', 'networkHostname', 'networkPort', 'streamr', 'port'])
 
     module.exports(optimist.argv)
         .then(() => {})
