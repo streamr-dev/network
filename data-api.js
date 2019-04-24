@@ -24,16 +24,21 @@ module.exports = async (externalConfig) => {
         --redis <redis_hosts_separated_by_commas>
         --redis-pwd <password>
         --cassandra <cassandra_hosts_separated_by_commas>
+        --cassandra-username <cassandra_username>
+        --cassandra-pwd <cassandra_password>
         --keyspace <cassandra_keyspace>
         --streamr <streamr>
         --port <port>`)
-        .demand(['data-topic', 'zookeeper', 'redis', 'redis-pwd', 'cassandra', 'keyspace', 'streamr', 'port'])
+        .demand(['data-topic', 'zookeeper', 'redis', 'redis-pwd', 'cassandra', 'cassandra-username', 'cassandra-pwd', 'keyspace', 'streamr', 'port'])
         .argv)
 
     // Create some utils
     const streamFetcher = new StreamFetcher(config.streamr)
     const redis = new RedisUtil(config.redis.split(','), config['redis-pwd'])
-    const storage = await startCassandraStorage(config.cassandra.split(','), 'datacenter1', config.keyspace)
+    const storage = await startCassandraStorage(
+        config.cassandra.split(','), 'datacenter1', config.keyspace,
+        config['cassandra-username'], config['cassandra-pwd'],
+    )
     const kafka = new StreamrKafkaProducer(config['data-topic'], Partitioner, config.zookeeper)
     const volumeLogger = new VolumeLogger()
     const publisher = new Publisher(kafka, Partitioner, volumeLogger)

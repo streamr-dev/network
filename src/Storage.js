@@ -129,11 +129,13 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const startCassandraStorage = async (contactPoints, localDataCenter, keyspace) => {
+const startCassandraStorage = async (contactPoints, localDataCenter, keyspace, username, password) => {
+    const authProvider = new cassandra.auth.PlainTextAuthProvider(username || '', password || '')
     const cassandraClient = new cassandra.Client({
         contactPoints,
         localDataCenter,
         keyspace,
+        authProvider,
     })
     const nbTrials = 20
     let retryCount = nbTrials
