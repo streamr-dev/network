@@ -19,6 +19,8 @@ ENV KAFKA_TOPIC data-dev
 ENV REDIS_HOST redis
 ENV REDIS_PASSWORD ""
 ENV CASSANDRA_HOST cassandra
+ENV CASSANDRA_USERNAME ""
+ENV CASSANDRA_PASSWORD ""
 ENV CASSANDRA_KEYSPACE streamr_dev
 ENV STREAMR_URL http://127.0.0.1:8081/streamr-core
 
@@ -28,6 +30,8 @@ CMD node data-api.js \
     --redis ${REDIS_HOST} \
     --redis-pwd ${REDIS_PASSWORD} \
     --cassandra ${CASSANDRA_HOST} \
+    --cassandra-username ${CASSANDRA_USERNAME} \
+    --cassandra-pwd ${CASSANDRA_PASSWORD} \
     --keyspace ${CASSANDRA_KEYSPACE} \
     --streamr ${STREAMR_URL} \
     --port 8890
