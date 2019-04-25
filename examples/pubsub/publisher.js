@@ -1,7 +1,6 @@
 const { spawn } = require('child_process')
 
-const topic = 'tram-2'
-const child = spawn('node', ['../../bin/subscriber.js', '30304', '127.0.0.1', 'ws://127.0.0.1:30300', topic])
+const child = spawn('node', ['../../bin/publisher.js'])
 
 child.stdout.setEncoding('utf8')
 child.stdout.on('data', (chunk) => {

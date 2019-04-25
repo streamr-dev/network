@@ -1,99 +1,115 @@
-# Streamr P2P network  ![Travis](https://travis-ci.com/streamr-dev/network.svg?token=qNNVCnYJo1fz18VTNpPZ&branch=master)
-
-# Installation
-
-### Mac OS
-
-#### install brew 
-`/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"`
-
-#### install nvm
-
-`brew update`
-
-`brew doctor`
+# Streamr network 
+ ![Travis](https://travis-ci.com/streamr-dev/network.svg?token=qNNVCnYJo1fz18VTNpPZ&branch=master)
  
-`brew install nvm`
+> P2P network for the real-time data with storage support
 
-#### install current node lts (v10.15.3)
-
-`nvm install v10.15.3`
-
-`nvm use default v10.15.3`
-
-#### install npm (v6.9.0)
-
-`npm install -g npm@6.9.0`
+This Node.js project implements
+[Streamr protocol](https://github.com/streamr-dev/streamr-client-protocol-js).
+It allows you to publish any kind of data, subscribe and store in network.
+Flexible architecture allows you to integrate any external data sources.
+Check [Examples](#examples) for more information. Project still in progress, 
+check [Roadmap](#roadmap) for more information.
 
 
-#### install packages
+## Table of Contents
+- [Demo](#demo)
+- [Installation](#installation)
+- [Integration](#integration)
+- [Getting started](#getting-started)
+- [Advanced integrations](#advanced-integrations)
+- [Architectural decisions](https://github.com/streamr-dev/network/wiki)
+- [Component reference](#component-reference)
+- [Examples](#examples)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
+- [Releasing](#releasing)
 
-`npm ci`
+## Demo
 
-# run network
-`npm run network 2`
+Follow installation instructions in [Network runner](https://github.com/streamr-dev/network-runner).
+![Screenshot of the demo running](https://raw.githubusercontent.com/streamr-dev/network-runner/master/streamr-network.png?token=ABWG2RMLCBIRYNCUUTOF2Z24ZLWT6)
 
-where 2 is a number of nodes in network
+## Installation
 
-# run tracker
+Prerequisites: [Node.js](https://nodejs.org/) (`^8.10.0`, `^10.13.0`, or `>=11.10.1`), npm version 6+.
 
-`npm run tracker`
+You can install Streamr Network using npm:
 
-# run node
+```
+$ npm install @streamr/streamr-p2p-network --save
+```
 
-`npm run node` - default node with port 30301
+It is also possible to install Streamr Network globally (using `npm install @streamr/streamr-p2p-network --global`)
 
-or
+## Integration
 
-`npm run node 30302`
+Integration into existing project could be found in [Examples](./examples)
 
-`npm run node 30303`
+## Getting started
 
-and etc
+TODO
 
-# run publisher
+## Roadmap
 
-`npm run pub`
+TODO
 
-# run subscriber
+## Advanced integrations
 
-`npm run sub`
+TODO
 
-# Debugging
-to get all streamr network debug messages `export DEBUG=streamr:*`
+## Component reference
 
-to get messages by layers run:
+TODO
+
+## Examples
+
+Check our [examples folder](./examples)
+
+## Troubleshooting
+
+TODO
+
+## Development
+
+Install dependencies:
+
+    npm ci
+    
+Run the tests:
+
+    npm run test
+
+Run example of network (10 nodes):
+
+    npm run network
+
+We use [eslint](https://github.com/eslint/eslint) for code formatting:
+
+    npm run eslint
+
+Code coverage:
+
+    npm run coverage
+    
+Debugging:
+
+To get all Streamr Network debug messages  
+
+    export DEBUG=streamr:*
+    
+Or adjust debugging to desired level 
 
 - connection layer `export DEBUG=streamr:connection:*`
 - logic layer `export DEBUG=streamr:logic:*`
 - protocol layer `export DEBUG=streamr:protocol:*`
 
-to get all debug messages run `export DEBUG=*`
+Excluding level
 
-to exclude level `export DEBUG=streamr:*,-streamr:connection:*`
+    export DEBUG=streamr:*,-streamr:connection:*
+    
+    
+## Releasing
 
-# Testing
-run all tests
-
-`npm run test`
-
-run unit tests
-
-`npm run test-unit`
-
-run integration tests
-
-`npm run test-integration`
-
-code coverage
-
-`./node_modules/jest/bin/jest.js --coverage`
-
-run one test
-
-`./node_modules/jest/bin/jest.js ./test/integration/message-duplication.test.js`
-
-# Releasing
 To release a new version of network onto NPM
 1. Update version with either `npm version patch`, `npm version minor`, or `npm version major`. Use semantic version
 https://semver.org/.

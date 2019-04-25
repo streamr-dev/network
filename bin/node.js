@@ -1,4 +1,6 @@
-const { startNode } = require('./src/composition')
+#!/usr/bin/env node
+
+const { startNode } = require('../src/composition')
 
 const port = process.argv[2] || 30301
 const ip = process.argv[3] || '127.0.0.1'

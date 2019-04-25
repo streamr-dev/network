@@ -1,3 +1,4 @@
 # Streamr Network Examples
 
-- [MQTT intergration](mqtt)
+- [PubSub](./pubsub)
+- [MQTT intergration](./mqtt)

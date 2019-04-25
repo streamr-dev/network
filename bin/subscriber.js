@@ -1,5 +1,7 @@
-const { startNetworkNode } = require('./src/composition')
-const NodeToNode = require('./src/protocol/NodeToNode')
+#!/usr/bin/env node
+
+const { startNetworkNode } = require('../src/composition')
+const NodeToNode = require('../src/protocol/NodeToNode')
 
 const port = process.argv[2] || 30304
 const host = process.argv[3] || '127.0.0.1'

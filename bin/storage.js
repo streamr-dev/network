@@ -1,4 +1,6 @@
-const { startStorageNode } = require('./src/composition')
+#!/usr/bin/env node
+
+const { startStorageNode } = require('../src/composition')
 
 const port = process.argv[2] || 40300
 const ip = process.argv[3] || '127.0.0.1'
