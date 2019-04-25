@@ -148,6 +148,10 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
         request = new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10)
     })
 
+    afterEach(() => {
+        resendStrategy.stop()
+    })
+
     test('if given non-local request returns empty stream', async () => {
         request = new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10, 'non-local')
         const responseStream = resendStrategy.getResendResponseStream(request)
@@ -165,10 +169,6 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
     describe('if neighbors available', () => {
         beforeEach(() => {
             getNeighbors.mockReturnValue(['neighbor-1', 'neighbor-2', 'neighbor-3'])
-        })
-
-        afterEach(() => {
-            resendStrategy.stop()
         })
 
         test('forwards request to first neighbor', async () => {
