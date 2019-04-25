@@ -18,9 +18,9 @@ jobs:
     name: lint
     script: npm run eslint
   - name: unit tests
-    script: npm run test-unit
+    script: npm run test-unit --detectOpenHandles
   - name: integration tests
-    script: npm run test-integration
+    script: npm run test-integration --detectOpenHandles
   - stage: publish
     if: tag IS present
     script: npm publish
