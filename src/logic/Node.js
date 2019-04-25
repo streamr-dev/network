@@ -35,17 +35,10 @@ class Node extends EventEmitter {
             this.debug('failed to deliver buffered messages of stream %s', streamId)
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
         })
-        this.resendHandler = new ResendHandler(resendStrategies, this.respondResend.bind(this),
-            (destination, unicastMessage) => {
-                if (destination === null) {
-                    this.emit(events.UNICAST_RECEIVED, unicastMessage)
-                } else {
-                    throw new Error('L2 resend not yet implemented.')
-                }
-            },
-            (error) => {
-                console.error(error)
-            })
+        this.resendHandler = new ResendHandler(resendStrategies,
+            this.respondResend.bind(this),
+            this._unicast.bind(this),
+            console.error.bind(console))
 
         this.id = id
         this.trackers = new Set()
@@ -103,15 +96,36 @@ class Node extends EventEmitter {
     }
 
     requestResend(request) {
+        this.debug('received %s resend request %s with subId %s',
+            request.getSource() === null ? 'local' : `from ${request.getSource()}`,
+            request.constructor.name,
+            request.getSubId())
         this.resendHandler.handleRequest(request)
     }
 
-    respondResend(destination, response) {
+    async respondResend(destination, response) {
         if (destination === null) {
             this.emit(events.RESEND_RESPONSE_RECEIVED, response)
         } else {
-            throw new Error('L2 resend not yet implemented.')
+            await this.protocols.nodeToNode.send(destination, response)
         }
+
+        this.debug('responded %s with %s and subId %s',
+            destination === null ? 'locally' : `to ${destination}`,
+            response.constructor.name,
+            response.getSubId())
+    }
+
+    async _unicast(destination, unicastMessage) {
+        if (destination === null) {
+            this.emit(events.UNICAST_RECEIVED, unicastMessage)
+        } else {
+            await this.protocols.nodeToNode.send(destination, unicastMessage)
+        }
+        this.debug('sent %s unicast %s for subId %s',
+            destination === null ? 'locally' : `to ${destination}`,
+            unicastMessage.getMessageId(),
+            unicastMessage.getSubId())
     }
 
     async onTrackerInstructionReceived(streamMessage) {

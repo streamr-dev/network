@@ -1,5 +1,12 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
+const ResendLastRequest = require('../messages/ResendLastRequest')
+const ResendFromRequest = require('../messages/ResendFromRequest')
+const ResendRangeRequest = require('../messages/ResendRangeRequest')
+const ResendResponseResent = require('../messages/ResendResponseResent')
+const ResendResponseResending = require('../messages/ResendResponseResending')
+const ResendResponseNoResend = require('../messages/ResendResponseNoResend')
+const UnicastMessage = require('../messages/UnicastMessage')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
 const { PeerBook, peerTypes } = require('./PeerBook')
@@ -94,6 +101,66 @@ class NodeToNode extends EventEmitter {
         return this.endpoint.close(receiverNodeAddress, reason).catch((err) => {
             console.error(`Could not close connection ${receiverNodeAddress} because '${err}'`)
         })
+    }
+
+    send(receiverNodeId, message) { // TODO: better way?
+        if (message instanceof ResendLastRequest) {
+            return this.requestResendLast(
+                receiverNodeId,
+                message.getStreamId(),
+                message.getSubId(),
+                message.getNumberLast()
+            )
+        }
+        if (message instanceof ResendFromRequest) {
+            return this.requestResendFrom(
+                receiverNodeId,
+                message.getStreamId(),
+                message.getSubId(),
+                message.getFromMsgRef(),
+                message.getPublisherId()
+            )
+        }
+        if (message instanceof ResendRangeRequest) {
+            return this.requestResendRange(
+                receiverNodeId,
+                message.getStreamId(),
+                message.getSubId(),
+                message.getFromMsgRef(),
+                message.getToMsgRef(),
+                message.getPublisherId()
+            )
+        }
+        if (message instanceof ResendResponseNoResend) {
+            return this.respondNoResend(
+                receiverNodeId,
+                message.getStreamId(),
+                message.getSubId()
+            )
+        } if (message instanceof ResendResponseResending) {
+            return this.respondResending(
+                receiverNodeId,
+                message.getStreamId(),
+                message.getSubId()
+            )
+        } if (message instanceof ResendResponseResent) {
+            return this.respondResent(
+                receiverNodeId,
+                message.getStreamId(),
+                message.getSubId()
+            )
+        } if (message instanceof UnicastMessage) {
+            return this.sendUnicast(
+                receiverNodeId,
+                message.getMessageId(),
+                message.getPreviousMessageReference(),
+                message.getData(),
+                message.getSignature(),
+                message.getSignatureType(),
+                message.getSubId()
+            )
+        }
+        throw new Error(`unrecognized message ${message}`)
     }
 
     getAddress() {

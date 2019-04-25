@@ -5,7 +5,7 @@ const ResendRangeRequest = require('./messages/ResendRangeRequest')
 const ResendResponseNoResend = require('./messages/ResendResponseNoResend')
 const ResendResponseResent = require('./messages/ResendResponseResent')
 const ResendResponseResending = require('./messages/ResendResponseResending')
-const { StorageResendStrategy } = require('./logic/resendStrategies')
+const { StorageResendStrategy, AskNeighborsResendStrategy } = require('./logic/resendStrategies')
 const Node = require('./logic/Node')
 const { StreamID, MessageID, MessageReference } = require('./identifiers')
 
@@ -22,7 +22,12 @@ Convenience wrapper for building client-facing functionality. Used by broker.
  */
 class NetworkNode extends Node {
     constructor(id, trackerNode, nodeToNode, storages) {
-        super(id, trackerNode, nodeToNode, storages.map((storage) => new StorageResendStrategy(storage)))
+        super(id, trackerNode, nodeToNode, [
+            ...storages.map((storage) => new StorageResendStrategy(storage)),
+            new AskNeighborsResendStrategy(nodeToNode, (streamId) => {
+                return this.streams.getOutboundNodesForStream(streamId)
+            })
+        ])
         storages.forEach((storage) => this.on(events.MESSAGE, storage.store.bind(storage)))
 
         this.on(Node.events.MESSAGE_PROPAGATED, this._emitMessage.bind(this))
