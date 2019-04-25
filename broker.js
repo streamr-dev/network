@@ -19,7 +19,7 @@ const volumeEndpoint = require('./src/rest/VolumeEndpoint')
 
 module.exports = async (config) => {
     const networkNode = await startNetworkNode(config.networkHostname, config.networkPort)
-    await networkNode.addBootstrapTracker('ws://127.0.0.1:30300')
+    networkNode.addBootstrapTracker('ws://127.0.0.1:30300')
 
     const historicalAdapter = null
     const latestOffsetFetcher = null
