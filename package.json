@@ -28,8 +28,8 @@
     "sub-2": "node $NODE_DEBUG_OPTION subscriber.js 30345 127.0.0.1",
     "storage": "node $NODE_DEBUG_OPTION storage.js",
     "test": "jest --detectOpenHandles",
-    "test-unit": "jest test/unit --detectOpenHandles",
-    "test-integration": "jest test/integration --detectOpenHandles --runInBand",
+    "test-unit": "jest test/unit",
+    "test-integration": "jest test/integration --detectOpenHandles --forceExit",
     "eslint": "eslint .",
     "network": "node $NODE_DEBUG_OPTION run.js"
   },
