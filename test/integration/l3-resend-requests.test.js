@@ -1,6 +1,5 @@
 const intoStream = require('into-stream')
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
-const { callbackToPromise } = require('../../src/util')
 const { eventsToArray, waitForEvent, wait, LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 const NetworkNode = require('../../src/NetworkNode')
@@ -100,17 +99,18 @@ describe('resend requests are fulfilled at L3', () => {
     })
 
     afterAll(async () => {
-        await callbackToPromise(contactNode.stop.bind(contactNode))
-        await callbackToPromise(neighborOne.stop.bind(neighborOne))
-        await callbackToPromise(neighborTwo.stop.bind(neighborTwo))
-        await callbackToPromise(storageNode.stop.bind(storageNode))
-        await callbackToPromise(tracker.stop.bind(tracker))
+        await contactNode.stop.bind(contactNode)
+        await neighborOne.stop.bind(neighborOne)
+        await neighborTwo.stop.bind(neighborTwo)
+        await storageNode.stop.bind(storageNode)
+        await tracker.stop.bind(tracker)
     })
 
     beforeEach(() => {
         // Prevent storageNode from being a neighbor of contactNode. Otherwise
         // L2 will be used to fulfill resend request, which will mean that L3
         // is skipped and we are just testing L2 again. TODO: find a better way
+        // eslint-disable-next-line no-underscore-dangle
         storageNode._disconnectFromAllNodes()
     })
 

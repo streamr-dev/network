@@ -344,7 +344,7 @@ class StorageNodeResendStrategy {
                 const address = storageNodeAddresses.shift()
                 try {
                     storageNode = await this.nodeToNode.connectToNode(address) // eslint-disable-line no-await-in-loop
-                } catch {
+                } catch (e) {
                     // nop
                 }
             }
@@ -358,7 +358,6 @@ class StorageNodeResendStrategy {
                 this.pendingResends[storageNode] = new Set()
             }
             entries.forEach(({ request, responseStream }) => {
-                const subId = request.getSubId()
                 const proxiedResend = new ProxiedResend(
                     request,
                     responseStream,

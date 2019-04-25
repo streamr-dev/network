@@ -1,6 +1,5 @@
 const intoStream = require('into-stream')
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { callbackToPromise } = require('../../src/util')
 const { eventsToArray, waitForEvent, wait, LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 const NetworkNode = require('../../src/NetworkNode')
@@ -100,10 +99,10 @@ describe('resend requests are fulfilled at L2', () => {
     })
 
     afterAll(async () => {
-        await callbackToPromise(contactNode.stop.bind(contactNode))
-        await callbackToPromise(n1.stop.bind(n1))
-        await callbackToPromise(n2.stop.bind(n2))
-        await callbackToPromise(tracker.stop.bind(tracker))
+        await contactNode.stop()
+        await n1.stop()
+        await n2.stop()
+        await tracker.stop()
     })
 
     test('requestResendLast', async () => {
