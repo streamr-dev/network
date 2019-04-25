@@ -25,6 +25,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, ({ peerId, nodeType }) => this.onNodeDisconnected(peerId, nodeType))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => this.processNodeStatus(statusMessage, nodeType))
+        this.protocols.trackerServer.on(TrackerServer.events.FIND_STORAGE_NODES_REQUEST, this.findStorageNodes.bind(this))
 
         this.debug = createDebug(`streamr:logic:tracker:${this.id}`)
         this.debug('started %s', this.id)
@@ -46,6 +47,21 @@ module.exports = class Tracker extends EventEmitter {
     onNodeDisconnected(node, nodeType) {
         this.storageNodes.delete(node)
         this._removeNode(node)
+    }
+
+    findStorageNodes(findStorageNodesMessage) {
+        const streamId = findStorageNodesMessage.getStreamId()
+        const source = findStorageNodesMessage.getSource()
+
+        const foundStorageNodes = []
+        this.storageNodes.forEach((status, node) => {
+            const streams = Object.keys(status.streams)
+            if (streams.includes(streamId.key())) {
+                foundStorageNodes.push(node)
+            }
+        })
+
+        this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)
     }
 
     stop(cb) {

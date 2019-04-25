@@ -7,7 +7,8 @@ const { PeerBook } = require('./PeerBook')
 const events = Object.freeze({
     CONNECTED_TO_TRACKER: 'streamr:tracker-node:send-status',
     TRACKER_INSTRUCTION_RECEIVED: 'streamr:tracker-node:tracker-instruction-received',
-    TRACKER_DISCONNECTED: 'streamr:tracker-node:tracker-disconnected'
+    TRACKER_DISCONNECTED: 'streamr:tracker-node:tracker-disconnected',
+    STORAGE_NODES_RECEIVED: 'streamr:tracker-node:storage-nodes-received'
 })
 
 class TrackerNode extends EventEmitter {
@@ -21,9 +22,14 @@ class TrackerNode extends EventEmitter {
         this._endpointListener.implement(this, endpoint)
     }
 
-    async sendStatus(trackerId, status) {
+    sendStatus(trackerId, status) {
         const trackerAddress = this.peerBook.getAddress(trackerId)
         return this.endpoint.send(trackerAddress, encoder.statusMessage(status))
+    }
+
+    findStorageNodes(trackerId, streamId) {
+        const trackerAddress = this.peerBook.getAddress(trackerId)
+        return this.endpoint.send(trackerAddress, encoder.findStorageNodesMessage(streamId))
     }
 
     stop(cb) {
@@ -34,6 +40,9 @@ class TrackerNode extends EventEmitter {
         switch (message.getCode()) {
             case encoder.INSTRUCTION:
                 this.emit(events.TRACKER_INSTRUCTION_RECEIVED, message)
+                break
+            case encoder.STORAGE_NODES:
+                this.emit(events.STORAGE_NODES_RECEIVED, message)
                 break
             default:
                 break

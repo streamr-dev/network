@@ -7,6 +7,7 @@ const ResendResponseResending = require('../../src/messages/ResendResponseResend
 const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
 const UnicastMessage = require('../../src/messages/UnicastMessage')
 const NodeToNode = require('../protocol/NodeToNode')
+const TrackerNode = require('../protocol/TrackerNode')
 const { MessageID, MessageReference } = require('../../src/identifiers')
 
 function toUnicastMessage(request) {
@@ -86,6 +87,132 @@ class StorageResendStrategy {
 }
 
 /**
+ * Internal class for managing the lifecycle of proxied resend requests. Useful
+ * for both L2 and L3.
+ *
+ * Operates on a one-neighbor-at-a-time basis until
+ *  1) a neighbor is able to fulfill request,
+ *  2) it runs out of neighbors to try,
+ *  3) limit maxTries is hit,
+ *  4) method cancel is invoked.
+ *
+ *  Given a neighbor it will forward resend request to it. It will then
+ *  interpret incoming unicast / resend response messages from that neighbor
+ *  and push to responseStream appropriately. It also handles timeout if
+ *  neighbor doesn't respond in a timely manner.
+ */
+class ProxiedResend {
+    constructor(request, responseStream, nodeToNode, getNeighbors, maxTries, timeout, onDoneCb) {
+        this.request = request
+        this.responseStream = responseStream
+        this.nodeToNode = nodeToNode
+        this.getNeighbors = getNeighbors
+        this.maxTries = maxTries
+        this.timeout = timeout
+        this.onDoneCb = onDoneCb
+        this.neighborsAsked = new Set()
+        this.currentNeighbor = null
+        this.timeoutRef = null
+
+        // Below are important for function identity in _detachEventHandlers
+        this._onUnicast = this._onUnicast.bind(this)
+        this._onResendResponse = this._onResendResponse.bind(this)
+        this._onNodeDisconnect = this._onNodeDisconnect.bind(this)
+    }
+
+    commence() {
+        this._attachEventHandlers()
+        this._askNextNeighbor()
+    }
+
+    cancel() {
+        this._endStream()
+    }
+
+    _attachEventHandlers() {
+        this.nodeToNode.on(NodeToNode.events.UNICAST_RECEIVED, this._onUnicast)
+        this.nodeToNode.on(NodeToNode.events.RESEND_RESPONSE, this._onResendResponse)
+        this.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, this._onNodeDisconnect)
+    }
+
+    _detachEventHandlers() {
+        this.nodeToNode.removeListener(NodeToNode.events.UNICAST_RECEIVED, this._onUnicast)
+        this.nodeToNode.removeListener(NodeToNode.events.RESEND_RESPONSE, this._onResendResponse)
+        this.nodeToNode.removeListener(NodeToNode.events.NODE_DISCONNECTED, this._onNodeDisconnect)
+    }
+
+    _onUnicast(unicastMessage) {
+        const subId = unicastMessage.getSubId()
+        const source = unicastMessage.getSource()
+
+        if (this.request.getSubId() === subId && this.currentNeighbor === source) {
+            this.responseStream.push(unicastMessage)
+            this._resetTimeout()
+        }
+    }
+
+    _onResendResponse(response) {
+        const subId = response.getSubId()
+        const source = response.getSource()
+
+        if (this.request.getSubId() === subId && this.currentNeighbor === source) {
+            if (response instanceof ResendResponseResent) {
+                this._endStream()
+            } else if (response instanceof ResendResponseNoResend) {
+                this._askNextNeighbor()
+            } else if (response instanceof ResendResponseResending) {
+                this._resetTimeout()
+            } else {
+                throw new Error(`unexpected response type ${response}`)
+            }
+        }
+    }
+
+    _onNodeDisconnect(nodeId) {
+        if (this.currentNeighbor === nodeId) {
+            this._askNextNeighbor()
+        }
+    }
+
+    _askNextNeighbor() {
+        clearTimeout(this.timeoutRef)
+
+        if (this.neighborsAsked.size >= this.maxTries) {
+            this._endStream()
+            return
+        }
+
+        const candidates = this.getNeighbors(this.request.getStreamId()).filter((x) => !this.neighborsAsked.has(x))
+        if (candidates.length === 0) {
+            this._endStream()
+            return
+        }
+
+        const neighborId = candidates[0]
+        this.neighborsAsked.add(neighborId)
+
+        this.nodeToNode.send(neighborId, this.request).then(() => {
+            this.currentNeighbor = neighborId
+            this._resetTimeout()
+        }, () => {
+            this._askNextNeighbor()
+        })
+    }
+
+    _endStream() {
+        clearTimeout(this.timeoutRef)
+        this.responseStream.push(null)
+        this._detachEventHandlers()
+        this.onDoneCb()
+    }
+
+    _resetTimeout() {
+        clearTimeout(this.timeoutRef)
+        this.timeoutRef = setTimeout(this._askNextNeighbor.bind(this), this.timeout)
+    }
+}
+
+/**
  * Resend strategy that forwards resend request to neighbor nodes and then acts
  * as a proxy in between.
  * Often used at L2.
@@ -96,51 +223,7 @@ class AskNeighborsResendStrategy {
         this.getNeighbors = getNeighbors
         this.maxTries = maxTries
         this.timeout = timeout
-        this.pending = {}
-
-        this.nodeToNode.on(NodeToNode.events.UNICAST_RECEIVED, (unicastMessage) => {
-            const subId = unicastMessage.getSubId()
-            const source = unicastMessage.getSource()
-
-            if (this.pending[subId]) {
-                if (this.pending[subId].currentNeighbor === source) {
-                    this.pending[subId].responseStream.push(unicastMessage)
-                    this._reSetTimeout(subId)
-                } else {
-                    console.error(`received unicast from non-current neighbor ${source}`)
-                }
-            } else {
-                console.error(`received unicast for unknown subId ${subId}`)
-            }
-        })
-        this.nodeToNode.on(NodeToNode.events.RESEND_RESPONSE, (response) => {
-            const subId = response.getSubId()
-            const source = response.getSource()
-            if (this.pending[subId]) {
-                if (this.pending[subId].currentNeighbor === source) {
-                    if (response instanceof ResendResponseResent) {
-                        this._endStream(subId)
-                    } else if (response instanceof ResendResponseNoResend) {
-                        this._askNextNeighbor(subId)
-                    } else if (response instanceof ResendResponseResending) {
-                        this._reSetTimeout(subId)
-                    } else {
-                        throw new Error(`unexpected response type ${response}`)
-                    }
-                } else {
-                    console.error(`received resend response from non-current neighbor ${source}`)
-                }
-            } else {
-                console.error(`received resend response for unknown subId ${subId}`)
-            }
-        })
-        this.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (nodeId) => {
-            Object.entries(this.pending).forEach(([subId, { currentNeighbor }]) => {
-                if (currentNeighbor === nodeId) {
-                    this._askNextNeighbor(subId)
-                }
-            })
-        })
+        this.pending = new Set()
     }
 
     getResendResponseStream(request) {
@@ -151,14 +234,17 @@ class AskNeighborsResendStrategy {
 
         // L2 only works on local requests
         if (request.getSource() === null) {
-            this.pending[request.getSubId()] = {
-                responseStream,
+            const proxiedResend = new ProxiedResend(
                 request,
-                neighborsAsked: new Set(),
-                currentNeighbor: null,
-                timeoutRef: null
-            }
-            this._askNextNeighbor(request.getSubId())
+                responseStream,
+                this.nodeToNode,
+                this.getNeighbors,
+                this.maxTries,
+                this.timeout,
+                () => this.pending.delete(proxiedResend)
+            )
+            this.pending.add(proxiedResend)
+            proxiedResend.commence()
         } else {
             responseStream.push(null)
         }
@@ -167,50 +253,171 @@ class AskNeighborsResendStrategy {
     }
 
     stop() {
-        Object.keys(this.pending).forEach(this._endStream.bind(this))
+        this.pending.forEach((proxiedResend) => proxiedResend.cancel())
+    }
+}
+
+/**
+ * Internal class used by StorageNodeResendStrategy (L3) to keep track of
+ * resend requests that are pending (STORAGE_NODES) response from tracker.
+ * Also handles timeouts if tracker response not received in a timely manner.
+ */
+class PendingTrackerResponseBookkeeper {
+    constructor(timeout) {
+        this.timeout = timeout
+        this.pending = {} // streamId => subId => { request, responseStream, timeoutRef }
     }
 
-    _askNextNeighbor(subId) {
-        const { request, neighborsAsked, timeoutRef } = this.pending[subId]
+    addEntry(request, responseStream) {
+        const streamId = request.getStreamId()
+        const subId = request.getSubId()
 
-        clearTimeout(timeoutRef)
-
-        if (neighborsAsked.size >= this.maxTries) {
-            this._endStream(subId)
-            return
+        if (!this.pending[streamId]) {
+            this.pending[streamId] = {}
         }
-
-        const candidates = this.getNeighbors(request.getStreamId()).filter((x) => !neighborsAsked.has(x))
-        if (candidates.length === 0) {
-            this._endStream(subId)
-            return
+        this.pending[streamId][subId] = {
+            responseStream,
+            request,
+            timeoutRef: setTimeout(() => {
+                delete this.pending[streamId][subId]
+                if (Object.entries(this.pending[streamId]).length === 0) {
+                    delete this.pending[streamId]
+                }
+                responseStream.push(null)
+            }, this.timeout)
         }
+    }
 
-        const neighborId = candidates[0]
-        neighborsAsked.add(neighborId)
+    popEntries(streamId) {
+        if (this._hasEntries(streamId)) {
+            const entries = Object.values(this.pending[streamId])
+            delete this.pending[streamId]
+            return entries.map(({ timeoutRef, ...rest }) => {
+                clearTimeout(timeoutRef)
+                return rest
+            })
+        }
+        return []
+    }
 
-        this.nodeToNode.send(neighborId, request).then(() => {
-            this.pending[subId].currentNeighbor = neighborId
-            this._reSetTimeout(subId)
-        }, () => {
-            this._askNextNeighbor(subId)
+    clearAll() {
+        Object.values(this.pending).forEach((entries) => {
+            Object.values(entries).forEach(({ responseStream, timeoutRef }) => {
+                clearTimeout(timeoutRef)
+                responseStream.push(null)
+            })
+        })
+        this.pending = {}
+    }
+
+    _hasEntries(streamId) {
+        return streamId in this.pending
+    }
+}
+
+/**
+ * Resend strategy that asks tracker for storage nodes, forwards resend request
+ * to one of them, and then acts as a proxy in between.
+ * Often used at L3.
+ */
+class StorageNodeResendStrategy {
+    constructor(trackerNode, nodeToNode, getTracker, isSubscribedTo, timeout = 20 * 1000) {
+        this.trackerNode = trackerNode
+        this.nodeToNode = nodeToNode
+        this.getTracker = getTracker
+        this.isSubscribedTo = isSubscribedTo
+        this.timeout = timeout
+        this.pendingTrackerResponse = new PendingTrackerResponseBookkeeper(timeout)
+        this.pendingResends = {} // storageNode => [...proxiedResend]
+
+        this.trackerNode.on(TrackerNode.events.STORAGE_NODES_RECEIVED, async (storageNodesMessage) => {
+            const streamId = storageNodesMessage.getStreamId()
+            const storageNodeAddresses = storageNodesMessage.getNodeAddresses()
+
+            const entries = this.pendingTrackerResponse.popEntries(streamId)
+            if (entries.length === 0) {
+                return
+            }
+
+            let storageNode = null
+            while (storageNode === null && storageNodeAddresses.length > 0) {
+                const address = storageNodeAddresses.shift()
+                try {
+                    storageNode = await this.nodeToNode.connectToNode(address) // eslint-disable-line no-await-in-loop
+                } catch {
+                    // nop
+                }
+            }
+
+            if (storageNode === null) {
+                entries.forEach(({ responseStream }) => responseStream.push(null))
+                return
+            }
+
+            if (!this.pendingResends[storageNode]) {
+                this.pendingResends[storageNode] = new Set()
+            }
+            entries.forEach(({ request, responseStream }) => {
+                const subId = request.getSubId()
+                const proxiedResend = new ProxiedResend(
+                    request,
+                    responseStream,
+                    this.nodeToNode,
+                    () => [storageNode],
+                    1,
+                    this.timeout,
+                    () => {
+                        this.pendingResends[storageNode].delete(proxiedResend)
+                        if (this.pendingResends[storageNode].size === 0 && !this.isSubscribedTo(storageNode)) {
+                            this.nodeToNode.disconnectFromNode(storageNode)
+                            delete this.pendingResends[storageNode]
+                        }
+                    }
+                )
+                this.pendingResends[storageNode].add(proxiedResend)
+                proxiedResend.commence()
+            })
         })
     }
 
-    _endStream(subId) {
-        const { responseStream, timeoutRef } = this.pending[subId]
-        clearTimeout(timeoutRef)
-        responseStream.push(null)
-        delete this.pending[subId]
+    getResendResponseStream(request) {
+        const responseStream = new Readable({
+            objectMode: true,
+            read() {}
+        })
+
+        // L3 only works on local requests
+        if (request.getSource() === null) {
+            this._requestStorageNodes(request, responseStream)
+        } else {
+            responseStream.push(null)
+        }
+
+        return responseStream
     }
 
-    _reSetTimeout(subId) {
-        clearTimeout(this.pending[subId].timeoutRef)
-        this.pending[subId].timeoutRef = setTimeout(() => this._askNextNeighbor(subId), this.timeout)
+    _requestStorageNodes(request, responseStream) {
+        const tracker = this.getTracker(request.getStreamId())
+        if (tracker == null) {
+            responseStream.push(null)
+        } else {
+            this.trackerNode.findStorageNodes(tracker, request.getStreamId()).then(
+                () => this.pendingTrackerResponse.addEntry(request, responseStream),
+                () => responseStream.push(null)
+            )
+        }
+    }
+
+    stop() {
+        Object.values(this.pendingResends).forEach((proxiedResends) => {
+            proxiedResends.forEach((proxiedResend) => proxiedResend.cancel())
+        })
+        this.pendingTrackerResponse.clearAll()
     }
 }
 
 module.exports = {
     AskNeighborsResendStrategy,
-    StorageResendStrategy
+    StorageResendStrategy,
+    StorageNodeResendStrategy
 }

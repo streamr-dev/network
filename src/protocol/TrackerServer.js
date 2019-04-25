@@ -6,7 +6,8 @@ const { PeerBook } = require('./PeerBook')
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:tracker:send-peers',
     NODE_STATUS_RECEIVED: 'streamr:tracker:peer-status',
-    NODE_DISCONNECTED: 'streamr:tracker:node-disconnected'
+    NODE_DISCONNECTED: 'streamr:tracker:node-disconnected',
+    FIND_STORAGE_NODES_REQUEST: 'streamr:tracker:find-storage-nodes-request'
 })
 
 class TrackerServer extends EventEmitter {
@@ -24,6 +25,12 @@ class TrackerServer extends EventEmitter {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
         const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.peerBook.getAddress(nodeId))
         return this.endpoint.send(receiverNodeAddress, encoder.instructionMessage(streamId, listOfNodeAddresses))
+    }
+
+    sendStorageNodes(receiverNodeId, streamId, listOfNodeIds) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.peerBook.getAddress(nodeId))
+        return this.endpoint.send(receiverNodeAddress, encoder.storageNodesMessage(streamId, listOfNodeAddresses))
     }
 
     getAddress() {
@@ -60,6 +67,9 @@ class TrackerServer extends EventEmitter {
                 this.emit(events.NODE_STATUS_RECEIVED, {
                     statusMessage: message, nodeType
                 })
+                break
+            case encoder.FIND_STORAGE_NODES:
+                this.emit(events.FIND_STORAGE_NODES_REQUEST, message)
                 break
             default:
                 break

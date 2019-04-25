@@ -5,7 +5,9 @@ const ResendRangeRequest = require('./messages/ResendRangeRequest')
 const ResendResponseNoResend = require('./messages/ResendResponseNoResend')
 const ResendResponseResent = require('./messages/ResendResponseResent')
 const ResendResponseResending = require('./messages/ResendResponseResending')
-const { StorageResendStrategy, AskNeighborsResendStrategy } = require('./logic/resendStrategies')
+const { StorageResendStrategy,
+    AskNeighborsResendStrategy,
+    StorageNodeResendStrategy } = require('./logic/resendStrategies')
 const Node = require('./logic/Node')
 const { StreamID, MessageID, MessageReference } = require('./identifiers')
 
@@ -26,7 +28,10 @@ class NetworkNode extends Node {
             ...storages.map((storage) => new StorageResendStrategy(storage)),
             new AskNeighborsResendStrategy(nodeToNode, (streamId) => {
                 return this.streams.getOutboundNodesForStream(streamId)
-            })
+            }),
+            new StorageNodeResendStrategy(trackerNode, nodeToNode,
+                () => [...this.trackers][0],
+                (node) => this.streams.isNodePresent(node))
         ])
         storages.forEach((storage) => this.on(events.MESSAGE, storage.store.bind(storage)))
 

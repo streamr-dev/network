@@ -39,13 +39,13 @@ function startNetworkNode(host, port, id = uuidv4(), storages = []) {
     })
 }
 
-function startStorageNode(host, port, id = uuidv4()) {
+function startStorageNode(host, port, id = uuidv4(), storages = []) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.STORAGE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), [])
+        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), storages)
     })
 }
 
