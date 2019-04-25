@@ -20,7 +20,7 @@ jobs:
   - name: unit tests
     script: npm run test-unit
   - name: integration tests
-    script: npm run test-integration-ci
+    script: npm run test-integration
   - stage: publish
     if: tag IS present
     script: npm publish
