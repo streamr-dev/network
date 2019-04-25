@@ -27,9 +27,10 @@
     "sub-1": "node $NODE_DEBUG_OPTION subscriber.js 30335 127.0.0.1",
     "sub-2": "node $NODE_DEBUG_OPTION subscriber.js 30345 127.0.0.1",
     "storage": "node $NODE_DEBUG_OPTION storage.js",
-    "test": "jest --detectOpenHandles",
+    "test": "jest",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration --detectOpenHandles --forceExit",
+    "test-integration": "jest test/integration",
+    "test-integration-ci": "jest test/integration --maxWorkers=10",
     "eslint": "eslint .",
     "network": "node $NODE_DEBUG_OPTION run.js"
   },
