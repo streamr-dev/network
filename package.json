@@ -29,7 +29,7 @@
     "storage": "node $NODE_DEBUG_OPTION storage.js",
     "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit --detectOpenHandles",
-    "test-integration": "jest test/integration --detectOpenHandles",
+    "test-integration": "jest test/integration --detectOpenHandles --runInBand",
     "eslint": "eslint .",
     "network": "node $NODE_DEBUG_OPTION run.js"
   },
