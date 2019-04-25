@@ -365,13 +365,26 @@ describe('WebsocketServer', () => {
             mockSocket.receive(ControlLayer.SubscribeRequest.create('streamId', 0, 'correct'))
 
             setTimeout(() => {
-                realtimeAdapter.emit('message', streamMessagev30)
+                realtimeAdapter.emit('message',
+                    streamMessagev30.getStreamId(),
+                    streamMessagev30.getStreamPartition(),
+                    streamMessagev30.getTimestamp(),
+                    streamMessagev30.messageId.sequenceNumber,
+                    streamMessagev30.getPublisherId(),
+                    streamMessagev30.messageId.msgChainId,
+                    streamMessagev30.prevMsgRef.timestamp,
+                    streamMessagev30.prevMsgRef.sequenceNumber,
+                    streamMessagev30.getContent(),
+                    streamMessagev30.signatureType,
+                    streamMessagev30.signature,
+                )
             })
 
-            const expectedResponse = ControlLayer.BroadcastMessage.create(streamMessagev30)
+            const expected = ControlLayer.BroadcastMessage.create(streamMessagev30)
+                .serialize(controlLayerVersion, messageLayerVersion)
 
             setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages[1], expectedResponse.serialize(controlLayerVersion, messageLayerVersion))
+                assert.deepEqual(mockSocket.sentMessages[1], expected)
                 done()
             })
         })

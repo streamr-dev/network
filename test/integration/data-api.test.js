@@ -6,8 +6,6 @@ const createBroker = require('../../broker')
 const port = 12345
 
 describe('data-api', () => {
-    jest.setTimeout(20 * 1000)
-
     let dataApi
 
     beforeAll(async () => {
@@ -53,4 +51,4 @@ describe('data-api', () => {
             done(err)
         })
     })
-})
+}, 20 * 1000)

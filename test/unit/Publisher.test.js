@@ -19,8 +19,12 @@ describe('Publisher', () => {
     }
 
     const streamMessageUnsigned = new StreamMessageV30(
-        [stream.id, 9, 135135135, 0, 'publisherId', '1'], [null, 0], StreamMessage.CONTENT_TYPES.JSON,
-        msg, StreamMessage.SIGNATURE_TYPES.NONE, null,
+        [stream.id, stream.partitions, 135135135, 0, 'publisherId', 'msgChainId'],
+        null,
+        StreamMessage.CONTENT_TYPES.JSON,
+        msg,
+        StreamMessage.SIGNATURE_TYPES.NONE,
+        null,
     )
 
     let publisher
@@ -51,14 +55,25 @@ describe('Publisher', () => {
         })
 
         it('should call NetworkNode.send with correct values', (done) => {
-            networkNode.publish = (streamId, streamPartition, ts, sequenceNo, publisherId, prevTs, previousSequenceNo, message) => {
+            networkNode.publish = (
+                streamId,
+                streamPartition,
+                ts,
+                sequenceNo,
+                publisherId,
+                msgChainId,
+                prevTs,
+                previousSequenceNo,
+                message,
+            ) => {
                 assert.equal(streamId, 'streamId')
-                assert.equal(streamPartition, 9)
+                assert.equal(streamPartition, 10)
                 assert.equal(ts, 135135135)
                 assert.equal(sequenceNo, 0)
                 assert.equal(publisherId, 'publisherId')
+                assert.equal(msgChainId, 'msgChainId')
                 assert.equal(prevTs, null)
-                assert.equal(previousSequenceNo, 0)
+                assert.equal(previousSequenceNo, null)
                 assert.deepEqual(message, {
                     hello: 'world',
                 })

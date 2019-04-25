@@ -26,7 +26,7 @@ module.exports = class Publisher {
             streamMessage.getTimestamp(),
             streamMessage.messageId.sequenceNumber,
             streamMessage.getPublisherId() || '',
-            streamMessage.msgChainId || '',
+            streamMessage.messageId.msgChainId || '',
             streamMessage.prevMsgRef == null ? null : streamMessage.prevMsgRef.timestamp,
             streamMessage.prevMsgRef == null ? null : streamMessage.prevMsgRef.sequenceNumber,
             streamMessage.parsedContent,

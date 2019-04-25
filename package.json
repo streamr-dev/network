@@ -35,7 +35,6 @@
     "node-fetch": "^2.2.0",
     "optimist": "*",
     "qs": "^6.5.2",
-    "redis": "^2.6.2",
     "sc-uws": "^10.148.2",
     "streamr-client-protocol": "^2.1.0"
   },

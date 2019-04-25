@@ -219,7 +219,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         }
     }
 
-    broadcastMessage(streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId, previousTimestamp, previousSequenceNo, payload) {
+    broadcastMessage(streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId, previousTimestamp, previousSequenceNo, payload, signatureType, signature) {
         const stream = this.streams.getStreamObject(streamId, streamPartition)
 
         if (stream) {
@@ -235,8 +235,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 [previousTimestamp, previousSequenceNo],
                 MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
                 payload,
-                null, // signatureType
-                null, // signature
+                signatureType,
+                signature,
             )
 
             stream.forEachConnection((connection) => {
