@@ -26,6 +26,6 @@
   },
   "homepage": "https://github.com/streamr-dev/listen-to-streamr#readme",
   "dependencies": {
-    "streamr-client": "0.12.1"
+    "streamr-client": "1.0.2"
   }
 }
