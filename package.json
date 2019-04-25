@@ -35,8 +35,8 @@
     "murmurhash-native": "^3.2.4",
     "node-fetch": "^2.2.0",
     "optimist": "*",
-    "qs": "^6.5.2",
-    "sc-uws": "^10.148.2",
+    "qs": "^6.7.0",
+    "ws": "^6.2.1",
     "streamr-client-protocol": "^2.1.0"
   },
   "devDependencies": {

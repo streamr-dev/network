@@ -4,12 +4,12 @@ const qs = require('qs')
 const { ErrorResponse } = require('streamr-client-protocol').ControlLayer
 
 module.exports = class Connection extends events.EventEmitter {
-    constructor(socket) {
+    constructor(socket, request) {
         super()
         this.id = socket.id
         this.socket = socket
         this.streams = []
-        const parts = socket.upgradeReq.url.split('?')
+        const parts = request.url.split('?')
         // default versions for old clients
         this.controlLayerVersion = 0
         this.messageLayerVersion = 28

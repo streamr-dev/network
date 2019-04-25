@@ -14,6 +14,7 @@ describe('WebsocketServer', () => {
     let realtimeAdapter
     let historicalAdapter
     let mockSocket
+    let mockRequest
 
     const controlLayerVersion = 1
     const messageLayerVersion = 30
@@ -104,7 +105,7 @@ describe('WebsocketServer', () => {
         // Mock websocket lib
         wsMock = new events.EventEmitter()
 
-        // Mock the socket
+        // Mock the socket and request
         mockSocket = new MockSocket(controlLayerVersion, messageLayerVersion)
 
         // Create the server instance
@@ -120,8 +121,8 @@ describe('WebsocketServer', () => {
 
         beforeEach(() => {
             mockSocket2 = new MockSocket()
-            wsMock.emit('connection', mockSocket)
-            wsMock.emit('connection', mockSocket2)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
+            wsMock.emit('connection', mockSocket2, mockSocket2.getRequest())
         })
 
         it('listens to connected sockets "message" event', () => {
@@ -141,7 +142,7 @@ describe('WebsocketServer', () => {
 
     describe('on resend request', () => {
         beforeEach(() => {
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
         })
 
         it('sends a resending message before starting a resend', (done) => {
@@ -295,7 +296,7 @@ describe('WebsocketServer', () => {
             // Expect error messages
             mockSocket.throwOnError = false
 
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
         })
 
         it('resend_all is not supported anymore.', (done) => {
@@ -358,7 +359,7 @@ describe('WebsocketServer', () => {
 
     describe('message broadcasting', () => {
         beforeEach(() => {
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
         })
 
         it('emits messages received from Redis to those sockets according to streamId', (done) => {
@@ -392,7 +393,7 @@ describe('WebsocketServer', () => {
 
     describe('on invalid subscribe request', () => {
         beforeEach(() => {
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
 
             // Expect error messages
             mockSocket.throwOnError = false
@@ -414,7 +415,7 @@ describe('WebsocketServer', () => {
 
     describe('on subscribe request', () => {
         beforeEach(() => {
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
             mockSocket.receive(ControlLayer.SubscribeRequest.create(
                 'streamId',
                 0,
@@ -431,7 +432,7 @@ describe('WebsocketServer', () => {
 
         it('creates the Stream object with given partition', (done) => {
             const socket2 = new MockSocket()
-            wsMock.emit('connection', socket2)
+            wsMock.emit('connection', socket2, socket2.getRequest())
             socket2.receive(ControlLayer.SubscribeRequest.create(
                 'streamId',
                 1,
@@ -464,7 +465,7 @@ describe('WebsocketServer', () => {
 
         it('does not resubscribe to realtimeAdapter on new subscription to same stream', (done) => {
             const socket2 = new MockSocket()
-            wsMock.emit('connection', socket2)
+            wsMock.emit('connection', socket2, socket2.getRequest())
             socket2.receive(ControlLayer.SubscribeRequest.create(
                 'streamId',
                 0,
@@ -481,7 +482,7 @@ describe('WebsocketServer', () => {
 
     describe('on subscribe request with invalid key', () => {
         beforeEach(() => {
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
 
             // Expect error messages
             mockSocket.throwOnError = false
@@ -518,7 +519,7 @@ describe('WebsocketServer', () => {
     describe('unsubscribe', () => {
         beforeEach((done) => {
             // connect
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
 
             // subscribe
             mockSocket.receive(ControlLayer.SubscribeRequest.create(
@@ -564,7 +565,7 @@ describe('WebsocketServer', () => {
 
             // subscribe 2
             socket2 = new MockSocket()
-            wsMock.emit('connection', socket2)
+            wsMock.emit('connection', socket2, socket2.getRequest())
             socket2.receive(ControlLayer.SubscribeRequest.create(
                 'streamId',
                 0,
@@ -605,7 +606,7 @@ describe('WebsocketServer', () => {
 
             // subscribe 2
             socket2 = new MockSocket()
-            wsMock.emit('connection', socket2)
+            wsMock.emit('connection', socket2, socket2.getRequest())
             socket2.receive(ControlLayer.SubscribeRequest.create(
                 'streamId',
                 0,
@@ -635,7 +636,7 @@ describe('WebsocketServer', () => {
     describe('subscribe-unsubscribe-subscribe', () => {
         it('should work', (done) => {
             // connect
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
 
             // subscribe
             mockSocket.receive(ControlLayer.SubscribeRequest.create(
@@ -675,7 +676,7 @@ describe('WebsocketServer', () => {
     describe('publish', () => {
         beforeEach(() => {
             // We are in connected state
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
         })
 
         it('calls the publisher for valid requests (V1&V29)', (done) => {
@@ -859,7 +860,7 @@ describe('WebsocketServer', () => {
 
     describe('disconnect', () => {
         beforeEach((done) => {
-            wsMock.emit('connection', mockSocket)
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
             mockSocket.receive(ControlLayer.SubscribeRequest.create(
                 'streamId',
                 6,

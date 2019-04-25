@@ -45,6 +45,10 @@ module.exports = class MockSocket extends events.EventEmitter {
         }
     }
 
+    getRequest() {
+        return this.upgradeReq
+    }
+
     disconnect() {
         this.emit('close')
     }

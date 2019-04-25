@@ -1,7 +1,7 @@
 const http = require('http')
 const cors = require('cors')
 const express = require('express')
-const ws = require('sc-uws')
+const ws = require('ws')
 const Optimist = require('optimist')
 
 const { startNetworkNode } = require('@streamr/streamr-p2p-network')

@@ -14,11 +14,11 @@ describe('Connection', () => {
             send(msg) {
                 this.received.push(msg)
             },
-            upgradeReq: {
-                url: 'url?controlLayerVersion=1&messageLayerVersion=30',
-            },
         }
-        connection = new Connection(fakeSocket)
+        const fakeRequest = {
+            url: 'url?controlLayerVersion=1&messageLayerVersion=30',
+        }
+        connection = new Connection(fakeSocket, fakeRequest)
     })
 
     it('id returns socket id', () => {
@@ -31,12 +31,10 @@ describe('Connection', () => {
     })
 
     it('parses undefined version properly', () => {
-        const fakeSocket2 = {
-            upgradeReq: {
-                url: 'url',
-            },
-        }
-        const conn2 = new Connection(fakeSocket2)
+        const fakeSocket2 = {}
+        const conn2 = new Connection(fakeSocket2, {
+            url: 'url',
+        })
         assert.strictEqual(conn2.controlLayerVersion, 0)
         assert.strictEqual(conn2.messageLayerVersion, 28)
     })
@@ -121,12 +119,11 @@ describe('Connection', () => {
                 received: [],
                 send(msg2) {
                     this.received.push(msg2)
-                },
-                upgradeReq: {
-                    url: 'url',
-                },
+                }
             }
-            const connection2 = new Connection(fakeSocket2)
+            const connection2 = new Connection(fakeSocket2, {
+                url: 'url',
+            })
             connection2.send(msg)
             assert.deepEqual(fakeSocket2.received, [msg.serialize(0, 28)])
         })
