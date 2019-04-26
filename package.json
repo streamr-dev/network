@@ -1,30 +1,33 @@
 {
-  "name": "@streamr/listen-to-stream",
+  "name": "@streamr/cli-tools",
   "version": "1.0.2",
-  "description": "Tool that subscribes to a Streamr stream and prints events to stdout",
-  "main": "bin/cli.js",
+  "description": "Command line tools for Streamr.",
   "bin": {
-    "listen-to-stream": "bin/cli.js",
-    "listen-to-stream-dev": "bin/cli-dev.js"
+    "generate-random-json": "bin/generate-random-json.js",
+    "listen-to-stream": "bin/listen-to-stream.js",
+    "listen-to-stream-dev": "bin/listen-to-stream-dev.js",
+    "publish-to-stream": "bin/publish-to-stream.js",
+    "publish-to-stream-dev": "bin/publish-to-stream-dev.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:streamr-dev/listen-to-stream.git"
+    "url": "git@github.com:streamr-dev/cli-tools.git"
   },
   "keywords": [
     "streamr",
+    "cli",
     "tool",
     "utility"
   ],
   "author": "Streamr <contact@streamr.com>",
   "license": "AGPL-3.0",
   "bugs": {
-    "url": "https://github.com/streamr-dev/listen-to-streamr/issues"
+    "url": "https://github.com/streamr-dev/cli-tools/issues"
   },
-  "homepage": "https://github.com/streamr-dev/listen-to-streamr#readme",
+  "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
     "streamr-client": "1.0.2"
   }
