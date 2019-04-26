@@ -82,7 +82,7 @@ generate-random-json
 ```
 Useful for testing when piping to `listen-to-stream`.
 
-Combining *nix pipes with `publish-to-stream` and `listen-to-stream`
+### Combining *nix pipes with `publish-to-stream` and `listen-to-stream`
 
 *Disclaimer*: These need more testing
 
