@@ -15,6 +15,7 @@ module.exports = function publishStream(stream, apiKey, alternativeWsUrl, altern
             try {
                 json = JSON.parse(data)
             } catch (e) {
+                console.error(data.toString())
                 done(e)
                 return
             }

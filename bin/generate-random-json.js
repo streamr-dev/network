@@ -20,7 +20,7 @@ function genArray(size, elementFn) {
 }
 
 setInterval(() => {
-    console.log(JSON.stringify({
+    console.info(JSON.stringify({
         someText: randomString(64),
         aNumber: Math.random() * 10000,
         bNumber: Math.random(),
@@ -28,5 +28,5 @@ setInterval(() => {
         arrayOfStrings: genArray(Math.floor(Math.random() * 20), () => randomString(8)),
         arrayOfIntegers: genArray(Math.floor(Math.random() * 10), () => Math.floor(Math.random() * 100))
 
-    }, null, 2))
+    }))
 }, RATE_IN_MS)

@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const es = require('event-stream')
 const publishStream = require('../src/publish')
 
 if (process.argv.length < 3 || process.argv.length > 6) {
@@ -15,6 +16,7 @@ if (alternativeWsUrl && !alternativeHttpUrl) {
 
 const ps = publishStream(stream, apiKey, alternativeWsUrl, alternativeHttpUrl)
 process.stdin
+    .pipe(es.split())
     .pipe(ps)
     .on('error', (err) => {
         console.error(err)

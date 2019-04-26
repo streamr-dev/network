@@ -9,5 +9,5 @@ module.exports = function listen(stream, apiKey, alternativeWsUrl, alternativeHt
     new StreamrClient(options).subscribe({
         stream,
         apiKey
-    }, (message, metadata) => console.info(JSON.stringify(message, null, 2)))
+    }, (message, metadata) => console.info(JSON.stringify(message)))
 }
