@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Command line tools for Streamr.",
   "bin": {
     "generate-random-json": "bin/generate-random-json.js",
