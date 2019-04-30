@@ -4,9 +4,25 @@ const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
-const TimestampUtil = require('../utils/TimestampUtil')
 const VolumeLogger = require('../utils/VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
+
+function parseTimestamp(millisOrString) {
+    if (typeof millisOrString === 'number') {
+        return millisOrString
+    }
+    if (typeof millisOrString === 'string') {
+        // Try if this string represents a number
+        const timestamp = Number(millisOrString) || Date.parse(millisOrString)
+        if (Number.isNaN(timestamp)) {
+            throw new Error(`Invalid timestamp: ${millisOrString}`)
+        } else {
+            return timestamp
+        }
+    } else {
+        throw new Error(`Invalid timestamp: ${millisOrString}`)
+    }
+}
 
 /**
  * Endpoint for POSTing data to streams
@@ -59,7 +75,7 @@ module.exports = (streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) 
             }
 
             try {
-                timestamp = req.query.ts ? TimestampUtil.parse(req.query.ts) : Date.now()
+                timestamp = req.query.ts ? parseTimestamp(req.query.ts) : Date.now()
                 sequenceNumber = req.query.seq ? parseInteger(req.query.seq) : 0
                 if (req.query.prev_ts) {
                     const previousSequenceNumber = req.query.prev_seq ? parseInteger(req.query.prev_seq) : 0

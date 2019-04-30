@@ -270,30 +270,11 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     stream.setSubscribing()
                     this.networkNode.subscribe(request.streamId, request.streamPartition)
                     stream.setSubscribed()
-                    stream.emit('subscribed')
-                }
 
-                const onSubscribe = () => {
                     stream.addConnection(connection)
                     connection.addStream(stream)
                     debug('handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"', connection.id, connection.streamsAsString())
                     connection.send(ControlLayer.SubscribeResponse.create(request.streamId, request.streamPartition))
-                }
-
-                const onError = (err) => {
-                    connection.sendError(err)
-                }
-
-                if (stream.isSubscribed()) {
-                    onSubscribe()
-                } else {
-                    stream.once('subscribed', (err) => {
-                        if (err) {
-                            onError(err)
-                        } else {
-                            onSubscribe()
-                        }
-                    })
                 }
             })
             .catch((response) => {

@@ -1,4 +1,3 @@
-const debug = require('debug')('Publisher')
 const MessageNotSignedError = require('./errors/MessageNotSignedError')
 const VolumeLogger = require('./utils/VolumeLogger')
 

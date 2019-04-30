@@ -1,8 +1,5 @@
-const events = require('events')
-
-module.exports = class Stream extends events.EventEmitter {
+module.exports = class Stream {
     constructor(id, partition, state) {
-        super()
         this.id = id
         this.partition = partition
         this.state = state

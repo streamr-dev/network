@@ -1,4 +1,3 @@
-const events = require('events')
 const debug = require('debug')('streamr:StreamStateManager')
 const Stream = require('./Stream')
 
@@ -6,9 +5,8 @@ function getStreamLookupKey(streamId, streamPartition) {
     return `${streamId}-${streamPartition}`
 }
 
-module.exports = class StreamStateManager extends events.EventEmitter {
+module.exports = class StreamStateManager {
     constructor() {
-        super()
         this._streams = {}
     }
 

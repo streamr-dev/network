@@ -1,15 +1,18 @@
-const events = require('events')
 const debug = require('debug')('streamr:Connection')
 const qs = require('qs')
 const { ErrorResponse } = require('streamr-client-protocol').ControlLayer
 
 let nextId = 1
 
-module.exports = class Connection extends events.EventEmitter {
+function generateId() {
+    const id = `socketId-${nextId}`
+    nextId += 1
+    return id
+}
+
+module.exports = class Connection {
     constructor(socket, request) {
-        super()
-        this.id = `socketId-${nextId}`
-        nextId += 1
+        this.id = generateId()
         this.socket = socket
         this.streams = []
         const parts = request.url.split('?')
