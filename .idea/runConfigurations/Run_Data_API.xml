@@ -1,5 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Data API" type="NodeJSConfigurationType" factoryName="Node.js" application-parameters="--data-topic data-dev --zookeeper localhost --redis localhost --redis-pwd not-set --cassandra localhost --keyspace streamr_dev --streamr http://localhost:8081/streamr-core --port 8890" path-to-node="$USER_HOME$/.nvm/versions/node/v8.12.0/bin/node" path-to-js-file="data-api.js" working-dir="$PROJECT_DIR$">
-    <method v="2" />
-  </configuration>
-</component>
