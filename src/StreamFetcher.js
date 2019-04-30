@@ -1,10 +1,19 @@
 const fetch = require('node-fetch')
 const memoize = require('memoizee')
 const debug = require('debug')('streamr:StreamFetcher')
-const AuthorizationHeaderUtil = require('./utils/AuthorizationHeaderUtil')
 const HttpError = require('./errors/HttpError')
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
+
+function formHeaders(authKey, sessionToken) {
+    const headers = {}
+    if (sessionToken) {
+        headers.Authorization = `Bearer ${sessionToken}`
+    } else if (authKey) {
+        headers.Authorization = `token ${authKey}`
+    }
+    return headers
+}
 
 module.exports = class StreamFetcher {
     constructor(baseUrl) {
@@ -19,6 +28,14 @@ module.exports = class StreamFetcher {
         })
     }
 
+    authenticate(streamId, authKey, sessionToken, operation = 'read') {
+        if (operation === 'read') {
+            // No need to explicitly check permissions, as fetch will fail if no read permission
+            return this.fetch(streamId, authKey, sessionToken)
+        }
+        return this.checkPermission(streamId, authKey, sessionToken, operation).then(() => this.fetch(streamId, authKey, sessionToken))
+    }
+
     /**
      * Returns a Promise that resolves with the stream json. Fails if there is no read permission.
      *
@@ -29,7 +46,7 @@ module.exports = class StreamFetcher {
      * @private
      */
     _fetch(streamId, authKey, sessionToken) {
-        const headers = AuthorizationHeaderUtil.getAuthorizationHeader(authKey, sessionToken)
+        const headers = formHeaders(authKey, sessionToken)
 
         return fetch(`${this.streamResourceUrl}/${streamId}`, {
             headers,
@@ -62,7 +79,7 @@ module.exports = class StreamFetcher {
      * @private
      */
     _checkPermission(streamId, authKey, sessionToken, operation = 'read') {
-        const headers = AuthorizationHeaderUtil.getAuthorizationHeader(authKey, sessionToken)
+        const headers = formHeaders(authKey, sessionToken)
 
         return fetch(`${this.streamResourceUrl}/${streamId}/permissions/me`, {
             headers,
@@ -82,13 +99,10 @@ module.exports = class StreamFetcher {
             }
 
             return response.json().then((permissions) => {
-                for (let i = 0; i < permissions.length; ++i) {
-                    if (permissions[i].operation === operation) {
-                        return true
-                    }
+                if (permissions.some((p) => p.operation === operation)) {
+                    return true
                 }
 
-                // Permission was not found
                 debug(
                     'checkPermission failed for streamId %s key %s sessionToken %s operation %s. permissions were: %o',
                     streamId, authKey, sessionToken, operation, permissions,
@@ -96,13 +110,5 @@ module.exports = class StreamFetcher {
                 throw new HttpError(403)
             })
         })
-    }
-
-    authenticate(streamId, authKey, sessionToken, operation = 'read') {
-        if (operation === 'read') {
-            // No need to explicitly check permissions, as fetch will fail if no read permission
-            return this.fetch(streamId, authKey, sessionToken)
-        }
-        return this.checkPermission(streamId, authKey, sessionToken, operation).then(() => this.fetch(streamId, authKey, sessionToken))
     }
 }
