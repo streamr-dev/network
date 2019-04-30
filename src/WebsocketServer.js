@@ -1,7 +1,6 @@
 const events = require('events')
 const debug = require('debug')('streamr:WebsocketServer')
 const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
-const Stream = require('./Stream')
 const Connection = require('./Connection')
 const StreamStateManager = require('./StreamStateManager')
 const HttpError = require('./errors/HttpError')
@@ -32,8 +31,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.wss.on('connection', this.handleConnection.bind(this))
     }
 
-    handleConnection(socket, request) {
-        const connection = new Connection(socket, request)
+    handleConnection(socket, socketRequest) {
+        const connection = new Connection(socket, socketRequest)
         this.volumeLogger.connectionCount += 1
         debug('handleConnection: socket "%s" connected', connection.id)
 
@@ -219,7 +218,19 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         }
     }
 
-    broadcastMessage(streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId, previousTimestamp, previousSequenceNo, payload, signatureType, signature) {
+    broadcastMessage({
+        streamId,
+        streamPartition,
+        timestamp,
+        sequenceNo,
+        publisherId,
+        msgChainId,
+        previousTimestamp,
+        previousSequenceNo,
+        data,
+        signatureType,
+        signature,
+    }) {
         const stream = this.streams.getStreamObject(streamId, streamPartition)
 
         if (stream) {
@@ -234,7 +245,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 ],
                 [previousTimestamp, previousSequenceNo],
                 MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-                payload,
+                data,
                 signatureType,
                 signature,
             )

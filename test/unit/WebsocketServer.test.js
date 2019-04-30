@@ -366,18 +366,20 @@ describe('WebsocketServer', () => {
             mockSocket.receive(ControlLayer.SubscribeRequest.create('streamId', 0, 'correct'))
 
             setTimeout(() => {
-                realtimeAdapter.emit('message',
-                    streamMessagev30.getStreamId(),
-                    streamMessagev30.getStreamPartition(),
-                    streamMessagev30.getTimestamp(),
-                    streamMessagev30.messageId.sequenceNumber,
-                    streamMessagev30.getPublisherId(),
-                    streamMessagev30.messageId.msgChainId,
-                    streamMessagev30.prevMsgRef.timestamp,
-                    streamMessagev30.prevMsgRef.sequenceNumber,
-                    streamMessagev30.getContent(),
-                    streamMessagev30.signatureType,
-                    streamMessagev30.signature,
+                realtimeAdapter.emit(
+                    'message', {
+                        streamId: streamMessagev30.getStreamId(),
+                        streamPartition: streamMessagev30.getStreamPartition(),
+                        timestamp: streamMessagev30.getTimestamp(),
+                        sequenceNo: streamMessagev30.messageId.sequenceNumber,
+                        publisherId: streamMessagev30.getPublisherId(),
+                        msgChainId: streamMessagev30.messageId.msgChainId,
+                        previousTimestamp: streamMessagev30.prevMsgRef.timestamp,
+                        previousSequenceNo: streamMessagev30.prevMsgRef.sequenceNumber,
+                        data: streamMessagev30.getContent(),
+                        signatureType: streamMessagev30.signatureType,
+                        signature: streamMessagev30.signature,
+                    }
                 )
             })
 

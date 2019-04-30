@@ -22,7 +22,7 @@ describe('Connection', () => {
     })
 
     it('id returns socket id', () => {
-        assert.equal(connection.id, 'socketId')
+        assert.equal(connection.id, 'socketId-1')
     })
 
     it('parses defined version properly', () => {

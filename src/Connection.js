@@ -3,10 +3,13 @@ const debug = require('debug')('streamr:Connection')
 const qs = require('qs')
 const { ErrorResponse } = require('streamr-client-protocol').ControlLayer
 
+let nextId = 1
+
 module.exports = class Connection extends events.EventEmitter {
     constructor(socket, request) {
         super()
-        this.id = socket.id
+        this.id = `socketId-${nextId}`
+        nextId += 1
         this.socket = socket
         this.streams = []
         const parts = request.url.split('?')
