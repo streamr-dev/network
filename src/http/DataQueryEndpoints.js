@@ -3,7 +3,7 @@
  */
 const express = require('express')
 const { MessageRef } = require('streamr-client-protocol').MessageLayer
-const VolumeLogger = require('../utils/VolumeLogger')
+const VolumeLogger = require('../VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
 function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {

@@ -3,7 +3,7 @@ const express = require('express')
 const request = require('supertest')
 const sinon = require('sinon')
 const { StreamMessage, StreamMessageV30, MessageRef } = require('streamr-client-protocol').MessageLayer
-const restEndpointRouter = require('../../../src/rest/DataQueryEndpoints')
+const restEndpointRouter = require('../../../src/http/DataQueryEndpoints')
 const HttpError = require('../../../src/errors/HttpError')
 
 describe('DataQueryEndpoints', () => {

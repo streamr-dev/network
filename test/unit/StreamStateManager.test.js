@@ -1,5 +1,5 @@
 const assert = require('assert')
-const StreamStateManager = require('../../src/StreamStateManager')
+const StreamStateManager = require('../../src/websocket/StreamStateManager')
 
 describe('StreamStateManager', () => {
     let streams

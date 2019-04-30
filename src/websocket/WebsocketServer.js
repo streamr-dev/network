@@ -3,8 +3,8 @@ const debug = require('debug')('streamr:WebsocketServer')
 const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 const Connection = require('./Connection')
 const StreamStateManager = require('./StreamStateManager')
-const HttpError = require('./errors/HttpError')
-const VolumeLogger = require('./utils/VolumeLogger')
+const HttpError = require('../errors/HttpError')
+const VolumeLogger = require('../VolumeLogger')
 
 module.exports = class WebsocketServer extends events.EventEmitter {
     constructor(wss, networkNode, storage, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {

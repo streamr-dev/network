@@ -1,5 +1,5 @@
 const MessageNotSignedError = require('./errors/MessageNotSignedError')
-const VolumeLogger = require('./utils/VolumeLogger')
+const VolumeLogger = require('./VolumeLogger')
 
 module.exports = class Publisher {
     constructor(networkNode, partitioner, volumeLogger = new VolumeLogger(0)) {

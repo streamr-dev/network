@@ -4,7 +4,7 @@ const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
-const VolumeLogger = require('../utils/VolumeLogger')
+const VolumeLogger = require('../VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
 function parseTimestamp(millisOrString) {

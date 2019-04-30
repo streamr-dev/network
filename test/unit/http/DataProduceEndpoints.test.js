@@ -2,7 +2,7 @@ const sinon = require('sinon')
 const express = require('express')
 const request = require('supertest')
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
-const router = require('../../../src/rest/DataProduceEndpoints')
+const router = require('../../../src/http/DataProduceEndpoints')
 
 const FailedToPublishError = require('../../../src/errors/FailedToPublishError')
 const NotReadyError = require('../../../src/errors/NotReadyError')

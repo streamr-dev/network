@@ -7,22 +7,19 @@ const Optimist = require('optimist')
 const { startNetworkNode } = require('@streamr/streamr-p2p-network')
 
 const StreamFetcher = require('./src/StreamFetcher')
-const WebsocketServer = require('./src/WebsocketServer')
+const WebsocketServer = require('./src/websocket/WebsocketServer')
 const { startCassandraStorage } = require('./src/Storage')
 const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
-const VolumeLogger = require('./src/utils/VolumeLogger')
+const VolumeLogger = require('./src/VolumeLogger')
 
-const dataQueryEndpoints = require('./src/rest/DataQueryEndpoints')
-const dataProduceEndpoints = require('./src/rest/DataProduceEndpoints')
-const volumeEndpoint = require('./src/rest/VolumeEndpoint')
+const dataQueryEndpoints = require('./src/http/DataQueryEndpoints')
+const dataProduceEndpoints = require('./src/http/DataProduceEndpoints')
+const volumeEndpoint = require('./src/http/VolumeEndpoint')
 
 module.exports = async (config) => {
     const networkNode = await startNetworkNode(config.networkHostname, config.networkPort)
     networkNode.addBootstrapTracker('ws://127.0.0.1:30300')
-
-    const historicalAdapter = null
-    const latestOffsetFetcher = null
 
     // Create some utils
     const storage = await startCassandraStorage(
