@@ -1,16 +1,16 @@
 const assert = require('assert')
-const partitioner = require('../../src/Partitioner')
+const partition = require('../../src/partition')
 
-describe('partitioner', () => {
+describe('partition', () => {
     it('should throw if partition count is not defined', () => {
         assert.throws(() => {
-            partitioner.partition(undefined, 'foo')
+            partition(undefined, 'foo')
         })
     })
 
     it('should always return partition 0 for all keys if partition count is 1', () => {
         for (let i = 0; i < 100; i++) {
-            assert.equal(partitioner.partition(1, `foo${i}`), 0)
+            assert.equal(partition(1, `foo${i}`), 0)
         }
     })
 
@@ -28,10 +28,10 @@ describe('partitioner', () => {
         assert.equal(correctResults.length, keys.length, 'key array and result array are different size!')
 
         for (let i = 0; i < keys.length; i++) {
-            const partition = partitioner.partition(10, keys[i])
+            const p = partition(10, keys[i])
             assert.equal(
-                correctResults[i], partition,
-                `Partition is incorrect for key: ${keys[i]}. Was: ${partition}, should be: ${correctResults[i]}`,
+                correctResults[i], p,
+                `Partition is incorrect for key: ${keys[i]}. Was: ${p}, should be: ${correctResults[i]}`,
             )
         }
     })

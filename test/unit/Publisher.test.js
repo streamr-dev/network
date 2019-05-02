@@ -29,16 +29,11 @@ describe('Publisher', () => {
 
     let publisher
     let networkNode
-    let partitionerMock
 
     beforeEach(() => {
         networkNode = new events.EventEmitter()
         networkNode.publish = sinon.stub().resolves()
-        partitionerMock = {
-            partition: sinon.stub().returns(9),
-        }
-
-        publisher = new Publisher(networkNode, partitionerMock)
+        publisher = new Publisher(networkNode)
     })
 
     describe('publish', () => {

@@ -1,15 +1,15 @@
 const MessageNotSignedError = require('./errors/MessageNotSignedError')
 const VolumeLogger = require('./VolumeLogger')
+const partition = require('./partition')
 
 module.exports = class Publisher {
-    constructor(networkNode, partitioner, volumeLogger = new VolumeLogger(0)) {
+    constructor(networkNode, volumeLogger = new VolumeLogger(0)) {
         this.networkNode = networkNode
-        this.partitioner = partitioner
         this.volumeLogger = volumeLogger
     }
 
     getStreamPartition(stream, partitionKey) {
-        return this.partitioner.partition(stream.partitions, partitionKey)
+        return partition(stream.partitions, partitionKey)
     }
 
     async publish(stream, streamMessage) {

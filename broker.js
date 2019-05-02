@@ -9,7 +9,6 @@ const { startNetworkNode } = require('@streamr/streamr-p2p-network')
 const StreamFetcher = require('./src/StreamFetcher')
 const WebsocketServer = require('./src/websocket/WebsocketServer')
 const { startCassandraStorage } = require('./src/Storage')
-const Partitioner = require('./src/Partitioner')
 const Publisher = require('./src/Publisher')
 const VolumeLogger = require('./src/VolumeLogger')
 
@@ -31,7 +30,7 @@ module.exports = async (config) => {
     )
     const volumeLogger = new VolumeLogger()
     const streamFetcher = new StreamFetcher(config.streamr)
-    const publisher = new Publisher(networkNode, Partitioner, volumeLogger)
+    const publisher = new Publisher(networkNode, volumeLogger)
 
     // Create HTTP server
     const app = express()
