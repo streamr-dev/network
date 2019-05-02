@@ -1,5 +1,7 @@
 const OverlayTopology = require('../../src/logic/OverlayTopology')
 
+const maxNeighborsPerNodeArray = [4, 8, 12, 16]
+
 test('forming overlay topology', () => {
     const topology = new OverlayTopology(3, (arr) => arr, (arr) => arr[0])
 
@@ -226,41 +228,45 @@ test('forming overlay topology', () => {
 })
 
 test('unknown nodes are discarded', () => {
-    const topology = new OverlayTopology(3)
+    maxNeighborsPerNodeArray.forEach((maxNeighborsPerNode) => {
+        const topology = new OverlayTopology(maxNeighborsPerNode)
 
-    topology.update('node-1', [])
-    topology.update('node-2', [])
-    topology.update('node-3', [])
+        topology.update('node-1', [])
+        topology.update('node-2', [])
+        topology.update('node-3', [])
 
-    topology.update('node-1', ['node-2', 'node-3', 'node-4'])
-    expect(topology.state()).toEqual({
-        'node-1': [
-            'node-2',
-            'node-3'
-        ],
-        'node-2': [
-            'node-1'
-        ],
-        'node-3': [
-            'node-1'
-        ]
+        topology.update('node-1', ['node-2', 'node-3', 'node-4'])
+        expect(topology.state()).toEqual({
+            'node-1': [
+                'node-2',
+                'node-3'
+            ],
+            'node-2': [
+                'node-1'
+            ],
+            'node-3': [
+                'node-1'
+            ]
+        })
     })
 })
 
 // TODO: remove or write better, since not the best way to test randomness
 test('100 rounds of typical operation does not lead to invariant exception', () => {
-    for (let i = 0; i < 100; ++i) {
-        const topology = new OverlayTopology(4)
-        topology.update('node-1', [])
-        topology.update('node-2', [])
-        topology.formInstructions('node-2')
-        topology.update('node-3', [])
-        topology.formInstructions('node-3')
-        topology.update('node-4', [])
-        topology.formInstructions('node-4')
-        topology.update('node-5', [])
-        topology.formInstructions('node-5')
-        topology.update('node-0', [])
-        topology.formInstructions('node-0')
-    }
+    maxNeighborsPerNodeArray.forEach((maxNeighborsPerNode) => {
+        for (let i = 0; i < 100; ++i) {
+            const topology = new OverlayTopology(maxNeighborsPerNode)
+            topology.update('node-1', [])
+            topology.update('node-2', [])
+            topology.formInstructions('node-2')
+            topology.update('node-3', [])
+            topology.formInstructions('node-3')
+            topology.update('node-4', [])
+            topology.formInstructions('node-4')
+            topology.update('node-5', [])
+            topology.formInstructions('node-5')
+            topology.update('node-0', [])
+            topology.formInstructions('node-0')
+        }
+    })
 })
