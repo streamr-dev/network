@@ -6,6 +6,14 @@ const FailedToPublishError = require('../errors/FailedToPublishError')
 const NotReadyError = require('../errors/NotReadyError')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
+function parsePositiveInteger(n) {
+    const parsed = parseInt(n)
+    if (!Number.isInteger(parsed) || parsed < 0) {
+        throw new Error(`${n} is not a valid positive integer`)
+    }
+    return parsed
+}
+
 function parseTimestamp(millisOrString) {
     if (typeof millisOrString === 'number') {
         return millisOrString
@@ -61,22 +69,14 @@ module.exports = (streamFetcher, publisher) => {
             let previousMessageRef = null
             let signatureType
 
-            function parseInteger(n) {
-                const parsed = parseInt(n)
-                if (!Number.isInteger(parsed) || parsed < 0) {
-                    throw new Error(`${n} is not a valid positive integer`)
-                }
-                return parsed
-            }
-
             try {
                 timestamp = req.query.ts ? parseTimestamp(req.query.ts) : Date.now()
-                sequenceNumber = req.query.seq ? parseInteger(req.query.seq) : 0
+                sequenceNumber = req.query.seq ? parsePositiveInteger(req.query.seq) : 0
                 if (req.query.prev_ts) {
-                    const previousSequenceNumber = req.query.prev_seq ? parseInteger(req.query.prev_seq) : 0
-                    previousMessageRef = [parseInteger(req.query.prev_ts), previousSequenceNumber]
+                    const previousSequenceNumber = req.query.prev_seq ? parsePositiveInteger(req.query.prev_seq) : 0
+                    previousMessageRef = [parsePositiveInteger(req.query.prev_ts), previousSequenceNumber]
                 }
-                signatureType = req.query.signatureType ? parseInteger(req.query.signatureType) : 0
+                signatureType = req.query.signatureType ? parsePositiveInteger(req.query.signatureType) : 0
             } catch (err) {
                 res.status(400).send({
                     error: err.message,
@@ -108,14 +108,8 @@ module.exports = (streamFetcher, publisher) => {
                     res.status(400).send({
                         error: err.message,
                     })
-                } else if (err instanceof FailedToPublishError) {
-                    res.status(500).send({
-                        error: 'Internal error, sorry',
-                    })
-                } else if (err instanceof NotReadyError) {
-                    res.status(503).send({
-                        error: err.message,
-                    })
+                } else {
+                    console.error(err)
                 }
             })
         },
