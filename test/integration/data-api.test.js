@@ -3,7 +3,8 @@ const fetch = require('node-fetch')
 const WebSocket = require('ws')
 const createBroker = require('../../broker')
 
-const port = 12345
+const httpPort = 12345
+const wsPort = 12346
 
 describe('data-api', () => {
     let dataApi
@@ -16,7 +17,8 @@ describe('data-api', () => {
             networkHostname: '127.0.0.1',
             networkPort: 31313,
             streamr: 'http://localhost:8081/streamr-core',
-            port,
+            httpPort,
+            wsPort,
         })
     })
 
@@ -24,12 +26,8 @@ describe('data-api', () => {
         dataApi.close()
     })
 
-    it('is listening for http requests', () => {
-        assert(dataApi.httpServer.listening)
-    })
-
     it('accepts websocket connections', (done) => {
-        const ws = new WebSocket(`ws://localhost:${port}/api/v1/ws`)
+        const ws = new WebSocket(`ws://localhost:${wsPort}/api/v1/ws`)
         ws.on('open', () => {
             ws.close()
             done()
@@ -37,7 +35,7 @@ describe('data-api', () => {
     })
 
     it('returns 400 response code for invalid websocket requests', (done) => {
-        fetch(`http://localhost:${port}/api/v1/ws`, {
+        fetch(`http://localhost:${wsPort}/api/v1/ws`, {
             method: 'GET',
             headers: {
                 Connection: 'upgrade',

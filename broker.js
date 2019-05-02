@@ -1,91 +1,48 @@
-const http = require('http')
-const cors = require('cors')
-const express = require('express')
-const ws = require('ws')
 const Optimist = require('optimist')
-
 const { startNetworkNode } = require('@streamr/streamr-p2p-network')
 
 const StreamFetcher = require('./src/StreamFetcher')
-const WebsocketServer = require('./src/websocket/WebsocketServer')
 const { startCassandraStorage } = require('./src/Storage')
 const Publisher = require('./src/Publisher')
 const VolumeLogger = require('./src/VolumeLogger')
 
-const dataQueryEndpoints = require('./src/http/DataQueryEndpoints')
-const dataProduceEndpoints = require('./src/http/DataProduceEndpoints')
-const volumeEndpoint = require('./src/http/VolumeEndpoint')
+const startHttpAdapter = require('./src/http/index')
+const startWsAdapter = require('./src/websocket/index')
 
 module.exports = async (config) => {
+    // Start network node
     const networkNode = await startNetworkNode(config.networkHostname, config.networkPort)
     networkNode.addBootstrapTracker('ws://127.0.0.1:30300')
 
-    // Create some utils
+    // Start storage
     const storage = await startCassandraStorage(
         config.cassandra.split(','),
         'datacenter1',
         config.keyspace,
         config['cassandra-username'],
-        config['cassandra-pwd']
+        config['cassandra-pwd'],
     )
+
+    // Init utils
     const volumeLogger = new VolumeLogger()
     const streamFetcher = new StreamFetcher(config.streamr)
     const publisher = new Publisher(networkNode, volumeLogger)
 
-    // Create HTTP server
-    const app = express()
-    const httpServer = http.Server(app)
+    console.info(`Configured with Streamr: ${config.streamr}`)
+    console.info(`Network node running on ${config.networkHostname}:${config.networkPort}`)
 
-    // Add CORS headers
-    app.use(cors())
-
-    // Websocket endpoint is handled by WebsocketServer
-    const websocketServer = new WebsocketServer(
-        new ws.Server({
-            server: httpServer,
-            path: '/api/v1/ws',
-            /**
-             * Gracefully reject clients sending invalid headers. Without this change, the connection gets abruptly closed,
-             * which makes load balancers such as nginx think the node is not healthy.
-             * This blocks ill-behaving clients sending invalid headers, as well as very old websocket implementations
-             * using draft 00 protocol version (https://tools.ietf.org/html/draft-ietf-hybi-thewebsocketprotocol-00)
-             */
-            verifyClient: (info, cb) => {
-                if (info.req.headers['sec-websocket-key']) {
-                    cb(true)
-                } else {
-                    cb(false, 400, 'Invalid headers on websocket request. Please upgrade your browser or websocket library!')
-                }
-            },
-        }),
+    const closeAdapterFns = [startHttpAdapter, startWsAdapter].map((startAdapterFn) => startAdapterFn({
         networkNode,
         storage,
-        streamFetcher,
         publisher,
+        streamFetcher,
         volumeLogger,
-    )
-
-    // Rest endpoints
-    app.use('/api/v1', dataQueryEndpoints(storage, streamFetcher, volumeLogger))
-    app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher, volumeLogger))
-    app.use('/api/v1', volumeEndpoint(volumeLogger))
-
-    // Start the server
-    httpServer.listen(config.port, () => {
-        console.info(`Configured with Streamr: ${config.streamr}`)
-        console.info(`Network node running on ${config.networkHostname}:${config.networkPort}`)
-        console.info(`Listening on port ${config.port}`)
-        httpServer.emit('listening')
-    })
+        config,
+    }))
 
     return {
-        httpServer,
-        websocketServer,
         close: () => {
-            httpServer.close()
-            networkNode.close()
-            storage.close()
-            volumeLogger.stop()
+            closeAdapterFns.forEach((close) => close())
         },
     }
 }
@@ -101,8 +58,9 @@ if (require.main === module) {
         --networkHostname <networkHostname>
         --networkPort <networkPort>
         --streamr <streamr>
-        --port <port>`)
-    optimist = optimist.demand(['cassandra', 'cassandra-username', 'cassandra-pwd', 'keyspace', 'networkHostname', 'networkPort', 'streamr', 'port'])
+        --httpPort <httpPort>
+        --wsPort <wsPort>`)
+    optimist = optimist.demand(['cassandra', 'cassandra-username', 'cassandra-pwd', 'keyspace', 'networkHostname', 'networkPort', 'streamr', 'httpPort', 'wsPort'])
 
     module.exports(optimist.argv)
         .then(() => {})

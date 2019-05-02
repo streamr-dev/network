@@ -31,6 +31,10 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.wss.on('connection', this.handleConnection.bind(this))
     }
 
+    close() {
+        this.wss.close()
+    }
+
     handleConnection(socket, socketRequest) {
         const connection = new Connection(socket, socketRequest)
         this.volumeLogger.connectionCount += 1
