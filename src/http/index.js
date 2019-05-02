@@ -1,17 +1,15 @@
 const cors = require('cors')
 const express = require('express')
 
+const adapterRegistry = require('../adapterRegistry')
 const dataQueryEndpoints = require('./DataQueryEndpoints')
 const dataProduceEndpoints = require('./DataProduceEndpoints')
 const volumeEndpoint = require('./VolumeEndpoint')
 
-module.exports = ({
-    publisher,
+adapterRegistry.register('http', ({ port }, { publisher,
     storage,
     streamFetcher,
-    volumeLogger,
-    config,
-}) => {
+    volumeLogger }) => {
     const app = express()
 
     // Add CORS headers
@@ -22,6 +20,6 @@ module.exports = ({
     app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher, volumeLogger))
     app.use('/api/v1', volumeEndpoint(volumeLogger))
 
-    const httpServer = app.listen(config.httpPort, () => console.info(`HTTP adapter listening on ${config.httpPort}`))
+    const httpServer = app.listen(port, () => console.info(`HTTP adapter listening on ${httpServer.address().port}`))
     return () => httpServer.stop()
-}
+})

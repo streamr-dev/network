@@ -6,7 +6,7 @@
     "type": "git",
     "url": "git+https://github.com/streamr-dev/broker.git"
   },
-  "main": "broker.js",
+  "main": "app.js",
   "directories": {
     "test": "test"
   },
@@ -27,6 +27,7 @@
     "body-parser": "^1.15.2",
     "buffermaker": "1.2.0",
     "cassandra-driver": "^4.1.0",
+    "commander": "^2.20.0",
     "cors": "^2.7.1",
     "debug": "*",
     "express": "^4.14.0",
@@ -34,10 +35,9 @@
     "merge2": "^1.2.3",
     "murmurhash-native": "^3.2.4",
     "node-fetch": "^2.2.0",
-    "optimist": "*",
     "qs": "^6.7.0",
-    "ws": "^6.2.1",
-    "streamr-client-protocol": "^2.1.0"
+    "streamr-client-protocol": "^2.1.0",
+    "ws": "^6.2.1"
   },
   "devDependencies": {
     "babel-eslint": "^10.0.1",

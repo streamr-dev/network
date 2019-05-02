@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Broker (8892, 8993)" type="NodeJSConfigurationType" application-parameters="--cassandra 127.0.0.1 --cassandra-username notused --cassandra-pwd notused --keyspace streamr_dev --networkHostname 127.0.0.1 --networkPort 30316 --streamr http://localhost:8081/streamr-core --httpPort 8893 --wsPort 8892" path-to-js-file="broker.js" working-dir="$PROJECT_DIR$">
+  <configuration default="false" name="Run Broker (8892, 8993)" type="NodeJSConfigurationType" application-parameters="configs/development-2.env.json" path-to-js-file="app.js" working-dir="$PROJECT_DIR$">
     <envs>
       <env name="DEBUG" value="streamr:*" />
     </envs>

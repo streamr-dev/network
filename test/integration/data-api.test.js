@@ -1,7 +1,7 @@
 const assert = require('assert')
 const fetch = require('node-fetch')
 const WebSocket = require('ws')
-const createBroker = require('../../broker')
+const createBroker = require('../../src/broker')
 
 const httpPort = 12345
 const wsPort = 12346
@@ -12,13 +12,30 @@ describe('data-api', () => {
     beforeAll(async () => {
         // Start the app
         dataApi = await createBroker({
-            cassandra: 'localhost',
-            keyspace: 'streamr_dev',
-            networkHostname: '127.0.0.1',
-            networkPort: 31313,
-            streamr: 'http://localhost:8081/streamr-core',
-            httpPort,
-            wsPort,
+            network: {
+                hostname: '127.0.0.1',
+                port: '31313',
+                tracker: 'ws://127.0.0.1:30300',
+            },
+            cassandra: {
+                hosts: [
+                    'localhost',
+                ],
+                username: '',
+                password: '',
+                keyspace: 'streamr_dev',
+            },
+            streamrUrl: 'http://localhost:8081/streamr-core',
+            adapters: [
+                {
+                    name: 'ws',
+                    port: wsPort,
+                },
+                {
+                    name: 'http',
+                    port: httpPort,
+                },
+            ],
         })
     })
 

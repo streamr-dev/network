@@ -1,18 +1,22 @@
 const ws = require('ws')
 
+const MissingConfigError = require('../errors/MissingConfigError')
+const adapterRegistry = require('../adapterRegistry')
 const WebsocketServer = require('./WebsocketServer')
 
-module.exports = ({
+adapterRegistry.register('ws', ({ port }, {
     networkNode,
     publisher,
     storage,
     streamFetcher,
     volumeLogger,
-    config,
 }) => {
+    if (port === undefined) {
+        throw new MissingConfigError('port')
+    }
     const websocketServer = new WebsocketServer(
         new ws.Server({
-            port: config.wsPort,
+            port,
             path: '/api/v1/ws',
             /**
              * Gracefully reject clients sending invalid headers. Without this change, the connection gets abruptly closed,
@@ -27,13 +31,12 @@ module.exports = ({
                     cb(false, 400, 'Invalid headers on websocket request. Please upgrade your browser or websocket library!')
                 }
             },
-        }),
+        }).on('listening', () => console.info(`WS adapter listening on ${port}`)),
         networkNode,
         storage,
         streamFetcher,
         publisher,
         volumeLogger,
     )
-    websocketServer.on('listening', () => console.info(`WS adapter listening on ${config.wsPort}`))
     return () => websocketServer.close()
-}
+})
