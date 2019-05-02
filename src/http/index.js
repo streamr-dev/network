@@ -17,7 +17,7 @@ adapterRegistry.register('http', ({ port }, { publisher,
 
     // Rest endpoints
     app.use('/api/v1', dataQueryEndpoints(storage, streamFetcher, volumeLogger))
-    app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher, volumeLogger))
+    app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher))
     app.use('/api/v1', volumeEndpoint(volumeLogger))
 
     const httpServer = app.listen(port, () => console.info(`HTTP adapter listening on ${httpServer.address().port}`))
