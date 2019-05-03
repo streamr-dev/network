@@ -109,7 +109,7 @@ describe('WebsocketServer', () => {
         mockSocket = new MockSocket(controlLayerVersion, messageLayerVersion)
 
         // Create the server instance
-        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, streamFetcher, publisher)
+        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, streamFetcher, publisher, () => 0)
     })
 
     afterEach(() => {
@@ -723,11 +723,6 @@ describe('WebsocketServer', () => {
         it('calls the publisher for valid requests (V0)', (done) => {
             const ts = Date.now()
             const req = new ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}', ts)
-            publisher.getStreamPartition = (stream, partitionKey) => {
-                assert.deepEqual(stream, myStream)
-                assert.equal(partitionKey, undefined)
-                return 0
-            }
             publisher.publish = (stream, streamMessage) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(streamMessage.getStreamPartition(), 0)
@@ -743,11 +738,6 @@ describe('WebsocketServer', () => {
         it('reads optional fields if specified (V0)', (done) => {
             const ts = Date.now()
             const req = new ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}', ts, 'foo')
-            publisher.getStreamPartition = (stream, partitionKey) => {
-                assert.deepEqual(stream, myStream)
-                assert.equal(partitionKey, 'foo')
-                return 0
-            }
             publisher.publish = (stream, streamMessage) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(streamMessage.getStreamPartition(), 0)
@@ -766,11 +756,6 @@ describe('WebsocketServer', () => {
                 myStream.streamId, 'correct', undefined, '{}',
                 ts, undefined, 'address', MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
-            publisher.getStreamPartition = (stream, partitionKey) => {
-                assert.deepEqual(stream, myStream)
-                assert.equal(partitionKey, undefined)
-                return 0
-            }
             publisher.publish = (stream, streamMessage) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(streamMessage.getStreamPartition(), 0)

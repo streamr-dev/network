@@ -1,19 +1,22 @@
 const events = require('events')
 const debug = require('debug')('streamr:WebsocketServer')
 const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
-const Connection = require('./Connection')
-const StreamStateManager = require('./StreamStateManager')
 const HttpError = require('../errors/HttpError')
 const VolumeLogger = require('../VolumeLogger')
+const partition = require('../partition')
+const Connection = require('./Connection')
+const StreamStateManager = require('./StreamStateManager')
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(wss, networkNode, storage, streamFetcher, publisher, volumeLogger = new VolumeLogger(0)) {
+    constructor(wss, networkNode, storage, streamFetcher, publisher,
+        partitionFn = partition, volumeLogger = new VolumeLogger(0)) {
         super()
         this.wss = wss
         this.networkNode = networkNode
         this.storage = storage
         this.streamFetcher = streamFetcher
         this.publisher = publisher
+        this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
         this.streams = new StreamStateManager()
 
@@ -67,7 +70,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             .then((stream) => {
                 let streamPartition
                 if (request.version === 0) {
-                    streamPartition = this.publisher.getStreamPartition(stream, request.partitionKey)
+                    streamPartition = this.partitionFn(stream.partitions, request.partitionKey)
                 }
                 this.publisher.publish(stream, request.getStreamMessage(streamPartition))
             })

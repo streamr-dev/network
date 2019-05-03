@@ -52,10 +52,9 @@ describe('DataProduceEndpoints', () => {
 
         publisherMock = {
             publish: sinon.stub().resolves(),
-            getStreamPartition: sinon.stub().returns(0),
         }
 
-        app.use(router(streamFetcher, publisherMock))
+        app.use(router(streamFetcher, publisherMock, () => 0))
     })
 
     it('should call Publisher.publish() with correct arguments', (done) => {
@@ -133,13 +132,6 @@ describe('DataProduceEndpoints', () => {
             .expect(200, done)
     })
 
-    it('returns 503 if the publisher throws NotReadyError', (done) => {
-        publisherMock.publish = sinon.stub().rejects(new NotReadyError())
-
-        postRequest()
-            .expect(503, done)
-    })
-
     it('should return 400 if the body is empty', (done) => {
         postRequest({
             streamId: 'streamId',
@@ -205,11 +197,5 @@ describe('DataProduceEndpoints', () => {
             body,
         })
             .expect(413, done)
-    })
-
-    it('returns 500 if there is an error producing to kafka', (done) => {
-        publisherMock.publish = sinon.stub().rejects(new FailedToPublishError())
-        postRequest()
-            .expect(500, done)
     })
 })

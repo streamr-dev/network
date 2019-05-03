@@ -2,8 +2,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
-const FailedToPublishError = require('../errors/FailedToPublishError')
-const NotReadyError = require('../errors/NotReadyError')
+const partition = require('../partition')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
 function parsePositiveInteger(n) {
@@ -34,7 +33,7 @@ function parseTimestamp(millisOrString) {
 /**
  * Endpoint for POSTing data to streams
  */
-module.exports = (streamFetcher, publisher) => {
+module.exports = (streamFetcher, publisher, partitionFn = partition) => {
     if (!streamFetcher) {
         throw new Error('No StreamFetcher given! Must use: new StreamrDataApi(streamrUrl)')
     }
@@ -89,7 +88,7 @@ module.exports = (streamFetcher, publisher) => {
                 req.stream,
                 StreamMessage.create(
                     [req.stream.streamId,
-                        publisher.getStreamPartition(req.stream, req.query.pkey),
+                        partitionFn(req.stream.partitions, req.query.pkey),
                         timestamp,
                         sequenceNumber, // sequenceNumber
                         req.query.address || '', // publisherId

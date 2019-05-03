@@ -37,16 +37,8 @@ describe('Publisher', () => {
     })
 
     describe('publish', () => {
-        it('should return a promise', () => {
-            const promise = publisher.publish(stream, streamMessageUnsigned).catch(() => {})
-            assert(promise instanceof Promise)
-        })
-
-        it('should throw MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData flag', (done) => {
-            publisher.publish(signedStream, streamMessageUnsigned).catch((err) => {
-                assert(err instanceof MessageNotSignedError, err)
-                done()
-            })
+        it('should throw MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData flag', () => {
+            expect(() => publisher.publish(signedStream, streamMessageUnsigned)).toThrow(MessageNotSignedError)
         })
 
         it('should call NetworkNode.send with correct values', (done) => {
