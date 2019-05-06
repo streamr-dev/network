@@ -22,6 +22,28 @@ describe('WebsocketServer', () => {
         streamId: 'streamId',
     }
 
+    const autoStream = {
+        streamId: 'streamId2',
+        autoConfigure: true,
+    }
+
+    const fieldsStream = {
+        streamId: 'streamId3',
+        autoConfigure: true,
+        config: {
+            fields: [{
+                name: 'name',
+                type: 'type',
+            }],
+        },
+    }
+
+    const streams = {
+        streamId: myStream,
+        streamId2: autoStream,
+        streamId3: fieldsStream,
+    }
+
     const streamMessagev29 = new MessageLayer.StreamMessageV29(
         'streamId',
         0, // partition
@@ -40,6 +62,32 @@ describe('WebsocketServer', () => {
 
     const streamMessagev30 = new MessageLayer.StreamMessageV30(
         ['streamId', 0, 1491037200100, 0, 'publisherId', '1'],
+        [1491037200000, 0],
+        MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+        {
+            hello: 'world',
+        },
+        MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
+        'signature',
+    )
+
+    const streamMessage2v30 = new MessageLayer.StreamMessageV30(
+        ['streamId2', 0, 1491037200100, 0, 'publisherId', '1'],
+        [1491037200000, 0],
+        MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+        {
+            field1: 'world',
+            field2: 12,
+            field3: true,
+            field4: [],
+            field5: {},
+        },
+        MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH,
+        'signature',
+    )
+
+    const streamMessage3v30 = new MessageLayer.StreamMessageV30(
+        ['streamId3', 0, 1491037200100, 0, 'publisherId', '1'],
         [1491037200000, 0],
         MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
         {
@@ -83,7 +131,7 @@ describe('WebsocketServer', () => {
             authenticate(streamId, authKey, sessionToken) {
                 return new Promise(((resolve, reject) => {
                     if (authKey === 'correct' || sessionToken === 'correct') {
-                        resolve(myStream)
+                        resolve(streams[streamId])
                     } else if (authKey === 'correctButNoPermission' || sessionToken === 'correctButNoPermission') {
                         reject(new Error(401))
                     } else {
@@ -91,6 +139,7 @@ describe('WebsocketServer', () => {
                     }
                 }))
             },
+            setFields: sinon.stub().resolves(''),
         }
 
         publisher = {
@@ -695,8 +744,56 @@ describe('WebsocketServer', () => {
                 assert.equal(streamMessage.getContent(), req.streamMessage.getContent())
                 assert.equal(streamMessage.signatureType, req.streamMessage.signatureType)
                 assert.equal(streamMessage.signature, req.streamMessage.signature)
+                // doesn't try to set fields for a stream with autoConfigure = false
+                assert(streamFetcher.setFields.notCalled)
                 done()
             }
+
+            mockSocket.receive(req)
+        })
+
+        it('sets the fields once for the stream', (done) => {
+            const req = ControlLayer.PublishRequest.create(streamMessage2v30, 'correct')
+            const req2 = ControlLayer.PublishRequest.create(streamMessage2v30, 'correct')
+            publisher.publish = sinon.stub().onSecondCall().callsFake(() => {
+                assert(streamFetcher.setFields.calledOnce)
+                done()
+            })
+
+            streamFetcher.setFields = sinon.stub().callsFake((streamId, fields) => {
+                assert.equal(streamId, autoStream.streamId)
+                assert.deepEqual(fields, [{
+                    name: 'field1',
+                    type: 'string',
+                }, {
+                    name: 'field2',
+                    type: 'number',
+                }, {
+                    name: 'field3',
+                    type: 'boolean',
+                }, {
+                    name: 'field4',
+                    type: 'list',
+                }, {
+                    name: 'field5',
+                    type: 'map',
+                }])
+                return Promise.resolve()
+            })
+
+            mockSocket.receive(req)
+            mockSocket.receive(req2)
+        })
+
+        it('doesnt set the fields for stream with existing fields', (done) => {
+            const req = ControlLayer.PublishRequest.create(streamMessage3v30, 'correct')
+
+            publisher.publish = () => {
+                assert(streamFetcher.setFields.notCalled)
+                done()
+            }
+
+            streamFetcher.setFields = sinon.stub().throws()
 
             mockSocket.receive(req)
         })
