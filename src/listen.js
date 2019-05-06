@@ -8,8 +8,13 @@ module.exports = function listen(stream, apiKey, alternativeWsUrl, alternativeHt
         auth
     } : { auth }
 
-    new StreamrClient(options).subscribe({
+    const client = new StreamrClient(options)
+    client.subscribe({
         stream,
         apiKey
     }, (message, metadata) => console.info(JSON.stringify(message)))
+    client.on('error', (err) => {
+        console.error(err.message ? err.message : err)
+        process.exit(1)
+    })
 }
