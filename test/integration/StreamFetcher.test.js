@@ -1,6 +1,7 @@
 const assert = require('assert')
 const express = require('express')
 const sinon = require('sinon')
+const bodyParser = require('body-parser')
 const uuid = require('uuid')
 const StreamFetcher = require('../../src/StreamFetcher')
 const HttpError = require('../../src/errors/HttpError')
@@ -24,9 +25,13 @@ describe('StreamFetcher', () => {
         // Create fake server endpoint for testing purposes
         expressApp = express()
 
+        expressApp.use(bodyParser.json())
+
         expressApp.get('/api/v1/streams/:id/permissions/me', (req, res) => requestHandlers.permissions(req, res))
 
         expressApp.get('/api/v1/streams/:id', (req, res) => requestHandlers.stream(req, res))
+
+        expressApp.post('/api/v1/streams/:id/fields', (req, res) => requestHandlers.fields(req, res))
 
         server = expressApp.listen(6194, () => {
             console.info('Server started on port 6194\n')
@@ -67,6 +72,21 @@ describe('StreamFetcher', () => {
                 } else if (req.get('Authorization') !== 'token key' && req.get('Authorization') !== 'Bearer session-token') {
                     res.sendStatus(403)
                 } else {
+                    res.status(200).send(streamJson)
+                }
+            },
+            fields(req, res) {
+                numOfRequests += 1
+                if (broken) {
+                    res.sendStatus(500)
+                } else if (req.params.id !== streamId) {
+                    res.sendStatus(404)
+                } else if (req.get('Authorization') !== 'token key' && req.get('Authorization') !== 'Bearer session-token') {
+                    res.sendStatus(403)
+                } else {
+                    /* eslint-disable prefer-destructuring */
+                    streamJson.config.fields = req.body
+                    /* eslint-enable prefer-destructuring */
                     res.status(200).send(streamJson)
                 }
             },
@@ -395,6 +415,19 @@ describe('StreamFetcher', () => {
             streamFetcher.authenticate(streamId, undefined, 'session-token', 'write').then((json) => {
                 assert.equal(numOfRequests, 2)
                 assert.deepEqual(json, streamJson)
+                done()
+            })
+        })
+    })
+
+    describe('setFields', () => {
+        it('sets fields', (done) => {
+            const fields = [{
+                name: 'field1',
+                type: 'type1',
+            }]
+            streamFetcher.setFields(streamId, fields, undefined, 'session-token').then(() => {
+                assert.deepStrictEqual(streamJson.config.fields, fields)
                 done()
             })
         })

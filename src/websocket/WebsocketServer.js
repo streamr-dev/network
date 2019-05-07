@@ -19,6 +19,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
         this.streams = new StreamStateManager()
+        this.configSet = {}
 
         this.requestHandlersByMessageType = {}
         this.requestHandlersByMessageType[ControlLayer.SubscribeRequest.TYPE] = this.handleSubscribeRequest
@@ -72,7 +73,33 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 if (request.version === 0) {
                     streamPartition = this.partitionFn(stream.partitions, request.partitionKey)
                 }
-                this.publisher.publish(stream, request.getStreamMessage(streamPartition))
+                const streamMessage = request.getStreamMessage(streamPartition)
+
+                if (!this.configSet[streamId] && stream.autoConfigure &&
+                    (!stream.config || !stream.config.fields || stream.config.fields.length === 0)) {
+                    this.configSet[streamId] = true
+                    const content = streamMessage.getParsedContent()
+                    const fields = []
+                    Object.keys(content).forEach((key) => {
+                        let type
+                        if (Array.isArray(content[key])) {
+                            type = 'list'
+                        } else if ((typeof content[key]) === 'object') {
+                            type = 'map'
+                        } else {
+                            type = typeof content[key]
+                        }
+                        fields.push({
+                            name: key,
+                            type,
+                        })
+                    })
+                    this.streamFetcher.setFields(streamId, fields, request.apiKey, request.sessionToken).catch(() => {
+                        this.configSet[streamId] = false
+                    })
+                }
+
+                this.publisher.publish(stream, streamMessage)
             })
             .catch((err) => {
                 let errorMsg

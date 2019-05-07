@@ -111,4 +111,27 @@ module.exports = class StreamFetcher {
             })
         })
     }
+
+    setFields(streamId, fields, apiKey, sessionToken) {
+        const headers = formHeaders(apiKey, sessionToken)
+        headers['Content-Type'] = 'application/json'
+        return fetch(`${this.streamResourceUrl}/${streamId}/fields`, {
+            method: 'POST',
+            body: JSON.stringify(fields),
+            headers,
+        }).catch((e) => {
+            console.error(`failed to communicate with E&E: ${e}`)
+            throw e
+        }).then(async (response) => {
+            if (response.status !== 200) {
+                debug(
+                    'fetch failed with status %d for streamId %s key %s sessionToken %s : %o',
+                    response.status, streamId, apiKey, sessionToken, response.text(),
+                )
+                throw new HttpError(response.status)
+            } else {
+                return response.json()
+            }
+        })
+    }
 }
