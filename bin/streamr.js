@@ -8,4 +8,7 @@ program
     .command('generate', 'generate JSON data')
     .command('listen', 'listen to a stream')
     .command('publish', 'publish to a stream')
+    .command('list', 'fetch a list of streams')
+    .command('show', 'info about a stream')
+    .command("create", "create a new stream")
     .parse(process.argv)

@@ -58,6 +58,24 @@ Useful for generating test data to be published to a stream with `publish`, e.g.
 streamr generate | streamr publish streamId apiKey
 ```
 
+### list
+Fetch a list of streams that are accessible to the given api key
+```
+streamr list apiKey
+```
+
+### show
+Show detailed information about a specific stream
+```
+streamr show streamId apiKey
+```
+
+## create
+Create a new stream
+```
+streamr create name apiKey
+```
+
 ### Piping with listen and publish
 
 You can use the piping facilities of your *nix operating system with commands `publish` and `listen` to achieve some
