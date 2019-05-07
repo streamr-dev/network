@@ -84,12 +84,21 @@ export default class StreamrClient extends EventEmitter {
         // Event handling on connection object
         this.connection = connection || new Connection(this.options)
 
-        this.msgCreationUtil = new MessageCreationUtil(
-            this.options.auth, this.signer, this.getUserInfo().catch((err) => this.emit('error', err)),
-            (streamId) => this.getStream(streamId).catch((err) => this.emit('error', err)),
-        )
+        if (this.session.isUnauthenticated()) {
+            this.msgCreationUtil = null
+        } else {
+            this.msgCreationUtil = new MessageCreationUtil(
+                this.options.auth, this.signer, this.getUserInfo()
+                    .catch((err) => this.emit('error', err)),
+                (streamId) => this.getStream(streamId)
+                    .catch((err) => this.emit('error', err)),
+            )
+        }
 
-        this.on('error', () => this.ensureDisconnected())
+        this.on('error', (error) => {
+            console.error(error)
+            this.ensureDisconnected()
+        })
 
         // Broadcast messages to all subs listening on stream
         this.connection.on(BroadcastMessage.TYPE, (msg) => {
@@ -255,6 +264,9 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async publish(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null) {
+        if (this.session.isUnauthenticated()) {
+            throw new Error('Need to be authenticated to publish.')
+        }
         // Validate streamObjectOrId
         let streamId
         if (streamObjectOrId instanceof Stream) {

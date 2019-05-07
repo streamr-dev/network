@@ -29,6 +29,10 @@ export default class Session extends EventEmitter {
         }
     }
 
+    isUnauthenticated() {
+        return this.options.unauthenticated
+    }
+
     updateState(newState) {
         this.state = newState
         this.emit(newState)
