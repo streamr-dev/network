@@ -15,108 +15,74 @@ npm publish --access=public
 ```
 
 ## Usage
+To get a list of all (sub)commands simply run `streamr`.
 
-### `listen-to-stream` and `listen-to-stream-dev`
+All (sub)commands follow pattern `streamr <command>`.
 
-Commands `listen-to-stream` and `listen-to-stream-dev` are used to subscribe to
-a stream and output real-time JSON objects to stdout line-by-line.
+Run `streamr help <command>` or `streamr <command> --help` to get more information about a a command, its options, and
+so forth.
 
-#### Public stream
-To listen to a public stream such as the Public transport demo:
+### listen
+Used to subscribe to a stream and output real-time JSON objects to stdout line-by-line.
 
+For example, to listen to a public stream such as the tram demo do
 ```
-listen-to-stream 7wa7APtlTq6EC5iTCBy6dw
+streamr listen 7wa7APtlTq6EC5iTCBy6dw
 ```
 
-#### Private stream
 To listen to a private stream:
 
 ```
-listen-to-stream streamId apiKey
+streamr listen streamId apiKey
 ```
 
-where _apiKey_ is the key of the user or stream with READ privilege.
+Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
 
-#### Development environment stream
-Listen to a development environment stream
-```
-listen-to-stream streamId apiKey ws://localhost:8890/api/v1/ws http://localhost:8081/streamr-core/api/v1
-```
 
-or shorthand (when running [streamr-docker-dev](https://github.com/streamr-dev/streamr-docker-dev) environment)
+###  publish
+Used to publish events to a stream from stdin line-by-line. Each line should be a valid JSON object.
 
+Example of use:
 ```
-listen-to-stream-dev streamId apiKey
+streamr publish streamId apiKey
 ```
 
-### `publish-to-stream` and `publish-to-stream-dev`
-Commands `publish-to-stream` and `publish-to-stream-dev` are used to publish
-events to a stream from stdin line-by-line. Each line should be a valid JSON
-object.
+Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
 
-#### Publishing to a stream
-To publish to a stream:
 
+### generate
+Generate random JSON objects to stdout line-by-line.
+
+Useful for generating test data to be published to a stream with `publish`, e.g.:
 ```
-publish-to-stream streamId apiKey
-```
-
-where _apiKey_ is the key of the user or stream with WRITE privilege.
-
-#### Development environment
-To publish to a development environment stream:
-```
-publish-to-stream streamId apiKey ws://localhost:8890/api/v1/ws http://localhost:8081/streamr-core/api/v1
+streamr generate | streamr publish streamId apiKey
 ```
 
-or shorthand (when running [streamr-docker-dev](https://github.com/streamr-dev/streamr-docker-dev) environment)
+### Piping with listen and publish
 
-```
-publish-to-stream-dev streamId apiKey
-```
-
-### `generate-random-json`
-Generate random JSON objects to stdout line-by-line with
-```
-generate-random-json
-```
-
-Useful for testing purposes when piped into `publish-to-stream`.
-
-### Combining shell pipes with `publish-to-stream` and `listen-to-stream`
-
-*Disclaimer*: These need more testing
-
-You can use the piping facilities of your *nix operating system with commands
-`publish-to-stream` and `listen-to-stream` to achieve some interesting results.
-Below are listed some example use cases.
+You can use the piping facilities of your *nix operating system with commands `publish` and `listen` to achieve some
+useful operations. Below is a list of some ideas.
 
 #### Use Case: Listening to a stream from any programming language
-You can pipe the line-by-line JSON objects output by `listen-to-stream` to
+You can pipe the line-by-line JSON objects output by `listen` to
 your program written in any language. Just make the program read JSON objects
 from stdin.
-
-E.g.
 ```
-listen-to-stream 7wa7APtlTq6EC5iTCBy6dw | ruby calculate-average-speed.rb
+streamr listen 7wa7APtlTq6EC5iTCBy6dw | ruby calculate-average-speed.rb
 ```
 
 #### Use Case: Publishing to a stream from any programming language
 If your program produces JSON objects to stdout (line-by-line), you can
-redirect it to `publish-to-stream` to publish the JSON objects to a stream.
-
-E.g.
+redirect it to command `publish` to publish the JSON objects to a stream.
 ```
-python printSensorReadingsAsJson.py | publish-to-stream streamId apiKey
+python printSensorReadingsAsJson.py | streamr publish streamId apiKey
 ```
 
 #### Use Case: Transforming streams
 You can also listen to a stream, apply a transformation, and then pipe the
 transformed output into another stream.
-
-E.g.
 ```
-listen-to-stream sourceStream | ./calculateMovingAverages | publish-to-stream destinationStream apiKey
+streamr listen sourceStream | ./calculateMovingAverages | streamr publish destinationStream apiKey
 ```
 
 Same rules apply here as before. Your program should accept line-by-line JSON
@@ -124,17 +90,15 @@ objects via stdin and output JSON objects to stdout line-by-line.
 
 #### Use Case: Copying a production stream into development environment
 If you have a working stream in production that you'd also like to use in your
-development environment, you can combine the two commands to effectively copy
+development environment, you can combine the `listen` and `publish` commands to effectively copy
 the real-time events.
-
-E.g.
 ```
-listen-to-stream 7wa7APtlTq6EC5iTCBy6dw | publish-to-stream-dev streamId apiKey
+streamr listen 7wa7APtlTq6EC5iTCBy6dw | streamr publish --dev streamId apiKey
 ```
 
-You can also do the reverse:
+And the same for staging environment:
 ```
-listen-to-stream-dev devStreamId | publish-to-stream productionStreamId apiKey
+streamr listen 7wa7APtlTq6EC5iTCBy6dw | streamr publish --stg streamId apiKey
 ```
 
 ## Developing

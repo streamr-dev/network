@@ -1,14 +1,11 @@
 const Writable = require('stream').Writable
 const StreamrClient = require('streamr-client')
 
-module.exports = function publishStream(stream, apiKey, alternativeWsUrl, alternativeHttpUrl) {
-    const auth = { apiKey }
-    const options = alternativeWsUrl ? {
-        url: alternativeWsUrl,
-        restUrl: alternativeHttpUrl,
-        auth,
-    } : { auth }
-
+module.exports = function publishStream(stream, apiKey, streamrOptions) {
+    const options = { ...streamrOptions }
+    if (apiKey != null) {
+        options.auth = { apiKey }
+    }
     const client = new StreamrClient(options)
     const writable = new Writable({
         objectMode: true,
@@ -28,7 +25,7 @@ module.exports = function publishStream(stream, apiKey, alternativeWsUrl, altern
                 return
             }
 
-            client.publish(stream, json, Date.now(), apiKey).then(
+            client.publish(stream, json, Date.now()).then(
                 () => done(),
                 (err) => done(err)
             )
@@ -37,6 +34,6 @@ module.exports = function publishStream(stream, apiKey, alternativeWsUrl, altern
 
     client.on('error', (err) => writable.emit('error', err))
     // disconnect client when upstream pipe ends and data flushed
-    writable.once('finish', () => client.ensureDisconnected())
+    //writable.once('finish', () => client.ensureDisconnected()) TODO: add back after CORE-1707
     return writable
 }

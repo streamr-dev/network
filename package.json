@@ -3,11 +3,10 @@
   "version": "1.1.1",
   "description": "Command line tools for Streamr.",
   "bin": {
-    "generate-random-json": "bin/generate-random-json.js",
-    "listen-to-stream": "bin/listen-to-stream.js",
-    "listen-to-stream-dev": "bin/listen-to-stream-dev.js",
-    "publish-to-stream": "bin/publish-to-stream.js",
-    "publish-to-stream-dev": "bin/publish-to-stream-dev.js"
+    "streamr": "bin/streamr.js",
+    "streamr-generate": "bin/streamr-generate.js",
+    "streamr-listen": "bin/streamr-listen.js",
+    "streamr-publish": "bin/streamr-publish.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -29,6 +28,7 @@
   },
   "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
+    "commander": "^2.20.0",
     "event-stream": "^4.0.1",
     "streamr-client": "^1.0.2"
   }
