@@ -21,15 +21,18 @@ describe('WebsocketServer', () => {
 
     const myStream = {
         streamId: 'streamId',
+        partitions: 0,
     }
 
     const autoStream = {
         streamId: 'streamId2',
+        partitions: 0,
         autoConfigure: true,
     }
 
     const fieldsStream = {
         streamId: 'streamId3',
+        partitions: 0,
         autoConfigure: true,
         config: {
             fields: [{

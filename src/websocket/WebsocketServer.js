@@ -67,6 +67,10 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
     handlePublishRequest(connection, request) {
         const streamId = request.getStreamId()
+        if (streamId === undefined) {
+            connection.sendError('Publish request failed: Error: streamId must be defined!')
+            return
+        }
         this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'write')
             .then((stream) => {
                 let streamPartition
