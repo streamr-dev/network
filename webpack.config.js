@@ -1,17 +1,22 @@
 /* eslint-disable prefer-template */
 /* eslint-disable prefer-destructuring */
 
+process.env.NODE_ENV = process.env.NODE_ENV || 'development' // set a default NODE_ENV
+
 const path = require('path')
-const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const webpack = require('webpack')
+const TerserPlugin = require('terser-webpack-plugin')
 const merge = require('lodash').merge
 const nodeExternals = require('webpack-node-externals')
 const pkg = require('./package.json')
 
+const isProduction = process.env.NODE_ENV === 'production'
 const libraryName = pkg.name
 
 const commonConfig = {
+    mode: isProduction ? 'production' : 'development',
     entry: path.join(__dirname, 'src', 'index.js'),
-    devtool: 'source-map',
+    devtool: isProduction ? 'nosources-source-map' : 'source-map',
     output: {
         path: path.join(__dirname, 'dist'),
         library: {
@@ -42,7 +47,11 @@ const commonConfig = {
         modules: [path.resolve('./node_modules'), path.resolve('./src')],
         extensions: ['.json', '.js'],
     },
-    plugins: [],
+    plugins: [
+        new webpack.DefinePlugin({
+            'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+        }),
+    ],
 }
 
 const serverConfig = merge({}, commonConfig, {
@@ -60,11 +69,28 @@ const clientConfig = merge({}, commonConfig, {
     },
 })
 
-const clientMinifiedConfig = merge({}, clientConfig, {
-    plugins: [new UglifyJsPlugin()],
-    output: {
-        filename: libraryName + '.web.min.js',
-    },
-})
+let clientMinifiedConfig = {}
+
+if (isProduction) {
+    clientMinifiedConfig = merge({}, clientConfig, {
+        optimization: {
+            minimizer: [
+                new TerserPlugin({
+                    cache: true,
+                    parallel: true,
+                    sourceMap: true,
+                    terserOptions: {
+                        output: {
+                            comments: false,
+                        },
+                    },
+                }),
+            ],
+        },
+        output: {
+            filename: libraryName + '.web.min.js',
+        },
+    })
+}
 
 module.exports = [serverConfig, clientConfig, clientMinifiedConfig]

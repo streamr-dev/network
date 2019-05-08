@@ -119,4 +119,5 @@ Connection.State = {
     DISCONNECTING: 'disconnecting',
 }
 
-module.exports = Connection
+export default Connection
+
