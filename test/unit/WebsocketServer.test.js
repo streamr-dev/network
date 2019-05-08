@@ -161,7 +161,7 @@ describe('WebsocketServer', () => {
         mockSocket = new MockSocket(controlLayerVersion, messageLayerVersion)
 
         // Create the server instance
-        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, streamFetcher, publisher, () => 0)
+        server = new WebsocketServer(wsMock, realtimeAdapter, historicalAdapter, streamFetcher, publisher, undefined, () => 0)
     })
 
     afterEach(() => {

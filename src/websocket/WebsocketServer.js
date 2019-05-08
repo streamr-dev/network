@@ -9,7 +9,7 @@ const StreamStateManager = require('./StreamStateManager')
 
 module.exports = class WebsocketServer extends events.EventEmitter {
     constructor(wss, networkNode, storage, streamFetcher, publisher,
-        partitionFn = partition, volumeLogger = new VolumeLogger(0)) {
+        volumeLogger = new VolumeLogger(0), partitionFn = partition) {
         super()
         this.wss = wss
         this.networkNode = networkNode
