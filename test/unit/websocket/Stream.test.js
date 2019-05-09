@@ -1,5 +1,5 @@
 const assert = require('assert')
-const Stream = require('../../src/websocket/Stream')
+const Stream = require('../../../src/websocket/Stream')
 
 describe('Stream', () => {
     it('addConnection adds connections', () => {
