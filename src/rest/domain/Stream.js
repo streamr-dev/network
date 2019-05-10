@@ -1,4 +1,4 @@
-import { authFetch } from '../utils'
+import authFetch from '../authFetch'
 
 export default class Stream {
     constructor(client, props) {

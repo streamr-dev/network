@@ -4,7 +4,7 @@ import { Agent as HttpsAgent } from 'https'
 import debugFactory from 'debug'
 
 import Stream from './domain/Stream'
-import { authFetch } from './utils'
+import authFetch from './authFetch'
 
 const debug = debugFactory('StreamrClient')
 

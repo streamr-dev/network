@@ -28,7 +28,7 @@ describe('Session', () => {
                     apiKey: 'wrong-api-key',
                 },
             }).session.getSessionToken()).rejects.toMatchObject({
-                message: expect.stringMatching(/invalid api key/i),
+                body: expect.stringMatching(/invalid api key/i),
             })
         })
 
@@ -59,7 +59,7 @@ describe('Session', () => {
                     password: 'WRONG',
                 },
             }).session.getSessionToken()).rejects.toMatchObject({
-                message: expect.stringMatching(/invalid username or password/i),
+                body: expect.stringMatching(/invalid username or password/i),
             })
         })
 
