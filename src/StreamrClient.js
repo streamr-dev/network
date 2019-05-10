@@ -47,6 +47,8 @@ export default class StreamrClient extends EventEmitter {
             auth: {},
             publishWithSignature: 'auto',
             verifySignatures: 'auto',
+            retryResendAfter: 5000,
+            gapFillTimeout: 5000,
             maxPublishQueueSize: 10000,
         }
         this.subscribedStreams = {}
@@ -346,7 +348,7 @@ export default class StreamrClient extends EventEmitter {
         }
 
         // Create the Subscription object and bind handlers
-        const sub = new Subscription(options.stream, options.partition || 0, callback, options.resend)
+        const sub = new Subscription(options.stream, options.partition || 0, callback, options.resend, this.options.gapFillTimeout)
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {
                 this._requestResend(sub, {
@@ -492,9 +494,22 @@ export default class StreamrClient extends EventEmitter {
             this._requestSubscribe(sub)
 
             // Once subscribed, ask for a resend
-            sub.once('subscribed', () => {
+            sub.once('subscribed', async () => {
                 if (sub.hasResendOptions()) {
-                    this._requestResend(sub)
+                    await this._requestResend(sub)
+                    // the requested messages might not have been stored yet, so retry if no answer after 'retryResendAfter' seconds
+                    const secondResend = setTimeout(() => this._requestResend(sub), this.options.retryResendAfter)
+                    // once a message is received, gap filling in Subscription.js will check if this satisfies the resend and request
+                    // another resend if it doesn't. So we can anyway clear this resend request.
+                    const handler = () => {
+                        clearTimeout(secondResend)
+                        sub.removeListener('message received', handler)
+                        sub.removeListener('unsubscribed', handler)
+                        sub.removeListener('error', handler)
+                    }
+                    sub.once('message received', handler)
+                    sub.once('unsubscribed', handler)
+                    sub.once('error', handler)
                 }
             })
         }
