@@ -98,12 +98,12 @@ streamr resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 streamId apiKey
 Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
 
 
-### Piping with listen and publish
+### Examples: Piping with listen and publish
 
 You can use the piping facilities of your *nix operating system with commands `publish` and `listen` to achieve some
 useful operations. Below is a list of some ideas.
 
-#### Use Case: Listening to a stream from any programming language
+#### Listening to a stream from any programming language
 You can pipe the line-by-line JSON objects output by `listen` to
 your program written in any language. Just make the program read JSON objects
 from stdin.
@@ -111,14 +111,14 @@ from stdin.
 streamr listen 7wa7APtlTq6EC5iTCBy6dw | ruby calculate-average-speed.rb
 ```
 
-#### Use Case: Publishing to a stream from any programming language
+#### Publishing to a stream from any programming language
 If your program produces JSON objects to stdout (line-by-line), you can
 redirect it to command `publish` to publish the JSON objects to a stream.
 ```
 python printSensorReadingsAsJson.py | streamr publish streamId apiKey
 ```
 
-#### Use Case: Transforming streams
+#### Transforming streams
 You can also listen to a stream, apply a transformation, and then pipe the
 transformed output into another stream.
 ```
@@ -128,7 +128,7 @@ streamr listen sourceStream | ./calculateMovingAverages | streamr publish destin
 Same rules apply here as before. Your program should accept line-by-line JSON
 objects via stdin and output JSON objects to stdout line-by-line.
 
-#### Use Case: Copying a production stream into development environment
+#### Copying a production stream into development environment
 If you have a working stream in production that you'd also like to use in your
 development environment, you can combine the `listen` and `publish` commands to effectively copy
 the real-time events.
