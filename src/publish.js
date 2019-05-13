@@ -34,6 +34,6 @@ module.exports = function publishStream(stream, apiKey, streamrOptions) {
 
     client.on('error', (err) => writable.emit('error', err))
     // disconnect client when upstream pipe ends and data flushed
-    //writable.once('finish', () => client.ensureDisconnected()) TODO: add back after CORE-1707
+    writable.once('finish', () => client.ensureDisconnected())
     return writable
 }
