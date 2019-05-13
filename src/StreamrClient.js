@@ -298,15 +298,16 @@ export default class StreamrClient extends EventEmitter {
 
             const published = new Promise((resolve, reject) => {
                 this.publishQueue.push(async () => {
+                    let publishRequest
                     try {
-                        await this._requestPublish(streamMessage, sessionToken)
+                        publishRequest = await this._requestPublish(streamMessage, sessionToken)
                     } catch (err) {
                         debug(`Error: ${err}`)
                         this.emit('error', err)
                         reject(err)
                         return
                     }
-                    resolve()
+                    resolve(publishRequest)
                 })
             })
             // be sure to trigger connection *after* queueing publish
@@ -321,11 +322,30 @@ export default class StreamrClient extends EventEmitter {
         )
     }
 
-    subscribe(optionsOrStreamId, callback, legacyOptions) {
+    async resend(optionsOrStreamId, callback) {
+        const options = this._validateParameters(optionsOrStreamId, callback)
+
+        if (!options.stream) {
+            throw new Error('subscribe: Invalid arguments: options.stream is not given')
+        }
+
+        await this.ensureConnected()
+
+        const sub = new Subscription(options.stream, options.partition || 0, callback, options.resend)
+
+        // TODO remove _addSubscription after uncoupling Subscription and Resend
+        this._addSubscription(sub)
+        this._requestResend(sub)
+
+        return sub
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    _validateParameters(optionsOrStreamId, callback) {
         if (!optionsOrStreamId) {
-            throw new Error('subscribe: Invalid arguments: subscription options is required!')
+            throw new Error('subscribe/resend: Invalid arguments: options is required!')
         } else if (!callback) {
-            throw new Error('subscribe: Invalid arguments: callback is required!')
+            throw new Error('subscribe/resend: Invalid arguments: callback is required!')
         }
 
         // Backwards compatibility for giving a streamId as first argument
@@ -337,8 +357,14 @@ export default class StreamrClient extends EventEmitter {
         } else if (typeof optionsOrStreamId === 'object') {
             options = optionsOrStreamId
         } else {
-            throw new Error(`subscribe: options must be an object! Given: ${optionsOrStreamId}`)
+            throw new Error(`subscribe/resend: options must be an object! Given: ${optionsOrStreamId}`)
         }
+
+        return options
+    }
+
+    subscribe(optionsOrStreamId, callback, legacyOptions) {
+        const options = this._validateParameters(optionsOrStreamId, callback)
 
         // Backwards compatibility for giving an options object as third argument
         Object.assign(options, legacyOptions)

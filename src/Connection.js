@@ -109,6 +109,7 @@ class Connection extends EventEmitter {
         } catch (err) {
             this.emit('error', err)
         }
+        return controlLayerRequest
     }
 }
 

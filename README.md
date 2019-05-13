@@ -46,6 +46,26 @@ const sub = client.subscribe(
 )
 ```
 
+#### Resending historical data 
+
+```javascript
+const sub = await client.resend(
+    {
+        stream: 'streamId',
+        resend: {
+            last: 5,
+        },
+    },
+    (message) => {
+        // This is the message handler which gets called for every received message in the Stream.
+        // Do something with the message here!
+    }
+)
+```
+
+See "Subscription options" for resend options
+
+
 #### Programmatically creating a Stream
 
 ```javascript

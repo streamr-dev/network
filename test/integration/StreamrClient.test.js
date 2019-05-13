@@ -20,6 +20,8 @@ const createClient = (opts = {}) => new StreamrClient({
     ...opts,
 })
 
+const wait = (timeout) => new Promise((resolve) => setTimeout(resolve, timeout))
+
 describe('StreamrClient Connection', () => {
     describe('bad config.url', () => {
         it('emits error without autoconnect', async (done) => {
@@ -108,6 +110,136 @@ describe('StreamrClient Connection', () => {
         client.connect()
         await client.disconnect()
         done()
+    })
+
+    describe('resend', () => {
+        let client
+        let stream
+
+        let timestamps = []
+
+        beforeEach(async () => {
+            client = createClient()
+            await client.ensureConnected()
+
+            stream = await client.createStream({
+                name: uniqueId(),
+            })
+
+            timestamps = []
+            for (let i = 0; i < 5; i++) {
+                const message = {
+                    msg: `message${i}`,
+                }
+
+                // eslint-disable-next-line no-await-in-loop
+                const rawMessage = await client.publish(stream.id, message)
+                timestamps.push(rawMessage.getStreamMessage().getTimestamp())
+            }
+
+            await wait(2000) // wait for messages to (probably) land in storage
+        })
+
+        afterEach(async () => {
+            await client.disconnect()
+        })
+
+        it('resend last', async (done) => {
+            const messages = []
+
+            const sub = await client.resend(
+                {
+                    stream: stream.id,
+                    resend: {
+                        last: 3,
+                    },
+                },
+                (message) => {
+                    messages.push(message)
+                },
+            )
+
+            sub.once('resent', () => {
+                expect(messages).toEqual([
+                    {
+                        msg: 'message2',
+                    },
+                    {
+                        msg: 'message3',
+                    },
+                    {
+                        msg: 'message4',
+                    },
+                ])
+                done()
+            })
+        })
+
+        it('resend from', async (done) => {
+            const messages = []
+
+            const sub = await client.resend(
+                {
+                    stream: stream.id,
+                    resend: {
+                        from: {
+                            timestamp: timestamps[3],
+                        },
+                    },
+                },
+                (message) => {
+                    messages.push(message)
+                },
+            )
+
+            sub.once('resent', () => {
+                expect(messages).toEqual([
+                    {
+                        msg: 'message3',
+                    },
+                    {
+                        msg: 'message4',
+                    },
+                ])
+                done()
+            })
+        })
+
+        it('resend range', async (done) => {
+            const messages = []
+
+            const sub = await client.resend(
+                {
+                    stream: stream.id,
+                    resend: {
+                        from: {
+                            timestamp: timestamps[0],
+                        },
+                        to: {
+                            timestamp: timestamps[3] - 1,
+                        },
+                    },
+                },
+                (message) => {
+                    messages.push(message)
+                },
+            )
+
+            sub.once('resent', () => {
+                expect(messages).toEqual([
+                    {
+                        msg: 'message0',
+                    },
+                    {
+                        msg: 'message1',
+                    },
+                    {
+                        msg: 'message2',
+                    },
+                ])
+                done()
+            })
+        })
     })
 
     describe('ensureConnected', () => {
