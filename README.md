@@ -70,7 +70,7 @@ Show detailed information about a specific stream
 streamr show streamId apiKey
 ```
 
-## create
+### create
 Create a new stream
 ```
 streamr create name apiKey
