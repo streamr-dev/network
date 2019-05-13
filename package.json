@@ -9,6 +9,7 @@
     "streamr-list": "bin/streamr-list.js",
     "streamr-listen": "bin/streamr-listen.js",
     "streamr-publish": "bin/streamr-publish.js",
+    "streamr-resend": "bin/streamr-resend.js",
     "streamr-show": "bin/streamr-show.js"
   },
   "scripts": {

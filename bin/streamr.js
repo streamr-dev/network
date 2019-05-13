@@ -11,4 +11,5 @@ program
     .command('list', 'fetch a list of streams')
     .command('show', 'info about a stream')
     .command("create", "create a new stream")
+    .command('resend', 'request resend of a stream')
     .parse(process.argv)

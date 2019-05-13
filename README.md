@@ -76,6 +76,28 @@ Create a new stream
 streamr create name apiKey
 ```
 
+### resend
+Request a resend of historical data printed as JSON objects to stdout line-by-line.
+
+For example, to fetch the 10 latest messages of a public stream such as the tram demo do
+```
+streamr resend last 10 7wa7APtlTq6EC5iTCBy6dw
+```
+
+
+To fetch data starting from a particular date-time
+```
+streamr resend from 2019-05-10T17:00:00 streamId apiKey
+```
+
+To fetch data between two date-times
+```
+streamr resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 streamId apiKey
+```
+
+Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
+
+
 ### Piping with listen and publish
 
 You can use the piping facilities of your *nix operating system with commands `publish` and `listen` to achieve some
