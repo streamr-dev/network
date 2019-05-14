@@ -13,6 +13,7 @@ describe('data-api', () => {
         // Start the app
         dataApi = await createBroker({
             network: {
+                id: 'broker-id',
                 hostname: '127.0.0.1',
                 port: '31313',
                 tracker: 'ws://127.0.0.1:30300',

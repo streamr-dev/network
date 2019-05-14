@@ -9,9 +9,12 @@ const MissingConfigError = require('./errors/MissingConfigError')
 const adapterRegistry = require('./adapterRegistry')
 
 module.exports = async (config) => {
-    // Validate config
+    // Validate that configuration exists
     if (config.network === undefined) {
         throw new MissingConfigError('network')
+    }
+    if (config.network.id === undefined) {
+        throw new MissingConfigError('network.id')
     }
     if (config.network.hostname === undefined) {
         throw new MissingConfigError('network.hostname')
@@ -49,12 +52,8 @@ module.exports = async (config) => {
         }
     })
 
-    // Start network node
-    const networkNode = await startNetworkNode(config.network.hostname, config.network.port)
-    networkNode.addBootstrapTracker(config.network.tracker)
-
-    // Start storage
-    const storage = await startCassandraStorage(
+    // Start cassandra storage
+    const cassandraStorage = await startCassandraStorage(
         config.cassandra.hosts,
         'datacenter1',
         config.cassandra.keyspace,
@@ -62,16 +61,25 @@ module.exports = async (config) => {
         config.cassandra.password,
     )
 
-    // Init utils
+    // Start network node
+    const networkNode = await startNetworkNode(
+        config.network.hostname,
+        config.network.port,
+        config.network.id,
+        [cassandraStorage],
+    )
+    networkNode.addBootstrapTracker(config.network.tracker)
+
+    // Initialize common utilities
     const volumeLogger = new VolumeLogger()
     const streamFetcher = new StreamFetcher(config.streamrUrl)
     const publisher = new Publisher(networkNode, volumeLogger)
 
+    // Start up adapters one-by-one, storing their close functions for further use
     const closeAdapterFns = config.adapters.map(({ name, ...adapterConfig }, index) => {
         try {
             return adapterRegistry.startAdapter(name, adapterConfig, {
                 networkNode,
-                storage,
                 publisher,
                 streamFetcher,
                 volumeLogger,
@@ -81,7 +89,7 @@ module.exports = async (config) => {
             if (e instanceof MissingConfigError) {
                 throw new MissingConfigError(`adapters[${index}].${e.config}`)
             }
-            return null
+            return () => {}
         }
     })
 
