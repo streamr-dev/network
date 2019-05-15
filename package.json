@@ -23,7 +23,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@streamr/streamr-p2p-network": "^4.2.0",
+    "@streamr/streamr-p2p-network": "^4.3.0",
     "body-parser": "^1.15.2",
     "buffermaker": "1.2.0",
     "cassandra-driver": "^4.1.0",
