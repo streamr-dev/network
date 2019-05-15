@@ -100,6 +100,7 @@ module.exports = async (config) => {
     return {
         close: () => {
             closeAdapterFns.forEach((close) => close())
+            volumeLogger.close()
         },
     }
 }

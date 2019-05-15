@@ -57,8 +57,8 @@ module.exports = class VolumeLogger {
         this.outBytes = 0
     }
 
-    stop() {
-        console.log('VolumeLogger stopping.')
+    close() {
+        console.log('VolumeLogger closing.')
         clearInterval(this.interval)
     }
 }
