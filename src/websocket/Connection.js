@@ -48,7 +48,7 @@ module.exports = class Connection {
     }
 
     streamsAsString() {
-        return this.streams.map((s) => `${s.id}:${s.partition}`)
+        return this.streams.map((s) => s.toString())
     }
 
     send(msg) {

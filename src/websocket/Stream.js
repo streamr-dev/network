@@ -40,4 +40,8 @@ module.exports = class Stream {
     isSubscribed() {
         return this.state === 'subscribed'
     }
+
+    toString() {
+        return `${this.id}::${this.partition}`
+    }
 }
