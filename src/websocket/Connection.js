@@ -15,15 +15,18 @@ module.exports = class Connection {
         this.id = generateId()
         this.socket = socket
         this.streams = []
-        const parts = request.url.split('?')
+
         // default versions for old clients
         this.controlLayerVersion = 0
         this.messageLayerVersion = 28
+
+        // attempt to parse versions from request parameters
+        const parts = request.url.split('?')
         if (parts.length === 2) {
-            const queryObj = qs.parse(parts[1])
-            if (queryObj.controlLayerVersion && queryObj.messageLayerVersion) {
-                this.controlLayerVersion = parseInt(queryObj.controlLayerVersion)
-                this.messageLayerVersion = parseInt(queryObj.messageLayerVersion)
+            const { controlLayerVersion, messageLayerVersion } = qs.parse(parts[1])
+            if (controlLayerVersion && messageLayerVersion) {
+                this.controlLayerVersion = parseInt(controlLayerVersion)
+                this.messageLayerVersion = parseInt(messageLayerVersion)
             }
         }
     }
