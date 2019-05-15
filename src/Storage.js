@@ -9,7 +9,7 @@ const encodeAsStreamrMessage = (msg) => StreamMessage.create(
     [msg.streamId, msg.streamPartition, msg.timestamp, msg.sequenceNo, msg.publisherId, msg.msgChainId],
     msg.previousTimestamp == null ? null : [msg.previousTimestamp, msg.previousSequenceNo],
     StreamMessage.CONTENT_TYPES.JSON,
-    msg.payload,
+    msg.data,
     msg.signatureType,
     msg.signature,
 )

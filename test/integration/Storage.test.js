@@ -1,13 +1,13 @@
 const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
-const { StreamMessage, StreamMessageV30, MessageRef } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const { startCassandraStorage } = require('../../src/Storage')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev'
 
-function formObject(streamId, streamPartition, timestamp, sequenceNo, publisherId = 'publisher', msgChainId = '1', payload = {}) {
+function formObject(streamId, streamPartition, timestamp, sequenceNo, publisherId = 'publisher', msgChainId = '1', data = {}) {
     return {
         streamId,
         streamPartition,
@@ -15,7 +15,7 @@ function formObject(streamId, streamPartition, timestamp, sequenceNo, publisherI
         sequenceNo,
         publisherId,
         msgChainId,
-        payload,
+        data,
         signature: null,
         signatureType: null,
     }
@@ -30,14 +30,14 @@ function objectToStreamrMessage({
     msgChainId,
     previousTimestamp,
     previousSequenceNo,
-    payload,
+    data,
     signatureType,
     signature,
 }) {
     return new StreamMessageV30(
         [streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
         previousTimestamp == null ? null : [previousTimestamp, previousSequenceNo],
-        StreamMessage.CONTENT_TYPES.JSON, payload, signatureType, signature,
+        StreamMessage.CONTENT_TYPES.JSON, data, signatureType, signature,
     )
 }
 
