@@ -1,6 +1,8 @@
 const assert = require('assert')
 const StreamStateManager = require('../../../src/websocket/StreamStateManager')
 
+jest.useFakeTimers()
+
 describe('StreamStateManager', () => {
     let streams
 
@@ -8,31 +10,30 @@ describe('StreamStateManager', () => {
         streams = new StreamStateManager()
     })
 
+    afterEach(() => {
+        streams.close()
+    })
+
     describe('createStreamObject', () => {
-        it('should return an object with the correct id, partition and state', () => {
+        it('returns an object with the correct id, partition and state', () => {
             const stream = streams.createStreamObject('streamId', 3)
             assert.equal(stream.id, 'streamId')
             assert.equal(stream.partition, 3)
             assert.equal(stream.state, 'init')
-        })
-
-        it('should return an object that can be looked up', () => {
-            const stream = streams.createStreamObject('streamId', 4)
-            assert.equal(streams.getStreamObject('streamId', 4), stream)
         })
     })
 
     describe('getStreamObject', () => {
         let stream
         beforeEach(() => {
-            stream = streams.createStreamObject('streamId', 0)
+            stream = streams.createStreamObject('streamId', 4)
         })
 
-        it('must return the requested stream', () => {
-            assert.equal(streams.getStreamObject('streamId', 0), stream)
+        it('returns the requested stream', () => {
+            assert.equal(streams.getStreamObject('streamId', 4), stream)
         })
 
-        it('must return undefined if the stream does not exist', () => {
+        it('returns undefined if the stream does not exist', () => {
             assert.equal(streams.getStreamObject('streamId', 1), undefined)
         })
     })
@@ -45,6 +46,32 @@ describe('StreamStateManager', () => {
         it('must delete the requested stream', () => {
             streams.deleteStreamObject('streamId', 0)
             assert.equal(streams.getStreamObject('streamId', 0), undefined)
+        })
+    })
+
+    describe('timeout behavior', () => {
+        let stream
+
+        beforeEach(() => {
+            stream = streams.createStreamObject('streamId', 0)
+        })
+
+        it('stream object is deleted after 60 seconds if state remains unchanged', () => {
+            jest.advanceTimersByTime(60 * 1000)
+            expect(streams.getStreamObject('streamId', 0)).toBeUndefined()
+        })
+
+        it('stream object is deleted after 60 seconds if state is subscribing', () => {
+            stream.setSubscribing()
+            jest.advanceTimersByTime(60 * 1000)
+            expect(streams.getStreamObject('streamId', 0)).toBeUndefined()
+        })
+
+        it('stream object remains after 60 seconds if state is subscribed', () => {
+            jest.advanceTimersByTime(59 * 1000)
+            stream.setSubscribed()
+            jest.advanceTimersByTime(1000)
+            expect(streams.getStreamObject('streamId', 0)).not.toBeUndefined()
         })
     })
 })

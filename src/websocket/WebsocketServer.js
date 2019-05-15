@@ -36,6 +36,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     close() {
+        this.streams.close()
         this.wss.close()
     }
 
