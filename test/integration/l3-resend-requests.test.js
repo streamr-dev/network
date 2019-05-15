@@ -130,7 +130,7 @@ describe('resend requests are fulfilled at L3', () => {
 
     test('requestResendFrom', async () => {
         const events = collectNetworkNodeEvents(contactNode)
-        contactNode.requestResendFrom('streamId', 0, 'subId', 666, 0, 'publisherId')
+        contactNode.requestResendFrom('streamId', 0, 'subId', 666, 0, 'publisherId', 'msgChainId')
 
         await waitForEvent(contactNode, NetworkNode.events.RESENT)
         expect(events).toEqual([
@@ -142,7 +142,7 @@ describe('resend requests are fulfilled at L3', () => {
 
     test('requestResendRange', async () => {
         const events = collectNetworkNodeEvents(contactNode)
-        contactNode.requestResendRange('streamId', 0, 'subId', 666, 0, 999, 0, 'publisherId')
+        contactNode.requestResendRange('streamId', 0, 'subId', 666, 0, 999, 0, 'publisherId', 'msgChainId')
 
         await waitForEvent(contactNode, NetworkNode.events.NO_RESEND)
         expect(events).toEqual([

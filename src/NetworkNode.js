@@ -78,12 +78,13 @@ class NetworkNode extends Node {
         this.requestResend(new ResendLastRequest(new StreamID(streamId, streamPartition), subId, number, null))
     }
 
-    requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId) {
+    requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
         this.requestResend(new ResendFromRequest(
             new StreamID(streamId, streamPartition),
             subId,
             new MessageReference(fromTimestamp, fromSequenceNo),
             publisherId,
+            msgChainId,
             null
         ))
     }
@@ -95,13 +96,15 @@ class NetworkNode extends Node {
         fromSequenceNo,
         toTimestamp,
         toSequenceNo,
-        publisherId) {
+        publisherId,
+        msgChainId) {
         this.requestResend(new ResendRangeRequest(
             new StreamID(streamId, streamPartition),
             subId,
             new MessageReference(fromTimestamp, fromSequenceNo),
             new MessageReference(toTimestamp, toSequenceNo),
             publisherId,
+            msgChainId,
             null
         ))
     }

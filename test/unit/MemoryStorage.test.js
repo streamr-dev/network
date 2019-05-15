@@ -121,7 +121,7 @@ describe('test mem storage', () => {
 
     test('test requestFrom', (done) => {
         const FROM_TIME = 8
-        const fromStream = memoryStorage.requestFrom(id, partition, FROM_TIME, 0, 'publisher-id')
+        const fromStream = memoryStorage.requestFrom(id, partition, FROM_TIME, 0, 'publisher-id', 'sessionId')
 
         const arr = []
         fromStream.on('data', (object) => arr.push(object))
@@ -168,7 +168,7 @@ describe('test mem storage', () => {
     test('test requestRange', (done) => {
         const FROM_TIME = 3
         const TO_TIME = 5
-        const rangeStream = memoryStorage.requestRange(id, partition, FROM_TIME, TO_TIME, 0, 0, 'publisher-id')
+        const rangeStream = memoryStorage.requestRange(id, partition, FROM_TIME, TO_TIME, 0, 0, 'publisher-id', 'sessionId')
 
         const arr = []
         rangeStream.on('data', (object) => arr.push(object))
@@ -225,4 +225,9 @@ describe('test mem storage', () => {
             done()
         })
     })
+
+    // TODO: write tests to verify that
+    //  (1) publisherId and msgChainId actually filters out undesired message with requestRange and requestFrom
+    //  (2) publisherId = null does not filter by publisher
+    //  (3) msgChainId = null does not filter by msgChainId
 })

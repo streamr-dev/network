@@ -225,7 +225,8 @@ describe('encoder', () => {
             new StreamID('stream', 6),
             'subId',
             new MessageReference(6666, 0),
-            'publisherId'
+            'publisherId',
+            'msgChainId'
         )
         expect(JSON.parse(actual)).toEqual({
             version,
@@ -238,7 +239,8 @@ describe('encoder', () => {
                     timestamp: 6666,
                     sequenceNo: 0
                 },
-                publisherId: 'publisherId'
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId'
             }
         })
     })
@@ -255,7 +257,8 @@ describe('encoder', () => {
                     timestamp: 6666,
                     sequenceNo: 0
                 },
-                publisherId: 'publisherId'
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId'
             }
         }))
 
@@ -267,6 +270,8 @@ describe('encoder', () => {
         expect(resendFromRequest.getStreamId()).toEqual(new StreamID('stream', 6))
         expect(resendFromRequest.getSubId()).toEqual('subId')
         expect(resendFromRequest.getFromMsgRef()).toEqual(new MessageReference(6666, 0))
+        expect(resendFromRequest.getPublisherId()).toEqual('publisherId')
+        expect(resendFromRequest.getMsgChainId()).toEqual('msgChainId')
     })
 
     it('check encoding RESEND_RANGE', () => {
@@ -275,7 +280,8 @@ describe('encoder', () => {
             'subId',
             new MessageReference(6666, 0),
             new MessageReference(7000, 100),
-            'publisherId'
+            'publisherId',
+            'msgChainId'
         )
         expect(JSON.parse(actual)).toEqual({
             version,
@@ -292,7 +298,8 @@ describe('encoder', () => {
                     timestamp: 7000,
                     sequenceNo: 100
                 },
-                publisherId: 'publisherId'
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId'
             }
         })
     })
@@ -313,7 +320,8 @@ describe('encoder', () => {
                     timestamp: 7000,
                     sequenceNo: 100
                 },
-                publisherId: 'publisherId'
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId'
             }
         }))
 
@@ -326,6 +334,8 @@ describe('encoder', () => {
         expect(resendRangeRequest.getSubId()).toEqual('subId')
         expect(resendRangeRequest.getFromMsgRef()).toEqual(new MessageReference(6666, 0))
         expect(resendRangeRequest.getToMsgRef()).toEqual(new MessageReference(7000, 100))
+        expect(resendRangeRequest.getPublisherId()).toEqual('publisherId')
+        expect(resendRangeRequest.getMsgChainId()).toEqual('msgChainId')
     })
 
     it('check encoding RESEND_RESPONSE_RESENDING', () => {

@@ -143,7 +143,7 @@ describe('delivery of messages in protocol layer', () => {
 
     test('requestResendFrom is delivered', async () => {
         nodeToNode2.requestResendFrom('nodeToNode1', new StreamID('stream', 10), 'subId',
-            new MessageReference(1, 1), 'publisherId')
+            new MessageReference(1, 1), 'publisherId', 'msgChainId')
         const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_REQUEST)
 
         expect(msg).toBeInstanceOf(ResendFromRequest)
@@ -152,11 +152,12 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.getSubId()).toEqual('subId')
         expect(msg.getFromMsgRef()).toEqual(new MessageReference(1, 1))
         expect(msg.getPublisherId()).toEqual('publisherId')
+        expect(msg.getMsgChainId()).toEqual('msgChainId')
     })
 
     test('requestResendRange is delivered', async () => {
         nodeToNode2.requestResendRange('nodeToNode1', new StreamID('stream', 10), 'subId',
-            new MessageReference(1, 1), new MessageReference(2, 2), 'publisherId')
+            new MessageReference(1, 1), new MessageReference(2, 2), 'publisherId', 'msgChainId')
         const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_REQUEST)
 
         expect(msg).toBeInstanceOf(ResendRangeRequest)
@@ -166,6 +167,7 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.getFromMsgRef()).toEqual(new MessageReference(1, 1))
         expect(msg.getToMsgRef()).toEqual(new MessageReference(2, 2))
         expect(msg.getPublisherId()).toEqual('publisherId')
+        expect(msg.getMsgChainId()).toEqual('msgChainId')
     })
 
     test('respondResending is delivered', async () => {

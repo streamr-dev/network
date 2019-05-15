@@ -7,7 +7,17 @@ module.exports = class MemoryStorage {
     }
 
     store({
-        streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId, previousTimestamp, previousSequenceNo, data, signature, signatureType
+        streamId,
+        streamPartition,
+        timestamp,
+        sequenceNo,
+        publisherId,
+        msgChainId,
+        previousTimestamp,
+        previousSequenceNo,
+        data,
+        signature,
+        signatureType
     }) {
         const streamKey = this._getStreamKey(streamId, streamPartition)
 
@@ -16,7 +26,17 @@ module.exports = class MemoryStorage {
         }
 
         this.storage.get(streamKey).push({
-            streamId, streamPartition, timestamp, sequenceNo, publisherId, previousTimestamp, msgChainId, previousSequenceNo, data, signature, signatureType
+            streamId,
+            streamPartition,
+            timestamp,
+            sequenceNo,
+            publisherId,
+            previousTimestamp,
+            msgChainId,
+            previousSequenceNo,
+            data,
+            signature,
+            signatureType
         })
 
         if (this.storage.get(streamKey).length > this.maxNumberOfMessages) {
@@ -73,7 +93,7 @@ module.exports = class MemoryStorage {
         return this._createStream(filterFunc, streamId, streamPartition)
     }
 
-    requestFrom(streamId, streamPartition, fromTimestamp, fromSequenceNo = 0, publisherId = null) {
+    requestFrom(streamId, streamPartition, fromTimestamp, fromSequenceNo = 0, publisherId = null, msgChainId = null) {
         if (!Number.isInteger(fromTimestamp) || fromTimestamp <= 0) {
             throw new TypeError('fromTimestamp is not an positive integer')
         }
@@ -86,12 +106,22 @@ module.exports = class MemoryStorage {
         const filterFunc = () => Object.values(this.storage.get(streamKey)).filter((record) => {
             return (record.timestamp > fromTimestamp || (record.timestamp === fromTimestamp && record.sequenceNo >= fromSequenceNo))
                 && (record.publisherId === publisherId || publisherId === null)
+                && (record.msgChainId === msgChainId || msgChainId === null)
         })
 
         return this._createStream(filterFunc, streamId, streamPartition)
     }
 
-    requestRange(streamId, streamPartition, fromTimestamp, toTimestamp, fromSequenceNo, toSequenceNo, publisherId = null) {
+    requestRange(
+        streamId,
+        streamPartition,
+        fromTimestamp,
+        toTimestamp,
+        fromSequenceNo,
+        toSequenceNo,
+        publisherId = null,
+        msgChainId = null
+    ) {
         if (!Number.isInteger(fromTimestamp) || fromTimestamp <= 0) {
             throw new TypeError('fromTimestamp is not an positive integer')
         }
@@ -114,9 +144,10 @@ module.exports = class MemoryStorage {
 
         const streamKey = this._getStreamKey(streamId, streamPartition)
         const filterFunc = () => Object.values(this.storage.get(streamKey)).filter((record) => {
-            return ((record.timestamp > fromTimestamp || (record.timestamp === fromTimestamp && record.sequenceNo >= fromSequenceNo))
+            return (record.timestamp > fromTimestamp || (record.timestamp === fromTimestamp && record.sequenceNo >= fromSequenceNo))
                 && (record.timestamp < toTimestamp || (record.timestamp === toTimestamp && record.sequenceNo <= toSequenceNo))
-                && (record.publisherId === publisherId || publisherId === null))
+                && (record.publisherId === publisherId || publisherId === null)
+                && (record.msgChainId === msgChainId || msgChainId === null)
         })
 
         return this._createStream(filterFunc, streamId, streamPartition)

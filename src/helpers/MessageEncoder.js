@@ -93,6 +93,7 @@ const decode = (source, message) => {
                 payload.subId,
                 MessageReference.fromObject(payload.fromMsgRef),
                 payload.publisherId,
+                payload.msgChainId,
                 source
             )
 
@@ -103,6 +104,7 @@ const decode = (source, message) => {
                 MessageReference.fromObject(payload.fromMsgRef),
                 MessageReference.fromObject(payload.toMsgRef),
                 payload.publisherId,
+                payload.msgChainId,
                 source
             )
 
@@ -183,20 +185,22 @@ module.exports = {
         subId,
         numberLast
     }),
-    resendFromRequest: (streamId, subId, fromMsgRef, publisherId) => encode(msgTypes.RESEND_FROM, {
+    resendFromRequest: (streamId, subId, fromMsgRef, publisherId, msgChainId) => encode(msgTypes.RESEND_FROM, {
         streamId: streamId.id,
         streamPartition: streamId.partition,
         subId,
         fromMsgRef,
-        publisherId
+        publisherId,
+        msgChainId
     }),
-    resendRangeRequest: (streamId, subId, fromMsgRef, toMsgRef, publisherId) => encode(msgTypes.RESEND_RANGE, {
+    resendRangeRequest: (streamId, subId, fromMsgRef, toMsgRef, publisherId, msgChainId) => encode(msgTypes.RESEND_RANGE, {
         streamId: streamId.id,
         streamPartition: streamId.partition,
         subId,
         fromMsgRef,
         toMsgRef,
-        publisherId
+        publisherId,
+        msgChainId
     }),
     resendResponseResending: (streamId, subId) => encode(msgTypes.RESEND_RESPONSE_RESENDING, {
         streamId: streamId.id,

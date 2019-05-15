@@ -2,7 +2,7 @@ const { StreamID, MessageReference } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
 module.exports = class ResendRangeRequest {
-    constructor(streamId, subId, fromMsgRef, toMsgRef, publisherId, source = null) {
+    constructor(streamId, subId, fromMsgRef, toMsgRef, publisherId, msgChainId, source = null) {
         if (!(streamId instanceof StreamID)) {
             throw new Error(`invalid streamId: ${streamId}`)
         }
@@ -24,6 +24,7 @@ module.exports = class ResendRangeRequest {
         this.fromMsgRef = fromMsgRef
         this.toMsgRef = toMsgRef
         this.publisherId = publisherId
+        this.msgChainId = msgChainId
     }
 
     getVersion() {
@@ -56,5 +57,9 @@ module.exports = class ResendRangeRequest {
 
     getPublisherId() {
         return this.publisherId
+    }
+
+    getMsgChainId() {
+        return this.msgChainId
     }
 }

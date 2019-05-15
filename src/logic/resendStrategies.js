@@ -66,7 +66,8 @@ class StorageResendStrategy {
                 partition,
                 fromMsgRef.timestamp,
                 fromMsgRef.sequenceNo,
-                request.getPublisherId()
+                request.getPublisherId(),
+                request.getMsgChainId()
             ).pipe(toUnicastMessage(request))
         }
         if (request instanceof ResendRangeRequest) {
@@ -79,7 +80,8 @@ class StorageResendStrategy {
                 fromMsgRef.sequenceNo,
                 toMsgRef.timestamp,
                 toMsgRef.sequenceNo,
-                request.getPublisherId()
+                request.getPublisherId(),
+                request.getMsgChainId()
             ).pipe(toUnicastMessage(request))
         }
         throw new Error(`unknown resend request ${request}`)

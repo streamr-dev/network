@@ -60,11 +60,12 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
             new StreamID('streamId', 0),
             'subId',
             new MessageReference(1555555555555, 0),
-            'publisherId'
+            'publisherId',
+            'msgChainId'
         ))
 
         expect(storage.requestFrom.mock.calls).toEqual([
-            ['streamId', 0, 1555555555555, 0, 'publisherId']
+            ['streamId', 0, 1555555555555, 0, 'publisherId', 'msgChainId']
         ])
     })
 
@@ -76,11 +77,12 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
             'subId',
             new MessageReference(1555555555555, 0),
             new MessageReference(1555555555555, 1000),
-            'publisherId'
+            'publisherId',
+            'msgChainId'
         ))
 
         expect(storage.requestRange.mock.calls).toEqual([
-            ['streamId', 0, 1555555555555, 0, 1555555555555, 1000, 'publisherId']
+            ['streamId', 0, 1555555555555, 0, 1555555555555, 1000, 'publisherId', 'msgChainId']
         ])
     })
 

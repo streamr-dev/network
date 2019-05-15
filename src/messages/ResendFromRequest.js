@@ -2,7 +2,7 @@ const { StreamID, MessageReference } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
 
 module.exports = class ResendFromRequest {
-    constructor(streamId, subId, fromMsgRef, publisherId, source = null) {
+    constructor(streamId, subId, fromMsgRef, publisherId, msgChainId, source = null) {
         if (!(streamId instanceof StreamID)) {
             throw new Error(`invalid streamId: ${streamId}`)
         }
@@ -20,6 +20,7 @@ module.exports = class ResendFromRequest {
         this.subId = subId
         this.fromMsgRef = fromMsgRef
         this.publisherId = publisherId
+        this.msgChainId = msgChainId
     }
 
     getVersion() {
@@ -48,5 +49,9 @@ module.exports = class ResendFromRequest {
 
     getPublisherId() {
         return this.publisherId
+    }
+
+    getMsgChainId() {
+        return this.msgChainId
     }
 }

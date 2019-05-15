@@ -81,7 +81,7 @@ describe('resend requests are fulfilled at L1', () => {
 
     test('requestResendFrom', async () => {
         const actualEvents = eventsToArray(contactNode, Object.values(NetworkNode.events))
-        contactNode.requestResendFrom('streamId', 0, 'subId', 666, 0, 'publisherId')
+        contactNode.requestResendFrom('streamId', 0, 'subId', 666, 0, 'publisherId', 'msgChainId')
 
         await waitForEvent(contactNode, NetworkNode.events.RESENT)
         expect(actualEvents).toEqual([
@@ -93,7 +93,7 @@ describe('resend requests are fulfilled at L1', () => {
 
     test('requestResendRange', async () => {
         const actualEvents = eventsToArray(contactNode, Object.values(NetworkNode.events))
-        contactNode.requestResendRange('streamId', 0, 'subId', 666, 0, 999, 0, 'publisherId')
+        contactNode.requestResendRange('streamId', 0, 'subId', 666, 0, 999, 0, 'publisherId', 'msgChainId')
 
         await waitForEvent(contactNode, NetworkNode.events.NO_RESEND)
         expect(actualEvents).toEqual([
