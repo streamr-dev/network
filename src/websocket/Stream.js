@@ -1,8 +1,8 @@
 module.exports = class Stream {
-    constructor(id, partition, state) {
+    constructor(id, partition) {
         this.id = id
         this.partition = partition
-        this.state = state
+        this.state = 'init'
         this.connections = []
     }
 

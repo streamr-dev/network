@@ -39,7 +39,7 @@ module.exports = class StreamStateManager {
             throw new Error('streamId or streamPartition not given!')
         }
 
-        const stream = new Stream(streamId, streamPartition, 'init')
+        const stream = new Stream(streamId, streamPartition)
         this._streams[getStreamLookupKey(streamId, streamPartition)] = stream
 
         stream.stateTimeout = setTimeout(() => {

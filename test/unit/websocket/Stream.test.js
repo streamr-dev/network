@@ -3,7 +3,7 @@ const Stream = require('../../../src/websocket/Stream')
 
 describe('Stream', () => {
     it('addConnection adds connections', () => {
-        const stream = new Stream('id', 0, 'subscribed')
+        const stream = new Stream('id', 0)
         stream.addConnection('a')
         stream.addConnection('b')
         stream.addConnection('c')
@@ -14,7 +14,7 @@ describe('Stream', () => {
         let stream
 
         beforeEach(() => {
-            stream = new Stream('id', 0, 'subscribed')
+            stream = new Stream('id', 0)
             stream.addConnection('a')
             stream.addConnection('b')
             stream.addConnection('c')

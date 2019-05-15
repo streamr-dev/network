@@ -42,8 +42,8 @@ describe('Connection', () => {
     describe('stream management', () => {
         describe('addStream', () => {
             it('adds stream to the connection', () => {
-                const stream0 = new Stream('stream', 0, 'subscribed')
-                const stream2 = new Stream('stream', 1, 'subscribing')
+                const stream0 = new Stream('stream', 0)
+                const stream2 = new Stream('stream', 1)
                 connection.addStream(stream0)
                 connection.addStream(stream2)
                 assert.deepEqual(connection.getStreams(), [stream0, stream2])
@@ -56,9 +56,9 @@ describe('Connection', () => {
             let stream3
 
             beforeEach(() => {
-                stream1 = new Stream('stream1', 0, 'subscribed')
-                stream2 = new Stream('stream2', 0, 'subscribed')
-                stream3 = new Stream('stream3', 0, 'subscribed')
+                stream1 = new Stream('stream1', 0)
+                stream2 = new Stream('stream2', 0)
+                stream3 = new Stream('stream3', 0)
                 connection.addStream(stream1)
                 connection.addStream(stream2)
                 connection.addStream(stream3)
@@ -81,9 +81,9 @@ describe('Connection', () => {
             let stream3
 
             beforeEach(() => {
-                stream1 = new Stream('stream1', 0, 'subscribed')
-                stream2 = new Stream('stream2', 0, 'subscribed')
-                stream3 = new Stream('stream3', 0, 'subscribed')
+                stream1 = new Stream('stream1', 0)
+                stream2 = new Stream('stream2', 0)
+                stream3 = new Stream('stream3', 0)
                 connection.addStream(stream1)
                 connection.addStream(stream2)
                 connection.addStream(stream3)
