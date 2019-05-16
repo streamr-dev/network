@@ -11,22 +11,22 @@ module.exports = class StreamStateManager {
         this._timeouts = {}
     }
 
-    getOrCreateStreamObject(streamId, streamPartition) {
-        const stream = this.getStreamObject(streamId, streamPartition)
+    getOrCreate(streamId, streamPartition) {
+        const stream = this.get(streamId, streamPartition)
         if (stream) {
             return stream
         }
-        return this.createStreamObject(streamId, streamPartition)
+        return this.create(streamId, streamPartition)
     }
 
-    getStreamObject(streamId, streamPartition) {
+    get(streamId, streamPartition) {
         return this._streams[getStreamLookupKey(streamId, streamPartition)]
     }
 
     /**
      * Creates and returns a Stream object, holding the Stream subscription state.
      * */
-    createStreamObject(streamId, streamPartition) {
+    create(streamId, streamPartition) {
         if (streamId == null || streamPartition == null) {
             throw new Error('streamId or streamPartition not given!')
         }
@@ -52,7 +52,7 @@ module.exports = class StreamStateManager {
         this._timeouts[key] = setTimeout(() => {
             if (stream.state !== 'subscribed') {
                 debug('Stream "%s:%d" never subscribed, cleaning..', streamId, streamPartition)
-                this.deleteStreamObject(streamId, streamPartition)
+                this.delete(streamId, streamPartition)
             }
         }, 60 * 1000)
 
@@ -60,12 +60,12 @@ module.exports = class StreamStateManager {
         return stream
     }
 
-    deleteStreamObject(streamId, streamPartition) {
+    delete(streamId, streamPartition) {
         if (streamId == null || streamPartition == null) {
             throw new Error('streamId or streamPartition not given!')
         }
 
-        const stream = this.getStreamObject(streamId, streamPartition)
+        const stream = this.get(streamId, streamPartition)
         if (stream) {
             const key = getStreamLookupKey(streamId, streamPartition)
             clearTimeout(this._timeouts[key])

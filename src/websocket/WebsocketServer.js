@@ -270,7 +270,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         signatureType,
         signature,
     }) {
-        const stream = this.streams.getStreamObject(streamId, streamPartition)
+        const stream = this.streams.get(streamId, streamPartition)
 
         if (stream) {
             const streamMessage = MessageLayer.StreamMessage.create(
@@ -302,7 +302,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     handleSubscribeRequest(connection, request) {
         this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken)
             .then((/* streamJson */) => {
-                const stream = this.streams.getOrCreateStreamObject(request.streamId, request.streamPartition)
+                const stream = this.streams.getOrCreate(request.streamId, request.streamPartition)
 
                 // Subscribe now if the stream is not already subscribed or subscribing
                 if (!stream.isSubscribed() && !stream.isSubscribing()) {
@@ -327,7 +327,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handleUnsubscribeRequest(connection, request, noAck) {
-        const stream = this.streams.getStreamObject(request.streamId, request.streamPartition)
+        const stream = this.streams.get(request.streamId, request.streamPartition)
 
         if (stream) {
             debug('handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"', connection.id,
@@ -343,7 +343,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             if (stream.getConnections().length === 0) {
                 debug('checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.', request.streamId, request.streamPartition)
                 this.networkNode.unsubscribe(request.streamId, request.streamPartition)
-                this.streams.deleteStreamObject(request.streamId, request.streamPartition)
+                this.streams.delete(request.streamId, request.streamPartition)
             }
 
             if (!noAck) {
