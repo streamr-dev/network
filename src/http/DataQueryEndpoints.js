@@ -2,7 +2,6 @@
  * Endpoints for RESTful data requests
  */
 const express = require('express')
-const { MessageRef } = require('streamr-client-protocol').MessageLayer
 const VolumeLogger = require('../VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
@@ -32,7 +31,16 @@ function parseIntIfExists(x) {
     return x === undefined ? undefined : parseInt(x)
 }
 
-module.exports = (storage, streamFetcher, volumeLogger = new VolumeLogger(0)) => {
+function generateSubId() {
+    let result = ''
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    for (let i = 0; i < characters.length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length))
+    }
+    return result
+}
+
+module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)) => {
     const router = express.Router()
 
     router.use(
@@ -63,9 +71,10 @@ module.exports = (storage, streamFetcher, volumeLogger = new VolumeLogger(0)) =>
             })
         } else {
             const dataPoints = []
-            const streamingData = storage.fetchLatest(
+            const streamingData = networkNode.requestResendLast(
                 req.params.id,
                 partition,
+                generateSubId(),
                 count,
             )
             streamingData.on('error', onDataFetchDone(res))
@@ -92,21 +101,15 @@ module.exports = (storage, streamFetcher, volumeLogger = new VolumeLogger(0)) =>
             })
         } else {
             const dataPoints = []
-            let streamingData
-            if (fromSequenceNumber && publisherId) {
-                streamingData = storage.fetchFromMessageRefForPublisher(
-                    req.params.id,
-                    partition,
-                    new MessageRef(fromTimestamp, fromSequenceNumber),
-                    publisherId,
-                )
-            } else {
-                streamingData = storage.fetchFromTimestamp(
-                    req.params.id,
-                    partition,
-                    new Date(fromTimestamp),
-                )
-            }
+            const streamingData = networkNode.requestResendFrom(
+                req.params.id,
+                partition,
+                generateSubId(),
+                fromTimestamp,
+                fromSequenceNumber || 0,
+                publisherId || null,
+                null,
+            )
             streamingData.on('error', onDataFetchDone(res))
             streamingData.on('data', dataPoints.push.bind(dataPoints))
             streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
@@ -137,8 +140,8 @@ module.exports = (storage, streamFetcher, volumeLogger = new VolumeLogger(0)) =>
             })
         } else if (toTimestamp === undefined) {
             res.status(400).send({
-                error: 'Query parameter "toTimestamp" required as well. To request all messages since a timestamp,' +
-                    'use the endpoint /streams/:id/data/partitions/:partition/from',
+                error: 'Query parameter "toTimestamp" required as well. To request all messages since a timestamp,'
+                    + 'use the endpoint /streams/:id/data/partitions/:partition/from',
             })
         } else if (Number.isNaN(toTimestamp)) {
             res.status(400).send({
@@ -146,23 +149,17 @@ module.exports = (storage, streamFetcher, volumeLogger = new VolumeLogger(0)) =>
             })
         } else {
             const dataPoints = []
-            let streamingData
-            if (fromSequenceNumber && toSequenceNumber && publisherId) {
-                streamingData = storage.fetchBetweenMessageRefsForPublisher(
-                    req.params.id,
-                    partition,
-                    new MessageRef(fromTimestamp, fromSequenceNumber),
-                    new MessageRef(toTimestamp, toSequenceNumber),
-                    publisherId,
-                )
-            } else {
-                streamingData = storage.fetchBetweenTimestamps(
-                    req.params.id,
-                    partition,
-                    new Date(fromTimestamp),
-                    new Date(toTimestamp),
-                )
-            }
+            const streamingData = networkNode.requestResendRange(
+                req.params.id,
+                partition,
+                generateSubId(),
+                fromTimestamp,
+                fromSequenceNumber || 0,
+                toTimestamp,
+                toSequenceNumber || 0,
+                publisherId || null,
+                null,
+            )
             streamingData.on('error', onDataFetchDone(res))
             streamingData.on('data', dataPoints.push.bind(dataPoints))
             streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))

@@ -238,7 +238,7 @@ describe('WebsocketServer', () => {
         })
 
         describe('socket sends ResendRangeRequest', () => {
-            it('requests messages from given timestamp range from historicalAdapter (V1)', (done) => {
+            it('requests messages from given timestamp range from networkNode (V1)', (done) => {
                 const request = ControlLayer.ResendRangeRequest.create(
                     'streamId', 0, 'sub', [1000, 0],
                     [5000, 10], 'publsherId', 'msgChainId', 'correct',
@@ -264,7 +264,7 @@ describe('WebsocketServer', () => {
         })
 
         describe('socket sends ResendFromRequest', () => {
-            it('requests messages from given message ref from historicalAdapter (V1)', (done) => {
+            it('requests messages from given message ref from networkNode (V1)', (done) => {
                 const request = ControlLayer.ResendFromRequest.create(
                     'streamId', 0, 'sub', [5000, 0], 'publisherId', 'msgChainId', 'correct',
                 )
@@ -287,7 +287,7 @@ describe('WebsocketServer', () => {
         })
 
         describe('socket sends resend request with resend_last', () => {
-            it('requests last N messages from historicalAdapter (V1)', (done) => {
+            it('requests last N messages from networkNode (V1)', (done) => {
                 const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
 
                 mockSocket.receive(request)
