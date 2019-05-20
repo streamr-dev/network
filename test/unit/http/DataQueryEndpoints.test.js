@@ -1,9 +1,8 @@
-const { Readable } = require('stream')
 const express = require('express')
 const request = require('supertest')
 const sinon = require('sinon')
 const intoStream = require('into-stream')
-const { StreamMessage, StreamMessageV30, MessageRef } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const restEndpointRouter = require('../../../src/http/DataQueryEndpoints')
 const HttpError = require('../../../src/errors/HttpError')
 
@@ -296,8 +295,9 @@ describe('DataQueryEndpoints', () => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1')
                     .expect('Content-Type', /json/)
                     .expect(400, {
-                        error: 'Query parameter "toTimestamp" required as well. To request all messages since a timestamp,' +
-                            'use the endpoint /streams/:id/data/partitions/:partition/from',
+                        error: 'Query parameter "toTimestamp" required as well. '
+                        + 'To request all messages since a timestamp,'
+                            + 'use the endpoint /streams/:id/data/partitions/:partition/from',
                     }, done)
             })
             it('responds 400 and error message if optional param "toTimestamp" not a number', (done) => {
@@ -322,12 +322,14 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
+                // eslint-disable-next-line max-len
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .expect('Content-Type', /json/)
                     .expect(200, done)
             })
 
             it('responds with data points as body', (done) => {
+                // eslint-disable-next-line max-len
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .expect(messages.map((msg) => msg.toArray()), done)
             })
@@ -335,6 +337,7 @@ describe('DataQueryEndpoints', () => {
             it('invokes networkNode#requestResendRange once with correct arguments', async () => {
                 networkNode.requestResendRange = jest.fn()
 
+                // eslint-disable-next-line max-len
                 await testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
 
                 expect(networkNode.requestResendRange).toHaveBeenCalledTimes(1)
@@ -354,6 +357,7 @@ describe('DataQueryEndpoints', () => {
             it('responds 500 and error message if networkNode signals error', (done) => {
                 networkNode.requestResendRange = () => intoStream.object(Promise.reject(new Error('error')))
 
+                // eslint-disable-next-line max-len
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
                     .expect('Content-Type', /json/)
                     .expect(500, {
@@ -362,7 +366,9 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
+        // eslint-disable-next-line max-len
         describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId', () => {
+            // eslint-disable-next-line max-len
             const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId'
 
             let messages

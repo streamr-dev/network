@@ -14,7 +14,8 @@ describe('partition', () => {
         }
     })
 
-    it('should use murmur2 partitioner and produce same results as org.apache.kafka.common.utils.Utils.murmur2(byte[])', () => {
+    // eslint-disable-next-line max-len
+    it('uses murmur2 partitioner and produces same results as org.apache.kafka.common.utils.Utils.murmur2(byte[])', () => {
         const keys = []
         for (let i = 0; i < 100; i++) {
             keys.push(`key-${i}`)

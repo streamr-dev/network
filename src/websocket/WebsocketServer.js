@@ -328,12 +328,18 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
                     stream.addConnection(connection)
                     connection.addStream(stream)
-                    debug('handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"', connection.id, connection.streamsAsString())
+                    debug(
+                        'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
+                        connection.id, connection.streamsAsString()
+                    )
                     connection.send(ControlLayer.SubscribeResponse.create(request.streamId, request.streamPartition))
                 }
             })
             .catch((response) => {
-                debug('handleSubscribeRequest: socket "%s" failed to subscribe to stream %s:%d because of "%o"', connection.id, request.streamId, request.streamPartition, response)
+                debug(
+                    'handleSubscribeRequest: socket "%s" failed to subscribe to stream %s:%d because of "%o"',
+                    connection.id, request.streamId, request.streamPartition, response
+                )
                 connection.sendError(`Not authorized to subscribe to stream ${
                     request.streamId
                 } and partition ${
@@ -352,12 +358,21 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             stream.removeConnection(connection)
             connection.removeStream(request.streamId, request.streamPartition)
 
-            debug('handleUnsubscribeRequest: socket "%s" is still subscribed to streams "%o"', connection.id, connection.streamsAsString())
+            debug(
+                'handleUnsubscribeRequest: socket "%s" is still subscribed to streams "%o"',
+                connection.id, connection.streamsAsString()
+            )
 
             // Unsubscribe from stream if no connections left
-            debug('checkRoomEmpty: "%d" sockets remaining on stream "%s:%d"', stream.getConnections().length, request.streamId, request.streamPartition)
+            debug(
+                'checkRoomEmpty: "%d" sockets remaining on stream "%s:%d"',
+                stream.getConnections().length, request.streamId, request.streamPartition
+            )
             if (stream.getConnections().length === 0) {
-                debug('checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.', request.streamId, request.streamPartition)
+                debug(
+                    'checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.',
+                    request.streamId, request.streamPartition
+                )
                 this.networkNode.unsubscribe(request.streamId, request.streamPartition)
                 this.streams.delete(request.streamId, request.streamPartition)
             }
@@ -366,7 +381,10 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 connection.send(ControlLayer.UnsubscribeResponse.create(request.streamId, request.streamPartition))
             }
         } else {
-            debug('handleUnsubscribeRequest: stream "%s:%d" no longer exists', request.streamId, request.streamPartition)
+            debug(
+                'handleUnsubscribeRequest: stream "%s:%d" no longer exists',
+                request.streamId, request.streamPartition
+            )
             connection.sendError(`Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`)
         }
     }

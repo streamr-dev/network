@@ -14,7 +14,6 @@ module.exports = class MockSocket extends events.EventEmitter {
 
     join(channel, cb) {
         this.rooms.push(channel)
-        console.log(`SOCKET MOCK: Socket ${this.id} joined channel ${channel}, now on: ${this.rooms}`)
         cb()
     }
 
@@ -60,8 +59,6 @@ module.exports = class MockSocket extends events.EventEmitter {
         if (index >= 0) {
             this.rooms.splice(index, 1)
         }
-
-        console.log(`SOCKET MOCK: Socket ${this.id} left channel ${channel}, now on: ${this.rooms}`)
         cb()
     }
 }

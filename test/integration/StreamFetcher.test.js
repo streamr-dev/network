@@ -57,7 +57,8 @@ describe('StreamFetcher', () => {
                     res.sendStatus(500)
                 } else if (req.params.id !== streamId) {
                     res.sendStatus(404)
-                } else if (req.get('Authorization') !== 'token key' && req.get('Authorization') !== 'Bearer session-token') {
+                } else if (req.get('Authorization') !== 'token key'
+                        && req.get('Authorization') !== 'Bearer session-token') {
                     res.sendStatus(403)
                 } else {
                     res.status(200).send(permissions)
@@ -69,7 +70,8 @@ describe('StreamFetcher', () => {
                     res.sendStatus(500)
                 } else if (req.params.id !== streamId) {
                     res.sendStatus(404)
-                } else if (req.get('Authorization') !== 'token key' && req.get('Authorization') !== 'Bearer session-token') {
+                } else if (req.get('Authorization') !== 'token key'
+                        && req.get('Authorization') !== 'Bearer session-token') {
                     res.sendStatus(403)
                 } else {
                     res.status(200).send(streamJson)
@@ -81,7 +83,8 @@ describe('StreamFetcher', () => {
                     res.sendStatus(500)
                 } else if (req.params.id !== streamId) {
                     res.sendStatus(404)
-                } else if (req.get('Authorization') !== 'token key' && req.get('Authorization') !== 'Bearer session-token') {
+                } else if (req.get('Authorization') !== 'token key'
+                        && req.get('Authorization') !== 'Bearer session-token') {
                     res.sendStatus(403)
                 } else {
                     /* eslint-disable prefer-destructuring */

@@ -37,7 +37,7 @@ describe('Publisher', () => {
     })
 
     describe('publish', () => {
-        it('should throw MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData flag', () => {
+        it('throws MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData', () => {
             expect(() => publisher.publish(signedStream, streamMessageUnsigned)).toThrow(MessageNotSignedError)
         })
 

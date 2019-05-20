@@ -7,7 +7,15 @@ const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev'
 
-function formObject(streamId, streamPartition, timestamp, sequenceNo, publisherId = 'publisher', msgChainId = '1', data = {}) {
+function formObject(
+    streamId,
+    streamPartition,
+    timestamp,
+    sequenceNo,
+    publisherId = 'publisher',
+    msgChainId = '1',
+    data = {}
+) {
     return {
         streamId,
         streamPartition,
@@ -77,7 +85,9 @@ describe('Storage', () => {
         const msg = formObject(streamId, 10, 1545144750494, 0, 'publisher', '1', data)
         await storage.store(msg)
 
-        const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE id = ? AND partition = 10', [streamId])
+        const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE id = ? AND partition = 10', [
+            streamId
+        ])
         expect(result.rows.length).toEqual(1)
         expect(result.rows[0]).toEqual({
             id: streamId,

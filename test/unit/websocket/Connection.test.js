@@ -1,5 +1,3 @@
-const assert = require('assert')
-const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 const Connection = require('../../../src/websocket/Connection.js')
 const Stream = require('../../../src/websocket/Stream.js')
 

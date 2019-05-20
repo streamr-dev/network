@@ -79,7 +79,13 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
             )
             streamingData.on('error', onDataFetchDone(res))
             streamingData.on('data', dataPoints.push.bind(dataPoints))
-            streamingData.on('end', onDataFetchDone(res, dataPoints, wrapperOption.toLowerCase(), contentOption.toLowerCase(), volumeLogger))
+            streamingData.on('end', onDataFetchDone(
+                res,
+                dataPoints,
+                wrapperOption.toLowerCase(),
+                contentOption.toLowerCase(),
+                volumeLogger
+            ))
         }
     })
 
@@ -128,7 +134,8 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
 
         if (req.query.fromOffset !== undefined || req.query.toOffset !== undefined) {
             res.status(400).send({
-                error: 'Query parameters "fromOffset" and "toOffset" are no longer supported. Please use "fromTimestamp" and "toTimestamp".',
+                error: 'Query parameters "fromOffset" and "toOffset" are no longer supported. '
+                    + 'Please use "fromTimestamp" and "toTimestamp".',
             })
         } else if (fromTimestamp === undefined) {
             res.status(400).send({

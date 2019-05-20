@@ -33,7 +33,8 @@ module.exports = class StreamFetcher {
             // No need to explicitly check permissions, as fetch will fail if no read permission
             return this.fetch(streamId, authKey, sessionToken)
         }
-        return this.checkPermission(streamId, authKey, sessionToken, operation).then(() => this.fetch(streamId, authKey, sessionToken))
+        return this.checkPermission(streamId, authKey, sessionToken, operation)
+            .then(() => this.fetch(streamId, authKey, sessionToken))
     }
 
     /**

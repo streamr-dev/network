@@ -3,5 +3,7 @@ module.exports = exports = {
     env: {
         jest: true,
     },
-    rules: {}
+    rules: {
+        'radix': ['error', 'as-needed']
+    }
 }

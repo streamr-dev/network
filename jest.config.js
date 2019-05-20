@@ -73,7 +73,8 @@ module.exports = {
     // A map from regular expressions to module names that allow to stub out resources with a single module
     // moduleNameMapper: {},
 
-    // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
+    // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module
+    // loader
     // modulePathIgnorePatterns: [],
 
     // Activates notifications for test results
@@ -161,12 +162,14 @@ module.exports = {
     // A map from regular expressions to paths to transformers
     // transform: null,
 
-    // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
+    // An array of regexp pattern strings that are matched against all source file paths, matched files will skip
+    // transformation
     // transformIgnorePatterns: [
     //   "/node_modules/"
     // ],
 
-    // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
+    // An array of regexp pattern strings that are matched against all modules before the module loader will
+    // automatically return a mock for them
     // unmockedModulePathPatterns: undefined,
 
     // Indicates whether each individual test should be reported during the run

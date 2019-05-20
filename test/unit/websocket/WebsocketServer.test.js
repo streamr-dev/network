@@ -320,7 +320,9 @@ describe('WebsocketServer', () => {
             mockSocket.receive(request)
             const expectedResponse = ControlLayer.ErrorResponse.create('Unknown resend options: {"resend_all":true}')
             setImmediate(() => {
-                assert.deepEqual(mockSocket.sentMessages, [expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)])
+                assert.deepEqual(mockSocket.sentMessages, [
+                    expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
+                ])
                 expect(networkNode.requestResendLast).not.toHaveBeenCalled()
                 expect(networkNode.requestResendFrom).not.toHaveBeenCalled()
                 expect(networkNode.requestResendRange).not.toHaveBeenCalled()
@@ -435,10 +437,15 @@ describe('WebsocketServer', () => {
                 type: 'subscribe',
             })
 
-            const expectedResponse = ControlLayer.ErrorResponse.create('Not authorized to subscribe to stream undefined and partition 0')
+            const expectedResponse = ControlLayer.ErrorResponse.create(
+                'Not authorized to subscribe to stream undefined and partition 0'
+            )
 
             setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION))
+                assert.deepEqual(
+                    mockSocket.sentMessages[0],
+                    expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
+                )
                 done()
             })
         })
@@ -488,7 +495,8 @@ describe('WebsocketServer', () => {
             setTimeout(() => {
                 assert.deepEqual(
                     mockSocket.sentMessages[0],
-                    ControlLayer.SubscribeResponse.create('streamId', 0).serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION),
+                    ControlLayer.SubscribeResponse.create('streamId', 0)
+                        .serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
                 )
                 done()
             })
@@ -539,9 +547,14 @@ describe('WebsocketServer', () => {
         })
 
         it('sends error message to socket', (done) => {
-            const expectedResponse = ControlLayer.ErrorResponse.create('Not authorized to subscribe to stream streamId and partition 0')
+            const expectedResponse = ControlLayer.ErrorResponse.create(
+                'Not authorized to subscribe to stream streamId and partition 0'
+            )
             setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION))
+                assert.deepEqual(
+                    mockSocket.sentMessages[0],
+                    expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
+                )
                 done()
             })
         })
@@ -569,7 +582,8 @@ describe('WebsocketServer', () => {
         it('emits a unsubscribed event', () => {
             assert.deepEqual(
                 mockSocket.sentMessages[1],
-                ControlLayer.UnsubscribeResponse.create('streamId', 0).serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION),
+                ControlLayer.UnsubscribeResponse.create('streamId', 0)
+                    .serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
             )
         })
 
@@ -693,9 +707,12 @@ describe('WebsocketServer', () => {
 
                     setTimeout(() => {
                         assert.deepEqual(mockSocket.sentMessages, [
-                            ControlLayer.SubscribeResponse.create('streamId', 0).serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION),
-                            ControlLayer.UnsubscribeResponse.create('streamId', 0).serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION),
-                            ControlLayer.SubscribeResponse.create('streamId', 0).serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION),
+                            ControlLayer.SubscribeResponse.create('streamId', 0)
+                                .serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION),
+                            ControlLayer.UnsubscribeResponse.create('streamId', 0)
+                                .serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION),
+                            ControlLayer.SubscribeResponse.create('streamId', 0)
+                                .serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION),
                         ])
                         done()
                     })
@@ -864,7 +881,10 @@ describe('WebsocketServer', () => {
             afterEach(() => {
                 assert.equal(mockSocket.sentMessages.length, 1)
                 const expectedResponse = ControlLayer.ErrorResponse.create(errorMessage)
-                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION))
+                assert.deepEqual(
+                    mockSocket.sentMessages[0],
+                    expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
+                )
             })
 
             it('responds with an error if the stream id is missing', () => {
