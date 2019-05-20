@@ -43,6 +43,8 @@ module.exports = class MockSocket extends events.EventEmitter {
         if (msg instanceof ControlLayer.ErrorResponse && this.throwOnError) {
             throw new Error(`Received unexpected error message: ${msg.errorMessage}`)
         }
+
+        this.emit('test:send', this.sentMessages.length)
     }
 
     getRequest() {

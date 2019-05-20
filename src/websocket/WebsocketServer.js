@@ -8,12 +8,17 @@ const Connection = require('./Connection')
 const StreamStateManager = require('./StreamStateManager')
 
 module.exports = class WebsocketServer extends events.EventEmitter {
-    constructor(wss, networkNode, storage, streamFetcher, publisher,
-        volumeLogger = new VolumeLogger(0), partitionFn = partition) {
+    constructor(
+        wss,
+        networkNode,
+        streamFetcher,
+        publisher,
+        volumeLogger = new VolumeLogger(0),
+        partitionFn = partition,
+    ) {
         super()
         this.wss = wss
         this.networkNode = networkNode
-        this.storage = storage
         this.streamFetcher = streamFetcher
         this.publisher = publisher
         this.partitionFn = partitionFn
@@ -21,18 +26,19 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.streams = new StreamStateManager()
         this.configSet = {}
 
-        this.requestHandlersByMessageType = {}
-        this.requestHandlersByMessageType[ControlLayer.SubscribeRequest.TYPE] = this.handleSubscribeRequest
-        this.requestHandlersByMessageType[ControlLayer.UnsubscribeRequest.TYPE] = this.handleUnsubscribeRequest
-        this.requestHandlersByMessageType[ControlLayer.ResendRequestV0.TYPE] = this.handleResendRequestV0
-        this.requestHandlersByMessageType[ControlLayer.ResendLastRequestV1.TYPE] = this.handleResendLastRequest
-        this.requestHandlersByMessageType[ControlLayer.ResendFromRequestV1.TYPE] = this.handleResendFromRequest
-        this.requestHandlersByMessageType[ControlLayer.ResendRangeRequestV1.TYPE] = this.handleResendRangeRequest
-        this.requestHandlersByMessageType[ControlLayer.PublishRequest.TYPE] = this.handlePublishRequest
+        this.requestHandlersByMessageType = {
+            [ControlLayer.SubscribeRequest.TYPE]: this.handleSubscribeRequest,
+            [ControlLayer.UnsubscribeRequest.TYPE]: this.handleUnsubscribeRequest,
+            [ControlLayer.ResendRequestV0.TYPE]: this.handleResendRequestV0,
+            [ControlLayer.ResendLastRequestV1.TYPE]: this.handleResendLastRequest,
+            [ControlLayer.ResendFromRequestV1.TYPE]: this.handleResendFromRequest,
+            [ControlLayer.ResendRangeRequestV1.TYPE]: this.handleResendRangeRequest,
+            [ControlLayer.PublishRequest.TYPE]: this.handlePublishRequest,
+        }
 
         this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
 
-        this.wss.on('connection', this.handleConnection.bind(this))
+        this.wss.on('connection', this.onNewClientConnection.bind(this))
     }
 
     close() {
@@ -40,17 +46,18 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.wss.close()
     }
 
-    handleConnection(socket, socketRequest) {
+    onNewClientConnection(socket, socketRequest) {
         const connection = new Connection(socket, socketRequest)
         this.volumeLogger.connectionCount += 1
-        debug('handleConnection: socket "%s" connected', connection.id)
+        debug('onNewClientConnection: socket "%s" connected', connection.id)
 
+        // Callback for when client sends message
         socket.on('message', (data) => {
             try {
                 const request = ControlLayer.ControlMessage.deserialize(data)
                 const handler = this.requestHandlersByMessageType[request.type]
                 if (handler) {
-                    debug('handleConnection: socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
+                    debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
                     handler.call(this, connection, request)
                 } else {
                     connection.sendError(`Unknown request type: ${request.type}`)
@@ -60,28 +67,43 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             }
         })
 
+        // Callback for when client disconnects
         socket.on('close', () => {
             this.volumeLogger.connectionCount -= 1
-            this.handleDisconnect(connection)
+            debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
+
+            // Unsubscribe from all streams
+            connection.forEachStream((stream) => {
+                this.handleUnsubscribeRequest(
+                    connection,
+                    ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition),
+                    true,
+                )
+            })
         })
     }
 
     handlePublishRequest(connection, request) {
         const streamId = request.getStreamId()
+        // TODO: should this be moved to streamr-client-protocol-js ?
         if (streamId === undefined) {
             connection.sendError('Publish request failed: Error: streamId must be defined!')
             return
         }
+        // TODO: simplify with async-await
         this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'write')
             .then((stream) => {
+                // TODO: should this be moved to streamr-client-protocol-js ?
                 let streamPartition
                 if (request.version === 0) {
                     streamPartition = this.partitionFn(stream.partitions, request.partitionKey)
                 }
                 const streamMessage = request.getStreamMessage(streamPartition)
 
-                if (!this.configSet[streamId] && stream.autoConfigure &&
-                    (!stream.config || !stream.config.fields || stream.config.fields.length === 0)) {
+                // TODO: extract class
+                if (!this.configSet[streamId]
+                    && stream.autoConfigure
+                    && (!stream.config || !stream.config.fields || stream.config.fields.length === 0)) {
                     this.configSet[streamId] = true
                     const content = streamMessage.getParsedContent()
                     const fields = []
@@ -122,6 +144,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             })
     }
 
+    // TODO: Extract resend stuff to class?
     handleResendRequest(connection, request, resendTypeHandler) {
         let nothingToResend = true
 
@@ -155,6 +178,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             }
         }
 
+        // TODO: simplify with async-await
         this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken).then(() => {
             const streamingStorageData = resendTypeHandler()
             streamingStorageData.on('data', msgHandler)
@@ -169,51 +193,41 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handleResendLastRequest(connection, request) {
-        this.handleResendRequest(connection, request, () => this.storage.fetchLatest(
+        this.handleResendRequest(connection, request, () => this.networkNode.requestResendLast(
             request.streamId,
             request.streamPartition,
+            request.subId, // TODO: should generate new here or use client-provided as is?
             request.numberLast,
         ))
     }
 
     handleResendFromRequest(connection, request) {
-        if (request.publisherId) {
-            this.handleResendRequest(connection, request, () => this.storage.fetchFromMessageRefForPublisher(
-                request.streamId,
-                request.streamPartition,
-                request.fromMsgRef,
-                request.publisherId,
-                request.msgChainId,
-            ))
-        } else {
-            this.handleResendRequest(connection, request, () => this.storage.fetchFromTimestamp(
-                request.streamId,
-                request.streamPartition,
-                request.fromMsgRef.timestamp,
-            ))
-        }
+        this.handleResendRequest(connection, request, () => this.networkNode.requestResendFrom(
+            request.streamId,
+            request.streamPartition,
+            request.subId, // TODO: should generate new here or use client-provided as is?
+            request.fromMsgRef.timestamp,
+            request.fromMsgRef.sequenceNumber,
+            request.publisherId,
+            request.msgChainId,
+        ))
     }
 
     handleResendRangeRequest(connection, request) {
-        if (request.publisherId) {
-            this.handleResendRequest(connection, request, () => this.storage.fetchBetweenMessageRefsForPublisher(
-                request.streamId,
-                request.streamPartition,
-                request.fromMsgRef,
-                request.toMsgRef,
-                request.publisherId,
-                request.msgChainId,
-            ))
-        } else {
-            this.handleResendRequest(connection, request, () => this.storage.fetchBetweenTimestamps(
-                request.streamId,
-                request.streamPartition,
-                request.fromMsgRef.timestamp,
-                request.toMsgRef.timestamp,
-            ))
-        }
+        this.handleResendRequest(connection, request, () => this.networkNode.requestResendRange(
+            request.streamId,
+            request.streamPartition,
+            request.subId, // TODO: should generate new here or use client-provided as is?
+            request.fromMsgRef.timestamp,
+            request.fromMsgRef.sequenceNumber,
+            request.toMsgRef.timestamp,
+            request.toMsgRef.sequenceNumber,
+            request.publisherId,
+            request.msgChainId,
+        ))
     }
 
+    // TODO: should this be moved to streamr-client-protocol-js ?
     /* eslint-disable class-methods-use-this */
     handleResendRequestV0(connection, request) {
         if (request.resendOptions.resend_last != null) {
@@ -290,6 +304,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             )
 
             stream.forEachConnection((connection) => {
+                // TODO: performance fix, no need to re-create on every loop iteration
                 connection.send(ControlLayer.BroadcastMessage.create(streamMessage))
             })
 
@@ -300,6 +315,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     handleSubscribeRequest(connection, request) {
+        // TODO: simplify with async-await
         this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken)
             .then((/* streamJson */) => {
                 const stream = this.streams.getOrCreate(request.streamId, request.streamPartition)
@@ -353,14 +369,5 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             debug('handleUnsubscribeRequest: stream "%s:%d" no longer exists', request.streamId, request.streamPartition)
             connection.sendError(`Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`)
         }
-    }
-
-    handleDisconnect(connection) {
-        debug('handleDisconnect: socket "%s" is on streams "%o"', connection.id, connection.streamsAsString())
-
-        // Unsubscribe from all streams
-        connection.forEachStream((stream) => {
-            this.handleUnsubscribeRequest(connection, ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition), true)
-        })
     }
 }

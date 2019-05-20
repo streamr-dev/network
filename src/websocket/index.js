@@ -4,13 +4,7 @@ const MissingConfigError = require('../errors/MissingConfigError')
 const adapterRegistry = require('../adapterRegistry')
 const WebsocketServer = require('./WebsocketServer')
 
-adapterRegistry.register('ws', ({ port }, {
-    networkNode,
-    publisher,
-    storage,
-    streamFetcher,
-    volumeLogger,
-}) => {
+adapterRegistry.register('ws', ({ port }, { networkNode, publisher, streamFetcher, volumeLogger }) => {
     if (port === undefined) {
         throw new MissingConfigError('port')
     }
@@ -33,7 +27,6 @@ adapterRegistry.register('ws', ({ port }, {
             },
         }).on('listening', () => console.info(`WS adapter listening on ${port}`)),
         networkNode,
-        storage,
         streamFetcher,
         publisher,
         volumeLogger,
