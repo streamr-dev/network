@@ -1,6 +1,22 @@
+const { Readable } = require('stream')
 const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
 const ResendResponseResent = require('../../src/messages/ResendResponseResent')
 const ResendResponseResending = require('../../src/messages/ResendResponseResending')
+
+class RequestStream extends Readable {
+    constructor() {
+        super({
+            objectMode: true,
+            read() {}
+        })
+        this.fulfilled = null
+    }
+
+    done(fulfilled) {
+        this.fulfilled = fulfilled
+        this.push(null)
+    }
+}
 
 class ResendHandler {
     constructor(resendStrategies, sendResponse, sendUnicast, notifyError) {
@@ -23,11 +39,19 @@ class ResendHandler {
         this.notifyError = notifyError
     }
 
-    async handleRequest(request) {
+    handleRequest(request) {
+        const requestStream = new RequestStream()
+        this._loopThruResendStrategies(request, requestStream)
+        return requestStream
+    }
+
+    async _loopThruResendStrategies(request, requestStream) {
         let isRequestFulfilled = false
 
         for (let i = 0; i < this.resendStrategies.length && !isRequestFulfilled; ++i) {
             const responseStream = this.resendStrategies[i].getResendResponseStream(request)
+                .on('data', requestStream.push.bind(requestStream))
+
             // eslint-disable-next-line no-await-in-loop
             isRequestFulfilled = await this._readStreamUntilEndOrError(responseStream, request)
         }
@@ -37,7 +61,8 @@ class ResendHandler {
         } else {
             this._emitNoResend(request)
         }
-        return isRequestFulfilled
+
+        requestStream.done(isRequestFulfilled)
     }
 
     _readStreamUntilEndOrError(responseStream, request) {

@@ -31,6 +31,21 @@ const waitForCondition = (conditionFn, timeout = 10 * 1000, retryInterval = 100)
     })
 }
 
+/**
+ * Collect data of a stream into an array. The array is wrapped in a Promise
+ * that resolves when the stream has ended, i.e., event `end` is emitted by
+ * stream.
+ */
+const waitForStreamToEnd = (stream) => {
+    const arr = []
+    return new Promise((resolve, reject) => {
+        stream
+            .on('data', arr.push.bind(arr))
+            .on('error', reject)
+            .on('end', () => resolve(arr))
+    })
+}
+
 const getPeers = (max) => Array.from(Array(max), (d, i) => 'address-' + i)
 
 const eventsToArray = (emitter, events) => {
@@ -65,5 +80,6 @@ module.exports = {
     wait,
     waitForEvent,
     waitForCondition,
+    waitForStreamToEnd,
     LOCALHOST,
 }

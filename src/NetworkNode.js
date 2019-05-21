@@ -75,11 +75,11 @@ class NetworkNode extends Node {
     }
 
     requestResendLast(streamId, streamPartition, subId, number) {
-        this.requestResend(new ResendLastRequest(new StreamID(streamId, streamPartition), subId, number, null))
+        return this.requestResend(new ResendLastRequest(new StreamID(streamId, streamPartition), subId, number, null))
     }
 
     requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
-        this.requestResend(new ResendFromRequest(
+        return this.requestResend(new ResendFromRequest(
             new StreamID(streamId, streamPartition),
             subId,
             new MessageReference(fromTimestamp, fromSequenceNo),
@@ -98,7 +98,7 @@ class NetworkNode extends Node {
         toSequenceNo,
         publisherId,
         msgChainId) {
-        this.requestResend(new ResendRangeRequest(
+        return this.requestResend(new ResendRangeRequest(
             new StreamID(streamId, streamPartition),
             subId,
             new MessageReference(fromTimestamp, fromSequenceNo),

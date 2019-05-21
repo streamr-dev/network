@@ -100,7 +100,7 @@ class Node extends EventEmitter {
             request.getSource() === null ? 'local' : `from ${request.getSource()}`,
             request.constructor.name,
             request.getSubId())
-        this.resendHandler.handleRequest(request)
+        return this.resendHandler.handleRequest(request)
     }
 
     async respondResend(destination, response) {

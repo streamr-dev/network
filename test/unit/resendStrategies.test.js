@@ -14,25 +14,11 @@ const UnicastMessage = require('../../src/messages/UnicastMessage')
 const { MessageID, MessageReference, StreamID } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
+const { waitForStreamToEnd } = require('../util')
 
 jest.useFakeTimers()
 
 const TIMEOUT = 10000
-
-/**
- * Collect data of a stream into an array. The array is wrapped in a Promise
- * that resolves when the stream has ended, i.e., event `end` is emitted by
- * stream.
- */
-function streamToArray(stream) {
-    const arr = []
-    return new Promise((resolve, reject) => {
-        stream
-            .on('data', arr.push.bind(arr))
-            .on('error', reject)
-            .on('end', () => resolve(arr))
-    })
-}
 
 describe('StorageResendStrategy#getResendResponseStream', () => {
     let storage
@@ -115,7 +101,7 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
         const responseStream = resendStrategy.getResendResponseStream(
             new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10)
         )
-        const streamAsArray = await streamToArray(responseStream)
+        const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([
             new UnicastMessage(
                 new MessageID(new StreamID('streamId', 0), 0, 0, 'publisherId', 'msgChainId'),
@@ -159,14 +145,14 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
     test('if given non-local request returns empty stream', async () => {
         request = new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10, 'non-local')
         const responseStream = resendStrategy.getResendResponseStream(request)
-        const streamAsArray = await streamToArray(responseStream)
+        const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([])
     })
 
     test('if no neighbors available returns empty stream', async () => {
         getNeighbors.mockReturnValueOnce([])
         const responseStream = resendStrategy.getResendResponseStream(request)
-        const streamAsArray = await streamToArray(responseStream)
+        const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([])
     })
 
@@ -206,7 +192,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
                 .mockReturnValueOnce(Promise.reject())
 
             const responseStream = resendStrategy.getResendResponseStream(request)
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
 
             expect(streamAsArray).toEqual([])
         })
@@ -216,7 +202,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
             getNeighbors.mockReturnValue(['neighbor-1', 'neighbor-1', 'neighbor-1'])
             nodeToNode.send = jest.fn().mockReturnValue(Promise.reject())
 
-            await streamToArray(resendStrategy.getResendResponseStream(request))
+            await waitForStreamToEnd(resendStrategy.getResendResponseStream(request))
 
             expect(nodeToNode.send).toBeCalledTimes(1)
         })
@@ -318,7 +304,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
             nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE,
                 new ResendResponseResent(new StreamID('streamId', 0), 'subId', 'neighbor-1'))
 
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([u1, u2, u3, u4, u5])
         })
     })
@@ -348,14 +334,14 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
     test('if given non-local request returns empty stream', async () => {
         request = new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10, 'non-local')
         const responseStream = resendStrategy.getResendResponseStream(request)
-        const streamAsArray = await streamToArray(responseStream)
+        const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([])
     })
 
     test('if tracker not available returns empty stream', async () => {
         getTracker.mockReturnValueOnce(undefined)
         const responseStream = resendStrategy.getResendResponseStream(request)
-        const streamAsArray = await streamToArray(responseStream)
+        const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([])
     })
 
@@ -377,7 +363,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
             trackerNode.findStorageNodes = jest.fn().mockReturnValueOnce(Promise.reject())
 
             const responseStream = resendStrategy.getResendResponseStream(request)
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
         })
     })
@@ -393,7 +379,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
 
         test('if tracker does not respond within timeout, returns empty stream', async () => {
             jest.advanceTimersByTime(TIMEOUT)
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
         })
 
@@ -402,7 +388,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
                 TrackerNode.events.STORAGE_NODES_RECEIVED,
                 new StorageNodesMessage(new StreamID('streamId', 0), [])
             )
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
         })
 
@@ -447,7 +433,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
                 ])
             )
 
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
         })
     })
@@ -487,7 +473,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
 
             await emitTrackerResponse()
 
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
             expect(nodeToNode.send).toBeCalledTimes(1) // sanity check
         })
@@ -498,7 +484,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
             await emitTrackerResponse()
             nodeToNode.emit(NodeToNode.events.NODE_DISCONNECTED, 'storageNode')
 
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
             expect(nodeToNode.send).toBeCalledTimes(1) // sanity check
         })
@@ -530,7 +516,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
 
             // eslint-disable-next-line no-underscore-dangle
             expect(responseStream._readableState.ended).toEqual(true)
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
         })
 
@@ -599,7 +585,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
             nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE,
                 new ResendResponseResent(new StreamID('streamId', 0), 'subId', 'storageNode'))
 
-            const streamAsArray = await streamToArray(responseStream)
+            const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([u1, u2, u3, u4, u5])
         })
     })
@@ -635,14 +621,14 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
 
         test('if not (previously) subscribed to storage node, disconnect from storage node', async () => {
             isSubscribedTo.mockReturnValue(false)
-            await streamToArray(responseStream)
+            await waitForStreamToEnd(responseStream)
             expect(nodeToNode.disconnectFromNode).toBeCalledTimes(1)
             expect(nodeToNode.disconnectFromNode).toBeCalledWith('storageNode')
         })
 
         test('if (previously) subscribed to storage node, do not disconnect from storage node', async () => {
             isSubscribedTo.mockReturnValue(true)
-            await streamToArray(responseStream)
+            await waitForStreamToEnd(responseStream)
             expect(nodeToNode.disconnectFromNode).toBeCalledTimes(0)
         })
     })

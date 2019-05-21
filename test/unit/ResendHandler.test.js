@@ -7,6 +7,7 @@ const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResen
 const ResendResponseResent = require('../../src/messages/ResendResponseResent')
 const ResendResponseResending = require('../../src/messages/ResendResponseResending')
 const UnicastMessage = require('../../src/messages/UnicastMessage')
+const { waitForStreamToEnd } = require('../util')
 
 describe('ResendHandler', () => {
     let resendHandler
@@ -29,13 +30,19 @@ describe('ResendHandler', () => {
             resendHandler = new ResendHandler([], sendResponse, sendUnicast, notifyError)
         })
 
-        test('handleRequest(request) returns false', async () => {
-            const isFulfilled = await resendHandler.handleRequest(request)
-            expect(isFulfilled).toEqual(false)
+        test('handleRequest(request) returns empty empty', async () => {
+            const streamAsArray = await waitForStreamToEnd(resendHandler.handleRequest(request))
+            expect(streamAsArray).toEqual([])
+        })
+
+        test('handleRequest(request) marks fulfilled = false', async () => {
+            const stream = resendHandler.handleRequest(request)
+            await waitForStreamToEnd(stream)
+            expect(stream.fulfilled).toStrictEqual(false)
         })
 
         test('handleRequest(request) sends only NoResend', async () => {
-            await resendHandler.handleRequest(request)
+            await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ResendResponseNoResend.name]
             ])
@@ -49,13 +56,19 @@ describe('ResendHandler', () => {
             }], sendResponse, sendUnicast, notifyError)
         })
 
-        test('handleRequest(request) returns false', async () => {
-            const isFulfilled = await resendHandler.handleRequest(request)
-            expect(isFulfilled).toEqual(false)
+        test('handleRequest(request) returns empty stream', async () => {
+            const streamAsArray = await waitForStreamToEnd(resendHandler.handleRequest(request))
+            expect(streamAsArray).toEqual([])
+        })
+
+        test('handleRequest(request) marks fulfilled = false', async () => {
+            const stream = resendHandler.handleRequest(request)
+            await waitForStreamToEnd(stream)
+            expect(stream.fulfilled).toStrictEqual(false)
         })
 
         test('handleRequest(request) sends only NoResend', async () => {
-            await resendHandler.handleRequest(request)
+            await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ResendResponseNoResend.name]
             ])
@@ -69,13 +82,19 @@ describe('ResendHandler', () => {
             }], sendResponse, sendUnicast, notifyError)
         })
 
-        test('handleRequest(request) returns false', async () => {
-            const isFulfilled = await resendHandler.handleRequest(request)
-            expect(isFulfilled).toEqual(false)
+        test('handleRequest(request) returns empty stream', async () => {
+            const streamAsArray = await waitForStreamToEnd(resendHandler.handleRequest(request))
+            expect(streamAsArray).toEqual([])
+        })
+
+        test('handleRequest(request) marks fulfilled = false', async () => {
+            const stream = resendHandler.handleRequest(request)
+            await waitForStreamToEnd(stream)
+            expect(stream.fulfilled).toStrictEqual(false)
         })
 
         test('handleRequest(request) sends Error and NoResend', async () => {
-            await resendHandler.handleRequest(request)
+            await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['notifyError', new Error('yikes')],
                 ['sendResponse', ResendResponseNoResend.name]
@@ -107,13 +126,19 @@ describe('ResendHandler', () => {
             }], sendResponse, sendUnicast, notifyError)
         })
 
-        test('handleRequest(request) returns true', async () => {
-            const isFulfilled = await resendHandler.handleRequest(request)
-            expect(isFulfilled).toEqual(true)
+        test('handleRequest(request) returns stream with 2 messages', async () => {
+            const streamAsArray = await waitForStreamToEnd(resendHandler.handleRequest(request))
+            expect(streamAsArray).toHaveLength(2)
+        })
+
+        test('handleRequest(request) marks fulfilled = true', async () => {
+            const stream = resendHandler.handleRequest(request)
+            await waitForStreamToEnd(stream)
+            expect(stream.fulfilled).toStrictEqual(true)
         })
 
         test('handleRequest(request) sends Resending, 2 x Unicast, and then Resent', async () => {
-            await resendHandler.handleRequest(request)
+            await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ResendResponseResending.name],
                 ['sendUnicast', UnicastMessage.name],
@@ -157,13 +182,19 @@ describe('ResendHandler', () => {
             }], sendResponse, sendUnicast, notifyError)
         })
 
-        test('handleRequest(request) returns false', async () => {
-            const isFulfilled = await resendHandler.handleRequest(request)
-            expect(isFulfilled).toEqual(false)
+        test('handleRequest(request) returns stream with 2 messages', async () => {
+            const streamAsArray = await waitForStreamToEnd(resendHandler.handleRequest(request))
+            expect(streamAsArray).toHaveLength(2)
+        })
+
+        test('handleRequest(request) marks fulfilled = false', async () => {
+            const stream = resendHandler.handleRequest(request)
+            await waitForStreamToEnd(stream)
+            expect(stream.fulfilled).toStrictEqual(false)
         })
 
         test('handleRequest(request) sends Resending, 2 x Unicast, Error, and then NoResend', async () => {
-            await resendHandler.handleRequest(request)
+            await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ResendResponseResending.name],
                 ['sendUnicast', UnicastMessage.name],
@@ -226,13 +257,13 @@ describe('ResendHandler', () => {
                 sendResponse, sendUnicast, notifyError)
         })
 
-        test('handleRequest(request) returns true', async () => {
-            const isFulfilled = await resendHandler.handleRequest(request)
-            expect(isFulfilled).toEqual(true)
+        test('handleRequest(request) returns stream with expected messages', async () => {
+            const streamAsArray = await waitForStreamToEnd(resendHandler.handleRequest(request))
+            expect(streamAsArray).toHaveLength(3)
         })
 
         test('handleRequest(request) sends expected order of messages', async () => {
-            await resendHandler.handleRequest(request)
+            await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ResendResponseResending.name],
                 ['sendUnicast', UnicastMessage.name],
@@ -270,8 +301,9 @@ describe('ResendHandler', () => {
         })
 
         test('on handleRequest(request) 2nd strategy is never used (short-circuit)', async () => {
-            const fulfilled = await resendHandler.handleRequest(request)
-            expect(fulfilled).toEqual(true)
+            const stream = resendHandler.handleRequest(request)
+            await waitForStreamToEnd(stream)
+            expect(stream.fulfilled).toStrictEqual(true)
             expect(neverShouldBeInvokedFn).not.toHaveBeenCalled()
         })
     })
@@ -288,7 +320,7 @@ describe('ResendHandler', () => {
                 getResendResponseStream: () => intoStream.object([])
             }], sendResponse, sendUnicast, notifyError)
 
-            await resendHandler.handleRequest(request)
+            await waitForStreamToEnd(resendHandler.handleRequest(request))
 
             expect(sendResponse).toBeCalledWith('source',
                 new ResendResponseNoResend(new StreamID('streamId', 0), 'subId'))
@@ -299,7 +331,7 @@ describe('ResendHandler', () => {
                 getResendResponseStream: () => intoStream.object(Promise.reject(new Error('yikes')))
             }], sendResponse, sendUnicast, notifyError)
 
-            await resendHandler.handleRequest(request)
+            await waitForStreamToEnd(resendHandler.handleRequest(request))
 
             expect(notifyError).toBeCalledWith(request, new Error('yikes'))
         })
@@ -323,21 +355,21 @@ describe('ResendHandler', () => {
             })
 
             test('sendResponse with ResendResponseResending is formed correctly', async () => {
-                await resendHandler.handleRequest(request)
+                await waitForStreamToEnd(resendHandler.handleRequest(request))
 
                 expect(sendResponse).toBeCalledWith('source',
                     new ResendResponseResending(new StreamID('streamId', 0), 'subId'))
             })
 
             test('sendResponse with ResendResponseResending is formed correctly', async () => {
-                await resendHandler.handleRequest(request)
+                await waitForStreamToEnd(resendHandler.handleRequest(request))
 
                 expect(sendResponse).toBeCalledWith('source',
                     new ResendResponseResent(new StreamID('streamId', 0), 'subId'))
             })
 
             test('sendUnicast is formed correctly', async () => {
-                await resendHandler.handleRequest(request)
+                await waitForStreamToEnd(resendHandler.handleRequest(request))
 
                 expect(sendUnicast).toBeCalledWith('source', new UnicastMessage(
                     new MessageID(new StreamID('streamId', 0), 756, 0, 'publisherId', 'msgChainId'),
