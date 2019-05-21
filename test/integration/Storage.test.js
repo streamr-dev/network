@@ -1,6 +1,5 @@
 const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
-const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const { startCassandraStorage } = require('../../src/Storage')
 
 const contactPoints = ['127.0.0.1']
@@ -27,26 +26,6 @@ function formObject(
         signature: null,
         signatureType: null,
     }
-}
-
-function objectToStreamrMessage({
-    streamId,
-    streamPartition,
-    timestamp,
-    sequenceNo,
-    publisherId,
-    msgChainId,
-    previousTimestamp,
-    previousSequenceNo,
-    data,
-    signatureType,
-    signature,
-}) {
-    return new StreamMessageV30(
-        [streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
-        previousTimestamp == null ? null : [previousTimestamp, previousSequenceNo],
-        StreamMessage.CONTENT_TYPES.JSON, data, signatureType, signature,
-    )
 }
 
 describe('Storage', () => {
@@ -100,7 +79,7 @@ describe('Storage', () => {
             },
             publisher_id: 'publisher',
             msg_chain_id: '1',
-            payload: Buffer.from(objectToStreamrMessage(msg).serialize()),
+            payload: Buffer.from(JSON.stringify(msg)),
         })
     })
 
@@ -123,7 +102,7 @@ describe('Storage', () => {
             formObject(streamId, 10, 3000, 2, 'publisher2'),
             formObject(streamId, 10, 3000, 3),
             formObject(streamId, 10, 4000, 0),
-        ].map(objectToStreamrMessage))
+        ])
     })
 
     test('fetch messages starting from a timestamp', async () => {
@@ -147,7 +126,7 @@ describe('Storage', () => {
             formObject(streamId, 10, 3000, 2, 'publisher', '2'),
             formObject(streamId, 10, 3000, 3),
             formObject(streamId, 10, 4000, 0),
-        ].map(objectToStreamrMessage))
+        ])
     })
 
     test('fetch messages starting from a message reference for a particular publisher', async () => {
@@ -170,7 +149,7 @@ describe('Storage', () => {
             formObject(streamId, 10, 3000, 1, 'publisher1'),
             formObject(streamId, 10, 3000, 3, 'publisher1'),
             formObject(streamId, 10, 8000, 0, 'publisher1'),
-        ].map(objectToStreamrMessage))
+        ])
     })
 
     test('fetch messages between two message references for a particular publisher', async () => {
@@ -194,7 +173,7 @@ describe('Storage', () => {
             formObject(streamId, 10, 3000, 0, 'publisher1'),
             formObject(streamId, 10, 3000, 1, 'publisher1'),
             formObject(streamId, 10, 3000, 2, 'publisher1'),
-        ].map(objectToStreamrMessage))
+        ])
     })
 
     test('fetch messages in a timestamp range', async () => {
@@ -218,6 +197,6 @@ describe('Storage', () => {
             formObject(streamId, 10, 2500, 1),
             formObject(streamId, 10, 2500, 2, 'publisher2'),
             formObject(streamId, 10, 3000, 0),
-        ].map(objectToStreamrMessage))
+        ])
     })
 })

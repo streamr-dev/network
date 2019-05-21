@@ -1,18 +1,6 @@
 const { Readable, Transform } = require('stream')
 const merge2 = require('merge2')
 const cassandra = require('cassandra-driver')
-const { StreamMessageFactory, StreamMessage } = require('streamr-client-protocol').MessageLayer
-
-const parseRow = (row) => StreamMessageFactory.deserialize(row.payload.toString())
-
-const encodeAsStreamrMessage = (msg) => StreamMessage.create(
-    [msg.streamId, msg.streamPartition, msg.timestamp, msg.sequenceNo, msg.publisherId, msg.msgChainId],
-    msg.previousTimestamp == null ? null : [msg.previousTimestamp, msg.previousSequenceNo],
-    StreamMessage.CONTENT_TYPES.JSON,
-    msg.data,
-    msg.signatureType,
-    msg.signature,
-)
 
 class Storage {
     constructor(cassandraClient) {
@@ -30,7 +18,7 @@ class Storage {
             msg.sequenceNo,
             msg.publisherId,
             msg.msgChainId,
-            Buffer.from(encodeAsStreamrMessage(msg).serialize()),
+            Buffer.from(JSON.stringify(msg)),
         ], {
             prepare: true,
         })
@@ -56,7 +44,7 @@ class Storage {
             prepare: true,
         })
             .then((resultSet) => {
-                resultSet.rows.reverse().forEach((r) => readableStream.push(parseRow(r)))
+                resultSet.rows.reverse().forEach((r) => readableStream.push(JSON.parse(r.payload)))
                 readableStream.push(null)
             })
             .catch((err) => {
@@ -152,7 +140,7 @@ class Storage {
         }).pipe(new Transform({
             objectMode: true,
             transform: (row, _, done) => {
-                done(null, parseRow(row))
+                done(null, JSON.parse(row.payload))
             },
         }))
     }

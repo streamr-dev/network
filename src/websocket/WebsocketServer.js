@@ -148,7 +148,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     handleResendRequest(connection, request, resendTypeHandler) {
         let nothingToResend = true
 
-        const msgHandler = (streamMessage) => {
+        const msgHandler = (msg) => {
             if (nothingToResend) {
                 nothingToResend = false
                 connection.send(ControlLayer.ResendResponseResending.create(
@@ -157,6 +157,15 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     request.subId,
                 ))
             }
+
+            const streamMessage = MessageLayer.StreamMessage.create(
+                [msg.streamId, msg.streamPartition, msg.timestamp, msg.sequenceNo, msg.publisherId, msg.msgChainId],
+                msg.previousTimestamp == null ? null : [msg.previousTimestamp, msg.previousSequenceNo],
+                MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+                msg.data,
+                msg.signatureType,
+                msg.signature
+            )
 
             this.volumeLogger.logOutput(streamMessage.getContent().length)
             connection.send(ControlLayer.UnicastMessage.create(request.subId, streamMessage))
