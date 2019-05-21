@@ -1,3 +1,4 @@
+const { Transform } = require('stream')
 const DataMessage = require('./messages/DataMessage')
 const ResendLastRequest = require('./messages/ResendLastRequest')
 const ResendFromRequest = require('./messages/ResendFromRequest')
@@ -18,6 +19,35 @@ const events = Object.freeze({
     RESENDING: 'streamr:networkNode:resending',
     RESENT: 'streamr:networkNode:resent',
 })
+
+function unicastMessageToObject(unicastMessage) {
+    const messageId = unicastMessage.getMessageId()
+    const previousMessageReference = unicastMessage.getPreviousMessageReference()
+    const { streamId } = messageId
+    return {
+        streamId: streamId.id,
+        streamPartition: streamId.partition,
+        timestamp: messageId.timestamp,
+        sequenceNo: messageId.sequenceNo,
+        publisherId: messageId.publisherId,
+        msgChainId: messageId.msgChainId,
+        previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
+        previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNo : null,
+        data: unicastMessage.getData(),
+        signature: unicastMessage.getSignature(),
+        signatureType: unicastMessage.getSignatureType(),
+        subId: unicastMessage.getSubId()
+    }
+}
+
+function toObjectTransform() {
+    return new Transform({
+        objectMode: true,
+        transform: (data, _, done) => {
+            done(null, unicastMessageToObject(data))
+        }
+    })
+}
 
 /*
 Convenience wrapper for building client-facing functionality. Used by broker.
@@ -75,7 +105,12 @@ class NetworkNode extends Node {
     }
 
     requestResendLast(streamId, streamPartition, subId, number) {
-        return this.requestResend(new ResendLastRequest(new StreamID(streamId, streamPartition), subId, number, null))
+        return this.requestResend(new ResendLastRequest(
+            new StreamID(streamId, streamPartition),
+            subId,
+            number,
+            null
+        )).pipe(toObjectTransform())
     }
 
     requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
@@ -86,7 +121,7 @@ class NetworkNode extends Node {
             publisherId,
             msgChainId,
             null
-        ))
+        )).pipe(toObjectTransform())
     }
 
     requestResendRange(streamId,
@@ -106,7 +141,7 @@ class NetworkNode extends Node {
             publisherId,
             msgChainId,
             null
-        ))
+        )).pipe(toObjectTransform())
     }
 
     _emitMessage(dataMessage) {
@@ -130,24 +165,7 @@ class NetworkNode extends Node {
     }
 
     _emitUnicast(unicastMessage) {
-        const messageId = unicastMessage.getMessageId()
-        const previousMessageReference = unicastMessage.getPreviousMessageReference()
-        const { streamId } = messageId
-
-        this.emit(events.UNICAST, {
-            streamId: streamId.id,
-            streamPartition: streamId.partition,
-            timestamp: messageId.timestamp,
-            sequenceNo: messageId.sequenceNo,
-            publisherId: messageId.publisherId,
-            msgChainId: messageId.msgChainId,
-            previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
-            previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNo : null,
-            data: unicastMessage.getData(),
-            signature: unicastMessage.getSignature(),
-            signatureType: unicastMessage.getSignatureType(),
-            subId: unicastMessage.getSubId()
-        })
+        this.emit(events.UNICAST, unicastMessageToObject(unicastMessage))
     }
 
     _emitResendResponse(resendResponse) {
