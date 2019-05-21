@@ -23,18 +23,18 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@streamr/streamr-p2p-network": "^4.3.0",
+    "@streamr/streamr-p2p-network": "^4.4.0",
     "body-parser": "^1.19.0",
     "buffermaker": "1.2.0",
     "cassandra-driver": "^4.1.0",
     "commander": "^2.20.0",
     "cors": "^2.7.1",
     "debug": "*",
-    "express": "^4.14.0",
+    "express": "^4.17.0",
     "memoizee": "^0.4.4",
     "merge2": "^1.2.3",
     "murmurhash-native": "^3.4.1",
-    "node-fetch": "^2.5.0",
+    "node-fetch": "^2.6.0",
     "qs": "^6.7.0",
     "streamr-client-protocol": "^2.1.0",
     "ws": "^7.0.0"
