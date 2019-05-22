@@ -6,6 +6,7 @@ const VolumeLogger = require('../VolumeLogger')
 const partition = require('../partition')
 const Connection = require('./Connection')
 const StreamStateManager = require('./StreamStateManager')
+const { networkMessageToStreamrMessage } = require('../utils')
 
 module.exports = class WebsocketServer extends events.EventEmitter {
     constructor(
@@ -158,15 +159,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 ))
             }
 
-            const streamMessage = MessageLayer.StreamMessage.create(
-                [msg.streamId, msg.streamPartition, msg.timestamp, msg.sequenceNo, msg.publisherId, msg.msgChainId],
-                msg.previousTimestamp == null ? null : [msg.previousTimestamp, msg.previousSequenceNo],
-                MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-                msg.data,
-                msg.signatureType,
-                msg.signature
-            )
-
+            const streamMessage = networkMessageToStreamrMessage(msg)
             this.volumeLogger.logOutput(streamMessage.getContent().length)
             connection.send(ControlLayer.UnicastMessage.create(request.subId, streamMessage))
         }
