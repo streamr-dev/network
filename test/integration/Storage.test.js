@@ -105,7 +105,7 @@ describe('Storage', () => {
         ])
     })
 
-    test('fetch messages starting from a timestamp', async () => {
+    test('fetch messages starting from a timestamp,sequenceNo', async () => {
         await storage.store(formObject(streamId, 10, 0, 0))
         await storage.store(formObject(streamId, 10, 1000, 0))
         await storage.store(formObject(streamId, 10, 2000, 0))
@@ -117,7 +117,7 @@ describe('Storage', () => {
         await storage.store(formObject(streamId, 666, 8000, 0))
         await storage.store(formObject(`${streamId}-wrong`, 10, 8000, 0))
 
-        const streamingResults = storage.requestFrom(streamId, 10, 3000)
+        const streamingResults = storage.requestFrom(streamId, 10, 3000, 0)
         const results = await toArray(streamingResults)
 
         expect(results).toEqual([
@@ -129,7 +129,31 @@ describe('Storage', () => {
         ])
     })
 
-    test('fetch messages starting from a message reference for a particular publisher', async () => {
+    test('fetch messages starting from a timestamp,sequenceNo for a given publisher', async () => {
+        await storage.store(formObject(streamId, 10, 0, 0, 'publisher1'))
+        await storage.store(formObject(streamId, 10, 1000, 0, 'publisher2'))
+        await storage.store(formObject(streamId, 10, 2000, 0, 'publisher3'))
+        await storage.store(formObject(streamId, 10, 3000, 0, 'publisher1'))
+        await storage.store(formObject(streamId, 10, 3000, 3, 'publisher1')) // 3rd
+        await storage.store(formObject(streamId, 10, 3000, 2, 'publisher2'))
+        await storage.store(formObject(streamId, 10, 3000, 1, 'publisher1')) // 1st
+        await storage.store(formObject(streamId, 10, 3000, 1, 'publisher1', '2')) // 2nd
+        await storage.store(formObject(streamId, 10, 4000, 0, 'publisher3'))
+        await storage.store(formObject(streamId, 10, 8000, 0, 'publisher1')) // 4th
+        await storage.store(formObject(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+
+        const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1')
+        const results = await toArray(streamingResults)
+
+        expect(results).toEqual([
+            formObject(streamId, 10, 3000, 1, 'publisher1'),
+            formObject(streamId, 10, 3000, 1, 'publisher1', '2'),
+            formObject(streamId, 10, 3000, 3, 'publisher1'),
+            formObject(streamId, 10, 8000, 0, 'publisher1'),
+        ])
+    })
+
+    test('fetch messages starting from a timestamp,sequenceNo for a given publisher, msgChainId', async () => {
         await storage.store(formObject(streamId, 10, 0, 0, 'publisher1'))
         await storage.store(formObject(streamId, 10, 1000, 0, 'publisher2'))
         await storage.store(formObject(streamId, 10, 2000, 0, 'publisher3'))
@@ -140,7 +164,7 @@ describe('Storage', () => {
         await storage.store(formObject(streamId, 10, 3000, 1, 'publisher1', '2'))
         await storage.store(formObject(streamId, 10, 4000, 0, 'publisher3'))
         await storage.store(formObject(streamId, 10, 8000, 0, 'publisher1')) // 3rd
-        await storage.store(formObject(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+        await storage.store(formObject(`${streamId}-wrong`, 10, 8000, 0, 'publisher1', '1'))
 
         const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1', '1')
         const results = await toArray(streamingResults)
@@ -152,7 +176,56 @@ describe('Storage', () => {
         ])
     })
 
-    test('fetch messages between two message references for a particular publisher', async () => {
+    test('fetch messages in a timestamp,sequenceNo range', async () => {
+        await storage.store(formObject(streamId, 10, 0, 0))
+        await storage.store(formObject(streamId, 10, 1000, 0))
+        await storage.store(formObject(streamId, 10, 2000, 0)) // 1st
+        await storage.store(formObject(streamId, 10, 2500, 0)) // 2nd
+        await storage.store(formObject(streamId, 10, 2500, 2, 'publisher2')) // 4th
+        await storage.store(formObject(streamId, 10, 2500, 1)) // 3rd
+        await storage.store(formObject(streamId, 10, 3000, 0)) // 5th
+        await storage.store(formObject(streamId, 10, 4000, 0))
+        await storage.store(formObject(streamId, 666, 2500, 0))
+        await storage.store(formObject(`${streamId}-wrong`, 10, 3000, 0))
+
+        const streamingResults = storage.requestRange(streamId, 10, 1500, 0, 3500, 0)
+        const results = await toArray(streamingResults)
+
+        expect(results).toEqual([
+            formObject(streamId, 10, 2000, 0),
+            formObject(streamId, 10, 2500, 0),
+            formObject(streamId, 10, 2500, 1),
+            formObject(streamId, 10, 2500, 2, 'publisher2'),
+            formObject(streamId, 10, 3000, 0),
+        ])
+    })
+
+    test('fetch messages in a timestamp,seqeuenceNo range for a particular publisher', async () => {
+        await storage.store(formObject(streamId, 10, 0, 0, 'publisher1'))
+        await storage.store(formObject(streamId, 10, 1500, 0, 'publisher1'))
+        await storage.store(formObject(streamId, 10, 2000, 0, 'publisher1')) // 1st
+        await storage.store(formObject(streamId, 10, 2500, 0, 'publisher3'))
+        await storage.store(formObject(streamId, 10, 3000, 0, 'publisher1')) // 2nd
+        await storage.store(formObject(streamId, 10, 3000, 0, 'publisher1', '2')) // 3rd
+        await storage.store(formObject(streamId, 10, 3000, 3, 'publisher1'))
+        await storage.store(formObject(streamId, 10, 3000, 2, 'publisher1')) // 5th
+        await storage.store(formObject(streamId, 10, 3000, 1, 'publisher1')) // 4th
+        await storage.store(formObject(streamId, 10, 8000, 0, 'publisher1'))
+        await storage.store(formObject(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+
+        const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, 'publisher1')
+        const results = await toArray(streamingResults)
+
+        expect(results).toEqual([
+            formObject(streamId, 10, 2000, 0, 'publisher1'),
+            formObject(streamId, 10, 3000, 0, 'publisher1'),
+            formObject(streamId, 10, 3000, 0, 'publisher1', '2'),
+            formObject(streamId, 10, 3000, 1, 'publisher1'),
+            formObject(streamId, 10, 3000, 2, 'publisher1'),
+        ])
+    })
+
+    test('fetch messages in a timestamp,seqeuenceNo range for a particular publisher, msgChainId', async () => {
         await storage.store(formObject(streamId, 10, 0, 0, 'publisher1'))
         await storage.store(formObject(streamId, 10, 1500, 0, 'publisher1'))
         await storage.store(formObject(streamId, 10, 2000, 0, 'publisher1')) // 1st
@@ -173,30 +246,6 @@ describe('Storage', () => {
             formObject(streamId, 10, 3000, 0, 'publisher1'),
             formObject(streamId, 10, 3000, 1, 'publisher1'),
             formObject(streamId, 10, 3000, 2, 'publisher1'),
-        ])
-    })
-
-    test('fetch messages in a timestamp range', async () => {
-        await storage.store(formObject(streamId, 10, 0, 0))
-        await storage.store(formObject(streamId, 10, 1000, 0))
-        await storage.store(formObject(streamId, 10, 2000, 0)) // 1st
-        await storage.store(formObject(streamId, 10, 2500, 0)) // 2nd
-        await storage.store(formObject(streamId, 10, 2500, 2, 'publisher2')) // 4th
-        await storage.store(formObject(streamId, 10, 2500, 1)) // 3rd
-        await storage.store(formObject(streamId, 10, 3000, 0)) // 5th
-        await storage.store(formObject(streamId, 10, 4000, 0))
-        await storage.store(formObject(streamId, 666, 2500, 0))
-        await storage.store(formObject(`${streamId}-wrong`, 10, 3000, 0))
-
-        const streamingResults = storage.requestRange(streamId, 10, 1500, null, 3500, null)
-        const results = await toArray(streamingResults)
-
-        expect(results).toEqual([
-            formObject(streamId, 10, 2000, 0),
-            formObject(streamId, 10, 2500, 0),
-            formObject(streamId, 10, 2500, 1),
-            formObject(streamId, 10, 2500, 2, 'publisher2'),
-            formObject(streamId, 10, 3000, 0),
         ])
     })
 })
