@@ -29,7 +29,7 @@ describe('FieldDetector#detectAndSetFields', () => {
 
     test('does not set fields if stream.autoConfigure = false', async () => {
         const stream = {
-            streamId: 'id'
+            id: 'id'
         }
 
         await fieldDetector.detectAndSetFields(stream, STREAM_MESSAGE, 'apiKey', 'sessionToken')
@@ -39,7 +39,7 @@ describe('FieldDetector#detectAndSetFields', () => {
 
     test('does not set fields if stream.autoConfigure = true but fields are already configured', async () => {
         const stream = {
-            streamId: 'id',
+            id: 'id',
             autoConfigure: true,
             config: {
                 fields: [
@@ -58,7 +58,7 @@ describe('FieldDetector#detectAndSetFields', () => {
 
     test('sets fields if stream.autoConfigure = true and fields have not been configured yet', async () => {
         const stream = {
-            streamId: 'id',
+            id: 'id',
             autoConfigure: true
         }
 
@@ -96,7 +96,7 @@ describe('FieldDetector#detectAndSetFields', () => {
 
     test('does not re-set fields of same stream on multiple invocations', async () => {
         const stream = {
-            streamId: 'id',
+            id: 'id',
             autoConfigure: true
         }
 

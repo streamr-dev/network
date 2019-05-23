@@ -6,7 +6,7 @@ module.exports = class FieldDetector {
 
     async detectAndSetFields(stream, streamMessage, apiKey, sessionToken) {
         if (this._shouldDetectAndSet(stream)) {
-            this.configuredStreamIds.add(stream.streamId)
+            this.configuredStreamIds.add(stream.id)
 
             const content = streamMessage.getParsedContent()
             const fields = []
@@ -26,9 +26,9 @@ module.exports = class FieldDetector {
                 })
             })
             try {
-                await this.streamFetcher.setFields(stream.streamId, fields, apiKey, sessionToken)
+                await this.streamFetcher.setFields(stream.id, fields, apiKey, sessionToken)
             } catch (e) {
-                this.configuredStreamIds.delete(stream.streamId)
+                this.configuredStreamIds.delete(stream.id)
                 throw e
             }
         }
@@ -37,6 +37,6 @@ module.exports = class FieldDetector {
     _shouldDetectAndSet(stream) {
         return stream.autoConfigure
             && (!stream.config || !stream.config.fields || stream.config.fields.length === 0)
-            && !this.configuredStreamIds.has(stream.streamId)
+            && !this.configuredStreamIds.has(stream.id)
     }
 }

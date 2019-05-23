@@ -18,18 +18,18 @@ describe('WebsocketServer', () => {
     let mockSocket
 
     const myStream = {
-        streamId: 'streamId',
+        id: 'streamId',
         partitions: 0,
     }
 
     const autoStream = {
-        streamId: 'streamId2',
+        id: 'streamId2',
         partitions: 0,
         autoConfigure: true,
     }
 
     const fieldsStream = {
-        streamId: 'streamId3',
+        id: 'streamId3',
         partitions: 0,
         autoConfigure: true,
         config: {
@@ -794,7 +794,7 @@ describe('WebsocketServer', () => {
             })
 
             streamFetcher.setFields = sinon.stub().callsFake((streamId, fields) => {
-                assert.equal(streamId, autoStream.streamId)
+                assert.equal(streamId, autoStream.id)
                 assert.deepEqual(fields, [{
                     name: 'field1',
                     type: 'string',
@@ -833,7 +833,7 @@ describe('WebsocketServer', () => {
 
         it('calls the publisher for valid requests (V0)', (done) => {
             const ts = Date.now()
-            const req = new ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}', ts)
+            const req = new ControlLayer.PublishRequestV0(myStream.id, 'correct', undefined, '{}', ts)
             publisher.publish = (stream, streamMessage) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(streamMessage.getStreamPartition(), 0)
@@ -848,7 +848,7 @@ describe('WebsocketServer', () => {
 
         it('reads optional fields if specified (V0)', (done) => {
             const ts = Date.now()
-            const req = new ControlLayer.PublishRequestV0(myStream.streamId, 'correct', undefined, '{}', ts, 'foo')
+            const req = new ControlLayer.PublishRequestV0(myStream.id, 'correct', undefined, '{}', ts, 'foo')
             publisher.publish = (stream, streamMessage) => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(streamMessage.getStreamPartition(), 0)
@@ -864,7 +864,7 @@ describe('WebsocketServer', () => {
         it('reads signature fields if specified (V0)', (done) => {
             const ts = Date.now()
             const req = new ControlLayer.PublishRequestV0(
-                myStream.streamId, 'correct', undefined, '{}',
+                myStream.id, 'correct', undefined, '{}',
                 ts, undefined, 'address', MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
             publisher.publish = (stream, streamMessage) => {
