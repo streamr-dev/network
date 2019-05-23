@@ -19,10 +19,24 @@ describe('DataQueryEndpoints', () => {
             .set('Authorization', `Token ${key}`)
     }
 
-    function streamMessage(content) {
+    function createNetworkMessage(data) {
+        return {
+            streamId: 'streamId',
+            streamPartition: 0,
+            timestamp: new Date(2017, 3, 1, 12, 0, 0).getTime(),
+            sequenceNo: 0,
+            publisherId: 'publisherId',
+            msgChainId: '1',
+            data,
+            signatureType: 0,
+            signature: null
+        }
+    }
+
+    function createStreamMessage(content) {
         return new StreamMessageV30(
             ['streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', '1'],
-            [null, 0],
+            null,
             StreamMessage.CONTENT_TYPES.JSON,
             content,
             StreamMessage.SIGNATURE_TYPES.NONE,
@@ -51,17 +65,25 @@ describe('DataQueryEndpoints', () => {
     })
 
     describe('Getting last events', () => {
-        let messages
+        let streamMessages
+
         beforeEach(() => {
-            messages = [
-                streamMessage({
+            streamMessages = [
+                createStreamMessage({
                     hello: 1,
                 }),
-                streamMessage({
+                createStreamMessage({
                     world: 2,
                 }),
             ]
-            networkNode.requestResendLast = jest.fn().mockReturnValue(intoStream.object(messages))
+            networkNode.requestResendLast = jest.fn().mockReturnValue(intoStream.object([
+                createNetworkMessage({
+                    hello: 1,
+                }),
+                createNetworkMessage({
+                    world: 2,
+                }),
+            ]))
         })
 
         describe('user errors', () => {
@@ -100,7 +122,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with arrays as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
-                    .expect(messages.map((msg) => msg.toArray()), done)
+                    .expect(streamMessages.map((m) => m.toArray()), done)
             })
 
             it('reports to volumeLogger', (done) => {
@@ -113,17 +135,17 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with objects as body given ?wrapper=object', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=obJECt')
-                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ false)), done)
+                    .expect(streamMessages.map((msg) => msg.toArray(/* parseContent */ false)), done)
             })
 
             it('responds with arrays as body and parsed content given ?content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?content=json')
-                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ true)), done)
+                    .expect(streamMessages.map((msg) => msg.toArray(/* parseContent */ true)), done)
             })
 
             it('responds with objects as body and parsed content given ?wrapper=object&content=json', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?wrapper=object&content=json')
-                    .expect(messages.map((msg) => msg.toArray(/* parseContent */ true)), done)
+                    .expect(streamMessages.map((msg) => msg.toArray(/* parseContent */ true)), done)
             })
 
             it('invokes networkNode#requestResendLast once with correct arguments', (done) => {
@@ -164,18 +186,25 @@ describe('DataQueryEndpoints', () => {
     })
 
     describe('From queries', () => {
-        let messages
+        let streamMessages
 
         beforeEach(() => {
-            messages = [
-                streamMessage({
+            streamMessages = [
+                createStreamMessage({
                     a: 'a',
                 }),
-                streamMessage({
+                createStreamMessage({
                     z: 'z',
                 }),
             ]
-            networkNode.requestResendFrom = () => intoStream.object(messages)
+            networkNode.requestResendFrom = () => intoStream.object([
+                createNetworkMessage({
+                    a: 'a',
+                }),
+                createNetworkMessage({
+                    z: 'z',
+                }),
+            ])
         })
 
         describe('?fromTimestamp=1496408255672', () => {
@@ -187,7 +216,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
-                    .expect(messages.map((msg) => msg.toArray()), done)
+                    .expect(streamMessages.map((msg) => msg.toArray()), done)
             })
 
             it('invokes networkNode#requestResendFrom once with correct arguments', async () => {
@@ -229,7 +258,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest(`/api/v1/streams/streamId/data/partitions/0/from?${query}`)
-                    .expect(messages.map((msg) => msg.toArray()), done)
+                    .expect(streamMessages.map((msg) => msg.toArray()), done)
             })
 
             it('invokes networkNode#requestResendFrom once with correct arguments', async () => {
@@ -310,15 +339,20 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
-            let messages
+            let streamMessages
             beforeEach(() => {
-                messages = [
-                    streamMessage([6, 6, 6]),
-                    streamMessage({
+                streamMessages = [
+                    createStreamMessage([6, 6, 6]),
+                    createStreamMessage({
                         '6': '6',
                     }),
                 ]
-                networkNode.requestResendRange = () => intoStream.object(messages)
+                networkNode.requestResendRange = () => intoStream.object([
+                    createNetworkMessage([6, 6, 6]),
+                    createNetworkMessage({
+                        '6': '6',
+                    }),
+                ])
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -331,7 +365,7 @@ describe('DataQueryEndpoints', () => {
             it('responds with data points as body', (done) => {
                 // eslint-disable-next-line max-len
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
-                    .expect(messages.map((msg) => msg.toArray()), done)
+                    .expect(streamMessages.map((msg) => msg.toArray()), done)
             })
 
             it('invokes networkNode#requestResendRange once with correct arguments', async () => {
@@ -371,15 +405,20 @@ describe('DataQueryEndpoints', () => {
             // eslint-disable-next-line max-len
             const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId'
 
-            let messages
+            let streamMessages
             beforeEach(() => {
-                messages = [
-                    streamMessage([6, 6, 6]),
-                    streamMessage({
+                streamMessages = [
+                    createStreamMessage([6, 6, 6]),
+                    createStreamMessage({
                         '6': '6',
                     }),
                 ]
-                networkNode.requestResendRange = () => intoStream.object(messages)
+                networkNode.requestResendRange = () => intoStream.object([
+                    createNetworkMessage([6, 6, 6]),
+                    createNetworkMessage({
+                        '6': '6',
+                    }),
+                ])
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -390,7 +429,7 @@ describe('DataQueryEndpoints', () => {
 
             it('responds with data points as body', (done) => {
                 testGetRequest(`/api/v1/streams/streamId/data/partitions/0/range?${query}`)
-                    .expect(messages.map((msg) => msg.toArray()), done)
+                    .expect(streamMessages.map((msg) => msg.toArray()), done)
             })
 
             it('invokes networkNode#requestResendRange once with correct arguments', async () => {
