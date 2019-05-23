@@ -787,6 +787,7 @@ describe('WebsocketServer', () => {
         it('sets the fields once for the stream', (done) => {
             const req = ControlLayer.PublishRequest.create(streamMessage2v30, 'correct')
             const req2 = ControlLayer.PublishRequest.create(streamMessage2v30, 'correct')
+
             publisher.publish = sinon.stub().onSecondCall().callsFake(() => {
                 assert(streamFetcher.setFields.calledOnce)
                 done()

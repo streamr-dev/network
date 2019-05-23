@@ -4,9 +4,10 @@ const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 const HttpError = require('../errors/HttpError')
 const VolumeLogger = require('../VolumeLogger')
 const partition = require('../partition')
-const Connection = require('./Connection')
-const StreamStateManager = require('./StreamStateManager')
 const { networkMessageToStreamrMessage } = require('../utils')
+const Connection = require('./Connection')
+const FieldDetector = require('./FieldDetector')
+const StreamStateManager = require('./StreamStateManager')
 
 module.exports = class WebsocketServer extends events.EventEmitter {
     constructor(
@@ -25,7 +26,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
         this.streams = new StreamStateManager()
-        this.configSet = {}
+        this.fieldDetector = new FieldDetector(streamFetcher)
 
         this.requestHandlersByMessageType = {
             [ControlLayer.SubscribeRequest.TYPE]: this.handleSubscribeRequest,
@@ -100,33 +101,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     streamPartition = this.partitionFn(stream.partitions, request.partitionKey)
                 }
                 const streamMessage = request.getStreamMessage(streamPartition)
-
-                // TODO: extract class
-                if (!this.configSet[streamId]
-                    && stream.autoConfigure
-                    && (!stream.config || !stream.config.fields || stream.config.fields.length === 0)) {
-                    this.configSet[streamId] = true
-                    const content = streamMessage.getParsedContent()
-                    const fields = []
-                    Object.keys(content).forEach((key) => {
-                        let type
-                        if (Array.isArray(content[key])) {
-                            type = 'list'
-                        } else if ((typeof content[key]) === 'object') {
-                            type = 'map'
-                        } else {
-                            type = typeof content[key]
-                        }
-                        fields.push({
-                            name: key,
-                            type,
-                        })
-                    })
-                    this.streamFetcher.setFields(streamId, fields, request.apiKey, request.sessionToken).catch(() => {
-                        this.configSet[streamId] = false
-                    })
-                }
-
+                this.fieldDetector.detectAndSetFields(stream, streamMessage, request.apiKey, request.sessionToken)
                 this.publisher.publish(stream, streamMessage)
             })
             .catch((err) => {
