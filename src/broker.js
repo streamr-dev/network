@@ -28,16 +28,16 @@ module.exports = async (config) => {
     if (config.cassandra === undefined) {
         throw new MissingConfigError('cassandra')
     }
-    if (config.cassandra.hosts === undefined) {
+    if (config.cassandra && config.cassandra.hosts === undefined) {
         throw new MissingConfigError('cassandra.hosts')
     }
-    if (config.cassandra.username === undefined) {
+    if (config.cassandra && config.cassandra.username === undefined) {
         throw new MissingConfigError('cassandra.username')
     }
-    if (config.cassandra.password === undefined) {
+    if (config.cassandra && config.cassandra.password === undefined) {
         throw new MissingConfigError('cassandra.password')
     }
-    if (config.cassandra.keyspace === undefined) {
+    if (config.cassandra && config.cassandra.keyspace === undefined) {
         throw new MissingConfigError('cassandra.keyspace')
     }
     if (config.streamrUrl === undefined) {
@@ -52,21 +52,27 @@ module.exports = async (config) => {
         }
     })
 
+    const storages = []
+
     // Start cassandra storage
-    const cassandraStorage = await startCassandraStorage(
-        config.cassandra.hosts,
-        'datacenter1',
-        config.cassandra.keyspace,
-        config.cassandra.username,
-        config.cassandra.password,
-    )
+    if (config.cassandra) {
+        storages.push(await startCassandraStorage(
+            config.cassandra.hosts,
+            'datacenter1',
+            config.cassandra.keyspace,
+            config.cassandra.username,
+            config.cassandra.password,
+        ))
+    } else {
+        console.info('Skipping Cassandra storage...')
+    }
 
     // Start network node
     const networkNode = await startNetworkNode(
         config.network.hostname,
         config.network.port,
         config.network.id,
-        [cassandraStorage],
+        storages,
     )
     networkNode.addBootstrapTracker(config.network.tracker)
 
