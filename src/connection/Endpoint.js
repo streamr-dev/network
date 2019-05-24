@@ -5,6 +5,7 @@ const events = Object.freeze({
 })
 
 class Endpoint {
+    // eslint-disable-next-line class-methods-use-this
     implement(implementor) {
         if (typeof implementor.send !== 'function') {
             throw new Error('send() method not found in class implementing Endpoint')

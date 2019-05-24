@@ -1,6 +1,6 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
-const { callbackToPromise, wait, waitForEvent, LOCALHOST } = require('../util')
+const { wait, waitForEvent, LOCALHOST } = require('../util')
 const { StreamID } = require('../../src/identifiers')
 
 describe('node unsubscribing from a stream', () => {

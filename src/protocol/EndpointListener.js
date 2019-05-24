@@ -3,6 +3,7 @@ const encoder = require('../helpers/MessageEncoder')
 const { PeerBook } = require('./PeerBook')
 
 module.exports = class EndpointListener {
+    // eslint-disable-next-line class-methods-use-this
     implement(implementor, endpoint) {
         if (typeof implementor.onPeerConnected !== 'function') {
             throw new Error('onPeerConnected() method not found in class implementing EndpointListener')

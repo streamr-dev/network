@@ -11,14 +11,22 @@ class ReadyStateError extends Error {
     }
 }
 
+function transformToObjectWithLowerCaseKeys(o) {
+    const transformedO = {}
+    Object.entries(o).forEach(([k, v]) => {
+        transformedO[k.toLowerCase()] = v
+    })
+    return transformedO
+}
+
 class CustomHeaders {
     constructor(headers) {
-        this.headers = this._transformToObjectWithLowerCaseKeys(headers)
+        this.headers = transformToObjectWithLowerCaseKeys(headers)
     }
 
     pluckCustomHeadersFromObject(object) {
         const headerNames = Object.keys(this.headers)
-        const objectWithLowerCaseKeys = this._transformToObjectWithLowerCaseKeys(object)
+        const objectWithLowerCaseKeys = transformToObjectWithLowerCaseKeys(object)
         return headerNames.reduce((acc, headerName) => {
             return {
                 ...acc,
@@ -34,14 +42,6 @@ class CustomHeaders {
     asArray() {
         return Object.entries(this.headers)
             .map(([name, value]) => `${name}: ${value}`)
-    }
-
-    _transformToObjectWithLowerCaseKeys(o) {
-        const transformedO = {}
-        Object.entries(o).forEach(([k, v]) => {
-            transformedO[k.toLowerCase()] = v
-        })
-        return transformedO
     }
 }
 

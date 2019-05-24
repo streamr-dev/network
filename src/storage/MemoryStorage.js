@@ -1,5 +1,9 @@
 const { Readable } = require('stream')
 
+function getStreamKey(streamId, streamPartition) {
+    return `${streamId}-${streamPartition}`
+}
+
 module.exports = class MemoryStorage {
     constructor(maxNumberOfMessages = 10000) {
         this.maxNumberOfMessages = maxNumberOfMessages
@@ -19,7 +23,7 @@ module.exports = class MemoryStorage {
         signature,
         signatureType
     }) {
-        const streamKey = this._getStreamKey(streamId, streamPartition)
+        const streamKey = getStreamKey(streamId, streamPartition)
 
         if (!this.storage.has(streamKey)) {
             this.storage.set(streamKey, [])
@@ -48,18 +52,14 @@ module.exports = class MemoryStorage {
         this.storage.set(streamKey, arr)
     }
 
-    _getStreamKey(streamId, streamPartition) {
-        return `${streamId}-${streamPartition}`
-    }
-
     hasStreamKey(streamId, streamPartition) {
-        const streamKey = this._getStreamKey(streamId, streamPartition)
+        const streamKey = getStreamKey(streamId, streamPartition)
 
         return this.storage.has(streamKey)
     }
 
     size(streamId, streamPartition) {
-        const streamKey = this._getStreamKey(streamId, streamPartition)
+        const streamKey = getStreamKey(streamId, streamPartition)
 
         return this.hasStreamKey(streamId, streamPartition) ? this.storage.get(streamKey).length : 0
     }
@@ -87,7 +87,7 @@ module.exports = class MemoryStorage {
             throw new TypeError('number is not an positive integer')
         }
 
-        const streamKey = this._getStreamKey(streamId, streamPartition)
+        const streamKey = getStreamKey(streamId, streamPartition)
         const filterFunc = () => Object.values(this.storage.get(streamKey)).slice(-number)
 
         return this._createStream(filterFunc, streamId, streamPartition)
@@ -102,7 +102,7 @@ module.exports = class MemoryStorage {
             throw new TypeError('fromSequenceNo should be equal or greater than zero')
         }
 
-        const streamKey = this._getStreamKey(streamId, streamPartition)
+        const streamKey = getStreamKey(streamId, streamPartition)
         const filterFunc = () => Object.values(this.storage.get(streamKey)).filter((record) => {
             return (record.timestamp > fromTimestamp || (record.timestamp === fromTimestamp && record.sequenceNo >= fromSequenceNo))
                 && (record.publisherId === publisherId || publisherId === null)
@@ -142,7 +142,7 @@ module.exports = class MemoryStorage {
             throw new TypeError('toSequenceNo should be equal or greater than zero')
         }
 
-        const streamKey = this._getStreamKey(streamId, streamPartition)
+        const streamKey = getStreamKey(streamId, streamPartition)
         const filterFunc = () => Object.values(this.storage.get(streamKey)).filter((record) => {
             return (record.timestamp > fromTimestamp || (record.timestamp === fromTimestamp && record.sequenceNo >= fromSequenceNo))
                 && (record.timestamp < toTimestamp || (record.timestamp === toTimestamp && record.sequenceNo <= toSequenceNo))

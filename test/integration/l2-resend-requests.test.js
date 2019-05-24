@@ -1,6 +1,6 @@
 const intoStream = require('into-stream')
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { eventsToArray, waitForEvent, wait, LOCALHOST } = require('../util')
+const { eventsToArray, waitForEvent, LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 const NetworkNode = require('../../src/NetworkNode')
 

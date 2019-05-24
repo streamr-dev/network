@@ -55,7 +55,8 @@
   },
   "devDependencies": {
     "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "13.1.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-config-streamr-nodejs": "^1.0.0",
     "eslint-plugin-import": "^2.17.2",
     "eslint-plugin-import-order": "2.1.4",
     "into-stream": "^5.1.0",

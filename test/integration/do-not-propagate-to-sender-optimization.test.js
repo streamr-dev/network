@@ -1,6 +1,6 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
-const { callbackToPromise, wait, waitForEvent, LOCALHOST } = require('../util')
+const { wait, waitForEvent, LOCALHOST } = require('../util')
 
 /**
  * This test verifies that on receiving a message, the receiver will not propagate the message to the sender as they
