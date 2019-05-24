@@ -210,6 +210,9 @@ Name | Description
 update() | Updates the properties of this Stream object by sending them to the API.
 delete() | Deletes this Stream.
 getPermissions() | Returns the list of permissions for this Stream.
+hasPermission(operation, user) | Returns a permission object, or null if no such permission was found. `operation` is one of 'read', 'write', or 'share'. `user` is the username of a user, or null for public permissions.
+grantPermission(operation, user) | Grants the permission to do `operation` to `user`, which are defined as above.
+revokePermission(permissionId) | Revokes a permission identified by its `id`.
 detectFields() | Updates the Stream field config (schema) to match the latest data point in the Stream.
 publish(message) | Publishes a new message (data point) to this Stream.
 

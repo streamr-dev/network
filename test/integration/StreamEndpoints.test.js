@@ -12,6 +12,7 @@ describe('StreamEndpoints', () => {
 
     let client
     let createdStream
+    let wallet
 
     const createClient = (opts = {}) => new StreamrClient({
         url: config.websocketUrl,
@@ -22,9 +23,10 @@ describe('StreamEndpoints', () => {
     })
 
     beforeAll(() => {
+        wallet = ethers.Wallet.createRandom()
         client = createClient({
             auth: {
-                privateKey: ethers.Wallet.createRandom().privateKey,
+                privateKey: wallet.privateKey,
             },
         })
     })
@@ -105,9 +107,25 @@ describe('StreamEndpoints', () => {
     })
 
     describe('Stream permissions', () => {
-        it('Stream.getPermissions', () => createdStream.getPermissions().then((permissions) => {
+        it('Stream.getPermissions', async () => {
+            const permissions = await createdStream.getPermissions()
             assert.equal(permissions.length, 3) // read, write, share for the owner
-        }))
+        })
+
+        it('Stream.hasPermission', async () => {
+            assert(await createdStream.hasPermission('share', wallet.address))
+        })
+
+        it('Stream.grantPermission', async () => {
+            await createdStream.grantPermission('read', null) // public read
+            assert(await createdStream.hasPermission('read', null))
+        })
+
+        it('Stream.revokePermission', async () => {
+            const publicRead = await createdStream.hasPermission('read', null)
+            await createdStream.revokePermission(publicRead.id)
+            assert(!(await createdStream.hasPermission('read', null)))
+        })
     })
 
     describe('Stream deletion', () => {
