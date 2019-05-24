@@ -1,9 +1,11 @@
-const { wait } = require('../util')
+const { waitForEvent } = require('../util')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 
 describe('duplicate connections are closed', () => {
     let wss1
+    let ws1
     let wss2
+    let ws2
     let wsEndpoint1
     let wsEndpoint2
 
@@ -25,22 +27,25 @@ describe('duplicate connections are closed', () => {
 
         wss1.on('connection', (ws) => {
             connectionsOpened += 1
-            ws.on('close', (code, reason) => {
-                connectionsClosedReasons.push(reason)
-            })
+            ws1 = ws
         })
         wss2.on('connection', (ws) => {
             connectionsOpened += 1
-            ws.on('close', (code, reason) => {
-                connectionsClosedReasons.push(reason)
-            })
+            ws2 = ws
         })
 
         await Promise.all([
             wsEndpoint1.connect('ws://127.0.0.1:28502'),
             wsEndpoint2.connect('ws://127.0.0.1:28501'),
         ])
-        await wait(500)
+
+        await Promise.race([
+            waitForEvent(ws1, 'close'),
+            waitForEvent(ws2, 'close')
+        ]).then((res) => {
+            const reason = res[1]
+            connectionsClosedReasons.push(reason)
+        })
 
         expect(connectionsOpened).toEqual(2) // sanity check
         expect(connectionsClosedReasons).toEqual(['streamr:endpoint:duplicate-connection']) // length === 1
