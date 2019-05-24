@@ -67,6 +67,7 @@ class Connection extends EventEmitter {
         this.socket.onmessage = (messageEvent) => {
             let controlMessage
             try {
+                debug('<< %s', messageEvent.data)
                 controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
             } catch (err) {
                 this.emit('error', err)
@@ -105,7 +106,9 @@ class Connection extends EventEmitter {
 
     send(controlLayerRequest) {
         try {
-            this.socket.send(controlLayerRequest.serialize())
+            const serialized = controlLayerRequest.serialize()
+            debug('>> %s', serialized)
+            this.socket.send(serialized)
         } catch (err) {
             this.emit('error', err)
         }
