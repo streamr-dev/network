@@ -580,13 +580,13 @@ export default class StreamrClient extends EventEmitter {
         } else if (options.from && !options.to) {
             request = ResendFromRequest.create(
                 sub.streamId, sub.streamPartition, sub.id, [options.from.timestamp, options.from.sequenceNumber],
-                options.publisherId || null, options.msgChainId || '', sessionToken,
+                options.publisherId || null, options.msgChainId || null, sessionToken,
             )
         } else if (options.from && options.to) {
             request = ResendRangeRequest.create(
                 sub.streamId, sub.streamPartition, sub.id, [options.from.timestamp, options.from.sequenceNumber],
                 [options.to.timestamp, options.to.sequenceNumber],
-                options.publisherId || null, options.msgChainId || '', sessionToken,
+                options.publisherId || null, options.msgChainId || null, sessionToken,
             )
         }
         debug('_requestResend: %o', request)
