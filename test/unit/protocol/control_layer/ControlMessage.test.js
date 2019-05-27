@@ -32,9 +32,9 @@ import ResendRequestV0 from '../../../../src/protocol/control_layer/resend_reque
 
 const examplesByTypeV0 = {
     '0': [0, 0, null, [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
-        941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']],
+        941516902, 941499898, StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}']],
     '1': [0, 1, 'subId', [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
-        941516902, 941499898, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']],
+        941516902, 941499898, StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}']],
     '2': [0, 2, null, {
         stream: 'id',
         partition: 0,
@@ -98,9 +98,9 @@ const examplesByTypeV0 = {
 
 const examplesByTypeV1 = {
     '0': [1, 0, [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
-        [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']],
+        [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']],
     '1': [1, 1, 'subId', [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
-        [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']],
+        [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']],
     '2': [1, 2, 'streamId', 0],
     '3': [1, 3, 'streamId', 0],
     '4': [1, 4, 'streamId', 0, 'subId'],
@@ -108,7 +108,7 @@ const examplesByTypeV1 = {
     '6': [1, 6, 'streamId', 0, 'subId'],
     '7': [1, 7, 'errorMessage'],
     '8': [1, 8, [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
-        StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'], 'sessionToken'],
+        StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'], 'sessionToken'],
     '9': [1, 9, 'streamId', 0, 'sessionToken'],
     '10': [1, 10, 'streamId', 0],
     '11': [1, 11, 'streamId', 0, 'subId', 100, 'sessionToken'],

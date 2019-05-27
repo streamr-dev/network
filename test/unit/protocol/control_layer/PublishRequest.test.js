@@ -9,7 +9,7 @@ describe('PublishRequest', () => {
     describe('create', () => {
         it('should create the latest version', () => {
             const streamMsg = StreamMessageFactory.deserialize([30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
-                StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'])
+                StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'])
             const msg = PublishRequest.create(streamMsg, 'sessionToken')
             assert(msg instanceof PublishRequestV1)
             assert(msg.streamMessage instanceof StreamMessage)

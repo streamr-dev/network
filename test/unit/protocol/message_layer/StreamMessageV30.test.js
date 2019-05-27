@@ -7,7 +7,7 @@ describe('StreamMessageV30', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
             const arr = [['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
             const result = new StreamMessageV30(...arr)
 
             assert(result instanceof StreamMessageV30)
@@ -20,7 +20,7 @@ describe('StreamMessageV30', () => {
             assert.equal(result.messageId.msgChainId, 'msg-chain-id')
             assert.equal(result.prevMsgRef.timestamp, 1529549961000)
             assert.equal(result.prevMsgRef.sequenceNumber, 0)
-            assert.equal(result.contentType, StreamMessage.CONTENT_TYPES.JSON)
+            assert.equal(result.contentType, StreamMessage.CONTENT_TYPES.MESSAGE)
             assert.equal(result.getContent(), '{"valid": "json"}')
             assert.equal(result.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.equal(result.signature, 'signature')
@@ -33,11 +33,11 @@ describe('StreamMessageV30', () => {
                 foo: 'bar',
             }
             const arr = [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
 
             const serialized = new StreamMessageV30(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, content, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             ).serialize()
 
             assert.deepEqual(serialized, JSON.stringify(arr))
@@ -47,11 +47,11 @@ describe('StreamMessageV30', () => {
                 foo: 'bar',
             }
             const arr = [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
 
             const serialized = new StreamMessageV30(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, content, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             ).serialize(30, {
                 stringify: false,
             })
@@ -63,11 +63,11 @@ describe('StreamMessageV30', () => {
                 foo: 'bar',
             }
             const arr = [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.NONE, null]
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.NONE, null]
 
             const serialized = new StreamMessageV30(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.NONE,
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, content, StreamMessage.SIGNATURE_TYPES.NONE,
             ).serialize()
 
             assert.deepEqual(serialized, JSON.stringify(arr))
@@ -77,34 +77,46 @@ describe('StreamMessageV30', () => {
                 foo: 'bar',
             }
             const arr = [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                null, StreamMessage.CONTENT_TYPES.JSON, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.NONE, null]
+                null, StreamMessage.CONTENT_TYPES.MESSAGE, JSON.stringify(content), StreamMessage.SIGNATURE_TYPES.NONE, null]
 
             const serialized = new StreamMessageV30(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                null, StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.NONE,
+                null, StreamMessage.CONTENT_TYPES.MESSAGE, content, StreamMessage.SIGNATURE_TYPES.NONE,
             ).serialize()
 
             assert.deepEqual(serialized, JSON.stringify(arr))
         })
         it('correctly serializes messages to v29', () => {
             const arr = [29, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 1529549961116, 1529549961000,
-                StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'publisherId', 'signature']
+                StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'publisherId', 'signature']
 
             const serialized = new StreamMessageV30(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             ).serialize(29)
 
             assert.deepEqual(serialized, JSON.stringify(arr))
         })
         it('correctly serializes messages to v28', () => {
             const arr = [28, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
-                1529549961116, 1529549961000, StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}']
+                1529549961116, 1529549961000, StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}']
 
             const serialized = new StreamMessageV30(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             ).serialize(28)
+
+            assert.deepEqual(serialized, JSON.stringify(arr))
+        })
+        it('correctly serializes messages to v31', () => {
+            const arr = [31, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], [1529549961000, 0],
+                StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.NONE, '{"valid": "json"}',
+                StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
+
+            const serialized = new StreamMessageV30(
+                ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+            ).serialize(31)
 
             assert.deepEqual(serialized, JSON.stringify(arr))
         })
@@ -116,7 +128,7 @@ describe('StreamMessageV30', () => {
                 foo: 'bar',
             }
             const msg = new StreamMessageV30(
-                ['streamId', 0, Date.now(), 0, 'publisherId', 1], [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, content,
+                ['streamId', 0, Date.now(), 0, 'publisherId', 1], [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, content,
                 StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
             assert.deepEqual(msg.getParsedContent(), content)
@@ -126,7 +138,7 @@ describe('StreamMessageV30', () => {
                 foo: 'bar',
             }
             const msg = new StreamMessageV30(
-                ['streamId', 0, Date.now(), 0, 'publisherId', 1], [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, JSON.stringify(content),
+                ['streamId', 0, Date.now(), 0, 'publisherId', 1], [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, JSON.stringify(content),
                 StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
             assert.deepEqual(msg.getParsedContent(), content)
@@ -136,13 +148,13 @@ describe('StreamMessageV30', () => {
     describe('toArray()', () => {
         it('parsedContent == true', () => {
             const array = [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, {
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, {
                     valid: 'json',
                 }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
 
             const msg = new StreamMessageV30(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], [1529549961000, 0],
-                StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
 
             assert.deepEqual(msg.toArray(true), array)
@@ -150,26 +162,14 @@ describe('StreamMessageV30', () => {
 
         it('parsedContent == false', () => {
             const array = [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
+                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']
 
             const msg = new StreamMessageV30(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], [1529549961000, 0],
-                StreamMessage.CONTENT_TYPES.JSON, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
 
             assert.deepEqual(msg.toArray(), array)
-        })
-    })
-
-    describe('validation', () => {
-        it('should throw if id does not define all fields', () => {
-            assert.throws(() => StreamMessage.create(
-                [undefined, 0], null, StreamMessage.CONTENT_TYPES.JSON, {},
-                StreamMessage.SIGNATURE_TYPES.NONE, null,
-            ), (err) => {
-                assert.equal(err.message, 'streamId must be defined!')
-                return true
-            })
         })
     })
 })

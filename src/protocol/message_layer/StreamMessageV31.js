@@ -1,18 +1,19 @@
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import StreamMessage from './StreamMessage'
-import StreamMessageV28 from './StreamMessageV28'
-import StreamMessageV29 from './StreamMessageV29'
-import StreamMessageV31 from './StreamMessageV31'
 import MessageID from './MessageID'
 import MessageRef from './MessageRef'
+import StreamMessageV28 from './StreamMessageV28'
+import StreamMessageV29 from './StreamMessageV29'
+import StreamMessageV30 from './StreamMessageV30'
 
-const VERSION = 30
+const VERSION = 31
 
-export default class StreamMessageV30 extends StreamMessage {
-    constructor(messageIdArgsArray, prevMessageRefArgsArray, contentType, content, signatureType, signature) {
-        super(VERSION, undefined, contentType, StreamMessage.ENCRYPTION_TYPES.NONE, content)
+export default class StreamMessageV31 extends StreamMessage {
+    constructor(messageIdArgsArray, prevMessageRefArgsArray, contentType, encryptionType, content, signatureType, signature) {
+        super(VERSION, undefined, contentType, encryptionType, content)
         this.messageId = new MessageID(...messageIdArgsArray)
         this.prevMsgRef = prevMessageRefArgsArray ? new MessageRef(...prevMessageRefArgsArray) : null
+        this.encryptionType = encryptionType
         this.signatureType = signatureType
         this.signature = signature
     }
@@ -43,6 +44,7 @@ export default class StreamMessageV30 extends StreamMessage {
             this.messageId.toArray(),
             this.prevMsgRef ? this.prevMsgRef.toArray() : null,
             this.contentType,
+            this.encryptionType,
             this.getContent(parsedContent),
             this.signatureType,
             this.signature,
@@ -64,11 +66,10 @@ export default class StreamMessageV30 extends StreamMessage {
                 0, this.messageId.timestamp, prevTimestamp, this.contentType, this.getContent(),
                 this.signatureType, this.messageId.publisherId, this.signature,
             )
-        } else if (version === 31) {
-            // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
-            return new StreamMessageV31(
+        } else if (version === 30) {
+            return new StreamMessageV30(
                 this.messageId.toArray(), this.prevMsgRef.toArray(), this.contentType,
-                StreamMessage.ENCRYPTION_TYPES.NONE, this.serializedContent, this.signatureType, this.signature,
+                this.serializedContent, this.signatureType, this.signature,
             )
         }
         throw new UnsupportedVersionError(version, 'Supported versions: [28, 29, 30, 31]')
@@ -87,3 +88,4 @@ export default class StreamMessageV30 extends StreamMessage {
         return this.toOtherVersion(version).serialize(version, options)
     }
 }
+StreamMessage.latestClass = StreamMessageV31

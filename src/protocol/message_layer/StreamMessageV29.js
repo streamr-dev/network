@@ -2,12 +2,13 @@ import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import StreamMessage from './StreamMessage'
 import StreamMessageV28 from './StreamMessageV28'
 import StreamMessageV30 from './StreamMessageV30'
+import StreamMessageV31 from './StreamMessageV31'
 
 const VERSION = 29
 
 export default class StreamMessageV29 extends StreamMessage {
     constructor(streamId, streamPartition, timestamp, ttl, offset, previousOffset, contentType, content, signatureType, publisherAddress, signature) {
-        super(VERSION, streamId, contentType, content)
+        super(VERSION, streamId, contentType, StreamMessage.ENCRYPTION_TYPES.NONE, content)
         this.ttl = ttl
         this.streamPartition = streamPartition
         this.timestamp = timestamp
@@ -79,8 +80,14 @@ export default class StreamMessageV29 extends StreamMessage {
                 [this.streamId, this.streamPartition, this.timestamp, 0, this.publisherAddress || '', ''],
                 [null, null], this.contentType, this.getContent(), this.signatureType, this.signature,
             )
+        } else if (version === 31) {
+            // null fields in order: prevMsgRef.timestamp, prevMsgRef.sequenceNumber
+            return new StreamMessageV31(
+                [this.streamId, this.streamPartition, this.timestamp, 0, this.publisherAddress || '', ''],
+                [null, null], this.contentType, StreamMessage.ENCRYPTION_TYPES.NONE, this.getContent(), this.signatureType, this.signature,
+            )
         }
-        throw new UnsupportedVersionError(version, 'Supported versions: [28, 29, 30]')
+        throw new UnsupportedVersionError(version, 'Supported versions: [28, 29, 30, 31]')
     }
 
     serialize(version = VERSION, options = {

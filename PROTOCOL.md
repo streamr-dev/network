@@ -346,7 +346,42 @@ Field    | Type | Description
 
 Content Type | Description
 -------------- | --------
-27 | JSON content. The `content` can either be a JSON string to be parsed or a JSON object.
+27 | Normal JSON message. `content` can either be a JSON string to be parsed or a JSON object.
+28 | Group key request. See example of valid `content` below.
+29 | Group key response. See example of valid `content` below.
+30 | Group key reset. See example of valid `content` below.
+
+Example of valid `content` for `contentType` 28 (group key request)
+```
+{
+  publicKey: "subscriber-rsa-public-key"
+  range: { // optional
+    start: 342546546
+    end: 379080012
+  }
+}
+```
+
+Example of valid `content` for `contentType` 29 (group key response)
+```
+{
+  keys: [{
+    groupKey: "some-encrypted-group-key"
+    start: 342546000
+  }, {
+    groupKey: "some-later-encrypted-group-key"
+    start: 369146000
+  }]
+}
+```
+
+Example of valid `content` for `contentType` 30 (group key reset)
+```
+{
+  groupKey: "new-encrypted-group-key"
+  start: 9086906
+}
+```
 
 Signature Type | Name | Description | Signature payload fields to be concatenated in order
 -------------- | ---- |------------ | -----------------------
