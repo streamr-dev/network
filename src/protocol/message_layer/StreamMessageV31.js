@@ -67,8 +67,9 @@ export default class StreamMessageV31 extends StreamMessage {
                 this.signatureType, this.messageId.publisherId, this.signature,
             )
         } else if (version === 30) {
+            const prevArray = this.prevMsgRef ? this.prevMsgRef.toArray() : null
             return new StreamMessageV30(
-                this.messageId.toArray(), this.prevMsgRef.toArray(), this.contentType,
+                this.messageId.toArray(), prevArray, this.contentType,
                 this.serializedContent, this.signatureType, this.signature,
             )
         }

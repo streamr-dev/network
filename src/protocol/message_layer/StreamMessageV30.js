@@ -65,9 +65,10 @@ export default class StreamMessageV30 extends StreamMessage {
                 this.signatureType, this.messageId.publisherId, this.signature,
             )
         } else if (version === 31) {
+            const prevArray = this.prevMsgRef ? this.prevMsgRef.toArray() : null
             // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
             return new StreamMessageV31(
-                this.messageId.toArray(), this.prevMsgRef.toArray(), this.contentType,
+                this.messageId.toArray(), prevArray, this.contentType,
                 StreamMessage.ENCRYPTION_TYPES.NONE, this.serializedContent, this.signatureType, this.signature,
             )
         }
