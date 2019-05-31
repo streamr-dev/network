@@ -1,7 +1,7 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
 
 const BYE_KEY = '_bye'
-const LATEST_VERSION = 30
+const LATEST_VERSION = 31
 
 export default class StreamMessage {
     constructor(version, streamId, contentType, encryptionType, content) {
