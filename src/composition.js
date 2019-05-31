@@ -15,7 +15,14 @@ function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) {
         'streamr-peer-type': peerTypes.TRACKER
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new Tracker(id, new TrackerServer(endpoint), maxNeighborsPerNode)
+        const opts = {
+            id,
+            protocols: {
+                trackerServer: new TrackerServer(endpoint)
+            },
+            maxNeighborsPerNode
+        }
+        return new Tracker(opts)
     })
 }
 
@@ -25,7 +32,15 @@ function startNode(host, port, id = uuidv4(), resendStrategies = []) {
         'streamr-peer-type': peerTypes.NODE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new Node(id, new TrackerNode(endpoint), new NodeToNode(endpoint), resendStrategies)
+        const opts = {
+            id,
+            protocols: {
+                trackerNode: new TrackerNode(endpoint),
+                nodeToNode: new NodeToNode(endpoint)
+            },
+            resendStrategies
+        }
+        return new Node(opts)
     })
 }
 
@@ -35,7 +50,15 @@ function startNetworkNode(host, port, id = uuidv4(), storages = []) {
         'streamr-peer-type': peerTypes.NODE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), storages)
+        const opts = {
+            id,
+            protocols: {
+                trackerNode: new TrackerNode(endpoint),
+                nodeToNode: new NodeToNode(endpoint)
+            },
+            storages
+        }
+        return new NetworkNode(opts)
     })
 }
 
@@ -45,7 +68,15 @@ function startStorageNode(host, port, id = uuidv4(), storages = []) {
         'streamr-peer-type': peerTypes.STORAGE
     }
     return startEndpoint(host, port, identity).then((endpoint) => {
-        return new NetworkNode(id, new TrackerNode(endpoint), new NodeToNode(endpoint), storages)
+        const opts = {
+            id,
+            protocols: {
+                trackerNode: new TrackerNode(endpoint),
+                nodeToNode: new NodeToNode(endpoint)
+            },
+            storages
+        }
+        return new NetworkNode(opts)
     })
 }
 

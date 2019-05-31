@@ -20,7 +20,7 @@ describe('check status message flow between tracker and two nodes', () => {
 
     it('tracker should receive status message from node', async (done) => {
         tracker.protocols.trackerServer.once(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => {
-            expect(statusMessage.getSource()).toEqual(nodeOne.id)
+            expect(statusMessage.getSource()).toEqual(nodeOne.opts.id)
             // eslint-disable-next-line no-underscore-dangle
             expect(statusMessage.getStatus()).toEqual(nodeOne._getStatus())
             done()
@@ -31,7 +31,7 @@ describe('check status message flow between tracker and two nodes', () => {
 
     it('tracker should receive status from second node', async (done) => {
         tracker.protocols.trackerServer.once(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => {
-            expect(statusMessage.getSource()).toEqual(nodeTwo.id)
+            expect(statusMessage.getSource()).toEqual(nodeTwo.opts.id)
             // eslint-disable-next-line no-underscore-dangle
             expect(statusMessage.getStatus()).toEqual(nodeTwo._getStatus())
             done()
@@ -53,12 +53,12 @@ describe('check status message flow between tracker and two nodes', () => {
 
             let receivedTotal = 0
             tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => {
-                if (statusMessage.getSource() === nodeOne.id) {
+                if (statusMessage.getSource() === nodeOne.opts.id) {
                     // eslint-disable-next-line no-underscore-dangle
                     expect(statusMessage.getStatus()).toEqual(nodeOne._getStatus())
                 }
 
-                if (statusMessage.getSource() === nodeTwo.id) {
+                if (statusMessage.getSource() === nodeTwo.opts.id) {
                     // eslint-disable-next-line no-underscore-dangle
                     expect(statusMessage.getStatus()).toEqual(nodeTwo._getStatus())
                 }

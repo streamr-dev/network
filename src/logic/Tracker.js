@@ -6,22 +6,30 @@ const { StreamID } = require('../identifiers')
 const { peerTypes } = require('../protocol/PeerBook')
 
 module.exports = class Tracker extends EventEmitter {
-    constructor(id, trackerServer, maxNeighborsPerNode) {
+    constructor(opts) {
         super()
+
+        if (!Number.isInteger(opts.maxNeighborsPerNode)) {
+            throw new Error('maxNeighborsPerNode is not an integer')
+        }
+
+        // set default options
+        const defaultOptions = {
+            id: 'tracker',
+            protocols: []
+        }
+
+        this.opts = Object.assign({}, defaultOptions, opts)
+
+        if (!(this.opts.protocols.trackerServer instanceof TrackerServer)) {
+            throw new Error('Provided protocols are not correct')
+        }
 
         this.overlayPerStream = {} // streamKey => overlayTopology
         this.storageNodes = new Map()
 
-        this.id = id
-        this.protocols = {
-            trackerServer
-        }
-
-        if (!Number.isInteger(maxNeighborsPerNode)) {
-            throw new Error('maxNeighborsPerNode is not an integer')
-        }
-
-        this.maxNeighborsPerNode = maxNeighborsPerNode
+        // this.id = id
+        this.protocols = opts.protocols
 
         this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, ({ peerId, nodeType }) => this.onNodeDisconnected(peerId, nodeType))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => this.processNodeStatus(statusMessage, nodeType))
@@ -79,7 +87,7 @@ module.exports = class Tracker extends EventEmitter {
         // Add or update
         Object.entries(streams).forEach(([streamKey, { inboundNodes, outboundNodes }]) => {
             if (this.overlayPerStream[streamKey] == null) {
-                this.overlayPerStream[streamKey] = new OverlayTopology(this.maxNeighborsPerNode)
+                this.overlayPerStream[streamKey] = new OverlayTopology(this.opts.maxNeighborsPerNode)
             }
 
             newNode = this.overlayPerStream[streamKey].hasNode(node)

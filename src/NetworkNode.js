@@ -53,17 +53,23 @@ function toObjectTransform() {
 Convenience wrapper for building client-facing functionality. Used by broker.
  */
 class NetworkNode extends Node {
-    constructor(id, trackerNode, nodeToNode, storages) {
-        super(id, trackerNode, nodeToNode, [
-            ...storages.map((storage) => new StorageResendStrategy(storage)),
-            new AskNeighborsResendStrategy(nodeToNode, (streamId) => {
-                return this.streams.getOutboundNodesForStream(streamId)
-            }),
-            new StorageNodeResendStrategy(trackerNode, nodeToNode,
-                () => [...this.trackers][0],
-                (node) => this.streams.isNodePresent(node))
-        ])
-        storages.forEach((storage) => this.on(events.MESSAGE, storage.store.bind(storage)))
+    constructor(opts) {
+        let networkOpts = {
+            resendStrategies: [
+                ...opts.storages.map((storage) => new StorageResendStrategy(storage)),
+                new AskNeighborsResendStrategy(opts.protocols.nodeToNode, (streamId) => {
+                    return this.streams.getOutboundNodesForStream(streamId)
+                }),
+                new StorageNodeResendStrategy(opts.protocols.trackerNode, opts.protocols.nodeToNode,
+                    () => [...this.trackers][0],
+                    (node) => this.streams.isNodePresent(node))
+            ]
+        }
+
+        networkOpts = Object.assign({}, opts, networkOpts)
+
+        super(networkOpts)
+        this.opts.storages.forEach((storage) => this.on(events.MESSAGE, storage.store.bind(storage)))
 
         this.on(Node.events.MESSAGE_PROPAGATED, this._emitMessage.bind(this))
         this.on(Node.events.UNICAST_RECEIVED, this._emitUnicast.bind(this))
