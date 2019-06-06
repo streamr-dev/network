@@ -1,5 +1,6 @@
 const { EventEmitter } = require('events')
 const intoStream = require('into-stream')
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { AskNeighborsResendStrategy,
     StorageResendStrategy,
     StorageNodeResendStrategy } = require('../../src/logic/resendStrategies')
@@ -10,11 +11,12 @@ const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResen
 const ResendResponseResending = require('../../src/messages/ResendResponseResending')
 const ResendResponseResent = require('../../src/messages/ResendResponseResent')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
-const UnicastMessage = require('../../src/messages/UnicastMessage')
-const { MessageID, MessageReference, StreamID } = require('../../src/identifiers')
+const { MessageReference, StreamID } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const { waitForStreamToEnd } = require('../util')
+
+const { StreamMessage } = MessageLayer
 
 jest.useFakeTimers()
 
@@ -103,24 +105,16 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
         )
         const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([
-            new UnicastMessage(
-                new MessageID(new StreamID('streamId', 0), 0, 0, 'publisherId', 'msgChainId'),
-                null,
-                {
-                    hello: 'world'
-                },
-                'signature',
-                2,
-                'subId'
-            ),
-            new UnicastMessage(
-                new MessageID(new StreamID('streamId', 0), 10, 10, 'publisherId', 'msgChainId'),
-                new MessageReference(0, 0),
-                {},
-                'signature',
-                2,
-                'subId'
-            )
+            [ControlLayer.UnicastMessage.create(
+                'subId', StreamMessage.create(['streamId', 0, 0, 0, 'publisherId', 'msgChainId'],
+                    null, StreamMessage.CONTENT_TYPES.JSON, {
+                        hello: 'world'
+                    }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'),
+            ), null],
+            [ControlLayer.UnicastMessage.create(
+                'subId', StreamMessage.create(['streamId', 0, 10, 10, 'publisherId', 'msgChainId'], [0, 0],
+                    StreamMessage.CONTENT_TYPES.JSON, {}, StreamMessage.SIGNATURE_TYPES.ETH, 'signature')
+            ), null],
         ])
     })
 })
@@ -241,17 +235,12 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
 
         test('if neighbor responds with UnicastMessage, extend timeout', () => {
             jest.advanceTimersByTime(TIMEOUT - 1)
+            const streamMessage = MessageLayer.StreamMessage.create(['streamId', 0, 0, 0, '', ''], null,
+                MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {}, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null)
             nodeToNode.emit(
                 NodeToNode.events.UNICAST_RECEIVED,
-                new UnicastMessage(
-                    new MessageID(new StreamID('streamId', 0), 0, 0, '', ''),
-                    null,
-                    {},
-                    '',
-                    0,
-                    'subId',
-                    'neighbor-1'
-                )
+                ControlLayer.UnicastMessage.create('subId', streamMessage),
+                'neighbor-1',
             )
             jest.advanceTimersByTime(TIMEOUT - 1)
 
@@ -278,29 +267,25 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
         })
 
         test('all UnicastMessages received from neighbor are pushed to returned stream', async () => {
-            const createUnicastMessage = (timestamp) => new UnicastMessage(
-                new MessageID(new StreamID('streamId', 0), timestamp, 0, '', ''),
-                null,
-                {},
-                '',
-                0,
-                'subId',
-                'neighbor-1'
-            )
+            const createUnicastMessageAndSource = (timestamp) => {
+                const streamMessage = MessageLayer.StreamMessage.create(['streamId', 0, timestamp, 0, '', ''], null,
+                    MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {}, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null)
+                return [ControlLayer.UnicastMessage.create('subId', streamMessage), 'neighbor-1']
+            }
 
-            const u1 = createUnicastMessage(0)
-            const u2 = createUnicastMessage(1000)
-            const u3 = createUnicastMessage(11000)
-            const u4 = createUnicastMessage(21000)
-            const u5 = createUnicastMessage(22000)
+            const u1 = createUnicastMessageAndSource(0)
+            const u2 = createUnicastMessageAndSource(1000)
+            const u3 = createUnicastMessageAndSource(11000)
+            const u4 = createUnicastMessageAndSource(21000)
+            const u5 = createUnicastMessageAndSource(22000)
 
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u1)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u2)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u1)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u2)
             jest.advanceTimersByTime(TIMEOUT / 10)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u3)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u3)
             jest.advanceTimersByTime(TIMEOUT / 10)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u4)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u5)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u4)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u5)
             nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE,
                 new ResendResponseResent(new StreamID('streamId', 0), 'subId', 'neighbor-1'))
 
@@ -534,15 +519,9 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
 
         test('if storage node responds with UnicastMessage, extend timeout', () => {
             jest.advanceTimersByTime(TIMEOUT - 1)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, new UnicastMessage(
-                new MessageID(new StreamID('streamId', 0), 0, 0, '', ''),
-                null,
-                {},
-                '',
-                0,
-                'subId',
-                'storageNode'
-            ))
+            const streamMessage = MessageLayer.StreamMessage.create(['streamId', 0, 0, 0, '', ''], null,
+                MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {}, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ControlLayer.UnicastMessage.create('subId', streamMessage), 'storageNode')
             jest.advanceTimersByTime(TIMEOUT - 1)
 
             // eslint-disable-next-line no-underscore-dangle
@@ -559,29 +538,25 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
         })
 
         test('all UnicastMessages received from storage node are pushed to returned stream', async () => {
-            const createUnicastMessage = (timestamp) => new UnicastMessage(
-                new MessageID(new StreamID('streamId', 0), timestamp, 0, '', ''),
-                null,
-                {},
-                '',
-                0,
-                'subId',
-                'storageNode'
-            )
+            const createUnicastMessageAndSource = (timestamp) => {
+                const streamMessage = MessageLayer.StreamMessage.create(['streamId', 0, timestamp, 0, '', ''], null,
+                    MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {}, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null)
+                return [ControlLayer.UnicastMessage.create('subId', streamMessage), 'storageNode']
+            }
 
-            const u1 = createUnicastMessage(0)
-            const u2 = createUnicastMessage(1000)
-            const u3 = createUnicastMessage(11000)
-            const u4 = createUnicastMessage(21000)
-            const u5 = createUnicastMessage(22000)
+            const u1 = createUnicastMessageAndSource(0)
+            const u2 = createUnicastMessageAndSource(1000)
+            const u3 = createUnicastMessageAndSource(11000)
+            const u4 = createUnicastMessageAndSource(21000)
+            const u5 = createUnicastMessageAndSource(22000)
 
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u1)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u2)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u1)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u2)
             jest.advanceTimersByTime(TIMEOUT / 10)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u3)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u3)
             jest.advanceTimersByTime(TIMEOUT / 10)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u4)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u5)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u4)
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ...u5)
             nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE,
                 new ResendResponseResent(new StreamID('streamId', 0), 'subId', 'storageNode'))
 

@@ -1,9 +1,10 @@
+const { MessageLayer } = require('streamr-client-protocol')
 const { startNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const { LOCALHOST } = require('../util')
+const { StreamID } = require('../../src/identifiers')
 
-const DataMessage = require('../../src/messages/DataMessage')
-const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
+const { StreamMessage, MessageID } = MessageLayer
 
 /**
  * When a node receives a message for a stream it hasn't still subscribed to, it
@@ -33,11 +34,11 @@ describe('message buffering of Node', () => {
     })
 
     test('first message to unknown stream eventually gets delivered', (done) => {
-        destinationNode.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => {
-            expect(dataMessage.getMessageId()).toEqual(
-                new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id', 'session-id')
+        destinationNode.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => {
+            expect(streamMessage.messageId).toEqual(
+                new MessageID('id', 0, 1, 0, 'publisher-id', 'session-id')
             )
-            expect(dataMessage.getData()).toEqual({
+            expect(streamMessage.getParsedContent()).toEqual({
                 hello: 'world'
             })
             done()
@@ -46,13 +47,9 @@ describe('message buffering of Node', () => {
         destinationNode.subscribeToStreamIfHaveNotYet(new StreamID('id', 0))
 
         // "Client" pushes data
-        const dataMessage = new DataMessage(
-            new MessageID(new StreamID('id', 0), 1, 0, 'publisher-id', 'session-id'),
-            new MessageReference(0, 0),
-            {
-                hello: 'world'
-            }
-        )
-        sourceNode.onDataReceived(dataMessage)
+        const streamMessage = StreamMessage.create(['id', 0, 1, 0, 'publisher-id', 'session-id'], [0, 0], StreamMessage.CONTENT_TYPES.JSON, {
+            hello: 'world'
+        }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+        sourceNode.onDataReceived(streamMessage)
     })
 })

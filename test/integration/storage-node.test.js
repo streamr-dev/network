@@ -97,7 +97,7 @@ describe('Check tracker will subscribe storage node to all streams', () => {
             await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
         ])
 
-        expect(subscriberOne.streams.isSetUp(streamOne)).toBeFalsy()
+        expect(subscriberOne.streams.isSetUp(streamOne, streamOne)).toBeFalsy()
         expect(storageNode.streams.getAllNodesForStream(streamOne)).toEqual([])
         expect(storageNode.streams.getAllNodesForStream(streamTwo)).toEqual([subscriberTwoId])
     })

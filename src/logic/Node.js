@@ -1,9 +1,11 @@
 const { EventEmitter } = require('events')
 const createDebug = require('debug')
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
+const { StreamID } = require('../identifiers')
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
 
@@ -63,7 +65,7 @@ class Node extends EventEmitter {
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, (streamMessage) => this.onTrackerInstructionReceived(streamMessage))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, (tracker) => this.onTrackerDisconnected(tracker))
-        this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (dataMessage) => this.onDataReceived(dataMessage))
+        this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (streamMessage, source) => this.onDataReceived(streamMessage, source))
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage) => this.onUnsubscribeRequest(unsubscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
@@ -93,9 +95,9 @@ class Node extends EventEmitter {
     }
 
     subscribeToStreamIfHaveNotYet(streamId) {
-        if (!this.streams.isSetUp(streamId)) {
+        if (!this.streams.isSetUp(streamId, streamId)) {
             this.debug('add %s to streams', streamId)
-            this.streams.setUpStream(streamId)
+            this.streams.setUpStream(streamId, streamId)
             this._sendStatusToAllTrackers()
         }
     }
@@ -128,16 +130,16 @@ class Node extends EventEmitter {
             response.getSubId())
     }
 
-    async _unicast(destination, unicastMessage) {
+    async _unicast(destination, unicastMessage, source) {
         if (destination === null) {
-            this.emit(events.UNICAST_RECEIVED, unicastMessage)
+            this.emit(events.UNICAST_RECEIVED, unicastMessage, source)
         } else {
             await this.protocols.nodeToNode.send(destination, unicastMessage)
         }
         this.debug('sent %s unicast %s for subId %s',
             destination === null ? 'locally' : `to ${destination}`,
-            unicastMessage.getMessageId(),
-            unicastMessage.getSubId())
+            unicastMessage.streamMessage.messageId,
+            unicastMessage.subId)
     }
 
     async onTrackerInstructionReceived(streamMessage) {
@@ -173,64 +175,56 @@ class Node extends EventEmitter {
         })
     }
 
-    onDataReceived(dataMessage) {
-        const messageId = dataMessage.getMessageId()
-        const previousMessageReference = dataMessage.getPreviousMessageReference()
-        const { streamId } = messageId
+    onDataReceived(streamMessage, source = null) {
+        const streamIdAndPartition = new StreamID(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
-        this.emit(events.MESSAGE_RECEIVED, dataMessage)
+        this.emit(events.MESSAGE_RECEIVED, streamMessage, source)
 
-        this.subscribeToStreamIfHaveNotYet(streamId)
+        this.subscribeToStreamIfHaveNotYet(streamIdAndPartition)
 
-        if (this._isReadyToPropagate(streamId)) {
-            const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(messageId, previousMessageReference)
-            if (isUnseen || this.seenButNotPropagated.has(messageId)) {
-                this.debug('received from %s data %s', dataMessage.getSource(), messageId)
-                this._propagateMessage(dataMessage)
+        if (this._isReadyToPropagate(streamIdAndPartition)) {
+            const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(streamMessage.messageId, streamMessage.prevMsgRef)
+            if (isUnseen || this.seenButNotPropagated.has(streamMessage.messageId)) {
+                this.debug('received from %s data %s', source, streamMessage.messageId)
+                this._propagateMessage(streamMessage, source)
             } else {
-                this.debug('ignoring duplicate data %s (from %s)', messageId, dataMessage.getSource())
+                this.debug('ignoring duplicate data %s (from %s)', streamMessage.messageId, source)
                 this.metrics.received.duplicates += 1
             }
         } else {
             this.debug('Not outbound nodes to propagate')
-            this.messageBuffer.put(streamId.key(), dataMessage)
+            this.messageBuffer.put(`${streamMessage.getStreamId()}::${streamMessage.getStreamPartition()}`, [streamMessage, source])
         }
     }
 
-    _isReadyToPropagate(streamId) {
-        return this.streams.getOutboundNodesForStream(streamId).length >= MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION
+    _isReadyToPropagate(streamIdAndPartition) {
+        return this.streams.getOutboundNodesForStream(streamIdAndPartition).length >= MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION
     }
 
-    async _propagateMessage(dataMessage) {
-        const source = dataMessage.getSource()
-        const messageId = dataMessage.getMessageId()
-        const previousMessageReference = dataMessage.getPreviousMessageReference()
-        const data = dataMessage.getData()
-        const signature = dataMessage.getSignature()
-        const signatureType = dataMessage.getSignatureType()
-        const { streamId } = messageId
+    async _propagateMessage(streamMessage, source) {
+        const streamIdAndPartition = new StreamID(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
-        const subscribers = this.streams.getOutboundNodesForStream(streamId).filter((n) => n !== source)
+        const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
         const successfulSends = []
         await Promise.all(subscribers.map(async (subscriber) => {
             try {
-                await this.protocols.nodeToNode.sendData(subscriber, messageId, previousMessageReference, data, signature, signatureType)
+                await this.protocols.nodeToNode.sendData(subscriber, streamMessage)
                 successfulSends.push(subscriber)
             } catch (e) {
-                this.debug('failed to propagate data %s to node %s (%s)', messageId, subscriber, e)
+                this.debug('failed to propagate data %s to node %s (%s)', streamMessage.messageId, subscriber, e)
             }
         }))
         if (successfulSends.length >= Math.min(MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION, subscribers.length)) {
-            this.debug('propagated data %s to %j', messageId, successfulSends)
-            this.seenButNotPropagated.delete(messageId)
-            this.emit(events.MESSAGE_PROPAGATED, dataMessage)
+            this.debug('propagated data %s to %j', streamMessage.messageId, successfulSends)
+            this.seenButNotPropagated.delete(streamMessage.messageId)
+            this.emit(events.MESSAGE_PROPAGATED, streamMessage)
         } else {
             // Handle scenario in which we were unable to propagate message to enough nodes. This often happens when
             // socket.readyState=2 (closing)
             this.debug('put %s back to buffer because could not propagated %d nodes or more',
-                messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
-            this.seenButNotPropagated.add(messageId)
-            this.messageBuffer.put(streamId.key(), dataMessage)
+                streamMessage.m, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
+            this.seenButNotPropagated.add(streamMessage.messageId)
+            this.messageBuffer.put(`${streamMessage.getStreamId()}::${streamMessage.getStreamPartition()}`, [streamMessage, source])
         }
     }
 
@@ -244,7 +238,7 @@ class Node extends EventEmitter {
             source
         })
 
-        if (this.streams.isSetUp(streamId)) {
+        if (this.streams.isSetUp(streamId, streamId)) {
             this.subscribeToStreamIfHaveNotYet(streamId)
 
             this.streams.addOutboundNode(streamId, source)
@@ -354,9 +348,9 @@ class Node extends EventEmitter {
 
     _handleBufferedMessages(streamId) {
         this.messageBuffer.popAll(streamId.key())
-            .forEach((dataMessage) => {
+            .forEach(([streamMessage, source]) => {
                 // TODO bad idea to call events directly
-                this.onDataReceived(dataMessage)
+                this.onDataReceived(streamMessage, source)
             })
     }
 

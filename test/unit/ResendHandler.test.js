@@ -1,13 +1,15 @@
 const { Readable } = require('stream')
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const intoStream = require('into-stream')
 const ResendHandler = require('../../src/logic/ResendHandler')
 const ResendLastRequest = require('../../src/messages/ResendLastRequest')
-const { MessageID, MessageReference, StreamID } = require('../../src/identifiers')
+const { StreamID } = require('../../src/identifiers')
 const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
 const ResendResponseResent = require('../../src/messages/ResendResponseResent')
 const ResendResponseResending = require('../../src/messages/ResendResponseResending')
-const UnicastMessage = require('../../src/messages/UnicastMessage')
 const { waitForStreamToEnd } = require('../util')
+
+const { StreamMessage } = MessageLayer
 
 describe('ResendHandler', () => {
     let resendHandler
@@ -106,22 +108,18 @@ describe('ResendHandler', () => {
         beforeEach(() => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => intoStream.object([
-                    new UnicastMessage(
-                        new MessageID(new StreamID('streamId', 0), 1000, 0, 'publisherId', 'msgChainId'),
-                        null,
-                        {},
-                        null,
-                        null,
-                        'subId'
-                    ),
-                    new UnicastMessage(
-                        new MessageID(new StreamID('streamId', 0), 2000, 0, 'publisherId', 'msgChainId'),
-                        null,
-                        {},
-                        null,
-                        null,
-                        'subId'
-                    )
+                    [ControlLayer.UnicastMessage.create(
+                        'subId', StreamMessage.create(
+                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
+                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                        )
+                    ), null],
+                    [ControlLayer.UnicastMessage.create(
+                        'subId', StreamMessage.create(
+                            ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
+                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                        )
+                    ), null],
                 ])
             }], sendResponse, sendUnicast, notifyError)
         })
@@ -141,8 +139,8 @@ describe('ResendHandler', () => {
             await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ResendResponseResending.name],
-                ['sendUnicast', UnicastMessage.name],
-                ['sendUnicast', UnicastMessage.name],
+                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
+                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
                 ['sendResponse', ResendResponseResent.name]
             ])
         })
@@ -157,22 +155,22 @@ describe('ResendHandler', () => {
                         read() {}
                     })
 
-                    setImmediate(() => stream.push(new UnicastMessage(
-                        new MessageID(new StreamID('streamId', 0), 1000, 0, 'publisherId', 'msgChainId'),
-                        null,
-                        {},
-                        null,
-                        null,
-                        'subId'
-                    )))
-                    setImmediate(() => stream.push(new UnicastMessage(
-                        new MessageID(new StreamID('streamId', 0), 2000, 0, 'publisherId', 'msgChainId'),
-                        null,
-                        {},
-                        null,
-                        null,
-                        'subId'
-                    )))
+                    setImmediate(() => stream.push(
+                        [ControlLayer.UnicastMessage.create(
+                            'subId', StreamMessage.create(
+                                ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
+                                {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                            )
+                        ), null]
+                    ))
+                    setImmediate(() => stream.push(
+                        [ControlLayer.UnicastMessage.create(
+                            'subId', StreamMessage.create(
+                                ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
+                                {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                            )
+                        ), null]
+                    ))
                     setImmediate(() => {
                         stream.emit('error', new Error('yikes'))
                     })
@@ -197,8 +195,8 @@ describe('ResendHandler', () => {
             await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ResendResponseResending.name],
-                ['sendUnicast', UnicastMessage.name],
-                ['sendUnicast', UnicastMessage.name],
+                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
+                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
                 ['notifyError', new Error('yikes')],
                 ['sendResponse', ResendResponseNoResend.name]
             ])
@@ -217,14 +215,14 @@ describe('ResendHandler', () => {
                         objectMode: true,
                         read() {}
                     })
-                    setImmediate(() => stream.push(new UnicastMessage(
-                        new MessageID(new StreamID('streamId', 0), 2000, 0, 'publisherId', 'msgChainId'),
-                        null,
-                        {},
-                        null,
-                        null,
-                        'subId'
-                    )))
+                    setImmediate(() => stream.push(
+                        [ControlLayer.UnicastMessage.create(
+                            'subId', StreamMessage.create(
+                                ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
+                                {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                            )
+                        ), null]
+                    ))
                     setImmediate(() => {
                         stream.emit('error', new Error('yikes'))
                     })
@@ -234,22 +232,18 @@ describe('ResendHandler', () => {
 
             const thirdStrategy = {
                 getResendResponseStream: () => intoStream.object([
-                    new UnicastMessage(
-                        new MessageID(new StreamID('streamId', 0), 1000, 0, 'publisherId', 'msgChainId'),
-                        null,
-                        {},
-                        null,
-                        null,
-                        'subId'
-                    ),
-                    new UnicastMessage(
-                        new MessageID(new StreamID('streamId', 0), 2000, 0, 'publisherId', 'msgChainId'),
-                        null,
-                        {},
-                        null,
-                        null,
-                        'subId'
-                    )
+                    [ControlLayer.UnicastMessage.create(
+                        'subId', StreamMessage.create(
+                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
+                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                        )
+                    ), null],
+                    [ControlLayer.UnicastMessage.create(
+                        'subId', StreamMessage.create(
+                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
+                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                        )
+                    ), null],
                 ])
             }
 
@@ -266,11 +260,11 @@ describe('ResendHandler', () => {
             await waitForStreamToEnd(resendHandler.handleRequest(request))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ResendResponseResending.name],
-                ['sendUnicast', UnicastMessage.name],
+                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
                 ['notifyError', new Error('yikes')],
                 ['sendResponse', ResendResponseResending.name],
-                ['sendUnicast', UnicastMessage.name],
-                ['sendUnicast', UnicastMessage.name],
+                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
+                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
                 ['sendResponse', ResendResponseResent.name]
             ])
         })
@@ -283,13 +277,12 @@ describe('ResendHandler', () => {
 
             const firstStrategy = {
                 getResendResponseStream: () => intoStream.object([
-                    {
-                        timestamp: 1000,
-                        sequenceNo: 0,
-                        publisherId: 'publisher',
-                        msgChainId: 'msgChain',
-                        data: {}
-                    }
+                    [ControlLayer.UnicastMessage.create(
+                        'subId', StreamMessage.create(
+                            ['streamId', 0, 1000, 0, 'publisher', 'msgChain'], null, StreamMessage.CONTENT_TYPES.JSON,
+                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                        )
+                    ), null]
                 ])
             }
 
@@ -340,16 +333,14 @@ describe('ResendHandler', () => {
             beforeEach(() => {
                 resendHandler = new ResendHandler([{
                     getResendResponseStream: () => intoStream.object([
-                        new UnicastMessage(
-                            new MessageID(new StreamID('streamId', 0), 756, 0, 'publisherId', 'msgChainId'),
-                            new MessageReference(666, 50),
-                            {
-                                hello: 'world'
-                            },
-                            'signature',
-                            2,
-                            'subId'
-                        )
+                        [ControlLayer.UnicastMessage.create(
+                            'subId', StreamMessage.create(
+                                ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'], [666, 50],
+                                StreamMessage.CONTENT_TYPES.JSON, {
+                                    hello: 'world'
+                                }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'
+                            )
+                        ), null]
                     ])
                 }], sendResponse, sendUnicast, notifyError)
             })
@@ -371,16 +362,14 @@ describe('ResendHandler', () => {
             test('sendUnicast is formed correctly', async () => {
                 await waitForStreamToEnd(resendHandler.handleRequest(request))
 
-                expect(sendUnicast).toBeCalledWith('source', new UnicastMessage(
-                    new MessageID(new StreamID('streamId', 0), 756, 0, 'publisherId', 'msgChainId'),
-                    new MessageReference(666, 50),
-                    {
-                        hello: 'world'
-                    },
-                    'signature',
-                    2,
-                    'subId'
-                ))
+                expect(sendUnicast).toBeCalledWith('source', ControlLayer.UnicastMessage.create(
+                    'subId', StreamMessage.create(
+                        ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'], [666, 50],
+                        StreamMessage.CONTENT_TYPES.JSON, {
+                            hello: 'world'
+                        }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'
+                    )
+                ), null)
             })
         })
     })

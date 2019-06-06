@@ -25,7 +25,7 @@ module.exports = class EndpointListener {
 
         endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => {
             const senderId = implementor.peerBook.getPeerId(sender)
-            implementor.onMessageReceived(encoder.decode(senderId, message))
+            implementor.onMessageReceived(encoder.decode(senderId, message), senderId)
         })
 
         endpoint.on(endpointEvents.PEER_DISCONNECTED, ({ address, reason }) => {

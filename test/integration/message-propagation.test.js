@@ -1,8 +1,10 @@
+const { MessageLayer } = require('streamr-client-protocol')
 const Node = require('../../src/logic/Node')
-const DataMessage = require('../../src/messages/DataMessage')
-const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
+const { StreamID } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')
 const { waitForCondition, LOCALHOST } = require('../../test/util')
+
+const { StreamMessage } = MessageLayer
 
 describe('message propagation in network', () => {
     let tracker
@@ -40,44 +42,42 @@ describe('message propagation in network', () => {
         const n3Messages = []
         const n4Messages = []
 
-        n1.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => n1Messages.push({
-            streamId: dataMessage.getMessageId().streamId,
-            payload: dataMessage.getData()
+        n1.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => n1Messages.push({
+            streamId: streamMessage.messageId.streamId,
+            streamPartition: streamMessage.messageId.streamPartition,
+            payload: streamMessage.getParsedContent()
         }))
-        n2.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => n2Messages.push({
-            streamId: dataMessage.getMessageId().streamId,
-            payload: dataMessage.getData()
+        n2.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => n2Messages.push({
+            streamId: streamMessage.messageId.streamId,
+            streamPartition: streamMessage.messageId.streamPartition,
+            payload: streamMessage.getParsedContent()
         }))
-        n3.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => n3Messages.push({
-            streamId: dataMessage.getMessageId().streamId,
-            payload: dataMessage.getData()
+        n3.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => n3Messages.push({
+            streamId: streamMessage.messageId.streamId,
+            streamPartition: streamMessage.messageId.streamPartition,
+            payload: streamMessage.getParsedContent()
         }))
-        n4.on(Node.events.MESSAGE_PROPAGATED, (dataMessage) => n4Messages.push({
-            streamId: dataMessage.getMessageId().streamId,
-            payload: dataMessage.getData()
+        n4.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => n4Messages.push({
+            streamId: streamMessage.messageId.streamId,
+            streamPartition: streamMessage.messageId.streamPartition,
+            payload: streamMessage.getParsedContent()
         }))
 
         n2.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
         n3.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
 
         for (let i = 1; i <= 5; ++i) {
-            const dataMessage = new DataMessage(
-                new MessageID(new StreamID('stream-1', 0), i, 0, 'publisher-id', 'sessionId'),
-                i === 1 ? null : new MessageReference(i - 1, 0),
-                {
+            const streamMessage = StreamMessage.create(['stream-1', 0, i, 0, 'publisher-id', 'sessionId'],
+                i === 1 ? null : [i - 1, 0], StreamMessage.CONTENT_TYPES.JSON, {
                     messageNo: i
-                }
-            )
-            n1.onDataReceived(dataMessage)
+                }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+            n1.onDataReceived(streamMessage)
 
-            const dataMessage2 = new DataMessage(
-                new MessageID(new StreamID('stream-2', 0), i * 100, 0, 'publisher-id', 'sessionId'),
-                i === 1 ? null : new MessageReference((i - 1) * 100, 0),
-                {
+            const streamMessage2 = StreamMessage.create(['stream-2', 0, i * 100, 0, 'publisher-id', 'sessionId'],
+                i === 1 ? null : [(i - 1) * 100, 0], StreamMessage.CONTENT_TYPES.JSON, {
                     messageNo: i * 100
-                }
-            )
-            n4.onDataReceived(dataMessage2)
+                }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+            n4.onDataReceived(streamMessage2)
         }
 
         await waitForCondition(() => n1Messages.length === 5)
@@ -86,31 +86,36 @@ describe('message propagation in network', () => {
 
         expect(n1Messages).toEqual([
             {
-                streamId: new StreamID('stream-1', 0),
+                streamId: 'stream-1',
+                streamPartition: 0,
                 payload: {
                     messageNo: 1
                 }
             },
             {
-                streamId: new StreamID('stream-1', 0),
+                streamId: 'stream-1',
+                streamPartition: 0,
                 payload: {
                     messageNo: 2
                 }
             },
             {
-                streamId: new StreamID('stream-1', 0),
+                streamId: 'stream-1',
+                streamPartition: 0,
                 payload: {
                     messageNo: 3
                 }
             },
             {
-                streamId: new StreamID('stream-1', 0),
+                streamId: 'stream-1',
+                streamPartition: 0,
                 payload: {
                     messageNo: 4
                 }
             },
             {
-                streamId: new StreamID('stream-1', 0),
+                streamId: 'stream-1',
+                streamPartition: 0,
                 payload: {
                     messageNo: 5
                 }

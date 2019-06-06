@@ -1,5 +1,8 @@
+const { MessageLayer } = require('streamr-client-protocol')
 const StreamManager = require('../../src/logic/StreamManager')
-const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
+const { StreamID, MessageReference } = require('../../src/identifiers')
+
+const { MessageID } = MessageLayer
 
 describe('StreamManager', () => {
     let manager
@@ -51,7 +54,7 @@ describe('StreamManager', () => {
 
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
-                new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-id', 'session-id'),
+                new MessageID('stream-id', 0, 10, 0, 'publisher-id', 'session-id'),
                 new MessageReference(5, 0)
             )
         }).not.toThrowError()
@@ -60,7 +63,7 @@ describe('StreamManager', () => {
     test('cannot duplicate detect on non-existing stream', () => {
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
-                new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-id', 'session-id'),
+                new MessageID('stream-id', 0, 10, 0, 'publisher-id', 'session-id'),
                 new MessageReference(5, 0)
             )
         }).toThrowError('Stream stream-id::0 is not set up')
@@ -69,27 +72,27 @@ describe('StreamManager', () => {
     test('duplicate detection is per publisher, msgChainId', () => {
         manager.setUpStream(new StreamID('stream-id', 0))
         manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-1', 'session-1'),
+            new MessageID('stream-id', 0, 10, 0, 'publisher-1', 'session-1'),
             new MessageReference(5, 0)
         )
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-1', 'session-1'),
+            new MessageID('stream-id', 0, 10, 0, 'publisher-1', 'session-1'),
             new MessageReference(5, 0)
         )).toEqual(false)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-2', 'session-1'),
+            new MessageID('stream-id', 0, 10, 0, 'publisher-2', 'session-1'),
             new MessageReference(5, 0)
         )).toEqual(true)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-1', 'session-2'),
+            new MessageID('stream-id', 0, 10, 0, 'publisher-1', 'session-2'),
             new MessageReference(5, 0)
         )).toEqual(true)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
-            new MessageID(new StreamID('stream-id', 0), 10, 0, 'publisher-2', 'session-2'),
+            new MessageID('stream-id', 0, 10, 0, 'publisher-2', 'session-2'),
             new MessageReference(5, 0)
         )).toEqual(true)
     })
@@ -98,13 +101,13 @@ describe('StreamManager', () => {
         const streamId = new StreamID('stream-id', 0)
         const streamId2 = new StreamID('stream-id-2', 0)
 
-        manager.setUpStream(streamId)
+        manager.setUpStream(new StreamID('stream-id', 0))
         manager.addInboundNode(streamId, 'node-1')
         manager.addInboundNode(streamId, 'node-2')
         manager.addOutboundNode(streamId, 'node-1')
         manager.addOutboundNode(streamId, 'node-3')
 
-        manager.setUpStream(streamId2)
+        manager.setUpStream(new StreamID('stream-id-2', 0))
         manager.addInboundNode(streamId2, 'node-1')
         manager.addInboundNode(streamId2, 'node-2')
         manager.addOutboundNode(streamId2, 'node-3')

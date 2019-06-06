@@ -37,6 +37,9 @@ class TrackerNode extends EventEmitter {
     }
 
     onMessageReceived(message) {
+        if (message.version === 1) {
+            return
+        }
         switch (message.getCode()) {
             case encoder.INSTRUCTION:
                 this.emit(events.TRACKER_INSTRUCTION_RECEIVED, message)

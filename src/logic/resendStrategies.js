@@ -1,14 +1,15 @@
 const { Readable, Transform } = require('stream')
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const ResendLastRequest = require('../messages/ResendLastRequest')
 const ResendFromRequest = require('../messages/ResendFromRequest')
 const ResendRangeRequest = require('../messages/ResendRangeRequest')
 const ResendResponseResent = require('../../src/messages/ResendResponseResent')
 const ResendResponseResending = require('../../src/messages/ResendResponseResending')
 const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
-const UnicastMessage = require('../../src/messages/UnicastMessage')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
-const { MessageID, MessageReference } = require('../../src/identifiers')
+
+const { StreamMessage } = MessageLayer
 
 function toUnicastMessage(request) {
     return new Transform({
@@ -25,14 +26,11 @@ function toUnicastMessage(request) {
                 signature,
                 signatureType,
             } = streamData
-            done(null, new UnicastMessage(
-                new MessageID(request.getStreamId(), timestamp, sequenceNo, publisherId, msgChainId),
-                previousTimestamp != null ? new MessageReference(previousTimestamp, previousSequenceNo) : null,
-                data,
-                signature,
-                signatureType,
-                request.getSubId()
-            ))
+            done(null, [ControlLayer.UnicastMessage.create(request.getSubId(), StreamMessage.create(
+                [request.getStreamId().id, request.getStreamId().partition, timestamp, sequenceNo, publisherId, msgChainId],
+                previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
+                StreamMessage.CONTENT_TYPES.JSON, data, signatureType, signature
+            )), null])
         }
     })
 }
@@ -143,12 +141,10 @@ class ProxiedResend {
         this.nodeToNode.removeListener(NodeToNode.events.NODE_DISCONNECTED, this._onNodeDisconnect)
     }
 
-    _onUnicast(unicastMessage) {
-        const subId = unicastMessage.getSubId()
-        const source = unicastMessage.getSource()
-
+    _onUnicast(unicastMessage, source) {
+        const { subId } = unicastMessage
         if (this.request.getSubId() === subId && this.currentNeighbor === source) {
-            this.responseStream.push(unicastMessage)
+            this.responseStream.push([unicastMessage, source])
             this._resetTimeout()
         }
     }

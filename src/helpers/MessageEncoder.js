@@ -1,4 +1,4 @@
-const DataMessage = require('../messages/DataMessage')
+const { ControlLayer } = require('streamr-client-protocol')
 const FindStorageNodesMessage = require('../messages/FindStorageNodesMessage')
 const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
@@ -11,8 +11,7 @@ const ResendResponseResent = require('../messages/ResendResponseResent')
 const ResendResponseResending = require('../messages/ResendResponseResending')
 const ResendResponseNoResend = require('../messages/ResendResponseNoResend')
 const StorageNodesMessage = require('../messages/StorageNodesMessage')
-const UnicastMessage = require('../messages/UnicastMessage')
-const { StreamID, MessageID, MessageReference } = require('../identifiers')
+const { StreamID, MessageReference } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
 
 const encode = (type, payload) => {
@@ -29,6 +28,9 @@ const encode = (type, payload) => {
 
 const decode = (source, message) => {
     const { code, payload } = JSON.parse(message)
+    if (code === undefined) {
+        return ControlLayer.ControlMessage.deserialize(message)
+    }
 
     switch (code) {
         case msgTypes.STATUS:
@@ -38,31 +40,6 @@ const decode = (source, message) => {
             return new InstructionMessage(
                 new StreamID(payload.streamId, payload.streamPartition),
                 payload.nodeAddresses,
-                source
-            )
-
-        case msgTypes.DATA:
-            return new DataMessage(
-                MessageID.fromObject(payload.messageId),
-                payload.previousMessageReference === null
-                    ? null
-                    : MessageReference.fromObject(payload.previousMessageReference),
-                payload.data,
-                payload.signature,
-                payload.signatureType,
-                source
-            )
-
-        case msgTypes.UNICAST:
-            return new UnicastMessage(
-                MessageID.fromObject(payload.messageId),
-                payload.previousMessageReference === null
-                    ? null
-                    : MessageReference.fromObject(payload.previousMessageReference),
-                payload.data,
-                payload.signature,
-                payload.signatureType,
-                payload.subId,
                 source
             )
 
@@ -150,21 +127,6 @@ const decode = (source, message) => {
 module.exports = {
     decode,
     statusMessage: (status) => encode(msgTypes.STATUS, status),
-    dataMessage: (messageId, previousMessageReference, data, signature, signatureType) => encode(msgTypes.DATA, {
-        messageId,
-        previousMessageReference,
-        data,
-        signature,
-        signatureType
-    }),
-    unicastMessage: (messageId, previousMessageReference, data, signature, signatureType, subId) => encode(msgTypes.UNICAST, {
-        messageId,
-        previousMessageReference,
-        data,
-        signature,
-        signatureType,
-        subId
-    }),
     subscribeMessage: (streamId, leechOnly) => encode(msgTypes.SUBSCRIBE, {
         streamId: streamId.id,
         streamPartition: streamId.partition,

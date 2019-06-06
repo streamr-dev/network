@@ -1,10 +1,10 @@
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForEvent } = require('../util')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
-const { MessageID, MessageReference, StreamID } = require('../../src/identifiers')
+const { MessageReference, StreamID } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const DataMessage = require('../../src/messages/DataMessage')
 const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMessage')
 const InstructionMessage = require('../../src/messages/InstructionMessage')
 const ResendLastRequest = require('../../src/messages/ResendLastRequest')
@@ -16,9 +16,10 @@ const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResen
 const StatusMessage = require('../../src/messages/StatusMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
 const SubscribeMessage = require('../../src/messages/SubscribeMessage')
-const UnicastMessage = require('../../src/messages/UnicastMessage')
 const UnsubscribeMessage = require('../../src/messages/UnsubscribeMessage')
 const { peerTypes } = require('../../src/protocol/PeerBook')
+
+const { StreamMessage } = MessageLayer
 
 describe('delivery of messages in protocol layer', () => {
     let nodeToNode1
@@ -71,53 +72,43 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendData is delivered', async () => {
-        nodeToNode2.sendData(
-            'nodeToNode1',
-            new MessageID(new StreamID('stream', 10), 666, 0, 'publisherId', 'msgChainId'),
-            new MessageReference(665, 0),
-            {
+        const streamMessage = StreamMessage.create(['stream', 10, 666, 0, 'publisherId', 'msgChainId'],
+            [665, 0], StreamMessage.CONTENT_TYPES.JSON, {
                 hello: 'world'
-            },
-            'signature',
-            1
-        )
-        const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.DATA_RECEIVED)
+            }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature')
+        nodeToNode2.sendData('nodeToNode1', streamMessage)
+        const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.DATA_RECEIVED)
 
-        expect(msg).toBeInstanceOf(DataMessage)
-        expect(msg.getSource()).toEqual('nodeToNode2')
-        expect(msg.getMessageId()).toEqual(new MessageID(new StreamID('stream', 10), 666, 0, 'publisherId', 'msgChainId'))
-        expect(msg.getPreviousMessageReference()).toEqual(new MessageReference(665, 0))
-        expect(msg.getData()).toEqual({
+        expect(msg).toBeInstanceOf(StreamMessage)
+        expect(source).toEqual('nodeToNode2')
+        expect(msg.messageId).toEqual(new MessageLayer.MessageID('stream', 10, 666, 0, 'publisherId', 'msgChainId'))
+        expect(msg.prevMsgRef).toEqual(new MessageLayer.MessageRef(665, 0))
+        expect(msg.getParsedContent()).toEqual({
             hello: 'world'
         })
-        expect(msg.getSignature()).toEqual('signature')
-        expect(msg.getSignatureType()).toEqual(1)
+        expect(msg.signatureType).toEqual(MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)
+        expect(msg.signature).toEqual('signature')
     })
 
     test('sendUnicast is delivered', async () => {
-        nodeToNode2.sendUnicast(
-            'nodeToNode1',
-            new MessageID(new StreamID('stream', 10), 666, 0, 'publisherId', 'msgChainId'),
-            new MessageReference(665, 0),
-            {
+        const streamMessage = MessageLayer.StreamMessage.create(['stream', 10, 666, 0, 'publisherId', 'msgChainId'],
+            [665, 0], MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {
                 hello: 'world'
-            },
-            'signature',
-            1,
-            'subId'
-        )
-        const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.UNICAST_RECEIVED)
+            }, 1, 'signature')
+        const unicastMessage = ControlLayer.UnicastMessage.create('subId', streamMessage)
+        nodeToNode2.sendUnicast('nodeToNode1', unicastMessage)
+        const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.UNICAST_RECEIVED)
 
-        expect(msg).toBeInstanceOf(UnicastMessage)
-        expect(msg.getSource()).toEqual('nodeToNode2')
-        expect(msg.getMessageId()).toEqual(new MessageID(new StreamID('stream', 10), 666, 0, 'publisherId', 'msgChainId'))
-        expect(msg.getPreviousMessageReference()).toEqual(new MessageReference(665, 0))
-        expect(msg.getData()).toEqual({
+        expect(msg).toBeInstanceOf(ControlLayer.UnicastMessage)
+        expect(source).toEqual('nodeToNode2')
+        expect(msg.streamMessage.messageId).toEqual(new MessageLayer.MessageID('stream', 10, 666, 0, 'publisherId', 'msgChainId'))
+        expect(msg.streamMessage.prevMsgRef).toEqual(new MessageLayer.MessageRef(665, 0))
+        expect(msg.streamMessage.getParsedContent()).toEqual({
             hello: 'world'
         })
-        expect(msg.getSignature()).toEqual('signature')
-        expect(msg.getSignatureType()).toEqual(1)
-        expect(msg.getSubId()).toEqual('subId')
+        expect(msg.streamMessage.signature).toEqual('signature')
+        expect(msg.streamMessage.signatureType).toEqual(1)
+        expect(msg.subId).toEqual('subId')
     })
 
     test('sendInstruction is delivered', async () => {

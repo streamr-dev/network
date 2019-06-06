@@ -1,9 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="test (disable parallel)" type="JavaScriptTestRunnerJest">
+  <configuration default="false" name="test (disable parallel)" type="JavaScriptTestRunnerJest" factoryName="Jest">
     <config-file value="$PROJECT_DIR$/jest.config.js" />
-    <node-interpreter value="project" />
+    <node-interpreter value="$USER_HOME$/.nvm/versions/node/v10.12.0/bin/node" />
     <node-options value="" />
-    <jest-package value="$PROJECT_DIR$/node_modules/jest" />
     <working-dir value="$PROJECT_DIR$" />
     <jest-options value="--detectOpenHandles --runInBand" />
     <envs />

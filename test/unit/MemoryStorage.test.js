@@ -1,8 +1,10 @@
+const { MessageLayer } = require('streamr-client-protocol')
 const MemoryStorage = require('../../src/storage/MemoryStorage')
-const DataMessage = require('../../src/messages/DataMessage')
-const { StreamID, MessageID, MessageReference } = require('../../src/identifiers')
+const { StreamID } = require('../../src/identifiers')
 
-let dataMessages = []
+const { StreamMessage } = MessageLayer
+
+let streamMessages = []
 const MAX = 10
 const streamIdInit = 'stream-1'
 const streamIdInit2 = 'stream-2'
@@ -13,12 +15,11 @@ const { id, partition } = streamObj
 let memoryStorage
 
 for (let i = 0; i < MAX; i++) {
-    const dataMessage = new DataMessage(
-        new MessageID(streamObj, i, 0, 'publisher-id', 'sessionId'), i === 0 ? null : new MessageReference(i - 1, 0), {
+    const streamMessage = StreamMessage.create([id, partition, i, 0, 'publisher-id', 'sessionId'],
+        i === 0 ? null : [i - 1, 0], StreamMessage.CONTENT_TYPES.JSON, {
             messageNo: i
-        }
-    )
-    dataMessages.push(dataMessage)
+        }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+    streamMessages.push(streamMessage)
 }
 
 const shuffleArray = (arr) => arr
@@ -30,27 +31,26 @@ describe('test mem storage', () => {
     beforeEach(() => {
         memoryStorage = new MemoryStorage()
 
-        dataMessages = shuffleArray(dataMessages)
+        streamMessages = shuffleArray(streamMessages)
 
         for (let i = 0; i < MAX; i++) {
-            const dataMessage = dataMessages[i]
+            const streamMessage = streamMessages[i]
 
-            const messageId = dataMessage.getMessageId()
-            const previousMessageReference = dataMessage.getPreviousMessageReference()
-            const { streamId } = messageId
+            const { messageId } = streamMessage
+            const previousMessageReference = streamMessage.prevMsgRef
 
             memoryStorage.store({
-                streamId: streamId.id,
-                streamPartition: streamId.partition,
+                streamId: messageId.streamId,
+                streamPartition: messageId.streamPartition,
                 timestamp: messageId.timestamp,
-                sequenceNo: messageId.sequenceNo,
+                sequenceNo: messageId.sequenceNumber,
                 publisherId: messageId.publisherId,
                 msgChainId: messageId.msgChainId,
                 previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
-                previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNo : null,
-                data: dataMessage.getData(),
-                signature: dataMessage.getSignature(),
-                signatureType: dataMessage.getSignatureType()
+                previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNumber : null,
+                data: streamMessage.getParsedContent(),
+                signature: streamMessage.signature,
+                signatureType: streamMessage.signatureType
             })
         }
     })
@@ -79,8 +79,8 @@ describe('test mem storage', () => {
                     previousTimestamp: 7,
                     publisherId: 'publisher-id',
                     sequenceNo: 0,
-                    signature: undefined,
-                    signatureType: undefined,
+                    signature: null,
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                     streamId: 'stream-1',
                     streamPartition: 0,
                     timestamp: 8
@@ -94,8 +94,8 @@ describe('test mem storage', () => {
                     previousTimestamp: 8,
                     publisherId: 'publisher-id',
                     sequenceNo: 0,
-                    signature: undefined,
-                    signatureType: undefined,
+                    signature: null,
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                     streamId: 'stream-1',
                     streamPartition: 0,
                     timestamp: 9
@@ -139,8 +139,8 @@ describe('test mem storage', () => {
                     previousTimestamp: 7,
                     publisherId: 'publisher-id',
                     sequenceNo: 0,
-                    signature: undefined,
-                    signatureType: undefined,
+                    signature: null,
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                     streamId: 'stream-1',
                     streamPartition: 0,
                     timestamp: 8
@@ -154,8 +154,8 @@ describe('test mem storage', () => {
                     previousTimestamp: 8,
                     publisherId: 'publisher-id',
                     sequenceNo: 0,
-                    signature: undefined,
-                    signatureType: undefined,
+                    signature: null,
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                     streamId: 'stream-1',
                     streamPartition: 0,
                     timestamp: 9
@@ -185,8 +185,8 @@ describe('test mem storage', () => {
                     previousTimestamp: 2,
                     publisherId: 'publisher-id',
                     sequenceNo: 0,
-                    signature: undefined,
-                    signatureType: undefined,
+                    signature: null,
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                     streamId: 'stream-1',
                     streamPartition: 0,
                     timestamp: 3
@@ -200,8 +200,8 @@ describe('test mem storage', () => {
                     previousTimestamp: 3,
                     publisherId: 'publisher-id',
                     sequenceNo: 0,
-                    signature: undefined,
-                    signatureType: undefined,
+                    signature: null,
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                     streamId: 'stream-1',
                     streamPartition: 0,
                     timestamp: 4
@@ -215,8 +215,8 @@ describe('test mem storage', () => {
                     previousTimestamp: 4,
                     publisherId: 'publisher-id',
                     sequenceNo: 0,
-                    signature: undefined,
-                    signatureType: undefined,
+                    signature: null,
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                     streamId: 'stream-1',
                     streamPartition: 0,
                     timestamp: 5

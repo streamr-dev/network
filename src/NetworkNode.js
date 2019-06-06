@@ -1,5 +1,5 @@
 const { Transform } = require('stream')
-const DataMessage = require('./messages/DataMessage')
+const { MessageLayer } = require('streamr-client-protocol')
 const ResendLastRequest = require('./messages/ResendLastRequest')
 const ResendFromRequest = require('./messages/ResendFromRequest')
 const ResendRangeRequest = require('./messages/ResendRangeRequest')
@@ -10,7 +10,9 @@ const { StorageResendStrategy,
     AskNeighborsResendStrategy,
     StorageNodeResendStrategy } = require('./logic/resendStrategies')
 const Node = require('./logic/Node')
-const { StreamID, MessageID, MessageReference } = require('./identifiers')
+const { StreamID, MessageReference } = require('./identifiers')
+
+const { StreamMessage } = MessageLayer
 
 const events = Object.freeze({
     MESSAGE: 'streamr:networkNode:message-received',
@@ -21,30 +23,30 @@ const events = Object.freeze({
 })
 
 function unicastMessageToObject(unicastMessage) {
-    const messageId = unicastMessage.getMessageId()
-    const previousMessageReference = unicastMessage.getPreviousMessageReference()
-    const { streamId } = messageId
+    const { streamMessage } = unicastMessage
+    const { messageId } = streamMessage
+    const previousMessageReference = streamMessage.prevMsgRef
     return {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
+        streamId: messageId.streamId,
+        streamPartition: messageId.streamPartition,
         timestamp: messageId.timestamp,
-        sequenceNo: messageId.sequenceNo,
+        sequenceNo: messageId.sequenceNumber,
         publisherId: messageId.publisherId,
         msgChainId: messageId.msgChainId,
         previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
-        previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNo : null,
-        data: unicastMessage.getData(),
-        signature: unicastMessage.getSignature(),
-        signatureType: unicastMessage.getSignatureType(),
-        subId: unicastMessage.getSubId()
+        previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNumber : null,
+        data: streamMessage.getParsedContent(),
+        signature: streamMessage.signature,
+        signatureType: streamMessage.signatureType,
+        subId: unicastMessage.subId
     }
 }
 
 function toObjectTransform() {
     return new Transform({
         objectMode: true,
-        transform: (data, _, done) => {
-            done(null, unicastMessageToObject(data))
+        transform: ([unicastMessage, source], _, done) => {
+            done(null, unicastMessageToObject(unicastMessage))
         }
     })
 }
@@ -87,14 +89,15 @@ class NetworkNode extends Node {
         content,
         signature,
         signatureType) {
-        const dataMessage = new DataMessage(
-            new MessageID(new StreamID(streamId, streamPartition), timestamp, sequenceNo, publisherId, msgChainId),
-            previousTimestamp != null ? new MessageReference(previousTimestamp, previousSequenceNo) : null,
+        const streamMessage = StreamMessage.create(
+            [streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
+            previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
+            StreamMessage.CONTENT_TYPES.JSON,
             content,
-            signature,
-            signatureType
+            signatureType,
+            signature
         )
-        this.onDataReceived(dataMessage)
+        this.onDataReceived(streamMessage)
     }
 
     // Convenience function
@@ -150,23 +153,22 @@ class NetworkNode extends Node {
         )).pipe(toObjectTransform())
     }
 
-    _emitMessage(dataMessage) {
-        const messageId = dataMessage.getMessageId()
-        const previousMessageReference = dataMessage.getPreviousMessageReference()
-        const { streamId } = messageId
+    _emitMessage(streamMessage) {
+        const { messageId } = streamMessage
+        const previousMessageReference = streamMessage.prevMsgRef
 
         this.emit(events.MESSAGE, {
-            streamId: streamId.id,
-            streamPartition: streamId.partition,
+            streamId: messageId.streamId,
+            streamPartition: messageId.streamPartition,
             timestamp: messageId.timestamp,
-            sequenceNo: messageId.sequenceNo,
+            sequenceNo: messageId.sequenceNumber,
             publisherId: messageId.publisherId,
             msgChainId: messageId.msgChainId,
             previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
-            previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNo : null,
-            data: dataMessage.getData(),
-            signature: dataMessage.getSignature(),
-            signatureType: dataMessage.getSignatureType()
+            previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNumber : null,
+            data: streamMessage.getParsedContent(),
+            signature: streamMessage.signature,
+            signatureType: streamMessage.signatureType
         })
     }
 

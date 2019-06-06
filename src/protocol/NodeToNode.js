@@ -1,12 +1,12 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const ResendLastRequest = require('../messages/ResendLastRequest')
 const ResendFromRequest = require('../messages/ResendFromRequest')
 const ResendRangeRequest = require('../messages/ResendRangeRequest')
 const ResendResponseResent = require('../messages/ResendResponseResent')
 const ResendResponseResending = require('../messages/ResendResponseResending')
 const ResendResponseNoResend = require('../messages/ResendResponseNoResend')
-const UnicastMessage = require('../messages/UnicastMessage')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
 const { PeerBook, peerTypes } = require('./PeerBook')
@@ -37,20 +37,15 @@ class NodeToNode extends EventEmitter {
         return this.endpoint.connect(address).then(() => this.peerBook.getPeerId(address))
     }
 
-    sendData(receiverNodeId, messageId, previousMessageReference, payload, signature, signatureType) {
+    sendData(receiverNodeId, streamMessage) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(
-            receiverNodeAddress,
-            encoder.dataMessage(messageId, previousMessageReference, payload, signature, signatureType)
-        )
+        const broadcastMessage = ControlLayer.BroadcastMessage.create(streamMessage)
+        return this.endpoint.send(receiverNodeAddress, broadcastMessage.serialize())
     }
 
-    sendUnicast(receiverNodeId, messageId, previousMessageReference, payload, signature, signatureType, subId) {
+    sendUnicast(receiverNodeId, unicastMessage) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(
-            receiverNodeAddress,
-            encoder.unicastMessage(messageId, previousMessageReference, payload, signature, signatureType, subId)
-        )
+        return this.endpoint.send(receiverNodeAddress, unicastMessage.serialize())
     }
 
     sendSubscribe(receiverNodeId, streamId, leechOnly) {
@@ -154,16 +149,8 @@ class NodeToNode extends EventEmitter {
                 message.getStreamId(),
                 message.getSubId()
             )
-        } if (message instanceof UnicastMessage) {
-            return this.sendUnicast(
-                receiverNodeId,
-                message.getMessageId(),
-                message.getPreviousMessageReference(),
-                message.getData(),
-                message.getSignature(),
-                message.getSignatureType(),
-                message.getSubId()
-            )
+        } if (message instanceof ControlLayer.UnicastMessage) {
+            return this.sendUnicast(receiverNodeId, message)
         }
         throw new Error(`unrecognized message ${message}`)
     }
@@ -192,7 +179,15 @@ class NodeToNode extends EventEmitter {
         return this.endpoint.customHeaders.headers['streamr-peer-type'] === peerTypes.STORAGE
     }
 
-    onMessageReceived(message) {
+    onMessageReceived(message, source) {
+        if (message.type === ControlLayer.BroadcastMessage.TYPE) {
+            this.emit(events.DATA_RECEIVED, message.streamMessage, source)
+            return
+        }
+        if (message.type === ControlLayer.UnicastMessage.TYPE) {
+            this.emit(events.UNICAST_RECEIVED, message, source)
+            return
+        }
         switch (message.getCode()) {
             case encoder.SUBSCRIBE:
                 this.emit(events.SUBSCRIBE_REQUEST, message)
@@ -203,11 +198,11 @@ class NodeToNode extends EventEmitter {
                 break
 
             case encoder.DATA:
-                this.emit(events.DATA_RECEIVED, message)
+                this.emit(events.DATA_RECEIVED, message, source)
                 break
 
             case encoder.UNICAST:
-                this.emit(events.UNICAST_RECEIVED, message)
+                this.emit(events.UNICAST_RECEIVED, message, source)
                 break
 
             case encoder.RESEND_LAST:

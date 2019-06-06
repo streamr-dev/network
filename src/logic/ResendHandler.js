@@ -75,8 +75,8 @@ class ResendHandler {
                 .on('data', () => {
                     numOfMessages += 1
                 })
-                .on('data', (data) => {
-                    this._emitUnicast(request, data)
+                .on('data', ([unicastMessage, source]) => {
+                    this._emitUnicast(request, unicastMessage, source)
                 })
                 .on('error', (error) => {
                     this._emitError(request, error)
@@ -94,8 +94,8 @@ class ResendHandler {
         this.sendResponse(request.getSource(), new ResendResponseResending(request.getStreamId(), request.getSubId()))
     }
 
-    _emitUnicast(request, unicastMessage) {
-        this.sendUnicast(request.getSource(), unicastMessage)
+    _emitUnicast(request, unicastMessage, source) {
+        this.sendUnicast(request.getSource(), unicastMessage, source)
     }
 
     _emitResent(request) {

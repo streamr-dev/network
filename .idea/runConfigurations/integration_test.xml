@@ -1,12 +1,13 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="integration test" type="JavaScriptTestRunnerJest">
+  <configuration default="false" name="integration test" type="JavaScriptTestRunnerJest" factoryName="Jest">
     <config-file value="$PROJECT_DIR$/jest.config.js" />
-    <node-interpreter value="project" />
+    <node-interpreter value="$USER_HOME$/.nvm/versions/node/v10.12.0/bin/node" />
     <node-options value="" />
-    <jest-package value="$PROJECT_DIR$/node_modules/jest" />
     <working-dir value="$PROJECT_DIR$" />
     <jest-options value="test/integration" />
-    <envs />
+    <envs>
+      <env name="_JB_INTELLIJ_JASMINE_REPORTER_DISABLED" value="true" />
+    </envs>
     <scope-kind value="ALL" />
     <method v="2" />
   </configuration>
