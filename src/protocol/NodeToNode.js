@@ -1,9 +1,7 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const ResendLastRequest = require('../messages/ResendLastRequest')
-const ResendFromRequest = require('../messages/ResendFromRequest')
-const ResendRangeRequest = require('../messages/ResendRangeRequest')
+const { StreamID, MessageReference } = require('../identifiers')
 const ResendResponseResent = require('../messages/ResendResponseResent')
 const ResendResponseResending = require('../messages/ResendResponseResending')
 const ResendResponseNoResend = require('../messages/ResendResponseNoResend')
@@ -59,25 +57,19 @@ class NodeToNode extends EventEmitter {
         this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
-    requestResendLast(receiverNodeId, streamId, subId, numberLast) {
+    requestResendLast(receiverNodeId, message) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.resendLastRequest(streamId, subId, numberLast))
+        return this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
-    requestResendFrom(receiverNodeId, streamId, subId, fromMsgRef, publisherId, msgChainId) {
+    requestResendFrom(receiverNodeId, message) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(
-            receiverNodeAddress,
-            encoder.resendFromRequest(streamId, subId, fromMsgRef, publisherId, msgChainId)
-        )
+        return this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
-    requestResendRange(receiverNodeId, streamId, subId, fromMsgRef, toMsgRef, publisherId, msgChainId) {
+    requestResendRange(receiverNodeId, message) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(
-            receiverNodeAddress,
-            encoder.resendRangeRequest(streamId, subId, fromMsgRef, toMsgRef, publisherId, msgChainId)
-        )
+        return this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
     respondResending(receiverNodeId, streamId, subId) {
@@ -103,34 +95,14 @@ class NodeToNode extends EventEmitter {
     }
 
     send(receiverNodeId, message) { // TODO: better way?
-        if (message instanceof ResendLastRequest) {
-            return this.requestResendLast(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId(),
-                message.getNumberLast()
-            )
+        if (message.type === ControlLayer.ResendLastRequest.TYPE) {
+            return this.requestResendLast(receiverNodeId, message)
         }
-        if (message instanceof ResendFromRequest) {
-            return this.requestResendFrom(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId(),
-                message.getFromMsgRef(),
-                message.getPublisherId(),
-                message.getMsgChainId()
-            )
+        if (message.type === ControlLayer.ResendFromRequest.TYPE) {
+            return this.requestResendFrom(receiverNodeId, message)
         }
-        if (message instanceof ResendRangeRequest) {
-            return this.requestResendRange(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId(),
-                message.getFromMsgRef(),
-                message.getToMsgRef(),
-                message.getPublisherId(),
-                message.getMsgChainId()
-            )
+        if (message.type === ControlLayer.ResendRangeRequest.TYPE) {
+            return this.requestResendRange(receiverNodeId, message)
         }
         if (message instanceof ResendResponseNoResend) {
             return this.respondNoResend(
@@ -193,23 +165,15 @@ class NodeToNode extends EventEmitter {
             this.emit(events.UNSUBSCRIBE_REQUEST, message, source)
             return
         }
+        if (message.type === ControlLayer.ResendLastRequest.TYPE
+            || message.type === ControlLayer.ResendFromRequest.TYPE
+            || message.type === ControlLayer.ResendRangeRequest.TYPE) {
+            this.emit(events.RESEND_REQUEST, message, source)
+            return
+        }
         switch (message.getCode()) {
             case encoder.SUBSCRIBE:
                 this.emit(events.SUBSCRIBE_REQUEST, message)
-                break
-
-            case encoder.DATA:
-                this.emit(events.DATA_RECEIVED, message, source)
-                break
-
-            case encoder.UNICAST:
-                this.emit(events.UNICAST_RECEIVED, message, source)
-                break
-
-            case encoder.RESEND_LAST:
-            case encoder.RESEND_FROM:
-            case encoder.RESEND_RANGE:
-                this.emit(events.RESEND_REQUEST, message)
                 break
 
             case encoder.RESEND_RESPONSE_RESENDING:

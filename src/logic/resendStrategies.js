@@ -1,13 +1,11 @@
 const { Readable, Transform } = require('stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const ResendLastRequest = require('../messages/ResendLastRequest')
-const ResendFromRequest = require('../messages/ResendFromRequest')
-const ResendRangeRequest = require('../messages/ResendRangeRequest')
 const ResendResponseResent = require('../../src/messages/ResendResponseResent')
 const ResendResponseResending = require('../../src/messages/ResendResponseResending')
 const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
+const { StreamID, MessageReference } = require('../../src/identifiers')
 
 const { StreamMessage } = MessageLayer
 
@@ -26,8 +24,8 @@ function toUnicastMessage(request) {
                 signature,
                 signatureType,
             } = streamData
-            done(null, [ControlLayer.UnicastMessage.create(request.getSubId(), StreamMessage.create(
-                [request.getStreamId().id, request.getStreamId().partition, timestamp, sequenceNo, publisherId, msgChainId],
+            done(null, [ControlLayer.UnicastMessage.create(request.subId, StreamMessage.create(
+                [request.streamId, request.streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
                 previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
                 StreamMessage.CONTENT_TYPES.JSON, data, signatureType, signature
             )), null])
@@ -48,38 +46,33 @@ class StorageResendStrategy {
     }
 
     getResendResponseStream(request) {
-        const { id, partition } = request.getStreamId()
-
-        if (request instanceof ResendLastRequest) {
+        if (request.type === ControlLayer.ResendLastRequest.TYPE) {
             return this.storage.requestLast(
-                id,
-                partition,
-                request.getNumberLast()
+                request.streamId,
+                request.streamPartition,
+                request.numberLast
             ).pipe(toUnicastMessage(request))
         }
-        if (request instanceof ResendFromRequest) {
-            const fromMsgRef = request.getFromMsgRef()
+        if (request.type === ControlLayer.ResendFromRequest.TYPE) {
             return this.storage.requestFrom(
-                id,
-                partition,
-                fromMsgRef.timestamp,
-                fromMsgRef.sequenceNo,
-                request.getPublisherId(),
-                request.getMsgChainId()
+                request.streamId,
+                request.streamPartition,
+                request.fromMsgRef.timestamp,
+                request.fromMsgRef.sequenceNumber,
+                request.publisherId,
+                request.msgChainId
             ).pipe(toUnicastMessage(request))
         }
-        if (request instanceof ResendRangeRequest) {
-            const fromMsgRef = request.getFromMsgRef()
-            const toMsgRef = request.getToMsgRef()
+        if (request.type === ControlLayer.ResendRangeRequest.TYPE) {
             return this.storage.requestRange(
-                id,
-                partition,
-                fromMsgRef.timestamp,
-                fromMsgRef.sequenceNo,
-                toMsgRef.timestamp,
-                toMsgRef.sequenceNo,
-                request.getPublisherId(),
-                request.getMsgChainId()
+                request.streamId,
+                request.streamPartition,
+                request.fromMsgRef.timestamp,
+                request.fromMsgRef.sequenceNumber,
+                request.toMsgRef.timestamp,
+                request.toMsgRef.sequenceNumber,
+                request.publisherId,
+                request.msgChainId
             ).pipe(toUnicastMessage(request))
         }
         throw new Error(`unknown resend request ${request}`)
@@ -143,7 +136,7 @@ class ProxiedResend {
 
     _onUnicast(unicastMessage, source) {
         const { subId } = unicastMessage
-        if (this.request.getSubId() === subId && this.currentNeighbor === source) {
+        if (this.request.subId === subId && this.currentNeighbor === source) {
             this.responseStream.push([unicastMessage, source])
             this._resetTimeout()
         }
@@ -153,7 +146,7 @@ class ProxiedResend {
         const subId = response.getSubId()
         const source = response.getSource()
 
-        if (this.request.getSubId() === subId && this.currentNeighbor === source) {
+        if (this.request.subId === subId && this.currentNeighbor === source) {
             if (response instanceof ResendResponseResent) {
                 this._endStream()
             } else if (response instanceof ResendResponseNoResend) {
@@ -180,7 +173,9 @@ class ProxiedResend {
             return
         }
 
-        const candidates = this.getNeighbors(this.request.getStreamId()).filter((x) => !this.neighborsAsked.has(x))
+        const candidates = this.getNeighbors(
+            new StreamID(this.request.streamId, this.request.streamPartition)
+        ).filter((x) => !this.neighborsAsked.has(x))
         if (candidates.length === 0) {
             this._endStream()
             return
@@ -224,14 +219,14 @@ class AskNeighborsResendStrategy {
         this.pending = new Set()
     }
 
-    getResendResponseStream(request) {
+    getResendResponseStream(request, source = null) {
         const responseStream = new Readable({
             objectMode: true,
             read() {}
         })
 
         // L2 only works on local requests
-        if (request.getSource() === null) {
+        if (source === null) {
             const proxiedResend = new ProxiedResend(
                 request,
                 responseStream,
@@ -267,29 +262,29 @@ class PendingTrackerResponseBookkeeper {
     }
 
     addEntry(request, responseStream) {
-        const streamId = request.getStreamId()
-        const subId = request.getSubId()
+        const streamIdAndPartition = new StreamID(request.streamId, request.streamPartition)
+        const { subId } = request
 
-        if (!this.pending[streamId]) {
-            this.pending[streamId] = {}
+        if (!this.pending[streamIdAndPartition]) {
+            this.pending[streamIdAndPartition] = {}
         }
-        this.pending[streamId][subId] = {
+        this.pending[streamIdAndPartition][subId] = {
             responseStream,
             request,
             timeoutRef: setTimeout(() => {
-                delete this.pending[streamId][subId]
-                if (Object.entries(this.pending[streamId]).length === 0) {
-                    delete this.pending[streamId]
+                delete this.pending[streamIdAndPartition][subId]
+                if (Object.entries(this.pending[streamIdAndPartition]).length === 0) {
+                    delete this.pending[streamIdAndPartition]
                 }
                 responseStream.push(null)
             }, this.timeout)
         }
     }
 
-    popEntries(streamId) {
-        if (this._hasEntries(streamId)) {
-            const entries = Object.values(this.pending[streamId])
-            delete this.pending[streamId]
+    popEntries(streamIdAndPartition) {
+        if (this._hasEntries(streamIdAndPartition)) {
+            const entries = Object.values(this.pending[streamIdAndPartition])
+            delete this.pending[streamIdAndPartition]
             return entries.map(({ timeoutRef, ...rest }) => {
                 clearTimeout(timeoutRef)
                 return rest
@@ -308,8 +303,8 @@ class PendingTrackerResponseBookkeeper {
         this.pending = {}
     }
 
-    _hasEntries(streamId) {
-        return streamId in this.pending
+    _hasEntries(streamIdAndPartition) {
+        return streamIdAndPartition in this.pending
     }
 }
 
@@ -377,14 +372,14 @@ class StorageNodeResendStrategy {
         })
     }
 
-    getResendResponseStream(request) {
+    getResendResponseStream(request, source = null) {
         const responseStream = new Readable({
             objectMode: true,
             read() {}
         })
 
         // L3 only works on local requests
-        if (request.getSource() === null) {
+        if (source === null) {
             this._requestStorageNodes(request, responseStream)
         } else {
             responseStream.push(null)
@@ -394,11 +389,12 @@ class StorageNodeResendStrategy {
     }
 
     _requestStorageNodes(request, responseStream) {
-        const tracker = this.getTracker(request.getStreamId())
+        const streamIdAndPartition = new StreamID(request.streamId, request.streamPartition)
+        const tracker = this.getTracker(streamIdAndPartition)
         if (tracker == null) {
             responseStream.push(null)
         } else {
-            this.trackerNode.findStorageNodes(tracker, request.getStreamId()).then(
+            this.trackerNode.findStorageNodes(tracker, streamIdAndPartition).then(
                 () => this.pendingTrackerResponse.addEntry(request, responseStream),
                 () => responseStream.push(null)
             )

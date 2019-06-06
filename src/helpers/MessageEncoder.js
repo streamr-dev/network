@@ -3,9 +3,6 @@ const FindStorageNodesMessage = require('../messages/FindStorageNodesMessage')
 const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
 const SubscribeMessage = require('../messages/SubscribeMessage')
-const ResendLastRequest = require('../messages/ResendLastRequest')
-const ResendFromRequest = require('../messages/ResendFromRequest')
-const ResendRangeRequest = require('../messages/ResendRangeRequest')
 const ResendResponseResent = require('../messages/ResendResponseResent')
 const ResendResponseResending = require('../messages/ResendResponseResending')
 const ResendResponseNoResend = require('../messages/ResendResponseNoResend')
@@ -46,35 +43,6 @@ const decode = (source, message) => {
             return new SubscribeMessage(
                 new StreamID(payload.streamId, payload.streamPartition),
                 payload.leechOnly,
-                source
-            )
-
-        case msgTypes.RESEND_LAST:
-            return new ResendLastRequest(
-                new StreamID(payload.streamId, payload.streamPartition),
-                payload.subId,
-                payload.numberLast,
-                source
-            )
-
-        case msgTypes.RESEND_FROM:
-            return new ResendFromRequest(
-                new StreamID(payload.streamId, payload.streamPartition),
-                payload.subId,
-                MessageReference.fromObject(payload.fromMsgRef),
-                payload.publisherId,
-                payload.msgChainId,
-                source
-            )
-
-        case msgTypes.RESEND_RANGE:
-            return new ResendRangeRequest(
-                new StreamID(payload.streamId, payload.streamPartition),
-                payload.subId,
-                MessageReference.fromObject(payload.fromMsgRef),
-                MessageReference.fromObject(payload.toMsgRef),
-                payload.publisherId,
-                payload.msgChainId,
                 source
             )
 
@@ -129,29 +97,6 @@ module.exports = {
         streamId: streamId.id,
         streamPartition: streamId.partition,
         nodeAddresses
-    }),
-    resendLastRequest: (streamId, subId, numberLast) => encode(msgTypes.RESEND_LAST, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        subId,
-        numberLast
-    }),
-    resendFromRequest: (streamId, subId, fromMsgRef, publisherId, msgChainId) => encode(msgTypes.RESEND_FROM, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        subId,
-        fromMsgRef,
-        publisherId,
-        msgChainId
-    }),
-    resendRangeRequest: (streamId, subId, fromMsgRef, toMsgRef, publisherId, msgChainId) => encode(msgTypes.RESEND_RANGE, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        subId,
-        fromMsgRef,
-        toMsgRef,
-        publisherId,
-        msgChainId
     }),
     resendResponseResending: (streamId, subId) => encode(msgTypes.RESEND_RESPONSE_RESENDING, {
         streamId: streamId.id,

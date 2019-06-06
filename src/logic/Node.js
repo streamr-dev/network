@@ -5,7 +5,7 @@ const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
-const { StreamID } = require('../identifiers')
+const { StreamID, MessageReference } = require('../identifiers')
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
 
@@ -69,7 +69,7 @@ class Node extends EventEmitter {
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
         this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage, source) => this.onUnsubscribeRequest(unsubscribeMessage, source))
         this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
-        this.protocols.nodeToNode.on(NodeToNode.events.RESEND_REQUEST, (request) => this.requestResend(request))
+        this.protocols.nodeToNode.on(NodeToNode.events.RESEND_REQUEST, (request, source) => this.requestResend(request, source))
         this.on(events.NODE_SUBSCRIBED, ({ streamId }) => {
             this._handleBufferedMessages(streamId)
             this._sendStatusToAllTrackers()
@@ -109,12 +109,12 @@ class Node extends EventEmitter {
         this._sendStatusToAllTrackers()
     }
 
-    requestResend(request) {
+    requestResend(request, source) {
         this.debug('received %s resend request %s with subId %s',
-            request.getSource() === null ? 'local' : `from ${request.getSource()}`,
+            source === null ? 'local' : `from ${source}`,
             request.constructor.name,
-            request.getSubId())
-        return this.resendHandler.handleRequest(request)
+            request.subId)
+        return this.resendHandler.handleRequest(request, source)
     }
 
     async respondResend(destination, response) {

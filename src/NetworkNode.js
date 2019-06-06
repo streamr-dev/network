@@ -1,8 +1,5 @@
 const { Transform } = require('stream')
-const { MessageLayer } = require('streamr-client-protocol')
-const ResendLastRequest = require('./messages/ResendLastRequest')
-const ResendFromRequest = require('./messages/ResendFromRequest')
-const ResendRangeRequest = require('./messages/ResendRangeRequest')
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const ResendResponseNoResend = require('./messages/ResendResponseNoResend')
 const ResendResponseResent = require('./messages/ResendResponseResent')
 const ResendResponseResending = require('./messages/ResendResponseResending')
@@ -114,23 +111,15 @@ class NetworkNode extends Node {
     }
 
     requestResendLast(streamId, streamPartition, subId, number) {
-        return this.requestResend(new ResendLastRequest(
-            new StreamID(streamId, streamPartition),
-            subId,
-            number,
-            null
-        )).pipe(toObjectTransform())
+        return this.requestResend(
+            ControlLayer.ResendLastRequest.create(streamId, streamPartition, subId, number), null
+        ).pipe(toObjectTransform())
     }
 
     requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
-        return this.requestResend(new ResendFromRequest(
-            new StreamID(streamId, streamPartition),
-            subId,
-            new MessageReference(fromTimestamp, fromSequenceNo),
-            publisherId,
-            msgChainId,
-            null
-        )).pipe(toObjectTransform())
+        return this.requestResend(
+            ControlLayer.ResendFromRequest.create(streamId, streamPartition, subId, [fromTimestamp, fromSequenceNo], publisherId, msgChainId), null
+        ).pipe(toObjectTransform())
     }
 
     requestResendRange(streamId,
@@ -142,15 +131,10 @@ class NetworkNode extends Node {
         toSequenceNo,
         publisherId,
         msgChainId) {
-        return this.requestResend(new ResendRangeRequest(
-            new StreamID(streamId, streamPartition),
-            subId,
-            new MessageReference(fromTimestamp, fromSequenceNo),
-            new MessageReference(toTimestamp, toSequenceNo),
-            publisherId,
-            msgChainId,
-            null
-        )).pipe(toObjectTransform())
+        return this.requestResend(
+            ControlLayer.ResendRangeRequest.create(streamId, streamPartition, subId, [fromTimestamp, fromSequenceNo],
+                [toTimestamp, toSequenceNo], publisherId, msgChainId), null
+        ).pipe(toObjectTransform())
     }
 
     _emitMessage(streamMessage) {

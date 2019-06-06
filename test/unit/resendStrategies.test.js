@@ -4,9 +4,6 @@ const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { AskNeighborsResendStrategy,
     StorageResendStrategy,
     StorageNodeResendStrategy } = require('../../src/logic/resendStrategies')
-const ResendLastRequest = require('../../src/messages/ResendLastRequest')
-const ResendFromRequest = require('../../src/messages/ResendFromRequest')
-const ResendRangeRequest = require('../../src/messages/ResendRangeRequest')
 const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
 const ResendResponseResending = require('../../src/messages/ResendResponseResending')
 const ResendResponseResent = require('../../src/messages/ResendResponseResent')
@@ -34,7 +31,7 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
     test('on receiving ResendLastRequest, storage#requestLast is invoked', async () => {
         storage.requestLast = jest.fn().mockReturnValueOnce(intoStream.object([]))
 
-        resendStrategy.getResendResponseStream(new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10))
+        resendStrategy.getResendResponseStream(ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10))
 
         expect(storage.requestLast.mock.calls).toEqual([
             ['streamId', 0, 10]
@@ -44,12 +41,8 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
     test('on receiving ResendFromRequest, storage#requestFrom is invoked', async () => {
         storage.requestFrom = jest.fn().mockReturnValueOnce(intoStream.object([]))
 
-        resendStrategy.getResendResponseStream(new ResendFromRequest(
-            new StreamID('streamId', 0),
-            'subId',
-            new MessageReference(1555555555555, 0),
-            'publisherId',
-            'msgChainId'
+        resendStrategy.getResendResponseStream(ControlLayer.ResendFromRequest.create(
+            'streamId', 0, 'subId', [1555555555555, 0], 'publisherId', 'msgChainId'
         ))
 
         expect(storage.requestFrom.mock.calls).toEqual([
@@ -60,13 +53,8 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
     test('on receiving ResendRangeRequest, storage#requestRange is invoked', async () => {
         storage.requestRange = jest.fn().mockReturnValueOnce(intoStream.object([]))
 
-        resendStrategy.getResendResponseStream(new ResendRangeRequest(
-            new StreamID('streamId', 0),
-            'subId',
-            new MessageReference(1555555555555, 0),
-            new MessageReference(1555555555555, 1000),
-            'publisherId',
-            'msgChainId'
+        resendStrategy.getResendResponseStream(ControlLayer.ResendRangeRequest.create(
+            'streamId', 0, 'subId', [1555555555555, 0], [1555555555555, 1000], 'publisherId', 'msgChainId'
         ))
 
         expect(storage.requestRange.mock.calls).toEqual([
@@ -101,7 +89,7 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
         ]))
 
         const responseStream = resendStrategy.getResendResponseStream(
-            new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10)
+            ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10)
         )
         const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([
@@ -129,7 +117,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
         nodeToNode = new EventEmitter()
         getNeighbors = jest.fn()
         resendStrategy = new AskNeighborsResendStrategy(nodeToNode, getNeighbors, 2, TIMEOUT)
-        request = new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10)
+        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10)
     })
 
     afterEach(() => {
@@ -137,8 +125,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
     })
 
     test('if given non-local request returns empty stream', async () => {
-        request = new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10, 'non-local')
-        const responseStream = resendStrategy.getResendResponseStream(request)
+        const responseStream = resendStrategy.getResendResponseStream(request, 'non-local')
         const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([])
     })
@@ -309,7 +296,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
         getTracker = jest.fn()
         isSubscribedTo = jest.fn()
         resendStrategy = new StorageNodeResendStrategy(trackerNode, nodeToNode, getTracker, isSubscribedTo, TIMEOUT)
-        request = new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10)
+        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10)
     })
 
     afterEach(() => {
@@ -317,8 +304,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
     })
 
     test('if given non-local request returns empty stream', async () => {
-        request = new ResendLastRequest(new StreamID('streamId', 0), 'subId', 10, 'non-local')
-        const responseStream = resendStrategy.getResendResponseStream(request)
+        const responseStream = resendStrategy.getResendResponseStream(request, 'non-local')
         const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([])
     })
