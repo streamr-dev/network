@@ -67,7 +67,7 @@ class Node extends EventEmitter {
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, (tracker) => this.onTrackerDisconnected(tracker))
         this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (streamMessage, source) => this.onDataReceived(streamMessage, source))
         this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
-        this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage) => this.onUnsubscribeRequest(unsubscribeMessage))
+        this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage, source) => this.onUnsubscribeRequest(unsubscribeMessage, source))
         this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
         this.protocols.nodeToNode.on(NodeToNode.events.RESEND_REQUEST, (request) => this.requestResend(request))
         this.on(events.NODE_SUBSCRIBED, ({ streamId }) => {
@@ -257,12 +257,11 @@ class Node extends EventEmitter {
         }
     }
 
-    onUnsubscribeRequest(unsubscribeMessage) {
-        const streamId = unsubscribeMessage.getStreamId()
-        const source = unsubscribeMessage.getSource()
-        this.streams.removeNodeFromStream(streamId, source)
-        this.debug('node %s unsubscribed from stream %s', source, streamId)
-        this.emit(events.NODE_UNSUBSCRIBED, source, streamId)
+    onUnsubscribeRequest(unsubscribeMessage, source) {
+        const streamIdAndPartition = new StreamID(unsubscribeMessage.streamId, unsubscribeMessage.streamPartition)
+        this.streams.removeNodeFromStream(streamIdAndPartition, source)
+        this.debug('node %s unsubscribed from stream %s', source, streamIdAndPartition)
+        this.emit(events.NODE_UNSUBSCRIBED, source, streamIdAndPartition)
         this._sendStatusToAllTrackers()
         if (!this.streams.isNodePresent(source)) {
             this.protocols.nodeToNode.disconnectFromNode(source, disconnectionReasons.NO_SHARED_STREAMS)

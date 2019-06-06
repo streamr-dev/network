@@ -16,7 +16,6 @@ const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResen
 const StatusMessage = require('../../src/messages/StatusMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
 const SubscribeMessage = require('../../src/messages/SubscribeMessage')
-const UnsubscribeMessage = require('../../src/messages/UnsubscribeMessage')
 const { peerTypes } = require('../../src/protocol/PeerBook')
 
 const { StreamMessage } = MessageLayer
@@ -217,11 +216,12 @@ describe('delivery of messages in protocol layer', () => {
 
     test('sendUnsubscribe is delivered', async () => {
         nodeToNode2.sendUnsubscribe('nodeToNode1', new StreamID('stream', 10))
-        const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.UNSUBSCRIBE_REQUEST)
+        const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.UNSUBSCRIBE_REQUEST)
 
-        expect(msg).toBeInstanceOf(UnsubscribeMessage)
-        expect(msg.getSource()).toEqual('nodeToNode2')
-        expect(msg.getStreamId()).toEqual(new StreamID('stream', 10))
+        expect(msg).toBeInstanceOf(ControlLayer.UnsubscribeRequest)
+        expect(source).toEqual('nodeToNode2')
+        expect(msg.streamId).toEqual('stream')
+        expect(msg.streamPartition).toEqual(10)
     })
 
     test('findStorageNodes is delivered', async () => {

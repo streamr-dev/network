@@ -53,9 +53,10 @@ class NodeToNode extends EventEmitter {
         return this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId, leechOnly))
     }
 
-    sendUnsubscribe(receiverNodeId, streamId) {
+    sendUnsubscribe(receiverNodeId, streamIdAndPartition) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        this.endpoint.send(receiverNodeAddress, encoder.unsubscribeMessage(streamId))
+        const message = ControlLayer.UnsubscribeRequest.create(streamIdAndPartition.id, streamIdAndPartition.partition)
+        this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
     requestResendLast(receiverNodeId, streamId, subId, numberLast) {
@@ -188,13 +189,13 @@ class NodeToNode extends EventEmitter {
             this.emit(events.UNICAST_RECEIVED, message, source)
             return
         }
+        if (message.type === ControlLayer.UnsubscribeRequest.TYPE) {
+            this.emit(events.UNSUBSCRIBE_REQUEST, message, source)
+            return
+        }
         switch (message.getCode()) {
             case encoder.SUBSCRIBE:
                 this.emit(events.SUBSCRIBE_REQUEST, message)
-                break
-
-            case encoder.UNSUBSCRIBE:
-                this.emit(events.UNSUBSCRIBE_REQUEST, message)
                 break
 
             case encoder.DATA:

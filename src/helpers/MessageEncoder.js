@@ -3,7 +3,6 @@ const FindStorageNodesMessage = require('../messages/FindStorageNodesMessage')
 const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
 const SubscribeMessage = require('../messages/SubscribeMessage')
-const UnsubscribeMessage = require('../messages/UnsubscribeMessage')
 const ResendLastRequest = require('../messages/ResendLastRequest')
 const ResendFromRequest = require('../messages/ResendFromRequest')
 const ResendRangeRequest = require('../messages/ResendRangeRequest')
@@ -47,12 +46,6 @@ const decode = (source, message) => {
             return new SubscribeMessage(
                 new StreamID(payload.streamId, payload.streamPartition),
                 payload.leechOnly,
-                source
-            )
-
-        case msgTypes.UNSUBSCRIBE:
-            return new UnsubscribeMessage(
-                new StreamID(payload.streamId, payload.streamPartition),
                 source
             )
 
@@ -131,10 +124,6 @@ module.exports = {
         streamId: streamId.id,
         streamPartition: streamId.partition,
         leechOnly
-    }),
-    unsubscribeMessage: (streamId) => encode(msgTypes.UNSUBSCRIBE, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
     }),
     instructionMessage: (streamId, nodeAddresses) => encode(msgTypes.INSTRUCTION, {
         streamId: streamId.id,
