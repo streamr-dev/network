@@ -94,9 +94,9 @@ class Node extends EventEmitter {
     }
 
     subscribeToStreamIfHaveNotYet(streamId) {
-        if (!this.streams.isSetUp(streamId, streamId)) {
+        if (!this.streams.isSetUp(streamId)) {
             this.debug('add %s to streams', streamId)
-            this.streams.setUpStream(streamId, streamId)
+            this.streams.setUpStream(streamId)
             this._sendStatusToAllTrackers()
         }
     }

@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="integration test" type="JavaScriptTestRunnerJest" factoryName="Jest">
     <config-file value="$PROJECT_DIR$/jest.config.js" />
-    <node-interpreter value="$USER_HOME$/.nvm/versions/node/v10.12.0/bin/node" />
+    <node-interpreter value="project" />
     <node-options value="" />
     <working-dir value="$PROJECT_DIR$" />
     <jest-options value="test/integration" />
