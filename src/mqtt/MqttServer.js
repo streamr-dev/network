@@ -34,21 +34,9 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
 
-        this._clients = new Map()
-
         this.streams = new StreamStateManager()
         this.fieldDetector = new FieldDetector(streamFetcher)
 
-        // this.requestHandlersByMessageType = {
-        //     [ControlLayer.SubscribeRequest.TYPE]: this.handleSubscribeRequest,
-        //     [ControlLayer.UnsubscribeRequest.TYPE]: this.handleUnsubscribeRequest,
-        //     [ControlLayer.ResendRequestV0.TYPE]: this.handleResendRequestV0,
-        //     [ControlLayer.ResendLastRequestV1.TYPE]: this.handleResendLastRequest,
-        //     [ControlLayer.ResendFromRequestV1.TYPE]: this.handleResendFromRequest,
-        //     [ControlLayer.ResendRangeRequestV1.TYPE]: this.handleResendRangeRequest,
-        //     [ControlLayer.PublishRequest.TYPE]: this.handlePublishRequest,
-        // }
-        //
         this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
         this.mqttServer.on('connection', this.onNewClientConnection.bind(this))
     }
@@ -127,32 +115,16 @@ module.exports = class MqttServer extends events.EventEmitter {
                 .then((streamObj) => {
                     this.streamFetcher.authenticate(streamObj.id, client.apiKey, client.token, 'write')
                         .then((json) => {
-                            console.log(streamObj)
                             const streamId = streamObj.id
                             const msgChainId = 'test-chain'
                             const streamPartition = this.partitionFn(streamObj.partitions, 0)
-                            const streamMessage = this.createStreamMessage(streamId, payload, i, Date.now(), uuidv4())
+                            const streamMessage = this.createStreamMessage(
+                                streamId, JSON.parse(payload), i, Date.now(), uuidv4()
+                            )
                             i += 1
-                            //     MessageLayer.StreamMessage.create(
-                            //     [
-                            //         streamId,
-                            //         streamPartition,
-                            //         Date.now(),
-                            //         0, // sequenceNumber
-                            //         '0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963',
-                            //         msgChainId
-                            //     ],
-                            //     [0, 0],
-                            //     MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-                            //     payload,
-                            //     MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
-                            //     null,
-                            // )
 
-                            // this.fieldDetector.detectAndSetFields(stream, streamMessage,
-                            // request.apiKey, request.sessionToken)
-                            this.publisher.publish(json, streamMessage)
-                            // send a puback with messageId (for QoS > 0)
+                            this.publisher.publish(streamObj, streamMessage)
+
                             client.puback({
                                 messageId: packet.messageId
                             })
@@ -201,101 +173,8 @@ module.exports = class MqttServer extends events.EventEmitter {
                         })
                         .catch((response) => {
                             console.log(response)
-                            // debug(
-                            //     'handleSubscribeRequest: socket "%s" failed to
-                            //     subscribe to stream %s:%d because of "%o"',
-                            //     connection.id, request.streamId, request.streamPartition, response
-                            // )
-                            // connection.sendError(`Not authorized to subscribe to stream ${
-                            //     request.streamId
-                            //     } and partition ${
-                            //     request.streamPartition
-                            //     }`)
                         })
                 })
-
-            // const { topic, username, password } = packet
-            // const apiKey = password.toString('utf8')
-            //
-            // console.log('%s ===== > %s', topic, password)
-            // // const { apiKey } = JSON.parse(packet.payload.toString('utf8'))
-
-            // if (topic && password) {
-
-            // this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken)
-            //     .then((/* streamJson */) => {
-            //         const stream = this.streams.getOrCreate(request.streamId, request.streamPartition)
-            //
-            //         // Subscribe now if the stream is not already subscribed or subscribing
-            //         if (!stream.isSubscribed() && !stream.isSubscribing()) {
-            //             stream.setSubscribing()
-            //             this.networkNode.subscribe(request.streamId, request.streamPartition)
-            //             stream.setSubscribed()
-            //
-            //             stream.addConnection(connection)
-            //             connection.addStream(stream)
-            //             debug(
-            //                 'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
-            //                 connection.id, connection.streamsAsString()
-            //             )
-            //             connection.send(ControlLayer.SubscribeResponse.create(request.streamId, request.streamPartition))
-            //         }
-            //     })
-            //     .catch((response) => {
-            //         debug(
-            //             'handleSubscribeRequest: socket "%s" failed to subscribe to stream %s:%d because of "%o"',
-            //             connection.id, request.streamId, request.streamPartition, response
-            //         )
-            //         connection.sendError(`Not authorized to subscribe to stream ${
-            //             request.streamId
-            //             } and partition ${
-            //             request.streamPartition
-            //             }`)
-            //     })
-
-            // this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken)
-            //     .then((/* streamJson */) => {
-            //         const stream = this.streams.getOrCreate(request.streamId, request.streamPartition)
-            //
-            //         // Subscribe now if the stream is not already subscribed or subscribing
-            //         if (!stream.isSubscribed() && !stream.isSubscribing()) {
-            //             stream.setSubscribing()
-            //             this.networkNode.subscribe(request.streamId, request.streamPartition)
-            //             stream.setSubscribed()
-            //
-            //             stream.addConnection(connection)
-            //             connection.addStream(stream)
-            //             debug(
-            //                 'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
-            //                 connection.id, connection.streamsAsString()
-            //             )
-            //             connection.send(ControlLayer.SubscribeResponse.create(request.streamId, request.streamPartition))
-            //         }
-            //     })
-            //     .catch((response) => {
-            //         debug(
-            //             'handleSubscribeRequest: socket "%s" failed to subscribe to stream %s:%d because of "%o"',
-            //             connection.id, request.streamId, request.streamPartition, response
-            //         )
-            //         connection.sendError(`Not authorized to subscribe to stream ${
-            //             request.streamId
-            //             } and partition ${
-            //             request.streamPartition
-            //             }`)
-            //     })
-            //
-            // client.suback({
-            //     granted: [packet.qos], messageId: packet.messageId
-            // })
-            //
-            // packet.subscriptions.forEach((subscription) => {
-            //     this.emit('subscribe', {
-            //         streamId: subscription.topic,
-            //         streamPartition: 0
-            //     })
-            //
-            //     this._clients.get(client.id).topics.push(subscription.topic)
-            // })
         })
     }
 
@@ -350,11 +229,13 @@ module.exports = class MqttServer extends events.EventEmitter {
         }
     }
 
-    // createStreamMessage(streamId, data, sequenceNumber, timestamp = Date.now(), messageChaindId = null) {
-    //     return MessageLayer.StreamMessage.create(
-    //         [streamId, 0, Date.now(), sequenceNumber, '0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963', messageChaindId], 0,
-    //         MessageLayer.StreamMessage.CONTENT_TYPES.JSON, data, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
-    //     )
-    // }
+    // eslint-disable-next-line class-methods-use-this
+    createStreamMessage(streamId, data, sequenceNumber, timestamp = Date.now(), messageChaindId = null) {
+        return MessageLayer.StreamMessage.create(
+            [streamId, 0, Date.now(), sequenceNumber,
+                '0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963', messageChaindId], 0,
+            MessageLayer.StreamMessage.CONTENT_TYPES.JSON, data, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
+        )
+    }
 }
 

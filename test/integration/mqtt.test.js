@@ -179,38 +179,6 @@ describe('broker: end-to-end', () => {
             }
         })
 
-        // client.publish(newStreamName, 'test message', {
-        //     qos: 1
-        // }, (err) => {
-        //     if (err) {
-        //         console.warn(err)
-        //     }
-        //     client.end()
-        // })
-
-        // mqttClient.on('connect', () => {
-        //     mqttClient.subscribe(newStreamName)
-        //
-        //     client.on('message', (topic, message) => {
-        //         // message is Buffer
-        //         console.log(message.toString())
-        //         client.end()
-        //     })
-        //
-        //     client.publish(newStreamName, 'test message', {
-        //         qos: 1
-        //     }, (err) => {
-        //         if (err) {
-        //             console.warn(err)
-        //         }
-        //         client.end()
-        //     })
-        // })
-        // client.on('error', (err) => {
-        //     console.warn(err)
-        //     client.end()
-        // })
-
         await wait(1000) // TODO: seems like this is needed for subscribes to go thru?
         await client1.publish(freshStreamId, {
             key: 1
@@ -221,8 +189,17 @@ describe('broker: end-to-end', () => {
         await client1.publish(freshStreamId, {
             key: 3
         })
+        mqttClient.publish(freshStreamName, JSON.stringify({
+            key: 4
+        }), {
+            qos: 1
+        }, (err) => {
+            if (err) {
+                console.warn(err)
+            }
+        })
 
-        await waitForCondition(() => client2Messages.length === 3)
+        await waitForCondition(() => client2Messages.length === 4)
 
         expect(client1Messages).toEqual([
             {
@@ -233,6 +210,9 @@ describe('broker: end-to-end', () => {
             },
             {
                 key: 3
+            },
+            {
+                key: 4
             },
         ])
 
@@ -246,6 +226,9 @@ describe('broker: end-to-end', () => {
             {
                 key: 3
             },
+            {
+                key: 4
+            },
         ])
 
         expect(client3Messages).toEqual([
@@ -257,6 +240,9 @@ describe('broker: end-to-end', () => {
             },
             {
                 key: 3
+            },
+            {
+                key: 4
             },
         ])
 
@@ -270,177 +256,9 @@ describe('broker: end-to-end', () => {
             {
                 key: 3
             },
+            {
+                key: 4
+            },
         ])
     })
-
-    // it('happy-path: real-time websocket producing and websocket consuming', async (done) => {
-    //     const client1Messages = []
-    //     const client2Messages = []
-    //     const client3Messages = []
-    //
-    //     await freshStream.grantPermission('read', 'tester2@streamr.com')
-    //
-    //     client1.subscribe({
-    //         stream: freshStreamId
-    //     }, (message, metadata) => {
-    //         client1Messages.push(message)
-    //     })
-    //
-    //     client2.subscribe({
-    //         stream: freshStreamId
-    //     }, (message, metadata) => {
-    //         client2Messages.push(message)
-    //     })
-    //
-    //     client3.subscribe({
-    //         stream: freshStreamId
-    //     }, (message, metadata) => {
-    //         client3Messages.push(message)
-    //     })
-    //
-    //     await wait(1000) // TODO: seems like this is needed for subscribes to go thru?
-    //     await client1.publish(freshStreamId, {
-    //         key: 1
-    //     })
-    //     await client1.publish(freshStreamId, {
-    //         key: 2
-    //     })
-    //     await client1.publish(freshStreamId, {
-    //         key: 3
-    //     })
-    //
-    //     await waitForCondition(() => client2Messages.length === 3)
-    //
-    //     expect(client1Messages).toEqual([
-    //         {
-    //             key: 1
-    //         },
-    //         {
-    //             key: 2
-    //         },
-    //         {
-    //             key: 3
-    //         },
-    //     ])
-    //
-    //     expect(client2Messages).toEqual([
-    //         {
-    //             key: 1
-    //         },
-    //         {
-    //             key: 2
-    //         },
-    //         {
-    //             key: 3
-    //         },
-    //     ])
-    //
-    //     expect(client3Messages).toEqual([
-    //         {
-    //             key: 1
-    //         },
-    //         {
-    //             key: 2
-    //         },
-    //         {
-    //             key: 3
-    //         },
-    //     ])
-    //     // const client = createMqttClient()
-    //     // client.on('connect', () => {
-    //     //     client.subscribe(newStreamName)
-    //     //
-    //     //     client.on('message', (topic, message) => {
-    //     //         // message is Buffer
-    //     //         console.log(message.toString())
-    //     //         client.end()
-    //     //     })
-    //     //
-    //     //     client.publish(newStreamName, 'test message', {
-    //     //         qos: 1
-    //     //     }, (err) => {
-    //     //         if (err) {
-    //     //             console.warn(err)
-    //     //         }
-    //     //         client.end()
-    //     //     })
-    //     // })
-    //     // client.on('error', (err) => {
-    //     //     console.warn(err)
-    //     //     client.end()
-    //     // })
-    //
-    //     // const client1Messages = []
-    //     // const client2Messages = []
-    //     // const client3Messages = []
-    //     //
-    //     // await newStream.grantPermission('read', 'tester2@streamr.com')
-    //     //
-    //     // client1.subscribe({
-    //     //     stream: newStreamId
-    //     // }, (message, metadata) => {
-    //     //     client1Messages.push(message)
-    //     // })
-    //     //
-    //     // client2.subscribe({
-    //     //     stream: newStreamId
-    //     // }, (message, metadata) => {
-    //     //     client2Messages.push(message)
-    //     // })
-    //     //
-    //     // client3.subscribe({
-    //     //     stream: newStreamId
-    //     // }, (message, metadata) => {
-    //     //     client3Messages.push(message)
-    //     // })
-    //     //
-    //     // await wait(1000) // TODO: seems like this is needed for subscribes to go thru?
-    //     // await client1.publish(newStreamId, {
-    //     //     key: 1
-    //     // })
-    //     // await client1.publish(newStreamId, {
-    //     //     key: 2
-    //     // })
-    //     // await client1.publish(newStreamId, {
-    //     //     key: 3
-    //     // })
-    //     //
-    //     // await waitForCondition(() => client2Messages.length === 3)
-    //     //
-    //     // expect(client1Messages).toEqual([
-    //     //     {
-    //     //         key: 1
-    //     //     },
-    //     //     {
-    //     //         key: 2
-    //     //     },
-    //     //     {
-    //     //         key: 3
-    //     //     },
-    //     // ])
-    //     //
-    //     // expect(client2Messages).toEqual([
-    //     //     {
-    //     //         key: 1
-    //     //     },
-    //     //     {
-    //     //         key: 2
-    //     //     },
-    //     //     {
-    //     //         key: 3
-    //     //     },
-    //     // ])
-    //     //
-    //     // expect(client3Messages).toEqual([
-    //     //     {
-    //     //         key: 1
-    //     //     },
-    //     //     {
-    //     //         key: 2
-    //     //     },
-    //     //     {
-    //     //         key: 3
-    //     //     },
-    //     // ])
-    // }, 50000)
 })
