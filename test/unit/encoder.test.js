@@ -3,7 +3,7 @@ const { version } = require('../../package.json')
 const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMessage')
 const InstructionMessage = require('../../src/messages/InstructionMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
-const { StreamID, MessageReference } = require('../../src/identifiers')
+const { StreamID } = require('../../src/identifiers')
 
 describe('encoder', () => {
     it('check streamMessage encoding/decoding', () => {

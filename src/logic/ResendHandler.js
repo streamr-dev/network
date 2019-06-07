@@ -1,6 +1,5 @@
 const { Readable } = require('stream')
-const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const { StreamID, MessageReference } = require('../../src/identifiers')
+const { ControlLayer } = require('streamr-client-protocol')
 
 class RequestStream extends Readable {
     constructor() {

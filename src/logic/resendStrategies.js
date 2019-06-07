@@ -2,7 +2,7 @@ const { Readable, Transform } = require('stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
-const { StreamID, MessageReference } = require('../../src/identifiers')
+const { StreamID } = require('../../src/identifiers')
 
 const { StreamMessage } = MessageLayer
 

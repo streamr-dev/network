@@ -1,11 +1,10 @@
 const { EventEmitter } = require('events')
 const createDebug = require('debug')
-const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
-const { StreamID, MessageReference } = require('../identifiers')
+const { StreamID } = require('../identifiers')
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
 

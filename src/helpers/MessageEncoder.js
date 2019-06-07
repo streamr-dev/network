@@ -4,7 +4,7 @@ const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
 const SubscribeMessage = require('../messages/SubscribeMessage')
 const StorageNodesMessage = require('../messages/StorageNodesMessage')
-const { StreamID, MessageReference } = require('../identifiers')
+const { StreamID } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
 
 const encode = (type, payload) => {

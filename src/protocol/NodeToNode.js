@@ -1,7 +1,5 @@
 const { EventEmitter } = require('events')
-const debug = require('debug')('streamr:protocol:node-node')
-const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const { StreamID } = require('../identifiers')
+const { ControlLayer } = require('streamr-client-protocol')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
 const { PeerBook, peerTypes } = require('./PeerBook')
@@ -33,14 +31,7 @@ class NodeToNode extends EventEmitter {
     }
 
     sendData(receiverNodeId, streamMessage) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        const broadcastMessage = ControlLayer.BroadcastMessage.create(streamMessage)
-        return this.endpoint.send(receiverNodeAddress, broadcastMessage.serialize())
-    }
-
-    sendUnicast(receiverNodeId, unicastMessage) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, unicastMessage.serialize())
+        return this.send(receiverNodeId, ControlLayer.BroadcastMessage.create(streamMessage))
     }
 
     sendSubscribe(receiverNodeId, streamId, leechOnly) {
@@ -49,42 +40,7 @@ class NodeToNode extends EventEmitter {
     }
 
     sendUnsubscribe(receiverNodeId, streamIdAndPartition) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        const message = ControlLayer.UnsubscribeRequest.create(streamIdAndPartition.id, streamIdAndPartition.partition)
-        this.endpoint.send(receiverNodeAddress, message.serialize())
-    }
-
-    requestResendLast(receiverNodeId, message) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, message.serialize())
-    }
-
-    requestResendFrom(receiverNodeId, message) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, message.serialize())
-    }
-
-    requestResendRange(receiverNodeId, message) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, message.serialize())
-    }
-
-    respondResending(receiverNodeId, streamId, subId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        const message = ControlLayer.ResendResponseResending.create(streamId.id, streamId.partition, subId)
-        return this.endpoint.send(receiverNodeAddress, message.serialize())
-    }
-
-    respondResent(receiverNodeId, streamId, subId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        const message = ControlLayer.ResendResponseResent.create(streamId.id, streamId.partition, subId)
-        return this.endpoint.send(receiverNodeAddress, message.serialize())
-    }
-
-    respondNoResend(receiverNodeId, streamId, subId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        const message = ControlLayer.ResendResponseNoResend.create(streamId.id, streamId.partition, subId)
-        return this.endpoint.send(receiverNodeAddress, message.serialize())
+        return this.send(receiverNodeId, ControlLayer.UnsubscribeRequest.create(streamIdAndPartition.id, streamIdAndPartition.partition))
     }
 
     disconnectFromNode(receiverNodeId, reason) {
@@ -94,29 +50,9 @@ class NodeToNode extends EventEmitter {
         })
     }
 
-    send(receiverNodeId, message) { // TODO: better way?
-        if (message.type === ControlLayer.ResendLastRequest.TYPE) {
-            return this.requestResendLast(receiverNodeId, message)
-        }
-        if (message.type === ControlLayer.ResendFromRequest.TYPE) {
-            return this.requestResendFrom(receiverNodeId, message)
-        }
-        if (message.type === ControlLayer.ResendRangeRequest.TYPE) {
-            return this.requestResendRange(receiverNodeId, message)
-        }
-        if (message.type === ControlLayer.ResendResponseResending.TYPE) {
-            return this.respondResending(receiverNodeId, new StreamID(message.streamId, message.streamPartition), message.subId)
-        }
-        if (message.type === ControlLayer.ResendResponseNoResend.TYPE) {
-            return this.respondNoResend(receiverNodeId, new StreamID(message.streamId, message.streamPartition), message.subId)
-        }
-        if (message.type === ControlLayer.ResendResponseResent.TYPE) {
-            return this.respondResent(receiverNodeId, new StreamID(message.streamId, message.streamPartition), message.subId)
-        }
-        if (message instanceof ControlLayer.UnicastMessage) {
-            return this.sendUnicast(receiverNodeId, message)
-        }
-        throw new Error(`unrecognized message ${message}`)
+    send(receiverNodeId, message) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
     getAddress() {

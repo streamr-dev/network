@@ -1,8 +1,8 @@
 const { MessageLayer } = require('streamr-client-protocol')
 const StreamManager = require('../../src/logic/StreamManager')
-const { StreamID, MessageReference } = require('../../src/identifiers')
+const { StreamID } = require('../../src/identifiers')
 
-const { MessageID } = MessageLayer
+const { MessageID, MessageRef } = MessageLayer
 
 describe('StreamManager', () => {
     let manager
@@ -55,7 +55,7 @@ describe('StreamManager', () => {
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
                 new MessageID('stream-id', 0, 10, 0, 'publisher-id', 'session-id'),
-                new MessageReference(5, 0)
+                new MessageRef(5, 0)
             )
         }).not.toThrowError()
     })
@@ -64,7 +64,7 @@ describe('StreamManager', () => {
         expect(() => {
             manager.markNumbersAndCheckThatIsNotDuplicate(
                 new MessageID('stream-id', 0, 10, 0, 'publisher-id', 'session-id'),
-                new MessageReference(5, 0)
+                new MessageRef(5, 0)
             )
         }).toThrowError('Stream stream-id::0 is not set up')
     })
@@ -73,27 +73,27 @@ describe('StreamManager', () => {
         manager.setUpStream(new StreamID('stream-id', 0))
         manager.markNumbersAndCheckThatIsNotDuplicate(
             new MessageID('stream-id', 0, 10, 0, 'publisher-1', 'session-1'),
-            new MessageReference(5, 0)
+            new MessageRef(5, 0)
         )
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
             new MessageID('stream-id', 0, 10, 0, 'publisher-1', 'session-1'),
-            new MessageReference(5, 0)
+            new MessageRef(5, 0)
         )).toEqual(false)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
             new MessageID('stream-id', 0, 10, 0, 'publisher-2', 'session-1'),
-            new MessageReference(5, 0)
+            new MessageRef(5, 0)
         )).toEqual(true)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
             new MessageID('stream-id', 0, 10, 0, 'publisher-1', 'session-2'),
-            new MessageReference(5, 0)
+            new MessageRef(5, 0)
         )).toEqual(true)
 
         expect(manager.markNumbersAndCheckThatIsNotDuplicate(
             new MessageID('stream-id', 0, 10, 0, 'publisher-2', 'session-2'),
-            new MessageReference(5, 0)
+            new MessageRef(5, 0)
         )).toEqual(true)
     })
 

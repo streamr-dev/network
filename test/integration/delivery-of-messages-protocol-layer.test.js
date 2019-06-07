@@ -1,7 +1,7 @@
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForEvent } = require('../util')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
-const { MessageReference, StreamID } = require('../../src/identifiers')
+const { StreamID } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
@@ -89,7 +89,7 @@ describe('delivery of messages in protocol layer', () => {
                 hello: 'world'
             }, 1, 'signature')
         const unicastMessage = ControlLayer.UnicastMessage.create('subId', streamMessage)
-        nodeToNode2.sendUnicast('nodeToNode1', unicastMessage)
+        nodeToNode2.send('nodeToNode1', unicastMessage)
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.UNICAST_RECEIVED)
 
         expect(msg).toBeInstanceOf(ControlLayer.UnicastMessage)
@@ -115,7 +115,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('resendLastRequest is delivered', async () => {
-        nodeToNode2.requestResendLast('nodeToNode1', ControlLayer.ResendLastRequest.create('stream', 10, 'subId', 100))
+        nodeToNode2.send('nodeToNode1', ControlLayer.ResendLastRequest.create('stream', 10, 'subId', 100))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_REQUEST)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendLastRequest)
@@ -127,7 +127,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('requestResendFrom is delivered', async () => {
-        nodeToNode2.requestResendFrom('nodeToNode1',
+        nodeToNode2.send('nodeToNode1',
             ControlLayer.ResendFromRequest.create('stream', 10, 'subId', [1, 1], 'publisherId', 'msgChainId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_REQUEST)
 
@@ -142,7 +142,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('requestResendRange is delivered', async () => {
-        nodeToNode2.requestResendRange('nodeToNode1',
+        nodeToNode2.send('nodeToNode1',
             ControlLayer.ResendRangeRequest.create('stream', 10, 'subId', [1, 1], [2, 2], 'publisherId', 'msgChainId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_REQUEST)
 
@@ -158,7 +158,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('respondResending is delivered', async () => {
-        nodeToNode2.respondResending('nodeToNode1', new StreamID('stream', 10), 'subId')
+        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseResending.create('stream', 10, 'subId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendResponseResending)
@@ -169,7 +169,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('respondResent is delivered', async () => {
-        nodeToNode2.respondResent('nodeToNode1', new StreamID('stream', 10), 'subId')
+        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseResent.create('stream', 10, 'subId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendResponseResent)
@@ -180,7 +180,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('respondNoResend is delivered', async () => {
-        nodeToNode2.respondNoResend('nodeToNode1', new StreamID('stream', 10), 'subId')
+        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseNoResend.create('stream', 10, 'subId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendResponseNoResend)
