@@ -2,7 +2,6 @@ const { ControlLayer } = require('streamr-client-protocol')
 const FindStorageNodesMessage = require('../messages/FindStorageNodesMessage')
 const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
-const SubscribeMessage = require('../messages/SubscribeMessage')
 const StorageNodesMessage = require('../messages/StorageNodesMessage')
 const { StreamID } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
@@ -36,13 +35,6 @@ const decode = (source, message) => {
                 source
             )
 
-        case msgTypes.SUBSCRIBE:
-            return new SubscribeMessage(
-                new StreamID(payload.streamId, payload.streamPartition),
-                payload.leechOnly,
-                source
-            )
-
         case msgTypes.FIND_STORAGE_NODES:
             return new FindStorageNodesMessage(
                 new StreamID(payload.streamId, payload.streamPartition),
@@ -64,11 +56,6 @@ const decode = (source, message) => {
 module.exports = {
     decode,
     statusMessage: (status) => encode(msgTypes.STATUS, status),
-    subscribeMessage: (streamId, leechOnly) => encode(msgTypes.SUBSCRIBE, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        leechOnly
-    }),
     instructionMessage: (streamId, nodeAddresses) => encode(msgTypes.INSTRUCTION, {
         streamId: streamId.id,
         streamPartition: streamId.partition,

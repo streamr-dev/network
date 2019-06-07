@@ -9,7 +9,6 @@ const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMess
 const InstructionMessage = require('../../src/messages/InstructionMessage')
 const StatusMessage = require('../../src/messages/StatusMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
-const SubscribeMessage = require('../../src/messages/SubscribeMessage')
 const { peerTypes } = require('../../src/protocol/PeerBook')
 
 const { StreamMessage } = MessageLayer
@@ -72,15 +71,15 @@ describe('delivery of messages in protocol layer', () => {
         nodeToNode2.sendData('nodeToNode1', streamMessage)
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.DATA_RECEIVED)
 
-        expect(msg).toBeInstanceOf(StreamMessage)
+        expect(msg).toBeInstanceOf(ControlLayer.BroadcastMessage)
         expect(source).toEqual('nodeToNode2')
-        expect(msg.messageId).toEqual(new MessageLayer.MessageID('stream', 10, 666, 0, 'publisherId', 'msgChainId'))
-        expect(msg.prevMsgRef).toEqual(new MessageLayer.MessageRef(665, 0))
-        expect(msg.getParsedContent()).toEqual({
+        expect(msg.streamMessage.messageId).toEqual(new MessageLayer.MessageID('stream', 10, 666, 0, 'publisherId', 'msgChainId'))
+        expect(msg.streamMessage.prevMsgRef).toEqual(new MessageLayer.MessageRef(665, 0))
+        expect(msg.streamMessage.getParsedContent()).toEqual({
             hello: 'world'
         })
-        expect(msg.signatureType).toEqual(MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)
-        expect(msg.signature).toEqual('signature')
+        expect(msg.streamMessage.signatureType).toEqual(MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)
+        expect(msg.streamMessage.signature).toEqual('signature')
     })
 
     test('sendUnicast is delivered', async () => {
@@ -205,13 +204,13 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendSubscribe is delivered', async () => {
-        nodeToNode2.sendSubscribe('nodeToNode1', new StreamID('stream', 10), true)
-        const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.SUBSCRIBE_REQUEST)
+        nodeToNode2.sendSubscribe('nodeToNode1', new StreamID('stream', 10))
+        const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.SUBSCRIBE_REQUEST)
 
-        expect(msg).toBeInstanceOf(SubscribeMessage)
-        expect(msg.getSource()).toEqual('nodeToNode2')
-        expect(msg.getStreamId()).toEqual(new StreamID('stream', 10))
-        expect(msg.getLeechOnly()).toEqual(true)
+        expect(msg).toBeInstanceOf(ControlLayer.SubscribeRequest)
+        expect(source).toEqual('nodeToNode2')
+        expect(msg.streamId).toEqual('stream')
+        expect(msg.streamPartition).toEqual(10)
     })
 
     test('sendUnsubscribe is delivered', async () => {

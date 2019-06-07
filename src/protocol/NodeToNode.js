@@ -1,6 +1,5 @@
 const { EventEmitter } = require('events')
 const { ControlLayer } = require('streamr-client-protocol')
-const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
 const { PeerBook, peerTypes } = require('./PeerBook')
 
@@ -14,6 +13,17 @@ const events = Object.freeze({
     RESEND_RESPONSE: 'streamr:node-node:resend-response',
     UNICAST_RECEIVED: 'streamr:node-node:unicast-received'
 })
+const eventPerType = {}
+eventPerType[ControlLayer.BroadcastMessage.TYPE] = events.DATA_RECEIVED
+eventPerType[ControlLayer.UnicastMessage.TYPE] = events.UNICAST_RECEIVED
+eventPerType[ControlLayer.SubscribeRequest.TYPE] = events.SUBSCRIBE_REQUEST
+eventPerType[ControlLayer.UnsubscribeRequest.TYPE] = events.UNSUBSCRIBE_REQUEST
+eventPerType[ControlLayer.ResendLastRequest.TYPE] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ResendFromRequest.TYPE] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ResendRangeRequest.TYPE] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ResendResponseResending.TYPE] = events.RESEND_RESPONSE
+eventPerType[ControlLayer.ResendResponseResent.TYPE] = events.RESEND_RESPONSE
+eventPerType[ControlLayer.ResendResponseNoResend.TYPE] = events.RESEND_RESPONSE
 
 class NodeToNode extends EventEmitter {
     constructor(endpoint) {
@@ -34,9 +44,8 @@ class NodeToNode extends EventEmitter {
         return this.send(receiverNodeId, ControlLayer.BroadcastMessage.create(streamMessage))
     }
 
-    sendSubscribe(receiverNodeId, streamId, leechOnly) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId, leechOnly))
+    sendSubscribe(receiverNodeId, streamIdAndPartition) {
+        return this.send(receiverNodeId, ControlLayer.SubscribeRequest.create(streamIdAndPartition.id, streamIdAndPartition.partition))
     }
 
     sendUnsubscribe(receiverNodeId, streamIdAndPartition) {
@@ -80,38 +89,7 @@ class NodeToNode extends EventEmitter {
     }
 
     onMessageReceived(message, source) {
-        if (message.type === ControlLayer.BroadcastMessage.TYPE) {
-            this.emit(events.DATA_RECEIVED, message.streamMessage, source)
-            return
-        }
-        if (message.type === ControlLayer.UnicastMessage.TYPE) {
-            this.emit(events.UNICAST_RECEIVED, message, source)
-            return
-        }
-        if (message.type === ControlLayer.UnsubscribeRequest.TYPE) {
-            this.emit(events.UNSUBSCRIBE_REQUEST, message, source)
-            return
-        }
-        if (message.type === ControlLayer.ResendLastRequest.TYPE
-            || message.type === ControlLayer.ResendFromRequest.TYPE
-            || message.type === ControlLayer.ResendRangeRequest.TYPE) {
-            this.emit(events.RESEND_REQUEST, message, source)
-            return
-        }
-        if (message.type === ControlLayer.ResendResponseNoResend.TYPE
-            || message.type === ControlLayer.ResendResponseResending.TYPE
-            || message.type === ControlLayer.ResendResponseResent.TYPE) {
-            this.emit(events.RESEND_RESPONSE, message, source)
-            return
-        }
-        switch (message.getCode()) {
-            case encoder.SUBSCRIBE:
-                this.emit(events.SUBSCRIBE_REQUEST, message)
-                break
-
-            default:
-                break
-        }
+        this.emit(eventPerType[message.type], message, source)
     }
 }
 

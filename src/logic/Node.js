@@ -64,8 +64,8 @@ class Node extends EventEmitter {
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, (streamMessage) => this.onTrackerInstructionReceived(streamMessage))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, (tracker) => this.onTrackerDisconnected(tracker))
-        this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (streamMessage, source) => this.onDataReceived(streamMessage, source))
-        this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage) => this.onSubscribeRequest(subscribeMessage))
+        this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (broadcastMessage, source) => this.onDataReceived(broadcastMessage.streamMessage, source))
+        this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage, source) => this.onSubscribeRequest(subscribeMessage, source))
         this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage, source) => this.onUnsubscribeRequest(unsubscribeMessage, source))
         this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
         this.protocols.nodeToNode.on(NodeToNode.events.RESEND_REQUEST, (request, source) => this.requestResend(request, source))
@@ -227,11 +227,8 @@ class Node extends EventEmitter {
         }
     }
 
-    onSubscribeRequest(subscribeMessage) {
-        const streamId = subscribeMessage.getStreamId()
-        const source = subscribeMessage.getSource()
-        const leechOnly = subscribeMessage.getLeechOnly()
-
+    onSubscribeRequest(subscribeMessage, source) {
+        const streamId = new StreamID(subscribeMessage.streamId, subscribeMessage.streamPartition)
         this.emit(events.SUBSCRIPTION_REQUEST, {
             streamId,
             source
@@ -241,9 +238,7 @@ class Node extends EventEmitter {
             this.subscribeToStreamIfHaveNotYet(streamId)
 
             this.streams.addOutboundNode(streamId, source)
-            if (!leechOnly) {
-                this.streams.addInboundNode(streamId, source)
-            }
+            this.streams.addInboundNode(streamId, source)
 
             this.debug('node %s subscribed to stream %s', source, streamId)
             this.emit(events.NODE_SUBSCRIBED, {
@@ -314,7 +309,7 @@ class Node extends EventEmitter {
 
     async _subscribeToStreamOnNode(node, streamId) {
         if (!this.streams.hasInboundNode(streamId, node)) {
-            await this.protocols.nodeToNode.sendSubscribe(node, streamId, false)
+            await this.protocols.nodeToNode.sendSubscribe(node, streamId)
 
             this.streams.addInboundNode(streamId, node)
             this.streams.addOutboundNode(streamId, node)
