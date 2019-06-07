@@ -1,8 +1,5 @@
 const { Readable, Transform } = require('stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const ResendResponseResent = require('../../src/messages/ResendResponseResent')
-const ResendResponseResending = require('../../src/messages/ResendResponseResending')
-const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const { StreamID, MessageReference } = require('../../src/identifiers')
@@ -142,16 +139,15 @@ class ProxiedResend {
         }
     }
 
-    _onResendResponse(response) {
-        const subId = response.getSubId()
-        const source = response.getSource()
+    _onResendResponse(response, source) {
+        const { subId } = response
 
         if (this.request.subId === subId && this.currentNeighbor === source) {
-            if (response instanceof ResendResponseResent) {
+            if (response.type === ControlLayer.ResendResponseResent.TYPE) {
                 this._endStream()
-            } else if (response instanceof ResendResponseNoResend) {
+            } else if (response.type === ControlLayer.ResendResponseNoResend.TYPE) {
                 this._askNextNeighbor()
-            } else if (response instanceof ResendResponseResending) {
+            } else if (response.type === ControlLayer.ResendResponseResending.TYPE) {
                 this._resetTimeout()
             } else {
                 throw new Error(`unexpected response type ${response}`)

@@ -1,8 +1,5 @@
 const { Readable } = require('stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
-const ResendResponseResent = require('../../src/messages/ResendResponseResent')
-const ResendResponseResending = require('../../src/messages/ResendResponseResending')
 const { StreamID, MessageReference } = require('../../src/identifiers')
 
 class RequestStream extends Readable {
@@ -93,7 +90,7 @@ class ResendHandler {
     }
 
     _emitResending(request, source) {
-        this.sendResponse(source, new ResendResponseResending(new StreamID(request.streamId, request.streamPartition), request.subId))
+        this.sendResponse(source, ControlLayer.ResendResponseResending.create(request.streamId, request.streamPartition, request.subId))
     }
 
     _emitUnicast(requestSource, unicastMessage, unicastMessageSource) {
@@ -101,11 +98,11 @@ class ResendHandler {
     }
 
     _emitResent(request, source) {
-        this.sendResponse(source, new ResendResponseResent(new StreamID(request.streamId, request.streamPartition), request.subId))
+        this.sendResponse(source, ControlLayer.ResendResponseResent.create(request.streamId, request.streamPartition, request.subId))
     }
 
     _emitNoResend(request, source) {
-        this.sendResponse(source, new ResendResponseNoResend(new StreamID(request.streamId, request.streamPartition), request.subId))
+        this.sendResponse(source, ControlLayer.ResendResponseNoResend.create(request.streamId, request.streamPartition, request.subId))
     }
 
     _emitError(request, error) {

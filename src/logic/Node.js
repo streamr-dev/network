@@ -127,7 +127,7 @@ class Node extends EventEmitter {
         this.debug('responded %s with %s and subId %s',
             destination === null ? 'locally' : `to ${destination}`,
             response.constructor.name,
-            response.getSubId())
+            response.subId)
     }
 
     async _unicast(destination, unicastMessage, source) {
@@ -238,7 +238,7 @@ class Node extends EventEmitter {
             source
         })
 
-        if (this.streams.isSetUp(streamId, streamId)) {
+        if (this.streams.isSetUp(streamId)) {
             this.subscribeToStreamIfHaveNotYet(streamId)
 
             this.streams.addOutboundNode(streamId, source)

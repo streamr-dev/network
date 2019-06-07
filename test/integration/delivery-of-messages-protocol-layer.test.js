@@ -7,9 +7,6 @@ const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMessage')
 const InstructionMessage = require('../../src/messages/InstructionMessage')
-const ResendResponseResent = require('../../src/messages/ResendResponseResent')
-const ResendResponseResending = require('../../src/messages/ResendResponseResending')
-const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
 const StatusMessage = require('../../src/messages/StatusMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
 const SubscribeMessage = require('../../src/messages/SubscribeMessage')
@@ -162,32 +159,35 @@ describe('delivery of messages in protocol layer', () => {
 
     test('respondResending is delivered', async () => {
         nodeToNode2.respondResending('nodeToNode1', new StreamID('stream', 10), 'subId')
-        const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
+        const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
-        expect(msg).toBeInstanceOf(ResendResponseResending)
-        expect(msg.getSource()).toEqual('nodeToNode2')
-        expect(msg.getStreamId()).toEqual(new StreamID('stream', 10))
-        expect(msg.getSubId()).toEqual('subId')
+        expect(msg).toBeInstanceOf(ControlLayer.ResendResponseResending)
+        expect(source).toEqual('nodeToNode2')
+        expect(msg.streamId).toEqual('stream')
+        expect(msg.streamPartition).toEqual(10)
+        expect(msg.subId).toEqual('subId')
     })
 
     test('respondResent is delivered', async () => {
         nodeToNode2.respondResent('nodeToNode1', new StreamID('stream', 10), 'subId')
-        const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
+        const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
-        expect(msg).toBeInstanceOf(ResendResponseResent)
-        expect(msg.getSource()).toEqual('nodeToNode2')
-        expect(msg.getStreamId()).toEqual(new StreamID('stream', 10))
-        expect(msg.getSubId()).toEqual('subId')
+        expect(msg).toBeInstanceOf(ControlLayer.ResendResponseResent)
+        expect(source).toEqual('nodeToNode2')
+        expect(msg.streamId).toEqual('stream')
+        expect(msg.streamPartition).toEqual(10)
+        expect(msg.subId).toEqual('subId')
     })
 
     test('respondNoResend is delivered', async () => {
         nodeToNode2.respondNoResend('nodeToNode1', new StreamID('stream', 10), 'subId')
-        const [msg] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
+        const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
-        expect(msg).toBeInstanceOf(ResendResponseNoResend)
-        expect(msg.getSource()).toEqual('nodeToNode2')
-        expect(msg.getStreamId()).toEqual(new StreamID('stream', 10))
-        expect(msg.getSubId()).toEqual('subId')
+        expect(msg).toBeInstanceOf(ControlLayer.ResendResponseNoResend)
+        expect(source).toEqual('nodeToNode2')
+        expect(msg.streamId).toEqual('stream')
+        expect(msg.streamPartition).toEqual(10)
+        expect(msg.subId).toEqual('subId')
     })
 
     test('sendStatus is delivered', async () => {

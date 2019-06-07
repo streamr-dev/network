@@ -1,13 +1,10 @@
 const { Transform } = require('stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const ResendResponseNoResend = require('./messages/ResendResponseNoResend')
-const ResendResponseResent = require('./messages/ResendResponseResent')
-const ResendResponseResending = require('./messages/ResendResponseResending')
 const { StorageResendStrategy,
     AskNeighborsResendStrategy,
     StorageNodeResendStrategy } = require('./logic/resendStrategies')
 const Node = require('./logic/Node')
-const { StreamID, MessageReference } = require('./identifiers')
+const { StreamID } = require('./identifiers')
 
 const { StreamMessage } = MessageLayer
 
@@ -162,20 +159,20 @@ class NetworkNode extends Node {
 
     _emitResendResponse(resendResponse) {
         let eventType
-        if (resendResponse instanceof ResendResponseNoResend) {
+        if (resendResponse.type === ControlLayer.ResendResponseNoResend.TYPE) {
             eventType = events.NO_RESEND
-        } else if (resendResponse instanceof ResendResponseResending) {
+        } else if (resendResponse.type === ControlLayer.ResendResponseResending.TYPE) {
             eventType = events.RESENDING
-        } else if (resendResponse instanceof ResendResponseResent) {
+        } else if (resendResponse.type === ControlLayer.ResendResponseResent.TYPE) {
             eventType = events.RESENT
         } else {
             throw new Error(`unexpected resendResponse ${resendResponse}`)
         }
 
         this.emit(eventType, {
-            streamId: resendResponse.getStreamId().id,
-            streamPartition: resendResponse.getStreamId().partition,
-            subId: resendResponse.getSubId()
+            streamId: resendResponse.streamId,
+            streamPartition: resendResponse.streamPartition,
+            subId: resendResponse.subId
         })
     }
 }

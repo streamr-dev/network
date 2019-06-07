@@ -3,9 +3,6 @@ const FindStorageNodesMessage = require('../messages/FindStorageNodesMessage')
 const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
 const SubscribeMessage = require('../messages/SubscribeMessage')
-const ResendResponseResent = require('../messages/ResendResponseResent')
-const ResendResponseResending = require('../messages/ResendResponseResending')
-const ResendResponseNoResend = require('../messages/ResendResponseNoResend')
 const StorageNodesMessage = require('../messages/StorageNodesMessage')
 const { StreamID, MessageReference } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
@@ -46,27 +43,6 @@ const decode = (source, message) => {
                 source
             )
 
-        case msgTypes.RESEND_RESPONSE_RESENDING:
-            return new ResendResponseResending(
-                new StreamID(payload.streamId, payload.streamPartition),
-                payload.subId,
-                source
-            )
-
-        case msgTypes.RESEND_RESPONSE_RESENT:
-            return new ResendResponseResent(
-                new StreamID(payload.streamId, payload.streamPartition),
-                payload.subId,
-                source
-            )
-
-        case msgTypes.RESEND_RESPONSE_NO_RESEND:
-            return new ResendResponseNoResend(
-                new StreamID(payload.streamId, payload.streamPartition),
-                payload.subId,
-                source
-            )
-
         case msgTypes.FIND_STORAGE_NODES:
             return new FindStorageNodesMessage(
                 new StreamID(payload.streamId, payload.streamPartition),
@@ -97,21 +73,6 @@ module.exports = {
         streamId: streamId.id,
         streamPartition: streamId.partition,
         nodeAddresses
-    }),
-    resendResponseResending: (streamId, subId) => encode(msgTypes.RESEND_RESPONSE_RESENDING, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        subId,
-    }),
-    resendResponseResent: (streamId, subId) => encode(msgTypes.RESEND_RESPONSE_RESENT, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        subId,
-    }),
-    resendResponseNoResend: (streamId, subId) => encode(msgTypes.RESEND_RESPONSE_NO_RESEND, {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        subId,
     }),
     findStorageNodesMessage: (streamId) => encode(msgTypes.FIND_STORAGE_NODES, {
         streamId: streamId.id,

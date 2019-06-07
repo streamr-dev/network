@@ -2,9 +2,6 @@ const encoder = require('../../src/helpers/MessageEncoder')
 const { version } = require('../../package.json')
 const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMessage')
 const InstructionMessage = require('../../src/messages/InstructionMessage')
-const ResendResponseResent = require('../../src/messages/ResendResponseResent')
-const ResendResponseResending = require('../../src/messages/ResendResponseResending')
-const ResendResponseNoResend = require('../../src/messages/ResendResponseNoResend')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
 const { StreamID, MessageReference } = require('../../src/identifiers')
 
@@ -31,114 +28,6 @@ describe('encoder', () => {
         expect(streamMessage.getSource()).toEqual('127.0.0.1')
         expect(streamMessage.getStreamId()).toEqual(new StreamID('stream-id', 0))
         expect(streamMessage.getNodeAddresses()).toEqual(['node-1', 'node-2'])
-    })
-
-    it('check encoding RESEND_RESPONSE_RESENDING', () => {
-        const actual = encoder.resendResponseResending(
-            new StreamID('stream', 6),
-            'subId'
-        )
-        expect(JSON.parse(actual)).toEqual({
-            version,
-            code: encoder.RESEND_RESPONSE_RESENDING,
-            payload: {
-                streamId: 'stream',
-                streamPartition: 6,
-                subId: 'subId'
-            }
-        })
-    })
-
-    it('check decoding RESEND_RESPONSE_RESENDING', () => {
-        const resendResponseResending = encoder.decode('source', JSON.stringify({
-            version,
-            code: encoder.RESEND_RESPONSE_RESENDING,
-            payload: {
-                streamId: 'stream',
-                streamPartition: 6,
-                subId: 'subId'
-            }
-        }))
-
-        expect(resendResponseResending).toBeInstanceOf(ResendResponseResending)
-        expect(resendResponseResending.getVersion()).toEqual(version)
-        expect(resendResponseResending.getCode()).toEqual(encoder.RESEND_RESPONSE_RESENDING)
-        expect(resendResponseResending.getSource()).toEqual('source')
-
-        expect(resendResponseResending.getStreamId()).toEqual(new StreamID('stream', 6))
-        expect(resendResponseResending.getSubId()).toEqual('subId')
-    })
-
-    it('check encoding RESEND_RESPONSE_RESENT', () => {
-        const actual = encoder.resendResponseResent(
-            new StreamID('stream', 6),
-            'subId'
-        )
-        expect(JSON.parse(actual)).toEqual({
-            version,
-            code: encoder.RESEND_RESPONSE_RESENT,
-            payload: {
-                streamId: 'stream',
-                streamPartition: 6,
-                subId: 'subId'
-            }
-        })
-    })
-
-    it('check decoding RESEND_RESPONSE_RESENT', () => {
-        const resendResponseResent = encoder.decode('source', JSON.stringify({
-            version,
-            code: encoder.RESEND_RESPONSE_RESENT,
-            payload: {
-                streamId: 'stream',
-                streamPartition: 6,
-                subId: 'subId'
-            }
-        }))
-
-        expect(resendResponseResent).toBeInstanceOf(ResendResponseResent)
-        expect(resendResponseResent.getVersion()).toEqual(version)
-        expect(resendResponseResent.getCode()).toEqual(encoder.RESEND_RESPONSE_RESENT)
-        expect(resendResponseResent.getSource()).toEqual('source')
-
-        expect(resendResponseResent.getStreamId()).toEqual(new StreamID('stream', 6))
-        expect(resendResponseResent.getSubId()).toEqual('subId')
-    })
-
-    it('check encoding RESEND_RESPONSE_NO_RESEND', () => {
-        const actual = encoder.resendResponseNoResend(
-            new StreamID('stream', 6),
-            'subId'
-        )
-        expect(JSON.parse(actual)).toEqual({
-            version,
-            code: encoder.RESEND_RESPONSE_NO_RESEND,
-            payload: {
-                streamId: 'stream',
-                streamPartition: 6,
-                subId: 'subId'
-            }
-        })
-    })
-
-    it('check decoding RESEND_RESPONSE_NO_RESEND', () => {
-        const resendResponseNoResend = encoder.decode('source', JSON.stringify({
-            version,
-            code: encoder.RESEND_RESPONSE_NO_RESEND,
-            payload: {
-                streamId: 'stream',
-                streamPartition: 6,
-                subId: 'subId'
-            }
-        }))
-
-        expect(resendResponseNoResend).toBeInstanceOf(ResendResponseNoResend)
-        expect(resendResponseNoResend.getVersion()).toEqual(version)
-        expect(resendResponseNoResend.getCode()).toEqual(encoder.RESEND_RESPONSE_NO_RESEND)
-        expect(resendResponseNoResend.getSource()).toEqual('source')
-
-        expect(resendResponseNoResend.getStreamId()).toEqual(new StreamID('stream', 6))
-        expect(resendResponseNoResend.getSubId()).toEqual('subId')
     })
 
     it('check encoding FIND_STORAGE_NODES', () => {

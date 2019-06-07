@@ -1,10 +1,7 @@
 const { EventEmitter } = require('events')
 const debug = require('debug')('streamr:protocol:node-node')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const { StreamID, MessageReference } = require('../identifiers')
-const ResendResponseResent = require('../messages/ResendResponseResent')
-const ResendResponseResending = require('../messages/ResendResponseResending')
-const ResendResponseNoResend = require('../messages/ResendResponseNoResend')
+const { StreamID } = require('../identifiers')
 const encoder = require('../helpers/MessageEncoder')
 const EndpointListener = require('./EndpointListener')
 const { PeerBook, peerTypes } = require('./PeerBook')
@@ -74,17 +71,20 @@ class NodeToNode extends EventEmitter {
 
     respondResending(receiverNodeId, streamId, subId) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseResending(streamId, subId))
+        const message = ControlLayer.ResendResponseResending.create(streamId.id, streamId.partition, subId)
+        return this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
     respondResent(receiverNodeId, streamId, subId) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseResent(streamId, subId))
+        const message = ControlLayer.ResendResponseResent.create(streamId.id, streamId.partition, subId)
+        return this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
     respondNoResend(receiverNodeId, streamId, subId) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseNoResend(streamId, subId))
+        const message = ControlLayer.ResendResponseNoResend.create(streamId.id, streamId.partition, subId)
+        return this.endpoint.send(receiverNodeAddress, message.serialize())
     }
 
     disconnectFromNode(receiverNodeId, reason) {
@@ -104,25 +104,16 @@ class NodeToNode extends EventEmitter {
         if (message.type === ControlLayer.ResendRangeRequest.TYPE) {
             return this.requestResendRange(receiverNodeId, message)
         }
-        if (message instanceof ResendResponseNoResend) {
-            return this.respondNoResend(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId()
-            )
-        } if (message instanceof ResendResponseResending) {
-            return this.respondResending(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId()
-            )
-        } if (message instanceof ResendResponseResent) {
-            return this.respondResent(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId()
-            )
-        } if (message instanceof ControlLayer.UnicastMessage) {
+        if (message.type === ControlLayer.ResendResponseResending.TYPE) {
+            return this.respondResending(receiverNodeId, new StreamID(message.streamId, message.streamPartition), message.subId)
+        }
+        if (message.type === ControlLayer.ResendResponseNoResend.TYPE) {
+            return this.respondNoResend(receiverNodeId, new StreamID(message.streamId, message.streamPartition), message.subId)
+        }
+        if (message.type === ControlLayer.ResendResponseResent.TYPE) {
+            return this.respondResent(receiverNodeId, new StreamID(message.streamId, message.streamPartition), message.subId)
+        }
+        if (message instanceof ControlLayer.UnicastMessage) {
             return this.sendUnicast(receiverNodeId, message)
         }
         throw new Error(`unrecognized message ${message}`)
@@ -171,15 +162,15 @@ class NodeToNode extends EventEmitter {
             this.emit(events.RESEND_REQUEST, message, source)
             return
         }
+        if (message.type === ControlLayer.ResendResponseNoResend.TYPE
+            || message.type === ControlLayer.ResendResponseResending.TYPE
+            || message.type === ControlLayer.ResendResponseResent.TYPE) {
+            this.emit(events.RESEND_RESPONSE, message, source)
+            return
+        }
         switch (message.getCode()) {
             case encoder.SUBSCRIBE:
                 this.emit(events.SUBSCRIBE_REQUEST, message)
-                break
-
-            case encoder.RESEND_RESPONSE_RESENDING:
-            case encoder.RESEND_RESPONSE_RESENT:
-            case encoder.RESEND_RESPONSE_NO_RESEND:
-                this.emit(events.RESEND_RESPONSE, message)
                 break
 
             default:
