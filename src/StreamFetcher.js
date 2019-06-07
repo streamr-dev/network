@@ -18,6 +18,7 @@ function formHeaders(authKey, sessionToken) {
 module.exports = class StreamFetcher {
     constructor(baseUrl) {
         this.streamResourceUrl = `${baseUrl}/api/v1/streams`
+        this.loginUrl = `${baseUrl}/api/v1/login/apikey`
         this.fetch = memoize(this._fetch, {
             maxAge: MAX_AGE,
             promise: true,
@@ -35,6 +36,31 @@ module.exports = class StreamFetcher {
         }
         return this.checkPermission(streamId, authKey, sessionToken, operation)
             .then(() => this.fetch(streamId, authKey, sessionToken))
+    }
+
+    getToken(apiKey) {
+        return new Promise((resolve, reject) => {
+            fetch(this.loginUrl, {
+                method: 'POST',
+                body: JSON.stringify({
+                    apiKey
+                }),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            }).then((res) => res.json()).then((json) => resolve(json))
+        })
+    }
+
+    getStream(topic, token) {
+        return new Promise((resolve, reject) => {
+            fetch(`${this.streamResourceUrl}?name=${topic}`, {
+                method: 'GET',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+            }).then((res) => res.json()).then((json) => resolve(json[0]))
+        })
     }
 
     /**
