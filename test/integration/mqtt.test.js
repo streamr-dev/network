@@ -97,7 +97,7 @@ function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1
     })
 }
 
-describe('broker: end-to-end', () => {
+describe('mqtt: end-to-end', () => {
     let tracker
     let broker1
     let broker2
@@ -260,5 +260,5 @@ describe('broker: end-to-end', () => {
                 key: 4
             },
         ])
-    })
+    }, 10000)
 })

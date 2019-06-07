@@ -87,7 +87,7 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
             publisher.publish(
                 req.stream,
                 StreamMessage.create(
-                    [req.stream.streamId,
+                    [req.stream.id,
                         partitionFn(req.stream.partitions, req.query.pkey),
                         timestamp,
                         sequenceNumber, // sequenceNumber
