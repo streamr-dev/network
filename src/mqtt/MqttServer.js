@@ -164,6 +164,8 @@ module.exports = class MqttServer extends events.EventEmitter {
                                 client.suback({
                                     granted: [packet.qos], messageId: packet.messageId
                                 })
+                            } else {
+                                console.error('error')
                             }
                         })
                         .catch((response) => {
@@ -175,15 +177,11 @@ module.exports = class MqttServer extends events.EventEmitter {
 
     _closeClient(connection) {
         this.volumeLogger.connectionCount -= 1
-        debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
+        debug('closing client "%s" on streams "%o"', connection.id, connection.streamsAsString())
 
         // Unsubscribe from all streams
         connection.forEachStream((stream) => {
-            // this.handleUnsubscribeRequest(
-            //     connection,
-            //     ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition),
-            //     true,
-            // )
+            // connection.client.unsubscribe(stream.getName())
         })
 
         connection.client.destroy()
@@ -218,7 +216,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                 connection.client.publish(object, () => {})
             })
 
-            // this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * stream.getConnections().length)
+            this.volumeLogger.logOutput(data.length * stream.getConnections().length)
         } else {
             debug('broadcastMessage: stream "%s::%d" not found', streamId, streamPartition)
         }

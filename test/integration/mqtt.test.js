@@ -179,7 +179,7 @@ describe('mqtt: end-to-end', () => {
             client3Messages.push(message)
         })
 
-        await wait(1000) // TODO: seems like this is needed for subscribes to go thru?
+        await wait(2000) // TODO: seems like this is needed for subscribes to go thru?
         await client1.publish(freshStreamId, {
             key: 1
         })
