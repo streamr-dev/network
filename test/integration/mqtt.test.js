@@ -1,7 +1,6 @@
 const { startTracker } = require('@streamr/streamr-p2p-network')
 const StreamrClient = require('streamr-client')
-const fetch = require('node-fetch')
-const mqtt = require('mqtt')
+const mqtt = require('async-mqtt')
 const createBroker = require('../../src/broker')
 
 const httpPort1 = 12341
@@ -14,7 +13,6 @@ const networkPort1 = 12361
 const networkPort2 = 12362
 const networkPort3 = 12363
 const trackerPort = 12370
-const testApiKey = 'tester1-api-key'
 const mqttPort1 = 12551
 const mqttPort2 = 12552
 const mqttPort3 = 12553
@@ -146,13 +144,22 @@ describe('mqtt: end-to-end', () => {
         mqttClient.destroy()
     })
 
-    it('happy-path: real-time websocket producing and websocket consuming', async () => {
+    it('happy-path: real-time mqtt and websocket producing and consuming', async () => {
         const client1Messages = []
         const client2Messages = []
         const client3Messages = []
         const client4Messages = []
 
         await freshStream.grantPermission('read', 'tester2@streamr.com')
+
+        await waitForCondition(() => mqttClient.connected)
+
+        mqttClient.subscribe(freshStreamName)
+        mqttClient.on('message', (topic, message) => {
+            if (topic === freshStreamName) {
+                client4Messages.push(JSON.parse(message.toString()))
+            }
+        })
 
         client1.subscribe({
             stream: freshStreamId
@@ -172,13 +179,6 @@ describe('mqtt: end-to-end', () => {
             client3Messages.push(message)
         })
 
-        mqttClient.subscribe(freshStreamName)
-        mqttClient.on('message', (topic, message) => {
-            if (topic === freshStreamName) {
-                client4Messages.push(JSON.parse(message.toString('utf8')))
-            }
-        })
-
         await wait(1000) // TODO: seems like this is needed for subscribes to go thru?
         await client1.publish(freshStreamId, {
             key: 1
@@ -189,17 +189,16 @@ describe('mqtt: end-to-end', () => {
         await client1.publish(freshStreamId, {
             key: 3
         })
-        mqttClient.publish(freshStreamName, JSON.stringify({
+        await mqttClient.publish(freshStreamName, JSON.stringify({
             key: 4
         }), {
             qos: 1
-        }, (err) => {
-            if (err) {
-                console.warn(err)
-            }
         })
 
+        await waitForCondition(() => client1Messages.length === 4)
         await waitForCondition(() => client2Messages.length === 4)
+        await waitForCondition(() => client3Messages.length === 4)
+        await waitForCondition(() => client4Messages.length === 4)
 
         expect(client1Messages).toEqual([
             {

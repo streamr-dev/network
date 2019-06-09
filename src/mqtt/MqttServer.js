@@ -3,16 +3,12 @@ const debug = require('debug')('streamr:MqttServer')
 
 const uuidv4 = require('uuid/v4')
 const mqttCon = require('mqtt-connection')
-const mqttPacket = require('mqtt-packet')
 
-const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
-const HttpError = require('../errors/HttpError')
+const { MessageLayer } = require('streamr-client-protocol')
 const VolumeLogger = require('../VolumeLogger')
 const partition = require('../partition')
-const { networkMessageToStreamrMessage } = require('../utils')
 
 const Connection = require('./Connection')
-const FieldDetector = require('./FieldDetector')
 const StreamStateManager = require('./StreamStateManager')
 
 module.exports = class MqttServer extends events.EventEmitter {
@@ -35,7 +31,6 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.volumeLogger = volumeLogger
 
         this.streams = new StreamStateManager()
-        this.fieldDetector = new FieldDetector(streamFetcher)
 
         this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
         this.mqttServer.on('connection', this.onNewClientConnection.bind(this))
@@ -54,7 +49,7 @@ module.exports = class MqttServer extends events.EventEmitter {
             debug('connect request %o', packet)
 
             const { username, password } = packet
-            const apiKey = password.toString('utf8')
+            const apiKey = password.toString()
 
             this.streamFetcher.getToken(apiKey)
                 .then((res) => {
@@ -162,7 +157,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                                 newOrExistingStream.addConnection(connection)
                                 connection.addStream(newOrExistingStream)
                                 debug(
-                                    'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
+                                    'handleSubscribeRequest: client "%s" is now subscribed to streams "%o"',
                                     connection.id, connection.streamsAsString()
                                 )
 
@@ -225,7 +220,7 @@ module.exports = class MqttServer extends events.EventEmitter {
 
             // this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * stream.getConnections().length)
         } else {
-            debug('broadcastMessage: stream "%s:%d" not found', streamId, streamPartition)
+            debug('broadcastMessage: stream "%s::%d" not found', streamId, streamPartition)
         }
     }
 
