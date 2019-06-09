@@ -11,6 +11,8 @@ const partition = require('../partition')
 const StreamStateManager = require('../StreamStateManager')
 const Connection = require('./Connection')
 
+let sequenceNumber = 0
+
 module.exports = class MqttServer extends events.EventEmitter {
     constructor(
         mqttServer,
@@ -104,21 +106,29 @@ module.exports = class MqttServer extends events.EventEmitter {
 
             const { topic, payload } = packet
 
-            let i = 0
-
             this.streamFetcher.getStream(topic, client.token)
                 .then((streamObj) => {
                     this.streamFetcher.authenticate(streamObj.id, client.apiKey, client.token, 'write')
-                        .then((json) => {
-                            const streamId = streamObj.id
-                            const msgChainId = 'test-chain'
+                        .then((/* streamJson */) => {
                             const streamPartition = this.partitionFn(streamObj.partitions, 0)
-                            const streamMessage = this.createStreamMessage(
-                                streamId, JSON.parse(payload), i, Date.now(), uuidv4()
+                            const streamMessage = MessageLayer.StreamMessage.create(
+                                [
+                                    streamObj.id,
+                                    streamPartition,
+                                    Date.now(),
+                                    sequenceNumber,
+                                    client.id,
+                                    '',
+                                ],
+                                [null, null],
+                                MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+                                JSON.parse(payload),
+                                MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null
                             )
-                            i += 1
 
                             this.publisher.publish(streamObj, streamMessage)
+
+                            sequenceNumber += 1
 
                             client.puback({
                                 messageId: packet.messageId
@@ -181,7 +191,7 @@ module.exports = class MqttServer extends events.EventEmitter {
 
         // Unsubscribe from all streams
         connection.forEachStream((stream) => {
-            // connection.client.unsubscribe(stream.getName())
+            connection.client.unsubscribe(stream.getName())
         })
 
         connection.client.destroy()
@@ -203,16 +213,15 @@ module.exports = class MqttServer extends events.EventEmitter {
         const stream = this.streams.get(streamId, streamPartition)
 
         if (stream) {
+            const payload = JSON.stringify(data)
+
+            const object = {
+                cmd: 'publish',
+                topic: stream.name,
+                payload
+            }
+
             stream.forEachConnection((connection) => {
-                // TODO: performance fix, no need to re-create on every loop iteration
-                const payload = JSON.stringify(data)
-
-                const object = {
-                    cmd: 'publish',
-                    topic: stream.name,
-                    payload
-                }
-
                 connection.client.publish(object, () => {})
             })
 
@@ -220,15 +229,6 @@ module.exports = class MqttServer extends events.EventEmitter {
         } else {
             debug('broadcastMessage: stream "%s::%d" not found', streamId, streamPartition)
         }
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    createStreamMessage(streamId, data, sequenceNumber, timestamp = Date.now(), messageChaindId = null) {
-        return MessageLayer.StreamMessage.create(
-            [streamId, 0, Date.now(), sequenceNumber,
-                '0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963', messageChaindId], 0,
-            MessageLayer.StreamMessage.CONTENT_TYPES.JSON, data, MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null,
-        )
     }
 }
 

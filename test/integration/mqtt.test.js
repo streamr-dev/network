@@ -259,5 +259,5 @@ describe('mqtt: end-to-end', () => {
                 key: 4
             },
         ])
-    }, 10000)
+    })
 })
