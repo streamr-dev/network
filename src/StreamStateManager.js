@@ -11,12 +11,12 @@ module.exports = class StreamStateManager {
         this._timeouts = {}
     }
 
-    getOrCreate(name, streamId, streamPartition) {
+    getOrCreate(streamId, streamPartition, name = '') {
         const stream = this.get(streamId, streamPartition)
         if (stream) {
             return stream
         }
-        return this.create(name, streamId, streamPartition)
+        return this.create(streamId, streamPartition, name)
     }
 
     get(streamId, streamPartition) {
@@ -26,8 +26,8 @@ module.exports = class StreamStateManager {
     /**
      * Creates and returns a Stream object, holding the Stream subscription state.
      * */
-    create(name, streamId, streamPartition) {
-        if (name == null || streamId == null || streamPartition == null) {
+    create(streamId, streamPartition, name = '') {
+        if (streamId == null || streamPartition == null) {
             throw new Error('streamId or streamPartition not given!')
         }
 
@@ -36,7 +36,7 @@ module.exports = class StreamStateManager {
             throw new Error(`stream already exists for ${key}`)
         }
 
-        const stream = new Stream(streamId, name, streamPartition)
+        const stream = new Stream(streamId, streamPartition, name)
         this._streams[key] = stream
 
         /*

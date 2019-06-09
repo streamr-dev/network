@@ -8,8 +8,8 @@ const { MessageLayer } = require('streamr-client-protocol')
 const VolumeLogger = require('../VolumeLogger')
 const partition = require('../partition')
 
+const StreamStateManager = require('../StreamStateManager')
 const Connection = require('./Connection')
-const StreamStateManager = require('./StreamStateManager')
 
 module.exports = class MqttServer extends events.EventEmitter {
     constructor(
@@ -146,7 +146,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                 .then((streamObj) => {
                     this.streamFetcher.authenticate(streamObj.id, client.apiKey, client.sessionToken)
                         .then((/* streamJson */) => {
-                            const newOrExistingStream = this.streams.getOrCreate(streamObj.name, streamObj.id, 0)
+                            const newOrExistingStream = this.streams.getOrCreate(streamObj.id, 0, streamObj.name)
 
                             // Subscribe now if the stream is not already subscribed or subscribing
                             if (!newOrExistingStream.isSubscribed() && !newOrExistingStream.isSubscribing()) {

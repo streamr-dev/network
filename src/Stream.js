@@ -1,6 +1,7 @@
 module.exports = class Stream {
-    constructor(id, partition) {
+    constructor(id, partition, name = '') {
         this.id = id
+        this.name = name
         this.partition = partition
         this.state = 'init'
         this.connections = []
@@ -43,5 +44,9 @@ module.exports = class Stream {
 
     toString() {
         return `${this.id}::${this.partition}`
+    }
+
+    getName() {
+        return this.name
     }
 }

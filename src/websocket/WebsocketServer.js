@@ -7,7 +7,7 @@ const partition = require('../partition')
 const { networkMessageToStreamrMessage } = require('../utils')
 const Connection = require('./Connection')
 const FieldDetector = require('./FieldDetector')
-const StreamStateManager = require('./StreamStateManager')
+const StreamStateManager = require('../StreamStateManager')
 
 module.exports = class WebsocketServer extends events.EventEmitter {
     constructor(
