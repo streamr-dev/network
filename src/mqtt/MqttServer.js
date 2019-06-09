@@ -39,6 +39,9 @@ module.exports = class MqttServer extends events.EventEmitter {
     }
 
     close() {
+        console.log("===============================>")
+        console.log(this.mqttServer.getConnections())
+
         this.streams.close()
         this.mqttServer.close()
     }
@@ -82,8 +85,8 @@ module.exports = class MqttServer extends events.EventEmitter {
                             debug('closing client')
                             this._closeClient(connection)
                         })
-                        client.on('error', () => {
-                            debug('error in client')
+                        client.on('error', (err) => {
+                            debug('error in client %s', err)
                             this._closeClient(connection)
                         })
                         client.on('disconnect', () => {
@@ -191,7 +194,11 @@ module.exports = class MqttServer extends events.EventEmitter {
 
         // Unsubscribe from all streams
         connection.forEachStream((stream) => {
-            connection.client.unsubscribe(stream.getName())
+            const object = {
+                messageId: 0,
+                unsubscriptions: [stream.getName()]
+            }
+            connection.client.unsubscribe(object)
         })
 
         connection.client.destroy()

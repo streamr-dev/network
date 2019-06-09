@@ -97,12 +97,15 @@ function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1
 
 describe('mqtt: end-to-end', () => {
     let tracker
+
     let broker1
     let broker2
     let broker3
+
     let client1
     let client2
     let client3
+
     let freshStream1
     let freshStreamId1
     let freshStreamName1
@@ -116,6 +119,7 @@ describe('mqtt: end-to-end', () => {
 
     beforeAll(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+
         broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, mqttPort1, true)
         broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, mqttPort2, true)
         broker3 = await startBroker('broker3', httpPort3, wsPort3, networkPort3, mqttPort3, true)
@@ -149,12 +153,15 @@ describe('mqtt: end-to-end', () => {
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
         await client3.ensureDisconnected()
+
+        mqttClient1.end()
+        mqttClient2.end()
+
         broker1.close()
         broker2.close()
         broker3.close()
-        tracker.close()
 
-        mqttClient1.destroy()
+        tracker.stop()
     })
 
     it('happy-path: real-time mqtt producing and consuming', async () => {
@@ -185,7 +192,7 @@ describe('mqtt: end-to-end', () => {
             qos: 1
         })
 
-        await wait(100)
+        await wait(1000)
 
         await mqttClient2.publish(freshStreamName1, JSON.stringify({
             key: 2
