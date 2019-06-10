@@ -81,8 +81,8 @@ class NetworkNode extends Node {
         previousTimestamp,
         previousSequenceNo,
         content,
-        signature,
-        signatureType) {
+        signatureType,
+        signature) {
         const streamMessage = StreamMessage.create(
             [streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
             previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,

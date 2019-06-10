@@ -192,7 +192,7 @@ class Node extends EventEmitter {
             }
         } else {
             this.debug('Not outbound nodes to propagate')
-            this.messageBuffer.put(`${streamMessage.getStreamId()}::${streamMessage.getStreamPartition()}`, [streamMessage, source])
+            this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
         }
     }
 
@@ -221,9 +221,9 @@ class Node extends EventEmitter {
             // Handle scenario in which we were unable to propagate message to enough nodes. This often happens when
             // socket.readyState=2 (closing)
             this.debug('put %s back to buffer because could not propagated %d nodes or more',
-                streamMessage.m, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
+                streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
             this.seenButNotPropagated.add(streamMessage.messageId)
-            this.messageBuffer.put(`${streamMessage.getStreamId()}::${streamMessage.getStreamPartition()}`, [streamMessage, source])
+            this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
         }
     }
 
