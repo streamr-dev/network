@@ -117,7 +117,7 @@ describe('mqtt: end-to-end', () => {
     let mqttClient1
     let mqttClient2
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
 
         broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, mqttPort1, true)
@@ -149,7 +149,7 @@ describe('mqtt: end-to-end', () => {
         freshStreamName2 = freshStream2.name
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
         await client3.ensureDisconnected()

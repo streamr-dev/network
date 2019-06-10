@@ -88,7 +88,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                         })
                         client.on('disconnect', () => {
                             debug('client disconnected')
-                            // this._closeClient(connection)
+                            this._closeClient(connection)
                         })
 
                         // stream timeout
