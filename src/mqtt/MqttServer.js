@@ -39,11 +39,8 @@ module.exports = class MqttServer extends events.EventEmitter {
     }
 
     close() {
-        console.log("===============================>")
-        console.log(this.mqttServer.getConnections())
-
         this.streams.close()
-        this.mqttServer.close()
+        this.mqttServer.close(() => {})
     }
 
     onNewClientConnection(stream) {
