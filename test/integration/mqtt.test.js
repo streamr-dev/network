@@ -267,6 +267,8 @@ describe('mqtt: end-to-end', () => {
         await client1.publish(freshStreamId1, {
             key: 3
         })
+
+        await wait(100)
         await mqttClient1.publish(freshStreamName1, JSON.stringify({
             key: 4
         }), {
