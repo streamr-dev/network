@@ -3,11 +3,11 @@ const { version } = require('../../package.json')
 const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMessage')
 const InstructionMessage = require('../../src/messages/InstructionMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 
 describe('encoder', () => {
     it('check streamMessage encoding/decoding', () => {
-        const json = encoder.instructionMessage(new StreamID('stream-id', 0), ['node-1', 'node-2'])
+        const json = encoder.instructionMessage(new StreamIdAndPartition('stream-id', 0), ['node-1', 'node-2'])
         expect(JSON.parse(json)).toEqual({
             code: encoder.INSTRUCTION,
             version,
@@ -26,12 +26,12 @@ describe('encoder', () => {
 
         expect(streamMessage).toBeInstanceOf(InstructionMessage)
         expect(streamMessage.getSource()).toEqual('127.0.0.1')
-        expect(streamMessage.getStreamId()).toEqual(new StreamID('stream-id', 0))
+        expect(streamMessage.getStreamId()).toEqual(new StreamIdAndPartition('stream-id', 0))
         expect(streamMessage.getNodeAddresses()).toEqual(['node-1', 'node-2'])
     })
 
     it('check encoding FIND_STORAGE_NODES', () => {
-        const actual = encoder.findStorageNodesMessage(new StreamID('stream-id', 0))
+        const actual = encoder.findStorageNodesMessage(new StreamIdAndPartition('stream-id', 0))
         expect(JSON.parse(actual)).toEqual({
             code: encoder.FIND_STORAGE_NODES,
             version,
@@ -57,11 +57,11 @@ describe('encoder', () => {
         expect(unicastMessage.getCode()).toEqual(encoder.FIND_STORAGE_NODES)
         expect(unicastMessage.getSource()).toEqual('source')
 
-        expect(unicastMessage.getStreamId()).toEqual(new StreamID('stream-id', 0))
+        expect(unicastMessage.getStreamId()).toEqual(new StreamIdAndPartition('stream-id', 0))
     })
 
     it('check encoding STORAGE_NODES', () => {
-        const actual = encoder.storageNodesMessage(new StreamID('stream-id', 0), ['ws://node-1', 'ws://node-2'])
+        const actual = encoder.storageNodesMessage(new StreamIdAndPartition('stream-id', 0), ['ws://node-1', 'ws://node-2'])
         expect(JSON.parse(actual)).toEqual({
             code: encoder.STORAGE_NODES,
             version,
@@ -95,7 +95,7 @@ describe('encoder', () => {
         expect(unicastMessage.getCode()).toEqual(encoder.STORAGE_NODES)
         expect(unicastMessage.getSource()).toEqual('source')
 
-        expect(unicastMessage.getStreamId()).toEqual(new StreamID('stream-id', 0))
+        expect(unicastMessage.getStreamId()).toEqual(new StreamIdAndPartition('stream-id', 0))
         expect(unicastMessage.getNodeAddresses()).toEqual(['ws://node-1', 'ws://node-2'])
     })
 })

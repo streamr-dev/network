@@ -4,7 +4,7 @@ const { StorageResendStrategy,
     AskNeighborsResendStrategy,
     StorageNodeResendStrategy } = require('./logic/resendStrategies')
 const Node = require('./logic/Node')
-const { StreamID } = require('./identifiers')
+const { StreamIdAndPartition } = require('./identifiers')
 
 const { StreamMessage } = MessageLayer
 
@@ -100,11 +100,11 @@ class NetworkNode extends Node {
     }
 
     subscribe(streamId, streamPartition) {
-        this.subscribeToStreamIfHaveNotYet(new StreamID(streamId, streamPartition))
+        this.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition(streamId, streamPartition))
     }
 
     unsubscribe(streamId, streamPartition) {
-        this.unsubscribeFromStream(new StreamID(streamId, streamPartition))
+        this.unsubscribeFromStream(new StreamIdAndPartition(streamId, streamPartition))
     }
 
     requestResendLast(streamId, streamPartition, subId, number) {

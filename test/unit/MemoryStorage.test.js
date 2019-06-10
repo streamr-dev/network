@@ -1,6 +1,6 @@
 const { MessageLayer } = require('streamr-client-protocol')
 const MemoryStorage = require('../../src/storage/MemoryStorage')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 
 const { StreamMessage } = MessageLayer
 
@@ -8,8 +8,8 @@ let streamMessages = []
 const MAX = 10
 const streamIdInit = 'stream-1'
 const streamIdInit2 = 'stream-2'
-const streamObj = new StreamID(streamIdInit, 0)
-const streamObj2 = new StreamID(streamIdInit2, 0)
+const streamObj = new StreamIdAndPartition(streamIdInit, 0)
+const streamObj2 = new StreamIdAndPartition(streamIdInit2, 0)
 
 const { id, partition } = streamObj
 let memoryStorage

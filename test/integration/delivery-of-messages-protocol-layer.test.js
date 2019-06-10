@@ -1,7 +1,7 @@
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForEvent } = require('../util')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
@@ -104,12 +104,12 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendInstruction is delivered', async () => {
-        trackerServer.sendInstruction('trackerNode', new StreamID('stream', 10), ['trackerNode'])
+        trackerServer.sendInstruction('trackerNode', new StreamIdAndPartition('stream', 10), ['trackerNode'])
         const [msg] = await waitForEvent(trackerNode, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
 
         expect(msg).toBeInstanceOf(InstructionMessage)
         expect(msg.getSource()).toEqual('trackerServer')
-        expect(msg.getStreamId()).toEqual(new StreamID('stream', 10))
+        expect(msg.getStreamId()).toEqual(new StreamIdAndPartition('stream', 10))
         expect(msg.getNodeAddresses()).toEqual(['ws://127.0.0.1:28513'])
     })
 
@@ -204,7 +204,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendSubscribe is delivered', async () => {
-        nodeToNode2.sendSubscribe('nodeToNode1', new StreamID('stream', 10))
+        nodeToNode2.sendSubscribe('nodeToNode1', new StreamIdAndPartition('stream', 10))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.SUBSCRIBE_REQUEST)
 
         expect(msg).toBeInstanceOf(ControlLayer.SubscribeRequest)
@@ -214,7 +214,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendUnsubscribe is delivered', async () => {
-        nodeToNode2.sendUnsubscribe('nodeToNode1', new StreamID('stream', 10))
+        nodeToNode2.sendUnsubscribe('nodeToNode1', new StreamIdAndPartition('stream', 10))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.UNSUBSCRIBE_REQUEST)
 
         expect(msg).toBeInstanceOf(ControlLayer.UnsubscribeRequest)
@@ -224,21 +224,21 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('findStorageNodes is delivered', async () => {
-        trackerNode.findStorageNodes('trackerServer', new StreamID('stream', 10))
+        trackerNode.findStorageNodes('trackerServer', new StreamIdAndPartition('stream', 10))
         const [msg] = await waitForEvent(trackerServer, TrackerServer.events.FIND_STORAGE_NODES_REQUEST)
 
         expect(msg).toBeInstanceOf(FindStorageNodesMessage)
         expect(msg.getSource()).toEqual('trackerNode')
-        expect(msg.getStreamId()).toEqual(new StreamID('stream', 10))
+        expect(msg.getStreamId()).toEqual(new StreamIdAndPartition('stream', 10))
     })
 
     test('sendStorageNodes is delivered', async () => {
-        trackerServer.sendStorageNodes('trackerNode', new StreamID('stream', 10), ['trackerNode'])
+        trackerServer.sendStorageNodes('trackerNode', new StreamIdAndPartition('stream', 10), ['trackerNode'])
         const [msg] = await waitForEvent(trackerNode, TrackerNode.events.STORAGE_NODES_RECEIVED)
 
         expect(msg).toBeInstanceOf(StorageNodesMessage)
         expect(msg.getSource()).toEqual('trackerServer')
-        expect(msg.getStreamId()).toEqual(new StreamID('stream', 10))
+        expect(msg.getStreamId()).toEqual(new StreamIdAndPartition('stream', 10))
         expect(msg.getNodeAddresses()).toEqual(['ws://127.0.0.1:28513'])
     })
 })

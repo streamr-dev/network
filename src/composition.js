@@ -7,7 +7,7 @@ const Tracker = require('./logic/Tracker')
 const Node = require('./logic/Node')
 const NetworkNode = require('./NetworkNode')
 const { startEndpoint } = require('./connection/WsEndpoint')
-const { StreamID } = require('./identifiers')
+const { StreamIdAndPartition } = require('./identifiers')
 
 function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) {
     const identity = {
@@ -85,5 +85,5 @@ module.exports = {
     startNode,
     startNetworkNode,
     startStorageNode,
-    StreamID
+    StreamIdAndPartition
 }

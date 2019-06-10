@@ -2,7 +2,6 @@ const { Readable } = require('stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const intoStream = require('into-stream')
 const ResendHandler = require('../../src/logic/ResendHandler')
-const { StreamID } = require('../../src/identifiers')
 const { waitForStreamToEnd } = require('../util')
 
 const { StreamMessage } = MessageLayer

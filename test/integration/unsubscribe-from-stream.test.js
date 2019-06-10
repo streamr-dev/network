@@ -1,14 +1,14 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const { wait, waitForEvent, LOCALHOST } = require('../util')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 
 describe('node unsubscribing from a stream', () => {
     let tracker
     let nodeA
     let nodeB
-    const s1 = new StreamID('s', 1)
-    const s2 = new StreamID('s', 2)
+    const s1 = new StreamIdAndPartition('s', 1)
+    const s2 = new StreamIdAndPartition('s', 2)
 
     beforeEach(async () => {
         tracker = await startTracker(LOCALHOST, 30450, 'tracker')

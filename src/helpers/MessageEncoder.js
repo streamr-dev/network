@@ -3,7 +3,7 @@ const FindStorageNodesMessage = require('../messages/FindStorageNodesMessage')
 const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
 const StorageNodesMessage = require('../messages/StorageNodesMessage')
-const { StreamID } = require('../identifiers')
+const { StreamIdAndPartition } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
 
 const encode = (type, payload) => {
@@ -30,20 +30,20 @@ const decode = (source, message) => {
 
         case msgTypes.INSTRUCTION:
             return new InstructionMessage(
-                new StreamID(payload.streamId, payload.streamPartition),
+                new StreamIdAndPartition(payload.streamId, payload.streamPartition),
                 payload.nodeAddresses,
                 source
             )
 
         case msgTypes.FIND_STORAGE_NODES:
             return new FindStorageNodesMessage(
-                new StreamID(payload.streamId, payload.streamPartition),
+                new StreamIdAndPartition(payload.streamId, payload.streamPartition),
                 source
             )
 
         case msgTypes.STORAGE_NODES:
             return new StorageNodesMessage(
-                new StreamID(payload.streamId, payload.streamPartition),
+                new StreamIdAndPartition(payload.streamId, payload.streamPartition),
                 payload.nodeAddresses,
                 source
             )

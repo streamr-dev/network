@@ -4,7 +4,7 @@ const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
-const { StreamID } = require('../identifiers')
+const { StreamIdAndPartition } = require('../identifiers')
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
 
@@ -175,7 +175,7 @@ class Node extends EventEmitter {
     }
 
     onDataReceived(streamMessage, source = null) {
-        const streamIdAndPartition = new StreamID(streamMessage.getStreamId(), streamMessage.getStreamPartition())
+        const streamIdAndPartition = new StreamIdAndPartition(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
         this.emit(events.MESSAGE_RECEIVED, streamMessage, source)
 
@@ -201,7 +201,7 @@ class Node extends EventEmitter {
     }
 
     async _propagateMessage(streamMessage, source) {
-        const streamIdAndPartition = new StreamID(streamMessage.getStreamId(), streamMessage.getStreamPartition())
+        const streamIdAndPartition = new StreamIdAndPartition(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
         const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
         const successfulSends = []
@@ -228,7 +228,7 @@ class Node extends EventEmitter {
     }
 
     onSubscribeRequest(subscribeMessage, source) {
-        const streamId = new StreamID(subscribeMessage.streamId, subscribeMessage.streamPartition)
+        const streamId = new StreamIdAndPartition(subscribeMessage.streamId, subscribeMessage.streamPartition)
         this.emit(events.SUBSCRIPTION_REQUEST, {
             streamId,
             source
@@ -252,7 +252,7 @@ class Node extends EventEmitter {
     }
 
     onUnsubscribeRequest(unsubscribeMessage, source) {
-        const streamIdAndPartition = new StreamID(unsubscribeMessage.streamId, unsubscribeMessage.streamPartition)
+        const streamIdAndPartition = new StreamIdAndPartition(unsubscribeMessage.streamId, unsubscribeMessage.streamPartition)
         this.streams.removeNodeFromStream(streamIdAndPartition, source)
         this.debug('node %s unsubscribed from stream %s', source, streamIdAndPartition)
         this.emit(events.NODE_UNSUBSCRIBED, source, streamIdAndPartition)

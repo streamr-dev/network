@@ -5,7 +5,7 @@ const { AskNeighborsResendStrategy,
     StorageResendStrategy,
     StorageNodeResendStrategy } = require('../../src/logic/resendStrategies')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const { waitForStreamToEnd } = require('../util')
@@ -324,7 +324,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
             resendStrategy.getResendResponseStream(request)
 
             expect(trackerNode.findStorageNodes).toBeCalledTimes(1)
-            expect(trackerNode.findStorageNodes).toBeCalledWith('tracker', new StreamID('streamId', 0))
+            expect(trackerNode.findStorageNodes).toBeCalledWith('tracker', new StreamIdAndPartition('streamId', 0))
         })
 
         test('if communication with tracker fails, returns empty stream', async () => {
@@ -354,7 +354,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
         test('if tracker responds with zero storage nodes, returns empty stream', async () => {
             trackerNode.emit(
                 TrackerNode.events.STORAGE_NODES_RECEIVED,
-                new StorageNodesMessage(new StreamID('streamId', 0), [])
+                new StorageNodesMessage(new StreamIdAndPartition('streamId', 0), [])
             )
             const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
@@ -371,7 +371,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
 
             trackerNode.emit(
                 TrackerNode.events.STORAGE_NODES_RECEIVED,
-                new StorageNodesMessage(new StreamID('streamId', 0), [
+                new StorageNodesMessage(new StreamIdAndPartition('streamId', 0), [
                     'ws://storageNode-1',
                     'ws://storageNode-2',
                     'ws://storageNode-3',
@@ -395,7 +395,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
 
             trackerNode.emit(
                 TrackerNode.events.STORAGE_NODES_RECEIVED,
-                new StorageNodesMessage(new StreamID('streamId', 0), [
+                new StorageNodesMessage(new StreamIdAndPartition('streamId', 0), [
                     'ws://storageNode-1',
                     'ws://storageNode-2'
                 ])
@@ -422,7 +422,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
         const emitTrackerResponse = () => {
             trackerNode.emit(
                 TrackerNode.events.STORAGE_NODES_RECEIVED,
-                new StorageNodesMessage(new StreamID('streamId', 0), ['ws://storageNode'])
+                new StorageNodesMessage(new StreamIdAndPartition('streamId', 0), ['ws://storageNode'])
             )
             return new Promise((resolve) => setImmediate(resolve))
         }
@@ -473,7 +473,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
             setImmediate(() => { // wait for this.trackerNode.findStorageNodes(...)
                 trackerNode.emit(
                     TrackerNode.events.STORAGE_NODES_RECEIVED,
-                    new StorageNodesMessage(new StreamID('streamId', 0), ['ws://storageNode'])
+                    new StorageNodesMessage(new StreamIdAndPartition('streamId', 0), ['ws://storageNode'])
                 )
                 done()
             })
@@ -563,7 +563,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
             setImmediate(() => {
                 trackerNode.emit(
                     TrackerNode.events.STORAGE_NODES_RECEIVED,
-                    new StorageNodesMessage(new StreamID('streamId', 0), ['ws://storageNode'])
+                    new StorageNodesMessage(new StreamIdAndPartition('streamId', 0), ['ws://storageNode'])
                 )
 
                 // Causes the stream to end. Other ways to end are a) failing to forward request and b) timeout. All of

@@ -3,7 +3,7 @@ const { LOCALHOST, waitForEvent } = require('../util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
 const encoder = require('../../src/helpers/MessageEncoder')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 const endpointEvents = require('../../src/connection/Endpoint').events
 const { disconnectionReasons } = require('../../src/messages/messageTypes')
 
@@ -80,7 +80,7 @@ describe('Check tracker instructions to node', () => {
         // send empty list
         await tracker.protocols.trackerServer.endpoint.send(
             otherNodes[0].protocols.nodeToNode.getAddress(),
-            encoder.instructionMessage(new StreamID(streamId, 0), [])
+            encoder.instructionMessage(new StreamIdAndPartition(streamId, 0), [])
         )
     })
 })

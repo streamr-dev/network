@@ -1,7 +1,7 @@
 /**
  * Uniquely identifies a stream
  */
-class StreamID {
+class StreamIdAndPartition {
     constructor(id, partition) {
         if (typeof id !== 'string') {
             throw new Error(`invalid id: ${id}`)
@@ -22,15 +22,15 @@ class StreamID {
     }
 
     static fromObject({ id, partition }) {
-        return new StreamID(id, partition)
+        return new StreamIdAndPartition(id, partition)
     }
 
     static fromKey(key) {
         const [id, partition] = key.split('::')
-        return new StreamID(id, Number.parseInt(partition, 10))
+        return new StreamIdAndPartition(id, Number.parseInt(partition, 10))
     }
 }
 
 module.exports = {
-    StreamID,
+    StreamIdAndPartition,
 }

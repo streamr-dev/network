@@ -1,6 +1,6 @@
 const { MessageLayer } = require('streamr-client-protocol')
 const Node = require('../../src/logic/Node')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')
 const { waitForCondition, LOCALHOST } = require('../../test/util')
 
@@ -63,8 +63,8 @@ describe('message propagation in network', () => {
             payload: streamMessage.getParsedContent()
         }))
 
-        n2.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
-        n3.subscribeToStreamIfHaveNotYet(new StreamID('stream-1', 0))
+        n2.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition('stream-1', 0))
+        n3.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition('stream-1', 0))
 
         for (let i = 1; i <= 5; ++i) {
             const streamMessage = StreamMessage.create(['stream-1', 0, i, 0, 'publisher-id', 'sessionId'],

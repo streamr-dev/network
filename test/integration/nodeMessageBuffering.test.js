@@ -2,7 +2,7 @@ const { MessageLayer } = require('streamr-client-protocol')
 const { startNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const { LOCALHOST } = require('../util')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -44,7 +44,7 @@ describe('message buffering of Node', () => {
             done()
         })
 
-        destinationNode.subscribeToStreamIfHaveNotYet(new StreamID('id', 0))
+        destinationNode.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition('id', 0))
 
         // "Client" pushes data
         const streamMessage = StreamMessage.create(['id', 0, 1, 0, 'publisher-id', 'session-id'], [0, 0], StreamMessage.CONTENT_TYPES.JSON, {

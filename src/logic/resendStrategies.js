@@ -2,7 +2,7 @@ const { Readable, Transform } = require('stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 
 const { StreamMessage } = MessageLayer
 
@@ -170,7 +170,7 @@ class ProxiedResend {
         }
 
         const candidates = this.getNeighbors(
-            new StreamID(this.request.streamId, this.request.streamPartition)
+            new StreamIdAndPartition(this.request.streamId, this.request.streamPartition)
         ).filter((x) => !this.neighborsAsked.has(x))
         if (candidates.length === 0) {
             this._endStream()
@@ -258,7 +258,7 @@ class PendingTrackerResponseBookkeeper {
     }
 
     addEntry(request, responseStream) {
-        const streamIdAndPartition = new StreamID(request.streamId, request.streamPartition)
+        const streamIdAndPartition = new StreamIdAndPartition(request.streamId, request.streamPartition)
         const { subId } = request
 
         if (!this.pending[streamIdAndPartition]) {
@@ -385,7 +385,7 @@ class StorageNodeResendStrategy {
     }
 
     _requestStorageNodes(request, responseStream) {
-        const streamIdAndPartition = new StreamID(request.streamId, request.streamPartition)
+        const streamIdAndPartition = new StreamIdAndPartition(request.streamId, request.streamPartition)
         const tracker = this.getTracker(streamIdAndPartition)
         if (tracker == null) {
             responseStream.push(null)

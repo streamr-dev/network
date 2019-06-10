@@ -3,7 +3,7 @@ const TrackerNode = require('../../src/protocol/TrackerNode')
 const Node = require('../../src/logic/Node')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const { LOCALHOST, waitForEvent } = require('../util')
-const { StreamID } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../../src/identifiers')
 
 describe('Check tracker will subscribe storage node to all streams', () => {
     const trackerId = 'tracker'
@@ -19,8 +19,8 @@ describe('Check tracker will subscribe storage node to all streams', () => {
     const streamIdOne = 'stream-1'
     const streamIdTwo = 'stream-2'
 
-    const streamOne = new StreamID(streamIdOne, 0)
-    const streamTwo = new StreamID(streamIdTwo, 0)
+    const streamOne = new StreamIdAndPartition(streamIdOne, 0)
+    const streamTwo = new StreamIdAndPartition(streamIdTwo, 0)
 
     beforeEach(async () => {
         tracker = await startTracker(LOCALHOST, 31950, trackerId)

@@ -1,4 +1,4 @@
-const { StreamID } = require('../identifiers')
+const { StreamIdAndPartition } = require('../identifiers')
 const { DuplicateMessageDetector, NumberPair } = require('./DuplicateMessageDetector')
 
 const keyForDetector = ({ publisherId, msgChainId }) => `${publisherId}-${msgChainId}`
@@ -9,8 +9,8 @@ module.exports = class StreamManager {
     }
 
     setUpStream(streamId) {
-        if (!(streamId instanceof StreamID)) {
-            throw new Error('streamId not instance of StreamID')
+        if (!(streamId instanceof StreamIdAndPartition)) {
+            throw new Error('streamId not instance of StreamIdAndPartition')
         }
         if (this.isSetUp(streamId)) {
             throw new Error(`Stream ${streamId} already set up`)
@@ -23,7 +23,7 @@ module.exports = class StreamManager {
     }
 
     markNumbersAndCheckThatIsNotDuplicate(messageId, previousMessageReference) {
-        const streamIdAndPartition = new StreamID(messageId.streamId, messageId.streamPartition)
+        const streamIdAndPartition = new StreamIdAndPartition(messageId.streamId, messageId.streamPartition)
         this._verifyThatIsSetUp(streamIdAndPartition)
 
         const detectorKey = keyForDetector(messageId)
@@ -84,7 +84,7 @@ module.exports = class StreamManager {
     }
 
     getStreams() {
-        return this.getStreamsAsKeys().map((key) => StreamID.fromKey(key))
+        return this.getStreamsAsKeys().map((key) => StreamIdAndPartition.fromKey(key))
     }
 
     getStreamsWithConnections() {
