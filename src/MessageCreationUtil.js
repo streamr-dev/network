@@ -25,7 +25,8 @@ export default class MessageCreationUtil {
 
     async getUsername() {
         if (!this.usernamePromise) {
-            this.usernamePromise = this.userInfoPromise.then((userInfo) => userInfo.username)
+            // In the edge case where StreamrClient.auth.apiKey is an anonymous key, userInfo.id is that anonymous key
+            this.usernamePromise = this.userInfoPromise.then((userInfo) => userInfo.username || userInfo.id)
         }
         return this.usernamePromise
     }
