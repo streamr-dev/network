@@ -1,29 +1,16 @@
-const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
+const { msgTypes } = require('./messageTypes')
+const NetworkMessage = require('./NetworkMessage')
 
-module.exports = class FindStorageNodesMessage {
+module.exports = class FindStorageNodesMessage extends NetworkMessage {
     constructor(streamId, source = null) {
+        super(msgTypes.FIND_STORAGE_NODES, source)
         if (streamId == null) {
             throw new Error('streamId not given')
         }
-        this.version = CURRENT_VERSION
-        this.code = msgTypes.FIND_STORAGE_NODES
-        this.source = source
         this.streamId = streamId
-    }
-
-    getVersion() {
-        return this.version
-    }
-
-    getCode() {
-        return this.code
     }
 
     getStreamId() {
         return this.streamId
-    }
-
-    getSource() {
-        return this.source
     }
 }

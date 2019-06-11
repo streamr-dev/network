@@ -1,5 +1,7 @@
 const { EventEmitter } = require('events')
 const { ControlLayer } = require('streamr-client-protocol')
+const encoder = require('../helpers/MessageEncoder')
+const { msgTypes } = require('../messages/messageTypes')
 const EndpointListener = require('./EndpointListener')
 const { PeerBook, peerTypes } = require('./PeerBook')
 
@@ -61,7 +63,7 @@ class NodeToNode extends EventEmitter {
 
     send(receiverNodeId, message) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, message.serialize())
+        return this.endpoint.send(receiverNodeAddress, encoder.wrapperMessage(message))
     }
 
     getAddress() {
@@ -88,8 +90,10 @@ class NodeToNode extends EventEmitter {
         return this.endpoint.customHeaders.headers['streamr-peer-type'] === peerTypes.STORAGE
     }
 
-    onMessageReceived(message, source) {
-        this.emit(eventPerType[message.type], message, source)
+    onMessageReceived(message) {
+        if (message.getCode() === msgTypes.WRAPPER) {
+            this.emit(eventPerType[message.controlLayerPayload.type], message.controlLayerPayload, message.getSource())
+        }
     }
 }
 

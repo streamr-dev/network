@@ -36,10 +36,6 @@ class TrackerNode extends EventEmitter {
     }
 
     onMessageReceived(message) {
-        // Unifying all the messages in the same protocol with a third layer would allow to avoid this hack
-        if (message.version === 1) {
-            return
-        }
         switch (message.getCode()) {
             case encoder.INSTRUCTION:
                 this.emit(events.TRACKER_INSTRUCTION_RECEIVED, message)

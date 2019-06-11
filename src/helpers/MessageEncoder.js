@@ -3,11 +3,12 @@ const FindStorageNodesMessage = require('../messages/FindStorageNodesMessage')
 const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
 const StorageNodesMessage = require('../messages/StorageNodesMessage')
+const WrapperMessage = require('../messages/WrapperMessage')
 const { StreamIdAndPartition } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
 
 const encode = (type, payload) => {
-    if (type < 0 || type > 14) {
+    if (type < 0 || type > 4) {
         throw new Error(`Unknown message type: ${type}`)
     }
 
@@ -20,9 +21,6 @@ const encode = (type, payload) => {
 
 const decode = (source, message) => {
     const { code, payload } = JSON.parse(message)
-    if (code === undefined) {
-        return ControlLayer.ControlMessage.deserialize(message)
-    }
 
     switch (code) {
         case msgTypes.STATUS:
@@ -48,6 +46,9 @@ const decode = (source, message) => {
                 source
             )
 
+        case msgTypes.WRAPPER:
+            return new WrapperMessage(ControlLayer.ControlMessage.deserialize(payload.serializedControlLayerPayload), source)
+
         default:
             throw new Error(`Unknown message type: ${code}`)
     }
@@ -69,6 +70,9 @@ module.exports = {
         streamId: streamId.id,
         streamPartition: streamId.partition,
         nodeAddresses
+    }),
+    wrapperMessage: (controlLayerPayload) => encode(msgTypes.WRAPPER, {
+        serializedControlLayerPayload: controlLayerPayload.serialize()
     }),
     ...msgTypes,
     CURRENT_VERSION

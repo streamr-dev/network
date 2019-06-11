@@ -1,28 +1,15 @@
-const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
+const { msgTypes } = require('./messageTypes')
+const NetworkMessage = require('./NetworkMessage')
 
-module.exports = class InstructionMessage {
+module.exports = class InstructionMessage extends NetworkMessage {
     constructor(streamId, nodeAddresses = [], source = null) {
+        super(msgTypes.INSTRUCTION, source)
         if (typeof streamId === 'undefined') {
             throw new Error('streamId cant be undefined')
         }
-        this.version = CURRENT_VERSION
-        this.code = msgTypes.INSTRUCTION
-        this.source = source
 
         this.streamId = streamId
         this.nodeAddresses = nodeAddresses
-    }
-
-    getVersion() {
-        return this.version
-    }
-
-    getCode() {
-        return this.code
-    }
-
-    getSource() {
-        return this.source
     }
 
     getStreamId() {

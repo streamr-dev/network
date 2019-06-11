@@ -1,22 +1,13 @@
-const { msgTypes, CURRENT_VERSION } = require('./messageTypes')
+const { msgTypes } = require('./messageTypes')
+const NetworkMessage = require('./NetworkMessage')
 
-module.exports = class StatusMessage {
+module.exports = class StatusMessage extends NetworkMessage {
     constructor(status, source = null) {
+        super(msgTypes.STATUS, source)
         if (typeof status === 'undefined') {
             throw new Error('status cant be undefined')
         }
-        this.version = CURRENT_VERSION
-        this.code = msgTypes.STATUS
-        this.source = source
         this.status = status
-    }
-
-    getVersion() {
-        return this.version
-    }
-
-    getCode() {
-        return this.code
     }
 
     getStatus() {
@@ -25,15 +16,6 @@ module.exports = class StatusMessage {
 
     setStatus(status) {
         this.status = status
-        return this
-    }
-
-    getSource() {
-        return this.source
-    }
-
-    setSource(source) {
-        this.source = source
         return this
     }
 
