@@ -121,6 +121,10 @@ export default class StreamMessage {
             }
         }
     }
+
+    static versionSupportsEncryption(streamMessageVersion) {
+        return streamMessageVersion >= 31
+    }
 }
 /* static */ StreamMessage.LATEST_VERSION = LATEST_VERSION
 
