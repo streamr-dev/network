@@ -5,5 +5,8 @@ module.exports = class InvalidJsonError extends Error {
         this.jsonString = jsonString
         this.parseError = parseError
         this.streamMessage = streamMessage
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
     }
 }
