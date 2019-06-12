@@ -3,5 +3,8 @@ module.exports = class VerificationFailedError extends Error {
         super(`Verification failed for message: ${streamMessage.serialize()}, cause: ${cause}`)
         this.streamMessage = streamMessage
         this.cause = cause
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
     }
 }

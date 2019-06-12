@@ -4,5 +4,8 @@ module.exports = class FailedToPublishError extends Error {
         this.streamId = streamId
         this.msg = msg
         this.reason = reason
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
     }
 }
