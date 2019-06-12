@@ -9,9 +9,6 @@ branches:
 before_install:
 - npm i -g npm@6.9.0
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
-env:
-  global:
-  - secure: opL3vm0mTZl9g9TI+53d04AlTVYq7OA38WUMJQJWHVgPmmyfobOoFvT6+9xDXzbnh4NAgXrqtJGOxnQKkK2o+gyT2e78dLWZx1RfeeLwntgVCTEYLl844tOtgc1bwivy7ND9HfPam1yfBjYQ6UmpsgkILrPbzzHfcDwWvFXLHANk/3IiCE705gtvdC5c1/JXdUtzhYmpmsQ9JOkAg0+n6qmNvYwU7VrIixogojnEP0U3yDSbwJ+yPiWNzZpnwwe4jI/G1KE193rbEQjEOURGiyoxeyBrFOANDYT5BohRGjwsi2MTs/PEl9WDXlNfliOadtjUFI0Y3ByatLpPzWzz5aVVSxifW1YbG+WbVfqw7S4VP3ebnsHiY5uFm0f1o6wVLlNFdQtRxVi1w8mSi90C7hqs3SjFQWtStGYhiNOnqYGpSz74HOEojTUdIsT9DqOXE7tVIdH/PcnNAflHG5kbvNPv8sW5FX4Vw2ECCuT73LuYXYZ+aW0ykogFcsP84rX6yw4P4z+VS758zJ7LeJapxXzS5C0lGR9ISzg91/tSR+4RhsurwRPPRGntQULm9WBfE6QKTPxfFE8/Pprxm2kPWt3svrsNBdCgR4nTEaYF1AbX2SRQJZ4gcJF5ojfkCaP9s3YtTedJ3aV7070OoT7qReksz4A3QSKpc75uTKR8yQ8=
 jobs:
   include:
   - stage: Unit tests
@@ -25,3 +22,6 @@ jobs:
     - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 1"
     - sleep 1m
     - npm run test-integration
+env:
+  global:
+    secure: YjBJm1GmSusUoHue15sAj04mZYhd6yC6v/V45hhyMhSfEawZn1H4nFzPiBqhNGZ2Lti2P+axJ5HXkFz/my/hWWL9+ENEKl0MczXcIWz5COZGZFJQORMCmL8u5yvFZvMqMGUwLuN6pkFnTHgYjRL7x7Ee+MEk+1qP0Tfy1qYaUhr192XzteRMI1zllxZSf3ElEY0BOjJ0N9PJs4O9X1T28w/lmW6c0ORiS9dCIG5afaMD50YRFrZCzc+l0e/kcSHo9lillCiD6755uTPBPYEmWYGmICRvG2qK+Hnv9B42sr3AOVKmkUyFHZgN1GOByHzcib8yrKdo2sgEr/oaFQvI2du915MDEAjMlQfeSbYjsPSouDMBD8CxhY6MVDwKZzMYF3KfSs7sttd411hx1vhog4aX+K6OFcVXyc/iSZAzSLSJQQvHrGffu5+lb/j7408vgJp69MAaK4ICfRhnGJbgcd/JxpGGeQiCELu1Zu7Sw8rXyq+W3ilvbOjfT0pXR9KzmZlFPpx083Ho51MxKoGEmxXL/RrW/LW5fx+EQXTuOQMnS+NUyJwPUUg16B0c+F2fNsov9KqXLiJBMXzo+fosjlWI+tm0pwNueFlGKJjs67Q/WwV5lKYyABQjTeBrT6AujGT7jeHHqp5ZrmKDLBHZK4isy63RqPeX+mwm/1fmHUU=
