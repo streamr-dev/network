@@ -21,6 +21,7 @@ jobs:
     - sudo ifconfig docker0 10.200.10.1/24
     - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 1"
     - sleep 1m
+    - node node_modules/@streamr/streamr-p2p-network/bin/tracker.js &
     - npm run test-integration
 env:
   global:
