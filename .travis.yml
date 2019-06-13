@@ -7,7 +7,6 @@ branches:
   - master
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
-- sudo apt-get install libstdc++6
 - npm i -g npm@6.9.0
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 jobs:
