@@ -33,7 +33,6 @@
     "express": "^4.17.0",
     "memoizee": "^0.4.4",
     "merge2": "^1.2.3",
-    "murmurhash-native": "^3.4.1",
     "node-fetch": "^2.6.0",
     "qs": "^6.7.0",
     "streamr-client-protocol": "^2.1.0",
