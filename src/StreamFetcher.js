@@ -27,6 +27,10 @@ module.exports = class StreamFetcher {
             maxAge: MAX_AGE,
             promise: true,
         })
+        this.getStream = memoize(this._getStream, {
+            maxAge: MAX_AGE,
+            promise: true,
+        })
     }
 
     authenticate(streamId, authKey, sessionToken, operation = 'read') {
@@ -52,7 +56,7 @@ module.exports = class StreamFetcher {
         })
     }
 
-    getStream(topic, token) {
+    _getStream(topic, token) {
         return new Promise((resolve, reject) => {
             fetch(`${this.streamResourceUrl}?name=${topic}`, {
                 method: 'GET',

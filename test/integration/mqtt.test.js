@@ -164,7 +164,26 @@ describe('mqtt: end-to-end', () => {
         tracker.stop()
     })
 
-    it('happy-path: real-time mqtt producing and consuming', async () => {
+    it('test not valid api key', async (done) => {
+        const mqttClient = createMqttClient(mqttPort1, 'localhost', 'NOT_VALID_KEY')
+        mqttClient.on('error', (err) => {
+            expect(err.message).toEqual('Connection refused: Bad username or password')
+            done()
+        })
+    })
+
+    it('test valid api key without permissions to stream', async (done) => {
+        mqttClient1.on('error', (err) => {
+            expect(err.message).toEqual('Connection refused: Not authorized')
+            done()
+        })
+
+        await mqttClient1.publish('NOT_VALID_STREARM', 'key: 1', {
+            qos: 1
+        })
+    })
+
+    it('happy-path: real-time mqtt plain text producing and consuming', async () => {
         const client1Messages = []
         const client2Messages = []
 
@@ -175,15 +194,61 @@ describe('mqtt: end-to-end', () => {
         mqttClient2.subscribe(freshStreamName1)
 
         mqttClient1.on('message', (topic, message) => {
-            if (topic === freshStreamName1) {
-                client1Messages.push(JSON.parse(message.toString()))
-            }
+            client1Messages.push(JSON.parse(message.toString()))
         })
 
         mqttClient2.on('message', (topic, message) => {
-            if (topic === freshStreamName1) {
-                client2Messages.push(JSON.parse(message.toString()))
+            client2Messages.push(JSON.parse(message.toString()))
+        })
+
+        await mqttClient1.publish(freshStreamName1, 'key: 1', {
+            qos: 1
+        })
+
+        await wait(1000)
+
+        await mqttClient2.publish(freshStreamName1, 'key: 2', {
+            qos: 1
+        })
+
+        await waitForCondition(() => client1Messages.length === 2)
+        await waitForCondition(() => client2Messages.length === 2)
+
+        expect(client1Messages).toEqual([
+            {
+                mqttPayload: 'key: 1'
+            },
+            {
+                mqttPayload: 'key: 2'
             }
+        ])
+
+        expect(client2Messages).toEqual([
+            {
+                mqttPayload: 'key: 1'
+            },
+            {
+                mqttPayload: 'key: 2'
+            }
+        ])
+    })
+
+    it('happy-path: real-time mqtt json producing and consuming', async () => {
+        const client1Messages = []
+        const client2Messages = []
+
+        await waitForCondition(() => mqttClient1.connected)
+        await waitForCondition(() => mqttClient2.connected)
+
+        mqttClient1.subscribe(freshStreamName1)
+        mqttClient2.subscribe(freshStreamName1)
+
+        mqttClient1.on('message', (topic, message) => {
+            client1Messages.push(JSON.parse(message.toString()))
+        })
+
+        mqttClient2.on('message', (topic, message) => {
+            client2Messages.push(JSON.parse(message.toString()))
         })
 
         await mqttClient1.publish(freshStreamName1, JSON.stringify({
@@ -234,9 +299,7 @@ describe('mqtt: end-to-end', () => {
 
         mqttClient1.subscribe(freshStreamName1)
         mqttClient1.on('message', (topic, message) => {
-            if (topic === freshStreamName1) {
-                client4Messages.push(JSON.parse(message.toString()))
-            }
+            client4Messages.push(JSON.parse(message.toString()))
         })
 
         client1.subscribe({

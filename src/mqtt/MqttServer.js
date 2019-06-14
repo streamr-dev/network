@@ -13,6 +13,17 @@ const Connection = require('./Connection')
 
 let sequenceNumber = 0
 
+function mqttPayloadToJson(payload) {
+    try {
+        JSON.parse(payload)
+    } catch (e) {
+        return {
+            mqttPayload: payload
+        }
+    }
+    return payload
+}
+
 module.exports = class MqttServer extends events.EventEmitter {
     constructor(
         mqttServer,
@@ -43,8 +54,8 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.mqttServer.close(() => {})
     }
 
-    onNewClientConnection(stream) {
-        const client = mqttCon(stream)
+    onNewClientConnection(mqttStream) {
+        const client = mqttCon(mqttStream)
         let connection
 
         client.on('connect', (packet) => {
@@ -55,13 +66,18 @@ module.exports = class MqttServer extends events.EventEmitter {
 
             this.streamFetcher.getToken(apiKey)
                 .then((res) => {
+                    // got some error
                     if (res.code) {
+                        // Connection refused, bad user name or password
                         client.connack({
                             returnCode: 4
                         })
+                        return
                     }
 
+                    // got token
                     if (res.token) {
+                        // Connection accepted
                         client.connack({
                             returnCode: 0
                         })
@@ -75,7 +91,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                         client.apiKey = apiKey
 
                         // timeout idle streams after X minutes
-                        stream.setTimeout(this.streamsTimeout)
+                        mqttStream.setTimeout(this.streamsTimeout)
 
                         // connection error handling
                         client.on('close', () => {
@@ -92,7 +108,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                         })
 
                         // stream timeout
-                        stream.on('timeout', () => {
+                        mqttStream.on('timeout', () => {
                             debug('client timeout')
                             this._closeClient(connection)
                         })
@@ -108,9 +124,17 @@ module.exports = class MqttServer extends events.EventEmitter {
 
             this.streamFetcher.getStream(topic, client.token)
                 .then((streamObj) => {
+                    if (streamObj === undefined) {
+                        client.connack({
+                            returnCode: 5
+                        })
+                        return
+                    }
                     this.streamFetcher.authenticate(streamObj.id, client.apiKey, client.token, 'write')
                         .then((/* streamJson */) => {
                             const streamPartition = this.partitionFn(streamObj.partitions, 0)
+
+                            const textPayload = payload.toString()
                             const streamMessage = MessageLayer.StreamMessage.create(
                                 [
                                     streamObj.id,
@@ -122,7 +146,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                                 ],
                                 [null, null],
                                 MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-                                JSON.parse(payload),
+                                mqttPayloadToJson(textPayload),
                                 MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null
                             )
 
@@ -217,12 +241,10 @@ module.exports = class MqttServer extends events.EventEmitter {
         const stream = this.streams.get(streamId, streamPartition)
 
         if (stream) {
-            const payload = JSON.stringify(data)
-
             const object = {
                 cmd: 'publish',
                 topic: stream.name,
-                payload
+                payload: JSON.stringify(data)
             }
 
             stream.forEachConnection((connection) => {
@@ -235,4 +257,3 @@ module.exports = class MqttServer extends events.EventEmitter {
         }
     }
 }
-
