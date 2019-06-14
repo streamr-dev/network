@@ -1,4 +1,4 @@
-const murmur = require('murmurhash-native').murmurHash
+const crypto = require('crypto')
 
 module.exports = function partition(partitionCount, partitionKey) {
     if (!partitionCount) {
@@ -7,9 +7,8 @@ module.exports = function partition(partitionCount, partitionKey) {
         // Fast common case
         return 0
     } else if (partitionKey) {
-        const bytes = Buffer.from(partitionKey, 'utf8')
-        const resultBytes = murmur(bytes, 0, 'buffer')
-        const intHash = resultBytes.readInt32LE()
+        const buffer = crypto.createHash('md5').update(partitionKey).digest()
+        const intHash = buffer.readInt32LE()
         return Math.abs(intHash) % partitionCount
     } else {
         // Fallback to random partition if no key

@@ -1,13 +1,14 @@
 language: node_js
 node_js:
-- '8'
+- 10.15.3
 sudo: true
 branches:
   only:
   - master
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
-- npm i -g npm@6.0.0
+- npm i -g npm@6.9.0
+- npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 jobs:
   include:
   - stage: Unit tests
@@ -18,6 +19,10 @@ jobs:
     - sudo /etc/init.d/mysql stop
     - git clone https://github.com/streamr-dev/streamr-docker-dev.git
     - sudo ifconfig docker0 10.200.10.1/24
-    - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start 1"
+    - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start engine-and-editor"
     - sleep 1m
+    - node node_modules/@streamr/streamr-p2p-network/bin/tracker.js &
     - npm run test-integration
+env:
+  global:
+    secure: YjBJm1GmSusUoHue15sAj04mZYhd6yC6v/V45hhyMhSfEawZn1H4nFzPiBqhNGZ2Lti2P+axJ5HXkFz/my/hWWL9+ENEKl0MczXcIWz5COZGZFJQORMCmL8u5yvFZvMqMGUwLuN6pkFnTHgYjRL7x7Ee+MEk+1qP0Tfy1qYaUhr192XzteRMI1zllxZSf3ElEY0BOjJ0N9PJs4O9X1T28w/lmW6c0ORiS9dCIG5afaMD50YRFrZCzc+l0e/kcSHo9lillCiD6755uTPBPYEmWYGmICRvG2qK+Hnv9B42sr3AOVKmkUyFHZgN1GOByHzcib8yrKdo2sgEr/oaFQvI2du915MDEAjMlQfeSbYjsPSouDMBD8CxhY6MVDwKZzMYF3KfSs7sttd411hx1vhog4aX+K6OFcVXyc/iSZAzSLSJQQvHrGffu5+lb/j7408vgJp69MAaK4ICfRhnGJbgcd/JxpGGeQiCELu1Zu7Sw8rXyq+W3ilvbOjfT0pXR9KzmZlFPpx083Ho51MxKoGEmxXL/RrW/LW5fx+EQXTuOQMnS+NUyJwPUUg16B0c+F2fNsov9KqXLiJBMXzo+fosjlWI+tm0pwNueFlGKJjs67Q/WwV5lKYyABQjTeBrT6AujGT7jeHHqp5ZrmKDLBHZK4isy63RqPeX+mwm/1fmHUU=

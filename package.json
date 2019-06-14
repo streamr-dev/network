@@ -11,7 +11,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest --detectOpenHandles --runInBand",
+    "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit",
     "test-integration": "jest --detectOpenHandles test/integration",
     "eslint": "eslint ."
@@ -34,7 +34,6 @@
     "memoizee": "^0.4.4",
     "merge2": "^1.2.3",
     "mqtt-connection": "^4.0.0",
-    "murmurhash-native": "^3.4.1",
     "node-fetch": "^2.6.0",
     "qs": "^6.7.0",
     "streamr-client-protocol": "^2.1.0",
