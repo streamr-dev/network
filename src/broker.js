@@ -105,7 +105,9 @@ module.exports = async (config) => {
 
     return {
         close: () => {
+            networkNode.stop()
             closeAdapterFns.forEach((close) => close())
+            storages.forEach((storage) => storage.close())
             volumeLogger.close()
         },
     }
