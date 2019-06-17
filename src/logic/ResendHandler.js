@@ -45,6 +45,14 @@ class ResendHandler {
         return requestStream
     }
 
+    stop() {
+        this.resendStrategies.forEach((resendStrategy) => {
+            if (resendStrategy.stop) {
+                resendStrategy.stop()
+            }
+        })
+    }
+
     async _loopThruResendStrategies(request, requestStream) {
         let isRequestFulfilled = false
 
