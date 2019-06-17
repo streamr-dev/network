@@ -1,6 +1,7 @@
-import qs from 'querystring'
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
+
+import qs from 'qs'
 import debugFactory from 'debug'
 
 import Stream from './domain/Stream'
