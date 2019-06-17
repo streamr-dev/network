@@ -131,6 +131,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.streamFetcher.getStream(topic, connection.token)
             .then((streamObj) => {
                 if (streamObj === undefined) {
+                    // Connection refused, not authorized
                     connection.client.connack({
                         returnCode: 5
                     })
