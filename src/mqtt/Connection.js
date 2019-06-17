@@ -1,10 +1,24 @@
+const events = require('events')
 const debug = require('debug')('streamr:Connection:mqtt')
 
-module.exports = class Connection {
-    constructor(client, clientId) {
+module.exports = class Connection extends events.EventEmitter {
+    constructor(client, clientId, token, apiKey) {
+        super()
+
         this.id = clientId
         this.client = client
+        this.token = token
+        this.apiKey = apiKey
         this.streams = []
+
+        this.client.on('close', () => this.emit('close'))
+        this.client.on('error', (err) => this.emit('error', err))
+        this.client.on('disconnect', () => this.emit('disconnect'))
+        this.client.on('publish', (packet) => this.emit('publish', packet))
+        this.client.on('subscribe', (packet) => this.emit('subscribe', packet))
+
+        // client pinged
+        this.client.on('pingreq', () => this.client.pingresp())
     }
 
     addStream(stream) {

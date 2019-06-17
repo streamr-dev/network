@@ -1,7 +1,6 @@
 const events = require('events')
 const debug = require('debug')('streamr:MqttServer')
 
-const uuidv4 = require('uuid/v4')
 const mqttCon = require('mqtt-connection')
 
 const { MessageLayer } = require('streamr-client-protocol')
@@ -51,7 +50,8 @@ module.exports = class MqttServer extends events.EventEmitter {
 
     close() {
         this.streams.close()
-        this.mqttServer.close(() => {})
+        this.mqttServer.close(() => {
+        })
     }
 
     onNewClientConnection(mqttStream) {
@@ -82,131 +82,129 @@ module.exports = class MqttServer extends events.EventEmitter {
                             returnCode: 0
                         })
 
-                        connection = new Connection(client, packet.clientId)
-                        this.volumeLogger.connectionCount += 1
-                        debug('onNewClientConnection: mqtt "%s" connected', connection.id)
+                        connection = new Connection(client, packet.clientId, res.token, apiKey)
 
-                        client.id = connection.id
-                        client.token = res.token
-                        client.apiKey = apiKey
-
-                        // timeout idle streams after X minutes
-                        mqttStream.setTimeout(this.streamsTimeout)
-
-                        // connection error handling
-                        client.on('close', () => {
+                        connection.on('close', () => {
                             debug('closing client')
                             this._closeClient(connection)
                         })
-                        client.on('error', (err) => {
+
+                        connection.on('error', (err) => {
                             debug('error in client %s', err)
                             this._closeClient(connection)
                         })
-                        client.on('disconnect', () => {
+
+                        connection.on('disconnect', () => {
                             debug('client disconnected')
                             this._closeClient(connection)
                         })
+
+                        connection.on('publish', (publishPacket) => {
+                            this.handlePublishRequest(connection, publishPacket)
+                        })
+
+                        connection.on('subscribe', (subscribePacket) => {
+                            this.handleSubscribeRequest(connection, subscribePacket)
+                        })
+
+                        // timeout idle streams after X minutes
+                        mqttStream.setTimeout(this.streamsTimeout)
 
                         // stream timeout
                         mqttStream.on('timeout', () => {
                             debug('client timeout')
                             this._closeClient(connection)
                         })
+
+                        this.volumeLogger.connectionCount += 1
+                        debug('onNewClientConnection: mqtt "%s" connected', connection.id)
                     }
                 })
         })
+    }
 
-        // client published
-        client.on('publish', (packet) => {
-            debug('publish request %o', packet)
+    handlePublishRequest(connection, packet) {
+        debug('publish request %o', packet)
 
-            const { topic, payload } = packet
+        const { topic, payload } = packet
 
-            this.streamFetcher.getStream(topic, client.token)
-                .then((streamObj) => {
-                    if (streamObj === undefined) {
-                        client.connack({
-                            returnCode: 5
+        this.streamFetcher.getStream(topic, connection.token)
+            .then((streamObj) => {
+                if (streamObj === undefined) {
+                    connection.client.connack({
+                        returnCode: 5
+                    })
+                    return
+                }
+                this.streamFetcher.authenticate(streamObj.id, connection.apiKey, connection.token, 'write')
+                    .then((/* streamJson */) => {
+                        const streamPartition = this.partitionFn(streamObj.partitions, 0)
+
+                        const textPayload = payload.toString()
+                        const streamMessage = MessageLayer.StreamMessage.create(
+                            [
+                                streamObj.id,
+                                streamPartition,
+                                Date.now(),
+                                sequenceNumber,
+                                connection.id,
+                                '',
+                            ],
+                            [null, null],
+                            MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+                            mqttPayloadToJson(textPayload),
+                            MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null
+                        )
+
+                        this.publisher.publish(streamObj, streamMessage)
+
+                        sequenceNumber += 1
+
+                        connection.client.puback({
+                            messageId: packet.messageId
                         })
-                        return
-                    }
-                    this.streamFetcher.authenticate(streamObj.id, client.apiKey, client.token, 'write')
-                        .then((/* streamJson */) => {
-                            const streamPartition = this.partitionFn(streamObj.partitions, 0)
+                    })
+                    .catch((err) => {
+                        console.log(err)
+                    })
+            })
+    }
 
-                            const textPayload = payload.toString()
-                            const streamMessage = MessageLayer.StreamMessage.create(
-                                [
-                                    streamObj.id,
-                                    streamPartition,
-                                    Date.now(),
-                                    sequenceNumber,
-                                    client.id,
-                                    '',
-                                ],
-                                [null, null],
-                                MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-                                mqttPayloadToJson(textPayload),
-                                MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null
+    handleSubscribeRequest(connection, packet) {
+        debug('subscribe request %o', packet)
+
+        const { topic } = packet.subscriptions[0]
+
+        this.streamFetcher.getStream(topic, connection.token)
+            .then((streamObj) => {
+                this.streamFetcher.authenticate(streamObj.id, connection.apiKey, connection.token)
+                    .then((/* streamJson */) => {
+                        const newOrExistingStream = this.streams.getOrCreate(streamObj.id, 0, streamObj.name)
+
+                        // Subscribe now if the stream is not already subscribed or subscribing
+                        if (!newOrExistingStream.isSubscribed() && !newOrExistingStream.isSubscribing()) {
+                            newOrExistingStream.setSubscribing()
+                            this.networkNode.subscribe(streamObj.id, 0)
+                            newOrExistingStream.setSubscribed()
+
+                            newOrExistingStream.addConnection(connection)
+                            connection.addStream(newOrExistingStream)
+                            debug(
+                                'handleSubscribeRequest: client "%s" is now subscribed to streams "%o"',
+                                connection.id, connection.streamsAsString()
                             )
 
-                            this.publisher.publish(streamObj, streamMessage)
-
-                            sequenceNumber += 1
-
-                            client.puback({
-                                messageId: packet.messageId
+                            connection.client.suback({
+                                granted: [packet.qos], messageId: packet.messageId
                             })
-                        })
-                        .catch((err) => {
-                            console.log(err)
-                        })
-                })
-        })
-
-        // client pinged
-        client.on('pingreq', () => {
-            // send a pingresp
-            client.pingresp()
-        })
-
-        // client subscribed
-        client.on('subscribe', (packet) => {
-            debug('subscribe request %o', packet)
-
-            const { topic } = packet.subscriptions[0]
-
-            this.streamFetcher.getStream(topic, client.token)
-                .then((streamObj) => {
-                    this.streamFetcher.authenticate(streamObj.id, client.apiKey, client.sessionToken)
-                        .then((/* streamJson */) => {
-                            const newOrExistingStream = this.streams.getOrCreate(streamObj.id, 0, streamObj.name)
-
-                            // Subscribe now if the stream is not already subscribed or subscribing
-                            if (!newOrExistingStream.isSubscribed() && !newOrExistingStream.isSubscribing()) {
-                                newOrExistingStream.setSubscribing()
-                                this.networkNode.subscribe(streamObj.id, 0)
-                                newOrExistingStream.setSubscribed()
-
-                                newOrExistingStream.addConnection(connection)
-                                connection.addStream(newOrExistingStream)
-                                debug(
-                                    'handleSubscribeRequest: client "%s" is now subscribed to streams "%o"',
-                                    connection.id, connection.streamsAsString()
-                                )
-
-                                client.suback({
-                                    granted: [packet.qos], messageId: packet.messageId
-                                })
-                            } else {
-                                console.error('error')
-                            }
-                        })
-                        .catch((response) => {
-                            console.log(response)
-                        })
-                })
-        })
+                        } else {
+                            console.error('error')
+                        }
+                    })
+                    .catch((response) => {
+                        console.log(response)
+                    })
+            })
     }
 
     _closeClient(connection) {
@@ -248,7 +246,8 @@ module.exports = class MqttServer extends events.EventEmitter {
             }
 
             stream.forEachConnection((connection) => {
-                connection.client.publish(object, () => {})
+                connection.client.publish(object, () => {
+                })
             })
 
             this.volumeLogger.logOutput(data.length * stream.getConnections().length)
