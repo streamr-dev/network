@@ -264,6 +264,7 @@ class Node extends EventEmitter {
 
     stop(cb) {
         this.debug('stopping')
+        this.resendHandler.stop()
         this._clearConnectToBootstrapTrackersInterval()
         this._disconnectFromAllNodes()
         this._disconnectFromTrackers()
