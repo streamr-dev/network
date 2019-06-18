@@ -1,4 +1,3 @@
-const { Transform } = require('stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { StorageResendStrategy,
     AskNeighborsResendStrategy,
@@ -15,35 +14,6 @@ const events = Object.freeze({
     RESENDING: 'streamr:networkNode:resending',
     RESENT: 'streamr:networkNode:resent',
 })
-
-function unicastMessageToObject(unicastMessage) {
-    const { streamMessage } = unicastMessage
-    const { messageId } = streamMessage
-    const previousMessageReference = streamMessage.prevMsgRef
-    return {
-        streamId: messageId.streamId,
-        streamPartition: messageId.streamPartition,
-        timestamp: messageId.timestamp,
-        sequenceNo: messageId.sequenceNumber,
-        publisherId: messageId.publisherId,
-        msgChainId: messageId.msgChainId,
-        previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
-        previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNumber : null,
-        data: streamMessage.getParsedContent(),
-        signature: streamMessage.signature,
-        signatureType: streamMessage.signatureType,
-        subId: unicastMessage.subId
-    }
-}
-
-function toObjectTransform() {
-    return new Transform({
-        objectMode: true,
-        transform: ([unicastMessage, source], _, done) => {
-            done(null, unicastMessageToObject(unicastMessage))
-        }
-    })
-}
 
 /*
 Convenience wrapper for building client-facing functionality. Used by broker.
@@ -110,13 +80,13 @@ class NetworkNode extends Node {
     requestResendLast(streamId, streamPartition, subId, number) {
         return this.requestResend(
             ControlLayer.ResendLastRequest.create(streamId, streamPartition, subId, number), null
-        ).pipe(toObjectTransform())
+        )
     }
 
     requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
         return this.requestResend(
             ControlLayer.ResendFromRequest.create(streamId, streamPartition, subId, [fromTimestamp, fromSequenceNo], publisherId, msgChainId), null
-        ).pipe(toObjectTransform())
+        )
     }
 
     requestResendRange(streamId,
@@ -131,30 +101,15 @@ class NetworkNode extends Node {
         return this.requestResend(
             ControlLayer.ResendRangeRequest.create(streamId, streamPartition, subId, [fromTimestamp, fromSequenceNo],
                 [toTimestamp, toSequenceNo], publisherId, msgChainId), null
-        ).pipe(toObjectTransform())
+        )
     }
 
     _emitMessage(streamMessage) {
-        const { messageId } = streamMessage
-        const previousMessageReference = streamMessage.prevMsgRef
-
-        this.emit(events.MESSAGE, {
-            streamId: messageId.streamId,
-            streamPartition: messageId.streamPartition,
-            timestamp: messageId.timestamp,
-            sequenceNo: messageId.sequenceNumber,
-            publisherId: messageId.publisherId,
-            msgChainId: messageId.msgChainId,
-            previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
-            previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNumber : null,
-            data: streamMessage.getParsedContent(),
-            signature: streamMessage.signature,
-            signatureType: streamMessage.signatureType
-        })
+        this.emit(events.MESSAGE, streamMessage)
     }
 
     _emitUnicast(unicastMessage) {
-        this.emit(events.UNICAST, unicastMessageToObject(unicastMessage))
+        this.emit(events.UNICAST, unicastMessage)
     }
 
     _emitResendResponse(resendResponse) {
@@ -169,11 +124,7 @@ class NetworkNode extends Node {
             throw new Error(`unexpected resendResponse ${resendResponse}`)
         }
 
-        this.emit(eventType, {
-            streamId: resendResponse.streamId,
-            streamPartition: resendResponse.streamPartition,
-            subId: resendResponse.subId
-        })
+        this.emit(eventType, resendResponse)
     }
 }
 
