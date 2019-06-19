@@ -49,13 +49,23 @@ describe('SubscribedStream', () => {
                     assert(client.getStreamPublishers.notCalled)
                     assert.deepStrictEqual(publishers, retrievedPublishers)
                 })
-                it('should call getStreamProducers only once when multiple calls made simultaneously', () => {
+                it('should call getStreamPublishers only once when multiple calls made simultaneously', () => {
                     const p1 = subscribedStream.getPublishers()
                     const p2 = subscribedStream.getPublishers()
                     return Promise.all([p1, p2]).then(([publishers1, publishers2]) => {
                         assert(client.getStreamPublishers.calledOnce)
                         assert.deepStrictEqual(publishers1, publishers2)
                     })
+                })
+                it('should use endpoint again after the list of locally stored publishers expires', async () => {
+                    const clock = sinon.useFakeTimers()
+                    await subscribedStream.getPublishers()
+                    subscribedStream.publishersPromise = Promise.resolve(publishers)
+                    await subscribedStream.getPublishers()
+                    clock.tick(SubscribedStream.PUBLISHERS_EXPIRATION_TIME + 100)
+                    await subscribedStream.getPublishers()
+                    assert(client.getStreamPublishers.calledTwice)
+                    clock.restore()
                 })
             })
             describe('getStream', () => {

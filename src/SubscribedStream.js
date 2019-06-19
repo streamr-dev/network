@@ -1,5 +1,6 @@
 import Signer from './Signer'
 
+const PUBLISHERS_EXPIRATION_TIME = 30 * 60 * 1000 // 30 minutes
 export default class SubscribedStream {
     constructor(client, streamId) {
         this._client = client
@@ -8,8 +9,9 @@ export default class SubscribedStream {
     }
 
     getPublishers() {
-        if (!this.publishersPromise) {
+        if (!this.publishersPromise || (Date.now() - this.lastAccess) > PUBLISHERS_EXPIRATION_TIME) {
             this.publishersPromise = this._client.getStreamPublishers(this.streamId)
+            this.lastAccess = Date.now()
         }
         return this.publishersPromise
     }
@@ -75,3 +77,4 @@ export default class SubscribedStream {
         delete this.subscriptions[sub.id]
     }
 }
+SubscribedStream.PUBLISHERS_EXPIRATION_TIME = PUBLISHERS_EXPIRATION_TIME
