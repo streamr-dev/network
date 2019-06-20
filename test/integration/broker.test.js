@@ -107,7 +107,7 @@ describe('broker: end-to-end', () => {
         freshStreamId = freshStream.id
 
         await freshStream.grantPermission('read', 'tester2@streamr.com')
-    })
+    }, 10 * 1000)
 
     afterAll(async () => {
         await client1.ensureDisconnected()
