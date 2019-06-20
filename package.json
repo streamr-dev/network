@@ -28,31 +28,33 @@
   "dependencies": {
     "@streamr/streamr-p2p-network": "^4.4.1",
     "body-parser": "^1.19.0",
-    "buffermaker": "1.2.0",
+    "buffermaker": "^1.2.1",
     "cassandra-driver": "^4.1.0",
     "commander": "^2.20.0",
     "cors": "^2.7.1",
     "debug": "*",
-    "express": "^4.17.0",
+    "express": "^4.17.1",
     "memoizee": "^0.4.4",
     "merge2": "^1.2.3",
+    "mqtt-connection": "^4.0.0",
     "node-fetch": "^2.6.0",
     "qs": "^6.7.0",
     "streamr-client-protocol": "^2.1.0",
+    "uuid": "^3.3.2",
     "ws": "^7.0.0"
   },
   "devDependencies": {
+    "async-mqtt": "^2.3.0",
     "buffer-reader": "^0.1.0",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^13.1.0",
     "eslint-config-streamr-nodejs": "^1.0.0",
-    "eslint-plugin-import": "^2.17.2",
+    "eslint-plugin-import": "^2.17.3",
     "into-stream": "^5.1.0",
     "jest": "^24.8.0",
     "sinon": "^7.3.2",
     "stream-to-array": "^2.3.0",
     "streamr-client": "^2.0.2",
-    "supertest": "^4.0.2",
-    "uuid": "^3.3.2"
+    "supertest": "^4.0.2"
   }
 }

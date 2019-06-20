@@ -1,5 +1,5 @@
 const Connection = require('../../../src/websocket/Connection.js')
-const Stream = require('../../../src/websocket/Stream.js')
+const Stream = require('../../../src/Stream.js')
 
 describe('Connection', () => {
     it('id is assigned', () => {
