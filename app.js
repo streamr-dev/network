@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 const fs = require('fs')
 const program = require('commander')
 const CURRENT_VERSION = require('./package.json').version

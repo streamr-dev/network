@@ -1,10 +1,13 @@
 {
-  "name": "streamr-broker",
+  "name": "@streamr/broker",
   "version": "0.0.1",
   "description": "",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/broker.git"
+  },
+  "bin": {
+    "broker": "./app.js"
   },
   "main": "app.js",
   "directories": {
