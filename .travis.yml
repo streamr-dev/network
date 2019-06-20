@@ -23,6 +23,9 @@ jobs:
     - sleep 3m
     - node node_modules/@streamr/streamr-p2p-network/bin/tracker.js &
     - npm run test-integration
+  - stage: publish
+    if: tag IS present
+    script: npm publish
 env:
   global:
     secure: YjBJm1GmSusUoHue15sAj04mZYhd6yC6v/V45hhyMhSfEawZn1H4nFzPiBqhNGZ2Lti2P+axJ5HXkFz/my/hWWL9+ENEKl0MczXcIWz5COZGZFJQORMCmL8u5yvFZvMqMGUwLuN6pkFnTHgYjRL7x7Ee+MEk+1qP0Tfy1qYaUhr192XzteRMI1zllxZSf3ElEY0BOjJ0N9PJs4O9X1T28w/lmW6c0ORiS9dCIG5afaMD50YRFrZCzc+l0e/kcSHo9lillCiD6755uTPBPYEmWYGmICRvG2qK+Hnv9B42sr3AOVKmkUyFHZgN1GOByHzcib8yrKdo2sgEr/oaFQvI2du915MDEAjMlQfeSbYjsPSouDMBD8CxhY6MVDwKZzMYF3KfSs7sttd411hx1vhog4aX+K6OFcVXyc/iSZAzSLSJQQvHrGffu5+lb/j7408vgJp69MAaK4ICfRhnGJbgcd/JxpGGeQiCELu1Zu7Sw8rXyq+W3ilvbOjfT0pXR9KzmZlFPpx083Ho51MxKoGEmxXL/RrW/LW5fx+EQXTuOQMnS+NUyJwPUUg16B0c+F2fNsov9KqXLiJBMXzo+fosjlWI+tm0pwNueFlGKJjs67Q/WwV5lKYyABQjTeBrT6AujGT7jeHHqp5ZrmKDLBHZK4isy63RqPeX+mwm/1fmHUU=
