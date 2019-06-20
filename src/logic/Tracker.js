@@ -2,6 +2,7 @@ const { EventEmitter } = require('events')
 const createDebug = require('debug')
 const TrackerServer = require('../protocol/TrackerServer')
 const OverlayTopology = require('../logic/OverlayTopology')
+const Metrics = require('../metrics')
 const { StreamID } = require('../identifiers')
 const { peerTypes } = require('../protocol/PeerBook')
 
@@ -28,18 +29,21 @@ module.exports = class Tracker extends EventEmitter {
         this.overlayPerStream = {} // streamKey => overlayTopology
         this.storageNodes = new Map()
 
-        // this.id = id
         this.protocols = opts.protocols
 
         this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, ({ peerId, nodeType }) => this.onNodeDisconnected(peerId, nodeType))
         this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => this.processNodeStatus(statusMessage, nodeType))
         this.protocols.trackerServer.on(TrackerServer.events.FIND_STORAGE_NODES_REQUEST, this.findStorageNodes.bind(this))
 
-        this.debug = createDebug(`streamr:logic:tracker:${this.id}`)
-        this.debug('started %s', this.id)
+        this.metrics = new Metrics(this.opts.id)
+
+        this.debug = createDebug(`streamr:logic:tracker:${this.opts.id}`)
+        this.debug('started %s', this.opts.id)
     }
 
     processNodeStatus(statusMessage, nodeType) {
+        this.metrics.inc('processNodeStatus')
+
         const source = statusMessage.getSource()
         const status = statusMessage.getStatus()
 
@@ -53,11 +57,13 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     onNodeDisconnected(node, nodeType) {
+        this.metrics.inc('onNodeDisconnected')
         this.storageNodes.delete(node)
         this._removeNode(node)
     }
 
     findStorageNodes(findStorageNodesMessage) {
+        this.metrics.inc('findStorageNodes')
         const streamId = findStorageNodesMessage.getStreamId()
         const source = findStorageNodesMessage.getSource()
 
@@ -110,6 +116,7 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     _formAndSendInstructions(node, streams) {
+        this.metrics.inc('_formAndSendInstructions')
         Object.keys(streams).forEach((streamKey) => {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
@@ -124,6 +131,7 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     _formAndSendInstructionsToStorages() {
+        this.metrics.inc('_formAndSendInstructionsToStorages')
         const existingStreams = Object.keys(this.overlayPerStream)
 
         if (existingStreams.length) {
@@ -153,7 +161,12 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     _removeNode(node) {
+        this.metrics.inc('_removeNode')
         Object.values(this.overlayPerStream).forEach((overlay) => overlay.leave(node))
         this.debug('unregistered node %s from tracker', node)
+    }
+
+    getMetrics() {
+        return this.metrics.report()
     }
 }

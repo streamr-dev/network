@@ -17,6 +17,10 @@ startNetworkNode(host, port, id).then((subscriber) => {
     subscriber.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (dataMessage) => {
         console.log('received %s, data %j', dataMessage.getMessageId(), dataMessage.getData())
     })
+
+    setInterval(() => {
+        console.log(subscriber.getMetrics())
+    }, 5000)
 }).catch((err) => {
     throw err
 })
