@@ -155,6 +155,7 @@ describe('broker: end-to-end', () => {
         })
 
         await waitForCondition(() => client2Messages.length === 3 && client3Messages.length === 3)
+        await waitForCondition(() => client1Messages.length === 3)
 
         expect(client1Messages).toEqual([
             {
@@ -232,6 +233,7 @@ describe('broker: end-to-end', () => {
         }
 
         await waitForCondition(() => client2Messages.length === 3 && client3Messages.length === 3)
+        await waitForCondition(() => client1Messages.length === 3)
 
         expect(client1Messages).toEqual([
             {
@@ -329,7 +331,8 @@ describe('broker: end-to-end', () => {
             client3Messages.push(message)
         })
 
-        await waitForCondition(() => client3Messages.length === 2)
+        await waitForCondition(() => client2Messages.length === 2 && client3Messages.length === 2)
+        await waitForCondition(() => client1Messages.length === 2)
 
         expect(client1Messages).toEqual([
             {
@@ -432,7 +435,8 @@ describe('broker: end-to-end', () => {
             client3Messages.push(message)
         })
 
-        await waitForCondition(() => client3Messages.length === 3)
+        await waitForCondition(() => client2Messages.length === 3 && client3Messages.length === 3)
+        await waitForCondition(() => client1Messages.length === 3)
 
         expect(client1Messages).toEqual([
             {
@@ -559,7 +563,8 @@ describe('broker: end-to-end', () => {
             client3Messages.push(message)
         })
 
-        await waitForCondition(() => client3Messages.length === 2)
+        await waitForCondition(() => client2Messages.length === 2 && client3Messages.length === 2)
+        await waitForCondition(() => client1Messages.length === 2)
 
         expect(client1Messages).toEqual([
             {
