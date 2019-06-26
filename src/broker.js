@@ -1,4 +1,4 @@
-const { startNetworkNode } = require('@streamr/streamr-p2p-network')
+const { startNetworkNode, startStorageNode } = require('@streamr/streamr-p2p-network')
 
 const StreamFetcher = require('./StreamFetcher')
 const { startCassandraStorage } = require('./Storage')
@@ -24,6 +24,9 @@ module.exports = async (config) => {
     }
     if (config.network.tracker === undefined) {
         throw new MissingConfigError('network.tracker')
+    }
+    if (config.network.isStorageNode === undefined) {
+        throw new MissingConfigError('network.isStorageNode')
     }
     if (config.cassandra === undefined) {
         throw new MissingConfigError('cassandra')
@@ -68,7 +71,8 @@ module.exports = async (config) => {
     }
 
     // Start network node
-    const networkNode = await startNetworkNode(
+    const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
+    const networkNode = await startFn(
         config.network.hostname,
         config.network.port,
         config.network.id,
