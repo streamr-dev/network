@@ -51,7 +51,9 @@ describe('optimization: do not propagate to sender', () => {
         }, null, 0)
         await wait(250)
 
-        expect(n1.metrics.received.duplicates + n2.metrics.received.duplicates + n3.metrics.received.duplicates)
+        expect(n1.metrics.get('onDataReceived:ignoring:duplicate')
+            + n2.metrics.get('onDataReceived:ignoring:duplicate')
+            + n3.metrics.get('onDataReceived:ignoring:duplicate'))
             .toEqual(2)
     })
 })

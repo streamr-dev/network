@@ -18,6 +18,10 @@ startNetworkNode(host, port, id).then((subscriber) => {
         const { streamMessage } = brodcastMessage
         console.log('received %s, data %j', streamMessage.messageId, streamMessage.getParsedContent())
     })
+
+    setInterval(() => {
+        console.log(subscriber.getMetrics())
+    }, 5000)
 }).catch((err) => {
     throw err
 })

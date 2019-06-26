@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const util = require('util')
 const { startNetworkNode } = require('../src/composition')
 
 const port = process.argv[2] || 30302
@@ -21,11 +22,15 @@ startNetworkNode(host, port, id)
             const timestamp = Date.now()
             const msg = 'Hello world, ' + new Date().toLocaleString()
 
-            publisher.publish(streamId, 0, timestamp, 0, publisher.id, messageChainId, lastTimestamp, 0, {
+            publisher.publish(streamId, 0, timestamp, 0, publisher.opts.id, messageChainId, lastTimestamp, 0, {
                 msg
             })
             lastTimestamp = timestamp
         }, intervalInMs)
+
+        setInterval(() => {
+            console.log(util.inspect(publisher.getMetrics(), false, null))
+        }, 5000)
     })
     .catch((err) => {
         console.error(err)

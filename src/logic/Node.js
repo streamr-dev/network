@@ -1,10 +1,12 @@
 const { EventEmitter } = require('events')
 const createDebug = require('debug')
+const pretty = require('prettysize')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
 const { StreamIdAndPartition } = require('../identifiers')
+const Metrics = require('../metrics')
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
 
@@ -78,11 +80,7 @@ class Node extends EventEmitter {
         this.debug('started %s', this.opts.id)
 
         this.started = new Date().toLocaleString()
-        this.metrics = {
-            received: {
-                duplicates: 0
-            }
-        }
+        this.metrics = new Metrics(this.opts.id)
 
         this.seenButNotPropagated = new Set()
     }
@@ -109,6 +107,7 @@ class Node extends EventEmitter {
     }
 
     requestResend(request, source) {
+        this.metrics.inc('requestResend')
         this.debug('received %s resend request %s with subId %s',
             source === null ? 'local' : `from ${source}`,
             request.constructor.name,
@@ -142,6 +141,7 @@ class Node extends EventEmitter {
     }
 
     async onTrackerInstructionReceived(streamMessage) {
+        this.metrics.inc('onTrackerInstructionReceived')
         const streamId = streamMessage.getStreamId()
         const nodeAddresses = streamMessage.getNodeAddresses()
         const nodeIds = []
@@ -175,6 +175,7 @@ class Node extends EventEmitter {
     }
 
     onDataReceived(streamMessage, source = null) {
+        this.metrics.inc('onDataReceived')
         const streamIdAndPartition = new StreamIdAndPartition(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
         this.emit(events.MESSAGE_RECEIVED, streamMessage, source)
@@ -188,7 +189,7 @@ class Node extends EventEmitter {
                 this._propagateMessage(streamMessage, source)
             } else {
                 this.debug('ignoring duplicate data %s (from %s)', streamMessage.messageId, source)
-                this.metrics.received.duplicates += 1
+                this.metrics.inc('onDataReceived:ignoring:duplicate')
             }
         } else {
             this.debug('Not outbound nodes to propagate')
@@ -201,6 +202,7 @@ class Node extends EventEmitter {
     }
 
     async _propagateMessage(streamMessage, source) {
+        this.metrics.inc('_propagateMessage')
         const streamIdAndPartition = new StreamIdAndPartition(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
         const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
@@ -228,6 +230,7 @@ class Node extends EventEmitter {
     }
 
     onSubscribeRequest(subscribeMessage, source) {
+        this.metrics.inc('onSubscribeRequest')
         const streamId = new StreamIdAndPartition(subscribeMessage.streamId, subscribeMessage.streamPartition)
         this.emit(events.SUBSCRIPTION_REQUEST, {
             streamId,
@@ -252,6 +255,7 @@ class Node extends EventEmitter {
     }
 
     onUnsubscribeRequest(unsubscribeMessage, source) {
+        this.metrics.inc('onUnsubscribeRequest')
         const streamIdAndPartition = new StreamIdAndPartition(unsubscribeMessage.streamId, unsubscribeMessage.streamPartition)
         this.streams.removeNodeFromStream(streamIdAndPartition, source)
         this.debug('node %s unsubscribed from stream %s', source, streamIdAndPartition)
@@ -330,6 +334,7 @@ class Node extends EventEmitter {
     }
 
     onNodeDisconnected(node) {
+        this.metrics.inc('onNodeDisconnected')
         this.streams.removeNodeFromAllStreams(node)
         this.debug('removed all subscriptions of node %s', node)
         this._sendStatusToAllTrackers()
@@ -367,6 +372,16 @@ class Node extends EventEmitter {
             clearInterval(this.connectToBoostrapTrackersInterval)
             this.connectToBoostrapTrackersInterval = null
         }
+    }
+
+    getMetrics() {
+        const metrics = this.protocols.nodeToNode.endpoint.getMetrics()
+
+        metrics.msg += ' messages/second'
+        metrics.inSpeed = pretty(metrics.inSpeed)
+        metrics.outSpeed = pretty(metrics.outSpeed)
+
+        return metrics
     }
 }
 

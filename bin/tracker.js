@@ -8,7 +8,11 @@ const maxNeighborsPerNode = process.argv[4] || 4
 const id = `tracker-${port}`
 
 startTracker(ip, port, id, maxNeighborsPerNode)
-    .then(() => {})
+    .then((tracker) => {
+        setInterval(() => {
+            console.log(tracker.getMetrics())
+        }, 5000)
+    })
     .catch((err) => {
         console.error(err)
         process.exit(1)
@@ -17,3 +21,4 @@ startTracker(ip, port, id, maxNeighborsPerNode)
 if (process.env.checkUncaughtException === 'true') {
     process.on('uncaughtException', (err) => console.error((err && err.stack) ? err.stack : err))
 }
+
