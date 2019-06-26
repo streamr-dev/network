@@ -98,6 +98,35 @@ test('clear() removes all messages and timeout callbacks', () => {
     expect(timeoutCb).not.toHaveBeenCalled()
 })
 
+test('size() gives correct size of buffer across streams', () => {
+    const buffer = new MessageBuffer(999999999)
+
+    buffer.put('stream-1', {
+        id: 'stream-1',
+        data: 'hello'
+    })
+    buffer.put('stream-1', {
+        id: 'stream-1',
+        data: 'world'
+    })
+    buffer.put('stream-2', {
+        id: 'stream-2',
+        data: 'not!'
+    })
+    buffer.put('stream-1', {
+        id: 'stream-1',
+        data: '!'
+    })
+
+    expect(buffer.size()).toEqual(4)
+
+    buffer.popAll('stream-1')
+    expect(buffer.size()).toEqual(1)
+
+    buffer.clear()
+    expect(buffer.size()).toEqual(0)
+})
+
 test('clearing and pushing to ids do not affect other ids', () => {
     const buffer = new MessageBuffer(100)
 

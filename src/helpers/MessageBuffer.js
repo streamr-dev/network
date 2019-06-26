@@ -34,6 +34,14 @@ module.exports = class MessageBuffer {
         Object.keys(this.buffer).forEach((id) => this.popAll(id))
     }
 
+    size() {
+        let total = 0
+        Object.values(this.buffer).forEach((messages) => {
+            total += messages.length
+        })
+        return total
+    }
+
     _hasBufferFor(id) {
         return this.buffer[id]
     }

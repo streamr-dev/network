@@ -380,6 +380,9 @@ class Node extends EventEmitter {
         metrics.msg += ' messages/second'
         metrics.inSpeed = pretty(metrics.inSpeed)
         metrics.outSpeed = pretty(metrics.outSpeed)
+        // eslint-disable-next-line no-underscore-dangle
+        metrics.openHandles = process._getActiveRequests().length + process._getActiveHandles().length
+        metrics.messageBufferSize = this.messageBuffer.size()
 
         return metrics
     }
