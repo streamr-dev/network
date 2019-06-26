@@ -4,7 +4,6 @@ const TrackerServer = require('../protocol/TrackerServer')
 const OverlayTopology = require('../logic/OverlayTopology')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
-const { StreamIdAndPartition } = require('../identifiers')
 const { peerTypes } = require('../protocol/PeerBook')
 
 module.exports = class Tracker extends EventEmitter {

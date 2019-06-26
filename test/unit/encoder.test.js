@@ -1,8 +1,10 @@
+const { ControlLayer } = require('streamr-client-protocol')
 const encoder = require('../../src/helpers/MessageEncoder')
 const { version } = require('../../package.json')
 const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMessage')
 const InstructionMessage = require('../../src/messages/InstructionMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
+const WrapperMessage = require('../../src/messages/WrapperMessage')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 
 describe('encoder', () => {
@@ -28,6 +30,36 @@ describe('encoder', () => {
         expect(streamMessage.getSource()).toEqual('127.0.0.1')
         expect(streamMessage.getStreamId()).toEqual(new StreamIdAndPartition('stream-id', 0))
         expect(streamMessage.getNodeAddresses()).toEqual(['node-1', 'node-2'])
+    })
+
+    it('check encoding WRAPPER', () => {
+        const payload = ControlLayer.ResendResponseNoResend.create('streamId', 0, 'subId')
+        const actual = encoder.wrapperMessage(payload)
+        expect(JSON.parse(actual)).toEqual({
+            code: encoder.WRAPPER,
+            version,
+            payload: {
+                serializedControlLayerPayload: payload.serialize()
+            },
+        })
+    })
+
+    it('check decoding WRAPPER', () => {
+        const payload = ControlLayer.ResendResponseNoResend.create('streamId', 0, 'subId')
+        const wrapperMessage = encoder.decode('source', JSON.stringify({
+            code: encoder.WRAPPER,
+            version,
+            payload: {
+                serializedControlLayerPayload: payload.serialize()
+            },
+        }))
+
+        expect(wrapperMessage).toBeInstanceOf(WrapperMessage)
+        expect(wrapperMessage.getVersion()).toEqual(version)
+        expect(wrapperMessage.getCode()).toEqual(encoder.WRAPPER)
+        expect(wrapperMessage.getSource()).toEqual('source')
+
+        expect(wrapperMessage.controlLayerPayload.serialize()).toEqual(payload.serialize())
     })
 
     it('check encoding FIND_STORAGE_NODES', () => {
