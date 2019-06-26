@@ -14,8 +14,9 @@ startNetworkNode(host, port, id).then((subscriber) => {
     subscriber.subscribe(streamId, 0)
     trackers.map((trackerAddress) => subscriber.addBootstrapTracker(trackerAddress))
 
-    subscriber.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (dataMessage) => {
-        console.log('received %s, data %j', dataMessage.getMessageId(), dataMessage.getData())
+    subscriber.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (brodcastMessage) => {
+        const { streamMessage } = brodcastMessage
+        console.log('received %s, data %j', streamMessage.messageId, streamMessage.getParsedContent())
     })
 
     setInterval(() => {

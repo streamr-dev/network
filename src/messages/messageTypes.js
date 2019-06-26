@@ -2,20 +2,10 @@ const CURRENT_VERSION = require('../../package.json').version
 
 const msgTypes = {
     STATUS: 0,
-    DATA: 1,
-    SUBSCRIBE: 2,
-    UNSUBSCRIBE: 3,
-    PUBLISH: 4,
-    INSTRUCTION: 5,
-    RESEND_LAST: 6,
-    RESEND_FROM: 7,
-    RESEND_RANGE: 8,
-    RESEND_RESPONSE_RESENDING: 9,
-    RESEND_RESPONSE_RESENT: 10,
-    RESEND_RESPONSE_NO_RESEND: 11,
-    UNICAST: 12,
-    FIND_STORAGE_NODES: 13,
-    STORAGE_NODES: 14
+    INSTRUCTION: 1,
+    FIND_STORAGE_NODES: 2,
+    STORAGE_NODES: 3,
+    WRAPPER: 4,
 }
 
 const disconnectionReasons = Object.freeze({

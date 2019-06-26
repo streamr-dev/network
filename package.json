@@ -50,6 +50,7 @@
   "dependencies": {
     "debug": "4.1.1",
     "events": "3.0.0",
+    "streamr-client-protocol": "^2.1.0",
     "prettysize": "^2.0.0",
     "speedometer": "^1.1.0",
     "uuid": "3.3.2",

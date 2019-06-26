@@ -1,4 +1,4 @@
-const { StreamID } = require('../identifiers')
+const { StreamIdAndPartition } = require('../identifiers')
 const { DuplicateMessageDetector, NumberPair } = require('./DuplicateMessageDetector')
 
 const keyForDetector = ({ publisherId, msgChainId }) => `${publisherId}-${msgChainId}`
@@ -9,8 +9,8 @@ module.exports = class StreamManager {
     }
 
     setUpStream(streamId) {
-        if (!(streamId instanceof StreamID)) {
-            throw new Error('streamId not instance of StreamID')
+        if (!(streamId instanceof StreamIdAndPartition)) {
+            throw new Error('streamId not instance of StreamIdAndPartition')
         }
         if (this.isSetUp(streamId)) {
             throw new Error(`Stream ${streamId} already set up`)
@@ -23,10 +23,11 @@ module.exports = class StreamManager {
     }
 
     markNumbersAndCheckThatIsNotDuplicate(messageId, previousMessageReference) {
-        this._verifyThatIsSetUp(messageId.streamId)
+        const streamIdAndPartition = new StreamIdAndPartition(messageId.streamId, messageId.streamPartition)
+        this._verifyThatIsSetUp(streamIdAndPartition)
 
         const detectorKey = keyForDetector(messageId)
-        const { detectors } = this.streams.get(messageId.streamId.key())
+        const { detectors } = this.streams.get(streamIdAndPartition.key())
         if (!detectors.has(detectorKey)) {
             detectors.set(detectorKey, new DuplicateMessageDetector())
         }
@@ -34,8 +35,8 @@ module.exports = class StreamManager {
         return detectors.get(detectorKey).markAndCheck(
             previousMessageReference === null
                 ? null
-                : new NumberPair(previousMessageReference.timestamp, previousMessageReference.sequenceNo),
-            new NumberPair(messageId.timestamp, messageId.sequenceNo)
+                : new NumberPair(previousMessageReference.timestamp, previousMessageReference.sequenceNumber),
+            new NumberPair(messageId.timestamp, messageId.sequenceNumber)
         )
     }
 
@@ -83,7 +84,7 @@ module.exports = class StreamManager {
     }
 
     getStreams() {
-        return this.getStreamsAsKeys().map((key) => StreamID.fromKey(key))
+        return this.getStreamsAsKeys().map((key) => StreamIdAndPartition.fromKey(key))
     }
 
     getStreamsWithConnections() {

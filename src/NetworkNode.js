@@ -1,16 +1,11 @@
-const { Transform } = require('stream')
-const DataMessage = require('./messages/DataMessage')
-const ResendLastRequest = require('./messages/ResendLastRequest')
-const ResendFromRequest = require('./messages/ResendFromRequest')
-const ResendRangeRequest = require('./messages/ResendRangeRequest')
-const ResendResponseNoResend = require('./messages/ResendResponseNoResend')
-const ResendResponseResent = require('./messages/ResendResponseResent')
-const ResendResponseResending = require('./messages/ResendResponseResending')
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { StorageResendStrategy,
     AskNeighborsResendStrategy,
     StorageNodeResendStrategy } = require('./logic/resendStrategies')
 const Node = require('./logic/Node')
-const { StreamID, MessageID, MessageReference } = require('./identifiers')
+const { StreamIdAndPartition } = require('./identifiers')
+
+const { StreamMessage } = MessageLayer
 
 const events = Object.freeze({
     MESSAGE: 'streamr:networkNode:message-received',
@@ -19,35 +14,6 @@ const events = Object.freeze({
     RESENDING: 'streamr:networkNode:resending',
     RESENT: 'streamr:networkNode:resent',
 })
-
-function unicastMessageToObject(unicastMessage) {
-    const messageId = unicastMessage.getMessageId()
-    const previousMessageReference = unicastMessage.getPreviousMessageReference()
-    const { streamId } = messageId
-    return {
-        streamId: streamId.id,
-        streamPartition: streamId.partition,
-        timestamp: messageId.timestamp,
-        sequenceNo: messageId.sequenceNo,
-        publisherId: messageId.publisherId,
-        msgChainId: messageId.msgChainId,
-        previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
-        previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNo : null,
-        data: unicastMessage.getData(),
-        signature: unicastMessage.getSignature(),
-        signatureType: unicastMessage.getSignatureType(),
-        subId: unicastMessage.getSubId()
-    }
-}
-
-function toObjectTransform() {
-    return new Transform({
-        objectMode: true,
-        transform: (data, _, done) => {
-            done(null, unicastMessageToObject(data))
-        }
-    })
-}
 
 /*
 Convenience wrapper for building client-facing functionality. Used by broker.
@@ -85,16 +51,17 @@ class NetworkNode extends Node {
         previousTimestamp,
         previousSequenceNo,
         content,
-        signature,
-        signatureType) {
-        const dataMessage = new DataMessage(
-            new MessageID(new StreamID(streamId, streamPartition), timestamp, sequenceNo, publisherId, msgChainId),
-            previousTimestamp != null ? new MessageReference(previousTimestamp, previousSequenceNo) : null,
+        signatureType,
+        signature) {
+        const streamMessage = StreamMessage.create(
+            [streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
+            previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
+            StreamMessage.CONTENT_TYPES.JSON,
             content,
-            signature,
-            signatureType
+            signatureType,
+            signature
         )
-        this.onDataReceived(dataMessage)
+        this.onDataReceived(streamMessage)
     }
 
     // Convenience function
@@ -103,31 +70,23 @@ class NetworkNode extends Node {
     }
 
     subscribe(streamId, streamPartition) {
-        this.subscribeToStreamIfHaveNotYet(new StreamID(streamId, streamPartition))
+        this.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition(streamId, streamPartition))
     }
 
     unsubscribe(streamId, streamPartition) {
-        this.unsubscribeFromStream(new StreamID(streamId, streamPartition))
+        this.unsubscribeFromStream(new StreamIdAndPartition(streamId, streamPartition))
     }
 
     requestResendLast(streamId, streamPartition, subId, number) {
-        return this.requestResend(new ResendLastRequest(
-            new StreamID(streamId, streamPartition),
-            subId,
-            number,
-            null
-        )).pipe(toObjectTransform())
+        return this.requestResend(
+            ControlLayer.ResendLastRequest.create(streamId, streamPartition, subId, number), null
+        )
     }
 
     requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
-        return this.requestResend(new ResendFromRequest(
-            new StreamID(streamId, streamPartition),
-            subId,
-            new MessageReference(fromTimestamp, fromSequenceNo),
-            publisherId,
-            msgChainId,
-            null
-        )).pipe(toObjectTransform())
+        return this.requestResend(
+            ControlLayer.ResendFromRequest.create(streamId, streamPartition, subId, [fromTimestamp, fromSequenceNo], publisherId, msgChainId), null
+        )
     }
 
     requestResendRange(streamId,
@@ -139,58 +98,33 @@ class NetworkNode extends Node {
         toSequenceNo,
         publisherId,
         msgChainId) {
-        return this.requestResend(new ResendRangeRequest(
-            new StreamID(streamId, streamPartition),
-            subId,
-            new MessageReference(fromTimestamp, fromSequenceNo),
-            new MessageReference(toTimestamp, toSequenceNo),
-            publisherId,
-            msgChainId,
-            null
-        )).pipe(toObjectTransform())
+        return this.requestResend(
+            ControlLayer.ResendRangeRequest.create(streamId, streamPartition, subId, [fromTimestamp, fromSequenceNo],
+                [toTimestamp, toSequenceNo], publisherId, msgChainId), null
+        )
     }
 
-    _emitMessage(dataMessage) {
-        const messageId = dataMessage.getMessageId()
-        const previousMessageReference = dataMessage.getPreviousMessageReference()
-        const { streamId } = messageId
-
-        this.emit(events.MESSAGE, {
-            streamId: streamId.id,
-            streamPartition: streamId.partition,
-            timestamp: messageId.timestamp,
-            sequenceNo: messageId.sequenceNo,
-            publisherId: messageId.publisherId,
-            msgChainId: messageId.msgChainId,
-            previousTimestamp: previousMessageReference ? previousMessageReference.timestamp : null,
-            previousSequenceNo: previousMessageReference ? previousMessageReference.sequenceNo : null,
-            data: dataMessage.getData(),
-            signature: dataMessage.getSignature(),
-            signatureType: dataMessage.getSignatureType()
-        })
+    _emitMessage(streamMessage) {
+        this.emit(events.MESSAGE, streamMessage)
     }
 
     _emitUnicast(unicastMessage) {
-        this.emit(events.UNICAST, unicastMessageToObject(unicastMessage))
+        this.emit(events.UNICAST, unicastMessage)
     }
 
     _emitResendResponse(resendResponse) {
         let eventType
-        if (resendResponse instanceof ResendResponseNoResend) {
+        if (resendResponse.type === ControlLayer.ResendResponseNoResend.TYPE) {
             eventType = events.NO_RESEND
-        } else if (resendResponse instanceof ResendResponseResending) {
+        } else if (resendResponse.type === ControlLayer.ResendResponseResending.TYPE) {
             eventType = events.RESENDING
-        } else if (resendResponse instanceof ResendResponseResent) {
+        } else if (resendResponse.type === ControlLayer.ResendResponseResent.TYPE) {
             eventType = events.RESENT
         } else {
             throw new Error(`unexpected resendResponse ${resendResponse}`)
         }
 
-        this.emit(eventType, {
-            streamId: resendResponse.getStreamId().id,
-            streamPartition: resendResponse.getStreamId().partition,
-            subId: resendResponse.getSubId()
-        })
+        this.emit(eventType, resendResponse)
     }
 }
 

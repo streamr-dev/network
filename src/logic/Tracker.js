@@ -2,8 +2,8 @@ const { EventEmitter } = require('events')
 const createDebug = require('debug')
 const TrackerServer = require('../protocol/TrackerServer')
 const OverlayTopology = require('../logic/OverlayTopology')
+const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
-const { StreamID } = require('../identifiers')
 const { peerTypes } = require('../protocol/PeerBook')
 
 module.exports = class Tracker extends EventEmitter {
@@ -121,7 +121,7 @@ module.exports = class Tracker extends EventEmitter {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
                 try {
-                    await this.protocols.trackerServer.sendInstruction(nodeId, StreamID.fromKey(streamKey), newNeighbors)
+                    await this.protocols.trackerServer.sendInstruction(nodeId, StreamIdAndPartition.fromKey(streamKey), newNeighbors)
                     this.debug('sent instruction %j for stream %s to node %s', newNeighbors, streamKey, nodeId)
                 } catch (e) {
                     this.debug('failed to send instruction %j for stream %s to node %s because of %s', newNeighbors, streamKey, nodeId, e)
@@ -149,7 +149,7 @@ module.exports = class Tracker extends EventEmitter {
                 if (streamsToSubscribe.length) {
                     streamsToSubscribe.forEach(async (streamKey) => {
                         try {
-                            await this.protocols.trackerServer.sendInstruction(storageNode, StreamID.fromKey(streamKey), [])
+                            await this.protocols.trackerServer.sendInstruction(storageNode, StreamIdAndPartition.fromKey(streamKey), [])
                             this.debug('sent instruction %j for stream %s to storage node %s', [], streamKey, storageNode)
                         } catch (e) {
                             this.debug('failed to send instruction %j for stream %s to storage node %s because of %s', [], streamKey, storageNode, e)

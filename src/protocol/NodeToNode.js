@@ -1,13 +1,7 @@
 const { EventEmitter } = require('events')
-const debug = require('debug')('streamr:protocol:node-node')
-const ResendLastRequest = require('../messages/ResendLastRequest')
-const ResendFromRequest = require('../messages/ResendFromRequest')
-const ResendRangeRequest = require('../messages/ResendRangeRequest')
-const ResendResponseResent = require('../messages/ResendResponseResent')
-const ResendResponseResending = require('../messages/ResendResponseResending')
-const ResendResponseNoResend = require('../messages/ResendResponseNoResend')
-const UnicastMessage = require('../messages/UnicastMessage')
+const { ControlLayer } = require('streamr-client-protocol')
 const encoder = require('../helpers/MessageEncoder')
+const { msgTypes } = require('../messages/messageTypes')
 const EndpointListener = require('./EndpointListener')
 const { PeerBook, peerTypes } = require('./PeerBook')
 
@@ -21,6 +15,17 @@ const events = Object.freeze({
     RESEND_RESPONSE: 'streamr:node-node:resend-response',
     UNICAST_RECEIVED: 'streamr:node-node:unicast-received'
 })
+const eventPerType = {}
+eventPerType[ControlLayer.BroadcastMessage.TYPE] = events.DATA_RECEIVED
+eventPerType[ControlLayer.UnicastMessage.TYPE] = events.UNICAST_RECEIVED
+eventPerType[ControlLayer.SubscribeRequest.TYPE] = events.SUBSCRIBE_REQUEST
+eventPerType[ControlLayer.UnsubscribeRequest.TYPE] = events.UNSUBSCRIBE_REQUEST
+eventPerType[ControlLayer.ResendLastRequest.TYPE] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ResendFromRequest.TYPE] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ResendRangeRequest.TYPE] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ResendResponseResending.TYPE] = events.RESEND_RESPONSE
+eventPerType[ControlLayer.ResendResponseResent.TYPE] = events.RESEND_RESPONSE
+eventPerType[ControlLayer.ResendResponseNoResend.TYPE] = events.RESEND_RESPONSE
 
 class NodeToNode extends EventEmitter {
     constructor(endpoint) {
@@ -37,66 +42,16 @@ class NodeToNode extends EventEmitter {
         return this.endpoint.connect(address).then(() => this.peerBook.getPeerId(address))
     }
 
-    sendData(receiverNodeId, messageId, previousMessageReference, payload, signature, signatureType) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(
-            receiverNodeAddress,
-            encoder.dataMessage(messageId, previousMessageReference, payload, signature, signatureType)
-        )
+    sendData(receiverNodeId, streamMessage) {
+        return this.send(receiverNodeId, ControlLayer.BroadcastMessage.create(streamMessage))
     }
 
-    sendUnicast(receiverNodeId, messageId, previousMessageReference, payload, signature, signatureType, subId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(
-            receiverNodeAddress,
-            encoder.unicastMessage(messageId, previousMessageReference, payload, signature, signatureType, subId)
-        )
+    sendSubscribe(receiverNodeId, streamIdAndPartition) {
+        return this.send(receiverNodeId, ControlLayer.SubscribeRequest.create(streamIdAndPartition.id, streamIdAndPartition.partition))
     }
 
-    sendSubscribe(receiverNodeId, streamId, leechOnly) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.subscribeMessage(streamId, leechOnly))
-    }
-
-    sendUnsubscribe(receiverNodeId, streamId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        this.endpoint.send(receiverNodeAddress, encoder.unsubscribeMessage(streamId))
-    }
-
-    requestResendLast(receiverNodeId, streamId, subId, numberLast) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.resendLastRequest(streamId, subId, numberLast))
-    }
-
-    requestResendFrom(receiverNodeId, streamId, subId, fromMsgRef, publisherId, msgChainId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(
-            receiverNodeAddress,
-            encoder.resendFromRequest(streamId, subId, fromMsgRef, publisherId, msgChainId)
-        )
-    }
-
-    requestResendRange(receiverNodeId, streamId, subId, fromMsgRef, toMsgRef, publisherId, msgChainId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(
-            receiverNodeAddress,
-            encoder.resendRangeRequest(streamId, subId, fromMsgRef, toMsgRef, publisherId, msgChainId)
-        )
-    }
-
-    respondResending(receiverNodeId, streamId, subId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseResending(streamId, subId))
-    }
-
-    respondResent(receiverNodeId, streamId, subId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseResent(streamId, subId))
-    }
-
-    respondNoResend(receiverNodeId, streamId, subId) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        return this.endpoint.send(receiverNodeAddress, encoder.resendResponseNoResend(streamId, subId))
+    sendUnsubscribe(receiverNodeId, streamIdAndPartition) {
+        return this.send(receiverNodeId, ControlLayer.UnsubscribeRequest.create(streamIdAndPartition.id, streamIdAndPartition.partition))
     }
 
     disconnectFromNode(receiverNodeId, reason) {
@@ -106,66 +61,9 @@ class NodeToNode extends EventEmitter {
         })
     }
 
-    send(receiverNodeId, message) { // TODO: better way?
-        if (message instanceof ResendLastRequest) {
-            return this.requestResendLast(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId(),
-                message.getNumberLast()
-            )
-        }
-        if (message instanceof ResendFromRequest) {
-            return this.requestResendFrom(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId(),
-                message.getFromMsgRef(),
-                message.getPublisherId(),
-                message.getMsgChainId()
-            )
-        }
-        if (message instanceof ResendRangeRequest) {
-            return this.requestResendRange(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId(),
-                message.getFromMsgRef(),
-                message.getToMsgRef(),
-                message.getPublisherId(),
-                message.getMsgChainId()
-            )
-        }
-        if (message instanceof ResendResponseNoResend) {
-            return this.respondNoResend(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId()
-            )
-        } if (message instanceof ResendResponseResending) {
-            return this.respondResending(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId()
-            )
-        } if (message instanceof ResendResponseResent) {
-            return this.respondResent(
-                receiverNodeId,
-                message.getStreamId(),
-                message.getSubId()
-            )
-        } if (message instanceof UnicastMessage) {
-            return this.sendUnicast(
-                receiverNodeId,
-                message.getMessageId(),
-                message.getPreviousMessageReference(),
-                message.getData(),
-                message.getSignature(),
-                message.getSignatureType(),
-                message.getSubId()
-            )
-        }
-        throw new Error(`unrecognized message ${message}`)
+    send(receiverNodeId, message) {
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        return this.endpoint.send(receiverNodeAddress, encoder.wrapperMessage(message))
     }
 
     getAddress() {
@@ -193,37 +91,8 @@ class NodeToNode extends EventEmitter {
     }
 
     onMessageReceived(message) {
-        switch (message.getCode()) {
-            case encoder.SUBSCRIBE:
-                this.emit(events.SUBSCRIBE_REQUEST, message)
-                break
-
-            case encoder.UNSUBSCRIBE:
-                this.emit(events.UNSUBSCRIBE_REQUEST, message)
-                break
-
-            case encoder.DATA:
-                this.emit(events.DATA_RECEIVED, message)
-                break
-
-            case encoder.UNICAST:
-                this.emit(events.UNICAST_RECEIVED, message)
-                break
-
-            case encoder.RESEND_LAST:
-            case encoder.RESEND_FROM:
-            case encoder.RESEND_RANGE:
-                this.emit(events.RESEND_REQUEST, message)
-                break
-
-            case encoder.RESEND_RESPONSE_RESENDING:
-            case encoder.RESEND_RESPONSE_RESENT:
-            case encoder.RESEND_RESPONSE_NO_RESEND:
-                this.emit(events.RESEND_RESPONSE, message)
-                break
-
-            default:
-                break
+        if (message.getCode() === msgTypes.WRAPPER) {
+            this.emit(eventPerType[message.controlLayerPayload.type], message.controlLayerPayload, message.getSource())
         }
     }
 }
