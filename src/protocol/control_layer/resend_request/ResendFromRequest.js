@@ -16,4 +16,5 @@ export default class ResendFromRequest extends ControlMessage {
     }
 }
 
-/* static */ ResendFromRequest.TYPE = TYPE
+/* static */
+ResendFromRequest.TYPE = TYPE

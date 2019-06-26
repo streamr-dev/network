@@ -18,4 +18,5 @@ export default class ResendRangeRequest extends ControlMessage {
     }
 }
 
-/* static */ ResendRangeRequest.TYPE = TYPE
+/* static */
+ResendRangeRequest.TYPE = TYPE

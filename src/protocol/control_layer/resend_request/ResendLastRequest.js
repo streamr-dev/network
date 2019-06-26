@@ -15,4 +15,5 @@ export default class ResendLastRequest extends ControlMessage {
     }
 }
 
-/* static */ ResendLastRequest.TYPE = TYPE
+/* static */
+ResendLastRequest.TYPE = TYPE

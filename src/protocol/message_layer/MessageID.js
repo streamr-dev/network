@@ -1,4 +1,4 @@
-class MessageID {
+export default class MessageID {
     constructor(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId) {
         if (streamId == null) {
             throw new Error('streamId must be defined!')
@@ -41,5 +41,3 @@ class MessageID {
         return JSON.stringify(this.toArray())
     }
 }
-
-module.exports = MessageID

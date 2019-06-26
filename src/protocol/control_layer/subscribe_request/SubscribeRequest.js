@@ -22,4 +22,5 @@ export default class SubscribeRequest extends ControlMessage {
     }
 }
 
-/* static */ SubscribeRequest.TYPE = TYPE
+/* static */
+SubscribeRequest.TYPE = TYPE

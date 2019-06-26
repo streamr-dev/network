@@ -1,7 +1,7 @@
-import ParseUtil from '../../utils/ParseUtil'
+import { ensureParsed } from '../../utils/ParseUtil'
 import ValidationError from '../../errors/ValidationError'
 
-class StreamAndPartition {
+export default class StreamAndPartition {
     constructor(streamId, streamPartition) {
         if (!streamId) {
             throw new ValidationError('Stream ID not given!')
@@ -30,11 +30,9 @@ class StreamAndPartition {
     }
 
     static deserialize(stringOrObject) {
-        const msg = ParseUtil.ensureParsed(stringOrObject)
+        const msg = ensureParsed(stringOrObject)
 
         // calling this.prototype.constructor instead of new StreamAndPartition(...) works for subclasses too
         return new this.prototype.constructor(...this.objectToConstructorArgs(msg))
     }
 }
-
-module.exports = StreamAndPartition

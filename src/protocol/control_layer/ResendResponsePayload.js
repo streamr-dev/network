@@ -1,6 +1,6 @@
 import StreamAndPartition from './StreamAndPartition'
 
-module.exports = class ResendResponsePayload extends StreamAndPartition {
+export default class ResendResponsePayload extends StreamAndPartition {
     constructor(streamId, streamPartition, subId) {
         super(streamId, streamPartition)
         if (subId == null) {

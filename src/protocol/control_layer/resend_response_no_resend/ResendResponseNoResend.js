@@ -15,4 +15,5 @@ export default class ResendResponseNoResend extends ControlMessage {
     }
 }
 
-/* static */ ResendResponseNoResend.TYPE = TYPE
+/* static */
+ResendResponseNoResend.TYPE = TYPE

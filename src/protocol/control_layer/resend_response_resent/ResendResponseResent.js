@@ -15,4 +15,5 @@ export default class ResendResponseResent extends ControlMessage {
     }
 }
 
-/* static */ ResendResponseResent.TYPE = TYPE
+/* static */
+ResendResponseResent.TYPE = TYPE

@@ -126,7 +126,9 @@ export default class StreamMessage {
         return streamMessageVersion >= 31
     }
 }
-/* static */ StreamMessage.LATEST_VERSION = LATEST_VERSION
+
+/* static */
+StreamMessage.LATEST_VERSION = LATEST_VERSION
 
 StreamMessage.CONTENT_TYPES = {
     MESSAGE: 27,

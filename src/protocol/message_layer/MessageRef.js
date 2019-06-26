@@ -1,4 +1,4 @@
-class MessageRef {
+export default class MessageRef {
     constructor(timestamp, sequenceNumber) {
         this.timestamp = timestamp
         this.sequenceNumber = sequenceNumber
@@ -29,5 +29,3 @@ class MessageRef {
         return JSON.stringify(this.toArray())
     }
 }
-
-module.exports = MessageRef

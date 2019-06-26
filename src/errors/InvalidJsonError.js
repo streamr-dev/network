@@ -1,4 +1,4 @@
-module.exports = class InvalidJsonError extends Error {
+export default class InvalidJsonError extends Error {
     constructor(streamId, jsonString, parseError, streamMessage) {
         super(`Invalid JSON in stream ${streamId}: ${jsonString}. Error while parsing was: ${parseError}`)
         this.streamId = streamId

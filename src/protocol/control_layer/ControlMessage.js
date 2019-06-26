@@ -5,7 +5,7 @@ import UnsupportedTypeError from '../../errors/UnsupportedTypeError'
 const classByVersionAndType = {}
 const LATEST_VERSION = 1
 
-class ControlMessage {
+export default class ControlMessage {
     constructor(version, type) {
         if (new.target === ControlMessage) {
             throw new TypeError('ControlMessage is abstract.')
@@ -79,5 +79,6 @@ class ControlMessage {
         return new C(...C.getConstructorArgs(args))
     }
 }
-module.exports = ControlMessage
-/* static */ ControlMessage.LATEST_VERSION = LATEST_VERSION
+
+/* static */
+ControlMessage.LATEST_VERSION = LATEST_VERSION

@@ -1,4 +1,4 @@
-import TimestampUtil from '../../../utils/TimestampUtil'
+import * as TimestampUtil from '../../../utils/TimestampUtil'
 import ValidationError from '../../../errors/ValidationError'
 import StreamMessageV30 from '../../message_layer/StreamMessageV30'
 import StreamMessage from '../../message_layer/StreamMessage'

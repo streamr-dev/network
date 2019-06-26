@@ -21,4 +21,5 @@ export default class UnsubscribeRequest extends ControlMessage {
     }
 }
 
-/* static */ UnsubscribeRequest.TYPE = TYPE
+/* static */
+UnsubscribeRequest.TYPE = TYPE

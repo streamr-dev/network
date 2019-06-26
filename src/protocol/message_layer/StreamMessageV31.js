@@ -89,4 +89,5 @@ export default class StreamMessageV31 extends StreamMessage {
         return this.toOtherVersion(version).serialize(version, options)
     }
 }
+
 StreamMessage.latestClass = StreamMessageV31

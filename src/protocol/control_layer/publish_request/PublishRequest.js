@@ -16,4 +16,5 @@ export default class PublishRequest extends ControlMessage {
     }
 }
 
-/* static */ PublishRequest.TYPE = TYPE
+/* static */
+PublishRequest.TYPE = TYPE

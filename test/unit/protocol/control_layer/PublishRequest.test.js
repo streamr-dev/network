@@ -1,7 +1,6 @@
 import assert from 'assert'
 import PublishRequest from '../../../../src/protocol/control_layer/publish_request/PublishRequest'
 import PublishRequestV1 from '../../../../src/protocol/control_layer/publish_request/PublishRequestV1'
-import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
 import StreamMessageFactory from '../../../../src/protocol/message_layer/StreamMessageFactory'
 

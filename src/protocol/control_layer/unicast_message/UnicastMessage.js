@@ -2,7 +2,7 @@ import ControlMessage from '../ControlMessage'
 
 const TYPE = 1
 
-class UnicastMessage extends ControlMessage {
+export default class UnicastMessage extends ControlMessage {
     constructor(version, subId) {
         if (new.target === UnicastMessage) {
             throw new TypeError('UnicastMessage is abstract.')
@@ -31,5 +31,6 @@ class UnicastMessage extends ControlMessage {
         return new C(subId, streamMessage)
     }
 }
-module.exports = UnicastMessage
-/* static */ UnicastMessage.TYPE = TYPE
+
+/* static */
+UnicastMessage.TYPE = TYPE

@@ -22,4 +22,5 @@ export default class BroadcastMessage extends ControlMessage {
     }
 }
 
-/* static */ BroadcastMessage.TYPE = TYPE
+/* static */
+BroadcastMessage.TYPE = TYPE
