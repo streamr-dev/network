@@ -31,12 +31,13 @@ jobs:
     - cp package-lock.json build
     - mv .codedeploy/appspec.yml build/appspec.yml
     - mv .codedeploy/ build/
-    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_JOB_ID}.tar .; cd $TRAVIS_BUILD_DIR;
+    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_JOB_ID}.tar .;
+      cd $TRAVIS_BUILD_DIR;
     deploy:
     - provider: s3
       access_key_id: AKIAI3FGPGMK3EREJJTQ
       secret_access_key:
-        secure: d6p3qJF3YdCbs715yk1bRMzCjKfPtuidEHSAfkU54DzlVBG+SfugB01JeQ15KBmf9F1J5TJi3/OKibfv6jt7wJxAzhWy2AwJLIZWMEiQS6nVKaS3O2RbrEUTsWggySYrKjks3oy65AKaWyE2oGxi1+7jKxTafOIfKZ2djvFHICOOhbkswt6hFIBK++xj9NCal07UJ+2/89XChwnclH+XGh2nZ6Cdw1bOw63/Z1zgwwlrGpSpUYek2dkY2IrWcWlg7K/kIqAiiXuMglVGsPAceQYuKEXkK+Y6jVKcsJvNQoEcDUtDL1QLDEhqKGULzqza+uf636d+Uw0LNgrno6Yxa4H1TRN0yLMpSK5zLydDziIRaXGoQOfWN7hNXpXqMcxrpImgnw2tfDbVmvXiXVRA0SGEwxvjj3pb/dBPKgAH/IK7vR3EGRcv+94XcfN6+0YvEX/H/w6tbKHV/8Ud+3dBrtlP3TkrIHbT9Fncd/yHIlbOJ8/ZX845LTrhl2u9Qb4BMH1REIx9UFFrEPFmZ7k1mbeXgpl1x5X0b1LD/aVMQoFd2U419QmomTo523ggQ4+gu6+JgqhgEts9/6+AbcWbSwTDMlrj8Iy8XW05DbdGVFgTwfLodTXSg8OKL8ecSnsR4OyWspkpt0DCnZtD1W1bz/gnrTXNX+AMSp4du4fUsw0=
+        secure: iGtMZxN+fvrqkMM5VP86eb8GrYXtx7fas7nLKcGsZde1iikO85vLeP8dR/yIARnZ8I044EDxhETbIDUsw0Y3+uW/num9a2xehoKIV19YEr7B+yyxp0wJNEfmBR6EYOq77XR+7BGLNyxdkFVHSfU51WsmU3JjVd4kCxvgSbjraj9/NVp/EJ/4+WqbTiWaOinJSiqtyVxnRkJ4ofqz+ZG5UzFXChAIhDC0rgN5ZhCz1uBl1ofuJ+8ULQODSj4v0zeU4OFkhOCIyk92ujRFf9qZWHVwNN0fRs/qfusyN5jjf9kffebMGOhrzEG0KT6iyUp81gZX80k24+73G1KfeZKy7q2vrJ0gX+II8MOyjv77bU4ohPWpBlDsxicoSg1AiJcaPjq/42tQnA/Rcw+u60X91QTvufgHouTkkFK81/HLNkCuUbfQX5hghUyx+/Az3+4YvQ98ZPzjnMnPGcblI2iM9O5C+T05dsreBPGQMIcjVoIhlbNeNgk5VXq5OteqpAV1t9jMOfy/b6t5NtlCBBfJTFzTvGggIW4dsFAZ2Fbn4nZCyHhtinjZoysIwp9MyO9aOvcGCHuiTZh0OcEUxTtxMq6Hkk0Qwp4sw98Cj8f59fL6hrjU39s7FCWxozCDTxO9Q43JQ8gjzex+vC3Vl00UD54PTwWfnWynLsJwHzXqmSA=
       bucket: eu-west-1-stg-streamr-vault
       upload-dir: tracker-node/releases
       acl: private
@@ -46,7 +47,7 @@ jobs:
     - provider: codedeploy
       access_key_id: AKIAI3FGPGMK3EREJJTQ
       secret_access_key:
-        secure: d6p3qJF3YdCbs715yk1bRMzCjKfPtuidEHSAfkU54DzlVBG+SfugB01JeQ15KBmf9F1J5TJi3/OKibfv6jt7wJxAzhWy2AwJLIZWMEiQS6nVKaS3O2RbrEUTsWggySYrKjks3oy65AKaWyE2oGxi1+7jKxTafOIfKZ2djvFHICOOhbkswt6hFIBK++xj9NCal07UJ+2/89XChwnclH+XGh2nZ6Cdw1bOw63/Z1zgwwlrGpSpUYek2dkY2IrWcWlg7K/kIqAiiXuMglVGsPAceQYuKEXkK+Y6jVKcsJvNQoEcDUtDL1QLDEhqKGULzqza+uf636d+Uw0LNgrno6Yxa4H1TRN0yLMpSK5zLydDziIRaXGoQOfWN7hNXpXqMcxrpImgnw2tfDbVmvXiXVRA0SGEwxvjj3pb/dBPKgAH/IK7vR3EGRcv+94XcfN6+0YvEX/H/w6tbKHV/8Ud+3dBrtlP3TkrIHbT9Fncd/yHIlbOJ8/ZX845LTrhl2u9Qb4BMH1REIx9UFFrEPFmZ7k1mbeXgpl1x5X0b1LD/aVMQoFd2U419QmomTo523ggQ4+gu6+JgqhgEts9/6+AbcWbSwTDMlrj8Iy8XW05DbdGVFgTwfLodTXSg8OKL8ecSnsR4OyWspkpt0DCnZtD1W1bz/gnrTXNX+AMSp4du4fUsw0=
+        secure: iGtMZxN+fvrqkMM5VP86eb8GrYXtx7fas7nLKcGsZde1iikO85vLeP8dR/yIARnZ8I044EDxhETbIDUsw0Y3+uW/num9a2xehoKIV19YEr7B+yyxp0wJNEfmBR6EYOq77XR+7BGLNyxdkFVHSfU51WsmU3JjVd4kCxvgSbjraj9/NVp/EJ/4+WqbTiWaOinJSiqtyVxnRkJ4ofqz+ZG5UzFXChAIhDC0rgN5ZhCz1uBl1ofuJ+8ULQODSj4v0zeU4OFkhOCIyk92ujRFf9qZWHVwNN0fRs/qfusyN5jjf9kffebMGOhrzEG0KT6iyUp81gZX80k24+73G1KfeZKy7q2vrJ0gX+II8MOyjv77bU4ohPWpBlDsxicoSg1AiJcaPjq/42tQnA/Rcw+u60X91QTvufgHouTkkFK81/HLNkCuUbfQX5hghUyx+/Az3+4YvQ98ZPzjnMnPGcblI2iM9O5C+T05dsreBPGQMIcjVoIhlbNeNgk5VXq5OteqpAV1t9jMOfy/b6t5NtlCBBfJTFzTvGggIW4dsFAZ2Fbn4nZCyHhtinjZoysIwp9MyO9aOvcGCHuiTZh0OcEUxTtxMq6Hkk0Qwp4sw98Cj8f59fL6hrjU39s7FCWxozCDTxO9Q43JQ8gjzex+vC3Vl00UD54PTwWfnWynLsJwHzXqmSA=
       bucket: eu-west-1-stg-streamr-vault
       key: tracker-node/releases/tracker-${TRAVIS_JOB_ID}.tar
       application: eu-west-1-stg-tracker-node-codedeploy
@@ -55,3 +56,4 @@ jobs:
   - stage: publish
     if: tag IS present
     script: npm publish
+
