@@ -28,6 +28,7 @@ jobs:
     - mkdir $TRAVIS_BUILD_DIR/build
     - mkdir $TRAVIS_BUILD_DIR/upload
     - cp -r src  build
+    - cp app.js build
     - cp package.json build
     - cp package-lock.json build
     - mv .codedeploy/appspec.yml build/appspec.yml
