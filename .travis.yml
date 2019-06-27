@@ -23,9 +23,31 @@ jobs:
     - sleep 3m
     - node node_modules/@streamr/streamr-p2p-network/bin/tracker.js &
     - npm run test-integration
+  - stage: Deploy Staging
+    script:
+    - mkdir build
+    - mkdir upload
+    - cp -r src  build
+    - cp package.json build
+    - cp package-lock.json build
+    - mv .codedeploy/appspec.yml build/appspec.yml
+    - mv .codedeploy/ build/
+    - cd build; tar -czvf ../upload/broker-${TRAVIS_JOB_ID}.tar .;
+    deploy:
+    - provider: s3
+      access_key_id: AKIAI3FGPGMK3EREJJTQ
+      secret_access_key:
+        secure: d6p3qJF3YdCbs715yk1bRMzCjKfPtuidEHSAfkU54DzlVBG+SfugB01JeQ15KBmf9F1J5TJi3/OKibfv6jt7wJxAzhWy2AwJLIZWMEiQS6nVKaS3O2RbrEUTsWggySYrKjks3oy65AKaWyE2oGxi1+7jKxTafOIfKZ2djvFHICOOhbkswt6hFIBK++xj9NCal07UJ+2/89XChwnclH+XGh2nZ6Cdw1bOw63/Z1zgwwlrGpSpUYek2dkY2IrWcWlg7K/kIqAiiXuMglVGsPAceQYuKEXkK+Y6jVKcsJvNQoEcDUtDL1QLDEhqKGULzqza+uf636d+Uw0LNgrno6Yxa4H1TRN0yLMpSK5zLydDziIRaXGoQOfWN7hNXpXqMcxrpImgnw2tfDbVmvXiXVRA0SGEwxvjj3pb/dBPKgAH/IK7vR3EGRcv+94XcfN6+0YvEX/H/w6tbKHV/8Ud+3dBrtlP3TkrIHbT9Fncd/yHIlbOJ8/ZX845LTrhl2u9Qb4BMH1REIx9UFFrEPFmZ7k1mbeXgpl1x5X0b1LD/aVMQoFd2U419QmomTo523ggQ4+gu6+JgqhgEts9/6+AbcWbSwTDMlrj8Iy8XW05DbdGVFgTwfLodTXSg8OKL8ecSnsR4OyWspkpt0DCnZtD1W1bz/gnrTXNX+AMSp4du4fUsw0=
+      bucket: eu-west-1-stg-streamr-vault
+      upload-dir: network-node/releases
+      acl: private
+      region: eu-west-1
+      skip_cleanup: true
+      local_dir: upload
   - stage: publish
     if: tag IS present
     script: npm publish
 env:
   global:
     secure: YjBJm1GmSusUoHue15sAj04mZYhd6yC6v/V45hhyMhSfEawZn1H4nFzPiBqhNGZ2Lti2P+axJ5HXkFz/my/hWWL9+ENEKl0MczXcIWz5COZGZFJQORMCmL8u5yvFZvMqMGUwLuN6pkFnTHgYjRL7x7Ee+MEk+1qP0Tfy1qYaUhr192XzteRMI1zllxZSf3ElEY0BOjJ0N9PJs4O9X1T28w/lmW6c0ORiS9dCIG5afaMD50YRFrZCzc+l0e/kcSHo9lillCiD6755uTPBPYEmWYGmICRvG2qK+Hnv9B42sr3AOVKmkUyFHZgN1GOByHzcib8yrKdo2sgEr/oaFQvI2du915MDEAjMlQfeSbYjsPSouDMBD8CxhY6MVDwKZzMYF3KfSs7sttd411hx1vhog4aX+K6OFcVXyc/iSZAzSLSJQQvHrGffu5+lb/j7408vgJp69MAaK4ICfRhnGJbgcd/JxpGGeQiCELu1Zu7Sw8rXyq+W3ilvbOjfT0pXR9KzmZlFPpx083Ho51MxKoGEmxXL/RrW/LW5fx+EQXTuOQMnS+NUyJwPUUg16B0c+F2fNsov9KqXLiJBMXzo+fosjlWI+tm0pwNueFlGKJjs67Q/WwV5lKYyABQjTeBrT6AujGT7jeHHqp5ZrmKDLBHZK4isy63RqPeX+mwm/1fmHUU=
+deploy:
