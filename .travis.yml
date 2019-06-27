@@ -44,6 +44,33 @@ jobs:
       region: eu-west-1
       skip_cleanup: true
       local_dir: upload
+    - provider: codedeploy
+      access_key_id: AKIAI3FGPGMK3EREJJTQ
+      secret_access_key:
+        secure: d6p3qJF3YdCbs715yk1bRMzCjKfPtuidEHSAfkU54DzlVBG+SfugB01JeQ15KBmf9F1J5TJi3/OKibfv6jt7wJxAzhWy2AwJLIZWMEiQS6nVKaS3O2RbrEUTsWggySYrKjks3oy65AKaWyE2oGxi1+7jKxTafOIfKZ2djvFHICOOhbkswt6hFIBK++xj9NCal07UJ+2/89XChwnclH+XGh2nZ6Cdw1bOw63/Z1zgwwlrGpSpUYek2dkY2IrWcWlg7K/kIqAiiXuMglVGsPAceQYuKEXkK+Y6jVKcsJvNQoEcDUtDL1QLDEhqKGULzqza+uf636d+Uw0LNgrno6Yxa4H1TRN0yLMpSK5zLydDziIRaXGoQOfWN7hNXpXqMcxrpImgnw2tfDbVmvXiXVRA0SGEwxvjj3pb/dBPKgAH/IK7vR3EGRcv+94XcfN6+0YvEX/H/w6tbKHV/8Ud+3dBrtlP3TkrIHbT9Fncd/yHIlbOJ8/ZX845LTrhl2u9Qb4BMH1REIx9UFFrEPFmZ7k1mbeXgpl1x5X0b1LD/aVMQoFd2U419QmomTo523ggQ4+gu6+JgqhgEts9/6+AbcWbSwTDMlrj8Iy8XW05DbdGVFgTwfLodTXSg8OKL8ecSnsR4OyWspkpt0DCnZtD1W1bz/gnrTXNX+AMSp4du4fUsw0=
+      bucket: eu-west-1-stg-streamr-vault
+      key: network-node/releases/broker-${TRAVIS_JOB_ID}.tar
+      application: eu-west-1-stg-network-node-codedeploy
+      deployment_group: eu-west-1-stg-network-node-deployment-group
+      region: eu-west-1
+    - provider: codedeploy
+      access_key_id: AKIAI3FGPGMK3EREJJTQ
+      secret_access_key:
+        secure: d6p3qJF3YdCbs715yk1bRMzCjKfPtuidEHSAfkU54DzlVBG+SfugB01JeQ15KBmf9F1J5TJi3/OKibfv6jt7wJxAzhWy2AwJLIZWMEiQS6nVKaS3O2RbrEUTsWggySYrKjks3oy65AKaWyE2oGxi1+7jKxTafOIfKZ2djvFHICOOhbkswt6hFIBK++xj9NCal07UJ+2/89XChwnclH+XGh2nZ6Cdw1bOw63/Z1zgwwlrGpSpUYek2dkY2IrWcWlg7K/kIqAiiXuMglVGsPAceQYuKEXkK+Y6jVKcsJvNQoEcDUtDL1QLDEhqKGULzqza+uf636d+Uw0LNgrno6Yxa4H1TRN0yLMpSK5zLydDziIRaXGoQOfWN7hNXpXqMcxrpImgnw2tfDbVmvXiXVRA0SGEwxvjj3pb/dBPKgAH/IK7vR3EGRcv+94XcfN6+0YvEX/H/w6tbKHV/8Ud+3dBrtlP3TkrIHbT9Fncd/yHIlbOJ8/ZX845LTrhl2u9Qb4BMH1REIx9UFFrEPFmZ7k1mbeXgpl1x5X0b1LD/aVMQoFd2U419QmomTo523ggQ4+gu6+JgqhgEts9/6+AbcWbSwTDMlrj8Iy8XW05DbdGVFgTwfLodTXSg8OKL8ecSnsR4OyWspkpt0DCnZtD1W1bz/gnrTXNX+AMSp4du4fUsw0=
+      bucket: eu-west-1-stg-streamr-vault
+      key: network-node/releases/broker-${TRAVIS_JOB_ID}.tar
+      application: eu-west-1-stg-network-node-cassandra-codedeploy
+      deployment_group: eu-west-1-stg-network-node-cassandra-deployment-group
+      region: eu-west-1
+    - provider: codedeploy
+      access_key_id: AKIAI3FGPGMK3EREJJTQ
+      secret_access_key:
+        secure: d6p3qJF3YdCbs715yk1bRMzCjKfPtuidEHSAfkU54DzlVBG+SfugB01JeQ15KBmf9F1J5TJi3/OKibfv6jt7wJxAzhWy2AwJLIZWMEiQS6nVKaS3O2RbrEUTsWggySYrKjks3oy65AKaWyE2oGxi1+7jKxTafOIfKZ2djvFHICOOhbkswt6hFIBK++xj9NCal07UJ+2/89XChwnclH+XGh2nZ6Cdw1bOw63/Z1zgwwlrGpSpUYek2dkY2IrWcWlg7K/kIqAiiXuMglVGsPAceQYuKEXkK+Y6jVKcsJvNQoEcDUtDL1QLDEhqKGULzqza+uf636d+Uw0LNgrno6Yxa4H1TRN0yLMpSK5zLydDziIRaXGoQOfWN7hNXpXqMcxrpImgnw2tfDbVmvXiXVRA0SGEwxvjj3pb/dBPKgAH/IK7vR3EGRcv+94XcfN6+0YvEX/H/w6tbKHV/8Ud+3dBrtlP3TkrIHbT9Fncd/yHIlbOJ8/ZX845LTrhl2u9Qb4BMH1REIx9UFFrEPFmZ7k1mbeXgpl1x5X0b1LD/aVMQoFd2U419QmomTo523ggQ4+gu6+JgqhgEts9/6+AbcWbSwTDMlrj8Iy8XW05DbdGVFgTwfLodTXSg8OKL8ecSnsR4OyWspkpt0DCnZtD1W1bz/gnrTXNX+AMSp4du4fUsw0=
+      bucket: eu-west-1-stg-streamr-vault
+      key: network-node/releases/broker-${TRAVIS_JOB_ID}.tar
+      application: eu-west-1-stg-network-node-storage-codedeploy
+      deployment_group: eu-west-1-stg-network-node-storage-deployment-group
+      region: eu-west-1
   - stage: publish
     if: tag IS present
     script: npm publish
