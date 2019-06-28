@@ -3,6 +3,7 @@ import debugFactory from 'debug'
 import { Errors } from 'streamr-client-protocol'
 import InvalidSignatureError from './errors/InvalidSignatureError'
 import VerificationFailedError from './errors/VerificationFailedError'
+import EncryptionUtil from './EncryptionUtil'
 
 const debug = debugFactory('StreamrClient::Subscription')
 
@@ -16,7 +17,7 @@ function generateSubscriptionId() {
 const DEFAULT_GAPFILL_TIMEOUT = 5000
 
 class Subscription extends EventEmitter {
-    constructor(streamId, streamPartition, callback, options, gapFillTimeout = DEFAULT_GAPFILL_TIMEOUT) {
+    constructor(streamId, streamPartition, callback, options, groupKeys, gapFillTimeout = DEFAULT_GAPFILL_TIMEOUT) {
         super()
 
         if (!streamId) {
@@ -37,7 +38,7 @@ class Subscription extends EventEmitter {
         this.lastReceivedMsgRef = {}
         this.gaps = {}
         this.gapFillTimeout = gapFillTimeout
-
+        this.groupKeys = groupKeys || {}
         if (this.resendOptions.from != null && this.resendOptions.last != null) {
             throw new Error(`Multiple resend options active! Please use only one: ${JSON.stringify(this.resendOptions)}`)
         }
@@ -163,8 +164,8 @@ class Subscription extends EventEmitter {
     }
 
     async _handleMessage(msg, verifyFn, isResend = false) {
-        if (msg.version !== 30) {
-            throw new Error(`Can handle only StreamMessageV30, not version ${msg.version}`)
+        if (msg.version !== 31) {
+            throw new Error(`Can handle only StreamMessageV31, not version ${msg.version}`)
         }
         if (msg.prevMsgRef == null) {
             debug('handleMessage: prevOffset is null, gap detection is impossible! message: %o', msg)
@@ -233,6 +234,10 @@ class Subscription extends EventEmitter {
             } else {
                 // Normal case where prevMsgRef == null || lastReceivedMsgRef == null || prevMsgRef === lastReceivedMsgRef
                 this.lastReceivedMsgRef[key] = messageRef
+                const newGroupKey = EncryptionUtil.decryptStreamMessage(msg, this.groupKeys[msg.getPublisherId()])
+                if (newGroupKey) {
+                    this.groupKeys[msg.getPublisherId()] = newGroupKey
+                }
                 this.callback(msg.getParsedContent(), msg)
                 if (msg.isByeMessage()) {
                     this.emit('done')

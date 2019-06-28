@@ -107,6 +107,8 @@ verifySignatures | 'auto' | Determines under which conditions signed and unsigne
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
 maxPublishQueueSize | 10000 | Only in effect when `autoConnect = true`. Controls the maximum number of messages to retain in internal queue when client has disconnected and is reconnecting to Streamr.
+publisherGroupKeys | {} | Object defining the group key as a hex string used to encrypt for each stream id.
+subscriberGroupKeys | {} | Object defining, for each stream id, an object containing the group key used to decrypt for each publisher id.
 
 ### Authentication options
 
@@ -225,6 +227,7 @@ Name | Description
 stream    | Stream id to subscribe to
 partition | Partition number to subscribe to. Defaults to the default partition (0).
 resend | Object defining the resend options. Below are examples of its contents.
+groupKeys | Object defining the group key as a hex string for each publisher id of the stream.
 
 ```javascript
 // Resend N most recent messages

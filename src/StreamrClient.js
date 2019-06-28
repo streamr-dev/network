@@ -2,7 +2,7 @@ import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import qs from 'qs'
 import once from 'once'
-import { ControlLayer, Errors } from 'streamr-client-protocol'
+import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 
 const {
     BroadcastMessage,
@@ -18,7 +18,9 @@ const {
     ResendFromRequest,
     ResendRangeRequest,
     ErrorResponse,
+    ControlMessage,
 } = ControlLayer
+const { StreamMessage } = MessageLayer
 const debug = debugFactory('StreamrClient')
 
 import Subscription from './Subscription'
@@ -50,6 +52,8 @@ export default class StreamrClient extends EventEmitter {
             retryResendAfter: 5000,
             gapFillTimeout: 5000,
             maxPublishQueueSize: 10000,
+            publisherGroupKeys: {}, // {streamId: groupKey}
+            subscriberGroupKeys: {}, // {streamId: {publisherId: groupKey}}
         }
         this.subscribedStreams = {}
 
@@ -57,14 +61,16 @@ export default class StreamrClient extends EventEmitter {
 
         const parts = this.options.url.split('?')
         if (parts.length === 1) { // there is no query string
-            this.options.url = `${this.options.url}?controlLayerVersion=1&messageLayerVersion=30`
+            const controlLayer = `controlLayerVersion=${ControlMessage.LATEST_VERSION}`
+            const messageLayer = `messageLayerVersion=${StreamMessage.LATEST_VERSION}`
+            this.options.url = `${this.options.url}?${controlLayer}&${messageLayer}`
         } else {
             const queryObj = qs.parse(parts[1])
             if (!queryObj.controlLayerVersion) {
                 this.options.url = `${this.options.url}&controlLayerVersion=1`
             }
             if (!queryObj.messageLayerVersion) {
-                this.options.url = `${this.options.url}&messageLayerVersion=30`
+                this.options.url = `${this.options.url}&messageLayerVersion=31`
             }
         }
 
@@ -93,7 +99,7 @@ export default class StreamrClient extends EventEmitter {
                 this.options.auth, this.signer, this.getUserInfo()
                     .catch((err) => this.emit('error', err)),
                 (streamId) => this.getStream(streamId)
-                    .catch((err) => this.emit('error', err)),
+                    .catch((err) => this.emit('error', err)), this.options.publisherGroupKeys,
             )
         }
 
@@ -265,7 +271,7 @@ export default class StreamrClient extends EventEmitter {
         return stream ? stream.getSubscriptions() : []
     }
 
-    async publish(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null) {
+    async publish(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null, groupKey) {
         if (this.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
@@ -281,7 +287,7 @@ export default class StreamrClient extends EventEmitter {
 
         const [sessionToken, streamMessage] = await Promise.all([
             this.session.getSessionToken(),
-            this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestamp, partitionKey),
+            this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestamp, partitionKey, groupKey),
         ])
 
         if (this.isConnected()) {
@@ -373,8 +379,15 @@ export default class StreamrClient extends EventEmitter {
             throw new Error('subscribe: Invalid arguments: options.stream is not given')
         }
 
+        if (options.groupKeys) {
+            this.options.subscriberGroupKeys[options.stream] = options.groupKeys
+        }
+
         // Create the Subscription object and bind handlers
-        const sub = new Subscription(options.stream, options.partition || 0, callback, options.resend, this.options.gapFillTimeout)
+        const sub = new Subscription(
+            options.stream, options.partition || 0, callback, options.resend,
+            this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout,
+        )
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {
                 this._requestResend(sub, {
@@ -476,6 +489,10 @@ export default class StreamrClient extends EventEmitter {
 
     logout() {
         return this.session.logout()
+    }
+
+    getPublisherId() {
+        return this.msgCreationUtil.getPublisherId()
     }
 
     /**

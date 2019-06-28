@@ -70,7 +70,7 @@ describe('StreamrClient', () => {
         const timestamp = Date.now()
         const streamMessage = StreamMessage.create(
             [streamId, 0, timestamp, 0, '', ''], [timestamp - 100, 0],
-            StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.NONE,
+            StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.NONE, content, StreamMessage.SIGNATURE_TYPES.NONE,
         )
         if (subId !== undefined) {
             return UnicastMessage.create(subId, streamMessage)
@@ -826,7 +826,7 @@ describe('StreamrClient', () => {
         function getPublishRequest(streamId, timestamp, sequenceNumber, prevMsgRef) {
             const streamMessage = StreamMessage.create(
                 [streamId, 0, timestamp, sequenceNumber, hashedUsername, client.msgCreationUtil.msgChainId], prevMsgRef,
-                StreamMessage.CONTENT_TYPES.JSON, pubMsg, StreamMessage.SIGNATURE_TYPES.NONE, null,
+                StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.NONE, pubMsg, StreamMessage.SIGNATURE_TYPES.NONE, null,
             )
             return ControlLayer.PublishRequest.create(streamMessage, 'session-token')
         }

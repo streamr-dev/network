@@ -1,4 +1,5 @@
 import assert from 'assert'
+import crypto from 'crypto'
 import fetch from 'node-fetch'
 import { MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
@@ -731,6 +732,39 @@ describe('StreamrClient', () => {
                 stream.publish({
                     id,
                 })
+            })
+        })
+
+        it('client.subscribe can decrypt encrypted messages if it knows the group key', async (done) => {
+            client.once('error', done)
+            const id = Date.now()
+            const publisherId = await client.getPublisherId()
+            const groupKey = crypto.randomBytes(32)
+            const keys = {}
+            keys[publisherId] = groupKey
+            const sub = client.subscribe({
+                stream: stream.id,
+                groupKeys: keys,
+            }, (parsedContent, streamMessage) => {
+                assert.equal(parsedContent.id, id)
+
+                // Check signature stuff
+                assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+                assert(streamMessage.getPublisherId())
+                assert(streamMessage.signature)
+
+                // All good, unsubscribe
+                client.unsubscribe(sub)
+                sub.on('unsubscribed', () => {
+                    done()
+                })
+            })
+
+            // Publish after subscribed
+            sub.on('subscribed', () => {
+                client.publish(stream.id, {
+                    id,
+                }, Date.now(), null, groupKey)
             })
         })
     })

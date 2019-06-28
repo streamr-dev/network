@@ -32,8 +32,8 @@ export default class Signer {
     }
 
     async signStreamMessage(streamMessage, signatureType = SIGNATURE_TYPES.ETH) {
-        if (streamMessage.version !== 30) {
-            throw new Error('Needs to be a StreamMessageV30')
+        if (streamMessage.version !== 31) {
+            throw new Error('Needs to be a StreamMessageV31')
         }
         if (!streamMessage.getTimestamp()) {
             throw new Error('Timestamp is required as part of the data to sign.')

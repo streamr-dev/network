@@ -4,11 +4,12 @@ import randomstring from 'randomstring'
 import { MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
 import Stream from './rest/domain/Stream'
+import EncryptionUtil from './EncryptionUtil'
 
 const { StreamMessage } = MessageLayer
 
 export default class MessageCreationUtil {
-    constructor(auth, signer, userInfoPromise, getStreamFunction) {
+    constructor(auth, signer, userInfoPromise, getStreamFunction, groupKeys = {}) {
         this.auth = auth
         this._signer = signer
         this.userInfoPromise = userInfoPromise
@@ -17,6 +18,8 @@ export default class MessageCreationUtil {
             max: 10000,
         })
         this.publishedStreams = {}
+        Object.values(groupKeys).forEach((key) => MessageCreationUtil.validateGroupKey(key))
+        this.groupKeys = groupKeys
         this.msgChainId = randomstring.generate(20)
         this.cachedHashes = {}
     }
@@ -94,10 +97,13 @@ export default class MessageCreationUtil {
         return this.publishedStreams[key].prevSequenceNumber
     }
 
-    async createStreamMessage(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null) {
+    async createStreamMessage(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null, groupKey) {
         // Validate data
         if (typeof data !== 'object') {
             throw new Error(`Message data must be an object! Was: ${data}`)
+        }
+        if (groupKey) {
+            MessageCreationUtil.validateGroupKey(groupKey)
         }
 
         const stream = (streamObjectOrId instanceof Stream) ? streamObjectOrId : await this.getStream(streamObjectOrId)
@@ -116,10 +122,21 @@ export default class MessageCreationUtil {
         const sequenceNumber = this.getNextSequenceNumber(key, timestamp)
         const streamMessage = StreamMessage.create(
             [stream.id, streamPartition, timestamp, sequenceNumber, publisherId, this.msgChainId], this.getPrevMsgRef(key),
-            StreamMessage.CONTENT_TYPES.JSON, data, StreamMessage.SIGNATURE_TYPES.NONE, null,
+            StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.NONE, null,
         )
         this.publishedStreams[key].prevTimestamp = timestamp
         this.publishedStreams[key].prevSequenceNumber = sequenceNumber
+
+        if (groupKey && this.groupKeys[stream.id] && groupKey !== this.groupKeys[stream.id]) {
+            EncryptionUtil.encryptStreamMessageAndNewKey(groupKey, streamMessage, this.groupKeys[stream.id])
+            this.groupKeys[stream.id] = groupKey
+        } else if (groupKey || this.groupKeys[stream.id]) {
+            if (groupKey) {
+                this.groupKeys[stream.id] = groupKey
+            }
+            EncryptionUtil.encryptStreamMessage(streamMessage, this.groupKeys[stream.id])
+        }
+
         if (this._signer) {
             await this._signer.signStreamMessage(streamMessage)
         }
@@ -146,6 +163,15 @@ export default class MessageCreationUtil {
         } else {
             // Fallback to random partition if no key
             return Math.floor(Math.random() * partitionCount)
+        }
+    }
+
+    static validateGroupKey(groupKey) {
+        if (!(groupKey instanceof Buffer)) {
+            throw new Error(`Group key must be a Buffer: ${groupKey}`)
+        }
+        if (groupKey.length !== 32) {
+            throw new Error(`Group key must have a size of 256 bits, not ${groupKey.length * 8}`)
         }
     }
 }

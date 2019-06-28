@@ -169,8 +169,8 @@ describe('Connection', () => {
                 const message = UnicastMessage.create(
                     'subId',
                     StreamMessage.create(
-                        ['streamId', 0, timestamp, 0, '', ''], [timestamp - 100, 0], StreamMessage.CONTENT_TYPES.JSON,
-                        content, StreamMessage.SIGNATURE_TYPES.NONE,
+                        ['streamId', 0, timestamp, 0, '', ''], [timestamp - 100, 0], StreamMessage.CONTENT_TYPES.MESSAGE,
+                        StreamMessage.ENCRYPTION_TYPES.NONE, content, StreamMessage.SIGNATURE_TYPES.NONE,
                     ),
                 )
 

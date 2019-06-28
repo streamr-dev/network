@@ -2,7 +2,7 @@ import assert from 'assert'
 import { MessageLayer } from 'streamr-client-protocol'
 import Signer from '../../src/Signer'
 
-const { StreamMessage, StreamMessageV30, StreamMessageV29 } = MessageLayer
+const { StreamMessage, StreamMessageV31, StreamMessageV30, StreamMessageV29 } = MessageLayer
 /*
 The StreamrClient accepts private keys with or without the '0x' prefix and adds the prefix if it's absent. Since
 we are testing the Signer which is internal, we use private keys with the '0x' prefix.
@@ -59,7 +59,7 @@ describe('Signer', () => {
         const timestamp = 1529549961116
         const correctSignatureV29 = '0xb922018e12b520491593718812b234539f43ec8cec68edce0920582f655b76' +
             'be0dd3c91dff706572ab378dc12da9df3373641267558685e0daa6ff8b2b0dec991c'
-        const correctSignatureV30 = '0x62b340bd136726195f9ee9ea58d9e2a58aab48f89c80f5c6d107e87143bf3c' +
+        const correctSignatureV30AndV31 = '0x62b340bd136726195f9ee9ea58d9e2a58aab48f89c80f5c6d107e87143bf3c' +
             'f853ec65e87b38712a2e0f051b62fc2d3064e693df5a46fade3619e592681ad8de1c'
         const wrongSignature = '0x3d5c221ebed6bf75ecd0ca8751aa18401ac60561034e3b2889dfd7bbc0a2ff3c5f1' +
             'c5239113f3fac5b648ab665d152ecece1daaafdd3d94309c2b822ec28369e1c'
@@ -74,10 +74,10 @@ describe('Signer', () => {
             assert.deepEqual(signature, '0x084b3ac0f2ad17d387ca5bbf5d72d8f1dfd1b372e399ce6b0bfc60793e' +
                 'b717d2431e498294f202d8dfd9f56158391d453c018470aea92ed6a80a23c20ab6f7ac1b')
         })
-        it('should sign StreamMessageV30 with null previous ref correctly', async () => {
-            const streamMessage = new StreamMessageV30(
-                [streamId, 0, timestamp, 0, '', 'chain-id'], null, StreamMessage.CONTENT_TYPES.JSON,
-                data, StreamMessage.SIGNATURE_TYPES.ETH, null,
+        it('should sign StreamMessageV31 with null previous ref correctly', async () => {
+            const streamMessage = new StreamMessageV31(
+                [streamId, 0, timestamp, 0, '', 'chain-id'], null, StreamMessage.CONTENT_TYPES.MESSAGE,
+                StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.ETH, null,
             )
             const payload = streamMessage.getStreamId() + streamMessage.getStreamPartition() + streamMessage.getTimestamp() +
                 streamMessage.messageId.sequenceNumber + signer.address.toLowerCase() + streamMessage.messageId.msgChainId +
@@ -88,10 +88,10 @@ describe('Signer', () => {
             assert.strictEqual(streamMessage.getPublisherId(), signer.address)
             assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
         })
-        it('should sign StreamMessageV30 with non-null previous ref correctly', async () => {
-            const streamMessage = new StreamMessageV30(
-                [streamId, 0, timestamp, 0, '', 'chain-id'], [timestamp - 10, 0], StreamMessage.CONTENT_TYPES.JSON,
-                data, StreamMessage.SIGNATURE_TYPES.ETH, null,
+        it('should sign StreamMessageV31 with non-null previous ref correctly', async () => {
+            const streamMessage = new StreamMessageV31(
+                [streamId, 0, timestamp, 0, '', 'chain-id'], [timestamp - 10, 0], StreamMessage.CONTENT_TYPES.MESSAGE,
+                StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.ETH, null,
             )
             const payload = streamMessage.getStreamId() + streamMessage.getStreamPartition() + streamMessage.getTimestamp() +
                 streamMessage.messageId.sequenceNumber + signer.address.toLowerCase() + streamMessage.messageId.msgChainId +
@@ -102,31 +102,38 @@ describe('Signer', () => {
             assert.strictEqual(streamMessage.getPublisherId(), signer.address)
             assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
         })
+        it('Should verify correct signature (V31)', () => {
+            const signedStreamMessage = new StreamMessageV31(
+                [streamId, 0, timestamp, 0, signer.address, 'chain-id'], null, StreamMessage.CONTENT_TYPES.MESSAGE,
+                StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.ETH, correctSignatureV30AndV31,
+            )
+            assert.strictEqual(Signer.verifyStreamMessage(signedStreamMessage, new Set([signer.address.toLowerCase()])), true)
+        })
         it('Should verify correct signature (V30)', () => {
             const signedStreamMessage = new StreamMessageV30(
-                [streamId, 0, timestamp, 0, signer.address, 'chain-id'], null, StreamMessage.CONTENT_TYPES.JSON,
-                data, StreamMessage.SIGNATURE_TYPES.ETH, correctSignatureV30,
+                [streamId, 0, timestamp, 0, signer.address, 'chain-id'], null, StreamMessage.CONTENT_TYPES.MESSAGE,
+                data, StreamMessage.SIGNATURE_TYPES.ETH, correctSignatureV30AndV31,
             )
             assert.strictEqual(Signer.verifyStreamMessage(signedStreamMessage, new Set([signer.address.toLowerCase()])), true)
         })
         it('Should verify correct signature (V29 but was converted to v30 for the client)', () => {
             const signedStreamMessage = (new StreamMessageV29(
-                streamId, 0, timestamp, 0, 0, 0, StreamMessage.CONTENT_TYPES.JSON,
+                streamId, 0, timestamp, 0, 0, 0, StreamMessage.CONTENT_TYPES.MESSAGE,
                 data, StreamMessage.SIGNATURE_TYPES.ETH_LEGACY, signer.address, correctSignatureV29,
             )).toOtherVersion(30)
             assert.strictEqual(Signer.verifyStreamMessage(signedStreamMessage, new Set([signer.address.toLowerCase()])), true)
         })
-        it('Should return false if incorrect signature (V30)', () => {
-            const wrongStreamMessage = new StreamMessageV30(
-                [streamId, 0, timestamp, 0, signer.address, ''], [timestamp - 10, 0], StreamMessage.CONTENT_TYPES.JSON,
-                data, StreamMessage.SIGNATURE_TYPES.ETH, wrongSignature,
+        it('Should return false if incorrect signature (V31)', () => {
+            const wrongStreamMessage = new StreamMessageV31(
+                [streamId, 0, timestamp, 0, signer.address, ''], [timestamp - 10, 0], StreamMessage.CONTENT_TYPES.MESSAGE,
+                StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.ETH, wrongSignature,
             )
             assert.strictEqual(Signer.verifyStreamMessage(wrongStreamMessage, new Set([signer.address.toLowerCase()])), false)
         })
         it('Should return false if correct signature but not from a trusted publisher', () => {
-            const signedStreamMessage = new StreamMessageV30(
-                [streamId, 0, timestamp, 0, signer.address, ''], [timestamp - 10, 0], StreamMessage.CONTENT_TYPES.JSON,
-                data, StreamMessage.SIGNATURE_TYPES.ETH, correctSignatureV30,
+            const signedStreamMessage = new StreamMessageV31(
+                [streamId, 0, timestamp, 0, signer.address, ''], [timestamp - 10, 0], StreamMessage.CONTENT_TYPES.MESSAGE,
+                StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.ETH, correctSignatureV30AndV31,
             )
             assert.strictEqual(Signer.verifyStreamMessage(signedStreamMessage, new Set()), false)
         })

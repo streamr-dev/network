@@ -1,21 +1,24 @@
 import assert from 'assert'
+import crypto from 'crypto'
 import sinon from 'sinon'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 
 import Subscription from '../../src/Subscription'
 import InvalidSignatureError from '../../src/errors/InvalidSignatureError'
 import VerificationFailedError from '../../src/errors/VerificationFailedError'
+import EncryptionUtil from '../../src/EncryptionUtil'
 
 const { StreamMessage } = MessageLayer
 
 const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp = null,
     prevSequenceNumber = 0, content = {}, publisherId = 'publisherId', msgChainId = '1',
+    encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
 ) => {
     const prevMsgRef = prevTimestamp ? [prevTimestamp, prevSequenceNumber] : null
     return StreamMessage.create(
         ['streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId], prevMsgRef,
-        StreamMessage.CONTENT_TYPES.JSON, content, StreamMessage.SIGNATURE_TYPES.NONE,
+        StreamMessage.CONTENT_TYPES.MESSAGE, encryptionType, content, StreamMessage.SIGNATURE_TYPES.NONE,
     )
 }
 
@@ -390,6 +393,82 @@ describe('Subscription', () => {
             })
 
             sub.handleBroadcastMessage(byeMsg, sinon.stub().resolves(true))
+        })
+
+        describe('decryption', () => {
+            it('should read clear text content without trying to decrypt', (done) => {
+                const msg1 = createMsg(1, 0, null, 0, {
+                    foo: 'bar',
+                })
+                const sub = new Subscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
+                    assert.deepStrictEqual(content, msg1.getParsedContent())
+                    done()
+                })
+                return sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+            })
+            it('should decrypt encrypted content with the correct key', (done) => {
+                const groupKey = crypto.randomBytes(32)
+                const data = {
+                    foo: 'bar',
+                }
+                const plaintext = Buffer.from(JSON.stringify(data), 'utf8')
+                const ciphertext = EncryptionUtil.encrypt(plaintext, groupKey)
+                const msg1 = createMsg(1, 0, null, 0, ciphertext, 'publisherId', '1', StreamMessage.ENCRYPTION_TYPES.AES)
+                const sub = new Subscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
+                    assert.deepStrictEqual(content, data)
+                    done()
+                }, {}, {
+                    publisherId: groupKey,
+                })
+                return sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+            })
+            it('should not be able to decrypt with the wrong key', (done) => {
+                const correctGroupKey = crypto.randomBytes(32)
+                const wrongGroupKey = crypto.randomBytes(32)
+                const data = {
+                    foo: 'bar',
+                }
+                const plaintext = Buffer.from(JSON.stringify(data), 'utf8')
+                const ciphertext = EncryptionUtil.encrypt(plaintext, correctGroupKey)
+                const msg1 = createMsg(1, 0, null, 0, ciphertext, 'publisherId', '1', StreamMessage.ENCRYPTION_TYPES.AES)
+                const sub = new Subscription(msg1.getStreamId(), msg1.getStreamPartition(), sinon.stub(), {}, {
+                    publisherId: wrongGroupKey,
+                })
+                sub.on('error', (err) => {
+                    assert.strictEqual(err.toString(), `Error: Unable to decrypt ${ciphertext}`)
+                    done()
+                })
+                return sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+            })
+            it('should decrypt first content, update key and decrypt second content', async (done) => {
+                const groupKey1 = crypto.randomBytes(32)
+                const groupKey2 = crypto.randomBytes(32)
+                const data1 = {
+                    test: 'data1',
+                }
+                const data2 = {
+                    test: 'data2',
+                }
+                const plaintext1 = Buffer.concat([groupKey2, Buffer.from(JSON.stringify(data1), 'utf8')])
+                const ciphertext1 = EncryptionUtil.encrypt(plaintext1, groupKey1)
+                const plaintext2 = Buffer.from(JSON.stringify(data2), 'utf8')
+                const ciphertext2 = EncryptionUtil.encrypt(plaintext2, groupKey2)
+                const msg1 = createMsg(1, 0, null, 0, ciphertext1, 'publisherId', '1', StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES)
+                const msg2 = createMsg(2, 0, 1, 0, ciphertext2, 'publisherId', '1', StreamMessage.ENCRYPTION_TYPES.AES)
+                let test1Ok = false
+                const sub = new Subscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
+                    if (JSON.stringify(content) === JSON.stringify(data1)) {
+                        assert.deepStrictEqual(sub.groupKeys.publisherId, groupKey2)
+                        test1Ok = true
+                    } else if (test1Ok && JSON.stringify(content) === JSON.stringify(data2)) {
+                        done()
+                    }
+                }, {}, {
+                    publisherId: groupKey1,
+                })
+                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+            })
         })
     })
 
