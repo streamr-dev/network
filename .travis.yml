@@ -33,7 +33,8 @@ jobs:
     - cp package-lock.json build
     - mv .codedeploy/appspec.yml build/appspec.yml
     - mv .codedeploy/ build/
-    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/broker-${TRAVIS_JOB_ID}.tar .; cd $TRAVIS_BUILD_DIR;
+    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/broker-${TRAVIS_JOB_ID}.tar .; tar -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
+    - cd $TRAVIS_BUILD_DIR;
     deploy:
     - provider: s3
       access_key_id: AKIAI3FGPGMK3EREJJTQ
