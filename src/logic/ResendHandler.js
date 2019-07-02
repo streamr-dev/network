@@ -81,8 +81,8 @@ class ResendHandler {
                 .on('data', () => {
                     numOfMessages += 1
                 })
-                .on('data', ([unicastMessage, unicastMessageSource]) => {
-                    this._emitUnicast(source, unicastMessage, unicastMessageSource)
+                .on('data', (unicastMessage) => {
+                    this._emitUnicast(source, unicastMessage)
                 })
                 .on('error', (error) => {
                     this._emitError(request, error)
@@ -100,8 +100,8 @@ class ResendHandler {
         this.sendResponse(source, ControlLayer.ResendResponseResending.create(request.streamId, request.streamPartition, request.subId))
     }
 
-    _emitUnicast(requestSource, unicastMessage, unicastMessageSource) {
-        this.sendUnicast(requestSource, unicastMessage, unicastMessageSource)
+    _emitUnicast(requestSource, unicastMessage) {
+        this.sendUnicast(requestSource, unicastMessage)
     }
 
     _emitResent(request, source) {

@@ -103,18 +103,18 @@ describe('ResendHandler', () => {
         beforeEach(() => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => intoStream.object([
-                    [ControlLayer.UnicastMessage.create(
+                    ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
                             ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
                             {}, StreamMessage.SIGNATURE_TYPES.NONE, null
                         )
-                    ), null],
-                    [ControlLayer.UnicastMessage.create(
+                    ),
+                    ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
                             ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
                             {}, StreamMessage.SIGNATURE_TYPES.NONE, null
                         )
-                    ), null],
+                    ),
                 ])
             }], sendResponse, sendUnicast, notifyError)
         })
@@ -151,20 +151,20 @@ describe('ResendHandler', () => {
                     })
 
                     setImmediate(() => stream.push(
-                        [ControlLayer.UnicastMessage.create(
+                        ControlLayer.UnicastMessage.create(
                             'subId', StreamMessage.create(
                                 ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
                                 {}, StreamMessage.SIGNATURE_TYPES.NONE, null
                             )
-                        ), null]
+                        ),
                     ))
                     setImmediate(() => stream.push(
-                        [ControlLayer.UnicastMessage.create(
+                        ControlLayer.UnicastMessage.create(
                             'subId', StreamMessage.create(
                                 ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
                                 {}, StreamMessage.SIGNATURE_TYPES.NONE, null
                             )
-                        ), null]
+                        )
                     ))
                     setImmediate(() => {
                         stream.emit('error', new Error('yikes'))
@@ -211,12 +211,12 @@ describe('ResendHandler', () => {
                         read() {}
                     })
                     setImmediate(() => stream.push(
-                        [ControlLayer.UnicastMessage.create(
+                        ControlLayer.UnicastMessage.create(
                             'subId', StreamMessage.create(
                                 ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
                                 {}, StreamMessage.SIGNATURE_TYPES.NONE, null
                             )
-                        ), null]
+                        )
                     ))
                     setImmediate(() => {
                         stream.emit('error', new Error('yikes'))
@@ -227,18 +227,18 @@ describe('ResendHandler', () => {
 
             const thirdStrategy = {
                 getResendResponseStream: () => intoStream.object([
-                    [ControlLayer.UnicastMessage.create(
+                    ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
                             ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
                             {}, StreamMessage.SIGNATURE_TYPES.NONE, null
                         )
-                    ), null],
-                    [ControlLayer.UnicastMessage.create(
+                    ),
+                    ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
                             ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
                             {}, StreamMessage.SIGNATURE_TYPES.NONE, null
                         )
-                    ), null],
+                    ),
                 ])
             }
 
@@ -272,12 +272,12 @@ describe('ResendHandler', () => {
 
             const firstStrategy = {
                 getResendResponseStream: () => intoStream.object([
-                    [ControlLayer.UnicastMessage.create(
+                    ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
                             ['streamId', 0, 1000, 0, 'publisher', 'msgChain'], null, StreamMessage.CONTENT_TYPES.JSON,
                             {}, StreamMessage.SIGNATURE_TYPES.NONE, null
                         )
-                    ), null]
+                    )
                 ])
             }
 
@@ -328,14 +328,14 @@ describe('ResendHandler', () => {
             beforeEach(() => {
                 resendHandler = new ResendHandler([{
                     getResendResponseStream: () => intoStream.object([
-                        [ControlLayer.UnicastMessage.create(
+                        ControlLayer.UnicastMessage.create(
                             'subId', StreamMessage.create(
                                 ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'], [666, 50],
                                 StreamMessage.CONTENT_TYPES.JSON, {
                                     hello: 'world'
                                 }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'
                             )
-                        ), null]
+                        )
                     ])
                 }], sendResponse, sendUnicast, notifyError)
             })
@@ -364,7 +364,7 @@ describe('ResendHandler', () => {
                             hello: 'world'
                         }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'
                     )
-                ), null)
+                ))
             })
         })
     })

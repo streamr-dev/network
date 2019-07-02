@@ -21,11 +21,11 @@ function toUnicastMessage(request) {
                 signature,
                 signatureType,
             } = streamData
-            done(null, [ControlLayer.UnicastMessage.create(request.subId, StreamMessage.create(
+            done(null, ControlLayer.UnicastMessage.create(request.subId, StreamMessage.create(
                 [request.streamId, request.streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
                 previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
                 StreamMessage.CONTENT_TYPES.JSON, data, signatureType, signature
-            )), null])
+            )))
         }
     })
 }
@@ -134,7 +134,7 @@ class ProxiedResend {
     _onUnicast(unicastMessage, source) {
         const { subId } = unicastMessage
         if (this.request.subId === subId && this.currentNeighbor === source) {
-            this.responseStream.push([unicastMessage, source])
+            this.responseStream.push(unicastMessage)
             this._resetTimeout()
         }
     }
