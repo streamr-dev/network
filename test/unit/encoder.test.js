@@ -1,4 +1,5 @@
 const { ControlLayer } = require('streamr-client-protocol')
+
 const encoder = require('../../src/helpers/MessageEncoder')
 const { version } = require('../../package.json')
 const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMessage')

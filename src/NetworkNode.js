@@ -1,4 +1,5 @@
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
+
 const { StorageResendStrategy,
     AskNeighborsResendStrategy,
     StorageNodeResendStrategy } = require('./logic/resendStrategies')

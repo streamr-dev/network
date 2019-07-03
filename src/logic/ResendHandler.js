@@ -1,4 +1,5 @@
 const { Readable } = require('stream')
+
 const { ControlLayer } = require('streamr-client-protocol')
 
 class RequestStream extends Readable {

@@ -1,6 +1,8 @@
 const { EventEmitter } = require('events')
+
 const intoStream = require('into-stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
+
 const { AskNeighborsResendStrategy,
     StorageResendStrategy,
     StorageNodeResendStrategy } = require('../../src/logic/resendStrategies')

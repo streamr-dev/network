@@ -1,5 +1,7 @@
 const { EventEmitter } = require('events')
+
 const createDebug = require('debug')
+
 const TrackerServer = require('../protocol/TrackerServer')
 const OverlayTopology = require('../logic/OverlayTopology')
 const { StreamIdAndPartition } = require('../identifiers')

@@ -50,17 +50,17 @@
   "dependencies": {
     "debug": "4.1.1",
     "events": "3.0.0",
-    "streamr-client-protocol": "^2.1.0",
     "prettysize": "^2.0.0",
     "speedometer": "^1.1.0",
+    "streamr-client-protocol": "^2.1.0",
     "uuid": "3.3.2",
-    "ws": "^7.0.0"
+    "ws": "^7.0.1"
   },
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-config-streamr-nodejs": "^1.0.0",
-    "eslint-plugin-import": "^2.17.3",
+    "eslint": "^6.0.1",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-config-streamr-nodejs": "^1.1.0",
+    "eslint-plugin-import": "^2.18.0",
     "eslint-plugin-import-order": "2.1.4",
     "into-stream": "^5.1.0",
     "jest": "^24.7.1",

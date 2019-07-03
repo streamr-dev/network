@@ -1,4 +1,5 @@
 const { StreamIdAndPartition } = require('../identifiers')
+
 const { DuplicateMessageDetector, NumberPair } = require('./DuplicateMessageDetector')
 
 const keyForDetector = ({ publisherId, msgChainId }) => `${publisherId}-${msgChainId}`

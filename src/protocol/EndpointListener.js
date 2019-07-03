@@ -1,5 +1,6 @@
 const endpointEvents = require('../connection/Endpoint').events
 const encoder = require('../helpers/MessageEncoder')
+
 const { PeerBook } = require('./PeerBook')
 
 module.exports = class EndpointListener {

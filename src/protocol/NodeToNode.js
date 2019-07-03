@@ -1,7 +1,10 @@
 const { EventEmitter } = require('events')
+
 const { ControlLayer } = require('streamr-client-protocol')
+
 const encoder = require('../helpers/MessageEncoder')
 const { msgTypes } = require('../messages/messageTypes')
+
 const EndpointListener = require('./EndpointListener')
 const { PeerBook, peerTypes } = require('./PeerBook')
 

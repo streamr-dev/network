@@ -1,4 +1,5 @@
 const { MessageLayer } = require('streamr-client-protocol')
+
 const MemoryStorage = require('../../src/storage/MemoryStorage')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 

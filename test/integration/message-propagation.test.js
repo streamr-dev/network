@@ -1,4 +1,5 @@
 const { MessageLayer } = require('streamr-client-protocol')
+
 const Node = require('../../src/logic/Node')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 const { startTracker, startNode } = require('../../src/composition')

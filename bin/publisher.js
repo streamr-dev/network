@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const util = require('util')
+
 const { startNetworkNode } = require('../src/composition')
 
 const port = process.argv[2] || 30302

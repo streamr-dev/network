@@ -1,12 +1,15 @@
 const { EventEmitter } = require('events')
+
 const createDebug = require('debug')
 const pretty = require('prettysize')
+
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
+
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
 

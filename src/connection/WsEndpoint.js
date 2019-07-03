@@ -1,9 +1,12 @@
 const { EventEmitter } = require('events')
 const url = require('url')
+
 const debug = require('debug')('streamr:connection:ws-endpoint')
 const WebSocket = require('ws')
+
 const { disconnectionReasons } = require('../messages/messageTypes')
 const Metrics = require('../metrics')
+
 const Endpoint = require('./Endpoint')
 
 class ReadyStateError extends Error {

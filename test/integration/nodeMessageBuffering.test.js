@@ -1,4 +1,5 @@
 const { MessageLayer } = require('streamr-client-protocol')
+
 const { startNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const { LOCALHOST } = require('../util')

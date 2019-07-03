@@ -1,4 +1,5 @@
 const { ControlLayer } = require('streamr-client-protocol')
+
 const FindStorageNodesMessage = require('../messages/FindStorageNodesMessage')
 const InstructionMessage = require('../messages/InstructionMessage')
 const StatusMessage = require('../messages/StatusMessage')
