@@ -1,4 +1,5 @@
 const { startNetworkNode, startStorageNode } = require('@streamr/streamr-p2p-network')
+const StreamrClient = require('streamr-client')
 
 const StreamFetcher = require('./StreamFetcher')
 const { startCassandraStorage } = require('./Storage')
@@ -49,6 +50,15 @@ module.exports = async (config) => {
     if (config.adapters === undefined) {
         throw new MissingConfigError('adapters')
     }
+    if (config.reporting === undefined) {
+        throw new MissingConfigError('reporting')
+    }
+    if (config.reporting && config.reporting.streamId === undefined) {
+        throw new MissingConfigError('reporting.streamId')
+    }
+    if (config.reporting && config.reporting.apiKey === undefined) {
+        throw new MissingConfigError('reporting.apiKey')
+    }
     config.adapters.forEach(({ name }, index) => {
         if (name === undefined) {
             throw new MissingConfigError(`adapters[${index}].name`)
@@ -80,8 +90,21 @@ module.exports = async (config) => {
     )
     networkNode.addBootstrapTracker(config.network.tracker)
 
+    let client
+    if (config.reporting) {
+        const { apiKey } = config.reporting
+        console.log(config.reporting.apiKey)
+        client = new StreamrClient({
+            auth: {
+                apiKey
+            }
+        })
+    } else {
+        console.info('Skipping configuring reporting...')
+    }
+
     // Initialize common utilities
-    const volumeLogger = new VolumeLogger()
+    const volumeLogger = new VolumeLogger(60, networkNode, client, config.reporting.streamId)
     const streamFetcher = new StreamFetcher(config.streamrUrl)
     const publisher = new Publisher(networkNode, volumeLogger)
 

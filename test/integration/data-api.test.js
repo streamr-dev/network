@@ -27,6 +27,7 @@ describe('data-api', () => {
                 password: '',
                 keyspace: 'streamr_dev',
             },
+            reporting: false,
             streamrUrl: 'http://localhost:8081/streamr-core',
             adapters: [
                 {
