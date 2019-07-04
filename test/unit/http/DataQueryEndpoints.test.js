@@ -2,6 +2,7 @@ const express = require('express')
 const request = require('supertest')
 const sinon = require('sinon')
 const intoStream = require('into-stream')
+const { ControlLayer } = require('streamr-client-protocol')
 const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 const restEndpointRouter = require('../../../src/http/DataQueryEndpoints')
 const HttpError = require('../../../src/errors/HttpError')
@@ -19,20 +20,6 @@ describe('DataQueryEndpoints', () => {
             .set('Authorization', `Token ${key}`)
     }
 
-    function createNetworkMessage(data) {
-        return {
-            streamId: 'streamId',
-            streamPartition: 0,
-            timestamp: new Date(2017, 3, 1, 12, 0, 0).getTime(),
-            sequenceNo: 0,
-            publisherId: 'publisherId',
-            msgChainId: '1',
-            data,
-            signatureType: 0,
-            signature: null
-        }
-    }
-
     function createStreamMessage(content) {
         return new StreamMessageV30(
             ['streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', '1'],
@@ -42,6 +29,10 @@ describe('DataQueryEndpoints', () => {
             StreamMessage.SIGNATURE_TYPES.NONE,
             null,
         )
+    }
+
+    function createUnicastMessage(streamMessage) {
+        return ControlLayer.UnicastMessage.create('subId', streamMessage)
     }
 
     beforeEach(() => {
@@ -76,14 +67,9 @@ describe('DataQueryEndpoints', () => {
                     world: 2,
                 }),
             ]
-            networkNode.requestResendLast = jest.fn().mockReturnValue(intoStream.object([
-                createNetworkMessage({
-                    hello: 1,
-                }),
-                createNetworkMessage({
-                    world: 2,
-                }),
-            ]))
+            networkNode.requestResendLast = jest.fn().mockReturnValue(intoStream.object(
+                streamMessages.map((m) => createUnicastMessage(m))
+            ))
         })
 
         describe('user errors', () => {
@@ -197,14 +183,9 @@ describe('DataQueryEndpoints', () => {
                     z: 'z',
                 }),
             ]
-            networkNode.requestResendFrom = () => intoStream.object([
-                createNetworkMessage({
-                    a: 'a',
-                }),
-                createNetworkMessage({
-                    z: 'z',
-                }),
-            ])
+            networkNode.requestResendFrom = () => intoStream.object(
+                streamMessages.map((m) => createUnicastMessage(m))
+            )
         })
 
         describe('?fromTimestamp=1496408255672', () => {
@@ -347,12 +328,9 @@ describe('DataQueryEndpoints', () => {
                         '6': '6',
                     }),
                 ]
-                networkNode.requestResendRange = () => intoStream.object([
-                    createNetworkMessage([6, 6, 6]),
-                    createNetworkMessage({
-                        '6': '6',
-                    }),
-                ])
+                networkNode.requestResendRange = () => intoStream.object(
+                    streamMessages.map((m) => createUnicastMessage(m))
+                )
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -413,12 +391,9 @@ describe('DataQueryEndpoints', () => {
                         '6': '6',
                     }),
                 ]
-                networkNode.requestResendRange = () => intoStream.object([
-                    createNetworkMessage([6, 6, 6]),
-                    createNetworkMessage({
-                        '6': '6',
-                    }),
-                ])
+                networkNode.requestResendRange = () => intoStream.object(
+                    streamMessages.map((m) => createUnicastMessage(m))
+                )
             })
 
             it('responds 200 and Content-Type JSON', (done) => {

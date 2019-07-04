@@ -172,28 +172,14 @@ describe('WebsocketServer', () => {
     })
 
     describe('on resend request', () => {
-        const messageAsObject = {
-            streamId: 'streamId',
-            streamPartition: 0,
-            timestamp: 1491037200100,
-            sequenceNo: 0,
-            publisherId: 'publisherId',
-            msgChainId: '1',
-            previousTimestamp: 1491037200000,
-            previousSequenceNo: 0,
-            data: {
-                hello: 'world'
-            },
-            signatureType: 2,
-            signature: 'signature'
-        }
-
         beforeEach(() => {
             wsMock.emit('connection', mockSocket, mockSocket.getRequest())
         })
 
         it('sends a resending message before starting a resend', (done) => {
-            networkNode.requestResendLast.mockReturnValue(intoStream.object([messageAsObject]))
+            networkNode.requestResendLast.mockReturnValue(intoStream.object([
+                ControlLayer.UnicastMessage.create('subId', streamMessagev30)
+            ]))
             const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
             const expectedResponse = ControlLayer.ResendResponseResending.create(
                 request.streamId,
@@ -208,7 +194,9 @@ describe('WebsocketServer', () => {
         })
 
         it('adds the subscription id to messages', (done) => {
-            networkNode.requestResendLast.mockReturnValue(intoStream.object([messageAsObject]))
+            networkNode.requestResendLast.mockReturnValue(intoStream.object([
+                ControlLayer.UnicastMessage.create('subId', streamMessagev30)
+            ]))
             const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
             const expectedResponse = ControlLayer.UnicastMessage.create(request.subId, streamMessagev30)
             mockSocket.receive(request)
@@ -221,7 +209,9 @@ describe('WebsocketServer', () => {
         })
 
         it('emits a resent event when resend is complete', (done) => {
-            networkNode.requestResendLast.mockReturnValue(intoStream.object([messageAsObject]))
+            networkNode.requestResendLast.mockReturnValue(intoStream.object([
+                ControlLayer.UnicastMessage.create('subId', streamMessagev30)
+            ]))
             const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
             const expectedResponse = ControlLayer.ResendResponseResent.create(
                 request.streamId,
@@ -413,21 +403,7 @@ describe('WebsocketServer', () => {
             mockSocket.receive(ControlLayer.SubscribeRequest.create('streamId', 0, 'correct'))
 
             setTimeout(() => {
-                networkNode.emit(
-                    'message', {
-                        streamId: streamMessagev30.getStreamId(),
-                        streamPartition: streamMessagev30.getStreamPartition(),
-                        timestamp: streamMessagev30.getTimestamp(),
-                        sequenceNo: streamMessagev30.messageId.sequenceNumber,
-                        publisherId: streamMessagev30.getPublisherId(),
-                        msgChainId: streamMessagev30.messageId.msgChainId,
-                        previousTimestamp: streamMessagev30.prevMsgRef.timestamp,
-                        previousSequenceNo: streamMessagev30.prevMsgRef.sequenceNumber,
-                        data: streamMessagev30.getContent(),
-                        signatureType: streamMessagev30.signatureType,
-                        signature: streamMessagev30.signature,
-                    }
-                )
+                networkNode.emit('message', streamMessagev30)
             })
 
             const expected = ControlLayer.BroadcastMessage.create(streamMessagev30)

@@ -2,7 +2,6 @@
  * Endpoints for RESTful data requests
  */
 const express = require('express')
-const { networkMessageToStreamrMessage } = require('../utils')
 const VolumeLogger = require('../VolumeLogger')
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
@@ -15,8 +14,8 @@ function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {
             })
         } else {
             let volumeBytes = 0
-            res.send(dataPoints.map((networkMessage) => {
-                const streamMessage = networkMessageToStreamrMessage(networkMessage)
+            res.send(dataPoints.map((unicastMessage) => {
+                const { streamMessage } = unicastMessage
                 volumeBytes += streamMessage.getSerializedContent().length
                 return streamMessage.serialize(streamMessage.version, {
                     stringify: false,

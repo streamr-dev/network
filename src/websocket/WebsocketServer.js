@@ -4,7 +4,6 @@ const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 const HttpError = require('../errors/HttpError')
 const VolumeLogger = require('../VolumeLogger')
 const partition = require('../partition')
-const { networkMessageToStreamrMessage } = require('../utils')
 const StreamStateManager = require('../StreamStateManager')
 const Connection = require('./Connection')
 const FieldDetector = require('./FieldDetector')
@@ -124,7 +123,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     handleResendRequest(connection, request, resendTypeHandler) {
         let nothingToResend = true
 
-        const msgHandler = (msg) => {
+        const msgHandler = (unicastMessage) => {
             if (nothingToResend) {
                 nothingToResend = false
                 connection.send(ControlLayer.ResendResponseResending.create(
@@ -134,7 +133,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 ))
             }
 
-            const streamMessage = networkMessageToStreamrMessage(msg)
+            const { streamMessage } = unicastMessage
             this.volumeLogger.logOutput(streamMessage.getContent().length)
             connection.send(ControlLayer.UnicastMessage.create(request.subId, streamMessage))
         }
@@ -248,38 +247,12 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         }
     }
 
-    broadcastMessage({
-        streamId,
-        streamPartition,
-        timestamp,
-        sequenceNo,
-        publisherId,
-        msgChainId,
-        previousTimestamp,
-        previousSequenceNo,
-        data,
-        signatureType,
-        signature,
-    }) {
+    broadcastMessage(streamMessage) {
+        const streamId = streamMessage.getStreamId()
+        const streamPartition = streamMessage.getStreamPartition()
         const stream = this.streams.get(streamId, streamPartition)
 
         if (stream) {
-            const streamMessage = MessageLayer.StreamMessage.create(
-                [
-                    streamId,
-                    streamPartition,
-                    timestamp,
-                    sequenceNo, // sequenceNumber
-                    publisherId,
-                    msgChainId,
-                ],
-                [previousTimestamp, previousSequenceNo],
-                MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
-                data,
-                signatureType,
-                signature,
-            )
-
             stream.forEachConnection((connection) => {
                 // TODO: performance fix, no need to re-create on every loop iteration
                 connection.send(ControlLayer.BroadcastMessage.create(streamMessage))

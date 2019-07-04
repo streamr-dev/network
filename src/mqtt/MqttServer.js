@@ -224,26 +224,16 @@ module.exports = class MqttServer extends events.EventEmitter {
         connection.client.destroy()
     }
 
-    broadcastMessage({
-        streamId,
-        streamPartition,
-        timestamp,
-        sequenceNo,
-        publisherId,
-        msgChainId,
-        previousTimestamp,
-        previousSequenceNo,
-        data,
-        signatureType,
-        signature,
-    }) {
+    broadcastMessage(streamMessage) {
+        const streamId = streamMessage.getStreamId()
+        const streamPartition = streamMessage.getStreamPartition()
         const stream = this.streams.get(streamId, streamPartition)
 
         if (stream) {
             const object = {
                 cmd: 'publish',
                 topic: stream.name,
-                payload: JSON.stringify(data)
+                payload: JSON.stringify(streamMessage.parsedContent)
             }
 
             stream.forEachConnection((connection) => {
@@ -251,7 +241,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                 })
             })
 
-            this.volumeLogger.logOutput(data.length * stream.getConnections().length)
+            this.volumeLogger.logOutput(streamMessage.parsedContent.length * stream.getConnections().length)
         } else {
             debug('broadcastMessage: stream "%s::%d" not found', streamId, streamPartition)
         }

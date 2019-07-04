@@ -1,24 +1,42 @@
 const { Readable, Transform } = require('stream')
 const merge2 = require('merge2')
 const cassandra = require('cassandra-driver')
+const { StreamMessageFactory, StreamMessage } = require('streamr-client-protocol').MessageLayer
+
+const parseRow = (row) => {
+    const streamMessage = StreamMessageFactory.deserialize(row.payload.toString())
+    return {
+        streamId: streamMessage.getStreamId(),
+        streamPartition: streamMessage.getStreamPartition(),
+        timestamp: streamMessage.getTimestamp(),
+        sequenceNo: streamMessage.messageId.sequenceNumber,
+        publisherId: streamMessage.getPublisherId(),
+        msgChainId: streamMessage.messageId.msgChainId,
+        previousTimestamp: streamMessage.prevMsgRef ? streamMessage.prevMsgRef.timestamp : null,
+        previousSequenceNo: streamMessage.prevMsgRef ? streamMessage.prevMsgRef.sequenceNumber : null,
+        data: streamMessage.getParsedContent(),
+        signature: streamMessage.signature,
+        signatureType: streamMessage.signatureType,
+    }
+}
 
 class Storage {
     constructor(cassandraClient) {
         this.cassandraClient = cassandraClient
     }
 
-    store(msg) {
+    store(streamMessage) {
         const insertStatement = 'INSERT INTO stream_data '
             + '(id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload) '
             + 'VALUES (?, ?, ?, ?, ?, ?, ?)'
         return this.cassandraClient.execute(insertStatement, [
-            msg.streamId,
-            msg.streamPartition,
-            msg.timestamp,
-            msg.sequenceNo,
-            msg.publisherId,
-            msg.msgChainId,
-            Buffer.from(JSON.stringify(msg)),
+            streamMessage.getStreamId(),
+            streamMessage.getStreamPartition(),
+            streamMessage.getTimestamp(),
+            streamMessage.messageId.sequenceNumber,
+            streamMessage.getPublisherId(),
+            streamMessage.messageId.msgChainId,
+            Buffer.from(streamMessage.serialize()),
         ], {
             prepare: true,
         })
@@ -44,7 +62,7 @@ class Storage {
             prepare: true,
         })
             .then((resultSet) => {
-                resultSet.rows.reverse().forEach((r) => readableStream.push(JSON.parse(r.payload)))
+                resultSet.rows.reverse().forEach((r) => readableStream.push(parseRow(r)))
                 readableStream.push(null)
             })
             .catch((err) => {
@@ -218,7 +236,7 @@ class Storage {
         }).pipe(new Transform({
             objectMode: true,
             transform: (row, _, done) => {
-                done(null, JSON.parse(row.payload))
+                done(null, parseRow(row))
             },
         }))
     }
