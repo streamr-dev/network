@@ -21,38 +21,6 @@ jobs:
     script: npm run test-unit
   - name: integration tests
     script: npm run test-integration
-  - stage: Deploy Staging
-    script:
-    - mkdir $TRAVIS_BUILD_DIR/build
-    - mkdir $TRAVIS_BUILD_DIR/upload
-    - cp -r src build
-    - cp -r bin build
-    - cp package.json build
-    - cp package-lock.json build
-    - mv .codedeploy/appspec.yml build/appspec.yml
-    - mv .codedeploy/ build/
-    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_JOB_ID}.tar .;tar -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
-    - cd $TRAVIS_BUILD_DIR;
-    deploy:
-    - provider: s3
-      access_key_id: AKIAI3FGPGMK3EREJJTQ
-      secret_access_key:
-        secure: iGtMZxN+fvrqkMM5VP86eb8GrYXtx7fas7nLKcGsZde1iikO85vLeP8dR/yIARnZ8I044EDxhETbIDUsw0Y3+uW/num9a2xehoKIV19YEr7B+yyxp0wJNEfmBR6EYOq77XR+7BGLNyxdkFVHSfU51WsmU3JjVd4kCxvgSbjraj9/NVp/EJ/4+WqbTiWaOinJSiqtyVxnRkJ4ofqz+ZG5UzFXChAIhDC0rgN5ZhCz1uBl1ofuJ+8ULQODSj4v0zeU4OFkhOCIyk92ujRFf9qZWHVwNN0fRs/qfusyN5jjf9kffebMGOhrzEG0KT6iyUp81gZX80k24+73G1KfeZKy7q2vrJ0gX+II8MOyjv77bU4ohPWpBlDsxicoSg1AiJcaPjq/42tQnA/Rcw+u60X91QTvufgHouTkkFK81/HLNkCuUbfQX5hghUyx+/Az3+4YvQ98ZPzjnMnPGcblI2iM9O5C+T05dsreBPGQMIcjVoIhlbNeNgk5VXq5OteqpAV1t9jMOfy/b6t5NtlCBBfJTFzTvGggIW4dsFAZ2Fbn4nZCyHhtinjZoysIwp9MyO9aOvcGCHuiTZh0OcEUxTtxMq6Hkk0Qwp4sw98Cj8f59fL6hrjU39s7FCWxozCDTxO9Q43JQ8gjzex+vC3Vl00UD54PTwWfnWynLsJwHzXqmSA=
-      bucket: eu-west-1-stg-streamr-vault
-      upload-dir: tracker-node/releases
-      acl: private
-      region: eu-west-1
-      skip_cleanup: true
-      local_dir: upload
-    - provider: codedeploy
-      access_key_id: AKIAI3FGPGMK3EREJJTQ
-      secret_access_key:
-        secure: iGtMZxN+fvrqkMM5VP86eb8GrYXtx7fas7nLKcGsZde1iikO85vLeP8dR/yIARnZ8I044EDxhETbIDUsw0Y3+uW/num9a2xehoKIV19YEr7B+yyxp0wJNEfmBR6EYOq77XR+7BGLNyxdkFVHSfU51WsmU3JjVd4kCxvgSbjraj9/NVp/EJ/4+WqbTiWaOinJSiqtyVxnRkJ4ofqz+ZG5UzFXChAIhDC0rgN5ZhCz1uBl1ofuJ+8ULQODSj4v0zeU4OFkhOCIyk92ujRFf9qZWHVwNN0fRs/qfusyN5jjf9kffebMGOhrzEG0KT6iyUp81gZX80k24+73G1KfeZKy7q2vrJ0gX+II8MOyjv77bU4ohPWpBlDsxicoSg1AiJcaPjq/42tQnA/Rcw+u60X91QTvufgHouTkkFK81/HLNkCuUbfQX5hghUyx+/Az3+4YvQ98ZPzjnMnPGcblI2iM9O5C+T05dsreBPGQMIcjVoIhlbNeNgk5VXq5OteqpAV1t9jMOfy/b6t5NtlCBBfJTFzTvGggIW4dsFAZ2Fbn4nZCyHhtinjZoysIwp9MyO9aOvcGCHuiTZh0OcEUxTtxMq6Hkk0Qwp4sw98Cj8f59fL6hrjU39s7FCWxozCDTxO9Q43JQ8gjzex+vC3Vl00UD54PTwWfnWynLsJwHzXqmSA=
-      bucket: eu-west-1-stg-streamr-vault
-      key: tracker-node/releases/tracker-${TRAVIS_JOB_ID}.tar
-      application: eu-west-1-stg-tracker-node-codedeploy
-      deployment_group: eu-west-1-stg-tracker-node-deployment-group
-      region: eu-west-1
   - stage: publish
     if: tag IS present
     script: npm publish
