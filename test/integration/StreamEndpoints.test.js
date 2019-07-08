@@ -67,6 +67,16 @@ describe('StreamEndpoints', () => {
         assert.deepStrictEqual(publishers, [client.signer.address.toLowerCase()])
     })
 
+    it('client.isStreamPublisher should return true', async () => {
+        const valid = await client.isStreamPublisher(createdStream.id, client.signer.address.toLowerCase())
+        assert(valid)
+    })
+
+    it('client.isStreamPublisher should return false', async () => {
+        const valid = await client.isStreamPublisher(createdStream.id, 'some-wrong-address')
+        assert(!valid)
+    })
+
     describe('Stream.update', () => {
         it('can change stream name', () => {
             createdStream.name = 'New name'

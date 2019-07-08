@@ -8,7 +8,11 @@ const { StreamMessage } = MessageLayer
 
 describe('SubscribedStream', () => {
     let subscribedStream
-    const publishers = ['0xb8CE9ab6943e0eCED004cDe8e3bBed6568B2Fa01'.toLowerCase(), 'publisher2', 'publisher3']
+    const publishers = ['0xb8ce9ab6943e0eced004cde8e3bbed6568b2fa01'.toLowerCase(), 'publisher2', 'publisher3']
+    const publishersMap = {}
+    publishers.forEach((p) => {
+        publishersMap[p] = true
+    })
 
     function setupClientAndStream(verifySignatures = 'auto', requireSignedData = true) {
         const client = {
@@ -18,6 +22,10 @@ describe('SubscribedStream', () => {
         }
         client.getStreamPublishers = sinon.stub()
         client.getStreamPublishers.withArgs('streamId').resolves(publishers)
+        client.isStreamPublisher = sinon.stub()
+        client.isStreamPublisher.withArgs('streamId', 'publisher4').resolves(true)
+        client.isStreamPublisher.withArgs('streamId', 'publisher5').resolves(false)
+
         client.getStream = sinon.stub()
         const stream = {
             requireSignedData,
@@ -40,14 +48,14 @@ describe('SubscribedStream', () => {
                 it('should use endpoint to retrieve publishers', async () => {
                     const retrievedPublishers = await subscribedStream.getPublishers()
                     assert(client.getStreamPublishers.calledOnce)
-                    assert.deepStrictEqual(publishers, retrievedPublishers)
-                    assert.deepStrictEqual(await subscribedStream.publishersPromise, publishers)
+                    assert.deepStrictEqual(publishersMap, retrievedPublishers)
+                    assert.deepStrictEqual(await subscribedStream.publishersPromise, publishersMap)
                 })
                 it('should use stored publishers and not the endpoint', async () => {
-                    subscribedStream.publishersPromise = Promise.resolve(publishers)
+                    subscribedStream.publishersPromise = Promise.resolve(publishersMap)
                     const retrievedPublishers = await subscribedStream.getPublishers()
                     assert(client.getStreamPublishers.notCalled)
-                    assert.deepStrictEqual(publishers, retrievedPublishers)
+                    assert.deepStrictEqual(publishersMap, retrievedPublishers)
                 })
                 it('should call getStreamPublishers only once when multiple calls made simultaneously', () => {
                     const p1 = subscribedStream.getPublishers()
@@ -60,12 +68,31 @@ describe('SubscribedStream', () => {
                 it('should use endpoint again after the list of locally stored publishers expires', async () => {
                     const clock = sinon.useFakeTimers()
                     await subscribedStream.getPublishers()
-                    subscribedStream.publishersPromise = Promise.resolve(publishers)
+                    subscribedStream.publishersPromise = Promise.resolve(publishersMap)
                     await subscribedStream.getPublishers()
                     clock.tick(SubscribedStream.PUBLISHERS_EXPIRATION_TIME + 100)
                     await subscribedStream.getPublishers()
                     assert(client.getStreamPublishers.calledTwice)
                     clock.restore()
+                })
+            })
+            describe('isValidPublisher', () => {
+                it('should return cache result if cache hit', async () => {
+                    const valid = await subscribedStream.isValidPublisher('publisher2')
+                    assert.strictEqual(valid, true)
+                    assert(client.getStreamPublishers.calledOnce)
+                    assert(client.isStreamPublisher.notCalled)
+                })
+                it('should fetch if cache miss and store result in cache', async () => {
+                    const valid4 = await subscribedStream.isValidPublisher('publisher4')
+                    assert.strictEqual(valid4, true)
+                    const valid5 = await subscribedStream.isValidPublisher('publisher5')
+                    assert.strictEqual(valid5, false)
+                    // calling the function again should use the cache
+                    await subscribedStream.isValidPublisher('publisher4')
+                    await subscribedStream.isValidPublisher('publisher5')
+                    assert(client.getStreamPublishers.calledOnce)
+                    assert(client.isStreamPublisher.calledTwice)
                 })
             })
             describe('getStream', () => {
@@ -91,7 +118,30 @@ describe('SubscribedStream', () => {
                 })
             })
         })
-        describe('verifyStreamMessage, signed message', () => {
+        describe('verifyStreamMessage, signed message from untrusted publisher', () => {
+            it('should not verify if the publisher is not trusted', async () => {
+                const signer = new Signer({
+                    privateKey: '0x948ce564d427a3311b6536bbcff9390d69311106ed6c486954e971d960fe8700',
+                })
+                const streamId = 'streamId'
+                const data = {
+                    field: 'some-data',
+                }
+                const timestamp = Date.now()
+                const msg = StreamMessage.create(
+                    [streamId, 0, timestamp, 0, '', ''], null, StreamMessage.CONTENT_TYPES.MESSAGE,
+                    StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.NONE,
+                )
+                await signer.signStreamMessage(msg)
+                const spiedVerifyStreamMessage = sinon.spy(Signer, 'verifyStreamMessage')
+                subscribedStream = new SubscribedStream(setupClientAndStream('auto', true).client, 'streamId')
+                const valid = await subscribedStream.verifyStreamMessage(msg)
+                assert.strictEqual(valid, false)
+                assert(spiedVerifyStreamMessage.notCalled)
+                spiedVerifyStreamMessage.restore()
+            })
+        })
+        describe('verifyStreamMessage, signed message from trusted publisher', () => {
             let msg
             let client
             let spiedVerifyStreamMessage

@@ -651,7 +651,9 @@ describe('StreamrClient', () => {
                     const publishers = await subStream.getPublishers()
                     const requireVerification = await subStream.getVerifySignatures()
                     assert.strictEqual(requireVerification, true)
-                    assert.deepStrictEqual(publishers, [client.signer.address.toLowerCase()])
+                    const map = {}
+                    map[client.signer.address.toLowerCase()] = true
+                    assert.deepStrictEqual(publishers, map)
                     assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
                     assert(streamMessage.getPublisherId())
                     assert(streamMessage.signature)
@@ -692,7 +694,9 @@ describe('StreamrClient', () => {
                     const publishers = await subStream.getPublishers()
                     const requireVerification = await subStream.getVerifySignatures()
                     assert.strictEqual(requireVerification, true)
-                    assert.deepStrictEqual(publishers, [client.signer.address.toLowerCase()])
+                    const map = {}
+                    map[client.signer.address.toLowerCase()] = true
+                    assert.deepStrictEqual(publishers, map)
                     assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
                     assert(streamMessage.getPublisherId())
                     assert(streamMessage.signature)

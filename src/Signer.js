@@ -68,10 +68,9 @@ export default class Signer {
         throw new Error(`Unrecognized signature type: ${signatureType}`)
     }
 
-    static verifyStreamMessage(msg, trustedPublishers = new Set()) {
+    static verifyStreamMessage(msg) {
         const payload = this.getPayloadToSign(msg, msg.getPublisherId(), msg.signatureType)
         const result = this.verifySignature(payload, msg.signature, msg.getPublisherId(), msg.signatureType)
-            && trustedPublishers.has(msg.getPublisherId().toLowerCase())
         debug('verifyStreamMessage: pass: %o, message: %o', result, msg)
         return result
     }
