@@ -2,7 +2,6 @@ import assert from 'assert'
 import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessageV31 from '../../../../src/protocol/message_layer/StreamMessageV31'
-import StreamMessageFactory from '../../../../src/protocol/message_layer/StreamMessageFactory'
 
 describe('StreamMessageV31', () => {
     describe('deserialize', () => {
