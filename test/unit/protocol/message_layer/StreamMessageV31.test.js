@@ -2,6 +2,7 @@ import assert from 'assert'
 import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 import StreamMessageV31 from '../../../../src/protocol/message_layer/StreamMessageV31'
+import StreamMessageFactory from '../../../../src/protocol/message_layer/StreamMessageFactory'
 
 describe('StreamMessageV31', () => {
     describe('deserialize', () => {
@@ -209,12 +210,21 @@ describe('StreamMessageV31', () => {
                 return true
             })
         })
-        it('Does not throws with a valid content of type GROUP_KEY_REQUEST', () => {
+        it('Does not throw with a valid content of type GROUP_KEY_REQUEST', () => {
             StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
                 StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                    streamId: 'streamId',
                     publicKey: 'some-public-key',
                 },
+                StreamMessage.SIGNATURE_TYPES.NONE, null,
+            )
+        })
+        it('Does not throw with a valid content (as string) of type GROUP_KEY_REQUEST', () => {
+            StreamMessage.create(
+                ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
+                StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE,
+                '{"streamId":"streamId","publicKey":"some-public-key"}',
                 StreamMessage.SIGNATURE_TYPES.NONE, null,
             )
         })
@@ -226,7 +236,7 @@ describe('StreamMessageV31', () => {
                 },
                 StreamMessage.SIGNATURE_TYPES.NONE, null,
             ), (err) => {
-                assert.equal(err.message, 'Content of type 29 must contain a \'keys\' field.')
+                assert.equal(err.message, 'Content of type 29 must contain a \'streamId\' field.')
                 return true
             })
         })
@@ -234,6 +244,7 @@ describe('StreamMessageV31', () => {
             assert.throws(() => StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
                 StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                    streamId: 'streamId',
                     keys: [{
                         groupKey: 'some-group-key',
                         start: 23314,
@@ -252,6 +263,7 @@ describe('StreamMessageV31', () => {
             StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
                 StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                    streamId: 'streamId',
                     keys: [{
                         groupKey: 'some-group-key',
                         start: 23314,
@@ -263,10 +275,11 @@ describe('StreamMessageV31', () => {
                 StreamMessage.SIGNATURE_TYPES.NONE, null,
             )
         })
-        it('Does not throws with a valid content of type GROUP_KEY_RESET_SIMPLE', () => {
+        it('Does not throw with a valid content of type GROUP_KEY_RESET_SIMPLE', () => {
             StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
                 StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                    streamId: 'streamId',
                     groupKey: 'some-group-key',
                     start: 96789,
                 },
@@ -277,12 +290,13 @@ describe('StreamMessageV31', () => {
             assert.throws(() => StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
                 StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                    streamId: 'streamId',
                     groupKey: 'some-group-key2',
                     wrong: 233142345,
                 },
                 StreamMessage.SIGNATURE_TYPES.NONE, null,
             ), (err) => {
-                assert.equal(err.message, 'Content of type 30 must contain \'groupKey\' and \'start\' fields.')
+                assert.equal(err.message, 'Content of type 30 must contain \'streamId\', \'groupKey\' and \'start\' fields.')
                 return true
             })
         })

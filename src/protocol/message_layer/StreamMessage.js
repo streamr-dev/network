@@ -13,9 +13,9 @@ export default class StreamMessage {
         StreamMessage.validateContentType(contentType)
         this.contentType = contentType
         this.encryptionType = encryptionType
-        StreamMessage.validateContent(content, contentType)
         this.serializedContent = this.serializeContent(content)
         this.parsedContent = this.parseContent(content)
+        StreamMessage.validateContent(this.parsedContent, contentType)
     }
 
     getStreamId() {
@@ -103,11 +103,15 @@ export default class StreamMessage {
         if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
             if (!content.publicKey) {
                 throw new Error(`Content of type ${contentType} must contain a 'publicKey' field.`)
+            } else if (!content.streamId) {
+                throw new Error(`Content of type ${contentType} must contain a 'streamId' field.`)
             } else if (content.range && !content.range.start && !content.range.end) {
                 throw new Error(`Field 'range' in content of type ${contentType} must contain fields 'start' and 'end'.`)
             }
         } else if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
-            if (!content.keys) {
+            if (!content.streamId) {
+                throw new Error(`Content of type ${contentType} must contain a 'streamId' field.`)
+            } else if (!content.keys) {
                 throw new Error(`Content of type ${contentType} must contain a 'keys' field.`)
             }
             content.keys.forEach((keyResponse) => {
@@ -116,8 +120,8 @@ export default class StreamMessage {
                 }
             })
         } else if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE) {
-            if (!content.groupKey || !content.start) {
-                throw new Error(`Content of type ${contentType} must contain 'groupKey' and 'start' fields.`)
+            if (!content.streamId || !content.groupKey || !content.start) {
+                throw new Error(`Content of type ${contentType} must contain 'streamId', 'groupKey' and 'start' fields.`)
             }
         }
     }
