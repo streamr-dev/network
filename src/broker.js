@@ -93,7 +93,6 @@ module.exports = async (config) => {
     let client
     if (config.reporting) {
         const { apiKey } = config.reporting
-        console.log(config.reporting.apiKey)
         client = new StreamrClient({
             auth: {
                 apiKey

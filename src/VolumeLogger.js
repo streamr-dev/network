@@ -9,7 +9,6 @@ module.exports = class VolumeLogger {
         this.outCount = 0
         this.outBytes = 0
         this.lastVolumeStatistics = {}
-        this.networkNode = networkNode
         this.client = client
         this.streamId = streamId
         this.networkNode = networkNode
@@ -37,11 +36,7 @@ module.exports = class VolumeLogger {
         const kbInPerSecond = (this.inBytes / this.reportingIntervalSeconds) / 1000
         const kbOutPerSecond = (this.outBytes / this.reportingIntervalSeconds) / 1000
 
-        let networkMetrics
-
-        if (this.networkNode) {
-            networkMetrics = await this.networkNode.getMetrics()
-        }
+        const networkMetrics = await this.networkNode.getMetrics()
 
         this.lastVolumeStatistics = {
             timestamp: Date.now(),
