@@ -69,6 +69,7 @@ export default class StreamrClient extends EventEmitter {
             if (!queryObj.controlLayerVersion) {
                 this.options.url = `${this.options.url}&controlLayerVersion=1`
             }
+
             if (!queryObj.messageLayerVersion) {
                 this.options.url = `${this.options.url}&messageLayerVersion=31`
             }
@@ -78,6 +79,7 @@ export default class StreamrClient extends EventEmitter {
         if (this.options.authKey && !this.options.apiKey) {
             this.options.apiKey = this.options.authKey
         }
+
         if (this.options.apiKey) {
             this.options.auth.apiKey = this.options.apiKey
         }
@@ -293,7 +295,9 @@ export default class StreamrClient extends EventEmitter {
         if (this.isConnected()) {
             // If connected, emit a publish request
             return this._requestPublish(streamMessage, sessionToken)
-        } else if (this.options.autoConnect) {
+        }
+
+        if (this.options.autoConnect) {
             if (this.publishQueue.length >= this.options.maxPublishQueueSize) {
                 throw new FailedToPublishError(
                     streamId,
@@ -470,7 +474,9 @@ export default class StreamrClient extends EventEmitter {
     connect() {
         if (this.isConnected()) {
             return Promise.reject(new Error('Already connected!'))
-        } else if (this.connection.state === Connection.State.CONNECTING) {
+        }
+
+        if (this.connection.state === Connection.State.CONNECTING) {
             return Promise.reject(new Error('Already connecting!'))
         }
 
@@ -483,6 +489,10 @@ export default class StreamrClient extends EventEmitter {
     }
 
     disconnect() {
+        if (this.msgCreationUtil) {
+            this.msgCreationUtil.stop()
+        }
+
         this.subscribedStreams = {}
         return this.connection.disconnect()
     }
@@ -503,6 +513,7 @@ export default class StreamrClient extends EventEmitter {
 
     async ensureConnected() {
         if (this.isConnected()) { return Promise.resolve() }
+
         if (this.isConnecting()) {
             return waitFor(this, 'connected')
         }
@@ -517,6 +528,7 @@ export default class StreamrClient extends EventEmitter {
 
     async ensureDisconnected() {
         if (this.isDisconnected()) { return Promise.resolve() }
+
         if (this.isDisconnecting()) {
             return waitFor(this, 'disconnected')
         }

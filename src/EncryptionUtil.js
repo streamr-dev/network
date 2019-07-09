@@ -1,6 +1,8 @@
 import crypto from 'crypto'
+
 import { ethers } from 'ethers'
 import { MessageLayer } from 'streamr-client-protocol'
+
 import UnableToDecryptError from './errors/UnableToDecryptError'
 
 const { StreamMessage } = MessageLayer

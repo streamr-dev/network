@@ -42,9 +42,11 @@ export default class Session extends EventEmitter {
         if (this.options.sessionToken && !requireNewToken) {
             return this.options.sessionToken
         }
+
         if (this.options.unauthenticated) {
             return undefined
         }
+
         if (this.state !== Session.State.LOGGING_IN) {
             if (this.state === Session.State.LOGGING_OUT) {
                 this.sessionTokenPromise = new Promise((resolve) => {
@@ -69,9 +71,11 @@ export default class Session extends EventEmitter {
         if (this.state === Session.State.LOGGED_OUT) {
             return Promise.reject(new Error('Already logged out!'))
         }
+
         if (this.state === Session.State.LOGGING_OUT) {
             return Promise.reject(new Error('Already logging out!'))
         }
+
         if (this.state === Session.State.LOGGING_IN) {
             return new Promise((resolve) => {
                 this.once(Session.State.LOGGED_IN, () => resolve(this.logout()))

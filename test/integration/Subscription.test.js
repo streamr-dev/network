@@ -1,6 +1,8 @@
 import { ethers } from 'ethers'
-import uniqueId from 'lodash/uniqueId'
+import uuid from 'uuid/v4'
+
 import StreamrClient from '../../src'
+
 import config from './config'
 
 const createClient = (opts = {}) => new StreamrClient({
@@ -32,7 +34,7 @@ describe('Subscription', () => {
         client = createClient()
         client.on('error', throwError)
         stream = await client.createStream({
-            name: uniqueId(),
+            name: uuid(),
         })
     }
 
@@ -41,10 +43,12 @@ describe('Subscription', () => {
             await client.unsubscribe(subscription)
             subscription = undefined
         }
+
         if (stream) {
             await stream.delete()
             stream = undefined
         }
+
         if (client && client.isConnected()) {
             await client.disconnect()
             client.off('error', throwError)
@@ -78,7 +82,7 @@ describe('Subscription', () => {
 
     async function publishMessage() {
         const message = {
-            message: uniqueId(),
+            message: uuid(),
         }
         await stream.publish(message)
         return message

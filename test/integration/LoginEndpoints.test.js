@@ -1,6 +1,9 @@
 import assert from 'assert'
+
 import { ethers } from 'ethers'
+
 import StreamrClient from '../../src'
+
 import config from './config'
 
 describe('LoginEndpoints', () => {
@@ -17,6 +20,11 @@ describe('LoginEndpoints', () => {
 
     beforeAll(() => {
         client = createClient()
+    })
+
+    afterAll(async (done) => {
+        await client.disconnect()
+        done()
     })
 
     describe('Challenge generation', () => {

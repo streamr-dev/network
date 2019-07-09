@@ -1,5 +1,7 @@
 import { ethers } from 'ethers'
+
 import StreamrClient from '../../src'
+
 import config from './config'
 
 describe('Session', () => {

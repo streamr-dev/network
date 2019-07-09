@@ -1,7 +1,9 @@
 import assert from 'assert'
+
 import { ethers } from 'ethers'
 
 import StreamrClient from '../../src'
+
 import config from './config'
 
 /**

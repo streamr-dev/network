@@ -4,10 +4,12 @@
 process.env.NODE_ENV = process.env.NODE_ENV || 'development' // set a default NODE_ENV
 
 const path = require('path')
+
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
-const merge = require('lodash').merge
+const merge = require('webpack-merge')
 const nodeExternals = require('webpack-node-externals')
+
 const pkg = require('./package.json')
 
 const isProduction = process.env.NODE_ENV === 'production'

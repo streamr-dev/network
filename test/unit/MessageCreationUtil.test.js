@@ -1,8 +1,10 @@
 import crypto from 'crypto'
 import assert from 'assert'
+
 import sinon from 'sinon'
 import { ethers } from 'ethers'
 import { MessageLayer } from 'streamr-client-protocol'
+
 import MessageCreationUtil from '../../src/MessageCreationUtil'
 import Stream from '../../src/rest/domain/Stream'
 
@@ -143,6 +145,10 @@ describe('MessageCreationUtil', () => {
                 getStream: sinon.stub().resolves(stream),
             }
             msgCreationUtil = new MessageCreationUtil(client.options.auth, client.signer, client.getUserInfo(), client.getStream)
+        })
+
+        afterAll(() => {
+            msgCreationUtil.stop()
         })
 
         function getStreamMessage(streamId, timestamp, sequenceNumber, prevMsgRef) {

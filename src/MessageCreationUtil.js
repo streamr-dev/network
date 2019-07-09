@@ -1,8 +1,10 @@
 import crypto from 'crypto'
+
 import Receptacle from 'receptacle'
 import randomstring from 'randomstring'
 import { MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
+
 import Stream from './rest/domain/Stream'
 import EncryptionUtil from './EncryptionUtil'
 
@@ -22,6 +24,10 @@ export default class MessageCreationUtil {
         this.groupKeys = groupKeys
         this.msgChainId = randomstring.generate(20)
         this.cachedHashes = {}
+    }
+
+    stop() {
+        this.cachedStreams.clear()
     }
 
     async getUsername() {
@@ -102,6 +108,7 @@ export default class MessageCreationUtil {
         if (typeof data !== 'object') {
             throw new Error(`Message data must be an object! Was: ${data}`)
         }
+
         if (groupKey) {
             MessageCreationUtil.validateGroupKey(groupKey)
         }
@@ -170,6 +177,7 @@ export default class MessageCreationUtil {
         if (!(groupKey instanceof Buffer)) {
             throw new Error(`Group key must be a Buffer: ${groupKey}`)
         }
+
         if (groupKey.length !== 32) {
             throw new Error(`Group key must have a size of 256 bits, not ${groupKey.length * 8}`)
         }

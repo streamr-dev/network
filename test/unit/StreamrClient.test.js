@@ -1,12 +1,16 @@
 import assert from 'assert'
+
 import EventEmitter from 'eventemitter3'
 import sinon from 'sinon'
 import debug from 'debug'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
-import StubbedStreamrClient from '../unit/StubbedStreamrClient'
+
 import Connection from '../../src/Connection'
 import Subscription from '../../src/Subscription'
 import FailedToPublishError from '../../src/errors/FailedToPublishError'
+
+// eslint-disable-next-line import/no-named-as-default-member
+import StubbedStreamrClient from './StubbedStreamrClient'
 
 const {
     BroadcastMessage,
@@ -150,6 +154,7 @@ describe('StreamrClient', () => {
 
     afterEach(() => {
         connection.checkSentMessages()
+        client.disconnect()
     })
 
     describe('Connection event handling', () => {
@@ -332,9 +337,10 @@ describe('StreamrClient', () => {
                         client.options.autoDisconnect = true
                     })
 
-                    it('calls connection.disconnect() when no longer subscribed to any streams', (done) => {
-                        connection.disconnect = done
+                    it('calls connection.disconnect() when no longer subscribed to any streams', () => {
+                        const disconnect = jest.spyOn(connection, 'disconnect')
                         connection.emitMessage(UnsubscribeResponse.create(sub.streamId))
+                        expect(disconnect).toHaveBeenCalled()
                     })
                 })
 
@@ -344,8 +350,9 @@ describe('StreamrClient', () => {
                     })
 
                     it('should not disconnect if autoDisconnect is set to false', () => {
-                        connection.disconnect = sinon.stub().throws('Should not call disconnect!')
+                        const disconnect = jest.spyOn(connection, 'disconnect')
                         connection.emitMessage(UnsubscribeResponse.create(sub.streamId))
+                        expect(disconnect).not.toHaveBeenCalled()
                     })
                 })
             })

@@ -1,5 +1,7 @@
 import assert from 'assert'
+
 import sinon from 'sinon'
+
 import authFetch from '../../src/rest/authFetch'
 
 const express = require('express')

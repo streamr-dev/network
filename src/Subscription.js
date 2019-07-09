@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import { Errors } from 'streamr-client-protocol'
+
 import InvalidSignatureError from './errors/InvalidSignatureError'
 import VerificationFailedError from './errors/VerificationFailedError'
 import EncryptionUtil from './EncryptionUtil'
@@ -23,6 +24,7 @@ class Subscription extends EventEmitter {
         if (!streamId) {
             throw new Error('No stream id given!')
         }
+
         if (!callback) {
             throw new Error('No callback given!')
         }
@@ -42,9 +44,11 @@ class Subscription extends EventEmitter {
         if (this.resendOptions.from != null && this.resendOptions.last != null) {
             throw new Error(`Multiple resend options active! Please use only one: ${JSON.stringify(this.resendOptions)}`)
         }
+
         if (this.resendOptions.msgChainId != null && typeof this.resendOptions.publisherId === 'undefined') {
             throw new Error('publisherId must be defined as well if msgChainId is defined.')
         }
+
         if (this.resendOptions.from == null && this.resendOptions.to != null) {
             throw new Error('"from" must be defined as well if "to" is defined.')
         }
@@ -79,9 +83,13 @@ class Subscription extends EventEmitter {
      * and the previousMsgRef is larger than what has been received, we have a gap!
      */
     checkForGap(previousMsgRef, key) {
-        return previousMsgRef != null &&
-            this.lastReceivedMsgRef[key] !== undefined &&
-            previousMsgRef.compareTo(this.lastReceivedMsgRef[key]) === 1
+        return previousMsgRef != null
+            && this.lastReceivedMsgRef[key] !== undefined
+            && previousMsgRef.compareTo(this.lastReceivedMsgRef[key]) === 1
+    }
+
+    stop() {
+        this._clearGaps()
     }
 
     async _catchAndEmitErrors(fn) {
@@ -129,6 +137,7 @@ class Subscription extends EventEmitter {
             if (!this.resending) {
                 throw new Error(`There should be no resend in progress, but received ResendResponseResent message ${response.serialize()}`)
             }
+
             if (!this._lastMessageHandlerPromise) {
                 throw new Error('Attempting to handle ResendResponseResent, but no messages have been received!')
             }
@@ -167,6 +176,7 @@ class Subscription extends EventEmitter {
         if (msg.version !== 31) {
             throw new Error(`Can handle only StreamMessageV31, not version ${msg.version}`)
         }
+
         if (msg.prevMsgRef == null) {
             debug('handleMessage: prevOffset is null, gap detection is impossible! message: %o', msg)
         }
@@ -225,6 +235,7 @@ class Subscription extends EventEmitter {
             if (this.lastReceivedMsgRef[key] !== undefined) {
                 res = messageRef.compareTo(this.lastReceivedMsgRef[key])
             }
+
             if (res <= 0) {
                 // Prevent double-processing of messages for any reason
                 debug(
@@ -320,6 +331,7 @@ class Subscription extends EventEmitter {
         if (err.streamMessage) {
             key = err.streamMessage.getPublisherId() + err.streamMessage.messageId.msgChainId
         }
+
         if (err instanceof Errors.InvalidJsonError && !this.checkForGap(err.streamMessage.prevMsgRef, key)) {
             this.lastReceivedMsgRef[key] = err.streamMessage.getMessageRef()
         }

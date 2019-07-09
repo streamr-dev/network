@@ -9,6 +9,7 @@ export default class StubbedStreamrClient extends StreamrClient {
             username: 'username',
         })
     }
+
     getStream = sinon.stub().resolves(new Stream(null, {
         id: 'streamId',
         partitions: 1,

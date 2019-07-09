@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/order
 import { MessageLayer } from 'streamr-client-protocol'
 
 const { StreamMessage } = MessageLayer
@@ -35,6 +36,7 @@ export default class Signer {
         if (streamMessage.version !== 31) {
             throw new Error('Needs to be a StreamMessageV31')
         }
+
         if (!streamMessage.getTimestamp()) {
             throw new Error('Timestamp is required as part of the data to sign.')
         }
@@ -52,9 +54,11 @@ export default class Signer {
             if (msg.prevMsgRef) {
                 prev = `${msg.prevMsgRef.timestamp}${msg.prevMsgRef.sequenceNumber}`
             }
-            return `${msg.getStreamId()}${msg.getStreamPartition()}${msg.getTimestamp()}${msg.messageId.sequenceNumber}` +
-                `${address.toLowerCase()}${msg.messageId.msgChainId}${prev}${msg.getSerializedContent()}`
-        } else if (signatureType === SIGNATURE_TYPES.ETH_LEGACY) {
+            return `${msg.getStreamId()}${msg.getStreamPartition()}${msg.getTimestamp()}${msg.messageId.sequenceNumber}`
+                + `${address.toLowerCase()}${msg.messageId.msgChainId}${prev}${msg.getSerializedContent()}`
+        }
+
+        if (signatureType === SIGNATURE_TYPES.ETH_LEGACY) {
             // verification of messages signed by old clients
             return `${msg.getStreamId()}${msg.getTimestamp()}${msg.getPublisherId().toLowerCase()}${msg.getSerializedContent()}`
         }
@@ -78,9 +82,13 @@ export default class Signer {
     static createSigner(options, publishWithSignature) {
         if (publishWithSignature === 'never') {
             return undefined
-        } else if (publishWithSignature === 'auto' && !options.privateKey && !options.provider) {
+        }
+
+        if (publishWithSignature === 'auto' && !options.privateKey && !options.provider) {
             return undefined
-        } else if (publishWithSignature === 'auto' || publishWithSignature === 'always') {
+        }
+
+        if (publishWithSignature === 'auto' || publishWithSignature === 'always') {
             return new Signer(options)
         }
         throw new Error(`Unknown parameter value: ${publishWithSignature}`)

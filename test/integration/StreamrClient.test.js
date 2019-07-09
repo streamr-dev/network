@@ -1,11 +1,13 @@
 import assert from 'assert'
 import crypto from 'crypto'
+
 import fetch from 'node-fetch'
 import { MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
-import uniqueId from 'lodash/uniqueId'
+import uuid from 'uuid/v4'
 
 import StreamrClient from '../../src'
+
 import config from './config'
 
 const { StreamMessage } = MessageLayer
@@ -64,7 +66,7 @@ describe('StreamrClient Connection', () => {
             client.once('error', onError)
 
             const stream = await client.createStream({
-                name: uniqueId(),
+                name: uuid(),
             }) // this will succeed because it uses restUrl config, not url
 
             // publish should trigger connect
@@ -74,6 +76,7 @@ describe('StreamrClient Connection', () => {
                 // not clear if emit or reject *should* occur first
                 expect(onError).toHaveBeenCalledTimes(1)
                 expect(onError).toHaveBeenCalledWith(error)
+
                 done()
             })
         }, 10000)
@@ -124,7 +127,7 @@ describe('StreamrClient Connection', () => {
             await client.ensureConnected()
 
             stream = await client.createStream({
-                name: uniqueId(),
+                name: uuid(),
             })
 
             timestamps = []
@@ -334,8 +337,8 @@ describe('StreamrClient Connection', () => {
             client = createClient()
             client.once('error', done)
             client.connect()
-            client.once('connected', () => {
-                client.disconnect()
+            client.once('connected', async () => {
+                await client.disconnect()
             })
             client.once('disconnected', () => {
                 client.connect()
@@ -364,7 +367,7 @@ describe('StreamrClient Connection', () => {
                 done()
             })
 
-            client.disconnect()
+            await client.disconnect()
         }, 5000)
 
         it('will resolve original disconnect', async (done) => {
@@ -415,7 +418,7 @@ describe('StreamrClient Connection', () => {
                 }
                 client.once('connecting', onConnecting)
 
-                client.disconnect()
+                await client.disconnect()
                 // wait for possible reconnections
                 setTimeout(() => {
                     client.off('connecting', onConnecting)
@@ -423,7 +426,7 @@ describe('StreamrClient Connection', () => {
                     done()
                 }, 2000)
             })
-            client.disconnect()
+            await client.disconnect()
         }, 6000)
     })
 
@@ -453,12 +456,12 @@ describe('StreamrClient Connection', () => {
                 client.once('error', done)
 
                 const stream = await client.createStream({
-                    name: uniqueId(),
+                    name: uuid(),
                 })
                 await client.ensureDisconnected()
 
                 const message = {
-                    id2: uniqueId(),
+                    id2: uuid(),
                 }
                 client.once('connected', () => {
                     // wait in case of delayed errors
@@ -476,15 +479,15 @@ describe('StreamrClient Connection', () => {
                 client.once('error', done)
                 await client.ensureConnected()
                 const stream = await client.createStream({
-                    name: uniqueId(),
+                    name: uuid(),
                 })
 
                 const message = {
-                    id1: uniqueId(),
+                    id1: uuid(),
                 }
                 const p = client.publish(stream.id, message)
-                setTimeout(() => {
-                    client.disconnect() // start async disconnect after publish started
+                setTimeout(async () => {
+                    await client.disconnect() // start async disconnect after publish started
                 })
                 await p
                 // wait in case of delayed errors
@@ -500,11 +503,11 @@ describe('StreamrClient Connection', () => {
                 client.once('error', done)
                 await client.ensureConnected()
                 const stream = await client.createStream({
-                    name: uniqueId(),
+                    name: uuid(),
                 })
 
                 const message = {
-                    id1: uniqueId(),
+                    id1: uuid(),
                 }
 
                 client.publish(stream.id, message).catch((err) => {
@@ -512,8 +515,8 @@ describe('StreamrClient Connection', () => {
                     done()
                 })
 
-                setTimeout(() => {
-                    client.disconnect() // start async disconnect after publish started
+                setTimeout(async () => {
+                    await client.disconnect() // start async disconnect after publish started
                 })
             })
         })
@@ -527,7 +530,7 @@ describe('StreamrClient Connection', () => {
                 client.once('error', done)
                 await client.ensureConnected()
                 const stream = await client.createStream({
-                    name: uniqueId(),
+                    name: uuid(),
                 })
 
                 const sub = client.subscribe({
@@ -553,7 +556,7 @@ describe('StreamrClient', () => {
     let stream
 
     // These tests will take time, especially on Travis
-    const TIMEOUT = 15 * 1000
+    const TIMEOUT = 5 * 1000
 
     const createStream = async () => {
         const name = `StreamrClient-integration-${Date.now()}`
@@ -578,9 +581,9 @@ describe('StreamrClient', () => {
             ])
         } catch (e) {
             if (e.errno === 'ENOTFOUND' || e.errno === 'ECONNREFUSED') {
-                throw new Error('Integration testing requires that engine-and-editor ' +
-                    'and data-api ("entire stack") are running in the background. ' +
-                    'Instructions: https://github.com/streamr-dev/streamr-docker-dev#running')
+                throw new Error('Integration testing requires that engine-and-editor '
+                    + 'and data-api ("entire stack") are running in the background. '
+                    + 'Instructions: https://github.com/streamr-dev/streamr-docker-dev#running')
             } else {
                 throw e
             }
@@ -665,7 +668,7 @@ describe('StreamrClient', () => {
                         done()
                     })
                 })
-            }, 10000)
+            }, TIMEOUT * 0.8)
         }, TIMEOUT)
 
         it('client.subscribe with resend last', (done) => {
@@ -708,7 +711,7 @@ describe('StreamrClient', () => {
                         done()
                     })
                 })
-            }, 10000)
+            }, TIMEOUT * 0.8)
         }, TIMEOUT)
 
         it('client.subscribe (realtime)', (done) => {

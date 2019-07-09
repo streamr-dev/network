@@ -1,5 +1,6 @@
 import assert from 'assert'
 import crypto from 'crypto'
+
 import sinon from 'sinon'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 
@@ -49,6 +50,7 @@ describe('Subscription', () => {
 
                 afterEach(() => {
                     console.error = stdError
+                    sub.stop()
                 })
 
                 describe('when message verification returns false', () => {
@@ -152,6 +154,7 @@ describe('Subscription', () => {
 
                 afterEach(() => {
                     console.error = stdError
+                    sub.stop()
                 })
 
                 describe('when message verification returns false', () => {
@@ -240,6 +243,8 @@ describe('Subscription', () => {
                     assert.equal(to.timestamp, 3)
                     assert.equal(to.sequenceNumber, 0)
                     assert.equal(publisherId, 'publisherId')
+
+                    sub.stop()
                     done()
                 })
 
@@ -259,6 +264,8 @@ describe('Subscription', () => {
                         assert.deepStrictEqual(to, to2)
                         assert.deepStrictEqual(publisherId, publisherId2)
                         clock.restore()
+
+                        sub.stop()
                         done()
                     })
                 })
@@ -283,6 +290,7 @@ describe('Subscription', () => {
                     const clock = sinon.useFakeTimers()
                     setTimeout(() => {
                         clock.restore()
+                        sub.stop()
                         done()
                     }, RESEND_TIMEOUT + 1000)
                     clock.tick(RESEND_TIMEOUT + 1000)
@@ -302,6 +310,7 @@ describe('Subscription', () => {
                     const clock = sinon.useFakeTimers()
                     setTimeout(() => {
                         clock.restore()
+                        sub.stop()
                         done()
                     }, RESEND_TIMEOUT + 1000)
                     clock.tick(RESEND_TIMEOUT + 1000)
@@ -322,6 +331,7 @@ describe('Subscription', () => {
                     const clock = sinon.useFakeTimers()
                     setTimeout(() => {
                         clock.restore()
+                        sub.stop()
                         done()
                     }, RESEND_TIMEOUT + 1000)
                     clock.tick(RESEND_TIMEOUT + 1000)
@@ -342,6 +352,7 @@ describe('Subscription', () => {
                 sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
                 sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
             })
+
             it('emits "gap" if a gap is detected (same timestamp but different sequenceNumbers)', (done) => {
                 const msg1 = msg
                 const msg4 = createMsg(1, 4, 1, 3)
@@ -353,12 +364,15 @@ describe('Subscription', () => {
                     assert.equal(to.timestamp, 1)
                     assert.equal(to.sequenceNumber, 3)
                     assert.equal(publisherId, 'publisherId')
+
+                    sub.stop()
                     done()
                 })
 
                 sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
                 sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
             })
+
             it('does not emit "gap" if a gap is not detected', () => {
                 const msg1 = msg
                 const msg2 = createMsg(2, undefined, 1)
@@ -369,6 +383,7 @@ describe('Subscription', () => {
                 sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
                 sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
             })
+
             it('does not emit "gap" if a gap is not detected (same timestamp but different sequenceNumbers)', () => {
                 const msg1 = msg
                 const msg2 = createMsg(1, 1, 1, 0)
@@ -490,6 +505,7 @@ describe('Subscription', () => {
         it('marks the message as received if an InvalidJsonError occurs, and continue normally on next message', (done) => {
             const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
                 if (receivedMsg.getTimestamp() === 3) {
+                    sub.stop()
                     done()
                 }
             })
@@ -519,6 +535,8 @@ describe('Subscription', () => {
                 assert.equal(to.timestamp, 3)
                 assert.equal(to.sequenceNumber, 0)
                 assert.equal(publisherId, 'publisherId')
+
+                sub.stop()
                 done()
             })
 
@@ -646,6 +664,7 @@ describe('Subscription', () => {
 
         describe('on error', () => {
             let stdError
+            let sub
 
             beforeEach(() => {
                 stdError = console.error
@@ -654,11 +673,12 @@ describe('Subscription', () => {
 
             afterEach(() => {
                 console.error = stdError
+                sub.stop()
             })
 
             it('cleans up the resend if event handler throws', async () => {
                 const handler = sinon.stub()
-                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), handler)
+                sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), handler)
                 const error = new Error('test error, ignore')
                 sub.on('resent', sinon.stub().throws(error))
                 sub.setResending(true)
@@ -692,6 +712,7 @@ describe('Subscription', () => {
 
         describe('on error', () => {
             let stdError
+            let sub
 
             beforeEach(() => {
                 stdError = console.error
@@ -700,10 +721,11 @@ describe('Subscription', () => {
 
             afterEach(() => {
                 console.error = stdError
+                sub.stop()
             })
 
             it('cleans up the resend if event handler throws', async () => {
-                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
+                sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
                 const error = new Error('test error, ignore')
                 sub.on('no_resend', sinon.stub()
                     .throws(error))

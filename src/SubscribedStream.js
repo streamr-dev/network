@@ -50,9 +50,12 @@ export default class SubscribedStream {
                 return Signer.verifyStreamMessage(msg)
             }
             return false
-        } else if (this._client.options.verifySignatures === 'never') {
+        }
+
+        if (this._client.options.verifySignatures === 'never') {
             return true
         }
+
         // if this._client.options.verifySignatures === 'auto'
         if (msg.signatureType && msg.signatureType !== 0 && msg.signature) { // always verify in case the message is signed
             const isValid = await this.isValidPublisher(msg.getPublisherId().toLowerCase())
@@ -104,7 +107,10 @@ export default class SubscribedStream {
     }
 
     removeSubscription(sub) {
-        delete this.subscriptions[sub.id]
+        if (this.subscriptions[sub.id]) {
+            this.subscriptions[sub.id].stop()
+            delete this.subscriptions[sub.id]
+        }
     }
 }
 SubscribedStream.PUBLISHERS_EXPIRATION_TIME = PUBLISHERS_EXPIRATION_TIME

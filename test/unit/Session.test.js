@@ -1,8 +1,10 @@
 import assert from 'assert'
+
 import sinon from 'sinon'
+
 import StreamrClient from '../../src'
 import config from '../integration/config'
-import Session from './../../src/Session'
+import Session from '../../src/Session'
 
 describe('Session', () => {
     let session
