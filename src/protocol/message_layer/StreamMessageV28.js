@@ -24,8 +24,14 @@ export default class StreamMessageV28 extends StreamMessage {
         return this.timestamp
     }
     /* eslint-disable class-methods-use-this */
+    getSequenceNumber() {
+        return 0
+    }
     getPublisherId() {
         return undefined
+    }
+    getMsgChainId() {
+        return ''
     }
     getMessageRef() {
         return undefined

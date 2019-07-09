@@ -29,12 +29,20 @@ export default class StreamMessageV30 extends StreamMessage {
         return this.messageId.timestamp
     }
 
+    getSequenceNumber() {
+        return this.messageId.sequenceNumber
+    }
+
     getPublisherId() {
         return this.messageId.publisherId
     }
 
+    getMsgChainId() {
+        return this.messageId.msgChainId
+    }
+
     getMessageRef() {
-        return new MessageRef(this.getTimestamp(), this.messageId.sequenceNumber)
+        return new MessageRef(this.getTimestamp(), this.getSequenceNumber())
     }
 
     toArray(parsedContent = false) {

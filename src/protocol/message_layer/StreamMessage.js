@@ -30,8 +30,16 @@ export default class StreamMessage {
         throw new Error('getTimestamp must be implemented')
     }
 
+    getSequenceNumber() {
+        throw new Error('getSequenceNumber must be implemented')
+    }
+
     getPublisherId() {
         throw new Error('getPublisherId must be implemented')
+    }
+
+    getMsgChainId() {
+        throw new Error('getMsgChainId must be implemented')
     }
 
     getMessageRef() {

@@ -31,6 +31,12 @@ export default class StreamMessageV29 extends StreamMessage {
         return this.publisherAddress
     }
     /* eslint-disable class-methods-use-this */
+    getSequenceNumber() {
+        return 0
+    }
+    getMsgChainId() {
+        return ''
+    }
     getMessageRef() {
         return undefined
     }
