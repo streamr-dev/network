@@ -309,7 +309,7 @@ class WsEndpoint extends EventEmitter {
 
     getMetrics() {
         return {
-            msg: this.metrics.speed('_msgSpeed')(),
+            msgSpeed: this.metrics.speed('_msgSpeed')(),
             inSpeed: this.metrics.speed('_inSpeed')(),
             outSpeed: this.metrics.speed('_outSpeed')(),
             metrics: this.metrics.report()

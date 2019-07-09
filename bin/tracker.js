@@ -9,8 +9,8 @@ const id = `tracker-${port}`
 
 startTracker(ip, port, id, maxNeighborsPerNode)
     .then((tracker) => {
-        setInterval(() => {
-            console.log(tracker.getMetrics())
+        setInterval(async () => {
+            console.log(await tracker.getMetrics())
         }, 5000)
     })
     .catch((err) => {

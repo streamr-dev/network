@@ -168,7 +168,17 @@ module.exports = class Tracker extends EventEmitter {
         this.debug('unregistered node %s from tracker', node)
     }
 
-    getMetrics() {
-        return this.metrics.report()
+    async getMetrics() {
+        const endpointMetrics = this.protocols.trackerServer.endpoint.getMetrics()
+        const processMetrics = await this.metrics.getPidusage()
+        const trackerMetrics = this.metrics.report()
+        const mainMetrics = this.metrics.prettify(endpointMetrics)
+
+        return {
+            mainMetrics,
+            endpointMetrics,
+            processMetrics,
+            trackerMetrics
+        }
     }
 }

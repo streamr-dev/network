@@ -29,8 +29,8 @@ startNetworkNode(host, port, id)
             lastTimestamp = timestamp
         }, intervalInMs)
 
-        setInterval(() => {
-            console.log(util.inspect(publisher.getMetrics(), false, null))
+        setInterval(async () => {
+            console.log(util.inspect(await publisher.getMetrics(), false, null))
         }, 5000)
     })
     .catch((err) => {

@@ -1,7 +1,6 @@
 const { EventEmitter } = require('events')
 
 const createDebug = require('debug')
-const pretty = require('prettysize')
 
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
@@ -377,17 +376,19 @@ class Node extends EventEmitter {
         }
     }
 
-    getMetrics() {
-        const metrics = this.protocols.nodeToNode.endpoint.getMetrics()
+    async getMetrics() {
+        const endpointMetrics = this.protocols.nodeToNode.endpoint.getMetrics()
+        const processMetrics = await this.metrics.getPidusage()
+        const nodeMetrics = this.metrics.report()
+        const mainMetrics = this.metrics.prettify(endpointMetrics)
 
-        metrics.msg += ' messages/second'
-        metrics.inSpeed = pretty(metrics.inSpeed)
-        metrics.outSpeed = pretty(metrics.outSpeed)
-        // eslint-disable-next-line no-underscore-dangle
-        metrics.openHandles = process._getActiveRequests().length + process._getActiveHandles().length
-        metrics.messageBufferSize = this.messageBuffer.size()
-
-        return metrics
+        return {
+            mainMetrics,
+            endpointMetrics,
+            processMetrics,
+            nodeMetrics,
+            messageBufferSize: this.messageBuffer.size()
+        }
     }
 }
 

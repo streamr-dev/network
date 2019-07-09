@@ -19,8 +19,8 @@ startNetworkNode(host, port, id).then((subscriber) => {
         console.log('received %s, data %j', streamMessage.messageId, streamMessage.getParsedContent())
     })
 
-    setInterval(() => {
-        console.log(subscriber.getMetrics())
+    setInterval(async () => {
+        console.log(await subscriber.getMetrics())
     }, 5000)
 }).catch((err) => {
     throw err

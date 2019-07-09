@@ -32,6 +32,8 @@ describe('metrics', () => {
         expect(appMetrics.report()).toEqual(
             {
                 name: 'test-app',
+                // eslint-disable-next-line no-underscore-dangle
+                openHandles: process._getActiveRequests().length + process._getActiveHandles().length,
                 timestamp,
                 metrics: [
                     ['metric-a', 0],
@@ -43,6 +45,8 @@ describe('metrics', () => {
         expect(appMetrics.reportAndReset()).toEqual(
             {
                 name: 'test-app',
+                // eslint-disable-next-line no-underscore-dangle
+                openHandles: process._getActiveRequests().length + process._getActiveHandles().length,
                 timestamp,
                 metrics: [
                     ['metric-a', 0],
@@ -77,6 +81,8 @@ describe('metrics', () => {
         expect(appMetrics2.mergeAndReport(appMetrics1.report())).toEqual(
             [{
                 name: 'test-app2',
+                // eslint-disable-next-line no-underscore-dangle
+                openHandles: process._getActiveRequests().length + process._getActiveHandles().length,
                 timestamp,
                 metrics:
                     [
@@ -86,6 +92,8 @@ describe('metrics', () => {
             },
             {
                 name: 'test-app1',
+                // eslint-disable-next-line no-underscore-dangle
+                openHandles: process._getActiveRequests().length + process._getActiveHandles().length,
                 timestamp,
                 metrics: [
                     ['metric-a', 'test-me'],
