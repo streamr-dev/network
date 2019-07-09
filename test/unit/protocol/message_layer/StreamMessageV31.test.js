@@ -187,6 +187,13 @@ describe('StreamMessageV31', () => {
                 return true
             })
         })
+        it('should not throw when encrypted content', () => {
+            StreamMessage.create(
+                ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
+                StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.AES, 'dfasdfgdgagregDAG',
+                StreamMessage.SIGNATURE_TYPES.NONE, null,
+            )
+        })
         it('Throws with an invalid content type', () => {
             assert.throws(() => StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null, 128, StreamMessage.ENCRYPTION_TYPES.NONE, {
