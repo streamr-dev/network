@@ -39,6 +39,7 @@
     "mqtt-connection": "^4.0.0",
     "node-fetch": "^2.6.0",
     "qs": "^6.7.0",
+    "streamr-client": "^2.0.2",
     "streamr-client-protocol": "2.1.0",
     "uuid": "^3.3.2",
     "ws": "^7.0.0"
@@ -54,7 +55,6 @@
     "jest": "^24.8.0",
     "sinon": "^7.3.2",
     "stream-to-array": "^2.3.0",
-    "streamr-client": "^2.0.2",
     "supertest": "^4.0.2"
   }
 }

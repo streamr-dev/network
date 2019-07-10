@@ -55,6 +55,7 @@ function startBroker(id, httpPort, wsPort, networkPort, enableCassandra) {
             password: '',
             keyspace: 'streamr_dev',
         } : false,
+        reporting: false,
         streamrUrl: 'http://localhost:8081/streamr-core',
         adapters: [
             {

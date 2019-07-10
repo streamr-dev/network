@@ -1,5 +1,7 @@
+const StreamrClient = require('streamr-client')
+
 module.exports = class VolumeLogger {
-    constructor(reportingIntervalSeconds = 60) {
+    constructor(reportingIntervalSeconds = 60, networkNode = undefined, client = undefined, streamId = undefined) {
         this.reportingIntervalSeconds = reportingIntervalSeconds
         this.connectionCount = 0
         this.inCount = 0
@@ -7,10 +9,13 @@ module.exports = class VolumeLogger {
         this.outCount = 0
         this.outBytes = 0
         this.lastVolumeStatistics = {}
+        this.client = client
+        this.streamId = streamId
+        this.networkNode = networkNode
 
         if (this.reportingIntervalSeconds > 0) {
-            this.interval = setInterval(() => {
-                this.reportAndReset()
+            this.interval = setInterval(async () => {
+                await this.reportAndReset()
             }, this.reportingIntervalSeconds * 1000)
         }
     }
@@ -25,11 +30,13 @@ module.exports = class VolumeLogger {
         this.outBytes += bytes
     }
 
-    reportAndReset() {
+    async reportAndReset() {
         const inPerSecond = this.inCount / this.reportingIntervalSeconds
         const outPerSecond = this.outCount / this.reportingIntervalSeconds
         const kbInPerSecond = (this.inBytes / this.reportingIntervalSeconds) / 1000
         const kbOutPerSecond = (this.outBytes / this.reportingIntervalSeconds) / 1000
+
+        const networkMetrics = await this.networkNode.getMetrics()
 
         this.lastVolumeStatistics = {
             timestamp: Date.now(),
@@ -55,6 +62,17 @@ module.exports = class VolumeLogger {
         this.outCount = 0
         this.inBytes = 0
         this.outBytes = 0
+
+        this._sendReport({
+            broker: this.lastVolumeStatistics,
+            network: networkMetrics
+        })
+    }
+
+    _sendReport(data) {
+        if (this.client instanceof StreamrClient && this.streamId !== undefined) {
+            this.client.publish(this.streamId, data)
+        }
     }
 
     close() {
