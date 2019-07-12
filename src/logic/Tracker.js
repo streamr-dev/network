@@ -174,6 +174,13 @@ module.exports = class Tracker extends EventEmitter {
         const trackerMetrics = this.metrics.report()
         const mainMetrics = this.metrics.prettify(endpointMetrics)
 
+        const topology = {}
+        Object.entries(this.overlayPerStream).forEach(([streamKey, overlayTopology]) => {
+            topology[streamKey] = overlayTopology.state()
+        })
+
+        trackerMetrics.topology = topology
+
         return {
             mainMetrics,
             endpointMetrics,
