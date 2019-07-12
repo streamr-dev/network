@@ -23,11 +23,18 @@ function toUnicastMessage(request) {
                 signature,
                 signatureType,
             } = streamData
-            done(null, ControlLayer.UnicastMessage.create(request.subId, StreamMessage.create(
-                [request.streamId, request.streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
-                previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
-                StreamMessage.CONTENT_TYPES.JSON, data, signatureType, signature
-            )))
+            done(null, ControlLayer.UnicastMessage.create(
+                request.subId,
+                StreamMessage.create(
+                    [request.streamId, request.streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
+                    previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
+                    StreamMessage.CONTENT_TYPES.MESSAGE,
+                    StreamMessage.ENCRYPTION_TYPES.NONE,
+                    data,
+                    signatureType,
+                    signature
+                )
+            ))
         }
     })
 }

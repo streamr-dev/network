@@ -68,16 +68,30 @@ describe('message propagation in network', () => {
         n3.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition('stream-1', 0))
 
         for (let i = 1; i <= 5; ++i) {
-            const streamMessage = StreamMessage.create(['stream-1', 0, i, 0, 'publisher-id', 'sessionId'],
-                i === 1 ? null : [i - 1, 0], StreamMessage.CONTENT_TYPES.JSON, {
+            const streamMessage = StreamMessage.create(
+                ['stream-1', 0, i, 0, 'publisher-id', 'sessionId'],
+                i === 1 ? null : [i - 1, 0],
+                StreamMessage.CONTENT_TYPES.MESSAGE,
+                StreamMessage.ENCRYPTION_TYPES.NONE,
+                {
                     messageNo: i
-                }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+                },
+                StreamMessage.SIGNATURE_TYPES.NONE,
+                null
+            )
             n1.onDataReceived(streamMessage)
 
-            const streamMessage2 = StreamMessage.create(['stream-2', 0, i * 100, 0, 'publisher-id', 'sessionId'],
-                i === 1 ? null : [(i - 1) * 100, 0], StreamMessage.CONTENT_TYPES.JSON, {
+            const streamMessage2 = StreamMessage.create(
+                ['stream-2', 0, i * 100, 0, 'publisher-id', 'sessionId'],
+                i === 1 ? null : [(i - 1) * 100, 0],
+                StreamMessage.CONTENT_TYPES.MESSAGE,
+                StreamMessage.ENCRYPTION_TYPES.NONE,
+                {
                     messageNo: i * 100
-                }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+                },
+                StreamMessage.SIGNATURE_TYPES.NONE,
+                null
+            )
             n4.onDataReceived(streamMessage2)
         }
 

@@ -57,7 +57,8 @@ class NetworkNode extends Node {
         const streamMessage = StreamMessage.create(
             [streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
             previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
-            StreamMessage.CONTENT_TYPES.JSON,
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
             content,
             signatureType,
             signature

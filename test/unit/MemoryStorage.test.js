@@ -16,10 +16,17 @@ const { id, partition } = streamObj
 let memoryStorage
 
 for (let i = 0; i < MAX; i++) {
-    const streamMessage = StreamMessage.create([id, partition, i, 0, 'publisher-id', 'sessionId'],
-        i === 0 ? null : [i - 1, 0], StreamMessage.CONTENT_TYPES.JSON, {
+    const streamMessage = StreamMessage.create(
+        [id, partition, i, 0, 'publisher-id', 'sessionId'],
+        i === 0 ? null : [i - 1, 0],
+        StreamMessage.CONTENT_TYPES.MESSAGE,
+        StreamMessage.ENCRYPTION_TYPES.NONE,
+        {
             messageNo: i
-        }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+        },
+        StreamMessage.SIGNATURE_TYPES.NONE,
+        null
+    )
     streamMessages.push(streamMessage)
 }
 

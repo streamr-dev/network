@@ -107,14 +107,24 @@ describe('ResendHandler', () => {
                 getResendResponseStream: () => intoStream.object([
                     ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
-                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
-                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
+                            null,
+                            StreamMessage.CONTENT_TYPES.MESSAGE,
+                            StreamMessage.ENCRYPTION_TYPES.NONE,
+                            {},
+                            StreamMessage.SIGNATURE_TYPES.NONE,
+                            null
                         )
                     ),
                     ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
-                            ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
-                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                            ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
+                            null,
+                            StreamMessage.CONTENT_TYPES.MESSAGE,
+                            StreamMessage.ENCRYPTION_TYPES.NONE,
+                            {},
+                            StreamMessage.SIGNATURE_TYPES.NONE,
+                            null
                         )
                     ),
                 ])
@@ -155,16 +165,26 @@ describe('ResendHandler', () => {
                     setImmediate(() => stream.push(
                         ControlLayer.UnicastMessage.create(
                             'subId', StreamMessage.create(
-                                ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
-                                {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                                ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
+                                null,
+                                StreamMessage.CONTENT_TYPES.MESSAGE,
+                                StreamMessage.ENCRYPTION_TYPES.NONE,
+                                {},
+                                StreamMessage.SIGNATURE_TYPES.NONE,
+                                null
                             )
                         ),
                     ))
                     setImmediate(() => stream.push(
                         ControlLayer.UnicastMessage.create(
                             'subId', StreamMessage.create(
-                                ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
-                                {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                                ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
+                                null,
+                                StreamMessage.CONTENT_TYPES.MESSAGE,
+                                StreamMessage.ENCRYPTION_TYPES.NONE,
+                                {},
+                                StreamMessage.SIGNATURE_TYPES.NONE,
+                                null
                             )
                         )
                     ))
@@ -215,8 +235,13 @@ describe('ResendHandler', () => {
                     setImmediate(() => stream.push(
                         ControlLayer.UnicastMessage.create(
                             'subId', StreamMessage.create(
-                                ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
-                                {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                                ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
+                                null,
+                                StreamMessage.CONTENT_TYPES.MESSAGE,
+                                StreamMessage.ENCRYPTION_TYPES.NONE,
+                                {},
+                                StreamMessage.SIGNATURE_TYPES.NONE,
+                                null
                             )
                         )
                     ))
@@ -231,14 +256,24 @@ describe('ResendHandler', () => {
                 getResendResponseStream: () => intoStream.object([
                     ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
-                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
-                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
+                            null,
+                            StreamMessage.CONTENT_TYPES.MESSAGE,
+                            StreamMessage.ENCRYPTION_TYPES.NONE,
+                            {},
+                            StreamMessage.SIGNATURE_TYPES.NONE,
+                            null
                         )
                     ),
                     ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
-                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'], null, StreamMessage.CONTENT_TYPES.JSON,
-                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
+                            null,
+                            StreamMessage.CONTENT_TYPES.MESSAGE,
+                            StreamMessage.ENCRYPTION_TYPES.NONE,
+                            {},
+                            StreamMessage.SIGNATURE_TYPES.NONE,
+                            null
                         )
                     ),
                 ])
@@ -276,8 +311,13 @@ describe('ResendHandler', () => {
                 getResendResponseStream: () => intoStream.object([
                     ControlLayer.UnicastMessage.create(
                         'subId', StreamMessage.create(
-                            ['streamId', 0, 1000, 0, 'publisher', 'msgChain'], null, StreamMessage.CONTENT_TYPES.JSON,
-                            {}, StreamMessage.SIGNATURE_TYPES.NONE, null
+                            ['streamId', 0, 1000, 0, 'publisher', 'msgChain'],
+                            null,
+                            StreamMessage.CONTENT_TYPES.MESSAGE,
+                            StreamMessage.ENCRYPTION_TYPES.NONE,
+                            {},
+                            StreamMessage.SIGNATURE_TYPES.NONE,
+                            null
                         )
                     )
                 ])
@@ -332,10 +372,15 @@ describe('ResendHandler', () => {
                     getResendResponseStream: () => intoStream.object([
                         ControlLayer.UnicastMessage.create(
                             'subId', StreamMessage.create(
-                                ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'], [666, 50],
-                                StreamMessage.CONTENT_TYPES.JSON, {
+                                ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
+                                [666, 50],
+                                StreamMessage.CONTENT_TYPES.MESSAGE,
+                                StreamMessage.ENCRYPTION_TYPES.NONE,
+                                {
                                     hello: 'world'
-                                }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'
+                                },
+                                StreamMessage.SIGNATURE_TYPES.ETH,
+                                'signature'
                             )
                         )
                     ])
@@ -361,10 +406,15 @@ describe('ResendHandler', () => {
 
                 expect(sendUnicast).toBeCalledWith('source', ControlLayer.UnicastMessage.create(
                     'subId', StreamMessage.create(
-                        ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'], [666, 50],
-                        StreamMessage.CONTENT_TYPES.JSON, {
+                        ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
+                        [666, 50],
+                        StreamMessage.CONTENT_TYPES.MESSAGE,
+                        StreamMessage.ENCRYPTION_TYPES.NONE,
+                        {
                             hello: 'world'
-                        }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature'
+                        },
+                        StreamMessage.SIGNATURE_TYPES.ETH,
+                        'signature'
                     )
                 ))
             })

@@ -65,10 +65,17 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendData is delivered', async () => {
-        const streamMessage = StreamMessage.create(['stream', 10, 666, 0, 'publisherId', 'msgChainId'],
-            [665, 0], StreamMessage.CONTENT_TYPES.JSON, {
+        const streamMessage = StreamMessage.create(
+            ['stream', 10, 666, 0, 'publisherId', 'msgChainId'],
+            [665, 0],
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
+            {
                 hello: 'world'
-            }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature')
+            },
+            StreamMessage.SIGNATURE_TYPES.ETH,
+            'signature'
+        )
         nodeToNode2.sendData('nodeToNode1', streamMessage)
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.DATA_RECEIVED)
 
@@ -84,10 +91,17 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendUnicast is delivered', async () => {
-        const streamMessage = MessageLayer.StreamMessage.create(['stream', 10, 666, 0, 'publisherId', 'msgChainId'],
-            [665, 0], MessageLayer.StreamMessage.CONTENT_TYPES.JSON, {
+        const streamMessage = MessageLayer.StreamMessage.create(
+            ['stream', 10, 666, 0, 'publisherId', 'msgChainId'],
+            [665, 0],
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
+            {
                 hello: 'world'
-            }, 1, 'signature')
+            },
+            StreamMessage.SIGNATURE_TYPES.ETH_LEGACY,
+            'signature'
+        )
         const unicastMessage = ControlLayer.UnicastMessage.create('subId', streamMessage)
         nodeToNode2.send('nodeToNode1', unicastMessage)
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.UNICAST_RECEIVED)

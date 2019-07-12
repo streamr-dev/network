@@ -48,9 +48,17 @@ describe('message buffering of Node', () => {
         destinationNode.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition('id', 0))
 
         // "Client" pushes data
-        const streamMessage = StreamMessage.create(['id', 0, 1, 0, 'publisher-id', 'session-id'], [0, 0], StreamMessage.CONTENT_TYPES.JSON, {
-            hello: 'world'
-        }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+        const streamMessage = StreamMessage.create(
+            ['id', 0, 1, 0, 'publisher-id', 'session-id'],
+            [0, 0],
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
+            {
+                hello: 'world'
+            },
+            StreamMessage.SIGNATURE_TYPES.NONE,
+            null
+        )
         sourceNode.onDataReceived(streamMessage)
     })
 })
