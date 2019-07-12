@@ -4,7 +4,8 @@ const FieldDetector = require('../../../src/websocket/FieldDetector.js')
 const STREAM_MESSAGE = StreamMessage.create(
     ['streamId', 0, 0, 0, 'publisherId', 'msgChainId'],
     null,
-    StreamMessage.CONTENT_TYPES.JSON,
+    StreamMessage.CONTENT_TYPES.MESSAGE,
+    StreamMessage.ENCRYPTION_TYPES.NONE,
     {
         aString: 'hello',
         aNumber: 412,

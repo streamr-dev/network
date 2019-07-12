@@ -16,7 +16,7 @@ describe('networkMessageToStreamrMessage', () => {
         expect(actual.serialize(undefined, {
             stringify: false
         })).toEqual([
-            30,
+            31,
             [
                 'streamId',
                 1,
@@ -27,6 +27,7 @@ describe('networkMessageToStreamrMessage', () => {
             ],
             null,
             27,
+            0,
             JSON.stringify({
                 hello: 'world'
             }),
@@ -52,7 +53,7 @@ describe('networkMessageToStreamrMessage', () => {
         expect(actual.serialize(undefined, {
             stringify: false
         })).toEqual([
-            30,
+            31,
             [
                 'streamId',
                 1,
@@ -66,6 +67,7 @@ describe('networkMessageToStreamrMessage', () => {
                 6006
             ],
             27,
+            0,
             JSON.stringify({
                 hello: 'world'
             }),
@@ -93,7 +95,7 @@ describe('networkMessageToStreamrMessage', () => {
         expect(actual.serialize(undefined, {
             stringify: false
         })).toEqual([
-            30,
+            31,
             [
                 'streamId',
                 1,
@@ -107,6 +109,7 @@ describe('networkMessageToStreamrMessage', () => {
                 6006
             ],
             27,
+            0,
             JSON.stringify({
                 hello: 'world'
             }),

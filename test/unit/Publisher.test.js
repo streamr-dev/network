@@ -21,7 +21,7 @@ describe('Publisher', () => {
     const streamMessageUnsigned = new StreamMessageV30(
         [stream.id, stream.partitions, 135135135, 0, 'publisherId', 'msgChainId'],
         null,
-        StreamMessage.CONTENT_TYPES.JSON,
+        StreamMessage.CONTENT_TYPES.MESSAGE,
         msg,
         StreamMessage.SIGNATURE_TYPES.NONE,
         null,

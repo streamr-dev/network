@@ -53,7 +53,7 @@ describe('WebsocketServer', () => {
         0, // ttl
         2, // offset
         1,
-        MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+        MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE,
         {
             hello: 'world',
         },
@@ -65,7 +65,7 @@ describe('WebsocketServer', () => {
     const streamMessagev30 = new MessageLayer.StreamMessageV30(
         ['streamId', 0, 1491037200100, 0, 'publisherId', '1'],
         [1491037200000, 0],
-        MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+        MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE,
         {
             hello: 'world',
         },
@@ -76,7 +76,7 @@ describe('WebsocketServer', () => {
     const streamMessage2v30 = new MessageLayer.StreamMessageV30(
         ['streamId2', 0, 1491037200100, 0, 'publisherId', '1'],
         [1491037200000, 0],
-        MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+        MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE,
         {
             field1: 'world',
             field2: 12,
@@ -91,7 +91,7 @@ describe('WebsocketServer', () => {
     const streamMessage3v30 = new MessageLayer.StreamMessageV30(
         ['streamId3', 0, 1491037200100, 0, 'publisherId', '1'],
         [1491037200000, 0],
-        MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+        MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE,
         {
             hello: 'world',
         },
@@ -727,7 +727,7 @@ describe('WebsocketServer', () => {
                 assert.equal(streamMessage.getStreamPartition(), req.streamMessage.getStreamPartition())
                 assert.equal(streamMessage.getTimestamp(), req.streamMessage.getTimestamp())
                 assert.equal(streamMessage.getPublisherId(), req.streamMessage.getPublisherId())
-                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.JSON)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
                 assert.equal(streamMessage.getContent(), req.streamMessage.getContent())
                 assert.equal(streamMessage.signatureType, req.streamMessage.signatureType)
                 assert.equal(streamMessage.signature, req.streamMessage.signature)
@@ -748,7 +748,7 @@ describe('WebsocketServer', () => {
                 assert.equal(streamMessage.getPublisherId(), req.streamMessage.getPublisherId())
                 assert.equal(streamMessage.prevMsgRef.timestamp, req.streamMessage.prevMsgRef.timestamp)
                 assert.equal(streamMessage.prevMsgRef.sequenceNumber, req.streamMessage.prevMsgRef.sequenceNumber)
-                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.JSON)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
                 assert.equal(streamMessage.getContent(), req.streamMessage.getContent())
                 assert.equal(streamMessage.signatureType, req.streamMessage.signatureType)
                 assert.equal(streamMessage.signature, req.streamMessage.signature)
@@ -814,7 +814,7 @@ describe('WebsocketServer', () => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(streamMessage.getStreamPartition(), 0)
                 assert.equal(streamMessage.getTimestamp(), ts)
-                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.JSON)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
                 assert.equal(streamMessage.getContent(), req.content)
                 done()
             }
@@ -829,7 +829,7 @@ describe('WebsocketServer', () => {
                 assert.deepEqual(stream, myStream)
                 assert.equal(streamMessage.getStreamPartition(), 0)
                 assert.equal(streamMessage.getTimestamp(), ts)
-                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.JSON)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
                 assert.equal(streamMessage.getContent(), req.content)
                 done()
             }
@@ -850,7 +850,7 @@ describe('WebsocketServer', () => {
                 assert.equal(streamMessage.messageId.sequenceNumber, 0)
                 assert.equal(streamMessage.getPublisherId(), 'address')
                 assert.equal(streamMessage.prevMsgRef, null)
-                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.JSON)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
                 assert.equal(streamMessage.getContent(), '{}')
                 assert.equal(streamMessage.signatureType, MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)
                 assert.equal(streamMessage.signature, 'signature')

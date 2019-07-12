@@ -14,6 +14,9 @@ const networkPort2 = 12362
 const networkPort3 = 12363
 const trackerPort = 12370
 
+// The index for content/body/payload in array response of HTTP resend requests
+const CONTENT_IDX_IN_ARRAY = 5
+
 // Copy-paste from network, should maybe consider packaging into library?
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 const waitForCondition = (conditionFn, timeout = 4500, retryInterval = 100) => {
@@ -633,7 +636,7 @@ describe('broker: end-to-end', () => {
                 },
             })
             const messagesAsArrays = await response.json()
-            return messagesAsArrays.map((msgAsArr) => JSON.parse(msgAsArr[4]))
+            return messagesAsArrays.map((msgAsArr) => JSON.parse(msgAsArr[CONTENT_IDX_IN_ARRAY]))
         }))
 
         expect(jsons[0]).toEqual([
@@ -707,7 +710,7 @@ describe('broker: end-to-end', () => {
                 },
             })
             const messagesAsArrays = await response.json()
-            return messagesAsArrays.map((msgAsArr) => JSON.parse(msgAsArr[4]))
+            return messagesAsArrays.map((msgAsArr) => JSON.parse(msgAsArr[CONTENT_IDX_IN_ARRAY]))
         }))
 
         expect(jsons[0]).toEqual([
@@ -794,7 +797,7 @@ describe('broker: end-to-end', () => {
                 },
             })
             const messagesAsArrays = await response.json()
-            return messagesAsArrays.map((msgAsArr) => JSON.parse(msgAsArr[4]))
+            return messagesAsArrays.map((msgAsArr) => JSON.parse(msgAsArr[CONTENT_IDX_IN_ARRAY]))
         }))
 
         expect(jsons[0]).toEqual([

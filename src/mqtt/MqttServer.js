@@ -151,10 +151,12 @@ module.exports = class MqttServer extends events.EventEmitter {
                                 connection.id,
                                 '',
                             ],
-                            [null, null],
-                            MessageLayer.StreamMessage.CONTENT_TYPES.JSON,
+                            null,
+                            MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE,
+                            MessageLayer.StreamMessage.ENCRYPTION_TYPES.NONE,
                             mqttPayloadToJson(textPayload),
-                            MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE, null
+                            MessageLayer.StreamMessage.SIGNATURE_TYPES.NONE,
+                            null
                         )
 
                         this.publisher.publish(streamObj, streamMessage)

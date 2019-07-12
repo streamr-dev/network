@@ -43,7 +43,7 @@ function buildMsg(
     return new StreamMessageV30(
         [streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId],
         null,
-        StreamMessage.CONTENT_TYPES.JSON,
+        StreamMessage.CONTENT_TYPES.MESSAGE,
         content,
         StreamMessage.SIGNATURE_TYPES.NONE,
         null,

@@ -58,7 +58,8 @@ describe('DataProduceEndpoints', () => {
         const streamMessage = StreamMessage.create(
             [stream.id, 0, Date.now(), 0, 'publisherId', '1'],
             null,
-            StreamMessage.CONTENT_TYPES.JSON,
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
             '{}',
             StreamMessage.SIGNATURE_TYPES.NONE,
             null,
@@ -81,7 +82,8 @@ describe('DataProduceEndpoints', () => {
         const streamMessage = StreamMessage.create(
             [stream.id, 0, Date.now(), 0, 'publisherId', ''],
             null,
-            StreamMessage.CONTENT_TYPES.JSON,
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
             '{}',
             StreamMessage.SIGNATURE_TYPES.ETH,
             'signature',
@@ -103,7 +105,8 @@ describe('DataProduceEndpoints', () => {
         const streamMessage = StreamMessage.create(
             [stream.id, 0, Date.now(), 1, 'publisherId', ''],
             [325656645, 3],
-            StreamMessage.CONTENT_TYPES.JSON,
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
             '{}',
             StreamMessage.SIGNATURE_TYPES.NONE,
             null,

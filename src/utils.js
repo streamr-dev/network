@@ -14,7 +14,8 @@ const networkMessageToStreamrMessage = (msg) => StreamMessage.create(
         msg.msgChainId
     ],
     msg.previousTimestamp == null ? null : [msg.previousTimestamp, msg.previousSequenceNo],
-    StreamMessage.CONTENT_TYPES.JSON,
+    StreamMessage.CONTENT_TYPES.MESSAGE,
+    StreamMessage.ENCRYPTION_TYPES.NONE,
     msg.data,
     msg.signatureType,
     msg.signature
