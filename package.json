@@ -26,7 +26,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@streamr/streamr-p2p-network": "^6.0.1",
+    "@streamr/streamr-p2p-network": "^6.0.2",
     "body-parser": "^1.19.0",
     "buffermaker": "^1.2.1",
     "cassandra-driver": "^4.1.0",

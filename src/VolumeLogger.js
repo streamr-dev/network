@@ -39,6 +39,7 @@ module.exports = class VolumeLogger {
         const networkMetrics = await this.networkNode.getMetrics()
 
         this.lastVolumeStatistics = {
+            id: this.networkNode.opts.id,
             timestamp: Date.now(),
             numOfOpenWebsockets: this.connectionCount,
             input: {
