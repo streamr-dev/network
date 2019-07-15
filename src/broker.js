@@ -1,5 +1,6 @@
 const { startNetworkNode, startStorageNode } = require('@streamr/streamr-p2p-network')
 const StreamrClient = require('streamr-client')
+const publicIp = require('public-ip')
 
 const StreamFetcher = require('./StreamFetcher')
 const { startCassandraStorage } = require('./Storage')
@@ -83,7 +84,11 @@ module.exports = async (config) => {
     // Start network node
     const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
     const networkNode = await startFn(
-        config.network.hostname,
+        config.network.hostname !== 'auto' ? config.network.hostname : await publicIp.v4()
+            .then((ip) => {
+                console.info(`Auto-detected IP address ${ip}`)
+                return ip
+            }),
         config.network.port,
         config.network.id,
         storages,
