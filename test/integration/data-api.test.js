@@ -16,6 +16,7 @@ describe('data-api', () => {
                 id: 'broker-id',
                 hostname: '127.0.0.1',
                 port: '31313',
+                advertisedWsUrl: 'ws://127.0.0.1:31313',
                 tracker: 'ws://127.0.0.1:30300',
                 isStorageNode: false
             },

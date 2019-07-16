@@ -24,6 +24,9 @@ module.exports = async (config) => {
     if (config.network.port === undefined) {
         throw new MissingConfigError('network.port')
     }
+    if (config.network.advertisedWsUrl === undefined) {
+        throw new MissingConfigError('network.advertisedWsUrl')
+    }
     if (config.network.tracker === undefined) {
         throw new MissingConfigError('network.tracker')
     }
@@ -92,6 +95,7 @@ module.exports = async (config) => {
         config.network.port,
         config.network.id,
         storages,
+        config.network.advertisedWsUrl
     )
     networkNode.addBootstrapTracker(config.network.tracker)
 
