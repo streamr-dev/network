@@ -87,15 +87,15 @@ module.exports = async (config) => {
     // Start network node
     const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
     const networkNode = await startFn(
-        config.network.hostname !== 'auto' ? config.network.hostname : await publicIp.v4()
-            .then((ip) => {
-                console.info(`Auto-detected IP address ${ip}`)
-                return ip
-            }),
+        config.network.hostname,
         config.network.port,
         config.network.id,
         storages,
-        config.network.advertisedWsUrl
+        config.network.advertisedWsUrl !== 'auto' ? config.network.advertisedWsUrl : await publicIp.v4()
+            .then((ip) => {
+                console.info(`Auto-detected IP address ${ip}`)
+                return ip
+            })
     )
     networkNode.addBootstrapTracker(config.network.tracker)
 
