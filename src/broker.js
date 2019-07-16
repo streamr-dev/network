@@ -86,16 +86,15 @@ module.exports = async (config) => {
 
     // Start network node
     const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
+    const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
+        ? config.network.advertisedWsUrl
+        : await publicIp.v4().then((ip) => `ws://${ip}:${config.network.port}`)
     const networkNode = await startFn(
         config.network.hostname,
         config.network.port,
         config.network.id,
         storages,
-        config.network.advertisedWsUrl !== 'auto' ? config.network.advertisedWsUrl : await publicIp.v4()
-            .then((ip) => {
-                console.info(`Auto-detected IP address ${ip}`)
-                return ip
-            })
+        advertisedWsUrl
     )
     networkNode.addBootstrapTracker(config.network.tracker)
 
@@ -135,6 +134,7 @@ module.exports = async (config) => {
     })
 
     console.info(`Configured with Streamr: ${config.streamrUrl}`)
+    console.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
     console.info(`Network node running on ${config.network.hostname}:${config.network.port}`)
     console.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
 
