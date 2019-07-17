@@ -9,7 +9,7 @@ describe('create five endpoints and init connection between them', () => {
     it('should be able to start and stop successfully', async () => {
         for (let i = 0; i < MAX; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const endpoint = await startEndpoint(LOCALHOST, 30690 + i, {}).catch((err) => { throw err })
+            const endpoint = await startEndpoint(LOCALHOST, 30690 + i, {}, null).catch((err) => { throw err })
             endpoints.push(endpoint)
         }
 
@@ -43,10 +43,10 @@ describe('create five endpoints and init connection between them', () => {
     it('address and custom headers are exchanged between connecting endpoints', async () => {
         const endpointOne = await startEndpoint(LOCALHOST, 30695, {
             'my-identity': 'endpoint-1'
-        })
+        }, null)
         const endpointTwo = await startEndpoint(LOCALHOST, 30696, {
             'my-identity': 'endpoint-2'
-        })
+        }, null)
 
         const e1 = waitForEvent(endpointOne, endpointEvents.PEER_CONNECTED)
         const e2 = waitForEvent(endpointTwo, endpointEvents.PEER_CONNECTED)

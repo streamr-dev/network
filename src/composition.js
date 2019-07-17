@@ -10,12 +10,12 @@ const NetworkNode = require('./NetworkNode')
 const { startEndpoint } = require('./connection/WsEndpoint')
 const { StreamIdAndPartition } = require('./identifiers')
 
-function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) {
+function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4, advertisedWsUrl = null) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.TRACKER
     }
-    return startEndpoint(host, port, identity).then((endpoint) => {
+    return startEndpoint(host, port, identity, advertisedWsUrl).then((endpoint) => {
         const opts = {
             id,
             protocols: {
@@ -27,12 +27,12 @@ function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4) {
     })
 }
 
-function startNode(host, port, id = uuidv4(), resendStrategies = []) {
+function startNode(host, port, id = uuidv4(), resendStrategies = [], advertisedWsUrl = null) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.NODE
     }
-    return startEndpoint(host, port, identity).then((endpoint) => {
+    return startEndpoint(host, port, identity, advertisedWsUrl).then((endpoint) => {
         const opts = {
             id,
             protocols: {
@@ -45,12 +45,12 @@ function startNode(host, port, id = uuidv4(), resendStrategies = []) {
     })
 }
 
-function startNetworkNode(host, port, id = uuidv4(), storages = []) {
+function startNetworkNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.NODE
     }
-    return startEndpoint(host, port, identity).then((endpoint) => {
+    return startEndpoint(host, port, identity, advertisedWsUrl).then((endpoint) => {
         const opts = {
             id,
             protocols: {
@@ -63,12 +63,12 @@ function startNetworkNode(host, port, id = uuidv4(), storages = []) {
     })
 }
 
-function startStorageNode(host, port, id = uuidv4(), storages = []) {
+function startStorageNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null) {
     const identity = {
         'streamr-peer-id': id,
         'streamr-peer-type': peerTypes.STORAGE
     }
-    return startEndpoint(host, port, identity).then((endpoint) => {
+    return startEndpoint(host, port, identity, advertisedWsUrl).then((endpoint) => {
         const opts = {
             id,
             protocols: {

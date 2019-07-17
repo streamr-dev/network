@@ -12,8 +12,8 @@ describe('duplicate connections are closed', () => {
     beforeEach(async () => {
         wss1 = await startWebSocketServer('127.0.0.1', 28501, {})
         wss2 = await startWebSocketServer('127.0.0.1', 28502, {})
-        wsEndpoint1 = new WsEndpoint(wss1, {})
-        wsEndpoint2 = new WsEndpoint(wss2, {})
+        wsEndpoint1 = new WsEndpoint(wss1, {}, null)
+        wsEndpoint2 = new WsEndpoint(wss2, {}, null)
     })
 
     afterAll(async () => {

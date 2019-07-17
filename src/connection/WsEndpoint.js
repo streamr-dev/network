@@ -50,7 +50,7 @@ class CustomHeaders {
 }
 
 class WsEndpoint extends EventEmitter {
-    constructor(wss, customHeaders) {
+    constructor(wss, customHeaders, advertisedWsUrl) {
         super()
 
         if (!wss) {
@@ -59,9 +59,13 @@ class WsEndpoint extends EventEmitter {
         if (!customHeaders) {
             throw new Error('customHeaders not given')
         }
+        if (advertisedWsUrl === undefined) {
+            throw new Error('advertisedWsUrl not given')
+        }
 
         this.wss = wss
         this.customHeaders = new CustomHeaders(customHeaders)
+        this.advertisedWsUrl = advertisedWsUrl
 
         this.endpoint = new Endpoint()
         this.endpoint.implement(this)
@@ -242,6 +246,9 @@ class WsEndpoint extends EventEmitter {
     }
 
     getAddress() {
+        if (this.advertisedWsUrl) {
+            return this.advertisedWsUrl
+        }
         const socketAddress = this.wss.address()
         return `ws://${socketAddress.address}:${socketAddress.port}`
     }
@@ -337,8 +344,8 @@ async function startWebSocketServer(host, port) {
     })
 }
 
-async function startEndpoint(host, port, customHeaders) {
-    return startWebSocketServer(host, port).then((wss) => new WsEndpoint(wss, customHeaders))
+async function startEndpoint(host, port, customHeaders, advertisedWsUrl) {
+    return startWebSocketServer(host, port).then((wss) => new WsEndpoint(wss, customHeaders, advertisedWsUrl))
 }
 
 module.exports = {

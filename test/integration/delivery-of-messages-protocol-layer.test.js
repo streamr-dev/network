@@ -29,22 +29,22 @@ describe('delivery of messages in protocol layer', () => {
         nodeToNode1 = new NodeToNode(new WsEndpoint(wss1, {
             'streamr-peer-id': 'nodeToNode1',
             'streamr-peer-type': peerTypes.NODE
-        }))
+        }, null))
 
         nodeToNode2 = new NodeToNode(new WsEndpoint(wss2, {
             'streamr-peer-id': 'nodeToNode2',
             'streamr-peer-type': peerTypes.NODE
-        }))
+        }, null))
 
         trackerNode = new TrackerNode(new WsEndpoint(wss3, {
             'streamr-peer-id': 'trackerNode',
             'streamr-peer-type': peerTypes.NODE
-        }))
+        }, null))
 
         trackerServer = new TrackerServer(new WsEndpoint(wss4, {
             'streamr-peer-id': 'trackerServer',
             'streamr-peer-type': peerTypes.NODE
-        }))
+        }, null))
 
         // Connect nodeToNode1 <-> nodeToNode2
         nodeToNode1.connectToNode(nodeToNode2.getAddress())
