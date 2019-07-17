@@ -136,7 +136,7 @@ class Node extends EventEmitter {
         } else {
             await this.protocols.nodeToNode.send(destination, unicastMessage)
         }
-        this.debug('sent %s unicast %s for subId %s',
+        this.debug('sent %s unicast %j for subId %s',
             destination === null ? 'locally' : `to ${destination}`,
             unicastMessage.streamMessage.messageId,
             unicastMessage.subId)
@@ -187,10 +187,10 @@ class Node extends EventEmitter {
         if (this._isReadyToPropagate(streamIdAndPartition)) {
             const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(streamMessage.messageId, streamMessage.prevMsgRef)
             if (isUnseen || this.seenButNotPropagated.has(streamMessage.messageId)) {
-                this.debug('received from %s data %s', source, streamMessage.messageId)
+                this.debug('received from %s data %j', source, streamMessage.messageId)
                 this._propagateMessage(streamMessage, source)
             } else {
-                this.debug('ignoring duplicate data %s (from %s)', streamMessage.messageId, source)
+                this.debug('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
                 this.metrics.inc('onDataReceived:ignoring:duplicate')
             }
         } else {
@@ -214,11 +214,11 @@ class Node extends EventEmitter {
                 await this.protocols.nodeToNode.sendData(subscriber, streamMessage)
                 successfulSends.push(subscriber)
             } catch (e) {
-                this.debug('failed to propagate data %s to node %s (%s)', streamMessage.messageId, subscriber, e)
+                this.debug('failed to propagate data %j to node %s (%s)', streamMessage.messageId, subscriber, e)
             }
         }))
         if (successfulSends.length >= Math.min(MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION, subscribers.length)) {
-            this.debug('propagated data %s to %j', streamMessage.messageId, successfulSends)
+            this.debug('propagated data %j to %j', streamMessage.messageId, successfulSends)
             this.seenButNotPropagated.delete(streamMessage.messageId)
             this.emit(events.MESSAGE_PROPAGATED, streamMessage)
         } else {
