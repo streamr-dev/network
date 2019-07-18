@@ -7,6 +7,7 @@ module.exports = exports = {
         'streamr-nodejs'
     ],
     rules: {
-        'max-len': [WARN, { code: 150 }]
+        'max-len': [WARN, { code: 150 }],
+        'no-unused-vars': [WARN, { "argsIgnorePattern": "^_$" }]
     }
 }

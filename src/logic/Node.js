@@ -47,7 +47,10 @@ class Node extends EventEmitter {
             throw new Error('Provided protocols are not correct')
         }
 
-        this.connectToBoostrapTrackersInterval = setInterval(this._connectToBootstrapTrackers.bind(this), this.opts.connectToBootstrapTrackersInterval)
+        this.connectToBoostrapTrackersInterval = setInterval(
+            this._connectToBootstrapTrackers.bind(this),
+            this.opts.connectToBootstrapTrackersInterval
+        )
         this.sendStatusTimeout = null
         this.bootstrapTrackerAddresses = []
 

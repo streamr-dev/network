@@ -4,7 +4,7 @@ const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
 const encoder = require('../../src/helpers/MessageEncoder')
 const { StreamIdAndPartition } = require('../../src/identifiers')
-const endpointEvents = require('../../src/connection/Endpoint').events
+const endpointEvents = require('../../src/connection/WsEndpoint').events
 const { disconnectionReasons } = require('../../src/messages/messageTypes')
 
 /**
@@ -48,7 +48,7 @@ describe('Check tracker instructions to node', () => {
         let firstCheck = false
         let secondCheck = false
 
-        otherNodes[1].protocols.nodeToNode.endpoint.once(endpointEvents.PEER_DISCONNECTED, ({ _, reason }) => {
+        otherNodes[1].protocols.nodeToNode.endpoint.once(endpointEvents.PEER_DISCONNECTED, ({ reason }) => {
             expect(reason).toBe(disconnectionReasons.NO_SHARED_STREAMS)
             firstCheck = true
             if (firstCheck && secondCheck) {
@@ -57,7 +57,7 @@ describe('Check tracker instructions to node', () => {
         })
 
         let receivedTotal = 0
-        tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => {
+        tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage }) => {
             // eslint-disable-next-line no-underscore-dangle
             const status = statusMessage.getStatus()
 

@@ -5,8 +5,8 @@ const { ControlLayer } = require('streamr-client-protocol')
 const encoder = require('../helpers/MessageEncoder')
 const { msgTypes } = require('../messages/messageTypes')
 
-const EndpointListener = require('./EndpointListener')
-const { PeerBook, peerTypes } = require('./PeerBook')
+const { peerTypes } = require('./PeerBook')
+const BasicProtocol = require('./BasicProtocol')
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:node-node:node-connected',
@@ -30,17 +30,7 @@ eventPerType[ControlLayer.ResendResponseResending.TYPE] = events.RESEND_RESPONSE
 eventPerType[ControlLayer.ResendResponseResent.TYPE] = events.RESEND_RESPONSE
 eventPerType[ControlLayer.ResendResponseNoResend.TYPE] = events.RESEND_RESPONSE
 
-class NodeToNode extends EventEmitter {
-    constructor(endpoint) {
-        super()
-
-        this.endpoint = endpoint
-        this.peerBook = new PeerBook()
-
-        this._endpointListener = new EndpointListener()
-        this._endpointListener.implement(this, endpoint)
-    }
-
+class NodeToNode extends BasicProtocol {
     connectToNode(address) {
         return this.endpoint.connect(address).then(() => this.peerBook.getPeerId(address))
     }

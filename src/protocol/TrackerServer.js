@@ -1,9 +1,6 @@
-const { EventEmitter } = require('events')
-
 const encoder = require('../helpers/MessageEncoder')
 
-const EndpointListener = require('./EndpointListener')
-const { PeerBook } = require('./PeerBook')
+const BasicProtocol = require('./BasicProtocol')
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:tracker:send-peers',
@@ -12,17 +9,7 @@ const events = Object.freeze({
     FIND_STORAGE_NODES_REQUEST: 'streamr:tracker:find-storage-nodes-request'
 })
 
-class TrackerServer extends EventEmitter {
-    constructor(endpoint) {
-        super()
-
-        this.endpoint = endpoint
-        this.peerBook = new PeerBook()
-
-        this._endpointListener = new EndpointListener()
-        this._endpointListener.implement(this, endpoint)
-    }
-
+class TrackerServer extends BasicProtocol {
     sendInstruction(receiverNodeId, streamId, listOfNodeIds) {
         const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
         const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.peerBook.getAddress(nodeId))

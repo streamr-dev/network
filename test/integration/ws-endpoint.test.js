@@ -1,5 +1,5 @@
 const { LOCALHOST, waitForEvent } = require('../util')
-const endpointEvents = require('../../src/connection/Endpoint').events
+const endpointEvents = require('../../src/connection/WsEndpoint').events
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
 
 describe('create five endpoints and init connection between them', () => {
