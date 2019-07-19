@@ -76,6 +76,8 @@ class WsEndpoint extends EventEmitter {
         this.metrics.createSpeedometer('_inSpeed')
         this.metrics.createSpeedometer('_outSpeed')
         this.metrics.createSpeedometer('_msgSpeed')
+        this.metrics.createSpeedometer('_msgInSpeed')
+        this.metrics.createSpeedometer('_msgOutSpeed')
 
         this.connections = new Map()
         this.pendingConnections = new Map()
@@ -126,6 +128,7 @@ class WsEndpoint extends EventEmitter {
                     if (ws.readyState === ws.OPEN) {
                         this.metrics.speed('_outSpeed')(message.length)
                         this.metrics.speed('_msgSpeed')(1)
+                        this.metrics.speed('_msgOutSpeed')(1)
 
                         ws.send(message, (err) => {
                             if (err) {
@@ -289,6 +292,7 @@ class WsEndpoint extends EventEmitter {
             // TODO check message.type [utf8|binary]
             this.metrics.speed('_inSpeed')(message.length)
             this.metrics.speed('_msgSpeed')(1)
+            this.metrics.speed('_msgInSpeed')(1)
 
             this.onReceive(address, message)
         })
@@ -318,6 +322,8 @@ class WsEndpoint extends EventEmitter {
     getMetrics() {
         return {
             msgSpeed: this.metrics.speed('_msgSpeed')(),
+            msgInSpeed: this.metrics.speed('_msgInSpeed')(),
+            msgOutSpeed: this.metrics.speed('_msgOutSpeed')(),
             inSpeed: this.metrics.speed('_inSpeed')(),
             outSpeed: this.metrics.speed('_outSpeed')(),
             metrics: this.metrics.report()

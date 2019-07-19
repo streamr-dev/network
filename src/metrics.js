@@ -1,6 +1,5 @@
 const speedometer = require('speedometer')
 const pidusage = require('pidusage')
-const pretty = require('prettysize')
 
 module.exports = class Metrics {
     constructor(name = '') {
@@ -17,9 +16,12 @@ module.exports = class Metrics {
     prettify(metrics) {
         return {
             msgSpeed: metrics.msgSpeed,
+            msgInSpeed: metrics.msgInSpeed,
+            msgOutSpeed: metrics.msgOutSpeed,
             msgSpeedUnit: 'messages/second',
-            inSpeed: pretty(metrics.inSpeed),
-            outSpeed: pretty(metrics.outSpeed)
+            inSpeed: metrics.inSpeed,
+            outSpeed: metrics.outSpeed,
+            inOutSpeedUnit: 'bytes/second'
         }
     }
 
@@ -64,7 +66,9 @@ module.exports = class Metrics {
         const res = {
             name: this.name,
             timestamp: this.timestamp,
-            metrics: Array.from(this._metrics),
+            metrics: Object.assign({}, ...[...this._metrics.entries()].map(([k, v]) => ({
+                [k]: v
+            }))),
             // eslint-disable-next-line no-underscore-dangle
             openHandles: process._getActiveRequests().length + process._getActiveHandles().length
         }

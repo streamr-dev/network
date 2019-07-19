@@ -51,7 +51,6 @@
     "debug": "4.1.1",
     "events": "3.0.0",
     "pidusage": "^2.0.17",
-    "prettysize": "^2.0.0",
     "speedometer": "^1.1.0",
     "streamr-client-protocol": "^2.2.5",
     "uuid": "3.3.2",

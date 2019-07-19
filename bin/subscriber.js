@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const util = require('util')
+
 const { startNetworkNode } = require('../src/composition')
 const NodeToNode = require('../src/protocol/NodeToNode')
 
@@ -20,7 +22,7 @@ startNetworkNode(host, port, id).then((subscriber) => {
     })
 
     setInterval(async () => {
-        console.log(await subscriber.getMetrics())
+        console.log(util.inspect(await subscriber.getMetrics(), false, null))
     }, 5000)
 }).catch((err) => {
     throw err

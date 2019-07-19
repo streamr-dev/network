@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const util = require('util')
+
 const { startTracker } = require('../src/composition')
 
 const port = process.argv[2] || 30300
@@ -10,7 +12,7 @@ const id = `tracker-${port}`
 startTracker(ip, port, id, maxNeighborsPerNode)
     .then((tracker) => {
         setInterval(async () => {
-            console.log(await tracker.getMetrics())
+            console.log(util.inspect(await tracker.getMetrics(), false, null))
         }, 5000)
     })
     .catch((err) => {

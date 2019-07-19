@@ -35,10 +35,10 @@ describe('metrics', () => {
                 // eslint-disable-next-line no-underscore-dangle
                 openHandles: process._getActiveRequests().length + process._getActiveHandles().length,
                 timestamp,
-                metrics: [
-                    ['metric-a', 0],
-                    ['metric-b', -1]
-                ]
+                metrics: {
+                    'metric-a': 0,
+                    'metric-b': -1,
+                },
             }
         )
 
@@ -48,10 +48,10 @@ describe('metrics', () => {
                 // eslint-disable-next-line no-underscore-dangle
                 openHandles: process._getActiveRequests().length + process._getActiveHandles().length,
                 timestamp,
-                metrics: [
-                    ['metric-a', 0],
-                    ['metric-b', -1]
-                ]
+                metrics: {
+                    'metric-a': 0,
+                    'metric-b': -1,
+                },
             }
         )
         // eslint-disable-next-line no-underscore-dangle
@@ -84,21 +84,20 @@ describe('metrics', () => {
                 // eslint-disable-next-line no-underscore-dangle
                 openHandles: process._getActiveRequests().length + process._getActiveHandles().length,
                 timestamp,
-                metrics:
-                    [
-                        ['metric-c', -10],
-                        ['metric-d', 50]
-                    ]
+                metrics: {
+                    'metric-c': -10,
+                    'metric-d': 50,
+                },
             },
             {
                 name: 'test-app1',
                 // eslint-disable-next-line no-underscore-dangle
                 openHandles: process._getActiveRequests().length + process._getActiveHandles().length,
                 timestamp,
-                metrics: [
-                    ['metric-a', 'test-me'],
-                    ['metric-b', 5]
-                ]
+                metrics: {
+                    'metric-a': 'test-me',
+                    'metric-b': 5
+                }
             }]
         )
     })
