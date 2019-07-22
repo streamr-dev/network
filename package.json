@@ -52,6 +52,7 @@
     "events": "3.0.0",
     "pidusage": "^2.0.17",
     "speedometer": "^1.1.0",
+    "streamr-client": "^2.1.1",
     "streamr-client-protocol": "^2.2.5",
     "uuid": "3.3.2",
     "ws": "^7.1.0"

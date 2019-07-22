@@ -179,13 +179,14 @@ module.exports = class Tracker extends EventEmitter {
             topology[streamKey] = overlayTopology.state()
         })
 
+        mainMetrics.id = this.opts.id
         trackerMetrics.topology = topology
 
         return {
+            trackerMetrics,
             mainMetrics,
             endpointMetrics,
-            processMetrics,
-            trackerMetrics
+            processMetrics
         }
     }
 }
