@@ -2,7 +2,9 @@
  * Endpoints for RESTful data requests
  */
 const express = require('express')
+
 const VolumeLogger = require('../VolumeLogger')
+
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
 function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {

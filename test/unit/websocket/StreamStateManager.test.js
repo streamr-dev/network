@@ -1,4 +1,5 @@
 const assert = require('assert')
+
 const StreamStateManager = require('../../../src/StreamStateManager')
 
 jest.useFakeTimers()

@@ -1,8 +1,10 @@
 const assert = require('assert')
 const events = require('events')
+
 const sinon = require('sinon')
 const intoStream = require('into-stream')
 const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
+
 const WebsocketServer = require('../../../src/websocket/WebsocketServer')
 const MockSocket = require('../test-helpers/MockSocket')
 

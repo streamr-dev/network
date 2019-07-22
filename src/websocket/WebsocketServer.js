@@ -1,10 +1,13 @@
 const events = require('events')
+
 const debug = require('debug')('streamr:WebsocketServer')
 const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
+
 const HttpError = require('../errors/HttpError')
 const VolumeLogger = require('../VolumeLogger')
 const partition = require('../partition')
 const StreamStateManager = require('../StreamStateManager')
+
 const Connection = require('./Connection')
 const FieldDetector = require('./FieldDetector')
 

@@ -1,4 +1,5 @@
 const assert = require('assert')
+
 const Stream = require('../../../src/Stream')
 
 describe('Stream', () => {

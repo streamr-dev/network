@@ -1,4 +1,5 @@
 const debug = require('debug')('streamr:StreamStateManager')
+
 const Stream = require('./Stream')
 
 function getStreamLookupKey(streamId, streamPartition) {

@@ -7,7 +7,6 @@ const { startCassandraStorage } = require('./Storage')
 const Publisher = require('./Publisher')
 const VolumeLogger = require('./VolumeLogger')
 const MissingConfigError = require('./errors/MissingConfigError')
-
 const adapterRegistry = require('./adapterRegistry')
 
 module.exports = async (config) => {

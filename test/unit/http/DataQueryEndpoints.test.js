@@ -4,6 +4,7 @@ const sinon = require('sinon')
 const intoStream = require('into-stream')
 const { ControlLayer } = require('streamr-client-protocol')
 const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
+
 const restEndpointRouter = require('../../../src/http/DataQueryEndpoints')
 const HttpError = require('../../../src/errors/HttpError')
 
