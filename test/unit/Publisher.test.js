@@ -1,7 +1,9 @@
 const assert = require('assert')
 const events = require('events')
+
 const sinon = require('sinon')
 const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
+
 const Publisher = require('../../src/Publisher')
 const MessageNotSignedError = require('../../src/errors/MessageNotSignedError')
 

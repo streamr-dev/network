@@ -1,4 +1,5 @@
 const events = require('events')
+
 const { ControlLayer } = require('streamr-client-protocol')
 
 module.exports = class MockSocket extends events.EventEmitter {

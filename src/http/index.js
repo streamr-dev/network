@@ -2,6 +2,7 @@ const cors = require('cors')
 const express = require('express')
 
 const adapterRegistry = require('../adapterRegistry')
+
 const dataQueryEndpoints = require('./DataQueryEndpoints')
 const dataProduceEndpoints = require('./DataProduceEndpoints')
 const volumeEndpoint = require('./VolumeEndpoint')

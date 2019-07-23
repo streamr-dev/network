@@ -1,6 +1,7 @@
 const { startTracker } = require('@streamr/streamr-p2p-network')
 const StreamrClient = require('streamr-client')
 const mqtt = require('async-mqtt')
+
 const createBroker = require('../../src/broker')
 
 const httpPort1 = 12381

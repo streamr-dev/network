@@ -1,8 +1,21 @@
 #!/usr/bin/env node
 const fs = require('fs')
+
+const Sentry = require('@sentry/node')
 const program = require('commander')
+
 const CURRENT_VERSION = require('./package.json').version
 const startBroker = require('./src/broker')
+
+Sentry.init({
+    dsn: 'https://0fcf3b8f6b254caa9a7fadd77bcc37a4@sentry.io/1510389',
+    integrations: [
+        new Sentry.Integrations.Console({
+            levels: ['error']
+        })
+    ],
+    environment: 'broker'
+})
 
 program
     .version(CURRENT_VERSION)

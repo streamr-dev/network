@@ -2,6 +2,7 @@ const net = require('net')
 
 const MissingConfigError = require('../errors/MissingConfigError')
 const adapterRegistry = require('../adapterRegistry')
+
 const MqttServer = require('./MqttServer')
 
 // eslint-disable-next-line max-len

@@ -1,4 +1,5 @@
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+
 const FieldDetector = require('../../../src/websocket/FieldDetector.js')
 
 const STREAM_MESSAGE = StreamMessage.create(

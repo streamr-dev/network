@@ -2,6 +2,7 @@ const ws = require('ws')
 
 const MissingConfigError = require('../errors/MissingConfigError')
 const adapterRegistry = require('../adapterRegistry')
+
 const WebsocketServer = require('./WebsocketServer')
 
 adapterRegistry.register('ws', ({ port }, { networkNode, publisher, streamFetcher, volumeLogger }) => {

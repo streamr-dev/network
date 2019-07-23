@@ -1,13 +1,13 @@
 const events = require('events')
+
 const debug = require('debug')('streamr:MqttServer')
-
 const mqttCon = require('mqtt-connection')
-
 const { MessageLayer } = require('streamr-client-protocol')
+
 const VolumeLogger = require('../VolumeLogger')
 const partition = require('../partition')
-
 const StreamStateManager = require('../StreamStateManager')
+
 const Connection = require('./Connection')
 
 let sequenceNumber = 0

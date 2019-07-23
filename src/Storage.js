@@ -1,4 +1,5 @@
 const { Readable, Transform } = require('stream')
+
 const merge2 = require('merge2')
 const cassandra = require('cassandra-driver')
 const { StreamMessageFactory, StreamMessage } = require('streamr-client-protocol').MessageLayer

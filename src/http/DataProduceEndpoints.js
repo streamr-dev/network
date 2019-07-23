@@ -1,8 +1,10 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+
 const InvalidMessageContentError = require('../errors/InvalidMessageContentError')
 const partition = require('../partition')
+
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
 function parsePositiveInteger(n) {
