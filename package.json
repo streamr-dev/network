@@ -48,6 +48,7 @@
   },
   "engineStrict": true,
   "dependencies": {
+    "@sentry/node": "^5.5.0",
     "debug": "4.1.1",
     "events": "3.0.0",
     "pidusage": "^2.0.17",
