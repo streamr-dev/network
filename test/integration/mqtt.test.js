@@ -417,10 +417,13 @@ describe('mqtt: end-to-end', () => {
         await mqttClient1.subscribe(freshStreamName1)
         await mqttClient2.subscribe(freshStreamName1)
 
-        expect(broker1.subscriptionManager.networkNode.streams.getStreams()).toEqual([])
-
-        await wait(1000)
-
+        // for mqtt partition is always zero
+        expect(broker1.getStreams()).toEqual([freshStreamId1 + '::0'])
         await mqttClient1.unsubscribe(freshStreamName1)
+
+        await wait(200)
+
+        expect(broker1.getStreams()).toEqual([])
+        expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0'])
     })
 })

@@ -140,6 +140,7 @@ module.exports = async (config) => {
     console.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
 
     return {
+        getStreams: () => networkNode.streams.getStreamsAsKeys(),
         close: () => {
             networkNode.stop()
             closeAdapterFns.forEach((close) => close())

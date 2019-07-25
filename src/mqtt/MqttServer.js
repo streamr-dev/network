@@ -188,6 +188,8 @@ module.exports = class MqttServer extends events.EventEmitter {
         if (stream) {
             this.subscriptionManager.unsubscribe(stream.getId(), stream.getPartition())
             connection.removeStream(stream.getId(), stream.getPartition())
+
+            connection.client.unsuback(packet)
         }
     }
 
@@ -238,6 +240,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                 messageId: 0,
                 unsubscriptions: [stream.getName()]
             }
+
             connection.client.unsubscribe(object)
         })
 
