@@ -6,6 +6,7 @@ const StreamFetcher = require('./StreamFetcher')
 const { startCassandraStorage } = require('./Storage')
 const Publisher = require('./Publisher')
 const VolumeLogger = require('./VolumeLogger')
+const SubscriptionManager = require('./SubscriptionManager')
 const MissingConfigError = require('./errors/MissingConfigError')
 const adapterRegistry = require('./adapterRegistry')
 
@@ -113,6 +114,7 @@ module.exports = async (config) => {
     const volumeLogger = new VolumeLogger(60, networkNode, client, config.reporting.streamId)
     const streamFetcher = new StreamFetcher(config.streamrUrl)
     const publisher = new Publisher(networkNode, volumeLogger)
+    const subscriptionManager = new SubscriptionManager(networkNode)
 
     // Start up adapters one-by-one, storing their close functions for further use
     const closeAdapterFns = config.adapters.map(({ name, ...adapterConfig }, index) => {
@@ -122,7 +124,7 @@ module.exports = async (config) => {
                 publisher,
                 streamFetcher,
                 volumeLogger,
-                config,
+                subscriptionManager
             })
         } catch (e) {
             if (e instanceof MissingConfigError) {

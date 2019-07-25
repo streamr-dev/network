@@ -197,6 +197,8 @@ describe('mqtt: end-to-end', () => {
         mqttClient1.subscribe(freshStreamName1)
         mqttClient2.subscribe(freshStreamName1)
 
+        await wait(100)
+
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
         })
@@ -209,7 +211,7 @@ describe('mqtt: end-to-end', () => {
             qos: 1
         })
 
-        await wait(1000)
+        await wait(500)
 
         await mqttClient2.publish(freshStreamName1, 'key: 2', {
             qos: 1

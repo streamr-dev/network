@@ -6,6 +6,7 @@ const intoStream = require('into-stream')
 const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 
 const WebsocketServer = require('../../../src/websocket/WebsocketServer')
+const SubscriptionManager = require('../../../src/SubscriptionManager')
 const MockSocket = require('../test-helpers/MockSocket')
 
 const CONTROL_LAYER_VERSION = 1
@@ -18,6 +19,7 @@ describe('WebsocketServer', () => {
     let publisher
     let networkNode
     let mockSocket
+    let subscriptionManager
 
     const myStream = {
         id: 'streamId',
@@ -133,6 +135,8 @@ describe('WebsocketServer', () => {
                 .resolves(),
         }
 
+        subscriptionManager = new SubscriptionManager(networkNode)
+
         // Mock websocket lib
         wsMock = new events.EventEmitter()
         wsMock.close = () => {}
@@ -141,7 +145,9 @@ describe('WebsocketServer', () => {
         mockSocket = new MockSocket(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
 
         // Create the server instance
-        server = new WebsocketServer(wsMock, networkNode, streamFetcher, publisher, undefined, () => 0)
+        server = new WebsocketServer(
+            wsMock, networkNode, streamFetcher, publisher, undefined, subscriptionManager, () => 0
+        )
     })
 
     afterEach(() => {

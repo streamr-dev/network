@@ -31,6 +31,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         streamFetcher,
         publisher,
         volumeLogger = new VolumeLogger(0),
+        subscriptionManager,
         partitionFn = partition,
     ) {
         super()
@@ -41,6 +42,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.publisher = publisher
         this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
+        this.subscriptionManager = subscriptionManager
 
         this.streams = new StreamStateManager()
 
@@ -187,7 +189,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                         // Subscribe now if the stream is not already subscribed or subscribing
                         if (!newOrExistingStream.isSubscribed() && !newOrExistingStream.isSubscribing()) {
                             newOrExistingStream.setSubscribing()
-                            this.networkNode.subscribe(streamObj.id, 0)
+                            this.subscriptionManager.subscribe(streamObj.id, 0)
                             newOrExistingStream.setSubscribed()
 
                             newOrExistingStream.addConnection(connection)
