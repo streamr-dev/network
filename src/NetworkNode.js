@@ -25,7 +25,7 @@ class NetworkNode extends Node {
             resendStrategies: [
                 ...opts.storages.map((storage) => new StorageResendStrategy(storage)),
                 new AskNeighborsResendStrategy(opts.protocols.nodeToNode, (streamId) => {
-                    return this.streams.getOutboundNodesForStream(streamId)
+                    return this.streams.isSetUp(streamId) ? this.streams.getOutboundNodesForStream(streamId) : []
                 }),
                 new StorageNodeResendStrategy(opts.protocols.trackerNode, opts.protocols.nodeToNode,
                     () => [...this.trackers][0],
