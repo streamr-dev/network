@@ -409,4 +409,18 @@ describe('mqtt: end-to-end', () => {
             },
         ])
     })
+
+    it('mqtt clients subscribe and unsubscribe logic', async () => {
+        await waitForCondition(() => mqttClient1.connected)
+        await waitForCondition(() => mqttClient2.connected)
+
+        await mqttClient1.subscribe(freshStreamName1)
+        await mqttClient2.subscribe(freshStreamName1)
+
+        expect(broker1.subscriptionManager.networkNode.streams.getStreams()).toEqual([])
+
+        await wait(1000)
+
+        await mqttClient1.unsubscribe(freshStreamName1)
+    })
 })

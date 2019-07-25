@@ -24,6 +24,12 @@ module.exports = class StreamStateManager {
         return this._streams[getStreamLookupKey(streamId, streamPartition)]
     }
 
+    getByName(name) {
+        const streamId = Object.keys(this._streams)
+            .find((key) => { return this._streams[key].getName() === name })
+        return streamId ? this._streams[streamId] : null
+    }
+
     /**
      * Creates and returns a Stream object, holding the Stream subscription state.
      * */

@@ -17,6 +17,7 @@ module.exports = class Connection extends events.EventEmitter {
         this.client.on('disconnect', () => this.emit('disconnect'))
         this.client.on('publish', (packet) => this.emit('publish', packet))
         this.client.on('subscribe', (packet) => this.emit('subscribe', packet))
+        this.client.on('unsubscribe', (packet) => this.emit('unsubscribe', packet))
 
         // client pinged
         this.client.on('pingreq', () => this.client.pingresp())

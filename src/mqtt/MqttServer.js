@@ -109,6 +109,10 @@ module.exports = class MqttServer extends events.EventEmitter {
                             this.handleSubscribeRequest(connection, subscribePacket)
                         })
 
+                        connection.on('unsubscribe', (unsubscribePacket) => {
+                            this.handleUnsubscribeRequest(connection, unsubscribePacket)
+                        })
+
                         // timeout idle streams after X minutes
                         mqttStream.setTimeout(this.streamsTimeout)
 
@@ -173,6 +177,18 @@ module.exports = class MqttServer extends events.EventEmitter {
                         console.log(err)
                     })
             })
+    }
+
+    handleUnsubscribeRequest(connection, packet) {
+        debug('unsubscribe request %o', packet)
+
+        const topic = packet.unsubscriptions[0]
+        const stream = this.streams.getByName(topic)
+
+        if (stream) {
+            this.subscriptionManager.unsubscribe(stream.getId(), stream.getPartition())
+            connection.removeStream(stream.getId(), stream.getPartition())
+        }
     }
 
     handleSubscribeRequest(connection, packet) {
