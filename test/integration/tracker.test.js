@@ -1,4 +1,4 @@
-const { startNode, startTracker } = require('../../src/composition')
+const { startNetworkNode, startTracker } = require('../../src/composition')
 const { LOCALHOST, waitForEvent } = require('../../test/util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 
@@ -11,7 +11,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         tracker = await startTracker(LOCALHOST, 32400, 'tracker')
         expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(0)
 
-        node1 = await startNode(LOCALHOST, 33371, 'node1')
+        node1 = await startNetworkNode(LOCALHOST, 33371, 'node1')
         await node1.addBootstrapTracker(tracker.getAddress())
 
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
@@ -19,7 +19,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
         expect(node1.protocols.trackerNode.endpoint.connections.size).toBe(1)
 
-        node2 = await startNode(LOCALHOST, 33372, 'node2')
+        node2 = await startNetworkNode(LOCALHOST, 33372, 'node2')
         await node2.addBootstrapTracker(tracker.getAddress())
 
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)

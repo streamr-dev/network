@@ -1,9 +1,8 @@
 const { MessageLayer } = require('streamr-client-protocol')
 
-const { startNode, startTracker } = require('../../src/composition')
-const Node = require('../../src/logic/Node')
+const { startNetworkNode, startTracker } = require('../../src/composition')
+const NetworkNode = require('../../src/NetworkNode')
 const { LOCALHOST } = require('../util')
-const { StreamIdAndPartition } = require('../../src/identifiers')
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -21,10 +20,10 @@ describe('message buffering of Node', () => {
     beforeAll(async () => {
         tracker = await startTracker(LOCALHOST, 30320, 'tracker')
 
-        sourceNode = await startNode(LOCALHOST, 30321, 'source-node')
+        sourceNode = await startNetworkNode(LOCALHOST, 30321, 'source-node')
         await sourceNode.addBootstrapTracker(tracker.getAddress())
 
-        destinationNode = await startNode(LOCALHOST, 30322, 'destination-node')
+        destinationNode = await startNetworkNode(LOCALHOST, 30322, 'destination-node')
         await destinationNode.addBootstrapTracker(tracker.getAddress())
     })
 
@@ -35,7 +34,7 @@ describe('message buffering of Node', () => {
     })
 
     test('first message to unknown stream eventually gets delivered', (done) => {
-        destinationNode.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => {
+        destinationNode.on(NetworkNode.events.MESSAGE, (streamMessage) => {
             expect(streamMessage.messageId).toEqual(
                 new MessageID('id', 0, 1, 0, 'publisher-id', 'session-id')
             )
@@ -45,20 +44,23 @@ describe('message buffering of Node', () => {
             done()
         })
 
-        destinationNode.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition('id', 0))
+        destinationNode.subscribe('id', 0)
 
         // "Client" pushes data
-        const streamMessage = StreamMessage.create(
-            ['id', 0, 1, 0, 'publisher-id', 'session-id'],
-            [0, 0],
-            StreamMessage.CONTENT_TYPES.MESSAGE,
-            StreamMessage.ENCRYPTION_TYPES.NONE,
+        sourceNode.publish(
+            'id',
+            0,
+            1,
+            0,
+            'publisher-id',
+            'session-id',
+            null,
+            null,
             {
                 hello: 'world'
             },
             StreamMessage.SIGNATURE_TYPES.NONE,
             null
         )
-        sourceNode.onDataReceived(streamMessage)
     })
 })

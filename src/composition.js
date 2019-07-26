@@ -5,10 +5,8 @@ const TrackerNode = require('./protocol/TrackerNode')
 const NodeToNode = require('./protocol/NodeToNode')
 const { peerTypes } = require('./protocol/PeerBook')
 const Tracker = require('./logic/Tracker')
-const Node = require('./logic/Node')
 const NetworkNode = require('./NetworkNode')
 const { startEndpoint } = require('./connection/WsEndpoint')
-const { StreamIdAndPartition } = require('./identifiers')
 
 function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4, advertisedWsUrl = null) {
     const identity = {
@@ -24,24 +22,6 @@ function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4, advert
             maxNeighborsPerNode
         }
         return new Tracker(opts)
-    })
-}
-
-function startNode(host, port, id = uuidv4(), resendStrategies = [], advertisedWsUrl = null) {
-    const identity = {
-        'streamr-peer-id': id,
-        'streamr-peer-type': peerTypes.NODE
-    }
-    return startEndpoint(host, port, identity, advertisedWsUrl).then((endpoint) => {
-        const opts = {
-            id,
-            protocols: {
-                trackerNode: new TrackerNode(endpoint),
-                nodeToNode: new NodeToNode(endpoint)
-            },
-            resendStrategies
-        }
-        return new Node(opts)
     })
 }
 
@@ -83,8 +63,6 @@ function startStorageNode(host, port, id = uuidv4(), storages = [], advertisedWs
 
 module.exports = {
     startTracker,
-    startNode,
     startNetworkNode,
     startStorageNode,
-    StreamIdAndPartition
 }

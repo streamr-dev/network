@@ -1,8 +1,6 @@
 const { MessageLayer } = require('streamr-client-protocol')
 
-const Node = require('../../src/logic/Node')
-const { StreamIdAndPartition } = require('../../src/identifiers')
-const { startTracker, startNode } = require('../../src/composition')
+const { startTracker, startNetworkNode } = require('../../src/composition')
 const { waitForCondition, LOCALHOST } = require('../../test/util')
 
 const { StreamMessage } = MessageLayer
@@ -18,10 +16,10 @@ describe('message propagation in network', () => {
         tracker = await startTracker(LOCALHOST, 33300, 'tracker')
 
         await Promise.all([
-            startNode('127.0.0.1', 33312, 'node-1'),
-            startNode('127.0.0.1', 33313, 'node-2'),
-            startNode('127.0.0.1', 33314, 'node-3'),
-            startNode('127.0.0.1', 33315, 'node-4')
+            startNetworkNode('127.0.0.1', 33312, 'node-1'),
+            startNetworkNode('127.0.0.1', 33313, 'node-2'),
+            startNetworkNode('127.0.0.1', 33314, 'node-3'),
+            startNetworkNode('127.0.0.1', 33315, 'node-4')
         ]).then((res) => {
             [n1, n2, n3, n4] = res
         });
@@ -43,56 +41,62 @@ describe('message propagation in network', () => {
         const n3Messages = []
         const n4Messages = []
 
-        n1.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => n1Messages.push({
+        n1.addMessageListener((streamMessage) => n1Messages.push({
             streamId: streamMessage.messageId.streamId,
             streamPartition: streamMessage.messageId.streamPartition,
             payload: streamMessage.getParsedContent()
         }))
-        n2.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => n2Messages.push({
+        n2.addMessageListener((streamMessage) => n2Messages.push({
             streamId: streamMessage.messageId.streamId,
             streamPartition: streamMessage.messageId.streamPartition,
             payload: streamMessage.getParsedContent()
         }))
-        n3.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => n3Messages.push({
+        n3.addMessageListener((streamMessage) => n3Messages.push({
             streamId: streamMessage.messageId.streamId,
             streamPartition: streamMessage.messageId.streamPartition,
             payload: streamMessage.getParsedContent()
         }))
-        n4.on(Node.events.MESSAGE_PROPAGATED, (streamMessage) => n4Messages.push({
+        n4.addMessageListener((streamMessage) => n4Messages.push({
             streamId: streamMessage.messageId.streamId,
             streamPartition: streamMessage.messageId.streamPartition,
             payload: streamMessage.getParsedContent()
         }))
 
-        n2.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition('stream-1', 0))
-        n3.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition('stream-1', 0))
+        n2.subscribe('stream-1', 0)
+        n3.subscribe('stream-1', 0)
 
         for (let i = 1; i <= 5; ++i) {
-            const streamMessage = StreamMessage.create(
-                ['stream-1', 0, i, 0, 'publisher-id', 'sessionId'],
-                i === 1 ? null : [i - 1, 0],
-                StreamMessage.CONTENT_TYPES.MESSAGE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
+            n1.publish(
+                'stream-1',
+                0,
+                i,
+                0,
+                'publisherId',
+                'msgChainId',
+                i === 1 ? null : i - 1,
+                i === 1 ? null : 0,
                 {
                     messageNo: i
                 },
                 StreamMessage.SIGNATURE_TYPES.NONE,
                 null
             )
-            n1.onDataReceived(streamMessage)
 
-            const streamMessage2 = StreamMessage.create(
-                ['stream-2', 0, i * 100, 0, 'publisher-id', 'sessionId'],
-                i === 1 ? null : [(i - 1) * 100, 0],
-                StreamMessage.CONTENT_TYPES.MESSAGE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
+            n4.publish(
+                'stream-2',
+                0,
+                i * 100,
+                0,
+                'publisherId',
+                'msgChainId',
+                i === 1 ? null : (i - 1) * 100,
+                i === 1 ? null : 0,
                 {
                     messageNo: i * 100
                 },
                 StreamMessage.SIGNATURE_TYPES.NONE,
                 null
             )
-            n4.onDataReceived(streamMessage2)
         }
 
         await waitForCondition(() => n1Messages.length === 5)
