@@ -104,6 +104,10 @@ class NetworkNode extends Node {
         )
         return this.requestResend(request, null)
     }
+
+    getStreams() {
+        return this.streams.getStreamsAsKeys()
+    }
 }
 
 module.exports = NetworkNode
