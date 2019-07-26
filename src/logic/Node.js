@@ -20,9 +20,6 @@ const events = Object.freeze({
     NODE_DISCONNECTED: 'streamr:node:node-disconnected',
     SUBSCRIPTION_REQUEST: 'streamr:node:subscription-received',
     MESSAGE_DELIVERY_FAILED: 'streamr:node:message-delivery-failed',
-    UNICAST_RECEIVED: 'streamr:node:unicast-received',
-    RESEND_RESPONSE_RECEIVED: 'streamr:node:resend-response-received',
-
 })
 
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
@@ -53,20 +50,20 @@ class Node extends EventEmitter {
         )
         this.sendStatusTimeout = null
         this.bootstrapTrackerAddresses = []
+        this.protocols = this.opts.protocols
 
         this.streams = new StreamManager()
         this.messageBuffer = new MessageBuffer(this.opts.messageBufferSize, (streamId) => {
             this.debug('failed to deliver buffered messages of stream %s', streamId)
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
         })
-        this.resendHandler = new ResendHandler(this.opts.resendStrategies,
-            this.respondResend.bind(this),
-            this._unicast.bind(this),
-            console.error.bind(console))
+        this.resendHandler = new ResendHandler(
+            this.opts.resendStrategies,
+            this.protocols.nodeToNode.send.bind(this.protocols.nodeToNode),
+            console.error.bind(console)
+        )
 
         this.trackers = new Set()
-
-        this.protocols = this.opts.protocols
 
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, (streamMessage) => this.onTrackerInstructionReceived(streamMessage))
@@ -124,31 +121,6 @@ class Node extends EventEmitter {
             request.constructor.name,
             request.subId)
         return this.resendHandler.handleRequest(request, source)
-    }
-
-    async respondResend(destination, response) {
-        if (destination === null) {
-            this.emit(events.RESEND_RESPONSE_RECEIVED, response)
-        } else {
-            await this.protocols.nodeToNode.send(destination, response)
-        }
-
-        this.debug('responded %s with %s and subId %s',
-            destination === null ? 'locally' : `to ${destination}`,
-            response.constructor.name,
-            response.subId)
-    }
-
-    async _unicast(destination, unicastMessage, source) {
-        if (destination === null) {
-            this.emit(events.UNICAST_RECEIVED, unicastMessage, source)
-        } else {
-            await this.protocols.nodeToNode.send(destination, unicastMessage)
-        }
-        this.debug('sent %s unicast %j for subId %s',
-            destination === null ? 'locally' : `to ${destination}`,
-            unicastMessage.streamMessage.messageId,
-            unicastMessage.subId)
     }
 
     async onTrackerInstructionReceived(streamMessage) {

@@ -18,15 +18,12 @@ class RequestStream extends Readable {
 }
 
 class ResendHandler {
-    constructor(resendStrategies, sendResponse, sendUnicast, notifyError) {
+    constructor(resendStrategies, sendResponse, notifyError) {
         if (resendStrategies == null) {
             throw new Error('resendStrategies not given')
         }
         if (sendResponse == null) {
             throw new Error('sendResponse not given')
-        }
-        if (sendUnicast == null) {
-            throw new Error('sendUnicast not given')
         }
         if (notifyError == null) {
             throw new Error('notifyError not given')
@@ -34,7 +31,6 @@ class ResendHandler {
 
         this.resendStrategies = [...resendStrategies]
         this.sendResponse = sendResponse
-        this.sendUnicast = sendUnicast
         this.notifyError = notifyError
     }
 
@@ -64,9 +60,9 @@ class ResendHandler {
         }
 
         if (isRequestFulfilled) {
-            this._emitResent(request, source)
+            this._sendResent(request, source)
         } else {
-            this._emitNoResend(request, source)
+            this._sendNoResend(request, source)
         }
 
         requestStream.done(isRequestFulfilled)
@@ -77,13 +73,13 @@ class ResendHandler {
         return new Promise((resolve) => {
             responseStream
                 .once('data', () => {
-                    this._emitResending(request, source)
+                    this._sendResending(request, source)
                 })
                 .on('data', () => {
                     numOfMessages += 1
                 })
                 .on('data', (unicastMessage) => {
-                    this._emitUnicast(source, unicastMessage)
+                    this._sendUnicast(unicastMessage, source)
                 })
                 .on('error', (error) => {
                     this._emitError(request, error)
@@ -97,20 +93,40 @@ class ResendHandler {
         })
     }
 
-    _emitResending(request, source) {
-        this.sendResponse(source, ControlLayer.ResendResponseResending.create(request.streamId, request.streamPartition, request.subId))
+    _sendResending(request, source) {
+        if (source != null) {
+            this.sendResponse(source, ControlLayer.ResendResponseResending.create(
+                request.streamId,
+                request.streamPartition,
+                request.subId
+            ))
+        }
     }
 
-    _emitUnicast(requestSource, unicastMessage) {
-        this.sendUnicast(requestSource, unicastMessage)
+    _sendUnicast(unicastMessage, source) {
+        if (source != null) {
+            this.sendResponse(source, unicastMessage)
+        }
     }
 
-    _emitResent(request, source) {
-        this.sendResponse(source, ControlLayer.ResendResponseResent.create(request.streamId, request.streamPartition, request.subId))
+    _sendResent(request, source) {
+        if (source != null) {
+            this.sendResponse(source, ControlLayer.ResendResponseResent.create(
+                request.streamId,
+                request.streamPartition,
+                request.subId
+            ))
+        }
     }
 
-    _emitNoResend(request, source) {
-        this.sendResponse(source, ControlLayer.ResendResponseNoResend.create(request.streamId, request.streamPartition, request.subId))
+    _sendNoResend(request, source) {
+        if (source != null) {
+            this.sendResponse(source, ControlLayer.ResendResponseNoResend.create(
+                request.streamId,
+                request.streamPartition,
+                request.subId
+            ))
+        }
     }
 
     _emitError(request, error) {

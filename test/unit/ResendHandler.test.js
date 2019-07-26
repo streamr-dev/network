@@ -13,20 +13,18 @@ describe('ResendHandler', () => {
     let request
     let cbInvocations
     let sendResponse
-    let sendUnicast
     let notifyError
 
     beforeEach(() => {
         request = ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10)
         cbInvocations = []
         sendResponse = (source, response) => cbInvocations.push(['sendResponse', response.constructor.name])
-        sendUnicast = (source, unicast) => cbInvocations.push(['sendUnicast', unicast.constructor.name])
         notifyError = (req, error) => cbInvocations.push(['notifyError', error])
     })
 
     describe('initialized with no strategies', () => {
         beforeEach(() => {
-            resendHandler = new ResendHandler([], sendResponse, sendUnicast, notifyError)
+            resendHandler = new ResendHandler([], sendResponse, notifyError)
         })
 
         test('handleRequest(request) returns empty empty', async () => {
@@ -52,7 +50,7 @@ describe('ResendHandler', () => {
         beforeEach(() => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => intoStream.object([])
-            }], sendResponse, sendUnicast, notifyError)
+            }], sendResponse, notifyError)
         })
 
         test('handleRequest(request) returns empty stream', async () => {
@@ -78,7 +76,7 @@ describe('ResendHandler', () => {
         beforeEach(() => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => intoStream.object(Promise.reject(new Error('yikes')))
-            }], sendResponse, sendUnicast, notifyError)
+            }], sendResponse, notifyError)
         })
 
         test('handleRequest(request) returns empty stream', async () => {
@@ -128,7 +126,7 @@ describe('ResendHandler', () => {
                         )
                     ),
                 ])
-            }], sendResponse, sendUnicast, notifyError)
+            }], sendResponse, notifyError)
         })
 
         test('handleRequest(request) returns stream with 2 messages', async () => {
@@ -146,8 +144,8 @@ describe('ResendHandler', () => {
             await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ControlLayer.ResendResponseResendingV1.name],
-                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
-                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
+                ['sendResponse', ControlLayer.UnicastMessageV1.name],
+                ['sendResponse', ControlLayer.UnicastMessageV1.name],
                 ['sendResponse', ControlLayer.ResendResponseResentV1.name]
             ])
         })
@@ -194,7 +192,7 @@ describe('ResendHandler', () => {
 
                     return stream
                 }
-            }], sendResponse, sendUnicast, notifyError)
+            }], sendResponse, notifyError)
         })
 
         test('handleRequest(request) returns stream with 2 messages', async () => {
@@ -212,8 +210,8 @@ describe('ResendHandler', () => {
             await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ControlLayer.ResendResponseResendingV1.name],
-                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
-                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
+                ['sendResponse', ControlLayer.UnicastMessageV1.name],
+                ['sendResponse', ControlLayer.UnicastMessageV1.name],
                 ['notifyError', new Error('yikes')],
                 ['sendResponse', ControlLayer.ResendResponseNoResendV1.name]
             ])
@@ -280,7 +278,7 @@ describe('ResendHandler', () => {
             }
 
             resendHandler = new ResendHandler([firstStrategy, secondStrategy, thirdStrategy],
-                sendResponse, sendUnicast, notifyError)
+                sendResponse, notifyError)
         })
 
         test('handleRequest(request) returns stream with expected messages', async () => {
@@ -292,11 +290,11 @@ describe('ResendHandler', () => {
             await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
             expect(cbInvocations).toEqual([
                 ['sendResponse', ControlLayer.ResendResponseResendingV1.name],
-                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
+                ['sendResponse', ControlLayer.UnicastMessageV1.name],
                 ['notifyError', new Error('yikes')],
                 ['sendResponse', ControlLayer.ResendResponseResendingV1.name],
-                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
-                ['sendUnicast', ControlLayer.UnicastMessageV1.name],
+                ['sendResponse', ControlLayer.UnicastMessageV1.name],
+                ['sendResponse', ControlLayer.UnicastMessageV1.name],
                 ['sendResponse', ControlLayer.ResendResponseResentV1.name]
             ])
         })
@@ -327,7 +325,7 @@ describe('ResendHandler', () => {
                 getResendResponseStream: neverShouldBeInvokedFn
             }
 
-            resendHandler = new ResendHandler([firstStrategy, secondStrategy], sendResponse, sendUnicast, notifyError)
+            resendHandler = new ResendHandler([firstStrategy, secondStrategy], sendResponse, notifyError)
         })
 
         test('on handleRequest(request) 2nd strategy is never used (short-circuit)', async () => {
@@ -341,14 +339,13 @@ describe('ResendHandler', () => {
     describe('callback arguments are formed correctly', () => {
         beforeEach(() => {
             sendResponse = jest.fn()
-            sendUnicast = jest.fn()
             notifyError = jest.fn()
         })
 
         test('sendResponse with ResendResponseNoResend is formed correctly', async () => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => intoStream.object([])
-            }], sendResponse, sendUnicast, notifyError)
+            }], sendResponse, notifyError)
 
             await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
 
@@ -359,7 +356,7 @@ describe('ResendHandler', () => {
         test('notifyError is formed correctly', async () => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => intoStream.object(Promise.reject(new Error('yikes')))
-            }], sendResponse, sendUnicast, notifyError)
+            }], sendResponse, notifyError)
 
             await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
 
@@ -384,7 +381,7 @@ describe('ResendHandler', () => {
                             )
                         )
                     ])
-                }], sendResponse, sendUnicast, notifyError)
+                }], sendResponse, notifyError)
             })
 
             test('sendResponse with ResendResponseResending is formed correctly', async () => {
@@ -404,7 +401,7 @@ describe('ResendHandler', () => {
             test('sendUnicast is formed correctly', async () => {
                 await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
 
-                expect(sendUnicast).toBeCalledWith('source', ControlLayer.UnicastMessage.create(
+                expect(sendResponse).toBeCalledWith('source', ControlLayer.UnicastMessage.create(
                     'subId', StreamMessage.create(
                         ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
                         [666, 50],

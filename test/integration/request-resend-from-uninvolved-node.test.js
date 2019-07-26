@@ -1,11 +1,15 @@
 const intoStream = require('into-stream')
+const { UnicastMessage } = require('streamr-client-protocol').ControlLayer
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
-const { eventsToArray, waitForEvent, LOCALHOST } = require('../util')
+const { waitForStreamToEnd, waitForEvent, LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 const NetworkNode = require('../../src/NetworkNode')
 
-const collectNetworkNodeEvents = (node) => eventsToArray(node, Object.values(NetworkNode.events))
+const typesOfStreamItems = async (stream) => {
+    const arr = await waitForStreamToEnd(stream)
+    return arr.map((msg) => msg.type)
+}
 
 /**
  * This test verifies that requesting a resend of stream S from a node that is
@@ -74,15 +78,13 @@ describe('request resend from uninvolved node', () => {
     })
 
     test('requesting resend from uninvolved node is fulfilled using l3', async () => {
-        const events = collectNetworkNodeEvents(uninvolvedNode)
-        uninvolvedNode.requestResendLast('streamId', 0, 'subId', 10)
+        const stream = uninvolvedNode.requestResendLast('streamId', 0, 'subId', 10)
+        const events = await typesOfStreamItems(stream)
 
-        await waitForEvent(uninvolvedNode, NetworkNode.events.RESENT)
+        expect(stream.fulfilled).toEqual(true)
         expect(events).toEqual([
-            NetworkNode.events.RESENDING,
-            NetworkNode.events.UNICAST,
-            NetworkNode.events.UNICAST,
-            NetworkNode.events.RESENT,
+            UnicastMessage.TYPE,
+            UnicastMessage.TYPE,
         ])
         expect(uninvolvedNode.streams.getStreamsAsKeys()).toEqual([]) // sanity check
     })

@@ -1,8 +1,13 @@
 const intoStream = require('into-stream')
+const { UnicastMessage } = require('streamr-client-protocol').ControlLayer
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { eventsToArray, waitForEvent, LOCALHOST } = require('../util')
-const NetworkNode = require('../../src/NetworkNode')
+const { waitForStreamToEnd, LOCALHOST } = require('../util')
+
+const typesOfStreamItems = async (stream) => {
+    const arr = await waitForStreamToEnd(stream)
+    return arr.map((msg) => msg.type)
+}
 
 /**
  * This test verifies that a node can fulfill resend requests at L1. This means
@@ -67,38 +72,50 @@ describe('resend requests are fulfilled at L1', () => {
     })
 
     test('requestResendLast', async () => {
-        const actualEvents = eventsToArray(contactNode, Object.values(NetworkNode.events))
-        contactNode.requestResendLast('streamId', 0, 'subId', 10)
+        const stream = contactNode.requestResendLast('streamId', 0, 'subId', 10)
+        const events = await typesOfStreamItems(stream)
 
-        await waitForEvent(contactNode, NetworkNode.events.RESENT)
-        expect(actualEvents).toEqual([
-            NetworkNode.events.RESENDING,
-            NetworkNode.events.UNICAST,
-            NetworkNode.events.UNICAST,
-            NetworkNode.events.UNICAST,
-            NetworkNode.events.RESENT,
+        expect(stream.fulfilled).toEqual(true)
+        expect(events).toEqual([
+            UnicastMessage.TYPE,
+            UnicastMessage.TYPE,
+            UnicastMessage.TYPE,
         ])
     })
 
     test('requestResendFrom', async () => {
-        const actualEvents = eventsToArray(contactNode, Object.values(NetworkNode.events))
-        contactNode.requestResendFrom('streamId', 0, 'subId', 666, 0, 'publisherId', 'msgChainId')
+        const stream = contactNode.requestResendFrom(
+            'streamId',
+            0,
+            'subId',
+            666,
+            0,
+            'publisherId',
+            'msgChainId'
+        )
+        const events = await typesOfStreamItems(stream)
 
-        await waitForEvent(contactNode, NetworkNode.events.RESENT)
-        expect(actualEvents).toEqual([
-            NetworkNode.events.RESENDING,
-            NetworkNode.events.UNICAST,
-            NetworkNode.events.RESENT,
+        expect(stream.fulfilled).toEqual(true)
+        expect(events).toEqual([
+            UnicastMessage.TYPE,
         ])
     })
 
     test('requestResendRange', async () => {
-        const actualEvents = eventsToArray(contactNode, Object.values(NetworkNode.events))
-        contactNode.requestResendRange('streamId', 0, 'subId', 666, 0, 999, 0, 'publisherId', 'msgChainId')
+        const stream = contactNode.requestResendRange(
+            'streamId',
+            0,
+            'subId',
+            666,
+            0,
+            999,
+            0,
+            'publisherId',
+            'msgChainId'
+        )
+        const events = await typesOfStreamItems(stream)
 
-        await waitForEvent(contactNode, NetworkNode.events.NO_RESEND)
-        expect(actualEvents).toEqual([
-            NetworkNode.events.NO_RESEND
-        ])
+        expect(stream.fulfilled).toEqual(false)
+        expect(events).toEqual([])
     })
 })
