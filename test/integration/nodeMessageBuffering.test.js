@@ -34,7 +34,7 @@ describe('message buffering of Node', () => {
     })
 
     test('first message to unknown stream eventually gets delivered', (done) => {
-        destinationNode.on(NetworkNode.events.MESSAGE, (streamMessage) => {
+        destinationNode.addMessageListener((streamMessage) => {
             expect(streamMessage.messageId).toEqual(
                 new MessageID('id', 0, 1, 0, 'publisher-id', 'session-id')
             )
