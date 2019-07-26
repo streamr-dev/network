@@ -3,6 +3,7 @@ const StreamrClient = require('streamr-client')
 const mqtt = require('async-mqtt')
 
 const createBroker = require('../../src/broker')
+const { wait, waitForCondition } = require('../util')
 
 const httpPort1 = 12381
 const httpPort2 = 12382
@@ -17,30 +18,6 @@ const trackerPort = 12410
 const mqttPort1 = 12551
 const mqttPort2 = 12552
 const mqttPort3 = 12553
-
-// Copy-paste from network, should maybe consider packaging into library?
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const waitForCondition = (conditionFn, timeout = 10 * 1000, retryInterval = 100) => {
-    if (conditionFn()) {
-        return Promise.resolve()
-    }
-    return new Promise((resolve, reject) => {
-        const refs = {}
-
-        refs.timeOut = setTimeout(() => {
-            clearInterval(refs.interval)
-            reject(new Error('waitForCondition: timed out before condition became true'))
-        }, timeout)
-
-        refs.interval = setInterval(() => {
-            if (conditionFn()) {
-                clearTimeout(refs.timeOut)
-                clearInterval(refs.interval)
-                resolve()
-            }
-        }, retryInterval)
-    })
-}
 
 function startBroker(id, httpPort, wsPort, networkPort, mqttPort, enableCassandra) {
     return createBroker({
@@ -211,7 +188,8 @@ describe('mqtt: end-to-end', () => {
             qos: 1
         })
 
-        await wait(500)
+        await waitForCondition(() => client1Messages.length === 1)
+        await waitForCondition(() => client2Messages.length === 1)
 
         await mqttClient2.publish(freshStreamName1, 'key: 2', {
             qos: 1
@@ -263,7 +241,8 @@ describe('mqtt: end-to-end', () => {
             qos: 1
         })
 
-        await wait(1000)
+        await waitForCondition(() => client1Messages.length === 1)
+        await waitForCondition(() => client2Messages.length === 1)
 
         await mqttClient2.publish(freshStreamName1, JSON.stringify({
             key: 2
@@ -417,11 +396,16 @@ describe('mqtt: end-to-end', () => {
         await mqttClient1.subscribe(freshStreamName1)
         await mqttClient2.subscribe(freshStreamName1)
 
+        await waitForCondition(() => broker1.getStreams().length === 1)
+        await waitForCondition(() => broker2.getStreams().length === 1)
+
         // for mqtt partition is always zero
         expect(broker1.getStreams()).toEqual([freshStreamId1 + '::0'])
+        expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0'])
         await mqttClient1.unsubscribe(freshStreamName1)
 
-        await wait(200)
+        await waitForCondition(() => broker1.getStreams().length === 0)
+        await waitForCondition(() => broker2.getStreams().length === 1)
 
         expect(broker1.getStreams()).toEqual([])
         expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0'])

@@ -8,6 +8,7 @@ const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 const WebsocketServer = require('../../../src/websocket/WebsocketServer')
 const SubscriptionManager = require('../../../src/SubscriptionManager')
 const MockSocket = require('../test-helpers/MockSocket')
+const { waitForCondition } = require('../../util')
 
 const CONTROL_LAYER_VERSION = 1
 const MESSAGE_LAYER_VERSION = 30
@@ -184,7 +185,7 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket, mockSocket.getRequest())
         })
 
-        it('sends a resending message before starting a resend', (done) => {
+        it('sends a resending message before starting a resend', async (done) => {
             networkNode.requestResendLast.mockReturnValue(intoStream.object([
                 ControlLayer.UnicastMessage.create('subId', streamMessagev30)
             ]))
@@ -195,10 +196,10 @@ describe('WebsocketServer', () => {
                 request.subId,
             )
             mockSocket.receive(request)
-            setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize())
-                done()
-            })
+
+            await waitForCondition(() => mockSocket.sentMessages[0] !== undefined)
+            assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize())
+            done()
         })
 
         it('adds the subscription id to messages', (done) => {

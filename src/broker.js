@@ -140,6 +140,7 @@ module.exports = async (config) => {
     console.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
 
     return {
+        // TODO replace with networkNode.getStreams() after updating new version of network
         getStreams: () => networkNode.streams.getStreamsAsKeys(),
         close: () => {
             networkNode.stop()
