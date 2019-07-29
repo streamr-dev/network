@@ -98,6 +98,32 @@ export default class StreamMessage {
         return new C(messageIdArgsArray, prevMessageRefArgsArray, contentType, encryptionType, content, signatureType, signature)
     }
 
+    static from({
+        streamId,
+        streamPartition,
+        timestamp,
+        sequenceNumber,
+        publisherId,
+        msgChainId,
+        previousTimestamp,
+        previousSequenceNumber,
+        contentType,
+        encryptionType,
+        content,
+        signatureType,
+        signature,
+    }) {
+        return StreamMessage.create(
+            [streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId],
+            previousTimestamp == null ? null : [previousTimestamp, previousSequenceNumber],
+            contentType,
+            encryptionType,
+            content,
+            signatureType,
+            signature,
+        )
+    }
+
     static validateContentType(contentType) {
         if (!StreamMessage.VALID_CONTENTS.has(contentType)) {
             throw new Error(`Unsupported content type: ${contentType}`)
