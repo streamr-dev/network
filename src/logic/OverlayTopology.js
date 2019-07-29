@@ -39,11 +39,12 @@ class OverlayTopology {
     }
 
     state() {
-        return Object.assign(...Object.entries(this.nodes).map(([nodeId, neighbors]) => {
+        const entries = Object.entries(this.nodes)
+        return entries.length ? Object.assign(...entries.map(([nodeId, neighbors]) => {
             return {
                 [nodeId]: [...neighbors].sort()
             }
-        }))
+        })) : {}
     }
 
     formInstructions(nodeId) {

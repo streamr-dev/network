@@ -251,6 +251,19 @@ test('unknown nodes are discarded', () => {
     })
 })
 
+test('test case when all nodes leave topology', () => {
+    const topology = new OverlayTopology(3, (arr) => arr, (arr) => arr[0])
+
+    expect(topology.state()).toEqual({})
+    topology.update('node-1', [])
+    expect(topology.state()).toEqual({
+        'node-1': [
+        ]
+    })
+    topology.leave('node-1')
+    expect(topology.state()).toEqual({})
+})
+
 // TODO: remove or write better, since not the best way to test randomness
 test('100 rounds of typical operation does not lead to invariant exception', () => {
     maxNeighborsPerNodeArray.forEach((maxNeighborsPerNode) => {
