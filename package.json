@@ -1,0 +1,33 @@
+{
+  "name": "streamr-test-utils",
+  "version": "1.0.0",
+  "description": "a collection of Node.js utilities for dealing with asynchronous behavior in jest/mocha tests",
+  "main": "utils.js",
+  "scripts": {
+    "test": "echo 'not implemented' & exit 1"
+  },
+  "keywords": [
+    "testing",
+    "streamr",
+    "asynchronous"
+  ],
+  "homepage": "https://github.com/streamr-dev/streamr-test-utils",
+  "bugs": {
+    "url": "https://github.com/streamr-dev/streamr-test-utils/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:streamr-dev/streamr-test-utils.git"
+  },
+  "author": "Streamr <contact@streamr.com>",
+  "license": "AGPL-3.0",
+  "dependencies": {
+    "p-event": "^4.1.0"
+  },
+  "devDependencies": {
+    "eslint": "^6.1.0",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-config-streamr-nodejs": "^1.1.0",
+    "eslint-plugin-import": "^2.18.2"
+  }
+}
