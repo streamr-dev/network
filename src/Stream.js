@@ -49,4 +49,12 @@ module.exports = class Stream {
     getName() {
         return this.name
     }
+
+    getId() {
+        return this.id
+    }
+
+    getPartition() {
+        return this.partition
+    }
 }

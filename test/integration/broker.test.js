@@ -3,6 +3,7 @@ const StreamrClient = require('streamr-client')
 const fetch = require('node-fetch')
 
 const createBroker = require('../../src/broker')
+const { wait, waitForCondition } = require('../util')
 
 const httpPort1 = 12341
 const httpPort2 = 12342
@@ -17,30 +18,6 @@ const trackerPort = 12370
 
 // The index for content/body/payload in array response of HTTP resend requests
 const CONTENT_IDX_IN_ARRAY = 5
-
-// Copy-paste from network, should maybe consider packaging into library?
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const waitForCondition = (conditionFn, timeout = 4500, retryInterval = 100) => {
-    if (conditionFn()) {
-        return Promise.resolve()
-    }
-    return new Promise((resolve, reject) => {
-        const refs = {}
-
-        refs.timeOut = setTimeout(() => {
-            clearInterval(refs.interval)
-            reject(new Error('waitForCondition: timed out before condition became true'))
-        }, timeout)
-
-        refs.interval = setInterval(() => {
-            if (conditionFn()) {
-                clearTimeout(refs.timeOut)
-                clearInterval(refs.interval)
-                resolve()
-            }
-        }, retryInterval)
-    })
-}
 
 function startBroker(id, httpPort, wsPort, networkPort, enableCassandra) {
     return createBroker({

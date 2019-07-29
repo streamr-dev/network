@@ -1,7 +1,7 @@
 const events = require('events')
 
 const debug = require('debug')('streamr:WebsocketServer')
-const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
+const { ControlLayer } = require('streamr-client-protocol')
 
 const HttpError = require('../errors/HttpError')
 const VolumeLogger = require('../VolumeLogger')
@@ -18,6 +18,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         streamFetcher,
         publisher,
         volumeLogger = new VolumeLogger(0),
+        subscriptionManager,
         partitionFn = partition,
     ) {
         super()
@@ -29,6 +30,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.volumeLogger = volumeLogger
         this.streams = new StreamStateManager()
         this.fieldDetector = new FieldDetector(streamFetcher)
+        this.subscriptionManager = subscriptionManager
 
         this.requestHandlersByMessageType = {
             [ControlLayer.SubscribeRequest.TYPE]: this.handleSubscribeRequest,
@@ -276,7 +278,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 // Subscribe now if the stream is not already subscribed or subscribing
                 if (!stream.isSubscribed() && !stream.isSubscribing()) {
                     stream.setSubscribing()
-                    this.networkNode.subscribe(request.streamId, request.streamPartition)
+                    this.subscriptionManager.subscribe(request.streamId, request.streamPartition)
                     stream.setSubscribed()
 
                     stream.addConnection(connection)
@@ -326,7 +328,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     'checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.',
                     request.streamId, request.streamPartition
                 )
-                this.networkNode.unsubscribe(request.streamId, request.streamPartition)
+                this.subscriptionManager.unsubscribe(request.streamId, request.streamPartition)
                 this.streams.delete(request.streamId, request.streamPartition)
             }
 

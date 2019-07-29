@@ -31,6 +31,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         streamFetcher,
         publisher,
         volumeLogger = new VolumeLogger(0),
+        subscriptionManager,
         partitionFn = partition,
     ) {
         super()
@@ -41,6 +42,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.publisher = publisher
         this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
+        this.subscriptionManager = subscriptionManager
 
         this.streams = new StreamStateManager()
 
@@ -105,6 +107,10 @@ module.exports = class MqttServer extends events.EventEmitter {
 
                         connection.on('subscribe', (subscribePacket) => {
                             this.handleSubscribeRequest(connection, subscribePacket)
+                        })
+
+                        connection.on('unsubscribe', (unsubscribePacket) => {
+                            this.handleUnsubscribeRequest(connection, unsubscribePacket)
                         })
 
                         // timeout idle streams after X minutes
@@ -173,6 +179,20 @@ module.exports = class MqttServer extends events.EventEmitter {
             })
     }
 
+    handleUnsubscribeRequest(connection, packet) {
+        debug('unsubscribe request %o', packet)
+
+        const topic = packet.unsubscriptions[0]
+        const stream = this.streams.getByName(topic)
+
+        if (stream) {
+            this.subscriptionManager.unsubscribe(stream.getId(), stream.getPartition())
+            connection.removeStream(stream.getId(), stream.getPartition())
+
+            connection.client.unsuback(packet)
+        }
+    }
+
     handleSubscribeRequest(connection, packet) {
         debug('subscribe request %o', packet)
 
@@ -187,7 +207,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                         // Subscribe now if the stream is not already subscribed or subscribing
                         if (!newOrExistingStream.isSubscribed() && !newOrExistingStream.isSubscribing()) {
                             newOrExistingStream.setSubscribing()
-                            this.networkNode.subscribe(streamObj.id, 0)
+                            this.subscriptionManager.subscribe(streamObj.id, 0)
                             newOrExistingStream.setSubscribed()
 
                             newOrExistingStream.addConnection(connection)
@@ -220,6 +240,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                 messageId: 0,
                 unsubscriptions: [stream.getName()]
             }
+
             connection.client.unsubscribe(object)
         })
 

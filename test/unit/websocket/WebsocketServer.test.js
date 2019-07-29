@@ -6,7 +6,9 @@ const intoStream = require('into-stream')
 const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 
 const WebsocketServer = require('../../../src/websocket/WebsocketServer')
+const SubscriptionManager = require('../../../src/SubscriptionManager')
 const MockSocket = require('../test-helpers/MockSocket')
+const { waitForCondition } = require('../../util')
 
 const CONTROL_LAYER_VERSION = 1
 const MESSAGE_LAYER_VERSION = 30
@@ -18,6 +20,7 @@ describe('WebsocketServer', () => {
     let publisher
     let networkNode
     let mockSocket
+    let subscriptionManager
 
     const myStream = {
         id: 'streamId',
@@ -133,6 +136,8 @@ describe('WebsocketServer', () => {
                 .resolves(),
         }
 
+        subscriptionManager = new SubscriptionManager(networkNode)
+
         // Mock websocket lib
         wsMock = new events.EventEmitter()
         wsMock.close = () => {}
@@ -141,7 +146,9 @@ describe('WebsocketServer', () => {
         mockSocket = new MockSocket(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
 
         // Create the server instance
-        server = new WebsocketServer(wsMock, networkNode, streamFetcher, publisher, undefined, () => 0)
+        server = new WebsocketServer(
+            wsMock, networkNode, streamFetcher, publisher, undefined, subscriptionManager, () => 0
+        )
     })
 
     afterEach(() => {
@@ -178,7 +185,7 @@ describe('WebsocketServer', () => {
             wsMock.emit('connection', mockSocket, mockSocket.getRequest())
         })
 
-        it('sends a resending message before starting a resend', (done) => {
+        it('sends a resending message before starting a resend', async (done) => {
             networkNode.requestResendLast.mockReturnValue(intoStream.object([
                 ControlLayer.UnicastMessage.create('subId', streamMessagev30)
             ]))
@@ -189,10 +196,10 @@ describe('WebsocketServer', () => {
                 request.subId,
             )
             mockSocket.receive(request)
-            setTimeout(() => {
-                assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize())
-                done()
-            })
+
+            await waitForCondition(() => mockSocket.sentMessages[0] !== undefined)
+            assert.deepEqual(mockSocket.sentMessages[0], expectedResponse.serialize())
+            done()
         })
 
         it('adds the subscription id to messages', (done) => {
