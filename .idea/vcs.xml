@@ -2,5 +2,7 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/examples/node/node_modules/streamr-client" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/examples/node/node_modules/streamr-client-protocol" vcs="Git" />
   </component>
 </project>

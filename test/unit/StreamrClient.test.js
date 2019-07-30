@@ -271,7 +271,10 @@ describe('StreamrClient', () => {
                 })
                 sub.once('subscribed', () => {
                     setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, sub.id)), 200)
-                    setTimeout(done, STORAGE_DELAY + 200)
+                    setTimeout(() => {
+                        sub.stop()
+                        done()
+                    }, STORAGE_DELAY + 200)
                 })
                 connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 1, 'session-token'))
                 connection.emitMessage(SubscribeResponse.create(sub.streamId))
@@ -304,7 +307,11 @@ describe('StreamrClient', () => {
                 connection.expect(ResendLastRequest.create(sub2.streamId, sub2.streamPartition, sub2.id, 1, 'session-token'))
 
                 connection.emitMessage(SubscribeResponse.create(sub1.streamId))
-                setTimeout(done, STORAGE_DELAY + 400)
+                setTimeout(() => {
+                    sub1.stop()
+                    sub2.stop()
+                    done()
+                }, STORAGE_DELAY + 400)
             }, STORAGE_DELAY + 1000)
         })
 
@@ -646,7 +653,10 @@ describe('StreamrClient', () => {
                     })
                     sub.once('subscribed', () => {
                         setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, sub.id)), 200)
-                        setTimeout(done, STORAGE_DELAY + 200)
+                        setTimeout(() => {
+                            sub.stop()
+                            done()
+                        }, STORAGE_DELAY + 200)
                     })
                     connection.expect(ResendFromRequest.create(
                         sub.streamId, sub.streamPartition, sub.id, ref.toArray(),
@@ -663,7 +673,10 @@ describe('StreamrClient', () => {
                     })
                     sub.once('subscribed', () => {
                         setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, sub.id)), 200)
-                        setTimeout(done, STORAGE_DELAY + 200)
+                        setTimeout(() => {
+                            sub.stop()
+                            done()
+                        }, STORAGE_DELAY + 200)
                     })
                     connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
@@ -678,7 +691,10 @@ describe('StreamrClient', () => {
                     connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
                     connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
-                    setTimeout(done, STORAGE_DELAY + 200)
+                    setTimeout(() => {
+                        sub.stop()
+                        done()
+                    }, STORAGE_DELAY + 200)
                 }, STORAGE_DELAY + 1000)
 
                 it('throws if multiple resend options are given', () => {

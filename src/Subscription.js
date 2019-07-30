@@ -5,6 +5,7 @@ import { Errors } from 'streamr-client-protocol'
 import InvalidSignatureError from './errors/InvalidSignatureError'
 import VerificationFailedError from './errors/VerificationFailedError'
 import EncryptionUtil from './EncryptionUtil'
+import OrderingUtil from './OrderingUtil'
 
 const debug = debugFactory('StreamrClient::Subscription')
 
@@ -32,15 +33,8 @@ class Subscription extends EventEmitter {
         this.id = generateSubscriptionId()
         this.streamId = streamId
         this.streamPartition = streamPartition
-        this.callback = callback
-        this.resendOptions = options || {}
-        this.queue = []
-        this.state = Subscription.State.unsubscribed
         this.resending = false
-        this.lastReceivedMsgRef = {}
-        this.gaps = {}
-        this.gapFillTimeout = gapFillTimeout
-        this.groupKeys = groupKeys || {}
+        this.resendOptions = options || {}
         if (this.resendOptions.from != null && this.resendOptions.last != null) {
             throw new Error(`Multiple resend options active! Please use only one: ${JSON.stringify(this.resendOptions)}`)
         }
@@ -52,6 +46,22 @@ class Subscription extends EventEmitter {
         if (this.resendOptions.from == null && this.resendOptions.to != null) {
             throw new Error('"from" must be defined as well if "to" is defined.')
         }
+        this.initialResendDone = Object.keys(this.resendOptions).length === 0
+        this.state = Subscription.State.unsubscribed
+        this.groupKeys = groupKeys || {}
+        this.queue = []
+        this.orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
+            const newGroupKey = EncryptionUtil.decryptStreamMessage(orderedMessage, this.groupKeys[orderedMessage.getPublisherId()])
+            if (newGroupKey) {
+                this.groupKeys[orderedMessage.getPublisherId()] = newGroupKey
+            }
+            callback(orderedMessage.getParsedContent(), orderedMessage)
+            if (orderedMessage.isByeMessage()) {
+                this.emit('done')
+            }
+        }, (from, to, publisherId, msgChainId) => {
+            this.emit('gap', from, to, publisherId, msgChainId)
+        }, gapFillTimeout)
 
         /** * Message handlers ** */
 
@@ -72,20 +82,7 @@ class Subscription extends EventEmitter {
     }
 
     _clearGaps() {
-        Object.keys(this.gaps).forEach((key) => {
-            clearInterval(this.gaps[key])
-            delete this.gaps[key]
-        })
-    }
-
-    /**
-     * Gap check: If the msg contains the previousMsgRef, and we know the lastReceivedMsgRef,
-     * and the previousMsgRef is larger than what has been received, we have a gap!
-     */
-    checkForGap(previousMsgRef, key) {
-        return previousMsgRef != null
-            && this.lastReceivedMsgRef[key] !== undefined
-            && previousMsgRef.compareTo(this.lastReceivedMsgRef[key]) === 1
+        this.orderingUtil.clearGaps()
     }
 
     stop() {
@@ -113,7 +110,7 @@ class Subscription extends EventEmitter {
 
     async handleResentMessage(msg, verifyFn) {
         return this._catchAndEmitErrors(() => {
-            if (!this.resending) {
+            if (!this.isResending()) {
                 throw new Error(`There is no resend in progress, but received resent message ${msg.serialize()}`)
             } else {
                 const handleMessagePromise = this._handleMessage(msg, verifyFn, true)
@@ -125,7 +122,7 @@ class Subscription extends EventEmitter {
 
     async handleResending(response) {
         return this._catchAndEmitErrors(() => {
-            if (!this.resending) {
+            if (!this.isResending()) {
                 throw new Error(`There should be no resend in progress, but received ResendResponseResending message ${response.serialize()}`)
             }
             this.emit('resending', response)
@@ -134,7 +131,7 @@ class Subscription extends EventEmitter {
 
     async handleResent(response) {
         return this._catchAndEmitErrors(async () => {
-            if (!this.resending) {
+            if (!this.isResending()) {
                 throw new Error(`There should be no resend in progress, but received ResendResponseResent message ${response.serialize()}`)
             }
 
@@ -147,7 +144,7 @@ class Subscription extends EventEmitter {
                 try {
                     this.emit('resent', response)
                 } finally {
-                    await this._finishResend()
+                    this._finishResend()
                 }
             })
         })
@@ -155,21 +152,22 @@ class Subscription extends EventEmitter {
 
     async handleNoResend(response) {
         return this._catchAndEmitErrors(async () => {
-            if (!this.resending) {
+            if (!this.isResending()) {
                 throw new Error(`There should be no resend in progress, but received ResendResponseNoResend message ${response.serialize()}`)
             }
             try {
                 this.emit('no_resend', response)
             } finally {
-                await this._finishResend()
+                this._finishResend()
             }
         })
     }
 
-    async _finishResend() {
+    _finishResend() {
         this._lastMessageHandlerPromise = null
         this.setResending(false)
-        await this.checkQueue()
+        this.initialResendDone = true
+        this.checkQueue()
     }
 
     async _handleMessage(msg, verifyFn, isResend = false) {
@@ -193,114 +191,28 @@ class Subscription extends EventEmitter {
             throw new InvalidSignatureError(msg)
         }
 
-        const key = msg.getPublisherId() + msg.messageId.msgChainId
-
         this.emit('message received')
-
-        // TODO: check this.options.resend_last ?
-        // If resending, queue broadcast messages
-        if (this.resending && !isResend) {
+        // we queue real-time messages until the initial resend (subscribe with resend options) is completed.
+        if (!this.initialResendDone && !isResend) {
             this.queue.push(msg)
-        } else if (this.checkForGap(msg.prevMsgRef, key) && !this.resending) {
-            // Queue the message to be processed after resend
-            this.queue.push(msg)
-
-            const from = this.lastReceivedMsgRef[key] // cannot know the first missing message so there will be a duplicate received
-            const fromObject = {
-                timestamp: from.timestamp,
-                sequenceNumber: from.sequenceNumber,
-            }
-            const to = msg.prevMsgRef
-            const toObject = {
-                timestamp: to.timestamp,
-                sequenceNumber: to.sequenceNumber,
-            }
-            debug('Gap detected, requesting resend for stream %s from %o to %o', this.streamId, from, to)
-            this.emit('gap', fromObject, toObject, msg.getPublisherId(), msg.messageId.msgChainId)
-
-            // If for some reason the missing messages are not received, the gap filling request is resent every 'gapFillTimeout' seconds
-            // until a message is received, at which point the gap will be filled or
-            // a new different gap request will be sent and resent every 'gapFillTimeout' seconds.
-            clearInterval(this.gaps[key])
-            this.gaps[key] = setInterval(() => {
-                if (this.lastReceivedMsgRef[key].compareTo(to) === -1) {
-                    this.emit('gap', fromObject, toObject, msg.getPublisherId(), msg.messageId.msgChainId)
-                } else {
-                    clearInterval(this.gaps[key])
-                }
-            }, this.gapFillTimeout)
         } else {
-            const messageRef = msg.getMessageRef()
-            let res
-            if (this.lastReceivedMsgRef[key] !== undefined) {
-                res = messageRef.compareTo(this.lastReceivedMsgRef[key])
-            }
-
-            if (res <= 0) {
-                // Prevent double-processing of messages for any reason
-                debug(
-                    'Sub %s already received message: %o, lastReceivedMsgRef: %d. Ignoring message.', this.id, messageRef,
-                    this.lastReceivedMsgRef[key],
-                )
-            } else {
-                // Normal case where prevMsgRef == null || lastReceivedMsgRef == null || prevMsgRef === lastReceivedMsgRef
-                this.lastReceivedMsgRef[key] = messageRef
-                const newGroupKey = EncryptionUtil.decryptStreamMessage(msg, this.groupKeys[msg.getPublisherId()])
-                if (newGroupKey) {
-                    this.groupKeys[msg.getPublisherId()] = newGroupKey
-                }
-                this.callback(msg.getParsedContent(), msg)
-                if (msg.isByeMessage()) {
-                    this.emit('done')
-                }
-            }
+            this.orderingUtil.add(msg)
         }
     }
 
-    async checkQueue() {
+    checkQueue() {
         if (this.queue.length) {
             debug('Attempting to process %d queued messages for stream %s', this.queue.length, this.streamId)
 
             const originalQueue = this.queue
             this.queue = []
 
-            // Queued messages are already verified, so pass true as the verificationPromise
-            const promises = originalQueue.map((msg) => this._handleMessage(msg, () => true, false))
-            await Promise.all(promises)
+            originalQueue.forEach((msg) => this.orderingUtil.add(msg))
         }
     }
 
     hasResendOptions() {
         return this.resendOptions.from || this.resendOptions.last > 0
-    }
-
-    /**
-     * Resend needs can change if messages have already been received.
-     * This function always returns the effective resend options:
-     *
-     * If messages have been received:
-     * - 'from' option becomes 'from' option the latest received message
-     * - 'last' option stays the same
-     */
-    getEffectiveResendOptions() {
-        const key = this.resendOptions.publisherId + this.resendOptions.msgChainId
-        if (this.hasReceivedMessagesFrom(key) && this.hasResendOptions()
-            && (this.resendOptions.from)) {
-            return {
-                // cannot know the first missing message so there will be a duplicate received
-                from: {
-                    timestamp: this.lastReceivedMsgRef[key].timestamp,
-                    sequenceNumber: this.lastReceivedMsgRef[key].sequenceNumber,
-                },
-                publisherId: this.resendOptions.publisherId,
-                msgChainId: this.resendOptions.msgChainId,
-            }
-        }
-        return this.resendOptions
-    }
-
-    hasReceivedMessagesFrom(key) {
-        return this.lastReceivedMsgRef[key] !== undefined
     }
 
     getState() {
@@ -327,13 +239,8 @@ class Subscription extends EventEmitter {
          * If parsing the (expected) message failed, we should still mark it as received. Otherwise the
          * gap detection will think a message was lost, and re-request the failing message.
          */
-        let key
-        if (err.streamMessage) {
-            key = err.streamMessage.getPublisherId() + err.streamMessage.messageId.msgChainId
-        }
-
-        if (err instanceof Errors.InvalidJsonError && !this.checkForGap(err.streamMessage.prevMsgRef, key)) {
-            this.lastReceivedMsgRef[key] = err.streamMessage.getMessageRef()
+        if (err instanceof Errors.InvalidJsonError && err.streamMessage) {
+            this.orderingUtil.markMessageExplicitly(err.streamMessage)
         }
         this.emit('error', err)
     }

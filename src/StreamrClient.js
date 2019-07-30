@@ -599,7 +599,7 @@ export default class StreamrClient extends EventEmitter {
 
     async _requestResend(sub, resendOptions) {
         sub.setResending(true)
-        const options = resendOptions || sub.getEffectiveResendOptions()
+        const options = resendOptions || sub.resendOptions
         const sessionToken = await this.session.getSessionToken()
         // don't bother requesting resend if not connected
         if (!this.isConnected()) { return }
