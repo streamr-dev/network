@@ -1,12 +1,12 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
-import { Errors } from 'streamr-client-protocol'
+import { Errors, Utils } from 'streamr-client-protocol'
 
 import InvalidSignatureError from './errors/InvalidSignatureError'
 import VerificationFailedError from './errors/VerificationFailedError'
 import EncryptionUtil from './EncryptionUtil'
-import OrderingUtil from './OrderingUtil'
 
+const { OrderingUtil } = Utils
 const debug = debugFactory('StreamrClient::Subscription')
 
 let subId = 0
