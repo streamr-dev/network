@@ -66,6 +66,7 @@ import StreamMessageV31 from './protocol/message_layer/StreamMessageV31'
 
 import InvalidJsonError from './errors/InvalidJsonError'
 import UnsupportedVersionError from './errors/UnsupportedVersionError'
+import GapFillFailedError from './errors/GapFillFailedError'
 import TimestampUtil from './utils/TimestampUtil'
 import OrderingUtil from './utils/OrderingUtil'
 
@@ -130,6 +131,7 @@ export const MessageLayer = {
 export const Errors = {
     InvalidJsonError,
     UnsupportedVersionError,
+    GapFillFailedError,
 }
 
 export const Utils = {

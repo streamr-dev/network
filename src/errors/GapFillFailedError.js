@@ -1,4 +1,4 @@
-module.exports = class GapFillFailedError extends Error {
+export default class GapFillFailedError extends Error {
     constructor(from, to, publisherId, msgChainId, nbTrials) {
         super(`Failed to fill gap between ${from.serialize()} and ${to.serialize()}`
             + ` for ${publisherId}-${msgChainId} after ${nbTrials} trials`)
