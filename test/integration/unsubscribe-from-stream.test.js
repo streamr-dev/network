@@ -1,6 +1,8 @@
+const { wait, waitForEvent } = require('streamr-test-utils')
+
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
-const { wait, waitForEvent, LOCALHOST } = require('../util')
+const { LOCALHOST } = require('../util')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 
 describe('node unsubscribing from a stream', () => {

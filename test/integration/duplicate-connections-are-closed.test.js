@@ -1,4 +1,5 @@
-const { waitForEvent } = require('../util')
+const { waitForEvent } = require('streamr-test-utils')
+
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 
 describe('duplicate connections are closed', () => {

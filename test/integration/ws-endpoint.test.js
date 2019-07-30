@@ -1,4 +1,6 @@
-const { LOCALHOST, waitForEvent } = require('../util')
+const { waitForEvent } = require('streamr-test-utils')
+
+const { LOCALHOST } = require('../util')
 const endpointEvents = require('../../src/connection/WsEndpoint').events
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
 

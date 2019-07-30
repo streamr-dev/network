@@ -1,6 +1,8 @@
+const { wait, waitForEvent } = require('streamr-test-utils')
+
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
-const { wait, waitForEvent, LOCALHOST } = require('../util')
+const { LOCALHOST } = require('../util')
 
 /**
  * This test verifies that on receiving a message, the receiver will not propagate the message to the sender as they

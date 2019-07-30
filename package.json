@@ -66,6 +66,6 @@
     "eslint-plugin-import-order": "2.1.4",
     "into-stream": "^5.1.0",
     "jest": "^24.7.1",
-    "p-event": "^4.1.0"
+    "streamr-test-utils": "^1.0.0"
   }
 }

@@ -1,7 +1,9 @@
+const { waitForEvent } = require('streamr-test-utils')
+
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const { LOCALHOST, waitForEvent } = require('../util')
+const { LOCALHOST } = require('../util')
 
 describe('tracker assigns storage node to streams', () => {
     let tracker

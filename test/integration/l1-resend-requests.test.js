@@ -1,8 +1,9 @@
 const intoStream = require('into-stream')
 const { UnicastMessage } = require('streamr-client-protocol').ControlLayer
+const { waitForStreamToEnd } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { waitForStreamToEnd, LOCALHOST } = require('../util')
+const { LOCALHOST } = require('../util')
 
 const typesOfStreamItems = async (stream) => {
     const arr = await waitForStreamToEnd(stream)

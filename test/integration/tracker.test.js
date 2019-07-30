@@ -1,5 +1,7 @@
+const { waitForEvent } = require('streamr-test-utils')
+
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { LOCALHOST, waitForEvent } = require('../../test/util')
+const { LOCALHOST } = require('../../test/util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 
 describe('check tracker, nodes and statuses from nodes', () => {

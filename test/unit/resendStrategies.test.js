@@ -2,6 +2,7 @@ const { EventEmitter } = require('events')
 
 const intoStream = require('into-stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
+const { waitForStreamToEnd } = require('streamr-test-utils')
 
 const { AskNeighborsResendStrategy,
     StorageResendStrategy,
@@ -10,7 +11,6 @@ const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
-const { waitForStreamToEnd } = require('../util')
 
 const { StreamMessage } = MessageLayer
 

@@ -1,7 +1,8 @@
 const { MessageLayer } = require('streamr-client-protocol')
+const { waitForCondition } = require('streamr-test-utils')
 
 const { startTracker, startNetworkNode } = require('../../src/composition')
-const { waitForCondition, LOCALHOST } = require('../../test/util')
+const { LOCALHOST } = require('../../test/util')
 
 const { StreamMessage } = MessageLayer
 

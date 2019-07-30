@@ -1,6 +1,6 @@
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
+const { waitForEvent } = require('streamr-test-utils')
 
-const { waitForEvent } = require('../util')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
