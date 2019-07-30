@@ -80,9 +80,9 @@ module.exports = class Tracker extends EventEmitter {
         this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)
     }
 
-    stop(cb) {
+    stop() {
         this.debug('stopping tracker')
-        return this.protocols.trackerServer.stop(cb)
+        return this.protocols.trackerServer.stop()
     }
 
     getAddress() {

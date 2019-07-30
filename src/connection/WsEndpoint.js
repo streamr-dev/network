@@ -240,13 +240,21 @@ class WsEndpoint extends EventEmitter {
         return p
     }
 
-    stop(callback = () => {}) {
+    stop() {
         clearInterval(this.checkConnectionsInterval)
         this.connections.forEach((connection) => {
             connection.terminate()
         })
 
-        return this.wss.close(callback)
+        return new Promise((resolve, reject) => {
+            this.wss.close((err) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve()
+                }
+            })
+        })
     }
 
     isConnected(address) {

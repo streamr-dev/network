@@ -20,8 +20,8 @@ class TrackerNode extends BasicProtocol {
         return this.endpoint.send(trackerAddress, encoder.findStorageNodesMessage(streamId))
     }
 
-    stop(cb) {
-        this.endpoint.stop(cb)
+    stop() {
+        this.endpoint.stop()
     }
 
     onMessageReceived(message) {

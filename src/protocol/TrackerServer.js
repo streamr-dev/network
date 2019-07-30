@@ -26,8 +26,8 @@ class TrackerServer extends BasicProtocol {
         return this.endpoint.getAddress()
     }
 
-    stop(cb) {
-        return this.endpoint.stop(cb)
+    stop() {
+        return this.endpoint.stop()
     }
 
     onPeerConnected(peerId) {
