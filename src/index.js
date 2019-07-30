@@ -67,6 +67,7 @@ import StreamMessageV31 from './protocol/message_layer/StreamMessageV31'
 import InvalidJsonError from './errors/InvalidJsonError'
 import UnsupportedVersionError from './errors/UnsupportedVersionError'
 import TimestampUtil from './utils/TimestampUtil'
+import OrderingUtil from './utils/OrderingUtil'
 
 export const ControlLayer = {
     BroadcastMessage,
@@ -133,6 +134,7 @@ export const Errors = {
 
 export const Utils = {
     TimestampUtil,
+    OrderingUtil,
 }
 
 export default {
