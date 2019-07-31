@@ -390,7 +390,7 @@ export default class StreamrClient extends EventEmitter {
         // Create the Subscription object and bind handlers
         const sub = new Subscription(
             options.stream, options.partition || 0, callback, options.resend,
-            this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout,
+            this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter,
         )
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {

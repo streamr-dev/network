@@ -16,10 +16,14 @@ function generateSubscriptionId() {
     return id.toString()
 }
 
-const DEFAULT_GAPFILL_TIMEOUT = 5000
+const DEFAULT_PROPAGATION_TIMEOUT = 5000
+const DEFAULT_RESEND_TIMEOUT = 5000
 
 class Subscription extends EventEmitter {
-    constructor(streamId, streamPartition, callback, options, groupKeys, gapFillTimeout = DEFAULT_GAPFILL_TIMEOUT) {
+    constructor(
+        streamId, streamPartition, callback, options, groupKeys,
+        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT, resendTimeout = DEFAULT_RESEND_TIMEOUT,
+    ) {
         super()
 
         if (!streamId) {
@@ -61,7 +65,7 @@ class Subscription extends EventEmitter {
             }
         }, (from, to, publisherId, msgChainId) => {
             this.emit('gap', from, to, publisherId, msgChainId)
-        }, gapFillTimeout)
+        }, propagationTimeout, resendTimeout)
 
         /** * Message handlers ** */
 

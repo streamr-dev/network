@@ -226,15 +226,17 @@ describe('Subscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100)
+                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100, 100)
                 sub.on('gap', (from, to, publisherId) => {
                     assert.equal(from.timestamp, 1) // cannot know the first missing message so there will be a duplicate received
                     assert.equal(from.sequenceNumber, 1)
                     assert.equal(to.timestamp, 3)
                     assert.equal(to.sequenceNumber, 0)
                     assert.equal(publisherId, 'publisherId')
-                    sub.stop()
-                    done()
+                    setTimeout(() => {
+                        sub.stop()
+                        done()
+                    }, 100)
                 })
 
                 sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
@@ -245,7 +247,7 @@ describe('Subscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100)
+                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100, 100)
                 sub.on('gap', (from, to, publisherId) => {
                     sub.on('gap', (from2, to2, publisherId2) => {
                         assert.deepStrictEqual(from, from2)
@@ -266,7 +268,7 @@ describe('Subscription', () => {
                 const msg3 = createMsg(3, undefined, 2)
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100)
+                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100, 100)
                 sub.on('gap', () => {
                     sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
                     sub.handleBroadcastMessage(msg3, sinon.stub().resolves(true)).then(() => {
@@ -286,7 +288,7 @@ describe('Subscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100)
+                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100, 100)
                 sub.once('gap', () => {
                     sub.emit('unsubscribed')
                     sub.on('gap', () => { throw new Error('should not emit second gap') })
@@ -304,7 +306,7 @@ describe('Subscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100)
+                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100, 100)
                 sub.once('gap', () => {
                     sub.emit('disconnected')
                     sub.on('gap', () => { throw new Error('should not emit second gap') })
@@ -335,15 +337,17 @@ describe('Subscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(1, 4, 1, 3)
 
-                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100)
+                const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100, 100)
                 sub.on('gap', (from, to, publisherId) => {
                     assert.equal(from.timestamp, 1) // cannot know the first missing message so there will be a duplicate received
                     assert.equal(from.sequenceNumber, 1)
                     assert.equal(to.timestamp, 1)
                     assert.equal(to.sequenceNumber, 3)
                     assert.equal(publisherId, 'publisherId')
-                    sub.stop()
-                    done()
+                    setTimeout(() => {
+                        sub.stop()
+                        done()
+                    }, 100)
                 })
 
                 sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
@@ -504,7 +508,7 @@ describe('Subscription', () => {
         })
 
         it('if an InvalidJsonError AND a gap occur, does not mark it as received and emits gap at the next message', async (done) => {
-            const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100)
+            const sub = new Subscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, {}, 100, 100)
 
             sub.on('gap', (from, to, publisherId) => {
                 assert.equal(from.timestamp, 1) // cannot know the first missing message so there will be a duplicate received
@@ -512,8 +516,10 @@ describe('Subscription', () => {
                 assert.equal(to.timestamp, 3)
                 assert.equal(to.sequenceNumber, 0)
                 assert.equal(publisherId, 'publisherId')
-                sub.stop()
-                done()
+                setTimeout(() => {
+                    sub.stop()
+                    done()
+                }, 100)
             })
 
             const msg1 = msg
