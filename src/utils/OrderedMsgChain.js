@@ -46,7 +46,7 @@ export default class OrderedMsgChain extends EventEmitter {
             this._process(unorderedStreamMessage)
             this._checkQueue()
         } else {
-            if (!this.gap) {
+            if (!this.firstGap && !this.nextGaps) {
                 this._scheduleGap()
             }
             this.queue.push(unorderedStreamMessage)
@@ -62,9 +62,10 @@ export default class OrderedMsgChain extends EventEmitter {
     }
 
     clearGap() {
-        clearTimeout(this.gap)
-        clearInterval(this.gap)
-        this.gap = undefined
+        clearInterval(this.nextGaps)
+        this.nextGaps = undefined
+        clearTimeout(this.firstGap)
+        this.firstGap = undefined
     }
 
     _isNextMessage(unorderedStreamMessage) {
@@ -97,10 +98,12 @@ export default class OrderedMsgChain extends EventEmitter {
 
     _scheduleGap() {
         this.gapRequestCount = 0
-        this.gap = setTimeout(() => {
+        this.firstGap = setTimeout(() => {
             this._requestGapFill()
-            this.gap = setInterval(() => {
-                this._requestGapFill()
+            this.nextGaps = setInterval(() => {
+                if (this.firstGap) {
+                    this._requestGapFill()
+                }
             }, this.resendTimeout)
         }, this.propagationTimeout)
     }

@@ -109,6 +109,20 @@ describe('OrderedMsgChain', () => {
         util.add(msg2)
         assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4, msg5])
     })
+    it('does not call the gap handler a second time if explicitly cleared', (done) => {
+        let counter = 0
+        util = new OrderedMsgChain('publisherId', 'msgChainId', () => {}, () => {
+            if (counter === 0) {
+                counter += 1
+                util.clearGap()
+                setTimeout(done, 1000)
+            } else {
+                throw new Error('Unexpected call to the gap handler')
+            }
+        }, 100, 100)
+        util.add(msg1)
+        util.add(msg3)
+    })
     it('call the gap handler MAX_GAP_REQUESTS times and then throws', (done) => {
         let counter = 0
         util = new OrderedMsgChain('publisherId', 'msgChainId', () => {}, (from, to, publisherId, msgChainId) => {
