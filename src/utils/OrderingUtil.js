@@ -1,12 +1,13 @@
 import OrderedMsgChain from './OrderedMsgChain'
 
 export default class OrderingUtil {
-    constructor(streamId, streamPartition, inOrderHandler, gapHandler, gapFillTimeout) {
+    constructor(streamId, streamPartition, inOrderHandler, gapHandler, propagationTimeout, resendTimeout) {
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
-        this.gapFillTimeout = gapFillTimeout
+        this.propagationTimeout = propagationTimeout
+        this.resendTimeout = resendTimeout
         this.orderedChains = {}
     }
 
@@ -18,7 +19,10 @@ export default class OrderingUtil {
     _getChain(publisherId, msgChainId) {
         const key = publisherId + msgChainId
         if (!this.orderedChains[key]) {
-            this.orderedChains[key] = new OrderedMsgChain(publisherId, msgChainId, this.inOrderHandler, this.gapHandler, this.gapFillTimeout)
+            this.orderedChains[key] = new OrderedMsgChain(
+                publisherId, msgChainId, this.inOrderHandler, this.gapHandler,
+                this.propagationTimeout, this.resendTimeout,
+            )
         }
         return this.orderedChains[key]
     }
