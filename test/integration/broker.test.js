@@ -1,9 +1,9 @@
 const { startTracker } = require('@streamr/streamr-p2p-network')
 const StreamrClient = require('streamr-client')
 const fetch = require('node-fetch')
+const { wait, waitForCondition } = require('streamr-test-utils')
 
 const createBroker = require('../../src/broker')
-const { wait, waitForCondition } = require('../util')
 
 const httpPort1 = 12341
 const httpPort2 = 12342

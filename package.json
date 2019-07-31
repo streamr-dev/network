@@ -57,6 +57,7 @@
     "jest": "^24.8.0",
     "sinon": "^7.3.2",
     "stream-to-array": "^2.3.0",
+    "streamr-test-utils": "^1.0.0",
     "supertest": "^4.0.2"
   }
 }

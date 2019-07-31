@@ -4,11 +4,11 @@ const events = require('events')
 const sinon = require('sinon')
 const intoStream = require('into-stream')
 const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
+const { waitForCondition } = require('streamr-test-utils')
 
 const WebsocketServer = require('../../../src/websocket/WebsocketServer')
 const SubscriptionManager = require('../../../src/SubscriptionManager')
 const MockSocket = require('../test-helpers/MockSocket')
-const { waitForCondition } = require('../../util')
 
 const CONTROL_LAYER_VERSION = 1
 const MESSAGE_LAYER_VERSION = 30
