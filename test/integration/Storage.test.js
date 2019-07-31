@@ -1,6 +1,6 @@
 const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
-const { StreamMessage, StreamMessageV30, MessageRef } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 
 const { startCassandraStorage } = require('../../src/Storage')
 
@@ -107,16 +107,18 @@ describe('Storage', () => {
     })
 
     test('fetch last messages', async () => {
-        await storage.store(buildMsg(streamId, 10, 0, 0))
-        await storage.store(buildMsg(streamId, 10, 1000, 0))
-        await storage.store(buildMsg(streamId, 10, 2000, 0))
-        await storage.store(buildMsg(streamId, 10, 3000, 0))
-        await storage.store(buildMsg(streamId, 10, 3000, 3)) // 2nd
-        await storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher2')) // 1st
-        await storage.store(buildMsg(streamId, 10, 3000, 1))
-        await storage.store(buildMsg(streamId, 10, 4000, 0)) // 3rd
-        await storage.store(buildMsg(streamId, 666, 8000, 0))
-        await storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
+        await Promise.all([
+            storage.store(buildMsg(streamId, 10, 0, 0)),
+            storage.store(buildMsg(streamId, 10, 1000, 0)),
+            storage.store(buildMsg(streamId, 10, 2000, 0)),
+            storage.store(buildMsg(streamId, 10, 3000, 0)),
+            storage.store(buildMsg(streamId, 10, 3000, 3)), // 2nd
+            storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher2')), // 1st
+            storage.store(buildMsg(streamId, 10, 3000, 1)),
+            storage.store(buildMsg(streamId, 10, 4000, 0)), // 3rd
+            storage.store(buildMsg(streamId, 666, 8000, 0)),
+            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
+        ])
 
         const streamingResults = storage.requestLast(streamId, 10, 3)
         const results = await toArray(streamingResults)
@@ -129,16 +131,18 @@ describe('Storage', () => {
     })
 
     test('fetch messages starting from a timestamp,sequenceNo', async () => {
-        await storage.store(buildMsg(streamId, 10, 0, 0))
-        await storage.store(buildMsg(streamId, 10, 1000, 0))
-        await storage.store(buildMsg(streamId, 10, 2000, 0))
-        await storage.store(buildMsg(streamId, 10, 3000, 0)) // 1st
-        await storage.store(buildMsg(streamId, 10, 3000, 3)) // 4th
-        await storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher', '2')) // 3rd
-        await storage.store(buildMsg(streamId, 10, 3000, 1)) // 2nd
-        await storage.store(buildMsg(streamId, 10, 4000, 0)) // 5th
-        await storage.store(buildMsg(streamId, 666, 8000, 0))
-        await storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
+        await Promise.all([
+            storage.store(buildMsg(streamId, 10, 0, 0)),
+            storage.store(buildMsg(streamId, 10, 1000, 0)),
+            storage.store(buildMsg(streamId, 10, 2000, 0)),
+            storage.store(buildMsg(streamId, 10, 3000, 0)), // 1st
+            storage.store(buildMsg(streamId, 10, 3000, 3)), // 4th
+            storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher', '2')), // 3rd
+            storage.store(buildMsg(streamId, 10, 3000, 1)), // 2nd
+            storage.store(buildMsg(streamId, 10, 4000, 0)), // 5th
+            storage.store(buildMsg(streamId, 666, 8000, 0)),
+            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
+        ])
 
         const streamingResults = storage.requestFrom(streamId, 10, 3000, 0)
         const results = await toArray(streamingResults)
@@ -153,17 +157,19 @@ describe('Storage', () => {
     })
 
     test('fetch messages starting from a timestamp,sequenceNo for a given publisher', async () => {
-        await storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 1000, 0, 'publisher2'))
-        await storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3'))
-        await storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')) // 3rd
-        await storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher2'))
-        await storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')) // 1st
-        await storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1', '2')) // 2nd
-        await storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3'))
-        await storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1')) // 4th
-        await storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+        await Promise.all([
+            storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 1000, 0, 'publisher2')),
+            storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3')),
+            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')), // 3rd
+            storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher2')),
+            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')), // 1st
+            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1', '2')), // 2nd
+            storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3')),
+            storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1')), // 4th
+            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+        ])
 
         const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1')
         const results = await toArray(streamingResults)
@@ -177,17 +183,19 @@ describe('Storage', () => {
     })
 
     test('fetch messages starting from a timestamp,sequenceNo for a given publisher, msgChainId', async () => {
-        await storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 1000, 0, 'publisher2'))
-        await storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3'))
-        await storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')) // 2nd
-        await storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher2'))
-        await storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')) // 1st
-        await storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1', '2'))
-        await storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3'))
-        await storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1')) // 3rd
-        await storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1', '1'))
+        await Promise.all([
+            storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 1000, 0, 'publisher2')),
+            storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3')),
+            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')), // 2nd
+            storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher2')),
+            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')), // 1st
+            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1', '2')),
+            storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3')),
+            storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1')), // 3rd
+            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1', '1'))
+        ])
 
         const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1', '1')
         const results = await toArray(streamingResults)
@@ -200,16 +208,18 @@ describe('Storage', () => {
     })
 
     test('fetch messages in a timestamp,sequenceNo range', async () => {
-        await storage.store(buildMsg(streamId, 10, 0, 0))
-        await storage.store(buildMsg(streamId, 10, 1000, 0))
-        await storage.store(buildMsg(streamId, 10, 2000, 0)) // 1st
-        await storage.store(buildMsg(streamId, 10, 2500, 0)) // 2nd
-        await storage.store(buildMsg(streamId, 10, 2500, 2, 'publisher2')) // 4th
-        await storage.store(buildMsg(streamId, 10, 2500, 1)) // 3rd
-        await storage.store(buildMsg(streamId, 10, 3000, 0)) // 5th
-        await storage.store(buildMsg(streamId, 10, 4000, 0))
-        await storage.store(buildMsg(streamId, 666, 2500, 0))
-        await storage.store(buildMsg(`${streamId}-wrong`, 10, 3000, 0))
+        await Promise.all([
+            storage.store(buildMsg(streamId, 10, 0, 0)),
+            storage.store(buildMsg(streamId, 10, 1000, 0)),
+            storage.store(buildMsg(streamId, 10, 2000, 0)), // 1st
+            storage.store(buildMsg(streamId, 10, 2500, 0)), // 2nd
+            storage.store(buildMsg(streamId, 10, 2500, 2, 'publisher2')), // 4th
+            storage.store(buildMsg(streamId, 10, 2500, 1)), // 3rd
+            storage.store(buildMsg(streamId, 10, 3000, 0)), // 5th
+            storage.store(buildMsg(streamId, 666, 2500, 0)),
+            storage.store(buildMsg(streamId, 10, 4000, 0)),
+            storage.store(buildMsg(`${streamId}-wrong`, 10, 3000, 0))
+        ])
 
         const streamingResults = storage.requestRange(streamId, 10, 1500, 0, 3500, 0)
         const results = await toArray(streamingResults)
@@ -224,17 +234,19 @@ describe('Storage', () => {
     })
 
     test('fetch messages in a timestamp,seqeuenceNo range for a particular publisher', async () => {
-        await storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 1500, 0, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher1')) // 1st
-        await storage.store(buildMsg(streamId, 10, 2500, 0, 'publisher3'))
-        await storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')) // 2nd
-        await storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1', '2')) // 3rd
-        await storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher1')) // 5th
-        await storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')) // 4th
-        await storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1'))
-        await storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+        await Promise.all([
+            storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 1500, 0, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher1')), // 1st
+            storage.store(buildMsg(streamId, 10, 2500, 0, 'publisher3')),
+            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')), // 2nd
+            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1', '2')), // 3rd
+            storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher1')), // 5th
+            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')), // 4th
+            storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1')),
+            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+        ])
 
         const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, 'publisher1')
         const results = await toArray(streamingResults)
@@ -249,17 +261,19 @@ describe('Storage', () => {
     })
 
     test('fetch messages in a timestamp,seqeuenceNo range for a particular publisher, msgChainId', async () => {
-        await storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 1500, 0, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher1')) // 1st
-        await storage.store(buildMsg(streamId, 10, 2500, 0, 'publisher3'))
-        await storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')) // 2nd
-        await storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1', '2'))
-        await storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1'))
-        await storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher1')) // 4th
-        await storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')) // 3rd
-        await storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1'))
-        await storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+        await Promise.all([
+            storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 1500, 0, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher1')), // 1st
+            storage.store(buildMsg(streamId, 10, 2500, 0, 'publisher3')),
+            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')), // 2nd
+            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1', '2')),
+            storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')),
+            storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher1')), // 4th
+            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')), // 3rd
+            storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1')),
+            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+        ])
 
         const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, 'publisher1', '1')
         const results = await toArray(streamingResults)
