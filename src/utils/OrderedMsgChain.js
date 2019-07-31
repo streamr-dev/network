@@ -6,18 +6,27 @@ import GapFillFailedError from '../errors/GapFillFailedError'
 import MessageRef from '../protocol/message_layer/MessageRef'
 
 const debug = debugFactory('StreamrClient::OrderedMsgChain')
-const DEFAULT_GAPFILL_TIMEOUT = 5000
+// The time it takes to propagate messages in the network. If we detect a gap, we first wait this amount of time because the missing
+// messages might still be propagated.
+const DEFAULT_PROPAGATION_TIMEOUT = 5000
+// The round trip time it takes to request a resend and receive the answer. If the messages are still missing after the propagation
+// delay, we request a resend and periodically wait this amount of time before requesting it again.
+const DEFAULT_RESEND_TIMEOUT = 5000
 const MAX_GAP_REQUESTS = 10
 
 export default class OrderedMsgChain extends EventEmitter {
-    constructor(publisherId, msgChainId, inOrderHandler, gapHandler, gapFillTimeout = DEFAULT_GAPFILL_TIMEOUT) {
+    constructor(
+        publisherId, msgChainId, inOrderHandler, gapHandler,
+        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT, resendTimeout = DEFAULT_RESEND_TIMEOUT,
+    ) {
         super()
         this.publisherId = publisherId
         this.msgChainId = msgChainId
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
         this.lastReceivedMsgRef = null
-        this.gapFillTimeout = gapFillTimeout
+        this.propagationTimeout = propagationTimeout
+        this.resendTimeout = resendTimeout
         /* eslint-disable arrow-body-style */
         this.queue = new Heap((msg1, msg2) => {
             return msg1.getMessageRef().compareTo(msg2.getMessageRef())
@@ -53,6 +62,7 @@ export default class OrderedMsgChain extends EventEmitter {
     }
 
     clearGap() {
+        clearTimeout(this.gap)
         clearInterval(this.gap)
         this.gap = undefined
     }
@@ -87,17 +97,24 @@ export default class OrderedMsgChain extends EventEmitter {
 
     _scheduleGap() {
         this.gapRequestCount = 0
-        this.gap = setInterval(() => {
-            const from = new MessageRef(this.lastReceivedMsgRef.timestamp, this.lastReceivedMsgRef.sequenceNumber + 1)
-            const to = this.queue.peek().prevMsgRef
-            if (this.gapRequestCount < MAX_GAP_REQUESTS) {
-                this.gapRequestCount += 1
-                this.gapHandler(from, to, this.publisherId, this.msgChainId)
-            } else {
-                this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, MAX_GAP_REQUESTS))
-                this.clearGap()
-            }
-        }, this.gapFillTimeout)
+        this.gap = setTimeout(() => {
+            this._requestGapFill()
+            this.gap = setInterval(() => {
+                this._requestGapFill()
+            }, this.resendTimeout)
+        }, this.propagationTimeout)
+    }
+
+    _requestGapFill() {
+        const from = new MessageRef(this.lastReceivedMsgRef.timestamp, this.lastReceivedMsgRef.sequenceNumber + 1)
+        const to = this.queue.peek().prevMsgRef
+        if (this.gapRequestCount < MAX_GAP_REQUESTS) {
+            this.gapRequestCount += 1
+            this.gapHandler(from, to, this.publisherId, this.msgChainId)
+        } else {
+            this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, MAX_GAP_REQUESTS))
+            this.clearGap()
+        }
     }
 }
 OrderedMsgChain.MAX_GAP_REQUESTS = MAX_GAP_REQUESTS

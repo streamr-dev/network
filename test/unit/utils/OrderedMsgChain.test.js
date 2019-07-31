@@ -118,7 +118,7 @@ describe('OrderedMsgChain', () => {
             assert.strictEqual(publisherId, 'publisherId')
             assert.strictEqual(msgChainId, 'msgChainId')
             counter += 1
-        }, 100)
+        }, 100, 100)
         util.on('error', (e) => {
             assert.strictEqual(e.message, 'Failed to fill gap between [1,1] and [2,0] for publisherId-msgChainId'
                 + ` after ${OrderedMsgChain.MAX_GAP_REQUESTS} trials`)
