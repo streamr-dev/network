@@ -73,13 +73,14 @@ module.exports = async (config) => {
 
     // Start cassandra storage
     if (config.cassandra) {
-        storages.push(await startCassandraStorage(
-            config.cassandra.hosts,
-            'datacenter1',
-            config.cassandra.keyspace,
-            config.cassandra.username,
-            config.cassandra.password,
-        ))
+        storages.push(await startCassandraStorage({
+            contactPoints: config.cassandra.hosts,
+            localDataCenter: 'datacenter1',
+            keyspace: config.cassandra.keyspace,
+            username: config.cassandra.username,
+            password: config.cassandra.password,
+            useTtl: !config.network.isStorageNode
+        }))
     } else {
         console.info('Skipping Cassandra storage...')
     }

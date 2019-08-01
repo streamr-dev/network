@@ -10,11 +10,15 @@ const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload) '
     + 'VALUES (?, ?, ?, ?, ?, ?, ?)'
 
-const batchingStore = (cassandraClient) => new MicroBatchingStrategy({
+const INSERT_STATEMENT_WITH_TTL = 'INSERT INTO stream_data '
+    + '(id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload) '
+    + 'VALUES (?, ?, ?, ?, ?, ?, ?) USING TTL 259200' // 3 days
+
+const batchingStore = (cassandraClient, insertStatement) => new MicroBatchingStrategy({
     insertFn: (streamMessages) => {
         const queries = streamMessages.map((streamMessage) => {
             return {
-                query: INSERT_STATEMENT,
+                query: insertStatement,
                 params: [
                     streamMessage.getStreamId(),
                     streamMessage.getStreamPartition(),
@@ -32,9 +36,9 @@ const batchingStore = (cassandraClient) => new MicroBatchingStrategy({
     }
 })
 
-const individualStore = (cassandraClient) => ({
+const individualStore = (cassandraClient, insertStatement) => ({
     store: (streamMessage) => {
-        return cassandraClient.execute(INSERT_STATEMENT, [
+        return cassandraClient.execute(insertStatement, [
             streamMessage.getStreamId(),
             streamMessage.getStreamPartition(),
             streamMessage.getTimestamp(),
@@ -67,12 +71,13 @@ const parseRow = (row) => {
 }
 
 class Storage {
-    constructor(cassandraClient, isBatching = true) {
+    constructor(cassandraClient, useTtl, isBatching = true) {
         this.cassandraClient = cassandraClient
+        const insertStatement = useTtl ? INSERT_STATEMENT_WITH_TTL : INSERT_STATEMENT
         if (isBatching) {
-            this.storeStrategy = batchingStore(cassandraClient)
+            this.storeStrategy = batchingStore(cassandraClient, insertStatement)
         } else {
-            this.storeStrategy = individualStore(cassandraClient)
+            this.storeStrategy = individualStore(cassandraClient, insertStatement)
         }
     }
 
@@ -285,7 +290,15 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-const startCassandraStorage = async (contactPoints, localDataCenter, keyspace, username, password) => {
+const startCassandraStorage = async ({
+    contactPoints,
+    localDataCenter,
+    keyspace,
+    username,
+    password,
+    useTtl = true,
+    isBatching = true
+}) => {
     const authProvider = new cassandra.auth.PlainTextAuthProvider(username || '', password || '')
     const cassandraClient = new cassandra.Client({
         contactPoints,
@@ -300,7 +313,7 @@ const startCassandraStorage = async (contactPoints, localDataCenter, keyspace, u
         /* eslint-disable no-await-in-loop */
         try {
             await cassandraClient.connect().catch((err) => { throw err })
-            return new Storage(cassandraClient)
+            return new Storage(cassandraClient, useTtl, isBatching)
         } catch (err) {
             console.log('Cassandra not responding yet...')
             retryCount -= 1

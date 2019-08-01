@@ -51,7 +51,7 @@ function buildMsg(
     )
 }
 
-describe('Storage', () => {
+describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
     let storage
     let streamId
     let cassandraClient
@@ -70,7 +70,12 @@ describe('Storage', () => {
     })
 
     beforeEach(async () => {
-        storage = await startCassandraStorage(contactPoints, localDataCenter, keyspace)
+        storage = await startCassandraStorage({
+            contactPoints,
+            localDataCenter,
+            keyspace,
+            isBatching
+        })
         streamId = `stream-id-${Date.now()}-${streamIdx}`
         streamIdx += 1
     })
