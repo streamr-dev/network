@@ -123,10 +123,10 @@ class Node extends EventEmitter {
         return this.resendHandler.handleRequest(request, source)
     }
 
-    async onTrackerInstructionReceived(streamMessage) {
+    async onTrackerInstructionReceived(instructionMessage) {
         this.metrics.inc('onTrackerInstructionReceived')
-        const streamId = streamMessage.getStreamId()
-        const nodeAddresses = streamMessage.getNodeAddresses()
+        const streamId = instructionMessage.getStreamId()
+        const nodeAddresses = instructionMessage.getNodeAddresses()
         const nodeIds = []
 
         this.debug('received instructions for %s', streamId)
