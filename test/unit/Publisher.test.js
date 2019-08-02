@@ -43,29 +43,9 @@ describe('Publisher', () => {
             expect(() => publisher.publish(signedStream, streamMessageUnsigned)).toThrow(MessageNotSignedError)
         })
 
-        it('should call NetworkNode.send with correct values', (done) => {
-            networkNode.publish = (
-                streamId,
-                streamPartition,
-                ts,
-                sequenceNo,
-                publisherId,
-                msgChainId,
-                prevTs,
-                previousSequenceNo,
-                message,
-            ) => {
-                assert.equal(streamId, 'streamId')
-                assert.equal(streamPartition, 10)
-                assert.equal(ts, 135135135)
-                assert.equal(sequenceNo, 0)
-                assert.equal(publisherId, 'publisherId')
-                assert.equal(msgChainId, 'msgChainId')
-                assert.equal(prevTs, null)
-                assert.equal(previousSequenceNo, null)
-                assert.deepEqual(message, {
-                    hello: 'world',
-                })
+        it('should call NetworkNode.publish with correct values', (done) => {
+            networkNode.publish = (streamMessage) => {
+                expect(streamMessage).toEqual(streamMessageUnsigned)
                 done()
             }
             publisher.publish(stream, streamMessageUnsigned)

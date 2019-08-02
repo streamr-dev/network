@@ -14,16 +14,6 @@ module.exports = class Publisher {
 
         this.volumeLogger.logInput(streamMessage.getContent().length)
 
-        this.networkNode.publish(
-            streamMessage.getStreamId(),
-            streamMessage.getStreamPartition(),
-            streamMessage.getTimestamp(),
-            streamMessage.messageId.sequenceNumber,
-            streamMessage.getPublisherId() || '',
-            streamMessage.messageId.msgChainId || '',
-            streamMessage.prevMsgRef == null ? null : streamMessage.prevMsgRef.timestamp,
-            streamMessage.prevMsgRef == null ? null : streamMessage.prevMsgRef.sequenceNumber,
-            streamMessage.parsedContent,
-        )
+        this.networkNode.publish(streamMessage)
     }
 }
