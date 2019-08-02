@@ -1,3 +1,4 @@
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const { waitForCondition, waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
@@ -48,12 +49,34 @@ describe('duplicate message detection and avoidance', () => {
         }
 
         // Produce data
-        contactNode.publish('stream-id', 0, 100, 0, 'publisher-id', 'session-id', 90, 0, {
-            hello: 'world'
-        })
-        contactNode.publish('stream-id', 0, 120, 0, 'publisher-id', 'session-id', 100, 0, {
-            foo: 'bar'
-        })
+        contactNode.publish(StreamMessage.from({
+            streamId: 'stream-id',
+            streamPartition: 0,
+            timestamp: 100,
+            sequenceNumber: 0,
+            publisherId: 'publisher-id',
+            msgChainId: 'session-id',
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            content: {
+                hello: 'world'
+            },
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+        }))
+        contactNode.publish(StreamMessage.from({
+            streamId: 'stream-id',
+            streamPartition: 0,
+            timestamp: 120,
+            sequenceNumber: 0,
+            publisherId: 'publisher-id',
+            msgChainId: 'session-id',
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            content: {
+                foo: 'bar'
+            },
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+        }))
 
         await waitForCondition(() => totalMessages > 9)
     })

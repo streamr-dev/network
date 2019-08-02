@@ -47,20 +47,19 @@ describe('message buffering of Node', () => {
         destinationNode.subscribe('id', 0)
 
         // "Client" pushes data
-        sourceNode.publish(
-            'id',
-            0,
-            1,
-            0,
-            'publisher-id',
-            'session-id',
-            null,
-            null,
-            {
+        sourceNode.publish(StreamMessage.from({
+            streamId: 'id',
+            streamPartition: 0,
+            timestamp: 1,
+            sequenceNumber: 0,
+            publisherId: 'publisher-id',
+            msgChainId: 'session-id',
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            content: {
                 hello: 'world'
             },
-            StreamMessage.SIGNATURE_TYPES.NONE,
-            null
-        )
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+        }))
     })
 })

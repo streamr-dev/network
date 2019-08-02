@@ -1,10 +1,8 @@
-const { MessageLayer } = require('streamr-client-protocol')
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const { waitForCondition } = require('streamr-test-utils')
 
 const { startTracker, startNetworkNode } = require('../../src/composition')
 const { LOCALHOST } = require('../../test/util')
-
-const { StreamMessage } = MessageLayer
 
 describe('message propagation in network', () => {
     let tracker
@@ -67,37 +65,39 @@ describe('message propagation in network', () => {
         n3.subscribe('stream-1', 0)
 
         for (let i = 1; i <= 5; ++i) {
-            n1.publish(
-                'stream-1',
-                0,
-                i,
-                0,
-                'publisherId',
-                'msgChainId',
-                i === 1 ? null : i - 1,
-                i === 1 ? null : 0,
-                {
+            n1.publish(StreamMessage.from({
+                streamId: 'stream-1',
+                streamPartition: 0,
+                timestamp: i,
+                sequenceNumber: 0,
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId',
+                previousTimestamp: i === 1 ? null : i - 1,
+                previousSequenceNumber: i === 1 ? null : 0,
+                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                content: {
                     messageNo: i
                 },
-                StreamMessage.SIGNATURE_TYPES.NONE,
-                null
-            )
+                signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+            }))
 
-            n4.publish(
-                'stream-2',
-                0,
-                i * 100,
-                0,
-                'publisherId',
-                'msgChainId',
-                i === 1 ? null : (i - 1) * 100,
-                i === 1 ? null : 0,
-                {
+            n4.publish(StreamMessage.from({
+                streamId: 'stream-2',
+                streamPartition: 0,
+                timestamp: i * 100,
+                sequenceNumber: 0,
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId',
+                previousTimestamp: i === 1 ? null : (i - 1) * 100,
+                previousSequenceNumber: i === 1 ? null : 0,
+                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                content: {
                     messageNo: i * 100
                 },
-                StreamMessage.SIGNATURE_TYPES.NONE,
-                null
-            )
+                signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+            }))
         }
 
         await waitForCondition(() => n1Messages.length === 5)

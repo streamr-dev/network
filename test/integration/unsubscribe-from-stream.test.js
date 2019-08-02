@@ -1,16 +1,14 @@
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const { wait, waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const { LOCALHOST } = require('../util')
-const { StreamIdAndPartition } = require('../../src/identifiers')
 
 describe('node unsubscribing from a stream', () => {
     let tracker
     let nodeA
     let nodeB
-    const s1 = new StreamIdAndPartition('s', 1)
-    const s2 = new StreamIdAndPartition('s', 2)
 
     beforeEach(async () => {
         tracker = await startTracker(LOCALHOST, 30450, 'tracker')
@@ -20,10 +18,10 @@ describe('node unsubscribing from a stream', () => {
         nodeA.addBootstrapTracker(tracker.getAddress())
         nodeB.addBootstrapTracker(tracker.getAddress())
 
-        nodeA.subscribeToStreamIfHaveNotYet(s1)
-        nodeB.subscribeToStreamIfHaveNotYet(s1)
-        nodeA.subscribeToStreamIfHaveNotYet(s2)
-        nodeB.subscribeToStreamIfHaveNotYet(s2)
+        nodeA.subscribe('s', 1)
+        nodeB.subscribe('s', 1)
+        nodeA.subscribe('s', 2)
+        nodeB.subscribe('s', 2)
 
         await waitForEvent(nodeB, Node.events.NODE_SUBSCRIBED)
         await waitForEvent(nodeA, Node.events.NODE_SUBSCRIBED)
@@ -41,11 +39,33 @@ describe('node unsubscribing from a stream', () => {
             actual.push(`${streamMessage.getStreamId()}::${streamMessage.getStreamPartition()}`)
         })
 
-        nodeB.unsubscribeFromStream(s2)
+        nodeB.unsubscribe('s', 2)
         await waitForEvent(nodeA, Node.events.NODE_UNSUBSCRIBED)
 
-        nodeA.publish('s', 2, 0, 0, '', '', null, null, {}, '', 0) // s::2
-        nodeA.publish('s', 1, 0, 0, '', '', null, null, {}, '', 0) // s::1
+        nodeA.publish(StreamMessage.from({
+            streamId: 's',
+            streamPartition: 2,
+            timestamp: 0,
+            sequenceNumber: 0,
+            publisherId: '',
+            msgChainId: '',
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            content: {},
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+        }))
+        nodeA.publish(StreamMessage.from({
+            streamId: 's',
+            streamPartition: 1,
+            timestamp: 0,
+            sequenceNumber: 0,
+            publisherId: '',
+            msgChainId: '',
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            content: {},
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+        }))
 
         await wait(150)
 
@@ -53,10 +73,10 @@ describe('node unsubscribing from a stream', () => {
     })
 
     test('connection between nodes is not kept if no shared streams', async () => {
-        nodeB.unsubscribeFromStream(s2)
+        nodeB.unsubscribe('s', 2)
         await waitForEvent(nodeA, Node.events.NODE_UNSUBSCRIBED)
 
-        nodeA.unsubscribeFromStream(s1)
+        nodeA.unsubscribe('s', 1)
         await waitForEvent(nodeB, Node.events.NODE_UNSUBSCRIBED)
 
         const [aEventArgs, bEventArgs] = await Promise.all([

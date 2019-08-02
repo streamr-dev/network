@@ -1,12 +1,10 @@
-const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
+const { ControlLayer } = require('streamr-client-protocol')
 
 const { StorageResendStrategy,
     AskNeighborsResendStrategy,
     StorageNodeResendStrategy } = require('./logic/resendStrategies')
 const Node = require('./logic/Node')
 const { StreamIdAndPartition } = require('./identifiers')
-
-const { StreamMessage } = MessageLayer
 
 /*
 Convenience wrapper for building client-facing functionality. Used by broker.
@@ -32,26 +30,7 @@ class NetworkNode extends Node {
         this.opts.storages.forEach((storage) => this.addMessageListener(storage.store.bind(storage)))
     }
 
-    publish(streamId,
-        streamPartition,
-        timestamp,
-        sequenceNo,
-        publisherId,
-        msgChainId,
-        previousTimestamp,
-        previousSequenceNo,
-        content,
-        signatureType,
-        signature) {
-        const streamMessage = StreamMessage.create(
-            [streamId, streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
-            previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
-            StreamMessage.CONTENT_TYPES.MESSAGE,
-            StreamMessage.ENCRYPTION_TYPES.NONE,
-            content,
-            signatureType,
-            signature
-        )
+    publish(streamMessage) {
         this.onDataReceived(streamMessage)
     }
 
