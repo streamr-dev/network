@@ -18,6 +18,7 @@
   ],
   "bin": {
     "tracker": "./bin/tracker.js",
+    "trackerWithReporting": "./bin/trackerWithReporting.js",
     "subscriber": "./bin/subscriber.js",
     "publisher": "./bin/publisher.js",
     "storage": "./bin/storage.js"
