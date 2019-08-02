@@ -49,7 +49,16 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
     close() {
         this.streams.close()
-        this.wss.close()
+        this.wss.clients.forEach((socket) => socket.terminate())
+        return new Promise((resolve, reject) => {
+            this.wss.close((err) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve()
+                }
+            })
+        })
     }
 
     onNewClientConnection(socket, socketRequest) {

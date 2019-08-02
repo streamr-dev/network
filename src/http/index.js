@@ -19,5 +19,13 @@ adapterRegistry.register('http', ({ port }, { networkNode, publisher, streamFetc
     app.use('/api/v1', volumeEndpoint(volumeLogger))
 
     const httpServer = app.listen(port, () => console.info(`HTTP adapter listening on ${httpServer.address().port}`))
-    return () => httpServer.close(() => {})
+    return () => new Promise((resolve, reject) => {
+        httpServer.close((err) => {
+            if (err) {
+                reject(err)
+            } else {
+                resolve()
+            }
+        })
+    })
 })

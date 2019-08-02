@@ -140,6 +140,7 @@ describe('WebsocketServer', () => {
 
         // Mock websocket lib
         wsMock = new events.EventEmitter()
+        wsMock.clients = []
         wsMock.close = () => {}
 
         // Mock the socket and request

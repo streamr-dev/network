@@ -43,6 +43,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
         this.subscriptionManager = subscriptionManager
+        this.clients = new Set() // for cleaning up clients on close()
 
         this.streams = new StreamStateManager()
 
@@ -52,12 +53,21 @@ module.exports = class MqttServer extends events.EventEmitter {
 
     close() {
         this.streams.close()
-        this.mqttServer.close(() => {
+        this.clients.forEach((client) => client.destroy())
+        return new Promise((resolve, reject) => {
+            this.mqttServer.close((err) => {
+                if (err) {
+                    reject(err)
+                } else {
+                    resolve()
+                }
+            })
         })
     }
 
     onNewClientConnection(mqttStream) {
         const client = mqttCon(mqttStream)
+        this.clients.add(client)
         let connection
 
         client.on('connect', (packet) => {
@@ -231,6 +241,7 @@ module.exports = class MqttServer extends events.EventEmitter {
     }
 
     _closeClient(connection) {
+        this.clients.delete(connection.client)
         this.volumeLogger.connectionCount -= 1
         debug('closing client "%s" on streams "%o"', connection.id, connection.streamsAsString())
 

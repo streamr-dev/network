@@ -142,11 +142,11 @@ module.exports = async (config) => {
 
     return {
         getStreams: () => networkNode.getStreams(),
-        close: () => {
-            networkNode.stop()
-            closeAdapterFns.forEach((close) => close())
-            storages.forEach((storage) => storage.close())
+        close: () => Promise.all([
+            networkNode.stop(),
+            ...closeAdapterFns.map((close) => close()),
+            ...storages.map((storage) => storage.close()),
             volumeLogger.close()
-        },
+        ])
     }
 }
