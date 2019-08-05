@@ -78,7 +78,7 @@ client.getOrCreateStream({
     })
 ```
 
-#### Producing data points to a Stream
+#### Publishing data points to a Stream
 
 ```javascript
 // Here's our example data point
@@ -93,6 +93,18 @@ client.publish('my-stream-id', msg)
 
 // Or alternatively, via the Stream object (from e.g. getOrCreateStream)
 stream.publish(msg)
+
+// Publish with a specific timestamp as a Date object (default is now)
+client.publish('my-stream-id', msg, new Date(54365472))
+
+// Publish with a specific timestamp in ms
+client.publish('my-stream-id', msg, 54365472)
+
+// Publish with a specific timestamp as a ISO8601 string
+client.publish('my-stream-id', msg, '2019-01-01T00:00:00.123Z')
+
+// Publish with a specific partition key (default is null which will publish to stream partition 0)
+client.publish('my-stream-id', msg, Date.now(), 'my-partition-key')
 ```
 
 ### Client options

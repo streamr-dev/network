@@ -273,7 +273,7 @@ export default class StreamrClient extends EventEmitter {
         return stream ? stream.getSubscriptions() : []
     }
 
-    async publish(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null, groupKey) {
+    async publish(streamObjectOrId, data, timestamp = new Date(), partitionKey = null, groupKey) {
         if (this.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
@@ -287,9 +287,10 @@ export default class StreamrClient extends EventEmitter {
             throw new Error(`First argument must be a Stream object or the stream id! Was: ${streamObjectOrId}`)
         }
 
+        const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
         const [sessionToken, streamMessage] = await Promise.all([
             this.session.getSessionToken(),
-            this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestamp, partitionKey, groupKey),
+            this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestampAsNumber, partitionKey, groupKey),
         ])
 
         if (this.isConnected()) {
