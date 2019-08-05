@@ -68,7 +68,14 @@ module.exports = class MqttServer extends events.EventEmitter {
     onNewClientConnection(mqttStream) {
         const client = mqttCon(mqttStream)
         this.clients.add(client)
-        let connection
+
+        // Error handler to use if MQTT handshake or E&E authentication below fails.
+        // Required, otherwise software will crash on error.
+        const backUpErrorHandler = (err) => {
+            console.error(`Dropping client because:\n${err.stack}`)
+            client.destroy()
+        }
+        client.on('error', backUpErrorHandler)
 
         client.on('connect', (packet) => {
             debug('connect request %o', packet)
@@ -94,7 +101,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                             returnCode: 0
                         })
 
-                        connection = new Connection(client, packet.clientId, res.token, apiKey)
+                        const connection = new Connection(client, packet.clientId, res.token, apiKey)
 
                         connection.on('close', () => {
                             debug('closing client')
@@ -131,6 +138,9 @@ module.exports = class MqttServer extends events.EventEmitter {
                             debug('client timeout')
                             this._closeClient(connection)
                         })
+
+                        // remove backup listener
+                        client.removeListener('error', backUpErrorHandler)
 
                         this.volumeLogger.connectionCount += 1
                         debug('onNewClientConnection: mqtt "%s" connected', connection.id)
