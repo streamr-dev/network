@@ -69,7 +69,7 @@ class WsEndpoint extends EventEmitter {
 
         const id = customHeaders['streamr-peer-id'] || 'id-not-set'
 
-        this.debug = createDebug(`streamr:logic:node:${id}:ws-endpoint`)
+        this.debug = createDebug(`streamr:connection:ws-endpoint:${id}`)
 
         this.wss = wss
         this.customHeaders = new CustomHeaders(customHeaders)
