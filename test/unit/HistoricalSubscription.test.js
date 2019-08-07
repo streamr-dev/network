@@ -149,7 +149,7 @@ describe('HistoricalSubscription', () => {
                     last: 1
                 }, {}, 100, 100)
                 sub.on('gap', (from, to, publisherId) => {
-                    assert.equal(from.timestamp, 1) // cannot know the first missing message so there will be a duplicate received
+                    assert.equal(from.timestamp, 1)
                     assert.equal(from.sequenceNumber, 1)
                     assert.equal(to.timestamp, 3)
                     assert.equal(to.sequenceNumber, 0)

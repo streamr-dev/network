@@ -5,10 +5,9 @@ import AbstractSubscription from './AbstractSubscription'
 const debug = debugFactory('StreamrClient::Subscription')
 
 export default class RealTimeSubscription extends AbstractSubscription {
-    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, startMsgRef = null) {
+    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout) {
         super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
         this.resending = false
-        this.orderingUtil.lastReceivedMsgRef = startMsgRef
     }
 
     // All the handle* methods should:

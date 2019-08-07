@@ -12,7 +12,6 @@ const debug = debugFactory('StreamrClient::AbstractSubscription')
 export default class AbstractSubscription extends Subscription {
     constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout) {
         super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
-
         this.orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
             const newGroupKey = EncryptionUtil.decryptStreamMessage(orderedMessage, this.groupKeys[orderedMessage.getPublisherId()])
             if (newGroupKey) {

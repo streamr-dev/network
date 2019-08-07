@@ -44,6 +44,6 @@ export default class HistoricalSubscription extends AbstractSubscription {
 
     _finishResend() {
         this._lastMessageHandlerPromise = null
-        this.emit('resend done', this.orderingUtil.lastReceivedMsgRef)
+        this.emit('resend done')
     }
 }
