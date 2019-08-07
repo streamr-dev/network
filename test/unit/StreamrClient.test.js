@@ -208,30 +208,6 @@ describe('StreamrClient', () => {
                     client.connection.emitMessage(UnsubscribeResponse.create(sub.streamId))
                 })
             })
-
-            it('should request resend according to sub.getEffectiveResendOptions()', (done) => {
-                const nbToResend = 1
-                const sub = client.subscribe({
-                    stream: 'stream1',
-                    resend: {
-                        last: nbToResend,
-                    },
-                }, () => {})
-
-                connection.expect(SubscribeRequest.create(sub.streamId, 0, 'session-token'))
-
-                connection.on('connected', () => {
-                    sub.getEffectiveResendOptions = () => ({
-                        last: nbToResend,
-                    })
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, nbToResend, 'session-token'))
-                    connection.emitMessage(SubscribeResponse.create(sub.streamId))
-                    // sending second resend last request since no answer to the first request was received
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, nbToResend, 'session-token'))
-                    setTimeout(done, STORAGE_DELAY + 1000)
-                })
-                return client.connect()
-            }, STORAGE_DELAY + 2000)
         })
 
         describe('disconnected', () => {

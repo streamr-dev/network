@@ -1,4 +1,8 @@
+import debugFactory from 'debug'
+
 import Signer from './Signer'
+
+const debug = debugFactory('StreamrClient::SubscribedStream')
 
 const PUBLISHERS_EXPIRATION_TIME = 30 * 60 * 1000 // 30 minutes
 export default class SubscribedStream {
@@ -41,6 +45,11 @@ export default class SubscribedStream {
     }
 
     async verifyStreamMessage(msg) {
+        if (msg.version !== 31) {
+            debug(`Can handle only StreamMessageV31, not version ${msg.version}`)
+            return false
+        }
+
         if (this._client.options.verifySignatures === 'always') {
             if (msg.signatureType && msg.signatureType !== 0 && msg.signature) {
                 const isValid = await this.isValidPublisher(msg.getPublisherId().toLowerCase())

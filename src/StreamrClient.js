@@ -23,7 +23,7 @@ const {
 const { StreamMessage } = MessageLayer
 const debug = debugFactory('StreamrClient')
 
-import Subscription from './Subscription'
+import HistoricalSubscription from './HistoricalSubscription'
 import Connection from './Connection'
 import Session from './Session'
 import Signer from './Signer'
@@ -32,6 +32,9 @@ import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
 import MessageCreationUtil from './MessageCreationUtil'
 import { waitFor } from './utils'
+import RealTimeSubscription from './RealTimeSubscription'
+import CombinedSubscription from './CombinedSubscription'
+import Subscription from './Subscription'
 
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
@@ -342,11 +345,11 @@ export default class StreamrClient extends EventEmitter {
 
         await this.ensureConnected()
 
-        const sub = new Subscription(options.stream, options.partition || 0, callback, options.resend)
+        const sub = new HistoricalSubscription(options.stream, options.partition || 0, callback, options.resend)
 
         // TODO remove _addSubscription after uncoupling Subscription and Resend
         this._addSubscription(sub)
-        this._requestResend(sub)
+        await this._requestResend(sub)
 
         return sub
     }
@@ -389,10 +392,16 @@ export default class StreamrClient extends EventEmitter {
         }
 
         // Create the Subscription object and bind handlers
-        const sub = new Subscription(
-            options.stream, options.partition || 0, callback, options.resend,
-            this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter,
-        )
+        let sub
+        if (options.resend) {
+            sub = new CombinedSubscription(
+                options.stream, options.partition || 0, callback, options.resend,
+                this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter,
+            )
+        } else {
+            sub = new RealTimeSubscription(options.stream, options.partition || 0, callback,
+                this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter)
+        }
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {
                 this._requestResend(sub, {
@@ -600,7 +609,7 @@ export default class StreamrClient extends EventEmitter {
 
     async _requestResend(sub, resendOptions) {
         sub.setResending(true)
-        const options = resendOptions || sub.resendOptions
+        const options = resendOptions || sub.getResendOptions()
         const sessionToken = await this.session.getSessionToken()
         // don't bother requesting resend if not connected
         if (!this.isConnected()) { return }
