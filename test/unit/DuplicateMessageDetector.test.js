@@ -1,6 +1,7 @@
 const { DuplicateMessageDetector,
     NumberPair,
-    GapMisMatchError } = require('../../src/logic/DuplicateMessageDetector')
+    GapMisMatchError,
+    InvalidNumberingError } = require('../../src/logic/DuplicateMessageDetector')
 
 test('starts empty', () => {
     const detector = new DuplicateMessageDetector()
@@ -174,9 +175,9 @@ describe('erroneous messages that overlap gaps', () => {
 test('checks that number > previousNumber', () => {
     const detector = new DuplicateMessageDetector()
     expect(() => detector.markAndCheck(new NumberPair(5, 0), new NumberPair(1, 0)))
-        .toThrowError('pre-condition: previousNumber < number')
+        .toThrowError(InvalidNumberingError)
     expect(() => detector.markAndCheck(new NumberPair(5, 5), new NumberPair(5, 5)))
-        .toThrowError('pre-condition: previousNumber < number')
+        .toThrowError(InvalidNumberingError)
 })
 
 test('lowest gaps get dropped when reaching maximum number of gaps', () => {

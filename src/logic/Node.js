@@ -8,6 +8,7 @@ const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
+const { InvalidNumberingError } = require('../logic/DuplicateMessageDetector')
 
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
@@ -166,7 +167,20 @@ class Node extends EventEmitter {
         this.subscribeToStreamIfHaveNotYet(streamIdAndPartition)
 
         if (this._isReadyToPropagate(streamIdAndPartition)) {
-            const isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(streamMessage.messageId, streamMessage.prevMsgRef)
+            let isUnseen
+            try {
+                isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(
+                    streamMessage.messageId,
+                    streamMessage.prevMsgRef
+                )
+            } catch (e) {
+                if (e instanceof InvalidNumberingError) {
+                    this.debug('received data %j from %s with invalid numbering', streamMessage.messageId, source)
+                    this.metrics.inc('onDataReceived:ignoring:invalid-numbering')
+                    return
+                }
+                throw e
+            }
             if (isUnseen || this.seenButNotPropagated.has(streamMessage.messageId)) {
                 this.debug('received from %s data %j', source, streamMessage.messageId)
                 this._propagateMessage(streamMessage, source)

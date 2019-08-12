@@ -42,6 +42,14 @@ class NumberPair {
     }
 }
 
+class InvalidNumberingError extends Error {
+    constructor() {
+        super('pre-condition: previousNumber < number')
+        // exclude this constructor from stack trace
+        Error.captureStackTrace(this, InvalidNumberingError)
+    }
+}
+
 class GapMisMatchError extends Error {
     constructor(...args) {
         super(...args)
@@ -83,7 +91,7 @@ class DuplicateMessageDetector {
      */
     markAndCheck(previousNumber, number) {
         if (previousNumber && previousNumber.greaterThanOrEqual(number)) {
-            throw new Error('pre-condition: previousNumber < number')
+            throw new InvalidNumberingError()
         }
 
         if (this.gaps.length === 0) {
@@ -157,5 +165,6 @@ class DuplicateMessageDetector {
 module.exports = {
     NumberPair,
     GapMisMatchError,
+    InvalidNumberingError,
     DuplicateMessageDetector
 }
