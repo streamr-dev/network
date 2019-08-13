@@ -1,4 +1,5 @@
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+
 const MicroBatchingStrategy = require('../../src/MicroBatchingStrategy')
 
 jest.useFakeTimers()
