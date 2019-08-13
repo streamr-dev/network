@@ -92,6 +92,11 @@ module.exports = class Tracker extends EventEmitter {
     _updateNode(node, streams) {
         let newNode = true
 
+        if (streams === {}) {
+            this._removeNode(node)
+            return
+        }
+
         // Add or update
         Object.entries(streams).forEach(([streamKey, { inboundNodes, outboundNodes }]) => {
             if (this.overlayPerStream[streamKey] == null) {
@@ -101,6 +106,7 @@ module.exports = class Tracker extends EventEmitter {
             newNode = this.overlayPerStream[streamKey].hasNode(node)
 
             const neighbors = new Set([...inboundNodes, ...outboundNodes])
+
             this.overlayPerStream[streamKey].update(node, neighbors)
         })
 
@@ -108,9 +114,9 @@ module.exports = class Tracker extends EventEmitter {
         const currentStreamKeys = new Set(Object.keys(streams))
         Object.entries(this.overlayPerStream)
             .filter(([streamKey, _]) => !currentStreamKeys.has(streamKey))
-            .forEach(([_, overlayTopology]) => overlayTopology.leave(node))
+            .forEach(([streamKey, overlayTopology]) => this._leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node))
 
-        if (newNode) {
+        if (!newNode) {
             this.debug('registered new node %s for streams %j', node, Object.keys(streams))
         } else {
             this.debug('setup existing node %s for streams %j', node, Object.keys(streams))
@@ -164,8 +170,17 @@ module.exports = class Tracker extends EventEmitter {
 
     _removeNode(node) {
         this.metrics.inc('_removeNode')
-        Object.values(this.overlayPerStream).forEach((overlay) => overlay.leave(node))
+        Object.entries(this.overlayPerStream)
+            .forEach(([streamKey, overlayTopology]) => this._leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node))
         this.debug('unregistered node %s from tracker', node)
+    }
+
+    _leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node) {
+        overlayTopology.leave(node)
+
+        if (overlayTopology.isEmpty()) {
+            delete this.overlayPerStream[streamKey]
+        }
     }
 
     async getMetrics() {

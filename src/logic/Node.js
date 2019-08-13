@@ -304,6 +304,7 @@ class Node extends EventEmitter {
 
     async _sendStatus(tracker) {
         const status = this._getStatus()
+
         try {
             await this.protocols.trackerNode.sendStatus(tracker, status)
             this.debug('sent status %j to tracker %s', status.streams, tracker)

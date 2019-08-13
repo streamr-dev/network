@@ -38,9 +38,12 @@ class OverlayTopology {
         }
     }
 
+    isEmpty() {
+        return Object.entries(this.nodes).length === 0
+    }
+
     state() {
-        const entries = Object.entries(this.nodes)
-        return entries.length ? Object.assign(...entries.map(([nodeId, neighbors]) => {
+        return !this.isEmpty() ? Object.assign(...Object.entries(this.nodes).map(([nodeId, neighbors]) => {
             return {
                 [nodeId]: [...neighbors].sort()
             }
