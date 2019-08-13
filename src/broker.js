@@ -63,6 +63,9 @@ module.exports = async (config) => {
     if (config.reporting && config.reporting.apiKey === undefined) {
         throw new MissingConfigError('reporting.apiKey')
     }
+    if (config.reporting && config.reporting.reportingIntervalSeconds === undefined) {
+        throw new MissingConfigError('reporting.reportingIntervalSeconds')
+    }
     config.adapters.forEach(({ name }, index) => {
         if (name === undefined) {
             throw new MissingConfigError(`adapters[${index}].name`)
@@ -112,7 +115,12 @@ module.exports = async (config) => {
     }
 
     // Initialize common utilities
-    const volumeLogger = new VolumeLogger(60, networkNode, client, config.reporting.streamId)
+    const volumeLogger = new VolumeLogger(
+        config.reporting.reportingIntervalSeconds,
+        networkNode,
+        client,
+        config.reporting.streamId
+    )
     const streamFetcher = new StreamFetcher(config.streamrUrl)
     const publisher = new Publisher(networkNode, volumeLogger)
     const subscriptionManager = new SubscriptionManager(networkNode)
