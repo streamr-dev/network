@@ -35,6 +35,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         partitionFn = partition,
     ) {
         super()
+
         this.mqttServer = mqttServer
         this.streamsTimeout = streamsTimeout
         this.networkNode = networkNode
@@ -43,7 +44,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
         this.subscriptionManager = subscriptionManager
-        this.clients = new Set() // for cleaning up clients on close()
+        this.connections = new Set()
 
         this.streams = new StreamStateManager()
 
@@ -53,7 +54,8 @@ module.exports = class MqttServer extends events.EventEmitter {
 
     close() {
         this.streams.close()
-        this.clients.forEach((client) => client.destroy())
+        this.connections.forEach((connection) => this._closeConnection(connection))
+
         return new Promise((resolve, reject) => {
             this.mqttServer.close((err) => {
                 if (err) {
@@ -65,19 +67,49 @@ module.exports = class MqttServer extends events.EventEmitter {
         })
     }
 
+    _createNewConnection(client) {
+        const connection = new Connection(client)
+
+        connection.on('close', () => {
+            debug('closing client')
+            this._closeConnection(connection)
+        })
+
+        connection.on('error', (err) => {
+            console.error(`dropping client because: ${err.message}`)
+            debug('error in client %s', err)
+        })
+
+        connection.on('disconnect', () => {
+            debug('client disconnected')
+        })
+
+        connection.on('publish', (publishPacket) => {
+            this.handlePublishRequest(connection, publishPacket)
+        })
+
+        connection.on('subscribe', (subscribePacket) => {
+            this.handleSubscribeRequest(connection, subscribePacket)
+        })
+
+        connection.on('unsubscribe', (unsubscribePacket) => {
+            this.handleUnsubscribeRequest(connection, unsubscribePacket)
+        })
+
+        return connection
+    }
+
     onNewClientConnection(mqttStream) {
-        const client = mqttCon(mqttStream)
-        this.clients.add(client)
+        const connection = this._createNewConnection(mqttCon(mqttStream))
+        this.connections.add(connection)
 
-        // Error handler to use if MQTT handshake or E&E authentication below fails.
-        // Required, otherwise software will crash on error.
-        const backUpErrorHandler = (err) => {
-            console.error(`Dropping client because:\n${err.stack}`)
-            client.destroy()
-        }
-        client.on('error', backUpErrorHandler)
+        mqttStream.setTimeout(this.streamsTimeout)
+        mqttStream.on('timeout', () => {
+            debug('mqttStream timeout')
+            this._closeConnection(connection)
+        })
 
-        client.on('connect', (packet) => {
+        connection.on('connect', (packet) => {
             debug('connect request %o', packet)
 
             const { username, password } = packet
@@ -87,65 +119,20 @@ module.exports = class MqttServer extends events.EventEmitter {
                 .then((res) => {
                     // got some error
                     if (res.code) {
-                        // Connection refused, bad user name or password
-                        client.connack({
-                            returnCode: 4
-                        })
+                        connection.sendConnectionRefused()
                         return
                     }
 
                     // got token
                     if (res.token) {
-                        // Connection accepted
-                        client.connack({
-                            returnCode: 0
-                        })
+                        connection.sendConnectionAccepted()
+                        connection.setClientId(packet.clientId).setApiKey(apiKey).setToken(res.token)
 
-                        const connection = new Connection(client, packet.clientId, res.token, apiKey)
-
-                        connection.on('close', () => {
-                            debug('closing client')
-                            this._closeClient(connection)
-                        })
-
-                        connection.on('error', (err) => {
-                            debug('error in client %s', err)
-                            this._closeClient(connection)
-                        })
-
-                        connection.on('disconnect', () => {
-                            debug('client disconnected')
-                            this._closeClient(connection)
-                        })
-
-                        connection.on('publish', (publishPacket) => {
-                            this.handlePublishRequest(connection, publishPacket)
-                        })
-
-                        connection.on('subscribe', (subscribePacket) => {
-                            this.handleSubscribeRequest(connection, subscribePacket)
-                        })
-
-                        connection.on('unsubscribe', (unsubscribePacket) => {
-                            this.handleUnsubscribeRequest(connection, unsubscribePacket)
-                        })
-
-                        // timeout idle streams after X minutes
-                        mqttStream.setTimeout(this.streamsTimeout)
-
-                        // stream timeout
-                        mqttStream.on('timeout', () => {
-                            debug('client timeout')
-                            this._closeClient(connection)
-                        })
-
-                        // remove backup listener
-                        client.removeListener('error', backUpErrorHandler)
-
-                        this.volumeLogger.connectionCount += 1
                         debug('onNewClientConnection: mqtt "%s" connected', connection.id)
                     }
                 })
+
+            this.volumeLogger.connectionCount += 1
         })
     }
 
@@ -157,14 +144,11 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.streamFetcher.getStream(topic, connection.token)
             .then((streamObj) => {
                 if (streamObj === undefined) {
-                    // Connection refused, not authorized
-                    connection.client.connack({
-                        returnCode: 5
-                    })
+                    connection.sendConnectionNotAuthorized()
                     return
                 }
                 this.streamFetcher.authenticate(streamObj.id, connection.apiKey, connection.token, 'write')
-                    .then((/* streamJson */) => {
+                    .then((streamJson) => {
                         const streamPartition = this.partitionFn(streamObj.partitions, 0)
 
                         const textPayload = payload.toString()
@@ -221,7 +205,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         this.streamFetcher.getStream(topic, connection.token)
             .then((streamObj) => {
                 this.streamFetcher.authenticate(streamObj.id, connection.apiKey, connection.token)
-                    .then((/* streamJson */) => {
+                    .then((streamJson) => {
                         const newOrExistingStream = this.streams.getOrCreate(streamObj.id, 0, streamObj.name)
 
                         // Subscribe now if the stream is not already subscribed or subscribing
@@ -240,18 +224,22 @@ module.exports = class MqttServer extends events.EventEmitter {
                             connection.client.suback({
                                 granted: [packet.qos], messageId: packet.messageId
                             })
-                        } else {
-                            console.error('error')
                         }
                     })
                     .catch((response) => {
                         console.log(response)
                     })
+            }).catch((response) => {
+                debug(
+                    'handleSubscribeRequest: socket "%s" failed to subscribe to stream "%s:%d" because of "%o"',
+                    connection.id, topic, 0, response
+                )
+
+                connection.sendConnectionNotAuthorized()
             })
     }
 
-    _closeClient(connection) {
-        this.clients.delete(connection.client)
+    _closeConnection(connection) {
         this.volumeLogger.connectionCount -= 1
         debug('closing client "%s" on streams "%o"', connection.id, connection.streamsAsString())
 
@@ -262,10 +250,27 @@ module.exports = class MqttServer extends events.EventEmitter {
                 unsubscriptions: [stream.getName()]
             }
 
-            connection.client.unsubscribe(object)
+            connection.sendUnsubscribe(object)
+
+            const streamObj = this.streams.get(stream.getId(), stream.getPartition())
+
+            if (streamObj) {
+                streamObj.removeConnection(connection)
+
+                if (streamObj.getConnections().length === 0) {
+                    debug(
+                        'checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.',
+                        stream.getId(), stream.getPartition()
+                    )
+
+                    this.subscriptionManager.unsubscribe(stream.getId(), stream.getPartition())
+                    this.streams.delete(stream.getId(), stream.getPartition())
+                }
+            }
         })
 
-        connection.client.destroy()
+        this.connections.delete(connection)
+        connection.close()
     }
 
     broadcastMessage(streamMessage) {
