@@ -63,8 +63,8 @@ describe('tracker assigns storage node to streams', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
 
-        const [msg1] = await waitForEvent(storageNode, Node.events.MESSAGE_PROPAGATED)
-        const [msg2] = await waitForEvent(storageNode, Node.events.MESSAGE_PROPAGATED)
+        const [msg1] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
+        const [msg2] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
         expect(msg1.getStreamId()).toEqual('stream-1')
         expect(msg2.getStreamId()).toEqual('stream-2')
     })
@@ -95,8 +95,8 @@ describe('tracker assigns storage node to streams', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
 
-        const [msg1] = await waitForEvent(storageNode, Node.events.MESSAGE_PROPAGATED)
-        const [msg2] = await waitForEvent(storageNode, Node.events.MESSAGE_PROPAGATED)
+        const [msg1] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
+        const [msg2] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
         expect(msg1.getStreamId()).toEqual('new-stream-1')
         expect(msg2.getStreamId()).toEqual('new-stream-2')
     })

@@ -15,6 +15,7 @@ const ResendHandler = require('./ResendHandler')
 
 const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:node:message-received',
+    UNSEEN_MESSAGE_RECEIVED: 'streamr:node:unseen-message-received',
     MESSAGE_PROPAGATED: 'streamr:node:message-propagated',
     NODE_SUBSCRIBED: 'streamr:node:subscribed-successfully',
     NODE_UNSUBSCRIBED: 'streamr:node:node-unsubscribed',
@@ -166,36 +167,32 @@ class Node extends EventEmitter {
 
         this.subscribeToStreamIfHaveNotYet(streamIdAndPartition)
 
-        if (this._isReadyToPropagate(streamIdAndPartition)) {
-            let isUnseen
-            try {
-                isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(
-                    streamMessage.messageId,
-                    streamMessage.prevMsgRef
-                )
-            } catch (e) {
-                if (e instanceof InvalidNumberingError) {
-                    this.debug('received data %j from %s with invalid numbering', streamMessage.messageId, source)
-                    this.metrics.inc('onDataReceived:ignoring:invalid-numbering')
-                    return
-                }
-                throw e
+        // Check duplicate
+        let isUnseen
+        try {
+            isUnseen = this.streams.markNumbersAndCheckThatIsNotDuplicate(
+                streamMessage.messageId,
+                streamMessage.prevMsgRef
+            )
+        } catch (e) {
+            if (e instanceof InvalidNumberingError) {
+                this.debug('received data %j from %s with invalid numbering', streamMessage.messageId, source)
+                this.metrics.inc('onDataReceived:ignoring:invalid-numbering')
+                return
             }
-            if (isUnseen || this.seenButNotPropagated.has(streamMessage.messageId)) {
-                this.debug('received from %s data %j', source, streamMessage.messageId)
-                this._propagateMessage(streamMessage, source)
-            } else {
-                this.debug('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
-                this.metrics.inc('onDataReceived:ignoring:duplicate')
-            }
-        } else {
-            this.debug('Not outbound nodes to propagate')
-            this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
+            throw e
         }
-    }
 
-    _isReadyToPropagate(streamIdAndPartition) {
-        return this.streams.getOutboundNodesForStream(streamIdAndPartition).length >= MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION
+        if (isUnseen) {
+            this.emit(events.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
+        }
+        if (isUnseen || this.seenButNotPropagated.has(streamMessage.messageId)) {
+            this.debug('received from %s data %j', source, streamMessage.messageId)
+            this._propagateMessage(streamMessage, source)
+        } else {
+            this.debug('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
+            this.metrics.inc('onDataReceived:ignoring:duplicate')
+        }
     }
 
     async _propagateMessage(streamMessage, source) {
@@ -212,14 +209,14 @@ class Node extends EventEmitter {
                 this.debug('failed to propagate data %j to node %s (%s)', streamMessage.messageId, subscriber, e)
             }
         }))
-        if (successfulSends.length >= Math.min(MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION, subscribers.length)) {
+        if (successfulSends.length >= MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION) {
             this.debug('propagated data %j to %j', streamMessage.messageId, successfulSends)
             this.seenButNotPropagated.delete(streamMessage.messageId)
             this.emit(events.MESSAGE_PROPAGATED, streamMessage)
         } else {
-            // Handle scenario in which we were unable to propagate message to enough nodes. This often happens when
-            // socket.readyState=2 (closing)
-            this.debug('put %s back to buffer because could not propagated %d nodes or more',
+            // Handle scenario in which we were unable to propagate message to enough nodes. This happens when
+            // we are not connect to enough subscribers or socket.readyState=2 (closing)
+            this.debug('put %s back to buffer because could not propagate to %d nodes or more',
                 streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
             this.seenButNotPropagated.add(streamMessage.messageId)
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])

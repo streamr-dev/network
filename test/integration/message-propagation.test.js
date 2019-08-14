@@ -143,6 +143,42 @@ describe('message propagation in network', () => {
         ])
         expect(n2Messages).toEqual(n1Messages)
         expect(n3Messages).toEqual(n2Messages)
-        expect(n4Messages).toEqual([])
+        expect(n4Messages).toEqual([
+            {
+                streamId: 'stream-2',
+                streamPartition: 0,
+                payload: {
+                    messageNo: 100
+                },
+            },
+            {
+                streamId: 'stream-2',
+                streamPartition: 0,
+                payload: {
+                    messageNo: 200
+                },
+            },
+            {
+                streamId: 'stream-2',
+                streamPartition: 0,
+                payload: {
+                    messageNo: 300
+                },
+            },
+            {
+                streamId: 'stream-2',
+                streamPartition: 0,
+                payload: {
+                    messageNo: 400
+                },
+            },
+            {
+                streamId: 'stream-2',
+                streamPartition: 0,
+                payload: {
+                    messageNo: 500
+                },
+            }
+        ])
     })
 })

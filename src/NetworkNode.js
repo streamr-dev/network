@@ -35,7 +35,7 @@ class NetworkNode extends Node {
     }
 
     addMessageListener(cb) {
-        this.on(Node.events.MESSAGE_PROPAGATED, cb)
+        this.on(Node.events.UNSEEN_MESSAGE_RECEIVED, cb)
     }
 
     subscribe(streamId, streamPartition) {
