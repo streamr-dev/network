@@ -9,6 +9,7 @@ import InvalidSignatureError from '../../src/errors/InvalidSignatureError'
 import VerificationFailedError from '../../src/errors/VerificationFailedError'
 import EncryptionUtil from '../../src/EncryptionUtil'
 import Subscription from '../../src/Subscription'
+import RealTimeSubscription from '../../src/RealTimeSubscription'
 
 const { StreamMessage } = MessageLayer
 
@@ -311,6 +312,54 @@ describe('HistoricalSubscription', () => {
 
                 sub.handleResentMessage(msg1, sinon.stub().resolves(true))
                 sub.handleResentMessage(msg2, sinon.stub().resolves(true))
+            })
+
+            describe('ordering util', () => {
+                it('handles messages in the order in which they arrive if no ordering util', async () => {
+                    const msg1 = msg
+                    const msg2 = createMsg(2, 0, 1, 0)
+                    const msg3 = createMsg(3, 0, 2, 0)
+                    const msg4 = createMsg(4, 0, 3, 0)
+                    const received = []
+
+                    const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
+                        received.push(receivedMsg)
+                    }, {
+                        last: 1
+                    }, {}, 100, 100, false)
+                    sub.on('gap', sinon.stub().throws())
+
+                    await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg2, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg2, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg3, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+
+                    assert.deepStrictEqual(received, [msg1, msg2, msg4, msg2, msg3, msg1])
+                })
+                it('handles messages in order without duplicates if ordering util is set', async () => {
+                    const msg1 = msg
+                    const msg2 = createMsg(2, 0, 1, 0)
+                    const msg3 = createMsg(3, 0, 2, 0)
+                    const msg4 = createMsg(4, 0, 3, 0)
+                    const received = []
+
+                    const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
+                        received.push(receivedMsg)
+                    }, {
+                        last: 1
+                    })
+
+                    await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg2, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg2, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg3, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+
+                    assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4])
+                })
             })
         })
 

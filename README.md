@@ -118,6 +118,7 @@ publishWithSignature | 'auto' | Determines if data points published to streams a
 verifySignatures | 'auto' | Determines under which conditions signed and unsigned data points are accepted or rejected. 'always' accepts only signed and verified data points. 'never' accepts all data points. 'auto' verifies all signed data points before accepting them and accepts unsigned data points only for streams not supposed to contain signed data.
 autoConnect | true | If set to `true`, the client connects automatically on the first call to `subscribe()`. Otherwise an explicit call to `connect()` is required.
 autoDisconnect | true  | If set to `true`, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling `disconnect()`.
+orderMessages | true | If set to `true`, the subscriber handles messages in the correct order, requests missing messages and drops duplicates. Otherwise, the subscriber processes messages as they arrive without any check.
 maxPublishQueueSize | 10000 | Only in effect when `autoConnect = true`. Controls the maximum number of messages to retain in internal queue when client has disconnected and is reconnecting to Streamr.
 publisherGroupKeys | {} | Object defining the group key as a hex string used to encrypt for each stream id.
 subscriberGroupKeys | {} | Object defining, for each stream id, an object containing the group key used to decrypt for each publisher id.

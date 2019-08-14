@@ -10,20 +10,14 @@ const { OrderingUtil } = Utils
 const debug = debugFactory('StreamrClient::AbstractSubscription')
 
 export default class AbstractSubscription extends Subscription {
-    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout) {
+    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true) {
         super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
-        this.orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
-            const newGroupKey = EncryptionUtil.decryptStreamMessage(orderedMessage, this.groupKeys[orderedMessage.getPublisherId()])
-            if (newGroupKey) {
-                this.groupKeys[orderedMessage.getPublisherId()] = newGroupKey
-            }
-            callback(orderedMessage.getParsedContent(), orderedMessage)
-            if (orderedMessage.isByeMessage()) {
-                this.emit('done')
-            }
+        this.callback = callback
+        this.orderingUtil = (orderMessages) ? new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
+            this._handleInOrder(orderedMessage)
         }, (from, to, publisherId, msgChainId) => {
             this.emit('gap', from, to, publisherId, msgChainId)
-        }, this.propagationTimeout, this.resendTimeout)
+        }, this.propagationTimeout, this.resendTimeout) : undefined
 
         /** * Message handlers ** */
 
@@ -41,6 +35,17 @@ export default class AbstractSubscription extends Subscription {
         this.on('error', () => {
             this._clearGaps()
         })
+    }
+
+    _handleInOrder(orderedMessage) {
+        const newGroupKey = EncryptionUtil.decryptStreamMessage(orderedMessage, this.groupKeys[orderedMessage.getPublisherId()])
+        if (newGroupKey) {
+            this.groupKeys[orderedMessage.getPublisherId()] = newGroupKey
+        }
+        this.callback(orderedMessage.getParsedContent(), orderedMessage)
+        if (orderedMessage.isByeMessage()) {
+            this.emit('done')
+        }
     }
 
     async handleResentMessage(msg, verifyFn) {
@@ -122,7 +127,7 @@ export default class AbstractSubscription extends Subscription {
          * If parsing the (expected) message failed, we should still mark it as received. Otherwise the
          * gap detection will think a message was lost, and re-request the failing message.
          */
-        if (err instanceof Errors.InvalidJsonError && err.streamMessage) {
+        if (err instanceof Errors.InvalidJsonError && err.streamMessage && this.orderingUtil) {
             this.orderingUtil.markMessageExplicitly(err.streamMessage)
         }
         this.emit('error', err)
@@ -156,6 +161,10 @@ export default class AbstractSubscription extends Subscription {
     async _handleMessage(msg, verifyFn) {
         await AbstractSubscription.validate(msg, verifyFn)
         this.emit('message received')
-        this.orderingUtil.add(msg)
+        if (this.orderingUtil) {
+            this.orderingUtil.add(msg)
+        } else {
+            this._handleInOrder(msg)
+        }
     }
 }

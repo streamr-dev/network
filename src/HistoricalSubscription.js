@@ -1,8 +1,8 @@
 import AbstractSubscription from './AbstractSubscription'
 
 export default class HistoricalSubscription extends AbstractSubscription {
-    constructor(streamId, streamPartition, callback, options, groupKeys, propagationTimeout, resendTimeout) {
-        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
+    constructor(streamId, streamPartition, callback, options, groupKeys, propagationTimeout, resendTimeout, orderMessages = true) {
+        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages)
         this.resendOptions = options
         if (!this.resendOptions || (!this.resendOptions.from && !this.resendOptions.last)) {
             throw new Error('Resend options (either "from", "from" and "to", or "last") must be defined in a historical subscription.')

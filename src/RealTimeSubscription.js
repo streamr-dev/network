@@ -5,8 +5,8 @@ import AbstractSubscription from './AbstractSubscription'
 const debug = debugFactory('StreamrClient::Subscription')
 
 export default class RealTimeSubscription extends AbstractSubscription {
-    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout) {
-        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
+    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true) {
+        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages)
         this.resending = false
     }
 

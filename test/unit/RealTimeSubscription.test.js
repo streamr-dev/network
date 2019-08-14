@@ -378,6 +378,50 @@ describe('RealTimeSubscription', () => {
             })
         })
 
+        describe('ordering util', () => {
+            it('handles messages in the order in which they arrive if no ordering util', async () => {
+                const msg1 = msg
+                const msg2 = createMsg(2, 0, 1, 0)
+                const msg3 = createMsg(3, 0, 2, 0)
+                const msg4 = createMsg(4, 0, 3, 0)
+                const received = []
+
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
+                    received.push(receivedMsg)
+                }, {}, 100, 100, false)
+                sub.on('gap', sinon.stub().throws())
+
+                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg3, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+
+                assert.deepStrictEqual(received, [msg1, msg2, msg4, msg2, msg3, msg1])
+            })
+            it('handles messages in order without duplicates if ordering util is set', async () => {
+                const msg1 = msg
+                const msg2 = createMsg(2, 0, 1, 0)
+                const msg3 = createMsg(3, 0, 2, 0)
+                const msg4 = createMsg(4, 0, 3, 0)
+                const received = []
+
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
+                    received.push(receivedMsg)
+                })
+
+                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg3, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+
+                assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4])
+            })
+        })
+
         it('emits done after processing a message with the bye key', (done) => {
             const byeMsg = createMsg(1, undefined, null, null, {
                 _bye: true,

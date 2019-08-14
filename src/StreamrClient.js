@@ -49,6 +49,7 @@ export default class StreamrClient extends EventEmitter {
             autoConnect: true,
             // Automatically disconnect on last unsubscribe
             autoDisconnect: true,
+            orderMessages: true,
             auth: {},
             publishWithSignature: 'auto',
             verifySignatures: 'auto',
@@ -345,7 +346,8 @@ export default class StreamrClient extends EventEmitter {
 
         await this.ensureConnected()
 
-        const sub = new HistoricalSubscription(options.stream, options.partition || 0, callback, options.resend)
+        const sub = new HistoricalSubscription(options.stream, options.partition || 0, callback, options.resend,
+            this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter, this.options.orderMessages)
 
         // TODO remove _addSubscription after uncoupling Subscription and Resend
         this._addSubscription(sub)
@@ -394,13 +396,12 @@ export default class StreamrClient extends EventEmitter {
         // Create the Subscription object and bind handlers
         let sub
         if (options.resend) {
-            sub = new CombinedSubscription(
-                options.stream, options.partition || 0, callback, options.resend,
-                this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter,
-            )
+            sub = new CombinedSubscription(options.stream, options.partition || 0, callback, options.resend,
+                this.options.subscriberGroupKeys[options.stream],
+                this.options.gapFillTimeout, this.options.retryResendAfter, this.options.orderMessages)
         } else {
-            sub = new RealTimeSubscription(options.stream, options.partition || 0, callback,
-                this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter)
+            sub = new RealTimeSubscription(options.stream, options.partition || 0, callback, this.options.subscriberGroupKeys[options.stream],
+                this.options.gapFillTimeout, this.options.retryResendAfter, this.options.orderMessages)
         }
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {
