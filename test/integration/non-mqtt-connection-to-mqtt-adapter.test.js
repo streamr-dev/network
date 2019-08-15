@@ -44,6 +44,12 @@ describe('non-mqtt connection to MQTT adapter', () => {
     test('sending unrecognized packets causes client to be dropped without server crashing', (done) => {
         const socket = new net.Socket()
 
+        function close(s1, s2, cb) {
+            s1.destroy()
+            s2.destroy()
+            cb
+        }
+
         socket.connect(mqttPort, '127.0.0.1', () => {
             for (let i = 0; i < 100; ++i) {
                 socket.write('nonsensepackage\r\n')
@@ -57,10 +63,10 @@ describe('non-mqtt connection to MQTT adapter', () => {
             // Ensure that server is indeed still up
             const newSocket = new net.Socket()
             newSocket.on('error', (err) => {
-                done(err)
+                close(socket, newSocket, done(err))
             })
             newSocket.connect(mqttPort, '127.0.0.1', () => {
-                done()
+                close(socket, newSocket, done())
             })
         })
     })
