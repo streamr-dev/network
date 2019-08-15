@@ -213,18 +213,18 @@ module.exports = class MqttServer extends events.EventEmitter {
                             newOrExistingStream.setSubscribing()
                             this.subscriptionManager.subscribe(streamObj.id, 0)
                             newOrExistingStream.setSubscribed()
-
-                            newOrExistingStream.addConnection(connection)
-                            connection.addStream(newOrExistingStream)
-                            debug(
-                                'handleSubscribeRequest: client "%s" is now subscribed to streams "%o"',
-                                connection.id, connection.streamsAsString()
-                            )
-
-                            connection.client.suback({
-                                granted: [packet.qos], messageId: packet.messageId
-                            })
                         }
+
+                        newOrExistingStream.addConnection(connection)
+                        connection.addStream(newOrExistingStream)
+                        debug(
+                            'handleSubscribeRequest: client "%s" is now subscribed to streams "%o"',
+                            connection.id, connection.streamsAsString()
+                        )
+
+                        connection.client.suback({
+                            granted: [packet.qos], messageId: packet.messageId
+                        })
                     })
                     .catch((response) => {
                         console.log(response)

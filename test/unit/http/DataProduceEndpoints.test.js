@@ -16,18 +16,20 @@ describe('DataProduceEndpoints', () => {
     let publisherMock
 
     function postRequest(overridingOptions = {}) {
-        const opts = Object.assign({
+        const opts = {
             streamId: 'streamId',
             body: '{}',
             key: 'authKey',
             headers: {},
             query: {},
-        }, overridingOptions)
+            ...overridingOptions
+        }
 
-        const headers = Object.assign({
+        const headers = {
             'Content-Type': 'application/json',
             Authorization: `Token ${opts.key}`,
-        }, opts.headers)
+            ...opts.headers
+        }
 
         const req = request(app)
             .post(`/streams/${opts.streamId}/data`)
