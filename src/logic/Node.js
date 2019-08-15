@@ -40,7 +40,9 @@ class Node extends EventEmitter {
             resendStrategies: []
         }
 
-        this.opts = Object.assign({}, defaultOptions, opts)
+        this.opts = {
+            ...defaultOptions, ...opts
+        }
 
         if (!(this.opts.protocols.trackerNode instanceof TrackerNode) || !(this.opts.protocols.nodeToNode instanceof NodeToNode)) {
             throw new Error('Provided protocols are not correct')
@@ -216,7 +218,7 @@ class Node extends EventEmitter {
         } else {
             // Handle scenario in which we were unable to propagate message to enough nodes. This happens when
             // we are not connect to enough subscribers or socket.readyState=2 (closing)
-            this.debug('put %s back to buffer because could not propagate to %d nodes or more',
+            this.debug('put %j back to buffer because could not propagate to %d nodes or more',
                 streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
             this.seenButNotPropagated.add(streamMessage.messageId)
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])

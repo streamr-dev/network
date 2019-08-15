@@ -22,7 +22,9 @@ module.exports = class Tracker extends EventEmitter {
             protocols: []
         }
 
-        this.opts = Object.assign({}, defaultOptions, opts)
+        this.opts = {
+            ...defaultOptions, ...opts
+        }
 
         if (!(this.opts.protocols.trackerServer instanceof TrackerServer)) {
             throw new Error('Provided protocols are not correct')

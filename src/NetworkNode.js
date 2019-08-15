@@ -11,7 +11,8 @@ Convenience wrapper for building client-facing functionality. Used by broker.
  */
 class NetworkNode extends Node {
     constructor(opts) {
-        const networkOpts = Object.assign({}, opts, {
+        const networkOpts = {
+            ...opts,
             resendStrategies: [
                 ...opts.storages.map((storage) => new StorageResendStrategy(storage)),
                 new AskNeighborsResendStrategy(opts.protocols.nodeToNode, (streamId) => {
@@ -24,7 +25,7 @@ class NetworkNode extends Node {
                     (node) => this.streams.isNodePresent(node)
                 )
             ]
-        })
+        }
 
         super(networkOpts)
         this.opts.storages.forEach((storage) => this.addMessageListener(storage.store.bind(storage)))
