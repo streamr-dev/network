@@ -12,6 +12,9 @@ describe('non-mqtt connection to MQTT adapter', () => {
     let tracker
     let broker
 
+    let socket
+    let newSocket
+
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
         broker = await createBroker({
@@ -37,18 +40,18 @@ describe('non-mqtt connection to MQTT adapter', () => {
     })
 
     afterEach(async () => {
-        broker.close()
-        tracker.stop()
+        socket.destroy()
+
+        if (newSocket) {
+            newSocket.destroy()
+        }
+
+        await broker.close()
+        await tracker.stop()
     })
 
     test('sending unrecognized packets causes client to be dropped without server crashing', (done) => {
-        const socket = new net.Socket()
-
-        function close(s1, s2, cb) {
-            s1.destroy()
-            s2.destroy()
-            cb
-        }
+        socket = new net.Socket()
 
         socket.connect(mqttPort, '127.0.0.1', () => {
             for (let i = 0; i < 100; ++i) {
@@ -61,12 +64,12 @@ describe('non-mqtt connection to MQTT adapter', () => {
             expect(hadError).toEqual(false)
 
             // Ensure that server is indeed still up
-            const newSocket = new net.Socket()
+            newSocket = new net.Socket()
             newSocket.on('error', (err) => {
-                close(socket, newSocket, done(err))
+                done(err)
             })
             newSocket.connect(mqttPort, '127.0.0.1', () => {
-                close(socket, newSocket, done())
+                done()
             })
         })
     })
