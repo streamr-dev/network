@@ -170,8 +170,6 @@ describe('local propagation', () => {
     })
 
     test('local propagation using mqtt clients', async () => {
-        const timeout = 10000
-
         const client1Messages = []
         const client2Messages = []
 
@@ -195,15 +193,15 @@ describe('local propagation', () => {
             qos: 1
         })
 
-        await waitForCondition(() => client1Messages.length === 1, timeout)
-        await waitForCondition(() => client2Messages.length === 1, timeout)
+        await waitForCondition(() => client1Messages.length === 1)
+        await waitForCondition(() => client2Messages.length === 1)
 
         await mqttClient2.publish(freshStreamName, 'key: 2', {
             qos: 1
         })
 
-        await waitForCondition(() => client1Messages.length === 2, timeout)
-        await waitForCondition(() => client2Messages.length === 2, timeout)
+        await waitForCondition(() => client1Messages.length === 2)
+        await waitForCondition(() => client2Messages.length === 2)
 
         expect(client1Messages).toEqual([
             {
@@ -222,11 +220,9 @@ describe('local propagation', () => {
                 mqttPayload: 'key: 2'
             }
         ])
-    }, 10000)
+    })
 
     test('local propagation using StreamrClients and mqtt clients', async () => {
-        const timeout = 10000
-
         const client1Messages = []
         const client2Messages = []
         const client3Messages = []
@@ -266,10 +262,10 @@ describe('local propagation', () => {
 
         await wait(500)
 
-        await waitForCondition(() => client1Messages.length === 1, timeout)
-        await waitForCondition(() => client2Messages.length === 1, timeout)
-        await waitForCondition(() => client3Messages.length === 1, timeout)
-        await waitForCondition(() => client4Messages.length === 1, timeout)
+        await waitForCondition(() => client1Messages.length === 1)
+        await waitForCondition(() => client2Messages.length === 1)
+        await waitForCondition(() => client3Messages.length === 1)
+        await waitForCondition(() => client4Messages.length === 1)
 
         await mqttClient2.publish(freshStreamName, JSON.stringify({
             key: 2
@@ -279,10 +275,10 @@ describe('local propagation', () => {
 
         await wait(500)
 
-        await waitForCondition(() => client1Messages.length === 2, timeout)
-        await waitForCondition(() => client2Messages.length === 2, timeout)
-        await waitForCondition(() => client3Messages.length === 2, timeout)
-        await waitForCondition(() => client4Messages.length === 2, timeout)
+        await waitForCondition(() => client1Messages.length === 2)
+        await waitForCondition(() => client2Messages.length === 2)
+        await waitForCondition(() => client3Messages.length === 2)
+        await waitForCondition(() => client4Messages.length === 2)
 
         await client1.publish(freshStreamId, {
             key: 3
@@ -294,10 +290,10 @@ describe('local propagation', () => {
 
         await wait(500)
 
-        await waitForCondition(() => client1Messages.length === 4, timeout)
-        await waitForCondition(() => client2Messages.length === 4, timeout)
-        await waitForCondition(() => client3Messages.length === 4, timeout)
-        await waitForCondition(() => client4Messages.length === 4, timeout)
+        await waitForCondition(() => client1Messages.length === 4)
+        await waitForCondition(() => client2Messages.length === 4)
+        await waitForCondition(() => client3Messages.length === 4)
+        await waitForCondition(() => client4Messages.length === 4)
 
         expect(client1Messages).toEqual([
             {
@@ -358,5 +354,5 @@ describe('local propagation', () => {
                 key: 4
             },
         ])
-    }, 20000)
+    })
 })
