@@ -260,8 +260,6 @@ describe('local propagation', () => {
             qos: 1
         })
 
-        await wait(500)
-
         await waitForCondition(() => client1Messages.length === 1)
         await waitForCondition(() => client2Messages.length === 1)
         await waitForCondition(() => client3Messages.length === 1)
@@ -272,8 +270,6 @@ describe('local propagation', () => {
         }), {
             qos: 1
         })
-
-        await wait(500)
 
         await waitForCondition(() => client1Messages.length === 2)
         await waitForCondition(() => client2Messages.length === 2)
@@ -287,8 +283,6 @@ describe('local propagation', () => {
         await client2.publish(freshStreamId, {
             key: 4
         })
-
-        await wait(500)
 
         await waitForCondition(() => client1Messages.length === 4)
         await waitForCondition(() => client2Messages.length === 4)
