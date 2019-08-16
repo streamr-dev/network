@@ -4,6 +4,7 @@ module.exports = exports = {
         jest: true,
     },
     rules: {
-        'radix': ['error', 'as-needed']
+        'radix': ['error', 'as-needed'],
+        'max-classes-per-file': 0
     }
 }

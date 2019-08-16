@@ -1,4 +1,3 @@
-const assert = require('assert')
 const events = require('events')
 
 const sinon = require('sinon')
