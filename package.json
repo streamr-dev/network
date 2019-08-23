@@ -30,7 +30,7 @@
     "node": ">= 8"
   },
   "author": "Streamr",
-  "license": "AGPL-3.0-or-later",
+  "license": "Apache-2.0",
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
