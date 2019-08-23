@@ -20,7 +20,7 @@
     "url": "git@github.com:streamr-dev/streamr-test-utils.git"
   },
   "author": "Streamr <contact@streamr.com>",
-  "license": "AGPL-3.0",
+  "license": "Apache-2.0",
   "dependencies": {
     "p-event": "^4.1.0"
   },
