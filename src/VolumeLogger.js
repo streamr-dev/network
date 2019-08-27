@@ -72,7 +72,7 @@ module.exports = class VolumeLogger {
 
     _sendReport(data) {
         if (this.client instanceof StreamrClient && this.streamId !== undefined) {
-            this.client.publish(this.streamId, data)
+            this.client.publishHttp(this.streamId, data)
         }
     }
 

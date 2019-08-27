@@ -130,7 +130,8 @@ module.exports = async (config) => {
         client = new StreamrClient({
             auth: {
                 apiKey
-            }
+            },
+            autoConnect: false
         })
     } else {
         console.info('Skipping configuring reporting...')
