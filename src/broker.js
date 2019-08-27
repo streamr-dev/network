@@ -1,6 +1,7 @@
 const { startNetworkNode, startStorageNode } = require('@streamr/streamr-p2p-network')
 const StreamrClient = require('streamr-client')
 const publicIp = require('public-ip')
+const Sentry = require('@sentry/node')
 
 const StreamFetcher = require('./StreamFetcher')
 const { startCassandraStorage } = require('./Storage')
@@ -101,6 +102,27 @@ module.exports = async (config) => {
         advertisedWsUrl
     )
     networkNode.addBootstrapTracker(config.network.tracker)
+
+    if (process.env.NODE_ENV === 'production') {
+        Sentry.init({
+            dsn: 'https://0fcf3b8f6b254caa9a7fadd77bcc37a4@sentry.io/1510389',
+            integrations: [
+                new Sentry.Integrations.Console({
+                    levels: ['error']
+                })
+            ],
+            environment: 'broker',
+            maxBreadcrumbs: 50,
+            attachStacktrace: true,
+
+        })
+
+        Sentry.configureScope((scope) => {
+            scope.setUser({
+                id: config.network.id
+            })
+        })
+    }
 
     let client
     if (config.reporting) {
