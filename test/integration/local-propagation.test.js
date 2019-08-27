@@ -111,8 +111,8 @@ describe('local propagation', () => {
         await broker.close()
         await tracker.stop()
 
-        await mqttClient1.end()
-        await mqttClient2.end()
+        await mqttClient1.end(true)
+        await mqttClient2.end(true)
     })
 
     test('local propagation using StreamrClients', async () => {
