@@ -22,6 +22,12 @@ Sentry.init({
     environment: 'tracker'
 })
 
+Sentry.configureScope((scope) => {
+    scope.setUser({
+        id
+    })
+})
+
 startTracker(ip, port, id, maxNeighborsPerNode)
     .then((tracker) => {
         if (apiKey && streamId) {
