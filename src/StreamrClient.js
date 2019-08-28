@@ -2,6 +2,7 @@ import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import qs from 'qs'
 import once from 'once'
+import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 
 const {
@@ -642,5 +643,13 @@ export default class StreamrClient extends EventEmitter {
     handleError(msg) {
         debug(msg)
         this.emit('error', msg)
+    }
+
+    static generateEthereumAccount() {
+        const wallet = Wallet.createRandom()
+        return {
+            address: wallet.address,
+            privateKey: wallet.privateKey,
+        }
     }
 }

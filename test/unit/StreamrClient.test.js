@@ -3,6 +3,7 @@ import assert from 'assert'
 import EventEmitter from 'eventemitter3'
 import sinon from 'sinon'
 import debug from 'debug'
+import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 
 import Connection from '../../src/Connection'
@@ -944,6 +945,14 @@ describe('StreamrClient', () => {
         it('sets unauthenticated', () => {
             const c = new StubbedStreamrClient({}, createConnectionMock())
             assert(c.session.options.unauthenticated)
+        })
+    })
+
+    describe('StreamrClient.generateEthereumAccount()', () => {
+        it('generates a new Ethereum account', () => {
+            const result = StubbedStreamrClient.generateEthereumAccount()
+            const wallet = new Wallet(result.privateKey)
+            assert.equal(result.address, wallet.address)
         })
     })
 })

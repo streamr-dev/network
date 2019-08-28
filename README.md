@@ -133,7 +133,7 @@ new StreamrClient({
     }
 })
 ```
-Authenticating with an Ethereum private key by cryptographically signing a challenge (also automatically creates an associated user account):
+Authenticating with an Ethereum private key by cryptographically signing a challenge. Note the utility function `StreamrClient.generateEthereumAccount()`, which can be used to easily get the address and private key for a newly generated account. Authenticating with Ethereum also automatically creates an associated Streamr user, if it doesn't exist:
 ```
 new StreamrClient({
     auth: {
@@ -272,6 +272,13 @@ resend: {
     msgChainId: 'msgChainId', // optional
 }
 ```
+
+### Utility functions
+
+Name | Description
+---- | -----------
+StreamrClient.generateEthereumAccount() | Generates a random Ethereum private key and returns an object with fields `address` and privateKey. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
+
 
 ### Binding to events
 
