@@ -8,6 +8,7 @@ module.exports = class VolumeLogger {
         this.inBytes = 0
         this.outCount = 0
         this.outBytes = 0
+        this.totalBufferSize = 0
         this.lastVolumeStatistics = {}
         this.client = client
         this.streamId = streamId
@@ -41,6 +42,7 @@ module.exports = class VolumeLogger {
         this.lastVolumeStatistics = {
             id: this.networkNode.opts.id,
             timestamp: Date.now(),
+            totalBufferSize: this.totalBufferSize,
             numOfOpenWebsockets: this.connectionCount,
             input: {
                 eventsPerSecond: Math.round(inPerSecond),
@@ -53,10 +55,16 @@ module.exports = class VolumeLogger {
         }
 
         console.log(
-            'Connections: %d, Messages in/sec: %d, Messages out/sec: %d',
+            'Connections: %d, Broker messages in/sec: %d, Broker messages out/sec: %d, '
+            + 'Network messages in/sec: %d, Network messages out/sec: %d, '
+            + 'Network IN bytes/second: %d, Network OUT bytes/second: %d',
             this.connectionCount,
             inPerSecond < 10 ? inPerSecond.toFixed(1) : Math.round(inPerSecond),
             outPerSecond < 10 ? outPerSecond.toFixed(1) : Math.round(outPerSecond),
+            networkMetrics.mainMetrics.msgInSpeed,
+            networkMetrics.mainMetrics.msgOutSpeed,
+            networkMetrics.mainMetrics.inSpeed,
+            networkMetrics.mainMetrics.outSpeed,
         )
 
         this.inCount = 0
