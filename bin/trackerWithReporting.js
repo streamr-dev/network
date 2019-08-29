@@ -34,11 +34,13 @@ startTracker(ip, port, id, maxNeighborsPerNode)
             const client = new StreamrClient({
                 auth: {
                     apiKey
-                }
+                },
+                autoConnect: false
             })
 
             setInterval(async () => {
-                client.publish(streamId, await tracker.getMetrics())
+                const metrics = await tracker.getMetrics()
+                await client.publishHttp(streamId, metrics)
             }, 5000)
         }
     })
