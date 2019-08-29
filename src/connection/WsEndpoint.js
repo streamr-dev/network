@@ -111,13 +111,23 @@ class WsEndpoint extends EventEmitter {
     }
 
     _checkConnections() {
-        // eslint-disable-next-line no-restricted-syntax
-        for (const [address, ws] of this.connections) {
+        Object.keys(this.connections).forEach((address) => {
+            const ws = this.connections.get(address)
+
             if (ws.readyState !== 1) {
                 this.metrics.inc(`_checkConnections:readyState=${ws.readyState}`)
                 console.error(address + '\t\t\t' + ws.readyState)
+
+                if (ws.readyState === 3) {
+                    this.close(address)
+                    try {
+                        ws.terminate()
+                    } catch (e) {
+                        console.error('failed to close closed socket because of %s', e)
+                    }
+                }
             }
-        }
+        })
     }
 
     send(recipientAddress, message) {
@@ -166,7 +176,7 @@ class WsEndpoint extends EventEmitter {
         })
     }
 
-    close(recipientAddress, reason) {
+    close(recipientAddress, reason = '') {
         this.metrics.inc('close')
         return new Promise((resolve, reject) => {
             if (!this.isConnected(recipientAddress)) {
@@ -332,13 +342,16 @@ class WsEndpoint extends EventEmitter {
     }
 
     getMetrics() {
+        const totalBufferSize = Object.values(this.connections).reduce((totalBufferSizeSum, ws) => totalBufferSizeSum + ws.bufferedAmount, 0)
+
         return {
             msgSpeed: this.metrics.speed('_msgSpeed')(),
             msgInSpeed: this.metrics.speed('_msgInSpeed')(),
             msgOutSpeed: this.metrics.speed('_msgOutSpeed')(),
             inSpeed: this.metrics.speed('_inSpeed')(),
             outSpeed: this.metrics.speed('_outSpeed')(),
-            metrics: this.metrics.report()
+            metrics: this.metrics.report(),
+            totalBufferSize
         }
     }
 }

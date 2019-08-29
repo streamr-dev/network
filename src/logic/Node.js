@@ -26,6 +26,10 @@ const events = Object.freeze({
 
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
 
+const messageIdToStr = ({
+    streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId
+}) => `${streamId}-${streamPartition}-${timestamp}-${sequenceNumber}-${publisherId}-${msgChainId}`
+
 class Node extends EventEmitter {
     constructor(opts) {
         super()
@@ -188,7 +192,7 @@ class Node extends EventEmitter {
         if (isUnseen) {
             this.emit(events.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
         }
-        if (isUnseen || this.seenButNotPropagated.has(streamMessage.messageId)) {
+        if (isUnseen || this.seenButNotPropagated.has(messageIdToStr(streamMessage.messageId))) {
             this.debug('received from %s data %j', source, streamMessage.messageId)
             this._propagateMessage(streamMessage, source)
         } else {
@@ -213,14 +217,14 @@ class Node extends EventEmitter {
         }))
         if (successfulSends.length >= MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION) {
             this.debug('propagated data %j to %j', streamMessage.messageId, successfulSends)
-            this.seenButNotPropagated.delete(streamMessage.messageId)
+            this.seenButNotPropagated.delete(messageIdToStr(streamMessage.messageId))
             this.emit(events.MESSAGE_PROPAGATED, streamMessage)
         } else {
             // Handle scenario in which we were unable to propagate message to enough nodes. This happens when
             // we are not connect to enough subscribers or socket.readyState=2 (closing)
             this.debug('put %j back to buffer because could not propagate to %d nodes or more',
                 streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
-            this.seenButNotPropagated.add(streamMessage.messageId)
+            this.seenButNotPropagated.add(messageIdToStr(streamMessage.messageId))
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
         }
     }
@@ -329,7 +333,9 @@ class Node extends EventEmitter {
 
     async _unsubscribeFromStreamOnNode(node, streamId) {
         this.streams.removeNodeFromStream(streamId, node)
-        await this.protocols.nodeToNode.sendUnsubscribe(node, streamId)
+        await this.protocols.nodeToNode.sendUnsubscribe(node, streamId).catch((err) => {
+            console.error(`Failed to unsubscribed from ${node} because '${err}'`)
+        })
         this.debug('unsubscribed from node %s (tracker instruction)', node)
     }
 
@@ -385,7 +391,8 @@ class Node extends EventEmitter {
             endpointMetrics,
             processMetrics,
             nodeMetrics,
-            messageBufferSize: this.messageBuffer.size()
+            messageBufferSize: this.messageBuffer.size(),
+            seenButNotPropagated: this.seenButNotPropagated.size
         }
     }
 }
