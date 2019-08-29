@@ -45,9 +45,14 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.networkNode.addMessageListener(this.broadcastMessage.bind(this))
 
         this.wss.on('connection', this.onNewClientConnection.bind(this))
+        this._updateTotalBufferSizeInterval = setInterval(() => {
+            // eslint-disable-next-line max-len
+            this.volumeLogger.totalBufferSize = Object.values(this.wss.clients).reduce((totalBufferSizeSum, ws) => totalBufferSizeSum + ws.bufferedAmount, 0)
+        }, 10 * 1000)
     }
 
     close() {
+        clearInterval(this._updateTotalBufferSizeInterval)
         this.streams.close()
         this.wss.clients.forEach((socket) => socket.terminate())
         return new Promise((resolve, reject) => {
