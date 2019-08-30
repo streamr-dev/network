@@ -212,7 +212,7 @@ describe('DataQueryEndpoints', () => {
                     0,
                     expect.stringMatching(/\w+/),
                     1496408255672,
-                    0,
+                    undefined,
                     null,
                     null,
                 )
@@ -359,9 +359,9 @@ describe('DataQueryEndpoints', () => {
                     0,
                     expect.stringMatching(/\w+/),
                     1496408255672,
-                    0,
+                    undefined,
                     1496415670909,
-                    0,
+                    undefined,
                     null,
                     null,
                 )

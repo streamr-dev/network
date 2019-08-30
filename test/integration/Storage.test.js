@@ -135,7 +135,7 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         ])
     })
 
-    test('fetch messages starting from a timestamp,sequenceNo', async () => {
+    test('fetch messages starting from a timestamp', async () => {
         await Promise.all([
             storage.store(buildMsg(streamId, 10, 0, 0)),
             storage.store(buildMsg(streamId, 10, 1000, 0)),
@@ -149,7 +149,7 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
             storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
         ])
 
-        const streamingResults = storage.requestFrom(streamId, 10, 3000, 0)
+        const streamingResults = storage.requestFrom(streamId, 10, 3000)
         const results = await toArray(streamingResults)
 
         expect(results).toEqual([
@@ -158,32 +158,6 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
             formObject(streamId, 10, 3000, 2, 'publisher', '2'),
             formObject(streamId, 10, 3000, 3),
             formObject(streamId, 10, 4000, 0),
-        ])
-    })
-
-    test('fetch messages starting from a timestamp,sequenceNo for a given publisher', async () => {
-        await Promise.all([
-            storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1')),
-            storage.store(buildMsg(streamId, 10, 1000, 0, 'publisher2')),
-            storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3')),
-            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')),
-            storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')), // 3rd
-            storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher2')),
-            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')), // 1st
-            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1', '2')), // 2nd
-            storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3')),
-            storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1')), // 4th
-            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
-        ])
-
-        const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1')
-        const results = await toArray(streamingResults)
-
-        expect(results).toEqual([
-            formObject(streamId, 10, 3000, 1, 'publisher1'),
-            formObject(streamId, 10, 3000, 1, 'publisher1', '2'),
-            formObject(streamId, 10, 3000, 3, 'publisher1'),
-            formObject(streamId, 10, 8000, 0, 'publisher1'),
         ])
     })
 
@@ -212,7 +186,7 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         ])
     })
 
-    test('fetch messages in a timestamp,sequenceNo range', async () => {
+    test('fetch messages in a timestamp range', async () => {
         await Promise.all([
             storage.store(buildMsg(streamId, 10, 0, 0)),
             storage.store(buildMsg(streamId, 10, 1000, 0)),
@@ -226,7 +200,7 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
             storage.store(buildMsg(`${streamId}-wrong`, 10, 3000, 0))
         ])
 
-        const streamingResults = storage.requestRange(streamId, 10, 1500, 0, 3500, 0)
+        const streamingResults = storage.requestRange(streamId, 10, 1500, undefined, 3500, undefined)
         const results = await toArray(streamingResults)
 
         expect(results).toEqual([
@@ -235,33 +209,6 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
             formObject(streamId, 10, 2500, 1),
             formObject(streamId, 10, 2500, 2, 'publisher2'),
             formObject(streamId, 10, 3000, 0),
-        ])
-    })
-
-    test('fetch messages in a timestamp,seqeuenceNo range for a particular publisher', async () => {
-        await Promise.all([
-            storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1')),
-            storage.store(buildMsg(streamId, 10, 1500, 0, 'publisher1')),
-            storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher1')), // 1st
-            storage.store(buildMsg(streamId, 10, 2500, 0, 'publisher3')),
-            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')), // 2nd
-            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1', '2')), // 3rd
-            storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')),
-            storage.store(buildMsg(streamId, 10, 3000, 2, 'publisher1')), // 5th
-            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1')), // 4th
-            storage.store(buildMsg(streamId, 10, 8000, 0, 'publisher1')),
-            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
-        ])
-
-        const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, 'publisher1')
-        const results = await toArray(streamingResults)
-
-        expect(results).toEqual([
-            formObject(streamId, 10, 2000, 0, 'publisher1'),
-            formObject(streamId, 10, 3000, 0, 'publisher1'),
-            formObject(streamId, 10, 3000, 0, 'publisher1', '2'),
-            formObject(streamId, 10, 3000, 1, 'publisher1'),
-            formObject(streamId, 10, 3000, 2, 'publisher1'),
         ])
     })
 

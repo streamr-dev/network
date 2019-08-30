@@ -115,7 +115,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
                 partition,
                 generateSubId(),
                 fromTimestamp,
-                fromSequenceNumber || 0,
+                fromSequenceNumber,
                 publisherId || null,
                 null,
             )
@@ -164,9 +164,9 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
                 partition,
                 generateSubId(),
                 fromTimestamp,
-                fromSequenceNumber || 0,
+                fromSequenceNumber,
                 toTimestamp,
-                toSequenceNumber || 0,
+                toSequenceNumber,
                 publisherId || null,
                 null,
             )
