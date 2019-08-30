@@ -131,6 +131,8 @@ describe('local propagation', () => {
             client2Messages.push(message)
         })
 
+        await wait(1000)
+
         await client1.publish(freshStreamId, {
             key: 1
         })
@@ -220,7 +222,7 @@ describe('local propagation', () => {
                 mqttPayload: 'key: 2'
             }
         ])
-    })
+    }, 10000)
 
     test('local propagation using StreamrClients and mqtt clients', async () => {
         const client1Messages = []
@@ -253,6 +255,8 @@ describe('local propagation', () => {
         }, (message, metadata) => {
             client4Messages.push(message)
         })
+
+        await wait(1000)
 
         await mqttClient1.publish(freshStreamName, JSON.stringify({
             key: 1
@@ -348,5 +352,5 @@ describe('local propagation', () => {
                 key: 4
             },
         ])
-    })
+    }, 10000)
 })
