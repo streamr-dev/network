@@ -37,10 +37,6 @@ module.exports = class StreamFetcher {
             maxAge: MAX_AGE_MINUTE,
             promise: true,
         })
-        this.setFields = memoize(this._setFields, {
-            maxAge: MAX_AGE,
-            promise: true,
-        })
     }
 
     _authenticate(streamId, authKey, sessionToken, operation = 'read') {
@@ -153,7 +149,7 @@ module.exports = class StreamFetcher {
         })
     }
 
-    _setFields(streamId, fields, apiKey, sessionToken) {
+    setFields(streamId, fields, apiKey, sessionToken) {
         const headers = formHeaders(apiKey, sessionToken)
         headers['Content-Type'] = 'application/json'
         return fetch(`${this.streamResourceUrl}/${streamId}/fields`, {
