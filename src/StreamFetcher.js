@@ -5,6 +5,7 @@ const debug = require('debug')('streamr:StreamFetcher')
 const HttpError = require('./errors/HttpError')
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
+const MAX_AGE_MINUTE = 1000 // 1 minutes
 
 function formHeaders(authKey, sessionToken) {
     const headers = {}
@@ -32,9 +33,13 @@ module.exports = class StreamFetcher {
             maxAge: MAX_AGE,
             promise: true,
         })
+        this.authenticate = memoize(this._authenticate, {
+            maxAge: MAX_AGE_MINUTE,
+            promise: true,
+        })
     }
 
-    authenticate(streamId, authKey, sessionToken, operation = 'read') {
+    _authenticate(streamId, authKey, sessionToken, operation = 'read') {
         if (operation === 'read') {
             // No need to explicitly check permissions, as fetch will fail if no read permission
             return this.fetch(streamId, authKey, sessionToken)
