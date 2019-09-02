@@ -201,27 +201,22 @@ class Node extends EventEmitter {
         }
     }
 
-    async _propagateMessage(streamMessage, source) {
+    _propagateMessage(streamMessage, source) {
         this.metrics.inc('_propagateMessage')
         const streamIdAndPartition = new StreamIdAndPartition(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
         const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
-        const successfulSends = []
-        await Promise.all(subscribers.map(async (subscriber) => {
-            try {
-                await this.protocols.nodeToNode.sendData(subscriber, streamMessage)
-                successfulSends.push(subscriber)
-            } catch (e) {
-                this.debug('failed to propagate data %j to node %s (%s)', streamMessage.messageId, subscriber, e)
-            }
-        }))
-        if (successfulSends.length >= MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION) {
-            this.debug('propagated data %j to %j', streamMessage.messageId, successfulSends)
+
+        if (subscribers.length) {
+            subscribers.forEach((subscriber) => {
+                this.protocols.nodeToNode.sendData(subscriber, streamMessage).catch((err) => {
+                    console.error(`Node "${this.opts.id}" failed to _propagateMessage to the subscriber "${subscriber}" because '${err}'`)
+                })
+            })
+
             this.seenButNotPropagated.delete(messageIdToStr(streamMessage.messageId))
             this.emit(events.MESSAGE_PROPAGATED, streamMessage)
         } else {
-            // Handle scenario in which we were unable to propagate message to enough nodes. This happens when
-            // we are not connect to enough subscribers or socket.readyState=2 (closing)
             this.debug('put %j back to buffer because could not propagate to %d nodes or more',
                 streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
             this.seenButNotPropagated.add(messageIdToStr(streamMessage.messageId))

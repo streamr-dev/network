@@ -92,7 +92,8 @@ describe('duplicate message detection and avoidance', () => {
     })
 
     test('maximum times a node receives duplicates of message is bounded by total number of repeaters', () => {
-        const numOfDuplicates = otherNodes.map((n) => n.metrics.get('received.duplicates'))
+        const numOfDuplicates = otherNodes.map((n) => n.metrics.get('onDataReceived:ignoring:duplicate'))
+
         expect(numOfDuplicates).toHaveLength(5)
         numOfDuplicates.forEach((n) => {
             expect(n).toBeLessThanOrEqual((otherNodes.length * 2)) // multiplier because 2 separate messages
