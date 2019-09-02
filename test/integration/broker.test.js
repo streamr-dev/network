@@ -384,7 +384,6 @@ describe('broker: end-to-end', () => {
             resend: {
                 from: {
                     timestamp: timeAfterFirstMessagePublished,
-                    sequenceNumber: 0
                 }
             }
         }, (message) => {
@@ -396,7 +395,6 @@ describe('broker: end-to-end', () => {
             resend: {
                 from: {
                     timestamp: timeAfterFirstMessagePublished,
-                    sequenceNumber: 0
                 }
             }
         }, (message) => {
@@ -408,7 +406,6 @@ describe('broker: end-to-end', () => {
             resend: {
                 from: {
                     timestamp: timeAfterFirstMessagePublished,
-                    sequenceNumber: 0
                 }
             }
         }, (message) => {
@@ -500,11 +497,9 @@ describe('broker: end-to-end', () => {
             resend: {
                 from: {
                     timestamp: timeAfterFirstMessagePublished,
-                    sequenceNumber: 0
                 },
                 to: {
                     timestamp: timeAfterThirdMessagePublished,
-                    sequenceNumber: 0
                 }
             }
         }, (message) => {
@@ -516,11 +511,9 @@ describe('broker: end-to-end', () => {
             resend: {
                 from: {
                     timestamp: timeAfterFirstMessagePublished,
-                    sequenceNumber: 0
                 },
                 to: {
                     timestamp: timeAfterThirdMessagePublished,
-                    sequenceNumber: 0
                 }
             }
         }, (message) => {
@@ -532,11 +525,9 @@ describe('broker: end-to-end', () => {
             resend: {
                 from: {
                     timestamp: timeAfterFirstMessagePublished,
-                    sequenceNumber: 0
                 },
                 to: {
                     timestamp: timeAfterThirdMessagePublished,
-                    sequenceNumber: 0
                 }
             }
         }, (message) => {
