@@ -130,6 +130,37 @@ class WsEndpoint extends EventEmitter {
         })
     }
 
+    sendSync(recipientAddress, message) {
+        if (!this.isConnected(recipientAddress)) {
+            this.metrics.inc('send:failed:not-connected')
+            this.debug('cannot send to %s because not connected', recipientAddress)
+        } else {
+            try {
+                const ws = this.connections.get(recipientAddress)
+                if (ws.readyState === ws.OPEN) {
+                    this.metrics.speed('_outSpeed')(message.length)
+                    this.metrics.speed('_msgSpeed')(1)
+                    this.metrics.speed('_msgOutSpeed')(1)
+
+                    ws.send(message, (err) => {
+                        if (!err) {
+                            this.metrics.inc('send:failed')
+                        } else {
+                            this.metrics.inc('send:success')
+                            this.debug('sent to %s message "%s"', recipientAddress, message)
+                        }
+                    })
+                } else {
+                    this.metrics.inc(`send:failed:readyState=${ws.readyState}`)
+                    this.debug('sent failed because readyState of socket is %d', ws.readyState)
+                }
+            } catch (e) {
+                this.metrics.inc('send:failed')
+                console.error('sending to %s failed because of %s', recipientAddress, e)
+            }
+        }
+    }
+
     send(recipientAddress, message) {
         return new Promise((resolve, reject) => {
             if (!this.isConnected(recipientAddress)) {

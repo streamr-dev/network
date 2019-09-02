@@ -36,7 +36,8 @@ class NodeToNode extends BasicProtocol {
     }
 
     sendData(receiverNodeId, streamMessage) {
-        return this.send(receiverNodeId, ControlLayer.BroadcastMessage.create(streamMessage))
+        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
+        this.endpoint.sendSync(receiverNodeAddress, encoder.wrapperMessage(ControlLayer.BroadcastMessage.create(streamMessage)))
     }
 
     sendSubscribe(receiverNodeId, streamIdAndPartition) {
