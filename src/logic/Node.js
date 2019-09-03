@@ -39,7 +39,8 @@ class Node extends EventEmitter {
             id: 'node',
             connectToBootstrapTrackersInterval: 5000,
             sendStatusToAllTrackersInterval: 1000,
-            messageBufferSize: 60 * 1000,
+            bufferTimeoutInMs: 60 * 1000,
+            bufferMaxSize: 10000,
             protocols: [],
             resendStrategies: []
         }
@@ -61,7 +62,7 @@ class Node extends EventEmitter {
         this.protocols = this.opts.protocols
 
         this.streams = new StreamManager()
-        this.messageBuffer = new MessageBuffer(this.opts.messageBufferSize, (streamId) => {
+        this.messageBuffer = new MessageBuffer(this.opts.bufferTimeoutInMs, this.opts.bufferMaxSize, (streamId) => {
             this.debug('failed to deliver buffered messages of stream %s', streamId)
             this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
         })
@@ -92,7 +93,7 @@ class Node extends EventEmitter {
         this.started = new Date().toLocaleString()
         this.metrics = new Metrics(this.opts.id)
 
-        this.seenButNotPropagated = new Set()
+        this.seenButNotPropagated = []
     }
 
     onConnectedToTracker(tracker) {
@@ -192,12 +193,32 @@ class Node extends EventEmitter {
         if (isUnseen) {
             this.emit(events.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
         }
-        if (isUnseen || this.seenButNotPropagated.has(messageIdToStr(streamMessage.messageId))) {
+        if (isUnseen || this._seenButNotPropagated(messageIdToStr(streamMessage.messageId))) {
             this.debug('received from %s data %j', source, streamMessage.messageId)
             this._propagateMessage(streamMessage, source)
         } else {
             this.debug('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
             this.metrics.inc('onDataReceived:ignoring:duplicate')
+        }
+    }
+
+    _seenButNotPropagated(messageId) {
+        return this.seenButNotPropagated.includes(messageId)
+    }
+
+    _removeFromSeenButNotPropagated(messageId) {
+        if (this._seenButNotPropagated(messageId)) {
+            delete this.seenButNotPropagated[messageId]
+        }
+    }
+
+    _addSeenButNotPropagated(messageId) {
+        if (this.seenButNotPropagated.length >= this.opts.bufferMaxSize) {
+            this.seenButNotPropagated.shift()
+        }
+
+        if (!this._seenButNotPropagated(messageId)) {
+            this.seenButNotPropagated.push(messageId)
         }
     }
 
@@ -212,12 +233,12 @@ class Node extends EventEmitter {
                 this.protocols.nodeToNode.sendData(subscriber, streamMessage)
             })
 
-            this.seenButNotPropagated.delete(messageIdToStr(streamMessage.messageId))
+            this._removeFromSeenButNotPropagated(messageIdToStr(streamMessage.messageId))
             this.emit(events.MESSAGE_PROPAGATED, streamMessage)
         } else {
             this.debug('put %j back to buffer because could not propagate to %d nodes or more',
                 streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
-            this.seenButNotPropagated.add(messageIdToStr(streamMessage.messageId))
+            this._addSeenButNotPropagated(messageIdToStr(streamMessage.messageId))
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
         }
     }
@@ -385,7 +406,7 @@ class Node extends EventEmitter {
             processMetrics,
             nodeMetrics,
             messageBufferSize: this.messageBuffer.size(),
-            seenButNotPropagated: this.seenButNotPropagated.size
+            seenButNotPropagated: this.seenButNotPropagated.length
         }
     }
 }

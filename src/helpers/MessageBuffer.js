@@ -1,8 +1,9 @@
 module.exports = class MessageBuffer {
-    constructor(timeoutInMs, onTimeout = () => {}) {
+    constructor(timeoutInMs, maxSize = 10000, onTimeout = () => {}) {
         this.buffer = {}
         this.timeoutRefs = {}
         this.timeoutInMs = timeoutInMs
+        this.maxSize = maxSize
         this.onTimeout = onTimeout
     }
 
@@ -11,12 +12,31 @@ module.exports = class MessageBuffer {
             this.buffer[id] = []
             this.timeoutRefs[id] = []
         }
+
+        if (this.buffer[id].length >= this.maxSize) {
+            this.pop(id)
+        }
+
         this.buffer[id].push(message)
         this.timeoutRefs[id].push(setTimeout(() => {
-            this.buffer[id].shift()
-            this.timeoutRefs[id].shift()
+            this.pop(id)
             this.onTimeout(id)
         }, this.timeoutInMs))
+    }
+
+    pop(id) {
+        if (this._hasBufferFor(id)) {
+            const message = this.buffer[id].shift()
+            const ref = this.timeoutRefs[id].shift()
+            clearTimeout(ref)
+
+            if (!this.buffer[id].length) {
+                delete this.buffer[id]
+            }
+
+            return message
+        }
+        return {}
     }
 
     popAll(id) {
