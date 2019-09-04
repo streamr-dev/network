@@ -127,7 +127,7 @@ class Storage {
             return this._fetchFromMessageRefForPublisher(streamId, streamPartition, fromTimestamp,
                 fromSequenceNo, publisherId, msgChainId)
         }
-        if (fromSequenceNo == null && publisherId == null && msgChainId == null) {
+        if ((fromSequenceNo == null || fromSequenceNo === 0) && publisherId == null && msgChainId == null) {
             return this._fetchFromTimestamp(streamId, streamPartition, fromTimestamp)
         }
 
@@ -185,76 +185,12 @@ class Storage {
             return this._fetchBetweenMessageRefsForPublisher(streamId, streamPartition, fromTimestamp,
                 fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId)
         }
-        if (fromSequenceNo == null && toSequenceNo == null && publisherId == null && msgChainId == null) {
+        if ((fromSequenceNo == null || fromSequenceNo === 0) && (toSequenceNo == null || toSequenceNo === 0)
+            && publisherId == null && msgChainId == null) {
             return this._fetchBetweenTimestamps(streamId, streamPartition, fromTimestamp, toTimestamp)
         }
 
         throw new Error('Invalid combination of requestFrom arguments')
-
-        let stream1
-        let stream2
-        let stream3
-
-        if (publisherId && msgChainId) {
-            // Cassandra doesn't allow ORs in WHERE clause so we need to do 3 queries.
-            // Once a range (id/partition/ts/sequence_no) has been selected in Cassandra,
-            // filtering it by publisher_id requires to ALLOW FILTERING.
-            const query1 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
-                + 'AND msg_chain_id = ? ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const query2 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts > ? AND ts < ? AND publisher_id = ? '
-                + 'AND msg_chain_id = ? ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const query3 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts = ? AND sequence_no <= ? AND publisher_id = ? '
-                + 'AND msg_chain_id = ? ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const queryParams1 = [streamId, streamPartition, fromTimestamp, fromSequenceNo, publisherId, msgChainId]
-            const queryParams2 = [streamId, streamPartition, fromTimestamp, toTimestamp, publisherId, msgChainId]
-            const queryParams3 = [streamId, streamPartition, toTimestamp, toSequenceNo, publisherId, msgChainId]
-            stream1 = this._queryWithStreamingResults(query1, queryParams1)
-            stream2 = this._queryWithStreamingResults(query2, queryParams2)
-            stream3 = this._queryWithStreamingResults(query3, queryParams3)
-        } else if (publisherId) {
-            // Cassandra doesn't allow ORs in WHERE clause so we need to do 3 queries.
-            // Once a range (id/partition/ts/sequence_no) has been selected in Cassandra,
-            // filtering it by publisher_id requires to ALLOW FILTERING.
-            const query1 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
-                + 'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const query2 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts > ? AND ts < ? AND publisher_id = ? '
-                + 'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const query3 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts = ? AND sequence_no <= ? AND publisher_id = ? '
-                + 'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const queryParams1 = [streamId, streamPartition, fromTimestamp, fromSequenceNo, publisherId]
-            const queryParams2 = [streamId, streamPartition, fromTimestamp, toTimestamp, publisherId]
-            const queryParams3 = [streamId, streamPartition, toTimestamp, toSequenceNo, publisherId]
-            stream1 = this._queryWithStreamingResults(query1, queryParams1)
-            stream2 = this._queryWithStreamingResults(query2, queryParams2)
-            stream3 = this._queryWithStreamingResults(query3, queryParams3)
-        } else {
-            // Cassandra doesn't allow ORs in WHERE clause so we need to do 3 queries.
-            // Once a range (id/partition/ts/sequence_no) has been selected in Cassandra,
-            // filtering it by publisher_id requires to ALLOW FILTERING.
-            const query1 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts = ? AND sequence_no >= ? '
-                + 'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const query2 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts > ? AND ts < ? '
-                + 'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const query3 = 'SELECT * FROM stream_data '
-                + 'WHERE id = ? AND partition = ? AND ts = ? AND sequence_no <= ? '
-                + 'ORDER BY ts ASC, sequence_no ASC ALLOW FILTERING'
-            const queryParams1 = [streamId, streamPartition, fromTimestamp, fromSequenceNo]
-            const queryParams2 = [streamId, streamPartition, fromTimestamp, toTimestamp]
-            const queryParams3 = [streamId, streamPartition, toTimestamp, toSequenceNo]
-            stream1 = this._queryWithStreamingResults(query1, queryParams1)
-            stream2 = this._queryWithStreamingResults(query2, queryParams2)
-            stream3 = this._queryWithStreamingResults(query3, queryParams3)
-        }
-
-        return merge2(stream1, stream2, stream3)
     }
 
     _fetchBetweenTimestamps(streamId, streamPartition, from, to) {
