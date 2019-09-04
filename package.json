@@ -32,6 +32,7 @@
   "author": "Streamr",
   "license": "Apache-2.0",
   "devDependencies": {
+    "array-shuffle": "^1.0.1",
     "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "babel-eslint": "^10.0.2",
@@ -43,7 +44,6 @@
     "babel-preset-2017": "0.0.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-stage-2": "^6.24.1",
-    "babel-runtime": "^6.26.0",
     "eslint": "^6.0.1",
     "eslint-config-airbnb": "^17.1.1",
     "eslint-config-streamr-nodejs": "^1.1.0",
@@ -56,10 +56,10 @@
     "uuid": "^3.3.2",
     "webpack": "^4.35.2",
     "webpack-cli": "^3.3.5",
-    "webpack-merge": "^4.2.1",
-    "array-shuffle": "^1.0.1"
+    "webpack-merge": "^4.2.1"
   },
   "dependencies": {
+    "babel-runtime": "^6.26.0",
     "debug": "^4.1.1",
     "ethers": "^4.0.27",
     "eventemitter3": "^4.0.0",
