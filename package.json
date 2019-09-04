@@ -52,6 +52,7 @@
     "@sentry/node": "^5.6.2",
     "debug": "4.1.1",
     "events": "3.0.0",
+    "lru-cache": "^5.1.1",
     "pidusage": "^2.0.17",
     "speedometer": "^1.1.0",
     "streamr-client": "^2.1.1",

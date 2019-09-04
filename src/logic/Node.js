@@ -1,6 +1,7 @@
 const { EventEmitter } = require('events')
 
 const createDebug = require('debug')
+const LRU = require('lru-cache')
 
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
@@ -93,7 +94,10 @@ class Node extends EventEmitter {
         this.started = new Date().toLocaleString()
         this.metrics = new Metrics(this.opts.id)
 
-        this.seenButNotPropagated = []
+        this.seenButNotPropagated = new LRU({
+            max: this.opts.bufferMaxSize,
+            maxAge: this.opts.bufferMaxSize
+        })
     }
 
     onConnectedToTracker(tracker) {
@@ -193,32 +197,12 @@ class Node extends EventEmitter {
         if (isUnseen) {
             this.emit(events.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
         }
-        if (isUnseen || this._seenButNotPropagated(messageIdToStr(streamMessage.messageId))) {
+        if (isUnseen || this.seenButNotPropagated.has(messageIdToStr(streamMessage.messageId))) {
             this.debug('received from %s data %j', source, streamMessage.messageId)
             this._propagateMessage(streamMessage, source)
         } else {
             this.debug('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
             this.metrics.inc('onDataReceived:ignoring:duplicate')
-        }
-    }
-
-    _seenButNotPropagated(messageId) {
-        return this.seenButNotPropagated.includes(messageId)
-    }
-
-    _removeFromSeenButNotPropagated(messageId) {
-        if (this._seenButNotPropagated(messageId)) {
-            delete this.seenButNotPropagated[messageId]
-        }
-    }
-
-    _addSeenButNotPropagated(messageId) {
-        if (this.seenButNotPropagated.length >= this.opts.bufferMaxSize) {
-            this.seenButNotPropagated.shift()
-        }
-
-        if (!this._seenButNotPropagated(messageId)) {
-            this.seenButNotPropagated.push(messageId)
         }
     }
 
@@ -233,12 +217,12 @@ class Node extends EventEmitter {
                 this.protocols.nodeToNode.sendData(subscriber, streamMessage)
             })
 
-            this._removeFromSeenButNotPropagated(messageIdToStr(streamMessage.messageId))
+            this.seenButNotPropagated.del(messageIdToStr(streamMessage.messageId))
             this.emit(events.MESSAGE_PROPAGATED, streamMessage)
         } else {
             this.debug('put %j back to buffer because could not propagate to %d nodes or more',
                 streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
-            this._addSeenButNotPropagated(messageIdToStr(streamMessage.messageId))
+            this.seenButNotPropagated.set(messageIdToStr(streamMessage.messageId), true)
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
         }
     }
