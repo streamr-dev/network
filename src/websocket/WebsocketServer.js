@@ -59,6 +59,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     close() {
         clearInterval(this._updateTotalBufferSizeInterval)
         this.streams.close()
+        this.streamAuthCache.reset()
         this.wss.clients.forEach((socket) => socket.terminate())
         return new Promise((resolve, reject) => {
             this.wss.close((err) => {
