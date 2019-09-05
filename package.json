@@ -58,6 +58,7 @@
     "webpack-cli": "^3.3.5",
     "webpack-merge": "^4.2.1"
   },
+  "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "debug": "^4.1.1",
