@@ -1,49 +1,30 @@
+const LRU = require('lru-cache')
+
 module.exports = class MessageBuffer {
-    constructor(timeoutInMs, maxSize = 10000, onTimeout = () => {}) {
+    constructor(timeoutInMs, maxSize = 10000) {
         this.buffer = {}
-        this.timeoutRefs = {}
         this.timeoutInMs = timeoutInMs
         this.maxSize = maxSize
-        this.onTimeout = onTimeout
     }
 
     put(id, message) {
         if (!this._hasBufferFor(id)) {
-            this.buffer[id] = []
-            this.timeoutRefs[id] = []
+            this.buffer[id] = new LRU({
+                max: this.maxSize,
+                maxAge: this.timeoutInMs
+            })
         }
 
-        if (this.buffer[id].length >= this.maxSize) {
-            this.pop(id)
-        }
-
-        this.buffer[id].push(message)
-        this.timeoutRefs[id].push(setTimeout(() => {
-            this.pop(id)
-            this.onTimeout(id)
-        }, this.timeoutInMs))
-    }
-
-    pop(id) {
-        if (this._hasBufferFor(id)) {
-            const message = this.buffer[id].shift()
-            const ref = this.timeoutRefs[id].shift()
-            clearTimeout(ref)
-
-            if (!this.buffer[id].length) {
-                delete this.buffer[id]
-            }
-
-            return message
-        }
-        return {}
+        this.buffer[id].set(message, true)
     }
 
     popAll(id) {
         if (this._hasBufferFor(id)) {
-            const messages = this.buffer[id]
-            this.timeoutRefs[id].forEach((ref) => clearTimeout(ref))
-            delete this.timeoutRefs[id]
+            const messages = []
+            if (this.buffer[id].length) {
+                this.buffer[id].rforEach((value, key, cache) => messages.push(key))
+            }
+            this.buffer[id].reset()
             delete this.buffer[id]
             return messages
         }

@@ -63,10 +63,7 @@ class Node extends EventEmitter {
         this.protocols = this.opts.protocols
 
         this.streams = new StreamManager()
-        this.messageBuffer = new MessageBuffer(this.opts.bufferTimeoutInMs, this.opts.bufferMaxSize, (streamId) => {
-            this.debug('failed to deliver buffered messages of stream %s', streamId)
-            this.emit(events.MESSAGE_DELIVERY_FAILED, streamId)
-        })
+        this.messageBuffer = new MessageBuffer(this.opts.bufferTimeoutInMs, this.opts.bufferMaxSize)
         this.resendHandler = new ResendHandler(
             this.opts.resendStrategies,
             this.protocols.nodeToNode.send.bind(this.protocols.nodeToNode),

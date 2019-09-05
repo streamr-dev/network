@@ -1,6 +1,6 @@
-const MessageBuffer = require('../../src/helpers/MessageBuffer')
+const { wait } = require('streamr-test-utils')
 
-jest.useFakeTimers()
+const MessageBuffer = require('../../src/helpers/MessageBuffer')
 
 describe('fullt test of MessageBuffer', () => {
     test('put, pop and popAll work as expected (no timeouts scenario)', () => {
@@ -47,16 +47,6 @@ describe('fullt test of MessageBuffer', () => {
         expect(buffer.popAll('stream-1')).toEqual([])
     })
 
-    test('timeoutCb(id) is invoked on timeout', (done) => {
-        const buffer = new MessageBuffer(1000, 1000, (id) => {
-            expect(id).toEqual('stream-id')
-            done()
-        })
-
-        buffer.put('stream-id', {})
-        jest.runAllTimers()
-    })
-
     test('timeoutCb(id) is not invoked if messages popped before timeout', () => {
         const timeoutCb = jest.fn()
         const buffer = new MessageBuffer(1000, 1000, timeoutCb)
@@ -67,36 +57,31 @@ describe('fullt test of MessageBuffer', () => {
         buffer.put('stream-2', {})
         buffer.popAll('stream-1')
         buffer.popAll('stream-2')
-
-        jest.runAllTimers()
-        expect(timeoutCb).not.toHaveBeenCalled()
     })
 
-    test('messages are deleted after timeout', () => {
+    test('messages are deleted after timeout', (done) => {
         const buffer = new MessageBuffer(100)
         buffer.put('stream-1', {})
         buffer.put('stream-2', {})
 
-        jest.runAllTimers()
-
-        expect(buffer.popAll('stream-1')).toEqual([])
-        expect(buffer.popAll('stream-2')).toEqual([])
+        setTimeout(() => {
+            expect(buffer.popAll('stream-1')).toEqual([])
+            expect(buffer.popAll('stream-2')).toEqual([])
+            done()
+        }, 101)
     })
 
     test('clear() removes all messages and timeout callbacks', () => {
-        const timeoutCb = jest.fn()
-        const buffer = new MessageBuffer(100, 100, timeoutCb)
+        const buffer = new MessageBuffer(100, 100)
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
         buffer.put('stream-2', {})
         buffer.put('stream-2', {})
 
         buffer.clear()
-        jest.runAllTimers()
 
         expect(buffer.popAll('stream-1')).toEqual([])
         expect(buffer.popAll('stream-2')).toEqual([])
-        expect(timeoutCb).not.toHaveBeenCalled()
     })
 
     test('size() gives correct size of buffer across streams', () => {
@@ -128,13 +113,13 @@ describe('fullt test of MessageBuffer', () => {
         expect(buffer.size()).toEqual(0)
     })
 
-    test('clearing and pushing to ids do not affect other ids', () => {
+    test('clearing and pushing to ids do not affect other ids', async () => {
         const buffer = new MessageBuffer(100)
 
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
 
-        jest.advanceTimersByTime(50)
+        await wait(50)
 
         buffer.put('stream-2', {
             a: 'a'
@@ -146,7 +131,7 @@ describe('fullt test of MessageBuffer', () => {
             c: 'c'
         })
 
-        jest.advanceTimersByTime(50)
+        await wait(50)
 
         expect(buffer.popAll('stream-1')).toEqual([])
         expect(buffer.popAll('stream-2')).toEqual([{
@@ -162,84 +147,29 @@ describe('fullt test of MessageBuffer', () => {
         ])
     })
 
-    test('only expired messages are deleted on timeout', () => {
+    test('only expired messages are deleted on timeout', async () => {
         const buffer = new MessageBuffer(100)
 
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
 
-        jest.advanceTimersByTime(50)
+        await wait(50)
 
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
 
-        jest.advanceTimersByTime(50) // first 3 messages deleted
+        await wait(50) // first 3 messages deleted
 
         expect(buffer.popAll('stream-1').length).toEqual(2)
-    })
-
-    test('test pop function', () => {
-        const buffer = new MessageBuffer(100)
-
-        buffer.put('stream-1', {
-            id: 'stream-1',
-            data: 'hello'
-        })
-        buffer.put('stream-1', {
-            id: 'stream-1',
-            data: 'world'
-        })
-        buffer.put('stream-2', {
-            id: 'stream-2',
-            data: 'not!'
-        })
-        buffer.put('stream-1', {
-            id: 'stream-1',
-            data: '!'
-        })
-
-        expect(buffer.pop('stream-1')).toEqual(
-            {
-                id: 'stream-1',
-                data: 'hello'
-            }
-        )
-
-        expect(buffer.pop('stream-2')).toEqual(
-            {
-                id: 'stream-2',
-                data: 'not!'
-            }
-        )
-
-        expect(buffer.pop('stream-2')).toEqual({})
-
-        expect(buffer.pop('stream-1')).toEqual(
-            {
-                id: 'stream-1',
-                data: 'world'
-            }
-        )
-
-        expect(buffer.pop('stream-1')).toEqual(
-            {
-                id: 'stream-1',
-                data: '!'
-            }
-        )
-
-        expect(buffer.pop('stream-1')).toEqual({})
     })
 
     test('test maxLimit', () => {
         const buffer = new MessageBuffer(1000, 3)
 
-        buffer.put('stream-1', {})
-        buffer.put('stream-1', {})
-        buffer.put('stream-1', {})
-        buffer.put('stream-1', {})
-        buffer.put('stream-1', {})
+        for (let i = 0; i < 1000; i++) {
+            buffer.put('stream-1', {})
+        }
 
         expect(buffer.popAll('stream-1').length).toEqual(3)
     })
