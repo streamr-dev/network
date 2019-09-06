@@ -723,227 +723,227 @@ describe('WebsocketServer', () => {
         })
     })
 
-    // describe('publish', () => {
-    //     beforeEach(() => {
-    //         // We are in connected state
-    //         wsMock.emit('connection', mockSocket, mockSocket.getRequest())
-    //     })
-    //
-    //     it('calls the publisher for valid requests (V1&V29)', (done) => {
-    //         const req = ControlLayer.PublishRequest.create(streamMessagev29, 'correct')
-    //
-    //         publisher.publish = (stream, streamMessage) => {
-    //             assert.deepEqual(stream, myStream)
-    //             assert.equal(streamMessage.getStreamPartition(), req.streamMessage.getStreamPartition())
-    //             assert.equal(streamMessage.getTimestamp(), req.streamMessage.getTimestamp())
-    //             assert.equal(streamMessage.getPublisherId(), req.streamMessage.getPublisherId())
-    //             assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
-    //             assert.equal(streamMessage.getContent(), req.streamMessage.getContent())
-    //             assert.equal(streamMessage.signatureType, req.streamMessage.signatureType)
-    //             assert.equal(streamMessage.signature, req.streamMessage.signature)
-    //             done()
-    //         }
-    //
-    //         mockSocket.receive(req)
-    //     })
-    //
-    //     it('calls the publisher for valid requests (V1&V30)', (done) => {
-    //         const req = ControlLayer.PublishRequest.create(streamMessagev30, 'correct')
-    //
-    //         publisher.publish = (stream, streamMessage) => {
-    //             assert.deepEqual(stream, myStream)
-    //             assert.equal(streamMessage.getStreamPartition(), req.streamMessage.getStreamPartition())
-    //             assert.equal(streamMessage.getTimestamp(), req.streamMessage.getTimestamp())
-    //             assert.equal(streamMessage.messageId.sequenceNumber, req.streamMessage.messageId.sequenceNumber)
-    //             assert.equal(streamMessage.getPublisherId(), req.streamMessage.getPublisherId())
-    //             assert.equal(streamMessage.prevMsgRef.timestamp, req.streamMessage.prevMsgRef.timestamp)
-    //             assert.equal(streamMessage.prevMsgRef.sequenceNumber, req.streamMessage.prevMsgRef.sequenceNumber)
-    //             assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
-    //             assert.equal(streamMessage.getContent(), req.streamMessage.getContent())
-    //             assert.equal(streamMessage.signatureType, req.streamMessage.signatureType)
-    //             assert.equal(streamMessage.signature, req.streamMessage.signature)
-    //             // doesn't try to set fields for a stream with autoConfigure = false
-    //             assert(streamFetcher.setFields.notCalled)
-    //             done()
-    //         }
-    //
-    //         mockSocket.receive(req)
-    //     })
-    //
-    //     it('sets the fields once for the stream', (done) => {
-    //         const req = ControlLayer.PublishRequest.create(streamMessage2v30, 'correct')
-    //         const req2 = ControlLayer.PublishRequest.create(streamMessage2v30, 'correct')
-    //
-    //         publisher.publish = sinon.stub().onSecondCall().callsFake(() => {
-    //             assert(streamFetcher.setFields.calledOnce)
-    //             done()
-    //         })
-    //
-    //         streamFetcher.setFields = sinon.stub().callsFake((streamId, fields) => {
-    //             assert.equal(streamId, autoStream.id)
-    //             assert.deepEqual(fields, [{
-    //                 name: 'field1',
-    //                 type: 'string',
-    //             }, {
-    //                 name: 'field2',
-    //                 type: 'number',
-    //             }, {
-    //                 name: 'field3',
-    //                 type: 'boolean',
-    //             }, {
-    //                 name: 'field4',
-    //                 type: 'list',
-    //             }, {
-    //                 name: 'field5',
-    //                 type: 'map',
-    //             }])
-    //             return Promise.resolve()
-    //         })
-    //
-    //         mockSocket.receive(req)
-    //         mockSocket.receive(req2)
-    //     })
-    //
-    //     it('doesnt set the fields for stream with existing fields', (done) => {
-    //         const req = ControlLayer.PublishRequest.create(streamMessage3v30, 'correct')
-    //
-    //         publisher.publish = () => {
-    //             assert(streamFetcher.setFields.notCalled)
-    //             done()
-    //         }
-    //
-    //         streamFetcher.setFields = sinon.stub().throws()
-    //
-    //         mockSocket.receive(req)
-    //     })
-    //
-    //     it('calls the publisher for valid requests (V0)', (done) => {
-    //         const ts = Date.now()
-    //         const req = new ControlLayer.PublishRequestV0(myStream.id, 'correct', undefined, '{}', ts)
-    //         publisher.publish = (stream, streamMessage) => {
-    //             assert.deepEqual(stream, myStream)
-    //             assert.equal(streamMessage.getStreamPartition(), 0)
-    //             assert.equal(streamMessage.getTimestamp(), ts)
-    //             assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
-    //             assert.equal(streamMessage.getContent(), req.content)
-    //             done()
-    //         }
-    //
-    //         mockSocket.receive(req)
-    //     })
-    //
-    //     it('reads optional fields if specified (V0)', (done) => {
-    //         const ts = Date.now()
-    //         const req = new ControlLayer.PublishRequestV0(myStream.id, 'correct', undefined, '{}', ts, 'foo')
-    //         publisher.publish = (stream, streamMessage) => {
-    //             assert.deepEqual(stream, myStream)
-    //             assert.equal(streamMessage.getStreamPartition(), 0)
-    //             assert.equal(streamMessage.getTimestamp(), ts)
-    //             assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
-    //             assert.equal(streamMessage.getContent(), req.content)
-    //             done()
-    //         }
-    //
-    //         mockSocket.receive(req)
-    //     })
-    //
-    //     it('reads signature fields if specified (V0)', (done) => {
-    //         const ts = Date.now()
-    //         const req = new ControlLayer.PublishRequestV0(
-    //             myStream.id, 'correct', undefined, '{}',
-    //             ts, undefined, 'address', MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
-    //         )
-    //         publisher.publish = (stream, streamMessage) => {
-    //             assert.deepEqual(stream, myStream)
-    //             assert.equal(streamMessage.getStreamPartition(), 0)
-    //             assert.equal(streamMessage.getTimestamp(), ts)
-    //             assert.equal(streamMessage.messageId.sequenceNumber, 0)
-    //             assert.equal(streamMessage.getPublisherId(), 'address')
-    //             assert.equal(streamMessage.prevMsgRef, null)
-    //             assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
-    //             assert.equal(streamMessage.getContent(), '{}')
-    //             assert.equal(streamMessage.signatureType, MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)
-    //             assert.equal(streamMessage.signature, 'signature')
-    //             done()
-    //         }
-    //         mockSocket.receive(req)
-    //     })
-    //
-    //     describe('error handling', () => {
-    //         let errorMessage
-    //
-    //         beforeEach(() => {
-    //             // None of these tests may publish
-    //             publisher.getStreamPartition = sinon.stub().returns(0)
-    //             publisher.publish = sinon.stub().throws()
-    //
-    //             // Expect error messages
-    //             mockSocket.throwOnError = false
-    //         })
-    //
-    //         afterEach(() => {
-    //             assert.equal(mockSocket.sentMessages.length, 1)
-    //             const expectedResponse = ControlLayer.ErrorResponse.create(errorMessage)
-    //             assert.deepEqual(
-    //                 mockSocket.sentMessages[0],
-    //                 expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
-    //             )
-    //         })
-    //
-    //         it('responds with an error if the stream id is missing', () => {
-    //             const req = {
-    //                 type: 'publish',
-    //                 authKey: 'correct',
-    //                 msg: '{}',
-    //             }
-    //             mockSocket.receiveRaw(req)
-    //             errorMessage = 'Publish request failed: Error: streamId must be defined!'
-    //         })
-    //
-    //         it('responds with an error if the msg is missing', () => {
-    //             const req = {
-    //                 type: 'publish',
-    //                 stream: 'streamId',
-    //                 authKey: 'correct',
-    //             }
-    //             mockSocket.receiveRaw(req)
-    //             errorMessage = 'No content given!'
-    //         })
-    //
-    //         it('responds with an error if the msg is not a string', () => {
-    //             const req = {
-    //                 type: 'publish',
-    //                 stream: 'streamId',
-    //                 authKey: 'correct',
-    //                 msg: {},
-    //             }
-    //             mockSocket.receiveRaw(req)
-    //             errorMessage = 'Publish request failed: Error: Error'
-    //         })
-    //
-    //         it('responds with an error if the api key is wrong', () => {
-    //             const req = {
-    //                 type: 'publish',
-    //                 stream: 'streamId',
-    //                 authKey: 'wrong',
-    //                 msg: '{}',
-    //             }
-    //             mockSocket.receiveRaw(req)
-    //             errorMessage = 'Publish request failed: Error: 403'
-    //         })
-    //
-    //         it('responds with an error if the user does not have permission', () => {
-    //             const req = {
-    //                 type: 'publish',
-    //                 stream: 'streamId',
-    //                 authKey: 'correctButNoPermission',
-    //                 msg: '{}',
-    //             }
-    //             mockSocket.receiveRaw(req)
-    //             errorMessage = 'Publish request failed: Error: 401'
-    //         })
-    //     })
-    // })
+    describe('publish', () => {
+        beforeEach(() => {
+            // We are in connected state
+            wsMock.emit('connection', mockSocket, mockSocket.getRequest())
+        })
+
+        it('calls the publisher for valid requests (V1&V29)', (done) => {
+            const req = ControlLayer.PublishRequest.create(streamMessagev29, 'correct')
+
+            publisher.publish = (stream, streamMessage) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(streamMessage.getStreamPartition(), req.streamMessage.getStreamPartition())
+                assert.equal(streamMessage.getTimestamp(), req.streamMessage.getTimestamp())
+                assert.equal(streamMessage.getPublisherId(), req.streamMessage.getPublisherId())
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
+                assert.equal(streamMessage.getContent(), req.streamMessage.getContent())
+                assert.equal(streamMessage.signatureType, req.streamMessage.signatureType)
+                assert.equal(streamMessage.signature, req.streamMessage.signature)
+                done()
+            }
+
+            mockSocket.receive(req)
+        })
+
+        it('calls the publisher for valid requests (V1&V30)', (done) => {
+            const req = ControlLayer.PublishRequest.create(streamMessagev30, 'correct')
+
+            publisher.publish = (stream, streamMessage) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(streamMessage.getStreamPartition(), req.streamMessage.getStreamPartition())
+                assert.equal(streamMessage.getTimestamp(), req.streamMessage.getTimestamp())
+                assert.equal(streamMessage.messageId.sequenceNumber, req.streamMessage.messageId.sequenceNumber)
+                assert.equal(streamMessage.getPublisherId(), req.streamMessage.getPublisherId())
+                assert.equal(streamMessage.prevMsgRef.timestamp, req.streamMessage.prevMsgRef.timestamp)
+                assert.equal(streamMessage.prevMsgRef.sequenceNumber, req.streamMessage.prevMsgRef.sequenceNumber)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
+                assert.equal(streamMessage.getContent(), req.streamMessage.getContent())
+                assert.equal(streamMessage.signatureType, req.streamMessage.signatureType)
+                assert.equal(streamMessage.signature, req.streamMessage.signature)
+                // doesn't try to set fields for a stream with autoConfigure = false
+                assert(streamFetcher.setFields.notCalled)
+                done()
+            }
+
+            mockSocket.receive(req)
+        })
+
+        it('sets the fields once for the stream', (done) => {
+            const req = ControlLayer.PublishRequest.create(streamMessage2v30, 'correct')
+            const req2 = ControlLayer.PublishRequest.create(streamMessage2v30, 'correct')
+
+            publisher.publish = sinon.stub().onSecondCall().callsFake(() => {
+                assert(streamFetcher.setFields.calledOnce)
+                done()
+            })
+
+            streamFetcher.setFields = sinon.stub().callsFake((streamId, fields) => {
+                assert.equal(streamId, autoStream.id)
+                assert.deepEqual(fields, [{
+                    name: 'field1',
+                    type: 'string',
+                }, {
+                    name: 'field2',
+                    type: 'number',
+                }, {
+                    name: 'field3',
+                    type: 'boolean',
+                }, {
+                    name: 'field4',
+                    type: 'list',
+                }, {
+                    name: 'field5',
+                    type: 'map',
+                }])
+                return Promise.resolve()
+            })
+
+            mockSocket.receive(req)
+            mockSocket.receive(req2)
+        })
+
+        it('doesnt set the fields for stream with existing fields', (done) => {
+            const req = ControlLayer.PublishRequest.create(streamMessage3v30, 'correct')
+
+            publisher.publish = () => {
+                assert(streamFetcher.setFields.notCalled)
+                done()
+            }
+
+            streamFetcher.setFields = sinon.stub().throws()
+
+            mockSocket.receive(req)
+        })
+
+        it('calls the publisher for valid requests (V0)', (done) => {
+            const ts = Date.now()
+            const req = new ControlLayer.PublishRequestV0(myStream.id, 'correct', undefined, '{}', ts)
+            publisher.publish = (stream, streamMessage) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(streamMessage.getStreamPartition(), 0)
+                assert.equal(streamMessage.getTimestamp(), ts)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
+                assert.equal(streamMessage.getContent(), req.content)
+                done()
+            }
+
+            mockSocket.receive(req)
+        })
+
+        it('reads optional fields if specified (V0)', (done) => {
+            const ts = Date.now()
+            const req = new ControlLayer.PublishRequestV0(myStream.id, 'correct', undefined, '{}', ts, 'foo')
+            publisher.publish = (stream, streamMessage) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(streamMessage.getStreamPartition(), 0)
+                assert.equal(streamMessage.getTimestamp(), ts)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
+                assert.equal(streamMessage.getContent(), req.content)
+                done()
+            }
+
+            mockSocket.receive(req)
+        })
+
+        it('reads signature fields if specified (V0)', (done) => {
+            const ts = Date.now()
+            const req = new ControlLayer.PublishRequestV0(
+                myStream.id, 'correct', undefined, '{}',
+                ts, undefined, 'address', MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+            )
+            publisher.publish = (stream, streamMessage) => {
+                assert.deepEqual(stream, myStream)
+                assert.equal(streamMessage.getStreamPartition(), 0)
+                assert.equal(streamMessage.getTimestamp(), ts)
+                assert.equal(streamMessage.messageId.sequenceNumber, 0)
+                assert.equal(streamMessage.getPublisherId(), 'address')
+                assert.equal(streamMessage.prevMsgRef, null)
+                assert.equal(streamMessage.contentType, MessageLayer.StreamMessage.CONTENT_TYPES.MESSAGE)
+                assert.equal(streamMessage.getContent(), '{}')
+                assert.equal(streamMessage.signatureType, MessageLayer.StreamMessage.SIGNATURE_TYPES.ETH)
+                assert.equal(streamMessage.signature, 'signature')
+                done()
+            }
+            mockSocket.receive(req)
+        })
+
+        describe('error handling', () => {
+            let errorMessage
+
+            beforeEach(() => {
+                // None of these tests may publish
+                publisher.getStreamPartition = sinon.stub().returns(0)
+                publisher.publish = sinon.stub().throws()
+
+                // Expect error messages
+                mockSocket.throwOnError = false
+            })
+
+            afterEach(() => {
+                assert.equal(mockSocket.sentMessages.length, 1)
+                const expectedResponse = ControlLayer.ErrorResponse.create(errorMessage)
+                assert.deepEqual(
+                    mockSocket.sentMessages[0],
+                    expectedResponse.serialize(CONTROL_LAYER_VERSION, MESSAGE_LAYER_VERSION)
+                )
+            })
+
+            it('responds with an error if the stream id is missing', () => {
+                const req = {
+                    type: 'publish',
+                    authKey: 'correct',
+                    msg: '{}',
+                }
+                mockSocket.receiveRaw(req)
+                errorMessage = 'Publish request failed: Error: streamId must be defined!'
+            })
+
+            it('responds with an error if the msg is missing', () => {
+                const req = {
+                    type: 'publish',
+                    stream: 'streamId',
+                    authKey: 'correct',
+                }
+                mockSocket.receiveRaw(req)
+                errorMessage = 'No content given!'
+            })
+
+            it('responds with an error if the msg is not a string', () => {
+                const req = {
+                    type: 'publish',
+                    stream: 'streamId',
+                    authKey: 'correct',
+                    msg: {},
+                }
+                mockSocket.receiveRaw(req)
+                errorMessage = 'Publish request failed: Error: Error'
+            })
+
+            it('responds with an error if the api key is wrong', () => {
+                const req = {
+                    type: 'publish',
+                    stream: 'streamId',
+                    authKey: 'wrong',
+                    msg: '{}',
+                }
+                mockSocket.receiveRaw(req)
+                errorMessage = 'Publish request failed: Error: 403'
+            })
+
+            it('responds with an error if the user does not have permission', () => {
+                const req = {
+                    type: 'publish',
+                    stream: 'streamId',
+                    authKey: 'correctButNoPermission',
+                    msg: '{}',
+                }
+                mockSocket.receiveRaw(req)
+                errorMessage = 'Publish request failed: Error: 401'
+            })
+        })
+    })
 
     describe('disconnect', () => {
         beforeEach((done) => {
