@@ -239,7 +239,7 @@ describe('StreamMessageV31', () => {
         it('Throws with an invalid content of type GROUP_KEY_RESPONSE_SIMPLE (1)', () => {
             assert.throws(() => StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE, StreamMessage.ENCRYPTION_TYPES.RSA, {
+                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE, StreamMessage.ENCRYPTION_TYPES.NONE, {
                     foo: 'bar',
                 },
                 StreamMessage.SIGNATURE_TYPES.NONE, null,
@@ -251,7 +251,7 @@ describe('StreamMessageV31', () => {
         it('Throws with an invalid content of type GROUP_KEY_RESPONSE_SIMPLE (2)', () => {
             assert.throws(() => StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE, StreamMessage.ENCRYPTION_TYPES.RSA, {
+                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE, StreamMessage.ENCRYPTION_TYPES.NONE, {
                     streamId: 'streamId',
                     keys: [{
                         groupKey: 'some-group-key',
@@ -270,7 +270,7 @@ describe('StreamMessageV31', () => {
         it('Does not throw with a valid content of type GROUP_KEY_RESPONSE_SIMPLE', () => {
             const msg = StreamMessage.create(
                 ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE, StreamMessage.ENCRYPTION_TYPES.RSA, {
+                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE, StreamMessage.ENCRYPTION_TYPES.NONE, {
                     streamId: 'streamId',
                     keys: [{
                         groupKey: 'some-group-key',

@@ -15,7 +15,6 @@ export default class StreamMessage {
         this.encryptionType = encryptionType
         this.serializedContent = this.serializeContent(content)
         this.parsedContent = this.parseContent(content)
-        StreamMessage.validateContent(this.parsedContent, contentType)
     }
 
     getStreamId() {
@@ -57,12 +56,16 @@ export default class StreamMessage {
     /* eslint-enable class-methods-use-this */
 
     parseContent(content) {
-        if (typeof content === 'object' ||
-            (this.contentType === StreamMessage.CONTENT_TYPES.MESSAGE && this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE)) {
+        if (this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
+            return content
+        } else if (typeof content === 'object') {
+            StreamMessage.validateContent(content, this.contentType)
             return content
         } else if (typeof content === 'string') {
             try {
-                return JSON.parse(content)
+                const parsed = JSON.parse(content)
+                StreamMessage.validateContent(parsed, this.contentType)
+                return parsed
             } catch (err) {
                 throw new InvalidJsonError(
                     this.streamId,
