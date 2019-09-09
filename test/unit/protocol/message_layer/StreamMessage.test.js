@@ -70,5 +70,32 @@ describe('StreamMessage', () => {
             assert.equal(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.equal(streamMessage.signature, 'signature')
         })
+
+        it('create StreamMessageV31 with minimum fields defined', () => {
+            const streamMessage = StreamMessage.from({
+                streamId: 'streamId',
+                streamPartition: 0,
+                timestamp: 1564046332168,
+                sequenceNumber: 10,
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId',
+                content: {
+                    hello: 'world',
+                },
+            })
+            assert(streamMessage instanceof StreamMessageV31)
+            assert.equal(streamMessage.getStreamId(), 'streamId')
+            assert.equal(streamMessage.getStreamPartition(), 0)
+            assert.equal(streamMessage.getTimestamp(), 1564046332168)
+            assert.equal(streamMessage.getSequenceNumber(), 10)
+            assert.equal(streamMessage.getPublisherId(), 'publisherId')
+            assert.equal(streamMessage.getMsgChainId(), 'msgChainId')
+            assert.equal(streamMessage.prevMsgRef, null)
+            assert.equal(streamMessage.contentType, StreamMessage.CONTENT_TYPES.MESSAGE)
+            assert.equal(streamMessage.encryptionType, StreamMessage.ENCRYPTION_TYPES.NONE)
+            assert.equal(streamMessage.getContent(), '{"hello":"world"}')
+            assert.equal(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.NONE)
+            assert.equal(streamMessage.signature, null)
+        })
     })
 })
