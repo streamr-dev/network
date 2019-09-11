@@ -137,7 +137,7 @@ describe('StreamrClient', () => {
         return c
     }
 
-    const STORAGE_DELAY = 500
+    const STORAGE_DELAY = 2000
 
     beforeEach(() => {
         clearAsync()
@@ -667,6 +667,22 @@ describe('StreamrClient', () => {
                     })
                     connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
+                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
+                    setTimeout(() => {
+                        sub.stop()
+                        done()
+                    }, STORAGE_DELAY + 200)
+                }, STORAGE_DELAY + 1000)
+
+                it('sends a second ResendLastRequests if no StreamMessage received and a ResendResponseNoResend received', (done) => {
+                    const sub = setupSubscription('stream1', false, {
+                        resend: {
+                            last: 5,
+                        },
+                    })
+                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
+                    connection.emitMessage(SubscribeResponse.create(sub.streamId))
+                    connection.emitMessage(ResendResponseNoResend.create(sub.streamId, sub.streamPartition, sub.id))
                     connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
                     setTimeout(() => {
                         sub.stop()

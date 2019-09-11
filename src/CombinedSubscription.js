@@ -38,6 +38,7 @@ export default class CombinedSubscription extends Subscription {
         sub.on('resending', (response) => this.emit('resending', response))
         sub.on('resent', (response) => this.emit('resent', response))
         sub.on('no_resend', (response) => this.emit('no_resend', response))
+        sub.on('resend done', (response) => this.emit('resend done', response))
         sub.on('message received', () => this.emit('message received'))
         Object.keys(Subscription.State).forEach((state) => this.sub.on(state, () => this.emit(state)))
     }

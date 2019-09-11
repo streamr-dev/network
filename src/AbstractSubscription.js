@@ -97,7 +97,7 @@ export default class AbstractSubscription extends Subscription {
             try {
                 this.emit('no_resend', response)
             } finally {
-                this._finishResend()
+                this._finishResend(true)
             }
         })
     }

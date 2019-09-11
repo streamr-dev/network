@@ -570,10 +570,12 @@ export default class StreamrClient extends EventEmitter {
                     // another resend if it doesn't. So we can anyway clear this resend request.
                     const handler = () => {
                         clearTimeout(secondResend)
+                        sub.removeListener('resend done', handler)
                         sub.removeListener('message received', handler)
                         sub.removeListener('unsubscribed', handler)
                         sub.removeListener('error', handler)
                     }
+                    sub.once('resend done', handler)
                     sub.once('message received', handler)
                     sub.once('unsubscribed', handler)
                     sub.once('error', handler)
@@ -630,8 +632,13 @@ export default class StreamrClient extends EventEmitter {
                 options.publisherId || null, options.msgChainId || null, sessionToken,
             )
         }
-        debug('_requestResend: %o', request)
-        this.connection.send(request)
+
+        if (request) {
+            debug('_requestResend: %o', request)
+            this.connection.send(request)
+        } else {
+            this.handleError("Can't _requestResend without resendOptions")
+        }
     }
 
     _requestPublish(streamMessage, sessionToken) {

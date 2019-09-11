@@ -42,8 +42,14 @@ export default class HistoricalSubscription extends AbstractSubscription {
         return this.resendOptions
     }
 
-    _finishResend() {
-        this._lastMessageHandlerPromise = null
-        this.emit('resend done')
+    _finishResend(isNoResend = false) {
+        // if after a first resend request no messages are received (received ResendResponseNoResend),
+        // we wait for the response to the second resend request before considering the resend done (messages might have been stored in between)
+        if (isNoResend && !this.firstNoResendReceived) {
+            this.firstNoResendReceived = true
+        } else {
+            this._lastMessageHandlerPromise = null
+            this.emit('resend done')
+        }
     }
 }
