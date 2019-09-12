@@ -31,8 +31,8 @@ export default class PublishRequestV1 extends PublishRequest {
         return JSON.stringify(this.toArray(messageLayerVersion))
     }
 
-    static getConstructorArgs(array) {
-        const streamMessage = StreamMessageFactory.deserialize(array[0])
+    static getConstructorArgs(array, parseContent = true) {
+        const streamMessage = StreamMessageFactory.deserialize(array[0], parseContent)
         return [streamMessage, array[1]]
     }
 }

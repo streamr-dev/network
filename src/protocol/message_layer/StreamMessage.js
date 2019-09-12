@@ -4,7 +4,7 @@ const BYE_KEY = '_bye'
 const LATEST_VERSION = 31
 
 export default class StreamMessage {
-    constructor(version, streamId, contentType, encryptionType, content) {
+    constructor(version, streamId, contentType, encryptionType, content, parseContent = true) {
         if (new.target === StreamMessage) {
             throw new TypeError('StreamMessage is abstract.')
         }
@@ -14,7 +14,9 @@ export default class StreamMessage {
         this.contentType = contentType
         this.encryptionType = encryptionType
         this.serializedContent = this.serializeContent(content)
-        this.parsedContent = this.parseContent(content)
+        if (parseContent) {
+            this.parsedContent = this.parseContent(content)
+        }
     }
 
     getStreamId() {

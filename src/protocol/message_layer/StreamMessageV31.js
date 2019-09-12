@@ -9,8 +9,8 @@ import StreamMessageV30 from './StreamMessageV30'
 const VERSION = 31
 
 export default class StreamMessageV31 extends StreamMessage {
-    constructor(messageIdArgsArray, prevMessageRefArgsArray, contentType, encryptionType, content, signatureType, signature) {
-        super(VERSION, undefined, contentType, encryptionType, content)
+    constructor(messageIdArgsArray, prevMessageRefArgsArray, contentType, encryptionType, content, signatureType, signature, parseContent = true) {
+        super(VERSION, undefined, contentType, encryptionType, content, parseContent)
         this.messageId = new MessageID(...messageIdArgsArray)
         this.prevMsgRef = prevMessageRefArgsArray ? new MessageRef(...prevMessageRefArgsArray) : null
         this.encryptionType = encryptionType

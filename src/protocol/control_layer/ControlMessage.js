@@ -58,7 +58,7 @@ export default class ControlMessage {
         return classByVersionAndType[version][type]
     }
 
-    static deserialize(msg) {
+    static deserialize(msg, parseContent = true) {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
         let messageVersion
         let messageType
@@ -76,7 +76,7 @@ export default class ControlMessage {
             args = messageArray.slice(2)
         }
         const C = ControlMessage.getClass(messageVersion, messageType)
-        return new C(...C.getConstructorArgs(args))
+        return new C(...C.getConstructorArgs(args, parseContent))
     }
 }
 
