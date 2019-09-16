@@ -36,7 +36,7 @@ To listen to a private stream:
 streamr listen streamId apiKey
 ```
 
-Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
+Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment. Alternatively, you can give `--ws-url <url>` and `--http-url <url>` to connect to any custom network.
 
 
 ###  publish
