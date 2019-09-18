@@ -108,11 +108,11 @@ describe('local propagation', () => {
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
 
-        await broker.close()
-        await tracker.stop()
-
         await mqttClient1.end(true)
         await mqttClient2.end(true)
+
+        await broker.close()
+        await tracker.stop()
     })
 
     test('local propagation using StreamrClients', async () => {

@@ -130,6 +130,8 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         } else {
             this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'write')
                 .then((stream) => {
+                    this.streamAuthCache.set(key, stream)
+
                     // TODO: should this be moved to streamr-client-protocol-js ?
                     let streamPartition
                     if (request.version === 0) {
@@ -138,8 +140,6 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                     const streamMessage = request.getStreamMessage(streamPartition)
                     this.fieldDetector.detectAndSetFields(stream, streamMessage, request.apiKey, request.sessionToken)
                     this.publisher.publish(stream, streamMessage)
-
-                    this.streamAuthCache.set(key, stream)
                 })
                 .catch((err) => {
                     let errorMsg

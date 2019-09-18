@@ -11,6 +11,9 @@ before_install:
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 jobs:
   include:
+  - stage: eslint
+    name: eslint
+    script: npm run eslint
   - stage: Unit tests
     script:
     - npm run test-unit
