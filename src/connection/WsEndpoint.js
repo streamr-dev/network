@@ -391,7 +391,6 @@ async function startWebSocketServer(host, port) {
     return new Promise((resolve, reject) => {
         const wss = new WebSocket.Server(
             {
-                host,
                 port,
                 clientTracking: true
             }
