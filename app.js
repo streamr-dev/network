@@ -12,11 +12,15 @@ program
     .description('Run broker under environment specified by given configuration file.')
     .parse(process.argv)
 
-if (program.args.length !== 1) {
-    program.help()
-}
-
 const config = JSON.parse(fs.readFileSync(program.args[0]))
+// TODO: nicer way to override config with program arguments (could take inspiration from data-api repo)
+/* eslint-disable prefer-destructuring */
+if (program.args[1] && program.args[2] && program.args[3]) {
+    config.cassandra.hosts = program.args[1]
+    config.streamrUrl = program.args[2]
+    config.network.tracker = program.args[3]
+}
+/* eslint-enable prefer-destructuring */
 startBroker(config).catch((err) => {
     console.error(err)
     process.exit(1)
