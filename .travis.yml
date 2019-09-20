@@ -76,6 +76,18 @@ jobs:
       application: eu-west-1-stg-network-node-storage-codedeploy
       deployment_group: eu-west-1-stg-network-node-storage-deployment-group
       region: eu-west-1
+  - stage: Build docker (dev)
+    if: tag IS blank
+    install: true
+    env:
+    - OWNER=streamr
+    - IMAGE_NAME=broker-node
+    - TAG=dev
+    script:
+    - docker build -t $OWNER/$IMAGE_NAME:$TAG .
+    deploy:
+    - provider: script
+      script: bash .travis_scripts/deploy_docker.sh staging
   - stage: publish
     if: tag IS present
     script: npm publish
