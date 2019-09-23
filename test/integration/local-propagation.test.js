@@ -102,17 +102,22 @@ describe('local propagation', () => {
         })
         freshStreamId = freshStream.id
         freshStreamName = freshStream.name
-    })
+
+        await wait(3000)
+    }, 10 * 1000)
 
     afterEach(async () => {
+        tracker.stop(() => {})
+
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
 
-        await mqttClient1.end(true)
-        await mqttClient2.end(true)
+        mqttClient1.end(true)
+        mqttClient2.end(true)
 
-        await broker.close()
-        await tracker.stop()
+        broker.close()
+
+        await wait(1000)
     })
 
     test('local propagation using StreamrClients', async () => {
@@ -283,6 +288,8 @@ describe('local propagation', () => {
         await client1.publish(freshStreamId, {
             key: 3
         })
+
+        await wait(500)
 
         await client2.publish(freshStreamId, {
             key: 4

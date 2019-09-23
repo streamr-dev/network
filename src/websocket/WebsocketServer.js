@@ -60,20 +60,16 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         clearInterval(this._updateTotalBufferSizeInterval)
         this.streams.close()
         this.streamAuthCache.reset()
-        this.wss.clients.forEach((socket) => socket.terminate())
+        // this.wss.forEach((socket) => socket.terminate())
         return new Promise((resolve, reject) => {
-            this.wss.close((err) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve()
-                }
-            })
+            // uws has setTimeout(cb, 20000); in close event
+            this.wss.close()
+            resolve()
         })
     }
 
     onNewClientConnection(socket, socketRequest) {
-        const connection = new Connection(socket, socketRequest)
+        const connection = new Connection(socket)
         this.volumeLogger.connectionCount += 1
         debug('onNewClientConnection: socket "%s" connected', connection.id)
 

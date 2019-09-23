@@ -98,6 +98,8 @@ describe('SubscriptionManager', () => {
         broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, mqttPort1, true)
         broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, mqttPort2, true)
 
+        await wait(2000)
+
         client1 = createClient(wsPort1, 'tester1-api-key')
         await wait(100)
         client2 = createClient(wsPort2, 'tester1-api-key')
@@ -119,19 +121,21 @@ describe('SubscriptionManager', () => {
         })
         freshStreamId2 = freshStream2.id
         freshStreamName2 = freshStream2.name
-    })
+    }, 10 * 1000)
 
     afterEach(async () => {
+        tracker.stop(() => {})
+
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
 
-        mqttClient1.end()
-        mqttClient2.end()
+        mqttClient1.end(true)
+        mqttClient2.end(true)
 
         broker1.close()
         broker2.close()
 
-        tracker.stop()
+        await wait(1000)
     })
 
     it('SubscriptionManager correctly handles subscribe/unsubscribe requests across all adapters', async () => {
@@ -140,6 +144,8 @@ describe('SubscriptionManager', () => {
 
         await mqttClient1.subscribe(freshStreamName1)
         await mqttClient2.subscribe(freshStreamName2)
+
+        await wait(1000)
 
         await waitForCondition(() => broker1.getStreams().length === 1)
         await waitForCondition(() => broker2.getStreams().length === 1)
@@ -158,6 +164,8 @@ describe('SubscriptionManager', () => {
         await waitForCondition(() => broker1.getStreams().length === 2)
         await waitForCondition(() => broker2.getStreams().length === 2)
 
+        await wait(1000)
+
         expect(broker1.getStreams()).toEqual([freshStreamId1 + '::0', freshStreamId2 + '::0'].sort())
         expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0', freshStreamId2 + '::0'].sort())
 
@@ -165,7 +173,7 @@ describe('SubscriptionManager', () => {
             stream: freshStreamId1
         }, () => {})
 
-        await wait(200)
+        await wait(1000)
         expect(broker1.getStreams()).toEqual([freshStreamId1 + '::0', freshStreamId2 + '::0'].sort())
         expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0', freshStreamId2 + '::0'].sort())
 
@@ -181,7 +189,7 @@ describe('SubscriptionManager', () => {
         expect(broker1.getStreams()).toEqual([freshStreamId2 + '::0'])
         expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0', freshStreamId2 + '::0'].sort())
 
-        await wait(200)
+        await wait(1000)
         await client1.unsubscribeAll(freshStreamId2)
 
         await waitForCondition(() => broker1.getStreams().length === 0)
@@ -189,5 +197,5 @@ describe('SubscriptionManager', () => {
 
         expect(broker1.getStreams()).toEqual([])
         expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0', freshStreamId2 + '::0'].sort())
-    })
+    }, 10000)
 })

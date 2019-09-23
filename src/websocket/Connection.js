@@ -11,7 +11,7 @@ function generateId() {
 }
 
 module.exports = class Connection {
-    constructor(socket, request) {
+    constructor(socket) {
         this.id = generateId()
         this.socket = socket
         this.streams = []
@@ -21,7 +21,7 @@ module.exports = class Connection {
         this.messageLayerVersion = 28
 
         // attempt to parse versions from request parameters
-        const parts = request.url.split('?')
+        const parts = socket.upgradeReq.url.split('?')
         if (parts.length === 2) {
             const { controlLayerVersion, messageLayerVersion } = qs.parse(parts[1])
             if (controlLayerVersion && messageLayerVersion) {

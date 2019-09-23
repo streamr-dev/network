@@ -1,4 +1,4 @@
-const ws = require('ws')
+const ws = require('@streamr/sc-uws')
 
 const MissingConfigError = require('../errors/MissingConfigError')
 const adapterRegistry = require('../adapterRegistry')
