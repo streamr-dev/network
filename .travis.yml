@@ -11,7 +11,7 @@ before_install:
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 env:
   global:
-  - secure: opL3vm0mTZl9g9TI+53d04AlTVYq7OA38WUMJQJWHVgPmmyfobOoFvT6+9xDXzbnh4NAgXrqtJGOxnQKkK2o+gyT2e78dLWZx1RfeeLwntgVCTEYLl844tOtgc1bwivy7ND9HfPam1yfBjYQ6UmpsgkILrPbzzHfcDwWvFXLHANk/3IiCE705gtvdC5c1/JXdUtzhYmpmsQ9JOkAg0+n6qmNvYwU7VrIixogojnEP0U3yDSbwJ+yPiWNzZpnwwe4jI/G1KE193rbEQjEOURGiyoxeyBrFOANDYT5BohRGjwsi2MTs/PEl9WDXlNfliOadtjUFI0Y3ByatLpPzWzz5aVVSxifW1YbG+WbVfqw7S4VP3ebnsHiY5uFm0f1o6wVLlNFdQtRxVi1w8mSi90C7hqs3SjFQWtStGYhiNOnqYGpSz74HOEojTUdIsT9DqOXE7tVIdH/PcnNAflHG5kbvNPv8sW5FX4Vw2ECCuT73LuYXYZ+aW0ykogFcsP84rX6yw4P4z+VS758zJ7LeJapxXzS5C0lGR9ISzg91/tSR+4RhsurwRPPRGntQULm9WBfE6QKTPxfFE8/Pprxm2kPWt3svrsNBdCgR4nTEaYF1AbX2SRQJZ4gcJF5ojfkCaP9s3YtTedJ3aV7070OoT7qReksz4A3QSKpc75uTKR8yQ8=
+    secure: TQNTkUzGO4c8CSN1fVKzrFwf8cqkDGuRpVH7UIVhv7ae0a0lflW3zqVC+7UYSpXrULQmr2t7oPq6mdz6oFfA+tLTvpsY1YXnBYf/heiFO1ZhgBKu4LFSTjzEs+GcI9gS12NHmCVwpNNWTxPXYd2ITyIx3Q2ctxyKIJsGp4/+/q3std2829YHHtZr1h/FzosODWjzuzmbsaI2QDGTlrAL/tpGkpeUrXmKWru45QdgXvKqg5DB9oqysnusrUSCE5gtfm13lEVealE8HqxTr0ZCHX+kiAiUbebG6DHLdp8FfFwp5f5KbSJAS2Y+Eu2wqwIdsMel39ptDBewdarXtuDQXv1JJw1kehzGpiwq6Aunvt1YuB0WtrtgJs+Cq5LprqduuQwZa0wwSWvg0mspuHiEiD3FgZk7aIeI/UiIPSAulHYB42QP8rFM5vGkGVN0AxhJbRobcsUjuIVajnebVvTpWVbMkAKHMtBom2iGxoRovP1itxKNira4P3uwC1yubqssaY7TkBqH29l6UVUB1IEnQiTBDexrASoUlLJe9PNK0sCeWkIHZssCtxlH1y2dI/OmQTLPdjPXq8e0juC5CGXlFMawPrLKxeETQY4IeRiv8zGgmOH0uvYsG7t208Jni9sFSL3jdKZ9GP/v+bW8QN7BiHV1grpTnRw+K75rJmFGAwk=
 jobs:
   include:
   - stage: tests
@@ -31,7 +31,8 @@ jobs:
     - cp package-lock.json build
     - mv .codedeploy/appspec.yml build/appspec.yml
     - mv .codedeploy/ build/
-    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_JOB_ID}.tar .;tar -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
+    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_JOB_ID}.tar .;tar
+      -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
     - cd $TRAVIS_BUILD_DIR;
     deploy:
     - provider: s3
@@ -56,4 +57,3 @@ jobs:
   - stage: publish
     if: tag IS present
     script: npm publish
-

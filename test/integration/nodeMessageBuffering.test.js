@@ -1,4 +1,5 @@
 const { MessageLayer } = require('streamr-client-protocol')
+const { wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const NetworkNode = require('../../src/NetworkNode')
@@ -22,6 +23,8 @@ describe('message buffering of Node', () => {
 
         sourceNode = await startNetworkNode(LOCALHOST, 30321, 'source-node')
         await sourceNode.addBootstrapTracker(tracker.getAddress())
+
+        await wait(1000)
 
         destinationNode = await startNetworkNode(LOCALHOST, 30322, 'destination-node')
         await destinationNode.addBootstrapTracker(tracker.getAddress())

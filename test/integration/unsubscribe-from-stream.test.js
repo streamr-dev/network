@@ -20,8 +20,13 @@ describe('node unsubscribing from a stream', () => {
 
         nodeA.subscribe('s', 1)
         nodeB.subscribe('s', 1)
+
+        await wait(500)
+
         nodeA.subscribe('s', 2)
         nodeB.subscribe('s', 2)
+
+        await wait(500)
 
         await waitForEvent(nodeB, Node.events.NODE_SUBSCRIBED)
         await waitForEvent(nodeA, Node.events.NODE_SUBSCRIBED)

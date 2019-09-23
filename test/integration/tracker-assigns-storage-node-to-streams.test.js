@@ -1,5 +1,5 @@
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
-const { waitForEvent } = require('streamr-test-utils')
+const { waitForEvent, wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
@@ -28,6 +28,8 @@ describe('tracker assigns storage node to streams', () => {
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
 
         storageNode.addBootstrapTracker(tracker.getAddress())
+
+        await wait(1000)
     })
 
     afterAll(async () => {
@@ -50,6 +52,9 @@ describe('tracker assigns storage node to streams', () => {
             content: {},
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
+
+        const [msg1] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
+
         subscriberTwo.publish(StreamMessage.from({
             streamId: 'stream-2',
             streamPartition: 0,
@@ -63,7 +68,6 @@ describe('tracker assigns storage node to streams', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
 
-        const [msg1] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
         const [msg2] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
         expect(msg1.getStreamId()).toEqual('stream-1')
         expect(msg2.getStreamId()).toEqual('stream-2')
@@ -82,6 +86,9 @@ describe('tracker assigns storage node to streams', () => {
             content: {},
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
+
+        const [msg1] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
+
         subscriberTwo.publish(StreamMessage.from({
             streamId: 'new-stream-2',
             streamPartition: 0,
@@ -95,7 +102,6 @@ describe('tracker assigns storage node to streams', () => {
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
 
-        const [msg1] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
         const [msg2] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
         expect(msg1.getStreamId()).toEqual('new-stream-1')
         expect(msg2.getStreamId()).toEqual('new-stream-2')

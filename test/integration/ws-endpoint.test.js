@@ -1,4 +1,4 @@
-const { waitForEvent } = require('streamr-test-utils')
+const { waitForEvent, wait } = require('streamr-test-utils')
 
 const { LOCALHOST } = require('../util')
 const endpointEvents = require('../../src/connection/WsEndpoint').events
@@ -31,9 +31,10 @@ describe('create five endpoints and init connection between them', () => {
         }
 
         await Promise.all(promises)
+        await wait(100)
 
         for (let i = 0; i < MAX; i++) {
-            expect(endpoints[i].getPeers().size).toEqual(1)
+            expect(endpoints[i].getPeers().size).toEqual(2)
         }
 
         for (let i = 0; i < MAX; i++) {
@@ -44,10 +45,10 @@ describe('create five endpoints and init connection between them', () => {
 
     it('address and custom headers are exchanged between connecting endpoints', async () => {
         const endpointOne = await startEndpoint(LOCALHOST, 30695, {
-            'my-identity': 'endpoint-1'
+            'streamr-peer-id': 'endpoint-1'
         }, null)
         const endpointTwo = await startEndpoint(LOCALHOST, 30696, {
-            'my-identity': 'endpoint-2'
+            'streamr-peer-id': 'endpoint-2'
         }, null)
 
         const e1 = waitForEvent(endpointOne, endpointEvents.PEER_CONNECTED)
@@ -61,13 +62,13 @@ describe('create five endpoints and init connection between them', () => {
         expect(endpointOneArguments).toEqual([
             'ws://127.0.0.1:30696',
             {
-                'my-identity': 'endpoint-2'
+                'streamr-peer-id': 'endpoint-2'
             }
         ])
         expect(endpointTwoArguments).toEqual([
             'ws://127.0.0.1:30695',
             {
-                'my-identity': 'endpoint-1'
+                'streamr-peer-id': 'endpoint-1'
             }
         ])
 

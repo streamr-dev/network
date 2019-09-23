@@ -8,7 +8,7 @@ const { EventEmitter } = require('events')
 const url = require('url')
 
 const createDebug = require('debug')
-const WebSocket = require('ws')
+const WebSocket = require('@streamr/sc-uws')
 
 const { disconnectionReasons } = require('../messages/messageTypes')
 const Metrics = require('../metrics')
@@ -88,7 +88,7 @@ class WsEndpoint extends EventEmitter {
 
         this.wss.on('connection', this._onIncomingConnection.bind(this))
 
-        this.wss.options.verifyClient = (info) => {
+        this.wss.verifyClient = (info) => {
             const parameters = url.parse(info.req.url, true)
             const { address } = parameters.query
 
@@ -102,8 +102,8 @@ class WsEndpoint extends EventEmitter {
         }
 
         // Attach custom headers to headers before they are sent to client
-        this.wss.on('headers', (headers) => {
-            headers.push(...this.customHeaders.asArray())
+        this.wss.httpServer.on('upgrade', (request, socket, head) => {
+            request.headers.extraHeaders = this.customHeaders.asObject()
         })
 
         this.debug('listening on: %s', this.getAddress())
@@ -244,12 +244,13 @@ class WsEndpoint extends EventEmitter {
         const p = new Promise((resolve, reject) => {
             try {
                 let customHeadersOfServer
-                const ws = new WebSocket(`${peerAddress}?address=${this.getAddress()}`, {
-                    headers: this.customHeaders.asObject()
-                })
+                const ws = new WebSocket(`${peerAddress}/?address=${this.getAddress()}`, this.customHeaders.asObject())
 
-                ws.on('upgrade', (response) => {
-                    customHeadersOfServer = this.customHeaders.pluckCustomHeadersFromObject(response.headers)
+                ws.on('upgrade', (peerId, peerType) => {
+                    customHeadersOfServer = this.customHeaders.pluckCustomHeadersFromObject({
+                        'streamr-peer-id': peerId,
+                        'streamr-peer-type': peerType
+                    })
                 })
 
                 ws.on('open', () => {
@@ -288,13 +289,9 @@ class WsEndpoint extends EventEmitter {
         })
 
         return new Promise((resolve, reject) => {
-            this.wss.close((err) => {
-                if (err) {
-                    reject(err)
-                } else {
-                    resolve()
-                }
-            })
+            // uws has setTimeout(cb, 20000); in close event
+            this.wss.close()
+            resolve()
         })
     }
 
@@ -306,8 +303,9 @@ class WsEndpoint extends EventEmitter {
         if (this.advertisedWsUrl) {
             return this.advertisedWsUrl
         }
-        const socketAddress = this.wss.address()
-        return `ws://${socketAddress.address}:${socketAddress.port}`
+        // eslint-disable-next-line no-underscore-dangle
+        const socketAddress = this.wss.httpServer._connectionKey.split(':')
+        return `ws://${socketAddress[1]}:${socketAddress[2]}`
     }
 
     getPeers() {
