@@ -11,7 +11,7 @@ before_install:
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 env:
   global:
-  - secure: opL3vm0mTZl9g9TI+53d04AlTVYq7OA38WUMJQJWHVgPmmyfobOoFvT6+9xDXzbnh4NAgXrqtJGOxnQKkK2o+gyT2e78dLWZx1RfeeLwntgVCTEYLl844tOtgc1bwivy7ND9HfPam1yfBjYQ6UmpsgkILrPbzzHfcDwWvFXLHANk/3IiCE705gtvdC5c1/JXdUtzhYmpmsQ9JOkAg0+n6qmNvYwU7VrIixogojnEP0U3yDSbwJ+yPiWNzZpnwwe4jI/G1KE193rbEQjEOURGiyoxeyBrFOANDYT5BohRGjwsi2MTs/PEl9WDXlNfliOadtjUFI0Y3ByatLpPzWzz5aVVSxifW1YbG+WbVfqw7S4VP3ebnsHiY5uFm0f1o6wVLlNFdQtRxVi1w8mSi90C7hqs3SjFQWtStGYhiNOnqYGpSz74HOEojTUdIsT9DqOXE7tVIdH/PcnNAflHG5kbvNPv8sW5FX4Vw2ECCuT73LuYXYZ+aW0ykogFcsP84rX6yw4P4z+VS758zJ7LeJapxXzS5C0lGR9ISzg91/tSR+4RhsurwRPPRGntQULm9WBfE6QKTPxfFE8/Pprxm2kPWt3svrsNBdCgR4nTEaYF1AbX2SRQJZ4gcJF5ojfkCaP9s3YtTedJ3aV7070OoT7qReksz4A3QSKpc75uTKR8yQ8=
+    secure: RLUxAORLAo5tRy2z49dRju3r7lJvcVA3I2+66YrE3YuLw7XwvQS4qmnyhcBZKZGbM5mibATvLeXHG3GoM1QJl4yjdkDKudNaGyBTfNuHzo9vGLnH/jd6sUKnau45qtfR+pQBve7zbekkDerRmQIz5hwP6BUUUk5zjvf+rovPUn9jaPVTGnmmCSK5lnvjee2KeDlNS8DB0js9F7UvHwOtSvVNFVCgCotV3CcLmf4XysF080yQasX1F/kXRlCE2mFhkDgwI1hQxUrv55m+Z8dTRx5e7K2IVQgUB+jAAY/Bji12KFPgnBzK5GqiNG9tDxFoBi1oQk95LH4r3T5Hap0PJyyaOIgxd4/8OBsHhEejdOs8ahjaeGYIRj6H2MVGLaWkANTDd4/skYY1oKehABT/K2FXM6p6GQWlBKHbZYHFhsP+Kht1kZMxxnvT7FTixaPfzy3dGUgKG6rKddptOCp455A89AwQtDYtKnroTX/j9RAV1HVYLCM+X33XlezW1GnESAU45TnMrX21uaAoV699a839zCbsu+yR8RadIhapRJPz5+D4H1tMJiIB2lYMHKa/O1AC86TUJ4cNUd/Vl9MIQbT9R88PLf2HpuoLIR2++ZU6/0jA0D/EZY/L9JhGpN9EO5oC5MtiuyKtGwVXKYpEstZbaF/D1UrpyYlGwo9Or8c=
 jobs:
   include:
   - stage: tests
@@ -61,7 +61,7 @@ jobs:
     - IMAGE_NAME=tracker
     - TAG=dev
     script:
-    - docker build -t $OWNER/$IMAGE_NAME:$TAG .
+    - docker build -t $OWNER/$IMAGE_NAME:$TAG --build-arg NPM_TOKEN=${NPM_TOKEN} .
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh staging
