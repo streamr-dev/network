@@ -100,6 +100,9 @@ describe('broker: end-to-end', () => {
         broker1.close()
         broker2.close()
         broker3.close()
+
+        await wait(1000)
+
         tracker.stop(() => {})
     })
 

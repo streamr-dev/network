@@ -46,7 +46,7 @@ describe('non-mqtt connection to MQTT adapter', () => {
             newSocket.destroy()
         }
 
-        await broker.close()
+        broker.close()
         await tracker.stop()
     })
 

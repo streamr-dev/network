@@ -66,10 +66,10 @@ describe('data-api', () => {
                 // Missing Sec-Websocket-Key header
             },
         }).then((res) => {
-            assert.equal(res.status, 400)
-            done()
         }).catch((err) => {
-            done(err)
+            expect(err.name).toEqual('FetchError')
+            expect(err.message).toEqual('request to http://localhost:12346/api/v1/ws failed, reason: socket hang up')
+            done()
         })
     })
-}, 20 * 1000)
+})

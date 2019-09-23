@@ -1,6 +1,7 @@
 const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
 const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
+const { wait } = require('streamr-test-utils')
 
 const { startCassandraStorage } = require('../../src/Storage')
 
@@ -81,7 +82,8 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
     })
 
     afterEach(async () => {
-        await storage.close()
+        storage.close()
+        await wait(1000)
     })
 
     test('store messages into Cassandra', async () => {
