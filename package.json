@@ -57,11 +57,11 @@
     "pidusage": "^2.0.17",
     "speedometer": "^1.1.0",
     "streamr-client": "^2.1.1",
-    "streamr-client-protocol": "^2.2.10",
+    "streamr-client-protocol": "^2.2.11",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "eslint": "^6.2.2",
+    "eslint": "^6.4.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-streamr-nodejs": "^1.1.0",
     "eslint-plugin-import": "^2.18.2",

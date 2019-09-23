@@ -48,7 +48,7 @@ const decode = (source, message) => {
             )
 
         case msgTypes.WRAPPER:
-            return new WrapperMessage(ControlLayer.ControlMessage.deserialize(payload.serializedControlLayerPayload), source)
+            return new WrapperMessage(ControlLayer.ControlMessage.deserialize(payload.serializedControlLayerPayload, false), source)
 
         default:
             throw new Error(`Unknown message type: ${code}`)
