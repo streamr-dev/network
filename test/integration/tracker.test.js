@@ -24,6 +24,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
         subscriberTwo.subscribeToStreamIfHaveNotYet(s1)
         subscriberTwo.subscribeToStreamIfHaveNotYet(s2)
+
+        await wait(1000)
     })
 
     afterEach(async () => {
@@ -67,18 +69,16 @@ describe('check tracker, nodes and statuses from nodes', () => {
         subscriberOne.addBootstrapTracker(tracker.getAddress())
         subscriberTwo.addBootstrapTracker(tracker.getAddress())
 
-        await Promise.all([
-            await waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED),
-            await waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED)
-        ])
-
-        // console.log('subscriberOne.unsubscribeFromStream(s2)')
+        // await Promise.all([
+        //     await waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED),
+        //     await waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED)
+        // ])
         subscriberOne.unsubscribeFromStream(s2)
-        await Promise.all([
-            await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
-            await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        ])
-
+        // await Promise.all([
+        //     await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+        //     await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        // ])
+        await wait(1000)
         expect(Object.keys(tracker.overlayPerStream)).toEqual(['stream-1::0', 'stream-2::2'])
         expect(tracker.overlayPerStream['stream-1::0'].state()).toEqual({
             subscriberOne: ['subscriberTwo'],

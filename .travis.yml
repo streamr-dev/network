@@ -31,7 +31,8 @@ jobs:
     - cp package-lock.json build
     - mv .codedeploy/appspec.yml build/appspec.yml
     - mv .codedeploy/ build/
-    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_JOB_ID}.tar .;tar -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
+    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_JOB_ID}.tar .;tar
+      -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
     - cd $TRAVIS_BUILD_DIR;
     deploy:
     - provider: s3
@@ -68,4 +69,3 @@ jobs:
   - stage: publish
     if: tag IS present
     script: npm publish
-

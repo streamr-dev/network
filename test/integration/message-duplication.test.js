@@ -1,5 +1,5 @@
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
-const { waitForCondition, waitForEvent } = require('streamr-test-utils')
+const { waitForCondition, waitForEvent, wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { LOCALHOST } = require('../util')
@@ -36,6 +36,8 @@ describe('duplicate message detection and avoidance', () => {
         otherNodes[2].subscribe('stream-id', 0)
         otherNodes[3].subscribe('stream-id', 0)
         otherNodes[4].subscribe('stream-id', 0)
+
+        await wait(1000)
 
         // Set up 1st test case
         let totalMessages = 0
