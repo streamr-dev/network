@@ -36,7 +36,8 @@ jobs:
     - cp package-lock.json build
     - mv .codedeploy/appspec.yml build/appspec.yml
     - mv .codedeploy/ build/
-    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/broker-${TRAVIS_JOB_ID}.tar .; tar -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
+    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/broker-${TRAVIS_JOB_ID}.tar .;
+      tar -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
     - cd $TRAVIS_BUILD_DIR;
     deploy:
     - provider: s3
@@ -84,7 +85,7 @@ jobs:
     - IMAGE_NAME=broker-node
     - TAG=dev
     script:
-    - docker build -t $OWNER/$IMAGE_NAME:$TAG .
+    - docker build -t $OWNER/$IMAGE_NAME:$TAG --build-arg NPM_TOKEN=${NPM_TOKEN} .
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh staging
@@ -93,4 +94,4 @@ jobs:
     script: npm publish
 env:
   global:
-    secure: YjBJm1GmSusUoHue15sAj04mZYhd6yC6v/V45hhyMhSfEawZn1H4nFzPiBqhNGZ2Lti2P+axJ5HXkFz/my/hWWL9+ENEKl0MczXcIWz5COZGZFJQORMCmL8u5yvFZvMqMGUwLuN6pkFnTHgYjRL7x7Ee+MEk+1qP0Tfy1qYaUhr192XzteRMI1zllxZSf3ElEY0BOjJ0N9PJs4O9X1T28w/lmW6c0ORiS9dCIG5afaMD50YRFrZCzc+l0e/kcSHo9lillCiD6755uTPBPYEmWYGmICRvG2qK+Hnv9B42sr3AOVKmkUyFHZgN1GOByHzcib8yrKdo2sgEr/oaFQvI2du915MDEAjMlQfeSbYjsPSouDMBD8CxhY6MVDwKZzMYF3KfSs7sttd411hx1vhog4aX+K6OFcVXyc/iSZAzSLSJQQvHrGffu5+lb/j7408vgJp69MAaK4ICfRhnGJbgcd/JxpGGeQiCELu1Zu7Sw8rXyq+W3ilvbOjfT0pXR9KzmZlFPpx083Ho51MxKoGEmxXL/RrW/LW5fx+EQXTuOQMnS+NUyJwPUUg16B0c+F2fNsov9KqXLiJBMXzo+fosjlWI+tm0pwNueFlGKJjs67Q/WwV5lKYyABQjTeBrT6AujGT7jeHHqp5ZrmKDLBHZK4isy63RqPeX+mwm/1fmHUU=
+    secure: KgcgQJEfrGuKfUBGp5Kg9UHjVBdNFe7+qmrZ4X0QUm3kqhDSBF9URAZRsfT9mwtk0mzPDrD4TVl+kD642/M6UDnez5uWmhZWNdYjg78L6QzuDdK67ZhhHJquSbkvYH2cu+9mn2HYyhFKOrmajHCVamXUfHRM/IzQtoNckwsGh6A3sip3QFqu08Uvn5eW4aSqE1TvfK1I65TGUA1aGI+ca1hDZ2OR4R8BRJTQUDI5JyRXyad0JdKWNPCPL9e8HOxcVks3K+duYyp56jMg3uTWVD6gE4WQNHCBjrfynpaY2Bbm7tJxz7f7ZkIqf377AEdD5l6cGIwZ814fdCxwLDgJCvakYnz6hyJMaUu6d/CG5Aqu5oudNyw1m/9FMFOKulpf9nRzB9FwwXRkmBepGi8/0MxOf/jn0GsfdClW/LRIWveZmhO41Rb/RZyEzGV+AqBBD/njFHO+/hWucjATtnxe3TuV7jbjtezJEuJzstKSPlaL5BceTEAahz6w0vZR6H+vKxeeuRmZXqpSOYtuOOIytlhyFyF5i/juSx6acc1z5HtV9r1L8DB65SryHX1AOhAc/v511mguRIV2wuHx8Rij68pxdn68Ede01bmatp6SWYo2pUejySL/9GYX9p5WROYMb/MyqGhE+1FM4120F5UTd7koqO0TIbysZGtNckuVPaU=
