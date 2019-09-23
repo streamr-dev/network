@@ -8,7 +8,7 @@ branches:
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
 - npm i -g npm@6.9.0
-- npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+- echo "//registry.npmjs.org/:_authToken=\${NPM_TOKEN}" > .npmrc
 jobs:
   include:
   - stage: eslint
