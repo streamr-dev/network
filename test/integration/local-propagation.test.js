@@ -105,11 +105,11 @@ describe('local propagation', () => {
     })
 
     afterEach(async () => {
-        await client1.ensureDisconnected()
-        await client2.ensureDisconnected()
-
         await mqttClient1.end(true)
         await mqttClient2.end(true)
+
+        await client1.ensureDisconnected()
+        await client2.ensureDisconnected()
 
         await broker.close()
         await tracker.stop()
@@ -283,6 +283,8 @@ describe('local propagation', () => {
         await client1.publish(freshStreamId, {
             key: 3
         })
+
+        await wait(500)
 
         await client2.publish(freshStreamId, {
             key: 4
