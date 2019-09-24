@@ -119,7 +119,7 @@ describe('fullt test of MessageBuffer', () => {
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
 
-        await wait(50)
+        await wait(51)
 
         buffer.put('stream-2', {
             a: 'a'
@@ -131,7 +131,7 @@ describe('fullt test of MessageBuffer', () => {
             c: 'c'
         })
 
-        await wait(50)
+        await wait(51)
 
         expect(buffer.popAll('stream-1')).toEqual([])
         expect(buffer.popAll('stream-2')).toEqual([{
@@ -154,12 +154,12 @@ describe('fullt test of MessageBuffer', () => {
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
 
-        await wait(50)
+        await wait(51)
 
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
 
-        await wait(50) // first 3 messages deleted
+        await wait(51) // first 3 messages deleted
 
         expect(buffer.popAll('stream-1').length).toEqual(2)
     })
