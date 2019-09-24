@@ -16,6 +16,8 @@ export default class StreamMessage {
         this.serializedContent = this.serializeContent(content)
         if (parseContent) {
             this.parsedContent = this.parseContent(content)
+        } else {
+            this.content = content
         }
     }
 
@@ -85,6 +87,10 @@ export default class StreamMessage {
     }
 
     getParsedContent() {
+        if (!this.parsedContent) {
+            this.parsedContent = this.parseContent(this.content)
+            this.content = null
+        }
         return this.parsedContent
     }
 

@@ -7,8 +7,11 @@ import StreamMessageV31 from './StreamMessageV31'
 const VERSION = 29
 
 export default class StreamMessageV29 extends StreamMessage {
-    constructor(streamId, streamPartition, timestamp, ttl, offset, previousOffset, contentType, content, signatureType, publisherAddress, signature) {
-        super(VERSION, streamId, contentType, StreamMessage.ENCRYPTION_TYPES.NONE, content)
+    constructor(
+        streamId, streamPartition, timestamp, ttl, offset, previousOffset, contentType,
+        content, signatureType, publisherAddress, signature, parseContent = true,
+    ) {
+        super(VERSION, streamId, contentType, StreamMessage.ENCRYPTION_TYPES.NONE, content, parseContent)
         this.ttl = ttl
         this.streamPartition = streamPartition
         this.timestamp = timestamp
