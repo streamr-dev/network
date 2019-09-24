@@ -5,7 +5,7 @@ const util = require('util')
 const { startTracker } = require('../src/composition')
 
 const port = process.argv[2] || 30300
-const ip = process.argv[3] || '127.0.0.1'
+const ip = process.argv[3]
 const maxNeighborsPerNode = process.argv[4] || 4
 const id = `tracker-${port}`
 

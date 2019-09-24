@@ -11,7 +11,7 @@ before_install:
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 env:
   global:
-    secure: hOCyEudoB8rm1jAAgJqaE9KkS4Yth/aoQliPnCWygTVsHyoyJrQjZnhEvfw2mOiXIuMG9BJ3N746DyAXCYYO0uurdtRnu2Fu7xavmQ31Do2gS6Y0ChPdlEf9G/ns7TAmpB3mx7bYEUKCYkyXcb9BeqNxW4wK0ubjf02LHQPMEjto4GNKxK6EaBql7VT47kFEGsXLV9yHNftRVoz7SVSTziv671YBaVlvGLchaG11yJuGdOwAS0v9iJGdk/7J5coC6mi2GJH5HzZus8h7KFpOdvt0IU/3xlGbbkudBgTI7p8vdeIiadrlHq7AKtbA0DSnV7DBQfJm5wzGq7mqrmzYa5MhXoJaVPxLwusuPKiFNi3Ktq2PCBcqkhbWIomakTcqqNv7kbXMZ2UUhp84AoPoAGdRnGH5zosFj43pOwIJBiuWy3hgyKMzBPKz4zAqd0vOKnGQ8bAi5ASLyHA6CVLIhCTKi4Zy+3QFvJIYVmR8bp52CZwrDaQF5xLAaoH9I9T2ACxSXo1LT6/sdPPv9S75aZjXB0pGVm/BzPVnuqTtO9EQt7q6+GOXbQstvKzoL2M32FS4TpDGa9LjgzHGOSloBEE8lj00nrnS1+9AZFK+BD22Sb5bnso07DmZ1f4JAwwKu7ZB27HNavmnMVUX2TqJBnzzGtZ9VlwsYowGgPUoR7E=
+    secure: RLUxAORLAo5tRy2z49dRju3r7lJvcVA3I2+66YrE3YuLw7XwvQS4qmnyhcBZKZGbM5mibATvLeXHG3GoM1QJl4yjdkDKudNaGyBTfNuHzo9vGLnH/jd6sUKnau45qtfR+pQBve7zbekkDerRmQIz5hwP6BUUUk5zjvf+rovPUn9jaPVTGnmmCSK5lnvjee2KeDlNS8DB0js9F7UvHwOtSvVNFVCgCotV3CcLmf4XysF080yQasX1F/kXRlCE2mFhkDgwI1hQxUrv55m+Z8dTRx5e7K2IVQgUB+jAAY/Bji12KFPgnBzK5GqiNG9tDxFoBi1oQk95LH4r3T5Hap0PJyyaOIgxd4/8OBsHhEejdOs8ahjaeGYIRj6H2MVGLaWkANTDd4/skYY1oKehABT/K2FXM6p6GQWlBKHbZYHFhsP+Kht1kZMxxnvT7FTixaPfzy3dGUgKG6rKddptOCp455A89AwQtDYtKnroTX/j9RAV1HVYLCM+X33XlezW1GnESAU45TnMrX21uaAoV699a839zCbsu+yR8RadIhapRJPz5+D4H1tMJiIB2lYMHKa/O1AC86TUJ4cNUd/Vl9MIQbT9R88PLf2HpuoLIR2++ZU6/0jA0D/EZY/L9JhGpN9EO5oC5MtiuyKtGwVXKYpEstZbaF/D1UrpyYlGwo9Or8c=
 jobs:
   include:
   - stage: tests
@@ -54,6 +54,18 @@ jobs:
       application: eu-west-1-stg-tracker-node-codedeploy
       deployment_group: eu-west-1-stg-tracker-node-deployment-group
       region: eu-west-1
+  - stage: Build docker (dev)
+    if: tag IS blank
+    install: true
+    env:
+    - OWNER=streamr
+    - IMAGE_NAME=tracker
+    - TAG=dev
+    script:
+    - docker build -t $OWNER/$IMAGE_NAME:$TAG --build-arg NPM_TOKEN=${NPM_TOKEN} .
+    deploy:
+    - provider: script
+      script: bash .travis_scripts/deploy_docker.sh staging
   - stage: publish
     if: tag IS present
     script: npm publish

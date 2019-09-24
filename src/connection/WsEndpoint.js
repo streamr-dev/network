@@ -387,13 +387,14 @@ class WsEndpoint extends EventEmitter {
 
 async function startWebSocketServer(host, port) {
     return new Promise((resolve, reject) => {
-        const wss = new WebSocket.Server(
-            {
-                host,
-                port,
-                clientTracking: true
-            }
-        )
+        const conf = {
+            port,
+            clientTracking: true
+        }
+        if (host) {
+            conf.host = host
+        }
+        const wss = new WebSocket.Server(conf)
 
         wss.on('error', (err) => {
             reject(err)
