@@ -205,9 +205,12 @@ describe('ControlMessage', () => {
                 serialized = null
             })
             afterEach(() => {
+                const clone = {
+                    ...array,
+                }
                 serialized = ControlMessage.deserialize(array).serialize()
                 assert(typeof serialized === 'string')
-                assert.deepEqual(array, JSON.parse(serialized))
+                assert.deepEqual(clone, JSON.parse(serialized))
             })
             /* eslint-disable prefer-destructuring */
             it('BroadcastMessageV0', () => {
@@ -329,9 +332,12 @@ describe('ControlMessage', () => {
                 serialized = null
             })
             afterEach(() => {
+                const clone = {
+                    ...array,
+                }
                 serialized = ControlMessage.deserialize(array).serialize()
                 assert(typeof serialized === 'string')
-                assert.deepEqual(array, JSON.parse(serialized))
+                assert.deepEqual(clone, JSON.parse(serialized))
             })
             /* eslint-disable prefer-destructuring */
             it('BroadcastMessageV1', () => {

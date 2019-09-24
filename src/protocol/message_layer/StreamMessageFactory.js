@@ -29,10 +29,7 @@ export default class StreamMessageFactory {
         } else {
             throw new UnsupportedVersionError(message[0], 'Supported versions: [28, 29, 30, 31]')
         }
-        // Ensure that the content parses
-        if (parseContent) {
-            result.getParsedContent()
-        }
+
         return result
     }
 }

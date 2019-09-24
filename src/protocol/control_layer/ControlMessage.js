@@ -62,21 +62,20 @@ export default class ControlMessage {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
         let messageVersion
         let messageType
-        let args
+
         // Version 0 (deprecated) uses objects instead of arrays for request types. In this case, messageArray is not an array but an object.
         if (!Array.isArray(messageArray)) {
             messageVersion = messageArray.version || 0
             messageType = messageArray.type
-            args = messageArray
         } else {
             /* eslint-disable prefer-destructuring */
             messageVersion = messageArray[0]
             messageType = messageArray[1]
             /* eslint-enable prefer-destructuring */
-            args = messageArray.slice(2)
+            messageArray.splice(0, 2)
         }
         const C = ControlMessage.getClass(messageVersion, messageType)
-        return new C(...C.getConstructorArgs(args, parseContent))
+        return new C(...C.getConstructorArgs(messageArray, parseContent))
     }
 }
 

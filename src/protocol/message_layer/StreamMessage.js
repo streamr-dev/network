@@ -13,9 +13,10 @@ export default class StreamMessage {
         StreamMessage.validateContentType(contentType)
         this.contentType = contentType
         this.encryptionType = encryptionType
-        this.serializedContent = this.serializeContent(content)
+
         if (parseContent) {
             this.parsedContent = this.parseContent(content)
+            this.serializedContent = this.serializeContent(content)
         } else {
             this.content = content
         }
@@ -83,6 +84,9 @@ export default class StreamMessage {
     }
 
     getSerializedContent() {
+        if (!this.serializedContent) {
+            this.serializedContent = this.serializeContent(this.content)
+        }
         return this.serializedContent
     }
 
