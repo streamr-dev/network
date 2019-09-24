@@ -26,8 +26,13 @@ node_modules
 
 # Users Environment Variables
 .lock-wscript
-.idea
 *.iml
 .DS_Store
 dist/*
 examples/webpack/dist/*
+
+# IntelliJ IDEA
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/httpRequests

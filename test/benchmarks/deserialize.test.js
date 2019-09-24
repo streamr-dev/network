@@ -2,6 +2,8 @@ import ControlMessage from '../../src/protocol/control_layer/ControlMessage'
 import PublishRequestV1 from '../../src/protocol/control_layer/publish_request/PublishRequestV1'
 import StreamMessageV31 from '../../src/protocol/message_layer/StreamMessageV31'
 
+const ITERATIONS = 1000000
+
 describe('deserialize()', () => {
     const run = (functionToTest, name) => {
         const json = '[1,8,[31,["kxeE-gyxS8CkuWYlfBKMVg",0,1567671580680,0,"0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963",' +
@@ -13,7 +15,7 @@ describe('deserialize()', () => {
 
         console.log(`Benchmarking ${name}...`)
 
-        for (let i = 0; i < 3000000; i++) {
+        for (let i = 0; i < ITERATIONS; i++) {
             functionToTest(json)
         }
 

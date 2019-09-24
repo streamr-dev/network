@@ -19,20 +19,17 @@ export default class StreamMessageFactory {
          * [prevTimestamp, prevSequenceNumber], ttl, contentType, encryptionType, content, signatureType, signature]
          */
         if (message[0] === 28) {
-            result = new StreamMessageV28(...message.slice(1))
+            result = new StreamMessageV28(...message.slice(1), parseContent)
         } else if (message[0] === 29) {
-            result = new StreamMessageV29(...message.slice(1))
+            result = new StreamMessageV29(...message.slice(1), parseContent)
         } else if (message[0] === 30) {
-            result = new StreamMessageV30(...message.slice(1))
+            result = new StreamMessageV30(...message.slice(1), parseContent)
         } else if (message[0] === 31) {
             result = new StreamMessageV31(...message.slice(1), parseContent)
         } else {
             throw new UnsupportedVersionError(message[0], 'Supported versions: [28, 29, 30, 31]')
         }
-        // Ensure that the content parses
-        if (parseContent) {
-            result.getParsedContent()
-        }
+
         return result
     }
 }

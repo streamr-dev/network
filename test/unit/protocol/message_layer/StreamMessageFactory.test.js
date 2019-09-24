@@ -46,5 +46,23 @@ describe('StreamMessageFactory', () => {
             const result = StreamMessageFactory.deserialize(arr)
             assert(result instanceof StreamMessageV30)
         })
+        it('should create a StreamMessageV29 with parsedContent = false', () => {
+            const arr = [29, 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 941516902, 941499898,
+                StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'address', 'signature']
+            const result = StreamMessageFactory.deserialize(arr, false)
+            assert(result instanceof StreamMessageV29)
+
+            assert.notEqual(result.content, undefined)
+            assert.equal(result.parsedContent, undefined)
+
+            assert.deepEqual(result.getParsedContent(), {
+                valid: 'json',
+            })
+
+            assert.equal(result.content, undefined)
+            assert.deepEqual(result.parsedContent, {
+                valid: 'json',
+            })
+        })
     })
 })
