@@ -28,7 +28,7 @@
   "dependencies": {
     "@sentry/node": "^5.6.2",
     "@streamr/sc-uws": "^10.12.0",
-    "@streamr/streamr-p2p-network": "^12.0.1",
+    "@streamr/streamr-p2p-network": "^12.1.3",
     "body-parser": "^1.19.0",
     "buffermaker": "^1.2.1",
     "cassandra-driver": "^4.1.0",
@@ -44,13 +44,13 @@
     "public-ip": "^3.2.0",
     "qs": "^6.8.0",
     "streamr-client": "^2.1.1",
-    "streamr-client-protocol": "^2.2.10",
+    "streamr-client-protocol": "^2.2.12",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
     "async-mqtt": "^2.4.2",
     "buffer-reader": "^0.1.0",
-    "eslint": "^6.3.0",
+    "eslint": "^6.4.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-streamr-nodejs": "^1.1.0",
     "eslint-plugin-import": "^2.18.2",

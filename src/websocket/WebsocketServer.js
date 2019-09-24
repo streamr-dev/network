@@ -76,7 +76,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         // Callback for when client sends message
         socket.on('message', (data) => {
             try {
-                const request = ControlLayer.ControlMessage.deserialize(data)
+                const request = ControlLayer.ControlMessage.deserialize(data, true)
                 const handler = this.requestHandlersByMessageType[request.type]
                 if (handler) {
                     debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
