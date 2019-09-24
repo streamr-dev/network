@@ -30,9 +30,7 @@ function startBroker(id, httpPort, wsPort, networkPort, mqttPort, enableCassandr
             isStorageNode: false
         },
         cassandra: enableCassandra ? {
-            hosts: [
-                'localhost',
-            ],
+            hosts: 'localhost',
             username: '',
             password: '',
             keyspace: 'streamr_dev',
