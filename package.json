@@ -62,7 +62,7 @@
   "dependencies": {
     "babel-runtime": "^6.26.0",
     "debug": "^4.1.1",
-    "ethers": "^4.0.27",
+    "ethers": "^4.0.37",
     "eventemitter3": "^4.0.0",
     "heap": "^0.2.6",
     "node-fetch": "^2.6.0",

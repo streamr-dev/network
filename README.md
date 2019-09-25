@@ -273,6 +273,19 @@ resend: {
 }
 ```
 
+### Community Product API
+
+Streamr Client provides functions for operating with Community Product.
+
+Name | Description
+---- | -----------
+joinCommunity(communityAddress, memberAddress, secret = undefined) | Join a community product
+memberStats(communityAddress, memberAddress) | Get member's community product statistics
+withdraw(communityAddress, memberAddress, wallet, confirmations = 1) | Withdraw funds from community product
+communityStats(communityAddress) | Get community product's statistics
+createSecret(communityAddress, secret, name = 'Untitled Community Secret') | Create a secret for a community product
+deployCommunity(wallet, blockFreezePeriodSeconds = 0, adminFee = 0) | Deploy a community product
+
 ### Utility functions
 
 Name | Description
