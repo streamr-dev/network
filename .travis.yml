@@ -1,15 +1,19 @@
 language: node_js
 node_js:
-- '8'
+  - '10'
+  - '8'
 sudo: true
 branches:
   only:
   - master
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
-- npm i -g npm@6.0.0
+- npm i -g npm@6.9.0
 jobs:
   include:
+  - stage: eslint
+    name: eslint
+    script: npm run eslint
   - stage: Unit tests
     script:
     - npm run test

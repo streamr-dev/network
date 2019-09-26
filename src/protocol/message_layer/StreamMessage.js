@@ -14,6 +14,7 @@ export default class StreamMessage {
         this.contentType = contentType
         this.encryptionType = encryptionType
 
+        this.parseContentOption = parseContent
         if (parseContent) {
             this.parsedContent = this.parseContent(content)
             this.serializedContent = this.serializeContent(content)

@@ -81,19 +81,20 @@ export default class StreamMessageV29 extends StreamMessage {
         if (version === 28) {
             return new StreamMessageV28(
                 this.streamId, this.streamPartition, this.timestamp,
-                this.ttl, this.offset, this.previousOffset, this.contentType, this.getContent(),
+                this.ttl, this.offset, this.previousOffset, this.contentType, this.getContent(), this.parseContentOption,
             )
         } else if (version === 30) {
             // null fields in order: prevMsgRef.timestamp, prevMsgRef.sequenceNumber
             return new StreamMessageV30(
                 [this.streamId, this.streamPartition, this.timestamp, 0, this.publisherAddress || '', ''],
-                [null, null], this.contentType, this.getContent(), this.signatureType, this.signature,
+                [null, null], this.contentType, this.getContent(), this.signatureType, this.signature, this.parseContentOption,
             )
         } else if (version === 31) {
             // null fields in order: prevMsgRef.timestamp, prevMsgRef.sequenceNumber
             return new StreamMessageV31(
                 [this.streamId, this.streamPartition, this.timestamp, 0, this.publisherAddress || '', ''],
-                [null, null], this.contentType, StreamMessage.ENCRYPTION_TYPES.NONE, this.getContent(), this.signatureType, this.signature,
+                [null, null], this.contentType, StreamMessage.ENCRYPTION_TYPES.NONE, this.getContent(),
+                this.signatureType, this.signature, this.parseContentOption,
             )
         }
         throw new UnsupportedVersionError(version, 'Supported versions: [28, 29, 30, 31]')

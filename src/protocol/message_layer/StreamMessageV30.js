@@ -63,21 +63,21 @@ export default class StreamMessageV30 extends StreamMessage {
             // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
             return new StreamMessageV28(
                 this.messageId.streamId, this.messageId.streamPartition, this.messageId.timestamp,
-                0, this.messageId.timestamp, prevTimestamp, this.contentType, this.getContent(),
+                0, this.messageId.timestamp, prevTimestamp, this.contentType, this.getContent(), this.parseContentOption,
             )
         } else if (version === 29) {
             // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
             return new StreamMessageV29(
                 this.messageId.streamId, this.messageId.streamPartition, this.messageId.timestamp,
                 0, this.messageId.timestamp, prevTimestamp, this.contentType, this.getContent(),
-                this.signatureType, this.messageId.publisherId, this.signature,
+                this.signatureType, this.messageId.publisherId, this.signature, this.parseContentOption,
             )
         } else if (version === 31) {
             const prevArray = this.prevMsgRef ? this.prevMsgRef.toArray() : null
             // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
             return new StreamMessageV31(
                 this.messageId.toArray(), prevArray, this.contentType,
-                StreamMessage.ENCRYPTION_TYPES.NONE, this.serializedContent, this.signatureType, this.signature,
+                StreamMessage.ENCRYPTION_TYPES.NONE, this.getSerializedContent(), this.signatureType, this.signature, this.parseContentOption,
             )
         }
         throw new UnsupportedVersionError(version, 'Supported versions: [28, 29, 30, 31]')
