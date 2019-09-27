@@ -56,8 +56,8 @@
     "lru-cache": "^5.1.1",
     "pidusage": "^2.0.17",
     "speedometer": "^1.1.0",
-    "streamr-client": "^2.1.1",
-    "streamr-client-protocol": "^2.2.12",
+    "streamr-client": "^2.2.2",
+    "streamr-client-protocol": "^2.2.13",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
