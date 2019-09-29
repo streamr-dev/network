@@ -717,7 +717,7 @@ describe('broker: end-to-end', () => {
         ])
     })
 
-    it( 'happy-path: resend range request via http', async () => {
+    it('happy-path: resend range request via http', async () => {
         client1.subscribe({
             stream: freshStreamId
         }, () => {})
