@@ -78,7 +78,7 @@ module.exports = async (config) => {
     // Start cassandra storage
     if (config.cassandra) {
         storages.push(await startCassandraStorage({
-            contactPoints: config.cassandra.hosts.split(','),
+            contactPoints: [...config.cassandra.hosts],
             localDataCenter: 'datacenter1',
             keyspace: config.cassandra.keyspace,
             username: config.cassandra.username,

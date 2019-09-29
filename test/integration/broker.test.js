@@ -30,7 +30,7 @@ function startBroker(id, httpPort, wsPort, networkPort, enableCassandra) {
             isStorageNode: false
         },
         cassandra: enableCassandra ? {
-            hosts: 'localhost',
+            hosts: ['localhost'],
             username: '',
             password: '',
             keyspace: 'streamr_dev',
@@ -717,7 +717,7 @@ describe('broker: end-to-end', () => {
         ])
     })
 
-    it('happy-path: resend range request via http', async () => {
+    it( 'happy-path: resend range request via http', async () => {
         client1.subscribe({
             stream: freshStreamId
         }, () => {})

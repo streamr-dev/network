@@ -23,7 +23,7 @@ describe('data-api', () => {
                 isStorageNode: false
             },
             cassandra: {
-                hosts: 'localhost',
+                hosts: ['localhost'],
                 username: '',
                 password: '',
                 keyspace: 'streamr_dev',
