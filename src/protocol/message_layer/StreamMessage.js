@@ -94,7 +94,6 @@ export default class StreamMessage {
     getParsedContent() {
         if (!this.parsedContent) {
             this.parsedContent = this.parseContent(this.content)
-            this.content = null
         }
         return this.parsedContent
     }
