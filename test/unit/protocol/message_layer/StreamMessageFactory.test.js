@@ -60,7 +60,7 @@ describe('StreamMessageFactory', () => {
                 valid: 'json',
             })
 
-            assert.equal(result.content, undefined)
+            assert.notEqual(result.content, undefined)
             assert.deepEqual(result.parsedContent, {
                 valid: 'json',
             })
