@@ -7,7 +7,7 @@ const { startTracker } = require('../src/composition')
 
 const port = process.argv[2] || 30300
 const ip = process.argv[3] || '127.0.0.1'
-const maxNeighborsPerNode = process.argv[4] || 4
+const maxNeighborsPerNode = parseInt(process.argv[4], 10) || 4
 const apiKey = process.argv[5] || 'EmqyPJBAR-26T60BbxLazQhN8GKqhOQQe2rbEqRwECCQ'
 const streamId = process.argv[6] || 'cueeTiqTQUmHjZJhv4rOhA'
 const id = `tracker-${port}`
