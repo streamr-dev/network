@@ -127,6 +127,8 @@ describe('broker: end-to-end', () => {
             client3Messages.push(message)
         })
 
+        await wait(1000)
+
         await client1.publish(freshStreamId, {
             key: 1
         })
