@@ -77,6 +77,7 @@ module.exports = async (config) => {
 
     // Start cassandra storage
     if (config.cassandra) {
+        console.info(`Starting Cassandra with hosts ${config.cassandra.hosts} and keyspace ${config.cassandra.keyspace}`)
         storages.push(await startCassandraStorage({
             contactPoints: [...config.cassandra.hosts],
             localDataCenter: 'datacenter1',
@@ -166,6 +167,9 @@ module.exports = async (config) => {
         }
     })
 
+    if (config.cassandra) {
+        console.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
+    }
     console.info(`Configured with Streamr: ${config.streamrUrl}`)
     console.info(`Configured with tracker: ${config.network.tracker}`)
     console.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
