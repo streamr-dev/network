@@ -38,7 +38,7 @@ adapterRegistry.register('ws', ({ port, privateKeyFileName, certFileName }, {
             key: fs.readFileSync(privateKeyFileName)
         })
         serverConfig.server = server
-        server.listen(port)
+        server.listen(port, () => console.info(`WS adapter listening on ${port}`))
     }
     const websocketServer = new WebsocketServer(
         new ws.Server(serverConfig).on('listening', () => console.info(`WS adapter listening on ${port}`)),
