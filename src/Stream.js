@@ -1,10 +1,23 @@
+const { Utils } = require('streamr-client-protocol')
+
 module.exports = class Stream {
-    constructor(id, partition, name = '') {
+    constructor(id, partition, name, msgHandler, gapHandler) {
         this.id = id
         this.name = name
         this.partition = partition
         this.state = 'init'
         this.connections = []
+        this.orderingUtil = new Utils.OrderingUtil(id, partition, msgHandler, (...args) => {
+            gapHandler(id, partition, ...args)
+        })
+    }
+
+    passToOrderingUtil(streamMessage) {
+        this.orderingUtil.add(streamMessage)
+    }
+
+    clearOrderingUtil() {
+        this.orderingUtil.clearGaps()
     }
 
     addConnection(connection) {
