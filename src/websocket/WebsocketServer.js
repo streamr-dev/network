@@ -134,8 +134,11 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                         streamPartition = this.partitionFn(stream.partitions, request.partitionKey)
                     }
                     const streamMessage = request.getStreamMessage(streamPartition)
-                    this.fieldDetector.detectAndSetFields(stream, streamMessage, request.apiKey, request.sessionToken)
                     this.publisher.publish(stream, streamMessage)
+
+                    this.fieldDetector.detectAndSetFields(stream, streamMessage, request.apiKey, request.sessionToken).catch((err) => {
+                        console.error(`detectAndSetFields request failed: ${err}`)
+                    })
                 })
                 .catch((err) => {
                     let errorMsg
