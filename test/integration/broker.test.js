@@ -1,3 +1,5 @@
+const { exec } = require('child_process')
+
 const WebSocket = require('ws')
 const { startTracker } = require('@streamr/streamr-p2p-network')
 const StreamrClient = require('streamr-client')
@@ -77,17 +79,21 @@ describe('ws and wss connections', () => {
     })
     it('can connect to wss endpoint', async (done) => {
         const tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
-        const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true, 'test_key.pem', 'test_cert.pem')
-        const ws = new WebSocket(`wss://127.0.0.1:${wsPort1}/api/v1/ws`, {
-            rejectUnauthorized: false // needed to accept self-signed certificate
+        const command = 'openssl req -x509 -newkey rsa:4096 -keyout test_key.pem -out test_cert.pem -days 365 -nodes -subj \'/CN=localhost\''
+        let broker
+        await exec(command, async () => {
+            broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true, 'test_key.pem', 'test_cert.pem')
+            const ws = new WebSocket(`wss://127.0.0.1:${wsPort1}/api/v1/ws`, {
+                rejectUnauthorized: false // needed to accept self-signed certificate
+            })
+            ws.on('open', () => {
+                broker.close()
+                tracker.stop(() => {})
+                done()
+            })
+            ws.on('error', (err) => console.log(err))
         })
-        ws.on('open', () => {
-            broker.close()
-            tracker.stop(() => {})
-            done()
-        })
-        ws.on('error', (err) => console.log(err))
-    })
+    }, 20000)
 })
 
 describe('broker: end-to-end', () => {
