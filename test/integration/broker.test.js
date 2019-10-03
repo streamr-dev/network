@@ -1,3 +1,4 @@
+const WebSocket = require('ws')
 const { startTracker } = require('@streamr/streamr-p2p-network')
 const StreamrClient = require('streamr-client')
 const fetch = require('node-fetch')
@@ -19,7 +20,7 @@ const trackerPort = 12370
 // The index for content/body/payload in array response of HTTP resend requests
 const CONTENT_IDX_IN_ARRAY = 5
 
-function startBroker(id, httpPort, wsPort, networkPort, enableCassandra) {
+function startBroker(id, httpPort, wsPort, networkPort, enableCassandra, privateKeyFileName, certFileName) {
     return createBroker({
         network: {
             id,
@@ -41,6 +42,8 @@ function startBroker(id, httpPort, wsPort, networkPort, enableCassandra) {
             {
                 name: 'ws',
                 port: wsPort,
+                privateKeyFileName,
+                certFileName
             },
             {
                 name: 'http',
@@ -59,6 +62,33 @@ function createClient(wsPort, apiKey) {
         }
     })
 }
+
+describe('ws and wss connections', () => {
+    it('can connect to ws endpoint', async (done) => {
+        const tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+        const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true)
+        const ws = new WebSocket(`ws://127.0.0.1:${wsPort1}/api/v1/ws`)
+        ws.on('open', () => {
+            broker.close()
+            tracker.stop(() => {})
+            done()
+        })
+        ws.on('error', (err) => console.log(err))
+    })
+    it('can connect to wss endpoint', async (done) => {
+        const tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+        const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true, 'test_key.pem', 'test_cert.pem')
+        const ws = new WebSocket(`wss://127.0.0.1:${wsPort1}/api/v1/ws`, {
+            rejectUnauthorized: false // needed to accept self-signed certificate
+        })
+        ws.on('open', () => {
+            broker.close()
+            tracker.stop(() => {})
+            done()
+        })
+        ws.on('error', (err) => console.log(err))
+    })
+})
 
 describe('broker: end-to-end', () => {
     let tracker
