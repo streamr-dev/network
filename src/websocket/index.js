@@ -1,7 +1,7 @@
 const fs = require('fs')
 const https = require('https')
 
-const ws = require('@streamr/sc-uws')
+const ws = require('ws')
 
 const MissingConfigError = require('../errors/MissingConfigError')
 const adapterRegistry = require('../adapterRegistry')
@@ -15,7 +15,6 @@ adapterRegistry.register('ws', ({ port, privateKeyFileName, certFileName }, {
         throw new MissingConfigError('port')
     }
     const serverConfig = {
-        port,
         path: '/api/v1/ws',
         /**
          * Gracefully reject clients sending invalid headers. Without this change, the connection gets abruptly
@@ -32,13 +31,16 @@ adapterRegistry.register('ws', ({ port, privateKeyFileName, certFileName }, {
             }
         },
     }
+    let server
     if (privateKeyFileName && certFileName) {
-        const server = https.createServer({
+        server = https.createServer({
             cert: fs.readFileSync(certFileName),
             key: fs.readFileSync(privateKeyFileName)
         })
         serverConfig.server = server
-        server.listen(port, () => console.info(`WS adapter listening on ${port}`))
+        server.listen(port)
+    } else {
+        serverConfig.port = port
     }
     const websocketServer = new WebsocketServer(
         new ws.Server(serverConfig).on('listening', () => console.info(`WS adapter listening on ${port}`)),
@@ -48,5 +50,10 @@ adapterRegistry.register('ws', ({ port, privateKeyFileName, certFileName }, {
         volumeLogger,
         subscriptionManager
     )
-    return () => websocketServer.close()
+    return () => {
+        websocketServer.close()
+        if (server) {
+            server.close()
+        }
+    }
 })

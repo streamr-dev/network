@@ -87,6 +87,9 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     onNewClientConnection(socket, socketRequest) {
+        /* eslint-disable no-param-reassign */
+        socket.upgradeReq = socketRequest // upgradeReq removed since ws@3.x.x
+        /* eslint-enable no-param-reassign */
         const connection = new Connection(socket)
         this.volumeLogger.connectionCount += 1
         debug('onNewClientConnection: socket "%s" connected', connection.id)
