@@ -11,13 +11,8 @@ before_install:
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 jobs:
   include:
-  - stage: eslint
-    name: eslint
-    script: npm run eslint
-  - stage: Unit tests
-    script:
-    - npm run test-unit
-  - stage: Integration tests
+  - stage: Tests
+    name: Integration Tests
     script:
     - sudo /etc/init.d/mysql stop
     - git clone https://github.com/streamr-dev/streamr-docker-dev.git
@@ -26,7 +21,15 @@ jobs:
     - sleep 3m
     - node node_modules/@streamr/streamr-p2p-network/bin/tracker.js &
     - npm run test-integration
+  - stage: Tests
+    name: Unit Tests
+    script:
+    - npm run test-unit
+  - stage: Tests
+    name: eslint
+    script: npm run eslint
   - stage: Deploy Staging
+    if: NOT type IN (pull_request)
     script:
     - mkdir $TRAVIS_BUILD_DIR/build
     - mkdir $TRAVIS_BUILD_DIR/upload
@@ -69,6 +72,7 @@ jobs:
       deployment_group: eu-west-1-stg-network-node-storage-deployment-group
       region: eu-west-1
   - stage: Deploy Lisboa
+    if: tag IS present
     script:
     - mkdir $TRAVIS_BUILD_DIR/build
     - mkdir $TRAVIS_BUILD_DIR/upload
@@ -102,7 +106,6 @@ jobs:
       deployment_group: eu-west-1-lx-network-node-deployment-group
       region: eu-west-1
   - stage: Build docker (dev)
-    if: tag IS blank
     install: true
     env:
     - OWNER=streamr
