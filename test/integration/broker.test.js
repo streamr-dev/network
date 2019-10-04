@@ -93,7 +93,7 @@ describe('ws and wss connections', () => {
             })
             ws.on('error', (err) => console.log(err))
         })
-    }, 20000)
+    }, 40000)
 })
 
 describe('broker: end-to-end', () => {
