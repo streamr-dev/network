@@ -58,11 +58,13 @@ module.exports = async (config) => {
     if (config.reporting === undefined) {
         throw new MissingConfigError('reporting')
     }
-    if (config.reporting && config.reporting.streamId === undefined) {
-        throw new MissingConfigError('reporting.streamId')
-    }
-    if (config.reporting && config.reporting.apiKey === undefined) {
-        throw new MissingConfigError('reporting.apiKey')
+    if (config.reporting && (config.reporting.streamId !== undefined || config.reporting.apiKey !== undefined)) {
+        if (config.reporting.apiKey === undefined) {
+            throw new MissingConfigError('reporting.apiKey')
+        }
+        if (config.reporting.streamId === undefined) {
+            throw new MissingConfigError('reporting.streamId')
+        }
     }
     if (config.reporting && config.reporting.reportingIntervalSeconds === undefined) {
         throw new MissingConfigError('reporting.reportingIntervalSeconds')
@@ -126,8 +128,9 @@ module.exports = async (config) => {
     }
 
     let client
-    if (config.reporting) {
-        const { apiKey } = config.reporting
+    const { apiKey, streamId } = config.reporting
+    if (config.reporting && streamId !== undefined && apiKey !== undefined) {
+        console.info(`Starting StreamrClient reporting with apiKey: ${apiKey} and streamId: ${streamId}`)
         client = new StreamrClient({
             auth: {
                 apiKey
@@ -135,7 +138,7 @@ module.exports = async (config) => {
             autoConnect: false
         })
     } else {
-        console.info('Skipping configuring reporting...')
+        console.info('Skipping configuring StreamrClient reporting...')
     }
 
     // Initialize common utilities
@@ -143,7 +146,7 @@ module.exports = async (config) => {
         config.reporting.reportingIntervalSeconds,
         networkNode,
         client,
-        config.reporting.streamId
+        streamId
     )
     const streamFetcher = new StreamFetcher(config.streamrUrl)
     const publisher = new Publisher(networkNode, volumeLogger)
