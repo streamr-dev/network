@@ -284,7 +284,7 @@ class PendingTrackerResponseBookkeeper {
                     }
                     responseStream.push(null)
                 } catch (err) {
-                    console.error(`HOTFIX error ${err}, request: ${request.serialize()}, from: ${source}`)
+                    console.error(`HOTFIX error ${err}, request: ${request.serialize()}`)
                 }
             }, this.timeout)
         }
