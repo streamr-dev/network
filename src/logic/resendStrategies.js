@@ -125,6 +125,7 @@ class ProxiedResend {
     }
 
     cancel() {
+        console.warn(`resend end: ${this.request.serialize()} cancelled`)
         this._endStream()
     }
 
@@ -153,6 +154,7 @@ class ProxiedResend {
 
         if (this.request.subId === subId && this.currentNeighbor === source) {
             if (response.type === ControlLayer.ResendResponseResent.TYPE) {
+                console.warn(`resend end: ${this.request.serialize()} proxy destination replied with Resent`)
                 this._endStream()
             } else if (response.type === ControlLayer.ResendResponseNoResend.TYPE) {
                 this._askNextNeighbor()
@@ -174,6 +176,7 @@ class ProxiedResend {
         clearTimeout(this.timeoutRef)
 
         if (this.neighborsAsked.size >= this.maxTries) {
+            console.warn(`resend end: ${this.request.serialize()} max tries reached`)
             this._endStream()
             return
         }
@@ -182,6 +185,7 @@ class ProxiedResend {
             new StreamIdAndPartition(this.request.streamId, this.request.streamPartition)
         ).filter((x) => !this.neighborsAsked.has(x))
         if (candidates.length === 0) {
+            console.warn(`resend end: ${this.request.serialize()} no more neighbors to ask`)
             this._endStream()
             return
         }
@@ -280,6 +284,7 @@ class PendingTrackerResponseBookkeeper {
                 if (this.pending[streamIdAndPartition].size === 0) {
                     delete this.pending[streamIdAndPartition]
                 }
+                console.warn(`resend end: ${this.pending} timed out while waiting for tracker response`)
                 responseStream.push(null)
             }, this.timeout)
         }
@@ -302,6 +307,7 @@ class PendingTrackerResponseBookkeeper {
         Object.values(this.pending).forEach((entries) => {
             entries.forEach(({ responseStream, timeoutRef }) => {
                 clearTimeout(timeoutRef)
+                console.warn(`resend end: ${entries} clearAll`)
                 responseStream.push(null)
             })
         })
@@ -348,6 +354,7 @@ class StorageNodeResendStrategy {
             }
 
             if (storageNode === null) {
+                console.warn(`resend end: ${entries} could not find or connect to storageNode`)
                 entries.forEach(({ responseStream }) => responseStream.push(null))
                 return
             }
