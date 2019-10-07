@@ -1,4 +1,4 @@
-const { waitForEvent, wait, waitForCondition } = require('streamr-test-utils')
+const { waitForEvent, waitForCondition } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
@@ -24,8 +24,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
         subscriberTwo.subscribeToStreamIfHaveNotYet(s1)
         subscriberTwo.subscribeToStreamIfHaveNotYet(s2)
-
-        await wait(1000)
     })
 
     afterEach(async () => {
@@ -69,16 +67,15 @@ describe('check tracker, nodes and statuses from nodes', () => {
         subscriberOne.addBootstrapTracker(tracker.getAddress())
         subscriberTwo.addBootstrapTracker(tracker.getAddress())
 
-        // await Promise.all([
-        //     await waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED),
-        //     await waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED)
-        // ])
+        await Promise.all([
+            await waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED),
+            await waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED)
+        ])
         subscriberOne.unsubscribeFromStream(s2)
-        // await Promise.all([
-        //     await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
-        //     await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        // ])
-        await wait(1000)
+        await Promise.all([
+            await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+            await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        ])
         expect(Object.keys(tracker.overlayPerStream)).toEqual(['stream-1::0', 'stream-2::2'])
         expect(tracker.overlayPerStream['stream-1::0'].state()).toEqual({
             subscriberOne: ['subscriberTwo'],
@@ -100,13 +97,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
         expect(tracker.overlayPerStream['stream-1::0'].state()).toEqual(res)
         expect(tracker.overlayPerStream['stream-2::2'].state()).toEqual(res)
 
-        // console.log('subscriberTwo.unsubscribeFromStream(s1)')
         subscriberTwo.unsubscribeFromStream(s1)
-
         await waitForCondition(() => tracker.overlayPerStream['stream-1::0'] === undefined)
-
         subscriberTwo.unsubscribeFromStream(s2)
-
         await waitForCondition(() => tracker.overlayPerStream['stream-2::2'] === undefined)
     })
 })

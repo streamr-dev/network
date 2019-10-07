@@ -7,7 +7,6 @@ const Node = require('../../src/logic/Node')
 const encoder = require('../../src/helpers/MessageEncoder')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 const endpointEvents = require('../../src/connection/WsEndpoint').events
-const { disconnectionReasons } = require('../../src/messages/messageTypes')
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions
@@ -24,8 +23,9 @@ describe('Check tracker instructions to node', () => {
             startNetworkNode(LOCALHOST, 30952, 'node-1'),
             startNetworkNode(LOCALHOST, 30953, 'node-2')
         ])
-        await Promise.all(otherNodes.map((node) => node.addBootstrapTracker(tracker.getAddress())))
-        await Promise.all(otherNodes.map((node) => node.subscribe(streamId, 0)))
+        otherNodes.map((node) => node.addBootstrapTracker(tracker.getAddress()))
+        otherNodes.map((node) => node.subscribe(streamId, 0))
+
         await Promise.all(otherNodes.map((node) => waitForEvent(node, Node.events.NODE_SUBSCRIBED)))
     })
 
@@ -51,7 +51,7 @@ describe('Check tracker instructions to node', () => {
         let secondCheck = false
 
         otherNodes[1].protocols.nodeToNode.endpoint.once(endpointEvents.PEER_DISCONNECTED, ({ reason }) => {
-            expect(reason).toBe(disconnectionReasons.NO_SHARED_STREAMS)
+            expect(reason).toBe('')
             firstCheck = true
             if (firstCheck && secondCheck) {
                 done()

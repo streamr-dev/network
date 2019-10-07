@@ -104,11 +104,11 @@ describe('resend requests are fulfilled at L3', () => {
     })
 
     afterAll(async () => {
+        await tracker.stop()
         await contactNode.stop()
         await neighborOne.stop()
         await neighborTwo.stop()
         await storageNode.stop()
-        await tracker.stop()
     })
 
     beforeEach(() => {
