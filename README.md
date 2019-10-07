@@ -3,7 +3,7 @@
 Main executable for running a broker node in Streamr Network.
 
 The broker node extends the minimal network node provided by the
-[network library]([network library](https://github.com/streamr-dev/network)) with
+[network library](https://github.com/streamr-dev/network) with
 - client-facing support for foreign protocols (e.g. HTTP, MQTT) via adapters
 - support for long-term persistence of data via Apache Cassandra.
 
