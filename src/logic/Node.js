@@ -130,6 +130,9 @@ class Node extends EventEmitter {
             source === null ? 'local' : `from ${source}`,
             request.constructor.name,
             request.subId)
+        if (request.subId == null) {
+            console.error(`missing subId in invalid requestResend: ${request.serialize()} from ${source}`)
+        }
         return this.resendHandler.handleRequest(request, source)
     }
 
