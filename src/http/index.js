@@ -1,3 +1,6 @@
+const fs = require('fs')
+const https = require('https')
+
 const cors = require('cors')
 const express = require('express')
 
@@ -7,7 +10,7 @@ const dataQueryEndpoints = require('./DataQueryEndpoints')
 const dataProduceEndpoints = require('./DataProduceEndpoints')
 const volumeEndpoint = require('./VolumeEndpoint')
 
-adapterRegistry.register('http', ({ port }, { networkNode, publisher, streamFetcher, volumeLogger }) => {
+adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, { networkNode, publisher, streamFetcher, volumeLogger }) => {
     const app = express()
 
     // Add CORS headers
@@ -18,7 +21,15 @@ adapterRegistry.register('http', ({ port }, { networkNode, publisher, streamFetc
     app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher))
     app.use('/api/v1', volumeEndpoint(volumeLogger))
 
-    const httpServer = app.listen(port, () => console.info(`HTTP adapter listening on ${httpServer.address().port}`))
+    let httpServer
+    if (privateKeyFileName && certFileName) {
+        httpServer = https.createServer({
+            cert: fs.readFileSync(certFileName),
+            key: fs.readFileSync(privateKeyFileName)
+        }, app).listen(port, () => console.info(`HTTP adapter listening on ${httpServer.address().port}`))
+    } else {
+        httpServer = app.listen(port, () => console.info(`HTTP adapter listening on ${httpServer.address().port}`))
+    }
     return () => new Promise((resolve, reject) => {
         httpServer.close((err) => {
             if (err) {

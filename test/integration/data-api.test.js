@@ -54,20 +54,4 @@ describe('data-api', () => {
             done()
         })
     })
-
-    it('returns 400 response code for invalid websocket requests', (done) => {
-        fetch(`http://localhost:${wsPort}/api/v1/ws`, {
-            method: 'GET',
-            headers: {
-                Connection: 'upgrade',
-                Upgrade: 'websocket',
-                // Missing Sec-Websocket-Key header
-            },
-        }).then((res) => {
-        }).catch((err) => {
-            expect(err.name).toEqual('FetchError')
-            expect(err.message).toEqual('request to http://localhost:12346/api/v1/ws failed, reason: socket hang up')
-            done()
-        })
-    })
 })

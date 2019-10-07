@@ -87,7 +87,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     }
 
     onNewClientConnection(socket, socketRequest) {
-        const connection = new Connection(socket)
+        const connection = new Connection(socket, socketRequest)
         this.volumeLogger.connectionCount += 1
         debug('onNewClientConnection: socket "%s" connected', connection.id)
 
