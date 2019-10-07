@@ -263,41 +263,32 @@ class AskNeighborsResendStrategy {
 class PendingTrackerResponseBookkeeper {
     constructor(timeout) {
         this.timeout = timeout
-        this.pending = {} // streamId => subId => { request, responseStream, timeoutRef }
+        this.pending = {} // streamId =>=> [{ request, responseStream, timeoutRef }]
     }
 
     addEntry(request, responseStream) {
         const streamIdAndPartition = new StreamIdAndPartition(request.streamId, request.streamPartition)
-        const { subId } = request
 
         if (!this.pending[streamIdAndPartition]) {
-            this.pending[streamIdAndPartition] = {}
+            this.pending[streamIdAndPartition] = new Set()
         }
-        this.pending[streamIdAndPartition][subId] = {
+        const entry = {
             responseStream,
             request,
             timeoutRef: setTimeout(() => {
-                try {
-                    if (this.pending[streamIdAndPartition] != null && this.pending[streamIdAndPartition][subId] != null) {
-                        delete this.pending[streamIdAndPartition][subId]
-                    }
-                    if (this.pending[streamIdAndPartition] != null) {
-                        if (Object.entries(this.pending[streamIdAndPartition]).length === 0) {
-                            delete this.pending[streamIdAndPartition]
-                        }
-                    }
-                    responseStream.push(null)
-                } catch (err) {
-                    // TODO: remove this catch later
-                    console.error(`HOTFIX error ${err}, request: ${request.serialize()}, streamIdAndPartition: ${streamIdAndPartition}, subId: ${subId}, pending: ${JSON.stringify(this.pending)}`)
+                this.pending[streamIdAndPartition].delete(entry)
+                if (this.pending[streamIdAndPartition].size === 0) {
+                    delete this.pending[streamIdAndPartition]
                 }
+                responseStream.push(null)
             }, this.timeout)
         }
+        this.pending[streamIdAndPartition].add(entry)
     }
 
     popEntries(streamIdAndPartition) {
         if (this._hasEntries(streamIdAndPartition)) {
-            const entries = Object.values(this.pending[streamIdAndPartition])
+            const entries = [...this.pending[streamIdAndPartition]]
             delete this.pending[streamIdAndPartition]
             return entries.map(({ timeoutRef, ...rest }) => {
                 clearTimeout(timeoutRef)
@@ -309,7 +300,7 @@ class PendingTrackerResponseBookkeeper {
 
     clearAll() {
         Object.values(this.pending).forEach((entries) => {
-            Object.values(entries).forEach(({ responseStream, timeoutRef }) => {
+            entries.forEach(({ responseStream, timeoutRef }) => {
                 clearTimeout(timeoutRef)
                 responseStream.push(null)
             })
