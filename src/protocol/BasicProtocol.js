@@ -23,8 +23,12 @@ module.exports = class BasicProtocol extends EventEmitter {
         })
 
         this.endpoint.on(endpointEvents.PEER_DISCONNECTED, ({ address, reason }) => {
-            this.onPeerDisconnected(this.peerBook.getPeerId(address), reason)
-            this.peerBook.remove(address)
+            try {
+                this.onPeerDisconnected(this.peerBook.getPeerId(address), reason)
+                this.peerBook.remove(address)
+            } catch (e) {
+                console.error(e)
+            }
         })
     }
 
