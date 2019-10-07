@@ -86,26 +86,28 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
             }
 
             // req.stream is written by authentication middleware
-            publisher.publish(
-                req.stream,
-                StreamMessage.create(
-                    [req.stream.id,
-                        partitionFn(req.stream.partitions, req.query.pkey),
-                        timestamp,
-                        sequenceNumber, // sequenceNumber
-                        req.query.address || '', // publisherId
-                        req.query.msgChainId || '',
-                    ],
-                    previousMessageRef,
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    req.body.toString(),
-                    signatureType,
-                    req.query.signature || null,
-                ),
-            ).then(() => {
-                res.status(200).send(/* empty success response */)
-            }).catch((err) => {
+            try {
+                publisher.publish(
+                    req.stream,
+                    StreamMessage.create(
+                        [req.stream.id,
+                            partitionFn(req.stream.partitions, req.query.pkey),
+                            timestamp,
+                            sequenceNumber, // sequenceNumber
+                            req.query.address || '', // publisherId
+                            req.query.msgChainId || '',
+                        ],
+                        previousMessageRef,
+                        StreamMessage.CONTENT_TYPES.MESSAGE,
+                        StreamMessage.ENCRYPTION_TYPES.NONE,
+                        req.body.toString(),
+                        signatureType,
+                        req.query.signature || null,
+                    ),
+                )
+                res.status(200)
+                    .send(/* empty success response */)
+            } catch (err) {
                 if (err instanceof InvalidMessageContentError) {
                     res.status(400).send({
                         error: err.message,
@@ -113,7 +115,7 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
                 } else {
                     console.error(err)
                 }
-            })
+            }
         },
     )
 
