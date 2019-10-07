@@ -69,6 +69,7 @@ module.exports = async (config) => {
     if (config.reporting && config.reporting.reportingIntervalSeconds === undefined) {
         throw new MissingConfigError('reporting.reportingIntervalSeconds')
     }
+    // TODO: disallow config.sentry from not being set, enforce "false" as in other cases
     config.adapters.forEach(({ name }, index) => {
         if (name === undefined) {
             throw new MissingConfigError(`adapters[${index}].name`)
@@ -106,9 +107,9 @@ module.exports = async (config) => {
     )
     networkNode.addBootstrapTracker(config.network.tracker)
 
-    if (process.env.NODE_ENV === 'production') {
+    if (config.sentry) {
         Sentry.init({
-            dsn: 'https://0fcf3b8f6b254caa9a7fadd77bcc37a4@sentry.io/1510389',
+            dsn: config.sentry,
             integrations: [
                 new Sentry.Integrations.Console({
                     levels: ['error']
