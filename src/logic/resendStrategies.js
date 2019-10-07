@@ -278,13 +278,18 @@ class PendingTrackerResponseBookkeeper {
             request,
             timeoutRef: setTimeout(() => {
                 try {
-                    delete this.pending[streamIdAndPartition][subId]
-                    if (Object.entries(this.pending[streamIdAndPartition]).length === 0) {
-                        delete this.pending[streamIdAndPartition]
+                    if (this.pending[streamIdAndPartition] != null && this.pending[streamIdAndPartition][subId] != null) {
+                        delete this.pending[streamIdAndPartition][subId]
+                    }
+                    if (this.pending[streamIdAndPartition] != null) {
+                        if (Object.entries(this.pending[streamIdAndPartition]).length === 0) {
+                            delete this.pending[streamIdAndPartition]
+                        }
                     }
                     responseStream.push(null)
                 } catch (err) {
-                    console.error(`HOTFIX error ${err}, request: ${request.serialize()}`)
+                    // TODO: remove this catch later
+                    console.error(`HOTFIX error ${err}, request: ${request.serialize()}, streamIdAndPartition: ${streamIdAndPartition}, subId: ${subId}, pending: ${JSON.stringify(this.pending)}`)
                 }
             }, this.timeout)
         }
