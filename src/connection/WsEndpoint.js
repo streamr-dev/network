@@ -138,6 +138,9 @@ class WsEndpoint extends EventEmitter {
             } catch (e) {
                 this.metrics.inc('send:failed')
                 console.error('sending to %s failed because of %s, readyState is', recipientAddress, e, ws.readyState)
+                if (ws.readyState === 2 || ws.readyState === 3) {
+                    duplex.destroy()
+                }
             }
         }
     }
@@ -160,6 +163,9 @@ class WsEndpoint extends EventEmitter {
                 } catch (e) {
                     this.metrics.inc('send:failed')
                     console.error('sending to %s failed because of %s, readyState is', recipientAddress, e, ws.readyState)
+                    if (ws.readyState === 2 || ws.readyState === 3) {
+                        duplex.destroy()
+                    }
                     reject(e)
                 }
             }
@@ -187,6 +193,7 @@ class WsEndpoint extends EventEmitter {
                     this.debug('closing connection to %s, reason %s', recipientAddress, reason)
                     const { duplex } = this.connections.get(recipientAddress)
                     duplex.destroy()
+                    resolve()
                 } catch (e) {
                     this.metrics.inc('close:error:failed')
                     console.error('closing connection to %s failed because of %s', recipientAddress, e)
