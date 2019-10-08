@@ -1,4 +1,4 @@
-const { startTracker } = require('@streamr/streamr-p2p-network')
+const { startTracker } = require('streamr-network')
 const StreamrClient = require('streamr-client')
 const mqtt = require('async-mqtt')
 const { wait, waitForCondition } = require('streamr-test-utils')

@@ -1,6 +1,6 @@
 const net = require('net')
 
-const { startTracker } = require('@streamr/streamr-p2p-network')
+const { startTracker } = require('streamr-network')
 
 const createBroker = require('../../src/broker')
 

@@ -1,4 +1,4 @@
-const { startNetworkNode, startStorageNode } = require('@streamr/streamr-p2p-network')
+const { startNetworkNode, startStorageNode } = require('streamr-network')
 const StreamrClient = require('streamr-client')
 const publicIp = require('public-ip')
 const Sentry = require('@sentry/node')

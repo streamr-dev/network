@@ -1,4 +1,4 @@
-const { startTracker, startNetworkNode } = require('@streamr/streamr-p2p-network')
+const { startTracker, startNetworkNode } = require('streamr-network')
 const intoStream = require('into-stream')
 const StreamrClient = require('streamr-client')
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer

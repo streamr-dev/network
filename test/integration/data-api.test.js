@@ -1,7 +1,4 @@
-const assert = require('assert')
-
-const fetch = require('node-fetch')
-const WebSocket = require('@streamr/sc-uws')
+const WebSocket = require('ws')
 
 const createBroker = require('../../src/broker')
 
