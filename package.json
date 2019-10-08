@@ -1,5 +1,5 @@
 {
-  "name": "@streamr/streamr-p2p-network",
+  "name": "streamr-network",
   "version": "12.1.14",
   "description": "Streamr P2P network",
   "repository": {
