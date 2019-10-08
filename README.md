@@ -22,7 +22,7 @@ If instead you want to run a broker node by itself without Docker, follow the st
 
 First install the package
 ```
-npm install -g @streamr/broker
+npm install -g streamr-broker
 ```
 Then run the command broker with the desired configuration file
 ```
