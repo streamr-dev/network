@@ -33,10 +33,10 @@ Prerequisites: [Node.js](https://nodejs.org/) (`^8.10.0`, `^10.13.0`, or `>=11.1
 You can install Streamr Network using npm:
 
 ```
-$ npm install @streamr/streamr-p2p-network --save
+$ npm install streamr-network --save
 ```
 
-It is also possible to install Streamr Network globally (using `npm install @streamr/streamr-p2p-network --global`)
+It is also possible to install Streamr Network globally (using `npm install streamr-network --global`)
 
 ## Examples
 
