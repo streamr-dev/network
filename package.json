@@ -43,7 +43,7 @@
     "qs": "^6.9.0",
     "streamr-client": "^2.2.2",
     "streamr-client-protocol": "^2.2.14",
-    "streamr-network": "^13.1.0",
+    "streamr-network": "^13.1.1",
     "uuid": "^3.3.3",
     "ws": "^7.1.2"
   },
