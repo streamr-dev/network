@@ -161,11 +161,11 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 .catch((err) => {
                     let errorMsg
                     if (err instanceof HttpError && err.code === 401) {
-                        errorMsg = `You are not allowed to write to stream ${request.streamId}`
+                        errorMsg = `Authentication failed while trying to publish to stream ${streamId}`
                     } else if (err instanceof HttpError && err.code === 403) {
-                        errorMsg = `Authentication failed while trying to publish to stream ${request.streamId}`
+                        errorMsg = `You are not allowed to write to stream ${streamId}`
                     } else if (err instanceof HttpError && err.code === 404) {
-                        errorMsg = `Stream ${request.streamId} not found.`
+                        errorMsg = `Stream ${streamId} not found.`
                     } else {
                         errorMsg = `Publish request failed: ${err}`
                     }
