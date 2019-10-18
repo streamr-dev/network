@@ -3,8 +3,14 @@ const { wait } = require('streamr-test-utils')
 const MessageBuffer = require('../../src/helpers/MessageBuffer')
 
 describe('fullt test of MessageBuffer', () => {
+    let buffer
+
+    afterEach(() => {
+        buffer.clear()
+    })
+
     test('put, pop and popAll work as expected (no timeouts scenario)', () => {
-        const buffer = new MessageBuffer(999999999)
+        buffer = new MessageBuffer(999999999)
 
         buffer.put('stream-1', {
             id: 'stream-1',
@@ -49,7 +55,7 @@ describe('fullt test of MessageBuffer', () => {
 
     test('timeoutCb(id) is not invoked if messages popped before timeout', () => {
         const timeoutCb = jest.fn()
-        const buffer = new MessageBuffer(1000, 1000, timeoutCb)
+        buffer = new MessageBuffer(1000, 1000, timeoutCb)
 
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
@@ -60,7 +66,7 @@ describe('fullt test of MessageBuffer', () => {
     })
 
     test('messages are deleted after timeout', (done) => {
-        const buffer = new MessageBuffer(100)
+        buffer = new MessageBuffer(100)
         buffer.put('stream-1', {})
         buffer.put('stream-2', {})
 
@@ -72,7 +78,7 @@ describe('fullt test of MessageBuffer', () => {
     })
 
     test('clear() removes all messages and timeout callbacks', () => {
-        const buffer = new MessageBuffer(100, 100)
+        buffer = new MessageBuffer(100, 100)
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
         buffer.put('stream-2', {})
@@ -85,7 +91,7 @@ describe('fullt test of MessageBuffer', () => {
     })
 
     test('size() gives correct size of buffer across streams', () => {
-        const buffer = new MessageBuffer(999999999)
+        buffer = new MessageBuffer(999999999)
 
         buffer.put('stream-1', {
             id: 'stream-1',
@@ -114,7 +120,7 @@ describe('fullt test of MessageBuffer', () => {
     })
 
     test('clearing and pushing to ids do not affect other ids', async () => {
-        const buffer = new MessageBuffer(100)
+        buffer = new MessageBuffer(100)
 
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
@@ -148,7 +154,7 @@ describe('fullt test of MessageBuffer', () => {
     })
 
     test('only expired messages are deleted on timeout', async () => {
-        const buffer = new MessageBuffer(100)
+        buffer = new MessageBuffer(100)
 
         buffer.put('stream-1', {})
         buffer.put('stream-1', {})
@@ -165,7 +171,7 @@ describe('fullt test of MessageBuffer', () => {
     })
 
     test('test maxLimit', () => {
-        const buffer = new MessageBuffer(1000, 3)
+        buffer = new MessageBuffer(1000, 3)
 
         for (let i = 0; i < 1000; i++) {
             buffer.put('stream-1', {})
