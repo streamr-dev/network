@@ -5,6 +5,7 @@ module.exports = class MessageBuffer {
         this.buffer = {}
         this.timeoutInMs = timeoutInMs
         this.maxSize = maxSize
+        this.pruneInterval = null
     }
 
     put(id, message) {
@@ -16,6 +17,13 @@ module.exports = class MessageBuffer {
         }
 
         this.buffer[id].set(message, true)
+
+        // 'lru-cache' library itself does not pro-actively prune items as they get old
+        if (this.pruneInterval === null) {
+            this.pruneInterval = setInterval(() => {
+                Object.values(this.buffer).forEach((messages) => messages.prune())
+            }, this.timeoutInMs)
+        }
     }
 
     popAll(id) {
@@ -33,6 +41,8 @@ module.exports = class MessageBuffer {
 
     clear() {
         Object.keys(this.buffer).forEach((id) => this.popAll(id))
+        clearInterval(this.pruneInterval)
+        this.pruneInterval = null
     }
 
     size() {
