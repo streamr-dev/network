@@ -577,6 +577,7 @@ export default class StreamrClient extends EventEmitter {
                         sub.removeListener('message received', handler)
                         sub.removeListener('unsubscribed', handler)
                         sub.removeListener('error', handler)
+                        sub.finishResend()
                     }
                     sub.once('resend done', handler)
                     sub.once('message received', handler)

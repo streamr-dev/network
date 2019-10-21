@@ -84,7 +84,7 @@ export default class AbstractSubscription extends Subscription {
             try {
                 this.emit('resent', response)
             } finally {
-                this._finishResend()
+                this.finishResend()
             }
         })
     }
@@ -97,7 +97,7 @@ export default class AbstractSubscription extends Subscription {
             try {
                 this.emit('no_resend', response)
             } finally {
-                this._finishResend(true)
+                this.finishResend(true)
             }
         })
     }

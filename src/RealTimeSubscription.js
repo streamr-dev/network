@@ -18,7 +18,7 @@ export default class RealTimeSubscription extends AbstractSubscription {
         return this._catchAndEmitErrors(() => this._handleMessage(msg, verifyFn))
     }
 
-    _finishResend() {
+    finishResend() {
         this._lastMessageHandlerPromise = null
         this.setResending(false)
     }

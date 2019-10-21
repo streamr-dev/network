@@ -67,6 +67,10 @@ export default class CombinedSubscription extends Subscription {
         return this.sub.handleBroadcastMessage(msg, verifyFn)
     }
 
+    finishResend() {
+        return this.sub.finishResend()
+    }
+
     hasResendOptions() {
         return this.sub.hasResendOptions()
     }
