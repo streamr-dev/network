@@ -109,6 +109,17 @@ jobs:
       region: eu-west-1
       on:
         tags: true
+    - provider: codedeploy
+      access_key_id: AKIAJBAGP3WA5UXQ3AZQ
+      secret_access_key:
+        secure: Q0V5zNJ1W6NI+uz+2bP27CdXitIMfBiUr0biziRl5KzpPEqGTxwLX/PQwNAcClSMP69smW4PGFAVf+uBmhQuFPsGDv0tLvSTrL7kcigijrVukx18sC1wvLkc9cX3JitTzhDLhi/WhtwDCPGYJbsd1BC8umd7C1iIWNDIueRzPo0Xy4YN7rRIFbY59twlEKb3mJbs1m+ZxtE5LJLvBbE8mqzxRjIPMHI5sbSa8xM8HEhZ7dLWFKIvOno1+n6eVCCWlU+uEfk0L9yLanOn85D3apuVau+//Xi1mbSNZhgywKD2mjeFtztHkrvgEC+ptAKelLyffT9uCI2ywd3R5D8FTDC+wlLcbvmDZ3fcG7qudUDulIRE0BOI2kw0MF0IiTtG96sJfmA3o4iQhoGAsME45+709unYgi0xrxvQ0zkJcBBPt4TzSEwrQX95i5lHiXUA61wW2inOCmr5wRPKOzpaSKSzYFsCts+5dDT/rKhk62+biQNCFXblVFFyLXqss64q7PqDRFKOChBMBiRNG6e0DSt4/SYH65sKPoKaPtZq8Pm8iDUM0CEVdIlpqK1IfLPGCmTeqHXTUk2Q147TsPIu2BW/bFWItd48eEk0gsdIdOdghHclus+24l/iX9Ijolbp2hEUpcYDn4SRDioV+OEtbbUs87ca4PA+3JplnOdSsyo=
+      bucket: eu-west-1-lx-streamr-vault
+      key: network-node/releases/broker-${TRAVIS_JOB_ID}.tar
+      application: eu-west-1-lx-network-node-storage-codedeploy
+      deployment_group: eu-west-1-lx-network-node-storage-deployment-group
+      region: eu-west-1
+      on:
+        tags: true
   - stage: Build docker (dev)
     install: true
     env:
