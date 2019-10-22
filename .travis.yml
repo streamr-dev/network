@@ -72,7 +72,7 @@ jobs:
       deployment_group: eu-west-1-stg-network-node-storage-deployment-group
       region: eu-west-1
   - stage: Deploy Lisboa
-    if: tag IS present
+    if: NOT type IN (pull_request)
     script:
     - mkdir $TRAVIS_BUILD_DIR/build
     - mkdir $TRAVIS_BUILD_DIR/upload
@@ -96,6 +96,8 @@ jobs:
       region: eu-west-1
       skip_cleanup: true
       local_dir: upload
+      on:
+        tags: true
     - provider: codedeploy
       access_key_id: AKIAJBAGP3WA5UXQ3AZQ
       secret_access_key:
@@ -105,6 +107,8 @@ jobs:
       application: eu-west-1-lx-network-node-codedeploy
       deployment_group: eu-west-1-lx-network-node-deployment-group
       region: eu-west-1
+      on:
+        tags: true
   - stage: Build docker (dev)
     install: true
     env:
