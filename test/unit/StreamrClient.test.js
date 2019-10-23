@@ -153,9 +153,17 @@ describe('StreamrClient', () => {
         }, connection)
     })
 
-    afterEach(() => {
-        connection.checkSentMessages()
-        client.disconnect()
+    afterEach((done) => {
+        // Allow the event queue to be processed before checking sent messages
+        setTimeout(() => {
+            try {
+                connection.checkSentMessages()
+                client.disconnect()
+                done()
+            } catch (err) {
+                done(err)
+            }
+        })
     })
 
     describe('Connection event handling', () => {
@@ -507,7 +515,7 @@ describe('StreamrClient', () => {
 
             it('reports InvalidJsonErrors to subscriptions', (done) => {
                 const sub = setupSubscription('stream1')
-                const jsonError = new Errors.InvalidJsonError(sub.streamId)
+                const jsonError = new Errors.InvalidJsonError(sub.streamId, 'invalid json', new Error('Invalid JSON: invalid json'), msg('stream1').streamMessage)
 
                 sub.handleError = (err) => {
                     assert.equal(err, jsonError)
@@ -597,6 +605,27 @@ describe('StreamrClient', () => {
                 client.subscribe({
                     stream: 'stream1',
                     partition: 5,
+                }, () => {})
+            })
+
+            it('sends subscribe request for each subscribed partition', async () => {
+                connection.expect(SubscribeRequest.create('stream1', 2, 'session-token'))
+                connection.expect(SubscribeRequest.create('stream1', 3, 'session-token'))
+                connection.expect(SubscribeRequest.create('stream1', 4, 'session-token'))
+
+                client.subscribe({
+                    stream: 'stream1',
+                    partition: 2,
+                }, () => {})
+
+                client.subscribe({
+                    stream: 'stream1',
+                    partition: 3,
+                }, () => {})
+
+                client.subscribe({
+                    stream: 'stream1',
+                    partition: 4,
                 }, () => {})
             })
 
@@ -981,3 +1010,4 @@ describe('StreamrClient', () => {
         })
     })
 })
+

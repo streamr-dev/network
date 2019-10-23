@@ -3,14 +3,14 @@ import assert from 'assert'
 import sinon from 'sinon'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import SubscribedStream from '../../src/SubscribedStream'
+import SubscribedStreamPartition from '../../src/SubscribedStreamPartition'
 import Signer from '../../src/Signer'
 import RealTimeSubscription from '../../src/RealTimeSubscription'
 
 const { StreamMessage } = MessageLayer
 
-describe('SubscribedStream', () => {
-    let subscribedStream
+describe('SubscribedStreamPartition', () => {
+    let subscribedStreamPartition
     const publishers = ['0xb8ce9ab6943e0eced004cde8e3bbed6568b2fa01'.toLowerCase(), 'publisher2', 'publisher3']
     const publishersMap = {}
     publishers.forEach((p) => {
@@ -45,24 +45,24 @@ describe('SubscribedStream', () => {
             let stream
             beforeEach(() => {
                 ({ client, stream } = setupClientAndStream())
-                subscribedStream = new SubscribedStream(client, 'streamId')
+                subscribedStreamPartition = new SubscribedStreamPartition(client, 'streamId')
             })
             describe('getPublishers', () => {
                 it('should use endpoint to retrieve publishers', async () => {
-                    const retrievedPublishers = await subscribedStream.getPublishers()
+                    const retrievedPublishers = await subscribedStreamPartition.getPublishers()
                     assert(client.getStreamPublishers.calledOnce)
                     assert.deepStrictEqual(publishersMap, retrievedPublishers)
-                    assert.deepStrictEqual(await subscribedStream.publishersPromise, publishersMap)
+                    assert.deepStrictEqual(await subscribedStreamPartition.publishersPromise, publishersMap)
                 })
                 it('should use stored publishers and not the endpoint', async () => {
-                    subscribedStream.publishersPromise = Promise.resolve(publishersMap)
-                    const retrievedPublishers = await subscribedStream.getPublishers()
+                    subscribedStreamPartition.publishersPromise = Promise.resolve(publishersMap)
+                    const retrievedPublishers = await subscribedStreamPartition.getPublishers()
                     assert(client.getStreamPublishers.notCalled)
                     assert.deepStrictEqual(publishersMap, retrievedPublishers)
                 })
                 it('should call getStreamPublishers only once when multiple calls made simultaneously', () => {
-                    const p1 = subscribedStream.getPublishers()
-                    const p2 = subscribedStream.getPublishers()
+                    const p1 = subscribedStreamPartition.getPublishers()
+                    const p2 = subscribedStreamPartition.getPublishers()
                     return Promise.all([p1, p2]).then(([publishers1, publishers2]) => {
                         assert(client.getStreamPublishers.calledOnce)
                         assert.deepStrictEqual(publishers1, publishers2)
@@ -70,50 +70,50 @@ describe('SubscribedStream', () => {
                 })
                 it('should use endpoint again after the list of locally stored publishers expires', async () => {
                     const clock = sinon.useFakeTimers()
-                    await subscribedStream.getPublishers()
-                    subscribedStream.publishersPromise = Promise.resolve(publishersMap)
-                    await subscribedStream.getPublishers()
-                    clock.tick(SubscribedStream.PUBLISHERS_EXPIRATION_TIME + 100)
-                    await subscribedStream.getPublishers()
+                    await subscribedStreamPartition.getPublishers()
+                    subscribedStreamPartition.publishersPromise = Promise.resolve(publishersMap)
+                    await subscribedStreamPartition.getPublishers()
+                    clock.tick(SubscribedStreamPartition.PUBLISHERS_EXPIRATION_TIME + 100)
+                    await subscribedStreamPartition.getPublishers()
                     assert(client.getStreamPublishers.calledTwice)
                     clock.restore()
                 })
             })
             describe('isValidPublisher', () => {
                 it('should return cache result if cache hit', async () => {
-                    const valid = await subscribedStream.isValidPublisher('publisher2')
+                    const valid = await subscribedStreamPartition.isValidPublisher('publisher2')
                     assert.strictEqual(valid, true)
                     assert(client.getStreamPublishers.calledOnce)
                     assert(client.isStreamPublisher.notCalled)
                 })
                 it('should fetch if cache miss and store result in cache', async () => {
-                    const valid4 = await subscribedStream.isValidPublisher('publisher4')
+                    const valid4 = await subscribedStreamPartition.isValidPublisher('publisher4')
                     assert.strictEqual(valid4, true)
-                    const valid5 = await subscribedStream.isValidPublisher('publisher5')
+                    const valid5 = await subscribedStreamPartition.isValidPublisher('publisher5')
                     assert.strictEqual(valid5, false)
                     // calling the function again should use the cache
-                    await subscribedStream.isValidPublisher('publisher4')
-                    await subscribedStream.isValidPublisher('publisher5')
+                    await subscribedStreamPartition.isValidPublisher('publisher4')
+                    await subscribedStreamPartition.isValidPublisher('publisher5')
                     assert(client.getStreamPublishers.calledOnce)
                     assert(client.isStreamPublisher.calledTwice)
                 })
             })
             describe('getStream', () => {
                 it('should use endpoint to retrieve stream', async () => {
-                    const retrievedStream = await subscribedStream.getStream()
+                    const retrievedStream = await subscribedStreamPartition.getStream()
                     assert(client.getStream.calledOnce)
                     assert.strictEqual(stream, retrievedStream)
-                    assert.strictEqual(stream, await subscribedStream.streamPromise)
+                    assert.strictEqual(stream, await subscribedStreamPartition.streamPromise)
                 })
                 it('should use stored stream and not the endpoint', async () => {
-                    subscribedStream.streamPromise = Promise.resolve(stream)
-                    const retrievedStream = await subscribedStream.getStream()
+                    subscribedStreamPartition.streamPromise = Promise.resolve(stream)
+                    const retrievedStream = await subscribedStreamPartition.getStream()
                     assert(client.getStream.notCalled)
                     assert.strictEqual(stream, retrievedStream)
                 })
                 it('should call the endpoint only once when multiple calls made simultaneously', () => {
-                    const p1 = subscribedStream.getStream()
-                    const p2 = subscribedStream.getStream()
+                    const p1 = subscribedStreamPartition.getStream()
+                    const p2 = subscribedStreamPartition.getStream()
                     return Promise.all([p1, p2]).then(([stream1, stream2]) => {
                         assert(client.getStream.calledOnce)
                         assert.deepStrictEqual(stream1, stream2)
@@ -137,8 +137,8 @@ describe('SubscribedStream', () => {
                 )
                 await signer.signStreamMessage(msg)
                 const spiedVerifyStreamMessage = sinon.spy(Signer, 'verifyStreamMessage')
-                subscribedStream = new SubscribedStream(setupClientAndStream('auto', true).client, 'streamId')
-                const valid = await subscribedStream.verifyStreamMessage(msg)
+                subscribedStreamPartition = new SubscribedStreamPartition(setupClientAndStream('auto', true).client, 'streamId')
+                const valid = await subscribedStreamPartition.verifyStreamMessage(msg)
                 assert.strictEqual(valid, false)
                 assert(spiedVerifyStreamMessage.notCalled)
                 spiedVerifyStreamMessage.restore()
@@ -166,8 +166,8 @@ describe('SubscribedStream', () => {
                 spiedVerifyStreamMessage = sinon.spy(Signer, 'verifyStreamMessage')
             })
             afterEach(async () => {
-                subscribedStream = new SubscribedStream(client, 'streamId')
-                const valid = await subscribedStream.verifyStreamMessage(msg)
+                subscribedStreamPartition = new SubscribedStreamPartition(client, 'streamId')
+                const valid = await subscribedStreamPartition.verifyStreamMessage(msg)
                 assert.strictEqual(valid, true)
                 assert(spiedExpectedCall())
                 spiedVerifyStreamMessage.restore()
@@ -205,8 +205,8 @@ describe('SubscribedStream', () => {
                 )
             })
             afterEach(async () => {
-                subscribedStream = new SubscribedStream(client, 'streamId')
-                const valid = await subscribedStream.verifyStreamMessage(msg)
+                subscribedStreamPartition = new SubscribedStreamPartition(client, 'streamId')
+                const valid = await subscribedStreamPartition.verifyStreamMessage(msg)
                 assert.strictEqual(valid, expectedValid)
             })
             it('should return false when "auto" verification and stream requires signed data', () => {
@@ -232,26 +232,26 @@ describe('SubscribedStream', () => {
         let sub1
         beforeEach(() => {
             ({ client } = setupClientAndStream())
-            subscribedStream = new SubscribedStream(client, 'streamId')
+            subscribedStreamPartition = new SubscribedStreamPartition(client, 'streamId')
             sub1 = new RealTimeSubscription('sub1Id', 0, () => {})
         })
         it('should add and remove subscription correctly', () => {
-            assert(subscribedStream.getSubscription(sub1.id) === undefined)
-            subscribedStream.addSubscription(sub1)
-            assert(subscribedStream.getSubscription(sub1.id) === sub1)
-            subscribedStream.removeSubscription(sub1)
-            assert(subscribedStream.getSubscription(sub1.id) === undefined)
+            assert(subscribedStreamPartition.getSubscription(sub1.id) === undefined)
+            subscribedStreamPartition.addSubscription(sub1)
+            assert(subscribedStreamPartition.getSubscription(sub1.id) === sub1)
+            subscribedStreamPartition.removeSubscription(sub1)
+            assert(subscribedStreamPartition.getSubscription(sub1.id) === undefined)
         })
         it('should get subscriptions array', () => {
-            subscribedStream.addSubscription(sub1)
+            subscribedStreamPartition.addSubscription(sub1)
             const sub2 = {
                 id: 'sub2Id',
             }
-            subscribedStream.addSubscription(sub2)
-            assert.deepStrictEqual(subscribedStream.getSubscriptions(), [sub1, sub2])
+            subscribedStreamPartition.addSubscription(sub2)
+            assert.deepStrictEqual(subscribedStreamPartition.getSubscriptions(), [sub1, sub2])
         })
         it('should return true', () => {
-            assert.strictEqual(subscribedStream.emptySubscriptionsSet(), true)
+            assert.strictEqual(subscribedStreamPartition.emptySubscriptionsSet(), true)
         })
     })
 })

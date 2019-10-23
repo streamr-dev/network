@@ -636,7 +636,7 @@ describe('StreamrClient', () => {
             })
 
             // Check that we're not subscribed yet
-            assert.strictEqual(client.subscribedStreams[stream.id], undefined)
+            assert.strictEqual(client.getSubscriptions()[stream.id], undefined)
 
             // Add delay: this test needs some time to allow the message to be written to Cassandra
             setTimeout(() => {
@@ -652,7 +652,8 @@ describe('StreamrClient', () => {
                     assert.strictEqual(parsedContent.test, 'client.subscribe with resend')
 
                     // Check signature stuff
-                    const subStream = client.subscribedStreams[stream.id]
+                    // WARNING: digging into internals
+                    const subStream = client._getSubscribedStreamPartition(stream.id, 0) // eslint-disable-line no-underscore-dangle
                     const publishers = await subStream.getPublishers()
                     const requireVerification = await subStream.getVerifySignatures()
                     assert.strictEqual(requireVerification, true)
@@ -666,7 +667,7 @@ describe('StreamrClient', () => {
                     // All good, unsubscribe
                     client.unsubscribe(sub)
                     sub.on('unsubscribed', () => {
-                        assert.strictEqual(client.subscribedStreams[stream.id], undefined)
+                        assert.strictEqual(client.getSubscriptions(stream.id).length, 0)
                         done()
                     })
                 })
@@ -681,7 +682,7 @@ describe('StreamrClient', () => {
             })
 
             // Check that we're not subscribed yet
-            assert.strictEqual(client.subscribedStreams[stream.id], undefined)
+            assert.strictEqual(client.getSubscriptions(stream.id).length, 0)
 
             // Add delay: this test needs some time to allow the message to be written to Cassandra
             setTimeout(() => {
@@ -695,7 +696,8 @@ describe('StreamrClient', () => {
                     assert.strictEqual(parsedContent.test, 'client.subscribe with resend')
 
                     // Check signature stuff
-                    const subStream = client.subscribedStreams[stream.id]
+                    // WARNING: digging into internals
+                    const subStream = client._getSubscribedStreamPartition(stream.id, 0) // eslint-disable-line no-underscore-dangle
                     const publishers = await subStream.getPublishers()
                     const requireVerification = await subStream.getVerifySignatures()
                     assert.strictEqual(requireVerification, true)
@@ -709,7 +711,7 @@ describe('StreamrClient', () => {
                     // All good, unsubscribe
                     client.unsubscribe(sub)
                     sub.on('unsubscribed', () => {
-                        assert.strictEqual(client.subscribedStreams[stream.id], undefined)
+                        assert.strictEqual(client.getSubscriptions(stream.id).length, 0)
                         done()
                     })
                 })

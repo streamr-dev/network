@@ -2,13 +2,14 @@ import debugFactory from 'debug'
 
 import Signer from './Signer'
 
-const debug = debugFactory('StreamrClient::SubscribedStream')
+const debug = debugFactory('StreamrClient::SubscribedStreamPartition')
 
 const PUBLISHERS_EXPIRATION_TIME = 30 * 60 * 1000 // 30 minutes
-export default class SubscribedStream {
-    constructor(client, streamId) {
+export default class SubscribedStreamPartition {
+    constructor(client, streamId, streamPartition) {
         this._client = client
         this.streamId = streamId
+        this.streamPartition = streamPartition
         this.subscriptions = {}
         this.isPublisherPromises = {}
     }
@@ -122,4 +123,4 @@ export default class SubscribedStream {
         }
     }
 }
-SubscribedStream.PUBLISHERS_EXPIRATION_TIME = PUBLISHERS_EXPIRATION_TIME
+SubscribedStreamPartition.PUBLISHERS_EXPIRATION_TIME = PUBLISHERS_EXPIRATION_TIME
