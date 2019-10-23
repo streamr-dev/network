@@ -91,8 +91,8 @@ const msg = {
 // Publish using the Stream id only
 client.publish('my-stream-id', msg)
 
-// Or alternatively, via the Stream object (from e.g. getOrCreateStream)
-stream.publish(msg)
+// The first argument can also be the Stream object
+client.publish(stream, msg)
 
 // Publish with a specific timestamp as a Date object (default is now)
 client.publish('my-stream-id', msg, new Date(54365472))
@@ -103,8 +103,11 @@ client.publish('my-stream-id', msg, 54365472)
 // Publish with a specific timestamp as a ISO8601 string
 client.publish('my-stream-id', msg, '2019-01-01T00:00:00.123Z')
 
-// Publish with a specific partition key (default is null which will publish to stream partition 0)
+// Publish with a specific partition key (read more about partitioning further down this readme)
 client.publish('my-stream-id', msg, Date.now(), 'my-partition-key')
+
+// For convenience, stream.publish(...) equals client.publish(stream, ...)
+stream.publish(msg)
 ```
 
 ### Client options
@@ -208,7 +211,7 @@ listStreams(query) | Fetches an array of Stream objects from the API. For the qu
 getStreamByName(name) | Fetches a Stream which exactly matches the given name.
 createStream(properties) | Creates a Stream with the given properties. For more information on the Stream properties, consult the API docs.
 getOrCreateStream(properties) | Gets a Stream with the id or name given in `properties`, or creates it if one is not found.
-publish(streamId, message) | Publishes a new message (data point) to the given Stream.
+publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given Stream.
 
 #### Listening to state changes of the client
 
@@ -229,7 +232,7 @@ hasPermission(operation, user) | Returns a permission object, or null if no such
 grantPermission(operation, user) | Grants the permission to do `operation` to `user`, which are defined as above.
 revokePermission(permissionId) | Revokes a permission identified by its `id`.
 detectFields() | Updates the Stream field config (schema) to match the latest data point in the Stream.
-publish(message) | Publishes a new message (data point) to this Stream.
+publish(message, timestamp, partitionKey) | Publishes a new message to this Stream.
 
 ### Subscription options
 
@@ -238,7 +241,7 @@ Note that only one of the resend options can be used for a particular subscripti
 Name | Description
 ---- | -----------
 stream    | Stream id to subscribe to
-partition | Partition number to subscribe to. Defaults to the default partition (0).
+partition | Partition number to subscribe to. Defaults to partition 0.
 resend | Object defining the resend options. Below are examples of its contents.
 groupKeys | Object defining the group key as a hex string for each publisher id of the stream.
 
@@ -273,9 +276,9 @@ resend: {
 }
 ```
 
-### Community Product API
+### Community Products API
 
-Streamr Client provides functions for operating with Community Product.
+The library provides functions for interacting with Community Products.
 
 Name | Description
 ---- | -----------
@@ -327,6 +330,72 @@ resending | [ResendResponseResending](https://github.com/streamr-dev/streamr-cli
 resent | [ResendResponseResent](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resent/ResendResponseResentV1.js) | Fired after `resending` when the subscription has finished resending.
 no_resend | [ResendResponseNoResend](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_no_resend/ResendResponseNoResendV1.js) | This will occur instead of the `resending` - `resent` sequence in case there were no messages to resend.
 error | Error object | Reports errors, for example problems with message content
+
+### Partitioning
+
+Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning). 
+
+**Creating partitioned streams**
+
+By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (1-100 is reasonable). An example of creating a partitioned stream using the JS client:
+
+```
+client.createStream({
+    name: 'My partitioned stream',
+    partitions: 10,
+}).then(stream => {
+    console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partitions.`)
+})
+```
+
+**Publishing to partitioned streams**
+
+In most use cases, a user wants related events (e.g. events from a particular device) to be assigned to the same partition, so that the events retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly. 
+
+The library allows the user to choose a *partition key*, which simplifies publishing to partitioned streams by not requiring the user to assign a partition number explicitly. The same partition key always maps to the same partition. In an IoT use case, the device id can be used as partition key; in user interaction data it could be the user id, and so on. 
+
+The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
+
+```
+client.publish('my-stream-id', msg, Date.now(), msg.vehicleId)
+
+// or, equivalently
+stream.publish(msg, Date.now(), msg.vehicleId)
+```
+
+**Subscribing to partitioned streams**
+
+By default, the JS client subscribes to the first partition (partition `0`) in a stream. The partition number can be explicitly given in the subscribe call:
+
+```
+client.subscribe(
+    {
+        stream: 'my-stream-id',
+        partition: 4, // defaults to 0
+    },
+    (payload) => {
+        console.log(`Got message ${JSON.stringify(payload)}`)
+    },
+)
+```
+
+Or, to subscribe to multiple partitions, if the subscriber can handle the volume:
+
+```
+const handler = (payload, streamMessage) => {
+    console.log(`Got message ${JSON.stringify(payload)} from partition ${streamMessage.getStreamPartition()}`)
+}
+
+[2,3,4].forEach(partition => {
+    client.subscribe(
+        {
+            stream: 'my-stream-id',
+            partition: partition,
+        },
+        handler,
+    )
+})
+```
 
 ### Logging
 
