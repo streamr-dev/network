@@ -1,10 +1,10 @@
 import assert from 'assert'
+
 import sinon from 'sinon'
 
 import Stream from '../../src/rest/domain/Stream'
 
 describe('Stream', () => {
-
     let stream
     let clientMock
 
