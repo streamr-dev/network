@@ -88,7 +88,7 @@ export default class Stream {
         )
     }
 
-    publish(data, timestamp = Date.now()) {
-        return this._client.publish(this.id, data, timestamp)
+    publish(...theArgs) {
+        return this._client.publish(this.id, ...theArgs)
     }
 }
