@@ -591,6 +591,15 @@ describe('StreamrClient', () => {
                 }, () => {})
             })
 
+            it('sends a subscribe request for a given partition', () => {
+                connection.expect(SubscribeRequest.create('stream1', 5, 'session-token'))
+
+                client.subscribe({
+                    stream: 'stream1',
+                    partition: 5,
+                }, () => {})
+            })
+
             it('accepts stream id as first argument instead of object', () => {
                 connection.expect(SubscribeRequest.create('stream1', 0, 'session-token'))
 

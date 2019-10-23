@@ -595,7 +595,7 @@ export default class StreamrClient extends EventEmitter {
         return this.session.getSessionToken().then((sessionToken) => {
             // If this is the first subscription for this stream, send a subscription request to the server
             if (!stream.isSubscribing() && subscribedSubs.length === 0) {
-                const request = SubscribeRequest.create(sub.streamId, undefined, sessionToken)
+                const request = SubscribeRequest.create(sub.streamId, sub.streamPartition, sessionToken)
                 debug('_requestSubscribe: subscribing client: %o', request)
                 stream.setSubscribing(true)
                 this.connection.send(request)
