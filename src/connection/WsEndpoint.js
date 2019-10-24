@@ -130,11 +130,13 @@ class WsEndpoint extends EventEmitter {
         } else {
             const { ws, duplex } = this.connections.get(recipientAddress)
             try {
-                duplex.write(message)
-                this.metrics.speed('_outSpeed')(message.length)
-                this.metrics.speed('_msgSpeed')(1)
-                this.metrics.speed('_msgOutSpeed')(1)
-                this.metrics.inc('send:success')
+                setImmediate(() => {
+                    duplex.write(message)
+                    this.metrics.speed('_outSpeed')(message.length)
+                    this.metrics.speed('_msgSpeed')(1)
+                    this.metrics.speed('_msgOutSpeed')(1)
+                    this.metrics.inc('send:success')
+                }, 0)
             } catch (e) {
                 this.metrics.inc('send:failed')
                 console.error('sending to %s failed because of %s, readyState is', recipientAddress, e, ws.readyState)
@@ -327,7 +329,7 @@ class WsEndpoint extends EventEmitter {
             this.metrics.speed('_msgSpeed')(1)
             this.metrics.speed('_msgInSpeed')(1)
 
-            this.onReceive(address, message)
+            setImmediate(() => this.onReceive(address, message), 0)
         })
 
         duplex.on('error', (message) => {

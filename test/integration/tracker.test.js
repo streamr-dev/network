@@ -71,11 +71,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
             await waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED),
             await waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED)
         ])
+
         subscriberOne.unsubscribeFromStream(s2)
-        await Promise.all([
-            await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
-            await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        ])
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+
         expect(Object.keys(tracker.overlayPerStream)).toEqual(['stream-1::0', 'stream-2::2'])
         expect(tracker.overlayPerStream['stream-1::0'].state()).toEqual({
             subscriberOne: ['subscriberTwo'],
@@ -101,5 +100,5 @@ describe('check tracker, nodes and statuses from nodes', () => {
         await waitForCondition(() => tracker.overlayPerStream['stream-1::0'] === undefined)
         subscriberTwo.unsubscribeFromStream(s2)
         await waitForCondition(() => tracker.overlayPerStream['stream-2::2'] === undefined)
-    })
+    }, 10000)
 })
