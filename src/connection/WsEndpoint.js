@@ -330,6 +330,10 @@ class WsEndpoint extends EventEmitter {
             this.onReceive(address, message)
         })
 
+        duplex.on('error', (message) => {
+            duplex.destroy()
+        })
+
         // TODO possible solution remove reasons?
         // duplex.on('close', () => {
         //     this.connections.delete(address)

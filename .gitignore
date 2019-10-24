@@ -65,6 +65,7 @@ typings/
 .idea/tasks.xml
 .idea/dictionaries
 .idea/httpRequests
+.idea/git_toolbox_prj.xml
 
 .vscode
 
