@@ -93,18 +93,20 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         // Callback for when client sends message
         socket.on('message', (data) => {
-            try {
-                const request = ControlLayer.ControlMessage.deserialize(data, false)
-                const handler = this.requestHandlersByMessageType[request.type]
-                if (handler) {
-                    debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
-                    handler.call(this, connection, request)
-                } else {
-                    connection.sendError(`Unknown request type: ${request.type}`)
+            setImmediate(() => {
+                try {
+                    const request = ControlLayer.ControlMessage.deserialize(data, false)
+                    const handler = this.requestHandlersByMessageType[request.type]
+                    if (handler) {
+                        debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
+                        handler.call(this, connection, request)
+                    } else {
+                        connection.sendError(`Unknown request type: ${request.type}`)
+                    }
+                } catch (err) {
+                    connection.sendError(err.message || err)
                 }
-            } catch (err) {
-                connection.sendError(err.message || err)
-            }
+            }, 0)
         })
 
         // Callback for when client disconnects
@@ -325,7 +327,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         const streamPartition = streamMessage.getStreamPartition()
         const stream = this.streams.get(streamId, streamPartition)
         if (stream) {
-            stream.passToOrderingUtil(streamMessage)
+            setImmediate(() => stream.passToOrderingUtil(streamMessage), 0)
         } else {
             debug('networkNode#_handleStreamMessage: stream "%s:%d" not found', streamId, streamPartition)
         }
