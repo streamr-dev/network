@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 cd /srv/broker
-npm install
+sudo npm install
