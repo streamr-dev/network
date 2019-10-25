@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 cd /srv/broker
-mkdir /srv/.npm-global
-NPM_CONFIG_PREFIX=/srv/.npm-global npm install
+mkdir /srv/broker/.npm-global
+NPM_CONFIG_PREFIX=/srv/broker/.npm-global npm install
