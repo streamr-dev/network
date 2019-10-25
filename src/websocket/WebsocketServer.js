@@ -95,7 +95,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.wss.ws('/api/v1/ws', {
             /* Options */
             compression: 0,
-            maxPayloadLength: 16 * 1024 * 1024,
+            maxPayloadLength: 1024 * 1024,
             idleTimeout: 0,
             open: (ws, req) => {
                 const connection = new Connection(ws, req)
@@ -166,7 +166,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             uWS.us_listen_socket_close(this._listenSocket)
             this._listenSocket = null
             // uws has setTimeout(cb, 20000); in close event
-            setTimeout(() => resolve(), 1000)
+            setTimeout(() => resolve(), 3000)
         })
     }
 
