@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-service network-node start
+service network-node* start
