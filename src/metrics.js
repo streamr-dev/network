@@ -9,7 +9,7 @@ module.exports = class Metrics {
     }
 
     createSpeedometer(name) {
-        this._metrics.set(name, speedometer())
+        this._metrics.set(name, speedometer(1))
     }
 
     // eslint-disable-next-line class-methods-use-this
