@@ -10,7 +10,7 @@ WORKDIR /app
 COPY . /app
 
 # Install package.json dependencies (yes, clean up must be part of same RUN command because of layering)
-RUN apk add --update python build-base && npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN && npm install && apk del python build-base && rm -rf /var/cache/apk/*
+RUN apk add --update python build-base git && npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN && npm install && apk del python build-base && rm -rf /var/cache/apk/*
 
 # Make ports available to the world outside this container
 EXPOSE 30315
