@@ -1,7 +1,7 @@
 const fs = require('fs')
 const https = require('https')
 
-const ws = require('ws')
+const ws = require('uWebSockets.js')
 
 const MissingConfigError = require('../errors/MissingConfigError')
 const adapterRegistry = require('../adapterRegistry')
@@ -14,22 +14,20 @@ adapterRegistry.register('ws', ({ port, privateKeyFileName, certFileName }, {
     if (port === undefined) {
         throw new MissingConfigError('port')
     }
-    const serverConfig = {
-        path: '/api/v1/ws',
-    }
+
     let server
     if (privateKeyFileName && certFileName) {
-        server = https.createServer({
-            cert: fs.readFileSync(certFileName),
-            key: fs.readFileSync(privateKeyFileName)
+        server = ws.SSLApp({
+            key_file_name: privateKeyFileName,
+            cert_file_name: certFileName,
+
         })
-        serverConfig.server = server
-        server.listen(port)
     } else {
-        serverConfig.port = port
+        server = ws.App()
     }
     const websocketServer = new WebsocketServer(
-        new ws.Server(serverConfig).on('listening', () => console.info(`WS adapter listening on ${port}`)),
+        server,
+        port,
         networkNode,
         streamFetcher,
         publisher,
@@ -38,8 +36,5 @@ adapterRegistry.register('ws', ({ port, privateKeyFileName, certFileName }, {
     )
     return () => {
         websocketServer.close()
-        if (server) {
-            server.close()
-        }
     }
 })

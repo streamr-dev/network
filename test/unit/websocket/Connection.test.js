@@ -4,15 +4,15 @@ const Stream = require('../../../src/Stream.js')
 describe('Connection', () => {
     it('id is assigned', () => {
         const connection = new Connection(undefined, {
-            url: 'url?controlLayerVersion=1&messageLayerVersion=30',
-        })
+            getQuery: () => 'controlLayerVersion=1&messageLayerVersion=30',
+        }, undefined)
         expect(connection.id).toEqual('socketId-1')
     })
 
     describe('version parsing', () => {
         it('parses versions when present in request url', () => {
             const request = {
-                url: 'url?controlLayerVersion=1&messageLayerVersion=30',
+                getQuery: () => 'controlLayerVersion=1&messageLayerVersion=30',
             }
             const connection = new Connection(undefined, request)
             expect(connection.controlLayerVersion).toEqual(1)
@@ -21,7 +21,7 @@ describe('Connection', () => {
 
         it('uses defaults when versions not present in request url', () => {
             const request = {
-                url: 'url',
+                getQuery: () => 'url',
             }
             const connection = new Connection(undefined, request)
             expect(connection.controlLayerVersion).toEqual(0)
@@ -34,7 +34,7 @@ describe('Connection', () => {
 
         beforeEach(() => {
             connection = new Connection(undefined, {
-                url: 'url',
+                getQuery: () => 'url',
             })
         })
 
@@ -107,7 +107,7 @@ describe('Connection', () => {
             connection = new Connection({
                 send: sendFn,
             }, {
-                url: 'url',
+                getQuery: () => 'url',
             })
         })
 
