@@ -21,9 +21,9 @@ module.exports = class Connection {
         this.messageLayerVersion = 28
 
         // attempt to parse versions from request parameters
-        const parts = socketRequest.url.split('?')
-        if (parts.length === 2) {
-            const { controlLayerVersion, messageLayerVersion } = qs.parse(parts[1])
+        const parts = socketRequest.getQuery()
+        if (parts) {
+            const { controlLayerVersion, messageLayerVersion } = qs.parse(parts)
             if (controlLayerVersion && messageLayerVersion) {
                 this.controlLayerVersion = parseInt(controlLayerVersion)
                 this.messageLayerVersion = parseInt(messageLayerVersion)

@@ -4,6 +4,8 @@ const uuidv4 = require('uuid/v4')
 const debug = require('debug')('streamr:WebsocketServer')
 const { ControlLayer } = require('streamr-client-protocol')
 const LRU = require('lru-cache')
+const ab2str = require('arraybuffer-to-string')
+const uWS = require('uWebSockets.js')
 
 const HttpError = require('../errors/HttpError')
 const VolumeLogger = require('../VolumeLogger')
@@ -16,6 +18,7 @@ const FieldDetector = require('./FieldDetector')
 module.exports = class WebsocketServer extends events.EventEmitter {
     constructor(
         wss,
+        port,
         networkNode,
         streamFetcher,
         publisher,
@@ -25,11 +28,13 @@ module.exports = class WebsocketServer extends events.EventEmitter {
     ) {
         super()
         this.wss = wss
+        this._listenSocket = null
         this.networkNode = networkNode
         this.streamFetcher = streamFetcher
         this.publisher = publisher
         this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
+        this.connections = new Map()
         this.streams = new StreamStateManager(
             this._broadcastMessage.bind(this),
             (streamId, streamPartition, from, to, publisherId, msgChainId) => {
@@ -67,11 +72,89 @@ module.exports = class WebsocketServer extends events.EventEmitter {
 
         this.networkNode.addMessageListener(this._handleStreamMessage.bind(this))
 
-        this.wss.on('connection', this.onNewClientConnection.bind(this))
         this._updateTotalBufferSizeInterval = setInterval(() => {
-            // eslint-disable-next-line max-len
-            this.volumeLogger.totalBufferSize = Object.values(this.wss.clients).reduce((totalBufferSizeSum, ws) => totalBufferSizeSum + ws.bufferedAmount, 0)
-        }, 10 * 1000)
+            let totalBufferSize = 0
+            this.connections.forEach((id, connection) => {
+                if (connection.socket) {
+                    totalBufferSize += connection.socket.getBufferedAmount()
+                }
+            })
+            this.volumeLogger.totalBufferSize = totalBufferSize
+        }, 1000)
+
+        this.wss.listen(port, (token) => {
+            if (token) {
+                this._listenSocket = token
+                console.log('WS adapter listening on ' + port)
+            } else {
+                console.log('Failed to listen to port ' + port)
+                this.close()
+            }
+        })
+
+        this.wss.ws('/api/v1/ws', {
+            /* Options */
+            compression: 0,
+            maxPayloadLength: 16 * 1024 * 1024,
+            idleTimeout: 0,
+            open: (ws, req) => {
+                const connection = new Connection(ws, req)
+                this.connections.set(connection.id, connection)
+                this.volumeLogger.connectionCount = this.connections.size
+                debug('onNewClientConnection: socket "%s" connected', connection.id)
+                // eslint-disable-next-line no-param-reassign
+                ws.connectionId = connection.id
+            },
+            message: (ws, message, isBinary) => {
+                const connection = this.connections.get(ws.connectionId)
+
+                if (connection) {
+                    const copy = (src) => {
+                        const dst = new ArrayBuffer(src.byteLength)
+                        new Uint8Array(dst).set(new Uint8Array(src))
+                        return dst
+                    }
+
+                    const msg = copy(message)
+
+                    setImmediate(() => {
+                        try {
+                            const request = ControlLayer.ControlMessage.deserialize(ab2str(msg), false)
+                            const handler = this.requestHandlersByMessageType[request.type]
+                            if (handler) {
+                                debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
+                                handler.call(this, connection, request)
+                            } else {
+                                connection.sendError(`Unknown request type: ${request.type}`)
+                            }
+                        } catch (err) {
+                            connection.sendError(err.message || err)
+                        }
+                    })
+                }
+            },
+            drain: (ws) => {
+                console.log('WebSocket backpressure: ' + ws.getBufferedAmount())
+            },
+            close: (ws, code, message) => {
+                const connection = this.connections.get(ws.connectionId)
+
+                if (connection) {
+                    debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
+                    this.connections.delete(connection.id)
+                    this.volumeLogger.connectionCount = this.connections.size
+
+                    // Unsubscribe from all streams
+                    connection.forEachStream((stream) => {
+                        this.handleUnsubscribeRequest(
+                            connection,
+                            ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition),
+                            true,
+                        )
+                    })
+                }
+            }
+        })
     }
 
     close() {
@@ -80,48 +163,10 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.streamAuthCache.reset()
         // this.wss.forEach((socket) => socket.terminate())
         return new Promise((resolve, reject) => {
+            uWS.us_listen_socket_close(this._listenSocket)
+            this._listenSocket = null
             // uws has setTimeout(cb, 20000); in close event
-            this.wss.close()
-            resolve()
-        })
-    }
-
-    onNewClientConnection(socket, socketRequest) {
-        const connection = new Connection(socket, socketRequest)
-        this.volumeLogger.connectionCount += 1
-        debug('onNewClientConnection: socket "%s" connected', connection.id)
-
-        // Callback for when client sends message
-        socket.on('message', (data) => {
-            setImmediate(() => {
-                try {
-                    const request = ControlLayer.ControlMessage.deserialize(data, false)
-                    const handler = this.requestHandlersByMessageType[request.type]
-                    if (handler) {
-                        debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
-                        handler.call(this, connection, request)
-                    } else {
-                        connection.sendError(`Unknown request type: ${request.type}`)
-                    }
-                } catch (err) {
-                    connection.sendError(err.message || err)
-                }
-            }, 0)
-        })
-
-        // Callback for when client disconnects
-        socket.on('close', () => {
-            this.volumeLogger.connectionCount -= 1
-            debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
-
-            // Unsubscribe from all streams
-            connection.forEachStream((stream) => {
-                this.handleUnsubscribeRequest(
-                    connection,
-                    ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition),
-                    true,
-                )
-            })
+            setTimeout(() => resolve(), 1000)
         })
     }
 
