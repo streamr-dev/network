@@ -1,3 +1,4 @@
 #!/usr/bin/env bash
 cd /srv/tracker
-npm ci
+NPM_CONFIG_PREFIX=/srv/tracker/.npm-global npm install -g streamr-network --unsafe-perm
+

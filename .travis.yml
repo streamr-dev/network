@@ -23,6 +23,9 @@ jobs:
     script: npm run test-unit
   - name: integration tests
     script: npm run test-integration
+  - stage: publish
+    if: tag IS present
+    script: npm publish
   - stage: Deploy Staging
     script:
     - mkdir $TRAVIS_BUILD_DIR/build
@@ -101,6 +104,3 @@ jobs:
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh staging
-  - stage: publish
-    if: tag IS present
-    script: npm publish
