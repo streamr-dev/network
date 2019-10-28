@@ -11,14 +11,10 @@ describe('duplicate connections are closed', () => {
     let wsEndpoint2
 
     beforeEach(async () => {
-        wss1 = await startWebSocketServer('127.0.0.1', 28501)
-        wss2 = await startWebSocketServer('127.0.0.1', 28502)
-        wsEndpoint1 = new WsEndpoint(wss1, {
-            'streamr-peer-id': 'node-1', 'streamr-peer-type': 'node'
-        }, null)
-        wsEndpoint2 = new WsEndpoint(wss2, {
-            'streamr-peer-id': 'node-2', 'streamr-peer-type': 'node'
-        }, null)
+        wss1 = await startWebSocketServer('127.0.0.1', 28501, {})
+        wss2 = await startWebSocketServer('127.0.0.1', 28502, {})
+        wsEndpoint1 = new WsEndpoint(wss1, {}, null)
+        wsEndpoint2 = new WsEndpoint(wss2, {}, null)
     })
 
     afterAll(async () => {
@@ -44,16 +40,15 @@ describe('duplicate connections are closed', () => {
             wsEndpoint2.connect('ws://127.0.0.1:28501'),
         ])
 
-        // TODO enable later
-        // await Promise.race([
-        //     waitForEvent(ws1, 'close'),
-        //     waitForEvent(ws2, 'close')
-        // ]).then((res) => {
-        //     const reason = res[1]
-        //     connectionsClosedReasons.push(reason)
-        // })
+        await Promise.race([
+            waitForEvent(ws1, 'close'),
+            waitForEvent(ws2, 'close')
+        ]).then((res) => {
+            const reason = res[1]
+            connectionsClosedReasons.push(reason)
+        })
 
         expect(connectionsOpened).toEqual(2) // sanity check
-        expect(connectionsClosedReasons).toEqual([]) // length === 1
+        expect(connectionsClosedReasons).toEqual(['streamr:endpoint:duplicate-connection']) // length === 1
     })
 })
