@@ -29,8 +29,8 @@ jobs:
     name: eslint
     script: npm run eslint
   - stage: publish
-      if: tag IS present
-      script: npm publish
+    if: tag IS present
+    script: npm publish
   - stage: Deploy Staging
     if: NOT type IN (pull_request)
     script:
