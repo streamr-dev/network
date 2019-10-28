@@ -28,6 +28,9 @@ jobs:
   - stage: Tests
     name: eslint
     script: npm run eslint
+  - stage: publish
+      if: tag IS present
+      script: npm publish
   - stage: Deploy Staging
     if: NOT type IN (pull_request)
     script:
@@ -127,9 +130,6 @@ jobs:
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh staging
-  - stage: publish
-    if: tag IS present
-    script: npm publish
 env:
   global:
   - secure: RiL1ul75w9pMGsimDPCm9OBzj8gdQZEl8jimBWpzS27/aoPOTu2Z0RkGPSaEvqOmSdcy5FsfKQUQgq9H6yesrBbDuJcN3jjm53DWmMZCua+JdoL1ySRBVMJo1oPTUTjw7seWAshVYbY6qHbG9GUcyd095wH07ykhq8aEXywl5mrrTdzyMg8+K2XvyrTBil6RzJ+bQcNtnDgksVnpGEqzqnw3iCzcgSSv25r/mlRxcggsah7lsoaOd4zHCYxl3VFcZgZRc2PYNK3BkWrarTFnTIXTEmikO9JFLoARmrBIgxJo9WEae4HYus4qy9Q+fGMxlAt3Ce55MQavQuiL9QpspPHFbvAJnur0PLGVNq6ChS4pz7C6L5dSO9QV6kVxoyVumlHExWvF4xr3mb1LQcb/Svt8DCk2cf9n//QXg3z7Em0kd77diVAoPpR00PSOVR4Y2CXXURfaVzKjTRfUV4lvVbiYR5Ox+RwsDIYLKsZZNYd2mj8Dj+5dq9RfMqk9qMYQ12ypY21dpgCDKoUdmtv7Y5+72v1OK6xRi1Hx9g2Nth2lp4mpJ2aBv4vzGJLG4DHtjv8Er8wpwmAyuSqVQmjRV75v6YintLr2Iu5aXejrtApEybiR0mGXNXRYM6iTkBnhAw8iVlC3Nk2AWpKkaPL3vWh+g6eXLlliTGHZHMxuXVM=
