@@ -1,4 +1,4 @@
-const { waitForEvent } = require('streamr-test-utils')
+const { waitForEvent, wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { LOCALHOST } = require('../util')
@@ -7,6 +7,7 @@ const Node = require('../../src/logic/Node')
 const encoder = require('../../src/helpers/MessageEncoder')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 const endpointEvents = require('../../src/connection/WsEndpoint').events
+const { disconnectionReasons } = require('../../src/messages/messageTypes')
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions
@@ -23,10 +24,11 @@ describe('Check tracker instructions to node', () => {
             startNetworkNode(LOCALHOST, 30952, 'node-1'),
             startNetworkNode(LOCALHOST, 30953, 'node-2')
         ])
-        otherNodes.map((node) => node.addBootstrapTracker(tracker.getAddress()))
-        otherNodes.map((node) => node.subscribe(streamId, 0))
+        await Promise.all(otherNodes.map((node) => node.addBootstrapTracker(tracker.getAddress())))
+        await Promise.all(otherNodes.map((node) => node.subscribe(streamId, 0)))
 
-        await Promise.all(otherNodes.map((node) => waitForEvent(node, Node.events.NODE_SUBSCRIBED)))
+        otherNodes.map((node) => node.addBootstrapTracker(tracker.getAddress()))
+        await wait(1000)
     })
 
     afterAll(async () => {
@@ -51,7 +53,7 @@ describe('Check tracker instructions to node', () => {
         let secondCheck = false
 
         otherNodes[1].protocols.nodeToNode.endpoint.once(endpointEvents.PEER_DISCONNECTED, ({ reason }) => {
-            expect(reason).toBe('')
+            expect(reason).toBe(disconnectionReasons.NO_SHARED_STREAMS)
             firstCheck = true
             if (firstCheck && secondCheck) {
                 done()
@@ -62,7 +64,6 @@ describe('Check tracker instructions to node', () => {
         tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage }) => {
             // eslint-disable-next-line no-underscore-dangle
             const status = statusMessage.getStatus()
-
             expect(status.streams).toEqual({
                 'stream-1::0': {
                     inboundNodes: [],
