@@ -60,13 +60,10 @@ jobs:
       deployment_group: eu-west-1-stg-tracker-node-deployment-group
       region: eu-west-1
   - stage: Deploy Lisboa
+    if: NOT type IN (pull_request)
     script:
     - mkdir $TRAVIS_BUILD_DIR/build
     - mkdir $TRAVIS_BUILD_DIR/upload
-    - cp -r src build
-    - cp -r bin build
-    - cp package.json build
-    - cp package-lock.json build
     - mv .codedeploy/appspec.yml build/appspec.yml
     - mv .codedeploy/ build/
     - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_JOB_ID}.tar .;tar
@@ -83,6 +80,8 @@ jobs:
       region: eu-west-1
       skip_cleanup: true
       local_dir: upload
+      on:
+        tags: true
     - provider: codedeploy
       access_key_id: AKIAJBAGP3WA5UXQ3AZQ
       secret_access_key:
@@ -92,6 +91,8 @@ jobs:
       application: eu-west-1-lx-tracker-node-codedeploy
       deployment_group: eu-west-1-lx-tracker-node-deployment-group
       region: eu-west-1
+      on:
+        tags: true
   - stage: Build docker (dev)
     if: tag IS blank
     install: true
