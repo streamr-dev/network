@@ -1,0 +1,26 @@
+
+##
+# This file is used by aws clouddeploy to know how to update the ee nodes
+##
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /srv/broker
+hooks:
+  BeforeInstall:
+    - location: /.codedeploy/before_install.sh
+      timeout: 300
+      runas: root
+  AfterInstall:
+    - location: /.codedeploy/after_install.sh
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: /.codedeploy/start_server.sh
+      timeout: 300
+      runas: root
+  ApplicationStop:
+    - location: /.codedeploy/stop_server.sh
+      timeout: 300
+      runas: root
