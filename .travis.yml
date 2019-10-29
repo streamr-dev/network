@@ -41,7 +41,7 @@ jobs:
     - cp package.json build
     - cp package-lock.json build
     - mv .codedeploy-stg/appspec.yml build/appspec.yml
-    - mv .codedeploy-stg/ build/
+    - mv .codedeploy-stg/ build/.codedeploy
     - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/broker-${TRAVIS_JOB_ID}.tar .;
       tar -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
     - cd $TRAVIS_BUILD_DIR;
