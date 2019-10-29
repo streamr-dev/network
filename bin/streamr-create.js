@@ -8,6 +8,7 @@ program
     .description('create a new stream')
     .option('-d, --description <description>', 'define a description')
     .option('-c, --config <config>', 'define a configuration as JSON', (s) => JSON.parse(s))
+    .option('-p, --partitions <config>', 'define a partition count', (s) => parseInt(s))
 envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
@@ -22,6 +23,9 @@ if ("description" in program) {
 }
 if ("config" in program) {
     body.config = program.config
+}
+if ("partitions" in program) {
+    body.partitions = program.partitions
 }
 
 const options = formStreamrOptionsWithEnv(program)
