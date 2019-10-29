@@ -8,7 +8,7 @@ program
     .description('create a new stream')
     .option('-d, --description <description>', 'define a description')
     .option('-c, --config <config>', 'define a configuration as JSON', (s) => JSON.parse(s))
-    .option('-p, --partitions <config>', 'define a partition count', (s) => parseInt(s))
+    .option('-p, --partitions <count>', 'define a partition count', (s) => parseInt(s))
 envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
