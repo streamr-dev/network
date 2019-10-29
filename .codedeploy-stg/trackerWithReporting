@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+node /srv/tracker/bin/trackerWithReporting.js $1 $2
