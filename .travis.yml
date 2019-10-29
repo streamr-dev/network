@@ -82,19 +82,7 @@ jobs:
       local_dir: upload
       on:
         tags: true
-    - provider: codedeploy
-      access_key_id: AKIAJBAGP3WA5UXQ3AZQ
-      secret_access_key:
-        secure: hvpO6AWRLNy46T2HGS/Z8rIvyqGQ90CCyqmnhS71KujcsgNTbF/F1eHUIjQKHB8yN8WdZYtV2oG6pH5zi07F+rjoR4qh817O8AEcf4rgaWuONWhbpQUgxD0BTOgevPpEy+W2e4JbIANNUFC9z5yfgyZ1hbl6hfa5zxGMGMjUtRg2gsWbkXSybWsYWcQnAjtsUyNTlXasUC8u7o6Com/Ml/IZ/ffen/zurtKBdd5m6LIFj32flzXfT2yfxcNnC2N8jrTCGi7BMvPotH4zraRPpOFlIqPw13UHDfWDbApdNQ+q7axPbHiAXzPE6K0ovo4/c6L5MCkS91EdzTEvLc11m3DwnMKVYC5WFHjFkxO79cM9MoeLWKX4kpUe8sW2fC+QyniqopBewR1d7pONosm1HVGlGjd2dZOG/LwtmP69JTO9QB2/Y1OZMQBbaLwlOPHwm2WB1IWhO8n/IuIzks8u/9hswNbMfGLUxQcIfA+0dzgmFXBzHkA8xNfENQn/7AwmXD/61ER+e/Smyk/Cl32YVRNCqPZnZeMSKoTiXfPRjbLdxZdWSNOhfDjinyHI+4iHti6ao2IrkB4A+M76+Nt7exdT9JG2kDmQfWNatcvlv3SWDUBJkcaUgMJljUgze/XtXoBF5uoutSwQihRU/54yx7F6lUy2EVW/Z3uni7CeiBA=
-      bucket: eu-west-1-lx-streamr-vault
-      key: tracker-node/releases/tracker-${TRAVIS_JOB_ID}.tar
-      application: eu-west-1-lx-tracker-node-codedeploy
-      deployment_group: eu-west-1-lx-tracker-node-deployment-group
-      region: eu-west-1
-      on:
-        tags: true
   - stage: Build docker (dev)
-    if: tag IS blank
     install: true
     env:
     - OWNER=streamr
@@ -105,3 +93,5 @@ jobs:
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh staging
+      on:
+        tags: true
