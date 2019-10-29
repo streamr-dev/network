@@ -7,6 +7,7 @@ const { envOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = r
 program
     .usage('<streamId> <apiKey>')
     .description('publish to a stream by reading JSON messages from stdin line-by-line')
+    .option('-k, --partitionKey <string>', 'key for calculating partition to publish message to')
 envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
@@ -14,7 +15,7 @@ envOptions(program)
 exitWitHelpIfArgsNotBetween(program, 2, 2)
 
 const options = formStreamrOptionsWithEnv(program)
-const ps = publishStream(program.args[0], program.args[1], options)
+const ps = publishStream(program.args[0], program.args[1], program.partitionKey, options)
 process.stdin
     .pipe(es.split())
     .pipe(ps)
