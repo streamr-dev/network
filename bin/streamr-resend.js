@@ -3,6 +3,23 @@ const program = require('commander')
 const resend = require('../src/resend')
 const { envOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
 
+function handlePublisherIdAndMsgChainId(cmd, resendOptions) {
+    if ('publisherId' in cmd && !('msgChainId' in cmd)) {
+        console.error('option --publisher-id must be accompanied by option --msg-chain-id')
+        process.exit(1)
+    }
+    if ('msgChainId' in cmd && !('publisherId' in cmd)) {
+        console.error('option --msg-chain-id must be accompanied by option --publisher-id')
+        process.exit(1)
+    }
+    if ('publisherId' in cmd) {
+        resendOptions.publisherId = cmd.publisherId
+    }
+    if ('msgChainId' in cmd) {
+        resendOptions.msgChainId = cmd.msgChainId
+    }
+}
+
 program
     .usage('<command> [<args>]')
     .description('request resend of stream and print JSON messages to stdout line-by-line')
@@ -25,6 +42,8 @@ program
 program
     .command('from <from> <streamId> [apiKey]')
     .description('request messages starting from given date-time (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
+    .option('--publisher-id <string>', 'filter results by publisher')
+    .option('--msg-chain-id <string>', 'filter results by message chain')
     .action((from, streamId, apiKey, cmd) => {
         const resendOptions = {
             from: {
@@ -32,6 +51,7 @@ program
                 sequenceNumber: 0
             }
         }
+        handlePublisherIdAndMsgChainId(cmd, resendOptions)
         const options = formStreamrOptionsWithEnv(cmd.parent)
         resend(streamId, apiKey, resendOptions, options)
     })
@@ -39,6 +59,8 @@ program
 program
     .command('range <from> <to> <streamId> [apiKey]')
     .description('request messages between two given date-times (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
+    .option('--publisher-id <string>', 'filter results by publisher')
+    .option('--msg-chain-id <string>', 'filter results by message chain')
     .action((from, to, streamId, apiKey, cmd) => {
         const resendOptions = {
             from: {
@@ -50,6 +72,7 @@ program
                 sequenceNumber: 0
             },
         }
+        handlePublisherIdAndMsgChainId(cmd, resendOptions)
         const options = formStreamrOptionsWithEnv(cmd.parent)
         resend(streamId, apiKey, resendOptions, options)
     })
