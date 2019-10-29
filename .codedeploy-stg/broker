@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+node /srv/broker/app.js $1
