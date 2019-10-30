@@ -59,7 +59,7 @@ jobs:
       application: eu-west-1-stg-tracker-node-codedeploy
       deployment_group: eu-west-1-stg-tracker-node-deployment-group
       region: eu-west-1
-  - stage: Deploy Lisboa
+  - stage: Build s3 Lisboa
     if: NOT type IN (pull_request)
     script:
     - mkdir $TRAVIS_BUILD_DIR/build
