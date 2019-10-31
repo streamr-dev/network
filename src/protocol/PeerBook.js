@@ -55,14 +55,18 @@ class PeerBook {
     }
 
     getPeerId(address) {
-        if (!this.addressToId[address]) {
+        if (!this.hasAddress(address)) {
             throw new NotFoundInPeerBookError(`Address ${address} not found in peer book`)
         }
         return this.addressToId[address]
     }
 
-    hasPeerId(address) {
-        return this.idToAddress[address] != null
+    hasAddress(address) {
+        return this.addressToId[address] != null
+    }
+
+    hasPeerId(peerId) {
+        return this.idToAddress[peerId] != null
     }
 
     isTracker(peerId) {
