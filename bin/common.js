@@ -38,8 +38,20 @@ function formStreamrOptionsWithEnv({ dev, stg, wsUrl, httpUrl }) {
     return options
 }
 
+function createFnParseInt(name) {
+    return (str) => {
+        const n = parseInt(str, 10)
+        if (isNaN(n)) {
+            console.error(`${name} must be an integer (was "${str}")`)
+            process.exit(1)
+        }
+        return n
+    }
+}
+
 module.exports = {
     envOptions,
     exitWitHelpIfArgsNotBetween,
-    formStreamrOptionsWithEnv
+    formStreamrOptionsWithEnv,
+    createFnParseInt
 }

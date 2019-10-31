@@ -1,14 +1,20 @@
 #!/usr/bin/env node
 const program = require('commander')
 const create = require('../src/create')
-const { envOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+const {
+    envOptions,
+    exitWitHelpIfArgsNotBetween,
+    formStreamrOptionsWithEnv,
+    createFnParseInt
+} = require('./common')
 
 program
     .usage('<name> <apiKey>')
     .description('create a new stream')
     .option('-d, --description <description>', 'define a description')
     .option('-c, --config <config>', 'define a configuration as JSON', (s) => JSON.parse(s))
-    .option('-p, --partitions <count>', 'define a partition count', (s) => parseInt(s))
+    .option('-p, --partitions <count>', 'define a partition count',
+        createFnParseInt('--partitions'))
 envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
