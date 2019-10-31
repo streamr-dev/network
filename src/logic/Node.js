@@ -363,7 +363,7 @@ class Node extends EventEmitter {
         this.bootstrapTrackerAddresses.forEach((address) => {
             this.protocols.trackerNode.connectToTracker(address)
                 .catch((err) => {
-                    console.error(`Could not connect to tracker ${address} because '${err}'`)
+                    console.error('Could not connect to tracker %s because %j', address, err)
                 })
         })
     }
