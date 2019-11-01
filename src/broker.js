@@ -3,6 +3,8 @@ const StreamrClient = require('streamr-client')
 const publicIp = require('public-ip')
 const Sentry = require('@sentry/node')
 
+const CURRENT_VERSION = require('../package.json').version
+
 const StreamFetcher = require('./StreamFetcher')
 const { startCassandraStorage } = require('./Storage')
 const Publisher = require('./Publisher')
@@ -75,6 +77,8 @@ module.exports = async (config) => {
             throw new MissingConfigError(`adapters[${index}].name`)
         }
     })
+
+    console.info(`Starting broker version ${CURRENT_VERSION}`)
 
     const storages = []
 
