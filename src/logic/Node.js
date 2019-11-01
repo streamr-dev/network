@@ -159,7 +159,7 @@ class Node extends EventEmitter {
             nodeIds.push(node)
         }))
 
-        const currentNodes = this.streams.getAllNodesForStream(streamId)
+        const currentNodes = this.streams.isSetUp(streamId) ? this.streams.getAllNodesForStream(streamId) : []
         const nodesToUnsubscribeFrom = currentNodes.filter((node) => !nodeIds.includes(node))
 
         nodesToUnsubscribeFrom.forEach((node) => {
