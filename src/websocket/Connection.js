@@ -57,7 +57,12 @@ module.exports = class Connection {
     send(msg) {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         debug('send: %s: %o', this.id, serialized)
-        this.socket.send(serialized)
+        try {
+            this.socket.send(serialized)
+        } catch (e) {
+            // TODO: hotfix, may need to do proper cleanup once we notice that connection is bad if library doesn't invoke close!
+            console.error(e)
+        }
     }
 
     sendError(errorMessage) {
