@@ -10,13 +10,21 @@ program
     .version(CURRENT_VERSION)
     .usage('<configFile>')
     .description('Run broker under environment specified by given configuration file.')
+    .option('--streamrUrl <url>', 'override streamrUrl with given value')
+    .option('--networkId <id>', 'override networkId with given value')
     .parse(process.argv)
 
+if (program.args.length !== 1) {
+    program.help()
+}
+
 const config = JSON.parse(fs.readFileSync(program.args[0]))
-// TODO: nicer way to override config with program arguments (could take inspiration from data-api repo)
 /* eslint-disable prefer-destructuring */
-if (program.args[1]) {
-    config.streamrUrl = program.args[1]
+if (program.streamrUrl) {
+    config.streamrUrl = program.streamrUrl
+}
+if (program.networkId) {
+    config.network.id = program.networkId
 }
 /* eslint-enable prefer-destructuring */
 startBroker(config).catch((err) => {

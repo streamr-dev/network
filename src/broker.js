@@ -94,7 +94,7 @@ module.exports = async (config) => {
             useTtl: !config.network.isStorageNode
         }))
     } else {
-        console.info('Skipping Cassandra storage...')
+        console.info('Cassandra disabled')
     }
 
     // Start network node
@@ -143,7 +143,7 @@ module.exports = async (config) => {
             autoConnect: false
         })
     } else {
-        console.info('Skipping configuring StreamrClient reporting...')
+        console.info('StreamrClient reporting disabled')
     }
 
     // Initialize common utilities
@@ -175,14 +175,16 @@ module.exports = async (config) => {
         }
     })
 
+    console.info(`Network node '${config.network.id}' running on ${config.network.hostname}:${config.network.port}`)
+    console.info(`Configured with tracker: ${config.network.tracker}`)
+    console.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
     if (config.cassandra) {
         console.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
     }
     console.info(`Configured with Streamr: ${config.streamrUrl}`)
-    console.info(`Configured with tracker: ${config.network.tracker}`)
-    console.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
-    console.info(`Network node running on ${config.network.hostname}:${config.network.port}`)
-    console.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
+    if (advertisedWsUrl) {
+        console.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
+    }
 
     return {
         getStreams: () => networkNode.getStreams(),
