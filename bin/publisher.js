@@ -2,27 +2,37 @@
 
 const util = require('util')
 
+const program = require('commander')
 const { MessageLayer } = require('streamr-client-protocol')
 
+const CURRENT_VERSION = require('../package.json').version
 const { startNetworkNode } = require('../src/composition')
 const { StreamIdAndPartition } = require('../src/identifiers')
 
 const { StreamMessage } = MessageLayer
 
-const port = process.argv[2] || 30302
-const host = process.argv[3] || '127.0.0.1'
-const trackers = process.argv[4] ? process.argv[4].split(',') : ['ws://127.0.0.1:30300']
-const streamId = process.argv[5] || 'default-stream-id'
-const intervalInMs = process.argv[6] || 200
+program
+    .version(CURRENT_VERSION)
+    .option('--port <port>', 'port', 30302)
+    .option('--ip <ip>', 'ip', '127.0.0.1')
+    .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:30300'])
+    .option('--streamId <streamId>', 'streamId to publish', 'default-stream-id')
+    .option('--metrics <metrics>', 'log metrics', false)
+    .option('--intervalInMs <intervalInMs>', 'interval to publish in ms', 200)
+    .description('Run publisher')
+    .parse(process.argv)
 
-const publisherId = `publisher-${port}`
-const messageChainId = `message-chain-id-${port}`
-const streamObj = new StreamIdAndPartition(streamId, 0)
+const publisherId = `publisher-${program.port}`
+const messageChainId = `message-chain-id-${program.port}`
+const streamObj = new StreamIdAndPartition(program.streamId, 0)
 const { id, partition } = streamObj
 
-startNetworkNode(host, port, publisherId)
+startNetworkNode(program.ip, program.port, publisherId)
     .then((publisher) => {
-        trackers.map((trackerAddress) => publisher.addBootstrapTracker(trackerAddress))
+        console.log('started publisher id: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
+            publisherId, program.port, program.ip, program.trackers.join(', '), program.streamId, program.intervalInMs, program.metrics)
+
+        program.trackers.map((trackerAddress) => publisher.addBootstrapTracker(trackerAddress))
 
         let lastTimestamp = null
         let i = 0
@@ -46,11 +56,13 @@ startNetworkNode(host, port, publisherId)
 
             i += 1
             lastTimestamp = timestamp
-        }, intervalInMs)
+        }, program.intervalInMs)
 
-        setInterval(async () => {
-            console.log(util.inspect(await publisher.getMetrics(), false, null))
-        }, 5000)
+        if (program.metrics) {
+            setInterval(async () => {
+                console.log(util.inspect(await publisher.getMetrics(), false, null))
+            }, 5000)
+        }
     })
     .catch((err) => {
         console.error(err)

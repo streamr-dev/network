@@ -1,14 +1,34 @@
 #!/usr/bin/env node
 
+const util = require('util')
+
+const program = require('commander')
+
+const CURRENT_VERSION = require('../package.json').version
 const { startTracker } = require('../src/composition')
 
-const port = process.argv[2] || 30300
-const host = process.argv[3] || null
-const maxNeighborsPerNode = parseInt(process.argv[4], 10) || 4
-const id = `tracker-${port}`
+program
+    .version(CURRENT_VERSION)
+    .option('--port <port>', 'port', 30300)
+    .option('--ip <ip>', 'ip', '127.0.0.1')
+    .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
+    .option('--metrics <metrics>', 'log metrics', false)
+    .description('Run tracker without reporting')
+    .parse(process.argv)
 
-startTracker(host, port, id, maxNeighborsPerNode)
-    .then(() => {})
+const id = `tracker-${program.port}`
+
+startTracker(program.ip, program.port, id, program.maxNeighborsPerNode)
+    .then((tracker) => {
+        console.log('started tracker id: %s, port: %d, ip: %s, maxNeighborsPerNode: %d, metrics: %s',
+            id, program.port, program.ip, program.maxNeighborsPerNode, program.metrics)
+        if (program.metrics) {
+            setInterval(async () => {
+                const metrics = await tracker.getMetrics()
+                console.log(util.inspect(metrics, false, null))
+            }, 5000)
+        }
+    })
     .catch((err) => {
         console.error(err)
         process.exit(1)

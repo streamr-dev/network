@@ -8,7 +8,6 @@ module.exports = exports = {
     ],
     rules: {
         'max-len': [WARN, { code: 150 }],
-        'no-unused-vars': [WARN, { "argsIgnorePattern": "^_$" }],
         'max-classes-per-file': DISABLED
     }
 }

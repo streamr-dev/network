@@ -1,36 +1,53 @@
 #!/usr/bin/env node
 
+const util = require('util')
+
+const program = require('commander')
 const StreamrClient = require('streamr-client')
 const Sentry = require('@sentry/node')
 
+const CURRENT_VERSION = require('../package.json').version
 const { startTracker } = require('../src/composition')
 
-const port = process.argv[2] || 30300
-const ip = process.argv[3] || '127.0.0.1'
-const maxNeighborsPerNode = parseInt(process.argv[4], 10) || 4
-const apiKey = process.argv[5] || 'EmqyPJBAR-26T60BbxLazQhN8GKqhOQQe2rbEqRwECCQ'
-const streamId = process.argv[6] || 'cueeTiqTQUmHjZJhv4rOhA'
-const id = `tracker-${port}`
+program
+    .version(CURRENT_VERSION)
+    .option('--port <port>', 'port', 30300)
+    .option('--ip <ip>', 'ip', '127.0.0.1')
+    .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
+    .option('--apiKey <apiKey>', 'apiKey for StreamrClient', undefined)
+    .option('--streamId <streamId>', 'streamId for StreamrClient', undefined)
+    .option('--sentryDns <sentryDns>', 'sentryDns', undefined)
+    .option('--metrics <metrics>', 'log metrics', false)
+    .description('Run tracker with reporting')
+    .parse(process.argv)
 
-Sentry.init({
-    dsn: 'https://0fcf3b8f6b254caa9a7fadd77bcc37a4@sentry.io/1510389',
-    integrations: [
-        new Sentry.Integrations.Console({
-            levels: ['error']
-        })
-    ],
-    environment: 'tracker'
-})
+const id = `tracker-${program.port}`
 
-Sentry.configureScope((scope) => {
-    scope.setUser({
-        id
+if (program.sentryDns) {
+    console.log('Configuring Sentry with dns: %s', program.sentryDns)
+    Sentry.init({
+        dsn: program.sentryDns,
+        integrations: [
+            new Sentry.Integrations.Console({
+                levels: ['error']
+            })
+        ],
+        environment: 'tracker'
     })
-})
 
-startTracker(ip, port, id, maxNeighborsPerNode)
+    Sentry.configureScope((scope) => {
+        scope.setUser({
+            id
+        })
+    })
+}
+
+startTracker(program.ip, program.port, id, program.maxNeighborsPerNode)
     .then((tracker) => {
-        if (apiKey && streamId) {
+        console.log('started tracker id: %s, port: %d, ip: %s, maxNeighborsPerNode: %d, metrics: %s, apiKey: %s, streamId: %s, sentryDns: %s',
+            id, program.port, program.ip, program.maxNeighborsPerNode, program.metrics, program.apiKey, program.streamId, program.sentryDns)
+        if (program.apiKey && program.streamId) {
+            const { apiKey } = program
             const client = new StreamrClient({
                 auth: {
                     apiKey
@@ -40,7 +57,10 @@ startTracker(ip, port, id, maxNeighborsPerNode)
 
             setInterval(async () => {
                 const metrics = await tracker.getMetrics()
-                await client.publishHttp(streamId, metrics)
+                client.publishHttp(program.streamId, metrics)
+                if (program.metrics) {
+                    console.log(util.inspect(metrics, false, null))
+                }
             }, 5000)
         }
     })

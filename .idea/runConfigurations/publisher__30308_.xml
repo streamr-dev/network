@@ -5,7 +5,7 @@
     <scripts>
       <script value="pub" />
     </scripts>
-    <arguments value="30308" />
+    <arguments value="--port=30308" />
     <node-interpreter value="project" />
     <envs>
       <env name="DEBUG" value="streamr:*" />

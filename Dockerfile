@@ -16,4 +16,4 @@ RUN apk add --update python build-base && npm ci && apk del python build-base &&
 # Make port available to the world outside this container
 EXPOSE 30300
 
-CMD node bin/tracker.js 30300
+CMD node bin/tracker.js --port=30300
