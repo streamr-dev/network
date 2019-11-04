@@ -1,6 +1,7 @@
-const encoder = require('../helpers/MessageEncoder')
+const { EventEmitter } = require('events')
 
-const BasicProtocol = require('./BasicProtocol')
+const encoder = require('../helpers/MessageEncoder')
+const endpointEvents = require('../connection/WsEndpoint').events
 
 const events = Object.freeze({
     CONNECTED_TO_TRACKER: 'streamr:tracker-node:send-status',
@@ -9,19 +10,28 @@ const events = Object.freeze({
     STORAGE_NODES_RECEIVED: 'streamr:tracker-node:storage-nodes-received'
 })
 
-class TrackerNode extends BasicProtocol {
+class TrackerNode extends EventEmitter {
+    constructor(basicProtocol) {
+        super()
+        this.basicProtocol = basicProtocol
+
+        this.basicProtocol.on(endpointEvents.PEER_CONNECTED, (peerId) => this.onPeerConnected(peerId))
+        this.basicProtocol.on(endpointEvents.PEER_DISCONNECTED, (peerId, reason) => this.onPeerDisconnected(peerId, reason))
+        this.basicProtocol.on(endpointEvents.MESSAGE_RECEIVED, (message) => this.onMessageReceived(message))
+    }
+
     sendStatus(trackerId, status) {
-        const trackerAddress = this.peerBook.getAddress(trackerId)
-        return this.endpoint.send(trackerAddress, encoder.statusMessage(status))
+        const trackerAddress = this.basicProtocol.peerBook.getAddress(trackerId)
+        return this.basicProtocol.endpoint.send(trackerAddress, encoder.statusMessage(status))
     }
 
     findStorageNodes(trackerId, streamId) {
-        const trackerAddress = this.peerBook.getAddress(trackerId)
-        return this.endpoint.send(trackerAddress, encoder.findStorageNodesMessage(streamId))
+        const trackerAddress = this.basicProtocol.peerBook.getAddress(trackerId)
+        return this.basicProtocol.endpoint.send(trackerAddress, encoder.findStorageNodesMessage(streamId))
     }
 
     stop() {
-        this.endpoint.stop()
+        this.basicProtocol.endpoint.stop()
     }
 
     onMessageReceived(message) {
@@ -38,17 +48,17 @@ class TrackerNode extends BasicProtocol {
     }
 
     connectToTracker(trackerAddress) {
-        return this.endpoint.connect(trackerAddress)
+        return this.basicProtocol.endpoint.connect(trackerAddress)
     }
 
     onPeerConnected(peerId) {
-        if (this.peerBook.isTracker(peerId)) {
+        if (this.basicProtocol.peerBook.isTracker(peerId)) {
             this.emit(events.CONNECTED_TO_TRACKER, peerId)
         }
     }
 
     onPeerDisconnected(peerId, reason) {
-        if (this.peerBook.isTracker(peerId)) {
+        if (this.basicProtocol.peerBook.isTracker(peerId)) {
             this.emit(events.TRACKER_DISCONNECTED, peerId)
         }
     }

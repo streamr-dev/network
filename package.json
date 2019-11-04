@@ -25,7 +25,7 @@
   },
   "main": "./src/composition.js",
   "scripts": {
-    "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js",
+    "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js 30300 127.0.0.1",
     "node": "node $NODE_DEBUG_OPTION bin/node.js",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",
     "pub-1": "node $NODE_DEBUG_OPTION bin/publisher.js 30323",
@@ -49,24 +49,23 @@
   },
   "engineStrict": true,
   "dependencies": {
-    "@sentry/node": "^5.6.2",
+    "@sentry/node": "^5.7.1",
     "@streamr/sc-uws": "^10.12.0",
     "debug": "4.1.1",
-    "events": "3.0.0",
     "lru-cache": "^5.1.1",
     "pidusage": "^2.0.17",
     "speedometer": "^1.1.0",
-    "streamr-client": "^2.2.2",
+    "streamr-client": "^2.2.5",
     "streamr-client-protocol": "^2.2.14",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
-    "eslint": "^6.5.0",
+    "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-streamr-nodejs": "^1.1.0",
     "eslint-plugin-import": "^2.18.2",
     "eslint-plugin-import-order": "2.1.4",
-    "into-stream": "^5.1.0",
+    "into-stream": "^5.1.1",
     "jest": "^24.9.0",
     "streamr-test-utils": "^1.0.0"
   },

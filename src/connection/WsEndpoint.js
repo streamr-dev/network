@@ -205,35 +205,27 @@ class WsEndpoint extends EventEmitter {
         })
     }
 
-    onReceive(sender, message) {
+    onReceive(address, message) {
         this.metrics.inc('onReceive')
-        this.debug('received from %s message "%s"', sender, message)
-        this.emit(events.MESSAGE_RECEIVED, {
-            sender,
-            message
-        })
+        this.debug('received from %s message "%s"', address, message)
+        this.emit(events.MESSAGE_RECEIVED, address, message)
     }
 
     close(recipientAddress, reason = '') {
         this.metrics.inc('close')
-        return new Promise((resolve, reject) => {
-            if (!this.isConnected(recipientAddress)) {
-                this.metrics.inc('close:error:not-connected')
-                this.debug('cannot close connection to %s because not connected', recipientAddress)
-                reject(new Error(`cannot close connection to ${recipientAddress} because not connected`))
-            } else {
-                try {
-                    this.debug('closing connection to %s, reason %s', recipientAddress, reason)
-                    const ws = this.connections.get(recipientAddress)
-                    ws.close(1000, reason)
-                    resolve()
-                } catch (e) {
-                    this.metrics.inc('close:error:failed')
-                    console.error('closing connection to %s failed because of %s', recipientAddress, e)
-                    reject(e)
-                }
+        if (!this.isConnected(recipientAddress)) {
+            this.metrics.inc('close:error:not-connected')
+            this.debug('cannot close connection to %s because not connected', recipientAddress)
+        } else {
+            const ws = this.connections.get(recipientAddress)
+            try {
+                this.debug('closing connection to %s, reason %s', recipientAddress, reason)
+                ws.close(1000, reason)
+            } catch (e) {
+                this.metrics.inc('close:error:failed')
+                console.error('closing connection to %s failed because of %s', recipientAddress, e)
             }
-        })
+        }
     }
 
     connect(peerAddress) {
@@ -368,9 +360,7 @@ class WsEndpoint extends EventEmitter {
             this.debug('socket to %s closed (code %d, reason %s)', address, code, reason)
             this.connections.delete(address)
             this.debug('removed %s from connection list', address)
-            this.emit(events.PEER_DISCONNECTED, {
-                address, reason
-            })
+            this.emit(events.PEER_DISCONNECTED, address, reason)
         })
 
         this.connections.set(address, ws)

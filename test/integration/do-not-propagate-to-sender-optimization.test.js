@@ -1,8 +1,7 @@
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
-const { wait, waitForEvent } = require('streamr-test-utils')
+const { wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const TrackerNode = require('../../src/protocol/TrackerNode')
 const { LOCALHOST } = require('../util')
 
 /**
@@ -21,11 +20,9 @@ describe('optimization: do not propagate to sender', () => {
         n2 = await startNetworkNode(LOCALHOST, 30412, 'node-2')
         n3 = await startNetworkNode(LOCALHOST, 30413, 'node-3')
 
-        await Promise.all([
-            n1.addBootstrapTracker(tracker.getAddress()),
-            n2.addBootstrapTracker(tracker.getAddress()),
-            n3.addBootstrapTracker(tracker.getAddress())
-        ])
+        n1.addBootstrapTracker(tracker.getAddress())
+        n2.addBootstrapTracker(tracker.getAddress())
+        n3.addBootstrapTracker(tracker.getAddress())
 
         // Become subscribers (one-by-one, for well connected graph)
         n1.subscribe('stream-id', 0)

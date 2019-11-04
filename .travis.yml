@@ -16,17 +16,20 @@ env:
   - secure: Hi1XjqoXHSrOwiHZp5BlAasBH+QoA8jcpDka6Egx9ri4dSoxcGI5lG0O3QE2h2Wil+8PdmJQekDGsWVKZZhKjmHXRCSVixJhLGgQUdsFCzQrcws30NhfhSkleLWSm1Bybe7mjEWqRqBysgphzbpy05lUQ86niUN9QhyHy1TIY4RVJyGUvLct8DUoMABfDTpYxjCJ5syEHXK1X6tRVqT7z/7iVqe2Nt4YcwkotLs5eXE+acjW/LJeIFvTItISLeRagvMXcuY9u0q7vCwHC8KxJ6Xy2R6k5G1oeVNsA+DlYunpqY5QECYW/FxADDAEBoraKE4jvgoGtXUyCN2tnDBeAe76ldsZZAdTkQIWhTPSOOuE7+CprWwvpcpDEpRTbth5d13UjMdNPYcU+ZZRp99zSdbAWFndTkqQNKC5/0lHs4jW/Um4/wt+Xg2uFnDa/Etk976qsgI5FbD3Np97geW118aE9+nZ2zEVmNw80Hw6D5z2qnPbdf2C1lJgG8CAC3PaFgbG28eKVNAtu7lgsaDIYuhCq6xkoG6yTkFIG6zyUBO1S2TTuoZGSuKQPuX39elDTvwZ9VNMYp6RJdc6tCVqYfuphoLggSvtWtqBEGdnQZxoNMdEbXRWUc3iPwn2931B1tVOXhAs0jcBDteEnvpT6Ny1OfiLmkP+6UnrGG3TpmY=
 jobs:
   include:
-  - stage: tests
-    name: lint
-    script: npm run eslint
-  - name: unit tests
-    script: npm run test-unit
-  - name: integration tests
+  - stage: Tests
+    name: Integration Tests
     script: npm run test-integration
+  - stage: Tests
+    name: Unit Tests
+    script: npm run test-unit
+  - stage: Tests
+    name: eslint
+    script: npm run eslint
   - stage: publish
     if: tag IS present
     script: npm publish
   - stage: Deploy Staging
+    if: NOT type IN (pull_request)
     script:
     - mkdir $TRAVIS_BUILD_DIR/build
     - mkdir $TRAVIS_BUILD_DIR/upload
@@ -83,6 +86,7 @@ jobs:
       on:
         tags: true
   - stage: Build docker (dev)
+    if: NOT type IN (pull_request)
     install: true
     env:
     - OWNER=streamr

@@ -13,29 +13,21 @@ module.exports = class BasicProtocol extends EventEmitter {
         this.peerBook = new PeerBook()
 
         this.endpoint.on(endpointEvents.PEER_CONNECTED, (address, metadata) => {
-            this.peerBook.add(address, metadata)
-            this.onPeerConnected(this.peerBook.getPeerId(address))
+            const peerId = this.peerBook.add(address, metadata)
+            this.emit(endpointEvents.PEER_CONNECTED, peerId)
         })
 
-        this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, ({ sender, message }) => {
-            const senderId = this.peerBook.getPeerId(sender)
-            this.onMessageReceived(encoder.decode(senderId, message), senderId)
+        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, (address, reason) => {
+            const peerId = this.peerBook.getPeerId(address)
+
+            this.emit(endpointEvents.PEER_DISCONNECTED, peerId, reason)
         })
 
-        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, ({ address, reason }) => {
-            this.onPeerDisconnected(this.peerBook.getPeerId(address), reason)
+        this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, (address, message) => {
+            const peerId = this.peerBook.getPeerId(address)
+            const decodedMessage = encoder.decode(peerId, message)
+
+            this.emit(endpointEvents.MESSAGE_RECEIVED, decodedMessage)
         })
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    onMessageReceived(message) {
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    onPeerConnected(peerId) {
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    onPeerDisconnected(peerId, reason) {
     }
 }

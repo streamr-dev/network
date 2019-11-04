@@ -1,8 +1,9 @@
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
-const { wait, waitForEvent } = require('streamr-test-utils')
+const { waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
+const TrackerServer = require('../../src/protocol/TrackerServer')
 const { LOCALHOST } = require('../util')
 
 describe('node unsubscribing from a stream', () => {
@@ -20,16 +21,15 @@ describe('node unsubscribing from a stream', () => {
 
         nodeA.subscribe('s', 1)
         nodeB.subscribe('s', 1)
-
-        await wait(500)
-
         nodeA.subscribe('s', 2)
         nodeB.subscribe('s', 2)
 
-        await wait(500)
-
-        await waitForEvent(nodeB, Node.events.NODE_SUBSCRIBED)
-        await waitForEvent(nodeA, Node.events.NODE_SUBSCRIBED)
+        await Promise.all([
+            waitForEvent(nodeA, Node.events.NODE_SUBSCRIBED),
+            waitForEvent(nodeB, Node.events.NODE_SUBSCRIBED),
+            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        ])
     })
 
     afterEach(async () => {
@@ -40,6 +40,7 @@ describe('node unsubscribing from a stream', () => {
 
     test('node still receives data for subscribed streams thru existing connections', async () => {
         const actual = []
+
         nodeB.addMessageListener((streamMessage) => {
             actual.push(`${streamMessage.getStreamId()}::${streamMessage.getStreamPartition()}`)
         })
@@ -71,9 +72,7 @@ describe('node unsubscribing from a stream', () => {
             content: {},
             signatureType: StreamMessage.SIGNATURE_TYPES.NONE
         }))
-
-        await wait(150)
-
+        await waitForEvent(nodeB, Node.events.UNSEEN_MESSAGE_RECEIVED)
         expect(actual).toEqual(['s::1'])
     })
 

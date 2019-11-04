@@ -1,6 +1,7 @@
-const encoder = require('../helpers/MessageEncoder')
+const { EventEmitter } = require('events')
 
-const BasicProtocol = require('./BasicProtocol')
+const encoder = require('../helpers/MessageEncoder')
+const endpointEvents = require('../connection/WsEndpoint').events
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:tracker:send-peers',
@@ -9,30 +10,39 @@ const events = Object.freeze({
     FIND_STORAGE_NODES_REQUEST: 'streamr:tracker:find-storage-nodes-request'
 })
 
-class TrackerServer extends BasicProtocol {
+class TrackerServer extends EventEmitter {
+    constructor(basicProtocol) {
+        super()
+        this.basicProtocol = basicProtocol
+
+        this.basicProtocol.on(endpointEvents.PEER_CONNECTED, (peerId) => this.onPeerConnected(peerId))
+        this.basicProtocol.on(endpointEvents.PEER_DISCONNECTED, (peerId, reason) => this.onPeerDisconnected(peerId, reason))
+        this.basicProtocol.on(endpointEvents.MESSAGE_RECEIVED, (message) => this.onMessageReceived(message))
+    }
+
     sendInstruction(receiverNodeId, streamId, listOfNodeIds) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.peerBook.getAddress(nodeId))
-        return this.endpoint.send(receiverNodeAddress, encoder.instructionMessage(streamId, listOfNodeAddresses))
+        const receiverNodeAddress = this.basicProtocol.peerBook.getAddress(receiverNodeId)
+        const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.basicProtocol.peerBook.getAddress(nodeId))
+        return this.basicProtocol.endpoint.send(receiverNodeAddress, encoder.instructionMessage(streamId, listOfNodeAddresses))
     }
 
     sendStorageNodes(receiverNodeId, streamId, listOfNodeIds) {
-        const receiverNodeAddress = this.peerBook.getAddress(receiverNodeId)
-        const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.peerBook.getAddress(nodeId))
-        return this.endpoint.send(receiverNodeAddress, encoder.storageNodesMessage(streamId, listOfNodeAddresses))
+        const receiverNodeAddress = this.basicProtocol.peerBook.getAddress(receiverNodeId)
+        const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.basicProtocol.peerBook.getAddress(nodeId))
+        return this.basicProtocol.endpoint.send(receiverNodeAddress, encoder.storageNodesMessage(streamId, listOfNodeAddresses))
     }
 
     getAddress() {
-        return this.endpoint.getAddress()
+        return this.basicProtocol.endpoint.getAddress()
     }
 
     stop() {
-        return this.endpoint.stop()
+        return this.basicProtocol.endpoint.stop()
     }
 
     onPeerConnected(peerId) {
-        const nodeType = this.peerBook.getTypeById(peerId)
-        if (this.peerBook.isNode(peerId)) {
+        const nodeType = this.basicProtocol.peerBook.getTypeById(peerId)
+        if (this.basicProtocol.peerBook.isNode(peerId)) {
             this.emit(events.NODE_CONNECTED, {
                 peerId, nodeType
             })
@@ -40,9 +50,9 @@ class TrackerServer extends BasicProtocol {
     }
 
     onPeerDisconnected(peerId, reason) {
-        const nodeType = this.peerBook.getTypeById(peerId)
+        const nodeType = this.basicProtocol.peerBook.getTypeById(peerId)
 
-        if (this.peerBook.isNode(peerId)) {
+        if (this.basicProtocol.peerBook.isNode(peerId)) {
             this.emit(events.NODE_DISCONNECTED, {
                 peerId, nodeType
             })
@@ -50,7 +60,7 @@ class TrackerServer extends BasicProtocol {
     }
 
     onMessageReceived(message) {
-        const nodeType = this.peerBook.getTypeById(message.getSource())
+        const nodeType = this.basicProtocol.peerBook.getTypeById(message.getSource())
         switch (message.getCode()) {
             case encoder.STATUS:
                 this.emit(events.NODE_STATUS_RECEIVED, {

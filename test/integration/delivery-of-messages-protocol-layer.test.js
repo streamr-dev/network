@@ -3,6 +3,7 @@ const { waitForEvent } = require('streamr-test-utils')
 
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 const { StreamIdAndPartition } = require('../../src/identifiers')
+const BasicProtocol = require('../../src/protocol/BasicProtocol')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
@@ -26,25 +27,25 @@ describe('delivery of messages in protocol layer', () => {
         const wss3 = await startWebSocketServer('127.0.0.1', 28513)
         const wss4 = await startWebSocketServer('127.0.0.1', 28514)
 
-        nodeToNode1 = new NodeToNode(new WsEndpoint(wss1, {
+        nodeToNode1 = new NodeToNode(new BasicProtocol(new WsEndpoint(wss1, {
             'streamr-peer-id': 'nodeToNode1',
             'streamr-peer-type': peerTypes.NODE
-        }, null))
+        }, null)))
 
-        nodeToNode2 = new NodeToNode(new WsEndpoint(wss2, {
+        nodeToNode2 = new NodeToNode(new BasicProtocol(new WsEndpoint(wss2, {
             'streamr-peer-id': 'nodeToNode2',
             'streamr-peer-type': peerTypes.NODE
-        }, null))
+        }, null)))
 
-        trackerNode = new TrackerNode(new WsEndpoint(wss3, {
+        trackerNode = new TrackerNode(new BasicProtocol(new WsEndpoint(wss3, {
             'streamr-peer-id': 'trackerNode',
             'streamr-peer-type': peerTypes.NODE
-        }, null))
+        }, null)))
 
-        trackerServer = new TrackerServer(new WsEndpoint(wss4, {
+        trackerServer = new TrackerServer(new BasicProtocol(new WsEndpoint(wss4, {
             'streamr-peer-id': 'trackerServer',
             'streamr-peer-type': peerTypes.NODE
-        }, null))
+        }, null)))
 
         // Connect nodeToNode1 <-> nodeToNode2
         nodeToNode1.connectToNode(nodeToNode2.getAddress())

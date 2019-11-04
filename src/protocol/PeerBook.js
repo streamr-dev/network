@@ -38,6 +38,8 @@ class PeerBook {
         this.idToAddress[peerId] = peerAddress
         this.idToType[peerId] = peerType
         this.addressToId[peerAddress] = peerId
+
+        return peerId
     }
 
     remove(peerAddress) {
@@ -45,6 +47,7 @@ class PeerBook {
         delete this.idToAddress[peerId]
         delete this.idToType[peerId]
         delete this.addressToId[peerAddress]
+        return peerId
     }
 
     getAddress(peerId) {
