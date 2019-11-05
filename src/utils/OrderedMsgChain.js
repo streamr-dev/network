@@ -117,6 +117,8 @@ export default class OrderedMsgChain extends EventEmitter {
         } else {
             this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, MAX_GAP_REQUESTS))
             this.clearGap()
+            this.lastReceivedMsgRef = null
+            this._checkQueue()
         }
     }
 }

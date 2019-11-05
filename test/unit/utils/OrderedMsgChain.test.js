@@ -4,6 +4,7 @@ import shuffle from 'array-shuffle'
 import OrderedMsgChain from '../../../src/utils/OrderedMsgChain'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
 import StreamMessageV31 from '../../../src/protocol/message_layer/StreamMessageV31'
+import GapFillFailedError from '../../../src/errors/GapFillFailedError'
 
 const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp = null,
@@ -22,6 +23,7 @@ describe('OrderedMsgChain', () => {
     const msg3 = createMsg(3, 0, 2, 0)
     const msg4 = createMsg(4, 0, 3, 0)
     const msg5 = createMsg(5, 0, 4, 0)
+    const msg6 = createMsg(6, 0, 5, 0)
     let util
     afterEach(() => {
         util.clearGap()
@@ -141,6 +143,32 @@ describe('OrderedMsgChain', () => {
         })
         util.add(msg1)
         util.add(msg3)
+    })
+    it('after MAX_GAP_REQUESTS OrderingUtil gives up on filling gap ', (done) => {
+        const received = []
+        util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
+            received.push(msg)
+        }, () => {}, 5, 5)
+
+        util.add(msg1)
+        util.add(msg3)
+        util.add(msg4)
+
+        util.once('error', (err) => {
+            if (err instanceof GapFillFailedError) {
+                setImmediate(() => {
+                    util.add(msg6)
+                    util.once('error', (err2) => {
+                        if (err2 instanceof GapFillFailedError) {
+                            setImmediate(() => {
+                                assert.deepStrictEqual(received, [msg1, msg3, msg4, msg6])
+                                done()
+                            })
+                        }
+                    })
+                })
+            }
+        })
     })
     it('handles unordered messages in order (large randomized test)', () => {
         const expected = [msg1]
