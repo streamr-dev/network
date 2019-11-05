@@ -3,6 +3,8 @@ dist: trusty
 node_js:
 - '8'
 sudo: true
+services:
+- docker
 branches:
   only:
   - master
