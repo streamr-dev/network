@@ -29,6 +29,11 @@ const client = new StreamrClient({
 })
 ```
 
+When using Node.js remember to require the library with:
+```javascript
+const StreamrClient = require('streamr-client')
+```
+
 #### Subscribing to real-time events in a stream
 
 ```javascript
