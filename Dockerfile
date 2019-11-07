@@ -20,6 +20,7 @@ EXPOSE 8891
 # MQTT
 EXPOSE 9000
 
+ENV DEBUG=streamr:logic:*
 ENV CONFIG_FILE configs/docker-1.env.json
 ENV STREAMR_URL http://127.0.0.1:8081/streamr-core
 
