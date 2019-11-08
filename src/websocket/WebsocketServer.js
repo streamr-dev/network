@@ -161,7 +161,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         clearInterval(this._updateTotalBufferSizeInterval)
         this.streams.close()
         this.streamAuthCache.reset()
-        // this.wss.forEach((socket) => socket.terminate())
+
         return new Promise((resolve, reject) => {
             uWS.us_listen_socket_close(this._listenSocket)
             this._listenSocket = null

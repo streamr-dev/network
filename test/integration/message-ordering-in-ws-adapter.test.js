@@ -60,7 +60,7 @@ describe('message ordering and gap filling in websocket adapter', () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
         publisherNode = await startNetworkNode('127.0.0.1', networkPort1, 'publisherNode')
         publisherNode.addBootstrapTracker(`ws://127.0.0.1:${trackerPort}`)
-        broker = createBroker({
+        broker = await createBroker({
             network: {
                 id: 'broker',
                 hostname: '127.0.0.1',
@@ -110,12 +110,15 @@ describe('message ordering and gap filling in websocket adapter', () => {
     })
 
     afterAll(async () => {
-        await broker.close()
-        await publisherNode.stop()
+        await Promise.all([
+            tracker.stop(),
+            publisherNode.stop(),
+            broker.close()
+        ])
+
         if (nodeWithMissingMessages) {
             await nodeWithMissingMessages.stop()
         }
-        await tracker.stop()
     })
 
     it('messages received out-of-order are ordered by ws adapter', async () => {

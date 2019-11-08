@@ -67,31 +67,28 @@ function createClient(wsPort, apiKey) {
 
 describe('ws and wss connections', () => {
     it('can connect to ws endpoint', async (done) => {
-        const tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
         const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true)
         const ws = new WebSocket(`ws://127.0.0.1:${wsPort1}/api/v1/ws`)
-        ws.on('open', () => {
-            broker.close()
-            tracker.stop(() => {})
+        ws.on('open', async () => {
+            ws.terminate()
+            await broker.close()
             done()
         })
-        ws.on('error', (err) => console.log(err))
+        ws.on('error', (err) => done(err))
     })
     it('can connect to wss endpoint', async (done) => {
-        const tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
         const command = 'openssl req -x509 -newkey rsa:4096 -keyout test_key.pem -out test_cert.pem -days 365 -nodes -subj \'/CN=localhost\''
-        let broker
         await exec(command, async () => {
-            broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true, 'test_key.pem', 'test_cert.pem')
+            const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true, 'test_key.pem', 'test_cert.pem')
             const ws = new WebSocket(`wss://127.0.0.1:${wsPort1}/api/v1/ws`, {
                 rejectUnauthorized: false // needed to accept self-signed certificate
             })
-            ws.on('open', () => {
-                broker.close()
-                tracker.stop(() => {})
+            ws.on('open', async () => {
+                ws.terminate()
+                await broker.close()
                 done()
             })
-            ws.on('error', (err) => console.log(err))
+            ws.on('error', (err) => done(err))
         })
     }, 40000)
 })
@@ -128,16 +125,15 @@ describe('broker: end-to-end', () => {
     }, 10 * 1000)
 
     afterAll(async () => {
-        await client1.ensureDisconnected()
-        await client2.ensureDisconnected()
-        await client3.ensureDisconnected()
-        broker1.close()
-        broker2.close()
-        broker3.close()
-
-        await wait(1000)
-
-        tracker.stop(() => {})
+        await Promise.all([
+            tracker.stop(),
+            client1.ensureDisconnected(),
+            client2.ensureDisconnected(),
+            client3.ensureDisconnected(),
+            broker1.close(),
+            broker2.close(),
+            broker3.close()
+        ])
     })
 
     it('happy-path: real-time websocket producing and websocket consuming', async () => {

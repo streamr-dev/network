@@ -105,17 +105,14 @@ describe('local propagation', () => {
     }, 10 * 1000)
 
     afterEach(async () => {
-        tracker.stop(() => {})
-
-        await client1.ensureDisconnected()
-        await client2.ensureDisconnected()
-
-        mqttClient1.end(true)
-        mqttClient2.end(true)
-
-        broker.close()
-
-        await wait(1000)
+        await Promise.all([
+            tracker.stop(),
+            client1.ensureDisconnected(),
+            client2.ensureDisconnected(),
+            mqttClient2.end(true),
+            mqttClient1.end(true),
+            broker.close()
+        ])
     })
 
     test('local propagation using StreamrClients', async () => {

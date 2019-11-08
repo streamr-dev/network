@@ -1,4 +1,3 @@
-const { Utils } = require('streamr-client-protocol')
 const debug = require('debug')('streamr:StreamStateManager')
 
 const Stream = require('./Stream')

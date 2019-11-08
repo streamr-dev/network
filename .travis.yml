@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- 10.15.3
+- 10.17.0
 sudo: true
 branches:
   only:
@@ -17,9 +17,8 @@ jobs:
     - sudo /etc/init.d/mysql stop
     - git clone https://github.com/streamr-dev/streamr-docker-dev.git
     - sudo ifconfig docker0 10.200.10.1/24
-    - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start engine-and-editor"
+    - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start engine-and-editor smtp"
     - sleep 2m
-    - node node_modules/streamr-network/bin/tracker.js &
     - npm run test-integration
   - stage: Tests
     name: Unit Tests

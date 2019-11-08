@@ -122,18 +122,15 @@ describe('SubscriptionManager', () => {
     }, 10 * 1000)
 
     afterEach(async () => {
-        tracker.stop(() => {})
-
-        await client1.ensureDisconnected()
-        await client2.ensureDisconnected()
-
-        mqttClient1.end(true)
-        mqttClient2.end(true)
-
-        broker1.close()
-        broker2.close()
-
-        await wait(1000)
+        await Promise.all([
+            tracker.stop(),
+            client1.ensureDisconnected(),
+            client2.ensureDisconnected(),
+            mqttClient1.end(true),
+            mqttClient2.end(true),
+            broker1.close(),
+            broker2.close()
+        ])
     })
 
     it('SubscriptionManager correctly handles subscribe/unsubscribe requests across all adapters', async () => {

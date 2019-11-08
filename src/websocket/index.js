@@ -1,6 +1,3 @@
-const fs = require('fs')
-const https = require('https')
-
 const ws = require('uWebSockets.js')
 
 const MissingConfigError = require('../errors/MissingConfigError')
