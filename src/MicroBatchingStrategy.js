@@ -59,6 +59,7 @@ class Batch {
         })
         this.timeoutRef = null
         this.sharedContext = sharedContext
+        this.committed = false
         this._scheduleInsert()
     }
 
@@ -68,8 +69,8 @@ class Batch {
         return this.donePromise
     }
 
-    isFull() {
-        return this.totalSize >= this.sharedContext.doNotGrowBatchAfterBytes
+    isClosed() {
+        return this.committed || this.totalSize >= this.sharedContext.doNotGrowBatchAfterBytes
     }
 
     cancel() {
@@ -82,6 +83,7 @@ class Batch {
     }
 
     async _tryInsert() {
+        this.committed = true
         try {
             await this.sharedContext.insert(this.streamMessages)
             this.resolve()
@@ -113,7 +115,7 @@ class MicroBatchingStrategy {
     store(streamMessage) {
         const key = `${streamMessage.getStreamId()}::${streamMessage.getStreamPartition()}`
 
-        if (this.batches[key] === undefined || this.batches[key].isFull()) {
+        if (this.batches[key] === undefined || this.batches[key].isClosed()) {
             const newBatch = new Batch(this.sharedContext)
             newBatch.donePromise.catch(() => {}).finally(() => this._cleanUp(key, newBatch))
             this.batches[key] = newBatch

@@ -1,8 +1,7 @@
+const { wait, waitForCondition } = require('streamr-test-utils')
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 
 const MicroBatchingStrategy = require('../../src/MicroBatchingStrategy')
-
-jest.useFakeTimers()
 
 const BASE_COMMIT_INTERVAL = 1000
 
@@ -26,11 +25,13 @@ function msgToStreamIdAndPartition(streamMessage) {
 }
 
 describe('MicroBatchingStrategy', () => {
+    let messageSize
     let insertFn
     let microBatchingStrategy
 
     beforeEach(() => {
-        const messageSize = Buffer.from(buildMsg('streamId', 0, 0, 0).serialize()).length
+        jest.useFakeTimers()
+        messageSize = Buffer.from(buildMsg('streamId', 0, 0, 0).serialize()).length
         insertFn = jest.fn()
         microBatchingStrategy = new MicroBatchingStrategy({
             insertFn,
@@ -139,6 +140,38 @@ describe('MicroBatchingStrategy', () => {
             expect(insertFn.mock.calls[2][0].map(msgToStreamIdAndPartition)).toEqual([
                 'streamId::1', 'streamId::1', 'streamId::1'
             ])
+        })
+
+        it('unfilled (but committed) batches are correctly cycled', async () => {
+            jest.useRealTimers()
+
+            let numOfMessagesInserted = 0
+            insertFn = (streamMessages) => new Promise((resolve) => {
+                numOfMessagesInserted += streamMessages.length
+                setTimeout(resolve, 10) // emulate 'slow' write with timeout
+            })
+
+            const strategy = new MicroBatchingStrategy({
+                insertFn,
+                baseCommitIntervalInMs: 15,
+                maxFailMultiplier: 1,
+                doNotGrowBatchAfterBytes: messageSize * 10,
+                logErrors: false,
+            })
+
+            for (let i = 0; i < 10; ++i) {
+                strategy.store(buildMsg('streamId', 0, i, 0))
+                // eslint-disable-next-line no-await-in-loop
+                await wait(5)
+            }
+
+            // Check that all messages were inserted. Any messages being erroneously
+            // pushed to a committed batch whilst in the midst of  `await insertFn()`
+            // will result in them not being accounted for in numOfMessagesInserted.
+            await waitForCondition(() => numOfMessagesInserted === 10, 500)
+                .catch((err) => {
+                    throw new Error(`expected 'numOfMessagesInserted' to be 10, but was ${numOfMessagesInserted}`)
+                })
         })
     })
 
