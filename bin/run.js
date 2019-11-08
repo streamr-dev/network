@@ -27,8 +27,10 @@ spawn('node', args, {
 })
 
 for (let i = 0; i < numberOfNodes; i++) {
-    const node = path.resolve('./bin/subscriber.js')
-    args = [node, startingPort + i]
+    args = [
+        path.resolve('./bin/subscriber.js'),
+        '--port=' + (startingPort + i)
+    ]
 
     if (debug) {
         args.unshift('--inspect-brk=' + (startingDebugPort + i))
