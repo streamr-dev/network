@@ -3,7 +3,8 @@ const StreamrClient = require('streamr-client')
 module.exports = class VolumeLogger {
     constructor(reportingIntervalSeconds = 60, networkNode = undefined, client = undefined, streamId = undefined) {
         this.reportingIntervalSeconds = reportingIntervalSeconds
-        this.connectionCount = 0
+        this.connectionCountMQTT = 0
+        this.connectionCountWS = 0
         this.inCount = 0
         this.inBytes = 0
         this.outCount = 0
@@ -38,12 +39,15 @@ module.exports = class VolumeLogger {
         const kbOutPerSecond = (this.outBytes / this.reportingIntervalSeconds) / 1000
 
         const networkMetrics = await this.networkNode.getMetrics()
+        const connectionCount = this.connectionCountWS + this.connectionCountMQTT
 
         this.lastVolumeStatistics = {
             id: this.networkNode.opts.id,
             timestamp: Date.now(),
             totalBufferSize: this.totalBufferSize,
-            numOfOpenWebsockets: this.connectionCount,
+            connectionCount,
+            connectionCountMQTT: this.connectionCountMQTT,
+            connectionCountWS: this.connectionCountWS,
             input: {
                 eventsPerSecond: Math.round(inPerSecond),
                 kbPerSecond: Math.round(kbInPerSecond),
@@ -58,7 +62,7 @@ module.exports = class VolumeLogger {
             'Connections: %d, Broker messages in/sec: %d, Broker messages out/sec: %d, '
             + 'Network messages in/sec: %d, Network messages out/sec: %d, '
             + 'Network IN bytes/second: %d, Network OUT bytes/second: %d',
-            this.connectionCount,
+            connectionCount,
             inPerSecond < 10 ? inPerSecond.toFixed(1) : Math.round(inPerSecond),
             outPerSecond < 10 ? outPerSecond.toFixed(1) : Math.round(outPerSecond),
             networkMetrics.mainMetrics.msgInSpeed,

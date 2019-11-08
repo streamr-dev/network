@@ -100,7 +100,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             open: (ws, req) => {
                 const connection = new Connection(ws, req)
                 this.connections.set(connection.id, connection)
-                this.volumeLogger.connectionCount = this.connections.size
+                this.volumeLogger.connectionCountWS = this.connections.size
                 debug('onNewClientConnection: socket "%s" connected', connection.id)
                 // eslint-disable-next-line no-param-reassign
                 ws.connectionId = connection.id
@@ -140,9 +140,9 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 const connection = this.connections.get(ws.connectionId)
 
                 if (connection) {
-                    debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
                     this.connections.delete(connection.id)
-                    this.volumeLogger.connectionCount = this.connections.size
+                    debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
+                    this.volumeLogger.connectionCountWS = this.connections.size
 
                     // Unsubscribe from all streams
                     connection.forEachStream((stream) => {
@@ -374,7 +374,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         if (stream) {
             setImmediate(() => stream.passToOrderingUtil(streamMessage), 0)
         } else {
-            debug('networkNode#_handleStreamMessage: stream "%s:%d" not found', streamId, streamPartition)
+            debug('_handleStreamMessage: stream "%s:%d" not found', streamId, streamPartition)
         }
     }
 

@@ -95,6 +95,7 @@ describe('mqtt: end-to-end', () => {
 
     let mqttClient1
     let mqttClient2
+    let mqttClient3
 
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
@@ -113,6 +114,8 @@ describe('mqtt: end-to-end', () => {
         mqttClient1 = createMqttClient(mqttPort1)
         await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
         mqttClient2 = createMqttClient(mqttPort2)
+        await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
+        mqttClient3 = createMqttClient(mqttPort1)
         await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
 
         freshStream1 = await client1.createStream({
@@ -167,12 +170,15 @@ describe('mqtt: end-to-end', () => {
     it('happy-path: real-time mqtt plain text producing and consuming', async () => {
         const client1Messages = []
         const client2Messages = []
+        const client3Messages = []
 
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
+        await waitForCondition(() => mqttClient3.connected)
 
         mqttClient1.subscribe(freshStreamName1)
         mqttClient2.subscribe(freshStreamName1)
+        mqttClient3.subscribe(freshStreamName1)
 
         await wait(100)
 
@@ -184,12 +190,17 @@ describe('mqtt: end-to-end', () => {
             client2Messages.push(JSON.parse(message.toString()))
         })
 
+        mqttClient3.on('message', (topic, message) => {
+            client3Messages.push(JSON.parse(message.toString()))
+        })
+
         await mqttClient1.publish(freshStreamName1, 'key: 1', {
             qos: 1
         })
 
         await waitForCondition(() => client1Messages.length === 1)
         await waitForCondition(() => client2Messages.length === 1)
+        await waitForCondition(() => client3Messages.length === 1)
 
         await mqttClient2.publish(freshStreamName1, 'key: 2', {
             qos: 1
@@ -197,6 +208,15 @@ describe('mqtt: end-to-end', () => {
 
         await waitForCondition(() => client1Messages.length === 2)
         await waitForCondition(() => client2Messages.length === 2)
+        await waitForCondition(() => client3Messages.length === 2)
+
+        await mqttClient3.publish(freshStreamName1, 'key: 3', {
+            qos: 0
+        })
+
+        await waitForCondition(() => client1Messages.length === 3)
+        await waitForCondition(() => client2Messages.length === 3)
+        await waitForCondition(() => client3Messages.length === 3)
 
         expect(client1Messages).toEqual([
             {
@@ -204,6 +224,9 @@ describe('mqtt: end-to-end', () => {
             },
             {
                 mqttPayload: 'key: 2'
+            },
+            {
+                mqttPayload: 'key: 3'
             }
         ])
 
@@ -213,6 +236,21 @@ describe('mqtt: end-to-end', () => {
             },
             {
                 mqttPayload: 'key: 2'
+            },
+            {
+                mqttPayload: 'key: 3'
+            }
+        ])
+
+        expect(client3Messages).toEqual([
+            {
+                mqttPayload: 'key: 1'
+            },
+            {
+                mqttPayload: 'key: 2'
+            },
+            {
+                mqttPayload: 'key: 3'
             }
         ])
     })

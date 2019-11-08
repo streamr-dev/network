@@ -30,7 +30,7 @@
     "arraybuffer-to-string": "^1.0.2",
     "body-parser": "^1.19.0",
     "buffermaker": "^1.2.1",
-    "cassandra-driver": "^4.3.0",
+    "cassandra-driver": "^4.3.1",
     "commander": "^4.0.0",
     "cors": "^2.7.1",
     "debug": "^4.1.1",
@@ -52,7 +52,7 @@
   "devDependencies": {
     "async-mqtt": "^2.4.2",
     "buffer-reader": "^0.1.0",
-    "eslint": "^6.5.1",
+    "eslint": "^6.6.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-streamr-nodejs": "^1.1.0",
     "eslint-plugin-import": "^2.18.2",

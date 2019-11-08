@@ -78,6 +78,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         connection.on('error', (err) => {
             console.error(`dropping client because: ${err.message}`)
             debug('error in client %s', err)
+            this._closeConnection(connection)
         })
 
         connection.on('disconnect', () => {
@@ -132,14 +133,14 @@ module.exports = class MqttServer extends events.EventEmitter {
                     }
                 })
 
-            this.volumeLogger.connectionCount += 1
+            this.volumeLogger.connectionCountMQTT = this.connections.size
         })
     }
 
     handlePublishRequest(connection, packet) {
         debug('publish request %o', packet)
 
-        const { topic, payload } = packet
+        const { topic, payload, qos } = packet
 
         this.streamFetcher.getStream(topic, connection.token)
             .then((streamObj) => {
@@ -173,9 +174,11 @@ module.exports = class MqttServer extends events.EventEmitter {
 
                         sequenceNumber += 1
 
-                        connection.client.puback({
-                            messageId: packet.messageId
-                        })
+                        if (qos) {
+                            connection.client.puback({
+                                messageId: packet.messageId
+                            })
+                        }
                     })
                     .catch((err) => {
                         console.log(err)
@@ -240,7 +243,7 @@ module.exports = class MqttServer extends events.EventEmitter {
     }
 
     _closeConnection(connection) {
-        this.volumeLogger.connectionCount -= 1
+        this.connections.delete(connection)
         debug('closing client "%s" on streams "%o"', connection.id, connection.streamsAsString())
 
         // Unsubscribe from all streams
@@ -269,8 +272,8 @@ module.exports = class MqttServer extends events.EventEmitter {
             }
         })
 
-        this.connections.delete(connection)
         connection.close()
+        this.volumeLogger.connectionCountMQTT = this.connections.size
     }
 
     broadcastMessage(streamMessage) {
