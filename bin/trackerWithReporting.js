@@ -12,7 +12,7 @@ const { startTracker } = require('../src/composition')
 program
     .version(CURRENT_VERSION)
     .option('--port <port>', 'port', 30300)
-    .option('--ip <ip>', 'ip', '127.0.0.1')
+    .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
     .option('--apiKey <apiKey>', 'apiKey for StreamrClient', undefined)
     .option('--streamId <streamId>', 'streamId for StreamrClient', undefined)
