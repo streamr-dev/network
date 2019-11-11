@@ -11,6 +11,7 @@ import StreamrClient from '../../src'
 import config from './config'
 
 const { StreamMessage } = MessageLayer
+const WebSocket = require('ws')
 
 const createClient = (opts = {}) => new StreamrClient({
     url: config.websocketUrl,
@@ -141,8 +142,8 @@ describe('StreamrClient Connection', () => {
                 timestamps.push(rawMessage.getStreamMessage().getTimestamp())
             }
 
-            await wait(2000) // wait for messages to (probably) land in storage
-        })
+            await wait(5000) // wait for messages to (probably) land in storage
+        }, 10 * 1000)
 
         afterEach(async () => {
             await client.disconnect()
@@ -579,7 +580,17 @@ describe('StreamrClient', () => {
         try {
             await Promise.all([
                 fetch(config.restUrl),
-                fetch(config.websocketUrl.replace('ws://', 'http://')),
+                new Promise((resolve, reject) => {
+                    const ws = new WebSocket(config.websocketUrl)
+                    ws.once('open', () => {
+                        resolve()
+                        ws.close()
+                    })
+                    ws.once('error', (err) => {
+                        reject(err)
+                        ws.terminate()
+                    })
+                }),
             ])
         } catch (e) {
             if (e.errno === 'ENOTFOUND' || e.errno === 'ECONNREFUSED') {

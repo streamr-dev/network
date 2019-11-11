@@ -136,7 +136,7 @@ describe('Subscription', () => {
             await client.connect()
             const message1 = await publishMessage()
             const message2 = await publishMessage()
-            await wait(2000) // wait for messages to (probably) land in storage
+            await wait(5000) // wait for messages to (probably) land in storage
             const subscriptionEvents = createMonitoredSubscription()
             subscription.on('resent', async () => {
                 await wait(500) // wait in case messages appear after resent event
@@ -149,6 +149,9 @@ describe('Subscription', () => {
                 ])
                 done()
             })
-        })
+            subscription.on('no_resend', () => {
+                done('error: got no_resend, expected: resent')
+            })
+        }, 10 * 1000)
     })
 })
