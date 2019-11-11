@@ -21,8 +21,8 @@ function formStreamrOptionsWithEnv({ dev, stg, wsUrl, httpUrl }) {
     }
 
     if (dev) {
-        options.url = 'ws://localhost:8890/api/v1/ws'
-        options.restUrl = 'http://localhost:8081/streamr-core/api/v1'
+        options.url = 'ws://localhost/api/v1/ws'
+        options.restUrl = 'http://localhost/api/v1'
     } else if (stg) {
         options.url = 'wss://staging.streamr.com/api/v1/ws'
         options.restUrl = 'https://staging.streamr.com/api/v1/'
