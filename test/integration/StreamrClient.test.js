@@ -757,6 +757,56 @@ describe('StreamrClient', () => {
             })
         })
 
+        it('publish and subscribe a sequence of messages', (done) => {
+            client.options.autoConnect = true
+            const nbMessages = 20
+            const intervalMs = 500
+            let counter = 1
+            const sub = client.subscribe({
+                stream: stream.id,
+            }, (parsedContent, streamMessage) => {
+                assert.strictEqual(parsedContent.i, counter)
+                counter += 1
+
+                // Check signature stuff
+                assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+                assert(streamMessage.getPublisherId())
+                assert(streamMessage.signature)
+
+                if (counter === nbMessages) {
+                    // All good, unsubscribe
+                    client.unsubscribe(sub)
+                    sub.on('unsubscribed', async () => {
+                        await client.disconnect()
+                        setTimeout(done, 1000)
+                    })
+                }
+            })
+
+            const sleep = (ms) => {
+                return new Promise((resolve) => setTimeout(resolve, ms))
+            }
+            const f = async (index) => {
+                await sleep(intervalMs)
+                await stream.publish({
+                    i: index,
+                })
+            }
+
+            // Publish after subscribed
+            sub.once('subscribed', () => {
+                let i
+                const loop = async () => {
+                    for (i = 1; i <= nbMessages; i++) {
+                        /* eslint-disable no-await-in-loop */
+                        await f(i)
+                        /* eslint-enable no-await-in-loop */
+                    }
+                }
+                return loop()
+            })
+        }, 600000)
+
         it('client.subscribe (realtime with resend)', (done) => {
             client.once('error', done)
             const id = Date.now()

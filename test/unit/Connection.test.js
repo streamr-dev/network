@@ -14,6 +14,7 @@ describe('Connection', () => {
         conn = new Connection({
             url: 'foo',
         }, {
+            on: sinon.mock(),
             close: sinon.mock(),
         })
     })
@@ -201,7 +202,7 @@ describe('Connection', () => {
             })
 
             it('tries to reconnect after 2 seconds', () => {
-                conn.connect = sinon.stub()
+                conn.connect = sinon.stub().resolves()
                 conn.socket.events.emit('close')
                 clock.tick(2100)
                 assert(conn.connect.calledOnce)

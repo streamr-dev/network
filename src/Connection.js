@@ -56,11 +56,17 @@ class Connection extends EventEmitter {
             this.updateState(Connection.State.CONNECTED)
         })
 
+        this.socket.on('error', (err) => {
+            console.error(err)
+        })
+
         this.socket.events.on('close', () => {
             if (this.state !== Connection.State.DISCONNECTING) {
                 debug('Connection lost. Attempting to reconnect')
                 setTimeout(() => {
-                    this.connect()
+                    this.connect().catch((err) => {
+                        console.error(err)
+                    })
                 }, 2000)
             }
 
@@ -101,7 +107,7 @@ class Connection extends EventEmitter {
 
         if (this.state === Connection.State.CONNECTING) {
             return new Promise((resolve) => {
-                this.once('connected', () => resolve(this.disconnect()))
+                this.once('connected', () => resolve(this.disconnect().catch((err) => console.error(err))))
             })
         }
 
