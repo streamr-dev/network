@@ -1,0 +1,22 @@
+language: node_js
+node_js:
+- 10.17.0
+sudo: true
+branches:
+  only:
+  - master
+  - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
+before_install:
+- npm i -g npm@6.13.0
+- npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+jobs:
+  include:
+  - stage: Tests
+    name: eslint
+    script: npm run eslint
+  - stage: publish
+    if: tag IS present
+    script: npm publish
+env:
+  global:
+    secure: G+MKoBoenqb02hOBBCliw2Nv4MyWqXqoLePkDDbOur8s0XWyWcVoD+2uu4C9K0AUU/09hdjfAAKewkyI6b3Hy0yRx2xBJPFQbRDU23e/HQIjZfLQvdzczHb4ab0n8dQ3Gix40uGX3OWuNan+o7VyRkq24Y1WLYIBuQfU7sjxx0Go9vAedLA7eeVw+E7Z2SBEsdd8i/F9nNE9r0LBYraKXgUfw8lLOlySCBUJie+vm2HCWKyzJe5SNod4jMIXgoXFPmIEiMGuXCijK8KcDrYCk6J5+ZEO7XAwLgE+dUxvfjNsso9IFIsL0x6pgAnbHEOMf1qYOxo/tVzmzcfl8uovASTIRUcT33EkJE1fKnk4WBkEFGSkvgRpHkDJereGx2frLDzZAzvumkErMsVmJfDxZJ60fV8Tut3G7xOCFvBkpbIFaPL7yttOSTc9hTY5iTPdtQI5Ozmlj8xhZWhYouFgBy3/h1CDmTZz6kIePqYt/dHIATkytIXfJ5eC/IMBLEO3dJ21eoiSrpW6f4faxImWPLIl1JnfYgr9uf6vXZMf6f4CpICtwWVnatuYmIEGWAl2pUDbXmf3fGFhJJKu02Je7vx8JIrFrr9Moorac2iCVd1a20Z7872b+GzRpjXB1sypfG3+qgZbKHXto5/lSL/ehHnXxuEhQvPi4Cr9b8yJOcg=
