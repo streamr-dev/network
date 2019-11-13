@@ -53,7 +53,7 @@ const waitForCondition = (conditionFn, timeout = 5000, retryInterval = 100) => {
 
         refs.timeOut = setTimeout(() => {
             clearInterval(refs.interval)
-            reject(new Error('waitForCondition: timed out before condition became true'))
+            reject(new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`))
         }, timeout)
 
         refs.interval = setInterval(() => {
@@ -104,7 +104,6 @@ const eventsWithArgsToArray = (emitter, events) => {
     })
     return array
 }
-
 
 /**
  * Convert a function that has as its last argument a callback of the form
