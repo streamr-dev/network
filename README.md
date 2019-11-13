@@ -10,7 +10,7 @@ The broker node extends the minimal network node provided by the
 ## Developing
 Project uses npm for package management.
 
-- Start off by installing required dependencies with `npm install`
+- Start off by installing required dependencies with `npm ci`
 - To run tests `npm test`
 
 ## Running
@@ -32,6 +32,11 @@ See folder "configs" for example configurations, e.g., to run a simple local bro
 ```
 broker configs/development-1.env.json
 ```
+Then run the command tracker with default values
+```
+tracker
+```
+
 
 ## Publishing
 

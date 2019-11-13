@@ -144,7 +144,7 @@ describe('mqtt: end-to-end', () => {
             broker2.close(),
             broker3.close()
         ])
-    })
+    }, 10000)
 
     it('test not valid api key', async (done) => {
         const mqttClient = createMqttClient(mqttPort1, 'localhost', 'NOT_VALID_KEY')
