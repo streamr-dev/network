@@ -178,10 +178,8 @@ describe('local propagation', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        mqttClient1.subscribe(freshStreamName)
-        mqttClient2.subscribe(freshStreamName)
-
-        await wait(100)
+        await mqttClient1.subscribe(freshStreamName)
+        await mqttClient2.subscribe(freshStreamName)
 
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
@@ -233,8 +231,8 @@ describe('local propagation', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        mqttClient1.subscribe(freshStreamName)
-        mqttClient2.subscribe(freshStreamName)
+        await mqttClient1.subscribe(freshStreamName)
+        await mqttClient2.subscribe(freshStreamName)
 
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))

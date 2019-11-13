@@ -174,11 +174,9 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => mqttClient2.connected)
         await waitForCondition(() => mqttClient3.connected)
 
-        mqttClient1.subscribe(freshStreamName1)
-        mqttClient2.subscribe(freshStreamName1)
-        mqttClient3.subscribe(freshStreamName1)
-
-        await wait(100)
+        await mqttClient1.subscribe(freshStreamName1)
+        await mqttClient2.subscribe(freshStreamName1)
+        await mqttClient3.subscribe(freshStreamName1)
 
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
@@ -260,8 +258,8 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        mqttClient1.subscribe(freshStreamName1)
-        mqttClient2.subscribe(freshStreamName1)
+        await mqttClient1.subscribe(freshStreamName1)
+        await mqttClient2.subscribe(freshStreamName1)
 
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
@@ -318,7 +316,7 @@ describe('mqtt: end-to-end', () => {
 
         await waitForCondition(() => mqttClient1.connected)
 
-        mqttClient1.subscribe(freshStreamName1)
+        await mqttClient1.subscribe(freshStreamName1)
         mqttClient1.on('message', (topic, message) => {
             client4Messages.push(JSON.parse(message.toString()))
         })
