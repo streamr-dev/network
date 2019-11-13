@@ -46,14 +46,14 @@
   },
   "engineStrict": true,
   "dependencies": {
-    "@sentry/node": "^5.7.1",
+    "@sentry/node": "^5.8.0",
     "@streamr/sc-uws": "^10.12.0",
-    "commander": "^4.0.0",
+    "commander": "^4.0.1",
     "debug": "4.1.1",
     "lru-cache": "^5.1.1",
     "pidusage": "^2.0.17",
     "speedometer": "^1.1.0",
-    "streamr-client": "^2.2.5",
+    "streamr-client": "^2.2.6",
     "streamr-client-protocol": "^2.2.15",
     "uuid": "^3.3.3"
   },
@@ -65,7 +65,7 @@
     "eslint-plugin-import-order": "2.1.4",
     "into-stream": "^5.1.1",
     "jest": "^24.9.0",
-    "streamr-test-utils": "^1.0.0"
+    "streamr-test-utils": "^1.0.4"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.1",
