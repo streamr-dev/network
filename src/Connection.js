@@ -14,6 +14,7 @@ class Connection extends EventEmitter {
         this.options = options
         this.state = Connection.State.DISCONNECTED
         this.socket = socket
+        this._reconnectTimeout = null
     }
 
     updateState(state) {
@@ -38,16 +39,20 @@ class Connection extends EventEmitter {
 
         if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
             try {
+                debug('Trying to open new websocket to %s', this.options.url)
                 this.socket = new WebSocket(this.options.url)
             } catch (err) {
                 this.emit('error', err)
+                debug(err)
                 return Promise.reject(err)
             }
         }
         this.socket.binaryType = 'arraybuffer'
         this.socket.events = new EventEmitter()
+
         this.socket.onopen = () => this.socket.events.emit('open')
         this.socket.onclose = () => this.socket.events.emit('close')
+        this.socket.onerror = () => this.socket.events.emit('error')
 
         this.updateState(Connection.State.CONNECTING)
 
@@ -56,14 +61,19 @@ class Connection extends EventEmitter {
             this.updateState(Connection.State.CONNECTED)
         })
 
-        this.socket.on('error', (err) => {
-            console.error(err)
+        this.socket.events.on('error', (err) => {
+            debug('Error in websocket.')
+            if (err) {
+                console.error(err)
+            }
+            this.socket.terminate()
         })
 
         this.socket.events.on('close', () => {
             if (this.state !== Connection.State.DISCONNECTING) {
                 debug('Connection lost. Attempting to reconnect')
-                setTimeout(() => {
+                clearTimeout(this._reconnectTimeout)
+                this._reconnectTimeout = setTimeout(() => {
                     this.connect().catch((err) => {
                         console.error(err)
                     })

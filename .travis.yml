@@ -1,7 +1,6 @@
 language: node_js
-dist: trusty
 node_js:
-- '8'
+- '10.17.0'
 sudo: true
 services:
 - docker
@@ -10,16 +9,11 @@ branches:
   - master
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
-- npm i -g npm@6.0.0
+- npm i -g npm@6.13.0
 jobs:
   include:
-  - stage: eslint
-    script:
-    - npm run eslint
-  - stage: Unit tests
-    script:
-    - npm run test-unit
-  - stage: Integration tests
+  - stage: Tests
+    name: Integration Tests
     script:
     - sudo /etc/init.d/mysql stop
     - sudo sysctl fs.inotify.max_user_watches=524288; sudo sysctl -p
@@ -30,3 +24,10 @@ jobs:
     - while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/users/me); if [ $http_code = 401 ]; then echo "EE up and running"; break; else echo "EE not receiving connections"; sleep 5s; fi; done
     - while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/volume); if [ $http_code = 200 ]; then echo "brokers up and running"; break; else echo "brokers not receiving connections"; sleep 5s; fi; done
     - npm run test-integration
+  - stage: Tests
+    name: Unit Tests
+    script:
+      - npm run test-unit
+  - stage: Tests
+    name: eslint
+    script: npm run eslint
