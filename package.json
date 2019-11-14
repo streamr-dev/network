@@ -1,6 +1,6 @@
 {
   "name": "@streamr/cli-tools",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Command line tools for Streamr.",
   "bin": {
     "streamr": "bin/streamr.js",
