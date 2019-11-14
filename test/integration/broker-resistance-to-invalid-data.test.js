@@ -37,6 +37,7 @@ describe('broker resistance to invalid data', () => {
             },
             cassandra: false,
             reporting: false,
+            sentry: false,
             streamrUrl: 'http://localhost:8081/streamr-core',
             adapters: [
                 {

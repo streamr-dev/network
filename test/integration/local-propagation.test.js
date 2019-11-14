@@ -27,6 +27,7 @@ function startBroker(id, httpPort, wsPort, networkPort, mqttPort, enableCassandr
             password: '',
             keyspace: 'streamr_dev',
         } : false,
+        sentry: false,
         reporting: false,
         streamrUrl: 'http://localhost:8081/streamr-core',
         adapters: [

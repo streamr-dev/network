@@ -77,6 +77,7 @@ describe('message ordering and gap filling in websocket adapter', () => {
                 password: '',
                 keyspace: 'streamr_dev',
             },
+            sentry: false,
             reporting: false,
             streamrUrl: 'http://localhost:8081/streamr-core',
             adapters: [

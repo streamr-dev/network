@@ -28,6 +28,7 @@ describe('non-mqtt connection to MQTT adapter', () => {
             },
             cassandra: false,
             reporting: false,
+            sentry: false,
             streamrUrl: 'http://localhost:8081/streamr-core',
             adapters: [
                 {
