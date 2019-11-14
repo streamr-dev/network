@@ -1,9 +1,7 @@
 const { startTracker } = require('streamr-network')
-const StreamrClient = require('streamr-client')
-const mqtt = require('async-mqtt')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const createBroker = require('../../src/broker')
+const { startBroker, createClient, createMqttClient } = require('../utils')
 
 const httpPort1 = 13381
 const httpPort2 = 13382
@@ -14,62 +12,6 @@ const networkPort2 = 13402
 const trackerPort = 13410
 const mqttPort1 = 13551
 const mqttPort2 = 13552
-
-function startBroker(id, httpPort, wsPort, networkPort, mqttPort, enableCassandra) {
-    return createBroker({
-        network: {
-            id,
-            hostname: '127.0.0.1',
-            port: networkPort,
-            advertisedWsUrl: null,
-            tracker: `ws://127.0.0.1:${trackerPort}`,
-            isStorageNode: false
-        },
-        cassandra: enableCassandra ? {
-            hosts: ['localhost'],
-            username: '',
-            password: '',
-            keyspace: 'streamr_dev',
-        } : false,
-        reporting: false,
-        sentry: false,
-        streamrUrl: 'http://localhost:8081/streamr-core',
-        adapters: [
-            {
-                name: 'ws',
-                port: wsPort,
-            },
-            {
-                name: 'http',
-                port: httpPort,
-            },
-            {
-                name: 'mqtt',
-                port: mqttPort,
-                streamsTimeout: 300000
-            }
-        ],
-    })
-}
-
-function createClient(wsPort, apiKey) {
-    return new StreamrClient({
-        url: `ws://localhost:${wsPort}/api/v1/ws`,
-        restUrl: 'http://localhost:8081/streamr-core/api/v1',
-        auth: {
-            apiKey
-        }
-    })
-}
-
-function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1-api-key') {
-    return mqtt.connect({
-        hostname: host,
-        port: mqttPort,
-        username: '',
-        password: apiKey
-    })
-}
 
 describe('SubscriptionManager', () => {
     let tracker
@@ -94,8 +36,8 @@ describe('SubscriptionManager', () => {
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
 
-        broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, mqttPort1, true)
-        broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, mqttPort2, true)
+        broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, mqttPort1, true)
+        broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, trackerPort, mqttPort2, true)
 
         await wait(2000)
 

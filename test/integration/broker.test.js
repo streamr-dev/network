@@ -2,11 +2,10 @@ const { exec } = require('child_process')
 
 const WebSocket = require('ws')
 const { startTracker } = require('streamr-network')
-const StreamrClient = require('streamr-client')
 const fetch = require('node-fetch')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const createBroker = require('../../src/broker')
+const { startBroker, createClient } = require('../utils')
 
 const httpPort1 = 12341
 const httpPort2 = 12342
@@ -22,53 +21,9 @@ const trackerPort = 12370
 // The index for content/body/payload in array response of HTTP resend requests
 const CONTENT_IDX_IN_ARRAY = 5
 
-function startBroker(id, httpPort, wsPort, networkPort, enableCassandra, privateKeyFileName, certFileName) {
-    return createBroker({
-        network: {
-            id,
-            hostname: '127.0.0.1',
-            port: networkPort,
-            advertisedWsUrl: null,
-            tracker: `ws://127.0.0.1:${trackerPort}`,
-            isStorageNode: false
-        },
-        cassandra: enableCassandra ? {
-            hosts: ['localhost'],
-            username: '',
-            password: '',
-            keyspace: 'streamr_dev',
-        } : false,
-        reporting: false,
-        sentry: false,
-        streamrUrl: 'http://localhost:8081/streamr-core',
-        adapters: [
-            {
-                name: 'ws',
-                port: wsPort,
-                privateKeyFileName,
-                certFileName
-            },
-            {
-                name: 'http',
-                port: httpPort,
-            },
-        ],
-    })
-}
-
-function createClient(wsPort, apiKey) {
-    return new StreamrClient({
-        url: `ws://localhost:${wsPort}/api/v1/ws`,
-        restUrl: 'http://localhost:8081/streamr-core/api/v1',
-        auth: {
-            apiKey
-        }
-    })
-}
-
 describe('ws and wss connections', () => {
     it('can connect to ws endpoint', async (done) => {
-        const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true)
+        const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, null, true)
         const ws = new WebSocket(`ws://127.0.0.1:${wsPort1}/api/v1/ws`)
         ws.on('open', async () => {
             ws.terminate()
@@ -80,7 +35,7 @@ describe('ws and wss connections', () => {
     it('can connect to wss endpoint', async (done) => {
         const command = 'openssl req -x509 -newkey rsa:4096 -keyout test_key.pem -out test_cert.pem -days 365 -nodes -subj \'/CN=localhost\''
         await exec(command, async () => {
-            const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true, 'test_key.pem', 'test_cert.pem')
+            const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, null, true, 'test_key.pem', 'test_cert.pem')
             const ws = new WebSocket(`wss://127.0.0.1:${wsPort1}/api/v1/ws`, {
                 rejectUnauthorized: false // needed to accept self-signed certificate
             })
@@ -107,9 +62,9 @@ describe('broker: end-to-end', () => {
 
     beforeAll(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
-        broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, true)
-        broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, true)
-        broker3 = await startBroker('broker3', httpPort3, wsPort3, networkPort3, true)
+        broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, null, true)
+        broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, trackerPort, null, true)
+        broker3 = await startBroker('broker3', httpPort3, wsPort3, networkPort3, trackerPort, null, true)
 
         client1 = createClient(wsPort1, 'tester1-api-key')
         await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
@@ -237,7 +192,7 @@ describe('broker: end-to-end', () => {
 
         for (let i = 1; i <= 3; ++i) {
             // eslint-disable-next-line no-await-in-loop
-            const n = await fetch(`http://localhost:${httpPort1}/api/v1/streams/${freshStreamId}/data`, {
+            await fetch(`http://localhost:${httpPort1}/api/v1/streams/${freshStreamId}/data`, {
                 method: 'post',
                 headers: {
                     Authorization: 'token tester1-api-key'

@@ -1,10 +1,9 @@
 const { startTracker, startNetworkNode } = require('streamr-network')
 const intoStream = require('into-stream')
-const StreamrClient = require('streamr-client')
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const createBroker = require('../../src/broker')
+const { startBroker, createClient } = require('../utils')
 
 const trackerPort = 11400
 const networkPort1 = 11402
@@ -60,44 +59,11 @@ describe('message ordering and gap filling in websocket adapter', () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
         publisherNode = await startNetworkNode('127.0.0.1', networkPort1, 'publisherNode')
         publisherNode.addBootstrapTracker(`ws://127.0.0.1:${trackerPort}`)
-        broker = await createBroker({
-            network: {
-                id: 'broker',
-                hostname: '127.0.0.1',
-                port: networkPort2,
-                advertisedWsUrl: null,
-                tracker: `ws://127.0.0.1:${trackerPort}`,
-                isStorageNode: false
-            },
-            cassandra: {
-                hosts: [
-                    'localhost',
-                ],
-                username: '',
-                password: '',
-                keyspace: 'streamr_dev',
-            },
-            sentry: false,
-            reporting: false,
-            streamrUrl: 'http://localhost:8081/streamr-core',
-            adapters: [
-                {
-                    name: 'ws',
-                    port: wsPort,
-                },
-            ]
-        })
+        broker = await startBroker('broker1', null, wsPort, networkPort2, trackerPort, null, true)
     })
 
     beforeEach(async () => {
-        subscriber = new StreamrClient({
-            url: `ws://localhost:${wsPort}/api/v1/ws`,
-            restUrl: 'http://localhost:8081/streamr-core/api/v1',
-            auth: {
-                apiKey: 'tester1-api-key'
-            },
-            orderMessages: false,
-        })
+        subscriber = createClient(wsPort, 'tester1-api-key', false)
         await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
 
         freshStream = await subscriber.createStream({

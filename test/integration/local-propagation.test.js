@@ -1,71 +1,13 @@
 const { startTracker } = require('streamr-network')
-const StreamrClient = require('streamr-client')
-const mqtt = require('async-mqtt')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const createBroker = require('../../src/broker')
+const { startBroker, createClient, createMqttClient } = require('../utils')
 
 const trackerPort = 17711
 const httpPort1 = 17712
 const wsPort1 = 17713
 const networkPort1 = 17701
 const mqttPort1 = 17751
-
-function startBroker(id, httpPort, wsPort, networkPort, mqttPort, enableCassandra) {
-    return createBroker({
-        network: {
-            id,
-            hostname: '127.0.0.1',
-            port: networkPort,
-            advertisedWsUrl: null,
-            tracker: `ws://127.0.0.1:${trackerPort}`,
-            isStorageNode: false
-        },
-        cassandra: enableCassandra ? {
-            hosts: ['localhost'],
-            username: '',
-            password: '',
-            keyspace: 'streamr_dev',
-        } : false,
-        sentry: false,
-        reporting: false,
-        streamrUrl: 'http://localhost:8081/streamr-core',
-        adapters: [
-            {
-                name: 'ws',
-                port: wsPort,
-            },
-            {
-                name: 'http',
-                port: httpPort,
-            },
-            {
-                name: 'mqtt',
-                port: mqttPort,
-                streamsTimeout: 300000
-            }
-        ],
-    })
-}
-
-function createClient(wsPort, apiKey) {
-    return new StreamrClient({
-        url: `ws://localhost:${wsPort}/api/v1/ws`,
-        restUrl: 'http://localhost:8081/streamr-core/api/v1',
-        auth: {
-            apiKey
-        }
-    })
-}
-
-function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1-api-key') {
-    return mqtt.connect({
-        hostname: host,
-        port: mqttPort,
-        username: '',
-        password: apiKey
-    })
-}
 
 describe('local propagation', () => {
     let tracker
@@ -84,7 +26,7 @@ describe('local propagation', () => {
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
 
-        broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, mqttPort1, true)
+        broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, mqttPort1, true)
 
         client1 = createClient(wsPort1, 'tester1-api-key')
         await wait(100)
