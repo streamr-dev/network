@@ -8,12 +8,6 @@ Command line tool for interacting with [Streamr](https://www.streamr.com).
 npm install -g @streamr/cli-tools
 ```
 
-## Releasing
-
-```
-npm publish --access=public
-```
-
 ## Usage
 To get a list of all (sub)commands simply run `streamr`.
 
@@ -141,13 +135,16 @@ And the same for staging environment:
 streamr listen 7wa7APtlTq6EC5iTCBy6dw | streamr publish --stg streamId apiKey
 ```
 
-## Developing
-This CLI tool is basically a thin wrapper around [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript),
-which does all the heavy lifting.
-
-The code of this tool concentrates more on the CLI concerns: parsing and
-passing arguments, stdin/stdout, errors, and so forth.
-
 ## Contributing
 See issues, especially those tagged with "help wanted". We welcome pull
 requests and issues.
+
+## Developing
+This project is a thin wrapper around [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript),
+which does the heavy lifting, while this project concentrates on CLI concerns: parsing and
+passing arguments, stdin/stdout, errors, and so forth.
+
+### Releasing to NPM
+```
+npm publish --access=public
+```
