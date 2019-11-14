@@ -93,7 +93,7 @@ describe('mqtt: end-to-end', () => {
             done()
         })
 
-        await mqttClient1.publish('NOT_VALID_STREARM', 'key: 1', {
+        mqttClient1.publish('NOT_VALID_STREARM', 'key: 1', {
             qos: 1
         })
     })
@@ -123,7 +123,7 @@ describe('mqtt: end-to-end', () => {
             client3Messages.push(JSON.parse(message.toString()))
         })
 
-        await mqttClient1.publish(freshStreamName1, 'key: 1', {
+        mqttClient1.publish(freshStreamName1, 'key: 1', {
             qos: 1
         })
 
@@ -131,7 +131,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client2Messages.length === 1)
         await waitForCondition(() => client3Messages.length === 1)
 
-        await mqttClient2.publish(freshStreamName1, 'key: 2', {
+        mqttClient2.publish(freshStreamName1, 'key: 2', {
             qos: 1
         })
 
@@ -139,7 +139,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client2Messages.length === 2)
         await waitForCondition(() => client3Messages.length === 2)
 
-        await mqttClient3.publish(freshStreamName1, 'key: 3', {
+        mqttClient3.publish(freshStreamName1, 'key: 3', {
             qos: 0
         })
 
@@ -284,7 +284,7 @@ describe('mqtt: end-to-end', () => {
         })
 
         await wait(100)
-        await mqttClient1.publish(freshStreamName1, JSON.stringify({
+        mqttClient1.publish(freshStreamName1, JSON.stringify({
             key: 4
         }), {
             qos: 1
