@@ -36,8 +36,8 @@ describe('SubscriptionManager', () => {
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
 
-        broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, mqttPort1, true)
-        broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, trackerPort, mqttPort2, true)
+        broker1 = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, mqttPort1, true)
+        broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, mqttPort2, true)
 
         await wait(2000)
 

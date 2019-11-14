@@ -5,7 +5,7 @@ const { startTracker } = require('streamr-network')
 const { startBroker, createClient } = require('../utils')
 
 const trackerPort = 12420
-const brokerPort = 12421
+const networkPort = 12421
 const httpPort = 12422
 
 describe('broker resistance to invalid data', () => {
@@ -15,7 +15,7 @@ describe('broker resistance to invalid data', () => {
 
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
-        broker = await startBroker('broker', httpPort, null, brokerPort, trackerPort, null, false)
+        broker = await startBroker('broker', networkPort, trackerPort, httpPort, null, null, false)
 
         // Create new stream
         const client = createClient(0, 'tester1-api-key')

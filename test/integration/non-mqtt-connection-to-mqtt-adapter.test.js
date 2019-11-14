@@ -17,7 +17,7 @@ describe('non-mqtt connection to MQTT adapter', () => {
 
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
-        broker = await startBroker('broker', null, null, brokerPort, trackerPort, mqttPort, false)
+        broker = await startBroker('broker', brokerPort, trackerPort, null, null, mqttPort, false)
     })
 
     afterEach(async () => {

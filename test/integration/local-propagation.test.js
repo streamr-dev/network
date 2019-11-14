@@ -26,7 +26,7 @@ describe('local propagation', () => {
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
 
-        broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, mqttPort1, true)
+        broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, mqttPort1, true)
 
         client1 = createClient(wsPort1, 'tester1-api-key')
         await wait(100)

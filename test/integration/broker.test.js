@@ -23,7 +23,7 @@ const CONTENT_IDX_IN_ARRAY = 5
 
 describe('ws and wss connections', () => {
     it('can connect to ws endpoint', async (done) => {
-        const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, null, true)
+        const broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, true)
         const ws = new WebSocket(`ws://127.0.0.1:${wsPort1}/api/v1/ws`)
         ws.on('open', async () => {
             ws.terminate()
@@ -35,7 +35,7 @@ describe('ws and wss connections', () => {
     it('can connect to wss endpoint', async (done) => {
         const command = 'openssl req -x509 -newkey rsa:4096 -keyout test_key.pem -out test_cert.pem -days 365 -nodes -subj \'/CN=localhost\''
         await exec(command, async () => {
-            const broker = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, null, true, 'test_key.pem', 'test_cert.pem')
+            const broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, true, 'test_key.pem', 'test_cert.pem')
             const ws = new WebSocket(`wss://127.0.0.1:${wsPort1}/api/v1/ws`, {
                 rejectUnauthorized: false // needed to accept self-signed certificate
             })
@@ -62,9 +62,9 @@ describe('broker: end-to-end', () => {
 
     beforeAll(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
-        broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, trackerPort, null, true)
-        broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, trackerPort, null, true)
-        broker3 = await startBroker('broker3', httpPort3, wsPort3, networkPort3, trackerPort, null, true)
+        broker1 = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, true)
+        broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, null, true)
+        broker3 = await startBroker('broker3', networkPort3, trackerPort, httpPort3, wsPort3, null, true)
 
         client1 = createClient(wsPort1, 'tester1-api-key')
         await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E

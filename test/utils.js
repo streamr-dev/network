@@ -3,7 +3,7 @@ const mqtt = require('async-mqtt')
 
 const createBroker = require('../src/broker')
 
-function startBroker(id, httpPort, wsPort, networkPort, trackerPort, mqttPort, enableCassandra, privateKeyFileName, certFileName) {
+function startBroker(id, networkPort, trackerPort, httpPort, wsPort, mqttPort, enableCassandra, privateKeyFileName, certFileName) {
     const adapters = []
 
     if (httpPort) {
