@@ -25,8 +25,9 @@ class SharedContext {
             await this.insertFn(streamMessages)
             this._resetFailMultiplier()
         } catch (e) {
+            const key = `${streamMessages[0].getStreamId()}::${streamMessages[0].getStreamPartition()}`
             if (this.logErrors) {
-                console.error(e)
+                console.error(`Failed to insert (${key}): ${e.stack ? e.stack : e}`)
             }
             this._growFailMultiplier()
             throw e
