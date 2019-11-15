@@ -26,7 +26,7 @@ adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, { 
         httpServer = https.createServer({
             cert: fs.readFileSync(certFileName),
             key: fs.readFileSync(privateKeyFileName)
-        }, app).listen(port, () => console.info(`HTTP adapter listening on ${httpServer.address().port}`))
+        }, app).listen(port, () => console.info(`HTTPS adapter listening on ${httpServer.address().port}`))
     } else {
         httpServer = app.listen(port, () => console.info(`HTTP adapter listening on ${httpServer.address().port}`))
     }

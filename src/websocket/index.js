@@ -17,7 +17,6 @@ adapterRegistry.register('ws', ({ port, privateKeyFileName, certFileName }, {
         server = ws.SSLApp({
             key_file_name: privateKeyFileName,
             cert_file_name: certFileName,
-
         })
     } else {
         server = ws.App()
