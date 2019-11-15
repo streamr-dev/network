@@ -1,9 +1,7 @@
 const { startTracker } = require('streamr-network')
-const StreamrClient = require('streamr-client')
-const mqtt = require('async-mqtt')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const createBroker = require('../../src/broker')
+const { startBroker, createClient, createMqttClient } = require('../utils')
 
 const httpPort1 = 12381
 const httpPort2 = 12382
@@ -18,61 +16,6 @@ const trackerPort = 12410
 const mqttPort1 = 12551
 const mqttPort2 = 12552
 const mqttPort3 = 12553
-
-function startBroker(id, httpPort, wsPort, networkPort, mqttPort, enableCassandra) {
-    return createBroker({
-        network: {
-            id,
-            hostname: '127.0.0.1',
-            port: networkPort,
-            advertisedWsUrl: null,
-            tracker: `ws://127.0.0.1:${trackerPort}`,
-            isStorageNode: false
-        },
-        cassandra: enableCassandra ? {
-            hosts: ['localhost'],
-            username: '',
-            password: '',
-            keyspace: 'streamr_dev',
-        } : false,
-        reporting: false,
-        streamrUrl: 'http://localhost:8081/streamr-core',
-        adapters: [
-            {
-                name: 'ws',
-                port: wsPort,
-            },
-            {
-                name: 'http',
-                port: httpPort,
-            },
-            {
-                name: 'mqtt',
-                port: mqttPort,
-                streamsTimeout: 300000
-            }
-        ],
-    })
-}
-
-function createClient(wsPort, apiKey) {
-    return new StreamrClient({
-        url: `ws://localhost:${wsPort}/api/v1/ws`,
-        restUrl: 'http://localhost:8081/streamr-core/api/v1',
-        auth: {
-            apiKey
-        }
-    })
-}
-
-function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1-api-key') {
-    return mqtt.connect({
-        hostname: host,
-        port: mqttPort,
-        username: '',
-        password: apiKey
-    })
-}
 
 describe('mqtt: end-to-end', () => {
     let tracker
@@ -89,10 +32,6 @@ describe('mqtt: end-to-end', () => {
     let freshStreamId1
     let freshStreamName1
 
-    let freshStream2
-    let freshStreamId2
-    let freshStreamName2
-
     let mqttClient1
     let mqttClient2
     let mqttClient3
@@ -100,9 +39,9 @@ describe('mqtt: end-to-end', () => {
     beforeEach(async () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
 
-        broker1 = await startBroker('broker1', httpPort1, wsPort1, networkPort1, mqttPort1, true)
-        broker2 = await startBroker('broker2', httpPort2, wsPort2, networkPort2, mqttPort2, true)
-        broker3 = await startBroker('broker3', httpPort3, wsPort3, networkPort3, mqttPort3, true)
+        broker1 = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, mqttPort1, true)
+        broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, mqttPort2, true)
+        broker3 = await startBroker('broker3', networkPort3, trackerPort, httpPort3, wsPort3, mqttPort3, true)
 
         client1 = createClient(wsPort1, 'tester1-api-key')
         await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
@@ -123,12 +62,6 @@ describe('mqtt: end-to-end', () => {
         })
         freshStreamId1 = freshStream1.id
         freshStreamName1 = freshStream1.name
-
-        freshStream2 = await client2.createStream({
-            name: 'broker.test.js-' + Date.now()
-        })
-        freshStreamId2 = freshStream2.id
-        freshStreamName2 = freshStream2.name
     })
 
     afterEach(async () => {
@@ -160,7 +93,7 @@ describe('mqtt: end-to-end', () => {
             done()
         })
 
-        await mqttClient1.publish('NOT_VALID_STREARM', 'key: 1', {
+        mqttClient1.publish('NOT_VALID_STREARM', 'key: 1', {
             qos: 1
         })
     })
@@ -190,7 +123,7 @@ describe('mqtt: end-to-end', () => {
             client3Messages.push(JSON.parse(message.toString()))
         })
 
-        await mqttClient1.publish(freshStreamName1, 'key: 1', {
+        mqttClient1.publish(freshStreamName1, 'key: 1', {
             qos: 1
         })
 
@@ -198,7 +131,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client2Messages.length === 1)
         await waitForCondition(() => client3Messages.length === 1)
 
-        await mqttClient2.publish(freshStreamName1, 'key: 2', {
+        mqttClient2.publish(freshStreamName1, 'key: 2', {
             qos: 1
         })
 
@@ -206,7 +139,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client2Messages.length === 2)
         await waitForCondition(() => client3Messages.length === 2)
 
-        await mqttClient3.publish(freshStreamName1, 'key: 3', {
+        mqttClient3.publish(freshStreamName1, 'key: 3', {
             qos: 0
         })
 
@@ -269,7 +202,7 @@ describe('mqtt: end-to-end', () => {
             client2Messages.push(JSON.parse(message.toString()))
         })
 
-        await mqttClient1.publish(freshStreamName1, JSON.stringify({
+        mqttClient1.publish(freshStreamName1, JSON.stringify({
             key: 1
         }), {
             qos: 1
@@ -278,7 +211,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client1Messages.length === 1)
         await waitForCondition(() => client2Messages.length === 1)
 
-        await mqttClient2.publish(freshStreamName1, JSON.stringify({
+        mqttClient2.publish(freshStreamName1, JSON.stringify({
             key: 2
         }), {
             qos: 1
@@ -351,7 +284,7 @@ describe('mqtt: end-to-end', () => {
         })
 
         await wait(100)
-        await mqttClient1.publish(freshStreamName1, JSON.stringify({
+        mqttClient1.publish(freshStreamName1, JSON.stringify({
             key: 4
         }), {
             qos: 1

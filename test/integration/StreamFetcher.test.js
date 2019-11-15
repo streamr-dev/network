@@ -36,7 +36,7 @@ describe('StreamFetcher', () => {
         expressApp.post('/api/v1/streams/:id/fields', (req, res) => requestHandlers.fields(req, res))
 
         server = expressApp.listen(6194, () => {
-            console.info('Server started on port 6194\n')
+            console.info('Server for StreamFetcher.test.js started on port 6194\n')
             done()
         })
     })

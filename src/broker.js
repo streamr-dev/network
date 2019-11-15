@@ -71,7 +71,10 @@ module.exports = async (config) => {
     if (config.reporting && config.reporting.reportingIntervalSeconds === undefined) {
         throw new MissingConfigError('reporting.reportingIntervalSeconds')
     }
-    // TODO: disallow config.sentry from not being set, enforce "false" as in other cases
+    if (config.sentry === undefined) {
+        throw new MissingConfigError('sentry')
+    }
+
     config.adapters.forEach(({ name }, index) => {
         if (name === undefined) {
             throw new MissingConfigError(`adapters[${index}].name`)

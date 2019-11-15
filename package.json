@@ -27,7 +27,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@sentry/node": "^5.8.0",
+    "@sentry/node": "^5.9.0",
     "arraybuffer-to-string": "^1.0.2",
     "body-parser": "^1.19.0",
     "buffermaker": "^1.2.1",
@@ -43,7 +43,7 @@
     "node-fetch": "^2.6.0",
     "public-ip": "^3.2.0",
     "qs": "^6.9.1",
-    "streamr-client": "^2.2.6",
+    "streamr-client": "^2.2.7",
     "streamr-client-protocol": "^2.2.15",
     "streamr-network": "^16.1.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v16.2.0",
