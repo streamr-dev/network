@@ -62,7 +62,7 @@ describe('mqtt: end-to-end', () => {
         })
         freshStreamId1 = freshStream1.id
         freshStreamName1 = freshStream1.name
-    })
+    }, 10000)
 
     afterEach(async () => {
         await Promise.all([

@@ -115,6 +115,7 @@ module.exports = async (config) => {
     networkNode.addBootstrapTracker(config.network.tracker)
 
     if (config.sentry) {
+        console.info('Starting Sentry with dns: %s', config.sentry)
         Sentry.init({
             dsn: config.sentry,
             integrations: [
@@ -122,7 +123,7 @@ module.exports = async (config) => {
                     levels: ['error']
                 })
             ],
-            environment: 'broker',
+            environment: config.network.hostname,
             maxBreadcrumbs: 50,
             attachStacktrace: true,
 

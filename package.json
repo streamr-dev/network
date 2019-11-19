@@ -46,7 +46,7 @@
     "streamr-client": "^2.2.7",
     "streamr-client-protocol": "^2.2.15",
     "streamr-network": "^16.1.0",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v16.2.0",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v16.3.0",
     "uuid": "^3.3.3",
     "ws": "^7.2.0"
   },

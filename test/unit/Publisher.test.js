@@ -4,22 +4,27 @@ const sinon = require('sinon')
 const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
 
 const Publisher = require('../../src/Publisher')
-const MessageNotSignedError = require('../../src/errors/MessageNotSignedError')
+const { MessageNotSignedError, MessageNotEncryptedError } = require('../../src/errors/MessageNotSignedError')
 
 describe('Publisher', () => {
     const stream = {
         id: 'streamId',
-        partitions: 10,
+        partitions: 10
     }
+
     const signedStream = {
-        requireSignedData: true,
+        requireSignedData: true
+    }
+
+    const encryptedStream = {
+        requireEncryptedData: true
     }
 
     const msg = {
-        hello: 'world',
+        hello: 'world'
     }
 
-    const streamMessageUnsigned = new StreamMessageV30(
+    const streamMessageUnsignedUnencrypted = new StreamMessageV30(
         [stream.id, stream.partitions, 135135135, 0, 'publisherId', 'msgChainId'],
         null,
         StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -39,15 +44,19 @@ describe('Publisher', () => {
 
     describe('publish', () => {
         it('throws MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData', () => {
-            expect(() => publisher.publish(signedStream, streamMessageUnsigned)).toThrow(MessageNotSignedError)
+            expect(() => publisher.publish(signedStream, streamMessageUnsignedUnencrypted)).toThrow(MessageNotSignedError)
+        })
+
+        it('throws MessageNotEncryptedError if trying to publish not encrypted data on stream with encryptedStream', () => {
+            expect(() => publisher.publish(encryptedStream, streamMessageUnsignedUnencrypted)).toThrow(MessageNotEncryptedError)
         })
 
         it('should call NetworkNode.publish with correct values', (done) => {
             networkNode.publish = (streamMessage) => {
-                expect(streamMessage).toEqual(streamMessageUnsigned)
+                expect(streamMessage).toEqual(streamMessageUnsignedUnencrypted)
                 done()
             }
-            publisher.publish(stream, streamMessageUnsigned)
+            expect(() => publisher.publish(stream, streamMessageUnsignedUnencrypted)).not.toThrow()
         })
     })
 })
