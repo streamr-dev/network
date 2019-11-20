@@ -67,7 +67,8 @@ jobs:
     script:
     - mkdir $TRAVIS_BUILD_DIR/build
     - mkdir $TRAVIS_BUILD_DIR/upload
-    - sed -i "s/TAG/$TRAVIS_TAG/g" .codedeploy/after_install.sh
+    - PACKAGE_VERSION=${TRAVIS_TAG:1}
+    - sed -i "s/PACKAGE_VERSION/$PACKAGE_VERSION/g" .codedeploy/after_install.sh
     - mv .codedeploy/appspec.yml build/appspec.yml
     - mv .codedeploy/ build/
     - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/tracker-${TRAVIS_TAG}.tar .;tar
