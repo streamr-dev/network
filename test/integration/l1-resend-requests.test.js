@@ -31,7 +31,8 @@ describe('resend requests are fulfilled at L1', () => {
                     sequenceNo: 50,
                     publisherId: 'publisherId',
                     msgChainId: 'msgChainId',
-                    data: {}
+                    data: {},
+                    signatureType: 0
                 },
                 {
                     timestamp: 756,
@@ -40,7 +41,8 @@ describe('resend requests are fulfilled at L1', () => {
                     previousSequenceNo: 50,
                     publisherId: 'publisherId',
                     msgChainId: 'msgChainId',
-                    data: {}
+                    data: {},
+                    signatureType: 0
                 },
                 {
                     timestamp: 800,
@@ -49,7 +51,8 @@ describe('resend requests are fulfilled at L1', () => {
                     previousSequenceNo: 0,
                     publisherId: 'publisherId',
                     msgChainId: 'msgChainId',
-                    data: {}
+                    data: {},
+                    signatureType: 0
                 }
             ]),
             requestFrom: () => intoStream.object([
@@ -58,7 +61,8 @@ describe('resend requests are fulfilled at L1', () => {
                     sequenceNo: 50,
                     publisherId: 'publisherId',
                     msgChainId: 'msgChainId',
-                    data: {}
+                    data: {},
+                    signatureType: 0
                 },
             ]),
             requestRange: () => intoStream.object([]),

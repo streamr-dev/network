@@ -43,7 +43,8 @@ describe('request resend from uninvolved node', () => {
                     previousSequenceNo: 50,
                     publisherId: 'publisherId',
                     msgChainId: 'msgChainId',
-                    data: {}
+                    data: {},
+                    signatureType: 0
                 },
                 {
                     timestamp: 800,
@@ -52,7 +53,8 @@ describe('request resend from uninvolved node', () => {
                     previousSequenceNo: 0,
                     publisherId: 'publisherId',
                     msgChainId: 'msgChainId',
-                    data: {}
+                    data: {},
+                    signatureType: 0
                 },
             ])
         }])
