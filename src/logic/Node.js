@@ -13,6 +13,7 @@ const { GapMisMatchError, InvalidNumberingError } = require('../logic/DuplicateM
 
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
+const proxyRequestStream = require('./proxyRequestStream')
 
 const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:node:message-received',
@@ -64,11 +65,7 @@ class Node extends EventEmitter {
 
         this.streams = new StreamManager()
         this.messageBuffer = new MessageBuffer(this.opts.bufferTimeoutInMs, this.opts.bufferMaxSize)
-        this.resendHandler = new ResendHandler(
-            this.opts.resendStrategies,
-            this.protocols.nodeToNode.send.bind(this.protocols.nodeToNode),
-            console.error.bind(console)
-        )
+        this.resendHandler = new ResendHandler(this.opts.resendStrategies, console.error.bind(console))
 
         this.trackers = new Set()
 
@@ -130,7 +127,15 @@ class Node extends EventEmitter {
             source === null ? 'local' : `from ${source}`,
             request.constructor.name,
             request.subId)
-        return this.resendHandler.handleRequest(request, source)
+        const requestStream = this.resendHandler.handleRequest(request, source)
+        if (source != null) {
+            proxyRequestStream(
+                (data) => this.protocols.nodeToNode.send(source, data),
+                request,
+                requestStream
+            )
+        }
+        return requestStream
     }
 
     async onTrackerInstructionReceived(instructionMessage) {

@@ -1,41 +1,23 @@
 const { Readable } = require('stream')
 
-const { ControlLayer } = require('streamr-client-protocol')
-
-class RequestStream extends Readable {
-    constructor() {
-        super({
-            objectMode: true,
-            read() {}
-        })
-        this.fulfilled = null
-    }
-
-    done(fulfilled) {
-        this.fulfilled = fulfilled
-        this.push(null)
-    }
-}
-
 class ResendHandler {
-    constructor(resendStrategies, sendResponse, notifyError) {
+    constructor(resendStrategies, notifyError) {
         if (resendStrategies == null) {
             throw new Error('resendStrategies not given')
-        }
-        if (sendResponse == null) {
-            throw new Error('sendResponse not given')
         }
         if (notifyError == null) {
             throw new Error('notifyError not given')
         }
 
         this.resendStrategies = [...resendStrategies]
-        this.sendResponse = sendResponse
         this.notifyError = notifyError
     }
 
     handleRequest(request, source) {
-        const requestStream = new RequestStream()
+        const requestStream = new Readable({
+            objectMode: true,
+            read() {}
+        })
         this._loopThruResendStrategies(request, source, requestStream)
         return requestStream
     }
@@ -56,33 +38,24 @@ class ResendHandler {
                 .on('data', requestStream.push.bind(requestStream))
 
             // eslint-disable-next-line no-await-in-loop
-            isRequestFulfilled = await this._readStreamUntilEndOrError(responseStream, request, source)
+            isRequestFulfilled = await this._readStreamUntilEndOrError(responseStream, request)
         }
 
-        if (isRequestFulfilled) {
-            this._sendResent(request, source)
-        } else {
-            this._sendNoResend(request, source)
-        }
-
-        requestStream.done(isRequestFulfilled)
+        requestStream.push(null)
     }
 
-    _readStreamUntilEndOrError(responseStream, request, source) {
+    _readStreamUntilEndOrError(responseStream, request) {
         let numOfMessages = 0
         return new Promise((resolve) => {
             responseStream
-                .once('data', () => {
-                    this._sendResending(request, source)
-                })
                 .on('data', () => {
                     numOfMessages += 1
                 })
-                .on('data', (unicastMessage) => {
-                    this._sendUnicast(unicastMessage, source)
-                })
                 .on('error', (error) => {
-                    this._emitError(request, error)
+                    this.notifyError({
+                        request,
+                        error
+                    })
                 })
                 .on('error', () => {
                     resolve(false)
@@ -91,46 +64,6 @@ class ResendHandler {
                     resolve(numOfMessages > 0)
                 })
         })
-    }
-
-    _sendResending(request, source) {
-        if (source != null) {
-            this.sendResponse(source, ControlLayer.ResendResponseResending.create(
-                request.streamId,
-                request.streamPartition,
-                request.subId
-            ))
-        }
-    }
-
-    _sendUnicast(unicastMessage, source) {
-        if (source != null) {
-            this.sendResponse(source, unicastMessage)
-        }
-    }
-
-    _sendResent(request, source) {
-        if (source != null) {
-            this.sendResponse(source, ControlLayer.ResendResponseResent.create(
-                request.streamId,
-                request.streamPartition,
-                request.subId
-            ))
-        }
-    }
-
-    _sendNoResend(request, source) {
-        if (source != null) {
-            this.sendResponse(source, ControlLayer.ResendResponseNoResend.create(
-                request.streamId,
-                request.streamPartition,
-                request.subId
-            ))
-        }
-    }
-
-    _emitError(request, error) {
-        this.notifyError(request, error)
     }
 }
 

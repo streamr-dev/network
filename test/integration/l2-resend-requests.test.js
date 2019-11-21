@@ -119,7 +119,6 @@ describe('resend requests are fulfilled at L2', () => {
         const stream = contactNode.requestResendLast('streamId', 0, 'subId', 10)
         const events = await typesOfStreamItems(stream)
 
-        expect(stream.fulfilled).toEqual(true)
         expect(events).toEqual([
             UnicastMessage.TYPE,
         ])
@@ -137,7 +136,6 @@ describe('resend requests are fulfilled at L2', () => {
         )
         const events = await typesOfStreamItems(stream)
 
-        expect(stream.fulfilled).toEqual(true)
         expect(events).toEqual([
             UnicastMessage.TYPE,
             UnicastMessage.TYPE,
@@ -160,7 +158,6 @@ describe('resend requests are fulfilled at L2', () => {
         )
         const events = await typesOfStreamItems(stream)
 
-        expect(stream.fulfilled).toEqual(false)
         expect(events).toEqual([])
     })
 })

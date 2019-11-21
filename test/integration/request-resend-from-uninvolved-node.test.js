@@ -83,7 +83,6 @@ describe('request resend from uninvolved node', () => {
         const stream = uninvolvedNode.requestResendLast('streamId', 0, 'subId', 10)
         const events = await typesOfStreamItems(stream)
 
-        expect(stream.fulfilled).toEqual(true)
         expect(events).toEqual([
             UnicastMessage.TYPE,
             UnicastMessage.TYPE,
