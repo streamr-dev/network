@@ -1,3 +1,4 @@
+import { validateIsNotEmptyString } from '../../../utils/validations'
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import ControlMessage from '../ControlMessage'
 import ErrorResponse from './ErrorResponse'
@@ -9,6 +10,7 @@ const VERSION = 0
 export default class ErrorResponseV0 extends ErrorResponse {
     constructor(errorMessage) {
         super(VERSION)
+        validateIsNotEmptyString('errorMessage', errorMessage)
         this.payload = new ErrorPayload(errorMessage)
     }
 

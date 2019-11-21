@@ -1,23 +1,14 @@
+import { validateIsString, validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
+
 export default class MessageID {
     constructor(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId) {
-        if (streamId == null) {
-            throw new Error('streamId must be defined!')
-        }
-        if (streamPartition == null) {
-            throw new Error('streamPartition must be defined!')
-        }
-        if (timestamp == null) {
-            throw new Error('timestamp must be defined!')
-        }
-        if (sequenceNumber == null) {
-            throw new Error('sequenceNumber must be defined!')
-        }
-        if (publisherId == null) {
-            throw new Error('publisherId must be defined!')
-        }
-        if (msgChainId == null) {
-            throw new Error('msgChainId must be defined!')
-        }
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition)
+        validateIsNotNegativeInteger('timestamp', timestamp)
+        validateIsNotNegativeInteger('sequenceNumber', sequenceNumber)
+        validateIsString('publisherId', publisherId)
+        validateIsString('msgChainId', msgChainId)
+
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.timestamp = timestamp

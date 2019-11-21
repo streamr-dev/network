@@ -1,4 +1,5 @@
 import InvalidJsonError from '../../errors/InvalidJsonError'
+import ValidationError from '../../errors/ValidationError'
 
 const BYE_KEY = '_bye'
 const LATEST_VERSION = 31
@@ -8,9 +9,12 @@ export default class StreamMessage {
         if (new.target === StreamMessage) {
             throw new TypeError('StreamMessage is abstract.')
         }
+
+        StreamMessage.validateContentType(contentType)
+        StreamMessage.validateEncryptionType(encryptionType)
+
         this.version = version
         this.streamId = streamId
-        StreamMessage.validateContentType(contentType)
         this.contentType = contentType
         this.encryptionType = encryptionType
 
@@ -142,7 +146,13 @@ export default class StreamMessage {
 
     static validateContentType(contentType) {
         if (!StreamMessage.VALID_CONTENTS.has(contentType)) {
-            throw new Error(`Unsupported content type: ${contentType}`)
+            throw new ValidationError(`Unsupported content type: ${contentType}`)
+        }
+    }
+
+    static validateEncryptionType(encryptionType) {
+        if (!StreamMessage.VALID_ENCRYPTIONS.has(encryptionType)) {
+            throw new ValidationError(`Unsupported encryption type: ${encryptionType}`)
         }
     }
 
@@ -204,3 +214,5 @@ StreamMessage.ENCRYPTION_TYPES = {
     AES: 2,
     NEW_KEY_AND_AES: 3,
 }
+
+StreamMessage.VALID_ENCRYPTIONS = new Set(Object.values(StreamMessage.ENCRYPTION_TYPES))

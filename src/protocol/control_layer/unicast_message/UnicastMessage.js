@@ -1,3 +1,4 @@
+import { validateIsNotEmptyString } from '../../../utils/validations'
 import ControlMessage from '../ControlMessage'
 
 const TYPE = 1
@@ -8,6 +9,7 @@ export default class UnicastMessage extends ControlMessage {
             throw new TypeError('UnicastMessage is abstract.')
         }
         super(version, TYPE)
+        validateIsNotEmptyString('subId', subId)
         this.subId = subId
     }
 

@@ -1,3 +1,4 @@
+import { validateIsString } from '../../../utils/validations'
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import ControlMessage from '../ControlMessage'
 import SubscribeRequest from './SubscribeRequest'
@@ -9,6 +10,7 @@ const VERSION = 0
 export default class SubscribeRequestV0 extends SubscribeRequest {
     constructor(streamId, streamPartition = 0, apiKey, sessionToken) {
         super(VERSION, streamId, streamPartition, sessionToken)
+        validateIsString('apiKey', apiKey, true)
         this.apiKey = apiKey
     }
 

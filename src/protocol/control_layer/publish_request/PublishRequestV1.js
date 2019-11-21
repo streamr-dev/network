@@ -1,3 +1,4 @@
+import { validateIsNotNullOrUndefined } from '../../../utils/validations'
 import StreamMessageFactory from '../../message_layer/StreamMessageFactory'
 import ControlMessage from '../ControlMessage'
 import PublishRequest from './PublishRequest'
@@ -7,6 +8,7 @@ const VERSION = 1
 export default class PublishRequestV1 extends PublishRequest {
     constructor(streamMessage, sessionToken) {
         super(VERSION, sessionToken)
+        validateIsNotNullOrUndefined('streamMessage', streamMessage)
         this.streamMessage = streamMessage
     }
 

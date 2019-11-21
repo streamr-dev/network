@@ -1,3 +1,9 @@
+import {
+    validateIsInteger,
+    validateIsString,
+    validateIsNotEmptyString,
+    validateIsNotNegativeInteger,
+} from '../../utils/validations'
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import StreamMessage from './StreamMessage'
 import StreamMessageV28 from './StreamMessageV28'
@@ -12,6 +18,17 @@ export default class StreamMessageV29 extends StreamMessage {
         content, signatureType, publisherAddress, signature, parseContent = true,
     ) {
         super(VERSION, streamId, contentType, StreamMessage.ENCRYPTION_TYPES.NONE, content, parseContent)
+
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition, true)
+        validateIsNotNegativeInteger('timestamp', timestamp, true)
+        validateIsNotNegativeInteger('ttl', ttl, true)
+        validateIsInteger('offset', offset, true)
+        validateIsInteger('previousOffset', previousOffset, true)
+        validateIsInteger('signatureType', signatureType, true)
+        validateIsString('publisherAddress', publisherAddress, true)
+        validateIsString('signature', signature, true)
+
         this.ttl = ttl
         this.streamPartition = streamPartition
         this.timestamp = timestamp
@@ -84,16 +101,15 @@ export default class StreamMessageV29 extends StreamMessage {
                 this.ttl, this.offset, this.previousOffset, this.contentType, this.getContent(), this.parseContentOption,
             )
         } else if (version === 30) {
-            // null fields in order: prevMsgRef.timestamp, prevMsgRef.sequenceNumber
             return new StreamMessageV30(
                 [this.streamId, this.streamPartition, this.timestamp, 0, this.publisherAddress || '', ''],
-                [null, null], this.contentType, this.getContent(), this.signatureType, this.signature, this.parseContentOption,
+                null, this.contentType, this.getContent(), this.signatureType, this.signature, this.parseContentOption,
             )
         } else if (version === 31) {
             // null fields in order: prevMsgRef.timestamp, prevMsgRef.sequenceNumber
             return new StreamMessageV31(
                 [this.streamId, this.streamPartition, this.timestamp, 0, this.publisherAddress || '', ''],
-                [null, null], this.contentType, StreamMessage.ENCRYPTION_TYPES.NONE, this.getContent(),
+                null, this.contentType, StreamMessage.ENCRYPTION_TYPES.NONE, this.getContent(),
                 this.signatureType, this.signature, this.parseContentOption,
             )
         }

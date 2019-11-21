@@ -1,3 +1,9 @@
+import {
+    validateIsInteger,
+    validateIsNotEmptyString,
+    validateIsNotNullOrUndefined,
+    validateIsString,
+} from '../../../utils/validations'
 import * as TimestampUtil from '../../../utils/TimestampUtil'
 import ValidationError from '../../../errors/ValidationError'
 import StreamMessageV30 from '../../message_layer/StreamMessageV30'
@@ -11,18 +17,25 @@ const VERSION = 0
 export default class PublishRequestV0 extends PublishRequest {
     constructor(streamId, apiKey, sessionToken, content, timestamp, partitionKey, publisherAddress, signatureType, signature) {
         super(VERSION, sessionToken)
-        this.apiKey = apiKey
-        this.streamId = streamId
 
-        if (!content) {
-            throw new ValidationError('No content given!')
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsString('apiKey', apiKey, true)
+        validateIsString('sessionToken', sessionToken, true)
+        validateIsNotNullOrUndefined('content', content)
+        validateIsString('partitionKey', partitionKey, true)
+        validateIsString('publisherAddress', publisherAddress, true)
+        validateIsInteger('signatureType', signatureType, true)
+        validateIsString('signature', signature, true)
+        if (apiKey == null && sessionToken == null) {
+            throw new ValidationError('Both apiKey and sessionToken cannot be null/undefined.')
         }
-        this.content = content
 
+        this.streamId = streamId
+        this.apiKey = apiKey
+        this.content = content
         if (timestamp) {
             this.timestamp = TimestampUtil.parse(timestamp)
         }
-
         this.partitionKey = partitionKey
         this.publisherAddress = publisherAddress
         this.signatureType = signatureType

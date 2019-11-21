@@ -1,4 +1,4 @@
-import ValidationError from '../../../errors/ValidationError'
+import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import ControlMessage from '../ControlMessage'
 
 const TYPE = 10
@@ -9,10 +9,11 @@ export default class UnsubscribeRequest extends ControlMessage {
             throw new TypeError('UnSubscribeRequest is abstract.')
         }
         super(version, TYPE)
+
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition)
+
         this.streamId = streamId
-        if (streamPartition == null) {
-            throw new ValidationError('Stream partition not given!')
-        }
         this.streamPartition = streamPartition
     }
 

@@ -60,7 +60,7 @@ describe('StreamMessageV28', () => {
         })
         it('correctly serializes messages to v30', () => {
             const arr = [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, '', ''],
-                [null, null], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', 0, null]
+                null, StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', 0, null]
 
             const serialized = new StreamMessageV28(
                 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,
@@ -71,7 +71,7 @@ describe('StreamMessageV28', () => {
         })
         it('correctly serializes messages to v31', () => {
             const arr = [31, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, '', ''],
-                [null, null], StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.NONE, '{"valid": "json"}', 0, null]
+                null, StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.NONE, '{"valid": "json"}', 0, null]
 
             const serialized = new StreamMessageV28(
                 'TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0,

@@ -1,6 +1,6 @@
 import assert from 'assert'
 import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
-import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
+import MessageRefStrict from '../../../../src/protocol/message_layer/MessageRefStrict'
 import StreamMessageV30 from '../../../../src/protocol/message_layer/StreamMessageV30'
 
 describe('StreamMessageV30', () => {
@@ -16,7 +16,7 @@ describe('StreamMessageV30', () => {
             assert.equal(result.getTimestamp(), 1529549961116)
             assert.equal(result.getSequenceNumber(), 0)
             assert.equal(result.getPublisherId(), 'publisherId')
-            assert.deepStrictEqual(result.getMessageRef(), new MessageRef(1529549961116, 0))
+            assert.deepStrictEqual(result.getMessageRef(), new MessageRefStrict(1529549961116, 0))
             assert.equal(result.getMsgChainId(), 'msg-chain-id')
             assert.equal(result.prevMsgRef.timestamp, 1529549961000)
             assert.equal(result.prevMsgRef.sequenceNumber, 0)
@@ -128,7 +128,7 @@ describe('StreamMessageV30', () => {
                 foo: 'bar',
             }
             const msg = new StreamMessageV30(
-                ['streamId', 0, Date.now(), 0, 'publisherId', 1], [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, content,
+                ['streamId', 0, Date.now(), 0, 'publisherId', '1'], [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, content,
                 StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
             assert.deepEqual(msg.getParsedContent(), content)
@@ -138,7 +138,7 @@ describe('StreamMessageV30', () => {
                 foo: 'bar',
             }
             const msg = new StreamMessageV30(
-                ['streamId', 0, Date.now(), 0, 'publisherId', 1], [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, JSON.stringify(content),
+                ['streamId', 0, Date.now(), 0, 'publisherId', '1'], [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, JSON.stringify(content),
                 StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
             )
             assert.deepEqual(msg.getParsedContent(), content)

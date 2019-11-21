@@ -1,3 +1,4 @@
+import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import ControlMessage from '../ControlMessage'
 import SubscribeResponse from './SubscribeResponse'
@@ -8,6 +9,10 @@ const VERSION = 1
 export default class SubscribeResponseV1 extends SubscribeResponse {
     constructor(streamId, streamPartition = 0) {
         super(VERSION)
+
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition)
+
         this.streamId = streamId
         this.streamPartition = streamPartition
     }

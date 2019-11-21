@@ -1,3 +1,4 @@
+import { validateIsNotNullOrUndefined } from '../../../utils/validations'
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import ControlMessage from '../ControlMessage'
 import StreamMessageFactory from '../../message_layer/StreamMessageFactory'
@@ -9,6 +10,7 @@ const VERSION = 1
 export default class BroadcastMessageV1 extends BroadcastMessage {
     constructor(streamMessage) {
         super(VERSION)
+        validateIsNotNullOrUndefined('streamMessage', streamMessage)
         this.streamMessage = streamMessage
     }
 

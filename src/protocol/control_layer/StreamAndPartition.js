@@ -1,15 +1,10 @@
 import { ensureParsed } from '../../utils/ParseUtil'
-import ValidationError from '../../errors/ValidationError'
+import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
 
 export default class StreamAndPartition {
     constructor(streamId, streamPartition) {
-        if (!streamId) {
-            throw new ValidationError('Stream ID not given!')
-        }
-        if (!streamPartition == null) {
-            throw new ValidationError('Stream partition not given!')
-        }
-
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition)
         this.streamId = streamId
         this.streamPartition = streamPartition
     }

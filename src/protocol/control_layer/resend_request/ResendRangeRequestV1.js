@@ -1,3 +1,4 @@
+import { validateIsString, validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import ControlMessage from '../ControlMessage'
 import ValidationError from '../../../errors/ValidationError'
 import MessageRef from '../../message_layer/MessageRef'
@@ -8,6 +9,14 @@ const VERSION = 1
 export default class ResendRangeRequestV1 extends ResendRangeRequest {
     constructor(streamId, streamPartition, subId, fromMsgRefArgsArray, toMsgRefArgsArray, publisherId, msgChainId, sessionToken) {
         super(VERSION)
+
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition)
+        validateIsNotEmptyString('subId', subId)
+        validateIsString('publisherId', publisherId, true)
+        validateIsString('msgChainId', msgChainId, true)
+        validateIsString('sessionToken', sessionToken, true)
+
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.subId = subId

@@ -1,4 +1,4 @@
-import ValidationError from '../../../errors/ValidationError'
+import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../../utils/validations'
 import ControlMessage from '../ControlMessage'
 
 const TYPE = 9
@@ -9,10 +9,12 @@ export default class SubscribeRequest extends ControlMessage {
             throw new TypeError('SubscribeRequest is abstract.')
         }
         super(version, TYPE)
+
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition)
+        validateIsString('sessionToken', sessionToken, true)
+
         this.streamId = streamId
-        if (streamPartition == null) {
-            throw new ValidationError('Stream partition not given!')
-        }
         this.streamPartition = streamPartition
         this.sessionToken = sessionToken
     }
