@@ -9,7 +9,7 @@ const MessageBuffer = require('../helpers/MessageBuffer')
 const { disconnectionReasons } = require('../messages/messageTypes')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
-const { InvalidNumberingError } = require('../logic/DuplicateMessageDetector')
+const { GapMisMatchError, InvalidNumberingError } = require('../logic/DuplicateMessageDetector')
 
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
@@ -184,8 +184,14 @@ class Node extends EventEmitter {
             )
         } catch (e) {
             if (e instanceof InvalidNumberingError) {
-                this.debug('received data %j from %s with invalid numbering', streamMessage.messageId, source)
+                this.debug('received from %s data %j with invalid numbering', source, streamMessage.messageId)
                 this.metrics.inc('onDataReceived:ignoring:invalid-numbering')
+                return
+            }
+            if (e instanceof GapMisMatchError) {
+                console.warn(e)
+                this.debug('received from %s data %j with gap mismatch detected', source, streamMessage.messageId)
+                this.metrics.inc('onDataReceived:ignoring:gap-mismatch')
                 return
             }
             throw e

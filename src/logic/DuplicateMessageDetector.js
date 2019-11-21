@@ -51,8 +51,9 @@ class InvalidNumberingError extends Error {
 }
 
 class GapMisMatchError extends Error {
-    constructor(...args) {
-        super(...args)
+    constructor(state, previousNumber, number) {
+        super('pre-condition: gap overlap in given numbers:'
+            + ` previousNumber=${previousNumber}, number=${number}, state=${state}`)
         Error.captureStackTrace(this, GapMisMatchError) // exclude this constructor from stack trace
     }
 }
@@ -119,7 +120,7 @@ class DuplicateMessageDetector {
             }
             if (previousNumber.greaterThanOrEqual(lowerBound)) {
                 if (number.greaterThan(upperBound)) {
-                    throw new GapMisMatchError('pre-condition: gap overlap in given numbers')
+                    throw new GapMisMatchError(this.toString(), previousNumber, number)
                 }
                 if (previousNumber.equalTo(lowerBound)) {
                     if (number.equalTo(upperBound)) {
@@ -144,7 +145,7 @@ class DuplicateMessageDetector {
                 return true
             }
             if (number.greaterThan(lowerBound)) {
-                throw new GapMisMatchError('pre-condition: gap overlap in given numbers')
+                throw new GapMisMatchError(this.toString(), previousNumber, number)
             }
         }
         return false
