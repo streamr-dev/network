@@ -86,8 +86,13 @@ class Storage {
     }
 
     requestLast(streamId, streamPartition, n) {
-        if (!Number.isInteger(n)) {
-            throw new Error('n is not an integer')
+        // TODO replace with protocol validations.js
+        if (!Number.isInteger(streamPartition) || parseInt(streamPartition) < 0) {
+            throw new Error('streamPartition must be >= 0')
+        }
+
+        if (!Number.isInteger(n) || parseInt(n) <= 0) {
+            throw new Error('LIMIT must be strictly positive')
         }
         const query = 'SELECT * FROM stream_data '
             + 'WHERE id = ? AND partition = ? '
@@ -116,11 +121,16 @@ class Storage {
     }
 
     requestFrom(streamId, streamPartition, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
-        if (!Number.isInteger(fromTimestamp)) {
-            throw new Error('fromTimestamp is not an integer')
+        // TODO replace with protocol validations.js
+        if (!Number.isInteger(streamPartition) || parseInt(streamPartition) < 0) {
+            throw new Error('streamPartition must be >= 0')
         }
-        if (fromSequenceNo != null && !Number.isInteger(fromSequenceNo)) {
-            throw new Error('fromSequenceNo is not an integer')
+
+        if (!Number.isInteger(fromTimestamp) || parseInt(fromTimestamp) <= 0) {
+            throw new Error('fromTimestamp must be strictly positive')
+        }
+        if (fromSequenceNo != null && (!Number.isInteger(fromSequenceNo) || parseInt(fromSequenceNo) <= 0)) {
+            throw new Error('fromSequenceNo must be strictly positive')
         }
 
         if (fromSequenceNo != null && publisherId != null && msgChainId != null) {
@@ -135,8 +145,13 @@ class Storage {
     }
 
     _fetchFromTimestamp(streamId, streamPartition, from) {
-        if (!Number.isInteger(from)) {
-            throw new Error('from is not an integer')
+        // TODO replace with protocol validations.js
+        if (!Number.isInteger(streamPartition) || parseInt(streamPartition) < 0) {
+            throw new Error('streamPartition must be >= 0')
+        }
+
+        if (!Number.isInteger(from) || Number.isInteger(from) <= 0) {
+            throw new Error('from must be strictly positive')
         }
 
         const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? ORDER BY ts ASC, sequence_no ASC'

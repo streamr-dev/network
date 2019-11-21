@@ -86,6 +86,17 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         await wait(1000)
     })
 
+    test('requestLast throws exception if limit is not strictly positive', async () => {
+        expect(() => storage.requestLast(streamId, -1, 0)).toThrow()
+        expect(() => storage.requestLast(streamId, 10, 0)).toThrow()
+        expect(() => storage.requestLast(streamId, 10, -1)).toThrow()
+    })
+
+    test('requestFrom throws exception if from is not strictly positive', async () => {
+        expect(() => storage.requestFrom(streamId, -10, 3000)).toThrow()
+        expect(() => storage.requestFrom(streamId, 10, -3000)).toThrow()
+    })
+
     test('store messages into Cassandra', async () => {
         const data = {
             hello: 'world',
