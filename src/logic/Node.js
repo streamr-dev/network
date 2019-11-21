@@ -23,7 +23,7 @@ const events = Object.freeze({
     NODE_UNSUBSCRIBED: 'streamr:node:node-unsubscribed',
     NODE_DISCONNECTED: 'streamr:node:node-disconnected',
     SUBSCRIPTION_REQUEST: 'streamr:node:subscription-received',
-    MESSAGE_DELIVERY_FAILED: 'streamr:node:message-delivery-failed',
+    RESEND_REQUEST_RECEIVED: 'streamr:node:resend-request-received',
 })
 
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
@@ -127,6 +127,8 @@ class Node extends EventEmitter {
             source === null ? 'local' : `from ${source}`,
             request.constructor.name,
             request.subId)
+        this.emit(events.RESEND_REQUEST_RECEIVED, request, source)
+
         const requestStream = this.resendHandler.handleRequest(request, source)
         if (source != null) {
             proxyRequestStream(
@@ -347,6 +349,7 @@ class Node extends EventEmitter {
 
     onNodeDisconnected(node) {
         this.metrics.inc('onNodeDisconnected')
+        this.resendHandler.cancelResendsOfNode(node)
         this.streams.removeNodeFromAllStreams(node)
         this.debug('removed all subscriptions of node %s', node)
         this._sendStatusToAllTrackers()

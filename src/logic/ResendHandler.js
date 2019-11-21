@@ -1,5 +1,36 @@
 const { Readable } = require('stream')
 
+class ResendBookkeeper {
+    constructor() {
+        this.resends = {} // nodeId => Set[Ctx]
+    }
+
+    add(node, ctx) {
+        if (this.resends[node] == null) {
+            this.resends[node] = new Set()
+        }
+        this.resends[node].add(ctx)
+    }
+
+    popContexts(node) {
+        if (this.resends[node] == null) {
+            return []
+        }
+        const contexts = this.resends[node]
+        delete this.resends[node]
+        return contexts
+    }
+
+    delete(node, ctx) {
+        if (this.resends[node] != null) {
+            this.resends[node].delete(ctx)
+            if (this.resends[node].size === 0) {
+                delete this.resends[node]
+            }
+        }
+    }
+}
+
 class ResendHandler {
     constructor(resendStrategies, notifyError) {
         if (resendStrategies == null) {
@@ -11,6 +42,7 @@ class ResendHandler {
 
         this.resendStrategies = [...resendStrategies]
         this.notifyError = notifyError
+        this.ongoingResends = new ResendBookkeeper()
     }
 
     handleRequest(request, source) {
@@ -22,7 +54,14 @@ class ResendHandler {
         return requestStream
     }
 
+    cancelResendsOfNode(node) {
+        this.ongoingResends.popContexts(node).forEach((ctx) => ctx.cancel())
+    }
+
     stop() {
+        Object.keys(this.ongoingResends).forEach((node) => {
+            this.cancelResendsOfNode(node)
+        })
         this.resendStrategies.forEach((resendStrategy) => {
             if (resendStrategy.stop) {
                 resendStrategy.stop()
@@ -31,17 +70,33 @@ class ResendHandler {
     }
 
     async _loopThruResendStrategies(request, source, requestStream) {
-        let isRequestFulfilled = false
-
-        for (let i = 0; i < this.resendStrategies.length && !isRequestFulfilled; ++i) {
-            const responseStream = this.resendStrategies[i].getResendResponseStream(request, source)
-                .on('data', requestStream.push.bind(requestStream))
-
-            // eslint-disable-next-line no-await-in-loop
-            isRequestFulfilled = await this._readStreamUntilEndOrError(responseStream, request)
+        const ctx = {
+            stop: false,
+            responseStream: null,
+            cancel: () => {
+                ctx.stop = true
+                if (ctx.responseStream != null) {
+                    ctx.responseStream.destroy()
+                }
+            }
         }
+        this.ongoingResends.add(source, ctx)
 
-        requestStream.push(null)
+        try {
+            for (let i = 0; i < this.resendStrategies.length && !ctx.stop; ++i) {
+                ctx.responseStream = this.resendStrategies[i].getResendResponseStream(request, source)
+                    .on('data', requestStream.push.bind(requestStream))
+
+                // eslint-disable-next-line no-await-in-loop
+                if (await this._readStreamUntilEndOrError(ctx.responseStream, request)) {
+                    ctx.stop = true
+                }
+            }
+
+            requestStream.push(null)
+        } finally {
+            this.ongoingResends.delete(source, ctx)
+        }
     }
 
     _readStreamUntilEndOrError(responseStream, request) {

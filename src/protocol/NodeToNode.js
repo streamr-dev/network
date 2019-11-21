@@ -18,6 +18,7 @@ const events = Object.freeze({
     RESEND_RESPONSE: 'streamr:node-node:resend-response',
     UNICAST_RECEIVED: 'streamr:node-node:unicast-received'
 })
+
 const eventPerType = {}
 eventPerType[ControlLayer.BroadcastMessage.TYPE] = events.DATA_RECEIVED
 eventPerType[ControlLayer.UnicastMessage.TYPE] = events.UNICAST_RECEIVED
