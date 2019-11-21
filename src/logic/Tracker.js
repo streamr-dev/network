@@ -30,7 +30,7 @@ module.exports = class Tracker extends EventEmitter {
             throw new Error('Provided protocols are not correct')
         }
 
-        this.overlayPerStream = {} // streamKey => overlayTopology
+        this.overlayPerStream = {} // streamKey => overlayTopology, where streamKey = streamId::partition
         this.storageNodes = new Map()
 
         this.protocols = opts.protocols
@@ -183,6 +183,31 @@ module.exports = class Tracker extends EventEmitter {
         if (overlayTopology.isEmpty()) {
             delete this.overlayPerStream[streamKey]
         }
+    }
+
+    getTopology(streamId = null, partition = null) {
+        const topology = {}
+
+        let streamKeys = []
+
+        if (streamId && partition === null) {
+            streamKeys = Object.keys(this.overlayPerStream).filter((streamKey) => streamKey.includes(streamId))
+        } else {
+            let askedStreamKey = null
+            if (streamId && partition) {
+                askedStreamKey = new StreamIdAndPartition(streamId, parseInt(partition, 10))
+            }
+
+            streamKeys = askedStreamKey
+                ? Object.keys(this.overlayPerStream).filter((streamKey) => streamKey === askedStreamKey.toString())
+                : Object.keys(this.overlayPerStream)
+        }
+
+        streamKeys.forEach((streamKey) => {
+            topology[streamKey] = this.overlayPerStream[streamKey].state()
+        })
+
+        return topology
     }
 
     async getMetrics() {

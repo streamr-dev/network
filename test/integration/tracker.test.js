@@ -106,4 +106,127 @@ describe('check tracker, nodes and statuses from nodes', () => {
         subscriberTwo.unsubscribeFromStream(s2)
         await waitForCondition(() => tracker.overlayPerStream['stream-2::2'] === undefined)
     }, 10000)
+
+    it('tracker getTopology should report correct topology based on parameters and current state', async () => {
+        expect(tracker.getTopology()).toEqual({})
+        subscriberOne.addBootstrapTracker(tracker.getAddress())
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        expect(tracker.getTopology()).toEqual({
+            'stream-1::0': {
+                subscriberOne: [],
+            },
+            'stream-2::2': {
+                subscriberOne: [],
+            },
+        })
+        expect(tracker.getTopology('stream-1', null)).toEqual({
+            'stream-1::0': {
+                subscriberOne: [],
+            }
+        })
+
+        expect(tracker.getTopology('stream-2', 2)).toEqual({
+            'stream-2::2': {
+                subscriberOne: [],
+            }
+        })
+
+        subscriberTwo.addBootstrapTracker(tracker.getAddress())
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+
+        expect(tracker.getTopology()).toEqual({
+            'stream-1::0': {
+                subscriberOne: ['subscriberTwo'],
+                subscriberTwo: ['subscriberOne']
+            },
+            'stream-2::2': {
+                subscriberOne: ['subscriberTwo'],
+                subscriberTwo: ['subscriberOne']
+            }
+        })
+        expect(tracker.getTopology('stream-1', null)).toEqual({
+            'stream-1::0': {
+                subscriberOne: ['subscriberTwo'],
+                subscriberTwo: ['subscriberOne']
+            }
+        })
+
+        expect(tracker.getTopology('stream-2', 2)).toEqual({
+            'stream-2::2': {
+                subscriberOne: ['subscriberTwo'],
+                subscriberTwo: ['subscriberOne']
+            }
+        })
+
+        subscriberOne.unsubscribeFromStream(s1)
+        await waitForCondition(() => Object.keys(tracker.overlayPerStream['stream-1::0'].state()).length === 1)
+
+        expect(tracker.getTopology()).toEqual({
+            'stream-1::0': {
+                subscriberTwo: []
+            },
+            'stream-2::2': {
+                subscriberOne: ['subscriberTwo'],
+                subscriberTwo: ['subscriberOne']
+            }
+        })
+        expect(tracker.getTopology('stream-1', null)).toEqual({
+            'stream-1::0': {
+                subscriberTwo: []
+            }
+        })
+
+        expect(tracker.getTopology('stream-2', 2)).toEqual({
+            'stream-2::2': {
+                subscriberOne: ['subscriberTwo'],
+                subscriberTwo: ['subscriberOne']
+            }
+        })
+
+        subscriberOne.unsubscribeFromStream(s2)
+        await waitForCondition(() => Object.keys(tracker.overlayPerStream['stream-2::2'].state()).length === 1)
+
+        expect(tracker.getTopology()).toEqual({
+            'stream-1::0': {
+                subscriberTwo: []
+            },
+            'stream-2::2': {
+                subscriberTwo: []
+            }
+        })
+        expect(tracker.getTopology('stream-1', null)).toEqual({
+            'stream-1::0': {
+                subscriberTwo: []
+            }
+        })
+
+        expect(tracker.getTopology('stream-2', 2)).toEqual({
+            'stream-2::2': {
+                subscriberTwo: []
+            }
+        })
+
+        subscriberTwo.unsubscribeFromStream(s1)
+        await waitForCondition(() => tracker.overlayPerStream['stream-1::0'] === undefined)
+
+        expect(tracker.getTopology()).toEqual({
+            'stream-2::2': {
+                subscriberTwo: []
+            }
+        })
+        expect(tracker.getTopology('stream-1', null)).toEqual({})
+
+        expect(tracker.getTopology('stream-2', 2)).toEqual({
+            'stream-2::2': {
+                subscriberTwo: []
+            }
+        })
+
+        subscriberTwo.unsubscribeFromStream(s2)
+        await waitForCondition(() => tracker.overlayPerStream['stream-2::2'] === undefined)
+
+        expect(tracker.getTopology()).toEqual({})
+        expect(tracker.getTopology('stream-1', null)).toEqual({})
+        expect(tracker.getTopology('stream-2', 2)).toEqual({})
+    })
 })
