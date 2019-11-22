@@ -18,7 +18,7 @@ class ResendBookkeeper {
         }
         const contexts = this.resends[node]
         delete this.resends[node]
-        return contexts
+        return [...contexts]
     }
 
     delete(node, ctx) {
@@ -55,7 +55,9 @@ class ResendHandler {
     }
 
     cancelResendsOfNode(node) {
-        this.ongoingResends.popContexts(node).forEach((ctx) => ctx.cancel())
+        const contexts = this.ongoingResends.popContexts(node)
+        contexts.forEach((ctx) => ctx.cancel())
+        return contexts.map((ctx) => ctx.request)
     }
 
     stop() {
@@ -71,6 +73,7 @@ class ResendHandler {
 
     async _loopThruResendStrategies(request, source, requestStream) {
         const ctx = {
+            request,
             stop: false,
             responseStream: null,
             cancel: () => {

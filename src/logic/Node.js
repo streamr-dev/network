@@ -132,7 +132,16 @@ class Node extends EventEmitter {
         const requestStream = this.resendHandler.handleRequest(request, source)
         if (source != null) {
             proxyRequestStream(
-                (data) => this.protocols.nodeToNode.send(source, data),
+                async (data) => {
+                    try {
+                        await this.protocols.nodeToNode.send(source, data)
+                    } catch (e) {
+                        // TODO: catch specific error
+                        const requests = this.resendHandler.cancelResendsOfNode(source)
+                        console.warn('Failed to send resend response to %s,\n\tcancelling resends %j,\n\tError %s',
+                            source, requests, e)
+                    }
+                },
                 request,
                 requestStream
             )
