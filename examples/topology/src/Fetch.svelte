@@ -1,5 +1,5 @@
 <script>
-    export let trackerEndpoint
+    export let trackerEndpoint = ""
     export let handleFetch = () => {}
 </script>
 <div class="field is-horizontal">

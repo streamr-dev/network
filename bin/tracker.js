@@ -96,7 +96,8 @@ function startServer(tracker, endpointServerPort) {
         reply.send(tracker.getTopology(request.params.streamId, request.params.partition))
     })
 
-    fastify.listen(endpointServerPort, (err, address) => {
+    //
+    fastify.listen(endpointServerPort, '0.0.0.0', (err, address) => {
         if (err) {
             throw err
         }

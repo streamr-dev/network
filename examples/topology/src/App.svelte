@@ -8,7 +8,7 @@
 	let topology
 	let network
 	let streamList = []
-    let trackerEndpoint = "http://localhost:11111/topology/"
+	let trackerEndpointUrl = "http://localhost:11111/topology/"
 
 	let nodes = new vis.DataSet();
 	let edges = new vis.DataSet();
@@ -41,9 +41,9 @@
 	}
 
 	function handleFetch() {
-		fetch(trackerEndpoint).then(function(response) {
+		fetch(trackerEndpointUrl).then(function(response) {
 			if (response.status !== 200) {
-				let msg = `Error. Got status ${response.status} for ${trackerEndpoint}`
+				let msg = `Error. Got status ${response.status} for ${trackerEndpointUrl}`
 				console.error(msg)
 				alert(msg)
 			} else {
@@ -61,7 +61,7 @@
 
 <main>
     <h1 class="title">Streamr Network Topology</h1>
-    <Fetch trackerEndpoint={trackerEndpoint} handleFetch={handleFetch} />
+    <Fetch bind:trackerEndpoint={trackerEndpointUrl} handleFetch={handleFetch} />
     <div class="columns full">
         <div class="column is-one-fifth">
 			<StreamList streamList={streamList} buildNetwork={(stream) => buildNetwork(stream)} />
