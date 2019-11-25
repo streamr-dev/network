@@ -29,6 +29,21 @@ class ResendBookkeeper {
             }
         }
     }
+
+    size() {
+        return Object.values(this.resends).reduce((acc, ctxs) => acc + ctxs.size, 0)
+    }
+
+    meanAge() {
+        const now = Date.now()
+        const ages = []
+        Object.values(this.resends).forEach((ctxts) => {
+            ctxts.forEach((ctx) => {
+                ages.push(now - ctx.startTime)
+            })
+        })
+        return ages.length === 0 ? 0 : ages.reduce((acc, x) => acc + x, 0) / ages.length
+    }
 }
 
 class ResendHandler {
@@ -71,9 +86,17 @@ class ResendHandler {
         })
     }
 
+    metrics() {
+        return {
+            numOfOngoingResends: this.ongoingResends.size(),
+            meanAge: this.ongoingResends.meanAge()
+        }
+    }
+
     async _loopThruResendStrategies(request, source, requestStream) {
         const ctx = {
             request,
+            startTime: Date.now(),
             stop: false,
             responseStream: null,
             cancel: () => {

@@ -403,12 +403,14 @@ class Node extends EventEmitter {
         const processMetrics = await this.metrics.getPidusage()
         const nodeMetrics = this.metrics.report()
         const mainMetrics = this.metrics.prettify(endpointMetrics)
+        const resendMetrics = this.resendHandler.metrics()
 
         return {
             mainMetrics,
             endpointMetrics,
             processMetrics,
             nodeMetrics,
+            resendMetrics,
             messageBufferSize: this.messageBuffer.size(),
             seenButNotPropagated: this.seenButNotPropagated.length
         }

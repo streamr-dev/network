@@ -2,7 +2,7 @@ const { Readable } = require('stream')
 
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const intoStream = require('into-stream')
-const { waitForStreamToEnd } = require('streamr-test-utils')
+const { waitForStreamToEnd, wait } = require('streamr-test-utils')
 
 const ResendHandler = require('../../src/logic/ResendHandler')
 
@@ -312,5 +312,36 @@ describe('ResendHandler', () => {
                 'signature'
             )
         ))
+    })
+
+    test('metrics work', async () => {
+        resendHandler = new ResendHandler([{
+            getResendResponseStream: () => {
+                const s = new Readable({
+                    objectMode: true,
+                    read() {}
+                })
+                setTimeout(() => s.push(null), 10)
+                return s
+            }
+        }], notifyError)
+
+        expect(resendHandler.metrics()).toEqual({
+            meanAge: 0,
+            numOfOngoingResends: 0
+        })
+
+        const p1 = waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
+        const p2 = waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
+        expect(resendHandler.metrics()).toMatchObject({
+            meanAge: expect.any(Number),
+            numOfOngoingResends: 2
+        })
+
+        await Promise.all([p1, p2])
+        expect(resendHandler.metrics()).toEqual({
+            meanAge: 0,
+            numOfOngoingResends: 0
+        })
     })
 })
