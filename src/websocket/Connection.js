@@ -61,7 +61,7 @@ module.exports = class Connection {
             this.socket.send(serialized)
         } catch (e) {
             // TODO: hotfix, may need to do proper cleanup once we notice that connection is bad if library doesn't invoke close!
-            console.error(e)
+            console.error("Failed to send message to '%s' because of 'e'", this.id, e)
         }
     }
 
