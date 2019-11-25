@@ -129,8 +129,8 @@ class Storage {
         if (!Number.isInteger(fromTimestamp) || parseInt(fromTimestamp) <= 0) {
             throw new Error('fromTimestamp must be strictly positive')
         }
-        if (fromSequenceNo != null && (!Number.isInteger(fromSequenceNo) || parseInt(fromSequenceNo) <= 0)) {
-            throw new Error('fromSequenceNo must be strictly positive')
+        if (fromSequenceNo != null && (!Number.isInteger(fromSequenceNo) || parseInt(fromSequenceNo) < 0)) {
+            throw new Error('fromSequenceNo must be positive')
         }
 
         if (fromSequenceNo != null && publisherId != null && msgChainId != null) {

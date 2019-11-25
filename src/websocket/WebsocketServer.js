@@ -275,7 +275,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.handleResendRequest(connection, request, () => this.networkNode.requestResendLast(
             request.streamId,
             request.streamPartition,
-            request.subId, // TODO: should generate new here or use client-provided as is?
+            uuidv4(),
             request.numberLast,
         ))
     }
@@ -284,7 +284,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.handleResendRequest(connection, request, () => this.networkNode.requestResendFrom(
             request.streamId,
             request.streamPartition,
-            request.subId, // TODO: should generate new here or use client-provided as is?
+            uuidv4(),
             request.fromMsgRef.timestamp,
             request.fromMsgRef.sequenceNumber,
             request.publisherId,
@@ -296,7 +296,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.handleResendRequest(connection, request, () => this.networkNode.requestResendRange(
             request.streamId,
             request.streamPartition,
-            request.subId, // TODO: should generate new here or use client-provided as is?
+            uuidv4(),
             request.fromMsgRef.timestamp,
             request.fromMsgRef.sequenceNumber,
             request.toMsgRef.timestamp,
