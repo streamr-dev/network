@@ -41,6 +41,7 @@
 	}
 
 	function handleFetch() {
+		streamList = ['Loading...']
 		fetch(trackerEndpointUrl).then(function(response) {
 			if (response.status !== 200) {
 				let msg = `Error. Got status ${response.status} for ${trackerEndpointUrl}`
@@ -63,7 +64,7 @@
     <h1 class="title">Streamr Network Topology</h1>
     <Fetch bind:trackerEndpoint={trackerEndpointUrl} handleFetch={handleFetch} />
     <div class="columns full">
-        <div class="column is-one-fifth">
+		<div class="column is-one-third">
 			<StreamList streamList={streamList} buildNetwork={(stream) => buildNetwork(stream)} />
         </div>
         <div class="column is-fullheight">
