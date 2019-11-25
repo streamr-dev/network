@@ -55,7 +55,7 @@
     "pidusage": "^2.0.17",
     "speedometer": "^1.1.0",
     "streamr-client": "^2.2.7",
-    "streamr-client-protocol": "^2.2.15",
+    "streamr-client-protocol": "^3.0.0",
     "uuid": "^3.3.3"
   },
   "devDependencies": {
