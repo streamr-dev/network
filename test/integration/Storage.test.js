@@ -97,6 +97,16 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         expect(() => storage.requestFrom(streamId, 10, -3000)).toThrow()
     })
 
+    test('requestFrom and requestLast not throwing exception if timestamp is zero', async () => {
+        const a = storage.requestFrom(streamId, 0, 1)
+        const resultsA = await toArray(a)
+        expect(resultsA).toEqual([])
+
+        const b = storage.requestLast(streamId, 0, 1)
+        const resultsB = await toArray(b)
+        expect(resultsB).toEqual([])
+    })
+
     test('store messages into Cassandra', async () => {
         const data = {
             hello: 'world',

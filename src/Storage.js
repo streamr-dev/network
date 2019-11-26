@@ -117,8 +117,8 @@ class Storage extends EventEmitter {
             throw new Error('streamPartition must be >= 0')
         }
 
-        if (!Number.isInteger(fromTimestamp) || parseInt(fromTimestamp) <= 0) {
-            throw new Error('fromTimestamp must be strictly positive')
+        if (!Number.isInteger(fromTimestamp) || parseInt(fromTimestamp) < 0) {
+            throw new Error('fromTimestamp must be zero or positive')
         }
         if (fromSequenceNo != null && (!Number.isInteger(fromSequenceNo) || parseInt(fromSequenceNo) < 0)) {
             throw new Error('fromSequenceNo must be positive')
@@ -135,18 +135,18 @@ class Storage extends EventEmitter {
         throw new Error('Invalid combination of requestFrom arguments')
     }
 
-    _fetchFromTimestamp(streamId, streamPartition, from) {
+    _fetchFromTimestamp(streamId, streamPartition, fromTimestamp) {
         // TODO replace with protocol validations.js
         if (!Number.isInteger(streamPartition) || parseInt(streamPartition) < 0) {
             throw new Error('streamPartition must be >= 0')
         }
 
-        if (!Number.isInteger(from) || Number.isInteger(from) <= 0) {
-            throw new Error('from must be strictly positive')
+        if (!Number.isInteger(fromTimestamp) || Number.isInteger(fromTimestamp) < 0) {
+            throw new Error('fromTimestamp must be zero or positive')
         }
 
         const query = 'SELECT * FROM stream_data WHERE id = ? AND partition = ? AND ts >= ? ORDER BY ts ASC, sequence_no ASC'
-        const queryParams = [streamId, streamPartition, from]
+        const queryParams = [streamId, streamPartition, fromTimestamp]
         return this._queryWithStreamingResults(query, queryParams)
     }
 
