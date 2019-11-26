@@ -44,7 +44,7 @@
     "public-ip": "^3.2.0",
     "qs": "^6.9.1",
     "streamr-client": "^2.2.7",
-    "streamr-client-protocol": "^2.2.15",
+    "streamr-client-protocol": "^3.0.0",
     "streamr-network": "^17.1.1",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v16.4.0",
     "uuid": "^3.3.3",
