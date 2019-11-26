@@ -114,6 +114,7 @@ module.exports = async (config) => {
     )
     networkNode.addBootstrapTracker(config.network.tracker)
 
+    // Set up sentry logging
     if (config.sentry) {
         console.info('Starting Sentry with dns: %s', config.sentry)
         Sentry.init({
@@ -136,6 +137,7 @@ module.exports = async (config) => {
         })
     }
 
+    // Set up reporting to Streamr stream
     let client
     const { apiKey, streamId } = config.reporting
     if (config.reporting && streamId !== undefined && apiKey !== undefined) {
@@ -154,6 +156,7 @@ module.exports = async (config) => {
     const volumeLogger = new VolumeLogger(
         config.reporting.reportingIntervalSeconds,
         networkNode,
+        storages,
         client,
         streamId
     )

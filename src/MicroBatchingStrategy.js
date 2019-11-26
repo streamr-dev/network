@@ -61,6 +61,8 @@ class Batch {
         this.timeoutRef = null
         this.sharedContext = sharedContext
         this.committed = false
+        this.createdAt = Date.now()
+        this.retries = 0
         this._scheduleInsert()
     }
 
@@ -89,6 +91,7 @@ class Batch {
             await this.sharedContext.insert(this.streamMessages)
             this.resolve()
         } catch (e) {
+            this.retries += 1
             this._scheduleInsert()
         }
     }
@@ -129,6 +132,36 @@ class MicroBatchingStrategy {
     close() {
         this.allBatches.forEach((batch) => batch.cancel())
         this.batches = {}
+    }
+
+    metrics() {
+        const now = Date.now()
+        const totalBatches = this.allBatches.size
+        const meanBatchAge = [...this.allBatches].reduce((acc, batch) => acc + (now - batch.createdAt), 0)
+
+        let batchesWithFiveOrMoreRetries = 0
+        let batchesWithTenOrMoreRetries = 0
+        let batchesWithHundredOrMoreRetries = 0
+
+        this.allBatches.forEach((batch) => {
+            if (batch.retries >= 5) {
+                batchesWithFiveOrMoreRetries += 1
+                if (batch.retries >= 10) {
+                    batchesWithTenOrMoreRetries += 1
+                    if (batch.retries >= 100) {
+                        batchesWithHundredOrMoreRetries += 1
+                    }
+                }
+            }
+        })
+
+        return {
+            totalBatches,
+            meanBatchAge,
+            batchesWithFiveOrMoreRetries,
+            batchesWithTenOrMoreRetries,
+            batchesWithHundredOrMoreRetries
+        }
     }
 
     _cleanUp(key, batch) {

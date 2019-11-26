@@ -1,7 +1,7 @@
 const StreamrClient = require('streamr-client')
 
 module.exports = class VolumeLogger {
-    constructor(reportingIntervalSeconds = 60, networkNode = undefined, client = undefined, streamId = undefined) {
+    constructor(reportingIntervalSeconds = 60, networkNode = undefined, storages = [], client = undefined, streamId = undefined) {
         this.reportingIntervalSeconds = reportingIntervalSeconds
         this.connectionCountMQTT = 0
         this.connectionCountWS = 0
@@ -10,16 +10,32 @@ module.exports = class VolumeLogger {
         this.outCount = 0
         this.outBytes = 0
         this.totalBufferSize = 0
+        this.storageReadCount = 0
+        this.storageReadBytes = 0
+        this.storageWriteCount = 0
+        this.storageWriteBytes = 0
         this.lastVolumeStatistics = {}
         this.client = client
         this.streamId = streamId
         this.networkNode = networkNode
+        this.storages = storages
 
         if (this.reportingIntervalSeconds > 0) {
             this.interval = setInterval(async () => {
                 await this.reportAndReset()
             }, this.reportingIntervalSeconds * 1000)
         }
+
+        this.storages.forEach((storage) => {
+            storage.on('read', (streamMessage) => {
+                this.storageReadCount += 1
+                this.storageReadBytes += streamMessage.getContent().length
+            })
+            storage.on('write', (streamMessage) => {
+                this.storageWriteCount += 1
+                this.storageWriteBytes += streamMessage.getContent().length
+            })
+        })
     }
 
     logInput(bytes) {
@@ -38,8 +54,17 @@ module.exports = class VolumeLogger {
         const kbInPerSecond = (this.inBytes / this.reportingIntervalSeconds) / 1000
         const kbOutPerSecond = (this.outBytes / this.reportingIntervalSeconds) / 1000
 
+        const storageReadCountPerSecond = this.storageReadCount / this.reportingIntervalSeconds
+        const storageWriteCountPerSecond = this.storageWriteCount / this.reportingIntervalSeconds
+        const storageReadKbPerSecond = (this.storageReadBytes / this.reportingIntervalSeconds) / 1000
+        const storageWriteKbPerSecond = (this.storageWriteBytes / this.reportingIntervalSeconds) / 1000
+
         const networkMetrics = await this.networkNode.getMetrics()
         const connectionCount = this.connectionCountWS + this.connectionCountMQTT
+
+        const storageMisc = this.storages.length === 0 ? {} : Object.assign({}, ...this.storages.map((storage) => ({
+            [storage.constructor.name]: storage.metrics()
+        })))
 
         this.lastVolumeStatistics = {
             id: this.networkNode.opts.id,
@@ -56,25 +81,61 @@ module.exports = class VolumeLogger {
                 eventsPerSecond: Math.round(outPerSecond),
                 kbPerSecond: Math.round(kbOutPerSecond),
             },
+            storage: {
+                read: {
+                    eventsPerSecond: Math.round(storageReadCountPerSecond),
+                    kbPerSecond: Math.round(storageReadKbPerSecond)
+                },
+                write: {
+                    eventsPerSecond: Math.round(storageWriteCountPerSecond),
+                    kbPerSecond: Math.round(storageWriteKbPerSecond)
+                },
+                misc: storageMisc
+            }
+        }
+
+        function formatNumber(n) {
+            return n < 10 ? n.toFixed(1) : Math.round(n)
         }
 
         console.log(
-            'Connections: %d, Broker messages in/sec: %d, Broker messages out/sec: %d, '
-            + 'Network messages in/sec: %d, Network messages out/sec: %d, '
-            + 'Network IN bytes/second: %d, Network OUT bytes/second: %d',
+            'Report\n'
+            + '\tBroker connections: %d\n'
+            + '\tBroker in: %d events/s, %d kb/s\n'
+            + '\tBroker out: %d events/s, %d kb/s\n'
+            + '\tNetwork in: %d events/s, %d kb/s\n'
+            + '\tNetwork out: %d events/s, %d kb/s\n'
+            + '\tStorage read: %d events/s, %d kb/s\n'
+            + '\tStorage write: %d events/s, %d kb/s\n'
+            + '\tTotal ongoing resends: %d (mean age %d ms)\n'
+            + '\tTotal batches: %d (mean age %d ms)\n',
             connectionCount,
-            inPerSecond < 10 ? inPerSecond.toFixed(1) : Math.round(inPerSecond),
-            outPerSecond < 10 ? outPerSecond.toFixed(1) : Math.round(outPerSecond),
+            formatNumber(inPerSecond),
+            formatNumber(kbInPerSecond),
+            formatNumber(outPerSecond),
+            formatNumber(kbOutPerSecond),
             networkMetrics.mainMetrics.msgInSpeed,
-            networkMetrics.mainMetrics.msgOutSpeed,
             networkMetrics.mainMetrics.inSpeed,
+            networkMetrics.mainMetrics.msgOutSpeed,
             networkMetrics.mainMetrics.outSpeed,
+            formatNumber(storageReadCountPerSecond),
+            formatNumber(storageReadKbPerSecond),
+            formatNumber(storageWriteCountPerSecond),
+            formatNumber(storageWriteKbPerSecond),
+            networkMetrics.resendMetrics.numOfOngoingResends,
+            networkMetrics.resendMetrics.meanAge,
+            storageMisc.Storage && storageMisc.Storage.storeStrategy ? storageMisc.Storage.storeStrategy.totalBatches : 0,
+            storageMisc.Storage && storageMisc.Storage.storeStrategy ? storageMisc.Storage.storeStrategy.meanBatchAge : 0
         )
 
         this.inCount = 0
         this.outCount = 0
         this.inBytes = 0
         this.outBytes = 0
+        this.storageReadCount = 0
+        this.storageReadBytes = 0
+        this.storageWriteCount = 0
+        this.storageWriteBytes = 0
 
         this._sendReport({
             broker: this.lastVolumeStatistics,

@@ -1,4 +1,5 @@
 const { Readable, Transform } = require('stream')
+const EventEmitter = require('events')
 
 const merge2 = require('merge2')
 const cassandra = require('cassandra-driver')
@@ -50,29 +51,15 @@ const individualStore = (cassandraClient, insertStatement) => ({
             prepare: true,
         })
     },
-    close: () => {}
+    close: () => {},
+    metrics: () => {}
 })
 
-const parseRow = (row) => {
-    const streamMessage = StreamMessageFactory.deserialize(row.payload.toString())
-    return {
-        streamId: streamMessage.getStreamId(),
-        streamPartition: streamMessage.getStreamPartition(),
-        timestamp: streamMessage.getTimestamp(),
-        sequenceNo: streamMessage.getSequenceNumber(),
-        publisherId: streamMessage.getPublisherId(),
-        msgChainId: streamMessage.getMsgChainId(),
-        previousTimestamp: streamMessage.prevMsgRef ? streamMessage.prevMsgRef.timestamp : null,
-        previousSequenceNo: streamMessage.prevMsgRef ? streamMessage.prevMsgRef.sequenceNumber : null,
-        data: streamMessage.getParsedContent(),
-        signature: streamMessage.signature,
-        signatureType: streamMessage.signatureType,
-    }
-}
-
-class Storage {
+class Storage extends EventEmitter {
     constructor(cassandraClient, useTtl, isBatching = true) {
+        super()
         this.cassandraClient = cassandraClient
+
         const insertStatement = useTtl ? INSERT_STATEMENT_WITH_TTL : INSERT_STATEMENT
         if (isBatching) {
             this.storeStrategy = batchingStore(cassandraClient, insertStatement)
@@ -82,7 +69,9 @@ class Storage {
     }
 
     store(streamMessage) {
-        return this.storeStrategy.store(streamMessage)
+        const p = this.storeStrategy.store(streamMessage)
+        p.then(() => this.emit('write', streamMessage), () => {})
+        return p
     }
 
     requestLast(streamId, streamPartition, n) {
@@ -110,7 +99,9 @@ class Storage {
             prepare: true,
         })
             .then((resultSet) => {
-                resultSet.rows.reverse().forEach((r) => readableStream.push(parseRow(r)))
+                resultSet.rows.reverse().forEach((r) => {
+                    readableStream.push(this._parseRow(r))
+                })
                 readableStream.push(null)
             })
             .catch((err) => {
@@ -249,6 +240,12 @@ class Storage {
         return merge2(stream1, stream2, stream3)
     }
 
+    metrics() {
+        return {
+            storeStrategy: this.storeStrategy.metrics()
+        }
+    }
+
     close() {
         this.storeStrategy.close()
         return this.cassandraClient.shutdown()
@@ -261,9 +258,27 @@ class Storage {
         }).pipe(new Transform({
             objectMode: true,
             transform: (row, _, done) => {
-                done(null, parseRow(row))
+                done(null, this._parseRow(row))
             },
         }))
+    }
+
+    _parseRow(row) {
+        const streamMessage = StreamMessageFactory.deserialize(row.payload.toString())
+        this.emit('read', streamMessage)
+        return {
+            streamId: streamMessage.getStreamId(),
+            streamPartition: streamMessage.getStreamPartition(),
+            timestamp: streamMessage.getTimestamp(),
+            sequenceNo: streamMessage.getSequenceNumber(),
+            publisherId: streamMessage.getPublisherId(),
+            msgChainId: streamMessage.getMsgChainId(),
+            previousTimestamp: streamMessage.prevMsgRef ? streamMessage.prevMsgRef.timestamp : null,
+            previousSequenceNo: streamMessage.prevMsgRef ? streamMessage.prevMsgRef.sequenceNumber : null,
+            data: streamMessage.getParsedContent(),
+            signature: streamMessage.signature,
+            signatureType: streamMessage.signatureType,
+        }
     }
 }
 
