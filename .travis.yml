@@ -1,6 +1,6 @@
 language: node_js
 node_js:
-- 10.15.3
+- 10.17.0
 sudo: true
 branches:
   only:
@@ -85,19 +85,5 @@ jobs:
       region: eu-west-1
       skip_cleanup: true
       local_dir: upload
-      on:
-        tags: true
-  - stage: Build docker (dev)
-    if: NOT type IN (pull_request)
-    install: true
-    env:
-    - OWNER=streamr
-    - IMAGE_NAME=tracker
-    - TAG=dev
-    script:
-    - docker build -t $OWNER/$IMAGE_NAME:$TAG --build-arg NPM_TOKEN=${NPM_TOKEN} .
-    deploy:
-    - provider: script
-      script: bash .travis_scripts/deploy_docker.sh staging
       on:
         tags: true
