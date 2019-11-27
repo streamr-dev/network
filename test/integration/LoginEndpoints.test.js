@@ -23,7 +23,7 @@ describe('LoginEndpoints', () => {
     })
 
     afterAll(async (done) => {
-        await client.disconnect()
+        await client.ensureDisconnected()
         done()
     })
 
