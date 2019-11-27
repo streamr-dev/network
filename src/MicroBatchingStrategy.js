@@ -137,7 +137,11 @@ class MicroBatchingStrategy {
     metrics() {
         const now = Date.now()
         const totalBatches = this.allBatches.size
-        const meanBatchAge = [...this.allBatches].reduce((acc, batch) => acc + (now - batch.createdAt), 0)
+        const meanBatchAge = totalBatches === 0 ? 0
+            : [...this.allBatches].reduce((acc, batch) => acc + (now - batch.createdAt), 0) / totalBatches
+        const meanBatchRetries = totalBatches === 0 ? 0
+            : [...this.allBatches].reduce((acc, batch) => acc + batch.retries, 0) / totalBatches
+        const currentCommitInterval = this.sharedContext.getCommitIntervalInMs()
 
         let batchesWithFiveOrMoreRetries = 0
         let batchesWithTenOrMoreRetries = 0
@@ -156,8 +160,10 @@ class MicroBatchingStrategy {
         })
 
         return {
+            currentCommitInterval,
             totalBatches,
             meanBatchAge,
+            meanBatchRetries,
             batchesWithFiveOrMoreRetries,
             batchesWithTenOrMoreRetries,
             batchesWithHundredOrMoreRetries
