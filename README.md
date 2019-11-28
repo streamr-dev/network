@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.com/streamr-dev/streamr-client-protocol-js.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-protocol-js)
 
-This repository contains ES6 JS implementations of the Streamr [protocol](PROTOCOL.md) messages. This is shared code used by:
+This repository contains ES6 JS implementations of the Streamr [protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages. This is shared code used by:
  
  - [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript)
  - [data-api](https://github.com/streamr-dev/data-api)
@@ -10,11 +10,11 @@ This repository contains ES6 JS implementations of the Streamr [protocol](PROTOC
 
 ### Usage
 
-This section describes how to use the Javascript implementation of the [protocol](PROTOCOL.md).
+This section describes how to use the Javascript implementation of the [protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md).
 
 #### Creating messages from arguments
 
-Every message type from both the Control Layer and the Message Layer is defined as a class and has a static `create` method that takes class-specific arguments to build an instance of the latest version of the message type. The arguments for each message type are defined in the [protocol documentation](PROTOCOL.md) and in the definition of the `create` method.
+Every message type from both the Control Layer and the Message Layer is defined as a class and has a static `create` method that takes class-specific arguments to build an instance of the latest version of the message type. The arguments for each message type are defined in the [protocol documentation](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) and in the definition of the `create` method.
 
 This example shows how to build a `StreamMessage` and encapsulate it in a  `UnicastMessage`.
 

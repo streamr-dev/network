@@ -14,7 +14,7 @@ describe('ResendRequestV0', () => {
             const result = new ResendRequestV0(...ResendRequestV0.getConstructorArgs(msg))
             assert.equal(result.streamId, msg.stream)
             assert.equal(result.streamPartition, msg.partition)
-            assert.equal(result.subId, msg.sub)
+            assert.equal(result.requestId, msg.sub)
             assert.deepEqual(result.resendOptions, {
                 resend_all: true,
             })

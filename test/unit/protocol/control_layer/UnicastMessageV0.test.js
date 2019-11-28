@@ -7,12 +7,12 @@ import UnicastMessageV0 from '../../../../src/protocol/control_layer/unicast_mes
 describe('UnicastMessageV0', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
-            const arr = ['subId', [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
+            const arr = ['requestId', [30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
                 StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']]
             const streamMsg = StreamMessageFactory.deserialize(arr[1])
             const result = new UnicastMessageV0(streamMsg, arr[0])
             assert(result.payload instanceof StreamMessageV30)
-            assert.strictEqual(result.subId, 'subId')
+            assert.strictEqual(result.requestId, 'requestId')
         })
     })
     describe('serialize', () => {

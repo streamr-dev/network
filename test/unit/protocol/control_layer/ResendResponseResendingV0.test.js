@@ -7,14 +7,14 @@ describe('ResendResponseResendingV0', () => {
             const array = [null, {
                 stream: 'streamId',
                 partition: 0,
-                sub: 'subId',
+                sub: 'requestId',
             }]
             const result = new ResendResponseResendingV0(...ResendResponseResendingV0.getConstructorArgs(array))
             assert(result instanceof ResendResponseResendingV0)
             assert.equal(result.subId, null)
             assert.equal(result.payload.streamId, 'streamId')
             assert.equal(result.payload.streamPartition, 0)
-            assert.equal(result.payload.subId, 'subId')
+            assert.equal(result.payload.requestId, 'requestId')
         })
     })
     describe('serialize', () => {
@@ -22,15 +22,15 @@ describe('ResendResponseResendingV0', () => {
             const arr = [0, 4, null, {
                 stream: 'streamId',
                 partition: 0,
-                sub: 'subId',
+                sub: 'requestId',
             }]
-            const serialized = new ResendResponseResendingV0('streamId', 0, 'subId').serialize()
+            const serialized = new ResendResponseResendingV0('streamId', 0, 'requestId').serialize()
             assert(typeof serialized === 'string')
             assert.deepEqual(arr, JSON.parse(serialized))
         })
         it('correctly serializes messages to version 1', () => {
-            const arr = [1, 4, 'streamId', 0, 'subId']
-            const serialized = new ResendResponseResendingV0('streamId', 0, 'subId').serialize(1)
+            const arr = [1, 4, 'streamId', 0, 'requestId']
+            const serialized = new ResendResponseResendingV0('streamId', 0, 'requestId').serialize(1)
             assert(typeof serialized === 'string')
             assert.deepEqual(arr, JSON.parse(serialized))
         })

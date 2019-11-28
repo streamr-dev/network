@@ -9,10 +9,10 @@ describe('UnicastMessage', () => {
         it('should create the latest version', () => {
             const streamMessage = StreamMessageFactory.deserialize([30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
                 [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'])
-            const msg = UnicastMessage.create('subId', streamMessage)
+            const msg = UnicastMessage.create('requestId', streamMessage)
             assert(msg instanceof UnicastMessageV1)
             assert(msg.streamMessage instanceof StreamMessage)
-            assert.strictEqual(msg.subId, 'subId')
+            assert.strictEqual(msg.requestId, 'requestId')
         })
     })
 })

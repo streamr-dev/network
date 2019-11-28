@@ -7,16 +7,16 @@ import ResendResponseNoResendV0 from './ResendResponseNoResendV0'
 const VERSION = 1
 
 export default class ResendResponseNoResendV1 extends ResendResponseNoResend {
-    constructor(streamId, streamPartition, subId) {
+    constructor(streamId, streamPartition, requestId) {
         super(VERSION)
 
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
-        validateIsNotEmptyString('subId', subId)
+        validateIsNotEmptyString('requestId', requestId)
 
         this.streamId = streamId
         this.streamPartition = streamPartition
-        this.subId = subId
+        this.requestId = requestId
     }
 
     toArray() {
@@ -24,14 +24,14 @@ export default class ResendResponseNoResendV1 extends ResendResponseNoResend {
         array.push(...[
             this.streamId,
             this.streamPartition,
-            this.subId,
+            this.requestId,
         ])
         return array
     }
 
     toOtherVersion(version) {
         if (version === 0) {
-            return new ResendResponseNoResendV0(this.streamId, this.streamPartition, this.subId)
+            return new ResendResponseNoResendV0(this.streamId, this.streamPartition, this.requestId)
         }
         throw new UnsupportedVersionError(version, 'Supported versions: [0, 1]')
     }

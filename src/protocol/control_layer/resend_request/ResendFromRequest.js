@@ -10,9 +10,9 @@ export default class ResendFromRequest extends ControlMessage {
         super(version, TYPE)
     }
 
-    static create(streamId, streamPartition, subId, msgRefArgsArray, publisherId, msgChainId, sessionToken) {
+    static create(streamId, streamPartition, requestId, msgRefArgsArray, publisherId, msgChainId, sessionToken) {
         const C = ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE)
-        return new C(streamId, streamPartition, subId, msgRefArgsArray, publisherId, msgChainId, sessionToken)
+        return new C(streamId, streamPartition, requestId, msgRefArgsArray, publisherId, msgChainId, sessionToken)
     }
 }
 

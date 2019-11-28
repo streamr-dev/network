@@ -17,7 +17,7 @@ export default class BroadcastMessageV0 extends BroadcastMessage {
     toArray(messageLayerVersion) {
         const array = super.toArray()
         array.push(...[
-            null, // subId
+            null, // requestId
             JSON.parse(this.payload.serialize(messageLayerVersion)),
         ])
         return array

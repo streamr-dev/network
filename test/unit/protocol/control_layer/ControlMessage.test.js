@@ -99,21 +99,21 @@ const examplesByTypeV0 = {
 const examplesByTypeV1 = {
     '0': [1, 0, [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
         [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']],
-    '1': [1, 1, 'subId', [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
+    '1': [1, 1, 'requestId', [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
         [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature']],
     '2': [1, 2, 'streamId', 0],
     '3': [1, 3, 'streamId', 0],
-    '4': [1, 4, 'streamId', 0, 'subId'],
-    '5': [1, 5, 'streamId', 0, 'subId'],
-    '6': [1, 6, 'streamId', 0, 'subId'],
+    '4': [1, 4, 'streamId', 0, 'requestId'],
+    '5': [1, 5, 'streamId', 0, 'requestId'],
+    '6': [1, 6, 'streamId', 0, 'requestId'],
     '7': [1, 7, 'errorMessage'],
     '8': [1, 8, [30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'], [1529549961000, 0],
         StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'], 'sessionToken'],
     '9': [1, 9, 'streamId', 0, 'sessionToken'],
     '10': [1, 10, 'streamId', 0],
-    '11': [1, 11, 'streamId', 0, 'subId', 100, 'sessionToken'],
-    '12': [1, 12, 'streamId', 0, 'subId', [132846894, 0], 'publisherId', 'msgChainId', 'sessionToken'],
-    '13': [1, 13, 'streamId', 0, 'subId', [132846894, 0], [132847000, 0], 'publisherId', 'msgChainId', 'sessionToken'],
+    '11': [1, 11, 'streamId', 0, 'requestId', 100, 'sessionToken'],
+    '12': [1, 12, 'streamId', 0, 'requestId', [132846894, 0], 'publisherId', 'msgChainId', 'sessionToken'],
+    '13': [1, 13, 'streamId', 0, 'requestId', [132846894, 0], [132847000, 0], 'publisherId', 'msgChainId', 'sessionToken'],
 }
 
 describe('ControlMessage', () => {

@@ -17,7 +17,7 @@ export default class ErrorResponseV0 extends ErrorResponse {
     toArray() {
         const array = super.toArray()
         array.push(...[
-            null, // subId
+            null, // requestId
             this.payload.toObject(),
         ])
         return array
@@ -31,7 +31,7 @@ export default class ErrorResponseV0 extends ErrorResponse {
     }
 
     static getConstructorArgs(array) {
-        const errorObject = array[1] // index 0 is the null subId
+        const errorObject = array[1] // index 0 is the null requestId
         const payload = ErrorPayload.deserialize(errorObject)
         return [payload.error]
     }

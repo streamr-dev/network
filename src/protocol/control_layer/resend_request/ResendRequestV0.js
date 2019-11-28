@@ -6,12 +6,12 @@ const TYPE = 'resend'
 const VERSION = 0
 
 export default class ResendRequestV0 extends ControlMessage {
-    constructor(streamId, streamPartition, subId, resendOptions, apiKey, sessionToken) {
+    constructor(streamId, streamPartition, requestId, resendOptions, apiKey, sessionToken) {
         super(VERSION, TYPE)
 
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
-        validateIsNotEmptyString('subId', subId)
+        validateIsNotEmptyString('requestId', requestId)
         validateIsString('apiKey', apiKey, true)
         validateIsString('sessionToken', sessionToken, true)
         if (!resendOptions.resend_all && !resendOptions.resend_last
@@ -23,7 +23,7 @@ export default class ResendRequestV0 extends ControlMessage {
         this.apiKey = apiKey
         this.sessionToken = sessionToken
         this.streamPartition = streamPartition
-        this.subId = subId
+        this.requestId = requestId
         this.resendOptions = resendOptions
     }
 
@@ -34,7 +34,7 @@ export default class ResendRequestV0 extends ControlMessage {
             authKey: this.apiKey,
             sessionToken: this.sessionToken,
             partition: this.streamPartition,
-            sub: this.subId,
+            sub: this.requestId,
             ...this.resendOptions,
         }
     }

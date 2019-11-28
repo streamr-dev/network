@@ -5,11 +5,11 @@ import ResendResponseNoResendV1 from '../../../../src/protocol/control_layer/res
 describe('ResendResponseNoResend', () => {
     describe('create', () => {
         it('should create the latest version', () => {
-            const msg = ResendResponseNoResend.create('streamId', 0, 'subId')
+            const msg = ResendResponseNoResend.create('streamId', 0, 'requestId')
             assert(msg instanceof ResendResponseNoResendV1)
             assert.equal(msg.streamId, 'streamId')
             assert.equal(msg.streamPartition, 0)
-            assert.equal(msg.subId, 'subId')
+            assert.equal(msg.requestId, 'requestId')
         })
     })
 })

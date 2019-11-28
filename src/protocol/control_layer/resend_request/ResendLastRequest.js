@@ -10,8 +10,8 @@ export default class ResendLastRequest extends ControlMessage {
         super(version, TYPE)
     }
 
-    static create(streamId, streamPartition, subId, numberLast, sessionToken) {
-        return new (ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE))(streamId, streamPartition, subId, numberLast, sessionToken)
+    static create(streamId, streamPartition, requestId, numberLast, sessionToken) {
+        return new (ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE))(streamId, streamPartition, requestId, numberLast, sessionToken)
     }
 }
 

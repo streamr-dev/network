@@ -5,12 +5,12 @@ import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 describe('ResendFromRequestV1', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
-            const arr = ['streamId', 0, 'subId', [132846894, 0], 'publisherId', 'msgChainId', 'sessionToken']
+            const arr = ['streamId', 0, 'requestId', [132846894, 0], 'publisherId', 'msgChainId', 'sessionToken']
             const result = new ResendFromRequestV1(...arr)
             assert(result instanceof ResendFromRequestV1)
             assert.equal(result.streamId, 'streamId')
             assert.equal(result.streamPartition, 0)
-            assert.equal(result.subId, 'subId')
+            assert.equal(result.requestId, 'requestId')
             assert(result.fromMsgRef instanceof MessageRef)
             assert.equal(result.fromMsgRef.timestamp, 132846894)
             assert.equal(result.fromMsgRef.sequenceNumber, 0)
@@ -21,9 +21,9 @@ describe('ResendFromRequestV1', () => {
     })
     describe('serialize', () => {
         it('correctly serializes messages', () => {
-            const arr = [1, 12, 'streamId', 0, 'subId', [132846894, 0], 'publisherId', 'msgChainId', 'sessionToken']
+            const arr = [1, 12, 'streamId', 0, 'requestId', [132846894, 0], 'publisherId', 'msgChainId', 'sessionToken']
             const serialized = new ResendFromRequestV1(
-                'streamId', 0, 'subId', [132846894, 0], 'publisherId',
+                'streamId', 0, 'requestId', [132846894, 0], 'publisherId',
                 'msgChainId', 'sessionToken',
             ).serialize()
             assert(typeof serialized === 'string')

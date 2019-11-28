@@ -15,7 +15,7 @@ export default class SubscribeResponseV0 extends SubscribeResponse {
     toArray() {
         const array = super.toArray()
         array.push(...[
-            null, // subId
+            null, // requestId
             this.payload.toObject(),
         ])
         return array
@@ -29,7 +29,7 @@ export default class SubscribeResponseV0 extends SubscribeResponse {
     }
 
     static getConstructorArgs(array) {
-        const streamPartitionObject = array[1] // index 0 is the null subId
+        const streamPartitionObject = array[1] // index 0 is the null requestId
         const payload = StreamAndPartition.deserialize(streamPartitionObject)
         return [payload.streamId, payload.streamPartition]
     }

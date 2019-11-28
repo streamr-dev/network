@@ -10,9 +10,9 @@ export default class ResendRangeRequest extends ControlMessage {
         super(version, TYPE)
     }
 
-    static create(streamId, streamPartition, subId, fromMsgRefArgsArray, toMsgRefArgsArray, publisherId, msgChainId, sessionToken) {
+    static create(streamId, streamPartition, requestId, fromMsgRefArgsArray, toMsgRefArgsArray, publisherId, msgChainId, sessionToken) {
         return new (ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE))(
-            streamId, streamPartition, subId, fromMsgRefArgsArray,
+            streamId, streamPartition, requestId, fromMsgRefArgsArray,
             toMsgRefArgsArray, publisherId, msgChainId, sessionToken,
         )
     }

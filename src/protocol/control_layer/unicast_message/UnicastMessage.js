@@ -4,19 +4,19 @@ import ControlMessage from '../ControlMessage'
 const TYPE = 1
 
 export default class UnicastMessage extends ControlMessage {
-    constructor(version, subId) {
+    constructor(version, requestId) {
         if (new.target === UnicastMessage) {
             throw new TypeError('UnicastMessage is abstract.')
         }
         super(version, TYPE)
-        validateIsNotEmptyString('subId', subId)
-        this.subId = subId
+        validateIsNotEmptyString('requestId', requestId)
+        this.requestId = requestId
     }
 
     toArray() {
         const array = super.toArray()
         array.push(...[
-            this.subId,
+            this.requestId,
         ])
         return array
     }
@@ -28,9 +28,9 @@ export default class UnicastMessage extends ControlMessage {
         return this.toOtherVersion(version, messageLayerVersion).serialize()
     }
 
-    static create(subId, streamMessage) {
+    static create(requestId, streamMessage) {
         const C = ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE)
-        return new C(subId, streamMessage)
+        return new C(requestId, streamMessage)
     }
 }
 
