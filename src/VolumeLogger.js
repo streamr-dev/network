@@ -59,8 +59,13 @@ module.exports = class VolumeLogger {
         const storageReadKbPerSecond = (this.storageReadBytes / this.reportingIntervalSeconds) / 1000
         const storageWriteKbPerSecond = (this.storageWriteBytes / this.reportingIntervalSeconds) / 1000
 
-        const networkMetrics = await this.networkNode.getMetrics()
         const connectionCount = this.connectionCountWS + this.connectionCountMQTT
+
+        const networkMetrics = await this.networkNode.getMetrics()
+        const networkInPerSecond = networkMetrics.mainMetrics.msgInSpeed
+        const networkOutPerSecond = networkMetrics.mainMetrics.msgOutSpeed
+        const networkKbInPerSecond = networkMetrics.mainMetrics.inSpeed / 1000
+        const networkKbOutPerSecond = networkMetrics.mainMetrics.outSpeed / 1000
 
         const storageMisc = this.storages.length === 0 ? {} : Object.assign({}, ...this.storages.map((storage) => ({
             [storage.constructor.name]: storage.metrics()
@@ -69,17 +74,29 @@ module.exports = class VolumeLogger {
         this.lastVolumeStatistics = {
             id: this.networkNode.opts.id,
             timestamp: Date.now(),
-            totalBufferSize: this.totalBufferSize,
-            connectionCount,
-            connectionCountMQTT: this.connectionCountMQTT,
-            connectionCountWS: this.connectionCountWS,
-            input: {
-                eventsPerSecond: Math.round(inPerSecond),
-                kbPerSecond: Math.round(kbInPerSecond),
+            network: {
+                input: {
+                    eventsPerSecond: Math.round(networkInPerSecond),
+                    kbPerSecond: Math.round(networkKbInPerSecond),
+                },
+                output: {
+                    eventsPerSecond: Math.round(networkOutPerSecond),
+                    kbInPerSecond: Math.round(networkKbOutPerSecond)
+                }
             },
-            output: {
-                eventsPerSecond: Math.round(outPerSecond),
-                kbPerSecond: Math.round(kbOutPerSecond),
+            broker: {
+                totalBufferSize: this.totalBufferSize,
+                connectionCount,
+                connectionCountMQTT: this.connectionCountMQTT,
+                connectionCountWS: this.connectionCountWS,
+                input: {
+                    eventsPerSecond: Math.round(inPerSecond),
+                    kbPerSecond: Math.round(kbInPerSecond),
+                },
+                output: {
+                    eventsPerSecond: Math.round(outPerSecond),
+                    kbPerSecond: Math.round(kbOutPerSecond),
+                },
             },
             storage: {
                 read: {
@@ -114,10 +131,10 @@ module.exports = class VolumeLogger {
             formatNumber(kbInPerSecond),
             formatNumber(outPerSecond),
             formatNumber(kbOutPerSecond),
-            networkMetrics.mainMetrics.msgInSpeed,
-            networkMetrics.mainMetrics.inSpeed,
-            networkMetrics.mainMetrics.msgOutSpeed,
-            networkMetrics.mainMetrics.outSpeed,
+            formatNumber(networkInPerSecond),
+            formatNumber(networkKbInPerSecond),
+            formatNumber(networkOutPerSecond),
+            formatNumber(networkKbOutPerSecond),
             formatNumber(storageReadCountPerSecond),
             formatNumber(storageReadKbPerSecond),
             formatNumber(storageWriteCountPerSecond),
