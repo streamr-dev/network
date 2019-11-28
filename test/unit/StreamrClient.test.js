@@ -71,14 +71,14 @@ describe('StreamrClient', () => {
         return sub
     }
 
-    function msg(streamId = 'stream1', content = {}, subId) {
+    function msg(streamId = 'stream1', content = {}, requestId) {
         const timestamp = Date.now()
         const streamMessage = StreamMessage.create(
             [streamId, 0, timestamp, 0, '', ''], [timestamp - 100, 0],
             StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.NONE, content, StreamMessage.SIGNATURE_TYPES.NONE,
         )
-        if (subId !== undefined) {
-            return UnicastMessage.create(subId, streamMessage)
+        if (requestId !== undefined) {
+            return UnicastMessage.create(requestId, streamMessage)
         }
 
         return BroadcastMessage.create(streamMessage)
@@ -114,20 +114,23 @@ describe('StreamrClient', () => {
 
         c.send = (msgToSend) => {
             const next = c.expectedMessagesToSend.shift()
-            assert.deepEqual(
-                msgToSend, next,
-                `Sending unexpected message: ${JSON.stringify(msgToSend)}
-                Expected: ${JSON.stringify(next)}
-                Queue: ${JSON.stringify(c.expectedMessagesToSend)}`,
-            )
+            next.verificationFunction(msgToSend, next.msgToExpect)
         }
 
         c.emitMessage = (message) => {
             c.emit(message.type, message)
         }
 
-        c.expect = (msgToExpect) => {
-            c.expectedMessagesToSend.push(msgToExpect)
+        c.expect = (msgToExpect, verificationFunction = (msgToSend, expected) => assert.deepEqual(
+            msgToSend, expected,
+            `Sending unexpected message: ${JSON.stringify(msgToSend)}
+                Expected: ${JSON.stringify(expected)}
+                Queue: ${JSON.stringify(c.expectedMessagesToSend)}`,
+        )) => {
+            c.expectedMessagesToSend.push({
+                msgToExpect,
+                verificationFunction,
+            })
         }
 
         c.checkSentMessages = () => {
@@ -194,9 +197,9 @@ describe('StreamrClient', () => {
                 connection.expect(SubscribeRequest.create('stream1', 0, 'session-token'))
 
                 client.subscribe('stream1', () => {})
-                await client.connect()
+                await client.ensureConnected()
                 await connection.disconnect()
-                return client.connect()
+                return client.ensureConnected()
             })
 
             it('should not subscribe to unsubscribed streams on reconnect', (done) => {
@@ -255,13 +258,13 @@ describe('StreamrClient', () => {
                     },
                 })
                 sub.once('subscribed', () => {
-                    setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, sub.id)), 200)
+                    setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, '0')), 200)
                     setTimeout(() => {
                         sub.stop()
                         done()
                     }, STORAGE_DELAY + 200)
                 })
-                connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 1, 'session-token'))
+                connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '0', 1, 'session-token'))
                 connection.emitMessage(SubscribeResponse.create(sub.streamId))
             }, STORAGE_DELAY + 1000)
 
@@ -282,14 +285,21 @@ describe('StreamrClient', () => {
                 }, () => {})
 
                 sub1.once('subscribed', () => {
-                    setTimeout(() => connection.emitMessage(msg(sub1.streamId, {}, sub1.id)), 200)
+                    setTimeout(() => connection.emitMessage(msg(sub1.streamId, {}, '0')), 200)
                 })
                 sub2.once('subscribed', () => {
-                    setTimeout(() => connection.emitMessage(msg(sub2.streamId, {}, sub2.id)), 200)
+                    setTimeout(() => connection.emitMessage(msg(sub2.streamId, {}, '1')), 200)
                 })
 
-                connection.expect(ResendLastRequest.create(sub1.streamId, sub1.streamPartition, sub1.id, 2, 'session-token'))
-                connection.expect(ResendLastRequest.create(sub2.streamId, sub2.streamPartition, sub2.id, 1, 'session-token'))
+                const compFunction = (m1, m2) => {
+                    assert.deepStrictEqual(m1.streamId, m2.streamId, 'wrong stream id')
+                    assert.deepStrictEqual(m1.streamPartition, m2.streamPartition, 'wrong stream partition')
+                    assert.deepStrictEqual(m1.numberLast, m2.numberLast, 'wrong numberLast')
+                    assert.deepStrictEqual(m1.sessionToken, m2.sessionToken, 'wrong session token')
+                }
+
+                connection.expect(ResendLastRequest.create(sub1.streamId, sub1.streamPartition, '0', 2, 'session-token'), compFunction)
+                connection.expect(ResendLastRequest.create(sub2.streamId, sub2.streamPartition, '0', 1, 'session-token'), compFunction)
 
                 connection.emitMessage(SubscribeResponse.create(sub1.streamId))
                 setTimeout(() => {
@@ -304,7 +314,7 @@ describe('StreamrClient', () => {
             // Before each test, client is connected, subscribed, and unsubscribe() is called
             let sub
             beforeEach(async () => {
-                await client.connect()
+                await client.ensureConnected()
                 sub = setupSubscription('stream1')
 
                 sub.on('subscribed', () => {
@@ -398,7 +408,12 @@ describe('StreamrClient', () => {
 
             beforeEach(async () => {
                 await client.connect()
-                sub = setupSubscription('stream1')
+                sub = setupSubscription('stream1', true, {
+                    resend: {
+                        last: 5,
+                    },
+                })
+                connection.expect(ResendLastRequest.create('stream1', 0, '0', 5, 'session-token'))
             })
 
             it('should call the message handler of specified Subscription', () => {
@@ -409,15 +424,14 @@ describe('StreamrClient', () => {
                 const sub2 = setupSubscription('stream1')
                 sub2.handleResentMessage = sinon.stub().throws()
 
-                const msg1 = msg(sub.streamId, {}, sub.id)
-                connection.emitMessage(msg1, sub.id)
-
+                const msg1 = msg(sub.streamId, {}, '0')
+                connection.emitMessage(msg1)
                 sinon.assert.calledWithMatch(sub.handleResentMessage, msg1.streamMessage, sinon.match.func)
             })
 
             it('ignores messages for unknown Subscriptions', () => {
                 sub.handleResentMessage = sinon.stub().throws()
-                connection.emitMessage(msg(sub.streamId, {}, 'unknown subId'), 'unknown subId')
+                connection.emitMessage(msg(sub.streamId, {}, 'unknown subId'))
             })
 
             it('should ensure that the promise returned by the verification function is cached', (done) => {
@@ -427,8 +441,8 @@ describe('StreamrClient', () => {
                     assert.strictEqual(firstResult, verifyFn())
                     done()
                 }
-                const msg1 = msg(sub.streamId, {}, sub.id)
-                connection.emitMessage(msg1, sub.id)
+                const msg1 = msg(sub.streamId, {}, '0')
+                connection.emitMessage(msg1)
             })
         })
 
@@ -437,18 +451,27 @@ describe('StreamrClient', () => {
 
             beforeEach(async () => {
                 await client.connect()
-                sub = setupSubscription('stream1')
+                sub = setupSubscription('stream1', true, {
+                    resend: {
+                        last: 5,
+                    },
+                })
+                connection.expect(ResendLastRequest.create('stream1', 0, '0', 5, 'session-token'))
             })
 
             it('emits event on associated subscription', () => {
                 sub.handleResending = sinon.stub()
-                const resendResponse = ResendResponseResending.create(sub.streamId, sub.streamPartition, sub.id)
+                const resendResponse = ResendResponseResending.create(sub.streamId, sub.streamPartition, '0')
                 connection.emitMessage(resendResponse)
                 sinon.assert.calledWith(sub.handleResending, resendResponse)
             })
-            it('ignores messages for unknown subscriptions', () => {
+            it('emits error when unknown request id', (done) => {
                 sub.handleResending = sinon.stub().throws()
-                const resendResponse = ResendResponseResending.create(sub.streamId, sub.streamPartition, 'unknown subid')
+                const resendResponse = ResendResponseResending.create(sub.streamId, sub.streamPartition, 'unknown request id')
+                client.on('error', (err) => {
+                    assert.deepStrictEqual(err.message, `Received unexpected ResendResponseResendingV1 message ${resendResponse.serialize()}`)
+                    done()
+                })
                 connection.emitMessage(resendResponse)
             })
         })
@@ -458,18 +481,27 @@ describe('StreamrClient', () => {
 
             beforeEach(async () => {
                 await client.connect()
-                sub = setupSubscription('stream1')
+                sub = setupSubscription('stream1', true, {
+                    resend: {
+                        last: 5,
+                    },
+                })
+                connection.expect(ResendLastRequest.create('stream1', 0, '0', 5, 'session-token'))
             })
 
             it('calls event handler on subscription', () => {
                 sub.handleNoResend = sinon.stub()
-                const resendResponse = ResendResponseNoResend.create(sub.streamId, sub.streamPartition, sub.id)
+                const resendResponse = ResendResponseNoResend.create(sub.streamId, sub.streamPartition, '0')
                 connection.emitMessage(resendResponse)
                 sinon.assert.calledWith(sub.handleNoResend, resendResponse)
             })
-            it('ignores messages for unknown subscriptions', () => {
+            it('ignores messages for unknown subscriptions', (done) => {
                 sub.handleNoResend = sinon.stub().throws()
-                const resendResponse = ResendResponseNoResend.create(sub.streamId, sub.streamPartition, 'unknown subid')
+                const resendResponse = ResendResponseNoResend.create(sub.streamId, sub.streamPartition, 'unknown request id')
+                client.on('error', (err) => {
+                    assert.deepStrictEqual(err.message, `Received unexpected ResendResponseNoResendV1 message ${resendResponse.serialize()}`)
+                    done()
+                })
                 connection.emitMessage(resendResponse)
             })
         })
@@ -479,18 +511,27 @@ describe('StreamrClient', () => {
 
             beforeEach(async () => {
                 await client.connect()
-                sub = setupSubscription('stream1')
+                sub = setupSubscription('stream1', true, {
+                    resend: {
+                        last: 5,
+                    },
+                })
+                connection.expect(ResendLastRequest.create('stream1', 0, '0', 5, 'session-token'))
             })
 
             it('calls event handler on subscription', () => {
                 sub.handleResent = sinon.stub()
-                const resendResponse = ResendResponseResent.create(sub.streamId, sub.streamPartition, sub.id)
+                const resendResponse = ResendResponseResent.create(sub.streamId, sub.streamPartition, '0')
                 connection.emitMessage(resendResponse)
                 sinon.assert.calledWith(sub.handleResent, resendResponse)
             })
-            it('does not call event handler for unknown subscriptions', () => {
+            it('does not call event handler for unknown subscriptions', (done) => {
                 sub.handleResent = sinon.stub().throws()
-                const resendResponse = ResendResponseResent.create(sub.streamId, sub.streamPartition, 'unknown subid')
+                const resendResponse = ResendResponseResent.create(sub.streamId, sub.streamPartition, 'unknown request id')
+                client.on('error', (err) => {
+                    assert.deepStrictEqual(err.message, `Received unexpected ResendResponseResentV1 message ${resendResponse.serialize()}`)
+                    done()
+                })
                 connection.emitMessage(resendResponse)
             })
         })
@@ -667,14 +708,14 @@ describe('StreamrClient', () => {
                         },
                     })
                     sub.once('subscribed', () => {
-                        setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, sub.id)), 200)
+                        setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, '0')), 200)
                         setTimeout(() => {
                             sub.stop()
                             done()
                         }, STORAGE_DELAY + 200)
                     })
                     connection.expect(ResendFromRequest.create(
-                        sub.streamId, sub.streamPartition, sub.id, ref.toArray(),
+                        sub.streamId, sub.streamPartition, '0', ref.toArray(),
                         'publisherId', '1', 'session-token',
                     ))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
@@ -687,13 +728,13 @@ describe('StreamrClient', () => {
                         },
                     })
                     sub.once('subscribed', () => {
-                        setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, sub.id)), 200)
+                        setTimeout(() => connection.emitMessage(msg(sub.streamId, {}, '0')), 200)
                         setTimeout(() => {
                             sub.stop()
                             done()
                         }, STORAGE_DELAY + 200)
                     })
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
+                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '0', 5, 'session-token'))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
                 }, STORAGE_DELAY + 1000)
 
@@ -703,25 +744,25 @@ describe('StreamrClient', () => {
                             last: 5,
                         },
                     })
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
+                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '0', 5, 'session-token'))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
+                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '1', 5, 'session-token'))
                     setTimeout(() => {
                         sub.stop()
                         done()
                     }, STORAGE_DELAY + 200)
                 }, STORAGE_DELAY + 1000)
 
-                it('sends a second ResendLastRequests if no StreamMessage received and a ResendResponseNoResend received', (done) => {
+                it('sends a second ResendLastRequest if no StreamMessage received and a ResendResponseNoResend received', (done) => {
                     const sub = setupSubscription('stream1', false, {
                         resend: {
                             last: 5,
                         },
                     })
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
+                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '0', 5, 'session-token'))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
-                    connection.emitMessage(ResendResponseNoResend.create(sub.streamId, sub.streamPartition, sub.id))
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, sub.id, 5, 'session-token'))
+                    connection.emitMessage(ResendResponseNoResend.create(sub.streamId, sub.streamPartition, '0'))
+                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '1', 5, 'session-token'))
                     setTimeout(() => {
                         sub.stop()
                         done()
@@ -751,7 +792,7 @@ describe('StreamrClient', () => {
                         const fromRef = new MessageRef(1, 0)
                         const toRef = new MessageRef(5, 0)
                         connection.expect(ResendRangeRequest.create(
-                            sub.streamId, sub.streamPartition, sub.id,
+                            sub.streamId, sub.streamPartition, '0',
                             fromRef.toArray(), toRef.toArray(), 'publisherId', 'msgChainId', 'session-token',
                         ))
                         const fromRefObject = {
@@ -770,7 +811,7 @@ describe('StreamrClient', () => {
                         const fromRef = new MessageRef(1, 0)
                         const toRef = new MessageRef(5, 0)
                         connection.expect(ResendRangeRequest.create(
-                            sub.streamId, sub.streamPartition, sub.id,
+                            sub.streamId, sub.streamPartition, '0',
                             fromRef.toArray(), toRef.toArray(), 'publisherId', 'msgChainId', 'session-token',
                         ))
                         const fromRefObject = {

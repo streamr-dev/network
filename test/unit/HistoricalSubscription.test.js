@@ -9,7 +9,6 @@ import InvalidSignatureError from '../../src/errors/InvalidSignatureError'
 import VerificationFailedError from '../../src/errors/VerificationFailedError'
 import EncryptionUtil from '../../src/EncryptionUtil'
 import Subscription from '../../src/Subscription'
-import RealTimeSubscription from '../../src/RealTimeSubscription'
 
 const { StreamMessage } = MessageLayer
 
@@ -561,8 +560,9 @@ describe('HistoricalSubscription', () => {
             const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {
                 last: 1
             })
+            sub.addPendingResendRequestId('requestId')
             sub.on('resending', () => done())
-            sub.handleResending(ControlLayer.ResendResponseResending.create('streamId', 0, 'subId'))
+            sub.handleResending(ControlLayer.ResendResponseResending.create('streamId', 0, 'requestId'))
         })
     })
 
@@ -572,9 +572,10 @@ describe('HistoricalSubscription', () => {
             const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), handler, {
                 last: 1
             })
+            sub.addPendingResendRequestId('requestId')
             sub.on('resent', () => done())
             await sub.handleResentMessage(msg, sinon.stub().resolves(true))
-            sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'subId'))
+            sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
         })
 
         it('arms the Subscription to emit the resent event on last message (message handler completes AFTER resent)', async (done) => {
@@ -582,9 +583,10 @@ describe('HistoricalSubscription', () => {
             const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), handler, {
                 last: 1
             })
+            sub.addPendingResendRequestId('requestId')
             sub.on('resent', () => done())
             sub.handleResentMessage(msg, sinon.stub().resolves(true))
-            sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'subId'))
+            sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
         })
     })
 
@@ -593,8 +595,9 @@ describe('HistoricalSubscription', () => {
             const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {
                 last: 1
             })
+            sub.addPendingResendRequestId('requestId')
             sub.on('no_resend', () => done())
-            sub.handleNoResend(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'subId'))
+            sub.handleNoResend(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId'))
         })
     })
 })

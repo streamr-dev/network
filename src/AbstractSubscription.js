@@ -13,6 +13,7 @@ export default class AbstractSubscription extends Subscription {
     constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true) {
         super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
         this.callback = callback
+        this.pendingResendRequestIds = {}
         this.orderingUtil = (orderMessages) ? new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
             this._handleInOrder(orderedMessage)
         }, (from, to, publisherId, msgChainId) => {
@@ -35,6 +36,10 @@ export default class AbstractSubscription extends Subscription {
         this.on('error', () => {
             this._clearGaps()
         })
+    }
+
+    addPendingResendRequestId(requestId) {
+        this.pendingResendRequestIds[requestId] = true
     }
 
     _handleInOrder(orderedMessage) {
@@ -62,8 +67,8 @@ export default class AbstractSubscription extends Subscription {
 
     async handleResending(response) {
         return this._catchAndEmitErrors(() => {
-            if (!this.isResending()) {
-                throw new Error(`There should be no resend in progress, but received ResendResponseResending message ${response.serialize()}`)
+            if (!this.pendingResendRequestIds[response.subId]) { // TODO: use requestId
+                throw new Error(`Received unexpected ResendResponseResending message ${response.serialize()}`)
             }
             this.emit('resending', response)
         })
@@ -71,8 +76,8 @@ export default class AbstractSubscription extends Subscription {
 
     async handleResent(response) {
         return this._catchAndEmitErrors(async () => {
-            if (!this.isResending()) {
-                throw new Error(`There should be no resend in progress, but received ResendResponseResent message ${response.serialize()}`)
+            if (!this.pendingResendRequestIds[response.subId]) { // TODO: use response.requestId
+                throw new Error(`Received unexpected ResendResponseResent message ${response.serialize()}`)
             }
 
             if (!this._lastMessageHandlerPromise) {
@@ -84,6 +89,7 @@ export default class AbstractSubscription extends Subscription {
             try {
                 this.emit('resent', response)
             } finally {
+                delete this.pendingResendRequestIds[response.subId] // TODO: use response.requestId
                 this.finishResend()
             }
         })
@@ -91,12 +97,13 @@ export default class AbstractSubscription extends Subscription {
 
     async handleNoResend(response) {
         return this._catchAndEmitErrors(async () => {
-            if (!this.isResending()) {
-                throw new Error(`There should be no resend in progress, but received ResendResponseNoResend message ${response.serialize()}`)
+            if (!this.pendingResendRequestIds[response.subId]) { // TODO: use response.requestId
+                throw new Error(`Received unexpected ResendResponseNoResend message ${response.serialize()}`)
             }
             try {
                 this.emit('no_resend', response)
             } finally {
+                delete this.pendingResendRequestIds[response.subId] // TODO: use response.requestId
                 this.finishResend(true)
             }
         })

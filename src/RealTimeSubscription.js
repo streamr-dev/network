@@ -20,7 +20,9 @@ export default class RealTimeSubscription extends AbstractSubscription {
 
     finishResend() {
         this._lastMessageHandlerPromise = null
-        this.setResending(false)
+        if (Object.keys(this.pendingResendRequestIds).length === 0) {
+            this.setResending(false)
+        }
     }
 
     /* eslint-disable class-methods-use-this */

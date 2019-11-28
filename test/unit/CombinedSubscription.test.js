@@ -1,7 +1,7 @@
 import assert from 'assert'
 
 import sinon from 'sinon'
-import { MessageLayer } from 'streamr-client-protocol'
+import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 
 import CombinedSubscription from '../../src/CombinedSubscription'
 
@@ -27,6 +27,7 @@ describe('CombinedSubscription', () => {
         const sub = new CombinedSubscription(msg1.getStreamId(), msg1.getStreamPartition(), sinon.stub(), {
             last: 1
         }, {}, 100, 100)
+        sub.addPendingResendRequestId('requestId')
         sub.on('gap', (from, to, publisherId) => {
             assert.equal(from.timestamp, 1)
             assert.equal(from.sequenceNumber, 1)
@@ -38,9 +39,9 @@ describe('CombinedSubscription', () => {
                 done()
             }, 100)
         })
-        sub.handleResending()
+        sub.handleResending(ControlLayer.ResendResponseResending.create('streamId', 0, 'requestId'))
         sub.handleResentMessage(msg1, sinon.stub().resolves(true))
         sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
-        sub.handleResent()
+        sub.handleResent(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId'))
     })
 })
