@@ -3,8 +3,8 @@
 This repository contains ES6 JS implementations of the Streamr [protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages. This is shared code used by:
  
  - [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript)
- - [data-api](https://github.com/streamr-dev/data-api)
  - [broker](https://github.com/streamr-dev/broker)
+ - [network](https://github.com/streamr-dev/network)
  
  This package is available on npm as `streamr-client-protocol`.
 
@@ -80,3 +80,13 @@ if (controlMessage.type === UnicastMessage.TYPE) {
     throw new Error(`Unknown type: ${controlMessage.type}`)
 }
 ```
+
+## Publishing
+
+Publishing to NPM is automated via Travis CI. Follow the steps below to publish.
+
+1. Update version with either `npm version patch`, `npm version minor`, or `npm version major`. Use semantic versioning
+https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
+2. `git push --follow-tags`
+3. Wait for Travis CI to run tests
+4. If tests passed, Travis CI will publish the new version to NPM

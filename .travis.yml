@@ -1,14 +1,14 @@
 language: node_js
 node_js:
-  - '10'
-  - '8'
-sudo: true
+- '10'
+- '8'
 branches:
   only:
   - master
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
 before_install:
-- npm i -g npm@6.9.0
+- npm i -g npm@latest
+- npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 jobs:
   include:
   - stage: eslint
@@ -17,3 +17,9 @@ jobs:
   - stage: Unit tests
     script:
     - npm run test
+  - stage: publish
+    if: tag IS present
+    script: npm publish
+env:
+  global:
+    secure: P7rBJa0jFH64ZCLY4p0nS88Cdq5GcFSFRzEGqzL7mLbpgTgxY3XqTZulb10GNwc+/502RTXjrhgdjGN2EG75p951/n1GX1i/wxLtEgPaZhHslPB09XIfwrwDdR3Z+Dpn19leaaXDYjMTDw7CyT5B8Iydw+I+PkCc2fDYWXptT4K17jfVtn0krJno7pEN7AmkgQT315iq2JneQtOY1msur/36UYm+wTe2D5vkgcC9yUxg9pTKSubBTveEdNMG644N+EIkMff4ipt1PyjN9zr2SJCRSdbK2fQz0PpqSir/9w8Clw+ZQ/KR2c9TVsylxzXAquwxl3oh/H80PFfjkS2IKcwo4XndharBHLI8e1gGZ52vjwRP/JYwccOB7fCc/CrXgUYZ2W/6KZL0xJ0/aqGBCIBqO1jmpP93bGcXrtor8Aq2o7XB/SUcbes/yrQ6lYLrW5dcfcBhO8TBWDUbaWRcJOU4mr2x8H637v+OJKobdhols0T2sVH6idSh1GIGIdrbqAAnrH1LowlbXZ82oiqOBo01Sv42W3VDtyS7MAo16Zix7xW3au85wMGSE2buwXq9uY8t6Ey3VlVQA/CNNCgooqzOtalG1fBUGUZMOJajBg6YlCcwvkj5huh9ORqAd4OToWFDMKAizgtsmcRLpy8rHPFm6JaXaZE5ArLUKY1Ycm4=
