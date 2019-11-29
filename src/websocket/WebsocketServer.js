@@ -1,4 +1,4 @@
-const events = require('events')
+const { EventEmitter } = require('events')
 
 const uuidv4 = require('uuid/v4')
 const debug = require('debug')('streamr:WebsocketServer')
@@ -15,7 +15,7 @@ const StreamStateManager = require('../StreamStateManager')
 const Connection = require('./Connection')
 const FieldDetector = require('./FieldDetector')
 
-module.exports = class WebsocketServer extends events.EventEmitter {
+module.exports = class WebsocketServer extends EventEmitter {
     constructor(
         wss,
         port,
@@ -104,6 +104,17 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 debug('onNewClientConnection: socket "%s" connected', connection.id)
                 // eslint-disable-next-line no-param-reassign
                 ws.connectionId = connection.id
+
+                connection.on('forceClose', (err) => {
+                    try {
+                        connection.socket.close()
+                    } catch (e) {
+                        // no need to check this error
+                    } finally {
+                        debug('forceClose connection with id %s, because of %s', connection.id, err)
+                        this._removeConnection(connection)
+                    }
+                })
             },
             message: (ws, message, isBinary) => {
                 const connection = this.connections.get(ws.connectionId)
@@ -140,20 +151,25 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 const connection = this.connections.get(ws.connectionId)
 
                 if (connection) {
-                    this.connections.delete(connection.id)
                     debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
-                    this.volumeLogger.connectionCountWS = this.connections.size
-
-                    // Unsubscribe from all streams
-                    connection.forEachStream((stream) => {
-                        this.handleUnsubscribeRequest(
-                            connection,
-                            ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition),
-                            true,
-                        )
-                    })
+                    this._removeConnection(connection)
                 }
             }
+        })
+    }
+
+    _removeConnection(connection) {
+        // TODO cancel resends attached to this connection
+        this.connections.delete(connection)
+        this.volumeLogger.connectionCountWS = this.connections.size
+
+        // Unsubscribe from all streams
+        connection.forEachStream((stream) => {
+            this.handleUnsubscribeRequest(
+                connection,
+                ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition),
+                true,
+            )
         })
     }
 
@@ -163,10 +179,15 @@ module.exports = class WebsocketServer extends events.EventEmitter {
         this.streamAuthCache.reset()
 
         return new Promise((resolve, reject) => {
+            try {
+                this.connections.forEach((connection) => connection.socket.close())
+            } catch (e) {
+                // ignoring any error
+            }
+
             uWS.us_listen_socket_close(this._listenSocket)
             this._listenSocket = null
-            // uws has setTimeout(cb, 20000); in close event
-            setTimeout(() => resolve(), 3000)
+            resolve()
         })
     }
 
@@ -412,7 +433,7 @@ module.exports = class WebsocketServer extends events.EventEmitter {
             })
     }
 
-    handleUnsubscribeRequest(connection, request, noAck) {
+    handleUnsubscribeRequest(connection, request, noAck = false) {
         const stream = this.streams.get(request.streamId, request.streamPartition)
 
         if (stream) {
@@ -449,7 +470,9 @@ module.exports = class WebsocketServer extends events.EventEmitter {
                 'handleUnsubscribeRequest: stream "%s:%d" no longer exists',
                 request.streamId, request.streamPartition
             )
-            connection.sendError(`Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`)
+            if (!noAck) {
+                connection.sendError(`Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`)
+            }
         }
     }
 }

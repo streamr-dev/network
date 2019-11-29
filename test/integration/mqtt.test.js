@@ -62,7 +62,7 @@ describe('mqtt: end-to-end', () => {
         })
         freshStreamId1 = freshStream1.id
         freshStreamName1 = freshStream1.name
-    }, 10000)
+    }, 15000)
 
     afterEach(async () => {
         await Promise.all([
@@ -77,7 +77,7 @@ describe('mqtt: end-to-end', () => {
             broker2.close(),
             broker3.close()
         ])
-    }, 10000)
+    }, 15000)
 
     it('test not valid api key', async (done) => {
         const mqttClient = createMqttClient(mqttPort1, 'localhost', 'NOT_VALID_KEY')

@@ -1,3 +1,5 @@
+const { EventEmitter } = require('events')
+
 const debug = require('debug')('streamr:Connection')
 const qs = require('qs')
 const { ErrorResponse } = require('streamr-client-protocol').ControlLayer
@@ -10,8 +12,9 @@ function generateId() {
     return id
 }
 
-module.exports = class Connection {
+module.exports = class Connection extends EventEmitter {
     constructor(socket, socketRequest) {
+        super()
         this.id = generateId()
         this.socket = socket
         this.streams = []
@@ -60,8 +63,7 @@ module.exports = class Connection {
         try {
             this.socket.send(serialized)
         } catch (e) {
-            // TODO: hotfix, may need to do proper cleanup once we notice that connection is bad if library doesn't invoke close!
-            console.error("Failed to send message to '%s' because of 'e'", this.id, e)
+            this.emit('forceClose', e)
         }
     }
 
