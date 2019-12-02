@@ -147,7 +147,7 @@ export default class StreamrClient extends EventEmitter {
                         once(() => stream.verifyStreamMessage(msg.streamMessage)), // ensure verification occurs only once
                     )
                 } else {
-                    debug('WARN: request id not found for stream: %s, sub: %s', msg.streamMessage.getStreamId(), msg.subId) // TODO: msg.requestId
+                    debug('WARN: request id not found for stream: %s, sub: %s', msg.streamMessage.getStreamId(), msg.requestId)
                 }
             } else {
                 debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
@@ -185,7 +185,7 @@ export default class StreamrClient extends EventEmitter {
             if (stream && sub && stream.getSubscription(sub.id)) {
                 stream.getSubscription(sub.id).handleResending(response)
             } else {
-                debug('resent: Subscription %s is gone already', response.subId)
+                debug('resent: Subscription %s is gone already', response.requestId)
             }
         })
 
@@ -197,7 +197,7 @@ export default class StreamrClient extends EventEmitter {
             if (stream && sub && stream.getSubscription(sub.id)) {
                 stream.getSubscription(sub.id).handleNoResend(response)
             } else {
-                debug('resent: Subscription %s is gone already', response.subId)
+                debug('resent: Subscription %s is gone already', response.requestId)
             }
         })
 
@@ -209,7 +209,7 @@ export default class StreamrClient extends EventEmitter {
             if (stream && sub && stream.getSubscription(sub.id)) {
                 stream.getSubscription(sub.id).handleResent(response)
             } else {
-                debug('resent: Subscription %s is gone already', response.subId)
+                debug('resent: Subscription %s is gone already', response.requestId)
             }
         })
 

@@ -164,11 +164,11 @@ describe('Connection', () => {
                     assert(message instanceof UnicastMessage)
                     assert.equal(message.streamMessage.getTimestamp(), timestamp)
                     assert.equal(message.streamMessage.getParsedContent().hello, 'world')
-                    assert.equal(message.subId, 'subId')
+                    assert.equal(message.requestId, 'requestId')
                     done()
                 })
                 const message = UnicastMessage.create(
-                    'subId',
+                    'requestId',
                     StreamMessage.create(
                         ['streamId', 0, timestamp, 0, '', ''], [timestamp - 100, 0], StreamMessage.CONTENT_TYPES.MESSAGE,
                         StreamMessage.ENCRYPTION_TYPES.NONE, content, StreamMessage.SIGNATURE_TYPES.NONE,
@@ -187,7 +187,7 @@ describe('Connection', () => {
                 })
 
                 conn.socket.onmessage({
-                    data: [0, 1, 'subId', [30, ['streamId', 0, Date.now(), 0, '', ''], [Date.now() - 100, 0], 27, 'invalid json', 0]],
+                    data: [0, 1, 'requestId', [30, ['streamId', 0, Date.now(), 0, '', ''], [Date.now() - 100, 0], 27, 'invalid json', 0]],
                 })
             })
         })

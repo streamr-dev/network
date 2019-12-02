@@ -67,7 +67,7 @@ export default class AbstractSubscription extends Subscription {
 
     async handleResending(response) {
         return this._catchAndEmitErrors(() => {
-            if (!this.pendingResendRequestIds[response.subId]) { // TODO: use requestId
+            if (!this.pendingResendRequestIds[response.requestId]) {
                 throw new Error(`Received unexpected ResendResponseResending message ${response.serialize()}`)
             }
             this.emit('resending', response)
@@ -76,7 +76,7 @@ export default class AbstractSubscription extends Subscription {
 
     async handleResent(response) {
         return this._catchAndEmitErrors(async () => {
-            if (!this.pendingResendRequestIds[response.subId]) { // TODO: use response.requestId
+            if (!this.pendingResendRequestIds[response.requestId]) {
                 throw new Error(`Received unexpected ResendResponseResent message ${response.serialize()}`)
             }
 
@@ -89,7 +89,7 @@ export default class AbstractSubscription extends Subscription {
             try {
                 this.emit('resent', response)
             } finally {
-                delete this.pendingResendRequestIds[response.subId] // TODO: use response.requestId
+                delete this.pendingResendRequestIds[response.requestId]
                 this.finishResend()
             }
         })
@@ -97,13 +97,13 @@ export default class AbstractSubscription extends Subscription {
 
     async handleNoResend(response) {
         return this._catchAndEmitErrors(async () => {
-            if (!this.pendingResendRequestIds[response.subId]) { // TODO: use response.requestId
+            if (!this.pendingResendRequestIds[response.requestId]) {
                 throw new Error(`Received unexpected ResendResponseNoResend message ${response.serialize()}`)
             }
             try {
                 this.emit('no_resend', response)
             } finally {
-                delete this.pendingResendRequestIds[response.subId] // TODO: use response.requestId
+                delete this.pendingResendRequestIds[response.requestId]
                 this.finishResend(true)
             }
         })

@@ -3,10 +3,10 @@ import debugFactory from 'debug'
 
 const debug = debugFactory('StreamrClient::Subscription')
 
-let subId = 0
+let requestId = 0
 function generateSubscriptionId() {
-    const id = subId
-    subId += 1
+    const id = requestId
+    requestId += 1
     return id.toString()
 }
 

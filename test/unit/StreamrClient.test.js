@@ -431,7 +431,7 @@ describe('StreamrClient', () => {
 
             it('ignores messages for unknown Subscriptions', () => {
                 sub.handleResentMessage = sinon.stub().throws()
-                connection.emitMessage(msg(sub.streamId, {}, 'unknown subId'))
+                connection.emitMessage(msg(sub.streamId, {}, 'unknown requestId'))
             })
 
             it('should ensure that the promise returned by the verification function is cached', (done) => {
