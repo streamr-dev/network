@@ -260,6 +260,27 @@ describe('ResendHandler', () => {
         })
     })
 
+    test('destroying returned stream destroys (and closes) underlying response stream ', (done) => {
+        let underlyingResponeStream = null
+
+        resendHandler = new ResendHandler([{
+            getResendResponseStream: () => {
+                underlyingResponeStream = new Readable({
+                    objectMode: true,
+                    read() {}
+                })
+                return underlyingResponeStream
+            }
+        }], notifyError)
+
+        const requestStream = resendHandler.handleRequest(request, 'source')
+        requestStream.on('close', () => {
+            expect(underlyingResponeStream.destroyed).toEqual(true)
+            done()
+        })
+        requestStream.destroy()
+    })
+
     test('arguments to notifyError are formed correctly', async () => {
         resendHandler = new ResendHandler([{
             getResendResponseStream: () => intoStream.object(Promise.reject(new Error('yikes')))

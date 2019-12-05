@@ -109,6 +109,13 @@ class ResendHandler {
         this.ongoingResends.add(source, ctx)
 
         try {
+            // cancel resend if requestStream has been destroyed by user
+            requestStream.on('close', () => {
+                if (requestStream.destroyed) {
+                    ctx.cancel()
+                }
+            })
+
             for (let i = 0; i < this.resendStrategies.length && !ctx.stop; ++i) {
                 ctx.responseStream = this.resendStrategies[i].getResendResponseStream(request, source)
                     .on('data', requestStream.push.bind(requestStream))
