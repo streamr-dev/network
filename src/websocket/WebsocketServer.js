@@ -96,7 +96,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             /* Options */
             compression: 0,
             maxPayloadLength: 1024 * 1024,
-            idleTimeout: 0,
+            idleTimeout: 3600, // 1 hour
             open: (ws, req) => {
                 const connection = new Connection(ws, req)
                 this.connections.set(connection.id, connection)
