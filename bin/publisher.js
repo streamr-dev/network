@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-const util = require('util')
-
 const program = require('commander')
 const { MessageLayer } = require('streamr-client-protocol')
 
@@ -60,7 +58,7 @@ startNetworkNode(program.ip, program.port, publisherId)
 
         if (program.metrics) {
             setInterval(async () => {
-                console.log(util.inspect(await publisher.getMetrics(), false, null))
+                console.info(JSON.stringify(await publisher.getMetrics(), null, 3))
             }, 5000)
         }
     })

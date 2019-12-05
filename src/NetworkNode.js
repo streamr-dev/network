@@ -47,16 +47,16 @@ class NetworkNode extends Node {
         this.unsubscribeFromStream(new StreamIdAndPartition(streamId, streamPartition))
     }
 
-    requestResendLast(streamId, streamPartition, subId, number) {
-        const request = ControlLayer.ResendLastRequest.create(streamId, streamPartition, subId, number)
+    requestResendLast(streamId, streamPartition, requestId, number) {
+        const request = ControlLayer.ResendLastRequest.create(streamId, streamPartition, requestId, number)
         return this.requestResend(request, null)
     }
 
-    requestResendFrom(streamId, streamPartition, subId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
+    requestResendFrom(streamId, streamPartition, requestId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
         const request = ControlLayer.ResendFromRequest.create(
             streamId,
             streamPartition,
-            subId,
+            requestId,
             [fromTimestamp, fromSequenceNo],
             publisherId,
             msgChainId
@@ -66,7 +66,7 @@ class NetworkNode extends Node {
 
     requestResendRange(streamId,
         streamPartition,
-        subId,
+        requestId,
         fromTimestamp,
         fromSequenceNo,
         toTimestamp,
@@ -76,7 +76,7 @@ class NetworkNode extends Node {
         const request = ControlLayer.ResendRangeRequest.create(
             streamId,
             streamPartition,
-            subId,
+            requestId,
             [fromTimestamp, fromSequenceNo],
             [toTimestamp, toSequenceNo],
             publisherId,

@@ -2,7 +2,7 @@ const { Readable } = require('stream')
 
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const intoStream = require('into-stream')
-const { waitForStreamToEnd, wait } = require('streamr-test-utils')
+const { waitForStreamToEnd } = require('streamr-test-utils')
 
 const ResendHandler = require('../../src/logic/ResendHandler')
 
@@ -14,7 +14,7 @@ describe('ResendHandler', () => {
     let notifyError
 
     beforeEach(() => {
-        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10)
+        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'requestId', 10)
         notifyError = jest.fn()
     })
 
@@ -65,7 +65,7 @@ describe('ResendHandler', () => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => intoStream.object([
                     ControlLayer.UnicastMessage.create(
-                        'subId', StreamMessage.create(
+                        'requestId', StreamMessage.create(
                             ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
                             null,
                             StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -76,7 +76,7 @@ describe('ResendHandler', () => {
                         )
                     ),
                     ControlLayer.UnicastMessage.create(
-                        'subId', StreamMessage.create(
+                        'requestId', StreamMessage.create(
                             ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
                             null,
                             StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -107,7 +107,7 @@ describe('ResendHandler', () => {
 
                     setImmediate(() => stream.push(
                         ControlLayer.UnicastMessage.create(
-                            'subId', StreamMessage.create(
+                            'requestId', StreamMessage.create(
                                 ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
                                 null,
                                 StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -120,7 +120,7 @@ describe('ResendHandler', () => {
                     ))
                     setImmediate(() => stream.push(
                         ControlLayer.UnicastMessage.create(
-                            'subId', StreamMessage.create(
+                            'requestId', StreamMessage.create(
                                 ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
                                 null,
                                 StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -165,7 +165,7 @@ describe('ResendHandler', () => {
                     })
                     setImmediate(() => stream.push(
                         ControlLayer.UnicastMessage.create(
-                            'subId', StreamMessage.create(
+                            'requestId', StreamMessage.create(
                                 ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
                                 null,
                                 StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -186,7 +186,7 @@ describe('ResendHandler', () => {
             const thirdStrategy = {
                 getResendResponseStream: () => intoStream.object([
                     ControlLayer.UnicastMessage.create(
-                        'subId', StreamMessage.create(
+                        'requestId', StreamMessage.create(
                             ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
                             null,
                             StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -197,7 +197,7 @@ describe('ResendHandler', () => {
                         )
                     ),
                     ControlLayer.UnicastMessage.create(
-                        'subId', StreamMessage.create(
+                        'requestId', StreamMessage.create(
                             ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
                             null,
                             StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -233,7 +233,7 @@ describe('ResendHandler', () => {
             const firstStrategy = {
                 getResendResponseStream: () => intoStream.object([
                     ControlLayer.UnicastMessage.create(
-                        'subId', StreamMessage.create(
+                        'requestId', StreamMessage.create(
                             ['streamId', 0, 1000, 0, 'publisher', 'msgChain'],
                             null,
                             StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -271,7 +271,7 @@ describe('ResendHandler', () => {
             request: ControlLayer.ResendLastRequest.create(
                 'streamId',
                 0,
-                'subId',
+                'requestId',
                 10,
                 undefined
             ),
@@ -283,7 +283,7 @@ describe('ResendHandler', () => {
         resendHandler = new ResendHandler([{
             getResendResponseStream: () => intoStream.object([
                 ControlLayer.UnicastMessage.create(
-                    'subId', StreamMessage.create(
+                    'requestId', StreamMessage.create(
                         ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
                         [666, 50],
                         StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -300,7 +300,7 @@ describe('ResendHandler', () => {
         const streamAsArray = await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
 
         expect(streamAsArray[0]).toEqual(ControlLayer.UnicastMessage.create(
-            'subId', StreamMessage.create(
+            'requestId', StreamMessage.create(
                 ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
                 [666, 50],
                 StreamMessage.CONTENT_TYPES.MESSAGE,

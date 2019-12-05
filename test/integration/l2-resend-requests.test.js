@@ -116,7 +116,7 @@ describe('resend requests are fulfilled at L2', () => {
     })
 
     test('requestResendLast', async () => {
-        const stream = contactNode.requestResendLast('streamId', 0, 'subId', 10)
+        const stream = contactNode.requestResendLast('streamId', 0, 'requestId', 10)
         const events = await typesOfStreamItems(stream)
 
         expect(events).toEqual([
@@ -128,7 +128,7 @@ describe('resend requests are fulfilled at L2', () => {
         const stream = contactNode.requestResendFrom(
             'streamId',
             0,
-            'subId',
+            'requestId',
             666,
             0,
             'publisherId',
@@ -148,7 +148,7 @@ describe('resend requests are fulfilled at L2', () => {
         const stream = contactNode.requestResendRange(
             'streamId',
             0,
-            'subId',
+            'requestId',
             666,
             0,
             999,

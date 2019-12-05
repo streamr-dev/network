@@ -30,7 +30,7 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
     test('on receiving ResendLastRequest, storage#requestLast is invoked', async () => {
         storage.requestLast = jest.fn().mockReturnValueOnce(intoStream.object([]))
 
-        resendStrategy.getResendResponseStream(ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10))
+        resendStrategy.getResendResponseStream(ControlLayer.ResendLastRequest.create('streamId', 0, 'requestId', 10))
 
         expect(storage.requestLast.mock.calls).toEqual([
             ['streamId', 0, 10]
@@ -41,7 +41,7 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
         storage.requestFrom = jest.fn().mockReturnValueOnce(intoStream.object([]))
 
         resendStrategy.getResendResponseStream(ControlLayer.ResendFromRequest.create(
-            'streamId', 0, 'subId', [1555555555555, 0], 'publisherId', 'msgChainId'
+            'streamId', 0, 'requestId', [1555555555555, 0], 'publisherId', 'msgChainId'
         ))
 
         expect(storage.requestFrom.mock.calls).toEqual([
@@ -53,7 +53,7 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
         storage.requestRange = jest.fn().mockReturnValueOnce(intoStream.object([]))
 
         resendStrategy.getResendResponseStream(ControlLayer.ResendRangeRequest.create(
-            'streamId', 0, 'subId', [1555555555555, 0], [1555555555555, 1000], 'publisherId', 'msgChainId'
+            'streamId', 0, 'requestId', [1555555555555, 0], [1555555555555, 1000], 'publisherId', 'msgChainId'
         ))
 
         expect(storage.requestRange.mock.calls).toEqual([
@@ -88,12 +88,12 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
         ]))
 
         const responseStream = resendStrategy.getResendResponseStream(
-            ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10)
+            ControlLayer.ResendLastRequest.create('streamId', 0, 'requestId', 10)
         )
         const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([
             ControlLayer.UnicastMessage.create(
-                'subId', StreamMessage.create(
+                'requestId', StreamMessage.create(
                     ['streamId', 0, 0, 0, 'publisherId', 'msgChainId'],
                     null,
                     StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -106,7 +106,7 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
                 ),
             ),
             ControlLayer.UnicastMessage.create(
-                'subId', StreamMessage.create(
+                'requestId', StreamMessage.create(
                     ['streamId', 0, 10, 10, 'publisherId', 'msgChainId'],
                     [0, 0],
                     StreamMessage.CONTENT_TYPES.MESSAGE,
@@ -130,7 +130,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
         nodeToNode = new EventEmitter()
         getNeighbors = jest.fn()
         resendStrategy = new AskNeighborsResendStrategy(nodeToNode, getNeighbors, 2, TIMEOUT)
-        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10)
+        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'requestId', 10)
     })
 
     afterEach(() => {
@@ -226,7 +226,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
             jest.advanceTimersByTime(TIMEOUT - 1)
             nodeToNode.emit(
                 NodeToNode.events.RESEND_RESPONSE,
-                ControlLayer.ResendResponseResending.create('streamId', 0, 'subId'), 'neighbor-1'
+                ControlLayer.ResendResponseResending.create('streamId', 0, 'requestId'), 'neighbor-1'
             )
             jest.advanceTimersByTime(TIMEOUT - 1)
 
@@ -246,7 +246,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
             )
             nodeToNode.emit(
                 NodeToNode.events.UNICAST_RECEIVED,
-                ControlLayer.UnicastMessage.create('subId', streamMessage),
+                ControlLayer.UnicastMessage.create('requestId', streamMessage),
                 'neighbor-1',
             )
             jest.advanceTimersByTime(TIMEOUT - 1)
@@ -257,7 +257,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
         test('if neighbor responds with ResendResponseNoResend, move to next neighbor', () => {
             nodeToNode.emit(
                 NodeToNode.events.RESEND_RESPONSE,
-                ControlLayer.ResendResponseNoResend.create('streamId', 0, 'subId'), 'neighbor-1'
+                ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId'), 'neighbor-1'
             )
             expect(nodeToNode.send).toBeCalledTimes(2)
         })
@@ -265,7 +265,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
         test('if neighbor responds with ResendResponseResent, returned stream is closed', async () => {
             nodeToNode.emit(
                 NodeToNode.events.RESEND_RESPONSE,
-                ControlLayer.ResendResponseResent.create('streamId', 0, 'subId'), 'neighbor-1'
+                ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'), 'neighbor-1'
             )
 
             // eslint-disable-next-line no-underscore-dangle
@@ -284,7 +284,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
                     StreamMessage.SIGNATURE_TYPES.NONE,
                     null
                 )
-                return ControlLayer.UnicastMessage.create('subId', streamMessage)
+                return ControlLayer.UnicastMessage.create('requestId', streamMessage)
             }
 
             const u1 = createUnicastMessage(0)
@@ -301,7 +301,7 @@ describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
             nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u4, 'neighbor-1')
             nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u5, 'neighbor-1')
             nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE,
-                ControlLayer.ResendResponseResent.create('streamId', 0, 'subId'), 'neighbor-1')
+                ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'), 'neighbor-1')
 
             const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([u1, u2, u3, u4, u5])
@@ -323,7 +323,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
         getTracker = jest.fn()
         isSubscribedTo = jest.fn()
         resendStrategy = new StorageNodeResendStrategy(trackerNode, nodeToNode, getTracker, isSubscribedTo, TIMEOUT)
-        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'subId', 10)
+        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'requestId', 10)
     })
 
     afterEach(() => {
@@ -522,7 +522,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
             jest.advanceTimersByTime(TIMEOUT - 1)
             nodeToNode.emit(
                 NodeToNode.events.RESEND_RESPONSE,
-                ControlLayer.ResendResponseResending.create('streamId', 0, 'subId'), 'storageNode'
+                ControlLayer.ResendResponseResending.create('streamId', 0, 'requestId'), 'storageNode'
             )
             jest.advanceTimersByTime(TIMEOUT - 1)
 
@@ -541,7 +541,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
                 StreamMessage.SIGNATURE_TYPES.NONE,
                 null
             )
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ControlLayer.UnicastMessage.create('subId', streamMessage), 'storageNode')
+            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, ControlLayer.UnicastMessage.create('requestId', streamMessage), 'storageNode')
             jest.advanceTimersByTime(TIMEOUT - 1)
 
             // eslint-disable-next-line no-underscore-dangle
@@ -551,7 +551,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
         test('if storage node responds with ResendResponseNoResend, returned stream is closed', () => {
             nodeToNode.emit(
                 NodeToNode.events.RESEND_RESPONSE,
-                ControlLayer.ResendResponseNoResend.create('streamId', 0, 'subId'), 'storageNode'
+                ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId'), 'storageNode'
             )
             // eslint-disable-next-line no-underscore-dangle
             expect(responseStream._readableState.ended).toEqual(true)
@@ -568,7 +568,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
                     StreamMessage.SIGNATURE_TYPES.NONE,
                     null
                 )
-                return ControlLayer.UnicastMessage.create('subId', streamMessage)
+                return ControlLayer.UnicastMessage.create('requestId', streamMessage)
             }
 
             const u1 = createUnicastMessage(0)
@@ -585,7 +585,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
             nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u4, 'storageNode')
             nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u5, 'storageNode')
             nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE,
-                ControlLayer.ResendResponseResent.create('streamId', 0, 'subId'), 'storageNode')
+                ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'), 'storageNode')
 
             const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([u1, u2, u3, u4, u5])
@@ -615,7 +615,7 @@ describe('StorageNodeResendStrategy#getResendResponseStream', () => {
                 setImmediate(() => {
                     nodeToNode.emit(
                         NodeToNode.events.RESEND_RESPONSE,
-                        ControlLayer.ResendResponseResent.create('streamId', 0, 'subId'), 'storageNode'
+                        ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'), 'storageNode'
                     )
                 })
             })

@@ -16,7 +16,7 @@ describe('proxyRequestStream', () => {
 
     beforeEach(() => {
         sendFn = jest.fn()
-        request = ResendLastRequest.create('streamId', 0, 'subId', 10, 'sessionToken')
+        request = ResendLastRequest.create('streamId', 0, 'requestId', 10, 'sessionToken')
     })
 
     it('empty requestStream causes only NoResend to be sent', (done) => {
@@ -24,7 +24,7 @@ describe('proxyRequestStream', () => {
         proxyRequestStream(sendFn, request, stream)
         stream.on('end', () => {
             expect(sendFn.mock.calls).toEqual([
-                [ResendResponseNoResend.create('streamId', 0, 'subId')]
+                [ResendResponseNoResend.create('streamId', 0, 'requestId')]
             ])
             done()
         })
@@ -54,18 +54,18 @@ describe('proxyRequestStream', () => {
             }
         })
         const stream = intoStream.object([
-            UnicastMessage.create('subId', firstMessage),
-            UnicastMessage.create('subId', secondMessage)
+            UnicastMessage.create('requestId', firstMessage),
+            UnicastMessage.create('requestId', secondMessage)
         ])
 
         proxyRequestStream(sendFn, request, stream)
 
         stream.on('end', () => {
             expect(sendFn.mock.calls).toEqual([
-                [ResendResponseResending.create('streamId', 0, 'subId')],
-                [UnicastMessage.create('subId', firstMessage)],
-                [UnicastMessage.create('subId', secondMessage)],
-                [ResendResponseResent.create('streamId', 0, 'subId')],
+                [ResendResponseResending.create('streamId', 0, 'requestId')],
+                [UnicastMessage.create('requestId', firstMessage)],
+                [UnicastMessage.create('requestId', secondMessage)],
+                [ResendResponseResent.create('streamId', 0, 'requestId')],
             ])
             done()
         })

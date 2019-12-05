@@ -34,7 +34,7 @@ describe('encoder', () => {
     })
 
     it('check encoding WRAPPER', () => {
-        const payload = ControlLayer.ResendResponseNoResend.create('streamId', 0, 'subId')
+        const payload = ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId')
         const actual = encoder.wrapperMessage(payload)
         expect(JSON.parse(actual)).toEqual({
             code: encoder.WRAPPER,
@@ -46,7 +46,7 @@ describe('encoder', () => {
     })
 
     it('check decoding WRAPPER', () => {
-        const payload = ControlLayer.ResendResponseNoResend.create('streamId', 0, 'subId')
+        const payload = ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId')
         const wrapperMessage = encoder.decode('source', JSON.stringify({
             code: encoder.WRAPPER,
             version,

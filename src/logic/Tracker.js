@@ -105,7 +105,7 @@ module.exports = class Tracker extends EventEmitter {
                 this.overlayPerStream[streamKey] = new OverlayTopology(this.opts.maxNeighborsPerNode)
             }
 
-            newNode = this.overlayPerStream[streamKey].hasNode(node)
+            newNode = this.overlayPerStream[streamKey].hasNode(node) ? false : newNode
 
             const neighbors = new Set([...inboundNodes, ...outboundNodes])
 
@@ -118,7 +118,7 @@ module.exports = class Tracker extends EventEmitter {
             .filter(([streamKey, _]) => !currentStreamKeys.has(streamKey))
             .forEach(([streamKey, overlayTopology]) => this._leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node))
 
-        if (!newNode) {
+        if (newNode) {
             this.debug('registered new node %s for streams %j', node, Object.keys(streams))
         } else {
             this.debug('setup existing node %s for streams %j', node, Object.keys(streams))
@@ -131,9 +131,11 @@ module.exports = class Tracker extends EventEmitter {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
                 try {
+                    this.metrics.inc('sendInstruction')
                     await this.protocols.trackerServer.sendInstruction(nodeId, StreamIdAndPartition.fromKey(streamKey), newNeighbors)
                     this.debug('sent instruction %j for stream %s to node %s', newNeighbors, streamKey, nodeId)
                 } catch (e) {
+                    this.metrics.inc('sendInstruction:failed')
                     this.debug('failed to send instruction %j for stream %s to node %s because of %s', newNeighbors, streamKey, nodeId, e)
                 }
             })
@@ -159,9 +161,11 @@ module.exports = class Tracker extends EventEmitter {
                 if (streamsToSubscribe.length) {
                     streamsToSubscribe.forEach(async (streamKey) => {
                         try {
+                            this.metrics.inc('sendInstructionStorages')
                             await this.protocols.trackerServer.sendInstruction(storageNode, StreamIdAndPartition.fromKey(streamKey), [])
                             this.debug('sent instruction %j for stream %s to storage node %s', [], streamKey, storageNode)
                         } catch (e) {
+                            this.metrics.inc('sendInstructionStorages:failed')
                             this.debug('failed to send instruction %j for stream %s to storage node %s because of %s', [], streamKey, storageNode, e)
                         }
                     })

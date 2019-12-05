@@ -34,7 +34,7 @@ startNetworkNode(program.ip, program.port, id).then((subscriber) => {
 
     if (program.metrics) {
         setInterval(async () => {
-            console.log(util.inspect(await subscriber.getMetrics(), false, null))
+            console.info(JSON.stringify(await subscriber.getMetrics(), null, 3))
         }, 5000)
     }
 }).catch((err) => {

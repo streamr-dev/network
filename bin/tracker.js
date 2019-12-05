@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-const util = require('util')
-
 const program = require('commander')
 const StreamrClient = require('streamr-client')
 const Sentry = require('@sentry/node')
@@ -123,7 +121,7 @@ startTracker(program.ip, parseInt(program.port, 10), id, parseInt(program.maxNei
 
                 // output to console
                 if (program.metrics) {
-                    console.log(util.inspect(metrics, false, null))
+                    console.log(JSON.stringify(metrics, null, 3))
                 }
             }, program.metricsInterval)
         }

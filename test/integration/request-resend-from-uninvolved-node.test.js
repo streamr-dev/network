@@ -80,7 +80,7 @@ describe('request resend from uninvolved node', () => {
     })
 
     test('requesting resend from uninvolved node is fulfilled using l3', async () => {
-        const stream = uninvolvedNode.requestResendLast('streamId', 0, 'subId', 10)
+        const stream = uninvolvedNode.requestResendLast('streamId', 0, 'requestId', 10)
         const events = await typesOfStreamItems(stream)
 
         expect(events).toEqual([

@@ -115,7 +115,7 @@ class Node extends EventEmitter {
             try {
                 await this.protocols.nodeToNode.sendUnsubscribe(n, streamId)
             } catch (e) {
-                this.debug('failed to send unsubscribe request because of %s', e)
+                this.debug('unsubscribed, but failed to send unsubscribe request for the stream %s because of %j', streamId, e)
             }
         })
         this._sendStatusToAllTrackers()
@@ -123,10 +123,10 @@ class Node extends EventEmitter {
 
     requestResend(request, source) {
         this.metrics.inc('requestResend')
-        this.debug('received %s resend request %s with subId %s',
+        this.debug('received %s resend request %s with requestId %s',
             source === null ? 'local' : `from ${source}`,
             request.constructor.name,
-            request.subId)
+            request.requestId)
         this.emit(events.RESEND_REQUEST_RECEIVED, request, source)
 
         const requestStream = this.resendHandler.handleRequest(request, source)
@@ -163,13 +163,13 @@ class Node extends EventEmitter {
             try {
                 node = await this.protocols.nodeToNode.connectToNode(nodeAddress)
             } catch (e) {
-                this.debug('failed to connect to node at %s (%j)', nodeAddress, e)
+                this.debug('failed to connect to node at %s (%j), to subscribe streamId %s', nodeAddress, e, streamId)
                 return
             }
             try {
                 await this._subscribeToStreamOnNode(node, streamId)
             } catch (e) {
-                this.debug('failed to subscribe to node %s (%s)', node, e)
+                this.debug('failed to subscribe to node %s (%j), streamId %s', node, e, streamId)
                 return
             }
             nodeIds.push(node)
@@ -351,7 +351,7 @@ class Node extends EventEmitter {
     async _unsubscribeFromStreamOnNode(node, streamId) {
         this.streams.removeNodeFromStream(streamId, node)
         await this.protocols.nodeToNode.sendUnsubscribe(node, streamId).catch((err) => {
-            console.error(`Failed to unsubscribed from ${node} because '${err}'`)
+            console.error(`Failed to send unsubscribed from ${node} because '${err}'`)
         })
         this.debug('unsubscribed from node %s (tracker instruction)', node)
     }

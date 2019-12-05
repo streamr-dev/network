@@ -24,7 +24,7 @@ function toUnicastMessage(request) {
                 signatureType,
             } = streamData
             done(null, ControlLayer.UnicastMessage.create(
-                request.subId,
+                request.requestId,
                 StreamMessage.create(
                     [request.streamId, request.streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
                     previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
@@ -141,17 +141,17 @@ class ProxiedResend {
     }
 
     _onUnicast(unicastMessage, source) {
-        const { subId } = unicastMessage
-        if (this.request.subId === subId && this.currentNeighbor === source) {
+        const { requestId } = unicastMessage
+        if (this.request.requestId === requestId && this.currentNeighbor === source) {
             this.responseStream.push(unicastMessage)
             this._resetTimeout()
         }
     }
 
     _onResendResponse(response, source) {
-        const { subId } = response
+        const { requestId } = response
 
-        if (this.request.subId === subId && this.currentNeighbor === source) {
+        if (this.request.requestId === requestId && this.currentNeighbor === source) {
             if (response.type === ControlLayer.ResendResponseResent.TYPE) {
                 this._endStream()
             } else if (response.type === ControlLayer.ResendResponseNoResend.TYPE) {

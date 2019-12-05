@@ -103,7 +103,7 @@ describe('delivery of messages in protocol layer', () => {
             StreamMessage.SIGNATURE_TYPES.ETH_LEGACY,
             'signature'
         )
-        const unicastMessage = ControlLayer.UnicastMessage.create('subId', streamMessage)
+        const unicastMessage = ControlLayer.UnicastMessage.create('requestId', streamMessage)
         nodeToNode2.send('nodeToNode1', unicastMessage)
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.UNICAST_RECEIVED)
 
@@ -116,7 +116,7 @@ describe('delivery of messages in protocol layer', () => {
         })
         expect(msg.streamMessage.signature).toEqual('signature')
         expect(msg.streamMessage.signatureType).toEqual(1)
-        expect(msg.subId).toEqual('subId')
+        expect(msg.requestId).toEqual('requestId')
     })
 
     test('sendInstruction is delivered', async () => {
@@ -130,27 +130,27 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('resendLastRequest is delivered', async () => {
-        nodeToNode2.send('nodeToNode1', ControlLayer.ResendLastRequest.create('stream', 10, 'subId', 100))
+        nodeToNode2.send('nodeToNode1', ControlLayer.ResendLastRequest.create('stream', 10, 'requestId', 100))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_REQUEST)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendLastRequest)
         expect(source).toEqual('nodeToNode2')
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
-        expect(msg.subId).toEqual('subId')
+        expect(msg.requestId).toEqual('requestId')
         expect(msg.numberLast).toEqual(100)
     })
 
     test('requestResendFrom is delivered', async () => {
         nodeToNode2.send('nodeToNode1',
-            ControlLayer.ResendFromRequest.create('stream', 10, 'subId', [1, 1], 'publisherId', 'msgChainId'))
+            ControlLayer.ResendFromRequest.create('stream', 10, 'requestId', [1, 1], 'publisherId', 'msgChainId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_REQUEST)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendFromRequest)
         expect(source).toEqual('nodeToNode2')
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
-        expect(msg.subId).toEqual('subId')
+        expect(msg.requestId).toEqual('requestId')
         expect(msg.fromMsgRef).toEqual(new MessageLayer.MessageRef(1, 1))
         expect(msg.publisherId).toEqual('publisherId')
         expect(msg.msgChainId).toEqual('msgChainId')
@@ -158,14 +158,14 @@ describe('delivery of messages in protocol layer', () => {
 
     test('requestResendRange is delivered', async () => {
         nodeToNode2.send('nodeToNode1',
-            ControlLayer.ResendRangeRequest.create('stream', 10, 'subId', [1, 1], [2, 2], 'publisherId', 'msgChainId'))
+            ControlLayer.ResendRangeRequest.create('stream', 10, 'requestId', [1, 1], [2, 2], 'publisherId', 'msgChainId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_REQUEST)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendRangeRequest)
         expect(source).toEqual('nodeToNode2')
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
-        expect(msg.subId).toEqual('subId')
+        expect(msg.requestId).toEqual('requestId')
         expect(msg.fromMsgRef).toEqual(new MessageLayer.MessageRef(1, 1))
         expect(msg.toMsgRef).toEqual(new MessageLayer.MessageRef(2, 2))
         expect(msg.publisherId).toEqual('publisherId')
@@ -173,36 +173,36 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('respondResending is delivered', async () => {
-        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseResending.create('stream', 10, 'subId'))
+        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseResending.create('stream', 10, 'requestId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendResponseResending)
         expect(source).toEqual('nodeToNode2')
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
-        expect(msg.subId).toEqual('subId')
+        expect(msg.requestId).toEqual('requestId')
     })
 
     test('respondResent is delivered', async () => {
-        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseResent.create('stream', 10, 'subId'))
+        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseResent.create('stream', 10, 'requestId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendResponseResent)
         expect(source).toEqual('nodeToNode2')
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
-        expect(msg.subId).toEqual('subId')
+        expect(msg.requestId).toEqual('requestId')
     })
 
     test('respondNoResend is delivered', async () => {
-        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseNoResend.create('stream', 10, 'subId'))
+        nodeToNode2.send('nodeToNode1', ControlLayer.ResendResponseNoResend.create('stream', 10, 'requestId'))
         const [msg, source] = await waitForEvent(nodeToNode1, NodeToNode.events.RESEND_RESPONSE)
 
         expect(msg).toBeInstanceOf(ControlLayer.ResendResponseNoResend)
         expect(source).toEqual('nodeToNode2')
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
-        expect(msg.subId).toEqual('subId')
+        expect(msg.requestId).toEqual('requestId')
     })
 
     test('sendStatus is delivered', async () => {
