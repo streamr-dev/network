@@ -111,7 +111,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                     } catch (e) {
                         // no need to check this error
                     } finally {
-                        debug('forceClose connection with id %s, because of %s', connection.id, err)
+                        console.warn('forceClose connection with id %s, because of %s', connection.id, err)
                         this._removeConnection(connection)
                     }
                 })
@@ -153,6 +153,8 @@ module.exports = class WebsocketServer extends EventEmitter {
                 if (connection) {
                     debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
                     this._removeConnection(connection)
+                } else {
+                    console.warn('failed to close websocket, because connection with id %s not found', ws.connectionId)
                 }
             }
         })
@@ -253,13 +255,13 @@ module.exports = class WebsocketServer extends EventEmitter {
                 connection.send(ControlLayer.ResendResponseResending.create(
                     request.streamId,
                     request.streamPartition,
-                    request.subId,
+                    request.requestId,
                 ))
             }
 
             const { streamMessage } = unicastMessage
             this.volumeLogger.logOutput(streamMessage.getContent().length)
-            connection.send(ControlLayer.UnicastMessage.create(request.subId, streamMessage))
+            connection.send(ControlLayer.UnicastMessage.create(request.requestId, streamMessage))
         }
 
         const doneHandler = () => {
@@ -267,13 +269,13 @@ module.exports = class WebsocketServer extends EventEmitter {
                 connection.send(ControlLayer.ResendResponseNoResend.create(
                     request.streamId,
                     request.streamPartition,
-                    request.subId,
+                    request.requestId,
                 ))
             } else {
                 connection.send(ControlLayer.ResendResponseResent.create(
                     request.streamId,
                     request.streamPartition,
-                    request.subId,
+                    request.requestId,
                 ))
             }
         }
@@ -334,7 +336,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             const requestV1 = ControlLayer.ResendLastRequest.create(
                 request.streamId,
                 request.streamPartition,
-                request.subId,
+                request.requestId,
                 request.resendOptions.resend_last,
                 request.sessionToken,
             )
@@ -344,7 +346,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             const requestV1 = ControlLayer.ResendRangeRequest.create(
                 request.streamId,
                 request.streamPartition,
-                request.subId,
+                request.requestId,
                 [request.resendOptions.resend_from, 0], // use offset as timestamp
                 [request.resendOptions.resend_to, 0], // use offset as timestamp)
                 null,
@@ -357,7 +359,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             const requestV1 = ControlLayer.ResendFromRequest.create(
                 request.streamId,
                 request.streamPartition,
-                request.subId,
+                request.requestId,
                 [request.resendOptions.resend_from, 0], // use offset as timestamp
                 null,
                 null,

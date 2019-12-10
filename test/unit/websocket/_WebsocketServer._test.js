@@ -194,7 +194,7 @@ describe('WebsocketServer', () => {
             const expectedResponse = ControlLayer.ResendResponseResending.create(
                 request.streamId,
                 request.streamPartition,
-                request.subId,
+                request.requestId,
             )
             mockSocket.receive(request)
 
@@ -208,7 +208,7 @@ describe('WebsocketServer', () => {
                 ControlLayer.UnicastMessage.create('subId', streamMessagev30)
             ]))
             const request = ControlLayer.ResendLastRequest.create('streamId', 0, 'sub', 10, 'correct')
-            const expectedResponse = ControlLayer.UnicastMessage.create(request.subId, streamMessagev30)
+            const expectedResponse = ControlLayer.UnicastMessage.create(request.requestId, streamMessagev30)
             mockSocket.receive(request)
             mockSocket.on('test:send', (numOfMessages) => {
                 if (numOfMessages === 2) {
@@ -226,7 +226,7 @@ describe('WebsocketServer', () => {
             const expectedResponse = ControlLayer.ResendResponseResent.create(
                 request.streamId,
                 request.streamPartition,
-                request.subId,
+                request.requestId,
             )
             mockSocket.receive(request)
             mockSocket.on('test:send', (numOfSentMessages) => {
@@ -242,7 +242,7 @@ describe('WebsocketServer', () => {
             const expectedResponse = ControlLayer.ResendResponseNoResend.create(
                 request.streamId,
                 request.streamPartition,
-                request.subId,
+                request.requestId,
             )
             mockSocket.receive(request)
             mockSocket.on('test:send', (numOfMessages) => {
