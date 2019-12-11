@@ -52,25 +52,24 @@ class StorageResendStrategy {
     }
 
     getResendResponseStream(request) {
+        let sourceStream
         if (request.type === ControlLayer.ResendLastRequest.TYPE) {
-            return this.storage.requestLast(
+            sourceStream = this.storage.requestLast(
                 request.streamId,
                 request.streamPartition,
                 request.numberLast
-            ).pipe(toUnicastMessage(request))
-        }
-        if (request.type === ControlLayer.ResendFromRequest.TYPE) {
-            return this.storage.requestFrom(
+            )
+        } else if (request.type === ControlLayer.ResendFromRequest.TYPE) {
+            sourceStream = this.storage.requestFrom(
                 request.streamId,
                 request.streamPartition,
                 request.fromMsgRef.timestamp,
                 request.fromMsgRef.sequenceNumber,
                 request.publisherId,
                 request.msgChainId
-            ).pipe(toUnicastMessage(request))
-        }
-        if (request.type === ControlLayer.ResendRangeRequest.TYPE) {
-            return this.storage.requestRange(
+            )
+        } else if (request.type === ControlLayer.ResendRangeRequest.TYPE) {
+            sourceStream = this.storage.requestRange(
                 request.streamId,
                 request.streamPartition,
                 request.fromMsgRef.timestamp,
@@ -79,9 +78,18 @@ class StorageResendStrategy {
                 request.toMsgRef.sequenceNumber,
                 request.publisherId,
                 request.msgChainId
-            ).pipe(toUnicastMessage(request))
+            )
+        } else {
+            throw new Error(`unknown resend request ${request}`)
         }
-        throw new Error(`unknown resend request ${request}`)
+
+        const destinationStream = toUnicastMessage(request)
+        destinationStream.on('close', () => {
+            if (destinationStream.destroyed) {
+                sourceStream.destroy()
+            }
+        })
+        return sourceStream.pipe(destinationStream)
     }
 }
 

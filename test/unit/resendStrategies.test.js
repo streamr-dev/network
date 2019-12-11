@@ -118,6 +118,22 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
             ),
         ])
     })
+
+    test('closing response stream also closes (original) the underlying storage stream', (done) => {
+        const storageStream = intoStream.object([])
+        storage.requestRange = jest.fn().mockReturnValueOnce(storageStream)
+
+        const responseStream = resendStrategy.getResendResponseStream(ControlLayer.ResendRangeRequest.create(
+            'streamId', 0, 'requestId', [1555555555555, 0], [1555555555555, 1000], 'publisherId', 'msgChainId'
+        ))
+
+        responseStream.destroy()
+
+        setImmediate(() => {
+            expect(storageStream.destroyed).toEqual(true)
+            done()
+        })
+    })
 })
 
 describe('AskNeighborsResendStrategy#getResendResponseStream', () => {
