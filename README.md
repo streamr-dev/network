@@ -2,6 +2,8 @@
 
 Command line tool for interacting with [Streamr](https://www.streamr.com).
 
+See [Changelog](CHANGELOG.md) for version information and changes.
+
 ## Installation
 
 ```
