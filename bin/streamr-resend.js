@@ -27,6 +27,7 @@ program
 program
     .command('last <n> <streamId> [apiKey]')
     .description('request last N messages')
+    .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .action((n, streamId, apiKey, cmd) => {
         if (isNaN(n)) {
             console.error('argument n is not a number')
@@ -36,6 +37,7 @@ program
             last: parseInt(n)
         }
         const options = formStreamrOptionsWithEnv(cmd.parent)
+        options.orderMessages = !cmd.disableOrdering
         resend(streamId, apiKey, resendOptions, options)
     })
 
@@ -44,6 +46,7 @@ program
     .description('request messages starting from given date-time (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
     .option('--publisher-id <string>', 'filter results by publisher')
     .option('--msg-chain-id <string>', 'filter results by message chain')
+    .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .action((from, streamId, apiKey, cmd) => {
         const resendOptions = {
             from: {
@@ -53,6 +56,7 @@ program
         }
         handlePublisherIdAndMsgChainId(cmd, resendOptions)
         const options = formStreamrOptionsWithEnv(cmd.parent)
+        options.orderMessages = !cmd.disableOrdering
         resend(streamId, apiKey, resendOptions, options)
     })
 
@@ -61,6 +65,7 @@ program
     .description('request messages between two given date-times (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
     .option('--publisher-id <string>', 'filter results by publisher')
     .option('--msg-chain-id <string>', 'filter results by message chain')
+    .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .action((from, to, streamId, apiKey, cmd) => {
         const resendOptions = {
             from: {
@@ -74,6 +79,7 @@ program
         }
         handlePublisherIdAndMsgChainId(cmd, resendOptions)
         const options = formStreamrOptionsWithEnv(cmd.parent)
+        options.orderMessages = !cmd.disableOrdering
         resend(streamId, apiKey, resendOptions, options)
     })
 
