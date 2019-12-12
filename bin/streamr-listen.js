@@ -7,6 +7,7 @@ program
     .usage('<streamId> [apiKey]')
     .description('subscribe and listen to a stream, prints JSON messages to stdout line-by-line')
     .option('-p, --partition [partition]', 'partition', createFnParseInt('--partition'), 0)
+    .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
 envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
@@ -14,4 +15,5 @@ envOptions(program)
 exitWitHelpIfArgsNotBetween(program, 1, 2)
 
 const options = formStreamrOptionsWithEnv(program)
+options.orderMessages = !program.disableOrdering
 listen(program.args[0], program.partition, program.args[1], options)
