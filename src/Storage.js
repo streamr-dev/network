@@ -296,11 +296,16 @@ const startCassandraStorage = async ({
     isBatching = true
 }) => {
     const authProvider = new cassandra.auth.PlainTextAuthProvider(username || '', password || '')
+    const requestLogger = new cassandra.tracker.RequestLogger({
+        slowThreshold: 10 * 1000, // 10 secs
+    })
+    requestLogger.emitter.on('slow', (message) => console.warn(message))
     const cassandraClient = new cassandra.Client({
         contactPoints,
         localDataCenter,
         keyspace,
         authProvider,
+        requestLogger
     })
     const nbTrials = 20
     let retryCount = nbTrials
