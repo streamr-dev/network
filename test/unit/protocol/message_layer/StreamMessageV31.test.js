@@ -142,6 +142,34 @@ describe('StreamMessageV31', () => {
             )
             assert.deepEqual(msg.getParsedContent(), content)
         })
+        it('returns an object (type is group key request)', () => {
+            const content = {
+                publicKey: 'publicKey',
+                streamId: 'streamId',
+            }
+            const msg = new StreamMessageV31(
+                ['streamId', 0, Date.now(), 0, 'publisherId', '1'], [1529549961000, 0],
+                StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE, JSON.stringify(content),
+                StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+            )
+            assert.deepEqual(msg.getParsedContent(), content)
+        })
+        it('returns an object (type is group key response)', () => {
+            const content = {
+                publicKey: 'publicKey',
+                streamId: 'streamId',
+                keys: [{
+                    groupKey: 'groupKey',
+                    start: 1,
+                }],
+            }
+            const msg = new StreamMessageV31(
+                ['streamId', 0, Date.now(), 0, 'publisherId', '1'], [1529549961000, 0],
+                StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.RSA, JSON.stringify(content),
+                StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+            )
+            assert.deepEqual(msg.getParsedContent(), content)
+        })
     })
 
     describe('toArray()', () => {

@@ -66,7 +66,7 @@ export default class StreamMessage {
     /* eslint-enable class-methods-use-this */
 
     parseContent(content) {
-        if (this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
+        if (this.contentType === StreamMessage.CONTENT_TYPES.MESSAGE && this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
             return content
         } else if (typeof content === 'object') {
             StreamMessage.validateContent(content, this.contentType)
