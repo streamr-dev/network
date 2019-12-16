@@ -18,6 +18,8 @@ module.exports = class Connection extends EventEmitter {
         this.id = generateId()
         this.socket = socket
         this.streams = []
+        this.ongoingResends = new Set()
+        this.dead = false
 
         // default versions for old clients
         this.controlLayerVersion = 0
@@ -55,6 +57,26 @@ module.exports = class Connection extends EventEmitter {
 
     streamsAsString() {
         return this.streams.map((s) => s.toString())
+    }
+
+    addOngoingResend(resend) {
+        this.ongoingResends.add(resend)
+    }
+
+    removeOngoingResend(resend) {
+        this.ongoingResends.delete(resend)
+    }
+
+    getOngoingResends() {
+        return new Set(this.ongoingResends)
+    }
+
+    markAsDead() {
+        this.dead = true
+    }
+
+    isDead() {
+        return this.dead
     }
 
     send(msg) {
