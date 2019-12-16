@@ -1,0 +1,39 @@
+name: Run eslint and tests
+
+on:
+  schedule:
+    # run every day at 00:00
+    - cron:  '0 0 * * *'
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x]
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - name: npm install
+      run: npm ci
+    - name: eslint
+      run: npm run eslint
+    - name: test
+      run: |
+        npm run build --if-present
+        npm test
+      env:
+        CI: true
+
