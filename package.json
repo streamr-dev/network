@@ -27,7 +27,7 @@
     "npm": "6.9.0"
   },
   "dependencies": {
-    "@sentry/node": "^5.10.0",
+    "@sentry/node": "^5.10.2",
     "arraybuffer-to-string": "^1.0.2",
     "body-parser": "^1.19.0",
     "buffermaker": "^1.2.1",
@@ -43,12 +43,12 @@
     "node-fetch": "^2.6.0",
     "public-ip": "^4.0.0",
     "qs": "^6.9.1",
-    "streamr-client": "^2.2.7",
-    "streamr-client-protocol": "^4.0.1",
+    "streamr-client": "^3.0.0",
+    "streamr-client-protocol": "^4.0.6",
     "streamr-network": "^17.2.1",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v16.4.0",
     "uuid": "^3.3.3",
-    "ws": "^7.2.0"
+    "ws": "^7.2.1"
   },
   "devDependencies": {
     "async-mqtt": "^2.4.2",
@@ -56,7 +56,7 @@
     "eslint": "^6.7.2",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-streamr-nodejs": "^1.1.0",
-    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-import": "^2.19.1",
     "into-stream": "^5.1.1",
     "jest": "^24.9.0",
     "sinon": "^7.5.0",

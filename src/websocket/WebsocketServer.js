@@ -164,7 +164,7 @@ module.exports = class WebsocketServer extends EventEmitter {
     }
 
     _removeConnection(connection) {
-        this.connections.delete(connection)
+        this.connections.delete(connection.id)
         this.volumeLogger.connectionCountWS = this.connections.size
 
         // Unsubscribe from all streams

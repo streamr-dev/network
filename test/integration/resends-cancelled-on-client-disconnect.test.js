@@ -11,9 +11,9 @@ const Publisher = require('../../src/Publisher')
 const VolumeLogger = require('../../src/VolumeLogger')
 const SubscriptionManager = require('../../src/SubscriptionManager')
 
-const trackerPort = 17711
-const networkNodePort = 17712
-const wsPort = 17713
+const trackerPort = 17750
+const networkNodePort = 17752
+const wsPort = 17753
 
 describe('resend cancellation', () => {
     let tracker
