@@ -305,7 +305,10 @@ const startCassandraStorage = async ({
         localDataCenter,
         keyspace,
         authProvider,
-        requestLogger
+        requestLogger,
+        pooling: {
+            maxRequestsPerConnection: 32768
+        }
     })
     const nbTrials = 20
     let retryCount = nbTrials
