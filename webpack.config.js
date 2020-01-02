@@ -25,18 +25,22 @@ const commonConfig = {
             root: 'StreamrClient',
             amd: libraryName,
         },
-        libraryTarget: 'umd',
         umdNamedDefine: true,
+    },
+    optimization: {
+        minimize: false
     },
     module: {
         rules: [
             {
                 test: /(\.jsx|\.js)$/,
-                loader: 'babel-loader',
                 exclude: /(node_modules|bower_components)/,
-                query: {
-                    plugins: ['transform-runtime'],
-                },
+                use: {
+                    loader: 'babel-loader',
+                    options: {
+                        presets: ['@babel/preset-env']
+                    }
+                }
             },
             {
                 test: /(\.jsx|\.js)$/,
@@ -53,13 +57,14 @@ const commonConfig = {
         new webpack.DefinePlugin({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
         }),
-    ],
+    ]
 }
 
 const serverConfig = merge({}, commonConfig, {
     target: 'node',
     externals: [nodeExternals()],
     output: {
+        libraryTarget: 'commonjs2',
         filename: libraryName + '.js',
     },
 })
@@ -67,6 +72,7 @@ const serverConfig = merge({}, commonConfig, {
 const clientConfig = merge({}, commonConfig, {
     target: 'web',
     output: {
+        libraryTarget: 'umd2',
         filename: libraryName + '.web.js',
     },
 })
@@ -76,6 +82,7 @@ let clientMinifiedConfig = {}
 if (isProduction) {
     clientMinifiedConfig = merge({}, clientConfig, {
         optimization: {
+            minimize: true,
             minimizer: [
                 new TerserPlugin({
                     cache: true,

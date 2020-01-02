@@ -2,7 +2,8 @@ import assert from 'assert'
 import crypto from 'crypto'
 
 import fetch from 'node-fetch'
-import { MessageLayer } from 'streamr-client-protocol'
+import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import { wait } from 'streamr-test-utils'
 import { ethers } from 'ethers'
 import uuid from 'uuid/v4'
 
@@ -12,6 +13,8 @@ import config from './config'
 
 const { StreamMessage } = MessageLayer
 const WebSocket = require('ws')
+
+const { SubscribeRequest, UnsubscribeRequest } = ControlLayer
 
 const createClient = (opts = {}) => new StreamrClient({
     url: config.websocketUrl,
@@ -23,8 +26,6 @@ const createClient = (opts = {}) => new StreamrClient({
     autoDisconnect: false,
     ...opts,
 })
-
-const wait = (timeout) => new Promise((resolve) => setTimeout(resolve, timeout))
 
 describe('StreamrClient Connection', () => {
     describe('bad config.url', () => {
@@ -210,7 +211,7 @@ describe('StreamrClient Connection', () => {
                 ])
                 done()
             })
-        })
+        }, 10000)
 
         it('resend range', async (done) => {
             const messages = []
@@ -406,6 +407,36 @@ describe('StreamrClient Connection', () => {
             })
             await client.disconnect()
         }, 5000)
+
+        it('should not subscribe to unsubscribed streams on reconnect', async (done) => {
+            client = createClient()
+            await client.ensureConnected()
+            const sessionToken = await client.session.getSessionToken()
+
+            const stream = await client.createStream({
+                name: uuid(),
+            })
+
+            const connectionEventSpy = jest.spyOn(client.connection, 'send')
+            const sub = client.subscribe(stream.id, () => {})
+
+            sub.once('subscribed', async () => {
+                client.unsubscribe(sub)
+            })
+
+            sub.on('unsubscribed', async () => {
+                await client.ensureDisconnected()
+                await client.ensureConnected()
+                await client.ensureDisconnected()
+
+                // check whole list of calls after reconnect and disconnect
+                expect(connectionEventSpy.mock.calls.length).toEqual(2)
+                expect(connectionEventSpy.mock.calls[0]).toEqual([SubscribeRequest.create(stream.id, 0, sessionToken)])
+                expect(connectionEventSpy.mock.calls[1]).toEqual([UnsubscribeRequest.create(stream.id, 0, sessionToken)])
+
+                done()
+            })
+        })
 
         it('does not try to reconnect', async (done) => {
             client = createClient()
