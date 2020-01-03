@@ -23,8 +23,8 @@
   "author": "Streamr <contact@streamr.com>",
   "license": "",
   "engines": {
-    "node": "10.15.3",
-    "npm": "6.9.0"
+    "node": "10.18.0",
+    "npm": "6.13.4"
   },
   "dependencies": {
     "@sentry/node": "^5.10.2",

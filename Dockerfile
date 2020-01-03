@@ -1,16 +1,26 @@
-# Use official node runtime as base image
-FROM node:10.17.0-alpine
-
-# Set the working directory to /app
+FROM ubuntu:16.04 AS builder
 WORKDIR /app
-
-# Copy app code
 COPY . /app
+RUN apt-get update && apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash
+RUN apt-get update && apt-get install -y \
+	build-essential \
+	git \
+	nodejs \
+	&& rm -rf /var/lib/apt/lists/*
+RUN node --version
+RUN npm ci
 
-# Install package.json dependencies (yes, clean up must be part of same RUN command because of layering)
-RUN apk add --no-cache gcompat
-RUN apk add --update python build-base git && npm install && apk del python build-base && rm -rf /var/cache/apk/*
+FROM ubuntu:16.04
+WORKDIR /app
+COPY --from=builder /app/ .
+RUN apt-get update && apt-get install -y curl
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash
+RUN apt-get update && apt-get install -y \
+	nodejs \
+	&& rm -rf /var/lib/apt/lists/*
 
+USER nobody
 # Make ports available to the world outside this container
 EXPOSE 30315
 # WebSocket
