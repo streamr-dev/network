@@ -3,18 +3,12 @@ import assert from 'assert'
 import EventEmitter from 'eventemitter3'
 import sinon from 'sinon'
 import debug from 'debug'
-import { ethers, Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
-import { wait } from 'streamr-test-utils'
 
 import FailedToPublishError from '../../src/errors/FailedToPublishError'
 import Connection from '../../src/Connection'
-// eslint-disable-next-line import/order
 import Subscription from '../../src/Subscription'
-
-// eslint-disable-next-line import/no-named-as-default-member
-import StreamrClient from '../../src'
-import config from '../integration/config'
 
 // eslint-disable-next-line import/no-named-as-default-member
 import StubbedStreamrClient from './StubbedStreamrClient'
@@ -36,17 +30,6 @@ const {
 } = ControlLayer
 const { StreamMessage, MessageRef } = MessageLayer
 const mockDebug = debug('mock')
-
-const createClient = (opts = {}) => new StreamrClient({
-    url: config.websocketUrl,
-    restUrl: config.restUrl,
-    auth: {
-        privateKey: ethers.Wallet.createRandom().privateKey,
-    },
-    autoConnect: false,
-    autoDisconnect: false,
-    ...opts,
-})
 
 describe('StreamrClient', () => {
     let client
@@ -738,21 +721,6 @@ describe('StreamrClient', () => {
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
                 }, STORAGE_DELAY + 1000)
 
-                it('sends 2 ResendLastRequests if no StreamMessage received after some delay', (done) => {
-                    const sub = setupSubscription('stream1', false, {
-                        resend: {
-                            last: 5,
-                        },
-                    })
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '0', 5, 'session-token'))
-                    connection.emitMessage(SubscribeResponse.create(sub.streamId))
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '1', 5, 'session-token'))
-                    setTimeout(() => {
-                        sub.stop()
-                        done()
-                    }, STORAGE_DELAY + 200)
-                }, STORAGE_DELAY + 1000)
-
                 it('sends a second ResendLastRequest if no StreamMessage received and a ResendResponseNoResend received', (done) => {
                     const sub = setupSubscription('stream1', false, {
                         resend: {
@@ -762,7 +730,7 @@ describe('StreamrClient', () => {
                     connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '0', 5, 'session-token'))
                     connection.emitMessage(SubscribeResponse.create(sub.streamId))
                     connection.emitMessage(ResendResponseNoResend.create(sub.streamId, sub.streamPartition, '0'))
-                    connection.expect(ResendLastRequest.create(sub.streamId, sub.streamPartition, '1', 5, 'session-token'))
+
                     setTimeout(() => {
                         sub.stop()
                         done()

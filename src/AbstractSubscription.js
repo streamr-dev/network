@@ -104,7 +104,7 @@ export default class AbstractSubscription extends Subscription {
                 this.emit('no_resend', response)
             } finally {
                 delete this.pendingResendRequestIds[response.requestId]
-                this.finishResend(true)
+                this.finishResend()
             }
         })
     }

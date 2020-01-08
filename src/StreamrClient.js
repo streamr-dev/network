@@ -627,17 +627,13 @@ export default class StreamrClient extends EventEmitter {
             sub.once('subscribed', async () => {
                 if (sub.hasResendOptions()) {
                     await this._requestResend(sub)
-                    // the requested messages might not have been stored yet, so retry if no answer after 'retryResendAfter' seconds
-                    const secondResend = setTimeout(() => this._requestResend(sub), this.options.retryResendAfter)
                     // once a message is received, gap filling in Subscription.js will check if this satisfies the resend and request
                     // another resend if it doesn't. So we can anyway clear this resend request.
                     const handler = () => {
-                        clearTimeout(secondResend)
                         sub.removeListener('resend done', handler)
                         sub.removeListener('message received', handler)
                         sub.removeListener('unsubscribed', handler)
                         sub.removeListener('error', handler)
-                        sub.finishResend()
                     }
                     sub.once('resend done', handler)
                     sub.once('message received', handler)

@@ -66,6 +66,7 @@
     "ethers": "^4.0.41",
     "eventemitter3": "^4.0.0",
     "heap": "^0.2.6",
+    "lodash.uniqueid": "^4.0.1",
     "node-fetch": "^2.6.0",
     "once": "^1.4.0",
     "qs": "^6.9.1",
