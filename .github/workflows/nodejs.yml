@@ -1,0 +1,49 @@
+name: Run eslint and tests
+
+on:
+  schedule:
+    # run every day at 00:00
+    - cron:  '0 0 * * *'
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - '*'
+
+jobs:
+  build:
+    name: Test on node ${{ matrix.node-version }} and ubuntu-latest
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [10.x, 12.x]
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: npm ci
+      run: npm ci
+
+    - name: eslint
+      run: npm run eslint
+
+    - name: test-unit
+      run: npm run test-unit
+
+    - name: test-integration
+      run: |
+        sudo service mysql stop
+        git clone https://github.com/streamr-dev/streamr-docker-dev.git
+        sudo ifconfig docker0 10.200.10.1/24
+        ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start 5
+        while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/users/me); if [ "$http_code" = 401 ]; then echo "EE up and running"; break; else echo "EE not receiving connections"; sleep 5s; fi; done
+        while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/volume); if [ "$http_code" = 200 ]; then echo "brokers up and running"; break; else echo "brokers not receiving connections"; sleep 5s; fi; done
+        npm run test-integration

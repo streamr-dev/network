@@ -47,7 +47,7 @@ describe('StreamrClient resends', () => {
                 publishedMessages.push(message)
             }
 
-            await wait(3000) // wait for messages to (hopefully) land in storage
+            await wait(5000) // wait for messages to (hopefully) land in storage
         }, 10 * 1000)
 
         afterEach(async () => {
