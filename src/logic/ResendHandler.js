@@ -151,6 +151,9 @@ class ResendHandler {
                 .on('end', () => {
                     resolve(numOfMessages > 0)
                 })
+                .on('close', () => {
+                    resolve(numOfMessages > 0)
+                })
         })
     }
 }
