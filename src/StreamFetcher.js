@@ -132,6 +132,9 @@ module.exports = class StreamFetcher {
                     )
                     this.checkPermission.delete(streamId, authKey, sessionToken, operation) // clear cache result
                     throw new HttpError(response.status)
+                }).catch((err) => {
+                    console.error(err)
+                    throw err
                 })
             }
 
