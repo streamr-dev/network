@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-const util = require('util')
-
 const program = require('commander')
 
 const CURRENT_VERSION = require('../package.json').version

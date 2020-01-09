@@ -1,9 +1,9 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="subscriber (30311)" type="js.build_tools.npm">
+  <configuration default="false" name="subscriber (30345)" type="js.build_tools.npm">
     <package-json value="$PROJECT_DIR$/package.json" />
     <command value="run" />
     <scripts>
-      <script value="sub-1" />
+      <script value="sub-2" />
     </scripts>
     <node-interpreter value="project" />
     <envs>

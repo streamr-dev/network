@@ -71,6 +71,15 @@ module.exports = class Tracker extends EventEmitter {
         const streamId = findStorageNodesMessage.getStreamId()
         const source = findStorageNodesMessage.getSource()
 
+        // Storage node may have restarted which means it will be no longer assigned to its previous streams,
+        // especially those that aren't actively being subscribed or produced to. Thus on encountering a
+        // unknown streamId, we need to create a new topology and assign storage node(s) to it to ensure
+        // that resend requests for inactive streams get properly handled.
+        if (this.storageNodes.size && this.overlayPerStream[streamId] == null) {
+            this.overlayPerStream[streamId] = this._createNewOverlayTopology()
+            this._formAndSendInstructionsToStorages()
+        }
+
         const foundStorageNodes = []
         this.storageNodes.forEach((status, node) => {
             const streams = Object.keys(status.streams)
@@ -78,6 +87,15 @@ module.exports = class Tracker extends EventEmitter {
                 foundStorageNodes.push(node)
             }
         })
+
+        // TODO: this works for single storage node scenario. How to deal with multiple?
+        if (!foundStorageNodes.length) {
+            const randomStorage = this._getRandomStorage()
+
+            if (randomStorage) {
+                foundStorageNodes.push(randomStorage)
+            }
+        }
 
         this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)
     }
@@ -91,6 +109,26 @@ module.exports = class Tracker extends EventEmitter {
         return this.protocols.trackerServer.getAddress()
     }
 
+    _getRandomStorage() {
+        const listOfStorages = [...this.storageNodes.keys()]
+        return listOfStorages[Math.floor(Math.random() * listOfStorages.length)]
+    }
+
+    _createNewOverlayTopology() {
+        const overlayTopology = new OverlayTopology(this.opts.maxNeighborsPerNode)
+
+        // add to the new OverlayTopology random storage
+        if (this.storageNodes.size) {
+            const randomStorage = this._getRandomStorage()
+
+            if (randomStorage) {
+                overlayTopology.update(this._getRandomStorage(), new Set())
+            }
+        }
+
+        return overlayTopology
+    }
+
     _updateNode(node, streams) {
         let newNode = true
 
@@ -102,7 +140,7 @@ module.exports = class Tracker extends EventEmitter {
         // Add or update
         Object.entries(streams).forEach(([streamKey, { inboundNodes, outboundNodes }]) => {
             if (this.overlayPerStream[streamKey] == null) {
-                this.overlayPerStream[streamKey] = new OverlayTopology(this.opts.maxNeighborsPerNode)
+                this.overlayPerStream[streamKey] = this._createNewOverlayTopology()
             }
 
             newNode = this.overlayPerStream[streamKey].hasNode(node) ? false : newNode

@@ -23,7 +23,7 @@ program
 const publisherId = `publisher-${program.port}`
 const messageChainId = `message-chain-id-${program.port}`
 const streamObj = new StreamIdAndPartition(program.streamId, 0)
-const { id, partition } = streamObj
+const { id: streamId, partition } = streamObj
 
 startNetworkNode(program.ip, program.port, publisherId)
     .then((publisher) => {
@@ -33,15 +33,15 @@ startNetworkNode(program.ip, program.port, publisherId)
         program.trackers.map((trackerAddress) => publisher.addBootstrapTracker(trackerAddress))
 
         let lastTimestamp = null
-        let i = 0
+        let sequenceNumber = 0
 
         setInterval(() => {
             const timestamp = Date.now()
             const msg = 'Hello world, ' + new Date().toLocaleString()
 
             const streamMessage = StreamMessage.create(
-                [id, partition, i, 0, publisherId, messageChainId],
-                i === 0 ? null : [i - 1, 0],
+                [streamId, partition, timestamp, sequenceNumber, publisherId, messageChainId],
+                lastTimestamp == null ? null : [lastTimestamp, sequenceNumber - 1],
                 StreamMessage.CONTENT_TYPES.MESSAGE,
                 StreamMessage.ENCRYPTION_TYPES.NONE,
                 {
@@ -52,7 +52,7 @@ startNetworkNode(program.ip, program.port, publisherId)
             )
             publisher.publish(streamMessage)
 
-            i += 1
+            sequenceNumber += 1
             lastTimestamp = timestamp
         }, program.intervalInMs)
 
