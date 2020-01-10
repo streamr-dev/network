@@ -10,12 +10,12 @@
             document.body.appendChild(elem)
         }
 
+        // register and get from https://streamr.network/signup
         const STREAM_ID = 'MY-STREAM-ID'
         const API_KEY = 'MY-API-KEY'
 
             // Create the client and give the API key to use by default
         const client = new StreamrClient({
-            restUrl: 'http://localhost:8081/streamr-core/api/v1',
             auth: {
                 apiKey: API_KEY,
             }

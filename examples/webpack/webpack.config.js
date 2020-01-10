@@ -5,8 +5,10 @@ const path = require('path')
 
 module.exports = {
     entry: path.join(__dirname, 'src', 'index.js'),
+    target: 'web',
     devtool: 'source-map',
     output: {
+        libraryTarget: 'umd2',
         path: path.join(__dirname, 'dist'),
         filename: 'webpack-example.js',
     },
@@ -15,10 +17,7 @@ module.exports = {
             {
                 test: /(\.jsx|\.js)$/,
                 loader: 'babel-loader',
-                exclude: /(node_modules|bower_components)/,
-                query: {
-                    plugins: ['transform-runtime'],
-                },
+                exclude: /(node_modules|bower_components)/
             },
         ],
     },
