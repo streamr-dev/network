@@ -66,7 +66,7 @@ class Connection extends EventEmitter {
             if (err) {
                 console.error(err)
             }
-            this.socket.terminate()
+            this.socket.close()
         })
 
         this.socket.events.on('close', () => {
