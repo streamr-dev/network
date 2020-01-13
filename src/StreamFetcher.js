@@ -85,7 +85,8 @@ module.exports = class StreamFetcher {
     _fetch(streamId, authKey, sessionToken) {
         const headers = formHeaders(authKey, sessionToken)
 
-        return fetch(`${this.streamResourceUrl}/${streamId}`, {
+        const url = `${this.streamResourceUrl}/${streamId}`
+        return fetch(url, {
             headers,
         }).catch((e) => {
             console.error(`failed to communicate with E&E: ${e}`)
@@ -97,7 +98,7 @@ module.exports = class StreamFetcher {
                     response.status, streamId, authKey, sessionToken, response.text(),
                 )
                 this.fetch.delete(streamId, authKey, sessionToken) // clear cache result
-                throw new HttpError(response.status)
+                throw new HttpError(response.status, 'GET', url)
             } else {
                 return response.json()
             }
@@ -118,7 +119,8 @@ module.exports = class StreamFetcher {
     _checkPermission(streamId, authKey, sessionToken, operation = 'read') {
         const headers = formHeaders(authKey, sessionToken)
 
-        return fetch(`${this.streamResourceUrl}/${streamId}/permissions/me`, {
+        const url = `${this.streamResourceUrl}/${streamId}/permissions/me`
+        return fetch(url, {
             headers,
         }).catch((e) => {
             console.error(`failed to communicate with E&E: ${e}`)
@@ -131,7 +133,7 @@ module.exports = class StreamFetcher {
                         response.status, streamId, authKey, sessionToken, operation, errorMsg,
                     )
                     this.checkPermission.delete(streamId, authKey, sessionToken, operation) // clear cache result
-                    throw new HttpError(response.status)
+                    throw new HttpError(response.status, 'GET', url)
                 }).catch((err) => {
                     console.error(err)
                     throw err
@@ -147,7 +149,7 @@ module.exports = class StreamFetcher {
                     'checkPermission failed for streamId %s key %s sessionToken %s operation %s. permissions were: %o',
                     streamId, authKey, sessionToken, operation, permissions,
                 )
-                throw new HttpError(403)
+                throw new HttpError(403, 'GET', url)
             })
         })
     }
@@ -155,7 +157,8 @@ module.exports = class StreamFetcher {
     setFields(streamId, fields, apiKey, sessionToken) {
         const headers = formHeaders(apiKey, sessionToken)
         headers['Content-Type'] = 'application/json'
-        return fetch(`${this.streamResourceUrl}/${streamId}/fields`, {
+        const url = `${this.streamResourceUrl}/${streamId}/fields`
+        return fetch(url, {
             method: 'POST',
             body: JSON.stringify(fields),
             headers,
@@ -168,7 +171,7 @@ module.exports = class StreamFetcher {
                     'fetch failed with status %d for streamId %s key %s sessionToken %s : %o',
                     response.status, streamId, apiKey, sessionToken, response.text(),
                 )
-                throw new HttpError(response.status)
+                throw new HttpError(response.status, 'POST', url)
             } else {
                 return response.json()
             }

@@ -96,7 +96,7 @@ describe('AuthenticationMiddleware', () => {
         })
 
         it('responds 403 and error message if streamFetcher#authenticate results in 403', (done) => {
-            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(403))
+            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(403, 'GET', ''))
 
             middlewareInstance(request, response, next)
 
@@ -113,7 +113,7 @@ describe('AuthenticationMiddleware', () => {
         })
 
         it('responds with 404 if the stream is not found', (done) => {
-            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(404))
+            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(404, 'GET', ''))
 
             middlewareInstance(request, response, next)
 
@@ -130,7 +130,7 @@ describe('AuthenticationMiddleware', () => {
         })
 
         it('responds with whatever status code the backend returns', (done) => {
-            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(123))
+            streamFetcherStub.authenticate = () => Promise.reject(new HttpError(123, 'GET', ''))
 
             middlewareInstance(request, response, next)
 

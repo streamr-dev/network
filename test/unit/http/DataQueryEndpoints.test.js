@@ -45,7 +45,7 @@ describe('DataQueryEndpoints', () => {
                     if (authKey === 'authKey') {
                         resolve({})
                     } else {
-                        reject(new HttpError(403))
+                        reject(new HttpError(403, 'GET', ''))
                     }
                 }))
             },
