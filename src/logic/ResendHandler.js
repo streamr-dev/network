@@ -47,7 +47,7 @@ class ResendBookkeeper {
 }
 
 class ResendHandler {
-    constructor(resendStrategies, notifyError) {
+    constructor(resendStrategies, notifyError, maxInactivityPeriodInMs = 5 * 60 * 1000) {
         if (resendStrategies == null) {
             throw new Error('resendStrategies not given')
         }
@@ -57,6 +57,7 @@ class ResendHandler {
 
         this.resendStrategies = [...resendStrategies]
         this.notifyError = notifyError
+        this.maxInactivityPeriodInMs = maxInactivityPeriodInMs
         this.ongoingResends = new ResendBookkeeper()
     }
 
@@ -135,6 +136,16 @@ class ResendHandler {
     _readStreamUntilEndOrError(responseStream, request) {
         let numOfMessages = 0
         return new Promise((resolve) => {
+            // Provide additional safety against hanging promises by emitting
+            // error if no data is seen within `maxInactivityPeriodInMs`
+            let lastCheck = 0
+            const rejectInterval = setInterval(() => {
+                if (numOfMessages === lastCheck) {
+                    responseStream.emit('error', new Error('_readStreamUntilEndOrError: timeout'))
+                }
+                lastCheck = numOfMessages
+            }, this.maxInactivityPeriodInMs)
+
             responseStream
                 .on('data', () => {
                     numOfMessages += 1
@@ -146,12 +157,15 @@ class ResendHandler {
                     })
                 })
                 .on('error', () => {
+                    clearInterval(rejectInterval)
                     resolve(false)
                 })
                 .on('end', () => {
+                    clearInterval(rejectInterval)
                     resolve(numOfMessages > 0)
                 })
                 .on('close', () => {
+                    clearInterval(rejectInterval)
                     resolve(numOfMessages > 0)
                 })
         })

@@ -2,7 +2,7 @@ const { Readable } = require('stream')
 
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const intoStream = require('into-stream')
-const { waitForStreamToEnd } = require('streamr-test-utils')
+const { wait, waitForStreamToEnd } = require('streamr-test-utils')
 
 const ResendHandler = require('../../src/logic/ResendHandler')
 
@@ -333,6 +333,57 @@ describe('ResendHandler', () => {
                 'signature'
             )
         ))
+    })
+
+    describe('timeout', () => {
+        const maxInactivityPeriodInMs = 100
+        let getResendResponseStreamFn
+
+        beforeEach(() => {
+            resendHandler = new ResendHandler([{
+                getResendResponseStream: () => getResendResponseStreamFn()
+            }], notifyError, maxInactivityPeriodInMs)
+        })
+
+        afterEach(() => {
+            resendHandler.stop()
+        })
+
+        test('times out if no messages within a given period', async () => {
+            getResendResponseStreamFn = () => new Readable({ // indefinite stream
+                objectMode: true,
+                read() {}
+            })
+
+            await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
+
+            expect(notifyError).toHaveBeenCalledTimes(1)
+            expect(notifyError).toBeCalledWith({
+                error: new Error('_readStreamUntilEndOrError: timeout'),
+                request
+            })
+        })
+
+        test('receiving a message prolongs the timeout', async (done) => {
+            getResendResponseStreamFn = () => {
+                const rs = new Readable({
+                    objectMode: true,
+                    read() {}
+                })
+                setTimeout(() => rs.push('message'), 50) // push message to reset timeout
+                return rs
+            }
+
+            let streamHasEnded = false
+            waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
+                .finally(() => {
+                    streamHasEnded = true
+                })
+            setTimeout(() => {
+                expect(streamHasEnded).toEqual(false)
+                done()
+            }, maxInactivityPeriodInMs + 10)
+        })
     })
 
     test('metrics work', async () => {
