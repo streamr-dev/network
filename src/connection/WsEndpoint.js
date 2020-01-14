@@ -84,6 +84,7 @@ class WsEndpoint extends EventEmitter {
         this.metrics.createSpeedometer('_msgOutSpeed')
 
         this.connections = new Map()
+        this.lastCheckedReadyState = new Map()
         this.pendingConnections = new Map()
 
         this.wss.on('connection', this._onIncomingConnection.bind(this))
@@ -107,7 +108,7 @@ class WsEndpoint extends EventEmitter {
         })
 
         this.debug('listening on: %s', this.getAddress())
-        this.checkConnectionsInterval = setInterval(this._checkConnections.bind(this), 2000)
+        this.checkConnectionsInterval = setInterval(this._checkConnections.bind(this), 10 * 1000)
     }
 
     _checkConnections() {
@@ -115,16 +116,23 @@ class WsEndpoint extends EventEmitter {
             const ws = this.connections.get(address)
 
             if (ws.readyState !== 1) {
+                const lastReadyState = this.lastCheckedReadyState.get(address)
+                this.lastCheckedReadyState.set(address, ws.readyState)
+
                 this.metrics.inc(`_checkConnections:readyState=${ws.readyState}`)
                 console.error(address + '\t\t\t' + ws.readyState)
 
-                if (ws.readyState === 3) {
+                if (lastReadyState != null && lastReadyState === ws.readyState) {
                     try {
                         ws.terminate()
                     } catch (e) {
                         console.error('failed to close closed socket because of %s', e)
+                    } finally {
+                        this.lastCheckedReadyState.delete(address)
                     }
                 }
+            } else {
+                this.lastCheckedReadyState.delete(address)
             }
         })
     }
@@ -359,6 +367,7 @@ class WsEndpoint extends EventEmitter {
             this.metrics.inc(`_onNewConnection:closed:code=${code}`)
             this.debug('socket to %s closed (code %d, reason %s)', address, code, reason)
             this.connections.delete(address)
+            this.lastCheckedReadyState.delete(address)
             this.debug('removed %s from connection list', address)
             this.emit(events.PEER_DISCONNECTED, address, reason)
         })
