@@ -103,6 +103,11 @@ jobs:
     install: true
     script:
     - docker build -t $OWNER/$IMAGE_NAME:taggit .
+    - .travis_scripts/smoke_test.sh
+    after_failure:
+    - docker ps;
+    - docker logs streamr_dev_tracker;
+    - docker logs streamr_dev_broker-node-no-storage-1;
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh dev
@@ -111,6 +116,11 @@ jobs:
     install: true
     script:
     - docker build -t $OWNER/$IMAGE_NAME:taggit .
+    - .travis_scripts/smoke_test.sh
+    after_failure:
+    - docker ps;
+    - docker logs streamr_dev_tracker;
+    - docker logs streamr_dev_broker-node-no-storage-1;
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh production
