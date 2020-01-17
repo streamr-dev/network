@@ -183,6 +183,13 @@ export default class StreamMessage {
             if (!content.streamId || !content.groupKey || !content.start) {
                 throw new Error(`Content of type ${contentType} must contain 'streamId', 'groupKey' and 'start' fields.`)
             }
+        } else if (contentType === StreamMessage.CONTENT_TYPES.ERROR_MSG) {
+            if (!content.code) {
+                throw new Error(`Content of type ${contentType} must contain 'code' and 'message' fields.`)
+            }
+            if (!content.message) {
+                throw new Error(`Content of type ${contentType} must contain 'code' and 'message' fields.`)
+            }
         }
     }
 
@@ -199,6 +206,7 @@ StreamMessage.CONTENT_TYPES = {
     GROUP_KEY_REQUEST: 28,
     GROUP_KEY_RESPONSE_SIMPLE: 29,
     GROUP_KEY_RESET_SIMPLE: 30,
+    ERROR_MSG: 31,
 }
 StreamMessage.VALID_CONTENTS = new Set(Object.values(StreamMessage.CONTENT_TYPES))
 

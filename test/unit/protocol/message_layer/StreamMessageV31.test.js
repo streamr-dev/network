@@ -170,6 +170,18 @@ describe('StreamMessageV31', () => {
             )
             assert.deepEqual(msg.getParsedContent(), content)
         })
+        it('returns an object (type is error message)', () => {
+            const content = {
+                code: 'INVALID_KEY_ERROR',
+                message: 'error message',
+            }
+            const msg = new StreamMessageV31(
+                ['streamId', 0, Date.now(), 0, 'publisherId', '1'], [1529549961000, 0],
+                StreamMessage.CONTENT_TYPES.ERROR_MSG, StreamMessage.ENCRYPTION_TYPES.RSA, JSON.stringify(content),
+                StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+            )
+            assert.deepEqual(msg.getParsedContent(), content)
+        })
     })
 
     describe('toArray()', () => {
@@ -335,6 +347,29 @@ describe('StreamMessageV31', () => {
                 StreamMessage.SIGNATURE_TYPES.NONE, null,
             ), (err) => {
                 assert.equal(err.message, 'Content of type 30 must contain \'streamId\', \'groupKey\' and \'start\' fields.')
+                return true
+            })
+        })
+        it('Does not throw with a valid content of type ERROR_MSG', () => {
+            const msg = StreamMessage.create(
+                ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
+                StreamMessage.CONTENT_TYPES.ERROR_MSG, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                    code: 'some_error_code',
+                    message: 'error message',
+                },
+                StreamMessage.SIGNATURE_TYPES.NONE, null,
+            )
+            assert.deepStrictEqual(StreamMessageFactory.deserialize(msg.serialize()), msg)
+        })
+        it('Throws with an invalid content of type ERROR_MSG', () => {
+            assert.throws(() => StreamMessage.create(
+                ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'publisherId', 'msg-chain-id'], null,
+                StreamMessage.CONTENT_TYPES.ERROR_MSG, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                    wrong: 233142345,
+                },
+                StreamMessage.SIGNATURE_TYPES.NONE, null,
+            ), (err) => {
+                assert.equal(err.message, 'Content of type 31 must contain \'code\' and \'message\' fields.')
                 return true
             })
         })
