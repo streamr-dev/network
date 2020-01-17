@@ -252,10 +252,24 @@ class Storage extends EventEmitter {
     }
 
     _queryWithStreamingResults(query, queryParams) {
-        return this.cassandraClient.stream(query, queryParams, {
+        const cassandraStream = this.cassandraClient.stream(query, queryParams, {
             prepare: true,
             autoPage: true,
-        }).pipe(new Transform({
+        })
+
+        // To avoid blocking main thread for too long, on every 1000th message
+        // pause & resume the cassandraStream to give other events in the event
+        // queue a chance to be handled.
+        let resultCount = 0
+        cassandraStream.on('data', () => {
+            resultCount += 1
+            if (resultCount % 1000 === 0) {
+                cassandraStream.pause()
+                setImmediate(() => cassandraStream.resume())
+            }
+        })
+
+        return cassandraStream.pipe(new Transform({
             objectMode: true,
             transform: (row, _, done) => {
                 done(null, this._parseRow(row))
