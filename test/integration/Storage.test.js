@@ -82,8 +82,7 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
     })
 
     afterEach(async () => {
-        storage.close()
-        await wait(1000)
+        await storage.close()
     })
 
     test('requestLast throws exception if limit is not strictly positive', async () => {

@@ -11,13 +11,18 @@ const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload) '
     + 'VALUES (?, ?, ?, ?, ?, ?, ?)'
 
+const INSERT_OR_UPDATE_LAST_MESSAHGE = 'UPDATE stream_last_msg SET time = toTimestamp(now()) WHERE id = ?'
+
 const INSERT_STATEMENT_WITH_TTL = 'INSERT INTO stream_data '
     + '(id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload) '
     + 'VALUES (?, ?, ?, ?, ?, ?, ?) USING TTL 259200' // 3 days
 
 const batchingStore = (cassandraClient, insertStatement) => new MicroBatchingStrategy({
     insertFn: (streamMessages) => {
+        // future-proofing: currently all messages in batch have same streamId, but could change later on
+        const streamIds = new Set()
         const queries = streamMessages.map((streamMessage) => {
+            streamIds.add(streamMessage.getStreamId())
             return {
                 query: insertStatement,
                 params: [
@@ -31,6 +36,16 @@ const batchingStore = (cassandraClient, insertStatement) => new MicroBatchingStr
                 ]
             }
         })
+
+        streamIds.forEach((streamId) => {
+            queries.push({
+                query: INSERT_OR_UPDATE_LAST_MESSAHGE,
+                params: [
+                    streamId
+                ]
+            })
+        })
+
         return cassandraClient.batch(queries, {
             prepare: true
         })
@@ -39,16 +54,29 @@ const batchingStore = (cassandraClient, insertStatement) => new MicroBatchingStr
 
 const individualStore = (cassandraClient, insertStatement) => ({
     store: (streamMessage) => {
-        return cassandraClient.execute(insertStatement, [
-            streamMessage.getStreamId(),
-            streamMessage.getStreamPartition(),
-            streamMessage.getTimestamp(),
-            streamMessage.getSequenceNumber(),
-            streamMessage.getPublisherId(),
-            streamMessage.getMsgChainId(),
-            Buffer.from(streamMessage.serialize()),
-        ], {
-            prepare: true,
+        const queries = [
+            {
+                query: insertStatement,
+                params: [
+                    streamMessage.getStreamId(),
+                    streamMessage.getStreamPartition(),
+                    streamMessage.getTimestamp(),
+                    streamMessage.getSequenceNumber(),
+                    streamMessage.getPublisherId(),
+                    streamMessage.getMsgChainId(),
+                    Buffer.from(streamMessage.serialize()),
+                ]
+            },
+            {
+                query: INSERT_OR_UPDATE_LAST_MESSAHGE,
+                params: [
+                    streamMessage.getStreamId()
+                ]
+            }
+        ]
+
+        return cassandraClient.batch(queries, {
+            prepare: true
         })
     },
     close: () => {},
