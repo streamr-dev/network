@@ -12,38 +12,12 @@ const networkPort3 = 11404
 const wsPort = 11401
 
 function createStreamMessage(streamId, idx, prevIdx) {
-    return StreamMessage.from({
-        streamId,
-        streamPartition: 0,
-        timestamp: idx,
-        sequenceNumber: 0,
-        publisherId: 'publisherId',
-        msgChainId: 'msgChainId',
-        previousTimestamp: prevIdx,
-        previousSequenceNumber: prevIdx ? 0 : null,
-        contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-        encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-        signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
-        content: {
+    const prevRef = prevIdx ? [prevIdx, 0] : null
+    return StreamMessage.create([streamId, 0, idx, 0, 'publisherId', 'msgChainId'],
+        prevRef, StreamMessage.CONTENT_TYPES.MESSAGE,
+        StreamMessage.ENCRYPTION_TYPES.NONE, {
             key: idx
-        }
-    })
-}
-
-function createStorageRow(streamId, idx, prevIdx) {
-    return {
-        timestamp: idx,
-        sequenceNo: 0,
-        publisherId: 'publisherId',
-        msgChainId: 'msgChainId',
-        previousTimestamp: prevIdx,
-        previousSequenceNo: prevIdx ? 0 : null,
-        data: {
-            key: idx
-        },
-        signature: null,
-        signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
-    }
+        }, StreamMessage.SIGNATURE_TYPES.NONE, null)
 }
 
 describe('message ordering and gap filling in websocket adapter', () => {
@@ -138,8 +112,8 @@ describe('message ordering and gap filling in websocket adapter', () => {
             requestRange(...args) {
                 resendRequests.push(args)
                 return intoStream.object([
-                    createStorageRow(freshStreamId, 200, 100),
-                    createStorageRow(freshStreamId, 300, 200)
+                    createStreamMessage(freshStreamId, 200, 100),
+                    createStreamMessage(freshStreamId, 300, 200)
                 ])
             }
         }])

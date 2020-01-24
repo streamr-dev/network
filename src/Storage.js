@@ -308,19 +308,7 @@ class Storage extends EventEmitter {
     _parseRow(row) {
         const streamMessage = StreamMessageFactory.deserialize(row.payload.toString())
         this.emit('read', streamMessage)
-        return {
-            streamId: streamMessage.getStreamId(),
-            streamPartition: streamMessage.getStreamPartition(),
-            timestamp: streamMessage.getTimestamp(),
-            sequenceNo: streamMessage.getSequenceNumber(),
-            publisherId: streamMessage.getPublisherId(),
-            msgChainId: streamMessage.getMsgChainId(),
-            previousTimestamp: streamMessage.prevMsgRef ? streamMessage.prevMsgRef.timestamp : null,
-            previousSequenceNo: streamMessage.prevMsgRef ? streamMessage.prevMsgRef.sequenceNumber : null,
-            data: streamMessage.getParsedContent(),
-            signature: streamMessage.signature,
-            signatureType: streamMessage.signatureType,
-        }
+        return streamMessage
     }
 }
 

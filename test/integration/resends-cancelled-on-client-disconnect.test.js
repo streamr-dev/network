@@ -2,6 +2,7 @@ const { Readable } = require('stream')
 
 const { startTracker, startStorageNode } = require('streamr-network')
 const { waitForCondition } = require('streamr-test-utils')
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const ws = require('uWebSockets.js')
 
 const WebsocketServer = require('../../src/websocket/WebsocketServer')
@@ -43,17 +44,9 @@ describe('resend cancellation', () => {
                             timeoutCleared = true
                         }
                     })
-                    stream.push({
-                        timestamp: 0,
-                        sequenceNo: 0,
-                        publisherId: 'publisherId',
-                        msgChainId: 'msgChainId',
-                        previousTimestamp: null,
-                        previousSequenceNo: null,
-                        data: {},
-                        signature: null,
-                        signatureType: 0
-                    })
+                    stream.push(StreamMessage.create([streamId, streamPartition, 0, 0, 'publisherId', 'msgChainId'],
+                        null, StreamMessage.CONTENT_TYPES.MESSAGE,
+                        StreamMessage.ENCRYPTION_TYPES.NONE, {}, StreamMessage.SIGNATURE_TYPES.NONE, null))
                     return stream
                 },
                 store: () => {}

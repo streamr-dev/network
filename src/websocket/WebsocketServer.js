@@ -269,7 +269,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             }
 
             const { streamMessage } = unicastMessage
-            this.volumeLogger.logOutput(streamMessage.getContent().length)
+            this.volumeLogger.logOutput(streamMessage.getSerializedContent().length)
             connection.send(ControlLayer.UnicastMessage.create(request.requestId, streamMessage))
         }
 
