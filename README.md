@@ -290,7 +290,7 @@ Streamr client provides functions for working with Community Products. All are a
 Name | Returns | Description
 ---- | ------- | -----------
 deployCommunity() | Transaction | Deploy a new community product
-createSecret(communityAddress, secret[, name]) | Create a secret for a community product
+createSecret(communityAddress, secret[, name]) | | Create a secret for a community product
 communityIsReady(address) | | Wait until community is operated
 addMembers(communityAddress, memberAddressList) | | Add members
 kick(communityAddress, memberAddressList) | | Kick members out from community
