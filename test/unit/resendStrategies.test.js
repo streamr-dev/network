@@ -62,60 +62,35 @@ describe('StorageResendStrategy#getResendResponseStream', () => {
     })
 
     test('data of storage stream are transformed into UnicastMessages for response stream', async () => {
-        storage.requestLast = jest.fn().mockReturnValueOnce(intoStream.object([
+        const msg1 = StreamMessage.create(
+            ['streamId', 0, 0, 0, 'publisherId', 'msgChainId'],
+            null,
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
             {
-                timestamp: 0,
-                sequenceNo: 0,
-                publisherId: 'publisherId',
-                msgChainId: 'msgChainId',
-                data: {
-                    hello: 'world'
-                },
-                signature: 'signature',
-                signatureType: 2,
+                hello: 'world'
             },
-            {
-                timestamp: 10,
-                sequenceNo: 10,
-                publisherId: 'publisherId',
-                msgChainId: 'msgChainId',
-                previousTimestamp: 0,
-                previousSequenceNo: 0,
-                data: {},
-                signature: 'signature',
-                signatureType: 2,
-            }
-        ]))
+            StreamMessage.SIGNATURE_TYPES.ETH,
+            'signature'
+        )
+        const msg2 = StreamMessage.create(
+            ['streamId', 0, 10, 10, 'publisherId', 'msgChainId'],
+            [0, 0],
+            StreamMessage.CONTENT_TYPES.MESSAGE,
+            StreamMessage.ENCRYPTION_TYPES.NONE,
+            {},
+            StreamMessage.SIGNATURE_TYPES.ETH,
+            'signature'
+        )
+        storage.requestLast = jest.fn().mockReturnValueOnce(intoStream.object([msg1, msg2]))
 
         const responseStream = resendStrategy.getResendResponseStream(
             ControlLayer.ResendLastRequest.create('streamId', 0, 'requestId', 10)
         )
         const streamAsArray = await waitForStreamToEnd(responseStream)
         expect(streamAsArray).toEqual([
-            ControlLayer.UnicastMessage.create(
-                'requestId', StreamMessage.create(
-                    ['streamId', 0, 0, 0, 'publisherId', 'msgChainId'],
-                    null,
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {
-                        hello: 'world'
-                    },
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
-            ),
-            ControlLayer.UnicastMessage.create(
-                'requestId', StreamMessage.create(
-                    ['streamId', 0, 10, 10, 'publisherId', 'msgChainId'],
-                    [0, 0],
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                )
-            ),
+            ControlLayer.UnicastMessage.create('requestId', msg1),
+            ControlLayer.UnicastMessage.create('requestId', msg2),
         ])
     })
 

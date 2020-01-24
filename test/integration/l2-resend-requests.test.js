@@ -1,10 +1,13 @@
 const intoStream = require('into-stream')
-const { UnicastMessage } = require('streamr-client-protocol').ControlLayer
+const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForStreamToEnd, waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
+
+const { UnicastMessage } = ControlLayer
+const { StreamMessage } = MessageLayer
 
 const typesOfStreamItems = async (stream) => {
     const arr = await waitForStreamToEnd(stream)
@@ -35,14 +38,15 @@ describe('resend requests are fulfilled at L2', () => {
         n1 = await startNetworkNode(LOCALHOST, 28612, 'n1', [{
             store: () => {},
             requestLast: () => intoStream.object([
-                {
-                    timestamp: 666,
-                    sequenceNo: 50,
-                    publisherId: 'publisherId',
-                    msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                },
+                StreamMessage.create(
+                    ['streamId', 0, 666, 50, 'publisherId', 'msgChainId'],
+                    null,
+                    StreamMessage.CONTENT_TYPES.MESSAGE,
+                    StreamMessage.ENCRYPTION_TYPES.NONE,
+                    {},
+                    StreamMessage.SIGNATURE_TYPES.ETH,
+                    'signature'
+                ),
             ]),
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
@@ -51,44 +55,42 @@ describe('resend requests are fulfilled at L2', () => {
             store: () => {},
             requestLast: () => intoStream.object([]),
             requestFrom: () => intoStream.object([
-                {
-                    timestamp: 756,
-                    sequenceNo: 0,
-                    previousTimestamp: 666,
-                    previousSequenceNo: 50,
-                    publisherId: 'publisherId',
-                    msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                },
-                {
-                    timestamp: 800,
-                    sequenceNo: 0,
-                    previousTimestamp: 756,
-                    previousSequenceNo: 0,
-                    publisherId: 'publisherId',
-                    msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                },
-                {
-                    timestamp: 900,
-                    sequenceNo: 0,
-                    previousTimestamp: 800,
-                    previousSequenceNo: 0,
-                    publisherId: 'publisherId',
-                    msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                },
-                {
-                    timestamp: 512012,
-                    sequenceNo: 0,
-                    publisherId: 'publisherId2',
-                    msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                }
+                StreamMessage.create(
+                    ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
+                    [666, 50],
+                    StreamMessage.CONTENT_TYPES.MESSAGE,
+                    StreamMessage.ENCRYPTION_TYPES.NONE,
+                    {},
+                    StreamMessage.SIGNATURE_TYPES.ETH,
+                    'signature'
+                ),
+                StreamMessage.create(
+                    ['streamId', 0, 800, 0, 'publisherId', 'msgChainId'],
+                    [756, 0],
+                    StreamMessage.CONTENT_TYPES.MESSAGE,
+                    StreamMessage.ENCRYPTION_TYPES.NONE,
+                    {},
+                    StreamMessage.SIGNATURE_TYPES.ETH,
+                    'signature'
+                ),
+                StreamMessage.create(
+                    ['streamId', 0, 900, 0, 'publisherId', 'msgChainId'],
+                    [800, 0],
+                    StreamMessage.CONTENT_TYPES.MESSAGE,
+                    StreamMessage.ENCRYPTION_TYPES.NONE,
+                    {},
+                    StreamMessage.SIGNATURE_TYPES.ETH,
+                    'signature'
+                ),
+                StreamMessage.create(
+                    ['streamId', 0, 512012, 0, 'publisherId2', 'msgChainId'],
+                    null,
+                    StreamMessage.CONTENT_TYPES.MESSAGE,
+                    StreamMessage.ENCRYPTION_TYPES.NONE,
+                    {},
+                    StreamMessage.SIGNATURE_TYPES.ETH,
+                    'signature'
+                ),
             ]),
             requestRange: () => intoStream.object([]),
         }])

@@ -1,40 +1,16 @@
 const { Readable, Transform } = require('stream')
 
-const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
+const { ControlLayer } = require('streamr-client-protocol')
 
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 
-const { StreamMessage } = MessageLayer
-
 function toUnicastMessage(request) {
     return new Transform({
         objectMode: true,
-        transform: (streamData, _, done) => {
-            const {
-                timestamp,
-                sequenceNo,
-                publisherId,
-                msgChainId,
-                previousTimestamp,
-                previousSequenceNo,
-                data,
-                signature,
-                signatureType,
-            } = streamData
-            done(null, ControlLayer.UnicastMessage.create(
-                request.requestId,
-                StreamMessage.create(
-                    [request.streamId, request.streamPartition, timestamp, sequenceNo, publisherId, msgChainId],
-                    previousTimestamp != null ? [previousTimestamp, previousSequenceNo] : null,
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    data,
-                    signatureType,
-                    signature
-                )
-            ))
+        transform: (streamMessage, _, done) => {
+            done(null, ControlLayer.UnicastMessage.create(request.requestId, streamMessage))
         }
     })
 }
