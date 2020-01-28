@@ -105,7 +105,8 @@ class Storage extends EventEmitter {
                 readableStream.push(null)
             })
             .catch((err) => {
-                readableStream.emit('error', err)
+                console.error(err)
+                readableStream.push(null)
             })
 
         return readableStream
@@ -267,6 +268,10 @@ class Storage extends EventEmitter {
                 cassandraStream.pause()
                 setImmediate(() => cassandraStream.resume())
             }
+        })
+
+        cassandraStream.on('error', (err) => {
+            console.error(err)
         })
 
         return cassandraStream.pipe(new Transform({
