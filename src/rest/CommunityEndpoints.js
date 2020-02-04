@@ -15,17 +15,15 @@ import {
     Wallet,
     getDefaultProvider,
     providers,
+    utils as ethersUtils,
 } from 'ethers'
-import {
-    BigNumber,
-    computeAddress,
-    getAddress
-} from 'ethers/utils'
 import debugFactory from 'debug'
 
 import * as CommunityProduct from '../../contracts/CommunityProduct.json'
 
 import authFetch from './authFetch'
+
+const { BigNumber, computeAddress, getAddress } = ethersUtils
 
 const debug = debugFactory('StreamrClient::CommunityEndpoints')
 

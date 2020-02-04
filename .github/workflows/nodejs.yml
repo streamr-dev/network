@@ -47,3 +47,6 @@ jobs:
         while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/users/me); if [ "$http_code" = 401 ]; then echo "EE up and running"; break; else echo "EE not receiving connections"; sleep 5s; fi; done
         while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/volume); if [ "$http_code" = 200 ]; then echo "brokers up and running"; break; else echo "brokers not receiving connections"; sleep 5s; fi; done
         npm run test-integration
+
+    - name: test-build
+      run: npm run build
