@@ -281,6 +281,14 @@ resend: {
 }
 ```
 
+If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
+
+```javascript
+client.on('initial_resend_done', () => {
+    console.log('All caught up and received all requested historical messages! Now switching to real time!')
+})
+```
+
 ### Community Products API
 
 Streamr client provides functions for working with Community Products. All are async, that is, they return a Promise.

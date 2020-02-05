@@ -630,12 +630,12 @@ export default class StreamrClient extends EventEmitter {
                     // once a message is received, gap filling in Subscription.js will check if this satisfies the resend and request
                     // another resend if it doesn't. So we can anyway clear this resend request.
                     const handler = () => {
-                        sub.removeListener('resend done', handler)
+                        sub.removeListener('initial_resend_done', handler)
                         sub.removeListener('message received', handler)
                         sub.removeListener('unsubscribed', handler)
                         sub.removeListener('error', handler)
                     }
-                    sub.once('resend done', handler)
+                    sub.once('initial_resend_done', handler)
                     sub.once('message received', handler)
                     sub.once('unsubscribed', handler)
                     sub.once('error', handler)
