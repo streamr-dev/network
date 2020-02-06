@@ -143,7 +143,7 @@ export default class StreamrClient extends EventEmitter {
                 if (sub && stream.getSubscription(sub.id)) {
                     // sub.handleResentMessage never rejects: on any error it emits an 'error' event on the Subscription
                     sub.handleResentMessage(
-                        msg.streamMessage,
+                        msg.streamMessage, msg.requestId,
                         once(() => stream.verifyStreamMessage(msg.streamMessage)), // ensure verification occurs only once
                     )
                 } else {

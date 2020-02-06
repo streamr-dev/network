@@ -125,7 +125,7 @@ describe('RealTimeSubscription', () => {
                 const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
 
                 sub.setResending(true)
-                await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
                 assert.equal(handler.callCount, 1)
             })
 
@@ -147,11 +147,11 @@ describe('RealTimeSubscription', () => {
                 })
 
                 describe('when message verification returns false', () => {
-                    it('does not call the message handler', async () => sub.handleResentMessage(msg, sinon.stub()
+                    it('does not call the message handler', async () => sub.handleResentMessage(msg, 'requestId', sinon.stub()
                         .resolves(false)))
 
                     it('prints to standard error stream', async () => {
-                        await sub.handleResentMessage(msg, sinon.stub()
+                        await sub.handleResentMessage(msg, 'requestId', sinon.stub()
                             .resolves(false))
                         assert(console.error.calledWith(sinon.match.instanceOf(InvalidSignatureError)))
                     })
@@ -161,7 +161,7 @@ describe('RealTimeSubscription', () => {
                             assert(err instanceof InvalidSignatureError)
                             done()
                         })
-                        return sub.handleResentMessage(msg, sinon.stub()
+                        return sub.handleResentMessage(msg, 'requestId', sinon.stub()
                             .resolves(false))
                     })
                 })
@@ -174,7 +174,7 @@ describe('RealTimeSubscription', () => {
                             assert.strictEqual(err.cause, error)
                             done()
                         })
-                        return sub.handleResentMessage(msg, sinon.stub()
+                        return sub.handleResentMessage(msg, 'requestId', sinon.stub()
                             .throws(error))
                     })
                 })
@@ -185,7 +185,7 @@ describe('RealTimeSubscription', () => {
                             assert.strictEqual(err.name, 'should not be called!')
                             done()
                         })
-                        return sub.handleResentMessage(msg, sinon.stub()
+                        return sub.handleResentMessage(msg, 'requestId', sinon.stub()
                             .resolves(true))
                     })
 
@@ -194,7 +194,7 @@ describe('RealTimeSubscription', () => {
                             assert.strictEqual(err.name, 'should not be called!')
                             done()
                         })
-                        return sub.handleResentMessage(msg, sinon.stub()
+                        return sub.handleResentMessage(msg, 'requestId', sinon.stub()
                             .resolves(true))
                     })
                 })
@@ -217,7 +217,7 @@ describe('RealTimeSubscription', () => {
                 sub.setResending(true)
 
                 await sub.handleBroadcastMessage(msg, sinon.stub().resolves(true))
-                await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
                 sub.stop()
             })
         })
@@ -612,7 +612,7 @@ describe('RealTimeSubscription', () => {
             sub.addPendingResendRequestId('requestId')
             sub.on('resent', () => done())
             sub.setResending(true)
-            await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
             sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
         })
 
@@ -622,7 +622,7 @@ describe('RealTimeSubscription', () => {
             sub.addPendingResendRequestId('requestId')
             sub.on('resent', () => done())
             sub.setResending(true)
-            sub.handleResentMessage(msg, sinon.stub().resolves(true))
+            sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
             sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
         })
 
@@ -647,7 +647,7 @@ describe('RealTimeSubscription', () => {
                 sub.addPendingResendRequestId('requestId')
                 sub.on('resent', sinon.stub().throws(error))
                 sub.setResending(true)
-                await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
 
                 await sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
                 assert(!sub.isResending())

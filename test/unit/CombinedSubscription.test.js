@@ -40,7 +40,7 @@ describe('CombinedSubscription', () => {
             }, 100)
         })
         sub.handleResending(ControlLayer.ResendResponseResending.create('streamId', 0, 'requestId'))
-        sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+        sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
         sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
         sub.handleResent(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId'))
     })

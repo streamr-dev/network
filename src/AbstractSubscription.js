@@ -14,6 +14,7 @@ export default class AbstractSubscription extends Subscription {
         super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
         this.callback = callback
         this.pendingResendRequestIds = {}
+        this._lastMessageHandlerPromise = {}
         this.orderingUtil = (orderMessages) ? new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
             this._handleInOrder(orderedMessage)
         }, (from, to, publisherId, msgChainId) => {
@@ -53,13 +54,13 @@ export default class AbstractSubscription extends Subscription {
         }
     }
 
-    async handleResentMessage(msg, verifyFn) {
+    async handleResentMessage(msg, requestId, verifyFn) {
         return this._catchAndEmitErrors(() => {
             if (!this.isResending()) {
                 throw new Error(`There is no resend in progress, but received resent message ${msg.serialize()}`)
             } else {
                 const handleMessagePromise = this._handleMessage(msg, verifyFn)
-                this._lastMessageHandlerPromise = handleMessagePromise
+                this._lastMessageHandlerPromise[requestId] = handleMessagePromise
                 return handleMessagePromise
             }
         })
@@ -80,17 +81,16 @@ export default class AbstractSubscription extends Subscription {
                 throw new Error(`Received unexpected ResendResponseResent message ${response.serialize()}`)
             }
 
-            if (!this._lastMessageHandlerPromise) {
+            if (!this._lastMessageHandlerPromise[response.requestId]) {
                 throw new Error('Attempting to handle ResendResponseResent, but no messages have been received!')
             }
 
             // Delay event emission until the last message in the resend has been handled
-            await this._lastMessageHandlerPromise
+            await this._lastMessageHandlerPromise[response.requestId]
             try {
                 this.emit('resent', response)
             } finally {
-                delete this.pendingResendRequestIds[response.requestId]
-                this.finishResend()
+                this.cleanupResponse(response)
             }
         })
     }
@@ -103,10 +103,17 @@ export default class AbstractSubscription extends Subscription {
             try {
                 this.emit('no_resend', response)
             } finally {
-                delete this.pendingResendRequestIds[response.requestId]
-                this.finishResend()
+                this.cleanupResponse(response)
             }
         })
+    }
+
+    cleanupResponse(response) {
+        delete this.pendingResendRequestIds[response.requestId]
+        delete this._lastMessageHandlerPromise[response.requestId]
+        if (Object.keys(this.pendingResendRequestIds).length === 0) {
+            this.finishResend()
+        }
     }
 
     _clearGaps() {

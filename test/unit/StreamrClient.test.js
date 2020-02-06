@@ -409,7 +409,7 @@ describe('StreamrClient', () => {
 
                 const msg1 = msg(sub.streamId, {}, '0')
                 connection.emitMessage(msg1)
-                sinon.assert.calledWithMatch(sub.handleResentMessage, msg1.streamMessage, sinon.match.func)
+                sinon.assert.calledWithMatch(sub.handleResentMessage, msg1.streamMessage, '0', sinon.match.func)
             })
 
             it('ignores messages for unknown Subscriptions', () => {
@@ -418,7 +418,8 @@ describe('StreamrClient', () => {
             })
 
             it('should ensure that the promise returned by the verification function is cached', (done) => {
-                sub.handleResentMessage = (message, verifyFn) => {
+                sub.handleResentMessage = (message, requestId, verifyFn) => {
+                    assert.strictEqual(requestId, '0')
                     const firstResult = verifyFn()
                     assert(firstResult instanceof Promise)
                     assert.strictEqual(firstResult, verifyFn())

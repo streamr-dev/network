@@ -36,7 +36,7 @@ describe('HistoricalSubscription', () => {
                 }, {
                     last: 1
                 })
-                return sub.handleResentMessage(msg, sinon.stub().resolves(true))
+                return sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
             })
 
             describe('on error', () => {
@@ -57,10 +57,10 @@ describe('HistoricalSubscription', () => {
                 })
 
                 describe('when message verification returns false', () => {
-                    it('does not call the message handler', async () => sub.handleResentMessage(msg, sinon.stub().resolves(false)))
+                    it('does not call the message handler', async () => sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(false)))
 
                     it('prints to standard error stream', async () => {
-                        await sub.handleResentMessage(msg, sinon.stub().resolves(false))
+                        await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(false))
                         assert(console.error.calledWith(sinon.match.instanceOf(InvalidSignatureError)))
                     })
 
@@ -69,7 +69,7 @@ describe('HistoricalSubscription', () => {
                             assert(err instanceof InvalidSignatureError)
                             done()
                         })
-                        return sub.handleResentMessage(msg, sinon.stub().resolves(false))
+                        return sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(false))
                     })
                 })
 
@@ -81,7 +81,7 @@ describe('HistoricalSubscription', () => {
                             assert.strictEqual(err.cause, error)
                             done()
                         })
-                        return sub.handleResentMessage(msg, sinon.stub().throws(error))
+                        return sub.handleResentMessage(msg, 'requestId', sinon.stub().throws(error))
                     })
                 })
 
@@ -91,7 +91,7 @@ describe('HistoricalSubscription', () => {
                             assert.strictEqual(err.name, 'should not be called!')
                             done()
                         })
-                        return sub.handleResentMessage(msg, sinon.stub().resolves(true))
+                        return sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
                     })
 
                     it('prints to standard error stream', async (done) => {
@@ -99,7 +99,7 @@ describe('HistoricalSubscription', () => {
                             assert.strictEqual(err.name, 'should not be called!')
                             done()
                         })
-                        return sub.handleResentMessage(msg, sinon.stub().resolves(true))
+                        return sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
                     })
                 })
             })
@@ -122,7 +122,7 @@ describe('HistoricalSubscription', () => {
                     last: 1
                 })
 
-                return Promise.all(msgs.map((m) => sub.handleResentMessage(m, sinon.stub().resolves(true))))
+                return Promise.all(msgs.map((m) => sub.handleResentMessage(m, 'requestId', sinon.stub().resolves(true))))
             })
         })
 
@@ -133,8 +133,8 @@ describe('HistoricalSubscription', () => {
                     last: 1
                 })
 
-                await sub.handleResentMessage(msg, sinon.stub().resolves(true))
-                await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
+                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
                 assert.equal(handler.callCount, 1)
                 sub.stop()
             })
@@ -160,8 +160,8 @@ describe('HistoricalSubscription', () => {
                     }, 100)
                 })
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
             })
 
             it('emits second "gap" after the first one if no missing message is received in between', (done) => {
@@ -181,8 +181,8 @@ describe('HistoricalSubscription', () => {
                     })
                 })
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
             })
 
             it('does not emit second "gap" after the first one if the missing messages are received in between', (done) => {
@@ -195,8 +195,8 @@ describe('HistoricalSubscription', () => {
                     last: 1
                 }, {}, 100, 100)
                 sub.on('gap', () => {
-                    sub.handleResentMessage(msg2, sinon.stub().resolves(true))
-                    sub.handleResentMessage(msg3, sinon.stub().resolves(true)).then(() => {
+                    sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
+                    sub.handleResentMessage(msg3, 'requestId', sinon.stub().resolves(true)).then(() => {
                     })
                     sub.on('gap', () => { throw new Error('should not emit second gap') })
                     setTimeout(() => {
@@ -205,8 +205,8 @@ describe('HistoricalSubscription', () => {
                     }, 100 + 1000)
                 })
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
             })
 
             it('does not emit second "gap" if gets unsubscribed', async (done) => {
@@ -225,8 +225,8 @@ describe('HistoricalSubscription', () => {
                     }, 100 + 1000)
                 })
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
             })
 
             it('does not emit second "gap" if gets disconnected', async (done) => {
@@ -245,8 +245,8 @@ describe('HistoricalSubscription', () => {
                     }, 100 + 1000)
                 })
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
             })
 
             it('does not emit "gap" if different publishers', () => {
@@ -260,8 +260,8 @@ describe('HistoricalSubscription', () => {
                     throw new Error('unexpected gap')
                 })
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg1b, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1b, 'requestId', sinon.stub().resolves(true))
             })
 
             it('emits "gap" if a gap is detected (same timestamp but different sequenceNumbers)', (done) => {
@@ -283,8 +283,8 @@ describe('HistoricalSubscription', () => {
                     }, 100)
                 })
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
             })
 
             it('does not emit "gap" if a gap is not detected', () => {
@@ -296,8 +296,8 @@ describe('HistoricalSubscription', () => {
                 })
                 sub.on('gap', sinon.stub().throws())
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg2, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
             })
 
             it('does not emit "gap" if a gap is not detected (same timestamp but different sequenceNumbers)', () => {
@@ -309,8 +309,8 @@ describe('HistoricalSubscription', () => {
                 })
                 sub.on('gap', sinon.stub().throws())
 
-                sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                sub.handleResentMessage(msg2, sinon.stub().resolves(true))
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
             })
 
             describe('ordering util', () => {
@@ -328,12 +328,12 @@ describe('HistoricalSubscription', () => {
                     }, {}, 100, 100, false)
                     sub.on('gap', sinon.stub().throws())
 
-                    await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg2, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg4, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg2, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg3, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg3, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
 
                     assert.deepStrictEqual(received, [msg1, msg2, msg4, msg2, msg3, msg1])
                 })
@@ -350,12 +350,12 @@ describe('HistoricalSubscription', () => {
                         last: 1
                     })
 
-                    await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg2, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg4, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg2, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg3, sinon.stub().resolves(true))
-                    await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg3, 'requestId', sinon.stub().resolves(true))
+                    await sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
 
                     assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4])
                 })
@@ -375,7 +375,7 @@ describe('HistoricalSubscription', () => {
                 done()
             })
 
-            sub.handleResentMessage(byeMsg, sinon.stub().resolves(true))
+            sub.handleResentMessage(byeMsg, 'requestId', sinon.stub().resolves(true))
         })
 
         describe('decryption', () => {
@@ -389,7 +389,7 @@ describe('HistoricalSubscription', () => {
                 }, {
                     last: 1
                 })
-                return sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
             })
             it('should decrypt encrypted content with the correct key', (done) => {
                 const groupKey = crypto.randomBytes(32)
@@ -407,7 +407,7 @@ describe('HistoricalSubscription', () => {
                 }, {
                     publisherId: groupKey,
                 })
-                return sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
             })
             it('should not be able to decrypt with the wrong key', (done) => {
                 const correctGroupKey = crypto.randomBytes(32)
@@ -427,7 +427,7 @@ describe('HistoricalSubscription', () => {
                     assert.strictEqual(err.toString(), `Error: Unable to decrypt ${ciphertext}`)
                     done()
                 })
-                return sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
             })
             it('should decrypt first content, update key and decrypt second content', async (done) => {
                 const groupKey1 = crypto.randomBytes(32)
@@ -457,8 +457,8 @@ describe('HistoricalSubscription', () => {
                 }, {
                     publisherId: groupKey1,
                 })
-                await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
-                return sub.handleResentMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                return sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
             })
         })
     })
@@ -496,14 +496,14 @@ describe('HistoricalSubscription', () => {
             const msg3 = createMsg(3, undefined, 2)
 
             // Receive msg1 successfully
-            await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
 
             // Get notified of an invalid message
             const err = new Errors.InvalidJsonError(msg.getStreamId(), 'invalid json', 'test error msg', createMsg(2, undefined, 1))
             sub.handleError(err)
 
             // Receive msg3 successfully
-            await sub.handleResentMessage(msg3, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg3, 'requestId', sinon.stub().resolves(true))
         })
 
         it('if an InvalidJsonError AND a gap occur, does not mark it as received and emits gap at the next message', async (done) => {
@@ -527,14 +527,14 @@ describe('HistoricalSubscription', () => {
             const msg4 = createMsg(4, undefined, 3)
 
             // Receive msg1 successfully
-            await sub.handleResentMessage(msg1, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
 
             // Get notified of invalid msg3 (msg2 is missing)
             const err = new Errors.InvalidJsonError(msg.getStreamId(), 'invalid json', 'test error msg', createMsg(3, undefined, 2))
             sub.handleError(err)
 
             // Receive msg4 and should emit gap
-            await sub.handleResentMessage(msg4, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
         })
     })
 
@@ -574,7 +574,7 @@ describe('HistoricalSubscription', () => {
             })
             sub.addPendingResendRequestId('requestId')
             sub.on('resent', () => sub.on('initial_resend_done', () => done()))
-            await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
             sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
         })
 
@@ -585,7 +585,7 @@ describe('HistoricalSubscription', () => {
             })
             sub.addPendingResendRequestId('requestId')
             sub.on('resent', () => done())
-            sub.handleResentMessage(msg, sinon.stub().resolves(true))
+            sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
             sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
         })
 
@@ -600,7 +600,7 @@ describe('HistoricalSubscription', () => {
                 throw new Error('resend is not done yet! (still waiting for answer to requestId2)')
             })
             sub.on('resent', () => setTimeout(done, 2000))
-            await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg, 'requestId1', sinon.stub().resolves(true))
             sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId1'))
         })
         it('emits 2 "resent" and 1 "initial_resend_done" after receiving 2 pending resend response', async (done) => {
@@ -618,9 +618,23 @@ describe('HistoricalSubscription', () => {
                 assert.strictEqual(counter, 2)
                 done()
             })
-            await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg, 'requestId1', sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg, 'requestId2', sinon.stub().resolves(true))
             sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId1'))
             sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId2'))
+        })
+
+        it('can handle a second resend while in the middle of resending', async (done) => {
+            const handler = sinon.stub()
+            const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), handler, {
+                last: 1
+            })
+            sub.addPendingResendRequestId('requestId1')
+            sub.addPendingResendRequestId('requestId2')
+            sub.on('resent', () => sub.on('initial_resend_done', () => done()))
+            await sub.handleResentMessage(msg, 'requestId1', sinon.stub().resolves(true))
+            sub.handleNoResend(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId2'))
+            sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId1'))
         })
     })
 
@@ -644,7 +658,7 @@ describe('HistoricalSubscription', () => {
                 throw new Error('resend is not done yet! (still waiting for answer to requestId2)')
             })
             sub.on('no_resend', () => setTimeout(done, 2000))
-            await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
             sub.handleNoResend(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId1'))
         })
         it('emits 2 "resent" and 1 "initial_resend_done" after receiving 2 pending resend response', async (done) => {
@@ -662,7 +676,7 @@ describe('HistoricalSubscription', () => {
                 assert.strictEqual(counter, 2)
                 done()
             })
-            await sub.handleResentMessage(msg, sinon.stub().resolves(true))
+            await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
             sub.handleNoResend(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId1'))
             sub.handleNoResend(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId2'))
         })

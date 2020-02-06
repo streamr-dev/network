@@ -284,7 +284,8 @@ resend: {
 If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
 
 ```javascript
-client.on('initial_resend_done', () => {
+const sub = client.subscribe(...)
+sub.on('initial_resend_done', () => {
     console.log('All caught up and received all requested historical messages! Now switching to real time!')
 })
 ```
