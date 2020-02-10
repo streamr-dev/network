@@ -1,0 +1,31 @@
+plugins {
+    id 'java'
+}
+
+group 'com.streamr'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenLocal()
+    maven {
+        url "https://dl.bintray.com/ethereum/maven/"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    compile 'com.streamr:client:1.2.4'
+    compile 'commons-cli:commons-cli:1.4'
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Version': version,
+                'Main-Class': 'com.streamr.client_testing.Main'
+    }
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}

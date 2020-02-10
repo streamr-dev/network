@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %c{1} - %msg%n" />
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Logger name="streamr.client-testing" level="warn" additivity="false">
+            <AppenderRef ref="Console" />
+        </Logger>
+        <Root level="warn" additivity="false">
+            <AppenderRef ref="Console" />
+        </Root>
+    </Loggers>
+</Configuration>
