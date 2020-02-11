@@ -3,7 +3,6 @@ const { waitForEvent } = require('streamr-test-utils')
 
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 const { StreamIdAndPartition } = require('../../src/identifiers')
-const BasicProtocol = require('../../src/protocol/BasicProtocol')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
@@ -11,7 +10,7 @@ const FindStorageNodesMessage = require('../../src/messages/FindStorageNodesMess
 const InstructionMessage = require('../../src/messages/InstructionMessage')
 const StatusMessage = require('../../src/messages/StatusMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
-const { peerTypes } = require('../../src/protocol/PeerBook')
+const { PeerInfo } = require('../../src/connection/PeerInfo')
 
 const { StreamMessage } = MessageLayer
 
@@ -27,25 +26,10 @@ describe('delivery of messages in protocol layer', () => {
         const wss3 = await startWebSocketServer('127.0.0.1', 28513)
         const wss4 = await startWebSocketServer('127.0.0.1', 28514)
 
-        nodeToNode1 = new NodeToNode(new BasicProtocol(new WsEndpoint(wss1, {
-            'streamr-peer-id': 'nodeToNode1',
-            'streamr-peer-type': peerTypes.NODE
-        }, null)))
-
-        nodeToNode2 = new NodeToNode(new BasicProtocol(new WsEndpoint(wss2, {
-            'streamr-peer-id': 'nodeToNode2',
-            'streamr-peer-type': peerTypes.NODE
-        }, null)))
-
-        trackerNode = new TrackerNode(new BasicProtocol(new WsEndpoint(wss3, {
-            'streamr-peer-id': 'trackerNode',
-            'streamr-peer-type': peerTypes.NODE
-        }, null)))
-
-        trackerServer = new TrackerServer(new BasicProtocol(new WsEndpoint(wss4, {
-            'streamr-peer-id': 'trackerServer',
-            'streamr-peer-type': peerTypes.NODE
-        }, null)))
+        nodeToNode1 = new NodeToNode(new WsEndpoint(wss1, PeerInfo.newNode('nodeToNode1'), null))
+        nodeToNode2 = new NodeToNode(new WsEndpoint(wss2, PeerInfo.newNode('nodeToNode2'), null))
+        trackerNode = new TrackerNode(new WsEndpoint(wss3, PeerInfo.newNode('trackerNode'), null))
+        trackerServer = new TrackerServer(new WsEndpoint(wss4, PeerInfo.newTracker('trackerServer'), null))
 
         // Connect nodeToNode1 <-> nodeToNode2
         nodeToNode1.connectToNode(nodeToNode2.getAddress())

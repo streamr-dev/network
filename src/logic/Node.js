@@ -38,7 +38,6 @@ class Node extends EventEmitter {
 
         // set default options
         const defaultOptions = {
-            id: 'node',
             connectToBootstrapTrackersInterval: 5000,
             sendStatusToAllTrackersInterval: 1000,
             bufferTimeoutInMs: 60 * 1000,
@@ -62,6 +61,7 @@ class Node extends EventEmitter {
         this.sendStatusTimeout = null
         this.bootstrapTrackerAddresses = []
         this.protocols = this.opts.protocols
+        this.peerInfo = this.opts.peerInfo
 
         this.streams = new StreamManager()
         this.messageBuffer = new MessageBuffer(this.opts.bufferTimeoutInMs, this.opts.bufferMaxSize)
@@ -82,11 +82,11 @@ class Node extends EventEmitter {
             this._sendStatusToAllTrackers()
         })
 
-        this.debug = createDebug(`streamr:logic:node:${this.opts.id}`)
-        this.debug('started %s', this.opts.id)
+        this.debug = createDebug(`streamr:logic:node:${this.peerInfo.peerId}`)
+        this.debug('started %s', this.peerInfo.peerId)
 
         this.started = new Date().toLocaleString()
-        this.metrics = new Metrics(this.opts.id)
+        this.metrics = new Metrics(this.peerInfo.peerId)
 
         this.seenButNotPropagated = new LRU({
             max: this.opts.bufferMaxSize,

@@ -25,7 +25,7 @@ describe('check status message flow between tracker and two nodes', () => {
 
     it('tracker should receive status message from node', async (done) => {
         tracker.protocols.trackerServer.once(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage }) => {
-            expect(statusMessage.getSource()).toEqual(nodeOne.opts.id)
+            expect(statusMessage.getSource()).toEqual('node-1')
             // eslint-disable-next-line no-underscore-dangle
             expect(statusMessage.getStatus()).toEqual(nodeOne._getStatus())
             done()
@@ -36,7 +36,7 @@ describe('check status message flow between tracker and two nodes', () => {
 
     it('tracker should receive status from second node', async (done) => {
         tracker.protocols.trackerServer.once(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage }) => {
-            expect(statusMessage.getSource()).toEqual(nodeTwo.opts.id)
+            expect(statusMessage.getSource()).toEqual('node-2')
             // eslint-disable-next-line no-underscore-dangle
             expect(statusMessage.getStatus()).toEqual(nodeTwo._getStatus())
             done()

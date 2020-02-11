@@ -3,23 +3,18 @@ const uuidv4 = require('uuid/v4')
 const TrackerServer = require('./protocol/TrackerServer')
 const TrackerNode = require('./protocol/TrackerNode')
 const NodeToNode = require('./protocol/NodeToNode')
-const BasicProtocol = require('./protocol/BasicProtocol')
-const { peerTypes } = require('./protocol/PeerBook')
+const { PeerInfo } = require('./connection/PeerInfo')
 const Tracker = require('./logic/Tracker')
 const NetworkNode = require('./NetworkNode')
 const { startEndpoint } = require('./connection/WsEndpoint')
 
 function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4, advertisedWsUrl = null) {
-    const identity = {
-        'streamr-peer-id': id,
-        'streamr-peer-type': peerTypes.TRACKER
-    }
-    return startEndpoint(host, port, identity, advertisedWsUrl).then((endpoint) => {
-        const basicProtocol = new BasicProtocol(endpoint)
+    const peerInfo = PeerInfo.newTracker(id)
+    return startEndpoint(host, port, peerInfo, advertisedWsUrl).then((endpoint) => {
         const opts = {
-            id,
+            peerInfo,
             protocols: {
-                trackerServer: new TrackerServer(basicProtocol)
+                trackerServer: new TrackerServer(endpoint)
             },
             maxNeighborsPerNode
         }
@@ -28,17 +23,13 @@ function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4, advert
 }
 
 function startNetworkNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null) {
-    const identity = {
-        'streamr-peer-id': id,
-        'streamr-peer-type': peerTypes.NODE
-    }
-    return startEndpoint(host, port, identity, advertisedWsUrl).then((endpoint) => {
-        const basicProtocol = new BasicProtocol(endpoint)
+    const peerInfo = PeerInfo.newNode(id)
+    return startEndpoint(host, port, peerInfo, advertisedWsUrl).then((endpoint) => {
         const opts = {
-            id,
+            peerInfo,
             protocols: {
-                trackerNode: new TrackerNode(basicProtocol),
-                nodeToNode: new NodeToNode(basicProtocol)
+                trackerNode: new TrackerNode(endpoint),
+                nodeToNode: new NodeToNode(endpoint)
             },
             storages
         }
@@ -47,17 +38,13 @@ function startNetworkNode(host, port, id = uuidv4(), storages = [], advertisedWs
 }
 
 function startStorageNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null) {
-    const identity = {
-        'streamr-peer-id': id,
-        'streamr-peer-type': peerTypes.STORAGE
-    }
-    return startEndpoint(host, port, identity, advertisedWsUrl).then((endpoint) => {
-        const basicProtocol = new BasicProtocol(endpoint)
+    const peerInfo = PeerInfo.newStorage(id)
+    return startEndpoint(host, port, peerInfo, advertisedWsUrl).then((endpoint) => {
         const opts = {
-            id,
+            peerInfo,
             protocols: {
-                trackerNode: new TrackerNode(basicProtocol),
-                nodeToNode: new NodeToNode(basicProtocol)
+                trackerNode: new TrackerNode(endpoint),
+                nodeToNode: new NodeToNode(endpoint)
             },
             storages
         }

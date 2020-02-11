@@ -6,8 +6,6 @@ const encoder = require('../helpers/MessageEncoder')
 const { msgTypes } = require('../messages/messageTypes')
 const endpointEvents = require('../connection/WsEndpoint').events
 
-const { peerTypes } = require('./PeerBook')
-
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:node-node:node-connected',
     SUBSCRIBE_REQUEST: 'streamr:node-node:subscribe-request',
@@ -32,22 +30,20 @@ eventPerType[ControlLayer.ResendResponseResent.TYPE] = events.RESEND_RESPONSE
 eventPerType[ControlLayer.ResendResponseNoResend.TYPE] = events.RESEND_RESPONSE
 
 class NodeToNode extends EventEmitter {
-    constructor(basicProtocol) {
+    constructor(endpoint) {
         super()
-        this.basicProtocol = basicProtocol
-
-        this.basicProtocol.on(endpointEvents.PEER_CONNECTED, (peerId) => this.onPeerConnected(peerId))
-        this.basicProtocol.on(endpointEvents.PEER_DISCONNECTED, (peerId, reason) => this.onPeerDisconnected(peerId, reason))
-        this.basicProtocol.on(endpointEvents.MESSAGE_RECEIVED, (message) => this.onMessageReceived(message))
+        this.endpoint = endpoint
+        this.endpoint.on(endpointEvents.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
+        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, (peerInfo, reason) => this.onPeerDisconnected(peerInfo, reason))
+        this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
     }
 
     connectToNode(address) {
-        return this.basicProtocol.endpoint.connect(address).then(() => this.basicProtocol.peerBook.getPeerId(address))
+        return this.endpoint.connect(address)
     }
 
     sendData(receiverNodeId, streamMessage) {
-        const receiverNodeAddress = this.basicProtocol.peerBook.getAddress(receiverNodeId)
-        this.basicProtocol.endpoint.sendSync(receiverNodeAddress, encoder.wrapperMessage(ControlLayer.BroadcastMessage.create(streamMessage)))
+        this.endpoint.sendSync(receiverNodeId, encoder.wrapperMessage(ControlLayer.BroadcastMessage.create(streamMessage)))
     }
 
     sendSubscribe(receiverNodeId, streamIdAndPartition) {
@@ -59,40 +55,35 @@ class NodeToNode extends EventEmitter {
     }
 
     disconnectFromNode(receiverNodeId, reason) {
-        const receiverNodeAddress = this.basicProtocol.peerBook.getAddress(receiverNodeId)
-        this.basicProtocol.endpoint.close(receiverNodeAddress, reason)
+        this.endpoint.close(receiverNodeId, reason)
     }
 
     send(receiverNodeId, message) {
-        const receiverNodeAddress = this.basicProtocol.peerBook.getAddress(receiverNodeId)
-        return this.basicProtocol.endpoint.send(receiverNodeAddress, encoder.wrapperMessage(message))
+        return this.endpoint.send(receiverNodeId, encoder.wrapperMessage(message))
     }
 
     getAddress() {
-        return this.basicProtocol.endpoint.getAddress()
+        return this.endpoint.getAddress()
     }
 
     stop() {
-        return this.basicProtocol.endpoint.stop()
+        return this.endpoint.stop()
     }
 
-    onPeerConnected(peerId) {
-        if (this.basicProtocol.peerBook.isNode(peerId)) {
-            this.emit(events.NODE_CONNECTED, peerId)
+    onPeerConnected(peerInfo) {
+        if (peerInfo.isNode()) {
+            this.emit(events.NODE_CONNECTED, peerInfo.peerId)
         }
     }
 
-    onPeerDisconnected(peerId, reason) {
-        if (this.basicProtocol.peerBook.isNode(peerId)) {
-            this.emit(events.NODE_DISCONNECTED, peerId)
+    onPeerDisconnected(peerInfo, reason) {
+        if (peerInfo.isNode()) {
+            this.emit(events.NODE_DISCONNECTED, peerInfo.peerId)
         }
     }
 
-    isStorage() {
-        return this.basicProtocol.endpoint.customHeaders.headers['streamr-peer-type'] === peerTypes.STORAGE
-    }
-
-    onMessageReceived(message) {
+    onMessageReceived(peerInfo, rawMessage) {
+        const message = encoder.decode(peerInfo.peerId, rawMessage)
         if (message.getCode() === msgTypes.WRAPPER) {
             this.emit(eventPerType[message.controlLayerPayload.type], message.controlLayerPayload, message.getSource())
         }

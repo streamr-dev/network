@@ -6,7 +6,6 @@ const TrackerServer = require('../protocol/TrackerServer')
 const OverlayTopology = require('../logic/OverlayTopology')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
-const { peerTypes } = require('../protocol/PeerBook')
 
 module.exports = class Tracker extends EventEmitter {
     constructor(opts) {
@@ -16,14 +15,9 @@ module.exports = class Tracker extends EventEmitter {
             throw new Error('maxNeighborsPerNode is not an integer')
         }
 
-        // set default options
-        const defaultOptions = {
-            id: 'tracker',
-            protocols: []
-        }
-
         this.opts = {
-            ...defaultOptions, ...opts
+            protocols: [],
+            ...opts
         }
 
         if (!(this.opts.protocols.trackerServer instanceof TrackerServer)) {
@@ -34,24 +28,25 @@ module.exports = class Tracker extends EventEmitter {
         this.storageNodes = new Map()
 
         this.protocols = opts.protocols
+        this.peerInfo = opts.peerInfo
 
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, ({ peerId, nodeType }) => this.onNodeDisconnected(peerId, nodeType))
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, nodeType }) => this.processNodeStatus(statusMessage, nodeType))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, isStorage }) => this.processNodeStatus(statusMessage, isStorage))
         this.protocols.trackerServer.on(TrackerServer.events.FIND_STORAGE_NODES_REQUEST, this.findStorageNodes.bind(this))
 
-        this.metrics = new Metrics(this.opts.id)
+        this.metrics = new Metrics(this.peerInfo.peerId)
 
-        this.debug = createDebug(`streamr:logic:tracker:${this.opts.id}`)
-        this.debug('started %s', this.opts.id)
+        this.debug = createDebug(`streamr:logic:tracker:${this.peerInfo.peerId}`)
+        this.debug('started %s', this.peerInfo.peerId)
     }
 
-    processNodeStatus(statusMessage, nodeType) {
+    processNodeStatus(statusMessage, isStorage) {
         this.metrics.inc('processNodeStatus')
 
         const source = statusMessage.getSource()
         const status = statusMessage.getStatus()
 
-        if (nodeType === peerTypes.STORAGE) {
+        if (isStorage) {
             this.storageNodes.set(source, status)
         }
 
@@ -60,7 +55,7 @@ module.exports = class Tracker extends EventEmitter {
         this._formAndSendInstructionsToStorages()
     }
 
-    onNodeDisconnected(node, nodeType) {
+    onNodeDisconnected(node) {
         this.metrics.inc('onNodeDisconnected')
         this.storageNodes.delete(node)
         this._removeNode(node)

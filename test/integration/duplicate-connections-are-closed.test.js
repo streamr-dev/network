@@ -1,4 +1,5 @@
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
+const { PeerInfo } = require('../../src/connection/PeerInfo')
 
 describe('duplicate connections are closed', () => {
     let wss1
@@ -11,12 +12,8 @@ describe('duplicate connections are closed', () => {
     beforeEach(async () => {
         wss1 = await startWebSocketServer('127.0.0.1', 28501)
         wss2 = await startWebSocketServer('127.0.0.1', 28502)
-        wsEndpoint1 = new WsEndpoint(wss1, {
-            'streamr-peer-id': 'node-1', 'streamr-peer-type': 'node'
-        }, null)
-        wsEndpoint2 = new WsEndpoint(wss2, {
-            'streamr-peer-id': 'node-2', 'streamr-peer-type': 'node'
-        }, null)
+        wsEndpoint1 = new WsEndpoint(wss1, PeerInfo.newNode('wsEndpoint1'), null)
+        wsEndpoint2 = new WsEndpoint(wss2, PeerInfo.newNode('wsEndpoint2'), null)
     })
 
     afterAll(async () => {

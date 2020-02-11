@@ -33,12 +33,12 @@ describe('check tracker, nodes and statuses from nodes', () => {
     })
 
     it('should be able to start tracker, two nodes, receive statuses, create overlayPerStream for streams, then stop them successfully', async () => {
-        expect(tracker.protocols.trackerServer.basicProtocol.endpoint.connections.size).toBe(0)
+        expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(0)
         expect(tracker.overlayPerStream).toEqual({})
 
         subscriberOne.addBootstrapTracker(tracker.getAddress())
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        expect(tracker.protocols.trackerServer.basicProtocol.endpoint.connections.size).toBe(1)
+        expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(1)
 
         expect(Object.keys(tracker.overlayPerStream)).toEqual(['stream-1::0', 'stream-2::2'])
         expect(tracker.overlayPerStream['stream-1::0'].state()).toEqual({
@@ -54,7 +54,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED)
         ])
 
-        expect(tracker.protocols.trackerServer.basicProtocol.endpoint.connections.size).toBe(2)
+        expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(2)
 
         expect(Object.keys(tracker.overlayPerStream)).toEqual(['stream-1::0', 'stream-2::2'])
         expect(tracker.overlayPerStream['stream-1::0'].state()).toEqual({
