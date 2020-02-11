@@ -45,7 +45,7 @@ public class Streams {
         if (testCorrectness) {
             startStream(name);
             try {
-                Thread.sleep(60 * 1000);
+                Thread.sleep(20 * 1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -95,16 +95,19 @@ public class Streams {
 
     private void cleartextSignedStream(StreamTester streamTester) {
         StreamrClient[] publishers = buildClients(this::buildCleartextSigningClient, 2);
-        StreamrClient[] subscribers = buildClients(this::buildCleartextSigningClient, 6);
+        StreamrClient[] subscribers = buildClients(this::buildCleartextSigningClient, 3);
 
         streamTester.addPublisher(publishers[0], streamTester.getDefaultPublishFunction(), 1100);
         streamTester.addPublisher(publishers[1], streamTester.getDefaultPublishFunction(), 1300);
+        streamTester.addJavascriptPublisher(1200);
         streamTester.addSubscribers(subscribers[0], subscribers[1], subscribers[2]);
+        streamTester.addJavascriptSubscriber(null);
+        /*
         streamTester.addDelayedSubscriber(subscribers[3], new ResendFromOption(new Date()), 10000);
         Date t1 = new Date((new Date()).getTime() + 5000);
         Date t2 = new Date((new Date()).getTime() + 10000);
         streamTester.addDelayedSubscriber(subscribers[4], new ResendRangeOption(t1, t2), 12000);
-        streamTester.addDelayedSubscriber(subscribers[5], new ResendLastOption(10), 15000);
+        streamTester.addDelayedSubscriber(subscribers[5], new ResendLastOption(10), 15000);*/
     }
 
     private void encryptedSharedKeySignedStream(StreamTester streamTester) {

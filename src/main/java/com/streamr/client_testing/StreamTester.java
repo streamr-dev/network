@@ -27,8 +27,6 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-import static com.streamr.client.utils.HttpUtils.MOSHI;
-
 public class StreamTester {
     private static final Logger log = LogManager.getLogger();
     private static SecureRandom secureRandom = new SecureRandom();
@@ -37,7 +35,7 @@ public class StreamTester {
     private final StreamrClient creator;
     private final Stream stream;
     private final ArrayList<PublisherThread> publishers = new ArrayList<>();
-    private final ArrayList<StreamrClient> subscribers = new ArrayList<>();
+    private final ArrayList<Subscriber> subscribers = new ArrayList<>();
     private final boolean testCorrectness;
     private HashMap<String, ArrayDeque<String>> publishersMsgStacks = new HashMap<>(); // publisherId --> stack of serialized msg content
     private HashMap<String, HashMap<String, ArrayDeque<String>>> subscribersMsgStacks = new HashMap<>(); // publisherId --> (subscriberId --> stack of serialized msg content)
@@ -57,34 +55,61 @@ public class StreamTester {
     }
 
     private void addPublisher(PublisherThread thread) {
-        grantPermission(stream, creator, thread.getPublisher().getPublisherId(), "read");
-        grantPermission(stream, creator, thread.getPublisher().getPublisherId(), "write");
-        thread.getPublisher().connect();
+        grantPermission(stream, creator, thread.getPublisherId(), "read");
+        grantPermission(stream, creator, thread.getPublisherId(), "write");
         publishers.add(thread);
         if (testCorrectness) {
-            publishersMsgStacks.put(thread.getPublisher().getPublisherId(), new ArrayDeque<>());
-            subscribersMsgStacks.put(thread.getPublisher().getPublisherId(), new HashMap<>());
+            publishersMsgStacks.put(thread.getPublisherId(), new ArrayDeque<>());
+            subscribersMsgStacks.put(thread.getPublisherId(), new HashMap<>());
         }
-        System.out.println("Added publisher: " + thread.getPublisher().getPublisherId());
+        System.out.println("Added publisher: " + thread.getPublisherId());
+    }
+
+    public void addJavascriptPublisher(long interval) {
+        PublisherThreadJS thread = new PublisherThreadJS(StreamTester.generatePrivateKey(), stream, interval);
+        addPublisher(thread);
+        if (testCorrectness) {
+            thread.setOnPublished((payloadString) -> publishersMsgStacks.get(thread.getPublisherId()).addLast(payloadString));
+        }
     }
 
     public void addPublisher(StreamrClient publisher, BiConsumer<StreamrClient, Stream> publishFunction, long interval) {
-        addPublisher(new PublisherThread(stream, publisher, publishFunction, interval));
+        addPublisher(new PublisherThreadJava(stream, publisher, publishFunction, interval));
     }
 
-    public void addPublisher(StreamrClient publisher, PublisherThread.PublishFunction publishFunction, long interval) {
-        addPublisher(new PublisherThread(stream, publisher, publishFunction, interval));
+    public void addPublisher(StreamrClient publisher, PublisherThreadJava.PublishFunction publishFunction, long interval) {
+        addPublisher(new PublisherThreadJava(stream, publisher, publishFunction, interval));
+    }
+
+    private void addSubscriber(Subscriber subscriber) {
+        grantPermission(stream, creator, subscriber.getSubscriberId(), "read");
+        subscriber.start();
+        subscribers.add(subscriber);
+        System.out.println("Added subscriber: " + subscriber.getSubscriberId());
+    }
+
+    public void addJavascriptSubscriber(ResendOption resendOption) {
+        SubscriberJS subscriberJS = new SubscriberJS(StreamTester.generatePrivateKey(), stream);
+        if (testCorrectness && resendOption == null) {
+            subscriberJS.setOnReceived((publisherId, content) -> {
+                ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(publisherId.toLowerCase()).get(subscriberJS.getSubscriberId());
+                if (subscriberStack == null) {
+                    subscriberStack = new ArrayDeque<>();
+                    subscribersMsgStacks.get(publisherId.toLowerCase()).put(subscriberJS.getSubscriberId(), subscriberStack);
+                }
+                subscriberStack.addLast(content);
+            });
+        }
+        addSubscriber(subscriberJS);
     }
 
     public void addSubscriber(StreamrClient subscriber, ResendOption resendOption) {
-        grantPermission(stream, creator, subscriber.getPublisherId(), "read");
-        subscriber.connect();
         BiConsumer<Subscription, StreamMessage> onMsg = (testCorrectness && resendOption == null) ? (subscription, streamMessage) -> {
             System.out.println("Subscriber " + subscriber.getPublisherId() + " received: " + streamMessage.toJson());
-            ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(streamMessage.getPublisherId()).get(subscriber.getPublisherId());
+            ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(streamMessage.getPublisherId().toLowerCase()).get(subscriber.getPublisherId());
             if (subscriberStack == null) {
                 subscriberStack = new ArrayDeque<>();
-                subscribersMsgStacks.get(streamMessage.getPublisherId()).put(subscriber.getPublisherId(), subscriberStack);
+                subscribersMsgStacks.get(streamMessage.getPublisherId().toLowerCase()).put(subscriber.getPublisherId(), subscriberStack);
             }
             subscriberStack.addLast(streamMessage.getSerializedContent());
         } : (subscription, streamMessage) -> {};
@@ -100,9 +125,7 @@ public class StreamTester {
             }
         };
         subscriber.subscribe(stream, 0, handler, resendOption);
-
-        subscribers.add(subscriber);
-        System.out.println("Added subscriber: " + subscriber.getPublisherId());
+        addSubscriber(new SubscriberJava(subscriber));
     }
 
     public void addDelayedSubscriber(StreamrClient subscriber, ResendOption resendOption, int delay) {
@@ -122,7 +145,7 @@ public class StreamTester {
     }
 
     public void start() {
-        System.out.println("Going to start stream " + stream.getName() + "...\n");
+        System.out.println("Starting stream " + stream.getName() + "...\n");
         try {
             // this delay is needed between the moment subscribers are subscribed and publishers start publishing
             // because the nodes stream topology needs some time before it is fully formed.
@@ -145,8 +168,8 @@ public class StreamTester {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        for (StreamrClient s: subscribers) {
-            s.disconnect();
+        for (Subscriber s: subscribers) {
+            s.stop();
         }
         creator.disconnect();
     }
@@ -234,7 +257,7 @@ public class StreamTester {
         }
     }
 
-    public PublisherThread.PublishFunction getRotatingPublishFunction() {
+    public PublisherThreadJava.PublishFunction getRotatingPublishFunction() {
         if (testCorrectness) {
             return (publisher, stream, counter) -> {
                 HashMap<String, Object> payload = genPayload();
@@ -280,6 +303,7 @@ public class StreamTester {
 
     private static HashMap<String, Object> genPayload() {
         HashMap<String, Object> payload = new HashMap<>();
+        payload.put("client-implementation", "Java");
         payload.put("string-key", RandomStringUtils.randomAlphanumeric(10));
         payload.put("integer-key", secureRandom.nextInt(100));
         payload.put("double-key", secureRandom.nextDouble());

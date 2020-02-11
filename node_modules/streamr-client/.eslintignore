@@ -1,0 +1,6 @@
+node_modules/**
+examples/**
+coverage/**
+dist/**
+src/shim/**
+test/unit/StubbedStreamrClient.js

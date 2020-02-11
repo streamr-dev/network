@@ -5,7 +5,6 @@ import org.apache.commons.cli.*;
 public class Main {
     private static Streams streams;
     public static void main(String[] args) {
-
         Options options = new Options();
 
         String streamsDescription = "Stream setup to test or run. Must be one of:\n" + String.join("\n", Streams.SETUPS_NAMES);
@@ -50,10 +49,5 @@ public class Main {
         }
         streams = new Streams(cmd.getOptionValue("resturl"), cmd.getOptionValue("wsurl"), testCorrectness);
         streams.start(cmd.getOptionValue("stream"));
-
-        /*
-        "http://localhost/api/v1"
-        "ws://localhost/api/v1/ws"
-         */
     }
 }
