@@ -243,7 +243,7 @@ export default class StreamrClient extends EventEmitter {
                     const stream = this.subscribedStreamPartitions[key]
                     stream.setSubscribing(false)
                     stream.getSubscriptions().forEach((sub) => {
-                        sub.setState(Subscription.State.unsubscribed)
+                        sub.onDisconnected()
                     })
                 })
         })
@@ -401,9 +401,10 @@ export default class StreamrClient extends EventEmitter {
             this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter, this.options.orderMessages)
 
         // TODO remove _addSubscription after uncoupling Subscription and Resend
+        sub.setState(Subscription.State.subscribed)
         this._addSubscription(sub)
+        sub.once('initial_resend_done', () => this._removeSubscription(sub))
         await this._requestResend(sub)
-
         return sub
     }
 

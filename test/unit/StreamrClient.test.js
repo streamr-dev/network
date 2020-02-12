@@ -114,6 +114,9 @@ describe('StreamrClient', () => {
 
         c.send = (msgToSend) => {
             const next = c.expectedMessagesToSend.shift()
+            if (!next) {
+                throw new Error(`Sending unexpected message: ${JSON.stringify(msgToSend)}`)
+            }
             next.verificationFunction(msgToSend, next.msgToExpect)
         }
 
@@ -583,6 +586,48 @@ describe('StreamrClient', () => {
         it('should reject promise when connected', (done) => {
             connection.state = Connection.State.CONNECTED
             client.connect().catch(() => done())
+        })
+    })
+
+    describe('resend()', () => {
+        it('should not send SubscribeRequest on reconnection', async () => {
+            connection.expect(ResendLastRequest.create('stream1', 0, '0', 10, 'session-token'))
+            await client.resend({
+                stream: 'stream1',
+                resend: {
+                    last: 10
+                }
+            }, () => {})
+            await client.pause()
+            await client.connect()
+        })
+        it('should not send SubscribeRequest after ResendResponseNoResend on reconnection', async () => {
+            connection.expect(ResendLastRequest.create('stream1', 0, '0', 10, 'session-token'))
+            const sub = await client.resend({
+                stream: 'stream1',
+                resend: {
+                    last: 10
+                }
+            }, () => {})
+            const resendResponse = ResendResponseNoResend.create(sub.streamId, sub.streamPartition, '0')
+            connection.emitMessage(resendResponse)
+            await client.pause()
+            await client.connect()
+        })
+        it('should not send SubscribeRequest after ResendResponseResent on reconnection', async () => {
+            connection.expect(ResendLastRequest.create('stream1', 0, '0', 10, 'session-token'))
+            const sub = await client.resend({
+                stream: 'stream1',
+                resend: {
+                    last: 10
+                }
+            }, () => {})
+            const msg1 = msg(sub.streamId, {}, '0')
+            connection.emitMessage(msg1)
+            const resendResponse = ResendResponseResent.create(sub.streamId, sub.streamPartition, '0')
+            connection.emitMessage(resendResponse)
+            await client.pause()
+            await client.connect()
         })
     })
 

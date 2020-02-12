@@ -14,7 +14,7 @@ import config from './config'
 const { StreamMessage } = MessageLayer
 const WebSocket = require('ws')
 
-const { SubscribeRequest, UnsubscribeRequest } = ControlLayer
+const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest } = ControlLayer
 
 const createClient = (opts = {}) => new StreamrClient({
     url: config.websocketUrl,
@@ -437,6 +437,38 @@ describe('StreamrClient Connection', () => {
                 done()
             })
         })
+
+        it('should not subscribe after resend() on reconnect', async (done) => {
+            client = createClient()
+            await client.ensureConnected()
+            const sessionToken = await client.session.getSessionToken()
+
+            const stream = await client.createStream({
+                name: uid('stream')
+            })
+
+            const connectionEventSpy = jest.spyOn(client.connection, 'send')
+            const sub = await client.resend({
+                stream: stream.id,
+                resend: {
+                    last: 10
+                }
+            }, () => {})
+
+            sub.once('initial_resend_done', () => {
+                setTimeout(async () => {
+                    await client.pause() // simulates a disconnection at the websocket level, not on the client level.
+                    await client.ensureConnected()
+                    await client.ensureDisconnected()
+
+                    // check whole list of calls after reconnect and disconnect
+                    expect(connectionEventSpy.mock.calls.length).toEqual(1)
+                    expect(connectionEventSpy.mock.calls[0]).toEqual([ResendLastRequest.create(stream.id, 0, '0', 10, sessionToken)])
+
+                    done()
+                }, 2000)
+            })
+        }, 9999999)
 
         it('does not try to reconnect', async (done) => {
             client = createClient()

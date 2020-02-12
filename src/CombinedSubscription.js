@@ -95,4 +95,8 @@ export default class CombinedSubscription extends Subscription {
     handleError(err) {
         return this.sub.handleError(err)
     }
+
+    onDisconnected() {
+        this.sub.onDisconnected()
+    }
 }

@@ -47,4 +47,8 @@ export default class HistoricalSubscription extends AbstractSubscription {
             this.emit('initial_resend_done')
         }
     }
+
+    /* eslint-disable class-methods-use-this */
+    onDisconnected() {}
+    /* eslint-enable class-methods-use-this */
 }

@@ -1,5 +1,6 @@
 import debugFactory from 'debug'
 
+import Subscription from './Subscription'
 import AbstractSubscription from './AbstractSubscription'
 
 const debug = debugFactory('StreamrClient::Subscription')
@@ -39,5 +40,9 @@ export default class RealTimeSubscription extends AbstractSubscription {
     setResending(resending) {
         debug(`Subscription: Stream ${this.streamId} resending: ${resending}`)
         this.resending = resending
+    }
+
+    onDisconnected() {
+        this.setState(Subscription.State.unsubscribed)
     }
 }
