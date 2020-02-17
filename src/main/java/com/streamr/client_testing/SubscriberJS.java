@@ -1,29 +1,35 @@
 package com.streamr.client_testing;
 
-import com.streamr.client.authentication.EthereumAuthenticationMethod;
+import com.streamr.client.options.ResendFromOption;
+import com.streamr.client.options.ResendLastOption;
+import com.streamr.client.options.ResendOption;
+import com.streamr.client.protocol.message_layer.MessageRef;
 import com.streamr.client.rest.Stream;
+import com.streamr.client.utils.HttpUtils;
+import com.streamr.client.utils.UnencryptedGroupKey;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
 import java.util.function.BiConsumer;
 
 public class SubscriberJS extends Subscriber {
-    private final EthereumAuthenticationMethod auth;
+    private final StreamrClientJS subscriber;
     private Process p;
     private final String command;
     private BiConsumer<String, String> onReceived = null;
     private final Thread thread;
 
-    public SubscriberJS(String privateKey, Stream stream) {
-        this.auth = new EthereumAuthenticationMethod(privateKey);
-        command = "node subscriber.js " + privateKey + " " + stream.getId();
-        thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                executeNode();
-            }
-        });
+    public SubscriberJS(StreamrClientJS subscriber, Stream stream, ResendOption resendOption) {
+        this.subscriber = subscriber;
+        String groupKeys = "";
+        if (subscriber.getEncryptionOptions() !=  null) {
+            groupKeys = groupKeysToJson(subscriber);
+        }
+        command = "node subscriber.js " + subscriber.getPrivateKey() + " "
+                + stream.getId() + " " + resendOptionToJson(resendOption) + " " + groupKeys;
+        thread = new Thread(this::executeNode);
     }
 
     public void setOnReceived(BiConsumer<String, String> onReceived) {
@@ -32,7 +38,7 @@ public class SubscriberJS extends Subscriber {
 
     @Override
     public String getSubscriberId() {
-        return auth.getAddress();
+        return subscriber.getAddress();
     }
 
     @Override
@@ -79,5 +85,35 @@ public class SubscriberJS extends Subscriber {
     @Override
     public void stop() {
         thread.interrupt();
+    }
+
+    private static String resendOptionToJson(ResendOption resendOption) {
+        if (resendOption == null) {
+            return "real-time";
+        }
+        HashMap<String, Object> map = new HashMap<>();
+        if (resendOption instanceof ResendLastOption) {
+            map.put("last", ((ResendLastOption) resendOption).getNumberLast());
+        } else if (resendOption instanceof ResendFromOption) {
+            HashMap<String, Object> from = new HashMap<>();
+            MessageRef fromRef = ((ResendFromOption) resendOption).getFrom();
+            from.put("timestamp", fromRef.getTimestamp());
+            from.put("sequenceNumber", fromRef.getSequenceNumber());
+            map.put("from", from);
+        }
+        return HttpUtils.mapAdapter.toJson(map);
+    }
+
+    private static String groupKeysToJson(StreamrClientJS subscriber) {
+        HashMap<String, HashMap<String, UnencryptedGroupKey>> keys = subscriber.getEncryptionOptions().getSubscriberGroupKeys();
+        HashMap<String, HashMap<String, String>> keysHex = new HashMap<>();
+        for (String streamId: keys.keySet()) {
+            HashMap<String, UnencryptedGroupKey> streamKeys = keys.get(streamId);
+            keysHex.put(streamId, new HashMap<>());
+            for (String publisherId: streamKeys.keySet()) {
+                keysHex.get(streamId).put(publisherId, streamKeys.get(publisherId).getGroupKeyHex());
+            }
+        }
+        return HttpUtils.mapAdapter.toJson(keysHex);
     }
 }

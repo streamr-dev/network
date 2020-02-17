@@ -45,7 +45,7 @@ public class Streams {
         if (testCorrectness) {
             startStream(name);
             try {
-                Thread.sleep(20 * 1000);
+                Thread.sleep(30 * 1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -72,7 +72,7 @@ public class Streams {
 
     private StreamTester build(String name, Consumer<StreamTester> addParticipants) {
         StreamTester streamTester = new StreamTester(name, restApiUrl, websocketApiUrl, testCorrectness);
-        System.out.println("Going to create publishers and subscribers for '" + name + "'...");
+        System.out.println("Creating publishers and subscribers for '" + name + "'...");
         addParticipants.accept(streamTester);
         System.out.println("Created publishers and subscribers for '" + name + "'!");
         System.out.println("Initialized '" + name + "'!");
@@ -87,21 +87,22 @@ public class Streams {
         streamTester.addPublisher(publishers[1], streamTester.getDefaultPublishFunction(), 1200);
         streamTester.addSubscribers(subscribers[0], subscribers[1], subscribers[2]);
         streamTester.addDelayedSubscriber(subscribers[3], new ResendFromOption(new Date()), 10000);
-        Date t1 = new Date((new Date()).getTime() + 5000);
-        Date t2 = new Date((new Date()).getTime() + 10000);
-        streamTester.addDelayedSubscriber(subscribers[4], new ResendRangeOption(t1, t2), 12000);
         streamTester.addDelayedSubscriber(subscribers[5], new ResendLastOption(10), 15000);
     }
 
     private void cleartextSignedStream(StreamTester streamTester) {
         StreamrClient[] publishers = buildClients(this::buildCleartextSigningClient, 2);
-        StreamrClient[] subscribers = buildClients(this::buildCleartextSigningClient, 3);
+        // StreamrClient[] subscribers = buildClients(this::buildCleartextSigningClient, 6);
 
         streamTester.addPublisher(publishers[0], streamTester.getDefaultPublishFunction(), 1100);
         streamTester.addPublisher(publishers[1], streamTester.getDefaultPublishFunction(), 1300);
-        streamTester.addJavascriptPublisher(1200);
-        streamTester.addSubscribers(subscribers[0], subscribers[1], subscribers[2]);
-        streamTester.addJavascriptSubscriber(null);
+        streamTester.addJavascriptPublisher(new StreamrClientJS(), 1200);
+        // streamTester.addJavascriptPublisher(1500);
+        // streamTester.addSubscribers(subscribers[0], subscribers[1], subscribers[2]);
+        streamTester.addJavascriptSubscriber(new StreamrClientJS(), null);
+        streamTester.addDelayedJavascriptSubscriber(new StreamrClientJS(), new ResendLastOption(10), 10000);
+        streamTester.addDelayedJavascriptSubscriber(new StreamrClientJS(), new ResendFromOption(new Date()), 15000);
+        // streamTester.addJavascriptSubscriber(null);
         /*
         streamTester.addDelayedSubscriber(subscribers[3], new ResendFromOption(new Date()), 10000);
         Date t1 = new Date((new Date()).getTime() + 5000);
@@ -112,19 +113,17 @@ public class Streams {
 
     private void encryptedSharedKeySignedStream(StreamTester streamTester) {
         String streamId = streamTester.getStreamId();
-        StreamrClient[][] participants = buildSharedKeyParticipants(streamId, 2, 3);
+        StreamrClientWrapper[][] participants = buildSharedKeyParticipants(streamId, 2, 2, 2, 2);
 
-        streamTester.addPublisher(participants[0][0], streamTester.getDefaultPublishFunction(), 1000);
-        streamTester.addPublisher(participants[0][1], streamTester.getDefaultPublishFunction(), 1350);
+        streamTester.addPublishers(streamTester.getDefaultPublishFunction(), 1000, 3000, participants[0]);
         streamTester.addSubscribers(participants[1]);
     }
 
     private void encryptedSharedRotatingKeySignedStream(StreamTester streamTester) {
         String streamId = streamTester.getStreamId();
-        StreamrClient[][] participants = buildSharedKeyParticipants(streamId, 2, 3);
+        StreamrClientWrapper[][] participants = buildSharedKeyParticipants(streamId, 2, 2, 2, 2);
 
-        streamTester.addPublisher(participants[0][0], streamTester.getRotatingPublishFunction(), 1000);
-        streamTester.addPublisher(participants[0][1], streamTester.getRotatingPublishFunction(), 1350);
+        streamTester.addPublishers(streamTester.getRotatingPublishFunction(), 1000, 3000, participants[0]);
         streamTester.addSubscribers(participants[1]);
     }
 
@@ -146,9 +145,6 @@ public class Streams {
 
         /*
         streamTester.addDelayedSubscriber(subscribers[3], new ResendFromOption(new Date()), 8000);
-        Date t1 = new Date((new Date()).getTime() + 5000);
-        Date t2 = new Date((new Date()).getTime() + 10000);
-        streamTester.addDelayedSubscriber(subscribers[4], new ResendRangeOption(t1, t2), 9000);
         streamTester.addDelayedSubscriber(subscribers[5], new ResendLastOption(10), 10000);*/
     }
 
@@ -160,20 +156,30 @@ public class Streams {
         return clients;
     }
 
-    private StreamrClient[][] buildSharedKeyParticipants(String streamId, int nbPublishers, int nbSubscribers) {
+    private StreamrClientWrapper[][] buildSharedKeyParticipants(String streamId, int nbJavaPublishers,
+        int nbJavaSubscribers, int nbJSPublishers, int nbJSSubscribers) {
         UnencryptedGroupKey groupKey = StreamTester.generateGroupKey();
 
-        StreamrClient[] publishers = new StreamrClient[nbPublishers];
+        StreamrClientWrapper[] publishers = new StreamrClientWrapper[nbJavaPublishers + nbJSPublishers];
         ArrayList<String> publisherIds = new ArrayList<>();
-        for (int i = 0; i < nbPublishers; i++) {
-            publishers[i] = buildEncryptedSigningClient(streamId, null, groupKey);
-            publisherIds.add(publishers[i].getPublisherId());
+        for (int i = 0; i < nbJavaPublishers; i++) {
+            StreamrClient p = buildEncryptedSigningClient(streamId, null, groupKey);
+            publishers[i] = new StreamrClientJava(p);
+            publisherIds.add(p.getPublisherId());
         }
-        StreamrClient[] subscribers = new StreamrClient[nbSubscribers];
-        for (int i = 0; i < nbSubscribers; i++) {
-            subscribers[i] = buildEncryptedSigningClient(streamId, publisherIds, groupKey);
+        for (int i = nbJavaPublishers; i < nbJavaPublishers + nbJSPublishers; i++) {
+            StreamrClientJS p = new StreamrClientJS(buildEncryptionOptions(streamId, null, groupKey));
+            publishers[i] = p;
+            publisherIds.add(p.getAddress());
         }
-        StreamrClient[][] participants = {publishers, subscribers};
+        StreamrClientWrapper[] subscribers = new StreamrClientWrapper[nbJavaSubscribers + nbJSSubscribers];
+        for (int i = 0; i < nbJavaSubscribers; i++) {
+            subscribers[i] = new StreamrClientJava(buildEncryptedSigningClient(streamId, publisherIds, groupKey));
+        }
+        for (int i = nbJavaSubscribers; i < nbJavaSubscribers + nbJSSubscribers; i++) {
+            subscribers[i] = new StreamrClientJS(buildEncryptionOptions(streamId, publisherIds, groupKey));
+        }
+        StreamrClientWrapper[][] participants = {publishers, subscribers};
         return participants;
     }
 
@@ -191,7 +197,6 @@ public class Streams {
     Returns a StreamrClient that publishes signed messages in cleartext and verifies the signature of the messages received.
      */
     private StreamrClient buildCleartextSigningClient() {
-        StreamrClient c = new StreamrClient(new EthereumAuthenticationMethod(StreamTester.generatePrivateKey()));
         return new StreamrClient(new StreamrClientOptions(
                 new EthereumAuthenticationMethod(StreamTester.generatePrivateKey()), SigningOptions.getDefault(),
                 EncryptionOptions.getDefault(), websocketApiUrl, restApiUrl));
@@ -202,6 +207,13 @@ public class Streams {
     the messages received and decrypts them also with 'groupKey'. It already knows all the publishers.
      */
     private StreamrClient buildEncryptedSigningClient(String streamId, ArrayList<String> publisherIds, UnencryptedGroupKey groupKey) {
+        EncryptionOptions encryptionOptions = buildEncryptionOptions(streamId, publisherIds, groupKey);
+        return new StreamrClient(new StreamrClientOptions(
+                new EthereumAuthenticationMethod(StreamTester.generatePrivateKey()), SigningOptions.getDefault(),
+                encryptionOptions, websocketApiUrl, restApiUrl));
+    }
+
+    private EncryptionOptions buildEncryptionOptions(String streamId, ArrayList<String> publisherIds, UnencryptedGroupKey groupKey) {
         HashMap<String, UnencryptedGroupKey> publisher = new HashMap<>();
         publisher.put(streamId, groupKey);
         HashMap<String, HashMap<String, UnencryptedGroupKey>> subscriber = new HashMap<>();
@@ -212,12 +224,6 @@ public class Streams {
             }
         }
         subscriber.put(streamId, keyPerPublisher);
-        return buildEncryptedSigningClient(new EncryptionOptions(publisher, subscriber));
-    }
-
-    private StreamrClient buildEncryptedSigningClient(EncryptionOptions encryptionOptions) {
-        return new StreamrClient(new StreamrClientOptions(
-                new EthereumAuthenticationMethod(StreamTester.generatePrivateKey()), SigningOptions.getDefault(),
-                encryptionOptions, websocketApiUrl, restApiUrl));
+        return new EncryptionOptions(publisher, subscriber);
     }
 }

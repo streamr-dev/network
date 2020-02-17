@@ -4,9 +4,11 @@ import com.streamr.client.StreamrClient;
 
 public class SubscriberJava extends Subscriber {
     private final StreamrClient subscriber;
+    private final Runnable onStart;
 
-    public SubscriberJava(StreamrClient subscriber) {
+    public SubscriberJava(StreamrClient subscriber, Runnable onStart) {
         this.subscriber = subscriber;
+        this.onStart = onStart;
     }
 
     @Override
@@ -17,6 +19,7 @@ public class SubscriberJava extends Subscriber {
     @Override
     public void start() {
         this.subscriber.connect();
+        onStart.run();
     }
 
     @Override

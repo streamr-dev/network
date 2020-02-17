@@ -30,6 +30,7 @@ import java.util.function.BiConsumer;
 public class StreamTester {
     private static final Logger log = LogManager.getLogger();
     private static SecureRandom secureRandom = new SecureRandom();
+    private static Random random = new Random();
     private static final int NETWORK_SETUP_DELAY = 5000;
 
     private final StreamrClient creator;
@@ -54,7 +55,7 @@ public class StreamTester {
         this.testCorrectness = testCorrectness;
     }
 
-    private void addPublisher(PublisherThread thread) {
+    private void addPublisher(PublisherThread thread, String implementation) {
         grantPermission(stream, creator, thread.getPublisherId(), "read");
         grantPermission(stream, creator, thread.getPublisherId(), "write");
         publishers.add(thread);
@@ -62,34 +63,36 @@ public class StreamTester {
             publishersMsgStacks.put(thread.getPublisherId(), new ArrayDeque<>());
             subscribersMsgStacks.put(thread.getPublisherId(), new HashMap<>());
         }
-        System.out.println("Added publisher: " + thread.getPublisherId());
+        System.out.println("Added " + implementation + " publisher: " + thread.getPublisherId() +
+                " (publication rate in milliseconds: " + thread.getInterval() + ")");
     }
 
-    public void addJavascriptPublisher(long interval) {
-        PublisherThreadJS thread = new PublisherThreadJS(StreamTester.generatePrivateKey(), stream, interval);
-        addPublisher(thread);
+    public void addJavascriptPublisher(StreamrClientJS publisher, long interval) {
+        PublisherThreadJS thread = new PublisherThreadJS(publisher, stream, interval);
         if (testCorrectness) {
             thread.setOnPublished((payloadString) -> publishersMsgStacks.get(thread.getPublisherId()).addLast(payloadString));
         }
-    }
-
-    public void addPublisher(StreamrClient publisher, BiConsumer<StreamrClient, Stream> publishFunction, long interval) {
-        addPublisher(new PublisherThreadJava(stream, publisher, publishFunction, interval));
+        addPublisher(thread, "Javascript");
     }
 
     public void addPublisher(StreamrClient publisher, PublisherThreadJava.PublishFunction publishFunction, long interval) {
-        addPublisher(new PublisherThreadJava(stream, publisher, publishFunction, interval));
+        addPublisher(new PublisherThreadJava(stream, publisher, publishFunction, interval), "Java");
     }
 
-    private void addSubscriber(Subscriber subscriber) {
+    public void addPublisher(StreamrClientJava publisher, PublisherThreadJava.PublishFunction publishFunction, long interval) {
+        addPublisher(new PublisherThreadJava(stream, publisher.getStreamrClient(), publishFunction, interval), "Java");
+    }
+
+    private void addSubscriber(Subscriber subscriber, String implementation) {
         grantPermission(stream, creator, subscriber.getSubscriberId(), "read");
         subscriber.start();
         subscribers.add(subscriber);
-        System.out.println("Added subscriber: " + subscriber.getSubscriberId());
+        subscribersMsgStacks.values().forEach(map -> map.put(subscriber.getSubscriberId(), new ArrayDeque<>()));
+        System.out.println("Added " + implementation + " subscriber: " + subscriber.getSubscriberId());
     }
 
-    public void addJavascriptSubscriber(ResendOption resendOption) {
-        SubscriberJS subscriberJS = new SubscriberJS(StreamTester.generatePrivateKey(), stream);
+    public void addJavascriptSubscriber(StreamrClientJS subscriber, ResendOption resendOption) {
+        SubscriberJS subscriberJS = new SubscriberJS(subscriber, stream, resendOption);
         if (testCorrectness && resendOption == null) {
             subscriberJS.setOnReceived((publisherId, content) -> {
                 ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(publisherId.toLowerCase()).get(subscriberJS.getSubscriberId());
@@ -100,7 +103,7 @@ public class StreamTester {
                 subscriberStack.addLast(content);
             });
         }
-        addSubscriber(subscriberJS);
+        addSubscriber(subscriberJS, "Javascript");
     }
 
     public void addSubscriber(StreamrClient subscriber, ResendOption resendOption) {
@@ -124,8 +127,8 @@ public class StreamTester {
                 throw new RuntimeException(e);
             }
         };
-        subscriber.subscribe(stream, 0, handler, resendOption);
-        addSubscriber(new SubscriberJava(subscriber));
+        SubscriberJava subscriberJava = new SubscriberJava(subscriber, () -> subscriber.subscribe(stream, 0, handler, resendOption));
+        addSubscriber(subscriberJava, "Java");
     }
 
     public void addDelayedSubscriber(StreamrClient subscriber, ResendOption resendOption, int delay) {
@@ -138,9 +141,40 @@ public class StreamTester {
         }, NETWORK_SETUP_DELAY + delay);
     }
 
+    public void addDelayedJavascriptSubscriber(StreamrClientJS subscriber, ResendOption resendOption, int delay) {
+        Timer timer = new Timer(true);
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                addJavascriptSubscriber(subscriber, resendOption);
+            }
+        }, NETWORK_SETUP_DELAY + delay);
+    }
+
     public void addSubscribers(StreamrClient ... subscribers) {
         for (StreamrClient sub: subscribers) {
             addSubscriber(sub, null);
+        }
+    }
+
+    public void addSubscribers(StreamrClientWrapper ... subscribers) {
+        for (StreamrClientWrapper sub: subscribers) {
+            if (sub instanceof StreamrClientJava) {
+                addSubscriber(((StreamrClientJava) sub).getStreamrClient(), null);
+            } else if (sub instanceof StreamrClientJS) {
+                addJavascriptSubscriber((StreamrClientJS) sub, null);
+            }
+        }
+    }
+
+    public void addPublishers(PublisherThreadJava.PublishFunction publishFunction,
+        long minInterval, long maxInterval, StreamrClientWrapper ... publishers) {
+        for (StreamrClientWrapper pub: publishers) {
+            if (pub instanceof StreamrClientJava) {
+                addPublisher((StreamrClientJava) pub, publishFunction, getInterval(minInterval, maxInterval));
+            } else if (pub instanceof StreamrClientJS) {
+                addJavascriptPublisher((StreamrClientJS) pub, getInterval(minInterval, maxInterval));
+            }
         }
     }
 
@@ -191,14 +225,14 @@ public class StreamTester {
             try {
                 total += checkMsgs(stacks);
             } catch (IllegalStateException e) {
-                System.out.println("\nFAILED: " + e.getMessage() + "\n");
+                System.out.println("\nFAILED. On error: '" + e.getMessage() + "'\n");
                 printMsgsReceived();
                 System.exit(1);
             }
 
         }
         if (decryptionErrorsCount > 0) {
-            System.out.println("FAILED: Got " + decryptionErrorsCount + " UnableToDecryptException(s)");
+            System.out.println("FAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)");
             System.exit(1);
         }
         System.out.println("PASSED. Checked all " + total + " messages.");
@@ -242,18 +276,18 @@ public class StreamTester {
         return nbMsgs;
     }
 
-    public BiConsumer<StreamrClient, Stream> getDefaultPublishFunction() {
+    public PublisherThreadJava.PublishFunction getDefaultPublishFunction() {
         if (testCorrectness) {
-            return (publisher, stream) -> {
+            return (publisher, stream, counter) -> {
                 HashMap<String, Object> payload = genPayload();
                 String payloadString = HttpUtils.mapAdapter.toJson(payload);
-                // System.out.println("going to publish " + payloadString);
+                System.out.println("going to publish " + payloadString);
                 publisher.publish(stream, payload);
                 publishersMsgStacks.get(publisher.getPublisherId()).addLast(payloadString);
-                // System.out.println("published " + payloadString);
+                System.out.println("published " + payloadString);
             };
         } else {
-            return (publisher, stream) -> publisher.publish(stream, genPayload());
+            return (publisher, stream, counter) -> publisher.publish(stream, genPayload());
         }
     }
 
@@ -264,7 +298,9 @@ public class StreamTester {
                 String payloadString = HttpUtils.mapAdapter.toJson(payload);
                 System.out.println(publisher.getPublisherId() + ": going to publish " + payloadString);
                 if (counter % 5 == 0) {
-                    publisher.publish(stream, payload, new Date(), null, generateGroupKey());
+                    UnencryptedGroupKey newKey = generateGroupKey();
+                    System.out.println("Rotating the key. New key: " + newKey.getGroupKeyHex());
+                    publisher.publish(stream, payload, new Date(), null, newKey);
                     counter = 0L;
                 } else {
                     publisher.publish(stream, payload);
@@ -364,5 +400,11 @@ public class StreamTester {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private long getInterval(long minInterval, long maxInterval) {
+        long diff = maxInterval - minInterval;
+        // publication intervals in millis should always be reasonably small so we can cast them to int
+        return random.nextInt((int)diff) + minInterval;
     }
 }

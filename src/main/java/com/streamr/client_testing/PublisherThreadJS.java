@@ -1,6 +1,5 @@
 package com.streamr.client_testing;
 
-import com.streamr.client.authentication.EthereumAuthenticationMethod;
 import com.streamr.client.rest.Stream;
 
 import java.io.BufferedReader;
@@ -9,26 +8,27 @@ import java.io.InputStreamReader;
 import java.util.function.Consumer;
 
 public class PublisherThreadJS extends PublisherThread {
-    private final EthereumAuthenticationMethod auth;
+    private final StreamrClientJS publisher;
     private Process p;
     private final String command;
     private Consumer<String> onPublished = null;
     private final Thread thread;
 
-    public PublisherThreadJS(String privateKey, Stream stream, long interval) {
-        this.auth = new EthereumAuthenticationMethod(privateKey);
-        command = "node publisher.js " + privateKey + " " + stream.getId() + " " + interval;
-        thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                executeNode();
-            }
-        });
+    public PublisherThreadJS(StreamrClientJS publisher, Stream stream, long interval) {
+        super(interval);
+        this.publisher = publisher;
+        // We assume there is only 1 key since we test only 1 stream
+        String groupKey = "";
+        if (publisher.getEncryptionOptions() != null) {
+            groupKey = publisher.getEncryptionOptions().getPublisherGroupKeys().values().iterator().next().getGroupKeyHex();
+        }
+        command = "node publisher.js " + publisher.getPrivateKey() + " " + stream.getId() + " " + interval + " " + groupKey;
+        thread = new Thread(this::executeNode);
     }
 
     @Override
     public String getPublisherId() {
-        return auth.getAddress();
+        return publisher.getAddress();
     }
 
     public void setOnPublished(Consumer<String> onPublished) {

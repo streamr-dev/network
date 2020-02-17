@@ -14,6 +14,7 @@ A 'stream setup' is basically a scenario. It consists of a test stream and a set
 
 The subscribers as well can be created with different parameters:
 - The library used (Only Java now)
+- subscribing only to real-time, or with resend from a specific time, or resend the last n messages
 - Verifying signatures or not
 - If encrypted, using a group key shared by the publisher or using the key-exchange mechanism
 

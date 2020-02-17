@@ -11,29 +11,15 @@ public class PublisherThreadJava extends PublisherThread {
     private final StreamrClient publisher;
     private final Timer timer;
     private TimerTask task;
-    private final long interval;
     private long counter = 0;
 
     private PublisherThreadJava(StreamrClient publisher, long interval) {
+        super(interval);
         this.publisher = publisher;
         this.publisher.connect();
         timer = new Timer(true);
-        this.interval = interval;
     }
 
-    public StreamrClient getPublisher() {
-        return publisher;
-    }
-
-    public PublisherThreadJava(Stream stream, StreamrClient publisher, BiConsumer<StreamrClient, Stream> publishFunction, long interval) {
-        this(publisher, interval);
-        task = new TimerTask() {
-            @Override
-            public void run() {
-                publishFunction.accept(publisher, stream);
-            }
-        };
-    }
     public PublisherThreadJava(Stream stream, StreamrClient publisher, PublishFunction publishFunction, long interval) {
         this(publisher, interval);
         task = new TimerTask() {
@@ -48,6 +34,11 @@ public class PublisherThreadJava extends PublisherThread {
     @Override
     public String getPublisherId() {
         return publisher.getPublisherId();
+    }
+
+    @Override
+    public long getInterval() {
+        return interval;
     }
 
     @Override
