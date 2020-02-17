@@ -1,15 +1,17 @@
+const WebSocket = require('ws')
 const { waitForEvent, wait } = require('streamr-test-utils')
 
 const { LOCALHOST } = require('../util')
 const endpointEvents = require('../../src/connection/WsEndpoint').events
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
+const { startTracker } = require('../../src/composition')
 
-describe('create five endpoints and init connection between them', () => {
+describe('ws-endpoint', () => {
     const MAX = 5
     const endpoints = []
 
-    it('should be able to start and stop successfully', async () => {
+    it('create five endpoints and init connection between them, should be able to start and stop successfully', async () => {
         for (let i = 0; i < MAX; i++) {
             // eslint-disable-next-line no-await-in-loop
             const endpoint = await startEndpoint(LOCALHOST, 30690 + i, PeerInfo.newNode(`endpoint-${i}`), null)
@@ -64,5 +66,51 @@ describe('create five endpoints and init connection between them', () => {
 
         await endpointOne.stop()
         await endpointTwo.stop()
+    })
+
+    describe('test direct connections from simple websocket', () => {
+        const trackerPort = 38481
+        let tracker
+
+        beforeEach(async () => {
+            tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
+        })
+
+        afterEach(async () => {
+            await tracker.stop()
+        })
+
+        it('tracker must check all required information for new incoming connection and not crash', async () => {
+            let ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/`)
+            let close = await waitForEvent(ws, 'close')
+            expect(close).toEqual([1002, 'Error: address not given'])
+
+            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address`)
+            close = await waitForEvent(ws, 'close')
+            expect(close).toEqual([1002, 'Error: address not given'])
+
+            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`, {
+                headers: {}
+            })
+            close = await waitForEvent(ws, 'close')
+            expect(close).toEqual([1002, 'Error: peerId not given'])
+
+            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`, {
+                headers: {
+                    'streamr-peer-id': 'peerId',
+                }
+            })
+            close = await waitForEvent(ws, 'close')
+            expect(close).toEqual([1002, 'Error: peerType not given'])
+
+            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`, {
+                headers: {
+                    'streamr-peer-id': 'peerId',
+                    'streamr-peer-type': 'typiii',
+                }
+            })
+            close = await waitForEvent(ws, 'close')
+            expect(close).toEqual([1002, 'Error: peerType typiii not in peerTypes list'])
+        })
     })
 })

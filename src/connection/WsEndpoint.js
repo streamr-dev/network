@@ -318,15 +318,18 @@ class WsEndpoint extends EventEmitter {
         const parameters = url.parse(req.url, true)
         const { address } = parameters.query
 
-        if (!address) {
-            this.metrics.inc('_onIncomingConnection:closed:no-address')
-            ws.terminate()
-            this.debug('dropped incoming connection from %s because address parameter missing',
-                req.connection.remoteAddress)
-        } else {
-            this.debug('%s connected to me', address)
+        try {
+            if (!address) {
+                throw new Error('address not given')
+            }
             const clientPeerInfo = fromHeaders(req.headers)
+
+            this.debug('%s connected to me', address)
             this._onNewConnection(ws, address, clientPeerInfo)
+        } catch (e) {
+            this.debug('dropped incoming connection from %s because of %s', req.connection.remoteAddress, e)
+            this.metrics.inc('_onIncomingConnection:closed:no-required-parameter')
+            ws.close(1002, `${e}`)
         }
     }
 

@@ -45,29 +45,30 @@
   },
   "engineStrict": true,
   "dependencies": {
-    "@sentry/node": "^5.10.2",
+    "@sentry/node": "^5.12.3",
     "@streamr/sc-uws": "^10.12.0",
-    "commander": "^4.1.0",
+    "commander": "^4.1.1",
     "debug": "4.1.1",
-    "fastify": "^2.11.0",
+    "fastify": "^2.12.0",
     "fastify-cors": "^3.0.1",
     "lru-cache": "^5.1.1",
     "pidusage": "^2.0.17",
     "speedometer": "^1.1.0",
-    "streamr-client": "^3.0.0",
-    "streamr-client-protocol": "^4.0.6",
-    "uuid": "^3.3.3"
+    "streamr-client": "^3.1.2",
+    "streamr-client-protocol": "^4.1.0",
+    "uuid": "^3.4.0"
   },
   "devDependencies": {
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-streamr-nodejs": "^1.1.0",
-    "eslint-plugin-import": "^2.19.1",
+    "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-import-order": "2.1.4",
     "into-stream": "^5.1.1",
-    "jest": "^24.9.0",
+    "jest": "^25.1.0",
     "portfinder": "^1.0.25",
-    "streamr-test-utils": "^1.0.4"
+    "streamr-test-utils": "^1.0.4",
+    "ws": "^7.2.1"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.1",
