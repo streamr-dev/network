@@ -399,7 +399,7 @@ class Node extends EventEmitter {
     }
 
     async getMetrics() {
-        const endpointMetrics = this.protocols.nodeToNode.basicProtocol.endpoint.getMetrics()
+        const endpointMetrics = this.protocols.nodeToNode.endpoint.getMetrics()
         const processMetrics = await this.metrics.getPidusage()
         const nodeMetrics = this.metrics.report()
         const mainMetrics = this.metrics.prettify(endpointMetrics)
