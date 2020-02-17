@@ -9,4 +9,4 @@ gradlew.bat
 *.iws
 .DS_Store
 logs/
-node_modules
+node_modules/
