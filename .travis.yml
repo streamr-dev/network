@@ -17,8 +17,7 @@ jobs:
     - sudo /etc/init.d/mysql stop
     - git clone https://github.com/streamr-dev/streamr-docker-dev.git
     - sudo ifconfig docker0 10.200.10.1/24
-    - $TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start engine-and-editor nginx
-    - while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/users/me); if [ "$http_code" == "401" ]; then echo "EE up and running"; break; else echo "EE not receiving connections"; sleep 5s; fi; done
+    - $TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start --except tracker --except broker-node-no-storage-1 --except broker-node-no-storage-2 --except broker-node-storage-1 --wait
     - npm run test-integration
   - stage: Tests
     name: Unit Tests
