@@ -33,9 +33,7 @@ jobs:
           sudo service mysql stop
           git clone https://github.com/streamr-dev/streamr-docker-dev.git
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start 5
-          while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/users/me); if [ "$http_code" = 401 ]; then echo "EE up and running"; break; else echo "EE not receiving connections"; sleep 5s; fi; done
-          while true; do http_code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/v1/volume); if [ "$http_code" = 200 ]; then echo "brokers up and running"; break; else echo "brokers not receiving connections"; sleep 5s; fi; done
+          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
           npm run test-integration
 
   publish-npm:
