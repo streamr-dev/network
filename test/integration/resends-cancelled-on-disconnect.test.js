@@ -1,5 +1,6 @@
 const { Readable } = require('stream')
 
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const intoStream = require('into-stream')
 const { waitForEvent, wait } = require('streamr-test-utils')
 
@@ -19,36 +20,48 @@ const Node = require('../../src/logic/Node')
 
 const createSlowStream = () => {
     const messages = [
-        {
+        StreamMessage.from({
+            streamId: 'streamId',
+            streamPartition: 0,
             timestamp: 756,
-            sequenceNo: 0,
+            sequenceNumber: 0,
+            publisherId: 'publisherId',
+            msgChainId: 'msgChainId',
             previousTimestamp: 666,
-            previousSequenceNo: 50,
-            publisherId: 'publisherId',
-            msgChainId: 'msgChainId',
-            data: {},
-            signatureType: 0
-        },
-        {
+            previousSequenceNumber: 50,
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            content: {},
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+        }),
+        StreamMessage.from({
+            streamId: 'streamId',
+            streamPartition: 0,
             timestamp: 800,
-            sequenceNo: 0,
+            sequenceNumber: 0,
+            publisherId: 'publisherId',
+            msgChainId: 'msgChainId',
             previousTimestamp: 756,
-            previousSequenceNo: 0,
-            publisherId: 'publisherId',
-            msgChainId: 'msgChainId',
-            data: {},
-            signatureType: 0
-        },
-        {
+            previousSequenceNumber: 0,
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            content: {},
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+        }),
+        StreamMessage.from({
+            streamId: 'streamId',
+            streamPartition: 0,
             timestamp: 950,
-            sequenceNo: 0,
-            previousTimestamp: 800,
-            previousSequenceNo: 0,
+            sequenceNumber: 0,
             publisherId: 'publisherId',
             msgChainId: 'msgChainId',
-            data: {},
-            signatureType: 0
-        }
+            previousTimestamp: 800,
+            previousSequenceNumber: 0,
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            content: {},
+            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+        })
     ]
 
     const stream = new Readable({

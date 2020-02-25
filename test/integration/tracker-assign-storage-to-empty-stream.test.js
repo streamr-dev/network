@@ -1,4 +1,5 @@
 const intoStream = require('into-stream')
+const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const { waitForEvent, waitForCondition, waitForStreamToEnd } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
@@ -23,46 +24,62 @@ describe('tracker assigns storage node to streams on any resend', () => {
         storageNode = await startStorageNode(LOCALHOST, 18634, 'storageNode', [{
             store: () => {},
             requestLast: () => intoStream.object([
-                {
+                StreamMessage.from({
+                    streamId: 'streamId',
+                    streamPartition: 0,
                     timestamp: 756,
-                    sequenceNo: 0,
+                    sequenceNumber: 0,
+                    publisherId: 'publisherId',
+                    msgChainId: 'msgChainId',
                     previousTimestamp: 666,
-                    previousSequenceNo: 50,
-                    publisherId: 'publisherId',
-                    msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                },
-                {
+                    previousSequenceNumber: 50,
+                    contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                    encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                    content: {},
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+                }),
+                StreamMessage.from({
+                    streamId: 'streamId',
+                    streamPartition: 0,
                     timestamp: 800,
-                    sequenceNo: 0,
+                    sequenceNumber: 0,
+                    publisherId: 'publisherId',
+                    msgChainId: 'msgChainId',
                     previousTimestamp: 756,
-                    previousSequenceNo: 0,
-                    publisherId: 'publisherId',
-                    msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                },
-                {
+                    previousSequenceNumber: 0,
+                    contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                    encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                    content: {},
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+                }),
+                StreamMessage.from({
+                    streamId: 'streamId',
+                    streamPartition: 0,
                     timestamp: 950,
-                    sequenceNo: 0,
-                    previousTimestamp: 800,
-                    previousSequenceNo: 0,
+                    sequenceNumber: 0,
                     publisherId: 'publisherId',
                     msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                }
+                    previousTimestamp: 800,
+                    previousSequenceNumber: 0,
+                    contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                    encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                    content: {},
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+                })
             ]),
             requestFrom: () => intoStream.object([
-                {
+                StreamMessage.from({
+                    streamId: 'streamId',
+                    streamPartition: 0,
                     timestamp: 666,
-                    sequenceNo: 0,
+                    sequenceNumber: 0,
                     publisherId: 'publisherId',
                     msgChainId: 'msgChainId',
-                    data: {},
-                    signatureType: 0
-                }
+                    contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                    encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+                    content: {},
+                    signatureType: StreamMessage.SIGNATURE_TYPES.NONE
+                })
             ]),
             requestRange: () => intoStream.object([]),
         }])
