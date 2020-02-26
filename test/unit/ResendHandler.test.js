@@ -375,10 +375,12 @@ describe('ResendHandler', () => {
             }
 
             let streamHasEnded = false
+            // eslint-disable-next-line promise/catch-or-return
             waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
                 .finally(() => {
                     streamHasEnded = true
                 })
+
             setTimeout(() => {
                 expect(streamHasEnded).toEqual(false)
                 done()

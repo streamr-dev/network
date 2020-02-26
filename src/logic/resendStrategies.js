@@ -178,6 +178,8 @@ class ProxiedResend {
             this._resetTimeout()
         }, () => {
             this._askNextNeighbor()
+        }).catch((e) => {
+            console.error(`Failed to _askNextNeighbor: ${neighborId}, error ${e}`)
         })
     }
 
@@ -386,7 +388,9 @@ class StorageNodeResendStrategy {
             this.trackerNode.findStorageNodes(tracker, streamIdAndPartition).then(
                 () => this.pendingTrackerResponse.addEntry(request, responseStream),
                 () => responseStream.push(null)
-            )
+            ).catch((e) => {
+                console.error(`Failed to _requestStorageNodes, error: ${e}`)
+            })
         }
     }
 

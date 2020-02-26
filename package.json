@@ -64,6 +64,7 @@
     "eslint-config-streamr-nodejs": "^1.1.0",
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-import-order": "2.1.4",
+    "eslint-plugin-promise": "^4.2.1",
     "into-stream": "^5.1.1",
     "jest": "^25.1.0",
     "portfinder": "^1.0.25",
