@@ -2,9 +2,23 @@ package com.streamr.client_testing;
 
 import org.apache.commons.cli.*;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
 public class Main {
     private static Streams streams;
     public static void main(String[] args) {
+        Properties prop = new Properties();
+        try {
+            InputStream in = new FileInputStream("application.conf");
+            prop.load(in);
+            in.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         Options options = new Options();
 
         String streamsDescription = "Stream setup to test or run. Must be one of:\n" + String.join("\n", Streams.SETUPS_NAMES);
@@ -16,10 +30,11 @@ public class Main {
         mode.setRequired(true);
         options.addOption(mode);
 
+        String restUrl = prop.getProperty("restUrl");
         Option restApiUrl = new Option("r", "resturl", true, "REST API url to connect to.");
-        restApiUrl.setRequired(true);
         options.addOption(restApiUrl);
 
+        String wsUrl = prop.getProperty("wsUrl");
         Option wsApiUrl = new Option("w", "wsurl", true, "WebSockets API url to connect to");
         wsApiUrl.setRequired(true);
         options.addOption(wsApiUrl);
@@ -36,7 +51,12 @@ public class Main {
 
             System.exit(1);
         }
-        cmd.getOptionValue("resturl");
+        if (cmd.getOptionValue("resturl") != null) {
+            restUrl = cmd.getOptionValue("resturl");
+        }
+        if (cmd.getOptionValue("wsurl") != null) {
+            wsUrl = cmd.getOptionValue("wsurl");
+        }
 
         boolean testCorrectness = false;
         if (cmd.getOptionValue("mode").equals("test")) {
@@ -47,7 +67,13 @@ public class Main {
             System.out.println("option 'mode' must be either 'test' or 'run'");
             System.exit(1);
         }
-        streams = new Streams(cmd.getOptionValue("resturl"), cmd.getOptionValue("wsurl"), testCorrectness);
+        Participants participants = new Participants(
+                Integer.parseInt(prop.getProperty("nbJavaPublishers")),
+                Integer.parseInt(prop.getProperty("nbJavaSubscribers")),
+                Integer.parseInt(prop.getProperty("nbJavascriptPublishers")),
+                Integer.parseInt(prop.getProperty("nbJavascriptSubscribers"))
+        );
+        streams = new Streams(participants, restUrl, wsUrl, testCorrectness);
         streams.start(cmd.getOptionValue("stream"));
     }
 }

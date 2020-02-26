@@ -5,7 +5,7 @@ import com.streamr.client.rest.Stream;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class PublisherThreadJava extends PublisherThread {
     private final StreamrClient publisher;
@@ -13,20 +13,16 @@ public class PublisherThreadJava extends PublisherThread {
     private TimerTask task;
     private long counter = 0;
 
-    private PublisherThreadJava(StreamrClient publisher, long interval) {
+    public PublisherThreadJava(Stream stream, StreamrClient publisher, PublishFunction publishFunction, long interval) {
         super(interval);
         this.publisher = publisher;
         this.publisher.connect();
         timer = new Timer(true);
-    }
-
-    public PublisherThreadJava(Stream stream, StreamrClient publisher, PublishFunction publishFunction, long interval) {
-        this(publisher, interval);
         task = new TimerTask() {
             @Override
             public void run() {
                 counter++;
-                publishFunction.apply(publisher, stream, counter);
+                publishFunction.getF().apply(publisher, stream, counter);
             }
         };
     }
@@ -42,18 +38,18 @@ public class PublisherThreadJava extends PublisherThread {
     }
 
     @Override
+    public void setOnPublished(Consumer<String> onPublished) {
+
+    }
+
+    @Override
     public void start() {
-        timer.schedule(task, 0, interval);
+        timer.schedule(task, 5000, interval);
     }
 
     @Override
     public void stop() {
         timer.cancel();
         publisher.disconnect();
-    }
-
-    @FunctionalInterface
-    public interface PublishFunction {
-        void apply(StreamrClient publisher, Stream stream, Long counter);
     }
 }

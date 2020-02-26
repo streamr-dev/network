@@ -14,7 +14,7 @@ public class PublisherThreadJS extends PublisherThread {
     private Consumer<String> onPublished = null;
     private final Thread thread;
 
-    public PublisherThreadJS(StreamrClientJS publisher, Stream stream, long interval) {
+    public PublisherThreadJS(StreamrClientJS publisher, Stream stream, PublishFunction publishFunction, long interval) {
         super(interval);
         this.publisher = publisher;
         // We assume there is only 1 key since we test only 1 stream
@@ -22,7 +22,8 @@ public class PublisherThreadJS extends PublisherThread {
         if (publisher.getEncryptionOptions() != null) {
             groupKey = publisher.getEncryptionOptions().getPublisherGroupKeys().values().iterator().next().getGroupKeyHex();
         }
-        command = "node publisher.js " + publisher.getPrivateKey() + " " + stream.getId() + " " + interval + " " + groupKey;
+        command = "node publisher.js " + publisher.getPrivateKey() + " " + stream.getId() + " "
+                + publishFunction.getName() + " " + interval + " " + groupKey;
         thread = new Thread(this::executeNode);
     }
 
@@ -31,6 +32,7 @@ public class PublisherThreadJS extends PublisherThread {
         return publisher.getAddress();
     }
 
+    @Override
     public void setOnPublished(Consumer<String> onPublished) {
         this.onPublished = onPublished;
     }
@@ -52,6 +54,7 @@ public class PublisherThreadJS extends PublisherThread {
             String s;
             while (!Thread.currentThread().isInterrupted() && (s = stdInput.readLine()) != null) {
                 if (s.startsWith("Published: ")) {
+                    System.out.println(s);
                     if (onPublished != null) {
                         onPublished.accept(s.substring(12));
                     }
@@ -59,11 +62,9 @@ public class PublisherThreadJS extends PublisherThread {
                     System.out.println(s);
                 }
             }
-
             while (!Thread.currentThread().isInterrupted() && (s = stdError.readLine()) != null) {
                 System.out.println(s);
             }
-
             if (Thread.currentThread().isInterrupted()) {
                 stdInput.close();
                 stdError.close();

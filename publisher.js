@@ -1,8 +1,11 @@
+const crypto = require('crypto')
+const { ethers } = require('ethers')
 const StreamrClient = require('streamr-client')
 const privateKey = process.argv[2]
 const streamId = process.argv[3]
-const interval = parseInt(process.argv[4])
-const groupKey = process.argv[5]
+const publishFunctionName = process.argv[4]
+const interval = parseInt(process.argv[5])
+const groupKey = process.argv[6]
 
 const options = {
     restUrl: "http://localhost/api/v1",
@@ -16,6 +19,38 @@ if (groupKey) {
     options.publisherGroupKeys[streamId] = Buffer.from(groupKey, 'hex')
 }
 const client = new StreamrClient(options)
+
+let counter = 0
+const rotatingPublishFunction = (msgToPublish) => {
+    counter += 1
+    if (counter % 5 === 0) {
+        const groupKey = crypto.randomBytes(32)
+
+        console.log("Rotating the key. New key: " + ethers.utils.hexlify(groupKey))
+        client.publish(streamId, msgToPublish, Date.now(), null, groupKey)
+            .then(() => console.log('Published: ', JSON.stringify(msgToPublish)))
+            .catch((err) => console.error(err))
+        counter = 0
+    } else {
+        client.publish(streamId, msgToPublish)
+            .then(() => console.log('Published: ', JSON.stringify(msgToPublish)))
+            .catch((err) => console.error(err))
+    }
+}
+
+const defaultPublishFunction = (msgToPublish) => {
+    client.publish(streamId, msgToPublish)
+        .then(() => console.log('Published: ', JSON.stringify(msgToPublish)))
+        .catch((err) => console.error(err))
+}
+
+let publishFunction = () => { throw new Error('Undefined publish function') }
+if (publishFunctionName === 'default') {
+    publishFunction = defaultPublishFunction
+} else if (publishFunctionName === 'rotating') {
+    publishFunction = rotatingPublishFunction
+}
+
 setInterval(() => {
     const msg = {
         "client-implementation": "Javascript",
@@ -25,7 +60,5 @@ setInterval(() => {
         "array-key": [4, -5, 19]
     }
 
-    client.publish(streamId, msg)
-        .then(() => console.log('Published: ', JSON.stringify(msg)))
-        .catch((err) => console.error(err))
+    publishFunction(msg)
 }, interval)

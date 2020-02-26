@@ -5,15 +5,14 @@ This tool allows to run/test different stream setups using the developed client 
 ## Stream setups
 
 A 'stream setup' is basically a scenario. It consists of a test stream and a set of participants (publishers + subscribers) using this stream. The publishers can be created with different parameters:
-- The library used. (Only Java now)
+- The library used. (Only Java or Javascript now)
 - Publication rate
-- Content published
 - Signing data or not
 - Encrypting data or not
 - if encrypting data, periodically rotating the key or not (forward secrecy)
 
 The subscribers as well can be created with different parameters:
-- The library used (Only Java now)
+- The library used (Only Java or Javascript now)
 - subscribing only to real-time, or with resend from a specific time, or resend the last n messages
 - Verifying signatures or not
 - If encrypted, using a group key shared by the publisher or using the key-exchange mechanism
@@ -22,14 +21,35 @@ The different parameters allow to test different scenarios. For example one stre
 
 ## Usage
 
-The script `streamr-client-testing.sh` takes 4 arguments:
-- `-s`, `--stream`: The stream setup to run. Value should be one of the following (the names should be self-explanatory. See the code for more specifics, like number of publishers/subscribers):
+The script `streamr-client-testing.sh` takes 2 required command-line arguments:
+- `-s`, `--stream`: The stream setup to run. Value should be one of the following (the names should be self-explanatory. See the code for more specifics and `application.conf` for the number of publishers/subscribers):
     - `"stream-cleartext-unsigned"`
     - `"stream-cleartext-signed"`
     - `"stream-encrypted-shared-signed"`
     - `"stream-encrypted-shared-rotating-signed"`
     - `"stream-encrypted-exchanged-rotating-signed"`
 
-- `-m`, `--mode`: determines how to run the stream setup. Value should be either `'run'` or `'test'`. In `'run'` mode, the stream setup is started and not stopped unless the process is killed (appropriate to continuously test staging). In `'test'` mode, the stream setup is run for 1 minute, after which it is stopped and a check is performed to assert that all subscribers have received all messages from all publishers in the correct order and that no exception was thrown in the process (appropriate to be part of the CI/CD pipeline).
+- `-m`, `--mode`: determines how to run the stream setup. Value should be either `'run'` or `'test'`. In `'run'` mode, the stream setup is started and not stopped unless the process is killed (appropriate to continuously test staging). In `'test'` mode, the stream setup is run for 30 seconds, after which it is stopped and a check is performed to assert that all subscribers have received all messages from all publishers in the correct order and that no exception was thrown in the process (appropriate to be part of the CI/CD pipeline).
+Some additional arguments are specified and can be changed in `application.conf`. The script `streamr-client-testing.sh` optionally accepts to override 2 of these arguments:
 - `-r`, `--resturl`: REST API url to connect to. Example value in the case of local testing: `"http://localhost/api/v1"`
 - `-w`, `--wsurl`: WebSockets API url to connect to. Example value in the case of local testing: `"ws://localhost/api/v1/ws"`
+
+If the number of **subscribers** for each library as specified in `application.conf` is greater than or equal to 3, then 2 of these subscribers will subscribe only after some delay and using a different resend option. For example, if `nbJavaSubscribers=2`, the 2 subscribers will subscribe immediately in real-time. But if `nbJavaSubscribers=5`, 3 of them will subscribe immediately, but 1 will subscribe later with a "resend last option" and 1 other with a "resend from" option.
+
+The following example will test locally for 30 seconds that 2 Java subscribers and 4 Javascript subscribers (3 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
+```
+>> cat application.conf
+restUrl=http://localhost/api/v1
+wsUrl=ws://localhost/api/v1/ws
+
+nbJavaPublishers=3
+nbJavaSubscribers=2
+nbJavascriptPublishers=0
+nbJavascriptSubscribers=4
+
+>> sh streamr-client-testing.sh -s stream-encrypted-shared-rotating-signed -m test
+```
+
+## Contributing
+
+You can add/update/remove setups in `Streams.Java`. To support another Streamr client library (like Python), follow the convention and encapsulate your code in Java wrapper classes: `StreamrClientX extends StreamrClientWrapper`, `SubscriberX extends Subscriber`, `PublisherThreadX extends PublisherThread` where `X` is the programming language of the library to support.

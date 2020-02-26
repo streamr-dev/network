@@ -1,5 +1,7 @@
 package com.streamr.client_testing;
 
+import java.util.function.Consumer;
+
 public abstract class PublisherThread {
     protected final long interval;
 
@@ -10,6 +12,7 @@ public abstract class PublisherThread {
     public long getInterval() {
         return interval;
     }
+    public abstract void setOnPublished(Consumer<String> onPublished);
     public abstract String getPublisherId();
     public abstract void start();
     public abstract void stop();

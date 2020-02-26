@@ -23,16 +23,23 @@ public class StreamrClientJS extends StreamrClientWrapper {
         this(StreamTester.generatePrivateKey(), encryptionOptions);
     }
 
-    public String getAddress() {
-        return auth.getAddress();
-    }
     public String getPrivateKey() {
         return privateKey;
     }
 
-    // @Override
-    public PublisherThread toPublisherThread(Stream stream, long interval) {
-        return new PublisherThreadJS(this, stream, interval);
+    @Override
+    public String getAddress() {
+        return auth.getAddress();
+    }
+
+    @Override
+    public String getImplementation() {
+        return "Javascript";
+    }
+
+    @Override
+    public PublisherThread toPublisherThread(Stream stream, PublishFunction publishFunction, long interval) {
+        return new PublisherThreadJS(this, stream, publishFunction, interval);
     }
 
     public EncryptionOptions getEncryptionOptions() {

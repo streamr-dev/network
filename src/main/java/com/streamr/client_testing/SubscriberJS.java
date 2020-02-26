@@ -66,11 +66,13 @@ public class SubscriberJS extends Subscriber {
                     System.out.println(s);
                 }
             }
+            try {
+                while (!Thread.currentThread().isInterrupted() && stdError.ready() && (s = stdError.readLine()) != null) {
+                    System.out.println(s);
+                }
+            } catch (IOException e) {
 
-            while (!Thread.currentThread().isInterrupted() && (s = stdError.readLine()) != null) {
-                System.out.println(s);
             }
-
             if (Thread.currentThread().isInterrupted()) {
                 stdInput.close();
                 stdError.close();
@@ -84,6 +86,12 @@ public class SubscriberJS extends Subscriber {
 
     @Override
     public void stop() {
+        try {
+            p.getInputStream().close();
+            p.getErrorStream().close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         thread.interrupt();
     }
 
