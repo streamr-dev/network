@@ -109,7 +109,7 @@ class Node extends EventEmitter {
     }
 
     unsubscribeFromStream(streamId) {
-        this.debug('remove %s from streams', streamId)
+        this.debug('unsubscribeFromStream: remove %s from streams', streamId)
         const nodes = this.streams.removeStream(streamId)
         nodes.forEach(async (n) => {
             try {
@@ -163,17 +163,19 @@ class Node extends EventEmitter {
             try {
                 node = await this.protocols.nodeToNode.connectToNode(nodeAddress)
             } catch (e) {
-                this.debug('failed to connect to node at %s (%j), to subscribe streamId %s', nodeAddress, e, streamId)
+                this.debug('failed to connect to node at %s (%o), to subscribe streamId %s', nodeAddress, e, streamId)
                 return
             }
             try {
                 await this._subscribeToStreamOnNode(node, streamId)
             } catch (e) {
-                this.debug('failed to subscribe to node %s (%j), streamId %s', node, e, streamId)
+                this.debug('failed to subscribe to node %s (%o), streamId %s', node, e, streamId)
                 return
             }
             nodeIds.push(node)
         }))
+
+        this._sendStatusToAllTrackers()
 
         const currentNodes = this.streams.isSetUp(streamId) ? this.streams.getAllNodesForStream(streamId) : []
         const nodesToUnsubscribeFrom = currentNodes.filter((node) => !nodeIds.includes(node))
@@ -267,7 +269,9 @@ class Node extends EventEmitter {
             })
         } else {
             this.debug('node %s tried to subscribe to stream %s, but it is not setup', source, streamId)
-            this.protocols.nodeToNode.sendUnsubscribe(source, streamId)
+            this.protocols.nodeToNode.sendUnsubscribe(source, streamId).catch((e) => {
+                console.error(`failed to send sendUnsubscribe to ${source}, because stream ${streamId} is not setUp, error ${e}`)
+            })
         }
     }
 
@@ -388,7 +392,7 @@ class Node extends EventEmitter {
         this.bootstrapTrackerAddresses.forEach((address) => {
             this.protocols.trackerNode.connectToTracker(address)
                 .catch((err) => {
-                    console.error('Could not connect to tracker %s because %j', address, err)
+                    console.error('Could not connect to tracker %s because %j', address, err.toString())
                 })
         })
     }

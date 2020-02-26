@@ -102,9 +102,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
         expect(tracker.overlayPerStream['stream-2::2'].state()).toEqual(res)
 
         subscriberTwo.unsubscribeFromStream(s1)
-        await waitForCondition(() => tracker.overlayPerStream['stream-1::0'] === undefined)
+        await waitForCondition(() => tracker.overlayPerStream['stream-1::0'] === undefined, 10000)
         subscriberTwo.unsubscribeFromStream(s2)
-        await waitForCondition(() => tracker.overlayPerStream['stream-2::2'] === undefined)
+        await waitForCondition(() => tracker.overlayPerStream['stream-2::2'] === undefined, 10000)
     }, 10000)
 
     it('tracker getTopology should report correct topology based on parameters and current state', async () => {
