@@ -39,6 +39,8 @@ If the number of **subscribers** for each library as specified in `application.c
 The following example will test locally for 30 seconds that 2 Java subscribers and 4 Javascript subscribers (3 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
 ```
 >> cat application.conf
+logLevel=INFO
+
 restUrl=http://localhost/api/v1
 wsUrl=ws://localhost/api/v1/ws
 
@@ -49,6 +51,8 @@ nbJavascriptSubscribers=4
 
 >> sh streamr-client-testing.sh -s stream-encrypted-shared-rotating-signed -m test
 ```
+
+The log levels follow [this convention](https://docs.oracle.com/javase/7/docs/api/java/util/logging/Level.html).
 
 ## Contributing
 
