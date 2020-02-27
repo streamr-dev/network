@@ -29,7 +29,7 @@ import java.util.function.BiConsumer;
 public class StreamTester {
     private static SecureRandom secureRandom = new SecureRandom();
     private static Random random = new Random();
-    private static final int NETWORK_SETUP_DELAY = 10000;
+    private static final int NETWORK_SETUP_DELAY = 5000;
 
     private final StreamrClient creator;
     private final Stream stream;
@@ -193,7 +193,10 @@ public class StreamTester {
     private void addPublisher(StreamrClientWrapper publisher, PublishFunction publishFunction, long interval) {
         PublisherThread thread = publisher.toPublisherThread(stream, publishFunction, interval);
         if (testCorrectness) {
-            thread.setOnPublished((payloadString) -> publishersMsgStacks.get(thread.getPublisherId()).addLast(payloadString));
+            thread.setOnPublished((payloadString) -> {
+                publishersMsgStacks.get(thread.getPublisherId()).addLast(payloadString);
+                Main.logger.fine(thread.getPublisherId() + " published " + payloadString);
+            });
         }
         grantPermission(stream, creator, thread.getPublisherId(), "read");
         grantPermission(stream, creator, thread.getPublisherId(), "write");
@@ -245,7 +248,7 @@ public class StreamTester {
     }
 
     private synchronized void onReceivedJavascript(SubscriberJS subscriberJS, String publisherId, String content) {
-        Main.logger.info("JS subscriber " + subscriberJS.getSubscriberId() + " received content: " + content + " from " + publisherId);
+        // logging is in subscriber.js and SubscriberJS.java
         ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(publisherId.toLowerCase()).get(subscriberJS.getSubscriberId());
         if (subscriberStack == null) {
             subscriberStack = new ArrayDeque<>();

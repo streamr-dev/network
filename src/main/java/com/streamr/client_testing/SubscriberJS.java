@@ -57,18 +57,23 @@ public class SubscriberJS extends Subscriber {
 
             String s;
             while (!Thread.currentThread().isInterrupted() && (s = stdInput.readLine()) != null) {
-                if (s.startsWith("Received: ")) {
+                if (s.startsWith("Received: ")) { // only content, for message validation
                     if (onReceived != null) {
                         String[] parts = s.substring(10).split("###");
                         onReceived.accept(parts[0], parts[1]);
                     }
+                } else if (s.startsWith("whole message received: ")) { // whole stream message, for logging
+                    String msg = s.split("whole message received: ")[1];
+                    Main.logger.info("Javascript subscriber " + getSubscriberId() + " received: " + msg);
                 } else {
-                    Main.logger.warning(s);
+                    Main.logger.warning(getSubscriberId() + " " + s);
                 }
             }
             try {
                 while (!Thread.currentThread().isInterrupted() && stdError.ready() && (s = stdError.readLine()) != null) {
-                    Main.logger.severe(s);
+                    if (!s.equals("Failed to decrypt. Requested the correct decryption key(s) and going to try again.")) {
+                        Main.logger.severe(s);
+                    }
                 }
             } catch (IOException e) {
 

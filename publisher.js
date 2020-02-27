@@ -23,7 +23,7 @@ const client = new StreamrClient(options)
 let counter = 0
 const rotatingPublishFunction = (msgToPublish) => {
     counter += 1
-    if (counter % 5 === 0) {
+    if (counter % 10 === 0) {
         const groupKey = crypto.randomBytes(32)
 
         console.log("Rotating the key. New key: " + ethers.utils.hexlify(groupKey))
@@ -59,6 +59,6 @@ setInterval(() => {
         "double-key": Math.random(),
         "array-key": [4, -5, 19]
     }
-
+    console.log('Going to publish: ', JSON.stringify(msg))
     publishFunction(msg)
 }, interval)

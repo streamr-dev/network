@@ -57,12 +57,16 @@ public class PublisherThreadJS extends PublisherThread {
                     if (onPublished != null) {
                         onPublished.accept(s.substring(12));
                     }
+                } else if (s.startsWith("Going to publish")) {
+                    Main.logger.finest(getPublisherId() + " " + s);
+                } else if (s.startsWith("Rotating")) {
+                    Main.logger.info(getPublisherId() + " " + s);
                 } else {
-                    Main.logger.warning(s);
+                    Main.logger.warning(getPublisherId() + " " + s);
                 }
             }
             while (!Thread.currentThread().isInterrupted() && (s = stdError.readLine()) != null) {
-                Main.logger.severe(s);
+                Main.logger.severe(getPublisherId() + " " + s);
             }
             if (Thread.currentThread().isInterrupted()) {
                 stdInput.close();

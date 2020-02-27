@@ -36,7 +36,7 @@ Some additional arguments are specified and can be changed in `application.conf`
 
 If the number of **subscribers** for each library as specified in `application.conf` is greater than or equal to 3, then 2 of these subscribers will subscribe only after some delay and using a different resend option. For example, if `nbJavaSubscribers=2`, the 2 subscribers will subscribe immediately in real-time. But if `nbJavaSubscribers=5`, 3 of them will subscribe immediately, but 1 will subscribe later with a "resend last option" and 1 other with a "resend from" option.
 
-The following example will test locally for 30 seconds that 2 Java subscribers and 4 Javascript subscribers (3 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
+The following example will test locally for 30 seconds that 2 Java subscribers and 4 Javascript subscribers (2 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
 ```
 >> cat application.conf
 logLevel=INFO
@@ -52,7 +52,7 @@ nbJavascriptSubscribers=4
 >> sh streamr-client-testing.sh -s stream-encrypted-shared-rotating-signed -m test
 ```
 
-The log levels follow [this convention](https://docs.oracle.com/javase/7/docs/api/java/util/logging/Level.html).
+The log levels follow [this convention](https://docs.oracle.com/javase/7/docs/api/java/util/logging/Level.html). Level `INFO` will output messages specific to this tool (setup and results) + every message received by every subscriber. Level `FINE` will in addition output every message published by every publisher.
 
 ## Contributing
 

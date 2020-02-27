@@ -35,10 +35,6 @@ public class Main {
     }
     public static final Logger logger = Logger.getAnonymousLogger();
     public static void main(String[] args) {
-        Handler handler = new ConsoleHandler();
-        handler.setFormatter(new LogFormatter());
-        logger.setUseParentHandlers(false);
-        logger.addHandler(handler);
         Properties prop = new Properties();
         try {
             InputStream in = new FileInputStream("application.conf");
@@ -47,7 +43,13 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        logger.setLevel(Level.parse(prop.getProperty("logLevel")));
+        Level logLevel = Level.parse(prop.getProperty("logLevel"));
+        Handler handler = new ConsoleHandler();
+        handler.setLevel(logLevel);
+        handler.setFormatter(new LogFormatter());
+        logger.setUseParentHandlers(false);
+        logger.addHandler(handler);
+        logger.setLevel(logLevel);
 
         Options options = new Options();
 

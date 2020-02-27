@@ -29,8 +29,8 @@ if (resendOptions) {
 }
 client.getPublisherId().then((publisherId) => {
     client.subscribe(options, (content, streamMessage) => {
-        // to be printed in test mode
-        console.log(`Subscriber ${publisherId} received: ${streamMessage.serialize()}`)
+        // to be logged in test mode
+        console.log(`whole message received: ${streamMessage.serialize()}`)
         // to be added by SubscriberJS to the message queue for verification in test mode
         console.log(`Received: ${streamMessage.getPublisherId()}###${streamMessage.getSerializedContent()}`)
     })
