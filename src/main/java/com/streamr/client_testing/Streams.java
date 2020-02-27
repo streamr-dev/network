@@ -29,9 +29,9 @@ public class Streams {
 
     public Streams(Participants participants, String restApiUrl, String websocketApiUrl, boolean testCorrectness) {
         this.ps = participants;
-        System.out.println("Using REST URL: " + restApiUrl);
+        Main.logger.info("Using REST URL: " + restApiUrl);
         this.restApiUrl = restApiUrl;
-        System.out.println("Using WebSockets URL: " + websocketApiUrl);
+        Main.logger.info("Using WebSockets URL: " + websocketApiUrl);
         this.websocketApiUrl = websocketApiUrl;
         this.testCorrectness = testCorrectness;
         streams.put(SETUPS_NAMES[0], this::cleartextUnsignedStream);
@@ -76,10 +76,9 @@ public class Streams {
 
     private StreamTester build(String name, Consumer<StreamTester> addParticipants) {
         StreamTester streamTester = new StreamTester(name, restApiUrl, websocketApiUrl, testCorrectness);
-        System.out.println("Creating " + ps.getTotal() + " publishers and subscribers for '" + name + "'...");
+        Main.logger.info("Creating " + ps.getTotal() + " publishers and subscribers for '" + name + "'...");
         addParticipants.accept(streamTester);
-        System.out.println("Created publishers and subscribers for '" + name + "'!");
-        System.out.println("Initialized '" + name + "'!");
+        Main.logger.info("Created publishers and subscribers for '" + name + "'!");
         return streamTester;
     }
 

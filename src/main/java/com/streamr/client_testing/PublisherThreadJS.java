@@ -54,16 +54,15 @@ public class PublisherThreadJS extends PublisherThread {
             String s;
             while (!Thread.currentThread().isInterrupted() && (s = stdInput.readLine()) != null) {
                 if (s.startsWith("Published: ")) {
-                    System.out.println(s);
                     if (onPublished != null) {
                         onPublished.accept(s.substring(12));
                     }
                 } else {
-                    System.out.println(s);
+                    Main.logger.warning(s);
                 }
             }
             while (!Thread.currentThread().isInterrupted() && (s = stdError.readLine()) != null) {
-                System.out.println(s);
+                Main.logger.severe(s);
             }
             if (Thread.currentThread().isInterrupted()) {
                 stdInput.close();

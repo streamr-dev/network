@@ -5,11 +5,40 @@ import org.apache.commons.cli.*;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Properties;
+import java.util.logging.*;
 
 public class Main {
     private static Streams streams;
+    private static class LogFormatter extends Formatter {
+        private final DateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
+
+        public String format(LogRecord record) {
+            StringBuilder builder = new StringBuilder(1000);
+            builder.append(df.format(new Date(record.getMillis()))).append("-");
+            builder.append(record.getLevel()).append(": ");
+            builder.append(formatMessage(record));
+            builder.append("\n");
+            return builder.toString();
+        }
+
+        public String getHead(Handler h) {
+            return super.getHead(h);
+        }
+
+        public String getTail(Handler h) {
+            return super.getTail(h);
+        }
+    }
+    public static final Logger logger = Logger.getAnonymousLogger();
     public static void main(String[] args) {
+        Handler handler = new ConsoleHandler();
+        handler.setFormatter(new LogFormatter());
+        logger.setUseParentHandlers(false);
+        logger.addHandler(handler);
         Properties prop = new Properties();
         try {
             InputStream in = new FileInputStream("application.conf");
@@ -18,6 +47,7 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        logger.setLevel(Level.parse(prop.getProperty("logLevel")));
 
         Options options = new Options();
 
@@ -36,7 +66,6 @@ public class Main {
 
         String wsUrl = prop.getProperty("wsUrl");
         Option wsApiUrl = new Option("w", "wsurl", true, "WebSockets API url to connect to");
-        wsApiUrl.setRequired(true);
         options.addOption(wsApiUrl);
 
         CommandLineParser parser = new DefaultParser();
@@ -46,7 +75,7 @@ public class Main {
         try {
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
-            System.out.println(e.getMessage());
+            logger.severe(e.getMessage());
             formatter.printHelp("streamr-client-testing", options);
 
             System.exit(1);
@@ -64,7 +93,7 @@ public class Main {
         } else if (cmd.getOptionValue("mode").equals("run")) {
             testCorrectness = false;
         } else {
-            System.out.println("option 'mode' must be either 'test' or 'run'");
+            logger.severe("option 'mode' must be either 'test' or 'run'");
             System.exit(1);
         }
         Participants participants = new Participants(

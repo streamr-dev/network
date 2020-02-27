@@ -63,12 +63,12 @@ public class SubscriberJS extends Subscriber {
                         onReceived.accept(parts[0], parts[1]);
                     }
                 } else {
-                    System.out.println(s);
+                    Main.logger.warning(s);
                 }
             }
             try {
                 while (!Thread.currentThread().isInterrupted() && stdError.ready() && (s = stdError.readLine()) != null) {
-                    System.out.println(s);
+                    Main.logger.severe(s);
                 }
             } catch (IOException e) {
 

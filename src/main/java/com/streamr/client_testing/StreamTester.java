@@ -18,8 +18,6 @@ import com.streamr.client.utils.UnencryptedGroupKey;
 import okhttp3.*;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import java.io.IOException;
@@ -29,7 +27,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
 public class StreamTester {
-    private static final Logger log = LogManager.getLogger();
     private static SecureRandom secureRandom = new SecureRandom();
     private static Random random = new Random();
     private static final int NETWORK_SETUP_DELAY = 10000;
@@ -90,7 +87,7 @@ public class StreamTester {
     }
 
     public void start() {
-        System.out.println("Starting stream " + stream.getName() + "...\n");
+        Main.logger.info("Starting stream " + stream.getName() + "...\n");
         try {
             // this delay is needed between the moment subscribers are subscribed and publishers start publishing
             // because the nodes stream topology needs some time before it is fully formed.
@@ -138,17 +135,17 @@ public class StreamTester {
             try {
                 total += checkMsgs(stacks);
             } catch (IllegalStateException e) {
-                System.out.println("\nFAILED. On error: '" + e.getMessage() + "'\n");
+                Main.logger.warning("\nFAILED. On error: '" + e.getMessage() + "'\n");
                 printMsgsReceived();
                 System.exit(1);
             }
 
         }
         if (decryptionErrorsCount > 0) {
-            System.out.println("FAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)");
+            Main.logger.warning("FAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)");
             System.exit(1);
         }
-        System.out.println("PASSED. Checked all " + total + " messages.");
+        Main.logger.info("PASSED. Checked all " + total + " messages.");
     }
 
     private void printMsgsReceived() {
@@ -205,7 +202,7 @@ public class StreamTester {
             publishersMsgStacks.put(thread.getPublisherId(), new ArrayDeque<>());
             subscribersMsgStacks.put(thread.getPublisherId(), new ConcurrentHashMap<>());
         }
-        System.out.println("Added " + publisher.getImplementation() + " publisher: " + thread.getPublisherId() +
+        Main.logger.info("Added " + publisher.getImplementation() + " publisher: " + thread.getPublisherId() +
                 " (publication rate in milliseconds: " + thread.getInterval() + ")");
     }
 
@@ -238,7 +235,7 @@ public class StreamTester {
     }
 
     private synchronized void onReceivedJava(String subscriberId, StreamMessage streamMessage) {
-        System.out.println("Subscriber " + subscriberId + " received: " + streamMessage.toJson());
+        Main.logger.info("Java subscriber " + subscriberId + " received: " + streamMessage.toJson());
         ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(streamMessage.getPublisherId().toLowerCase()).get(subscriberId);
         if (subscriberStack == null) {
             subscriberStack = new ArrayDeque<>();
@@ -248,6 +245,7 @@ public class StreamTester {
     }
 
     private synchronized void onReceivedJavascript(SubscriberJS subscriberJS, String publisherId, String content) {
+        Main.logger.info("JS subscriber " + subscriberJS.getSubscriberId() + " received content: " + content + " from " + publisherId);
         ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(publisherId.toLowerCase()).get(subscriberJS.getSubscriberId());
         if (subscriberStack == null) {
             subscriberStack = new ArrayDeque<>();
@@ -263,7 +261,7 @@ public class StreamTester {
         if (testCorrectness && resendOption == null) {
             subscribersMsgStacks.values().forEach(map -> map.put(subscriber.getSubscriberId(), new ArrayDeque<>()));
         }
-        System.out.println("Added " + implementation + " subscriber: " + subscriber.getSubscriberId());
+        Main.logger.info("Added " + implementation + " subscriber: " + subscriber.getSubscriberId());
     }
 
     private void addDelayedJavaSubscriber(StreamrClientJava subscriber, ResendOption resendOption, int delay) {
@@ -293,10 +291,10 @@ public class StreamTester {
                 synchronized (this) {
                     HashMap<String, Object> payload = genPayload();
                     String payloadString = HttpUtils.mapAdapter.toJson(payload);
-                    System.out.println("going to publish " + payloadString);
+                    Main.logger.finest(publisher.getPublisherId() + " going to publish " + payloadString);
                     publisher.publish(stream, payload);
                     publishersMsgStacks.get(publisher.getPublisherId()).addLast(payloadString);
-                    System.out.println("published " + payloadString);
+                    Main.logger.fine(publisher.getPublisherId() + " published " + payloadString);
                 }
             };
         } else {
@@ -312,17 +310,17 @@ public class StreamTester {
                 synchronized (this) {
                     HashMap<String, Object> payload = genPayload();
                     String payloadString = HttpUtils.mapAdapter.toJson(payload);
-                    System.out.println(publisher.getPublisherId() + ": going to publish " + payloadString);
+                    Main.logger.finest(publisher.getPublisherId() + " going to publish " + payloadString);
                     if (counter % nbMessagesForSingleKey == 0) {
                         UnencryptedGroupKey newKey = generateGroupKey();
-                        System.out.println("Rotating the key. New key: " + newKey.getGroupKeyHex());
+                        Main.logger.fine(publisher.getPublisherId() + " rotating the key. New key: " + newKey.getGroupKeyHex());
                         publisher.publish(stream, payload, new Date(), null, newKey);
                         counter = 0L;
                     } else {
                         publisher.publish(stream, payload);
                     }
                     publishersMsgStacks.get(publisher.getPublisherId()).addLast(payloadString);
-                    System.out.println(publisher.getPublisherId() + ": published " + payloadString);
+                    Main.logger.fine(publisher.getPublisherId() + ": published " + payloadString);
                 }
             };
         } else {
