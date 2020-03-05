@@ -101,7 +101,8 @@ class WsEndpoint extends EventEmitter {
     }
 
     _checkConnections() {
-        Object.keys(this.connections).forEach((address) => {
+        const addresses = [...this.connections.keys()]
+        addresses.forEach((address) => {
             const ws = this.connections.get(address)
 
             if (ws.readyState !== 1) {
@@ -109,10 +110,11 @@ class WsEndpoint extends EventEmitter {
                 this.lastCheckedReadyState.set(address, ws.readyState)
 
                 this.metrics.inc(`_checkConnections:readyState=${ws.readyState}`)
-                console.error(address + '\t\t\t' + ws.readyState)
+                console.error(`${this.getAddress()} => ${address} = ${ws.readyState}`)
 
                 if (lastReadyState != null && lastReadyState === ws.readyState) {
                     try {
+                        console.error('terminating connection...')
                         ws.terminate()
                     } catch (e) {
                         console.error('failed to close closed socket because of %s', e)
@@ -389,7 +391,8 @@ class WsEndpoint extends EventEmitter {
     }
 
     getMetrics() {
-        const totalBufferSize = Object.values(this.connections).reduce((totalBufferSizeSum, ws) => totalBufferSizeSum + ws.bufferedAmount, 0)
+        const sockets = this.connections.values()
+        const totalBufferSize = [...sockets].reduce((totalBufferSizeSum, ws) => totalBufferSizeSum + (ws.bufferedAmount || 0), 0)
 
         return {
             msgSpeed: this.metrics.speed('_msgSpeed')(),

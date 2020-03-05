@@ -159,7 +159,6 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     _formAndSendInstructions(node, streams) {
-        this.metrics.inc('_formAndSendInstructions')
         Object.keys(streams).forEach((streamKey) => {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
             Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
@@ -176,7 +175,6 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     _formAndSendInstructionsToStorages() {
-        this.metrics.inc('_formAndSendInstructionsToStorages')
         const existingStreams = Object.keys(this.overlayPerStream)
 
         if (existingStreams.length) {
