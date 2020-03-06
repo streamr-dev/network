@@ -38,8 +38,8 @@ function fromHeaders(headers) {
 }
 
 class ReadyStateError extends Error {
-    constructor(readyState) {
-        super(`cannot send because socket.readyState=${readyState}`)
+    constructor(address, readyState) {
+        super(`cannot send to ${address} because socket.readyState=${readyState}`)
     }
 }
 
@@ -110,12 +110,17 @@ class WsEndpoint extends EventEmitter {
                 this.lastCheckedReadyState.set(address, ws.readyState)
 
                 this.metrics.inc(`_checkConnections:readyState=${ws.readyState}`)
-                console.error(`${this.getAddress()} => ${address} = ${ws.readyState}`)
+                this.debug(`found suspicious connection: ${this.getAddress()} => ${address} = ${ws.readyState}`)
 
                 if (lastReadyState != null && lastReadyState === ws.readyState) {
                     try {
-                        console.error('terminating connection...')
+                        console.error(`closing dead connection to ${address}...`)
+                        // force close dead connection
                         ws.terminate()
+                        this._onClose(
+                            address, this.peerBook.getPeerInfo(address),
+                            disconnectionCodes.DEAD_CONNECTION, disconnectionReasons.DEAD_CONNECTION
+                        )
                     } catch (e) {
                         console.error('failed to close closed socket because of %s', e)
                     } finally {
@@ -152,9 +157,9 @@ class WsEndpoint extends EventEmitter {
                         })
                     } else {
                         this.metrics.inc(`send:failed:readyState=${ws.readyState}`)
-                        this.debug('sent failed because readyState of socket is %d', ws.readyState)
+                        this.debug(`send to ${recipientAddress} failed because readyState of socket is ${ws.readyState}`)
                     }
-                }, 0)
+                })
             } catch (e) {
                 this.metrics.inc('send:failed')
                 console.error('sending to %s failed because of %s, readyState is', recipientAddress, e, ws.readyState)
@@ -186,13 +191,13 @@ class WsEndpoint extends EventEmitter {
                             } else {
                                 this.metrics.inc('send:success')
                                 this.debug('sent to %s message "%s"', recipientAddress, message)
-                                resolve()
+                                resolve(recipientId)
                             }
                         })
                     } else {
                         this.metrics.inc(`send:failed:readyState=${ws.readyState}`)
                         this.debug('sent failed because readyState of socket is %d', ws.readyState)
-                        reject(new ReadyStateError(ws.readyState))
+                        reject(new ReadyStateError(recipientAddress, ws.readyState))
                     }
                 } catch (e) {
                     this.metrics.inc('send:failed')
@@ -234,15 +239,24 @@ class WsEndpoint extends EventEmitter {
         this.metrics.inc('connect')
 
         if (this.isConnected(peerAddress)) {
-            this.metrics.inc('connect:already-connected')
-            this.debug('already connected to %s', peerAddress)
-            return Promise.resolve(this.peerBook.getPeerId(peerAddress))
+            const ws = this.connections.get(peerAddress)
+
+            if (ws.readyState === 1) {
+                this.metrics.inc('connect:already-connected')
+                this.debug('already connected to %s', peerAddress)
+                return Promise.resolve(this.peerBook.getPeerId(peerAddress))
+            }
+
+            this.debug(`already connected but readyState is ${ws.readyState}, closing connection`)
+            this.close(this.peerBook.getPeerId(peerAddress))
         }
+
         if (peerAddress === this.getAddress()) {
             this.metrics.inc('connect:own-address')
             this.debug('not allowed to connect to own address %s', peerAddress)
             return Promise.reject(new Error('trying to connect to own address'))
         }
+
         if (this.pendingConnections.has(peerAddress)) {
             this.metrics.inc('connect:pending-connection')
             this.debug('pending connection to %s', peerAddress)
@@ -268,7 +282,7 @@ class WsEndpoint extends EventEmitter {
                         if (result) {
                             resolve(this.peerBook.getPeerId(peerAddress))
                         } else {
-                            reject(new Error('duplicate connection is dropped'))
+                            reject(new Error(`duplicate connection to ${peerAddress} is dropped`))
                         }
                     }
                 })
@@ -345,6 +359,22 @@ class WsEndpoint extends EventEmitter {
         }
     }
 
+    _onClose(address, peerInfo, code = 0, reason = '') {
+        if (reason === disconnectionReasons.DUPLICATE_SOCKET) {
+            this.metrics.inc('_onNewConnection:closed:duplicate')
+            this.debug('socket %s dropped from other side because existing connection already exists')
+            return
+        }
+
+        this.metrics.inc(`_onClose:closed:code=${code}`)
+        this.debug('socket to %s closed (code %d, reason %s)', address, code, reason)
+        this.connections.delete(address)
+        this.lastCheckedReadyState.delete(address)
+        this.peerBook.getPeerId(address)
+        this.debug('removed %s [%s] from connection list', peerInfo, address)
+        this.emit(events.PEER_DISCONNECTED, peerInfo, reason)
+    }
+
     _onNewConnection(ws, address, peerInfo) {
         // Handle scenario where two peers have opened a socket to each other at the same time.
         // Second condition is a tiebreaker to avoid both peers of simultaneously disconnecting their socket,
@@ -366,19 +396,7 @@ class WsEndpoint extends EventEmitter {
         })
 
         ws.once('close', (code, reason) => {
-            if (reason === disconnectionReasons.DUPLICATE_SOCKET) {
-                this.metrics.inc('_onNewConnection:closed:dublicate')
-                this.debug('socket %s dropped from other side because existing connection already exists')
-                return
-            }
-
-            this.metrics.inc(`_onNewConnection:closed:code=${code}`)
-            this.debug('socket to %s closed (code %d, reason %s)', address, code, reason)
-            this.connections.delete(address)
-            this.lastCheckedReadyState.delete(address)
-            this.peerBook.getPeerId(address)
-            this.debug('removed %s [%s] from connection list', peerInfo, address)
-            this.emit(events.PEER_DISCONNECTED, peerInfo, reason)
+            this._onClose(address, peerInfo, code, reason)
         })
 
         this.peerBook.add(address, peerInfo)

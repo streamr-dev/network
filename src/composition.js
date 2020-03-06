@@ -1,4 +1,4 @@
-const uuidv4 = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 
 const TrackerServer = require('./protocol/TrackerServer')
 const TrackerNode = require('./protocol/TrackerNode')

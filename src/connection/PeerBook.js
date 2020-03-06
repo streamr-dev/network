@@ -1,4 +1,4 @@
-const { peerTypes } = require('./PeerInfo')
+const { PeerInfo } = require('./PeerInfo')
 
 class NotFoundInPeerBookError extends Error {
     constructor(...args) {
@@ -15,20 +15,31 @@ class MetadataNotSetError extends Error {
 
 class PeerBook {
     constructor() {
+        // TODO store normal peerInfo object
         this.idToAddress = {}
         this.addressToId = {}
+        this.addressToType = {}
     }
 
     add(peerAddress, peerInfo) {
-        const { peerId } = peerInfo
+        const { peerId, peerType } = peerInfo
         this.idToAddress[peerId] = peerAddress
         this.addressToId[peerAddress] = peerId
+        this.addressToType[peerAddress] = peerType
+    }
+
+    getPeerInfo(peerAddress) {
+        if (this.hasAddress(peerAddress)) {
+            return new PeerInfo(this.addressToId[peerAddress], this.addressToType[peerAddress])
+        }
+        return null
     }
 
     remove(peerAddress) {
         const peerId = this.addressToId[peerAddress]
         delete this.idToAddress[peerId]
         delete this.addressToId[peerAddress]
+        delete this.addressToType[peerAddress]
     }
 
     getAddress(peerId) {

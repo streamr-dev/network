@@ -3,12 +3,28 @@
 const { spawn } = require('child_process')
 const path = require('path')
 
-const numberOfNodes = process.argv[2] || 10
+const program = require('commander')
+
+const CURRENT_VERSION = require('../package.json').version
+
+program
+    .version(CURRENT_VERSION)
+    .option('--nodes <nodes>', 'number of nodes', 10)
+    .option('--streams <streams>', 'number of streams', 1)
+    .description('Run local network with stream (-s)')
+    .parse(process.argv)
+
+const { nodes: numberOfNodes } = program
 const startingPort = 30400
 const trackerPort = 27777
 const trackerEndpointServerPort = 11111
 const startingDebugPort = 9200
-const streams = ['stream1', 'stream2', 'stream3', 'stream4', 'stream5']
+const streams = []
+
+for (let i = 0; i < program.streams; i++) {
+    streams.push(`stream-${i}`)
+}
+
 let debug = false
 
 const productionEnv = Object.create(process.env)
