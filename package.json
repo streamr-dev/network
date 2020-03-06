@@ -27,12 +27,12 @@
     "npm": "6.13.4"
   },
   "dependencies": {
-    "@sentry/node": "^5.11.1",
+    "@sentry/node": "^5.13.2",
     "arraybuffer-to-string": "^1.0.2",
     "body-parser": "^1.19.0",
     "buffermaker": "^1.2.1",
     "cassandra-driver": "^4.4.0",
-    "commander": "^4.1.0",
+    "commander": "^4.1.1",
     "cors": "^2.7.1",
     "debug": "^4.1.1",
     "express": "^4.17.1",
@@ -43,25 +43,25 @@
     "node-fetch": "^2.6.0",
     "public-ip": "^4.0.0",
     "qs": "^6.9.1",
-    "streamr-client": "^3.0.1",
-    "streamr-client-protocol": "^4.1.0",
-    "streamr-network": "^17.3.0",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v17.1.0",
-    "uuid": "^3.4.0",
+    "streamr-client": "^3.1.3",
+    "streamr-client-protocol": "^4.1.1",
+    "streamr-network": "^17.4.0",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v17.3.0",
+    "uuid": "^7.0.2",
     "ws": "^7.2.1"
   },
   "devDependencies": {
-    "async-mqtt": "^2.4.2",
+    "async-mqtt": "^2.5.0",
     "buffer-reader": "^0.1.0",
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.0.0",
     "eslint-config-streamr-nodejs": "^1.1.0",
-    "eslint-plugin-import": "^2.20.0",
+    "eslint-plugin-import": "^2.20.1",
     "into-stream": "^5.1.1",
     "jest": "^25.1.0",
-    "sinon": "^8.1.1",
+    "sinon": "^9.0.0",
+    "stream-to-array": "^2.3.0",
     "streamr-test-utils": "^1.0.4",
-    "supertest": "^4.0.2",
-    "stream-to-array": "^2.3.0"
+    "supertest": "^4.0.2"
   }
 }
