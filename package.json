@@ -60,8 +60,8 @@
     "into-stream": "^5.1.1",
     "jest": "^25.1.0",
     "sinon": "^8.1.1",
-    "stream-to-array": "^2.3.0",
     "streamr-test-utils": "^1.0.4",
-    "supertest": "^4.0.2"
+    "supertest": "^4.0.2",
+    "stream-to-array": "^2.3.0"
   }
 }

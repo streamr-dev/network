@@ -6,6 +6,7 @@ const cassandra = require('cassandra-driver')
 const { StreamMessageFactory } = require('streamr-client-protocol').MessageLayer
 
 const MicroBatchingStrategy = require('./MicroBatchingStrategy')
+const PeriodicQuery = require('./PeriodicQuery')
 
 const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload) '
@@ -54,6 +55,10 @@ const individualStore = (cassandraClient, insertStatement) => ({
     close: () => {},
     metrics: () => {}
 })
+
+const RANGE_THRESHOLD = 30 * 1000
+const RETRY_INTERVAL = 2000
+const RETRY_TIMEOUT = 15 * 1000
 
 class Storage extends EventEmitter {
     constructor(cassandraClient, useTtl, isBatching = true) {
@@ -189,6 +194,11 @@ class Storage extends EventEmitter {
         }
 
         if (fromSequenceNo != null && toSequenceNo != null && publisherId != null && msgChainId != null) {
+            if (toTimestamp > (Date.now() - RANGE_THRESHOLD)) {
+                const periodicQuery = new PeriodicQuery(() => this._fetchBetweenMessageRefsForPublisher(streamId, streamPartition, fromTimestamp,
+                    fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId), RETRY_INTERVAL, RETRY_TIMEOUT)
+                return periodicQuery.getStreamingResults()
+            }
             return this._fetchBetweenMessageRefsForPublisher(streamId, streamPartition, fromTimestamp,
                 fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId)
         }
