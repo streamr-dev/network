@@ -72,7 +72,7 @@ module.exports = class VolumeLogger {
         })))
 
         this.lastVolumeStatistics = {
-            id: this.networkNode.opts.id,
+            id: this.networkNode.peerInfo.peerId,
             timestamp: Date.now(),
             network: {
                 input: {
