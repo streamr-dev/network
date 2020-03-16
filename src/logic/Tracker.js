@@ -161,15 +161,10 @@ module.exports = class Tracker extends EventEmitter {
     _formAndSendInstructions(node, streams) {
         Object.keys(streams).forEach((streamKey) => {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
-            Object.entries(instructions).forEach(async ([nodeId, newNeighbors]) => {
-                try {
-                    this.metrics.inc('sendInstruction')
-                    await this.protocols.trackerServer.sendInstruction(nodeId, StreamIdAndPartition.fromKey(streamKey), newNeighbors)
-                    this.debug('sent instruction %j for stream %s to node %s', newNeighbors, streamKey, nodeId)
-                } catch (e) {
-                    this.metrics.inc('sendInstruction:failed')
-                    this.debug('failed to send instruction %j for stream %s to node %s because of %s', newNeighbors, streamKey, nodeId, e)
-                }
+            Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
+                this.metrics.inc('sendInstruction')
+                this.protocols.trackerServer.sendInstruction(nodeId, StreamIdAndPartition.fromKey(streamKey), newNeighbors)
+                this.debug('sent instruction %j for stream %s to node %s', newNeighbors, streamKey, nodeId)
             })
         })
     }
@@ -180,7 +175,7 @@ module.exports = class Tracker extends EventEmitter {
         if (existingStreams.length) {
             let streamsToSubscribe
 
-            this.storageNodes.forEach(async (status, storageNode) => {
+            this.storageNodes.forEach((status, storageNode) => {
                 const alreadyConnected = Object.keys(status.streams)
 
                 if (!alreadyConnected.length) {
@@ -190,15 +185,10 @@ module.exports = class Tracker extends EventEmitter {
                 }
 
                 if (streamsToSubscribe.length) {
-                    streamsToSubscribe.forEach(async (streamKey) => {
-                        try {
-                            this.metrics.inc('sendInstructionStorages')
-                            await this.protocols.trackerServer.sendInstruction(storageNode, StreamIdAndPartition.fromKey(streamKey), [])
-                            this.debug('sent instruction %j for stream %s to storage node %s', [], streamKey, storageNode)
-                        } catch (e) {
-                            this.metrics.inc('sendInstructionStorages:failed')
-                            this.debug('failed to send instruction %j for stream %s to storage node %s because of %s', [], streamKey, storageNode, e)
-                        }
+                    streamsToSubscribe.forEach((streamKey) => {
+                        this.metrics.inc('sendInstructionStorages')
+                        this.protocols.trackerServer.sendInstruction(storageNode, StreamIdAndPartition.fromKey(streamKey), [])
+                        this.debug('sent instruction %j for stream %s to storage node %s', [], streamKey, storageNode)
                     })
                 }
             })
