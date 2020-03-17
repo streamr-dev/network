@@ -4,7 +4,6 @@ const { waitForEvent, waitForCondition, waitForStreamToEnd } = require('streamr-
 
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const TrackerNode = require('../../src/protocol/TrackerNode')
 const { LOCALHOST, getPort } = require('../util')
 
 describe('tracker assigns storage node to streams on any resend', () => {
@@ -106,8 +105,9 @@ describe('tracker assigns storage node to streams on any resend', () => {
         expect(tracker.getTopology()).toEqual({})
 
         const stream = subscriberOne.requestResendLast('streamId', 0, 'requestId', 10)
-        await waitForEvent(storageNode.protocols.trackerNode, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.FIND_STORAGE_NODES_REQUEST)
         await waitForStreamToEnd(stream)
+
         expect(tracker.getTopology()).toEqual({
             'streamId::0': {
                 storageNode: []
@@ -115,7 +115,7 @@ describe('tracker assigns storage node to streams on any resend', () => {
         })
 
         const stream2 = subscriberTwo.requestResendLast('streamId2', 1, 'requestId2', 10)
-        await waitForEvent(storageNode.protocols.trackerNode, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.FIND_STORAGE_NODES_REQUEST)
         await waitForStreamToEnd(stream2)
 
         expect(tracker.getTopology()).toEqual({
@@ -130,13 +130,7 @@ describe('tracker assigns storage node to streams on any resend', () => {
         await tracker.stop()
         tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
 
-        await Promise.all([
-            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
-            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
-            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
-        ])
-
-        await waitForCondition(() => Object.keys(tracker.getTopology()).length === 2)
+        await waitForCondition(() => Object.keys(tracker.getTopology()).length === 2, 10000)
 
         expect(tracker.getTopology()).toEqual({
             'streamId::0': {

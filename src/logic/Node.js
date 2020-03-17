@@ -130,6 +130,11 @@ class Node extends EventEmitter {
             request.requestId)
         this.emit(events.RESEND_REQUEST_RECEIVED, request, source)
 
+        if (this.peerInfo.isStorage()) {
+            const { streamId, streamPartition } = request
+            this.subscribeToStreamIfHaveNotYet(new StreamIdAndPartition(streamId, streamPartition))
+        }
+
         const requestStream = this.resendHandler.handleRequest(request, source)
         if (source != null) {
             proxyRequestStream(
