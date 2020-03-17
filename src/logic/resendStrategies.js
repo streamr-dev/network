@@ -4,7 +4,7 @@ const { ControlLayer } = require('streamr-client-protocol')
 
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
-const { StreamIdAndPartition } = require('../../src/identifiers')
+const { StreamIdAndPartition } = require('../identifiers')
 
 function toUnicastMessage(request) {
     return new Transform({
@@ -327,7 +327,8 @@ class StorageNodeResendStrategy {
             while (storageNode === null && storageNodeAddresses.length > 0) {
                 const address = storageNodeAddresses.shift()
                 try {
-                    storageNode = await this.nodeToNode.connectToNode(address) // eslint-disable-line no-await-in-loop
+                    // eslint-disable-next-line require-atomic-updates, no-await-in-loop
+                    storageNode = await this.nodeToNode.connectToNode(address)
                 } catch (e) {
                     // nop
                 }

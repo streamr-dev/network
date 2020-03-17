@@ -123,6 +123,7 @@ class ResendHandler {
 
                 // eslint-disable-next-line no-await-in-loop
                 if (await this._readStreamUntilEndOrError(ctx.responseStream, request)) {
+                    // eslint-disable-next-line require-atomic-updates
                     ctx.stop = true
                 }
             }

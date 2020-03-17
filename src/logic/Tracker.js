@@ -3,9 +3,10 @@ const { EventEmitter } = require('events')
 const createDebug = require('debug')
 
 const TrackerServer = require('../protocol/TrackerServer')
-const OverlayTopology = require('../logic/OverlayTopology')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
+
+const OverlayTopology = require('./OverlayTopology')
 
 const isEmpty = (obj) => Object.keys(obj).length === 0 && obj.constructor === Object
 

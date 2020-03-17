@@ -128,6 +128,7 @@ describe('tracker assigns storage node to streams on any resend', () => {
         })
 
         await tracker.stop()
+        // eslint-disable-next-line require-atomic-updates
         tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
 
         await waitForCondition(() => Object.keys(tracker.getTopology()).length === 2, 10000)

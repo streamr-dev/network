@@ -2,7 +2,7 @@ const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const { waitForCondition } = require('streamr-test-utils')
 
 const { startTracker, startNetworkNode } = require('../../src/composition')
-const { LOCALHOST } = require('../../test/util')
+const { LOCALHOST } = require('../util')
 
 describe('message propagation in network', () => {
     let tracker
