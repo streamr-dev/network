@@ -1,8 +1,9 @@
 const intoStream = require('into-stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const { waitForStreamToEnd } = require('streamr-test-utils')
+const { waitForEvent, waitForStreamToEnd } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
+const TrackerServer = require('../../src/protocol/TrackerServer')
 const { LOCALHOST } = require('../util')
 
 const { UnicastMessage } = ControlLayer
@@ -24,7 +25,7 @@ describe('resend requests are fulfilled at L1', () => {
     let tracker
     let contactNode
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         tracker = await startTracker(LOCALHOST, 28600, 'tracker')
         contactNode = await startNetworkNode(LOCALHOST, 28601, 'contactNode', [{
             store: () => {},
@@ -72,9 +73,11 @@ describe('resend requests are fulfilled at L1', () => {
         }])
         contactNode.addBootstrapTracker(tracker.getAddress())
         contactNode.subscribe('streamId', 0)
+
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await contactNode.stop()
         await tracker.stop()
     })

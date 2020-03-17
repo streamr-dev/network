@@ -30,7 +30,7 @@ describe('resend requests are fulfilled at L3', () => {
     let neighborTwo
     let storageNode
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         tracker = await startTracker(LOCALHOST, 28630, 'tracker')
         contactNode = await startNetworkNode(LOCALHOST, 28631, 'contactNode', [{
             store: () => {},
@@ -90,15 +90,15 @@ describe('resend requests are fulfilled at L3', () => {
             requestRange: () => intoStream.object([]),
         }])
 
-        contactNode.subscribe('streamId', 0)
         neighborOne.subscribe('streamId', 0)
         neighborTwo.subscribe('streamId', 0)
-        // storageNode automatically assigned (subscribed) by tracker
+        contactNode.subscribe('streamId', 0)
 
-        contactNode.addBootstrapTracker(tracker.getAddress())
+        // storageNode automatically assigned (subscribed) by tracker
+        storageNode.addBootstrapTracker(tracker.getAddress())
         neighborOne.addBootstrapTracker(tracker.getAddress())
         neighborTwo.addBootstrapTracker(tracker.getAddress())
-        storageNode.addBootstrapTracker(tracker.getAddress())
+        contactNode.addBootstrapTracker(tracker.getAddress())
 
         await Promise.all([
             waitForEvent(contactNode, Node.events.NODE_SUBSCRIBED),
@@ -106,22 +106,19 @@ describe('resend requests are fulfilled at L3', () => {
             waitForEvent(neighborTwo, Node.events.NODE_SUBSCRIBED),
             waitForEvent(storageNode, Node.events.NODE_SUBSCRIBED)
         ])
+
+        // Prevent storageNode from being a neighbor of contactNode. Otherwise
+        // L2 will be used to fulfill resend request, which will mean that L3
+        // is skipped and we are just testing L2 again.
+        contactNode.resendHandler.resendStrategies.splice(1, 1)
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await tracker.stop()
         await contactNode.stop()
         await neighborOne.stop()
         await neighborTwo.stop()
         await storageNode.stop()
-    })
-
-    beforeEach(() => {
-        // Prevent storageNode from being a neighbor of contactNode. Otherwise
-        // L2 will be used to fulfill resend request, which will mean that L3
-        // is skipped and we are just testing L2 again. TODO: find a better way
-        // eslint-disable-next-line no-underscore-dangle
-        storageNode._disconnectFromAllNodes()
     })
 
     test('requestResendLast', async () => {

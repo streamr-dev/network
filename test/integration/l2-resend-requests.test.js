@@ -27,7 +27,7 @@ describe('resend requests are fulfilled at L2', () => {
     let n1
     let n2
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         tracker = await startTracker(LOCALHOST, 28610, 'tracker')
         contactNode = await startNetworkNode(LOCALHOST, 28611, 'contactNode', [{
             store: () => {},
@@ -95,13 +95,13 @@ describe('resend requests are fulfilled at L2', () => {
             requestRange: () => intoStream.object([]),
         }])
 
-        contactNode.subscribe('streamId', 0)
         n1.subscribe('streamId', 0)
         n2.subscribe('streamId', 0)
+        contactNode.subscribe('streamId', 0)
 
-        contactNode.addBootstrapTracker(tracker.getAddress())
         n1.addBootstrapTracker(tracker.getAddress())
         n2.addBootstrapTracker(tracker.getAddress())
+        contactNode.addBootstrapTracker(tracker.getAddress())
 
         await Promise.all([
             waitForEvent(contactNode, Node.events.NODE_SUBSCRIBED),
@@ -110,7 +110,7 @@ describe('resend requests are fulfilled at L2', () => {
         ])
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await contactNode.stop()
         await n1.stop()
         await n2.stop()

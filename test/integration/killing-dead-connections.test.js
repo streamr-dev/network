@@ -37,8 +37,8 @@ describe('check and kill dead connections', () => {
         const connection = node1.getPeers().get('ws://127.0.0.1:43972')
         expect(connection.readyState).toEqual(1)
 
-        // break connection
-        jest.spyOn(connection, 'readyState', 'get').mockReturnValue(10)
+        // break connection, not using mock, because it's a uWS external object
+        connection.readyState = 10
         expect(connection.readyState).toEqual(10)
 
         // check connections

@@ -30,7 +30,7 @@ module.exports = class MessageBuffer {
         if (this._hasBufferFor(id)) {
             const messages = []
             if (this.buffer[id].length) {
-                this.buffer[id].rforEach((value, key, cache) => messages.push(key))
+                this.buffer[id].rforEach((value, key) => messages.push(key))
             }
             this.buffer[id].reset()
             delete this.buffer[id]

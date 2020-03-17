@@ -82,34 +82,49 @@ describe('ws-endpoint', () => {
         })
 
         it('tracker must check all required information for new incoming connection and not crash', async () => {
-            let ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/`)
+            let ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/`,
+                undefined,
+                {
+                    followRedirects: true
+                })
             let close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: address not given'])
 
-            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address`)
+            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address`,
+                undefined,
+                {
+                    followRedirects: true
+                })
             close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: address not given'])
 
-            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`, {
-                headers: {}
-            })
+            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`,
+                undefined,
+                {
+                    followRedirects: true
+                })
             close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: peerId not given'])
 
-            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`, {
-                headers: {
-                    'streamr-peer-id': 'peerId',
-                }
-            })
+            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`,
+                undefined,
+                {
+                    followRedirects: true,
+                    headers: {
+                        'streamr-peer-id': 'peerId',
+                    }
+                })
             close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: peerType not given'])
 
-            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`, {
-                headers: {
-                    'streamr-peer-id': 'peerId',
-                    'streamr-peer-type': 'typiii',
-                }
-            })
+            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/?address=address`,
+                undefined, {
+                    followRedirects: true,
+                    headers: {
+                        'streamr-peer-id': 'peerId',
+                        'streamr-peer-type': 'typiii',
+                    }
+                })
             close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: peerType typiii not in peerTypes list'])
         })

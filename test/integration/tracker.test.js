@@ -1,4 +1,4 @@
-const { waitForEvent, waitForCondition } = require('streamr-test-utils')
+const { wait, waitForEvent, waitForCondition } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
@@ -76,6 +76,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
         ])
 
+        await wait(100)
         subscriberOne.unsubscribeFromStream(s2)
         await Promise.all([
             waitForEvent(subscriberTwo, Node.events.NODE_UNSUBSCRIBED),
@@ -157,6 +158,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
                 subscriberTwo: ['subscriberOne']
             }
         })
+
+        await wait(100)
 
         subscriberOne.unsubscribeFromStream(s1)
         await waitForCondition(() => Object.keys(tracker.overlayPerStream['stream-1::0'].state()).length === 1)

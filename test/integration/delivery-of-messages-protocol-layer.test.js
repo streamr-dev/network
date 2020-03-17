@@ -1,7 +1,7 @@
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForEvent } = require('streamr-test-utils')
 
-const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
+const { startEndpoint } = require('../../src/connection/WsEndpoint')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
@@ -11,6 +11,7 @@ const InstructionMessage = require('../../src/messages/InstructionMessage')
 const StatusMessage = require('../../src/messages/StatusMessage')
 const StorageNodesMessage = require('../../src/messages/StorageNodesMessage')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
+const { LOCALHOST } = require('../util')
 
 const { StreamMessage } = MessageLayer
 
@@ -21,15 +22,15 @@ describe('delivery of messages in protocol layer', () => {
     let trackerServer
 
     beforeAll(async () => {
-        const wss1 = await startWebSocketServer('127.0.0.1', 28511)
-        const wss2 = await startWebSocketServer('127.0.0.1', 28512)
-        const wss3 = await startWebSocketServer('127.0.0.1', 28513)
-        const wss4 = await startWebSocketServer('127.0.0.1', 28514)
+        const wsEndpoint1 = await startEndpoint(LOCALHOST, 28511, PeerInfo.newNode('nodeToNode1'), null)
+        const wsEndpoint2 = await startEndpoint(LOCALHOST, 28512, PeerInfo.newNode('nodeToNode2'), null)
+        const wsEndpoint3 = await startEndpoint(LOCALHOST, 28513, PeerInfo.newNode('trackerNode'), null)
+        const wsEndpoint4 = await startEndpoint(LOCALHOST, 28514, PeerInfo.newNode('trackerServer'), null)
 
-        nodeToNode1 = new NodeToNode(new WsEndpoint(wss1, PeerInfo.newNode('nodeToNode1'), null))
-        nodeToNode2 = new NodeToNode(new WsEndpoint(wss2, PeerInfo.newNode('nodeToNode2'), null))
-        trackerNode = new TrackerNode(new WsEndpoint(wss3, PeerInfo.newNode('trackerNode'), null))
-        trackerServer = new TrackerServer(new WsEndpoint(wss4, PeerInfo.newTracker('trackerServer'), null))
+        nodeToNode1 = new NodeToNode(wsEndpoint1)
+        nodeToNode2 = new NodeToNode(wsEndpoint2)
+        trackerNode = new TrackerNode(wsEndpoint3)
+        trackerServer = new TrackerServer(wsEndpoint4)
 
         // Connect nodeToNode1 <-> nodeToNode2
         nodeToNode1.connectToNode(nodeToNode2.getAddress())

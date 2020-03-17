@@ -14,6 +14,6 @@ describe('tracker', () => {
     })
 
     it('tracker should be able to start and stop successfully', async () => {
-        expect(tracker.getAddress()).toEqual('ws://127.0.0.1:30300')
+        expect(tracker.getAddress()).toEqual(`ws://${LOCALHOST}:30300`)
     })
 })

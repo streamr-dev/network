@@ -2,6 +2,7 @@ const { waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
+const Node = require('../../src/logic/Node')
 const { LOCALHOST } = require('../util')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 const encoder = require('../../src/helpers/MessageEncoder')
@@ -45,11 +46,20 @@ describe('check tracker, nodes and statuses from nodes', () => {
     })
 
     it('if failed to follow tracker instructions, inform tracker about current status', async () => {
-        const trackerInstruction = encoder.instructionMessage(s1, [`ws://${LOCALHOST}:${port1}`, `ws://${LOCALHOST}:${port2}`, 'OOPS'])
+        const trackerInstruction = encoder.instructionMessage(s1, [
+            `ws://${LOCALHOST}:${port1}`,
+            `ws://${LOCALHOST}:${port2}`,
+            'OOPS'
+        ])
 
         await Promise.all([
             node1.onTrackerInstructionReceived(encoder.decode('tracker', trackerInstruction)),
             node2.onTrackerInstructionReceived(encoder.decode('tracker', trackerInstruction))
+        ])
+
+        await Promise.race([
+            waitForEvent(node1, Node.events.NODE_SUBSCRIBED),
+            waitForEvent(node2, Node.events.NODE_SUBSCRIBED)
         ])
 
         await Promise.all([

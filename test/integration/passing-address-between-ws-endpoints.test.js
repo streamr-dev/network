@@ -23,7 +23,7 @@ describe('passing address between WsEndpoints', () => {
         wsEndpoint2.connect(`ws://${LOCALHOST}:31960`)
         await waitForEvent(wsEndpoint1, events.PEER_CONNECTED)
         const address = wsEndpoint1.resolveAddress('wsEndpoint2')
-        expect(address).toEqual('ws://127.0.0.1:31961')
+        expect(address).toEqual(`ws://${LOCALHOST}:31961`)
     })
 
     it('advertised address is passed to other WsEndpoint if advertisedWsUrl set', async () => {

@@ -1,22 +1,20 @@
 const { waitForEvent } = require('streamr-test-utils')
 
-const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
+const { startEndpoint } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { disconnectionReasons } = require('../../src/messages/messageTypes')
+const { LOCALHOST } = require('../util')
 
 describe('duplicate connections are closed', () => {
-    let wss1
-    let ws1
-    let wss2
-    let ws2
+    const port1 = 28501
+    const port2 = 28502
+
     let wsEndpoint1
     let wsEndpoint2
 
     beforeEach(async () => {
-        wss1 = await startWebSocketServer('127.0.0.1', 28501)
-        wss2 = await startWebSocketServer('127.0.0.1', 28502)
-        wsEndpoint1 = new WsEndpoint(wss1, PeerInfo.newNode('wsEndpoint1'), null)
-        wsEndpoint2 = new WsEndpoint(wss2, PeerInfo.newNode('wsEndpoint2'), null)
+        wsEndpoint1 = await startEndpoint(LOCALHOST, port1, PeerInfo.newNode('wsEndpoint1'), null)
+        wsEndpoint2 = await startEndpoint(LOCALHOST, port2, PeerInfo.newNode('wsEndpoint2'), null)
     })
 
     afterAll(async () => {
@@ -28,33 +26,32 @@ describe('duplicate connections are closed', () => {
         let connectionsOpened = 0
         const connectionsClosedReasons = []
 
-        wss1.on('connection', (ws) => {
+        wsEndpoint1.on('connection', () => {
             connectionsOpened += 1
-            ws1 = ws
         })
-        wss2.on('connection', (ws) => {
+        wsEndpoint2.on('connection', () => {
             connectionsOpened += 1
-            ws2 = ws
         })
+
         await Promise.all([
             wsEndpoint1.connect('ws://127.0.0.1:28502').catch((e) => console.log(e.toString())),
             wsEndpoint2.connect('ws://127.0.0.1:28501').catch((e) => console.log(e.toString()))
         ])
 
-        // TODO remove when we'll switch to new uWebsocket.js
-        ws1.removeAllListeners()
-        ws2.removeAllListeners()
-
         // TODO enable later
         await Promise.race([
-            waitForEvent(ws1, 'close'),
-            waitForEvent(ws2, 'close')
+            waitForEvent(wsEndpoint1, 'close'),
+            waitForEvent(wsEndpoint2, 'close')
         ]).then((res) => {
-            const reason = res[1]
+            const reason = res[2]
             connectionsClosedReasons.push(reason)
         })
 
         expect(connectionsOpened).toEqual(2) // sanity check
         expect(connectionsClosedReasons).toEqual([disconnectionReasons.DUPLICATE_SOCKET]) // length === 1
+
+        // to be sure that everything wrong happened
+        expect(wsEndpoint1.getPeers().size).toEqual(1)
+        expect(wsEndpoint2.getPeers().size).toEqual(1)
     })
 })
