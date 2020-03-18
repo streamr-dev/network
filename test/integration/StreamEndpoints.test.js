@@ -79,6 +79,21 @@ describe('StreamEndpoints', () => {
         assert(!valid)
     })
 
+    it('client.getStreamSubscribers should retrieve itself', async () => {
+        const subscribers = await client.getStreamSubscribers(createdStream.id)
+        assert.deepStrictEqual(subscribers, [client.signer.address.toLowerCase()])
+    })
+
+    it('client.isStreamSubscriber should return true', async () => {
+        const valid = await client.isStreamSubscriber(createdStream.id, client.signer.address.toLowerCase())
+        assert(valid)
+    })
+
+    it('client.isStreamSubscriber should return false', async () => {
+        const valid = await client.isStreamSubscriber(createdStream.id, 'some-wrong-address')
+        assert(!valid)
+    })
+
     describe('Stream.update', () => {
         it('can change stream name', () => {
             createdStream.name = 'New name'

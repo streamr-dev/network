@@ -129,7 +129,9 @@ autoDisconnect | true  | If set to `true`, the client automatically disconnects
 orderMessages | true | If set to `true`, the subscriber handles messages in the correct order, requests missing messages and drops duplicates. Otherwise, the subscriber processes messages as they arrive without any check.
 maxPublishQueueSize | 10000 | Only in effect when `autoConnect = true`. Controls the maximum number of messages to retain in internal queue when client has disconnected and is reconnecting to Streamr.
 publisherGroupKeys | {} | Object defining the group key as a hex string used to encrypt for each stream id.
-subscriberGroupKeys | {} | Object defining, for each stream id, an object containing the group key used to decrypt for each publisher id.
+publisherStoreKeyHistory | true | If `true`, the client will locally store every key used to encrypt messages at some point. If set to `false`, the client will not be able to answer subscribers asking for historical keys during resend requests.
+subscriberGroupKeys | {} | Object defining, for each stream id, an object containing the group key used to decrypt for each publisher id. Not needed if `keyExchange` is defined.
+keyExchange | {} | Defines RSA key pair to use for group key exchange. Can define `publicKey` and `privateKey` fields as strings in the PEM format, or stay empty to generate a key pair automatically. Can be set to `null` if no key exchange is required.
 
 ### Authentication options
 

@@ -1,13 +1,15 @@
 import HistoricalSubscription from './HistoricalSubscription'
 import RealTimeSubscription from './RealTimeSubscription'
 import Subscription from './Subscription'
+import AbstractSubscription from './AbstractSubscription'
 
 export default class CombinedSubscription extends Subscription {
-    constructor(streamId, streamPartition, callback, options, groupKeys, propagationTimeout, resendTimeout, orderMessages = true) {
+    constructor(streamId, streamPartition, callback, options, groupKeys, propagationTimeout, resendTimeout, orderMessages = true,
+        onUnableToDecrypt = AbstractSubscription.defaultUnableToDecrypt) {
         super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
 
         this.sub = new HistoricalSubscription(streamId, streamPartition, callback, options,
-            groupKeys, this.propagationTimeout, this.resendTimeout, orderMessages)
+            groupKeys, this.propagationTimeout, this.resendTimeout, orderMessages, onUnableToDecrypt)
         this.realTimeMsgsQueue = []
         this.sub.on('message received', (msg) => {
             if (msg) {
@@ -16,7 +18,7 @@ export default class CombinedSubscription extends Subscription {
         })
         this.sub.on('initial_resend_done', async () => {
             const realTime = new RealTimeSubscription(streamId, streamPartition, callback,
-                groupKeys, this.propagationTimeout, this.resendTimeout, orderMessages)
+                groupKeys, this.propagationTimeout, this.resendTimeout, orderMessages, onUnableToDecrypt)
             if (this.sub.orderingUtil) {
                 realTime.orderingUtil.orderedChains = this.sub.orderingUtil.orderedChains
                 Object.keys(this.sub.orderingUtil.orderedChains).forEach((key) => {
@@ -26,6 +28,7 @@ export default class CombinedSubscription extends Subscription {
             }
             this._bindListeners(realTime)
             await Promise.all(this.realTimeMsgsQueue.map((msg) => realTime.handleBroadcastMessage(msg, () => true)))
+            this.realTimeMsgsQueue = []
             this.sub = realTime
         })
         this._bindListeners(this.sub)
@@ -40,6 +43,7 @@ export default class CombinedSubscription extends Subscription {
         sub.on('no_resend', (response) => this.emit('no_resend', response))
         sub.on('initial_resend_done', (response) => this.emit('initial_resend_done', response))
         sub.on('message received', () => this.emit('message received'))
+        sub.on('groupKeyMissing', (publisherId, start, end) => this.emit('groupKeyMissing', publisherId, start, end))
         Object.keys(Subscription.State).forEach((state) => this.sub.on(state, () => this.emit(state)))
     }
 
@@ -90,6 +94,10 @@ export default class CombinedSubscription extends Subscription {
     setState(state) {
         super.setState(state)
         this.sub.state = state
+    }
+
+    setGroupKeys(publisherId, groupKeys) {
+        this.sub.setGroupKeys(publisherId, groupKeys)
     }
 
     handleError(err) {

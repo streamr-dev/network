@@ -4,10 +4,46 @@ import { ethers } from 'ethers'
 import { MessageLayer } from 'streamr-client-protocol'
 
 import UnableToDecryptError from './errors/UnableToDecryptError'
+import InvalidGroupKeyError from './errors/InvalidGroupKeyError'
 
 const { StreamMessage } = MessageLayer
 
 export default class EncryptionUtil {
+    constructor(options = {}) {
+        if (options.privateKey && options.publicKey) {
+            EncryptionUtil.validatePrivateKey(options.privateKey)
+            EncryptionUtil.validatePublicKey(options.publicKey)
+            this.privateKey = options.privateKey
+            this.publicKey = options.publicKey
+        } else {
+            this._generateKeyPair()
+        }
+    }
+
+    // Returns a Buffer
+    decryptWithPrivateKey(ciphertext, isHexString = false) {
+        let ciphertextBuffer = ciphertext
+        if (isHexString) {
+            ciphertextBuffer = ethers.utils.arrayify(`0x${ciphertext}`)
+        }
+        return crypto.privateDecrypt(this.privateKey, ciphertextBuffer)
+    }
+
+    // Returns a String (base64 encoding)
+    getPublicKey() {
+        return this.publicKey
+    }
+
+    // Returns a Buffer or a hex String
+    static encryptWithPublicKey(plaintextBuffer, publicKey, hexlify = false) {
+        EncryptionUtil.validatePublicKey(publicKey)
+        const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
+        if (hexlify) {
+            return ethers.utils.hexlify(ciphertextBuffer).slice(2)
+        }
+        return ciphertextBuffer
+    }
+
     /*
     Both 'data' and 'groupKey' must be Buffers. Returns a hex string without the '0x' prefix.
      */
@@ -57,7 +93,12 @@ export default class EncryptionUtil {
     message content and returns null.
      */
     static decryptStreamMessage(streamMessage, groupKey) {
+        if ((streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.AES
+            || streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES) && !groupKey) {
+            throw new UnableToDecryptError(streamMessage)
+        }
         /* eslint-disable no-param-reassign */
+
         if (streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.AES) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
             const serializedContent = this.decrypt(streamMessage.getSerializedContent(), groupKey).toString()
@@ -65,6 +106,7 @@ export default class EncryptionUtil {
                 streamMessage.parsedContent = JSON.parse(serializedContent)
                 streamMessage.serializedContent = serializedContent
             } catch (err) {
+                streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
                 throw new UnableToDecryptError(streamMessage)
             }
         } else if (streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES) {
@@ -75,11 +117,52 @@ export default class EncryptionUtil {
                 streamMessage.parsedContent = JSON.parse(serializedContent)
                 streamMessage.serializedContent = serializedContent
             } catch (err) {
+                streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES
                 throw new UnableToDecryptError(streamMessage)
             }
             return plaintext.slice(0, 32)
         }
         return null
         /* eslint-enable no-param-reassign */
+    }
+
+    _generateKeyPair() {
+        const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
+            modulusLength: 4096,
+            publicKeyEncoding: {
+                type: 'spki',
+                format: 'pem',
+            },
+            privateKeyEncoding: {
+                type: 'pkcs8',
+                format: 'pem',
+            },
+        })
+        this.privateKey = privateKey
+        this.publicKey = publicKey
+    }
+
+    static validatePublicKey(publicKey) {
+        if (typeof publicKey !== 'string' || !publicKey.startsWith('-----BEGIN PUBLIC KEY-----')
+            || !publicKey.endsWith('-----END PUBLIC KEY-----\n')) {
+            throw new Error('"publicKey" must be a PKCS#8 RSA public key as a string in the PEM format')
+        }
+    }
+
+    static validatePrivateKey(privateKey) {
+        if (typeof privateKey !== 'string' || !privateKey.startsWith('-----BEGIN PRIVATE KEY-----')
+            || !privateKey.endsWith('-----END PRIVATE KEY-----\n')) {
+            throw new Error('"privateKey" must be a PKCS#8 RSA public key as a string in the PEM format')
+        }
+    }
+
+    static validateGroupKey(groupKey) {
+        if (!(groupKey instanceof Buffer)) {
+            throw new InvalidGroupKeyError(`Group key must be a Buffer: ${groupKey}`)
+        }
+
+        if (groupKey.length !== 32) {
+            throw new InvalidGroupKeyError(`Group key must have a size of 256 bits, not ${groupKey.length * 8}`)
+        }
     }
 }

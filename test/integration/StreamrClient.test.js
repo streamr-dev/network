@@ -430,9 +430,12 @@ describe('StreamrClient Connection', () => {
                 await client.ensureDisconnected()
 
                 // check whole list of calls after reconnect and disconnect
-                expect(connectionEventSpy.mock.calls.length).toEqual(2)
+                expect(connectionEventSpy.mock.calls.length).toEqual(3)
                 expect(connectionEventSpy.mock.calls[0]).toEqual([SubscribeRequest.create(stream.id, 0, sessionToken)])
                 expect(connectionEventSpy.mock.calls[1]).toEqual([UnsubscribeRequest.create(stream.id, 0, sessionToken)])
+                // inbox stream subscription:
+                const publisherId = await client.getPublisherId()
+                expect(connectionEventSpy.mock.calls[2]).toEqual([SubscribeRequest.create(publisherId, 0, sessionToken)])
 
                 done()
             })
@@ -462,13 +465,15 @@ describe('StreamrClient Connection', () => {
                     await client.ensureDisconnected()
 
                     // check whole list of calls after reconnect and disconnect
-                    expect(connectionEventSpy.mock.calls.length).toEqual(1)
+                    expect(connectionEventSpy.mock.calls.length).toEqual(2)
                     expect(connectionEventSpy.mock.calls[0]).toEqual([ResendLastRequest.create(stream.id, 0, '0', 10, sessionToken)])
-
+                    // inbox stream subscription:
+                    const publisherId = await client.getPublisherId()
+                    expect(connectionEventSpy.mock.calls[1]).toEqual([SubscribeRequest.create(publisherId, 0, sessionToken)])
                     done()
                 }, 2000)
             })
-        }, 9999999)
+        }, 5000)
 
         it('does not try to reconnect', async (done) => {
             client = createClient()
@@ -871,7 +876,7 @@ describe('StreamrClient', () => {
                 }
                 return loop()
             })
-        }, 600000)
+        }, 20000)
 
         it('client.subscribe (realtime with resend)', (done) => {
             client.once('error', done)
@@ -937,5 +942,110 @@ describe('StreamrClient', () => {
                 }, Date.now(), null, groupKey)
             })
         })
+
+        it('client can publish to own inbox', async (done) => {
+            client.once('error', done)
+            const id = Date.now()
+            const publisherId = await client.getPublisherId()
+            const sub = client.subscribe({
+                stream: stream.id,
+            }, (parsedContent) => {
+                assert.equal(parsedContent.id, id)
+            })
+
+            // Publish after subscribed
+            sub.on('subscribed', () => {
+                const sub2 = client.subscribe({
+                    stream: publisherId,
+                }, (content) => {
+                    assert.equal(content.test, 'works')
+
+                    // All good, unsubscribe
+
+                    client.unsubscribe(sub)
+                    sub.on('unsubscribed', () => {
+                        done()
+                    })
+                })
+                sub2.on('subscribed', () => {
+                    client.publish(publisherId, {
+                        test: 'works',
+                    }, Date.now())
+                })
+            })
+        })
+        it('client.subscribe can get the group key and decrypt encrypted messages using an RSA key pair', async (done) => {
+            client.once('error', done)
+            const id = Date.now()
+            const groupKey = crypto.randomBytes(32)
+            // subscribe without knowing the group key to decrypt stream messages
+            const sub = client.subscribe({
+                stream: stream.id,
+            }, (parsedContent, streamMessage) => {
+                assert.equal(parsedContent.id, id)
+
+                // Check signature stuff
+                assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+                assert(streamMessage.getPublisherId())
+                assert(streamMessage.signature)
+
+                // Now the subscriber knows the group key
+                assert.deepStrictEqual(sub.groupKeys[streamMessage.getPublisherId().toLowerCase()], groupKey)
+
+                // All good, unsubscribe
+                client.unsubscribe(sub)
+                sub.on('unsubscribed', () => {
+                    done()
+                })
+            })
+
+            // Publish after subscribed
+            sub.on('subscribed', () => {
+                client.publish(stream.id, {
+                    id,
+                }, Date.now(), null, groupKey)
+            })
+        }, 2 * TIMEOUT)
+
+        it('client.subscribe with resend last can get the historical keys for previous encrypted messages', (done) => {
+            client.once('error', done)
+            // Publish encrypted messages with different keys
+            const groupKey1 = crypto.randomBytes(32)
+            const groupKey2 = crypto.randomBytes(32)
+            client.publish(stream.id, {
+                test: 'resent msg 1',
+            }, Date.now(), null, groupKey1)
+            client.publish(stream.id, {
+                test: 'resent msg 2',
+            }, Date.now(), null, groupKey2)
+
+            // Add delay: this test needs some time to allow the message to be written to Cassandra
+            let receivedFirst = false
+            setTimeout(() => {
+                // subscribe with resend without knowing the historical keys
+                const sub = client.subscribe({
+                    stream: stream.id,
+                    resend: {
+                        last: 2,
+                    },
+                }, async (parsedContent) => {
+                    // Check message content
+                    if (!receivedFirst) {
+                        assert.strictEqual(parsedContent.test, 'resent msg 1')
+                        receivedFirst = true
+                    } else {
+                        assert.strictEqual(parsedContent.test, 'resent msg 2')
+                    }
+
+                    // All good, unsubscribe
+                    client.unsubscribe(sub)
+                    sub.on('unsubscribed', () => {
+                        // TODO: fix this hack in other PR
+                        assert.strictEqual(client.subscribedStreamPartitions[stream.id + '0'], undefined)
+                        done()
+                    })
+                })
+            }, TIMEOUT * 0.8)
+        }, 2 * TIMEOUT)
     })
 })

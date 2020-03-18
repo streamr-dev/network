@@ -1,5 +1,3 @@
-import assert from 'assert'
-
 import sinon from 'sinon'
 
 import Stream from '../../src/rest/domain/Stream'

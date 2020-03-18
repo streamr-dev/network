@@ -28,8 +28,14 @@ export default class Subscription extends EventEmitter {
         }
         this.streamId = streamId
         this.streamPartition = streamPartition
+        this.callback = callback
         this.id = generateSubscriptionId()
-        this.groupKeys = groupKeys || {}
+        this.groupKeys = {}
+        if (groupKeys) {
+            Object.keys(groupKeys).forEach((publisherId) => {
+                this.groupKeys[publisherId.toLowerCase()] = groupKeys[publisherId]
+            })
+        }
         this.propagationTimeout = propagationTimeout
         this.resendTimeout = resendTimeout
         this.state = Subscription.State.unsubscribed

@@ -36,7 +36,13 @@ import { waitFor } from './utils'
 import RealTimeSubscription from './RealTimeSubscription'
 import CombinedSubscription from './CombinedSubscription'
 import Subscription from './Subscription'
+import EncryptionUtil from './EncryptionUtil'
+import KeyExchangeUtil from './KeyExchangeUtil'
+import KeyStorageUtil from './KeyStorageUtil'
 import ResendUtil from './ResendUtil'
+import InvalidGroupKeyResponseError from './errors/InvalidGroupKeyResponseError'
+import InvalidContentTypeError from './errors/InvalidContentTypeError'
+import InvalidGroupKeyRequestError from './errors/InvalidGroupKeyRequestError'
 
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
@@ -58,8 +64,11 @@ export default class StreamrClient extends EventEmitter {
             retryResendAfter: 5000,
             gapFillTimeout: 5000,
             maxPublishQueueSize: 10000,
+            // encryption options
+            publisherStoreKeyHistory: true,
             publisherGroupKeys: {}, // {streamId: groupKey}
             subscriberGroupKeys: {}, // {streamId: {publisherId: groupKey}}
+            keyExchange: {},
             streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
             streamrOperatorAddress: '0xc0aa4dC0763550161a6B59fa430361b5a26df28C',
             tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
@@ -97,6 +106,22 @@ export default class StreamrClient extends EventEmitter {
             this.options.auth.privateKey = `0x${this.options.auth.privateKey}`
         }
 
+        if (this.options.keyExchange) {
+            this.encryptionUtil = new EncryptionUtil(this.options.keyExchange)
+            this.keyExchangeUtil = new KeyExchangeUtil(this)
+        }
+
+        // add the start time to every group key if missing
+        const validated = KeyStorageUtil.validateAndAddStart(this.options.publisherGroupKeys, this.options.subscriberGroupKeys)
+        /* eslint-disable prefer-destructuring */
+        this.options.publisherGroupKeys = validated[0]
+        this.options.subscriberGroupKeys = validated[1]
+        /* eslint-enable prefer-destructuring */
+
+        this.keyStorageUtil = KeyStorageUtil.getKeyStorageUtil(
+            this.options.publisherGroupKeys, this.options.publisherStoreKeyHistory
+        )
+
         this.publishQueue = []
         this.session = new Session(this, this.options.auth)
         this.signer = Signer.createSigner(this.options.auth, this.options.publishWithSignature)
@@ -110,7 +135,7 @@ export default class StreamrClient extends EventEmitter {
                 this.options.auth, this.signer, this.getUserInfo()
                     .catch((err) => this.emit('error', err)),
                 (streamId) => this.getStream(streamId)
-                    .catch((err) => this.emit('error', err)), this.options.publisherGroupKeys,
+                    .catch((err) => this.emit('error', err)), this.keyStorageUtil,
             )
         }
 
@@ -214,9 +239,11 @@ export default class StreamrClient extends EventEmitter {
         })
 
         // On connect/reconnect, send pending subscription requests
-        this.connection.on('connected', () => {
+        this.connection.on('connected', async () => {
             debug('Connected!')
             this.emit('connected')
+
+            await this._subscribeToInboxStream()
 
             // Check pending subscriptions
             Object.keys(this.subscribedStreamPartitions)
@@ -254,7 +281,7 @@ export default class StreamrClient extends EventEmitter {
             console.error(errorObject)
         })
 
-        this.connection.on('error', (err) => {
+        this.connection.on('error', async (err) => {
             // If there is an error parsing a json message in a stream, fire error events on the relevant subs
             if (err instanceof Errors.InvalidJsonError) {
                 const stream = this._getSubscribedStreamPartition(err.streamMessage.getStreamId(), err.streamMessage.getStreamPartition())
@@ -270,6 +297,55 @@ export default class StreamrClient extends EventEmitter {
                 console.error(errorObject)
             }
         })
+    }
+
+    async _subscribeToInboxStream() {
+        if (this.options.auth.privateKey || this.options.auth.provider) {
+            // subscribing to own inbox stream
+            const ethAddress = await this.getPublisherId()
+            this.subscribe(ethAddress, async (parsedContent, streamMessage) => {
+                try {
+                    if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
+                        if (this.keyExchangeUtil) {
+                            await this.keyExchangeUtil.handleGroupKeyRequest(streamMessage)
+                        }
+                    } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
+                        if (this.keyExchangeUtil) {
+                            const { streamId } = streamMessage.getParsedContent()
+                            // A valid publisher of the client's inbox stream could send key responses for other streams to which
+                            // the publisher doesn't have write permissions. Thus the following additional check is necessary.
+                            // TODO: fix this hack in other PR (and move logic to keyExchangeUtil)
+                            const valid = await this.subscribedStreamPartitions[streamId + '0'].isValidPublisher(streamMessage.getPublisherId())
+                            if (valid) {
+                                this.keyExchangeUtil.handleGroupKeyResponse(streamMessage)
+                            } else {
+                                throw new InvalidGroupKeyResponseError(
+                                    `Received group key from an invalid publisher ${streamMessage.getPublisherId()} for stream ${streamId}`
+                                )
+                            }
+                        }
+                    } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.ERROR_MSG) {
+                        debug('WARN: Received error of type %s from %s: %s',
+                            streamMessage.getParsedContent().code, streamMessage.getPublisherId(), streamMessage.getParsedContent().message)
+                    } else {
+                        throw new InvalidContentTypeError(`Cannot handle message with content type: ${streamMessage.contentType}`)
+                    }
+                } catch (err) {
+                    if (err instanceof InvalidGroupKeyRequestError
+                        || err instanceof InvalidGroupKeyResponseError
+                        || err instanceof InvalidContentTypeError) {
+                        debug('WARN: %s', err.message)
+                        // we don't notify the error to the originator if the message is unauthenticated.
+                        if (streamMessage.signature) {
+                            const errorMessage = await this.msgCreationUtil.createErrorMessage(streamMessage.getPublisherId(), err)
+                            this.publishStreamMessage(errorMessage)
+                        }
+                    } else {
+                        throw err
+                    }
+                }
+            })
+        }
     }
 
     _getSubscribedStreamPartition(streamId, streamPartition) {
@@ -392,13 +468,18 @@ export default class StreamrClient extends EventEmitter {
         const options = this._validateParameters(optionsOrStreamId, callback)
 
         if (!options.stream) {
-            throw new Error('subscribe: Invalid arguments: options.stream is not given')
+            throw new Error('resend: Invalid arguments: options.stream is not given')
+        }
+
+        if (!options.resend) {
+            throw new Error('resend: Invalid arguments: options.resend is not given')
         }
 
         await this.ensureConnected()
 
         const sub = new HistoricalSubscription(options.stream, options.partition || 0, callback, options.resend,
-            this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter, this.options.orderMessages)
+            this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter,
+            this.options.orderMessages, options.onUnableToDecrypt)
 
         // TODO remove _addSubscription after uncoupling Subscription and Resend
         sub.setState(Subscription.State.subscribed)
@@ -442,18 +523,38 @@ export default class StreamrClient extends EventEmitter {
         }
 
         if (options.groupKeys) {
-            this.options.subscriberGroupKeys[options.stream] = options.groupKeys
+            const now = Date.now()
+            Object.keys(options.groupKeys).forEach((publisherId) => {
+                EncryptionUtil.validateGroupKey(options.groupKeys[publisherId])
+                if (!this.options.subscriberGroupKeys[options.stream]) {
+                    this.options.subscriberGroupKeys[options.stream] = {}
+                }
+                this.options.subscriberGroupKeys[options.stream][publisherId] = {
+                    groupKey: options.groupKeys[publisherId],
+                    start: now
+                }
+            })
+        }
+
+        const groupKeys = {}
+        if (this.options.subscriberGroupKeys[options.stream]) {
+            Object.keys(this.options.subscriberGroupKeys[options.stream]).forEach((publisherId) => {
+                groupKeys[publisherId] = this.options.subscriberGroupKeys[options.stream][publisherId].groupKey
+            })
         }
 
         // Create the Subscription object and bind handlers
         let sub
         if (options.resend) {
-            sub = new CombinedSubscription(options.stream, options.partition || 0, callback, options.resend,
-                this.options.subscriberGroupKeys[options.stream],
-                this.options.gapFillTimeout, this.options.retryResendAfter, this.options.orderMessages)
+            sub = new CombinedSubscription(
+                options.stream, options.partition || 0, callback, options.resend,
+                groupKeys, this.options.gapFillTimeout, this.options.retryResendAfter,
+                this.options.orderMessages, options.onUnableToDecrypt,
+            )
         } else {
-            sub = new RealTimeSubscription(options.stream, options.partition || 0, callback, this.options.subscriberGroupKeys[options.stream],
-                this.options.gapFillTimeout, this.options.retryResendAfter, this.options.orderMessages)
+            sub = new RealTimeSubscription(options.stream, options.partition || 0, callback,
+                groupKeys, this.options.gapFillTimeout, this.options.retryResendAfter,
+                this.options.orderMessages, options.onUnableToDecrypt)
         }
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {
@@ -466,6 +567,14 @@ export default class StreamrClient extends EventEmitter {
             debug('done event for sub %d', sub.id)
             this.unsubscribe(sub)
         })
+        sub.on('groupKeyMissing', async (publisherId, start, end) => {
+            if (this.encryptionUtil) {
+                const streamMessage = await this.msgCreationUtil.createGroupKeyRequest(
+                    publisherId, sub.streamId, this.encryptionUtil.getPublicKey(), start, end,
+                )
+                await this.publishStreamMessage(streamMessage)
+            }
+        })
 
         // Add to lookups
         this._addSubscription(sub)
@@ -474,7 +583,7 @@ export default class StreamrClient extends EventEmitter {
         if (this.isConnected()) {
             this._resendAndSubscribe(sub)
         } else if (this.options.autoConnect) {
-            this.ensureConnected()
+            this.ensureConnected().catch((err) => this.emit('error', err))
         }
 
         return sub
@@ -703,10 +812,29 @@ export default class StreamrClient extends EventEmitter {
         }
     }
 
+    async publishStreamMessage(streamMessage) {
+        const sessionToken = await this.session.getSessionToken()
+        return this._requestPublish(streamMessage, sessionToken)
+    }
+
     _requestPublish(streamMessage, sessionToken) {
         const request = ControlLayer.PublishRequest.create(streamMessage, sessionToken)
         debug('_requestPublish: %o', request)
         return this.connection.send(request)
+    }
+
+    // each element of the array "groupKeys" is an object with 2 fields: "groupKey" and "start"
+    _setGroupKeys(streamId, publisherId, groupKeys) {
+        if (!this.options.subscriberGroupKeys[streamId]) {
+            this.options.subscriberGroupKeys[streamId] = {}
+        }
+        const last = groupKeys[groupKeys.length - 1]
+        const current = this.options.subscriberGroupKeys[streamId][publisherId]
+        if (!current || last.start > current.start) {
+            this.options.subscriberGroupKeys[streamId][publisherId] = last
+        }
+        // TODO: fix this hack in other PR
+        this.subscribedStreamPartitions[streamId + '0'].setSubscriptionsGroupKeys(publisherId, groupKeys.map((obj) => obj.groupKey))
     }
 
     handleError(msg) {

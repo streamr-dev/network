@@ -112,6 +112,25 @@ export async function isStreamPublisher(streamId, ethAddress) {
     }
 }
 
+export async function getStreamSubscribers(streamId) {
+    const url = `${this.options.restUrl}/streams/${streamId}/subscribers`
+    const json = await authFetch(url, this.session)
+    return json.addresses.map((a) => a.toLowerCase())
+}
+
+export async function isStreamSubscriber(streamId, ethAddress) {
+    const url = `${this.options.restUrl}/streams/${streamId}/subscriber/${ethAddress}`
+    try {
+        await authFetch(url, this.session)
+        return true
+    } catch (e) {
+        if (e.response && e.response.status === 404) {
+            return false
+        }
+        throw e
+    }
+}
+
 export function publishHttp(streamObjectOrId, data, requestOptions = {}, keepAlive = true) {
     let streamId
     if (streamObjectOrId instanceof Stream) {
