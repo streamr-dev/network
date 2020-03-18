@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="test" type="JavaScriptTestRunnerJest">
     <config-file value="$PROJECT_DIR$/jest.config.js" />
-    <node-interpreter value="$USER_HOME$/.nvm/versions/node/v10.17.0/bin/node" />
+    <node-interpreter value="$USER_HOME$/.nvm/versions/node/v13.11.0/bin/node" />
     <node-options value="" />
     <jest-package value="$PROJECT_DIR$/node_modules/jest" />
     <working-dir value="$PROJECT_DIR$" />

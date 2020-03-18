@@ -1,5 +1,5 @@
 FROM ubuntu:16.04 AS builder
-ARG NODE_VERSION="v10.18.0"
+ARG NODE_VERSION="v13.11.0"
 WORKDIR /app
 COPY . /app
 RUN apt-get update && apt-get install -y \
@@ -21,7 +21,7 @@ COPY ./ ./
 RUN npm ci
 
 FROM ubuntu:16.04
-ARG NODE_VERSION="v10.18.0"
+ARG NODE_VERSION="v13.11.0"
 WORKDIR /app
 COPY --from=builder /app/ .
 RUN apt-get update && apt-get install -y \

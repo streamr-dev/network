@@ -1,6 +1,6 @@
 const { EventEmitter } = require('events')
 
-const uuidv4 = require('uuid/v4')
+const { v4: uuidv4 } = require('uuid')
 const debug = require('debug')('streamr:WebsocketServer')
 const { ControlLayer } = require('streamr-client-protocol')
 const LRU = require('lru-cache')

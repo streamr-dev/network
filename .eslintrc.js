@@ -10,6 +10,8 @@ module.exports = exports = {
     rules: {
         'max-len': [WARN, { code: 150 }],
         'radix': ['error', 'as-needed'],
-        'max-classes-per-file': DISABLED
+        'max-classes-per-file': DISABLED,
+        'promise/always-return': WARN,
+        'promise/catch-or-return': WARN,
     }
 }

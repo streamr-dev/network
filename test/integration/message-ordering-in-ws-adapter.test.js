@@ -51,11 +51,9 @@ describe('message ordering and gap filling in websocket adapter', () => {
     })
 
     afterAll(async () => {
-        await Promise.all([
-            tracker.stop(),
-            publisherNode.stop(),
-            broker.close()
-        ])
+        await tracker.stop()
+        await publisherNode.stop()
+        await broker.close()
 
         if (nodeWithMissingMessages) {
             await nodeWithMissingMessages.stop()
