@@ -17,13 +17,12 @@ const WebSocket = require('ws')
 const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest } = ControlLayer
 
 const createClient = (opts = {}) => new StreamrClient({
-    url: config.websocketUrl,
-    restUrl: config.restUrl,
     auth: {
         privateKey: ethers.Wallet.createRandom().privateKey,
     },
     autoConnect: false,
     autoDisconnect: false,
+    ...config.clientOptions,
     ...opts,
 })
 
@@ -181,7 +180,7 @@ describe('StreamrClient Connection', () => {
                     done()
                 }, 2000)
             })
-        })
+        }, 10000)
 
         it('resend from', async (done) => {
             const messages = []
@@ -647,9 +646,9 @@ describe('StreamrClient', () => {
     beforeEach(async () => {
         try {
             await Promise.all([
-                fetch(config.restUrl),
+                fetch(config.clientOptions.restUrl),
                 new Promise((resolve, reject) => {
-                    const ws = new WebSocket(config.websocketUrl)
+                    const ws = new WebSocket(config.clientOptions.url)
                     ws.once('open', () => {
                         resolve()
                         ws.close()

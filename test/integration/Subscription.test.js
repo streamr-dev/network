@@ -7,13 +7,12 @@ import StreamrClient from '../../src'
 import config from './config'
 
 const createClient = (opts = {}) => new StreamrClient({
-    url: config.websocketUrl,
-    restUrl: config.restUrl,
     auth: {
         privateKey: ethers.Wallet.createRandom().privateKey,
     },
     autoConnect: false,
     autoDisconnect: false,
+    ...config.clientOptions,
     ...opts,
 })
 

@@ -31,7 +31,7 @@ describe('utils', () => {
         expressApp.get(testUrl, (req, res) => handle(req, res))
 
         server = expressApp.listen(30000, () => {
-            console.info('Mock server started on port 30000\n')
+            console.info('Mock server started on port 30000\n') // eslint-disable-line no-console
             done()
         })
     })
@@ -51,7 +51,7 @@ describe('utils', () => {
             session.getSessionToken = sinon.stub().resolves('invalid token')
             return authFetch(baseUrl + testUrl, session).catch((err) => {
                 assert(session.getSessionToken.calledTwice)
-                assert.equal(err.toString(), `Error: Request to ${baseUrl + testUrl} returned with error code 401.`)
+                assert.equal(err.toString(), `Error: Request to ${baseUrl + testUrl} returned with error code 401. Unauthorized`)
                 assert.equal(err.body, 'Unauthorized')
                 done()
             })

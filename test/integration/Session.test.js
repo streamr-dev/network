@@ -6,10 +6,9 @@ import config from './config'
 
 describe('Session', () => {
     const createClient = (opts = {}) => new StreamrClient({
-        url: config.websocketUrl,
-        restUrl: config.restUrl,
         autoConnect: false,
         autoDisconnect: false,
+        ...config.clientOptions,
         ...opts,
     })
 

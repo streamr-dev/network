@@ -78,6 +78,8 @@ async function getOrThrow(...args) {
 /**
  * @typedef {Object} EthereumOptions all optional, hence "options"
  * @property {Wallet | String} wallet or private key, default is currently logged in StreamrClient (if auth: privateKey)
+ * @property {String} key private key, alias for String wallet
+ * @property {String} privateKey, alias for String wallet
  * @property {providers.Provider} provider to use in case wallet was a String, or omitted
  * @property {Number} confirmations, default is 1
  * @property {BigNumber} gasPrice in wei (part of ethers overrides), default is whatever the network recommends (ethers.js default)
@@ -337,27 +339,47 @@ export async function getCommunityStats(communityAddress) {
 //          member: WITHDRAW EARNINGS
 // //////////////////////////////////////////////////////////////////
 
+/* eslint-disable no-await-in-loop, no-else-return */
 /**
  * Validate the proof given by the server with the smart contract (ground truth)
+ * Wait for options.retryBlocks Ethereum blocks (default: 5)
  * @param {EthereumAddress} communityAddress to query
  * @param {EthereumAddress} memberAddress to query
  * @param {providers.Provider} provider (optional) e.g. `wallet.provider`, default is `ethers.getDefaultProvider()` (mainnet)
- * @return {Boolean} true if proof is correct
+ * @return {Object} containing the validated proof, withdrawableEarnings and withdrawableBlock
  */
 export async function validateProof(communityAddress, options) {
     const wallet = parseWalletFromOptions(this, options)
-    const stats = await this.getMemberStats(communityAddress, wallet.address) // throws on connection errors
-    if (!stats.withdrawableBlockNumber) {
-        throw new Error('No earnings to withdraw.')
-    }
     const contract = new Contract(communityAddress, CommunityProduct.abi, wallet)
-    return contract.proofIsCorrect(
-        stats.withdrawableBlockNumber,
-        wallet.address,
-        stats.withdrawableEarnings,
-        stats.proof,
-    )
+
+    const { retryBlocks = 5 } = options
+    for (let retryCount = 0; retryCount < retryBlocks; retryCount++) {
+        const stats = await this.getMemberStats(communityAddress, wallet.address) // throws on connection errors
+        if (!stats.withdrawableBlockNumber) {
+            throw new Error('No earnings to withdraw.')
+        }
+        const wasCorrect = await contract.proofIsCorrect(
+            stats.withdrawableBlockNumber,
+            wallet.address,
+            stats.withdrawableEarnings,
+            stats.proof,
+        ).catch((e) => e)
+        if (wasCorrect === true) {
+            return stats
+        } else if (wasCorrect === false) {
+            console.error(`Server gave bad proof: ${JSON.stringify(stats)}`)
+        } else if (wasCorrect instanceof Error && wasCorrect.message.endsWith('error_blockNotFound')) {
+            // commit hasn't been yet accepted into blockchain, just wait until next block and try again
+        } else {
+            console.error(`Unexpected: ${wasCorrect}`)
+        }
+        await new Promise((done) => {
+            wallet.provider.once('block', done)
+        })
+    }
+    throw new Error(`Failed to validate proof after ${retryBlocks} Ethereum blocks`)
 }
+/* eslint-enable no-await-in-loop, no-else-return */
 
 /**
  * Withdraw all your earnings

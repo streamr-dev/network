@@ -8,13 +8,12 @@ import config from './config'
 const { wait, waitForCondition } = require('streamr-test-utils')
 
 const createClient = (opts = {}) => new StreamrClient({
-    url: config.websocketUrl,
-    restUrl: config.restUrl,
     auth: {
         privateKey: ethers.Wallet.createRandom().privateKey,
     },
     autoConnect: false,
     autoDisconnect: false,
+    ...config.clientOptions,
     ...opts,
 })
 

@@ -13,10 +13,9 @@ describe('Session', () => {
     let clientNone
 
     const createClient = (opts = {}) => new StreamrClient({
-        url: config.websocketUrl,
-        restUrl: config.restUrl,
         autoConnect: false,
         autoDisconnect: false,
+        ...config.clientOptions,
         ...opts,
     })
 

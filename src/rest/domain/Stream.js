@@ -45,10 +45,18 @@ export default class Stream {
         )
     }
 
+    getMyPermissions() {
+        return authFetch(
+            `${this._client.options.restUrl}/streams/${this.id}/permissions/me`,
+            this._client.session,
+        )
+    }
+
     async hasPermission(operation, userId) {
         // eth addresses may be in checksumcase, but userId from server has no case
         const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
         const permissions = await this.getPermissions()
+
         return permissions.find((p) => {
             if (p.operation !== operation) { return false }
 
@@ -63,6 +71,7 @@ export default class Stream {
         const permissionObject = {
             operation,
         }
+
         const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined
 
         if (userIdCaseInsensitive !== undefined) {

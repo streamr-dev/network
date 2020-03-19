@@ -1,6 +1,8 @@
 export default class AuthFetchError extends Error {
     constructor(message, response, body) {
-        super(message)
+        // add leading space if there is a body set
+        const bodyMessage = body ? ` ${(typeof body === 'string' ? body : JSON.stringify(body))}` : ''
+        super(message + bodyMessage)
         this.response = response
         this.body = body
 

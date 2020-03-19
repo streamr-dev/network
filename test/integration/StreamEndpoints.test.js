@@ -17,10 +17,9 @@ describe('StreamEndpoints', () => {
     let wallet
 
     const createClient = (opts = {}) => new StreamrClient({
-        url: config.websocketUrl,
-        restUrl: config.restUrl,
         autoConnect: false,
         autoDisconnect: false,
+        ...config.clientOptions,
         ...opts,
     })
 

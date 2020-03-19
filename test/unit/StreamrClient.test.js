@@ -548,8 +548,13 @@ describe('StreamrClient', () => {
 
             it('reports InvalidJsonErrors to subscriptions', (done) => {
                 const sub = setupSubscription('stream1')
-                const jsonError = new Errors.InvalidJsonError(sub.streamId, 'invalid json',
-                    new Error('Invalid JSON: invalid json'), msg('stream1').streamMessage)
+
+                const jsonError = new Errors.InvalidJsonError(
+                    sub.streamId,
+                    'invalid json',
+                    new Error('Invalid JSON: invalid json'),
+                    msg('stream1').streamMessage
+                )
 
                 sub.handleError = (err) => {
                     assert.equal(err, jsonError)

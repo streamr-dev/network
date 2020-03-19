@@ -10,11 +10,10 @@ describe('LoginEndpoints', () => {
     let client
 
     const createClient = (opts = {}) => new StreamrClient({
-        url: config.websocketUrl,
-        restUrl: config.restUrl,
         apiKey: 'tester1-api-key',
         autoConnect: false,
         autoDisconnect: false,
+        ...config.clientOptions,
         ...opts,
     })
 
