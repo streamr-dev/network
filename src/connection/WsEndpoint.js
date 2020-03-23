@@ -22,10 +22,14 @@ const ab2str = (buf) => Buffer.from(buf).toString('utf8')
 // TODO uWS will soon rename end -> close and end -> terminate
 const closeWs = (ws, code, reason) => {
     // only ws/ws lib has terminate method
-    if (ws.terminate !== undefined) {
-        ws.close(code, reason)
-    } else {
-        ws.end(code, reason)
+    try {
+        if (ws.terminate !== undefined) {
+            ws.close(code, reason)
+        } else {
+            ws.end(code, reason)
+        }
+    } catch (e) {
+        console.error(`Failed to close ws, error: ${e}`)
     }
 }
 
@@ -39,11 +43,15 @@ const getBufferedAmount = (ws) => {
 }
 
 const terminateWs = (ws) => {
-    // only ws/ws lib has terminate method
-    if (ws.terminate !== undefined) {
-        ws.terminate()
-    } else {
-        ws.close()
+    try {
+        // only ws/ws lib has terminate method
+        if (ws.terminate !== undefined) {
+            ws.terminate()
+        } else {
+            ws.close()
+        }
+    } catch (e) {
+        console.error(`Failed to terminate ws, error: ${e}`)
     }
 }
 
@@ -52,12 +60,6 @@ function toHeaders(peerInfo) {
     return {
         'streamr-peer-id': peerInfo.peerId,
         'streamr-peer-type': peerInfo.peerType
-    }
-}
-
-class ReadyStateError extends Error {
-    constructor(address, readyState) {
-        super(`cannot send to ${address} because socket.readyState=${readyState}`)
     }
 }
 
@@ -94,7 +96,6 @@ class WsEndpoint extends EventEmitter {
         this.metrics.createSpeedometer('_msgOutSpeed')
 
         this.connections = new Map()
-        this.lastCheckedReadyState = new Map()
         this.pendingConnections = new Map()
         this.peerBook = new PeerBook()
 
@@ -138,7 +139,7 @@ class WsEndpoint extends EventEmitter {
         })
 
         this.debug('listening on: %s', this.getAddress())
-        this.checkConnectionsInterval = setInterval(this._checkConnections.bind(this), 10 * 1000)
+        this.checkConnectionsInterval = setInterval(this._checkConnections.bind(this), 3000)
     }
 
     _checkConnections() {
@@ -146,30 +147,15 @@ class WsEndpoint extends EventEmitter {
         addresses.forEach((address) => {
             const ws = this.connections.get(address)
 
-            if (ws.readyState !== ws.OPEN) {
-                const lastReadyState = this.lastCheckedReadyState.get(address)
-                this.lastCheckedReadyState.set(address, ws.readyState)
-
-                this.metrics.inc(`_checkConnections:readyState=${ws.readyState}`)
-                this.debug(`found suspicious connection: ${this.getAddress()} => ${address} = ${ws.readyState}`)
-
-                if (lastReadyState != null && lastReadyState === ws.readyState) {
-                    try {
-                        console.error(`closing dead connection to ${address}...`)
-                        // force close dead connection
-                        terminateWs(ws)
-                        this._onClose(
-                            address, this.peerBook.getPeerInfo(address),
-                            disconnectionCodes.DEAD_CONNECTION, disconnectionReasons.DEAD_CONNECTION
-                        )
-                    } catch (e) {
-                        console.error('failed to close socket because of %s', e)
-                    } finally {
-                        this.lastCheckedReadyState.delete(address)
-                    }
-                }
-            } else {
-                this.lastCheckedReadyState.delete(address)
+            try {
+                ws.ping('ping')
+            } catch (e) {
+                console.error(`Failed to send ping to ${address}, terminating connection`)
+                terminateWs(ws)
+                this._onClose(
+                    address, this.peerBook.getPeerInfo(address),
+                    disconnectionCodes.DEAD_CONNECTION, disconnectionReasons.DEAD_CONNECTION
+                )
             }
         })
     }
@@ -204,27 +190,46 @@ class WsEndpoint extends EventEmitter {
     }
 
     _socketSend(ws, message, recipientId, recipientAddress, successCallback, errorCallback) {
+        const onError = (err, callback) => {
+            if (typeof callback === 'function') {
+                callback(err)
+            } else {
+                throw new Error(err)
+            }
+        }
+
+        const onSuccess = (address, peerId, msg, callback) => {
+            this.debug('sent to %s message "%s"', address, msg)
+            this.metrics.inc('send:success')
+
+            this.metrics.speed('_outSpeed')(msg.length)
+            this.metrics.speed('_msgSpeed')(1)
+            this.metrics.speed('_msgOutSpeed')(1)
+
+            if (typeof callback === 'function') {
+                callback(peerId)
+            }
+        }
+
         try {
-            ws.send(message, (err) => {
-                if (err) {
-                    if (typeof errorCallback === 'function') {
-                        errorCallback(err)
-                    } else {
-                        throw new Error(err)
-                    }
+            if (ws.constructor.name === 'uWS.WebSocket') {
+                const res = ws.send(message)
+
+                if (!res) {
+                    const err = `Failed to send to message to ${recipientId}`
+                    onError(err, errorCallback)
                 } else {
-                    this.debug('sent to %s message "%s"', recipientAddress, message)
-                    this.metrics.inc('send:success')
-
-                    this.metrics.speed('_outSpeed')(message.length)
-                    this.metrics.speed('_msgSpeed')(1)
-                    this.metrics.speed('_msgOutSpeed')(1)
-
-                    if (typeof successCallback === 'function') {
-                        successCallback(recipientId)
-                    }
+                    onSuccess(recipientAddress, recipientId, message, successCallback)
                 }
-            })
+            } else {
+                ws.send(message, (err) => {
+                    if (err) {
+                        onError(err, errorCallback)
+                    } else {
+                        onSuccess(recipientAddress, recipientId, message, successCallback)
+                    }
+                })
+            }
         } catch (e) {
             this.metrics.inc('send:failed')
             console.error('sending to %s failed because of %s, readyState is', recipientAddress, e, ws.readyState)
@@ -350,11 +355,7 @@ class WsEndpoint extends EventEmitter {
         return new Promise((resolve, reject) => {
             try {
                 this.connections.forEach((ws) => {
-                    try {
-                        closeWs(ws, disconnectionCodes.GRACEFUL_SHUTDOWN, disconnectionReasons.GRACEFUL_SHUTDOWN)
-                    } catch (e) {
-                        console.warn(`Failed to close websocket on shutdown, reason ${e}`)
-                    }
+                    closeWs(ws, disconnectionCodes.GRACEFUL_SHUTDOWN, disconnectionReasons.GRACEFUL_SHUTDOWN)
                 })
 
                 if (this._listenSocket) {
@@ -417,6 +418,11 @@ class WsEndpoint extends EventEmitter {
             // eslint-disable-next-line no-param-reassign
             ws.address = address
 
+            if (this.isConnected(address)) {
+                ws.close(disconnectionCodes.DUPLICATE_SOCKET, disconnectionReasons.DUPLICATE_SOCKET)
+                return
+            }
+
             this.debug('<=== %s connecting to me', address)
             // added 'connection' event for test - duplicate-connections-are-closed.test.js
             this.emit('connection', ws)
@@ -438,7 +444,6 @@ class WsEndpoint extends EventEmitter {
         this.metrics.inc(`_onClose:closed:code=${code}`)
         this.debug('socket to %s closed (code %d, reason %s)', address, code, reason)
         this.connections.delete(address)
-        this.lastCheckedReadyState.delete(address)
         this.peerBook.getPeerId(address)
         this.debug('removed %s [%s] from connection list', peerInfo, address)
         this.emit(events.PEER_DISCONNECTED, peerInfo, reason)

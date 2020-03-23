@@ -38,13 +38,15 @@ describe('check and kill dead connections', () => {
         expect(connection.readyState).toEqual(1)
 
         // break connection, not using mock, because it's a uWS external object
-        connection.readyState = 10
-        expect(connection.readyState).toEqual(10)
+        connection.readyState = 0
+        expect(connection.readyState).toEqual(0)
 
-        // check connections
-        node1._checkConnections()
         jest.spyOn(node1, '_onClose').mockImplementation(() => {})
 
+        // check connections
+        jest.spyOn(connection, 'ping').mockImplementation(() => {
+            throw new Error()
+        })
         node1._checkConnections()
 
         expect(node1._onClose).toBeCalledTimes(1)
@@ -53,6 +55,7 @@ describe('check and kill dead connections', () => {
         }, disconnectionCodes.DEAD_CONNECTION, disconnectionReasons.DEAD_CONNECTION)
 
         node1._onClose.mockRestore()
+        node1._checkConnections()
 
         const [peerInfo] = await waitForEvent(node1, events.PEER_DISCONNECTED)
         expect(peerInfo).toEqual(new PeerInfo('node2', 'node'))

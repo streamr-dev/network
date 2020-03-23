@@ -9,7 +9,7 @@ const CURRENT_VERSION = require('../package.json').version
 
 program
     .version(CURRENT_VERSION)
-    .option('--nodes <nodes>', 'number of nodes', 10)
+    .option('--nodes <nodes>', 'number of nodes', 100)
     .option('--streams <streams>', 'number of streams', 1)
     .description('Run local network with stream (-s)')
     .parse(process.argv)
