@@ -18,7 +18,8 @@ public class Streams {
             "stream-cleartext-signed",
             "stream-encrypted-shared-signed",
             "stream-encrypted-shared-rotating-signed",
-            "stream-encrypted-exchanged-rotating-signed"
+            "stream-encrypted-exchanged-rotating-signed",
+            "stream-encrypted-exchanged-rotating-revoking-signed"
     };
     private final Participants ps;
     private final String restApiUrl;
@@ -39,6 +40,7 @@ public class Streams {
         streams.put(SETUPS_NAMES[2], this::encryptedSharedKeySignedStream);
         streams.put(SETUPS_NAMES[3], this::encryptedSharedRotatingKeySignedStream);
         streams.put(SETUPS_NAMES[4], this::encryptedExchangedRotatingKeySignedStream);
+        streams.put(SETUPS_NAMES[5], this::encryptedExchangedRotatingRevokingKeySignedStream);
     }
 
     public void checkMsgsCorrectness() {
@@ -121,18 +123,26 @@ public class Streams {
     }
 
     private void encryptedExchangedRotatingKeySignedStream(StreamTester streamTester) {
+        encryptedExchangeStreamHelper(streamTester, streamTester.getRotatingPublishFunction(10));
+    }
+
+    private void encryptedExchangedRotatingRevokingKeySignedStream(StreamTester streamTester) {
+        encryptedExchangeStreamHelper(streamTester, streamTester.getRotatingRevokingPublishFunction(10, 20));
+    }
+
+    private void encryptedExchangeStreamHelper(StreamTester streamTester, PublishFunction publishFunction) {
         String streamId = streamTester.getStreamId();
 
         StreamrClientJava[] javaPublishers = new StreamrClientJava[ps.getNbJavaPublishers()];
         for (int i = 0; i < ps.getNbJavaPublishers(); i++) {
             javaPublishers[i] = buildEncryptedSigningClient(streamId, null, StreamTester.generateGroupKey());
         }
-        streamTester.addPublishers(streamTester.getRotatingPublishFunction(10), 1000, 2500, javaPublishers);
+        streamTester.addPublishers(publishFunction, 1000, 2500, javaPublishers);
         StreamrClientJS[] javascriptPublishers = new StreamrClientJS[ps.getNbJavascriptPublishers()];
         for (int i = 0; i < ps.getNbJavascriptPublishers(); i++) {
             javascriptPublishers[i] = new StreamrClientJS(buildEncryptionOptions(streamId, null, StreamTester.generateGroupKey()));
         }
-        streamTester.addPublishers(streamTester.getRotatingPublishFunction(10), 1000, 2500, javascriptPublishers);
+        streamTester.addPublishers(publishFunction, 1000, 2500, javascriptPublishers);
 
         StreamrClientWrapper[] subscribers = buildClientsWithoutKeys(this::buildCleartextSigningClient, ps.getNbJavaSubscribers(), ps.getNbJavascriptSubscribers());
         StreamrClientWrapper[] javaSubscribers = Arrays.copyOfRange(subscribers, 0, ps.getNbJavaSubscribers());

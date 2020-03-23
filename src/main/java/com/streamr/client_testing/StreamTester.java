@@ -342,6 +342,50 @@ public class StreamTester {
         return new PublishFunction("rotating", f);
     }
 
+    public PublishFunction getRotatingRevokingPublishFunction(int nbMessagesForSingleKey, int nbMessagesBetweenRevokes) {
+        PublishFunction.Function f;
+        if (testCorrectness) {
+            f = (publisher, stream, counter) -> {
+                synchronized (this) {
+                    HashMap<String, Object> payload = genPayload();
+                    String payloadString = HttpUtils.mapAdapter.toJson(payload);
+                    Main.logger.finest(publisher.getPublisherId() + " going to publish " + payloadString);
+                    if (counter % nbMessagesBetweenRevokes == 0) {
+                        Main.logger.fine(publisher.getPublisherId() + " revoking with a rekey...");
+                        publisher.rekey(stream);
+                        Main.logger.fine(publisher.getPublisherId() + " revoked with a rekey.");
+                        publisher.publish(stream, payload);
+                        counter = 0L;
+                    } else if (counter % nbMessagesForSingleKey == 0) {
+                        UnencryptedGroupKey newKey = generateGroupKey();
+                        Main.logger.fine(publisher.getPublisherId() + " rotating the key. New key: " + newKey.getGroupKeyHex());
+                        publisher.publish(stream, payload, new Date(), null, newKey);
+                    } else {
+                        publisher.publish(stream, payload);
+                    }
+                    publishersMsgStacks.get(publisher.getPublisherId()).addLast(payloadString);
+                    Main.logger.fine(publisher.getPublisherId() + ": published " + payloadString);
+                }
+            };
+        } else {
+            f = (publisher, stream, counter) -> {
+                synchronized (this) {
+                    HashMap<String, Object> payload = genPayload();
+                    if (counter % nbMessagesBetweenRevokes == 0) {
+                        publisher.rekey(stream);
+                        publisher.publish(stream, payload);
+                        counter = 0L;
+                    } else if (counter % nbMessagesForSingleKey == 0) {
+                        publisher.publish(stream, payload, new Date(), null, generateGroupKey());
+                    } else {
+                        publisher.publish(stream, payload);
+                    }
+                }
+            };
+        }
+        return new PublishFunction("rotating", f);
+    }
+
     public static UnencryptedGroupKey generateGroupKey() {
         byte[] keyBytes = new byte[32];
         secureRandom.nextBytes(keyBytes);
