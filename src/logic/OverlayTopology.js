@@ -22,7 +22,9 @@ class OverlayTopology {
     }
 
     update(nodeId, neighbors) {
-        const knownNeighbors = [...neighbors].filter((n) => n in this.nodes)
+        const knownNeighbors = [...neighbors]
+            .filter((n) => n in this.nodes)
+            .filter((n) => n !== nodeId) // in case nodeId is reporting itself as neighbor
 
         this.nodes[nodeId] = new Set(knownNeighbors)
         knownNeighbors.forEach((neighbor) => this.nodes[neighbor].add(nodeId))

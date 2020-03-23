@@ -252,6 +252,29 @@ describe('overlay creation', () => {
         })
     })
 
+    test('self-connections are discarded', () => {
+        const topology = new OverlayTopology(4, (arr) => arr, (arr) => arr[0])
+
+        topology.update('node-1', [])
+        topology.update('node-2', [])
+        topology.update('node-3', [])
+
+        topology.update('node-3', ['node-1', 'node-2', 'node-3'])
+
+        expect(topology.state()).toEqual({
+            'node-1': [
+                'node-3',
+            ],
+            'node-2': [
+                'node-3'
+            ],
+            'node-3': [
+                'node-1',
+                'node-2'
+            ]
+        })
+    })
+
     test('test case when all nodes leave topology', () => {
         const topology = new OverlayTopology(3, (arr) => arr, (arr) => arr[0])
 
