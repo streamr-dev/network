@@ -27,7 +27,7 @@
     "npm": "6.14.2"
   },
   "dependencies": {
-    "@sentry/node": "^5.14.2",
+    "@sentry/node": "^5.15.0",
     "arraybuffer-to-string": "^1.0.2",
     "body-parser": "^1.19.0",
     "buffermaker": "^1.2.1",
@@ -42,10 +42,10 @@
     "mqtt-connection": "^4.0.0",
     "node-fetch": "^2.6.0",
     "public-ip": "^4.0.0",
-    "qs": "^6.9.1",
-    "streamr-client": "^3.1.3",
+    "qs": "^6.9.2",
+    "streamr-client": "^3.2.0",
     "streamr-client-protocol": "^4.1.1",
-    "streamr-network": "^17.5.0",
+    "streamr-network": "^17.5.2",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v17.3.0",
     "uuid": "^7.0.2",
     "ws": "^7.2.3"

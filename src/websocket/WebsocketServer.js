@@ -196,9 +196,12 @@ module.exports = class WebsocketServer extends EventEmitter {
                 // ignoring any error
             }
 
-            uWS.us_listen_socket_close(this._listenSocket)
-            this._listenSocket = null
-            resolve()
+            if (this._listenSocket) {
+                uWS.us_listen_socket_close(this._listenSocket)
+                this._listenSocket = null
+            }
+
+            setTimeout(() => resolve(), 100)
         })
     }
 
