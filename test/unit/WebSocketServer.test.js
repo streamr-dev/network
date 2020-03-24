@@ -28,7 +28,7 @@ describe('test starting startWebSocketServer', () => {
     })
 
     test('wss raises error', () => {
-        //  host must be 'Text and data can only be passed by String, ArrayBuffer or TypedArray.'
+        // host must be 'Text and data can only be passed by String, ArrayBuffer or TypedArray.'
         return expect(startWebSocketServer(null, null)).rejects.toEqual('Text and data can only be passed by String, ArrayBuffer or TypedArray.')
     })
 })
