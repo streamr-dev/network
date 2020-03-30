@@ -88,7 +88,7 @@ describe('CommunityEndPoints', () => {
 
     describe('Members', () => {
         let memberClient
-        const memberWallet = new Wallet('0x0000000000000000000000000000000000000000000000000000000000000001', testProvider)
+        const memberWallet = new Wallet('0x1000000000000000000000000000000000000000000000000000000000000001', testProvider)
 
         beforeAll(async () => {
             memberClient = new StreamrClient({
