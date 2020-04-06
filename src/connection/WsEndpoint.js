@@ -167,10 +167,7 @@ class WsEndpoint extends EventEmitter {
             this.debug('cannot send to %s because not connected', recipientAddress)
         } else {
             const ws = this.connections.get(recipientAddress)
-
-            setImmediate(() => {
-                this._socketSend(ws, message, recipientId, recipientAddress)
-            })
+            this._socketSend(ws, message, recipientId, recipientAddress)
         }
     }
 

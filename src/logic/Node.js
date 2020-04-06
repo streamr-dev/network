@@ -255,7 +255,11 @@ class Node extends EventEmitter {
 
         if (subscribers.length) {
             subscribers.forEach((subscriber) => {
-                this.protocols.nodeToNode.sendData(subscriber, streamMessage)
+                try {
+                    this.protocols.nodeToNode.sendData(subscriber, streamMessage)
+                } catch (e) {
+                    console.error(`Failed to _propagateMessage ${streamMessage} to subscriber ${subscriber}, because of ${e}`)
+                }
             })
 
             this.seenButNotPropagated.del(messageIdToStr(streamMessage.messageId))
