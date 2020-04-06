@@ -96,6 +96,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this._updateAllStorages()
         this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)
+            .catch((e) => console.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`))
     }
 
     stop() {
