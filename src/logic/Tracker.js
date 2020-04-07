@@ -96,6 +96,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this._updateAllStorages()
         this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)
+            .catch((e) => console.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`))
     }
 
     stop() {
@@ -171,8 +172,12 @@ module.exports = class Tracker extends EventEmitter {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
             Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
                 this.metrics.inc('sendInstruction')
-                this.protocols.trackerServer.sendInstruction(nodeId, StreamIdAndPartition.fromKey(streamKey), newNeighbors)
-                this.debug('sent instruction %j for stream %s to node %s', newNeighbors, streamKey, nodeId)
+                try {
+                    this.protocols.trackerServer.sendInstruction(nodeId, StreamIdAndPartition.fromKey(streamKey), newNeighbors)
+                    this.debug('sent instruction %j for stream %s to node %s', newNeighbors, streamKey, nodeId)
+                } catch (e) {
+                    console.error(`Failed to _formAndSendInstructions to node ${nodeId}, streamKey ${streamKey}, because of ${e}`)
+                }
             })
         })
     }
