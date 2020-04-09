@@ -4,7 +4,8 @@
   "description": "Example of how streamr-client can be included in webpack projects",
   "scripts": {
     "build": "NODE_ENV=production webpack --mode=production --progress",
-    "dev": "webpack --progress --colors --watch"
+    "dev": "webpack --progress --colors --watch",
+    "build-with-parent": "cp -Rpfv ../../dist ./node_modules/streamr-client/ && rm node_modules/streamr-client/package.json; cp ../../package.json ./node_modules/streamr-client/package.json && npm run build"
   },
   "engines": {
     "node": ">= 8"

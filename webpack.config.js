@@ -75,6 +75,15 @@ const clientConfig = merge({}, commonConfig, {
         libraryTarget: 'umd2',
         filename: libraryName + '.web.js',
     },
+    resolve: {
+        alias: {
+            http: path.resolve(__dirname, './src/shim/http-https.js'),
+            https: path.resolve(__dirname, './src/shim/http-https.js'),
+            ws: path.resolve(__dirname, './src/shim/ws.js'),
+            'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
+            'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
+        }
+    }
 })
 
 let clientMinifiedConfig = {}

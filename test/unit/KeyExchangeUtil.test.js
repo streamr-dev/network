@@ -17,7 +17,7 @@ subscribers.forEach((p) => {
     subscribersMap[p] = true
 })
 
-function setupClient() {
+async function setupClient() {
     const client = {}
     client.getStreamSubscribers = sinon.stub()
     client.getStreamSubscribers.withArgs('streamId').resolves(subscribers)
@@ -36,14 +36,15 @@ function setupClient() {
         },
     }
     client.encryptionUtil = new EncryptionUtil()
+    await client.encryptionUtil.onReady()
     return client
 }
 
 describe('KeyExchangeUtil', () => {
     let client
     let util
-    beforeEach(() => {
-        client = setupClient()
+    beforeEach(async () => {
+        client = await setupClient()
         util = new KeyExchangeUtil(client)
     })
     describe('getSubscribers', () => {
@@ -142,92 +143,98 @@ describe('KeyExchangeUtil', () => {
         })
         it('should send group key response (latest key)', (done) => {
             const subscriberKeyPair = new EncryptionUtil()
-            const streamMessage = StreamMessage.create(
-                ['clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''], null,
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE, {
-                    streamId: 'streamId',
-                    publicKey: subscriberKeyPair.getPublicKey(),
-                }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
-            )
-            client.msgCreationUtil = {
-                createGroupKeyResponse: (subscriberId, streamId, keys) => {
-                    assert.strictEqual(subscriberId, 'subscriber2')
-                    assert.strictEqual(streamId, 'streamId')
-                    assert.strictEqual(keys.length, 1)
-                    const keyObject = keys[0]
-                    const expectedKeyObj = client.keyStorageUtil.getLatestKey('streamId')
-                    assert.deepStrictEqual(subscriberKeyPair.decryptWithPrivateKey(keyObject.groupKey, true), expectedKeyObj.groupKey)
-                    assert.deepStrictEqual(keyObject.start, expectedKeyObj.start)
-                    return Promise.resolve('fake response')
-                },
-            }
-            client.publishStreamMessage = (response) => {
-                assert.strictEqual(response, 'fake response')
-                done()
-            }
-            return util.handleGroupKeyRequest(streamMessage)
+            subscriberKeyPair.onReady().then(() => {
+                const streamMessage = StreamMessage.create(
+                    ['clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''], null,
+                    StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                        streamId: 'streamId',
+                        publicKey: subscriberKeyPair.getPublicKey(),
+                    }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                )
+                client.msgCreationUtil = {
+                    createGroupKeyResponse: (subscriberId, streamId, keys) => {
+                        assert.strictEqual(subscriberId, 'subscriber2')
+                        assert.strictEqual(streamId, 'streamId')
+                        assert.strictEqual(keys.length, 1)
+                        const keyObject = keys[0]
+                        const expectedKeyObj = client.keyStorageUtil.getLatestKey('streamId')
+                        assert.deepStrictEqual(subscriberKeyPair.decryptWithPrivateKey(keyObject.groupKey, true), expectedKeyObj.groupKey)
+                        assert.deepStrictEqual(keyObject.start, expectedKeyObj.start)
+                        return Promise.resolve('fake response')
+                    },
+                }
+                client.publishStreamMessage = (response) => {
+                    assert.strictEqual(response, 'fake response')
+                    done()
+                }
+                return util.handleGroupKeyRequest(streamMessage)
+            })
         })
         it('should send group key response (range of keys)', (done) => {
             const subscriberKeyPair = new EncryptionUtil()
-            const streamMessage = StreamMessage.create(
-                ['clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''], null,
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE, {
-                    streamId: 'streamId',
-                    publicKey: subscriberKeyPair.getPublicKey(),
-                    range: {
-                        start: 15,
-                        end: 27
-                    }
-                }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
-            )
-            client.msgCreationUtil = {
-                createGroupKeyResponse: (subscriberId, streamId, keys) => {
-                    assert.strictEqual(subscriberId, 'subscriber2')
-                    assert.strictEqual(streamId, 'streamId')
-                    const decryptedKeys = []
-                    keys.forEach((keyObj) => {
-                        const decryptedKey = subscriberKeyPair.decryptWithPrivateKey(keyObj.groupKey, true)
-                        decryptedKeys.push({
-                            groupKey: decryptedKey,
-                            start: keyObj.start
+            subscriberKeyPair.onReady().then(() => {
+                const streamMessage = StreamMessage.create(
+                    ['clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''], null,
+                    StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                        streamId: 'streamId',
+                        publicKey: subscriberKeyPair.getPublicKey(),
+                        range: {
+                            start: 15,
+                            end: 27
+                        }
+                    }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                )
+                client.msgCreationUtil = {
+                    createGroupKeyResponse: (subscriberId, streamId, keys) => {
+                        assert.strictEqual(subscriberId, 'subscriber2')
+                        assert.strictEqual(streamId, 'streamId')
+                        const decryptedKeys = []
+                        keys.forEach((keyObj) => {
+                            const decryptedKey = subscriberKeyPair.decryptWithPrivateKey(keyObj.groupKey, true)
+                            decryptedKeys.push({
+                                groupKey: decryptedKey,
+                                start: keyObj.start
+                            })
                         })
-                    })
-                    assert.deepStrictEqual(decryptedKeys, client.keyStorageUtil.getKeysBetween('streamId', 15, 27))
-                    return Promise.resolve('fake response')
-                },
-            }
-            client.publishStreamMessage = (response) => {
-                assert.strictEqual(response, 'fake response')
-                done()
-            }
-            return util.handleGroupKeyRequest(streamMessage)
+                        assert.deepStrictEqual(decryptedKeys, client.keyStorageUtil.getKeysBetween('streamId', 15, 27))
+                        return Promise.resolve('fake response')
+                    },
+                }
+                client.publishStreamMessage = (response) => {
+                    assert.strictEqual(response, 'fake response')
+                    done()
+                }
+                return util.handleGroupKeyRequest(streamMessage)
+            })
         })
         it('should send group key response (latest key and no storage of past keys)', (done) => {
             const subscriberKeyPair = new EncryptionUtil()
-            const streamMessage = StreamMessage.create(
-                ['clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''], null,
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE, {
-                    streamId: 'streamId',
-                    publicKey: subscriberKeyPair.getPublicKey(),
-                }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
-            )
-            client.msgCreationUtil = {
-                createGroupKeyResponse: (subscriberId, streamId, keys) => {
-                    assert.strictEqual(subscriberId, 'subscriber2')
-                    assert.strictEqual(streamId, 'streamId')
-                    assert.strictEqual(keys.length, 1)
-                    const keyObject = keys[0]
-                    const expectedKeyObj = client.keyStorageUtil.getLatestKey('streamId')
-                    assert.deepStrictEqual(subscriberKeyPair.decryptWithPrivateKey(keyObject.groupKey, true), expectedKeyObj.groupKey)
-                    assert.deepStrictEqual(keyObject.start, expectedKeyObj.start)
-                    return Promise.resolve('fake response')
-                },
-            }
-            client.publishStreamMessage = (response) => {
-                assert.strictEqual(response, 'fake response')
-                done()
-            }
-            return util.handleGroupKeyRequest(streamMessage)
+            subscriberKeyPair.onReady().then(() => {
+                const streamMessage = StreamMessage.create(
+                    ['clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''], null,
+                    StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST, StreamMessage.ENCRYPTION_TYPES.NONE, {
+                        streamId: 'streamId',
+                        publicKey: subscriberKeyPair.getPublicKey(),
+                    }, StreamMessage.SIGNATURE_TYPES.ETH, 'signature',
+                )
+                client.msgCreationUtil = {
+                    createGroupKeyResponse: (subscriberId, streamId, keys) => {
+                        assert.strictEqual(subscriberId, 'subscriber2')
+                        assert.strictEqual(streamId, 'streamId')
+                        assert.strictEqual(keys.length, 1)
+                        const keyObject = keys[0]
+                        const expectedKeyObj = client.keyStorageUtil.getLatestKey('streamId')
+                        assert.deepStrictEqual(subscriberKeyPair.decryptWithPrivateKey(keyObject.groupKey, true), expectedKeyObj.groupKey)
+                        assert.deepStrictEqual(keyObject.start, expectedKeyObj.start)
+                        return Promise.resolve('fake response')
+                    },
+                }
+                client.publishStreamMessage = (response) => {
+                    assert.strictEqual(response, 'fake response')
+                    done()
+                }
+                return util.handleGroupKeyRequest(streamMessage)
+            })
         })
     })
     describe('handleGroupKeyResponse', () => {

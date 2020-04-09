@@ -569,6 +569,7 @@ export default class StreamrClient extends EventEmitter {
         })
         sub.on('groupKeyMissing', async (publisherId, start, end) => {
             if (this.encryptionUtil) {
+                await this.encryptionUtil.onReady()
                 const streamMessage = await this.msgCreationUtil.createGroupKeyRequest(
                     publisherId, sub.streamId, this.encryptionUtil.getPublicKey(), start, end,
                 )

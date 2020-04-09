@@ -38,6 +38,9 @@ jobs:
     - name: test-unit
       run: npm run test-unit
 
+    - name: test-build
+      run: npm run build && npm run install-example && npm run build-example
+
     - name: test-integration
       run: |
         sudo service mysql stop
@@ -46,5 +49,3 @@ jobs:
         ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
         npm run test-integration
 
-    - name: test-build
-      run: npm run build

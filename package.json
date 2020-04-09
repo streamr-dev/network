@@ -7,6 +7,7 @@
     "url": "git://github.com/streamr-dev/streamr-client.git"
   },
   "main": "dist/streamr-client.js",
+  "browser": "dist/streamr-client.web.min.js",
   "directories": {
     "test": "test"
   },
@@ -18,13 +19,9 @@
     "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit --detectOpenHandles",
     "coverage": "jest --coverage",
-    "test-integration": "jest test/integration --detectOpenHandles"
-  },
-  "browser": {
-    "http": "./src/shim/http-https.js",
-    "https": "./src/shim/http-https.js",
-    "ws": "./src/shim/ws.js",
-    "node-fetch": "./src/shim/node-fetch.js"
+    "test-integration": "jest test/integration --detectOpenHandles",
+    "install-example": "cd examples/webpack && npm ci",
+    "build-example": "cd examples/webpack && npm run build-with-parent"
   },
   "engines": {
     "node": ">= 10"
@@ -68,6 +65,7 @@
     "heap": "^0.2.6",
     "lodash.uniqueid": "^4.0.1",
     "node-fetch": "^2.6.0",
+    "node-webcrypto-ossl": "^2.0.1",
     "once": "^1.4.0",
     "qs": "^6.9.1",
     "randomstring": "^1.1.5",
