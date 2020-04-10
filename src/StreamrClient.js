@@ -757,7 +757,16 @@ export default class StreamrClient extends EventEmitter {
 
     async _requestSubscribe(sub) {
         const sp = this._getSubscribedStreamPartition(sub.streamId, sub.streamPartition)
-        const subscribedSubs = sp.getSubscriptions().filter((it) => it.getState() === Subscription.State.subscribed)
+        let subscribedSubs = []
+        // never reuse subscriptions when incoming subscription needs resends
+        // i.e. only reuse realtime subscriptions
+        if (!sub.hasResendOptions()) {
+            subscribedSubs = sp.getSubscriptions().filter((it) => (
+                it.getState() === Subscription.State.subscribed
+                // don't resuse subscriptions currently resending
+                && !it.isResending()
+            ))
+        }
 
         const sessionToken = await this.session.getSessionToken()
 

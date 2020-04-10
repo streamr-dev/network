@@ -53,6 +53,138 @@ describe('StreamrClient resends', () => {
             await client.ensureDisconnected()
         })
 
+        describe('issue resend and subscribe at the same time', () => {
+            it('works with resend -> subscribe', async () => {
+                const resentMessages = []
+                const realtimeMessages = []
+
+                const realtimeMessage = {
+                    msg: uid('realtimeMessage'),
+                }
+
+                await client.resend({
+                    stream: stream.id,
+                    resend: {
+                        last: MAX_MESSAGES,
+                    },
+                }, (message) => {
+                    resentMessages.push(message)
+                })
+
+                client.subscribe({
+                    stream: stream.id,
+                }, (message) => {
+                    realtimeMessages.push(message)
+                })
+
+                await waitForCondition(() => resentMessages.length === MAX_MESSAGES, 5000)
+                await Promise.all([
+                    client.publish(stream.id, realtimeMessage),
+                    waitForCondition(() => realtimeMessages.length === 1, 10000)
+                ])
+                expect(resentMessages).toStrictEqual(publishedMessages)
+                expect(realtimeMessages).toStrictEqual([realtimeMessage])
+            }, 18000)
+
+            it('works with subscribe -> resend', async () => {
+                const resentMessages = []
+                const realtimeMessages = []
+
+                const realtimeMessage = {
+                    msg: uid('realtimeMessage'),
+                }
+
+                client.subscribe({
+                    stream: stream.id,
+                }, (message) => {
+                    realtimeMessages.push(message)
+                })
+
+                // resend after realtime subscribe
+                await client.resend({
+                    stream: stream.id,
+                    resend: {
+                        last: MAX_MESSAGES,
+                    },
+                }, (message) => {
+                    resentMessages.push(message)
+                })
+
+                await waitForCondition(() => resentMessages.length === MAX_MESSAGES, 5000)
+                await Promise.all([
+                    client.publish(stream.id, realtimeMessage),
+                    waitForCondition(() => realtimeMessages.length === 1, 5000)
+                ])
+                expect(resentMessages).toStrictEqual(publishedMessages)
+                expect(realtimeMessages).toStrictEqual([realtimeMessage])
+            }, 15000)
+
+            it('works with subscribe+resend -> subscribe', async () => {
+                const resentMessages = []
+                const realtimeMessages = []
+
+                const realtimeMessage = {
+                    msg: uid('realtimeMessage'),
+                }
+
+                client.subscribe({
+                    stream: stream.id,
+                    resend: {
+                        last: MAX_MESSAGES,
+                    },
+                }, (message) => {
+                    resentMessages.push(message)
+                })
+
+                client.subscribe({
+                    stream: stream.id,
+                }, (message) => {
+                    realtimeMessages.push(message)
+                })
+
+                await waitForCondition(() => resentMessages.length === MAX_MESSAGES, 5000)
+                await Promise.all([
+                    client.publish(stream.id, realtimeMessage),
+                    waitForCondition(() => realtimeMessages.length === 1, 5000)
+                ])
+                expect(resentMessages).toStrictEqual([...publishedMessages, realtimeMessage])
+                expect(realtimeMessages).toStrictEqual([realtimeMessage])
+            }, 15000)
+
+            it('works with subscribe -> subscribe+resend', async () => {
+                const resentMessages = []
+                const realtimeMessages = []
+
+                const realtimeMessage = {
+                    msg: uid('realtimeMessage'),
+                }
+
+                client.subscribe({
+                    stream: stream.id,
+                }, (message) => {
+                    realtimeMessages.push(message)
+                })
+
+                // subscribe with resend after realtime subscribe
+                client.subscribe({
+                    stream: stream.id,
+                    resend: {
+                        last: MAX_MESSAGES,
+                    },
+                }, (message) => {
+                    resentMessages.push(message)
+                })
+
+                await waitForCondition(() => resentMessages.length === MAX_MESSAGES, 5000)
+                await Promise.all([
+                    client.publish(stream.id, realtimeMessage),
+                    waitForCondition(() => realtimeMessages.length === 1, 5000)
+                ])
+                expect(resentMessages).toStrictEqual([...publishedMessages, realtimeMessage])
+                expect(realtimeMessages).toStrictEqual([realtimeMessage])
+            }, 15000)
+        })
+
         for (let i = 0; i < TEST_REPEATS; i++) {
             // eslint-disable-next-line no-loop-func
             it(`resend last using resend function on try ${i}`, async () => {

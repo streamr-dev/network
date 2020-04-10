@@ -413,6 +413,7 @@ describe('StreamrClient', () => {
 
                 // this sub's handler must not be called
                 const sub2 = setupSubscription('stream1')
+                connection.expect(SubscribeRequest.create('stream1', 0, 'session-token'))
                 sub2.handleResentMessage = sinon.stub().throws()
 
                 const msg1 = msg(sub.streamId, {}, '0')

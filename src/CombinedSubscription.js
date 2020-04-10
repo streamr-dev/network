@@ -107,4 +107,8 @@ export default class CombinedSubscription extends Subscription {
     onDisconnected() {
         this.sub.onDisconnected()
     }
+
+    isResending() {
+        return this.sub.isResending()
+    }
 }

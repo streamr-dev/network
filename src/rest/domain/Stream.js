@@ -54,6 +54,7 @@ export default class Stream {
 
     async hasPermission(operation, userId) {
         // eth addresses may be in checksumcase, but userId from server has no case
+
         const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
         const permissions = await this.getPermissions()
 
