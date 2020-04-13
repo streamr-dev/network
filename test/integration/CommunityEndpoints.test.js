@@ -167,7 +167,7 @@ describe('CommunityEndPoints', () => {
             expect(isValid).toBeTruthy()
 
             const walletBefore = await opToken.balanceOf(memberWallet.address)
-
+            await wait(80000)
             const tr2 = await memberClient.withdraw(community.address, {
                 provider: testProvider
             })
