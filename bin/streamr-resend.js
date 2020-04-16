@@ -28,6 +28,7 @@ program
     .command('last <n> <streamId> [apiKey]')
     .description('request last N messages')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
+    .option('-s, --subscribe', 'subscribe in addition to resend', false)
     .action((n, streamId, apiKey, cmd) => {
         if (isNaN(n)) {
             console.error('argument n is not a number')
@@ -38,6 +39,7 @@ program
         }
         const options = formStreamrOptionsWithEnv(cmd.parent)
         options.orderMessages = !cmd.disableOrdering
+        options.subscribe = cmd.subscribe
         resend(streamId, apiKey, resendOptions, options)
     })
 
@@ -47,6 +49,7 @@ program
     .option('--publisher-id <string>', 'filter results by publisher')
     .option('--msg-chain-id <string>', 'filter results by message chain')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
+    .option('-s, --subscribe', 'subscribe in addition to resend', false)
     .action((from, streamId, apiKey, cmd) => {
         const resendOptions = {
             from: {
@@ -57,6 +60,7 @@ program
         handlePublisherIdAndMsgChainId(cmd, resendOptions)
         const options = formStreamrOptionsWithEnv(cmd.parent)
         options.orderMessages = !cmd.disableOrdering
+        options.subscribe = cmd.subscribe
         resend(streamId, apiKey, resendOptions, options)
     })
 

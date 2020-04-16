@@ -9,12 +9,19 @@ module.exports = async function resend(streamId, apiKey, resendOpts, streamrOpti
 
     let sub
     try {
-        sub = await client.resend({
+        const subscribeOpts = {
             stream: streamId,
             resend: resendOpts
-        }, (message) => {
+        }
+        const handler = (message) => {
             console.info(JSON.stringify(message))
-        })
+        }
+
+        if (options.subscribe) {
+            sub = await client.subscribe(subscribeOpts, handler)
+        } else {
+            sub = await client.resend(subscribeOpts, handler)
+        }
     } catch (err) {
         console.error(err.message ? err.message : err)
         process.exit(1)
@@ -26,10 +33,14 @@ module.exports = async function resend(streamId, apiKey, resendOpts, streamrOpti
     })
 
     sub.on('resent', () => {
-        process.exit(0)
+        if (!options.subscribe) {
+            process.exit(0)
+        }
     })
 
     sub.on('no_resend', () => {
-        process.exit(0)
+        if (!options.subscribe) {
+            process.exit(0)
+        }
     })
 }
