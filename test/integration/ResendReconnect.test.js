@@ -56,7 +56,6 @@ describe('resend/reconnect', () => {
 
     describe('reconnect after resend', () => {
         let sub
-        let t
         let messages = []
         beforeEach((done) => {
             sub = client.subscribe({

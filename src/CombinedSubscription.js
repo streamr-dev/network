@@ -35,12 +35,6 @@ export default class CombinedSubscription extends Subscription {
         this._bindListeners(this.sub)
     }
 
-    _unbindListeners(sub) {
-        this.sub.removeAllListeners()
-        // eslint-disable-next-line no-param-reassign
-        delete sub.setState // hack to reset original setState
-    }
-
     _bindListeners(sub) {
         sub.on('done', () => this.emit('done'))
         sub.on('gap', (from, to, publisherId, msgChainId) => this.emit('gap', from, to, publisherId, msgChainId))
@@ -51,9 +45,28 @@ export default class CombinedSubscription extends Subscription {
         sub.on('initial_resend_done', (response) => this.emit('initial_resend_done', response))
         sub.on('message received', () => this.emit('message received'))
         sub.on('groupKeyMissing', (publisherId, start, end) => this.emit('groupKeyMissing', publisherId, start, end))
+
+        // hack to ensure inner subscription state is reflected in the outer subscription state
+        // restore in _unbindListeners
+        // still not foolproof though
         /* eslint-disable no-param-reassign */
-        sub.setState = this.setState.bind(this) // hack to keep state in sync
+        sub.setState = this.setState.bind(this)
         sub.getState = this.getState.bind(this)
+        /* eslint-enable no-param-reassign */
+    }
+
+    _unbindListeners(sub) {
+        this.sub.removeAllListeners()
+
+        // delete to (probably) restore original (prototype) methods
+        /* eslint-disable no-param-reassign */
+        if (Object.hasOwnProperty.call(sub, 'setState')) {
+            delete sub.setState
+        }
+
+        if (Object.hasOwnProperty.call(sub, 'getState')) {
+            delete sub.getState
+        }
         /* eslint-enable no-param-reassign */
     }
 
