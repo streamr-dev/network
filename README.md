@@ -292,36 +292,36 @@ sub.on('initial_resend_done', () => {
 })
 ```
 
-### Community Products API
+### Data Unions API
 
-Streamr client provides functions for working with Community Products. All are async, that is, they return a Promise.
+This library provides functions for working with Data Unions. All of the below methods return a Promise.
 
 #### Admin functions
 
 Name | Returns | Description
 ---- | ------- | -----------
-deployCommunity() | Transaction | Deploy a new community product
-createSecret(communityAddress, secret[, name]) | | Create a secret for a community product
-communityIsReady(address) | | Wait until community is operated
-addMembers(communityAddress, memberAddressList) | | Add members
-kick(communityAddress, memberAddressList) | | Kick members out from community
+deployDataUnion() | Transaction | Deploy a new Data Union
+createSecret(dataUnionContractAddress, secret[, name]) | | Create a secret for a Data Union
+dataUnionIsReady(address) | | Wait until a new Data Union is initialized by its Operator
+addMembers(dataUnionContractAddress, memberAddressList) | | Add members
+kick(dataUnionContractAddress, memberAddressList) | | Kick members out from Data Union
 ```javascript
-const community = await client.deployCommunity()
-community.address           // already available before deployment
-await community.deployed()  // waits until contract is deployed
-await community.isReady()   // waits until community is operated
+const dataUnion = await client.deployDataUnion()
+dataUnion.address           // already available before deployment
+await dataUnion.deployed()  // waits until contract is deployed
+await dataUnion.isReady()   // waits until data union is operated
 ```
 
 #### Member functions
 
 Name | Returns | Description
 ---- | ------- | -----------
-joinCommunity(communityAddress[, secret]) | JoinRequest | Join a community product
-hasJoined(communityAddress[, memberAddress]) | | Wait until member has been accepted (default: authenticated StreamrClient)
-validateProof(communityAddress, options) | true/false | Check that server is giving a proof that allows withdrawing
-withdraw(communityAddress, options) | Receipt | Withdraw funds from community product
-withdrawFor(memberAddress, communityAddress, options) | Receipt | Pay for withdraw transaction on behalf of a community member
-withdrawTo(recipientAddress, communityAddress, options) | Receipt | Donate/move your earnings to recipientAddress instead of your memberAddress
+joinDataUnion(dataUnionContractAddress[, secret]) | JoinRequest | Join a Data Union
+hasJoined(dataUnionContractAddress[, memberAddress]) | | Wait until member has been accepted
+validateProof(dataUnionContractAddress, options) | true/false | Check that server is giving a proof that allows withdrawing
+withdraw(dataUnionContractAddress, options) | Receipt | Withdraw funds from Data Union
+withdrawFor(memberAddress, dataUnionContractAddress, options) | Receipt | Pay for withdraw transaction on behalf of a Data Union member
+withdrawTo(recipientAddress, dataUnionContractAddress, options) | Receipt | Donate/move your earnings to recipientAddress instead of your memberAddress
 
 The options object for withdraw functions above may contain following overrides:
 
@@ -334,13 +334,13 @@ gasPrice | ethers.js | Probably uses the network estimate
 
 #### Query functions
 
-These are available for everyone and anyone, to query publicly available info from a community
+These are available for everyone and anyone, to query publicly available info from a Data Union:
 
 Name | Returns | Description
 ---- | ------- | -----------
-getMemberStats(communityAddress[, memberAddress]) | {earnings, proof, ...} | Get member's community stats
-getCommunityStats(communityAddress) | {memberCount, totalEarnings, ...} | Get community product's statistics
-getMembers(communityAddress) | [{address, earnings}, ...] | Get community members
+getMemberStats(dataUnionContractAddress[, memberAddress]) | {earnings, proof, ...} | Get member's stats
+getDataUnionStats(dataUnionContractAddress) | {memberCount, totalEarnings, ...} | Get Data Union's statistics
+getMembers(dataUnionContractAddress) | [{address, earnings}, ...] | Get Data Union's members
 
 
 ### Utility functions

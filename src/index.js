@@ -1,13 +1,13 @@
 import StreamrClient from './StreamrClient'
 import * as StreamEndpoints from './rest/StreamEndpoints'
 import * as LoginEndpoints from './rest/LoginEndpoints'
-import * as CommunityEndpoints from './rest/CommunityEndpoints'
+import * as DataUnionEndpoints from './rest/DataUnionEndpoints'
 
 // Mixin the rest endpoints to the StreamrClient
 Object.assign(StreamrClient.prototype, {
     ...StreamEndpoints,
     ...LoginEndpoints,
-    ...CommunityEndpoints,
+    ...DataUnionEndpoints,
 })
 
 export default StreamrClient
