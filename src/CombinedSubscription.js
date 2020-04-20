@@ -17,8 +17,10 @@ export default class CombinedSubscription extends Subscription {
             }
         })
         this.sub.on('initial_resend_done', async () => {
+            this._unbindListeners(this.sub)
             const realTime = new RealTimeSubscription(streamId, streamPartition, callback,
                 groupKeys, this.propagationTimeout, this.resendTimeout, orderMessages, onUnableToDecrypt)
+            this._bindListeners(realTime)
             if (this.sub.orderingUtil) {
                 realTime.orderingUtil.orderedChains = this.sub.orderingUtil.orderedChains
                 Object.keys(this.sub.orderingUtil.orderedChains).forEach((key) => {
@@ -26,12 +28,17 @@ export default class CombinedSubscription extends Subscription {
                     realTime.orderingUtil.orderedChains[key].gapHandler = realTime.orderingUtil.gapHandler
                 })
             }
-            this._bindListeners(realTime)
             await Promise.all(this.realTimeMsgsQueue.map((msg) => realTime.handleBroadcastMessage(msg, () => true)))
             this.realTimeMsgsQueue = []
             this.sub = realTime
         })
         this._bindListeners(this.sub)
+    }
+
+    _unbindListeners(sub) {
+        this.sub.removeAllListeners()
+        // eslint-disable-next-line no-param-reassign
+        delete sub.setState // hack to reset original setState
     }
 
     _bindListeners(sub) {
@@ -44,7 +51,10 @@ export default class CombinedSubscription extends Subscription {
         sub.on('initial_resend_done', (response) => this.emit('initial_resend_done', response))
         sub.on('message received', () => this.emit('message received'))
         sub.on('groupKeyMissing', (publisherId, start, end) => this.emit('groupKeyMissing', publisherId, start, end))
-        Object.keys(Subscription.State).forEach((state) => this.sub.on(state, () => this.emit(state)))
+        /* eslint-disable no-param-reassign */
+        sub.setState = this.setState.bind(this) // hack to keep state in sync
+        sub.getState = this.getState.bind(this)
+        /* eslint-enable no-param-reassign */
     }
 
     stop() {
@@ -92,8 +102,8 @@ export default class CombinedSubscription extends Subscription {
     }
 
     setState(state) {
-        super.setState(state)
         this.sub.state = state
+        super.setState(state)
     }
 
     setGroupKeys(publisherId, groupKeys) {
