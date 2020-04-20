@@ -32,7 +32,7 @@ import SubscribedStreamPartition from './SubscribedStreamPartition'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
 import MessageCreationUtil from './MessageCreationUtil'
-import { waitFor } from './utils'
+import { waitFor, getVersionString } from './utils'
 import RealTimeSubscription from './RealTimeSubscription'
 import CombinedSubscription from './CombinedSubscription'
 import Subscription from './Subscription'
@@ -92,6 +92,9 @@ export default class StreamrClient extends EventEmitter {
                 this.options.url = `${this.options.url}&messageLayerVersion=31`
             }
         }
+
+        // always add streamrClient version
+        this.options.url = `${this.options.url}&streamrClient=${getVersionString()}`
 
         // Backwards compatibility for option 'authKey' => 'apiKey'
         if (this.options.authKey && !this.options.apiKey) {

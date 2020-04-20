@@ -1,3 +1,10 @@
+import pkg from '../package.json'
+
+export function getVersionString() {
+    const isProduction = process.env.NODE_ENV === 'production'
+    return `${pkg.version}${!isProduction ? 'dev' : ''}`
+}
+
 /**
  * Converts a .once event listener into a promise.
  * Rejects if an 'error' event is received before resolving.

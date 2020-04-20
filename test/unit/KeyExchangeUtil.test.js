@@ -46,7 +46,7 @@ describe('KeyExchangeUtil', () => {
     beforeEach(async () => {
         client = await setupClient()
         util = new KeyExchangeUtil(client)
-    })
+    }, 20000)
     describe('getSubscribers', () => {
         it('should use endpoint to retrieve subscribers', async () => {
             const retrievedSubscribers = await util.getSubscribers('streamId')

@@ -21,7 +21,7 @@ import debugFactory from 'debug'
 
 import * as DataUnion from '../../contracts/DataUnion.json'
 
-import authFetch from './authFetch'
+import authFetch, { DEFAULT_HEADERS } from './authFetch'
 
 const { BigNumber, computeAddress, getAddress } = ethersUtils
 
@@ -51,9 +51,15 @@ function sleep(ms) {
     })
 }
 
-async function get(client, dataUnionContractAddress, endpoint, ...opts) {
+async function get(client, dataUnionContractAddress, endpoint, opts = {}) {
     const url = `${client.options.restUrl}/communities/${dataUnionContractAddress}${endpoint}`
-    const response = await fetch(url, ...opts)
+    const response = await fetch(url, {
+        ...opts,
+        headers: {
+            ...DEFAULT_HEADERS,
+            ...opts.headers,
+        },
+    })
     const json = await response.json()
     // server may return things like { code: "ConnectionPoolTimeoutException", message: "Timeout waiting for connection from pool" }
     //   they must still be handled as errors
