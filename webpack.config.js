@@ -65,7 +65,7 @@ const serverConfig = merge({}, commonConfig, {
     externals: [nodeExternals()],
     output: {
         libraryTarget: 'commonjs2',
-        filename: libraryName + '.js',
+        filename: libraryName + '.nodejs.js',
     },
 })
 
