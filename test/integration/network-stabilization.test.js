@@ -1,5 +1,3 @@
-const { wait } = require('streamr-test-utils')
-
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { LOCALHOST } = require('../util')
 
@@ -26,7 +24,6 @@ describe('check network stabilization', () => {
             node.addBootstrapTracker(tracker.getAddress())
             nodes.push(node)
         }
-        await wait(3000)
     }, 20000)
 
     afterEach(async () => {
@@ -37,11 +34,17 @@ describe('check network stabilization', () => {
         await tracker.stop()
     }, 40000)
 
-    it('expect _formAndSendInstructions not to be called when topology is stable', async () => {
-        await wait(15000)
-        const spy = jest.spyOn(tracker, '_formAndSendInstructions').mockImplementation(() => {})
-        await wait(10000)
-        expect(spy).not.toHaveBeenCalled()
-        jest.restoreAllMocks()
-    }, 40000)
+    it('network must become stable in less than 15 seconds', async (done) => {
+        let doneTimeout
+        const spy = jest.spyOn(tracker, '_formAndSendInstructions').mockImplementation(() => {
+            // reset spy calls and timeout
+            clearTimeout(doneTimeout)
+            jest.clearAllMocks()
+
+            doneTimeout = setTimeout(() => {
+                expect(spy).not.toHaveBeenCalled()
+                done()
+            }, 5000)
+        })
+    }, 15000)
 })

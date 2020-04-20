@@ -52,10 +52,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
             'OOPS'
         ])
 
-        await Promise.all([
-            node1.onTrackerInstructionReceived(encoder.decode('tracker', trackerInstruction)),
-            node2.onTrackerInstructionReceived(encoder.decode('tracker', trackerInstruction))
-        ])
+        await node1.onTrackerInstructionReceived('tracker', encoder.decode('tracker', trackerInstruction))
+        await node2.onTrackerInstructionReceived('tracker', encoder.decode('tracker', trackerInstruction))
 
         await Promise.race([
             waitForEvent(node1, Node.events.NODE_SUBSCRIBED),

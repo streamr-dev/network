@@ -88,12 +88,21 @@ module.exports = class StreamManager {
         return this.getStreamsAsKeys().map((key) => StreamIdAndPartition.fromKey(key))
     }
 
-    getStreamsWithConnections() {
+    getStreamsWithConnections(tracker, trackersRing) {
         const result = {}
         this.streams.forEach(({ inboundNodes, outboundNodes }, streamKey) => {
-            result[streamKey] = {
-                inboundNodes: [...inboundNodes],
-                outboundNodes: [...outboundNodes]
+            let addToStatus = true
+
+            if (tracker && trackersRing) {
+                const targetTracker = trackersRing.get(streamKey)
+                addToStatus = targetTracker === tracker
+            }
+
+            if (addToStatus) {
+                result[streamKey] = {
+                    inboundNodes: [...inboundNodes],
+                    outboundNodes: [...outboundNodes]
+                }
             }
         })
         return result

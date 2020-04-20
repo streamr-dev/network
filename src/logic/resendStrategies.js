@@ -382,7 +382,7 @@ class StorageNodeResendStrategy {
 
     _requestStorageNodes(request, responseStream) {
         const streamIdAndPartition = new StreamIdAndPartition(request.streamId, request.streamPartition)
-        const tracker = this.getTracker(streamIdAndPartition)
+        const tracker = this.getTracker(streamIdAndPartition.key())
         if (tracker == null) {
             responseStream.push(null)
         } else {

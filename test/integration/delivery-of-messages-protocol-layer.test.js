@@ -106,8 +106,9 @@ describe('delivery of messages in protocol layer', () => {
 
     test('sendInstruction is delivered', async () => {
         trackerServer.sendInstruction('trackerNode', new StreamIdAndPartition('stream', 10), ['trackerNode'])
-        const [msg] = await waitForEvent(trackerNode, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
+        const [trackerId, msg] = await waitForEvent(trackerNode, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
 
+        expect(trackerId).toEqual('trackerServer')
         expect(msg).toBeInstanceOf(InstructionMessage)
         expect(msg.getSource()).toEqual('trackerServer')
         expect(msg.getStreamId()).toEqual(new StreamIdAndPartition('stream', 10))

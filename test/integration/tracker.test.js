@@ -1,4 +1,4 @@
-const { wait, waitForEvent, waitForCondition } = require('streamr-test-utils')
+const { waitForEvent, waitForCondition } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
@@ -49,10 +49,13 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         subscriberTwo.addBootstrapTracker(tracker.getAddress())
+
         await Promise.all([
-            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
-            waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED)
+            waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED),
+            waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED)
         ])
+
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
 
         expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(2)
 
@@ -73,15 +76,13 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
         await Promise.all([
             waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+            waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED)
         ])
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
 
-        await wait(100)
         subscriberOne.unsubscribeFromStream(s2)
-        await Promise.all([
-            waitForEvent(subscriberTwo, Node.events.NODE_UNSUBSCRIBED),
-            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        ])
+        await waitForEvent(subscriberTwo, Node.events.NODE_UNSUBSCRIBED)
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
 
         expect(Object.keys(tracker.overlayPerStream)).toEqual(['stream-1::0', 'stream-2::2'])
         expect(tracker.overlayPerStream['stream-1::0'].state()).toEqual({
@@ -93,19 +94,21 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         subscriberOne.unsubscribeFromStream(s1)
+        await waitForEvent(subscriberTwo, Node.events.NODE_UNSUBSCRIBED)
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+
         const res = {
             subscriberTwo: []
         }
 
-        await waitForCondition(() => Object.keys(tracker.overlayPerStream['stream-1::0'].state()).length === 1)
         expect(Object.keys(tracker.overlayPerStream)).toEqual(['stream-1::0', 'stream-2::2'])
         expect(tracker.overlayPerStream['stream-1::0'].state()).toEqual(res)
         expect(tracker.overlayPerStream['stream-2::2'].state()).toEqual(res)
 
         subscriberTwo.unsubscribeFromStream(s1)
-        await waitForCondition(() => tracker.overlayPerStream['stream-1::0'] === undefined, 10000)
+        await waitForCondition(() => tracker.overlayPerStream['stream-1::0'] === undefined)
         subscriberTwo.unsubscribeFromStream(s2)
-        await waitForCondition(() => tracker.overlayPerStream['stream-2::2'] === undefined, 10000)
+        await waitForCondition(() => tracker.overlayPerStream['stream-2::2'] === undefined)
     }, 10000)
 
     it('tracker getTopology should report correct topology based on parameters and current state', async () => {
@@ -133,6 +136,11 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         subscriberTwo.addBootstrapTracker(tracker.getAddress())
+
+        await Promise.all([
+            waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED),
+            waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED)
+        ])
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
 
         expect(tracker.getTopology()).toEqual({
@@ -158,8 +166,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
                 subscriberTwo: ['subscriberOne']
             }
         })
-
-        await wait(100)
 
         subscriberOne.unsubscribeFromStream(s1)
         await waitForCondition(() => Object.keys(tracker.overlayPerStream['stream-1::0'].state()).length === 1)
@@ -231,5 +237,5 @@ describe('check tracker, nodes and statuses from nodes', () => {
         expect(tracker.getTopology()).toEqual({})
         expect(tracker.getTopology('stream-1', null)).toEqual({})
         expect(tracker.getTopology('stream-2', 2)).toEqual({})
-    })
+    }, 10000)
 })
