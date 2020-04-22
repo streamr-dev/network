@@ -61,7 +61,7 @@ class Node extends EventEmitter {
             this.opts.connectToBootstrapTrackersInterval
         )
         this.sendStatusTimeout = new Map()
-        this.bootstrapTrackerAddresses = []
+        this.bootstrapTrackerAddresses = new Set()
         this.protocols = this.opts.protocols
         this.peerInfo = this.opts.peerInfo
 
@@ -414,7 +414,7 @@ class Node extends EventEmitter {
     }
 
     addBootstrapTracker(trackerAddress) {
-        this.bootstrapTrackerAddresses.push(trackerAddress)
+        this.bootstrapTrackerAddresses.add(trackerAddress)
         this._connectToBootstrapTrackers()
     }
 

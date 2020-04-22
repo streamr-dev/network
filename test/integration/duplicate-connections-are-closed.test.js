@@ -38,7 +38,6 @@ describe('duplicate connections are closed', () => {
             wsEndpoint2.connect('ws://127.0.0.1:28501').catch((e) => console.log(e.toString()))
         ])
 
-        // TODO enable later
         await Promise.race([
             waitForEvent(wsEndpoint1, 'close'),
             waitForEvent(wsEndpoint2, 'close')
