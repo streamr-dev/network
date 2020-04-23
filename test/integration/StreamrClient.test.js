@@ -3,7 +3,7 @@ import crypto from 'crypto'
 
 import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { wait } from 'streamr-test-utils'
+import { wait, waitForCondition } from 'streamr-test-utils'
 import { ethers } from 'ethers'
 
 import { uid } from '../utils'
@@ -111,10 +111,12 @@ describe('StreamrClient Connection', () => {
 
     it('can disconnect before connected', async (done) => {
         const client = createClient()
-        client.once('error', done)
+        client.once('error', (err) => {
+            expect(err).toEqual('Failed to send subscribe request: Error: WebSocket is not open: readyState 3 (CLOSED)')
+            done()
+        })
         client.connect()
-        await client.disconnect()
-        done()
+        await client.ensureDisconnected()
     })
 
     describe('resend', () => {
@@ -146,7 +148,7 @@ describe('StreamrClient Connection', () => {
         }, 10 * 1000)
 
         afterEach(async () => {
-            await client.disconnect()
+            await client.ensureDisconnected()
         })
 
         it('resend last', async (done) => {
@@ -165,21 +167,21 @@ describe('StreamrClient Connection', () => {
             )
 
             sub.once('resent', () => {
-                setTimeout(() => {
-                    expect(messages).toEqual([
-                        {
-                            msg: 'message2',
-                        },
-                        {
-                            msg: 'message3',
-                        },
-                        {
-                            msg: 'message4',
-                        },
-                    ])
-                    done()
-                }, 2000)
+                expect(messages).toEqual([
+                    {
+                        msg: 'message2',
+                    },
+                    {
+                        msg: 'message3',
+                    },
+                    {
+                        msg: 'message4',
+                    },
+                ])
+                done()
             })
+
+            await waitForCondition(() => messages.length === 3)
         }, 10000)
 
         it('resend from', async (done) => {
@@ -210,6 +212,8 @@ describe('StreamrClient Connection', () => {
                 ])
                 done()
             })
+
+            await waitForCondition(() => messages.length === 2)
         }, 10000)
 
         it('resend range', async (done) => {
@@ -246,6 +250,8 @@ describe('StreamrClient Connection', () => {
                 ])
                 done()
             })
+
+            await waitForCondition(() => messages.length === 3)
         }, 10000)
     })
 

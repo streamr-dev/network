@@ -11,5 +11,11 @@ module.exports = exports = {
             { 'blankLine': 'always', 'prev': 'if', 'next': 'if' }
         ],
         'prefer-destructuring': 'warn',
+
+        // TODO check all errors/warnings and create separate PR
+        'promise/always-return': 'warn',
+        'promise/catch-or-return': 'warn',
+        'require-atomic-updates': 'warn',
+        'promise/param-names': 'warn'
     }
 }

@@ -119,7 +119,7 @@ describe('StreamrClient', () => {
             })
         })
 
-        c.send = (msgToSend) => {
+        c.send = async (msgToSend) => {
             const next = c.expectedMessagesToSend.shift()
             if (!next) {
                 throw new Error(`Sending unexpected message: ${JSON.stringify(msgToSend)}`)

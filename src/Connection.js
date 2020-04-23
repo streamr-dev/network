@@ -135,14 +135,26 @@ class Connection extends EventEmitter {
     }
 
     send(controlLayerRequest) {
-        try {
-            const serialized = controlLayerRequest.serialize()
-            debug('>> %s', serialized)
-            this.socket.send(serialized)
-        } catch (err) {
-            this.emit('error', err)
-        }
-        return controlLayerRequest
+        return new Promise((resolve, reject) => {
+            try {
+                const serialized = controlLayerRequest.serialize()
+                debug('>> %s', serialized)
+                this.socket.send(serialized, (err) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        resolve(controlLayerRequest)
+                    }
+                })
+
+                if (process.browser) {
+                    resolve()
+                }
+            } catch (err) {
+                this.emit('error', err)
+                reject(err)
+            }
+        })
     }
 }
 

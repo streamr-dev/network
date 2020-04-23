@@ -1,5 +1,3 @@
-import { ethers } from 'ethers'
-
 import { uid } from '../utils'
 import StreamrClient from '../../src'
 
@@ -8,9 +6,7 @@ import config from './config'
 const { wait, waitForCondition } = require('streamr-test-utils')
 
 const createClient = (opts = {}) => new StreamrClient({
-    auth: {
-        privateKey: ethers.Wallet.createRandom().privateKey,
-    },
+    apiKey: 'tester1-api-key',
     autoConnect: false,
     autoDisconnect: false,
     ...config.clientOptions,
@@ -300,5 +296,53 @@ describe('StreamrClient resends', () => {
             await waitForCondition(() => receivedMessages.length === MAX_MESSAGES * 2, 10000)
             expect(receivedMessages).toEqual(publishedMessages)
         }, 30000)
+
+        it('long resend', async () => {
+            const LONG_RESEND = 10000
+            publishedMessages = []
+
+            stream = await client.createStream({
+                name: uid('resends')
+            })
+
+            for (let i = 0; i < LONG_RESEND; i++) {
+                const message = {
+                    msg: uid('message'),
+                }
+
+                // eslint-disable-next-line no-await-in-loop
+                await client.publish(stream.id, message)
+                publishedMessages.push(message)
+            }
+
+            await wait(15000)
+            await client.ensureDisconnected()
+
+            // resend from LONG_RESEND messages
+            await client.ensureConnected()
+            const receivedMessages = []
+
+            const sub = await client.resend(
+                {
+                    stream: stream.id,
+                    resend: {
+                        from: {
+                            timestamp: 0,
+                        },
+                    },
+                },
+                (message) => {
+                    receivedMessages.push(message)
+                },
+            )
+
+            // eslint-disable-next-line no-loop-func
+            sub.once('resent', () => {
+                expect(receivedMessages.length).toBe(publishedMessages.length)
+            })
+
+            // eslint-disable-next-line no-await-in-loop
+            await waitForCondition(() => receivedMessages.length === LONG_RESEND, 100000)
+        }, 100000)
     })
 })
