@@ -24,6 +24,7 @@ module.exports = class WebsocketServer extends EventEmitter {
         publisher,
         volumeLogger = new VolumeLogger(0),
         subscriptionManager,
+        pingInterval = 60 * 1000,
         partitionFn = partition,
     ) {
         super()
@@ -53,6 +54,8 @@ module.exports = class WebsocketServer extends EventEmitter {
                 })
             }
         )
+
+        this.pingInterval = pingInterval
         this.fieldDetector = new FieldDetector(streamFetcher)
         this.subscriptionManager = subscriptionManager
         this.streamAuthCache = new LRU({
@@ -81,6 +84,10 @@ module.exports = class WebsocketServer extends EventEmitter {
             })
             this.volumeLogger.totalBufferSize = totalBufferSize
         }, 1000)
+
+        this._pingInterval = setInterval(() => {
+            this._pingConnections()
+        }, this.pingInterval)
 
         this.wss.listen(port, (token) => {
             if (token) {
@@ -159,6 +166,14 @@ module.exports = class WebsocketServer extends EventEmitter {
                 } else {
                     console.warn('failed to close websocket, because connection with id %s not found', ws.connectionId)
                 }
+            },
+            pong: (ws) => {
+                const connection = this.connections.get(ws.connectionId)
+
+                if (connection) {
+                    debug(`received from ${connection.id} "pong" frame`)
+                    connection.respondedPong = true
+                }
             }
         })
     }
@@ -186,6 +201,8 @@ module.exports = class WebsocketServer extends EventEmitter {
 
     close() {
         clearInterval(this._updateTotalBufferSizeInterval)
+        clearInterval(this._pingInterval)
+
         this.streams.close()
         this.streamAuthCache.reset()
 
@@ -407,6 +424,26 @@ module.exports = class WebsocketServer extends EventEmitter {
         } else {
             debug('broadcastMessage: stream "%s:%d" not found', streamId, streamPartition)
         }
+    }
+
+    _pingConnections() {
+        const connections = [...this.connections.values()]
+        connections.forEach((connection) => {
+            try {
+                // didn't get "pong" in pingInterval
+                if (connection.respondedPong !== undefined && !connection.respondedPong) {
+                    throw Error('Connection is not active')
+                }
+
+                // eslint-disable-next-line no-param-reassign
+                connection.respondedPong = false
+                connection.ping()
+                debug(`pinging ${connection.id}`)
+            } catch (e) {
+                console.error(`Failed to ping connection: ${connection.id}, error ${e}`)
+                connection.emit('forceClose')
+            }
+        })
     }
 
     _handleStreamMessage(streamMessage) {

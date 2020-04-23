@@ -11,10 +11,11 @@ module.exports = class Connection extends events.EventEmitter {
         this.token = token
         this.apiKey = apiKey
         this.streams = []
+        this.dead = false
 
         this.client.once('connect', (packet) => this.emit('connect', packet))
         this.client.once('close', () => this.emit('close'))
-        this.client.once('error', (err) => this.emit('error', err))
+        this.client.on('error', (err) => this.emit('error', err))
         this.client.once('disconnect', () => this.emit('disconnect'))
 
         this.client.on('publish', (packet) => this.emit('publish', packet))
@@ -22,6 +23,14 @@ module.exports = class Connection extends events.EventEmitter {
         this.client.on('unsubscribe', (packet) => this.emit('unsubscribe', packet))
 
         this.client.on('pingreq', () => this.client.pingresp())
+    }
+
+    markAsDead() {
+        this.dead = true
+    }
+
+    isDead() {
+        return this.dead
     }
 
     // Connection refused, bad user name or password
@@ -50,7 +59,9 @@ module.exports = class Connection extends events.EventEmitter {
 
     sendUnsubscribe(packet) {
         try {
-            this.client.unsubscribe(packet)
+            if (!this.isDead()) {
+                this.client.unsubscribe(packet)
+            }
         } catch (e) {
             console.error(`Failed to unsubscribe: ${e.message}`)
         }

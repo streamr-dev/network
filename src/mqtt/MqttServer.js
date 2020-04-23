@@ -72,12 +72,14 @@ module.exports = class MqttServer extends events.EventEmitter {
 
         connection.on('close', () => {
             debug('closing client')
+            connection.markAsDead()
             this._closeConnection(connection)
         })
 
         connection.on('error', (err) => {
             console.error(`dropping client because: ${err.message}`)
             debug('error in client %s', err)
+            connection.markAsDead()
             this._closeConnection(connection)
         })
 

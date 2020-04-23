@@ -79,6 +79,10 @@ module.exports = class Connection extends EventEmitter {
         return this.dead
     }
 
+    ping() {
+        this.socket.ping()
+    }
+
     send(msg) {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         debug('send: %s: %o', this.id, serialized)

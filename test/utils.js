@@ -17,6 +17,7 @@ function startBroker(id, networkPort, trackerPort, httpPort, wsPort, mqttPort, e
         adapters.push({
             name: 'ws',
             port: wsPort,
+            pingInterval: 3000,
             privateKeyFileName,
             certFileName
         })
