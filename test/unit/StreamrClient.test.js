@@ -106,6 +106,8 @@ describe('StreamrClient', () => {
             })
         })
 
+        c.clearReconnectTimeout = () => {}
+
         c.disconnect = () => new Promise((resolve) => {
             mockDebug('Connection mock: disconnecting')
             c.state = Connection.State.DISCONNECTING

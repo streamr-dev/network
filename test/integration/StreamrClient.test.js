@@ -316,6 +316,21 @@ describe('StreamrClient Connection', () => {
             })
             await client.connect()
         })
+
+        it('clear _reconnectTimeout when disconnecting client', async (done) => {
+            const client = createClient()
+            await client.ensureConnected()
+
+            client.on('disconnected', async () => {
+                await client.ensureDisconnected()
+                setTimeout(() => {
+                    expect(client.isDisconnected()).toBeTruthy()
+                    done()
+                }, 2500)
+            })
+
+            client.connection.socket.close()
+        })
     })
 
     describe('connect during disconnect', () => {

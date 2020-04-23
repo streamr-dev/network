@@ -102,7 +102,13 @@ class Connection extends EventEmitter {
         })
     }
 
+    clearReconnectTimeout() {
+        clearTimeout(this._reconnectTimeout)
+    }
+
     disconnect() {
+        this.clearReconnectTimeout()
+
         if (this.state === Connection.State.DISCONNECTING) {
             return Promise.reject(new Error('Already disconnecting!'))
         }

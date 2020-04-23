@@ -716,7 +716,11 @@ export default class StreamrClient extends EventEmitter {
      */
 
     async ensureDisconnected() {
-        if (this.isDisconnected()) { return Promise.resolve() }
+        this.connection.clearReconnectTimeout()
+
+        if (this.isDisconnected()) {
+            return Promise.resolve()
+        }
 
         if (this.isDisconnecting()) {
             return waitFor(this, 'disconnected')
