@@ -30,8 +30,11 @@ module.exports = async (config) => {
     if (config.network.advertisedWsUrl === undefined) {
         throw new MissingConfigError('network.advertisedWsUrl')
     }
-    if (config.network.tracker === undefined) {
-        throw new MissingConfigError('network.tracker')
+    if (config.network.tracker === undefined && config.network.trackers === undefined) {
+        throw new MissingConfigError('network.tracker or network.trackers')
+    }
+    if (config.network.trackers && !Array.isArray(config.network.trackers)) {
+        throw new MissingConfigError('network.trackers must be array')
     }
     if (config.network.isStorageNode === undefined) {
         throw new MissingConfigError('network.isStorageNode')
@@ -112,7 +115,16 @@ module.exports = async (config) => {
         storages,
         advertisedWsUrl
     )
-    networkNode.addBootstrapTracker(config.network.tracker)
+
+    if (config.network.tracker) {
+        networkNode.addBootstrapTracker(config.network.tracker)
+    }
+
+    if (config.network.trackers) {
+        config.network.trackers.forEach((tracker) => {
+            networkNode.addBootstrapTracker(tracker)
+        })
+    }
 
     // Set up sentry logging
     if (config.sentry) {
@@ -183,7 +195,7 @@ module.exports = async (config) => {
     })
 
     console.info(`Network node '${config.network.id}' running on ${config.network.hostname}:${config.network.port}`)
-    console.info(`Configured with tracker: ${config.network.tracker}`)
+    console.info(`Configured with trackers: ${[...networkNode.bootstrapTrackerAddresses].join(', ')}`)
     console.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
     if (config.cassandra) {
         console.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
