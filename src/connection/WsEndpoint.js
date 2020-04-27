@@ -64,7 +64,7 @@ function toHeaders(peerInfo) {
 }
 
 class WsEndpoint extends EventEmitter {
-    constructor(host, port, wss, listenSocket, peerInfo, advertisedWsUrl) {
+    constructor(host, port, wss, listenSocket, peerInfo, advertisedWsUrl, pingInterval = 5 * 1000) {
         super()
 
         if (!wss) {
@@ -135,22 +135,40 @@ class WsEndpoint extends EventEmitter {
                     this.emit('close', ws, code, reason)
                     this._onClose(ws.address, this.peerBook.getPeerInfo(ws.address), code, reason)
                 }
+            },
+            pong: (ws) => {
+                const connection = this.connections.get(ws.address)
+
+                if (connection) {
+                    this.debug(`<== received from ${ws.address} "pong" frame`)
+                    connection.respondedPong = true
+                    connection.rtt = Date.now() - connection.rttStart
+                }
             }
         })
 
         this.debug('listening on: %s', this.getAddress())
-        this.checkConnectionsInterval = setInterval(this._checkConnections.bind(this), 3000)
+        this._pingInterval = setInterval(() => this._pingConnections(), pingInterval)
     }
 
-    _checkConnections() {
+    _pingConnections() {
         const addresses = [...this.connections.keys()]
         addresses.forEach((address) => {
             const ws = this.connections.get(address)
 
             try {
-                ws.ping('ping')
+                // didn't get "pong" in pingInterval
+                if (ws.respondedPong !== undefined && !ws.respondedPong) {
+                    throw Error('ws is not active')
+                }
+
+                // eslint-disable-next-line no-param-reassign
+                ws.respondedPong = false
+                ws.rttStart = Date.now()
+                ws.ping()
+                this.debug(`pinging ${address}, current rtt ${ws.rtt}`)
             } catch (e) {
-                console.error(`Failed to send ping to ${address}, terminating connection`)
+                console.error(`Failed to ping connection: ${address}, error ${e}, terminating connection`)
                 terminateWs(ws)
                 this._onClose(
                     address, this.peerBook.getPeerInfo(address),
@@ -242,6 +260,7 @@ class WsEndpoint extends EventEmitter {
 
     close(recipientId, reason = disconnectionReasons.GRACEFUL_SHUTDOWN) {
         const recipientAddress = this.resolveAddress(recipientId)
+
         this.metrics.inc('close')
         if (!this.isConnected(recipientAddress)) {
             this.metrics.inc('close:error:not-connected')
@@ -347,7 +366,7 @@ class WsEndpoint extends EventEmitter {
     }
 
     stop() {
-        clearInterval(this.checkConnectionsInterval)
+        clearInterval(this._pingInterval)
 
         return new Promise((resolve, reject) => {
             try {
@@ -475,6 +494,14 @@ class WsEndpoint extends EventEmitter {
             this.metrics.speed('_msgInSpeed')(1)
 
             setImmediate(() => this.onReceive(peerInfo, address, message))
+        })
+
+        ws.on('pong', () => {
+            this.debug(`=> got pong event ws ${address}`)
+            // eslint-disable-next-line no-param-reassign
+            ws.respondedPong = true
+            // eslint-disable-next-line no-param-reassign
+            ws.rtt = Date.now() - ws.rttStart
         })
 
         ws.once('close', (code, reason) => {

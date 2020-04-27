@@ -47,7 +47,7 @@ describe('check and kill dead connections', () => {
         jest.spyOn(connection, 'ping').mockImplementation(() => {
             throw new Error()
         })
-        node1._checkConnections()
+        node1._pingConnections()
 
         expect(node1._onClose).toBeCalledTimes(1)
         expect(node1._onClose).toBeCalledWith('ws://127.0.0.1:43972', {
@@ -55,7 +55,7 @@ describe('check and kill dead connections', () => {
         }, disconnectionCodes.DEAD_CONNECTION, disconnectionReasons.DEAD_CONNECTION)
 
         node1._onClose.mockRestore()
-        node1._checkConnections()
+        node1._pingConnections()
 
         const [peerInfo] = await waitForEvent(node1, events.PEER_DISCONNECTED)
         expect(peerInfo).toEqual(new PeerInfo('node2', 'node'))

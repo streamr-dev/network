@@ -342,13 +342,16 @@ class Node extends EventEmitter {
     _sendStreamStatus(streamId) {
         const streamKey = streamId.key()
         const trackerId = this.trackersRing.get(streamKey)
-        clearTimeout(this.sendStatusTimeout.get(trackerId))
 
-        const timeout = setTimeout(() => {
-            this._sendStatus(trackerId)
-        }, this.opts.sendStatusToAllTrackersInterval)
+        if (trackerId) {
+            clearTimeout(this.sendStatusTimeout.get(trackerId))
 
-        this.sendStatusTimeout.set(trackerId, timeout)
+            const timeout = setTimeout(() => {
+                this._sendStatus(trackerId)
+            }, this.opts.sendStatusToAllTrackersInterval)
+
+            this.sendStatusTimeout.set(trackerId, timeout)
+        }
     }
 
     async _sendStatus(tracker) {
