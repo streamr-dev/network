@@ -131,6 +131,12 @@ export async function isStreamSubscriber(streamId, ethAddress) {
     }
 }
 
+export async function getStreamValidationInfo(streamId) {
+    const url = `${this.options.restUrl}/streams/${streamId}/validation`
+    const json = await authFetch(url, this.session)
+    return json
+}
+
 export function publishHttp(streamObjectOrId, data, requestOptions = {}, keepAlive = true) {
     let streamId
     if (streamObjectOrId instanceof Stream) {
