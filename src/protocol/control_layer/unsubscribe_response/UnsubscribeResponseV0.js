@@ -1,6 +1,7 @@
 import StreamAndPartition from '../StreamAndPartition'
 import ControlMessage from '../ControlMessage'
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
+
 import UnsubscribeResponse from './UnsubscribeResponse'
 import UnsubscribeResponseV1 from './UnsubscribeResponseV1'
 

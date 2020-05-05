@@ -1,5 +1,6 @@
 import { validateIsString, validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import ControlMessage from '../ControlMessage'
+
 import ResendLastRequest from './ResendLastRequest'
 
 const VERSION = 1

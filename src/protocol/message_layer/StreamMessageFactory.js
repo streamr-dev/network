@@ -1,4 +1,5 @@
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
+
 import StreamMessageV28 from './StreamMessageV28'
 import StreamMessageV29 from './StreamMessageV29'
 import StreamMessageV30 from './StreamMessageV30'

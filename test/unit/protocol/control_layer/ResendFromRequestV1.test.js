@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import ResendFromRequestV1 from '../../../../src/protocol/control_layer/resend_request/ResendFromRequestV1'
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 

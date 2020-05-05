@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
 
 describe('MessageRef', () => {

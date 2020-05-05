@@ -1,6 +1,7 @@
-import UnsubscribeRequestV1 from '../unsubscribe_request/UnsubscribeRequestV1'
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import ControlMessage from '../ControlMessage'
+
+import UnsubscribeRequestV1 from './UnsubscribeRequestV1'
 import UnsubscribeRequest from './UnsubscribeRequest'
 
 const TYPE = 'unsubscribe'

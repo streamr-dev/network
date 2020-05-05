@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import SubscribeRequestV0 from '../../../../src/protocol/control_layer/subscribe_request/SubscribeRequestV0'
 import SubscribeRequest from '../../../../src/protocol/control_layer/subscribe_request/SubscribeRequest'
 

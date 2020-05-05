@@ -11,12 +11,14 @@ export default class MessageRef {
     compareTo(other) {
         if (this.timestamp < other.timestamp) {
             return -1
-        } else if (this.timestamp > other.timestamp) {
+        }
+        if (this.timestamp > other.timestamp) {
             return 1
         }
         if (this.sequenceNumber < other.sequenceNumber) {
             return -1
-        } else if (this.sequenceNumber > other.sequenceNumber) {
+        }
+        if (this.sequenceNumber > other.sequenceNumber) {
             return 1
         }
         return 0

@@ -1,6 +1,7 @@
 import { validateIsNotNullOrUndefined } from '../../../utils/validations'
 import StreamMessageFactory from '../../message_layer/StreamMessageFactory'
 import ControlMessage from '../ControlMessage'
+
 import PublishRequest from './PublishRequest'
 
 const VERSION = 1

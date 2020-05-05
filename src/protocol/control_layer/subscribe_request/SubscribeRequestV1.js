@@ -1,5 +1,6 @@
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import ControlMessage from '../ControlMessage'
+
 import SubscribeRequest from './SubscribeRequest'
 import SubscribeRequestV0 from './SubscribeRequestV0'
 

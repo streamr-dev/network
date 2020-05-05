@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import ResendResponseResent from '../../../../src/protocol/control_layer/resend_response_resent/ResendResponseResent'
 import ResendResponseResentV1 from '../../../../src/protocol/control_layer/resend_response_resent/ResendResponseResentV1'
 

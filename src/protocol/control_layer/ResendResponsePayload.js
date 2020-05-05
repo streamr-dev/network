@@ -1,4 +1,5 @@
 import { validateIsNotEmptyString } from '../../utils/validations'
+
 import StreamAndPartition from './StreamAndPartition'
 
 export default class ResendResponsePayload extends StreamAndPartition {

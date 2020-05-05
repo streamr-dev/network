@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import shuffle from 'array-shuffle'
 
 import OrderedMsgChain from '../../../src/utils/OrderedMsgChain'

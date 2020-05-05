@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import ResendResponseNoResendV1 from '../../../../src/protocol/control_layer/resend_response_no_resend/ResendResponseNoResendV1'
 
 describe('ResendResponseNoResendV1', () => {

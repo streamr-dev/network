@@ -1,6 +1,7 @@
 import { validateIsString } from '../../../utils/validations'
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import ControlMessage from '../ControlMessage'
+
 import SubscribeRequest from './SubscribeRequest'
 import SubscribeRequestV1 from './SubscribeRequestV1'
 

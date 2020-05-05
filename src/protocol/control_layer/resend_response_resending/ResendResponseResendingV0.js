@@ -1,6 +1,7 @@
 import ResendResponsePayload from '../ResendResponsePayload'
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import ControlMessage from '../ControlMessage'
+
 import ResendResponseResending from './ResendResponseResending'
 import ResendResponseResendingV1 from './ResendResponseResendingV1'
 

@@ -6,9 +6,9 @@ const ITERATIONS = 1000000
 
 describe('deserialize()', () => {
     const run = (functionToTest, name) => {
-        const json = '[1,8,[31,["kxeE-gyxS8CkuWYlfBKMVg",0,1567671580680,0,"0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963",' +
-            '"7kcxFuyOs4ozeAcVfzJF"],[1567671579675,0],27,0,"{\\"random\\": 0.8314497807870005}",0,null],' +
-            '"kuC8Ilzt2NURdpKxuYN2JBLkPQBJ0vN7NGIx5ohA7ZJafyh29I07fZR57Jq4fUBo"]'
+        const json = '[1,8,[31,["kxeE-gyxS8CkuWYlfBKMVg",0,1567671580680,0,"0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963",'
+            + '"7kcxFuyOs4ozeAcVfzJF"],[1567671579675,0],27,0,"{\\"random\\": 0.8314497807870005}",0,null],'
+            + '"kuC8Ilzt2NURdpKxuYN2JBLkPQBJ0vN7NGIx5ohA7ZJafyh29I07fZR57Jq4fUBo"]'
 
         const start = new Date()
         const hrstart = process.hrtime()

@@ -30,6 +30,7 @@ export default class StreamMessage {
     getStreamId() {
         return this.streamId
     }
+
     /* eslint-disable class-methods-use-this */
     getStreamPartition() {
         throw new Error('getStreamPartition must be implemented')
@@ -58,7 +59,9 @@ export default class StreamMessage {
     serializeContent(content) {
         if (typeof content === 'string') {
             return content
-        } else if (typeof content === 'object') {
+        }
+
+        if (typeof content === 'object') {
             return JSON.stringify(content)
         }
         throw new Error('Stream payloads can only be objects!')
@@ -68,10 +71,14 @@ export default class StreamMessage {
     parseContent(content) {
         if (this.contentType === StreamMessage.CONTENT_TYPES.MESSAGE && this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
             return content
-        } else if (typeof content === 'object') {
+        }
+
+        if (typeof content === 'object') {
             StreamMessage.validateContent(content, this.contentType)
             return content
-        } else if (typeof content === 'string') {
+        }
+
+        if (typeof content === 'string') {
             try {
                 const parsed = JSON.parse(content)
                 StreamMessage.validateContent(parsed, this.contentType)

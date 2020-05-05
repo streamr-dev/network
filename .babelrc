@@ -2,7 +2,7 @@
     "presets": [
         ["@babel/preset-env", {
             "useBuiltIns": "usage",
-            "corejs": 3,
+            "corejs": 3
         }]
     ],
     "plugins": [
@@ -15,7 +15,7 @@
         "@babel/plugin-proposal-numeric-separator",
         "@babel/plugin-proposal-throw-expressions",
         ["@babel/plugin-transform-runtime", {
-            "corejs": 3,
-        }],
+            "corejs": 3
+        }]
     ]
 }

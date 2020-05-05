@@ -1,5 +1,6 @@
 import { validateIsInteger, validateIsString } from '../../utils/validations'
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
+
 import StreamMessage from './StreamMessage'
 import StreamMessageV28 from './StreamMessageV28'
 import StreamMessageV29 from './StreamMessageV29'
@@ -70,14 +71,16 @@ export default class StreamMessageV30 extends StreamMessage {
                 this.messageId.streamId, this.messageId.streamPartition, this.messageId.timestamp,
                 0, this.messageId.timestamp, prevTimestamp, this.contentType, this.getContent(), this.parseContentOption,
             )
-        } else if (version === 29) {
+        }
+        if (version === 29) {
             // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
             return new StreamMessageV29(
                 this.messageId.streamId, this.messageId.streamPartition, this.messageId.timestamp,
                 0, this.messageId.timestamp, prevTimestamp, this.contentType, this.getContent(),
                 this.signatureType, this.messageId.publisherId, this.signature, this.parseContentOption,
             )
-        } else if (version === 31) {
+        }
+        if (version === 31) {
             const prevArray = this.prevMsgRef ? this.prevMsgRef.toArray() : null
             // hack for resend and gap detection: messageId.timestamp --> offset, prevMessageRef.timestamp --> previousOffset
             return new StreamMessageV31(

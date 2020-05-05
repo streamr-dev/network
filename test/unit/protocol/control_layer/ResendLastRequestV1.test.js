@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import ResendLastRequestV1 from '../../../../src/protocol/control_layer/resend_request/ResendLastRequestV1'
 
 describe('ResendLastRequestV1', () => {

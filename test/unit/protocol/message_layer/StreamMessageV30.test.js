@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
 import MessageRefStrict from '../../../../src/protocol/message_layer/MessageRefStrict'
 import StreamMessageV30 from '../../../../src/protocol/message_layer/StreamMessageV30'

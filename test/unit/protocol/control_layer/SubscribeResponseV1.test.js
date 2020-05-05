@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import SubscribeResponseV1 from '../../../../src/protocol/control_layer/subscribe_response/SubscribeResponseV1'
 
 describe('SubscribeResponseV1', () => {

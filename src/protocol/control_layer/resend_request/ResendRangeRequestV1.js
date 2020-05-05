@@ -2,6 +2,7 @@ import { validateIsString, validateIsNotEmptyString, validateIsNotNegativeIntege
 import ControlMessage from '../ControlMessage'
 import ValidationError from '../../../errors/ValidationError'
 import MessageRef from '../../message_layer/MessageRef'
+
 import ResendRangeRequest from './ResendRangeRequest'
 
 const VERSION = 1
@@ -23,8 +24,8 @@ export default class ResendRangeRequestV1 extends ResendRangeRequest {
         this.fromMsgRef = new MessageRef(...fromMsgRefArgsArray)
         this.toMsgRef = new MessageRef(...toMsgRefArgsArray)
         if (this.fromMsgRef.timestamp > this.toMsgRef.timestamp) {
-            throw new ValidationError(`fromMsgRef.timestamp (${this.fromMsgRef.timestamp})` +
-            `must be less than or equal to toMsgRef.timestamp (${this.toMsgRef.timestamp})`)
+            throw new ValidationError(`fromMsgRef.timestamp (${this.fromMsgRef.timestamp})`
+            + `must be less than or equal to toMsgRef.timestamp (${this.toMsgRef.timestamp})`)
         }
         this.publisherId = publisherId
         this.msgChainId = msgChainId

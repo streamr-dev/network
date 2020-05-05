@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import UnsupportedTypeError from '../../../../src/errors/UnsupportedTypeError'
@@ -205,9 +206,10 @@ describe('ControlMessage', () => {
                 serialized = null
             })
             afterEach(() => {
-                const clone = {
+                // deep clone array or object
+                const clone = Array.isArray(array) ? Array.from(array) : ({
                     ...array,
-                }
+                })
                 serialized = ControlMessage.deserialize(array).serialize()
                 assert(typeof serialized === 'string')
                 assert.deepEqual(clone, JSON.parse(serialized))
@@ -332,9 +334,10 @@ describe('ControlMessage', () => {
                 serialized = null
             })
             afterEach(() => {
-                const clone = {
+                // deep clone array or object
+                const clone = Array.isArray(array) ? Array.from(array) : ({
                     ...array,
-                }
+                })
                 serialized = ControlMessage.deserialize(array).serialize()
                 assert(typeof serialized === 'string')
                 assert.deepEqual(clone, JSON.parse(serialized))

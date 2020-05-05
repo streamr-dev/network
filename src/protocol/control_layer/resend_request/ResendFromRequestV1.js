@@ -1,6 +1,7 @@
 import { validateIsString, validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import ControlMessage from '../ControlMessage'
 import MessageRef from '../../message_layer/MessageRef'
+
 import ResendFromRequest from './ResendFromRequest'
 
 const VERSION = 1

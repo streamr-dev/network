@@ -9,6 +9,7 @@ import ValidationError from '../../../errors/ValidationError'
 import StreamMessageV30 from '../../message_layer/StreamMessageV30'
 import StreamMessage from '../../message_layer/StreamMessage'
 import ControlMessage from '../ControlMessage'
+
 import PublishRequest from './PublishRequest'
 
 const TYPE = 'publish'
@@ -56,7 +57,9 @@ export default class PublishRequestV0 extends PublishRequest {
     getSerializedContent() {
         if (typeof this.content === 'string') {
             return this.content
-        } else if (typeof this.content === 'object') {
+        }
+
+        if (typeof this.content === 'object') {
             return JSON.stringify(this.content)
         }
         throw new Error('Stream payloads can only be objects!')

@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import ErrorResponseV1 from '../../../../src/protocol/control_layer/error_response/ErrorResponseV1'
 
 describe('ErrorResponseV1', () => {

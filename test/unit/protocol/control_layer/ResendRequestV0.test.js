@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import ResendRequestV0 from '../../../../src/protocol/control_layer/resend_request/ResendRequestV0'
 
 describe('ResendRequestV0', () => {

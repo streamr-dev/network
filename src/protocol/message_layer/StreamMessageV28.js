@@ -1,5 +1,6 @@
 import { validateIsNotNegativeInteger, validateIsInteger, validateIsNotEmptyString } from '../../utils/validations'
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
+
 import StreamMessage from './StreamMessage'
 import StreamMessageV29 from './StreamMessageV29'
 import StreamMessageV30 from './StreamMessageV30'
@@ -32,16 +33,20 @@ export default class StreamMessageV28 extends StreamMessage {
     getTimestamp() {
         return this.timestamp
     }
+
     /* eslint-disable class-methods-use-this */
     getSequenceNumber() {
         return 0
     }
+
     getPublisherId() {
         return undefined
     }
+
     getMsgChainId() {
         return ''
     }
+
     getMessageRef() {
         return undefined
     }
@@ -80,13 +85,15 @@ export default class StreamMessageV28 extends StreamMessage {
                 this.streamId, this.streamPartition, this.timestamp,
                 this.ttl, this.offset, this.previousOffset, this.contentType, this.getContent(), 0, null, null, this.parseContentOption,
             )
-        } else if (version === 30) {
+        }
+        if (version === 30) {
             // null fields in order: msgId.publisherId, prevMsgRef.timestamp, prevMsgRef.sequenceNumber, signature
             return new StreamMessageV30(
                 [this.streamId, this.streamPartition, this.timestamp, 0, '', ''],
                 null, this.contentType, this.getContent(), 0, null, this.parseContentOption,
             )
-        } else if (version === 31) {
+        }
+        if (version === 31) {
             // null fields in order: msgId.publisherId, prevMsgRef.timestamp, prevMsgRef.sequenceNumber, signature
             return new StreamMessageV31(
                 [this.streamId, this.streamPartition, this.timestamp, 0, '', ''],

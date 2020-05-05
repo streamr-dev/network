@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import UnsubscribeResponseV1 from '../../../../src/protocol/control_layer/unsubscribe_response/UnsubscribeResponseV1'
 
 describe('UnsubscribeResponseV1', () => {

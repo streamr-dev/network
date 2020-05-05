@@ -1,4 +1,5 @@
 import assert from 'assert'
+
 import ErrorPayload from '../../../../src/protocol/control_layer/error_response/ErrorPayload'
 import ErrorResponseV0 from '../../../../src/protocol/control_layer/error_response/ErrorResponseV0'
 

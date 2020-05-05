@@ -1,6 +1,7 @@
 import UnsupportedVersionError from '../../../errors/UnsupportedVersionError'
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 import ControlMessage from '../ControlMessage'
+
 import UnsubscribeResponse from './UnsubscribeResponse'
 import UnsubscribeResponseV0 from './UnsubscribeResponseV0'
 

@@ -1,4 +1,5 @@
 import { validateIsNotNegativeInteger } from '../../utils/validations'
+
 import MessageRef from './MessageRef'
 
 /**
