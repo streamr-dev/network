@@ -106,7 +106,7 @@ class WsEndpoint extends EventEmitter {
             res.writeHeader('streamr-peer-id', this.peerInfo.peerId)
             res.writeHeader('streamr-peer-type', this.peerInfo.peerType)
 
-            res.writeHeader('location', `/ws/?${req.getQuery()}`)
+            res.writeHeader('location', `/ws?${req.getQuery()}`)
             res.end()
         }).ws('/ws', {
             compression: 0,
@@ -209,7 +209,7 @@ class WsEndpoint extends EventEmitter {
             if (typeof callback === 'function') {
                 callback(err)
             } else {
-                throw new Error(err)
+                console.error(err)
             }
         }
 
@@ -312,7 +312,6 @@ class WsEndpoint extends EventEmitter {
                 let serverPeerInfo
                 const ws = new WebSocket(
                     `${peerAddress}/?address=${this.getAddress()}`,
-                    undefined,
                     {
                         followRedirects: true,
                         headers: toHeaders(this.peerInfo)
