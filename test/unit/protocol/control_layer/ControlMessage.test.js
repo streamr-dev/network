@@ -206,13 +206,9 @@ describe('ControlMessage', () => {
                 serialized = null
             })
             afterEach(() => {
-                // deep clone array or object
-                const clone = Array.isArray(array) ? Array.from(array) : ({
-                    ...array,
-                })
-                serialized = ControlMessage.deserialize(array).serialize()
+                serialized = ControlMessage.deserialize(JSON.stringify(array)).serialize()
                 assert(typeof serialized === 'string')
-                assert.deepEqual(clone, JSON.parse(serialized))
+                assert.deepEqual(array, JSON.parse(serialized))
             })
             /* eslint-disable prefer-destructuring */
             it('BroadcastMessageV0', () => {
@@ -334,13 +330,9 @@ describe('ControlMessage', () => {
                 serialized = null
             })
             afterEach(() => {
-                // deep clone array or object
-                const clone = Array.isArray(array) ? Array.from(array) : ({
-                    ...array,
-                })
-                serialized = ControlMessage.deserialize(array).serialize()
+                serialized = ControlMessage.deserialize(JSON.stringify(array)).serialize()
                 assert(typeof serialized === 'string')
-                assert.deepEqual(clone, JSON.parse(serialized))
+                assert.deepEqual(array, JSON.parse(serialized))
             })
             /* eslint-disable prefer-destructuring */
             it('BroadcastMessageV1', () => {

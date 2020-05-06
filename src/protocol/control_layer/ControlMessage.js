@@ -58,6 +58,10 @@ export default class ControlMessage {
         return classByVersionAndType[version][type]
     }
 
+    /**
+     * Takes a serialized representation (array or string) of a message, and returns a ControlMessage instance.
+     * WARNING: if you pass an array, it gets mutated!
+     */
     static deserialize(msg, parseContent = true) {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
         let messageVersion

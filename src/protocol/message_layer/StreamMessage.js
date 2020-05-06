@@ -120,9 +120,30 @@ export default class StreamMessage {
         return !!this.getParsedContent()[BYE_KEY]
     }
 
+    getPayloadToSign() {
+        if (this.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
+            let prev = ''
+            if (this.prevMsgRef) {
+                prev = `${this.prevMsgRef.timestamp}${this.prevMsgRef.sequenceNumber}`
+            }
+            return `${this.getStreamId()}${this.getStreamPartition()}${this.getTimestamp()}${this.messageId.sequenceNumber}`
+                + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}`
+        }
+
+        if (this.signatureType === StreamMessage.SIGNATURE_TYPES.ETH_LEGACY) {
+            // verification of messages signed by old clients
+            return `${this.getStreamId()}${this.getTimestamp()}${this.getPublisherId().toLowerCase()}${this.getSerializedContent()}`
+        }
+
+        throw new Error(`Unrecognized signature type: ${this.signatureType}`)
+    }
+
     static create(messageIdArgsArray, prevMessageRefArgsArray, contentType, encryptionType, content, signatureType, signature) {
-        const C = StreamMessage.latestClass
-        return new C(messageIdArgsArray, prevMessageRefArgsArray, contentType, encryptionType, content, signatureType, signature)
+        if (StreamMessage.latestClass) {
+            const C = StreamMessage.latestClass
+            return new C(messageIdArgsArray, prevMessageRefArgsArray, contentType, encryptionType, content, signatureType, signature)
+        }
+        throw new Error('StreamMessage.latestClass is not defined! It should be defined by the latest StreamMessageVXX.js file.')
     }
 
     static from({

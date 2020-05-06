@@ -106,4 +106,8 @@ export default class StreamMessageV31 extends StreamMessage {
     }
 }
 
-StreamMessage.latestClass = StreamMessageV31
+if (StreamMessage.latestClass !== undefined) {
+    throw new Error(`Whoa! StreamMessage.latestClass was already defined: ${StreamMessage.latestClass}`)
+} else {
+    StreamMessage.latestClass = StreamMessageV31
+}
