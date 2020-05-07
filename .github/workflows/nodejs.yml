@@ -1,19 +1,32 @@
-name: Run eslint and tests
+name: Test, Eslint and Publish
 
 on:
-  schedule:
-    # run every day at 00:00
-    - cron:  '0 0 * * *'
   push:
     branches:
       - master
   pull_request:
-    branches:
-      - '*'
+  schedule:
+    # run every day at 00:00
+    - cron:  '0 0 * * *'
 
 jobs:
-  build:
+  eslint:
+    name: Run eslint using Node 12
+    runs-on: ubuntu-latest
 
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+
+      - name: npm run eslint
+        run: |
+          npm ci
+          npm run eslint
+
+  test:
+    name: Testing using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -21,19 +34,50 @@ jobs:
         node-version: [10.x, 12.x, 13.x, 14.x]
 
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: npm ci
         run: npm ci
 
-      - name: eslint
-        run: npm run eslint
-
       - name: test
+        run: npm run test
+
+  publish:
+    needs: test
+    name: Publishing master using Node 12
+    runs-on: ubuntu-latest
+
+    # run job only for tags and skip for cron
+    if: startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
+    steps:
+      - name: Get the release version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+          registry-url: https://registry.npmjs.org/
+
+      - name: npm ci
         run: |
+          npm ci --only=production
           npm run build --if-present
-          npm test
+
+      - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
+        # if tag includes beta keyword
+        if: contains(steps.get_version.outputs.VERSION, 'beta') == true
+        run: npm publish --tag beta
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish latest ${{ steps.get_version.outputs.VERSION }}
+        # if tag doesn't include beta keyword
+        if: contains(steps.get_version.outputs.VERSION, 'beta') == false
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
