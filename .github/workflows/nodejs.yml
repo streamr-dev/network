@@ -2,9 +2,13 @@ name: Test, Eslint and Publish
 
 on:
   push:
+    tags:
+      - '*'
     branches:
       - master
   pull_request:
+    branches:
+      - '*'
   schedule:
     # run every day at 00:00
     - cron:  '0 0 * * *'
@@ -46,7 +50,7 @@ jobs:
         run: npm run test
 
   publish:
-    needs: test
+    needs: [test, eslint]
     name: Publishing master using Node 12
     runs-on: ubuntu-latest
 
