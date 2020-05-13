@@ -1,0 +1,34 @@
+language: java
+os: linux
+dist: xenial
+jdk:
+- openjdk8
+services:
+- docker
+branches:
+  only:
+  - master
+  - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
+git:
+  submodules: false
+env:
+  global:
+  - NODE_VERSION=12
+before_install:
+- curl -s http://get.sdkman.io | bash
+- echo sdkman_auto_answer=true > ~/.sdkman/etc/config
+- source "/home/travis/.sdkman/bin/sdkman-init.sh"
+- sdk install grails 2.5.6
+- nvm install $NODE_VERSION
+jobs:
+  include:
+  - stage: Test Production clients
+    name: Dev Env
+    script:
+    - sed -i "s/com.streamr:client:1.3.0/com.streamr:client:+/g" $TRAVIS_BUILD_DIR/build.gradle
+    - 'sed -i "s/\"streamr-client\": \"\^3.1.2\"/\"streamr-client\":\"latest\"/g" $TRAVIS_BUILD_DIR/package.json'
+    - cat $TRAVIS_BUILD_DIR/package.json
+    - npm install
+    - gradle fatjar
+    - $TRAVIS_BUILD_DIR/.travis-scripts/start-docker-dev.sh
+    - java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed -m test

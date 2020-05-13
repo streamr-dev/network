@@ -146,6 +146,7 @@ public class StreamTester {
             System.exit(1);
         }
         Main.logger.info("PASSED. Checked all " + total + " messages.");
+        System.exit(0);
     }
 
     private void printMsgsReceived() {
