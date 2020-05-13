@@ -62,6 +62,13 @@ Messaging protocol is described in [streamr-specs PROTOCOL.md](https://github.co
 - MQTT native clients are able to send plain text, but their payload will be transformed to JSON
 `{"mqttPayload":"ORIGINAL_PLAINTEXT_PAYLOAD}`
 
+## Generating fixture self signed certificate
+To regenerate self signed certificate in `./test/fixtures` run:
+
+``
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -nodes -subj \'/CN=localhost\'
+``
+
 Error handling:
 - If API_KEY is not correct, client will receive "Connection refused, bad user name or password" (returnCode: 4)
 - If stream is not found, client will receive "Connection refused, not authorized" (returnCode: 5)

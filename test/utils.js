@@ -37,7 +37,9 @@ function startBroker(id, networkPort, trackerPort, httpPort, wsPort, mqttPort, e
             hostname: '127.0.0.1',
             port: networkPort,
             advertisedWsUrl: null,
-            tracker: `ws://127.0.0.1:${trackerPort}`,
+            trackers: [
+                `ws://127.0.0.1:${trackerPort}`
+            ],
             isStorageNode: false
         },
         cassandra: enableCassandra ? {

@@ -33,20 +33,17 @@ describe('ws and wss connections', () => {
         ws.on('error', (err) => done(err))
     })
     it('can connect to wss endpoint', async (done) => {
-        const command = 'openssl req -x509 -newkey rsa:4096 -keyout test_key.pem -out test_cert.pem -days 365 -nodes -subj \'/CN=localhost\''
-        await exec(command, async () => {
-            const broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, true, 'test_key.pem', 'test_cert.pem')
-            const ws = new WebSocket(`wss://127.0.0.1:${wsPort1}/api/v1/ws`, {
-                rejectUnauthorized: false // needed to accept self-signed certificate
-            })
-            ws.on('open', async () => {
-                ws.terminate()
-                await broker.close()
-                done()
-            })
-            ws.on('error', (err) => done(err))
+        const broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, true, 'test/fixtures/key.pem', 'test/fixtures/cert.pem')
+        const ws = new WebSocket(`wss://127.0.0.1:${wsPort1}/api/v1/ws`, {
+            rejectUnauthorized: false // needed to accept self-signed certificate
         })
-    }, 40000)
+        ws.on('open', async () => {
+            ws.terminate()
+            await broker.close()
+            done()
+        })
+        ws.on('error', (err) => done(err))
+    })
 })
 
 describe('broker: end-to-end', () => {
