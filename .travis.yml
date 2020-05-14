@@ -6,6 +6,14 @@ branches:
   only:
   - master
   - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
+env:
+  global:
+  - OWNER=streamr
+  - IMAGE_NAME=broker-node
+import:
+ - source: streamr-dev/travis-ci:aws-staging-secrets.yml@master
+ - source: streamr-dev/travis-ci:npm-secrets.yml@master
+ - source: streamr-dev/travis-ci:docker-secrets.yml@master
 before_install:
 - npm i -g npm@6.14.2
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
@@ -45,9 +53,8 @@ jobs:
     - cd $TRAVIS_BUILD_DIR;
     deploy:
     - provider: s3
-      access_key_id: AKIAI3FGPGMK3EREJJTQ
-      secret_access_key:
-        secure: CK/WSjevo6O2Lhf+hB9mYjsnHtH3LhY0A9dZSK/FjUCZQthrZjpGP7NK5hX8v1uFutCK7nyjMBfM4DD2gkjgzT/8IGbCtSrOd8RyDPoBWjWTjcDzSAtlyXkmZGH2iaJFO/AjAYetuerW7k44BdXa/yE3d6IB4dLeRTVe76CfBFaiV8SSYugE89GaNjXD9GuVl6NJ9AdaVmjRqFXavZW4oCI+m5oivCIHiAD1R1XboxHavSzLTH1GPDcVJareEc10002ZRo9thSH/pqxHO2g6reTxQrdT3nE8E5/Bzm8xeIPHbgFqLcaFyWRDPiq6AWA1rtnextERWsO3P8MwGoHzuuuzrTcozuoZ3880bEIu6RY9QnSX2atYsZICIw6r8Be7LKtObrSnDbqQkA8KJvWANEg4xFf/YX5+qyrDSS6FvIg1rXIc8NvDrIPQkYea6hFPoLWyJSl6WAhkPH5z+WQcrvCJX+kKn170hVVR0CwBHbiCVaakZIuh5TOkgNTDTvb66/oJlzGwDX2B3Un6UM+hvj8e6iYXuoNLgTY/P8vJp8Qc3KX2WroeemQNZug+KVwZvggTvKm3XSY0CQzRmgsemum3fQCYmi56u3cwWYp6aWcKMBrnYk5ZOna7YVsIIqt8zRb/0/e1U7kPf8AU5I37ztWFKfy9Irp7HwBYVmI1BeI=
+      access_key_id: $ACCESS_KEY_STG
+      secret_access_key: $SECRET_ACCESS_KEY_STG
       bucket: eu-west-1-stg-streamr-vault
       upload-dir: network-node/releases
       acl: private
@@ -55,48 +62,21 @@ jobs:
       skip_cleanup: true
       local_dir: upload
     - provider: codedeploy
-      access_key_id: AKIAI3FGPGMK3EREJJTQ
-      secret_access_key:
-        secure: CK/WSjevo6O2Lhf+hB9mYjsnHtH3LhY0A9dZSK/FjUCZQthrZjpGP7NK5hX8v1uFutCK7nyjMBfM4DD2gkjgzT/8IGbCtSrOd8RyDPoBWjWTjcDzSAtlyXkmZGH2iaJFO/AjAYetuerW7k44BdXa/yE3d6IB4dLeRTVe76CfBFaiV8SSYugE89GaNjXD9GuVl6NJ9AdaVmjRqFXavZW4oCI+m5oivCIHiAD1R1XboxHavSzLTH1GPDcVJareEc10002ZRo9thSH/pqxHO2g6reTxQrdT3nE8E5/Bzm8xeIPHbgFqLcaFyWRDPiq6AWA1rtnextERWsO3P8MwGoHzuuuzrTcozuoZ3880bEIu6RY9QnSX2atYsZICIw6r8Be7LKtObrSnDbqQkA8KJvWANEg4xFf/YX5+qyrDSS6FvIg1rXIc8NvDrIPQkYea6hFPoLWyJSl6WAhkPH5z+WQcrvCJX+kKn170hVVR0CwBHbiCVaakZIuh5TOkgNTDTvb66/oJlzGwDX2B3Un6UM+hvj8e6iYXuoNLgTY/P8vJp8Qc3KX2WroeemQNZug+KVwZvggTvKm3XSY0CQzRmgsemum3fQCYmi56u3cwWYp6aWcKMBrnYk5ZOna7YVsIIqt8zRb/0/e1U7kPf8AU5I37ztWFKfy9Irp7HwBYVmI1BeI=
+      access_key_id: $ACCESS_KEY_STG
+      secret_access_key: $SECRET_ACCESS_KEY_STG
       bucket: eu-west-1-stg-streamr-vault
       key: network-node/releases/broker-${TRAVIS_JOB_ID}.tar
       application: eu-west-1-stg-network-node-codedeploy
       deployment_group: eu-west-1-stg-network-node-deployment-group
       region: eu-west-1
     - provider: codedeploy
-      access_key_id: AKIAI3FGPGMK3EREJJTQ
-      secret_access_key:
-        secure: CK/WSjevo6O2Lhf+hB9mYjsnHtH3LhY0A9dZSK/FjUCZQthrZjpGP7NK5hX8v1uFutCK7nyjMBfM4DD2gkjgzT/8IGbCtSrOd8RyDPoBWjWTjcDzSAtlyXkmZGH2iaJFO/AjAYetuerW7k44BdXa/yE3d6IB4dLeRTVe76CfBFaiV8SSYugE89GaNjXD9GuVl6NJ9AdaVmjRqFXavZW4oCI+m5oivCIHiAD1R1XboxHavSzLTH1GPDcVJareEc10002ZRo9thSH/pqxHO2g6reTxQrdT3nE8E5/Bzm8xeIPHbgFqLcaFyWRDPiq6AWA1rtnextERWsO3P8MwGoHzuuuzrTcozuoZ3880bEIu6RY9QnSX2atYsZICIw6r8Be7LKtObrSnDbqQkA8KJvWANEg4xFf/YX5+qyrDSS6FvIg1rXIc8NvDrIPQkYea6hFPoLWyJSl6WAhkPH5z+WQcrvCJX+kKn170hVVR0CwBHbiCVaakZIuh5TOkgNTDTvb66/oJlzGwDX2B3Un6UM+hvj8e6iYXuoNLgTY/P8vJp8Qc3KX2WroeemQNZug+KVwZvggTvKm3XSY0CQzRmgsemum3fQCYmi56u3cwWYp6aWcKMBrnYk5ZOna7YVsIIqt8zRb/0/e1U7kPf8AU5I37ztWFKfy9Irp7HwBYVmI1BeI=
+      access_key_id: $ACCESS_KEY_STG
+      secret_access_key: $SECRET_ACCESS_KEY_STG
       bucket: eu-west-1-stg-streamr-vault
       key: network-node/releases/broker-${TRAVIS_JOB_ID}.tar
       application: eu-west-1-stg-network-node-storage-codedeploy
       deployment_group: eu-west-1-stg-network-node-storage-deployment-group
       region: eu-west-1
-  - stage: Deploy Lisboa
-    if: NOT type IN (pull_request)
-    script:
-    - mkdir $TRAVIS_BUILD_DIR/build
-    - mkdir $TRAVIS_BUILD_DIR/upload
-    - PACKAGE_VERSION=${TRAVIS_TAG:1}
-    - sed -i "s/PACKAGE_VERSION/$PACKAGE_VERSION/g" .codedeploy/after_install.sh
-    - mv .codedeploy/appspec.yml build/appspec.yml
-    - mv .codedeploy/ build/
-    - cd build; tar -czvf $TRAVIS_BUILD_DIR/upload/broker-${TRAVIS_TAG}.tar .;
-      tar -czvf $TRAVIS_BUILD_DIR/upload/latest.tar .;
-    - cd $TRAVIS_BUILD_DIR;
-    deploy:
-    - provider: s3
-      access_key_id: AKIAJBAGP3WA5UXQ3AZQ
-      secret_access_key:
-        secure: Q0V5zNJ1W6NI+uz+2bP27CdXitIMfBiUr0biziRl5KzpPEqGTxwLX/PQwNAcClSMP69smW4PGFAVf+uBmhQuFPsGDv0tLvSTrL7kcigijrVukx18sC1wvLkc9cX3JitTzhDLhi/WhtwDCPGYJbsd1BC8umd7C1iIWNDIueRzPo0Xy4YN7rRIFbY59twlEKb3mJbs1m+ZxtE5LJLvBbE8mqzxRjIPMHI5sbSa8xM8HEhZ7dLWFKIvOno1+n6eVCCWlU+uEfk0L9yLanOn85D3apuVau+//Xi1mbSNZhgywKD2mjeFtztHkrvgEC+ptAKelLyffT9uCI2ywd3R5D8FTDC+wlLcbvmDZ3fcG7qudUDulIRE0BOI2kw0MF0IiTtG96sJfmA3o4iQhoGAsME45+709unYgi0xrxvQ0zkJcBBPt4TzSEwrQX95i5lHiXUA61wW2inOCmr5wRPKOzpaSKSzYFsCts+5dDT/rKhk62+biQNCFXblVFFyLXqss64q7PqDRFKOChBMBiRNG6e0DSt4/SYH65sKPoKaPtZq8Pm8iDUM0CEVdIlpqK1IfLPGCmTeqHXTUk2Q147TsPIu2BW/bFWItd48eEk0gsdIdOdghHclus+24l/iX9Ijolbp2hEUpcYDn4SRDioV+OEtbbUs87ca4PA+3JplnOdSsyo=
-      bucket: eu-west-1-lx-streamr-vault
-      upload-dir: network-node/releases
-      acl: private
-      region: eu-west-1
-      skip_cleanup: true
-      local_dir: upload
-      on:
-        tags: true
   - stage: Build docker (Dev/Nightly)
     if: tag IS blank
     install: true
@@ -123,11 +103,3 @@ jobs:
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh production
-env:
-  global:
-  - OWNER=streamr
-  - IMAGE_NAME=broker-node
-  - secure: RiL1ul75w9pMGsimDPCm9OBzj8gdQZEl8jimBWpzS27/aoPOTu2Z0RkGPSaEvqOmSdcy5FsfKQUQgq9H6yesrBbDuJcN3jjm53DWmMZCua+JdoL1ySRBVMJo1oPTUTjw7seWAshVYbY6qHbG9GUcyd095wH07ykhq8aEXywl5mrrTdzyMg8+K2XvyrTBil6RzJ+bQcNtnDgksVnpGEqzqnw3iCzcgSSv25r/mlRxcggsah7lsoaOd4zHCYxl3VFcZgZRc2PYNK3BkWrarTFnTIXTEmikO9JFLoARmrBIgxJo9WEae4HYus4qy9Q+fGMxlAt3Ce55MQavQuiL9QpspPHFbvAJnur0PLGVNq6ChS4pz7C6L5dSO9QV6kVxoyVumlHExWvF4xr3mb1LQcb/Svt8DCk2cf9n//QXg3z7Em0kd77diVAoPpR00PSOVR4Y2CXXURfaVzKjTRfUV4lvVbiYR5Ox+RwsDIYLKsZZNYd2mj8Dj+5dq9RfMqk9qMYQ12ypY21dpgCDKoUdmtv7Y5+72v1OK6xRi1Hx9g2Nth2lp4mpJ2aBv4vzGJLG4DHtjv8Er8wpwmAyuSqVQmjRV75v6YintLr2Iu5aXejrtApEybiR0mGXNXRYM6iTkBnhAw8iVlC3Nk2AWpKkaPL3vWh+g6eXLlliTGHZHMxuXVM=
-  - secure: lL103oLdM8ty56rJPyxKKAGDUFz1B8hyFGicHm72QiC3jacxk+RVZaDk5zg1cn6VdC4qYaYstMh4jHKJGRH3UxMzGBCm+Bbkzt5OEDJfs63tR0QA2KtUn9rO2w3fh8PyREee8DLjiJa3dVk8Sr4LxdFWUzNy+1VdMP5VEuLq9+KMBzOXHkFIy5z7DMoUjq2d19PWuLB7yC+fbYesG4/SU/8s3shuRc/CaUw/d7CZh27raGlSeHEFLBfaefbWmEZyWIi4yYPP/6BFDocBBp4QaIGtj2llvoHe8sw19I3Xqx4f9yvNmDFU8yATT6JFyf/SFj/of39+c+Ne+rbEmZ1SBaCDpMUIMCw6kxLZJQd0zZ7jso+4JR4i3KBAnmxcOFMCoWVOatHUoVU25iN1H7AAArVWzoRQoRgOUbhvV0InA58f7uOnDqxfPZ7hTduK4dA1KiBtt16iFHaZskssCxgw2CnZtUNLodbjUIvIGZ7SKKl0JgHIyjYR71DVX5040PE5m9A9uKtcIECYg6eKVPs7T48LqZDFa1XcfBSEvNu3SViSoOlJ6ghH29uxYr5MOhn6GM4i4Ajf79ZltiJcUP1qXNV6IiT7Kq6q7mZCqYUMV75bkRJBPyNPxeX/paYlKih0suid57uLttO6Icp3JeUHBo5bbiIV2eNeX5hGoG+zHd0=
-  - secure: pNFIU1b/Oz+wJ5laYwB1xGJsFvL+Q//o88Bd3sIhEupbcXv1DAVcPjXdGS15JYLaxHocLX3UzAZQsSMx+v6ktyytOFxEcgvkOsqQOeJsr4IxtRrwFC6BlfcmpM5L3bwyz8vLqCslQ8EVaOvV9mGpPOGLJLLHrqx85UKpNBfbtOzzo++VWuHzg5aQ84Exc3q7Ii0e1k2ZSdF80/t8ZA0DX+37rf8EZTBO1jvKENFJX3RRiE2Q92ICxD5QOd/iVxTTqlAsURJPOjXKx5BWwQx1GwTOY3ny0wEq1Vg1bsLU5nmupArhshEgYveG31LlGABk3ocu7wT9b8RpE+ZyKorjYNq1//K/pcxZcKrMellhvvcYqDcvUc1GaRPZ5aQi+dmvZeVeGuyDDj1RkLPPDKi/SqMj8PIOSs26oa/LYnz/sn4X3uw/NYFIqkBoeAZz9MGTjSm8GLxtk6PFzTPtlanA+k7MsSLgX/1Y0YgrBdRU3pLh2xHnYZGhE3ZCnq6Utnz+RI+3slTFKC9dZb4l+lQTNx/cLvRhnkRCJ5syQZVPxjWbOgOz9zjOZb//75eIbPsotwHpk0e3KR5fwmMYua5Gm8rtntw9RVkG8IMPx2rxO7xEhHVctdudUVWXIyVuQQJvwOKcN2zRGxiHQVmkrhwzJeG7rpsDDgotK9nFjgRofKw=
-
