@@ -26,7 +26,7 @@ jobs:
     - sudo /etc/init.d/mysql stop
     - git clone https://github.com/streamr-dev/streamr-docker-dev.git
     - sudo ifconfig docker0 10.200.10.1/24
-    - $TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start --except tracker --except broker-node-no-storage-1 --except broker-node-no-storage-2 --except broker-node-storage-1 --wait
+    - $TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start --except tracker-1 --except tracker-2 --except tracker-3 --except broker-node-no-storage-1 --except broker-node-no-storage-2 --except broker-node-storage-1 --wait
     - npm run test-integration
   - stage: Tests
     name: Unit Tests

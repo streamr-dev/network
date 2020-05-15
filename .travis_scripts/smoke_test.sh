@@ -6,7 +6,7 @@ git clone https://github.com/streamr-dev/streamr-docker-dev.git
 ## Switch out image for local one
 sed -i "s#$OWNER/$IMAGE_NAME:dev#$OWNER/$IMAGE_NAME\:taggit#g" $TRAVIS_BUILD_DIR/streamr-docker-dev/docker-compose.override.yml
 ## Start up services needed
-$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-no-storage-1
+$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-no-storage-1 smart-contracts-init --wait
 
 ## Wait for the service to come online and test
 wait_time=10;

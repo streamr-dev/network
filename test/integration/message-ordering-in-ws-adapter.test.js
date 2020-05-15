@@ -38,12 +38,14 @@ describe('message ordering and gap filling in websocket adapter', () => {
 
     beforeEach(async () => {
         subscriber = createClient(wsPort, 'tester1-api-key', false)
-        await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
+        await subscriber.ensureConnected()
 
         freshStream = await subscriber.createStream({
             name: 'message-ordering-in-ws-adapter.test.js-' + Date.now()
         })
         freshStreamId = freshStream.id
+
+        await wait(1000)
     })
 
     afterEach(async () => {
