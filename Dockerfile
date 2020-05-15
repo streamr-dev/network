@@ -1,10 +1,18 @@
-FROM node:13.10
+FROM node:13.10 as build
 WORKDIR /usr/src/broker
 COPY . .
 
 RUN node --version
 RUN npm --version
 RUN npm ci --only=production
+
+FROM node:13.10-alpine
+
+# needed for uWebSockets.js
+RUN apk update && apk add --no-cache gcompat
+
+COPY --from=build /usr/src/broker /usr/src/broker
+WORKDIR /usr/src/broker
 
 # Make ports available to the world outside this container
 EXPOSE 30315
