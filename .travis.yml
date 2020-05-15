@@ -58,6 +58,7 @@ jobs:
       secret_access_key: $SECRET_ACCESS_KEY_STG
       bucket: eu-west-1-stg-streamr-vault
       upload_dir: network-node/releases
+      skip_cleanup: true
       acl: private
       region: eu-west-1
       local_dir: upload
