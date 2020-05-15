@@ -1,7 +1,8 @@
+os: linux
+dist: xenial
 language: node_js
 node_js:
 - 13.11.0
-sudo: true
 branches:
   only:
   - master
@@ -56,10 +57,9 @@ jobs:
       access_key_id: $ACCESS_KEY_STG
       secret_access_key: $SECRET_ACCESS_KEY_STG
       bucket: eu-west-1-stg-streamr-vault
-      upload-dir: network-node/releases
+      upload_dir: network-node/releases
       acl: private
       region: eu-west-1
-      skip_cleanup: true
       local_dir: upload
     - provider: codedeploy
       access_key_id: $ACCESS_KEY_STG
@@ -103,3 +103,5 @@ jobs:
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh production
+      on:
+        tags: true
