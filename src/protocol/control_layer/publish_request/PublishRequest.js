@@ -1,20 +1,18 @@
 import ControlMessage from '../ControlMessage'
-
-const TYPE = 8
+import { validateIsNotNullOrUndefined, validateIsString } from '../../../utils/validations'
 
 export default class PublishRequest extends ControlMessage {
-    constructor(version, sessionToken) {
-        if (new.target === PublishRequest) {
-            throw new TypeError('PublishRequest is abstract.')
-        }
-        super(version, TYPE)
+    constructor(version, requestId, streamMessage, sessionToken) {
+        super(version, ControlMessage.TYPES.PublishRequest, requestId)
+
+        validateIsNotNullOrUndefined('streamMessage', streamMessage)
+        this.streamMessage = streamMessage
+
+        validateIsString('sessionToken', sessionToken, true)
         this.sessionToken = sessionToken
     }
 
-    static create(streamMessage, sessionToken) {
-        return new (ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE))(streamMessage, sessionToken)
+    static create(requestId, streamMessage, sessionToken) {
+        return new PublishRequest(ControlMessage.LATEST_VERSION, requestId, streamMessage, sessionToken)
     }
 }
-
-/* static */
-PublishRequest.TYPE = TYPE

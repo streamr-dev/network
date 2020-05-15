@@ -1,26 +1,16 @@
 import ControlMessage from '../ControlMessage'
-
-const TYPE = 0
+import { validateIsType } from '../../../utils/validations'
+import StreamMessage from '../../message_layer/StreamMessage'
 
 export default class BroadcastMessage extends ControlMessage {
-    constructor(version) {
-        if (new.target === BroadcastMessage) {
-            throw new TypeError('BroadcastMessage is abstract.')
-        }
-        super(version, TYPE)
+    constructor(version, requestId, streamMessage) {
+        super(version, ControlMessage.TYPES.BroadcastMessage, requestId)
+
+        validateIsType('streamMessage', streamMessage, 'StreamMessage', StreamMessage)
+        this.streamMessage = streamMessage
     }
 
-    serialize(controlLayerVersion = this.version, messageLayerVersion) {
-        if (controlLayerVersion === this.version) {
-            return JSON.stringify(this.toArray(messageLayerVersion))
-        }
-        return this.toOtherVersion(controlLayerVersion, messageLayerVersion).serialize()
-    }
-
-    static create(streamMessage) {
-        return new (ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE))(streamMessage)
+    static create(requestId, streamMessage) {
+        return new BroadcastMessage(ControlMessage.LATEST_VERSION, requestId, streamMessage)
     }
 }
-
-/* static */
-BroadcastMessage.TYPE = TYPE

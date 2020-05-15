@@ -48,3 +48,12 @@ export function validateIsNotNegativeInteger(varName, varValue, allowNull = fals
         throw new ValidationError(`Expected ${varName} to not be negative (${varValue}).`)
     }
 }
+
+export function validateIsType(varName, varValue, typeName, typeClass, allowNull = false) {
+    if (allowNull && varValue == null) {
+        return
+    }
+    if (!(varValue instanceof typeClass)) {
+        throw new ValidationError(`Expected ${varName} to be an instance of (${typeName}), but it was: ${varValue}`)
+    }
+}

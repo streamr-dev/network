@@ -1,18 +1,25 @@
 import assert from 'assert'
 
-import ResendLastRequestV1 from '../../../../src/protocol/control_layer/resend_request/ResendLastRequestV1'
 import ResendLastRequest from '../../../../src/protocol/control_layer/resend_request/ResendLastRequest'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
+import ValidationError from '../../../../src/errors/ValidationError'
 
 describe('ResendLastRequest', () => {
+    describe('validation', () => {
+        it('throws on null requestId', () => {
+            assert.throws(() => new ResendLastRequest(ControlMessage.LATEST_VERSION, null, 'streamId', 0, 100, 'sessionToken'), ValidationError)
+        })
+    })
+
     describe('create', () => {
         it('should create the latest version', () => {
-            const msg = ResendLastRequest.create('streamId', 0, 'requestId', 100, 'sessionToken')
-            assert(msg instanceof ResendLastRequestV1)
-            assert.equal(msg.streamId, 'streamId')
-            assert.equal(msg.streamPartition, 0)
-            assert.equal(msg.requestId, 'requestId')
-            assert.equal(msg.numberLast, 100)
-            assert.equal(msg.sessionToken, 'sessionToken')
+            const msg = ResendLastRequest.create('requestId', 'streamId', 0, 100, 'sessionToken')
+            assert(msg instanceof ResendLastRequest)
+            assert.strictEqual(msg.streamId, 'streamId')
+            assert.strictEqual(msg.streamPartition, 0)
+            assert.strictEqual(msg.requestId, 'requestId')
+            assert.strictEqual(msg.numberLast, 100)
+            assert.strictEqual(msg.sessionToken, 'sessionToken')
         })
     })
 })

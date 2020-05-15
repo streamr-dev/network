@@ -4,16 +4,19 @@ import shuffle from 'array-shuffle'
 
 import OrderingUtil from '../../../src/utils/OrderingUtil'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
-import StreamMessageV31 from '../../../src/protocol/message_layer/StreamMessageV31'
+import StreamMessageSerializerV31 from '../../../src/protocol/message_layer/StreamMessageSerializerV31' // eslint-disable-line no-unused-vars
+import MessageID from '../../../src/protocol/message_layer/MessageID'
+import MessageRef from '../../../src/protocol/message_layer/MessageRef'
 
 const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp = null,
     prevSequenceNumber = 0, content = {}, publisherId = 'publisherId', msgChainId = '1',
 ) => {
-    const prevMsgRef = prevTimestamp ? [prevTimestamp, prevSequenceNumber] : null
-    return new StreamMessageV31(
-        ['streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId], prevMsgRef,
-        StreamMessage.CONTENT_TYPES.MESSAGE, StreamMessage.ENCRYPTION_TYPES.NONE, content, StreamMessage.SIGNATURE_TYPES.NONE,
+    const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null
+    return new StreamMessage(
+        new MessageID('streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId),
+        prevMsgRef,
+        JSON.stringify(content),
     )
 }
 

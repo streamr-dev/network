@@ -1,20 +1,32 @@
 import ControlMessage from '../ControlMessage'
-
-const TYPE = 12
+import {
+    validateIsNotEmptyString,
+    validateIsNotNegativeInteger,
+    validateIsString,
+    validateIsType
+} from '../../../utils/validations'
+import MessageRef from '../../message_layer/MessageRef'
 
 export default class ResendFromRequest extends ControlMessage {
-    constructor(version) {
-        if (new.target === ResendFromRequest) {
-            throw new TypeError('ResendFromRequest is abstract.')
-        }
-        super(version, TYPE)
+    constructor(version = ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, fromMsgRef, publisherId, sessionToken) {
+        super(version, ControlMessage.TYPES.ResendFromRequest, requestId)
+
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition)
+        validateIsString('publisherId', publisherId, true)
+        validateIsString('sessionToken', sessionToken, true)
+        validateIsType('fromMsgRef', fromMsgRef, 'MessageRef', MessageRef)
+
+        this.streamId = streamId
+        this.streamPartition = streamPartition
+        this.fromMsgRef = fromMsgRef
+        this.publisherId = publisherId
+        this.sessionToken = sessionToken
+
+        validateIsNotEmptyString('requestId', requestId) // unnecessary line once V1 is dropped
     }
 
-    static create(streamId, streamPartition, requestId, msgRefArgsArray, publisherId, msgChainId, sessionToken) {
-        const C = ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE)
-        return new C(streamId, streamPartition, requestId, msgRefArgsArray, publisherId, msgChainId, sessionToken)
+    static create(requestId, streamId, streamPartition, fromMsgRef, publisherId, sessionToken) {
+        return new ResendFromRequest(ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, fromMsgRef, publisherId, sessionToken)
     }
 }
-
-/* static */
-ResendFromRequest.TYPE = TYPE

@@ -1,87 +1,97 @@
-import ValidationError from '../../errors/ValidationError'
 import UnsupportedVersionError from '../../errors/UnsupportedVersionError'
 import UnsupportedTypeError from '../../errors/UnsupportedTypeError'
+import { validateIsInteger, validateIsString } from '../../utils/validations'
 
-const classByVersionAndType = {}
-const LATEST_VERSION = 1
+const serializerByVersionAndType = {}
+const LATEST_VERSION = 2
 
 export default class ControlMessage {
-    constructor(version, type) {
+    constructor(version = LATEST_VERSION, type, requestId) {
         if (new.target === ControlMessage) {
             throw new TypeError('ControlMessage is abstract.')
         }
+        validateIsInteger('version', version)
         this.version = version
-        if (type === undefined) {
-            throw new ValidationError('No message type given!')
-        }
+        validateIsInteger('type', type)
         this.type = type
+
+        // Since V2 - allow null in older versions
+        validateIsString('requestId', requestId, version < 2)
+        this.requestId = requestId
     }
 
-    toArray() {
-        return [
-            this.version,
-            this.type,
-        ]
-    }
-
-    toOtherVersion() {
-        throw new Error(`Class ${this.constructor.name} must override ControlMessage.toOtherVersion(version) or ControlMessage.serialize(version)`)
-    }
-
-    serialize(version = this.version) {
-        if (version === this.version) {
-            return JSON.stringify(this.toArray())
+    static registerSerializer(version, type, serializer) {
+        // Check the serializer interface
+        if (!serializer.fromArray) {
+            throw new Error(`Serializer ${JSON.stringify(serializer)} doesn't implement a method fromArray!`)
         }
-        return this.toOtherVersion(version).serialize()
-    }
-
-    static getConstructorArgs(array) {
-        return array
-    }
-
-    static registerClass(version, type, clazz) {
-        if (classByVersionAndType[version] === undefined) {
-            classByVersionAndType[version] = {}
+        if (!serializer.toArray) {
+            throw new Error(`Serializer ${JSON.stringify(serializer)} doesn't implement a method toArray!`)
         }
-        classByVersionAndType[version][type] = clazz
+
+        if (serializerByVersionAndType[version] === undefined) {
+            serializerByVersionAndType[version] = {}
+        }
+        if (serializerByVersionAndType[version][type] !== undefined) {
+            throw new Error(`Serializer for version ${version} and type ${type} is already registered: ${
+                JSON.stringify(serializerByVersionAndType[version][type])
+            }`)
+        }
+        serializerByVersionAndType[version][type] = serializer
     }
 
-    static getClass(version, type) {
-        const classesByVersion = classByVersionAndType[version]
-        if (!classesByVersion) {
-            throw new UnsupportedVersionError(version, `Supported versions: [${Object.keys(classByVersionAndType)}]`)
+    static unregisterSerializer(version, type) {
+        delete serializerByVersionAndType[version][type]
+    }
+
+    static getSerializer(version, type) {
+        const serializersByType = serializerByVersionAndType[version]
+        if (!serializersByType) {
+            throw new UnsupportedVersionError(version, `Supported versions: [${Object.keys(serializerByVersionAndType)}]`)
         }
-        const clazz = classesByVersion[type]
+        const clazz = serializersByType[type]
         if (!clazz) {
-            throw new UnsupportedTypeError(type, `Supported types: [${Object.keys(classesByVersion)}]`)
+            throw new UnsupportedTypeError(type, `Supported types: [${Object.keys(serializersByType)}]`)
         }
-        return classByVersionAndType[version][type]
+        return clazz
+    }
+
+    serialize(version = this.version, ...typeSpecificSerializeArgs) {
+        return JSON.stringify(ControlMessage.getSerializer(version, this.type).toArray(this, ...typeSpecificSerializeArgs))
     }
 
     /**
      * Takes a serialized representation (array or string) of a message, and returns a ControlMessage instance.
-     * WARNING: if you pass an array, it gets mutated!
      */
-    static deserialize(msg, parseContent = true) {
+    static deserialize(msg, ...typeSpecificDeserializeArgs) {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
-        let messageVersion
-        let messageType
 
-        // Version 0 (deprecated) uses objects instead of arrays for request types. In this case, messageArray is not an array but an object.
-        if (!Array.isArray(messageArray)) {
-            messageVersion = messageArray.version || 0
-            messageType = messageArray.type
-        } else {
-            /* eslint-disable prefer-destructuring */
-            messageVersion = messageArray[0]
-            messageType = messageArray[1]
-            /* eslint-enable prefer-destructuring */
-            messageArray.splice(0, 2)
-        }
-        const C = ControlMessage.getClass(messageVersion, messageType)
-        return new C(...C.getConstructorArgs(messageArray, parseContent))
+        /* eslint-disable prefer-destructuring */
+        const messageVersion = messageArray[0]
+        const messageType = messageArray[1]
+        /* eslint-enable prefer-destructuring */
+
+        const C = ControlMessage.getSerializer(messageVersion, messageType)
+        return C.fromArray(messageArray, ...typeSpecificDeserializeArgs)
     }
 }
 
 /* static */
 ControlMessage.LATEST_VERSION = LATEST_VERSION
+
+ControlMessage.TYPES = {
+    BroadcastMessage: 0,
+    UnicastMessage: 1,
+    SubscribeResponse: 2,
+    UnsubscribeResponse: 3,
+    ResendResponseResending: 4,
+    ResendResponseResent: 5,
+    ResendResponseNoResend: 6,
+    ErrorResponse: 7,
+    PublishRequest: 8,
+    SubscribeRequest: 9,
+    UnsubscribeRequest: 10,
+    ResendLastRequest: 11,
+    ResendFromRequest: 12,
+    ResendRangeRequest: 13,
+}

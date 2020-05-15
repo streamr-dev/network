@@ -1,16 +1,18 @@
 import ControlMessage from '../ControlMessage'
-
-const TYPE = 2
+import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../../utils/validations'
 
 export default class SubscribeResponse extends ControlMessage {
-    constructor(version) {
-        super(version, TYPE)
+    constructor(version, requestId, streamId, streamPartition) {
+        super(version, ControlMessage.TYPES.SubscribeResponse, requestId)
+
+        validateIsNotEmptyString('streamId', streamId)
+        validateIsNotNegativeInteger('streamPartition', streamPartition)
+
+        this.streamId = streamId
+        this.streamPartition = streamPartition
     }
 
-    static create(streamId, streamPartition) {
-        return new (ControlMessage.getClass(ControlMessage.LATEST_VERSION, TYPE))(streamId, streamPartition)
+    static create(requestId, streamId, streamPartition) {
+        return new SubscribeResponse(ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition)
     }
 }
-
-/* static */
-SubscribeResponse.TYPE = TYPE

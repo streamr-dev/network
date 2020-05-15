@@ -1,16 +1,22 @@
 import assert from 'assert'
 
-import ResendResponseResending from '../../../../src/protocol/control_layer/resend_response_resending/ResendResponseResending'
-import ResendResponseResendingV1 from '../../../../src/protocol/control_layer/resend_response_resending/ResendResponseResendingV1'
+import ResendResponseResending from '../../../../src/protocol/control_layer/resend_response/ResendResponseResending'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
+import ValidationError from '../../../../src/errors/ValidationError'
 
 describe('ResendResponseResending', () => {
+    describe('validation', () => {
+        it('throws on null requestId', () => {
+            assert.throws(() => new ResendResponseResending(ControlMessage.LATEST_VERSION, null, 'streamId', 0), ValidationError)
+        })
+    })
     describe('create', () => {
         it('should create the latest version', () => {
-            const msg = ResendResponseResending.create('streamId', 0, 'requestId')
-            assert(msg instanceof ResendResponseResendingV1)
-            assert.equal(msg.streamId, 'streamId')
-            assert.equal(msg.streamPartition, 0)
-            assert.equal(msg.requestId, 'requestId')
+            const msg = ResendResponseResending.create('requestId', 'streamId', 0)
+            assert(msg instanceof ResendResponseResending)
+            assert.strictEqual(msg.streamId, 'streamId')
+            assert.strictEqual(msg.streamPartition, 0)
+            assert.strictEqual(msg.requestId, 'requestId')
         })
     })
 })

@@ -31,6 +31,14 @@ export default class MessageRef {
         ]
     }
 
+    static fromArray(arr) {
+        const [
+            timestamp,
+            sequenceNumber,
+        ] = arr
+        return new MessageRef(timestamp, sequenceNumber)
+    }
+
     serialize() {
         return JSON.stringify(this.toArray())
     }
