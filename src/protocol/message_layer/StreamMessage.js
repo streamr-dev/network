@@ -176,7 +176,7 @@ export default class StreamMessage {
     }
 
     /**
-     * Takes a serialized representation (array or string) of a message, and returns a ControlMessage instance.
+     * Takes a serialized representation (array or string) of a message, and returns a StreamMessage instance.
      */
     static deserialize(msg, parseContent = true) {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
