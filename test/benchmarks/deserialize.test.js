@@ -27,6 +27,7 @@ describe('deserialize', () => {
         const end = new Date() - start
 
         resultString += `Execution time: ${end} ms\n`
+        resultString += `Iterations / second: ${ITERATIONS / (end / 1000)}\n`
         const used = process.memoryUsage()
         Object.keys(used).forEach((key) => {
             /* eslint-disable no-mixed-operators */
