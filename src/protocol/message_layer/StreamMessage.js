@@ -178,7 +178,7 @@ export default class StreamMessage {
     /**
      * Takes a serialized representation (array or string) of a message, and returns a StreamMessage instance.
      */
-    static deserialize(msg, parseContent = true) {
+    static deserialize(msg) {
         const messageArray = (typeof msg === 'string' ? JSON.parse(msg) : msg)
 
         /* eslint-disable prefer-destructuring */
@@ -186,7 +186,7 @@ export default class StreamMessage {
         /* eslint-enable prefer-destructuring */
 
         const C = StreamMessage.getSerializer(messageVersion)
-        return C.fromArray(messageArray, parseContent)
+        return C.fromArray(messageArray)
     }
 
     static validateContentType(contentType) {
