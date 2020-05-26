@@ -170,7 +170,7 @@ export async function deployDataUnion(options) {
 export async function dataUnionIsReady(dataUnionContractAddress, pollingIntervalMs = 1000, retryTimeoutMs = 60000) {
     let stats = await get(this, dataUnionContractAddress, '/stats')
     const startTime = Date.now()
-    while (stats.error && Date.now() < startTime + retryTimeoutMs) {
+    while (stats.error && Date.now() < startTime + retryTimeoutMs && (!stats.dataUnion || stats.dataUnion.state !== 'failed')) {
         debug(`Waiting for data union ${dataUnionContractAddress} to start. Status: ${JSON.stringify(stats)}`)
         await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
         stats = await get(this, dataUnionContractAddress, '/stats') // eslint-disable-line no-await-in-loop
@@ -258,7 +258,7 @@ export async function hasJoined(dataUnionContractAddress, memberAddress, polling
 
     let stats = await get(this, dataUnionContractAddress, `/members/${address}`)
     const startTime = Date.now()
-    while (stats.error && Date.now() < startTime + retryTimeoutMs) {
+    while (stats.error && Date.now() < startTime + retryTimeoutMs && (!stats.dataUnion || stats.dataUnion.state !== 'failed')) {
         debug(`Waiting for member ${address} to be accepted into data union ${dataUnionContractAddress}. Status: ${JSON.stringify(stats)}`)
         await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
         stats = await get(this, dataUnionContractAddress, `/members/${address}`) // eslint-disable-line no-await-in-loop
