@@ -6,6 +6,7 @@ gradlew.bat
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/dictionaries
+.idea/*
 *.iws
 .DS_Store
 logs/

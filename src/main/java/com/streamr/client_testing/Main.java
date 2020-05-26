@@ -104,7 +104,14 @@ public class Main {
                 Integer.parseInt(prop.getProperty("nbJavascriptPublishers")),
                 Integer.parseInt(prop.getProperty("nbJavascriptSubscribers"))
         );
+        try {
         streams = new Streams(participants, restUrl, wsUrl, testCorrectness);
         streams.start(cmd.getOptionValue("stream"));
+        } catch (Exception e) {
+            logger.severe(e.getMessage());
+            formatter.printHelp("streamr-client-testing", options);
+
+            System.exit(1);
+        }
     }
 }
