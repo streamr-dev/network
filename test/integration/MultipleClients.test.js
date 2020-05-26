@@ -98,5 +98,6 @@ describe('PubSub with multiple clients', () => {
         // messages should arrive on both clients?
         expect(receivedMessagesMain).toEqual([message])
         expect(receivedMessagesOther).toEqual([message])
+        done()
     }, 30000)
 })
