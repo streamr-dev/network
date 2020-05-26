@@ -39,7 +39,7 @@ describe('AuthenticationMiddleware', () => {
             sinon.assert.calledOnce(streamFetcherStub.authenticate)
             sinon.assert.calledWithExactly(
                 streamFetcherStub.authenticate,
-                'streamId', undefined, undefined, 'read',
+                'streamId', undefined, undefined, 'stream_subscribe',
             )
         })
     })
@@ -77,7 +77,7 @@ describe('AuthenticationMiddleware', () => {
             sinon.assert.calledOnce(streamFetcherStub.authenticate)
             sinon.assert.calledWithExactly(
                 streamFetcherStub.authenticate,
-                'streamId', 'authKey', undefined, 'read',
+                'streamId', 'authKey', undefined, 'stream_subscribe',
             )
         })
 
@@ -85,13 +85,13 @@ describe('AuthenticationMiddleware', () => {
             streamFetcherStub.authenticate = sinon.stub()
             streamFetcherStub.authenticate.returns(Promise.resolve({}))
 
-            middlewareInstance = authenticationMiddleware(streamFetcherStub, 'write')
+            middlewareInstance = authenticationMiddleware(streamFetcherStub, 'stream_publish')
             middlewareInstance(request, response, next)
 
             sinon.assert.calledOnce(streamFetcherStub.authenticate)
             sinon.assert.calledWithExactly(
                 streamFetcherStub.authenticate,
-                'streamId', 'authKey', undefined, 'write',
+                'streamId', 'authKey', undefined, 'stream_publish',
             )
         })
 
@@ -197,7 +197,7 @@ describe('AuthenticationMiddleware', () => {
             sinon.assert.calledOnce(streamFetcherStub.authenticate)
             sinon.assert.calledWithExactly(
                 streamFetcherStub.authenticate,
-                'streamId', undefined, 'session-token', 'read',
+                'streamId', undefined, 'session-token', 'stream_subscribe',
             )
         })
 
@@ -205,13 +205,13 @@ describe('AuthenticationMiddleware', () => {
             streamFetcherStub.authenticate = sinon.stub()
             streamFetcherStub.authenticate.returns(Promise.resolve({}))
 
-            middlewareInstance = authenticationMiddleware(streamFetcherStub, 'write')
+            middlewareInstance = authenticationMiddleware(streamFetcherStub, 'stream_publish')
             middlewareInstance(request, response, next)
 
             sinon.assert.calledOnce(streamFetcherStub.authenticate)
             sinon.assert.calledWithExactly(
                 streamFetcherStub.authenticate,
-                'streamId', undefined, 'session-token', 'write',
+                'streamId', undefined, 'session-token', 'stream_publish',
             )
         })
     })

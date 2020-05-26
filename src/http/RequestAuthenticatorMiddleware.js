@@ -3,7 +3,7 @@ const HttpError = require('../errors/HttpError')
 /**
  * Middleware used to authenticate REST API requests
  */
-module.exports = (streamFetcher, permission = 'read') => (req, res, next) => {
+module.exports = (streamFetcher, permission = 'stream_subscribe') => (req, res, next) => {
     let authKey
     let sessionToken
 

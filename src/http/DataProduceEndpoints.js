@@ -53,7 +53,7 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
             type() { return true },
         }),
         // Check write permission using middleware, writes req.stream
-        authenticationMiddleware(streamFetcher, 'write'),
+        authenticationMiddleware(streamFetcher, 'stream_publish'),
         // Produce request handler
         (req, res) => {
             // Validate body

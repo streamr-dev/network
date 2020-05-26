@@ -241,7 +241,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             const streamMessage = request.getStreamMessage(streamPartition)
             this.publisher.publish(stream, streamMessage)
         } else {
-            this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'write')
+            this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'stream_publish')
                 .then((stream) => {
                     this.streamAuthCache.set(key, stream)
 

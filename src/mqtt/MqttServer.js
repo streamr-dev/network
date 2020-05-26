@@ -150,7 +150,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                     connection.sendConnectionNotAuthorized()
                     return
                 }
-                this.streamFetcher.authenticate(streamObj.id, connection.apiKey, connection.token, 'write')
+                this.streamFetcher.authenticate(streamObj.id, connection.apiKey, connection.token, 'stream_publish')
                     .then((streamJson) => {
                         const streamPartition = this.partitionFn(streamObj.partitions, 0)
 

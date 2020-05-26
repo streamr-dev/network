@@ -39,11 +39,7 @@ module.exports = class StreamFetcher {
         })
     }
 
-    _authenticate(streamId, authKey, sessionToken, operation = 'read') {
-        if (operation === 'read') {
-            // No need to explicitly check permissions, as fetch will fail if no read permission
-            return this.fetch(streamId, authKey, sessionToken)
-        }
+    _authenticate(streamId, authKey, sessionToken, operation = 'stream_subscribe') {
         return this.checkPermission(streamId, authKey, sessionToken, operation)
             .then(() => this.fetch(streamId, authKey, sessionToken))
     }
@@ -116,7 +112,7 @@ module.exports = class StreamFetcher {
      * @returns {Promise}
      * @private
      */
-    _checkPermission(streamId, authKey, sessionToken, operation = 'read') {
+    _checkPermission(streamId, authKey, sessionToken, operation = 'stream_subscribe') {
         const headers = formHeaders(authKey, sessionToken)
 
         const url = `${this.streamResourceUrl}/${streamId}/permissions/me`

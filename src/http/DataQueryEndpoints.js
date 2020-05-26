@@ -59,7 +59,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
             }
         },
         // authentication
-        authenticationMiddleware(streamFetcher, 'read'),
+        authenticationMiddleware(streamFetcher, 'stream_subscribe'),
     )
 
     router.get('/streams/:id/data/partitions/:partition/last', (req, res) => {

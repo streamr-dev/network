@@ -116,14 +116,19 @@ describe('StreamFetcher', () => {
             {
                 id: null,
                 user: 'tester1@streamr.com',
-                operation: 'read',
+                operation: 'stream_get',
+            },
+            {
+                id: null,
+                user: 'tester1@streamr.com',
+                operation: 'stream_subscribe',
             },
         ]
     })
 
     describe('checkPermission', () => {
         it('returns Promise when API key given', (done) => {
-            const promise = streamFetcher.checkPermission(streamId, 'key', undefined, 'read')
+            const promise = streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe')
             promise.then((response) => {
                 assert.deepEqual(response, true)
                 done()
@@ -134,7 +139,7 @@ describe('StreamFetcher', () => {
         })
 
         it('returns Promise when session token given', (done) => {
-            const promise = streamFetcher.checkPermission(streamId, undefined, 'session-token', 'read')
+            const promise = streamFetcher.checkPermission(streamId, undefined, 'session-token', 'stream_subscribe')
             promise.then((response) => {
                 assert.deepEqual(response, true)
                 done()
@@ -145,7 +150,7 @@ describe('StreamFetcher', () => {
         })
 
         it('rejects with 404 if stream does not exist', (done) => {
-            streamFetcher.checkPermission('nonExistingStreamId', 'key', undefined, 'read').catch((err) => {
+            streamFetcher.checkPermission('nonExistingStreamId', 'key', undefined, 'stream_subscribe').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 404)
                 done()
@@ -153,7 +158,7 @@ describe('StreamFetcher', () => {
         })
 
         it('rejects with 403 if key does not grant access to stream', (done) => {
-            streamFetcher.checkPermission(streamId, 'nonExistantKey', undefined, 'read').catch((err) => {
+            streamFetcher.checkPermission(streamId, 'nonExistantKey', undefined, 'stream_subscribe').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 403)
                 done()
@@ -161,7 +166,7 @@ describe('StreamFetcher', () => {
         })
 
         it('rejects with 403 if session token does not grant access to stream', (done) => {
-            streamFetcher.checkPermission(streamId, undefined, 'nonExistingSessionToken', 'read').catch((err) => {
+            streamFetcher.checkPermission(streamId, undefined, 'nonExistingSessionToken', 'stream_subscribe').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 403)
                 done()
@@ -169,7 +174,7 @@ describe('StreamFetcher', () => {
         })
 
         it('rejects with 403 if key does not provides (desired level) privilege to stream', (done) => {
-            streamFetcher.checkPermission(streamId, 'key', undefined, 'write').catch((err) => {
+            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_publish').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 403)
                 done()
@@ -177,7 +182,7 @@ describe('StreamFetcher', () => {
         })
 
         it('resolves with true if key provides privilege to stream', (done) => {
-            streamFetcher.checkPermission(streamId, 'key', undefined, 'read').then((response) => {
+            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe').then((response) => {
                 assert.deepEqual(response, true)
                 done()
             }).catch((err) => {
@@ -186,7 +191,7 @@ describe('StreamFetcher', () => {
         })
 
         it('resolves with true if session token provides privilege to stream', (done) => {
-            streamFetcher.checkPermission(streamId, undefined, 'session-token', 'read').then((response) => {
+            streamFetcher.checkPermission(streamId, undefined, 'session-token', 'stream_subscribe').then((response) => {
                 assert.deepEqual(response, true)
                 done()
             }).catch((err) => {
@@ -201,11 +206,11 @@ describe('StreamFetcher', () => {
                     {
                         id: null,
                         user: null,
-                        operation: 'read',
+                        operation: 'stream_subscribe',
                     },
                 ])
             }
-            streamFetcher.checkPermission('publicStream', undefined, undefined, 'read').then((response) => {
+            streamFetcher.checkPermission('publicStream', undefined, undefined, 'stream_subscribe').then((response) => {
                 assert.deepEqual(response, true)
                 done()
             }).catch((err) => {
@@ -217,15 +222,15 @@ describe('StreamFetcher', () => {
             const streamId2 = getUniqueStreamId()
             const streamId3 = getUniqueStreamId()
 
-            Promise.all([streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
-                streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
-                streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
-                streamFetcher.checkPermission(streamId2, 'key', undefined, 'read'),
-                streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
-                streamFetcher.checkPermission(streamId2, 'key', undefined, 'read'),
-                streamFetcher.checkPermission(streamId3, 'key', undefined, 'read'),
-                streamFetcher.checkPermission(streamId2, 'key', undefined, 'read'),
-                streamFetcher.checkPermission(streamId3, 'key', undefined, 'read'),
+            Promise.all([streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId2, 'key', undefined, 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId2, 'key', undefined, 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId3, 'key', undefined, 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId2, 'key', undefined, 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId3, 'key', undefined, 'stream_subscribe'),
             ]).catch(() => {
                 assert.equal(numOfRequests, 3)
                 done()
@@ -234,17 +239,17 @@ describe('StreamFetcher', () => {
 
         it('does not cache errors', (done) => {
             broken = true
-            streamFetcher.checkPermission(streamId, 'key', undefined, 'read').catch(() => {
-                streamFetcher.checkPermission(streamId, 'key', undefined, 'read').catch(() => {
-                    streamFetcher.checkPermission(streamId, 'key', undefined, 'read').catch(() => {
+            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe').catch(() => {
+                streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe').catch(() => {
+                    streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe').catch(() => {
                         assert.equal(numOfRequests, 3)
                         broken = false
                         Promise.all([
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'read'),
+                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
                         ]).then(() => {
                             assert.equal(numOfRequests, 3 + 1)
                             done()
@@ -325,7 +330,7 @@ describe('StreamFetcher', () => {
                 assert.equal(req.params.id, 'publicStream')
                 res.status(200).send(streamJson)
             }
-            streamFetcher.fetch('publicStream', undefined, 'read').then((response) => {
+            streamFetcher.fetch('publicStream', undefined, 'stream_subscribe').then((response) => {
                 assert.deepEqual(response, streamJson)
                 done()
             }).catch((err) => {
@@ -376,50 +381,40 @@ describe('StreamFetcher', () => {
     })
 
     describe('authenticate', () => {
-        it('only fetches if read permission is required when API key given', (done) => {
-            streamFetcher.checkPermission = sinon.stub()
-            streamFetcher.authenticate(streamId, 'key', undefined, undefined).then((json) => {
-                assert.equal(numOfRequests, 1)
-                assert.deepEqual(json, streamJson)
-                assert(streamFetcher.checkPermission.notCalled)
-                done()
-            })
+        it('fails if the requested permission has not been granted', (done) => {
+            // Only stream_get permission
+            permissions = [
+                {
+                    id: null,
+                    user: 'tester1@streamr.com',
+                    operation: 'stream_get',
+                }
+            ]
+
+            // Should reject promise
+            streamFetcher.authenticate(streamId, undefined, 'session-token', 'stream_subscribe')
+                .catch((err) => {
+                    done()
+                })
         })
 
-        it('checks permission and fetches if write permission is required when API key given', (done) => {
+        it('accepts and returns stream if the permission is granted', (done) => {
             permissions.push({
                 id: null,
                 user: 'tester1@streamr.com',
-                operation: 'write',
+                operation: 'stream_publish',
             })
 
-            streamFetcher.authenticate(streamId, 'key', undefined, 'write').then((json) => {
+            streamFetcher.authenticate(streamId, undefined, 'session-token', 'stream_publish').then((json) => {
                 assert.equal(numOfRequests, 2)
                 assert.deepEqual(json, streamJson)
                 done()
             })
         })
 
-        it('only fetches if read permission is required when session token given', (done) => {
-            streamFetcher.checkPermission = sinon.stub()
-            streamFetcher.authenticate(streamId, undefined, 'session-token', undefined).then((json) => {
+        it('fails with an invalid session token', (done) => {
+            streamFetcher.authenticate(streamId, undefined, 'nonExistingSessionToken', 'stream_subscribe').catch((err) => {
                 assert.equal(numOfRequests, 1)
-                assert.deepEqual(json, streamJson)
-                assert(streamFetcher.checkPermission.notCalled)
-                done()
-            })
-        })
-
-        it('checks permission and fetches if write permission is required when session token given', (done) => {
-            permissions.push({
-                id: null,
-                user: 'tester1@streamr.com',
-                operation: 'write',
-            })
-
-            streamFetcher.authenticate(streamId, undefined, 'session-token', 'write').then((json) => {
-                assert.equal(numOfRequests, 2)
-                assert.deepEqual(json, streamJson)
                 done()
             })
         })
