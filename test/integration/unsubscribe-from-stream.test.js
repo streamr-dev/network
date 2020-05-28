@@ -19,6 +19,11 @@ describe('node unsubscribing from a stream', () => {
         nodeA.addBootstrapTracker(tracker.getAddress())
         nodeB.addBootstrapTracker(tracker.getAddress())
 
+        // TODO: a better way of achieving this would be to pass via constructor, but currently not possible when using
+        // startNetworkNode function
+        nodeA.opts.disconnectionWaitTime = 200
+        nodeB.opts.disconnectionWaitTime = 200
+
         nodeA.subscribe('s', 1)
         nodeB.subscribe('s', 1)
         nodeA.subscribe('s', 2)

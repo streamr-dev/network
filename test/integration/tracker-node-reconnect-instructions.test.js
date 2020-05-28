@@ -26,6 +26,11 @@ describe('Check tracker instructions to node', () => {
         nodeOne = await startNetworkNode(LOCALHOST, 30952, 'node-1')
         nodeTwo = await startNetworkNode(LOCALHOST, 30953, 'node-2')
 
+        // TODO: a better way of achieving this would be to pass via constructor, but currently not possible when using
+        // startNetworkNode function
+        nodeOne.opts.disconnectionWaitTime = 200
+        nodeTwo.opts.disconnectionWaitTime = 200
+
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
 
@@ -50,7 +55,7 @@ describe('Check tracker instructions to node', () => {
         })
     })
 
-    it('if tracker sends empty list of nodes, so node-one will disconnect from node two', async () => {
+    it('if tracker sends empty list of nodes, node one will disconnect from node two', async () => {
         await Promise.all([
             waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
             waitForEvent(nodeTwo, Node.events.NODE_SUBSCRIBED)
@@ -62,6 +67,7 @@ describe('Check tracker instructions to node', () => {
         )
 
         await waitForEvent(nodeOne.protocols.trackerNode, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
+        await waitForEvent(nodeOne, Node.events.NODE_DISCONNECTED)
 
         expect(nodeOne.protocols.trackerNode.endpoint.getPeers().size).toBe(1)
 
