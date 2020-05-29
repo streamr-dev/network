@@ -1,6 +1,7 @@
 import assert from 'assert'
 
 import { ethers } from 'ethers'
+import { wait } from 'streamr-test-utils'
 
 import StreamrClient from '../../src'
 
@@ -33,34 +34,33 @@ describe('StreamEndpoints', () => {
     })
 
     describe('Stream creation', () => {
-        it('createStream', () => client.createStream({
-            name,
-            requireSignedData: true,
-            requireEncryptedData: false,
-        }).then((stream) => {
+        it('createStream', async () => {
+            const stream = await client.createStream({
+                name,
+                requireSignedData: true,
+                requireEncryptedData: false,
+            })
             createdStream = stream
             assert(createdStream.id)
             assert.equal(createdStream.name, name)
             assert.strictEqual(createdStream.requireSignedData, true)
-        }).catch((err) => { throw err }))
-
-        it('getOrCreate an existing Stream', () => client.getOrCreateStream({
-            name,
         })
-            .then((existingStream) => {
-                assert.equal(existingStream.id, createdStream.id)
-                assert.equal(existingStream.name, createdStream.name)
-            }))
 
-        it('getOrCreate a new Stream', () => {
-            const newName = Date.now()
-                .toString()
-            return client.getOrCreateStream({
+        it('getOrCreate an existing Stream', async () => {
+            const existingStream = await client.getOrCreateStream({
+                name,
+            })
+            assert.equal(existingStream.id, createdStream.id)
+            assert.equal(existingStream.name, createdStream.name)
+        })
+
+        it('getOrCreate a new Stream', async () => {
+            const newName = Date.now().toString()
+            const newStream = await client.getOrCreateStream({
                 name: newName,
             })
-                .then((newStream) => {
-                    assert.notEqual(newStream.id, createdStream.id)
-                })
+
+            assert.notEqual(newStream.id, createdStream.id)
         })
     })
 
@@ -110,67 +110,68 @@ describe('StreamEndpoints', () => {
     })
 
     describe('Stream.update', () => {
-        it('can change stream name', () => {
+        it('can change stream name', async () => {
             createdStream.name = 'New name'
-            return createdStream.update()
+            await createdStream.update()
         })
     })
 
     describe('Stream configuration', () => {
-        it('Stream.detectFields', (done) => {
-            client.connect().then(() => {
-                client.publish(createdStream.id, {
-                    foo: 'bar',
-                    count: 0,
-                }).then(() => {
-                    // Need time to propagate to storage
-                    setTimeout(() => {
-                        createdStream.detectFields().then((stream) => {
-                            assert.deepEqual(
-                                stream.config.fields,
-                                [
-                                    {
-                                        name: 'foo',
-                                        type: 'string',
-                                    },
-                                    {
-                                        name: 'count',
-                                        type: 'number',
-                                    },
-                                ],
-                            )
-                            done()
-                        })
-                        client.disconnect()
-                    }, 10000)
-                }).catch((err) => { throw err })
+        it('Stream.detectFields', async () => {
+            await client.ensureConnected()
+            await client.publish(createdStream.id, {
+                foo: 'bar',
+                count: 0,
             })
+            // Need time to propagate to storage
+            await wait(10000)
+            const stream = await createdStream.detectFields()
+            assert.deepEqual(
+                stream.config.fields,
+                [
+                    {
+                        name: 'foo',
+                        type: 'string',
+                    },
+                    {
+                        name: 'count',
+                        type: 'number',
+                    },
+                ],
+            )
+            await client.ensureDisconnected()
         }, 15000)
     })
 
     describe('Stream permissions', () => {
         it('Stream.getPermissions', async () => {
             const permissions = await createdStream.getPermissions()
-            assert.equal(permissions.length, 3) // read, write, share for the owner
+            // get, edit, delete, subscribe, publish, share
+            assert.equal(permissions.length, 6, `Unexpected number of permissions: ${JSON.stringify(permissions)}`)
         })
 
         it('Stream.hasPermission', async () => {
-            assert(await createdStream.hasPermission('share', wallet.address))
+            assert(await createdStream.hasPermission('stream_share', wallet.address))
         })
 
         it('Stream.grantPermission', async () => {
-            await createdStream.grantPermission('read', null) // public read
-            assert(await createdStream.hasPermission('read', null))
+            await createdStream.grantPermission('stream_subscribe', null) // public read
+            assert(await createdStream.hasPermission('stream_subscribe', null))
         })
 
         it('Stream.revokePermission', async () => {
-            const publicRead = await createdStream.hasPermission('read', null)
+            const publicRead = await createdStream.hasPermission('stream_subscribe', null)
             await createdStream.revokePermission(publicRead.id)
-            assert(!(await createdStream.hasPermission('read', null)))
+            assert(!(await createdStream.hasPermission('stream_subscribe', null)))
         })
     })
 
     describe('Stream deletion', () => {
-        it('Stream.delete', () => createdStream.delete())
+        it('Stream.delete', async () => {
+            await createdStream.delete()
+            assert.rejects(async () => {
+                await client.getStream(createdStream.id)
+            })
+        })
     })
 })
