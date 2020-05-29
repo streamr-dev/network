@@ -315,7 +315,7 @@ describe('StreamrClient resends', () => {
                 publishedMessages.push(message)
             }
 
-            await wait(15000)
+            await wait(30000)
             await client.ensureDisconnected()
 
             // resend from LONG_RESEND messages
@@ -336,13 +336,14 @@ describe('StreamrClient resends', () => {
                 },
             )
 
-            // eslint-disable-next-line no-loop-func
-            sub.once('resent', () => {
-                expect(receivedMessages.length).toBe(publishedMessages.length)
+            await new Promise((resolve) => {
+                sub.once('resent', () => {
+                    expect(receivedMessages.length).toBe(publishedMessages.length)
+                    resolve()
+                })
             })
 
-            // eslint-disable-next-line no-await-in-loop
             await waitForCondition(() => receivedMessages.length === LONG_RESEND, 100000)
-        }, 100000)
+        }, 200000)
     })
 })
