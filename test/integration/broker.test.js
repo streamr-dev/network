@@ -74,6 +74,7 @@ describe('broker: end-to-end', () => {
         })
         freshStreamId = freshStream.id
 
+        await freshStream.grantPermission('stream_get', 'tester2@streamr.com')
         await freshStream.grantPermission('stream_subscribe', 'tester2@streamr.com')
     }, 10 * 1000)
 

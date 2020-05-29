@@ -245,6 +245,7 @@ describe('mqtt: end-to-end', () => {
         const client3Messages = []
         const client4Messages = []
 
+        await freshStream1.grantPermission('stream_get', 'tester2@streamr.com')
         await freshStream1.grantPermission('stream_subscribe', 'tester2@streamr.com')
 
         await waitForCondition(() => mqttClient1.connected)
