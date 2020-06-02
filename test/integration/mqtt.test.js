@@ -65,18 +65,19 @@ describe('mqtt: end-to-end', () => {
     }, 15000)
 
     afterEach(async () => {
-        await Promise.all([
-            tracker.stop(),
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
-            client3.ensureDisconnected(),
-            mqttClient1.end(true),
-            mqttClient2.end(true),
-            mqttClient3.end(true),
-            broker1.close(),
-            broker2.close(),
-            broker3.close()
-        ])
+        await tracker.stop()
+
+        await client1.ensureDisconnected()
+        await client2.ensureDisconnected()
+        await client3.ensureDisconnected()
+
+        await mqttClient1.end(true)
+        await mqttClient2.end(true)
+        await mqttClient3.end(true)
+
+        await broker1.close()
+        await broker2.close()
+        await broker3.close()
     }, 15000)
 
     it('test not valid api key', async (done) => {

@@ -2,7 +2,7 @@ os: linux
 dist: xenial
 language: node_js
 node_js:
-- 13.11.0
+- 14.3.0
 branches:
   only:
   - master
@@ -16,7 +16,7 @@ import:
 - source: streamr-dev/travis-ci:npm-secrets.yml@master
 - source: streamr-dev/travis-ci:docker-secrets.yml@master
 before_install:
-- npm i -g npm@6.14.2
+- npm i -g npm@6.14.5
 - npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
 jobs:
   allow_failures:
