@@ -20,19 +20,20 @@ const throwError = (error) => { throw error }
 
 describe('PubSub with multiple clients', () => {
     let stream
-    let client
+    let mainClient
+    let otherClient
     let privateKey
 
     async function setup() {
         privateKey = ethers.Wallet.createRandom().privateKey
 
-        client = createClient({
+        mainClient = createClient({
             auth: {
                 privateKey
             }
         })
-        client.once('error', throwError)
-        stream = await client.createStream({
+        mainClient.once('error', throwError)
+        stream = await mainClient.createStream({
             name: uid('stream')
         })
     }
@@ -43,10 +44,12 @@ describe('PubSub with multiple clients', () => {
             stream = undefined // eslint-disable-line require-atomic-updates
         }
 
-        if (client && client.isConnected()) {
-            await client.disconnect()
-            client.off('error', throwError)
-            client = undefined // eslint-disable-line require-atomic-updates
+        if (mainClient) {
+            await mainClient.ensureDisconnected()
+        }
+
+        if (otherClient) {
+            await otherClient.ensureDisconnected()
         }
     }
 
@@ -59,8 +62,7 @@ describe('PubSub with multiple clients', () => {
     })
 
     test('can get messages published from other client', async (done) => {
-        const mainClient = client
-        const otherClient = createClient({
+        otherClient = createClient({
             auth: {
                 privateKey
             }
@@ -68,7 +70,7 @@ describe('PubSub with multiple clients', () => {
         otherClient.once('error', done)
         mainClient.once('error', done)
         await otherClient.ensureConnected()
-        await client.ensureConnected()
+        await mainClient.ensureConnected()
 
         const receivedMessagesOther = []
         const receivedMessagesMain = []
@@ -98,6 +100,8 @@ describe('PubSub with multiple clients', () => {
         // messages should arrive on both clients?
         expect(receivedMessagesMain).toEqual([message])
         expect(receivedMessagesOther).toEqual([message])
+        otherClient.removeListener('error', done)
+        mainClient.removeListener('error', done)
         done()
     }, 30000)
 })
