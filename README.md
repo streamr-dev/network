@@ -1,11 +1,11 @@
 # Streamr client libraries end-to-end testing
 
-This tool allows to run/test different stream setups using the developed client libraries (only Java supported at the moment). These setups can be either part of the CI or run indefinitely against the staging environment to better mock the production environment.
+This tool allows to run/test different stream setups using the developed client libraries. These setups can be either part of the CI or run indefinitely against the staging environment to better mock the production environment.
 
 ## Stream setups
 
 A 'stream setup' is basically a scenario. It consists of a test stream and a set of participants (publishers + subscribers) using this stream. The publishers can be created with different parameters:
-- The library used. (Only Java or Javascript now)
+- The library used (Java or Javascript at the moment)
 - Publication rate
 - Signing data or not
 - Encrypting data or not
@@ -18,6 +18,14 @@ The subscribers as well can be created with different parameters:
 - If encrypted, using a group key shared by the publisher or using the key-exchange mechanism
 
 The different parameters allow to test different scenarios. For example one stream with 3 Java publishers, 2 JS publishers, 5 Java subscribers and 1 JS subscriber. One publisher shares his group key with the subscribers, the others use the key-exchange mechanism, some rotate the key and some don't, etc...
+
+## Building
+
+Build both the JS and Java parts:
+
+```
+npm ci && gradle fatjar
+```
 
 ## Usage
 
