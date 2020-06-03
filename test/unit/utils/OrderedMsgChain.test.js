@@ -13,11 +13,11 @@ const createMsg = (
     prevSequenceNumber = 0, content = {}, publisherId = 'publisherId', msgChainId = 'msgChainId',
 ) => {
     const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null
-    return new StreamMessage(
-        new MessageID('streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId),
+    return new StreamMessage({
+        messageId: new MessageID('streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId),
         prevMsgRef,
-        JSON.stringify(content),
-    )
+        content,
+    })
 }
 
 describe('OrderedMsgChain', () => {

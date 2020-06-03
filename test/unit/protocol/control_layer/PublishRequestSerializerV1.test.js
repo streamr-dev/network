@@ -11,7 +11,11 @@ const streamMessage = StreamMessage.deserialize([30, ['streamId', 0, 15295499611
 const VERSION = 1
 
 // Message definitions
-const message = new PublishRequest(VERSION, null, streamMessage, 'sessionToken')
+const message = new PublishRequest({
+    version: VERSION,
+    streamMessage,
+    sessionToken: 'sessionToken',
+})
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.PublishRequest, JSON.parse(streamMessage.serialize(30)), 'sessionToken'])
 
 describe('PublishRequestSerializerV1', () => {

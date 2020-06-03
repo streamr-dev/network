@@ -11,15 +11,15 @@ const content = {
 }
 
 // Message definitions
-const message = new StreamMessage(
-    new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-    new MessageRef(1564046132168, 5),
-    JSON.stringify(content),
-    StreamMessage.CONTENT_TYPES.MESSAGE,
-    StreamMessage.ENCRYPTION_TYPES.NONE,
-    StreamMessage.SIGNATURE_TYPES.ETH,
-    'signature',
-)
+const message = new StreamMessage({
+    messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+    prevMsgRef: new MessageRef(1564046132168, 5),
+    content: JSON.stringify(content),
+    contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+    encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+    signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+    signature: 'signature',
+})
 const serializedMessage = JSON.stringify([
     VERSION,
     ['streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'],

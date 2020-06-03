@@ -23,7 +23,11 @@ export default class BroadcastMessageSerializerV2 {
             serializedStreamMsg,
         ] = arr
 
-        return new BroadcastMessage(version, requestId, StreamMessage.deserialize(serializedStreamMsg))
+        return new BroadcastMessage({
+            version,
+            requestId,
+            streamMessage: StreamMessage.deserialize(serializedStreamMsg),
+        })
     }
 }
 

@@ -2,7 +2,9 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsStrin
 import ControlMessage from '../ControlMessage'
 
 export default class SubscribeRequest extends ControlMessage {
-    constructor(version, requestId, streamId, streamPartition, sessionToken) {
+    constructor({
+        version = ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, sessionToken
+    }) {
         super(version, ControlMessage.TYPES.SubscribeRequest, requestId)
 
         validateIsNotEmptyString('streamId', streamId)
@@ -12,9 +14,5 @@ export default class SubscribeRequest extends ControlMessage {
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.sessionToken = sessionToken
-    }
-
-    static create(requestId, streamId, streamPartition, sessionToken) {
-        return new SubscribeRequest(ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, sessionToken)
     }
 }

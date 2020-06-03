@@ -19,27 +19,39 @@ Every message type from both the Control Layer and the Message Layer is defined 
 This example shows how to create a `StreamMessage` and encapsulate it in a `PublishRequest`.
 
 ```javascript
-const streamMessage = new StreamMessage(...)
-const publishRequest = PublishRequest.create('requestId', streamMessage, 'sessionToken')
+const streamMessage = new StreamMessage({
+    messageId: new MessageID(...),
+    content
+})
+const publishRequest = new PublishRequest({
+    requestId: 'requestId', 
+    streamMessage, 
+})
 ```
 
-#### Serializing messages to JSON arrays or strings
+#### Serializing messages to strings
 
-Every message type from both the Control Layer and the Message Layer has a `serialize` method that takes different optional arguments depending on the message type. For every message type, the first argument is the version of the resulting serialized message. By default, it serializes to the latest version of the message type and the result is a string.
+Every message type from both the Control Layer and the Message Layer has a `serialize` method, which takes as argument the version to serialize to. By default, it serializes to the latest version of the message type. The `serialize` methods return a string.
 
 ```javascript
-const streamMessage = new StreamMessage(...)
+const streamMessage = new StreamMessage({...})
 streamMessage.serialize() // to latest version
 // > '[31,["streamId",0,1529549961116,"publisherId","msgChainId"],null,27,0,{"foo":"bar"},0,null]'
-streamMessage.serialize(30) // to version 30
+streamMessage.serialize(30) // to MessageLayer version 30
 // > '[30,["streamId",0,1529549961116,"publisherId","msgChainId"],null,27,{"foo":"bar"},0,null]'
 
-const subscribeRequest = SubscribeRequest.create('streamId', 0, 'sessionToken')
-subscribeRequest.serialize()
+const subscribeRequest = new SubscribeRequest({
+    streamId: 'streamId', 
+    streamPartition: 0, 
+    sessionToken: 'sessionToken',
+})
+subscribeRequest.serialize() // to latest version
+// > '[2,9,"requestId","streamId",0,"sessionToken"]'
+subscribeRequest.serialize(1) // to ControlLayer version 1
 // > '[1,9,"streamId",0,"sessionToken"]'
 ```
 
-#### Parsing messages from JSON arrays or strings
+#### Parsing messages from strings
 
 For deserialization, use the static `deserialize` method that is present in `ControlMessage` for the ControlLayer and `StreamMessage` for the Message Layer. The `deserialize` method accepts both strings and arrays as input.
 

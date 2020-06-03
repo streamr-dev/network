@@ -1,5 +1,7 @@
 import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../utils/validations'
 
+import MessageRef from './MessageRef'
+
 export default class MessageID {
     constructor(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId) {
         validateIsNotEmptyString('streamId', streamId)
@@ -40,5 +42,9 @@ export default class MessageID {
 
     serialize() {
         return JSON.stringify(this.toArray())
+    }
+
+    toMessageRef() {
+        return new MessageRef(this.timestamp, this.sequenceNumber)
     }
 }

@@ -31,7 +31,9 @@ export default class ResendFromRequestSerializerV2 {
             sessionToken,
         ] = arr
 
-        return new ResendFromRequest(version, requestId, streamId, streamPartition, new MessageRef(...fromMsgRefArray), publisherId, sessionToken)
+        return new ResendFromRequest({
+            version, requestId, streamId, streamPartition, fromMsgRef: new MessageRef(...fromMsgRefArray), publisherId, sessionToken
+        })
     }
 }
 

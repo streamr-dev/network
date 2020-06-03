@@ -7,7 +7,10 @@ const { ErrorResponse, ControlMessage } = ControlLayer
 const VERSION = 1
 
 // Message definitions
-const message = new ErrorResponse(VERSION, null, 'error message', null)
+const message = new ErrorResponse({
+    version: VERSION,
+    errorMessage: 'error message',
+})
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.ErrorResponse, 'error message'])
 
 describe('ErrorResponseSerializerV1', () => {

@@ -6,30 +6,42 @@ import ControlMessage from '../../../../src/protocol/control_layer/ControlMessag
 import ValidationError from '../../../../src/errors/ValidationError'
 
 describe('ResendRangeRequest', () => {
-    describe('validation', () => {
+    describe('constructor', () => {
         it('throws on null requestId', () => {
-            assert.throws(() => new ResendRangeRequest(ControlMessage.LATEST_VERSION,
-                null, 'streamId', 0, new MessageRef(132846894, 0),
-                new MessageRef(132847000, 0), 'publisherId',
-                'msgChainId', 'sessionToken'), ValidationError)
+            assert.throws(() => new ResendRangeRequest({
+                streamId: 'streamId',
+                streamPartition: 0,
+                fromMsgRef: new MessageRef(132846894, 0),
+                toMsgRef: new MessageRef(132847000, 0),
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId',
+                sessionToken: 'sessionToken',
+            }), ValidationError)
         })
         it('throws if from > to', () => {
-            assert.throws(() => new ResendRangeRequest(ControlMessage.LATEST_VERSION,
-                'requestId', 'streamId', 0,
-                new MessageRef(132847000, 0),
-                new MessageRef(132846894, 0), 'publisherId',
-                'msgChainId', 'sessionToken'), ValidationError)
+            assert.throws(() => new ResendRangeRequest({
+                streamId: 'streamId',
+                streamPartition: 0,
+                fromMsgRef: new MessageRef(132847000, 0),
+                toMsgRef: new MessageRef(132846894, 0),
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId',
+                sessionToken: 'sessionToken',
+            }), ValidationError)
         })
-    })
-
-    describe('create', () => {
         it('should create the latest version', () => {
-            const msg = ResendRangeRequest.create(
-                'requestId', 'streamId', 0,
-                new MessageRef(132846894, 0), new MessageRef(132847000, 0),
-                'publisherId', 'msgChainId', 'sessionToken',
-            )
+            const msg = new ResendRangeRequest({
+                requestId: 'requestId',
+                streamId: 'streamId',
+                streamPartition: 0,
+                fromMsgRef: new MessageRef(132846894, 0),
+                toMsgRef: new MessageRef(132847000, 0),
+                publisherId: 'publisherId',
+                msgChainId: 'msgChainId',
+                sessionToken: 'sessionToken',
+            })
             assert(msg instanceof ResendRangeRequest)
+            assert.strictEqual(msg.version, ControlMessage.LATEST_VERSION)
             assert.strictEqual(msg.streamId, 'streamId')
             assert.strictEqual(msg.streamPartition, 0)
             assert.strictEqual(msg.requestId, 'requestId')

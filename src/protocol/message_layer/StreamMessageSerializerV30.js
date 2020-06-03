@@ -28,15 +28,15 @@ export default class StreamMessageSerializerV30 {
             signature,
         ] = arr
 
-        return new StreamMessage(
-            MessageID.fromArray(messageIdArr),
-            prevMsgRefArr ? MessageRef.fromArray(prevMsgRefArr) : null,
-            serializedContent,
+        return new StreamMessage({
+            messageId: MessageID.fromArray(messageIdArr),
+            prevMsgRef: prevMsgRefArr ? MessageRef.fromArray(prevMsgRefArr) : null,
+            content: serializedContent,
             contentType,
-            StreamMessage.ENCRYPTION_TYPES.NONE, // encryption not supported in V30
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE, // encryption not supported in V30
             signatureType,
             signature,
-        )
+        })
     }
 }
 

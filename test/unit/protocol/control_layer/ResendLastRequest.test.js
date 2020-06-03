@@ -5,16 +5,26 @@ import ControlMessage from '../../../../src/protocol/control_layer/ControlMessag
 import ValidationError from '../../../../src/errors/ValidationError'
 
 describe('ResendLastRequest', () => {
-    describe('validation', () => {
+    describe('constructor', () => {
         it('throws on null requestId', () => {
-            assert.throws(() => new ResendLastRequest(ControlMessage.LATEST_VERSION, null, 'streamId', 0, 100, 'sessionToken'), ValidationError)
+            assert.throws(() => new ResendLastRequest({
+                requestId: null,
+                streamId: 'streamId',
+                streamPartition: 0,
+                numberLast: 100,
+                sessionToken: 'sessionToken',
+            }), ValidationError)
         })
-    })
-
-    describe('create', () => {
         it('should create the latest version', () => {
-            const msg = ResendLastRequest.create('requestId', 'streamId', 0, 100, 'sessionToken')
+            const msg = new ResendLastRequest({
+                requestId: 'requestId',
+                streamId: 'streamId',
+                streamPartition: 0,
+                numberLast: 100,
+                sessionToken: 'sessionToken',
+            })
             assert(msg instanceof ResendLastRequest)
+            assert.strictEqual(msg.version, ControlMessage.LATEST_VERSION)
             assert.strictEqual(msg.streamId, 'streamId')
             assert.strictEqual(msg.streamPartition, 0)
             assert.strictEqual(msg.requestId, 'requestId')

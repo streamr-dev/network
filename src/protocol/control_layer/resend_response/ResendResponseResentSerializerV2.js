@@ -24,7 +24,9 @@ export default class ResendResponseResentSerializerV2 {
             streamPartition,
         ] = arr
 
-        return new ResendResponseResent(version, requestId, streamId, streamPartition)
+        return new ResendResponseResent({
+            version, requestId, streamId, streamPartition
+        })
     }
 }
 

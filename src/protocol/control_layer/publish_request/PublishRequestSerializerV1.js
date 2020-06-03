@@ -23,7 +23,11 @@ export default class PublishRequestSerializerV1 {
             sessionToken,
         ] = arr
 
-        return new PublishRequest(version, null, StreamMessage.deserialize(serializedStreamMsg), sessionToken)
+        return new PublishRequest({
+            version,
+            streamMessage: StreamMessage.deserialize(serializedStreamMsg),
+            sessionToken,
+        })
     }
 }
 

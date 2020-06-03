@@ -3,28 +3,37 @@ import assert from 'assert'
 import ValidationError from '../../../../src/errors/ValidationError'
 import { ControlLayer, MessageLayer } from '../../../../src/index'
 
-const { StreamMessage } = MessageLayer
+const { StreamMessage, MessageID } = MessageLayer
 const { UnicastMessage, ControlMessage } = ControlLayer
 
 describe('UnicastMessage', () => {
-    describe('validation', () => {
+    describe('constructor', () => {
         it('throws on null streamMessage', () => {
-            assert.throws(() => new UnicastMessage(ControlMessage.LATEST_VERSION, 'requestId', null), ValidationError)
-        })
-        it('throws on bogus streamMessage', () => {
-            assert.throws(() => new UnicastMessage(ControlMessage.LATEST_VERSION, 'requestId', {
-                fake: true
+            assert.throws(() => new UnicastMessage({
+                requestId: 'requestId',
+                streamMessage: null,
             }), ValidationError)
         })
-    })
-
-    describe('create', () => {
+        it('throws on bogus streamMessage', () => {
+            assert.throws(() => new UnicastMessage({
+                requestId: 'requestId',
+                streamMessage: {
+                    fake: true,
+                },
+            }), ValidationError)
+        })
         it('should create the latest version', () => {
-            const streamMessage = StreamMessage.deserialize([30, ['TsvTbqshTsuLg_HyUjxigA', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
-                [1529549961000, 0], StreamMessage.CONTENT_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'])
+            const streamMessage = new StreamMessage({
+                messageId: new MessageID('streamId', 0, 12345, 0, 'publisherId', 'msgChainId'),
+                content: {},
+            })
 
-            const msg = UnicastMessage.create('requestId', streamMessage)
+            const msg = new UnicastMessage({
+                requestId: 'requestId',
+                streamMessage,
+            })
             assert(msg instanceof UnicastMessage)
+            assert.strictEqual(msg.version, ControlMessage.LATEST_VERSION)
             assert(msg.streamMessage instanceof StreamMessage)
             assert.strictEqual(msg.requestId, 'requestId')
         })

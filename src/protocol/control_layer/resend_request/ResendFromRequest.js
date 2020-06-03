@@ -8,7 +8,9 @@ import {
 import MessageRef from '../../message_layer/MessageRef'
 
 export default class ResendFromRequest extends ControlMessage {
-    constructor(version = ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, fromMsgRef, publisherId, sessionToken) {
+    constructor({
+        version = ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, fromMsgRef, publisherId, sessionToken
+    }) {
         super(version, ControlMessage.TYPES.ResendFromRequest, requestId)
 
         validateIsNotEmptyString('streamId', streamId)
@@ -24,9 +26,5 @@ export default class ResendFromRequest extends ControlMessage {
         this.sessionToken = sessionToken
 
         validateIsNotEmptyString('requestId', requestId) // unnecessary line once V1 is dropped
-    }
-
-    static create(requestId, streamId, streamPartition, fromMsgRef, publisherId, sessionToken) {
-        return new ResendFromRequest(ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, fromMsgRef, publisherId, sessionToken)
     }
 }

@@ -24,7 +24,9 @@ export default class SubscribeRequestSerializerV1 {
             sessionToken,
         ] = arr
 
-        return new SubscribeRequest(version, null, streamId, streamPartition, sessionToken)
+        return new SubscribeRequest({
+            version, streamId, streamPartition, sessionToken
+        })
     }
 }
 

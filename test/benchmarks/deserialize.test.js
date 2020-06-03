@@ -47,15 +47,12 @@ describe('deserialize', () => {
         // Object creation only
 
         run(() => {
-            return new StreamMessage(
-                new MessageID('kxeE-gyxS8CkuWYlfBKMVg', 0, 1567671580680, 0, '0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963', '7kcxFuyOs4ozeAcVfzJF'),
-                new MessageRef(1567671579675, 0),
-                '{"random": 0.8314497807870005}',
-                StreamMessage.CONTENT_TYPES.MESSAGE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE
-            )
-        }, 'new StreamMessage(...)')
+            return new StreamMessage({
+                messageId: new MessageID('kxeE-gyxS8CkuWYlfBKMVg', 0, 1567671580680, 0, '0x8a9b2ca74d8c1c095d34de3f3cdd7462a5c9c9f4b84d11270a0ad885958bb963', '7kcxFuyOs4ozeAcVfzJF'),
+                prevMsgRef: new MessageRef(1567671579675, 0),
+                content: '{"random": 0.8314497807870005}',
+            })
+        }, 'new StreamMessage({...})')
 
         // Decomposition and object creation
 
@@ -79,7 +76,11 @@ describe('deserialize', () => {
         // Object creation only
 
         run(() => {
-            return new PublishRequest(2, 'requestId', streamMessage, 'sessionToken')
+            return new PublishRequest({
+                requestId: 'requestId',
+                streamMessage,
+                sessionToken: 'sessionToken',
+            })
         }, 'new PublishRequest(...) with ready-made StreamMessage')
 
         // Decomposition and object creation

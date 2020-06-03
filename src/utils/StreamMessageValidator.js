@@ -1,6 +1,8 @@
 import StreamMessage from '../protocol/message_layer/StreamMessage'
 import ValidationError from '../errors/ValidationError'
 
+import SigningUtil from './SigningUtil'
+
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
 
 /**
@@ -17,21 +19,22 @@ const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange/'
  */
 export default class StreamMessageValidator {
     /**
-     * @param getStreamFn async function(streamId): returns the metadata required for stream validation for streamId.
+     * @param getStream async function(streamId): returns the metadata required for stream validation for streamId.
      *        The included fields should be at least: { partitions, requireSignedData, requireEncryptedData }
-     * @param isPublisherFn async function(address, streamId): returns true if address is a permitted publisher on streamId
-     * @param isSubscriberFn async function(address, streamId): returns true if address is a permitted subscriber on streamId
-     * @param recoverAddressFn function(payload, signature): returns the Ethereum address that signed the payload to generate signature
+     * @param isPublisher async function(address, streamId): returns true if address is a permitted publisher on streamId
+     * @param isSubscriber async function(address, streamId): returns true if address is a permitted subscriber on streamId
+     * @param verify async function(address, payload, signature): returns true if the address and payload match the signature.
+     * The default implementation uses the native secp256k1 library on node.js and falls back to the elliptic library on browsers.
      */
-    constructor({ getStream, isPublisher, isSubscriber, recoverAddress }) {
-        StreamMessageValidator.checkInjectedFunctions(getStream, isPublisher, isSubscriber, recoverAddress)
+    constructor({ getStream, isPublisher, isSubscriber, verify = SigningUtil.verify }) {
+        StreamMessageValidator.checkInjectedFunctions(getStream, isPublisher, isSubscriber, verify)
         this.getStream = getStream
         this.isPublisher = isPublisher
         this.isSubscriber = isSubscriber
-        this.recoverAddress = recoverAddress
+        this.verify = verify
     }
 
-    static checkInjectedFunctions(getStreamFn, isPublisherFn, isSubscriberFn, recoverAddressFn) {
+    static checkInjectedFunctions(getStreamFn, isPublisherFn, isSubscriberFn, verifyFn) {
         if (typeof getStreamFn !== 'function') {
             throw new Error('getStreamFn must be: async function(streamId): returns the validation metadata object for streamId')
         }
@@ -41,8 +44,8 @@ export default class StreamMessageValidator {
         if (typeof isSubscriberFn !== 'function') {
             throw new Error('isSubscriberFn must be: async function(address, streamId): returns true if address is a permitted subscriber on streamId')
         }
-        if (typeof recoverAddressFn !== 'function') {
-            throw new Error('recoverAddressFn must be: function(payload, signature): returns the Ethereum address that signed the payload to generate signature')
+        if (typeof verifyFn !== 'function') {
+            throw new Error('verifyFn must be: function(address, payload, signature): returns true if the address and payload match the signature')
         }
     }
 
@@ -77,25 +80,25 @@ export default class StreamMessageValidator {
      * Checks that the signature in the given StreamMessage is cryptographically valid.
      * Resolves if valid, rejects otherwise.
      *
-     * It's left up to the user of this method to decide which implementation to pass in as the recoverFn.
+     * It's left up to the user of this method to decide which implementation to pass in as the verifyFn.
      *
      * @param streamMessage the StreamMessage to validate.
-     * @param recoverFn function(payload, signature): returns the Ethereum address that signed the payload to generate signature
+     * @param verifyFn function(address, payload, signature): return true if the address and payload match the signature
      */
-    static checkSignature(streamMessage, recoverFn) {
+    static async assertSignatureIsValid(streamMessage, verifyFn) {
         const payload = streamMessage.getPayloadToSign()
 
         if (streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH_LEGACY
             || streamMessage.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
-            let recoveredAddress
+            let success
             try {
-                recoveredAddress = recoverFn(payload, streamMessage.signature)
+                success = await verifyFn(streamMessage.getPublisherId(), payload, streamMessage.signature)
             } catch (err) {
                 throw new ValidationError(`An error occurred during address recovery from signature: ${err}`)
             }
 
-            if (!recoveredAddress || recoveredAddress.toLowerCase() !== streamMessage.getPublisherId().toLowerCase()) {
-                throw new ValidationError(`Signature validation failed for message! Recovered address: ${recoveredAddress}, message: ${streamMessage.serialize()}`)
+            if (!success) {
+                throw new ValidationError(`Signature validation failed for message: ${streamMessage.serialize()}`)
             }
         } else {
             // We should never end up here, as StreamMessage construction throws if the signature type is invalid
@@ -119,7 +122,7 @@ export default class StreamMessageValidator {
 
         // Cryptographic integrity and publisher permission checks. Note that only signed messages can be validated this way.
         if (streamMessage.signature) {
-            StreamMessageValidator.checkSignature(streamMessage, this.recoverAddress)
+            await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
             const sender = streamMessage.getPublisherId()
 
             // Check that the sender of the message is a valid publisher of the stream
@@ -142,7 +145,7 @@ export default class StreamMessageValidator {
         const sender = streamMessage.getPublisherId()
         const recipient = streamMessage.getStreamId().substring(KEY_EXCHANGE_STREAM_PREFIX.length)
 
-        StreamMessageValidator.checkSignature(streamMessage, this.recoverAddress)
+        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
         // Check that the recipient of the request is a valid publisher of the stream
         const recipientIsPublisher = await this.isPublisher(recipient, request.streamId)
@@ -165,7 +168,7 @@ export default class StreamMessageValidator {
             throw new ValidationError(`Group key responses can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}. Message: ${streamMessage.serialize()}`)
         }
 
-        StreamMessageValidator.checkSignature(streamMessage, this.recoverAddress)
+        await StreamMessageValidator.assertSignatureIsValid(streamMessage, this.verify)
 
         const response = streamMessage.getParsedContent()
         const sender = streamMessage.getPublisherId()

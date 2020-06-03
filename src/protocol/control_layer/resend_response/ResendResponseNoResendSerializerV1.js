@@ -24,7 +24,9 @@ export default class ResendResponseNoResendSerializerV1 {
             requestId,
         ] = arr
 
-        return new ResendResponseNoResend(version, requestId, streamId, streamPartition)
+        return new ResendResponseNoResend({
+            version, requestId, streamId, streamPartition
+        })
     }
 }
 

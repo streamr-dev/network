@@ -22,7 +22,9 @@ export default class UnsubscribeRequestSerializerV1 {
             streamPartition,
         ] = arr
 
-        return new UnsubscribeRequest(version, null, streamId, streamPartition)
+        return new UnsubscribeRequest({
+            version, streamId, streamPartition
+        })
     }
 }
 

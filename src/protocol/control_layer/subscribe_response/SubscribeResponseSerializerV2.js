@@ -24,7 +24,9 @@ export default class SubscribeResponseSerializerV2 {
             streamPartition,
         ] = arr
 
-        return new SubscribeResponse(version, requestId, streamId, streamPartition)
+        return new SubscribeResponse({
+            version, requestId, streamId, streamPartition
+        })
     }
 }
 

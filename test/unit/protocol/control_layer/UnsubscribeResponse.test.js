@@ -5,25 +5,44 @@ import ControlMessage from '../../../../src/protocol/control_layer/ControlMessag
 import ValidationError from '../../../../src/errors/ValidationError'
 
 describe('UnsubscribeResponse', () => {
-    describe('validation', () => {
+    describe('constructor', () => {
         it('throws on null streamId', () => {
-            assert.throws(() => new UnsubscribeResponse(ControlMessage.LATEST_VERSION, 'requestId', null, 0, 'sessionToken'), ValidationError)
+            assert.throws(() => new UnsubscribeResponse({
+                requestId: 'requestId',
+                streamId: null,
+                streamPartition: 0,
+            }), ValidationError)
         })
         it('throws on null streamPartition', () => {
-            assert.throws(() => new UnsubscribeResponse(ControlMessage.LATEST_VERSION, 'requestId', 'streamId', null, 'sessionToken'), ValidationError)
+            assert.throws(() => new UnsubscribeResponse({
+                requestId: 'requestId',
+                streamId: 'streamId',
+                streamPartition: null,
+            }), ValidationError)
         })
         it('throws on null requestId (since V2)', () => {
-            assert.throws(() => new UnsubscribeResponse(ControlMessage.LATEST_VERSION, null, 'streamId', 0, 'sessionToken'), ValidationError)
+            assert.throws(() => new UnsubscribeResponse({
+                requestId: null,
+                streamId: 'streamId',
+                streamPartition: 0,
+            }), ValidationError)
         })
         it('does not throw on null requestId (before V2)', () => {
-            assert.doesNotThrow(() => new UnsubscribeResponse(1, null, 'streamId', 0, 'sessionToken'))
+            assert.doesNotThrow(() => new UnsubscribeResponse({
+                version: 1,
+                requestId: null,
+                streamId: 'streamId',
+                streamPartition: 0,
+            }))
         })
-    })
-
-    describe('create', () => {
         it('should create the latest version', () => {
-            const msg = UnsubscribeResponse.create('requestId', 'streamId', 0)
+            const msg = new UnsubscribeResponse({
+                requestId: 'requestId',
+                streamId: 'streamId',
+                streamPartition: 0,
+            })
             assert(msg instanceof UnsubscribeResponse)
+            assert.strictEqual(msg.version, ControlMessage.LATEST_VERSION)
             assert.strictEqual(msg.requestId, 'requestId')
             assert.strictEqual(msg.streamId, 'streamId')
             assert.strictEqual(msg.streamPartition, 0)

@@ -2,7 +2,7 @@ import { validateIsNotEmptyString, validateIsNotNegativeInteger } from '../../..
 import ControlMessage from '../ControlMessage'
 
 export default class UnsubscribeRequest extends ControlMessage {
-    constructor(version, requestId, streamId, streamPartition) {
+    constructor({ version = ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition }) {
         super(version, ControlMessage.TYPES.UnsubscribeRequest, requestId)
 
         validateIsNotEmptyString('streamId', streamId)
@@ -10,9 +10,5 @@ export default class UnsubscribeRequest extends ControlMessage {
 
         this.streamId = streamId
         this.streamPartition = streamPartition
-    }
-
-    static create(requestId, streamId, streamPartition) {
-        return new UnsubscribeRequest(ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition)
     }
 }

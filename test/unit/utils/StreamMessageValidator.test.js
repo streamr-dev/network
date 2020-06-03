@@ -1,7 +1,6 @@
 import assert from 'assert'
 
 import sinon from 'sinon'
-import { ethers } from 'ethers'
 
 import StreamMessageValidator from '../../../src/utils/StreamMessageValidator'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
@@ -13,7 +12,7 @@ describe('StreamMessageValidator', () => {
     let getStream
     let isPublisher
     let isSubscriber
-    let recoverAddress
+    let verify
     let msg
     let groupKeyRequest
     let groupKeyResponse
@@ -26,7 +25,7 @@ describe('StreamMessageValidator', () => {
     }
 
     const getValidator = () => new StreamMessageValidator({
-        getStream, isPublisher, isSubscriber, recoverAddress,
+        getStream, isPublisher, isSubscriber, verify,
     })
 
     beforeEach(() => {
@@ -34,7 +33,7 @@ describe('StreamMessageValidator', () => {
         getStream = sinon.stub().resolves(defaultGetStreamResponse)
         isPublisher = sinon.stub().resolves(true)
         isSubscriber = sinon.stub().resolves(true)
-        recoverAddress = (payload, signature) => ethers.utils.verifyMessage(payload, signature)
+        verify = undefined // use default impl by default
 
         msg = StreamMessage.deserialize('[31,["tagHE6nTQ9SJV2wPoCxBFw",0,1587141844396,0,"0xbce3217F2AC9c8a2D14A6303F87506c4FC124014","k000EDTMtqOTLM8sirFj"],[1587141844312,0],27,0,"{\\"eventType\\":\\"trade\\",\\"eventTime\\":1587141844398,\\"symbol\\":\\"ETHBTC\\",\\"tradeId\\":172530352,\\"price\\":0.02415,\\"quantity\\":0.296,\\"buyerOrderId\\":687544144,\\"sellerOrderId\\":687544104,\\"time\\":1587141844396,\\"maker\\":false,\\"ignored\\":true}",2,"0x91c47df28dc3014a49ef50313efa8e40015eeeccea0cf006ab2c7b05efbb0ddc7e10e430aaa7ea6dd0ca5e05761eaf0c14c8ca09b57c8d8626da7bb9ea2d50fa1b"]')
         groupKeyRequest = StreamMessage.deserialize('[31,["SYSTEM/keyexchange/0xbce3217F2AC9c8a2D14A6303F87506c4FC124014",0,1587143350864,0,"0xFeAACDBBc318EbBF9BB5835D4173C1a7fC24B3b9","2AC1lJgGTPhVzNCr4lyT"],null,28,0,"{\\"streamId\\":\\"tagHE6nTQ9SJV2wPoCxBFw\\",\\"publicKey\\":\\"rsaPublicKey\\",\\"range\\":{\\"start\\":1354155,\\"end\\":2344155}}",2,"0x968292d5a57529042543318c60f20a709d838e37f166ea478e4695750bacf51446dd12aa1c652f97ba300b244fab988592748c27d590de5ff0e2f1c71d0455c41b"]')
@@ -151,9 +150,9 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('rejects with ValidationError if recoverAddress throws', async () => {
+        it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            recoverAddress = sinon.stub().throws(testError)
+            verify = sinon.stub().throws(testError)
             await assert.rejects(getValidator().validate(msg), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
@@ -234,9 +233,9 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('rejects with ValidationError if recoverAddress throws', async () => {
+        it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            recoverAddress = sinon.stub().throws(testError)
+            verify = sinon.stub().throws(testError)
             await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
@@ -317,9 +316,9 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('rejects with ValidationError if recoverAddress throws', async () => {
+        it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            recoverAddress = sinon.stub().throws(testError)
+            verify = sinon.stub().throws(testError)
             await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
@@ -400,9 +399,9 @@ describe('StreamMessageValidator', () => {
             })
         })
 
-        it('rejects with ValidationError if recoverAddress throws', async () => {
+        it('rejects with ValidationError if verify throws', async () => {
             const testError = new Error('test error')
-            recoverAddress = sinon.stub().throws(testError)
+            verify = sinon.stub().throws(testError)
             await assert.rejects(getValidator().validate(groupKeyReset), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true

@@ -24,7 +24,9 @@ export default class ErrorResponseSerializerV2 {
             errorCode,
         ] = arr
 
-        return new ErrorResponse(version, requestId, errorMessage, errorCode)
+        return new ErrorResponse({
+            version, requestId, errorMessage, errorCode
+        })
     }
 }
 

@@ -20,7 +20,9 @@ export default class ErrorResponseSerializerV1 {
             errorMessage,
         ] = arr
 
-        return new ErrorResponse(version, null, errorMessage)
+        return new ErrorResponse({
+            version, errorMessage
+        })
     }
 }
 

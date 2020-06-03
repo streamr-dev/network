@@ -30,15 +30,15 @@ export default class StreamMessageSerializerV31 {
             signature,
         ] = arr
 
-        return new StreamMessage(
-            MessageIDStrict.fromArray(messageIdArr),
-            prevMsgRefArr ? MessageRef.fromArray(prevMsgRefArr) : null,
-            serializedContent,
+        return new StreamMessage({
+            messageId: MessageIDStrict.fromArray(messageIdArr),
+            prevMsgRef: prevMsgRefArr ? MessageRef.fromArray(prevMsgRefArr) : null,
+            content: serializedContent,
             contentType,
             encryptionType,
             signatureType,
             signature,
-        )
+        })
     }
 }
 

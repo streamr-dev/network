@@ -6,22 +6,50 @@ import ControlMessage from '../../../../src/protocol/control_layer/ControlMessag
 import ValidationError from '../../../../src/errors/ValidationError'
 
 describe('ResendFromRequest', () => {
-    describe('validation', () => {
+    describe('constructor', () => {
         it('throws on null requestId', () => {
-            assert.throws(() => new ResendFromRequest(ControlMessage.LATEST_VERSION, null, 'streamId', 0, new MessageRef(132846894, 0), 'publisherId', 'sessionToken'), ValidationError)
+            assert.throws(() => new ResendFromRequest({
+                requestId: null,
+                streamId: 'streamId',
+                streamPartition: 0,
+                fromMsgRef: new MessageRef(132846894, 0),
+                publisherId: 'publisherId',
+                sessionToken: 'sessionToken',
+            }), ValidationError)
         })
-    })
-
-    describe('create', () => {
         it('should create the latest version', () => {
-            const msg = ResendFromRequest.create('requestId', 'streamId', 0, new MessageRef(132846894, 0), 'publisherId', 'sessionToken')
+            const msg = new ResendFromRequest({
+                requestId: 'requestId',
+                streamId: 'streamId',
+                streamPartition: 0,
+                fromMsgRef: new MessageRef(132846894, 0),
+                publisherId: 'publisherId',
+                sessionToken: 'sessionToken',
+            })
             assert(msg instanceof ResendFromRequest)
+            assert.strictEqual(msg.version, ControlMessage.LATEST_VERSION)
             assert.strictEqual(msg.requestId, 'requestId')
             assert.strictEqual(msg.streamId, 'streamId')
             assert.strictEqual(msg.streamPartition, 0)
             assert(msg.fromMsgRef instanceof MessageRef)
             assert.strictEqual(msg.publisherId, 'publisherId')
             assert.strictEqual(msg.sessionToken, 'sessionToken')
+        })
+
+        it('publisherId and sessionToken can be null', () => {
+            const msg = new ResendFromRequest({
+                requestId: 'requestId',
+                streamId: 'streamId',
+                streamPartition: 0,
+                fromMsgRef: new MessageRef(132846894, 0),
+            })
+            assert(msg instanceof ResendFromRequest)
+            assert.strictEqual(msg.requestId, 'requestId')
+            assert.strictEqual(msg.streamId, 'streamId')
+            assert.strictEqual(msg.streamPartition, 0)
+            assert(msg.fromMsgRef instanceof MessageRef)
+            assert.strictEqual(msg.publisherId, undefined)
+            assert.strictEqual(msg.sessionToken, undefined)
         })
     })
 })

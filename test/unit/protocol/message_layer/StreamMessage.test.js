@@ -12,16 +12,17 @@ const content = {
     hello: 'world',
 }
 
-const msg = () => {
-    return new StreamMessage(
-        new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-        new MessageRef(1564046132168, 5),
-        JSON.stringify(content),
-        StreamMessage.CONTENT_TYPES.MESSAGE,
-        StreamMessage.ENCRYPTION_TYPES.NONE,
-        StreamMessage.SIGNATURE_TYPES.ETH,
-        'signature',
-    )
+const msg = (overrides = {}) => {
+    return new StreamMessage({
+        messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+        prevMsgRef: new MessageRef(1564046132168, 5),
+        content: JSON.stringify(content),
+        contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+        encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
+        signature: 'signature',
+        ...overrides
+    })
 }
 
 describe('StreamMessage', () => {
@@ -43,25 +44,11 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.signature, 'signature')
         })
 
-        it('create StreamMessage without prevMsgRef', () => {
-            const streamMessage = new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                null,
-                JSON.stringify(content),
-                StreamMessage.CONTENT_TYPES.MESSAGE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.ETH,
-                'signature',
-            )
-            assert.strictEqual(streamMessage.prevMsgRef, null)
-        })
-
         it('create StreamMessage with minimum fields defined', () => {
-            const streamMessage = new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                null,
-                JSON.stringify(content),
-            )
+            const streamMessage = new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                content: JSON.stringify(content),
+            })
             assert.strictEqual(streamMessage.getStreamId(), 'streamId')
             assert.strictEqual(streamMessage.getStreamPartition(), 0)
             assert.strictEqual(streamMessage.getTimestamp(), 1564046332168)
@@ -77,93 +64,75 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.signature, null)
         })
 
+        it('create StreamMessage with object as content instead of string', () => {
+            const streamMessage = new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                content,
+            })
+            assert.deepStrictEqual(streamMessage.getContent(), content)
+            assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
+        })
+
         it('should throw if required fields are not defined', () => {
-            assert.throws(() => new StreamMessage(
-                null,
-                null,
-                JSON.stringify(content),
-            ), ValidationError)
+            assert.throws(() => new StreamMessage({
+                // missing messageId
+                content: JSON.stringify(content),
+            }), ValidationError)
         })
 
         it('should throw if content is not defined', () => {
-            assert.throws(() => new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                null,
-                null,
-            ), ValidationError)
+            assert.throws(() => new StreamMessage({
+                messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
+                // missing content
+            }), ValidationError)
         })
 
         it('should not throw when encrypted content', () => {
-            assert.doesNotThrow(() => new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                'encrypted content',
-                StreamMessage.CONTENT_TYPES.MESSAGE,
-                StreamMessage.ENCRYPTION_TYPES.AES,
-                StreamMessage.SIGNATURE_TYPES.ETH,
-                'signature',
-            ))
+            assert.doesNotThrow(() => msg({
+                content: 'encrypted content',
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+            }))
         })
         it('Throws with an invalid content type', () => {
-            assert.throws(() => new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify(content),
-                999, // invalid
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.ETH,
-                'signature',
-            ), ValidationError)
+            assert.throws(() => msg({
+                contentType: 999, // invalid
+            }), ValidationError)
         })
         it('Throws with an invalid content of type GROUP_KEY_REQUEST', () => {
-            assert.throws(() => new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            assert.throws(() => msg({
+                content: {
                     wrongField: 'some-public-key',
-                }),
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            ), (err) => {
+                },
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
+            }), (err) => {
                 assert.strictEqual(err.message, 'Content of type 28 must contain a \'publicKey\' field.')
                 return true
             })
         })
         it('Does not throw with a valid content of type GROUP_KEY_REQUEST', () => {
-            const m = new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            const m = msg({
+                content: {
                     streamId: 'streamId',
                     publicKey: 'some-public-key',
-                }),
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            )
+                },
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
+            })
             assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
         })
         it('Throws with an invalid content of type GROUP_KEY_RESPONSE_SIMPLE (1)', () => {
-            assert.throws(() => new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            assert.throws(() => msg({
+                content: {
                     foo: 'bar',
-                }),
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            ), (err) => {
+                },
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
+            }), (err) => {
                 assert.strictEqual(err.message, 'Content of type 29 must contain a \'streamId\' field.')
                 return true
             })
         })
         it('Throws with an invalid content of type GROUP_KEY_RESPONSE_SIMPLE (2)', () => {
-            assert.throws(() => new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            assert.throws(() => msg({
+                content: {
                     streamId: 'streamId',
                     keys: [{
                         groupKey: 'some-group-key',
@@ -172,20 +141,16 @@ describe('StreamMessage', () => {
                         groupKey: 'some-group-key2',
                         wrong: 233142345,
                     }],
-                }),
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            ), (err) => {
+                },
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
+            }), (err) => {
                 assert.strictEqual(err.message, 'Each element in field \'keys\' of content of type 29 must contain \'groupKey\' and \'start\' fields.')
                 return true
             })
         })
         it('Does not throw with a valid content of type GROUP_KEY_RESPONSE_SIMPLE', () => {
-            const m = new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            const m = msg({
+                content: {
                     streamId: 'streamId',
                     keys: [{
                         groupKey: 'some-group-key',
@@ -194,70 +159,52 @@ describe('StreamMessage', () => {
                         groupKey: 'some-group-key2',
                         start: 233142345,
                     }],
-                }),
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            )
+                },
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
+            })
             assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
         })
         it('Does not throw with a valid content of type GROUP_KEY_RESET_SIMPLE', () => {
-            const m = new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            const m = msg({
+                content: {
                     streamId: 'streamId',
                     groupKey: 'some-group-key',
                     start: 96789,
-                }),
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            )
+                },
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE,
+            })
             assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
         })
         it('Throws with an invalid content of type GROUP_KEY_RESET_SIMPLE', () => {
-            assert.throws(() => new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            assert.throws(() => msg({
+                content: {
                     streamId: 'streamId',
                     groupKey: 'some-group-key2',
                     wrong: 233142345,
-                }),
-                StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            ), (err) => {
+                },
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE,
+            }), (err) => {
                 assert.strictEqual(err.message, 'Content of type 30 must contain \'streamId\', \'groupKey\' and \'start\' fields.')
                 return true
             })
         })
         it('Does not throw with a valid content of type ERROR_MSG', () => {
-            const m = new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            const m = msg({
+                content: {
                     code: 'some_error_code',
                     message: 'error message',
-                }),
-                StreamMessage.CONTENT_TYPES.ERROR_MSG,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            )
+                },
+                contentType: StreamMessage.CONTENT_TYPES.ERROR_MSG,
+            })
             assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
         })
         it('Throws with an invalid content of type ERROR_MSG', () => {
-            assert.throws(() => new StreamMessage(
-                new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-                new MessageRef(1564046132168, 5),
-                JSON.stringify({
+            assert.throws(() => msg({
+                content: {
                     wrong: 233142345,
-                }),
-                StreamMessage.CONTENT_TYPES.ERROR_MSG,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                StreamMessage.SIGNATURE_TYPES.NONE,
-            ), (err) => {
+                },
+                contentType: StreamMessage.CONTENT_TYPES.ERROR_MSG,
+            }), (err) => {
                 assert.strictEqual(err.message, 'Content of type 31 must contain \'code\' and \'message\' fields.')
                 return true
             })

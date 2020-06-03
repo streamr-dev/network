@@ -28,7 +28,9 @@ export default class ResendLastRequestSerializerV1 {
             sessionToken,
         ] = arr
 
-        return new ResendLastRequest(version, requestId, streamId, streamPartition, numberLast, sessionToken)
+        return new ResendLastRequest({
+            version, requestId, streamId, streamPartition, numberLast, sessionToken
+        })
     }
 }
 

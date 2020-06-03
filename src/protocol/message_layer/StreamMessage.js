@@ -11,7 +11,7 @@ const BYE_KEY = '_bye'
 const LATEST_VERSION = 31
 
 export default class StreamMessage {
-    constructor(
+    constructor({
         messageId,
         prevMsgRef = null,
         content,
@@ -19,7 +19,7 @@ export default class StreamMessage {
         encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
         signatureType = StreamMessage.SIGNATURE_TYPES.NONE,
         signature = null,
-    ) {
+    }) {
         validateIsType('messageId', messageId, 'MessageID', MessageID)
         this.messageId = messageId
 
@@ -38,8 +38,14 @@ export default class StreamMessage {
         validateIsString('signature', signature, true)
         this.signature = signature
 
-        validateIsNotEmptyString('content', content)
-        this.serializedContent = content // parsed lazily and cached as this.parsedContent
+        if (typeof content === 'object') {
+            this.parsedContent = content
+            this.serializedContent = JSON.stringify(content)
+        } else {
+            // this.parsedContent gets written lazily
+            this.serializedContent = content
+        }
+        validateIsNotEmptyString('content', this.serializedContent)
 
         // Parse and validate content of message types related to key exchange (non-message types)
         if (contentType !== StreamMessage.CONTENT_TYPES.MESSAGE) {

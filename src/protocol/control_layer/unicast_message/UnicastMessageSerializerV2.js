@@ -23,7 +23,9 @@ export default class UnicastMessageSerializerV2 {
             serializedStreamMsg
         ] = arr
 
-        return new UnicastMessage(version, requestId, StreamMessage.deserialize(serializedStreamMsg))
+        return new UnicastMessage({
+            version, requestId, streamMessage: StreamMessage.deserialize(serializedStreamMsg)
+        })
     }
 }
 

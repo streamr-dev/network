@@ -5,22 +5,36 @@ import ControlMessage from '../../../../src/protocol/control_layer/ControlMessag
 import ValidationError from '../../../../src/errors/ValidationError'
 
 describe('ErrorResponse', () => {
-    describe('validation', () => {
+    describe('constructor', () => {
         it('throws on null error message', () => {
-            assert.throws(() => new ErrorResponse(ControlMessage.LATEST_VERSION, 'requestId', null), ValidationError)
+            assert.throws(() => new ErrorResponse({
+                requestId: 'requestId',
+                errorMessage: undefined,
+            }), ValidationError)
         })
         it('throws on null error code (since V2)', () => {
-            assert.throws(() => new ErrorResponse(ControlMessage.LATEST_VERSION, 'requestId', 'error message', null), ValidationError)
+            assert.throws(() => new ErrorResponse({
+                requestId: 'requestId',
+                errorMessage: 'error message',
+                errorCode: undefined,
+            }), ValidationError)
         })
         it('accepts null error code (before V2)', () => {
-            assert.doesNotThrow(() => new ErrorResponse(1, 'requestId', 'error message', null))
+            assert.doesNotThrow(() => new ErrorResponse({
+                version: 1,
+                requestId: 'requestId',
+                errorMessage: 'error message',
+                errorCode: undefined,
+            }))
         })
-    })
-
-    describe('create', () => {
         it('should create the latest version', () => {
-            const msg = ErrorResponse.create('requestId', 'error message', 'ERROR_CODE')
+            const msg = new ErrorResponse({
+                requestId: 'requestId',
+                errorMessage: 'error message',
+                errorCode: 'ERROR_CODE',
+            })
             assert(msg instanceof ErrorResponse)
+            assert.strictEqual(msg.version, ControlMessage.LATEST_VERSION)
             assert.strictEqual(msg.errorMessage, 'error message')
             assert.strictEqual(msg.errorCode, 'ERROR_CODE')
         })

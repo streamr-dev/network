@@ -7,7 +7,12 @@ const { ResendResponseResending, ControlMessage } = ControlLayer
 const VERSION = 2
 
 // Message definitions
-const message = new ResendResponseResending(VERSION, 'requestId', 'streamId', 0)
+const message = new ResendResponseResending({
+    version: VERSION,
+    requestId: 'requestId',
+    streamId: 'streamId',
+    streamPartition: 0,
+})
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.ResendResponseResending, 'requestId', 'streamId', 0])
 
 describe('ResendResponseResendingSerializerV2', () => {

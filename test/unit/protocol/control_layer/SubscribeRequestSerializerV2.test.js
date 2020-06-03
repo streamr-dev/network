@@ -7,7 +7,13 @@ const { SubscribeRequest, ControlMessage } = ControlLayer
 const VERSION = 2
 
 // Message definitions
-const message = new SubscribeRequest(VERSION, 'requestId', 'streamId', 0, 'sessionToken')
+const message = new SubscribeRequest({
+    version: VERSION,
+    requestId: 'requestId',
+    streamId: 'streamId',
+    streamPartition: 0,
+    sessionToken: 'sessionToken',
+})
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.SubscribeRequest, 'requestId', 'streamId', 0, 'sessionToken'])
 
 describe('SubscribeRequestSerializerV2', () => {

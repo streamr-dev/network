@@ -35,8 +35,17 @@ export default class ResendRangeRequestSerializerV1 {
             sessionToken,
         ] = arr
 
-        return new ResendRangeRequest(version, requestId, streamId, streamPartition,
-            new MessageRef(...fromMsgRefArr), new MessageRef(...toMsgRefArr), publisherId, msgChainId, sessionToken)
+        return new ResendRangeRequest({
+            version,
+            requestId,
+            streamId,
+            streamPartition,
+            fromMsgRef: new MessageRef(...fromMsgRefArr),
+            toMsgRef: new MessageRef(...toMsgRefArr),
+            publisherId,
+            msgChainId,
+            sessionToken
+        })
     }
 }
 

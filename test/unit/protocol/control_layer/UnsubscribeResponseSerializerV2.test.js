@@ -7,7 +7,12 @@ const { UnsubscribeResponse, ControlMessage } = ControlLayer
 const VERSION = 2
 
 // Message definitions
-const message = new UnsubscribeResponse(VERSION, 'requestId', 'streamId', 0)
+const message = new UnsubscribeResponse({
+    version: VERSION,
+    requestId: 'requestId',
+    streamId: 'streamId',
+    streamPartition: 0,
+})
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.UnsubscribeResponse, 'requestId', 'streamId', 0])
 
 describe('UnsubscribeResponseSerializerV2', () => {

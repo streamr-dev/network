@@ -2,7 +2,9 @@ import ControlMessage from '../ControlMessage'
 import { validateIsNotEmptyString, validateIsNotNegativeInteger, validateIsString } from '../../../utils/validations'
 
 export default class ResendLastRequest extends ControlMessage {
-    constructor(version, requestId, streamId, streamPartition, numberLast, sessionToken) {
+    constructor({
+        version = ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, numberLast, sessionToken
+    }) {
         super(version, ControlMessage.TYPES.ResendLastRequest, requestId)
 
         validateIsNotEmptyString('streamId', streamId)
@@ -16,9 +18,5 @@ export default class ResendLastRequest extends ControlMessage {
         this.sessionToken = sessionToken
 
         validateIsNotEmptyString('requestId', requestId) // unnecessary line once V1 is dropped
-    }
-
-    static create(requestId, streamId, streamPartition, numberLast, sessionToken) {
-        return new ResendLastRequest(ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition, numberLast, sessionToken)
     }
 }

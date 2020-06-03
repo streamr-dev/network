@@ -7,7 +7,11 @@ const { SubscribeResponse, ControlMessage } = ControlLayer
 const VERSION = 1
 
 // Message definitions
-const message = new SubscribeResponse(VERSION, null, 'streamId', 0)
+const message = new SubscribeResponse({
+    version: VERSION,
+    streamId: 'streamId',
+    streamPartition: 0,
+})
 const serializedMessage = JSON.stringify([VERSION, ControlMessage.TYPES.SubscribeResponse, 'streamId', 0])
 
 describe('SubscribeResponseSerializerV1', () => {
