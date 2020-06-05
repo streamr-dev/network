@@ -108,9 +108,7 @@ public class Main {
         streams = new Streams(participants, restUrl, wsUrl, testCorrectness);
         streams.start(cmd.getOptionValue("stream"));
         } catch (Exception e) {
-            logger.severe(e.getMessage());
-            formatter.printHelp("streamr-client-testing", options);
-
+            logger.log(Level.SEVERE, e.getMessage(), e);
             System.exit(1);
         }
     }
