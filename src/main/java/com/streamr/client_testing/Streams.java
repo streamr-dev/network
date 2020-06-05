@@ -163,6 +163,8 @@ public class Streams {
     }
 
     private void addSubscribersWithResend(StreamTester streamTester, StreamrClientWrapper[] subscribers) {
+        // If there are more than 2 subscribers, add some delay to starting 2 of them to test whether
+        // they still get the expected messages using resend from and resend last
         if (subscribers.length > 2) {
             for (int i = 0; i < subscribers.length - 2; i++) {
                 streamTester.addSubscriber(subscribers[i], null);

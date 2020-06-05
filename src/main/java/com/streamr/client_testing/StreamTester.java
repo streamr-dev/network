@@ -128,13 +128,12 @@ public class StreamTester {
         int total = 0;
         for (String publisherId: publishersMsgStacks.keySet()) {
             ArrayDeque<String> pubStack = publishersMsgStacks.get(publisherId);
-            ArrayList<ArrayDeque<String>> stacks = new ArrayList<>();
-            stacks.add(new ArrayDeque<>(pubStack));
+            ArrayList<ArrayDeque<String>> subStacks = new ArrayList<>();
             for (ArrayDeque<String> s: subscribersMsgStacks.get(publisherId).values()) {
-                stacks.add(new ArrayDeque<>(s));
+                subStacks.add(new ArrayDeque<>(s));
             }
             try {
-                total += checkMsgs(stacks);
+                total += checkMsgs(publisherId, pubStack, subStacks);
             } catch (IllegalStateException e) {
                 Main.logger.warning("\nFAILED. On error: '" + e.getMessage() + "'\n");
                 printMsgsReceived();
@@ -146,7 +145,7 @@ public class StreamTester {
             Main.logger.warning("FAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)");
             System.exit(1);
         }
-        Main.logger.info("PASSED. Checked all " + total + " messages.");
+        Main.logger.info("PASSED. Checked all " + total + " published messages from " + publishersMsgStacks.size() + " publishers.");
         System.exit(0);
     }
 
@@ -170,26 +169,24 @@ public class StreamTester {
         }
     }
 
-    private int checkMsgs(ArrayList<ArrayDeque<String>> stacks) {
-        int size0 = stacks.get(0).size();
-        for (int i = 1; i < stacks.size(); i++) {
-            int size = stacks.get(i).size();
-            if (size != size0) {
-                throw new IllegalStateException("Expected to receive " + size0 + " messages but received " + size);
+    private static int checkMsgs(String publisherId, ArrayDeque<String> pubStack, ArrayList<ArrayDeque<String>> subStacks) {
+        int publishedMessagesCount = pubStack.size();
+        for (Collection<String> subStack : subStacks) {
+            int size = subStack.size();
+            if (size != publishedMessagesCount) {
+                throw new IllegalStateException("Expected to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
             }
         }
-        int nbMsgs = 0;
-        for (int i = 0; i < size0; i++) {
-            String content0 = stacks.get(0).pollFirst();
-            nbMsgs++;
-            for (int j = 1; j < stacks.size(); j++) {
-                String content = stacks.get(j).pollFirst();
-                if (!content0.equals(content)) {
-                    throw new IllegalStateException("Expected " + content0 + " but received " + content);
+
+        for (String publishedMessage : pubStack) {
+            for (Deque<String> subStack : subStacks) {
+                String receivedMessage = subStack.pollFirst();
+                if (!publishedMessage.equals(receivedMessage)) {
+                    throw new IllegalStateException("Expected " + publishedMessage + " but received " + receivedMessage);
                 }
             }
         }
-        return nbMsgs;
+        return pubStack.size();
     }
 
     private void addPublisher(StreamrClientWrapper publisher, PublishFunction publishFunction, long interval) {
@@ -278,6 +275,7 @@ public class StreamTester {
                 addJavaSubscriber(subscriber, resendOption);
             }
         }, NETWORK_SETUP_DELAY + delay);
+        Main.logger.info("Added delayed Java subscriber with resend. Delay: " + delay);
     }
 
     private void addDelayedJavascriptSubscriber(StreamrClientJS subscriber, ResendOption resendOption, int delay) {
@@ -288,6 +286,7 @@ public class StreamTester {
                 addJavascriptSubscriber(subscriber, resendOption);
             }
         }, NETWORK_SETUP_DELAY + delay);
+        Main.logger.info("Added delayed JS subscriber with resend. Delay: " + delay);
     }
 
     public PublishFunction getDefaultPublishFunction() {
