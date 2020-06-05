@@ -8,6 +8,7 @@ public class StreamrClientJava extends StreamrClientWrapper {
 
     public StreamrClientJava(StreamrClient streamrClient) {
         this.streamrClient = streamrClient;
+        streamrClient.getSessionToken(); // ensure we have a session and the user is created
     }
 
     public StreamrClient getStreamrClient() {
