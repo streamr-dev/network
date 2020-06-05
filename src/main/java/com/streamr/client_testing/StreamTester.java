@@ -125,15 +125,17 @@ public class StreamTester {
         if (!testCorrectness) {
             throw new RuntimeException("Cannot check correctness of messages on this stream.");
         }
-        int total = 0;
+        int totalPublished = 0;
+        int totalReceived = 0;
         for (String publisherId: publishersMsgStacks.keySet()) {
             ArrayDeque<String> pubStack = publishersMsgStacks.get(publisherId);
             ArrayList<ArrayDeque<String>> subStacks = new ArrayList<>();
             for (ArrayDeque<String> s: subscribersMsgStacks.get(publisherId).values()) {
                 subStacks.add(new ArrayDeque<>(s));
             }
+            totalPublished += pubStack.size();
             try {
-                total += checkMsgs(publisherId, pubStack, subStacks);
+                totalReceived += checkMsgs(publisherId, pubStack, subStacks);
             } catch (IllegalStateException e) {
                 Main.logger.warning("\nFAILED. On error: '" + e.getMessage() + "'\n");
                 printMsgsReceived();
@@ -145,7 +147,7 @@ public class StreamTester {
             Main.logger.warning("FAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)");
             System.exit(1);
         }
-        Main.logger.info("PASSED. Checked all " + total + " published messages from " + publishersMsgStacks.size() + " publishers.");
+        Main.logger.info("PASSED. Checked all " + totalPublished + " published and " + totalReceived + " received messages from " + publishersMsgStacks.size() + " publishers and " + subscribersMsgStacks.size() + " subscribers.");
         System.exit(0);
     }
 
@@ -171,13 +173,14 @@ public class StreamTester {
 
     private static int checkMsgs(String publisherId, ArrayDeque<String> pubStack, ArrayList<ArrayDeque<String>> subStacks) {
         int publishedMessagesCount = pubStack.size();
+        // Check that every subscriber received the correct number of messages from this publisher
         for (Collection<String> subStack : subStacks) {
             int size = subStack.size();
             if (size != publishedMessagesCount) {
                 throw new IllegalStateException("Expected to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
             }
         }
-
+        // Check that every subscriber received the correct content of messages from this publisher
         for (String publishedMessage : pubStack) {
             for (Deque<String> subStack : subStacks) {
                 String receivedMessage = subStack.pollFirst();
@@ -186,7 +189,7 @@ public class StreamTester {
                 }
             }
         }
-        return pubStack.size();
+        return subStacks.size() * pubStack.size(); // total received messages
     }
 
     private void addPublisher(StreamrClientWrapper publisher, PublishFunction publishFunction, long interval) {
@@ -230,7 +233,7 @@ public class StreamTester {
 
     private void addJavascriptSubscriber(StreamrClientJS subscriber, ResendOption resendOption) {
         SubscriberJS subscriberJS = new SubscriberJS(subscriber, stream, resendOption);
-        if (testCorrectness && resendOption == null) {
+        if (testCorrectness) {
             subscriberJS.setOnReceived((publisherId, content) -> onReceivedJavascript(subscriberJS, publisherId, content));
         }
         addSubscriber(subscriberJS, "Javascript", resendOption);
@@ -261,7 +264,7 @@ public class StreamTester {
         grantPermission(stream, creator, subscriber.getSubscriberId(), "stream_subscribe");
         subscriber.start();
         subscribers.add(subscriber);
-        if (testCorrectness && resendOption == null) {
+        if (testCorrectness) {
             subscribersMsgStacks.values().forEach(map -> map.put(subscriber.getSubscriberId(), new ArrayDeque<>()));
         }
         Main.logger.info("Added " + implementation + " subscriber: " + subscriber.getSubscriberId());

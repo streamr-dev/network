@@ -170,7 +170,8 @@ public class Streams {
                 streamTester.addSubscriber(subscribers[i], null);
             }
             streamTester.addDelayedSubscriber(subscribers[subscribers.length - 2], new ResendFromOption(new Date()), 8000);
-            streamTester.addDelayedSubscriber(subscribers[subscribers.length - 1], new ResendLastOption(10), 12000);
+            // For ResendLastOption, the number of last messages must be greater than what the publishers can publish during delay
+            streamTester.addDelayedSubscriber(subscribers[subscribers.length - 1], new ResendLastOption(1000), 12000);
         } else {
             streamTester.addSubscribers(subscribers);
         }
