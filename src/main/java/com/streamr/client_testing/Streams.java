@@ -85,8 +85,8 @@ public class Streams {
     }
 
     private void cleartextUnsignedStream(StreamTester streamTester) {
-        StreamrClientWrapper[] publishers = buildClientsWithoutKeys(this::buildCleartextNoSigningClient, ps.getNbJavaPublishers(), 0);
-        StreamrClientWrapper[] subscribers = buildClientsWithoutKeys(this::buildCleartextNoSigningClient, ps.getNbJavaSubscribers(), 0);
+        StreamrClientWrapper[] publishers = buildClientsWithoutKeys(this::buildCleartextNoSigningClient, ps.getNbJavaPublishers(), ps.getNbJavascriptPublishers());
+        StreamrClientWrapper[] subscribers = buildClientsWithoutKeys(this::buildCleartextNoSigningClient, ps.getNbJavaSubscribers(), ps.getNbJavascriptSubscribers());
 
         streamTester.addPublishers(streamTester.getDefaultPublishFunction(), 800, 2500, publishers);
         addSubscribersWithResend(streamTester, subscribers);
