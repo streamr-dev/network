@@ -199,8 +199,8 @@ public class StreamTester {
                 Main.logger.fine(thread.getPublisherId() + " published " + payloadString);
             });
         }
-        grantPermission(stream, creator, thread.getPublisherId(), "read");
-        grantPermission(stream, creator, thread.getPublisherId(), "write");
+        grantPermission(stream, creator, thread.getPublisherId(), "stream_get");
+        grantPermission(stream, creator, thread.getPublisherId(), "stream_publish");
         publishers.add(thread);
         if (testCorrectness) {
             publishersMsgStacks.put(thread.getPublisherId(), new ArrayDeque<>());
@@ -259,7 +259,8 @@ public class StreamTester {
     }
 
     private void addSubscriber(Subscriber subscriber, String implementation, ResendOption resendOption) {
-        grantPermission(stream, creator, subscriber.getSubscriberId(), "read");
+        grantPermission(stream, creator, subscriber.getSubscriberId(), "stream_get");
+        grantPermission(stream, creator, subscriber.getSubscriberId(), "stream_subscribe");
         subscriber.start();
         subscribers.add(subscriber);
         if (testCorrectness && resendOption == null) {
