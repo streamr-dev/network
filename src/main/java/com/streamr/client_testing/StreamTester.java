@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 
 public class StreamTester {
@@ -423,7 +424,11 @@ public class StreamTester {
     }
 
     private static <T> T execute(Request request, JsonAdapter<T> adapter) throws IOException {
-        OkHttpClient client = new OkHttpClient();
+        OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(10, TimeUnit.SECONDS)
+            .writeTimeout(10, TimeUnit.SECONDS)
+            .readTimeout(10, TimeUnit.SECONDS)
+            .build();
 
         // Execute the request and retrieve the response.
         Response response = client.newCall(request).execute();
