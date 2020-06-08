@@ -1,4 +1,4 @@
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
 const { wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
@@ -43,21 +43,12 @@ describe('optimization: do not propagate to sender', () => {
     // propagating received messages back to their source
     test('total duplicates == 2 in a fully-connected network of 3 nodes', async () => {
         await wait(1000)
-        n1.publish(StreamMessage.from({
-            streamId: 'stream-id',
-            streamPartition: 0,
-            timestamp: 100,
-            sequenceNumber: 0,
-            publisherId: 'publisher',
-            msgChainId: 'session',
-            previousTimestamp: 99,
-            previousSequenceNumber: 0,
-            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        n1.publish(new StreamMessage({
+            messageId: new MessageID('stream-id', 0, 100, 0, 'publisher', 'session'),
+            prevMsgRef: new MessageRef(99, 0),
             content: {
                 hello: 'world'
             },
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
         }))
         await wait(250)
 

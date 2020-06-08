@@ -1,4 +1,4 @@
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageID } = require('streamr-client-protocol').MessageLayer
 const { waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
@@ -33,32 +33,16 @@ describe('tracker assigns storage node to streams', () => {
     })
 
     it('existing streams are assigned to storage node', async () => {
-        subscriberOne.publish(StreamMessage.from({
-            streamId: 'stream-1',
-            streamPartition: 0,
-            timestamp: 5,
-            sequenceNumber: 0,
-            publisherId: 'publisherId',
-            msgChainId: 'msgChainId',
-            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        subscriberOne.publish(new StreamMessage({
+            messageId: new MessageID('stream-1', 0, 5, 0, 'publisherId', 'msgChainId'),
             content: {},
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
 
         const [msg1] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
 
-        subscriberTwo.publish(StreamMessage.from({
-            streamId: 'stream-2',
-            streamPartition: 0,
-            timestamp: 10,
-            sequenceNumber: 0,
-            publisherId: 'publisherId',
-            msgChainId: 'msgChainId',
-            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        subscriberTwo.publish(new StreamMessage({
+            messageId: new MessageID('stream-2', 0, 10, 0, 'publisherId', 'msgChainId'),
             content: {},
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
 
         const [msg2] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
@@ -67,31 +51,15 @@ describe('tracker assigns storage node to streams', () => {
     })
 
     it('new streams are assigned to storage node', async () => {
-        subscriberOne.publish(StreamMessage.from({
-            streamId: 'new-stream-1',
-            streamPartition: 0,
-            timestamp: 5,
-            sequenceNumber: 0,
-            publisherId: 'publisherId',
-            msgChainId: 'msgChainId',
-            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        subscriberOne.publish(new StreamMessage({
+            messageId: new MessageID('new-stream-1', 0, 5, 0, 'publisherId', 'msgChainId'),
             content: {},
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
         const [msg1] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
 
-        subscriberTwo.publish(StreamMessage.from({
-            streamId: 'new-stream-2',
-            streamPartition: 0,
-            timestamp: 10,
-            sequenceNumber: 0,
-            publisherId: 'publisherId',
-            msgChainId: 'msgChainId',
-            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        subscriberTwo.publish(new StreamMessage({
+            messageId: new MessageID('new-stream-2', 0, 10, 0, 'publisherId', 'msgChainId'),
             content: {},
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         }))
         const [msg2] = await waitForEvent(storageNode, Node.events.UNSEEN_MESSAGE_RECEIVED)
 

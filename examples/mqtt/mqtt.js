@@ -1,7 +1,7 @@
 const mqtt = require('mqtt')
 const { startNetworkNode } = require('../../src/composition')
 const { MessageLayer } = require('streamr-client-protocol')
-const { StreamMessage } = MessageLayer
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const port = process.argv[2] || 40300
 const ip = process.argv[3] || '127.0.0.1'
@@ -31,17 +31,13 @@ startNetworkNode(ip, port, id)
 
             if (data.VP.desi) {
                 const timestamp = Date.now()
-                const streamMessage = StreamMessage.create(
-                    [streamId, 0, timestamp, sequenceNumber, id, streamId],
-                    lastTimestamp == null ? null : [lastTimestamp, sequenceNumber - 1],
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {
+                const streamMessage = new StreamMessage({
+                    messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, id, streamId),
+                    prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
+                    content: {
                         data
                     },
-                    StreamMessage.SIGNATURE_TYPES.NONE,
-                    null
-                )
+                })
                 mqttNode.publish(streamMessage)
 
                 console.log('---')

@@ -1,4 +1,4 @@
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
 const { waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
@@ -53,29 +53,13 @@ describe('node unsubscribing from a stream', () => {
         nodeB.unsubscribe('s', 2)
         await waitForEvent(nodeA, Node.events.NODE_UNSUBSCRIBED)
 
-        nodeA.publish(StreamMessage.from({
-            streamId: 's',
-            streamPartition: 2,
-            timestamp: 0,
-            sequenceNumber: 0,
-            publisherId: '',
-            msgChainId: '',
-            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        nodeA.publish(new StreamMessage({
+            messageId: new MessageID('s', 2, 0, 0, 'publisherId', 'msgChainId'),
             content: {},
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
         }))
-        nodeA.publish(StreamMessage.from({
-            streamId: 's',
-            streamPartition: 1,
-            timestamp: 0,
-            sequenceNumber: 0,
-            publisherId: '',
-            msgChainId: '',
-            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+        nodeA.publish(new StreamMessage({
+            messageId: new MessageID('s', 1, 0, 0, 'publisherId', 'msgChainId'),
             content: {},
-            signatureType: StreamMessage.SIGNATURE_TYPES.NONE
         }))
         await waitForEvent(nodeB, Node.events.UNSEEN_MESSAGE_RECEIVED)
         expect(actual).toEqual(['s::1'])

@@ -1,5 +1,6 @@
 const { EventEmitter } = require('events')
 
+const { v4: uuidv4 } = require('uuid')
 const { ControlLayer } = require('streamr-client-protocol')
 
 const encoder = require('../helpers/MessageEncoder')
@@ -18,16 +19,16 @@ const events = Object.freeze({
 })
 
 const eventPerType = {}
-eventPerType[ControlLayer.BroadcastMessage.TYPE] = events.DATA_RECEIVED
-eventPerType[ControlLayer.UnicastMessage.TYPE] = events.UNICAST_RECEIVED
-eventPerType[ControlLayer.SubscribeRequest.TYPE] = events.SUBSCRIBE_REQUEST
-eventPerType[ControlLayer.UnsubscribeRequest.TYPE] = events.UNSUBSCRIBE_REQUEST
-eventPerType[ControlLayer.ResendLastRequest.TYPE] = events.RESEND_REQUEST
-eventPerType[ControlLayer.ResendFromRequest.TYPE] = events.RESEND_REQUEST
-eventPerType[ControlLayer.ResendRangeRequest.TYPE] = events.RESEND_REQUEST
-eventPerType[ControlLayer.ResendResponseResending.TYPE] = events.RESEND_RESPONSE
-eventPerType[ControlLayer.ResendResponseResent.TYPE] = events.RESEND_RESPONSE
-eventPerType[ControlLayer.ResendResponseNoResend.TYPE] = events.RESEND_RESPONSE
+eventPerType[ControlLayer.ControlMessage.TYPES.BroadcastMessage] = events.DATA_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.UnicastMessage] = events.UNICAST_RECEIVED
+eventPerType[ControlLayer.ControlMessage.TYPES.SubscribeRequest] = events.SUBSCRIBE_REQUEST
+eventPerType[ControlLayer.ControlMessage.TYPES.UnsubscribeRequest] = events.UNSUBSCRIBE_REQUEST
+eventPerType[ControlLayer.ControlMessage.TYPES.ResendLastRequest] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ControlMessage.TYPES.ResendFromRequest] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ControlMessage.TYPES.ResendRangeRequest] = events.RESEND_REQUEST
+eventPerType[ControlLayer.ControlMessage.TYPES.ResendResponseResending] = events.RESEND_RESPONSE
+eventPerType[ControlLayer.ControlMessage.TYPES.ResendResponseResent] = events.RESEND_RESPONSE
+eventPerType[ControlLayer.ControlMessage.TYPES.ResendResponseNoResend] = events.RESEND_RESPONSE
 
 class NodeToNode extends EventEmitter {
     constructor(endpoint) {
@@ -43,15 +44,26 @@ class NodeToNode extends EventEmitter {
     }
 
     sendData(receiverNodeId, streamMessage) {
-        this.endpoint.sendSync(receiverNodeId, encoder.wrapperMessage(ControlLayer.BroadcastMessage.create(streamMessage)))
+        this.endpoint.sendSync(receiverNodeId, encoder.wrapperMessage(new ControlLayer.BroadcastMessage({
+            requestId: '', // TODO: how to echo here the requestId of the original SubscribeRequest?
+            streamMessage,
+        })))
     }
 
     sendSubscribe(receiverNodeId, streamIdAndPartition) {
-        return this.send(receiverNodeId, ControlLayer.SubscribeRequest.create(streamIdAndPartition.id, streamIdAndPartition.partition))
+        return this.send(receiverNodeId, new ControlLayer.SubscribeRequest({
+            requestId: uuidv4(),
+            streamId: streamIdAndPartition.id,
+            streamPartition: streamIdAndPartition.partition,
+        }))
     }
 
     sendUnsubscribe(receiverNodeId, streamIdAndPartition) {
-        return this.send(receiverNodeId, ControlLayer.UnsubscribeRequest.create(streamIdAndPartition.id, streamIdAndPartition.partition))
+        return this.send(receiverNodeId, new ControlLayer.UnsubscribeRequest({
+            requestId: uuidv4(),
+            streamId: streamIdAndPartition.id,
+            streamPartition: streamIdAndPartition.partition,
+        }))
     }
 
     disconnectFromNode(receiverNodeId, reason) {

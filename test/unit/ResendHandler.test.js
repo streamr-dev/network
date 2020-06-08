@@ -6,7 +6,24 @@ const { waitForStreamToEnd } = require('streamr-test-utils')
 
 const ResendHandler = require('../../src/logic/ResendHandler')
 
-const { StreamMessage } = MessageLayer
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
+
+const streamMessage1 = new StreamMessage({
+    messageId: new MessageID('streamId', 0, 1000, 0, 'publisherId', 'msgChainId'),
+    content: {},
+})
+const streamMessage2 = new StreamMessage({
+    messageId: new MessageID('streamId', 0, 2000, 0, 'publisherId', 'msgChainId'),
+    content: {},
+})
+const unicastMsg1 = new ControlLayer.UnicastMessage({
+    requestId: 'request1',
+    streamMessage: streamMessage1,
+})
+const unicastMsg2 = new ControlLayer.UnicastMessage({
+    requestId: 'request2',
+    streamMessage: streamMessage2,
+})
 
 describe('ResendHandler', () => {
     let resendHandler
@@ -14,7 +31,12 @@ describe('ResendHandler', () => {
     let notifyError
 
     beforeEach(() => {
-        request = ControlLayer.ResendLastRequest.create('streamId', 0, 'requestId', 10)
+        request = new ControlLayer.ResendLastRequest({
+            streamId: 'streamId',
+            streamPartition: 0,
+            requestId: 'requestId',
+            numberLast: 10,
+        })
         notifyError = jest.fn()
     })
 
@@ -64,28 +86,8 @@ describe('ResendHandler', () => {
         beforeEach(() => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => intoStream.object([
-                    ControlLayer.UnicastMessage.create(
-                        'requestId', StreamMessage.create(
-                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
-                            null,
-                            StreamMessage.CONTENT_TYPES.MESSAGE,
-                            StreamMessage.ENCRYPTION_TYPES.NONE,
-                            {},
-                            StreamMessage.SIGNATURE_TYPES.NONE,
-                            null
-                        )
-                    ),
-                    ControlLayer.UnicastMessage.create(
-                        'requestId', StreamMessage.create(
-                            ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
-                            null,
-                            StreamMessage.CONTENT_TYPES.MESSAGE,
-                            StreamMessage.ENCRYPTION_TYPES.NONE,
-                            {},
-                            StreamMessage.SIGNATURE_TYPES.NONE,
-                            null
-                        )
-                    ),
+                    unicastMsg1,
+                    unicastMsg2,
                 ])
             }], notifyError)
         })
@@ -105,32 +107,8 @@ describe('ResendHandler', () => {
                         read() {}
                     })
 
-                    setImmediate(() => stream.push(
-                        ControlLayer.UnicastMessage.create(
-                            'requestId', StreamMessage.create(
-                                ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
-                                null,
-                                StreamMessage.CONTENT_TYPES.MESSAGE,
-                                StreamMessage.ENCRYPTION_TYPES.NONE,
-                                {},
-                                StreamMessage.SIGNATURE_TYPES.NONE,
-                                null
-                            )
-                        ),
-                    ))
-                    setImmediate(() => stream.push(
-                        ControlLayer.UnicastMessage.create(
-                            'requestId', StreamMessage.create(
-                                ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
-                                null,
-                                StreamMessage.CONTENT_TYPES.MESSAGE,
-                                StreamMessage.ENCRYPTION_TYPES.NONE,
-                                {},
-                                StreamMessage.SIGNATURE_TYPES.NONE,
-                                null
-                            )
-                        )
-                    ))
+                    setImmediate(() => stream.push(unicastMsg1))
+                    setImmediate(() => stream.push(unicastMsg2))
                     setImmediate(() => {
                         stream.emit('error', new Error('yikes'))
                     })
@@ -163,19 +141,7 @@ describe('ResendHandler', () => {
                         objectMode: true,
                         read() {}
                     })
-                    setImmediate(() => stream.push(
-                        ControlLayer.UnicastMessage.create(
-                            'requestId', StreamMessage.create(
-                                ['streamId', 0, 2000, 0, 'publisherId', 'msgChainId'],
-                                null,
-                                StreamMessage.CONTENT_TYPES.MESSAGE,
-                                StreamMessage.ENCRYPTION_TYPES.NONE,
-                                {},
-                                StreamMessage.SIGNATURE_TYPES.NONE,
-                                null
-                            )
-                        )
-                    ))
+                    setImmediate(() => stream.push(unicastMsg2))
                     setImmediate(() => {
                         stream.emit('error', new Error('yikes'))
                     })
@@ -185,28 +151,8 @@ describe('ResendHandler', () => {
 
             const thirdStrategy = {
                 getResendResponseStream: () => intoStream.object([
-                    ControlLayer.UnicastMessage.create(
-                        'requestId', StreamMessage.create(
-                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
-                            null,
-                            StreamMessage.CONTENT_TYPES.MESSAGE,
-                            StreamMessage.ENCRYPTION_TYPES.NONE,
-                            {},
-                            StreamMessage.SIGNATURE_TYPES.NONE,
-                            null
-                        )
-                    ),
-                    ControlLayer.UnicastMessage.create(
-                        'requestId', StreamMessage.create(
-                            ['streamId', 0, 1000, 0, 'publisherId', 'msgChainId'],
-                            null,
-                            StreamMessage.CONTENT_TYPES.MESSAGE,
-                            StreamMessage.ENCRYPTION_TYPES.NONE,
-                            {},
-                            StreamMessage.SIGNATURE_TYPES.NONE,
-                            null
-                        )
-                    ),
+                    unicastMsg1,
+                    unicastMsg2,
                 ])
             }
 
@@ -231,19 +177,7 @@ describe('ResendHandler', () => {
             neverShouldBeInvokedFn = jest.fn()
 
             const firstStrategy = {
-                getResendResponseStream: () => intoStream.object([
-                    ControlLayer.UnicastMessage.create(
-                        'requestId', StreamMessage.create(
-                            ['streamId', 0, 1000, 0, 'publisher', 'msgChain'],
-                            null,
-                            StreamMessage.CONTENT_TYPES.MESSAGE,
-                            StreamMessage.ENCRYPTION_TYPES.NONE,
-                            {},
-                            StreamMessage.SIGNATURE_TYPES.NONE,
-                            null
-                        )
-                    )
-                ])
+                getResendResponseStream: () => intoStream.object([unicastMsg1])
             }
 
             const secondStrategy = {
@@ -289,50 +223,23 @@ describe('ResendHandler', () => {
         await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
 
         expect(notifyError).toBeCalledWith({
-            request: ControlLayer.ResendLastRequest.create(
-                'streamId',
-                0,
-                'requestId',
-                10,
-                undefined
-            ),
+            request: new ControlLayer.ResendLastRequest({
+                streamId: 'streamId',
+                streamPartition: 0,
+                requestId: 'requestId',
+                numberLast: 10,
+            }),
             error: new Error('yikes'),
         })
     })
 
     test('unicast messages are piped through without changes', async () => {
         resendHandler = new ResendHandler([{
-            getResendResponseStream: () => intoStream.object([
-                ControlLayer.UnicastMessage.create(
-                    'requestId', StreamMessage.create(
-                        ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
-                        [666, 50],
-                        StreamMessage.CONTENT_TYPES.MESSAGE,
-                        StreamMessage.ENCRYPTION_TYPES.NONE,
-                        {
-                            hello: 'world'
-                        },
-                        StreamMessage.SIGNATURE_TYPES.ETH,
-                        'signature'
-                    )
-                )
-            ])
+            getResendResponseStream: () => intoStream.object([unicastMsg1])
         }], notifyError)
         const streamAsArray = await waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
 
-        expect(streamAsArray[0]).toEqual(ControlLayer.UnicastMessage.create(
-            'requestId', StreamMessage.create(
-                ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
-                [666, 50],
-                StreamMessage.CONTENT_TYPES.MESSAGE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                {
-                    hello: 'world'
-                },
-                StreamMessage.SIGNATURE_TYPES.ETH,
-                'signature'
-            )
-        ))
+        expect(streamAsArray[0]).toEqual(unicastMsg1)
     })
 
     describe('timeout', () => {

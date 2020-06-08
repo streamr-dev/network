@@ -6,8 +6,8 @@ const { startNetworkNode, startTracker } = require('../../src/composition')
 const { LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 
-const { UnicastMessage } = ControlLayer
-const { StreamMessage } = MessageLayer
+const { UnicastMessage, ControlMessage } = ControlLayer
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const typesOfStreamItems = async (stream) => {
     const arr = await waitForStreamToEnd(stream)
@@ -38,15 +38,10 @@ describe('resend requests are fulfilled at L2', () => {
         n1 = await startNetworkNode(LOCALHOST, 28612, 'n1', [{
             store: () => {},
             requestLast: () => intoStream.object([
-                StreamMessage.create(
-                    ['streamId', 0, 666, 50, 'publisherId', 'msgChainId'],
-                    null,
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 666, 50, 'publisherId', 'msgChainId'),
+                    content: {},
+                }),
             ]),
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
@@ -55,42 +50,25 @@ describe('resend requests are fulfilled at L2', () => {
             store: () => {},
             requestLast: () => intoStream.object([]),
             requestFrom: () => intoStream.object([
-                StreamMessage.create(
-                    ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
-                    [666, 50],
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
-                StreamMessage.create(
-                    ['streamId', 0, 800, 0, 'publisherId', 'msgChainId'],
-                    [756, 0],
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
-                StreamMessage.create(
-                    ['streamId', 0, 900, 0, 'publisherId', 'msgChainId'],
-                    [800, 0],
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
-                StreamMessage.create(
-                    ['streamId', 0, 512012, 0, 'publisherId2', 'msgChainId'],
-                    null,
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
+                    prevMsgRef: new MessageRef(666, 50),
+                    content: {},
+                }),
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 800, 0, 'publisherId', 'msgChainId'),
+                    prevMsgRef: new MessageRef(756, 0),
+                    content: {},
+                }),
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 900, 0, 'publisherId', 'msgChainId'),
+                    prevMsgRef: new MessageRef(800, 0),
+                    content: {},
+                }),
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 512012, 0, 'publisherId2', 'msgChainId'),
+                    content: {},
+                }),
             ]),
             requestRange: () => intoStream.object([]),
         }])
@@ -122,7 +100,7 @@ describe('resend requests are fulfilled at L2', () => {
         const events = await typesOfStreamItems(stream)
 
         expect(events).toEqual([
-            UnicastMessage.TYPE,
+            ControlMessage.TYPES.UnicastMessage,
         ])
     })
 
@@ -139,10 +117,10 @@ describe('resend requests are fulfilled at L2', () => {
         const events = await typesOfStreamItems(stream)
 
         expect(events).toEqual([
-            UnicastMessage.TYPE,
-            UnicastMessage.TYPE,
-            UnicastMessage.TYPE,
-            UnicastMessage.TYPE,
+            ControlMessage.TYPES.UnicastMessage,
+            ControlMessage.TYPES.UnicastMessage,
+            ControlMessage.TYPES.UnicastMessage,
+            ControlMessage.TYPES.UnicastMessage,
         ])
     })
 

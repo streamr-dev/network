@@ -10,7 +10,10 @@ function toUnicastMessage(request) {
     return new Transform({
         objectMode: true,
         transform: (streamMessage, _, done) => {
-            done(null, ControlLayer.UnicastMessage.create(request.requestId, streamMessage))
+            done(null, new ControlLayer.UnicastMessage({
+                requestId: request.requestId,
+                streamMessage
+            }))
         }
     })
 }
@@ -29,13 +32,13 @@ class StorageResendStrategy {
 
     getResendResponseStream(request) {
         let sourceStream
-        if (request.type === ControlLayer.ResendLastRequest.TYPE) {
+        if (request.type === ControlLayer.ControlMessage.TYPES.ResendLastRequest) {
             sourceStream = this.storage.requestLast(
                 request.streamId,
                 request.streamPartition,
                 request.numberLast
             )
-        } else if (request.type === ControlLayer.ResendFromRequest.TYPE) {
+        } else if (request.type === ControlLayer.ControlMessage.TYPES.ResendFromRequest) {
             sourceStream = this.storage.requestFrom(
                 request.streamId,
                 request.streamPartition,
@@ -44,7 +47,7 @@ class StorageResendStrategy {
                 request.publisherId,
                 request.msgChainId
             )
-        } else if (request.type === ControlLayer.ResendRangeRequest.TYPE) {
+        } else if (request.type === ControlLayer.ControlMessage.TYPES.ResendRangeRequest) {
             sourceStream = this.storage.requestRange(
                 request.streamId,
                 request.streamPartition,
@@ -136,11 +139,11 @@ class ProxiedResend {
         const { requestId } = response
 
         if (this.request.requestId === requestId && this.currentNeighbor === source) {
-            if (response.type === ControlLayer.ResendResponseResent.TYPE) {
+            if (response.type === ControlLayer.ControlMessage.TYPES.ResendResponseResent) {
                 this._endStream()
-            } else if (response.type === ControlLayer.ResendResponseNoResend.TYPE) {
+            } else if (response.type === ControlLayer.ControlMessage.TYPES.ResendResponseNoResend) {
                 this._askNextNeighbor()
-            } else if (response.type === ControlLayer.ResendResponseResending.TYPE) {
+            } else if (response.type === ControlLayer.ControlMessage.TYPES.ResendResponseResending) {
                 this._resetTimeout()
             } else {
                 throw new Error(`unexpected response type ${response}`)

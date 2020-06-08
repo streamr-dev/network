@@ -7,7 +7,7 @@ const CURRENT_VERSION = require('../package.json').version
 const { startNetworkNode } = require('../src/composition')
 const { StreamIdAndPartition } = require('../src/identifiers')
 
-const { StreamMessage } = MessageLayer
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 program
     .version(CURRENT_VERSION)
@@ -39,17 +39,13 @@ startNetworkNode(program.ip, program.port, publisherId)
             const timestamp = Date.now()
             const msg = 'Hello world, ' + new Date().toLocaleString()
 
-            const streamMessage = StreamMessage.create(
-                [streamId, partition, timestamp, sequenceNumber, publisherId, messageChainId],
-                lastTimestamp == null ? null : [lastTimestamp, sequenceNumber - 1],
-                StreamMessage.CONTENT_TYPES.MESSAGE,
-                StreamMessage.ENCRYPTION_TYPES.NONE,
-                {
+            const streamMessage = new StreamMessage({
+                messageId: new MessageID(streamId, partition, timestamp, sequenceNumber, publisherId, messageChainId),
+                prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
+                content: {
                     msg
                 },
-                StreamMessage.SIGNATURE_TYPES.NONE,
-                null
-            )
+            })
             publisher.publish(streamMessage)
 
             sequenceNumber += 1

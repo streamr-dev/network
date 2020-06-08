@@ -3,7 +3,7 @@ const { MessageLayer } = require('streamr-client-protocol')
 const MemoryStorage = require('../../src/storage/MemoryStorage')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 
-const { StreamMessage } = MessageLayer
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 let streamMessages = []
 const MAX = 10
@@ -16,17 +16,13 @@ const { id, partition } = streamObj
 let memoryStorage
 
 for (let i = 0; i < MAX; i++) {
-    const streamMessage = StreamMessage.create(
-        [id, partition, i, 0, 'publisher-id', 'sessionId'],
-        i === 0 ? null : [i - 1, 0],
-        StreamMessage.CONTENT_TYPES.MESSAGE,
-        StreamMessage.ENCRYPTION_TYPES.NONE,
-        {
+    const streamMessage = new StreamMessage({
+        messageId: new MessageID(id, partition, i, 0, 'publisher-id', 'sessionId'),
+        prevMsgRef: i === 0 ? null : new MessageRef(i - 1, 0),
+        content: {
             messageNo: i
         },
-        StreamMessage.SIGNATURE_TYPES.NONE,
-        null
-    )
+    })
     streamMessages.push(streamMessage)
 }
 

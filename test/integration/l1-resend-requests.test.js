@@ -6,8 +6,8 @@ const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const { LOCALHOST } = require('../util')
 
-const { UnicastMessage } = ControlLayer
-const { StreamMessage } = MessageLayer
+const { UnicastMessage, ControlMessage } = ControlLayer
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const typesOfStreamItems = async (stream) => {
     const arr = await waitForStreamToEnd(stream)
@@ -30,44 +30,26 @@ describe('resend requests are fulfilled at L1', () => {
         contactNode = await startNetworkNode(LOCALHOST, 28601, 'contactNode', [{
             store: () => {},
             requestLast: () => intoStream.object([
-                StreamMessage.create(
-                    ['streamId', 0, 666, 50, 'publisherId', 'msgChainId'],
-                    null,
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
-                StreamMessage.create(
-                    ['streamId', 0, 756, 0, 'publisherId', 'msgChainId'],
-                    [666, 50],
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
-                StreamMessage.create(
-                    ['streamId', 0, 800, 0, 'publisherId', 'msgChainId'],
-                    [756, 0],
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                )
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 666, 50, 'publisherId', 'msgChainId'),
+                    content: {},
+                }),
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
+                    prevMsgRef: new MessageRef(666, 50),
+                    content: {},
+                }),
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 800, 0, 'publisherId', 'msgChainId'),
+                    prevMsgRef: new MessageRef(756, 0),
+                    content: {},
+                })
             ]),
             requestFrom: () => intoStream.object([
-                StreamMessage.create(
-                    ['streamId', 0, 666, 50, 'publisherId', 'msgChainId'],
-                    null,
-                    StreamMessage.CONTENT_TYPES.MESSAGE,
-                    StreamMessage.ENCRYPTION_TYPES.NONE,
-                    {},
-                    StreamMessage.SIGNATURE_TYPES.ETH,
-                    'signature'
-                ),
+                new StreamMessage({
+                    messageId: new MessageID('streamId', 0, 666, 50, 'publisherId', 'msgChainId'),
+                    content: {},
+                }),
             ]),
             requestRange: () => intoStream.object([]),
         }])
@@ -87,9 +69,9 @@ describe('resend requests are fulfilled at L1', () => {
         const events = await typesOfStreamItems(stream)
 
         expect(events).toEqual([
-            UnicastMessage.TYPE,
-            UnicastMessage.TYPE,
-            UnicastMessage.TYPE,
+            ControlMessage.TYPES.UnicastMessage,
+            ControlMessage.TYPES.UnicastMessage,
+            ControlMessage.TYPES.UnicastMessage,
         ])
     })
 
@@ -106,7 +88,7 @@ describe('resend requests are fulfilled at L1', () => {
         const events = await typesOfStreamItems(stream)
 
         expect(events).toEqual([
-            UnicastMessage.TYPE,
+            ControlMessage.TYPES.UnicastMessage,
         ])
     })
 

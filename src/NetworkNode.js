@@ -1,4 +1,4 @@
-const { ControlLayer } = require('streamr-client-protocol')
+const { ControlLayer, MessageLayer } = require('streamr-client-protocol')
 
 const { StorageResendStrategy,
     AskNeighborsResendStrategy,
@@ -47,20 +47,22 @@ class NetworkNode extends Node {
         this.unsubscribeFromStream(new StreamIdAndPartition(streamId, streamPartition))
     }
 
-    requestResendLast(streamId, streamPartition, requestId, number) {
-        const request = ControlLayer.ResendLastRequest.create(streamId, streamPartition, requestId, number)
+    requestResendLast(streamId, streamPartition, requestId, numberLast) {
+        const request = new ControlLayer.ResendLastRequest({
+            requestId, streamId, streamPartition, numberLast
+        })
         return this.requestResend(request, null)
     }
 
     requestResendFrom(streamId, streamPartition, requestId, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
-        const request = ControlLayer.ResendFromRequest.create(
+        const request = new ControlLayer.ResendFromRequest({
+            requestId,
             streamId,
             streamPartition,
-            requestId,
-            [fromTimestamp, fromSequenceNo],
+            fromMsgRef: new MessageLayer.MessageRef(fromTimestamp, fromSequenceNo),
             publisherId,
             msgChainId
-        )
+        })
         return this.requestResend(request, null)
     }
 
@@ -73,15 +75,15 @@ class NetworkNode extends Node {
         toSequenceNo,
         publisherId,
         msgChainId) {
-        const request = ControlLayer.ResendRangeRequest.create(
+        const request = new ControlLayer.ResendRangeRequest({
+            requestId,
             streamId,
             streamPartition,
-            requestId,
-            [fromTimestamp, fromSequenceNo],
-            [toTimestamp, toSequenceNo],
+            fromMsgRef: new MessageLayer.MessageRef(fromTimestamp, fromSequenceNo),
+            toMsgRef: new MessageLayer.MessageRef(toTimestamp, toSequenceNo),
             publisherId,
             msgChainId
-        )
+        })
         return this.requestResend(request, null)
     }
 

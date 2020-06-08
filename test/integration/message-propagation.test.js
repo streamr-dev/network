@@ -1,4 +1,4 @@
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
 const { waitForCondition } = require('streamr-test-utils')
 
 const { startTracker, startNetworkNode } = require('../../src/composition')
@@ -65,38 +65,20 @@ describe('message propagation in network', () => {
         n3.subscribe('stream-1', 0)
 
         for (let i = 1; i <= 5; ++i) {
-            n1.publish(StreamMessage.from({
-                streamId: 'stream-1',
-                streamPartition: 0,
-                timestamp: i,
-                sequenceNumber: 0,
-                publisherId: 'publisherId',
-                msgChainId: 'msgChainId',
-                previousTimestamp: i === 1 ? null : i - 1,
-                previousSequenceNumber: i === 1 ? null : 0,
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            n1.publish(new StreamMessage({
+                messageId: new MessageID('stream-1', 0, i, 0, 'publisherId', 'msgChainId'),
+                prevMsgRef: i === 1 ? null : new MessageRef(i - 1, 0),
                 content: {
                     messageNo: i
                 },
-                signatureType: StreamMessage.SIGNATURE_TYPES.NONE
             }))
 
-            n4.publish(StreamMessage.from({
-                streamId: 'stream-2',
-                streamPartition: 0,
-                timestamp: i * 100,
-                sequenceNumber: 0,
-                publisherId: 'publisherId',
-                msgChainId: 'msgChainId',
-                previousTimestamp: i === 1 ? null : (i - 1) * 100,
-                previousSequenceNumber: i === 1 ? null : 0,
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
+            n4.publish(new StreamMessage({
+                messageId: new MessageID('stream-2', 0, i * 100, 0, 'publisherId', 'msgChainId'),
+                prevMsgRef: i === 1 ? null : new MessageRef((i - 1) * 100, 0),
                 content: {
                     messageNo: i * 100
                 },
-                signatureType: StreamMessage.SIGNATURE_TYPES.NONE
             }))
         }
 

@@ -6,7 +6,7 @@ const {
     UnicastMessage,
     ResendLastRequest,
 } = require('streamr-client-protocol').ControlLayer
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
 
 const proxyRequestStream = require('../../src/logic/proxyRequestStream')
 
@@ -16,7 +16,13 @@ describe('proxyRequestStream', () => {
 
     beforeEach(() => {
         sendFn = jest.fn()
-        request = ResendLastRequest.create('streamId', 0, 'requestId', 10, 'sessionToken')
+        request = new ResendLastRequest({
+            requestId: 'requestId',
+            streamId: 'streamId',
+            streamPartition: 0,
+            numberLast: 10,
+            sessionToken: 'sessionToken',
+        })
     })
 
     it('empty requestStream causes only NoResend to be sent', (done) => {
@@ -24,48 +30,54 @@ describe('proxyRequestStream', () => {
         proxyRequestStream(sendFn, request, stream)
         stream.on('end', () => {
             expect(sendFn.mock.calls).toEqual([
-                [ResendResponseNoResend.create('streamId', 0, 'requestId')]
+                [new ResendResponseNoResend({
+                    requestId: 'requestId',
+                    streamId: 'streamId',
+                    streamPartition: 0,
+                })]
             ])
             done()
         })
     })
 
     it('requestStream with messages causes Resending, Unicast(s), and Resent to be sent', (done) => {
-        const firstMessage = StreamMessage.from({
-            streamId: 'streamId',
-            streamPartition: 0,
-            timestamp: 10000000,
-            sequenceNumber: 0,
-            publisherId: 'publisherId',
-            msgChainId: 'msgChainId',
+        const firstMessage = new StreamMessage({
+            messageId: new MessageID('streamId', 0, 10000000, 0, 'publisherId', 'msgChainId'),
             content: {
                 hello: 'world'
-            }
+            },
         })
-        const secondMessage = StreamMessage.from({
-            streamId: 'streamId',
-            streamPartition: 0,
-            timestamp: 20000000,
-            sequenceNumber: 0,
-            publisherId: 'publisherId',
-            msgChainId: 'msgChainId',
+        const secondMessage = new StreamMessage({
+            messageId: new MessageID('streamId', 0, 20000000, 0, 'publisherId', 'msgChainId'),
             content: {
                 moi: 'maailma'
-            }
+            },
         })
         const stream = intoStream.object([
-            UnicastMessage.create('requestId', firstMessage),
-            UnicastMessage.create('requestId', secondMessage)
+            new UnicastMessage({
+                requestId: 'requestId', streamMessage: firstMessage
+            }),
+            new UnicastMessage({
+                requestId: 'requestId', streamMessage: secondMessage
+            }),
         ])
 
         proxyRequestStream(sendFn, request, stream)
 
         stream.on('end', () => {
             expect(sendFn.mock.calls).toEqual([
-                [ResendResponseResending.create('streamId', 0, 'requestId')],
-                [UnicastMessage.create('requestId', firstMessage)],
-                [UnicastMessage.create('requestId', secondMessage)],
-                [ResendResponseResent.create('streamId', 0, 'requestId')],
+                [new ResendResponseResending({
+                    streamId: 'streamId', streamPartition: 0, requestId: 'requestId',
+                })],
+                [new UnicastMessage({
+                    requestId: 'requestId', streamMessage: firstMessage
+                })],
+                [new UnicastMessage({
+                    requestId: 'requestId', streamMessage: secondMessage
+                })],
+                [new ResendResponseResent({
+                    streamId: 'streamId', streamPartition: 0, requestId: 'requestId'
+                })],
             ])
             done()
         })

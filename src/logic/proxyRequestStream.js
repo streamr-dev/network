@@ -7,7 +7,9 @@ module.exports = function proxyRequestStream(sendFn, request, requestStream) {
     let fulfilled = false
     requestStream
         .once('data', () => {
-            sendFn(ResendResponseResending.create(streamId, streamPartition, requestId))
+            sendFn(new ResendResponseResending({
+                requestId, streamId, streamPartition
+            }))
             fulfilled = true
         })
         .on('data', (unicastMessage) => {
@@ -15,9 +17,13 @@ module.exports = function proxyRequestStream(sendFn, request, requestStream) {
         })
         .on('end', () => {
             if (fulfilled) {
-                sendFn(ResendResponseResent.create(streamId, streamPartition, requestId))
+                sendFn(new ResendResponseResent({
+                    requestId, streamId, streamPartition
+                }))
             } else {
-                sendFn(ResendResponseNoResend.create(streamId, streamPartition, requestId))
+                sendFn(new ResendResponseNoResend({
+                    requestId, streamId, streamPartition
+                }))
             }
         })
 }
