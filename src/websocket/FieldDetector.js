@@ -1,3 +1,5 @@
+const HttpError = require('../errors/HttpError')
+
 module.exports = class FieldDetector {
     constructor(streamFetcher) {
         this.streamFetcher = streamFetcher
@@ -28,7 +30,10 @@ module.exports = class FieldDetector {
             try {
                 await this.streamFetcher.setFields(stream.id, fields, apiKey, sessionToken)
             } catch (e) {
-                this.configuredStreamIds.delete(stream.id)
+                // Can try again unless we get a 403 response (permission denied)
+                if (!(e instanceof HttpError && e.code === 403)) {
+                    this.configuredStreamIds.delete(stream.id)
+                }
                 throw e
             }
         }

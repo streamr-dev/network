@@ -1,6 +1,7 @@
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 
-const FieldDetector = require('../../../src/websocket/FieldDetector.js')
+const HttpError = require('../../../src/errors/HttpError')
+const FieldDetector = require('../../../src/websocket/FieldDetector')
 
 const STREAM_MESSAGE = StreamMessage.create(
     ['streamId', 0, 0, 0, 'publisherId', 'msgChainId'],
@@ -105,6 +106,28 @@ describe('FieldDetector#detectAndSetFields', () => {
         await fieldDetector.detectAndSetFields(stream, STREAM_MESSAGE, 'apiKey', 'sessionToken')
         await fieldDetector.detectAndSetFields(stream, STREAM_MESSAGE, 'apiKey', 'sessionToken')
         await fieldDetector.detectAndSetFields(stream, STREAM_MESSAGE, 'apiKey', 'sessionToken')
+
+        expect(streamFetcher.setFields).toHaveBeenCalledTimes(1)
+    })
+
+    test('if streamFetcher#setFields throws a 403, do not try again', async () => {
+        streamFetcher.setFields.mockRejectedValue(new HttpError(403, 'method', 'url'))
+
+        const stream = {
+            streamId: 'id',
+            autoConfigure: true
+        }
+
+        try {
+            await fieldDetector.detectAndSetFields(stream, STREAM_MESSAGE, 'apiKey', 'sessionToken')
+        } catch (e) {
+            // no op
+        }
+        try {
+            await fieldDetector.detectAndSetFields(stream, STREAM_MESSAGE, 'apiKey', 'sessionToken')
+        } catch (e) {
+            // no op
+        }
 
         expect(streamFetcher.setFields).toHaveBeenCalledTimes(1)
     })
