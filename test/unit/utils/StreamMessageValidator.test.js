@@ -408,4 +408,14 @@ describe('StreamMessageValidator', () => {
             })
         })
     })
+
+    describe('isKeyExchangeStream', () => {
+        it('returns true for streams that start with the correct prefix', () => {
+            assert(StreamMessageValidator.isKeyExchangeStream('SYSTEM/keyexchange/0x1234'))
+            assert(StreamMessageValidator.isKeyExchangeStream('SYSTEM/keyexchange/foo'))
+        })
+        it('returns false for other streams', () => {
+            assert(!StreamMessageValidator.isKeyExchangeStream('SYSTEM/keyexchangefoo'))
+        })
+    })
 })

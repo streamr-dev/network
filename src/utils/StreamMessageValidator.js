@@ -137,7 +137,7 @@ export default class StreamMessageValidator {
         if (!streamMessage.signature) {
             throw new ValidationError(`Received unsigned group key request (the public key must be signed to avoid MitM attacks). Message: ${streamMessage.serialize()}`)
         }
-        if (!streamMessage.getStreamId().startsWith(KEY_EXCHANGE_STREAM_PREFIX)) {
+        if (!StreamMessageValidator.isKeyExchangeStream(streamMessage.getStreamId())) {
             throw new ValidationError(`Group key requests can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}. Message: ${streamMessage.serialize()}`)
         }
 
@@ -164,7 +164,7 @@ export default class StreamMessageValidator {
         if (!streamMessage.signature) {
             throw new ValidationError(`Received unsigned group key response (it must be signed to avoid MitM attacks). Message: ${streamMessage.serialize()}`)
         }
-        if (!streamMessage.getStreamId().startsWith(KEY_EXCHANGE_STREAM_PREFIX)) {
+        if (!StreamMessageValidator.isKeyExchangeStream(streamMessage.getStreamId())) {
             throw new ValidationError(`Group key responses can only occur on stream ids of form ${`${KEY_EXCHANGE_STREAM_PREFIX}{address}`}. Message: ${streamMessage.serialize()}`)
         }
 
@@ -185,5 +185,9 @@ export default class StreamMessageValidator {
         if (!recipientIsSubscriber) {
             throw new ValidationError(`${recipient} is not a subscriber on stream ${response.streamId}. Group key response: ${streamMessage.serialize()}`)
         }
+    }
+
+    static isKeyExchangeStream(streamId) {
+        return streamId.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
     }
 }
