@@ -99,21 +99,27 @@ class WsEndpoint extends EventEmitter {
         this.pendingConnections = new Map()
         this.peerBook = new PeerBook()
 
-        this.wss.get('/', (res, req) => {
-            // write into headers need information and redirect to ws
-            res.writeStatus('302')
-
-            res.writeHeader('streamr-peer-id', this.peerInfo.peerId)
-            res.writeHeader('streamr-peer-type', this.peerInfo.peerType)
-
-            res.writeHeader('location', `/ws?${req.getQuery()}`)
-            res.end()
-        }).ws('/ws', {
+        this.wss.ws('/ws', {
             compression: 0,
             maxPayloadLength: 1024 * 1024,
             idleTimeout: 0,
-            open: (ws, req) => {
-                this._onIncomingConnection(ws, req)
+            upgrade: (res, req, context) => {
+                res.writeStatus(`101 Switching Protocols\nstreamr-peer-id: ${this.peerInfo.peerId}\nstreamr-peer-type: ${this.peerInfo.peerType}`)
+
+                /* This immediately calls open handler, you must not use res after this call */
+                res.upgrade({
+                    query: req.getQuery(),
+                    peerId: req.getHeader('streamr-peer-id'),
+                    peerType: req.getHeader('streamr-peer-type'),
+                },
+                /* Spell these correctly */
+                req.getHeader('sec-websocket-key'),
+                req.getHeader('sec-websocket-protocol'),
+                req.getHeader('sec-websocket-extensions'),
+                context)
+            },
+            open: (ws) => {
+                this._onIncomingConnection(ws)
             },
             message: (ws, message, isBinary) => {
                 const connection = this.connections.get(ws.address)
@@ -311,16 +317,13 @@ class WsEndpoint extends EventEmitter {
             try {
                 let serverPeerInfo
                 const ws = new WebSocket(
-                    `${peerAddress}/?address=${this.getAddress()}`,
+                    `${peerAddress}/ws?address=${this.getAddress()}`,
                     {
-                        followRedirects: true,
                         headers: toHeaders(this.peerInfo)
                     }
                 )
 
-                // catching headers
-                // eslint-disable-next-line no-underscore-dangle
-                ws._req.on('response', (res) => {
+                ws.on('upgrade', (res) => {
                     const peerId = res.headers['streamr-peer-id']
                     const peerType = res.headers['streamr-peer-type']
 
@@ -407,11 +410,9 @@ class WsEndpoint extends EventEmitter {
         return this.peerBook.getAddress(peerId)
     }
 
-    _onIncomingConnection(ws, req) {
-        const { address } = qs.parse(req.getQuery())
-
-        const peerId = req.getHeader('streamr-peer-id') // case insensitive
-        const peerType = req.getHeader('streamr-peer-type')
+    _onIncomingConnection(ws) {
+        const { address } = qs.parse(ws.query)
+        const { peerId, peerType } = ws
 
         try {
             if (!address) {
