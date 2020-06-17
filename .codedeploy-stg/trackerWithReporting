@@ -1,2 +1,0 @@
-#!/usr/bin/env bash
-node /srv/tracker/bin/tracker.js --port=$1 --ip=$2
