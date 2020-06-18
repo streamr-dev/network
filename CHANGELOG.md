@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Renamed `listen` to `subscribe` to unify terminology
+- API key can be given with `--apiKey <key>`. API keys are deprecated, so `--privateKey` should be the preferred authentication method.
 
 ## [3.1.0] - 2019-12-12
 ### Added
