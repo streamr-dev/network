@@ -1,10 +1,7 @@
 const StreamrClient = require('streamr-client')
 
-module.exports = function create(body, apiKey, streamrOptions) {
+module.exports = function create(body, streamrOptions) {
     const options = { ...streamrOptions }
-    if (apiKey != null) {
-        options.auth = { apiKey }
-    }
 
     const client = new StreamrClient(options)
     client.createStream(body).then((stream) => {

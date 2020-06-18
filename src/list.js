@@ -1,11 +1,8 @@
 const StreamrClient = require('streamr-client')
 const EasyTable = require('easy-table')
 
-module.exports = function list(apiKey, query, streamrOptions) {
+module.exports = function list(query, streamrOptions) {
     const options = { ...streamrOptions }
-    if (apiKey != null) {
-        options.auth = { apiKey }
-    }
     const client = new StreamrClient(options)
     client.listStreams(query).then((streams) => {
         if (streams.length > 0) {

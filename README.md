@@ -1,6 +1,6 @@
 # Streamr Command Line Tools
 
-Command line tool for interacting with [Streamr](https://www.streamr.com).
+Command line tool for interacting with [Streamr](https://streamr.network).
 
 See [Changelog](CHANGELOG.md) for version information and changes.
 
@@ -18,18 +18,18 @@ All (sub)commands follow pattern `streamr <command>`.
 Run `streamr help <command>` or `streamr <command> --help` to get more information about a a command, its options, and
 so forth.
 
-### listen
+### subscribe
 Used to subscribe to a stream and output real-time JSON objects to stdout line-by-line.
 
-For example, to listen to a public stream such as the tram demo do
+For example, to subscribe to a public stream such as the tram demo do
 ```
-streamr listen 7wa7APtlTq6EC5iTCBy6dw
+streamr subscribe 7wa7APtlTq6EC5iTCBy6dw
 ```
 
-To listen to a private stream:
+To subscribe to a private stream and authenticate with an Ethereum private key:
 
 ```
-streamr listen streamId apiKey
+streamr subscribe streamId --privateKey <key>
 ```
 
 Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment. Alternatively, you can give `--ws-url <url>` and `--http-url <url>` to connect to any custom network.
@@ -40,7 +40,7 @@ Used to publish events to a stream from stdin line-by-line. Each line should be 
 
 Example of use:
 ```
-streamr publish streamId apiKey
+streamr publish <streamId> --privateKey <key>
 ```
 
 Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
@@ -51,25 +51,25 @@ Generate random JSON objects to stdout line-by-line.
 
 Useful for generating test data to be published to a stream with `publish`, e.g.:
 ```
-streamr generate | streamr publish streamId apiKey
+streamr generate | streamr publish <streamId> --privateKey <key>
 ```
 
 ### list
-Fetch a list of streams that are accessible to the given api key
+Fetch a list of streams that are accessible to the user authenticated by the private key
 ```
-streamr list apiKey
+streamr list --privateKey <key>
 ```
 
 ### show
 Show detailed information about a specific stream
 ```
-streamr show streamId apiKey
+streamr show <streamId> --privateKey <key>
 ```
 
 ### create
 Create a new stream
 ```
-streamr create name apiKey
+streamr create <name> --privateKey <key>
 ```
 
 ### resend
@@ -83,42 +83,42 @@ streamr resend last 10 7wa7APtlTq6EC5iTCBy6dw
 
 To fetch data starting from a particular date-time
 ```
-streamr resend from 2019-05-10T17:00:00 streamId apiKey
+streamr resend from 2019-05-10T17:00:00 <streamId> --privateKey <key>
 ```
 
 To fetch data between two date-times
 ```
-streamr resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 streamId apiKey
+streamr resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 <streamId> --privateKey <key>
 ```
 
 Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
 
 
-### Examples: Piping with listen and publish
+### Examples: Piping with subscribe and publish
 
-You can use the piping facilities of your *nix operating system with commands `publish` and `listen` to achieve some
+You can use the piping facilities of your *nix operating system with commands `publish` and `subscribe` to achieve some
 useful operations. Below is a list of some ideas.
 
-#### Listening to a stream from any programming language
-You can pipe the line-by-line JSON objects output by `listen` to
+#### Subscribing to a stream from any programming language
+You can pipe the line-by-line JSON objects output by `subscribe` to
 your program written in any language. Just make the program read JSON objects
 from stdin.
 ```
-streamr listen 7wa7APtlTq6EC5iTCBy6dw | ruby calculate-average-speed.rb
+streamr subscribe 7wa7APtlTq6EC5iTCBy6dw | ruby calculate-average-speed.rb
 ```
 
 #### Publishing to a stream from any programming language
 If your program produces JSON objects to stdout (line-by-line), you can
 redirect it to command `publish` to publish the JSON objects to a stream.
 ```
-python printSensorReadingsAsJson.py | streamr publish streamId apiKey
+python printSensorReadingsAsJson.py | streamr publish <streamId> --privateKey <key>
 ```
 
 #### Transforming streams
-You can also listen to a stream, apply a transformation, and then pipe the
+You can also subscribe to a stream, apply a transformation, and then pipe the
 transformed output into another stream.
 ```
-streamr listen sourceStream | ./calculateMovingAverages | streamr publish destinationStream apiKey
+streamr subscribe <sourceStream> | ./calculateMovingAverages | streamr publish <destinationStream> --privateKey <key>
 ```
 
 Same rules apply here as before. Your program should accept line-by-line JSON
@@ -126,20 +126,19 @@ objects via stdin and output JSON objects to stdout line-by-line.
 
 #### Copying a production stream into development environment
 If you have a working stream in production that you'd also like to use in your
-development environment, you can combine the `listen` and `publish` commands to effectively copy
+development environment, you can combine the `subscribe` and `publish` commands to effectively copy
 the real-time events.
 ```
-streamr listen 7wa7APtlTq6EC5iTCBy6dw | streamr publish --dev streamId apiKey
+streamr subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr publish --dev <streamId> --privateKey <key>
 ```
 
 And the same for staging environment:
 ```
-streamr listen 7wa7APtlTq6EC5iTCBy6dw | streamr publish --stg streamId apiKey
+streamr subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr publish --stg <streamId> --privateKey <key>
 ```
 
 ## Contributing
-See issues, especially those tagged with "help wanted". We welcome pull
-requests and issues.
+See issues, especially those tagged with "help wanted". We welcome pull requests and issues.
 
 ## Developing
 This project is a thin wrapper around [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript),

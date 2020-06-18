@@ -1,11 +1,9 @@
 const Writable = require('stream').Writable
 const StreamrClient = require('streamr-client')
 
-module.exports = function publishStream(stream, apiKey, partitionKey, streamrOptions) {
+module.exports = function publishStream(stream, partitionKey, streamrOptions) {
     const options = { ...streamrOptions }
-    if (apiKey != null) {
-        options.auth = { apiKey }
-    }
+
     const client = new StreamrClient(options)
     const writable = new Writable({
         objectMode: true,
@@ -25,7 +23,7 @@ module.exports = function publishStream(stream, apiKey, partitionKey, streamrOpt
                 return
             }
 
-            client.publish(stream, json, Date.now(), partitionKey).then(
+            client.publish(stream, json, Date.now(), json[partitionKey]).then(
                 () => done(),
                 (err) => done(err)
             )

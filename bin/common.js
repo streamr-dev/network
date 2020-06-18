@@ -6,13 +6,19 @@ function envOptions(program) {
         .option('--http-url <url>', 'alternative http url to use')
 }
 
+function authOptions(program) {
+    return program
+        .option('--privateKey <key>', 'use an Ethereum private key to authenticate')
+        .option('--apiKey <key>', 'use an API key to authenticate (deprecated)')
+}
+
 function exitWitHelpIfArgsNotBetween(program, min, max) {
     if (program.args.length < min || program.args.length > max) {
         program.help()
     }
 }
 
-function formStreamrOptionsWithEnv({ dev, stg, wsUrl, httpUrl }) {
+function formStreamrOptionsWithEnv({ dev, stg, wsUrl, httpUrl, privateKey, apiKey }) {
     const options = {}
 
     if (dev && stg) {
@@ -35,6 +41,21 @@ function formStreamrOptionsWithEnv({ dev, stg, wsUrl, httpUrl }) {
         options.restUrl = httpUrl
     }
 
+    if (privateKey && apiKey) {
+        console.error('flags --privateKey and --apiKey cannot be used at the same time')
+        process.exit(1)
+    }
+
+    if (privateKey) {
+        options.auth = {
+            privateKey
+        }
+    } else if (apiKey) {
+        options.auth = {
+            apiKey
+        }
+    }
+
     return options
 }
 
@@ -51,6 +72,7 @@ function createFnParseInt(name) {
 
 module.exports = {
     envOptions,
+    authOptions,
     exitWitHelpIfArgsNotBetween,
     formStreamrOptionsWithEnv,
     createFnParseInt

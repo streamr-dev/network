@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 const program = require('commander')
 const list = require('../src/list')
-const { envOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+const { envOptions, authOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
 
 program
-    .usage('<apiKey>')
-    .description('fetch a list of streams that are accessible with given key')
+    .description('fetch a list of streams that are accessible by the authenticated user')
     .option('-s, --search [term]', 'search for term in name or description')
-    .option('-o, --operation [permission]', 'filter by permission', /^(READ|WRITE|SHARE)$/i, 'READ')
+    .option('-o, --operation [permission]', 'filter by permission', /^(stream_get|stream_subscribe|stream_publish|stream_delete|stream_share)$/i, 'stream_get')
     .option('--public-access', 'include publicly available streams')
     .option('--no-granted-access', 'exclude streams that user has directly granted permissions to')
+authOptions(program)
 envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
 
-exitWitHelpIfArgsNotBetween(program, 1, 1)
+exitWitHelpIfArgsNotBetween(program, 0, 0)
 
 const query = {
     operation: program.operation,
@@ -31,5 +31,5 @@ if ("grantedAccess" in program) {
 }
 
 const options = formStreamrOptionsWithEnv(program);
-list(program.args[0], query, options)
+list(query, options)
 

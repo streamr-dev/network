@@ -1,10 +1,7 @@
 const StreamrClient = require('streamr-client')
 
-module.exports = async function resend(streamId, apiKey, resendOpts, streamrOptions) {
+module.exports = async function resend(streamId, resendOpts, streamrOptions) {
     const options = { ...streamrOptions }
-    if (apiKey != null) {
-        options.auth = { apiKey }
-    }
     const client = new StreamrClient(options)
 
     let sub

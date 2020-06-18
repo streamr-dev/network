@@ -7,9 +7,9 @@
     "streamr-create": "bin/streamr-create.js",
     "streamr-generate": "bin/streamr-generate.js",
     "streamr-list": "bin/streamr-list.js",
-    "streamr-listen": "bin/streamr-listen.js",
     "streamr-publish": "bin/streamr-publish.js",
     "streamr-resend": "bin/streamr-resend.js",
+    "streamr-subscribe": "bin/streamr-subscribe.js",
     "streamr-show": "bin/streamr-show.js"
   },
   "scripts": {

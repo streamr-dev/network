@@ -1,11 +1,7 @@
 const StreamrClient = require('streamr-client')
 
-module.exports = function show(streamId, apiKey, includePermissions, streamrOptions) {
+module.exports = function show(streamId, includePermissions, streamrOptions) {
     const options = { ...streamrOptions }
-    if (apiKey != null) {
-        options.auth = { apiKey }
-    }
-
     const client = new StreamrClient(options)
     client.getStream(streamId).then(async (stream) => {
         const obj = stream.toObject()

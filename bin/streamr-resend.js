@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander')
 const resend = require('../src/resend')
-const { envOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+const { envOptions, authOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
 
 function handlePublisherIdAndMsgChainId(cmd, resendOptions) {
     if ('publisherId' in cmd && !('msgChainId' in cmd)) {
@@ -25,11 +25,11 @@ program
     .description('request resend of stream and print JSON messages to stdout line-by-line')
 
 program
-    .command('last <n> <streamId> [apiKey]')
+    .command('last <n> <streamId>')
     .description('request last N messages')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-s, --subscribe', 'subscribe in addition to resend', false)
-    .action((n, streamId, apiKey, cmd) => {
+    .action((n, streamId, cmd) => {
         if (isNaN(n)) {
             console.error('argument n is not a number')
             process.exit(1)
@@ -40,17 +40,17 @@ program
         const options = formStreamrOptionsWithEnv(cmd.parent)
         options.orderMessages = !cmd.disableOrdering
         options.subscribe = cmd.subscribe
-        resend(streamId, apiKey, resendOptions, options)
+        resend(streamId, resendOptions, options)
     })
 
 program
-    .command('from <from> <streamId> [apiKey]')
+    .command('from <from> <streamId>')
     .description('request messages starting from given date-time (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
     .option('--publisher-id <string>', 'filter results by publisher')
     .option('--msg-chain-id <string>', 'filter results by message chain')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-s, --subscribe', 'subscribe in addition to resend', false)
-    .action((from, streamId, apiKey, cmd) => {
+    .action((from, streamId, cmd) => {
         const resendOptions = {
             from: {
                 timestamp: Date.parse(from),
@@ -61,16 +61,16 @@ program
         const options = formStreamrOptionsWithEnv(cmd.parent)
         options.orderMessages = !cmd.disableOrdering
         options.subscribe = cmd.subscribe
-        resend(streamId, apiKey, resendOptions, options)
+        resend(streamId, resendOptions, options)
     })
 
 program
-    .command('range <from> <to> <streamId> [apiKey]')
+    .command('range <from> <to> <streamId>')
     .description('request messages between two given date-times (format: "YYYY-MM-DDTHH:mm:ss.sssZ")')
     .option('--publisher-id <string>', 'filter results by publisher')
     .option('--msg-chain-id <string>', 'filter results by message chain')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
-    .action((from, to, streamId, apiKey, cmd) => {
+    .action((from, to, streamId, cmd) => {
         const resendOptions = {
             from: {
                 timestamp: Date.parse(from),
@@ -84,7 +84,7 @@ program
         handlePublisherIdAndMsgChainId(cmd, resendOptions)
         const options = formStreamrOptionsWithEnv(cmd.parent)
         options.orderMessages = !cmd.disableOrdering
-        resend(streamId, apiKey, resendOptions, options)
+        resend(streamId, resendOptions, options)
     })
 
 program
@@ -93,6 +93,7 @@ program
         process.exit(1)
     })
 
+authOptions(program)
 envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
