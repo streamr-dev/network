@@ -5,12 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [4.0.0] - 2020-06-18
+
+### Breaking changes
+- Renamed `listen` to `subscribe` to unify terminology
+- API key can be given with `--apiKey <key>`. API keys are deprecated, so `--privateKey` should be the preferred authentication method (see below).
+
 ### Added
 - Support for authenticating with an Ethereum private key by passing `--privateKey <key>`. This also automatically enables message signing when publishing messages.
-
-### Changed
-- Renamed `listen` to `subscribe` to unify terminology
-- API key can be given with `--apiKey <key>`. API keys are deprecated, so `--privateKey` should be the preferred authentication method.
 
 ## [3.1.0] - 2019-12-12
 ### Added
