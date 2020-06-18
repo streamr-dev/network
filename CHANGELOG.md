@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [4.0.0] - 2020-06-18
 ### Added
-- Support for authenticating with `--privateKey <key>`, which also automatically enables message signing
+- Support for authenticating with an Ethereum private key by passing `--privateKey <key>`. This also automatically enables message signing when publishing messages.
 
 ### Changed
 - Renamed `listen` to `subscribe` to unify terminology
