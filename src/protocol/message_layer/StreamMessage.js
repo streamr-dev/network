@@ -215,36 +215,30 @@ export default class StreamMessage {
 
     static validateContent(content, contentType) {
         if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
-            if (!content.publicKey) {
-                throw new Error(`Content of type ${contentType} must contain a 'publicKey' field.`)
-            } else if (!content.streamId) {
-                throw new Error(`Content of type ${contentType} must contain a 'streamId' field.`)
-            } else if (content.range && !content.range.start && !content.range.end) {
-                throw new Error(`Field 'range' in content of type ${contentType} must contain fields 'start' and 'end'.`)
+            this._requireFields(['requestId', 'publicKey', 'streamId'], content, contentType)
+            if (content.range && !content.range.start && !content.range.end) {
+                throw new ValidationError(`Field 'range' in content of type ${contentType} must contain fields 'start' and 'end'.`)
             }
         } else if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
-            if (!content.streamId) {
-                throw new Error(`Content of type ${contentType} must contain a 'streamId' field.`)
-            } else if (!content.keys) {
-                throw new Error(`Content of type ${contentType} must contain a 'keys' field.`)
-            }
+            this._requireFields(['requestId', 'streamId', 'keys'], content, contentType)
             content.keys.forEach((keyResponse) => {
                 if (!keyResponse.groupKey || !keyResponse.start) {
                     throw new Error(`Each element in field 'keys' of content of type ${contentType} must contain 'groupKey' and 'start' fields.`)
                 }
             })
         } else if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE) {
-            if (!content.streamId || !content.groupKey || !content.start) {
-                throw new Error(`Content of type ${contentType} must contain 'streamId', 'groupKey' and 'start' fields.`)
-            }
-        } else if (contentType === StreamMessage.CONTENT_TYPES.ERROR_MSG) {
-            if (!content.code) {
-                throw new Error(`Content of type ${contentType} must contain 'code' and 'message' fields.`)
-            }
-            if (!content.message) {
-                throw new Error(`Content of type ${contentType} must contain 'code' and 'message' fields.`)
-            }
+            this._requireFields(['streamId', 'groupKey', 'start'], content, contentType)
+        } else if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+            this._requireFields(['requestId', 'streamId', 'code', 'message'], content, contentType)
         }
+    }
+
+    static _requireFields(fieldsArr, content, contentType) {
+        fieldsArr.forEach((fieldName) => {
+            if (!content[fieldName]) {
+                throw new ValidationError(`Content of type ${contentType} must contain fields ${JSON.stringify(fieldsArr)}. Content was: ${JSON.stringify(content)}`)
+            }
+        })
     }
 
     static versionSupportsEncryption(streamMessageVersion) {
@@ -276,7 +270,7 @@ StreamMessage.CONTENT_TYPES = {
     GROUP_KEY_REQUEST: 28,
     GROUP_KEY_RESPONSE_SIMPLE: 29,
     GROUP_KEY_RESET_SIMPLE: 30,
-    ERROR_MSG: 31,
+    GROUP_KEY_ERROR_RESPONSE: 31,
 }
 StreamMessage.VALID_CONTENTS = new Set(Object.values(StreamMessage.CONTENT_TYPES))
 

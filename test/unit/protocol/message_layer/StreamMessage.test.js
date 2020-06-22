@@ -104,16 +104,29 @@ describe('StreamMessage', () => {
                     wrongField: 'some-public-key',
                 },
                 contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
-            }), (err) => {
-                assert.strictEqual(err.message, 'Content of type 28 must contain a \'publicKey\' field.')
-                return true
-            })
+            }), ValidationError)
         })
-        it('Does not throw with a valid content of type GROUP_KEY_REQUEST', () => {
+        it('Does not throw with a valid content of type GROUP_KEY_REQUEST (1)', () => {
             const m = msg({
                 content: {
+                    requestId: 'requestId',
                     streamId: 'streamId',
                     publicKey: 'some-public-key',
+                },
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
+            })
+            assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
+        })
+        it('Does not throw with a valid content of type GROUP_KEY_REQUEST (2)', () => {
+            const m = msg({
+                content: {
+                    requestId: 'requestId',
+                    streamId: 'streamId',
+                    publicKey: 'some-public-key',
+                    range: {
+                        start: 123,
+                        end: 456,
+                    },
                 },
                 contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
             })
@@ -125,14 +138,12 @@ describe('StreamMessage', () => {
                     foo: 'bar',
                 },
                 contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
-            }), (err) => {
-                assert.strictEqual(err.message, 'Content of type 29 must contain a \'streamId\' field.')
-                return true
-            })
+            }), ValidationError)
         })
         it('Throws with an invalid content of type GROUP_KEY_RESPONSE_SIMPLE (2)', () => {
             assert.throws(() => msg({
                 content: {
+                    requestId: 'requestId',
                     streamId: 'streamId',
                     keys: [{
                         groupKey: 'some-group-key',
@@ -151,6 +162,7 @@ describe('StreamMessage', () => {
         it('Does not throw with a valid content of type GROUP_KEY_RESPONSE_SIMPLE', () => {
             const m = msg({
                 content: {
+                    requestId: 'requestId',
                     streamId: 'streamId',
                     keys: [{
                         groupKey: 'some-group-key',
@@ -183,18 +195,17 @@ describe('StreamMessage', () => {
                     wrong: 233142345,
                 },
                 contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE,
-            }), (err) => {
-                assert.strictEqual(err.message, 'Content of type 30 must contain \'streamId\', \'groupKey\' and \'start\' fields.')
-                return true
-            })
+            }), ValidationError)
         })
-        it('Does not throw with a valid content of type ERROR_MSG', () => {
+        it('Does not throw with a valid content of type GROUP_KEY_ERROR_RESPONSE', () => {
             const m = msg({
                 content: {
+                    requestId: 'requestId',
+                    streamId: 'streamId',
                     code: 'some_error_code',
                     message: 'error message',
                 },
-                contentType: StreamMessage.CONTENT_TYPES.ERROR_MSG,
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE,
             })
             assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
         })
@@ -203,11 +214,8 @@ describe('StreamMessage', () => {
                 content: {
                     wrong: 233142345,
                 },
-                contentType: StreamMessage.CONTENT_TYPES.ERROR_MSG,
-            }), (err) => {
-                assert.strictEqual(err.message, 'Content of type 31 must contain \'code\' and \'message\' fields.')
-                return true
-            })
+                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE,
+            }), ValidationError)
         })
     })
 

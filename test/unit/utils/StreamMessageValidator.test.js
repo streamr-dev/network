@@ -14,9 +14,16 @@ describe('StreamMessageValidator', () => {
     let isSubscriber
     let verify
     let msg
+
+    // publisher private key: d462a6f2ccd995a346a841d110e8c6954930a1c22851c0032d3116d8ccd2296a
+    const publisher = '0x6807295093ac5da6fb2a10f7dedc5edd620804fb'
+    // subscriber private key: 81fe39ed83c4ab997f64564d0c5a630e34c621ad9bbe51ad2754fac575fc0c46
+    const subscriber = '0xbe0ab87a1f5b09afe9101b09e3c86fd8f4162527'
+
     let groupKeyRequest
     let groupKeyResponse
     let groupKeyReset
+    let groupKeyErrorResponse
 
     const defaultGetStreamResponse = {
         partitions: 10,
@@ -35,10 +42,11 @@ describe('StreamMessageValidator', () => {
         isSubscriber = sinon.stub().resolves(true)
         verify = undefined // use default impl by default
 
-        msg = StreamMessage.deserialize('[31,["tagHE6nTQ9SJV2wPoCxBFw",0,1587141844396,0,"0xbce3217F2AC9c8a2D14A6303F87506c4FC124014","k000EDTMtqOTLM8sirFj"],[1587141844312,0],27,0,"{\\"eventType\\":\\"trade\\",\\"eventTime\\":1587141844398,\\"symbol\\":\\"ETHBTC\\",\\"tradeId\\":172530352,\\"price\\":0.02415,\\"quantity\\":0.296,\\"buyerOrderId\\":687544144,\\"sellerOrderId\\":687544104,\\"time\\":1587141844396,\\"maker\\":false,\\"ignored\\":true}",2,"0x91c47df28dc3014a49ef50313efa8e40015eeeccea0cf006ab2c7b05efbb0ddc7e10e430aaa7ea6dd0ca5e05761eaf0c14c8ca09b57c8d8626da7bb9ea2d50fa1b"]')
-        groupKeyRequest = StreamMessage.deserialize('[31,["SYSTEM/keyexchange/0xbce3217F2AC9c8a2D14A6303F87506c4FC124014",0,1587143350864,0,"0xFeAACDBBc318EbBF9BB5835D4173C1a7fC24B3b9","2AC1lJgGTPhVzNCr4lyT"],null,28,0,"{\\"streamId\\":\\"tagHE6nTQ9SJV2wPoCxBFw\\",\\"publicKey\\":\\"rsaPublicKey\\",\\"range\\":{\\"start\\":1354155,\\"end\\":2344155}}",2,"0x968292d5a57529042543318c60f20a709d838e37f166ea478e4695750bacf51446dd12aa1c652f97ba300b244fab988592748c27d590de5ff0e2f1c71d0455c41b"]')
-        groupKeyResponse = StreamMessage.deserialize('[31,["SYSTEM/keyexchange/0xbce3217F2AC9c8a2D14A6303F87506c4FC124014",0,1587143432683,0,"0xFeAACDBBc318EbBF9BB5835D4173C1a7fC24B3b9","2hmxXpkhmaLcJipCDVDm"],null,29,1,"{\\"streamId\\":\\"tagHE6nTQ9SJV2wPoCxBFw\\",\\"keys\\":[{\\"groupKey\\":\\"encrypted-group-key\\",\\"start\\":34524}]}",2,"0xab2ecce6ee5cfb0890cbb4f9f4d5daf9fd8283eb53bdf67144d920624e22424657f96c3c2a3cafe53ca2049e235be5d08f6181546152c3e61cf509db2fd0e6701c"]')
-        groupKeyReset = StreamMessage.deserialize('[31,["SYSTEM/keyexchange/0xbce3217F2AC9c8a2D14A6303F87506c4FC124014",0,1587143432683,0,"0xFeAACDBBc318EbBF9BB5835D4173C1a7fC24B3b9","2hmxXpkhmaLcJipCDVDm"],null,30,1,"{\\"streamId\\":\\"tagHE6nTQ9SJV2wPoCxBFw\\",\\"groupKey\\":\\"encrypted-group-key\\",\\"start\\":34524}",2,"0xefa15b14db0f57c8c6d14fd8428d8de195db691598a53000dc2993808563edef49118cb666581b260f0fe70874f52553b2851dcb19b5f19333136191211cff2b1b"]')
+        msg = StreamMessage.deserialize('[31,["tagHE6nTQ9SJV2wPoCxBFw",0,1587141844396,0,"0x6807295093ac5da6fb2a10f7dedc5edd620804fb","k000EDTMtqOTLM8sirFj"],[1587141844312,0],27,0,"{\\"eventType\\":\\"trade\\",\\"eventTime\\":1587141844398,\\"symbol\\":\\"ETHBTC\\",\\"tradeId\\":172530352,\\"price\\":0.02415,\\"quantity\\":0.296,\\"buyerOrderId\\":687544144,\\"sellerOrderId\\":687544104,\\"time\\":1587141844396,\\"maker\\":false,\\"ignored\\":true}",2,"0x6ad42041804c34902aaf7f07780b3e468ec2faec84eda2ff504d5fc26377d5556481d133d7f3f112c63cd48ee9081172013fb0ae1a61b45ee9ca89e057b099591b"]')
+        groupKeyRequest = StreamMessage.deserialize('[31,["SYSTEM/keyexchange/0x6807295093ac5da6fb2a10f7dedc5edd620804fb",0,1587143350864,0,"0xbe0ab87a1f5b09afe9101b09e3c86fd8f4162527","2AC1lJgGTPhVzNCr4lyT"],null,28,0,"{\\"requestId\\":\\"groupKeyRequestId\\",\\"streamId\\":\\"tagHE6nTQ9SJV2wPoCxBFw\\",\\"publicKey\\":\\"rsaPublicKey\\",\\"range\\":{\\"start\\":1354155,\\"end\\":2344155}}",2,"0xa442e08c54257f3245abeb9a64c9381b2459029c6f9d88ff3b4839e67843519736b5f469b3d36a5d659f7eb47fb5c4af165445aa176ad01e6134e0901e0f5fd01c"]')
+        groupKeyResponse = StreamMessage.deserialize('[31,["SYSTEM/keyexchange/0xbe0ab87a1f5b09afe9101b09e3c86fd8f4162527",0,1587143432683,0,"0x6807295093ac5da6fb2a10f7dedc5edd620804fb","2hmxXpkhmaLcJipCDVDm"],null,29,1,"{\\"requestId\\":\\"groupKeyRequestId\\",\\"streamId\\":\\"tagHE6nTQ9SJV2wPoCxBFw\\",\\"keys\\":[{\\"groupKey\\":\\"encrypted-group-key\\",\\"start\\":34524}]}",2,"0xe633ef60a4ad8c80e6d58010614e08376912711261d9136b3debf4c5a602b8e27e7235d58667c470791373e9fa2757575d02f539cf9556a6724661ef28c055871c"]')
+        groupKeyReset = StreamMessage.deserialize('[31,["SYSTEM/keyexchange/0xbe0ab87a1f5b09afe9101b09e3c86fd8f4162527",0,1587143432683,0,"0x6807295093ac5da6fb2a10f7dedc5edd620804fb","2hmxXpkhmaLcJipCDVDm"],null,30,1,"{\\"streamId\\":\\"tagHE6nTQ9SJV2wPoCxBFw\\",\\"groupKey\\":\\"encrypted-group-key\\",\\"start\\":34524}",2,"0xfcc1b55818ed8949e3d94e423c320ae6fdc732f6956cabec87b0e8e1674a29de0f483aeed14914496ea572d81cfd5eaf232a7d1ccb3cb8b0c0ed9cc6874b880b1b"]')
+        groupKeyErrorResponse = StreamMessage.deserialize('[31,["SYSTEM/keyexchange/0xbe0ab87a1f5b09afe9101b09e3c86fd8f4162527",0,1587143432683,0,"0x6807295093ac5da6fb2a10f7dedc5edd620804fb","2hmxXpkhmaLcJipCDVDm"],null,31,1,"{\\"requestId\\":\\"groupKeyRequestId\\",\\"streamId\\":\\"tagHE6nTQ9SJV2wPoCxBFw\\",\\"code\\":\\"TEST_ERROR\\",\\"message\\":\\"Test error message\\"}",2,"0x74301e65c0cb8f553b7aa2e0eeac61aaff918726f6f7699bd05e9201e591cf0c304b5812c28dd2903b394c57dde1c23dae787ec0005d6e2bc1c03edeb7cdbfc41c"]')
     })
 
     describe('validate(unknown content type)', () => {
@@ -199,7 +207,7 @@ describe('StreamMessageValidator', () => {
             await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert(isPublisher.calledOnce, 'isPublisher not called!')
-                assert(isPublisher.calledWith('0xbce3217F2AC9c8a2D14A6303F87506c4FC124014', 'tagHE6nTQ9SJV2wPoCxBFw'), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
+                assert(isPublisher.calledWith(publisher, groupKeyRequest.getParsedContent().streamId), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
                 return true
             })
         })
@@ -210,7 +218,7 @@ describe('StreamMessageValidator', () => {
             await assert.rejects(getValidator().validate(groupKeyRequest), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert(isSubscriber.calledOnce, 'isSubscriber not called!')
-                assert(isSubscriber.calledWith('0xFeAACDBBc318EbBF9BB5835D4173C1a7fC24B3b9', 'tagHE6nTQ9SJV2wPoCxBFw'), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
+                assert(isSubscriber.calledWith(subscriber, groupKeyRequest.getParsedContent().streamId), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
                 return true
             })
         })
@@ -282,7 +290,7 @@ describe('StreamMessageValidator', () => {
             await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert(isPublisher.calledOnce, 'isPublisher not called!')
-                assert(isPublisher.calledWith('0xFeAACDBBc318EbBF9BB5835D4173C1a7fC24B3b9', 'tagHE6nTQ9SJV2wPoCxBFw'), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
+                assert(isPublisher.calledWith(publisher, groupKeyResponse.getParsedContent().streamId), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
                 return true
             })
         })
@@ -293,7 +301,7 @@ describe('StreamMessageValidator', () => {
             await assert.rejects(getValidator().validate(groupKeyResponse), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert(isSubscriber.calledOnce, 'isSubscriber not called!')
-                assert(isSubscriber.calledWith('0xbce3217F2AC9c8a2D14A6303F87506c4FC124014', 'tagHE6nTQ9SJV2wPoCxBFw'), `isSubscriber called with wrong args: ${isSubscriber.getCall(0).args}`)
+                assert(isSubscriber.calledWith(subscriber, groupKeyResponse.getParsedContent().streamId), `isSubscriber called with wrong args: ${isSubscriber.getCall(0).args}`)
                 return true
             })
         })
@@ -365,7 +373,7 @@ describe('StreamMessageValidator', () => {
             await assert.rejects(getValidator().validate(groupKeyReset), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert(isPublisher.calledOnce, 'isPublisher not called!')
-                assert(isPublisher.calledWith('0xFeAACDBBc318EbBF9BB5835D4173C1a7fC24B3b9', 'tagHE6nTQ9SJV2wPoCxBFw'), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
+                assert(isPublisher.calledWith(publisher, groupKeyReset.getParsedContent().streamId), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
                 return true
             })
         })
@@ -376,7 +384,7 @@ describe('StreamMessageValidator', () => {
             await assert.rejects(getValidator().validate(groupKeyReset), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 assert(isSubscriber.calledOnce, 'isSubscriber not called!')
-                assert(isSubscriber.calledWith('0xbce3217F2AC9c8a2D14A6303F87506c4FC124014', 'tagHE6nTQ9SJV2wPoCxBFw'), `isSubscriber called with wrong args: ${isSubscriber.getCall(0).args}`)
+                assert(isSubscriber.calledWith(subscriber, groupKeyReset.getParsedContent().streamId), `isSubscriber called with wrong args: ${isSubscriber.getCall(0).args}`)
                 return true
             })
         })
@@ -403,6 +411,89 @@ describe('StreamMessageValidator', () => {
             const testError = new Error('test error')
             verify = sinon.stub().throws(testError)
             await assert.rejects(getValidator().validate(groupKeyReset), (err) => {
+                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
+                return true
+            })
+        })
+    })
+
+    describe('validate(group key error response)', () => {
+        it('accepts valid group key error responses', async () => {
+            await getValidator().validate(groupKeyErrorResponse)
+        })
+
+        it('rejects unsigned group key error responses', async () => {
+            groupKeyErrorResponse.signature = null
+            groupKeyErrorResponse.signatureType = StreamMessage.SIGNATURE_TYPES.NONE
+
+            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err) => {
+                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
+                return true
+            })
+        })
+
+        it('rejects invalid signatures', async () => {
+            groupKeyErrorResponse.signature = groupKeyErrorResponse.signature.replace('a', 'b')
+
+            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err) => {
+                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
+                return true
+            })
+        })
+
+        it('rejects group key error responses on unexpected streams', async () => {
+            groupKeyErrorResponse.getStreamId = sinon.stub().returns('foo')
+
+            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err) => {
+                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
+                return true
+            })
+        })
+
+        it('rejects messages from invalid publishers', async () => {
+            isPublisher = sinon.stub().resolves(false)
+
+            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err) => {
+                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
+                assert(isPublisher.calledOnce, 'isPublisher not called!')
+                assert(isPublisher.calledWith(publisher, groupKeyErrorResponse.getParsedContent().streamId), `isPublisher called with wrong args: ${isPublisher.getCall(0).args}`)
+                return true
+            })
+        })
+
+        it('rejects messages to unpermitted subscribers', async () => {
+            isSubscriber = sinon.stub().resolves(false)
+
+            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err) => {
+                assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
+                assert(isSubscriber.calledOnce, 'isSubscriber not called!')
+                assert(isSubscriber.calledWith(subscriber, groupKeyErrorResponse.getParsedContent().streamId), `isSubscriber called with wrong args: ${isSubscriber.getCall(0).args}`)
+                return true
+            })
+        })
+
+        it('rejects if isPublisher rejects', async () => {
+            const testError = new Error('test error')
+            isPublisher = sinon.stub().rejects(testError)
+            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err) => {
+                assert(err === testError)
+                return true
+            })
+        })
+
+        it('rejects if isSubscriber rejects', async () => {
+            const testError = new Error('test error')
+            isSubscriber = sinon.stub().rejects(testError)
+            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err) => {
+                assert(err === testError)
+                return true
+            })
+        })
+
+        it('rejects with ValidationError if verify throws', async () => {
+            const testError = new Error('test error')
+            verify = sinon.stub().throws(testError)
+            await assert.rejects(getValidator().validate(groupKeyErrorResponse), (err) => {
                 assert(err instanceof ValidationError, `Unexpected error thrown: ${err}`)
                 return true
             })
