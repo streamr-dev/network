@@ -18,7 +18,7 @@ describe('getTrackers', () => {
         try {
             await getTrackers('address', config, jsonRpcProvider)
         } catch (e) {
-            expect(e.toString()).toMatch('Error: network does not support ENS (operation="ENS", network="unknown", version=4.0.47)')
+            expect(e.toString()).toMatch('Error: network does not support ENS (operation="ENS", network="unknown", code=UNSUPPORTED_OPERATION, version=providers/5.0.2)')
             done()
         }
     })
@@ -27,7 +27,7 @@ describe('getTrackers', () => {
         try {
             await getTrackers('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', config, jsonRpcProvider)
         } catch (e) {
-            expect(e.toString()).toMatch('Error: contract not deployed (contractAddress="0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF", operation="getDeployed", version=4.0.47)')
+            expect(e.toString()).toMatch('Error: call revert exception (method="getNodes()", errorSignature=null, errorArgs=[null], reason=null, code=CALL_EXCEPTION, version=abi/5.0.1)')
             done()
         }
     })
@@ -45,7 +45,7 @@ describe('getTrackers', () => {
         try {
             await getTrackers(address, config, 'jsonRpcProvider')
         } catch (e) {
-            expect(e.toString()).toMatch('Error: invalid response - 400')
+            expect(e.toString()).toMatch('Error: could not detect network (event="noNetwork", code=NETWORK_ERROR, version=providers/5.0.2)')
             done()
         }
     })

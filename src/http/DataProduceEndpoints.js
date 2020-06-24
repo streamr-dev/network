@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const { InvalidJsonError } = require('streamr-client-protocol').Errors
 
+const FailedToPublishError = require('../errors/FailedToPublishError')
 const partition = require('../partition')
 
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
@@ -80,7 +81,7 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
                 signatureType = req.query.signatureType ? parsePositiveInteger(req.query.signatureType) : 0
             } catch (err) {
                 res.status(400).send({
-                    error: err.message,
+                    error: err.message
                 })
                 return
             }
@@ -105,10 +106,9 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
                         req.query.signature || null,
                     ),
                 )
-                res.status(200)
-                    .send(/* empty success response */)
+                res.status(200).send(/* empty success response */)
             } catch (err) {
-                if (err instanceof InvalidJsonError) {
+                if (err instanceof InvalidJsonError || err instanceof FailedToPublishError) {
                     res.status(400).send({
                         error: err.message,
                     })

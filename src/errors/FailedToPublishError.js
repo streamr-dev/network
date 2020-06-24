@@ -1,5 +1,5 @@
 module.exports = class FailedToPublishError extends Error {
     constructor(streamId, reason) {
-        super(`Publish to stream ${streamId} failed: ${reason}`)
+        super(`Failed publish to stream ${streamId}, reason: ${reason}`)
     }
 }

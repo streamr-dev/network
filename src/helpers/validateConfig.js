@@ -78,6 +78,10 @@ const validateConfig = (config) => {
     if (config.trackerRegistry && config.trackerRegistry.address === undefined) {
         throw new MissingConfigError('trackerRegistry.address')
     }
+    if (config.thresholdForFutureMessageSeconds === undefined) {
+        // eslint-disable-next-line no-param-reassign
+        config.thresholdForFutureMessageSeconds = 300
+    }
 
     config.adapters.forEach(({ name }, index) => {
         if (name === undefined) {

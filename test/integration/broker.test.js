@@ -1,5 +1,3 @@
-const { exec } = require('child_process')
-
 const WebSocket = require('ws')
 const { startTracker } = require('streamr-network')
 const fetch = require('node-fetch')

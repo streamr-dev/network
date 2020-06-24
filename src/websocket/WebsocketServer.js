@@ -8,6 +8,7 @@ const ab2str = require('arraybuffer-to-string')
 const uWS = require('uWebSockets.js')
 
 const HttpError = require('../errors/HttpError')
+const FailedToPublishError = require('../errors/FailedToPublishError')
 const VolumeLogger = require('../VolumeLogger')
 const partition = require('../partition')
 const StreamStateManager = require('../StreamStateManager')
@@ -265,6 +266,8 @@ module.exports = class WebsocketServer extends EventEmitter {
                         errorMsg = `You are not allowed to write to stream ${streamId}`
                     } else if (err instanceof HttpError && err.code === 404) {
                         errorMsg = `Stream ${streamId} not found.`
+                    } else if (err instanceof FailedToPublishError) {
+                        errorMsg = err.message
                     } else {
                         errorMsg = `Publish request failed: ${err}`
                     }

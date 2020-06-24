@@ -8,7 +8,7 @@ const router = require('../../../src/http/DataProduceEndpoints')
 describe('DataProduceEndpoints', () => {
     const stream = {
         id: 'streamId',
-        partitions: 10,
+        partitions: 1,
     }
 
     let app
