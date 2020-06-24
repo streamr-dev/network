@@ -147,7 +147,7 @@ public class StreamTester {
             Main.logger.warning("FAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)");
             System.exit(1);
         }
-        Main.logger.info("PASSED. Checked all " + totalPublished + " published and " + totalReceived + " received messages from " + publishersMsgStacks.size() + " publishers and " + subscribersMsgStacks.size() + " subscribers.");
+        Main.logger.info("PASSED. Checked all " + totalPublished + " published and " + totalReceived + " received messages.");
         System.exit(0);
     }
 

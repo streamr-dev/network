@@ -78,7 +78,8 @@ public class Streams {
 
     private StreamTester build(String name, Consumer<StreamTester> addParticipants) {
         StreamTester streamTester = new StreamTester(name, restApiUrl, websocketApiUrl, testCorrectness);
-        Main.logger.info("Creating " + ps.getTotal() + " publishers and subscribers for '" + name + "'...");
+        Main.logger.info(String.format("Creating:\n%s Java publishers\n%s Java subscribers\n%s JS publishers\n%s JS subscribers",
+                ps.getNbJavaPublishers(), ps.getNbJavaSubscribers(), ps.getNbJavascriptPublishers(), ps.getNbJavascriptSubscribers()));
         addParticipants.accept(streamTester);
         Main.logger.info("Created publishers and subscribers for '" + name + "'!");
         return streamTester;
