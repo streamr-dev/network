@@ -51,7 +51,7 @@ public class Streams {
         if (testCorrectness) {
             startStream(name);
             try {
-                Thread.sleep(30 * 1000);
+                Thread.sleep(60 * 1000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
