@@ -212,18 +212,17 @@ public class StreamTester {
     }
 
     private void addJavaSubscriber(StreamrClientJava subscriber, ResendOption resendOption) {
-        String subscriberId = subscriber.getAddress();
-        BiConsumer<Subscription, StreamMessage> onMsg = (testCorrectness && resendOption == null) ?
-                (subscription, streamMessage) -> onReceivedJava(subscriberId, streamMessage) :
-                (subscription, streamMessage) -> {};
         MessageHandler handler = new MessageHandler() {
             @Override
             public void onMessage(Subscription subscription, StreamMessage streamMessage) {
-                onMsg.accept(subscription, streamMessage);
+                if (testCorrectness) {
+                    onReceivedJava(subscriber.getAddress(), streamMessage);
+                }
             }
             @Override
             public void onUnableToDecrypt(UnableToDecryptException e) {
                 decryptionErrorsCount++;
+                log.error("onUnableToDecrypt called", e);
                 throw new RuntimeException(e);
             }
         };
