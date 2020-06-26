@@ -34,24 +34,13 @@ public class Main {
         }
     }
     public static final Logger logger = Logger.getAnonymousLogger();
-    public static void main(String[] args) {
-        Properties prop = new Properties();
-        try {
-            InputStream in = new FileInputStream("application.conf");
-            prop.load(in);
-            in.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        Level logLevel = Level.parse(prop.getProperty("logLevel"));
-        Handler handler = new ConsoleHandler();
-        handler.setLevel(logLevel);
-        handler.setFormatter(new LogFormatter());
-        logger.setUseParentHandlers(false);
-        logger.addHandler(handler);
-        logger.setLevel(logLevel);
 
+    public static void main(String[] args) {
         Options options = new Options();
+
+        Option configFileOption = new Option("c", "config", true, "config file, default 'config/default.conf'");
+        configFileOption.setRequired(false);
+        options.addOption(configFileOption);
 
         String streamsDescription = "Stream setup to test or run. Must be one of:\n" + String.join("\n", Streams.SETUPS_NAMES);
         Option stream = new Option("s", "stream", true, streamsDescription);
@@ -62,12 +51,10 @@ public class Main {
         mode.setRequired(true);
         options.addOption(mode);
 
-        String restUrl = prop.getProperty("restUrl");
-        Option restApiUrl = new Option("r", "resturl", true, "REST API url to connect to.");
+        Option restApiUrl = new Option("r", "restUrl", true, "REST API url to connect to.");
         options.addOption(restApiUrl);
 
-        String wsUrl = prop.getProperty("wsUrl");
-        Option wsApiUrl = new Option("w", "wsurl", true, "WebSockets API url to connect to");
+        Option wsApiUrl = new Option("w", "wsUrl", true, "WebSockets API url to connect to");
         options.addOption(wsApiUrl);
 
         CommandLineParser parser = new DefaultParser();
@@ -77,17 +64,34 @@ public class Main {
         try {
             cmd = parser.parse(options, args);
         } catch (ParseException e) {
-            logger.severe(e.getMessage());
             formatter.printHelp("streamr-client-testing", options);
-
             System.exit(1);
         }
-        if (cmd.getOptionValue("resturl") != null) {
-            restUrl = cmd.getOptionValue("resturl");
+
+        String configFile = cmd.getOptionValue("config") != null ? cmd.getOptionValue("config") : "config/default.conf";
+        System.out.println("Reading config from " + configFile);
+
+        Properties prop = new Properties();
+        try {
+            InputStream in = new FileInputStream(configFile);
+            prop.load(in);
+            in.close();
+        } catch (IOException e) {
+            System.err.println("Unable to read config file: " + configFile);
+            System.exit(1);
         }
-        if (cmd.getOptionValue("wsurl") != null) {
-            wsUrl = cmd.getOptionValue("wsurl");
-        }
+
+        Level logLevel = Level.parse(prop.getProperty("logLevel"));
+        Handler handler = new ConsoleHandler();
+        handler.setLevel(logLevel);
+        handler.setFormatter(new LogFormatter());
+        logger.setUseParentHandlers(false);
+        logger.addHandler(handler);
+        logger.setLevel(logLevel);
+
+        // Command-line options override config file
+        String restUrl = cmd.getOptionValue("restUrl") != null ? cmd.getOptionValue("restUrl") : prop.getProperty("restUrl");
+        String wsUrl = cmd.getOptionValue("wsUrl") != null ? cmd.getOptionValue("wsUrl") : prop.getProperty("wsUrl");
 
         boolean testCorrectness = false;
         if (cmd.getOptionValue("mode").equals("test")) {
