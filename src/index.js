@@ -53,6 +53,7 @@ import GapFillFailedError from './errors/GapFillFailedError'
 import ValidationError from './errors/ValidationError'
 import TimestampUtil from './utils/TimestampUtil'
 import OrderingUtil from './utils/OrderingUtil'
+import SigningUtil from './utils/SigningUtil'
 import StreamMessageValidator from './utils/StreamMessageValidator'
 import CachingStreamMessageValidator from './utils/CachingStreamMessageValidator'
 import MessageIDStrict from './protocol/message_layer/MessageIDStrict'
@@ -96,6 +97,7 @@ export const Utils = {
     OrderingUtil,
     StreamMessageValidator,
     CachingStreamMessageValidator,
+    SigningUtil,
 }
 
 export default {
