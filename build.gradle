@@ -17,7 +17,7 @@ repositories {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
-    compile 'com.streamr:client:1.3.0'
+    compile 'com.streamr:client:+' // always run against latest
     compile 'commons-cli:commons-cli:1.4'
 }
 

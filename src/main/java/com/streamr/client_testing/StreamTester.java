@@ -137,8 +137,8 @@ public class StreamTester {
             try {
                 totalReceived += checkMsgs(publisherId, pubStack, subStacks);
             } catch (IllegalStateException e) {
-                Main.logger.warning("\nFAILED. On error: '" + e.getMessage() + "'\n");
                 printMsgsReceived();
+                Main.logger.warning("\nFAILED test " + stream.getName() + ". On error: '" + e.getMessage() + "'\n");
                 System.exit(1);
             }
 
