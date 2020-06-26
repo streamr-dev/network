@@ -1,10 +1,9 @@
 const events = require('events')
 
 const sinon = require('sinon')
-const { StreamMessage, StreamMessageV30 } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageID } = require('streamr-network').Protocol.MessageLayer
 
 const Publisher = require('../../src/Publisher')
-const { MessageNotSignedError, MessageNotEncryptedError } = require('../../src/errors/MessageNotSignedError')
 
 describe('Publisher', () => {
     const stream = {
@@ -12,51 +11,57 @@ describe('Publisher', () => {
         partitions: 10
     }
 
-    const signedStream = {
-        requireSignedData: true
-    }
-
-    const encryptedStream = {
-        requireEncryptedData: true
-    }
-
     const msg = {
         hello: 'world'
     }
 
-    const streamMessageUnsignedUnencrypted = new StreamMessageV30(
-        [stream.id, stream.partitions, 135135135, 0, 'publisherId', 'msgChainId'],
-        null,
-        StreamMessage.CONTENT_TYPES.MESSAGE,
-        msg,
-        StreamMessage.SIGNATURE_TYPES.NONE,
-        null,
-    )
-
-    let publisher
+    let streamMessage
     let networkNode
+    let validator
+    const thresholdForFutureMessageSeconds = 5 * 60
+
+    const getPublisher = () => new Publisher(networkNode, validator, thresholdForFutureMessageSeconds)
 
     beforeEach(() => {
+        streamMessage = new StreamMessage({
+            messageId: new MessageID(stream.id, 0, 135135135, 0, 'publisherId', 'msgChainId'),
+            content: msg,
+        })
+
         networkNode = new events.EventEmitter()
         networkNode.publish = sinon.stub().resolves()
-        publisher = new Publisher(networkNode)
+        validator = {
+            validate: sinon.stub().resolves()
+        }
     })
 
-    describe('publish', () => {
-        it('throws MessageNotSignedError if trying to publish unsigned data on stream with requireSignedData', () => {
-            expect(() => publisher.publish(signedStream, streamMessageUnsignedUnencrypted)).toThrow(MessageNotSignedError)
+    describe('validateAndPublish', () => {
+        it('calls the validator', async () => {
+            await getPublisher().validateAndPublish(streamMessage)
+            expect(validator.validate.calledWith(streamMessage)).toBe(true)
         })
 
-        it('throws MessageNotEncryptedError if trying to publish not encrypted data on stream with encryptedStream', () => {
-            expect(() => publisher.publish(encryptedStream, streamMessageUnsignedUnencrypted)).toThrow(MessageNotEncryptedError)
-        })
-
-        it('should call NetworkNode.publish with correct values', (done) => {
-            networkNode.publish = (streamMessage) => {
-                expect(streamMessage).toEqual(streamMessageUnsignedUnencrypted)
-                done()
+        it('throws on invalid messages', async () => {
+            validator = {
+                validate: sinon.stub().rejects()
             }
-            expect(() => publisher.publish(stream, streamMessageUnsignedUnencrypted)).not.toThrow()
+            await expect(getPublisher().validateAndPublish(streamMessage)).rejects.toThrow()
+        })
+
+        it('should call NetworkNode.publish with correct values', async () => {
+            await getPublisher().validateAndPublish(streamMessage)
+            expect(networkNode.publish.calledWith(streamMessage)).toBe(true)
+        })
+
+        it('rejects on messages too far in the future', async () => {
+            streamMessage = new StreamMessage({
+                messageId: new MessageID(stream.id, 0,
+                    Date.now() + 1000 * (thresholdForFutureMessageSeconds + 5),
+                    0, 'publisherId', 'msgChainId'),
+                content: msg,
+            })
+
+            await expect(getPublisher().validateAndPublish(streamMessage)).rejects.toThrow()
         })
     })
 })

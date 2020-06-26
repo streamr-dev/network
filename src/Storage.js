@@ -3,7 +3,7 @@ const EventEmitter = require('events')
 
 const merge2 = require('merge2')
 const cassandra = require('cassandra-driver')
-const { StreamMessageFactory } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage } = require('streamr-network').Protocol.MessageLayer
 
 const MicroBatchingStrategy = require('./MicroBatchingStrategy')
 const PeriodicQuery = require('./PeriodicQuery')
@@ -293,7 +293,7 @@ class Storage extends EventEmitter {
     }
 
     _parseRow(row) {
-        const streamMessage = StreamMessageFactory.deserialize(row.payload.toString())
+        const streamMessage = StreamMessage.deserialize(row.payload.toString())
         this.emit('read', streamMessage)
         return streamMessage
     }

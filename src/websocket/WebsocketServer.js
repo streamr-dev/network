@@ -2,15 +2,12 @@ const { EventEmitter } = require('events')
 
 const { v4: uuidv4 } = require('uuid')
 const debug = require('debug')('streamr:WebsocketServer')
-const { ControlLayer } = require('streamr-client-protocol')
-const LRU = require('lru-cache')
+const { ControlLayer, Utils } = require('streamr-network').Protocol
 const ab2str = require('arraybuffer-to-string')
 const uWS = require('uWebSockets.js')
 
 const HttpError = require('../errors/HttpError')
-const FailedToPublishError = require('../errors/FailedToPublishError')
 const VolumeLogger = require('../VolumeLogger')
-const partition = require('../partition')
 const StreamStateManager = require('../StreamStateManager')
 
 const Connection = require('./Connection')
@@ -26,7 +23,6 @@ module.exports = class WebsocketServer extends EventEmitter {
         volumeLogger = new VolumeLogger(0),
         subscriptionManager,
         pingInterval = 60 * 1000,
-        partitionFn = partition,
     ) {
         super()
         this.wss = wss
@@ -34,7 +30,6 @@ module.exports = class WebsocketServer extends EventEmitter {
         this.networkNode = networkNode
         this.streamFetcher = streamFetcher
         this.publisher = publisher
-        this.partitionFn = partitionFn
         this.volumeLogger = volumeLogger
         this.connections = new Map()
         this.streams = new StreamStateManager(
@@ -59,19 +54,14 @@ module.exports = class WebsocketServer extends EventEmitter {
         this.pingInterval = pingInterval
         this.fieldDetector = new FieldDetector(streamFetcher)
         this.subscriptionManager = subscriptionManager
-        this.streamAuthCache = new LRU({
-            max: 1000,
-            maxAge: 1000 * 60 * 5
-        })
 
         this.requestHandlersByMessageType = {
-            [ControlLayer.SubscribeRequest.TYPE]: this.handleSubscribeRequest,
-            [ControlLayer.UnsubscribeRequest.TYPE]: this.handleUnsubscribeRequest,
-            [ControlLayer.ResendRequestV0.TYPE]: this.handleResendRequestV0,
-            [ControlLayer.ResendLastRequestV1.TYPE]: this.handleResendLastRequest,
-            [ControlLayer.ResendFromRequestV1.TYPE]: this.handleResendFromRequest,
-            [ControlLayer.ResendRangeRequestV1.TYPE]: this.handleResendRangeRequest,
-            [ControlLayer.PublishRequest.TYPE]: this.handlePublishRequest,
+            [ControlLayer.ControlMessage.TYPES.SubscribeRequest]: this.handleSubscribeRequest,
+            [ControlLayer.ControlMessage.TYPES.UnsubscribeRequest]: this.handleUnsubscribeRequest,
+            [ControlLayer.ControlMessage.TYPES.ResendLastRequest]: this.handleResendLastRequest,
+            [ControlLayer.ControlMessage.TYPES.ResendFromRequest]: this.handleResendFromRequest,
+            [ControlLayer.ControlMessage.TYPES.ResendRangeRequest]: this.handleResendRangeRequest,
+            [ControlLayer.ControlMessage.TYPES.PublishRequest]: this.handlePublishRequest,
         }
 
         this.networkNode.addMessageListener(this._handleStreamMessage.bind(this))
@@ -140,17 +130,38 @@ module.exports = class WebsocketServer extends EventEmitter {
                         if (connection.isDead()) {
                             return
                         }
+
+                        let request
                         try {
-                            const request = ControlLayer.ControlMessage.deserialize(ab2str(msg), false)
+                            request = ControlLayer.ControlMessage.deserialize(ab2str(msg), false)
+                        } catch (err) {
+                            connection.send(new ControlLayer.ErrorResponse({
+                                requestId: '', // Can't echo the requestId of the request since parsing the request failed
+                                errorMessage: err.message || err,
+                                errorCode: 'INVALID_REQUEST',
+                            }))
+                        }
+
+                        try {
                             const handler = this.requestHandlersByMessageType[request.type]
                             if (handler) {
                                 debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
                                 handler.call(this, connection, request)
                             } else {
-                                connection.sendError(`Unknown request type: ${request.type}`)
+                                connection.send(new ControlLayer.ErrorResponse({
+                                    version: request.version,
+                                    requestId: request.requestId,
+                                    errorMessage: `Unknown request type: ${request.type}`,
+                                    errorCode: 'INVALID_REQUEST',
+                                }))
                             }
                         } catch (err) {
-                            connection.sendError(err.message || err)
+                            connection.send(new ControlLayer.ErrorResponse({
+                                version: request.version,
+                                requestId: request.requestId,
+                                errorMessage: err.message || err,
+                                errorCode: err.errorCode || 'ERROR_WHILE_HANDLING_REQUEST',
+                            }))
                         }
                     })
                 }
@@ -185,9 +196,14 @@ module.exports = class WebsocketServer extends EventEmitter {
 
         // Unsubscribe from all streams
         connection.forEachStream((stream) => {
+            // for cleanup, spoof an UnsubscribeRequest to ourselves on the removed connection
             this.handleUnsubscribeRequest(
                 connection,
-                ControlLayer.UnsubscribeRequest.create(stream.id, stream.partition),
+                new ControlLayer.UnsubscribeRequest({
+                    requestId: uuidv4(),
+                    streamId: stream.id,
+                    streamPartition: stream.partition,
+                }),
                 true,
             )
         })
@@ -205,7 +221,6 @@ module.exports = class WebsocketServer extends EventEmitter {
         clearInterval(this._pingInterval)
 
         this.streams.close()
-        this.streamAuthCache.reset()
 
         return new Promise((resolve, reject) => {
             try {
@@ -223,97 +238,91 @@ module.exports = class WebsocketServer extends EventEmitter {
         })
     }
 
-    handlePublishRequest(connection, request) {
-        const streamId = request.getStreamId()
-        // TODO: should this be moved to streamr-client-protocol-js ?
-        if (streamId === undefined) {
-            connection.sendError('Publish request failed: Error: streamId must be defined!')
-            return
-        }
-        // TODO: simplify with async-await
-        const key = `${streamId}-${request.apiKey}-${request.sessionToken}`
-        if (this.streamAuthCache.has(key)) {
-            const stream = this.streamAuthCache.get(key)
+    async handlePublishRequest(connection, request) {
+        const { streamMessage } = request
 
-            let streamPartition
-            if (request.version === 0) {
-                streamPartition = this.partitionFn(stream.partitions, request.partitionKey)
+        try {
+            // Legacy validation: for unsigned messages, we additionally need to do an authenticated check of publish permission
+            // This can be removed when support for unsigned messages is dropped!
+            if (!streamMessage.signature) {
+                // checkPermission is cached
+                await this.streamFetcher.checkPermission(request.streamMessage.getStreamId(), request.apiKey, request.sessionToken, 'stream_publish')
             }
-            const streamMessage = request.getStreamMessage(streamPartition)
-            this.publisher.publish(stream, streamMessage)
-        } else {
-            this.streamFetcher.authenticate(streamId, request.apiKey, request.sessionToken, 'stream_publish')
-                .then((stream) => {
-                    this.streamAuthCache.set(key, stream)
 
-                    // TODO: should this be moved to streamr-client-protocol-js ?
-                    let streamPartition
-                    if (request.version === 0) {
-                        streamPartition = this.partitionFn(stream.partitions, request.partitionKey)
-                    }
-                    const streamMessage = request.getStreamMessage(streamPartition)
-                    this.publisher.publish(stream, streamMessage)
+            await this.publisher.validateAndPublish(streamMessage)
 
-                    this.fieldDetector.detectAndSetFields(stream, streamMessage, request.apiKey, request.sessionToken).catch((err) => {
+            // TODO later: should be moved to client, as this is an authenticated call
+            if (!Utils.StreamMessageValidator.isKeyExchangeStream(request.streamMessage.getStreamId())) {
+                this.fieldDetector.detectAndSetFields(streamMessage, request.apiKey, request.sessionToken)
+                    .catch((err) => {
                         console.error(`detectAndSetFields request failed: ${err}`)
                     })
-                })
-                .catch((err) => {
-                    let errorMsg
-                    if (err instanceof HttpError && err.code === 401) {
-                        errorMsg = `Authentication failed while trying to publish to stream ${streamId}`
-                    } else if (err instanceof HttpError && err.code === 403) {
-                        errorMsg = `You are not allowed to write to stream ${streamId}`
-                    } else if (err instanceof HttpError && err.code === 404) {
-                        errorMsg = `Stream ${streamId} not found.`
-                    } else if (err instanceof FailedToPublishError) {
-                        errorMsg = err.message
-                    } else {
-                        errorMsg = `Publish request failed: ${err}`
-                    }
+            }
+        } catch (err) {
+            let errorMessage
+            let errorCode
+            if (err instanceof HttpError && err.code === 401) {
+                errorMessage = `Authentication failed while trying to publish to stream ${streamMessage.getStreamId()}`
+                errorCode = 'AUTHENTICATION_FAILED'
+            } else if (err instanceof HttpError && err.code === 403) {
+                errorMessage = `You are not allowed to write to stream ${streamMessage.getStreamId()}`
+                errorCode = 'PERMISSION_DENIED'
+            } else if (err instanceof HttpError && err.code === 404) {
+                errorMessage = `Stream ${streamMessage.getStreamId()} not found.`
+                errorCode = 'NOT_FOUND'
+            } else {
+                errorMessage = `Publish request failed: ${err.message || err}`
+                errorCode = 'REQUEST_FAILED'
+            }
 
-                    connection.sendError(errorMsg)
-                })
+            connection.send(new ControlLayer.ErrorResponse({
+                version: request.version,
+                requestId: request.requestId,
+                errorMessage,
+                errorCode,
+            }))
         }
     }
 
     // TODO: Extract resend stuff to class?
-    handleResendRequest(connection, request, resendTypeHandler) {
+    async handleResendRequest(connection, request, resendTypeHandler) {
         let nothingToResend = true
 
         const msgHandler = (unicastMessage) => {
             if (nothingToResend) {
                 nothingToResend = false
-                connection.send(ControlLayer.ResendResponseResending.create(
-                    request.streamId,
-                    request.streamPartition,
-                    request.requestId,
-                ))
+                connection.send(new ControlLayer.ResendResponseResending(request))
             }
 
             const { streamMessage } = unicastMessage
             this.volumeLogger.logOutput(streamMessage.getSerializedContent().length)
-            connection.send(ControlLayer.UnicastMessage.create(request.requestId, streamMessage))
+            connection.send(new ControlLayer.UnicastMessage({
+                version: request.version,
+                requestId: request.requestId,
+                streamMessage,
+            }))
         }
 
         const doneHandler = () => {
             if (nothingToResend) {
-                connection.send(ControlLayer.ResendResponseNoResend.create(
-                    request.streamId,
-                    request.streamPartition,
-                    request.requestId,
-                ))
+                connection.send(new ControlLayer.ResendResponseNoResend({
+                    version: request.version,
+                    requestId: request.requestId,
+                    streamId: request.streamId,
+                    streamPartition: request.streamPartition,
+                }))
             } else {
-                connection.send(ControlLayer.ResendResponseResent.create(
-                    request.streamId,
-                    request.streamPartition,
-                    request.requestId,
-                ))
+                connection.send(new ControlLayer.ResendResponseResent({
+                    version: request.version,
+                    requestId: request.requestId,
+                    streamId: request.streamId,
+                    streamPartition: request.streamPartition,
+                }))
             }
         }
 
-        // TODO: simplify with async-await
-        this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken).then(() => {
+        try {
+            await this._validateSubscribeOrResendRequest(request)
             if (connection.isDead()) {
                 return
             }
@@ -324,17 +333,18 @@ module.exports = class WebsocketServer extends EventEmitter {
             streamingStorageData.once('end', () => {
                 connection.removeOngoingResend(streamingStorageData)
             })
-        }).catch((err) => {
-            connection.sendError(`Failed to request resend from stream ${
-                request.streamId
-            } and partition ${
-                request.streamPartition
-            }: ${err.message}`)
-        })
+        } catch (err) {
+            connection.send(new ControlLayer.ErrorResponse({
+                version: request.version,
+                requestId: request.requestId,
+                errorMessage: `Failed to request resend from stream ${request.streamId} and partition ${request.streamPartition}: ${err.message}`,
+                errorCode: err.errorCode || 'RESEND_FAILED',
+            }))
+        }
     }
 
-    handleResendLastRequest(connection, request) {
-        this.handleResendRequest(connection, request, () => this.networkNode.requestResendLast(
+    async handleResendLastRequest(connection, request) {
+        await this.handleResendRequest(connection, request, () => this.networkNode.requestResendLast(
             request.streamId,
             request.streamPartition,
             uuidv4(),
@@ -342,8 +352,8 @@ module.exports = class WebsocketServer extends EventEmitter {
         ))
     }
 
-    handleResendFromRequest(connection, request) {
-        this.handleResendRequest(connection, request, () => this.networkNode.requestResendFrom(
+    async handleResendFromRequest(connection, request) {
+        await this.handleResendRequest(connection, request, () => this.networkNode.requestResendFrom(
             request.streamId,
             request.streamPartition,
             uuidv4(),
@@ -354,8 +364,8 @@ module.exports = class WebsocketServer extends EventEmitter {
         ))
     }
 
-    handleResendRangeRequest(connection, request) {
-        this.handleResendRequest(connection, request, () => this.networkNode.requestResendRange(
+    async handleResendRangeRequest(connection, request) {
+        await this.handleResendRequest(connection, request, () => this.networkNode.requestResendRange(
             request.streamId,
             request.streamPartition,
             uuidv4(),
@@ -368,50 +378,6 @@ module.exports = class WebsocketServer extends EventEmitter {
         ))
     }
 
-    // TODO: should this be moved to streamr-client-protocol-js ?
-    /* eslint-disable class-methods-use-this */
-    handleResendRequestV0(connection, request) {
-        if (request.resendOptions.resend_last != null) {
-            const requestV1 = ControlLayer.ResendLastRequest.create(
-                request.streamId,
-                request.streamPartition,
-                request.requestId,
-                request.resendOptions.resend_last,
-                request.sessionToken,
-            )
-            requestV1.apiKey = request.apiKey
-            this.handleResendLastRequest(connection, requestV1)
-        } else if (request.resendOptions.resend_from != null && request.resendOptions.resend_to != null) {
-            const requestV1 = ControlLayer.ResendRangeRequest.create(
-                request.streamId,
-                request.streamPartition,
-                request.requestId,
-                [request.resendOptions.resend_from, 0], // use offset as timestamp
-                [request.resendOptions.resend_to, 0], // use offset as timestamp)
-                null,
-                null,
-                request.sessionToken,
-            )
-            requestV1.apiKey = request.apiKey
-            this.handleResendRangeRequest(connection, requestV1)
-        } else if (request.resendOptions.resend_from != null) {
-            const requestV1 = ControlLayer.ResendFromRequest.create(
-                request.streamId,
-                request.streamPartition,
-                request.requestId,
-                [request.resendOptions.resend_from, 0], // use offset as timestamp
-                null,
-                null,
-                request.sessionToken,
-            )
-            requestV1.apiKey = request.apiKey
-            this.handleResendFromRequest(connection, requestV1)
-        } else {
-            debug('handleResendRequest: unknown resend request: %o', JSON.stringify(request))
-            connection.sendError(`Unknown resend options: ${JSON.stringify(request.resendOptions)}`)
-        }
-    }
-
     _broadcastMessage(streamMessage) {
         const streamId = streamMessage.getStreamId()
         const streamPartition = streamMessage.getStreamPartition()
@@ -419,8 +385,10 @@ module.exports = class WebsocketServer extends EventEmitter {
 
         if (stream) {
             stream.forEachConnection((connection) => {
-                // TODO: performance fix, no need to re-create on every loop iteration
-                connection.send(ControlLayer.BroadcastMessage.create(streamMessage))
+                connection.send(new ControlLayer.BroadcastMessage({
+                    requestId: '', // TODO: can we have here the requestId of the original SubscribeRequest?
+                    streamMessage,
+                }))
             })
 
             this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * stream.getConnections().length)
@@ -460,41 +428,73 @@ module.exports = class WebsocketServer extends EventEmitter {
         }
     }
 
-    handleSubscribeRequest(connection, request) {
-        // TODO: simplify with async-await
-        this.streamFetcher.authenticate(request.streamId, request.apiKey, request.sessionToken)
-            .then((/* streamJson */) => {
-                if (connection.isDead()) {
-                    return
-                }
-                const stream = this.streams.getOrCreate(request.streamId, request.streamPartition)
+    async _validateSubscribeOrResendRequest(request) {
+        if (Utils.StreamMessageValidator.isKeyExchangeStream(request.streamId)) {
+            if (request.streamPartition !== 0) {
+                throw new Error(`Key exchange streams only have partition 0. Tried to subscribe to ${request.streamId}:${request.streamPartition}`)
+            }
+        } else {
+            await this.streamFetcher.checkPermission(request.streamId, request.apiKey, request.sessionToken, 'stream_subscribe')
+        }
+    }
 
-                // Subscribe now if the stream is not already subscribed or subscribing
-                if (!stream.isSubscribed() && !stream.isSubscribing()) {
-                    stream.setSubscribing()
-                    this.subscriptionManager.subscribe(request.streamId, request.streamPartition)
-                    stream.setSubscribed()
-                }
+    async handleSubscribeRequest(connection, request) {
+        try {
+            await this._validateSubscribeOrResendRequest(request)
 
-                stream.addConnection(connection)
-                connection.addStream(stream)
-                debug(
-                    'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
-                    connection.id, connection.streamsAsString()
-                )
-                connection.send(ControlLayer.SubscribeResponse.create(request.streamId, request.streamPartition))
-            })
-            .catch((response) => {
-                debug(
-                    'handleSubscribeRequest: socket "%s" failed to subscribe to stream %s:%d because of "%o"',
-                    connection.id, request.streamId, request.streamPartition, response
-                )
-                connection.sendError(`Not authorized to subscribe to stream ${
-                    request.streamId
-                } and partition ${
-                    request.streamPartition
-                }`)
-            })
+            if (connection.isDead()) {
+                return
+            }
+            const stream = this.streams.getOrCreate(request.streamId, request.streamPartition)
+
+            // Subscribe now if the stream is not already subscribed or subscribing
+            if (!stream.isSubscribed() && !stream.isSubscribing()) {
+                stream.setSubscribing()
+                this.subscriptionManager.subscribe(request.streamId, request.streamPartition)
+                stream.setSubscribed()
+            }
+
+            stream.addConnection(connection)
+            connection.addStream(stream)
+            debug(
+                'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
+                connection.id, connection.streamsAsString()
+            )
+            connection.send(new ControlLayer.SubscribeResponse({
+                version: request.version,
+                requestId: request.requestId,
+                streamId: request.streamId,
+                streamPartition: request.streamPartition,
+            }))
+        } catch (err) {
+            debug(
+                'handleSubscribeRequest: socket "%s" failed to subscribe to stream %s:%d because of "%o"',
+                connection.id, request.streamId, request.streamPartition, err
+            )
+
+            let errorMessage
+            let errorCode
+            if (err instanceof HttpError && err.code === 401) {
+                errorMessage = `Authentication failed while trying to subscribe to stream ${request.streamId}`
+                errorCode = 'AUTHENTICATION_FAILED'
+            } else if (err instanceof HttpError && err.code === 403) {
+                errorMessage = `You are not allowed to subscribe to stream ${request.streamId}`
+                errorCode = 'PERMISSION_DENIED'
+            } else if (err instanceof HttpError && err.code === 404) {
+                errorMessage = `Stream ${request.streamId} not found.`
+                errorCode = 'NOT_FOUND'
+            } else {
+                errorMessage = `Subscribe request failed: ${err}`
+                errorCode = 'REQUEST_FAILED'
+            }
+
+            connection.send(new ControlLayer.ErrorResponse({
+                version: request.version,
+                requestId: request.requestId,
+                errorMessage,
+                errorCode,
+            }))
+        }
     }
 
     handleUnsubscribeRequest(connection, request, noAck = false) {
@@ -527,7 +527,12 @@ module.exports = class WebsocketServer extends EventEmitter {
             }
 
             if (!noAck) {
-                connection.send(ControlLayer.UnsubscribeResponse.create(request.streamId, request.streamPartition))
+                connection.send(new ControlLayer.UnsubscribeResponse({
+                    version: request.version,
+                    requestId: request.requestId,
+                    streamId: request.streamId,
+                    streamPartition: request.streamPartition
+                }))
             }
         } else {
             debug(
@@ -535,7 +540,12 @@ module.exports = class WebsocketServer extends EventEmitter {
                 request.streamId, request.streamPartition
             )
             if (!noAck) {
-                connection.sendError(`Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`)
+                connection.send(new ControlLayer.ErrorResponse({
+                    version: request.version,
+                    requestId: request.requestId,
+                    errorMessage: `Not subscribed to stream ${request.streamId} partition ${request.streamPartition}!`,
+                    errorCode: 'INVALID_REQUEST',
+                }))
             }
         }
     }

@@ -1,32 +1,33 @@
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
-
-const { MessageNotSignedError, MessageNotEncryptedError } = require('./errors/MessageNotSignedError')
+const VolumeLogger = require('./VolumeLogger')
 const FailedToPublishError = require('./errors/FailedToPublishError')
 const { isTimestampTooFarInTheFuture } = require('./helpers/utils')
-const VolumeLogger = require('./VolumeLogger')
 
 module.exports = class Publisher {
-    constructor(networkNode, thresholdForFutureMessageSeconds, volumeLogger = new VolumeLogger(0)) {
+    constructor(networkNode, streamMessageValidator, thresholdForFutureMessageSeconds, volumeLogger = new VolumeLogger(0)) {
         this.networkNode = networkNode
+        this.streamMessageValidator = streamMessageValidator
         this.volumeLogger = volumeLogger
         this._thresholdForFutureMessageSeconds = thresholdForFutureMessageSeconds
+
+        if (!networkNode) {
+            throw new Error('No networkNode defined!')
+        }
+        if (!streamMessageValidator) {
+            throw new Error('No streamMessageValidator defined!')
+        }
+        if (!volumeLogger) {
+            throw new Error('No volumeLogger defined!')
+        }
     }
 
-    publish(stream, streamMessage) {
-        if (stream.requireSignedData && !streamMessage.signature) {
-            throw new MessageNotSignedError('This stream requires published data to be signed.')
-        }
-
-        if (stream.requireEncryptedData && streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE) {
-            throw new MessageNotEncryptedError('This stream requires published data to be encrypted.')
-        }
-
+    async validateAndPublish(streamMessage) {
         if (isTimestampTooFarInTheFuture(streamMessage.getTimestamp(), this._thresholdForFutureMessageSeconds)) {
             throw new FailedToPublishError(streamMessage.getStreamId(), `future timestamps are not allowed, max allowed +${this._thresholdForFutureMessageSeconds} seconds`)
         }
 
+        // Only publish valid messages
+        await this.streamMessageValidator.validate(streamMessage)
         this.volumeLogger.logInput(streamMessage.getContent().length)
-
         this.networkNode.publish(streamMessage)
     }
 }

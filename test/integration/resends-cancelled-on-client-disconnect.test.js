@@ -1,8 +1,7 @@
 const { Readable } = require('stream')
 
-const { startTracker, startStorageNode } = require('streamr-network')
+const { startTracker, startStorageNode, Protocol } = require('streamr-network')
 const { waitForCondition } = require('streamr-test-utils')
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const ws = require('uWebSockets.js')
 
 const WebsocketServer = require('../../src/websocket/WebsocketServer')
@@ -11,6 +10,8 @@ const StreamFetcher = require('../../src/StreamFetcher')
 const Publisher = require('../../src/Publisher')
 const VolumeLogger = require('../../src/VolumeLogger')
 const SubscriptionManager = require('../../src/SubscriptionManager')
+
+const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const trackerPort = 17750
 const networkNodePort = 17752
@@ -44,9 +45,12 @@ describe('resend cancellation', () => {
                             timeoutCleared = true
                         }
                     })
-                    stream.push(StreamMessage.create([streamId, streamPartition, 0, 0, 'publisherId', 'msgChainId'],
-                        null, StreamMessage.CONTENT_TYPES.MESSAGE,
-                        StreamMessage.ENCRYPTION_TYPES.NONE, {}, StreamMessage.SIGNATURE_TYPES.NONE, null))
+                    stream.push(
+                        new StreamMessage({
+                            messageId: new MessageID(streamId, streamPartition, 0, 0, 'publisherId', 'msgChainId'),
+                            content: {},
+                        })
+                    )
                     return stream
                 },
                 store: () => {}
@@ -61,7 +65,7 @@ describe('resend cancellation', () => {
             volumeLogger,
             new SubscriptionManager(networkNode)
         )
-        client = createClient(wsPort, 'tester1-api-key')
+        client = createClient(wsPort)
         freshStream = await client.createStream({
             name: 'resends-cancelled-on-client-disconnect.test.js-' + Date.now()
         })

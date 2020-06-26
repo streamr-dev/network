@@ -18,7 +18,7 @@ describe('broker resistance to invalid data', () => {
         broker = await startBroker('broker', networkPort, trackerPort, httpPort, null, null, false)
 
         // Create new stream
-        const client = createClient(0, 'tester1-api-key')
+        const client = createClient(0)
         const freshStream = await client.createStream({
             name: 'broker-resistance-to-invalid-data.test.js-' + Date.now()
         })

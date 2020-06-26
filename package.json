@@ -15,9 +15,9 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest --detectOpenHandles",
+    "test": "eslint . && jest --detectOpenHandles",
     "test-unit": "jest --detectOpenHandles test/unit",
-    "test-integration": "jest --detectOpenHandles --forceExit test/integration",
+    "test-integration": "jest --forceExit test/integration",
     "eslint": "eslint ."
   },
   "author": "Streamr <contact@streamr.com>",
@@ -45,8 +45,8 @@
     "public-ip": "^4.0.1",
     "qs": "^6.9.4",
     "streamr-client": "4.1.0-beta.0",
-    "streamr-client-protocol": "^4.1.1",
-    "streamr-network": "^17.8.0",
+    "streamr-client-protocol": "^5.0.0-beta.7",
+    "streamr-network": "^17.9.0-beta.1",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v17.6.0",
     "uuid": "^8.2.0",
     "ws": "^7.3.0"

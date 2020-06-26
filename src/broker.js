@@ -1,4 +1,4 @@
-const { startNetworkNode, startStorageNode } = require('streamr-network')
+const { startNetworkNode, startStorageNode, Protocol } = require('streamr-network')
 const StreamrClient = require('streamr-client')
 const publicIp = require('public-ip')
 const Sentry = require('@sentry/node')
@@ -14,6 +14,8 @@ const MissingConfigError = require('./errors/MissingConfigError')
 const adapterRegistry = require('./adapterRegistry')
 const getTrackers = require('./helpers/getTrackers')
 const validateConfig = require('./helpers/validateConfig')
+
+const { Utils } = Protocol
 
 module.exports = async (config) => {
     validateConfig(config)
@@ -111,8 +113,17 @@ module.exports = async (config) => {
         client,
         streamId
     )
+    // Validator only needs public information, so use unauthenticated client for that
+    const unauthenticatedClient = new StreamrClient({
+        restUrl: config.streamrUrl + '/api/v1',
+    })
+    const streamMessageValidator = new Utils.CachingStreamMessageValidator({
+        getStream: (sId) => unauthenticatedClient.getStreamValidationInfo(sId),
+        isPublisher: (address, sId) => unauthenticatedClient.isStreamPublisher(sId, address),
+        isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
+    })
     const streamFetcher = new StreamFetcher(config.streamrUrl)
-    const publisher = new Publisher(networkNode, config.thresholdForFutureMessageSeconds, volumeLogger)
+    const publisher = new Publisher(networkNode, streamMessageValidator, config.thresholdForFutureMessageSeconds, volumeLogger)
     const subscriptionManager = new SubscriptionManager(networkNode)
 
     // Start up adapters one-by-one, storing their close functions for further use
@@ -129,6 +140,8 @@ module.exports = async (config) => {
             if (e instanceof MissingConfigError) {
                 throw new MissingConfigError(`adapters[${index}].${e.config}`)
             }
+            console.error(`Error thrown while starting adapter ${name}: ${e}`)
+            console.error(e.stack)
             return () => {}
         }
     })

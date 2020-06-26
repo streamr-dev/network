@@ -1,9 +1,10 @@
-const { startTracker, startNetworkNode } = require('streamr-network')
+const { startTracker, startNetworkNode, Protocol } = require('streamr-network')
 const intoStream = require('into-stream')
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
 const { wait, waitForCondition } = require('streamr-test-utils')
 
 const { startBroker, createClient } = require('../utils')
+
+const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 
 const trackerPort = 11400
 const networkPort1 = 11402
@@ -12,12 +13,13 @@ const networkPort3 = 11404
 const wsPort = 11401
 
 function createStreamMessage(streamId, idx, prevIdx) {
-    const prevRef = prevIdx ? [prevIdx, 0] : null
-    return StreamMessage.create([streamId, 0, idx, 0, 'publisherId', 'msgChainId'],
-        prevRef, StreamMessage.CONTENT_TYPES.MESSAGE,
-        StreamMessage.ENCRYPTION_TYPES.NONE, {
-            key: idx
-        }, StreamMessage.SIGNATURE_TYPES.NONE, null)
+    return new StreamMessage({
+        messageId: new MessageID(streamId, 0, idx, 0, 'publisherId', 'msgChainId'),
+        prevMsgRef: prevIdx != null ? new MessageRef(prevIdx, 0) : null,
+        content: {
+            key: idx,
+        },
+    })
 }
 
 describe('message ordering and gap filling in websocket adapter', () => {
@@ -37,15 +39,18 @@ describe('message ordering and gap filling in websocket adapter', () => {
     })
 
     beforeEach(async () => {
-        subscriber = createClient(wsPort, 'tester1-api-key', false)
+        subscriber = createClient(wsPort, {
+            auth: {
+                apiKey: 'tester1-api-key'
+            },
+            orderMessages: false,
+        })
         await subscriber.ensureConnected()
 
         freshStream = await subscriber.createStream({
             name: 'message-ordering-in-ws-adapter.test.js-' + Date.now()
         })
         freshStreamId = freshStream.id
-
-        await wait(1000)
     })
 
     afterEach(async () => {

@@ -18,7 +18,6 @@ describe('local propagation', () => {
 
     let freshStream
     let freshStreamId
-    let freshStreamName
 
     let mqttClient1
     let mqttClient2
@@ -28,21 +27,16 @@ describe('local propagation', () => {
 
         broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, mqttPort1, true)
 
-        client1 = createClient(wsPort1, 'tester1-api-key')
-        await wait(100)
-        client2 = createClient(wsPort1, 'tester1-api-key')
-        await wait(100)
+        client1 = createClient(wsPort1)
+        client2 = createClient(wsPort1)
 
         mqttClient1 = createMqttClient(mqttPort1)
-        await wait(100)
         mqttClient2 = createMqttClient(mqttPort1)
-        await wait(100)
 
         freshStream = await client1.createStream({
             name: 'local-propagation.test.js-' + Date.now()
         })
         freshStreamId = freshStream.id
-        freshStreamName = freshStream.name
 
         await wait(3000)
     }, 10 * 1000)
@@ -121,8 +115,8 @@ describe('local propagation', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        await mqttClient1.subscribe(freshStreamName)
-        await mqttClient2.subscribe(freshStreamName)
+        await mqttClient1.subscribe(freshStreamId)
+        await mqttClient2.subscribe(freshStreamId)
 
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
@@ -132,14 +126,14 @@ describe('local propagation', () => {
             client2Messages.push(JSON.parse(message.toString()))
         })
 
-        await mqttClient1.publish(freshStreamName, 'key: 1', {
+        await mqttClient1.publish(freshStreamId, 'key: 1', {
             qos: 1
         })
 
         await waitForCondition(() => client1Messages.length === 1)
         await waitForCondition(() => client2Messages.length === 1)
 
-        await mqttClient2.publish(freshStreamName, 'key: 2', {
+        await mqttClient2.publish(freshStreamId, 'key: 2', {
             qos: 1
         })
 
@@ -174,8 +168,8 @@ describe('local propagation', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        await mqttClient1.subscribe(freshStreamName)
-        await mqttClient2.subscribe(freshStreamName)
+        await mqttClient1.subscribe(freshStreamId)
+        await mqttClient2.subscribe(freshStreamId)
 
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
@@ -199,7 +193,7 @@ describe('local propagation', () => {
 
         await wait(1000)
 
-        await mqttClient1.publish(freshStreamName, JSON.stringify({
+        await mqttClient1.publish(freshStreamId, JSON.stringify({
             key: 1
         }), {
             qos: 1
@@ -210,7 +204,7 @@ describe('local propagation', () => {
         await waitForCondition(() => client3Messages.length === 1)
         await waitForCondition(() => client4Messages.length === 1)
 
-        await mqttClient2.publish(freshStreamName, JSON.stringify({
+        await mqttClient2.publish(freshStreamId, JSON.stringify({
             key: 2
         }), {
             qos: 1

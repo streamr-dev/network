@@ -1,7 +1,9 @@
 const express = require('express')
 const bodyParser = require('body-parser')
-const { StreamMessage } = require('streamr-client-protocol').MessageLayer
-const { InvalidJsonError } = require('streamr-client-protocol').Errors
+const { Protocol } = require('streamr-network')
+
+const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
+const { InvalidJsonError, ValidationError } = Protocol.Errors
 
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const partition = require('../partition')
@@ -56,7 +58,7 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
         // Check write permission using middleware, writes req.stream
         authenticationMiddleware(streamFetcher, 'stream_publish'),
         // Produce request handler
-        (req, res) => {
+        async (req, res) => {
             // Validate body
             if (!req.body || !req.body.length) {
                 res.status(400).send({
@@ -76,7 +78,7 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
                 sequenceNumber = req.query.seq ? parsePositiveInteger(req.query.seq) : 0
                 if (req.query.prev_ts) {
                     const previousSequenceNumber = req.query.prev_seq ? parsePositiveInteger(req.query.prev_seq) : 0
-                    previousMessageRef = [parsePositiveInteger(req.query.prev_ts), previousSequenceNumber]
+                    previousMessageRef = new MessageRef(parsePositiveInteger(req.query.prev_ts), previousSequenceNumber)
                 }
                 signatureType = req.query.signatureType ? parsePositiveInteger(req.query.signatureType) : 0
             } catch (err) {
@@ -88,27 +90,27 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
 
             // req.stream is written by authentication middleware
             try {
-                publisher.publish(
-                    req.stream,
-                    StreamMessage.create(
-                        [req.stream.id,
-                            partitionFn(req.stream.partitions, req.query.pkey),
-                            timestamp,
-                            sequenceNumber, // sequenceNumber
-                            req.query.address || '', // publisherId
-                            req.query.msgChainId || '',
-                        ],
-                        previousMessageRef,
-                        StreamMessage.CONTENT_TYPES.MESSAGE,
-                        StreamMessage.ENCRYPTION_TYPES.NONE,
-                        req.body.toString(),
-                        signatureType,
-                        req.query.signature || null,
+                const streamMessage = new StreamMessage({
+                    messageId: new MessageID(
+                        req.stream.id,
+                        partitionFn(req.stream.partitions, req.query.pkey),
+                        timestamp,
+                        sequenceNumber, // sequenceNumber
+                        req.query.address || '', // publisherId
+                        req.query.msgChainId || '',
                     ),
-                )
+                    prevMsgRef: previousMessageRef,
+                    content: req.body.toString(),
+                    signatureType,
+                    signature: req.query.signature || null,
+                })
+
+                await publisher.validateAndPublish(streamMessage)
                 res.status(200).send(/* empty success response */)
             } catch (err) {
-                if (err instanceof InvalidJsonError || err instanceof FailedToPublishError) {
+                if (err instanceof InvalidJsonError
+                    || err instanceof ValidationError
+                    || err instanceof FailedToPublishError) {
                     res.status(400).send({
                         error: err.message,
                     })

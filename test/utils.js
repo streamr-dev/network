@@ -3,6 +3,12 @@ const mqtt = require('async-mqtt')
 
 const createBroker = require('../src/broker')
 
+const DEFAULT_CLIENT_OPTIONS = {
+    auth: {
+        apiKey: 'tester1-api-key'
+    }
+}
+
 function startBroker(id, networkPort, trackerPort, httpPort, wsPort, mqttPort, enableCassandra, privateKeyFileName, certFileName) {
     const adapters = []
 
@@ -55,14 +61,11 @@ function startBroker(id, networkPort, trackerPort, httpPort, wsPort, mqttPort, e
     })
 }
 
-function createClient(wsPort, apiKey, orderMessages = true) {
+function createClient(wsPort, clientOptions = DEFAULT_CLIENT_OPTIONS) {
     return new StreamrClient({
         url: `ws://localhost:${wsPort}/api/v1/ws`,
         restUrl: 'http://localhost:8081/streamr-core/api/v1',
-        auth: {
-            apiKey
-        },
-        orderMessages
+        ...clientOptions,
     })
 }
 

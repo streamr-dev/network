@@ -2,7 +2,6 @@ const { EventEmitter } = require('events')
 
 const debug = require('debug')('streamr:Connection')
 const qs = require('qs')
-const { ErrorResponse } = require('streamr-client-protocol').ControlLayer
 
 let nextId = 1
 
@@ -92,9 +91,4 @@ module.exports = class Connection extends EventEmitter {
             this.emit('forceClose', e)
         }
     }
-
-    sendError(errorMessage) {
-        this.send(ErrorResponse.create(errorMessage))
-    }
 }
-

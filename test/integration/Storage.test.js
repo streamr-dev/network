@@ -1,6 +1,6 @@
 const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
-const { StreamMessage, StreamMessageV31 } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageIDStrict } = require('streamr-network').Protocol.MessageLayer
 const { wait } = require('streamr-test-utils')
 
 const { startCassandraStorage } = require('../../src/Storage')
@@ -18,15 +18,10 @@ function buildMsg(
     msgChainId = '1',
     content = {}
 ) {
-    return StreamMessage.create(
-        [streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId],
-        null,
-        StreamMessage.CONTENT_TYPES.MESSAGE,
-        StreamMessage.ENCRYPTION_TYPES.NONE,
-        content,
-        StreamMessage.SIGNATURE_TYPES.NONE,
-        null,
-    )
+    return new StreamMessage({
+        messageId: new MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+        content: JSON.stringify(content)
+    })
 }
 
 function buildEncryptedMsg(
@@ -38,15 +33,11 @@ function buildEncryptedMsg(
     msgChainId = '1',
     content = 'ab3516983712fa4eb216a898ddd'
 ) {
-    return new StreamMessageV31(
-        [streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId],
-        null,
-        StreamMessage.CONTENT_TYPES.MESSAGE,
-        StreamMessage.ENCRYPTION_TYPES.AES,
+    return new StreamMessage({
+        messageId: new MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content,
-        StreamMessage.SIGNATURE_TYPES.NONE,
-        null,
-    )
+        encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
+    })
 }
 
 describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {

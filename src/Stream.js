@@ -1,4 +1,4 @@
-const { Utils } = require('streamr-client-protocol')
+const { Utils } = require('streamr-network').Protocol
 
 module.exports = class Stream {
     constructor(id, partition, name, msgHandler, gapHandler) {

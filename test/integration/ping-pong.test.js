@@ -37,13 +37,13 @@ describe('ping-pong test between broker and clients', () => {
             new SubscriptionManager(networkNode)
         )
 
-        client1 = createClient(wsPort, 'tester1-api-key')
+        client1 = createClient(wsPort)
         await client1.ensureConnected()
 
-        client2 = createClient(wsPort, 'tester1-api-key')
+        client2 = createClient(wsPort)
         await client2.ensureConnected()
 
-        client3 = createClient(wsPort, 'tester1-api-key')
+        client3 = createClient(wsPort)
         await client3.ensureConnected()
 
         await waitForCondition(() => websocketServer.connections.size === 3)

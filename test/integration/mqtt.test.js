@@ -29,8 +29,6 @@ describe('mqtt: end-to-end', () => {
     let client3
 
     let freshStream1
-    let freshStreamId1
-    let freshStreamName1
 
     let mqttClient1
     let mqttClient2
@@ -43,25 +41,17 @@ describe('mqtt: end-to-end', () => {
         broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, mqttPort2, true)
         broker3 = await startBroker('broker3', networkPort3, trackerPort, httpPort3, wsPort3, mqttPort3, true)
 
-        client1 = createClient(wsPort1, 'tester1-api-key')
-        await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
-        client2 = createClient(wsPort2, 'tester1-api-key')
-        await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
-        client3 = createClient(wsPort3, 'tester2-api-key') // different api key
-        await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
+        client1 = createClient(wsPort1)
+        client2 = createClient(wsPort2)
+        client3 = createClient(wsPort3)
 
         mqttClient1 = createMqttClient(mqttPort1)
-        await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
         mqttClient2 = createMqttClient(mqttPort2)
-        await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
-        mqttClient3 = createMqttClient(mqttPort1)
-        await wait(100) // TODO: remove when StaleObjectStateException is fixed in E&E
+        mqttClient3 = createMqttClient(mqttPort3)
 
         freshStream1 = await client1.createStream({
-            name: 'broker.test.js-' + Date.now()
+            name: 'mqtt.test.js-' + Date.now()
         })
-        freshStreamId1 = freshStream1.id
-        freshStreamName1 = freshStream1.name
     }, 15000)
 
     afterEach(async () => {
@@ -94,7 +84,7 @@ describe('mqtt: end-to-end', () => {
             done()
         })
 
-        mqttClient1.publish('NOT_VALID_STREARM', 'key: 1', {
+        mqttClient1.publish('NOT_VALID_STREAM', 'key: 1', {
             qos: 1
         })
     })
@@ -108,9 +98,9 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => mqttClient2.connected)
         await waitForCondition(() => mqttClient3.connected)
 
-        await mqttClient1.subscribe(freshStreamName1)
-        await mqttClient2.subscribe(freshStreamName1)
-        await mqttClient3.subscribe(freshStreamName1)
+        await mqttClient1.subscribe(freshStream1.id)
+        await mqttClient2.subscribe(freshStream1.id)
+        await mqttClient3.subscribe(freshStream1.id)
 
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
@@ -124,7 +114,7 @@ describe('mqtt: end-to-end', () => {
             client3Messages.push(JSON.parse(message.toString()))
         })
 
-        mqttClient1.publish(freshStreamName1, 'key: 1', {
+        mqttClient1.publish(freshStream1.id, 'key: 1', {
             qos: 1
         })
 
@@ -132,7 +122,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client2Messages.length === 1)
         await waitForCondition(() => client3Messages.length === 1)
 
-        mqttClient2.publish(freshStreamName1, 'key: 2', {
+        mqttClient2.publish(freshStream1.id, 'key: 2', {
             qos: 1
         })
 
@@ -140,7 +130,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client2Messages.length === 2)
         await waitForCondition(() => client3Messages.length === 2)
 
-        mqttClient3.publish(freshStreamName1, 'key: 3', {
+        mqttClient3.publish(freshStream1.id, 'key: 3', {
             qos: 0
         })
 
@@ -192,8 +182,8 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        await mqttClient1.subscribe(freshStreamName1)
-        await mqttClient2.subscribe(freshStreamName1)
+        await mqttClient1.subscribe(freshStream1.id)
+        await mqttClient2.subscribe(freshStream1.id)
 
         mqttClient1.on('message', (topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
@@ -203,7 +193,7 @@ describe('mqtt: end-to-end', () => {
             client2Messages.push(JSON.parse(message.toString()))
         })
 
-        mqttClient1.publish(freshStreamName1, JSON.stringify({
+        mqttClient1.publish(freshStream1.id, JSON.stringify({
             key: 1
         }), {
             qos: 1
@@ -212,7 +202,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client1Messages.length === 1)
         await waitForCondition(() => client2Messages.length === 1)
 
-        mqttClient2.publish(freshStreamName1, JSON.stringify({
+        mqttClient2.publish(freshStream1.id, JSON.stringify({
             key: 2
         }), {
             qos: 1
@@ -251,42 +241,42 @@ describe('mqtt: end-to-end', () => {
 
         await waitForCondition(() => mqttClient1.connected)
 
-        await mqttClient1.subscribe(freshStreamName1)
+        await mqttClient1.subscribe(freshStream1.id)
         mqttClient1.on('message', (topic, message) => {
             client4Messages.push(JSON.parse(message.toString()))
         })
 
         client1.subscribe({
-            stream: freshStreamId1
+            stream: freshStream1.id
         }, (message, metadata) => {
             client1Messages.push(message)
         })
 
         client2.subscribe({
-            stream: freshStreamId1
+            stream: freshStream1.id
         }, (message, metadata) => {
             client2Messages.push(message)
         })
 
         client3.subscribe({
-            stream: freshStreamId1
+            stream: freshStream1.id
         }, (message, metadata) => {
             client3Messages.push(message)
         })
 
         await wait(2000) // TODO: seems like this is needed for subscribes to go thru?
-        await client1.publish(freshStreamId1, {
+        await client1.publish(freshStream1.id, {
             key: 1
         })
-        await client1.publish(freshStreamId1, {
+        await client1.publish(freshStream1.id, {
             key: 2
         })
-        await client1.publish(freshStreamId1, {
+        await client1.publish(freshStream1.id, {
             key: 3
         })
 
         await wait(100)
-        mqttClient1.publish(freshStreamName1, JSON.stringify({
+        mqttClient1.publish(freshStream1.id, JSON.stringify({
             key: 4
         }), {
             qos: 1
@@ -362,21 +352,21 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        await mqttClient1.subscribe(freshStreamName1)
-        await mqttClient2.subscribe(freshStreamName1)
+        await mqttClient1.subscribe(freshStream1.id)
+        await mqttClient2.subscribe(freshStream1.id)
 
         await waitForCondition(() => broker1.getStreams().length === 1)
         await waitForCondition(() => broker2.getStreams().length === 1)
 
         // for mqtt partition is always zero
-        expect(broker1.getStreams()).toEqual([freshStreamId1 + '::0'])
-        expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0'])
-        await mqttClient1.unsubscribe(freshStreamName1)
+        expect(broker1.getStreams()).toEqual([freshStream1.id + '::0'])
+        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0'])
+        await mqttClient1.unsubscribe(freshStream1.id)
 
         await waitForCondition(() => broker1.getStreams().length === 0)
         await waitForCondition(() => broker2.getStreams().length === 1)
 
         expect(broker1.getStreams()).toEqual([])
-        expect(broker2.getStreams()).toEqual([freshStreamId1 + '::0'])
+        expect(broker2.getStreams()).toEqual([freshStream1.id + '::0'])
     }, 10000)
 })

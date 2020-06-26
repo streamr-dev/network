@@ -7,7 +7,7 @@ const VolumeLogger = require('../VolumeLogger')
 
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 
-function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {
+function onDataFetchDone(res, dataPoints, format = 'object', version, volumeLogger) {
     return (err) => {
         if (err) {
             console.log(err)
@@ -16,14 +16,15 @@ function onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger) {
             })
         } else {
             let volumeBytes = 0
+
             res.send(dataPoints.map((unicastMessage) => {
                 const { streamMessage } = unicastMessage
                 volumeBytes += streamMessage.getSerializedContent().length
-                return streamMessage.serialize(streamMessage.version, {
-                    stringify: false,
-                    parsedContent: content === 'json',
-                    compact: wrapper !== 'object',
-                })
+
+                if (format === 'protocol') {
+                    return streamMessage.serialize(version)
+                }
+                return streamMessage.toObject()
             }))
             volumeLogger.logOutput(volumeBytes)
         }
@@ -65,8 +66,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
     router.get('/streams/:id/data/partitions/:partition/last', (req, res) => {
         const partition = parseInt(req.params.partition)
         const count = req.query.count === undefined ? 1 : parseInt(req.query.count)
-        const wrapperOption = req.query.wrapper || 'array'
-        const contentOption = req.query.content || 'string'
+        const version = parseIntIfExists(req.query.version)
 
         if (Number.isNaN(count)) {
             res.status(400).send({
@@ -85,8 +85,8 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
             streamingData.on('end', onDataFetchDone(
                 res,
                 dataPoints,
-                wrapperOption.toLowerCase(),
-                contentOption.toLowerCase(),
+                req.query.format,
+                version,
                 volumeLogger
             ))
         }
@@ -94,11 +94,10 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
 
     router.get('/streams/:id/data/partitions/:partition/from', (req, res) => {
         const partition = parseInt(req.params.partition)
-        const wrapper = req.query.wrapper || 'array'
-        const content = req.query.content || 'string'
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
         const { publisherId } = req.query
+        const version = parseIntIfExists(req.query.version)
 
         if (fromTimestamp === undefined) {
             res.status(400).send({
@@ -121,14 +120,13 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
             )
             streamingData.on('error', onDataFetchDone(res))
             streamingData.on('data', dataPoints.push.bind(dataPoints))
-            streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
+            streamingData.on('end', onDataFetchDone(res, dataPoints, req.query.format, version, volumeLogger))
         }
     })
 
     router.get('/streams/:id/data/partitions/:partition/range', (req, res) => {
         const partition = parseInt(req.params.partition)
-        const wrapper = req.query.wrapper || 'array'
-        const content = req.query.content || 'string'
+        const version = parseIntIfExists(req.query.version)
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const toTimestamp = parseIntIfExists(req.query.toTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
@@ -172,7 +170,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
             )
             streamingData.on('error', onDataFetchDone(res))
             streamingData.on('data', dataPoints.push.bind(dataPoints))
-            streamingData.on('end', onDataFetchDone(res, dataPoints, wrapper, content, volumeLogger))
+            streamingData.on('end', onDataFetchDone(res, dataPoints, req.query.format, version, volumeLogger))
         }
     })
 
