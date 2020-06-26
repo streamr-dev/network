@@ -64,7 +64,7 @@ public class SubscriberJS extends Subscriber {
                     }
                 } else if (s.startsWith("whole message received: ")) { // whole stream message, for logging
                     String msg = s.split("whole message received: ")[1];
-                    Main.logger.info("Javascript subscriber " + getSubscriberId() + " received: " + msg);
+                    Main.logger.fine("Javascript subscriber " + getSubscriberId() + " received: " + msg);
                 } else {
                     Main.logger.warning(getSubscriberId() + " " + s);
                 }

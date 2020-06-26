@@ -239,7 +239,7 @@ public class StreamTester {
     }
 
     private synchronized void onReceivedJava(String subscriberId, StreamMessage streamMessage) {
-        Main.logger.info("Java subscriber " + subscriberId + " received: " + streamMessage.toJson());
+        Main.logger.fine("Java subscriber " + subscriberId + " received: " + streamMessage.toJson());
         ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(streamMessage.getPublisherId().toLowerCase()).get(subscriberId);
         if (subscriberStack == null) {
             subscriberStack = new ArrayDeque<>();
