@@ -144,10 +144,10 @@ public class StreamTester {
 
         }
         if (decryptionErrorsCount > 0) {
-            Main.logger.warning("FAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)");
+            Main.logger.warning("\nFAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)\n");
             System.exit(1);
         }
-        Main.logger.info("PASSED. Checked all " + totalPublished + " published and " + totalReceived + " received messages.");
+        Main.logger.info("\nPASSED. Checked all " + totalPublished + " published and " + totalReceived + " received messages.\n");
         System.exit(0);
     }
 
