@@ -33,15 +33,17 @@ class TrackerNode extends EventEmitter {
 
     onMessageReceived(peerInfo, rawMessage) {
         const message = encoder.decode(peerInfo.peerId, rawMessage)
-        switch (message.getCode()) {
-            case encoder.INSTRUCTION:
-                this.emit(events.TRACKER_INSTRUCTION_RECEIVED, peerInfo.peerId, message)
-                break
-            case encoder.STORAGE_NODES:
-                this.emit(events.STORAGE_NODES_RECEIVED, message)
-                break
-            default:
-                break
+        if (message) {
+            switch (message.getCode()) {
+                case encoder.INSTRUCTION:
+                    this.emit(events.TRACKER_INSTRUCTION_RECEIVED, peerInfo.peerId, message)
+                    break
+                case encoder.STORAGE_NODES:
+                    this.emit(events.STORAGE_NODES_RECEIVED, message)
+                    break
+                default:
+                    break
+            }
         }
     }
 

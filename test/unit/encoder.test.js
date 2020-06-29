@@ -139,5 +139,30 @@ describe('encoder', () => {
         expect(unicastMessage.getStreamId()).toEqual(new StreamIdAndPartition('stream-id', 0))
         expect(unicastMessage.getNodeAddresses()).toEqual(['ws://node-1', 'ws://node-2'])
     })
+
+    it('encoder.decode doesnt throw exception if failed to JSON.parse', () => {
+        expect(() => {
+            const message = encoder.decode('source', 'JUST_TEXT_NOT_JSON')
+            expect(message).toBeUndefined()
+        }).not.toThrowError()
+    })
+
+    it('encoder.decode doesnt throw exception if unknown message type', () => {
+        expect(() => {
+            const message = encoder.decode('source', JSON.stringify({
+                code: '777777',
+                version,
+                payload: {
+                    streamId: 'stream-id',
+                    streamPartition: 0,
+                    nodeAddresses: [
+                        'ws://node-1',
+                        'ws://node-2'
+                    ]
+                }
+            }))
+            expect(message).toBeUndefined()
+        }).not.toThrowError()
+    })
 })
 

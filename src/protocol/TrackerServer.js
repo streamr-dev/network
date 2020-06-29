@@ -51,18 +51,20 @@ class TrackerServer extends EventEmitter {
 
     onMessageReceived(peerInfo, rawMessage) {
         const message = encoder.decode(peerInfo.peerId, rawMessage)
-        switch (message.getCode()) {
-            case encoder.STATUS:
-                this.emit(events.NODE_STATUS_RECEIVED, {
-                    statusMessage: message,
-                    isStorage: peerInfo.isStorage()
-                })
-                break
-            case encoder.FIND_STORAGE_NODES:
-                this.emit(events.FIND_STORAGE_NODES_REQUEST, message)
-                break
-            default:
-                break
+        if (message) {
+            switch (message.getCode()) {
+                case encoder.STATUS:
+                    this.emit(events.NODE_STATUS_RECEIVED, {
+                        statusMessage: message,
+                        isStorage: peerInfo.isStorage()
+                    })
+                    break
+                case encoder.FIND_STORAGE_NODES:
+                    this.emit(events.FIND_STORAGE_NODES_REQUEST, message)
+                    break
+                default:
+                    break
+            }
         }
     }
 }

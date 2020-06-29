@@ -21,7 +21,14 @@ const encode = (type, payload) => {
 }
 
 const decode = (source, message) => {
-    const { code, payload } = JSON.parse(message)
+    let code
+    let payload
+
+    try {
+        ({ code, payload } = JSON.parse(message))
+    } catch (e) {
+        return undefined
+    }
 
     switch (code) {
         case msgTypes.STATUS:
@@ -51,7 +58,8 @@ const decode = (source, message) => {
             return new WrapperMessage(ControlLayer.ControlMessage.deserialize(payload.serializedControlLayerPayload, false), source)
 
         default:
-            throw new Error(`Unknown message type: ${code}`)
+            console.warn(`Got from "${source}" unknown message type with content: "${message}"`)
+            return undefined
     }
 }
 

@@ -104,7 +104,9 @@ class WsEndpoint extends EventEmitter {
             maxPayloadLength: 1024 * 1024,
             idleTimeout: 0,
             upgrade: (res, req, context) => {
-                res.writeStatus(`101 Switching Protocols\nstreamr-peer-id: ${this.peerInfo.peerId}\nstreamr-peer-type: ${this.peerInfo.peerType}`)
+                res.writeStatus('101 Switching Protocols')
+                    .writeHeader('streamr-peer-id', this.peerInfo.peerId)
+                    .writeHeader('streamr-peer-type', this.peerInfo.peerType)
 
                 /* This immediately calls open handler, you must not use res after this call */
                 res.upgrade({

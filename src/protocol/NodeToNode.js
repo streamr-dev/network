@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require('uuid')
 const { ControlLayer } = require('streamr-client-protocol')
 
 const encoder = require('../helpers/MessageEncoder')
-const { msgTypes } = require('../messages/messageTypes')
+const WrapperMessage = require('../messages/WrapperMessage')
 const endpointEvents = require('../connection/WsEndpoint').events
 
 const events = Object.freeze({
@@ -96,7 +96,7 @@ class NodeToNode extends EventEmitter {
 
     onMessageReceived(peerInfo, rawMessage) {
         const message = encoder.decode(peerInfo.peerId, rawMessage)
-        if (message.getCode() === msgTypes.WRAPPER) {
+        if (message instanceof WrapperMessage) {
             this.emit(eventPerType[message.controlLayerPayload.type], message.controlLayerPayload, message.getSource())
         }
     }
