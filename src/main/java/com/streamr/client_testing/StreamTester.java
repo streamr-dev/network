@@ -176,8 +176,12 @@ public class StreamTester {
         // Check that every subscriber received the correct number of messages from this publisher
         for (Collection<String> subStack : subStacks) {
             int size = subStack.size();
-            if (size != publishedMessagesCount) {
+            if (size < publishedMessagesCount) {
                 throw new IllegalStateException("Expected to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
+            } else if (size != publishedMessagesCount) {
+                // Receiving ~one message more than counted can happen due to a race condition. Not an error but let's log a warning
+                Main.logger.warning("Expected to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
+                Main.logger.warning("This could happen due to a race condition in publishing vs. stopping the publisher. Probably not an issue, but logging it anyway.");
             }
         }
         // Check that every subscriber received the correct content of messages from this publisher

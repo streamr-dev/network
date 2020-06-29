@@ -53,29 +53,40 @@ public class PublisherThreadJS extends PublisherThread {
 
             String s;
             while (!Thread.currentThread().isInterrupted() && (s = stdInput.readLine()) != null) {
-                if (s.startsWith("Published: ")) {
-                    if (onPublished != null) {
-                        onPublished.accept(s.substring(12));
-                    }
-                } else if (s.startsWith("Going to publish")) {
-                    Main.logger.finest(getPublisherId() + " " + s);
-                } else if (s.startsWith("Rotating")) {
-                    Main.logger.info(getPublisherId() + " " + s);
-                } else {
-                    Main.logger.warning(getPublisherId() + " " + s);
-                }
+                handleLine(s);
             }
+            // Note: it could happen that a new message is published just before stopping the process.
+            // In this case the subscribers may receive MORE messages than we counted as published.
+            if (p.isAlive()) {
+                p.destroy();
+            }
+            // Log any errors if we exited without interrupting
             while (!Thread.currentThread().isInterrupted() && (s = stdError.readLine()) != null) {
                 Main.logger.severe(getPublisherId() + " " + s);
             }
-            if (Thread.currentThread().isInterrupted()) {
+            if (stdInput != null) {
                 stdInput.close();
+            }
+            if (stdError != null) {
                 stdError.close();
-                p.destroy();
             }
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(1);
+        }
+    }
+
+    private void handleLine(String s) {
+        if (s.startsWith("Published: ")) {
+            if (onPublished != null) {
+                onPublished.accept(s.substring(12));
+            }
+        } else if (s.startsWith("Going to publish")) {
+            Main.logger.finest(getPublisherId() + " " + s);
+        } else if (s.startsWith("Rotating")) {
+            Main.logger.info(getPublisherId() + " " + s);
+        } else {
+            Main.logger.warning(getPublisherId() + " " + s);
         }
     }
 
