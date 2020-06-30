@@ -17,17 +17,17 @@
   "scripts": {
     "test": "eslint . && jest --detectOpenHandles",
     "test-unit": "jest --detectOpenHandles test/unit",
-    "test-integration": "jest --forceExit test/integration",
+    "test-integration": "jest --forceExit --detectOpenHandles test/integration",
     "eslint": "eslint ."
   },
   "author": "Streamr <contact@streamr.com>",
   "license": "",
   "engines": {
-    "node": "13.11.0",
-    "npm": "6.14.2"
+    "node": "14.3.0",
+    "npm": "6.14.5"
   },
   "dependencies": {
-    "@sentry/node": "^5.18.0",
+    "@sentry/node": "^5.18.1",
     "arraybuffer-to-string": "^1.0.2",
     "body-parser": "^1.19.0",
     "buffermaker": "^1.2.1",
@@ -35,7 +35,7 @@
     "commander": "^5.1.0",
     "cors": "^2.7.1",
     "debug": "^4.1.1",
-    "ethers": "^5.0.2",
+    "ethers": "^5.0.3",
     "express": "^4.17.1",
     "lru-cache": "^5.1.1",
     "memoizee": "^0.4.4",
@@ -45,7 +45,7 @@
     "public-ip": "^4.0.1",
     "qs": "^6.9.4",
     "streamr-client": "4.1.0-beta.0",
-    "streamr-client-protocol": "^5.0.0-beta.7",
+    "streamr-client-protocol": "^5.0.0-beta.9",
     "streamr-network": "^17.9.0-beta.1",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v17.6.0",
     "uuid": "^8.2.0",
@@ -57,7 +57,7 @@
     "eslint": "^7.3.1",
     "eslint-config-airbnb-base": "^14.2.0",
     "eslint-config-streamr-nodejs": "^1.3.0",
-    "eslint-plugin-import": "^2.21.2",
+    "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-promise": "^4.2.1",
     "into-stream": "^5.1.1",
     "jest": "^26.1.0",

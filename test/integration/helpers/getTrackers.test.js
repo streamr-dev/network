@@ -18,7 +18,7 @@ describe('getTrackers', () => {
         try {
             await getTrackers('address', config, jsonRpcProvider)
         } catch (e) {
-            expect(e.toString()).toMatch('Error: network does not support ENS (operation="ENS", network="unknown", code=UNSUPPORTED_OPERATION, version=providers/5.0.2)')
+            expect(e.toString()).toContain('Error: network does not support ENS')
             done()
         }
     })
@@ -27,7 +27,7 @@ describe('getTrackers', () => {
         try {
             await getTrackers('0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF', config, jsonRpcProvider)
         } catch (e) {
-            expect(e.toString()).toMatch('Error: call revert exception (method="getNodes()", errorSignature=null, errorArgs=[null], reason=null, code=CALL_EXCEPTION, version=abi/5.0.1)')
+            expect(e.toString()).toContain('Error: call revert exception')
             done()
         }
     })
@@ -36,7 +36,7 @@ describe('getTrackers', () => {
         try {
             await getTrackers(address, 'config', jsonRpcProvider)
         } catch (e) {
-            expect(e.toString()).toMatch("Error: ENOENT: no such file or directory, open './configs/config'")
+            expect(e.toString()).toContain("Error: ENOENT: no such file or directory, open './configs/config'")
             done()
         }
     })
@@ -45,7 +45,7 @@ describe('getTrackers', () => {
         try {
             await getTrackers(address, config, 'jsonRpcProvider')
         } catch (e) {
-            expect(e.toString()).toMatch('Error: could not detect network (event="noNetwork", code=NETWORK_ERROR, version=providers/5.0.2)')
+            expect(e.toString()).toContain('Error: could not detect network')
             done()
         }
     })
