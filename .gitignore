@@ -26,7 +26,6 @@ node_modules
 
 # Users Environment Variables
 .lock-wscript
-*.iml
 .DS_Store
 dist/*
 examples/webpack/dist/*
@@ -37,3 +36,6 @@ examples/webpack/dist/*
 .idea/dictionaries
 .idea/httpRequests
 .idea/dataSources*
+
+reports
+tests_output

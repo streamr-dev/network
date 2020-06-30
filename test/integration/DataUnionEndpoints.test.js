@@ -1,3 +1,4 @@
+/* eslint-disable no-await-in-loop */
 import { Contract, providers, utils, Wallet } from 'ethers'
 import debug from 'debug'
 import { wait } from 'streamr-test-utils'

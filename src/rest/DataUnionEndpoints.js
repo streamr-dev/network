@@ -15,6 +15,7 @@ import {
     Wallet,
     getDefaultProvider,
     providers,
+    BigNumber,
     utils as ethersUtils,
 } from 'ethers'
 import debugFactory from 'debug'
@@ -23,7 +24,7 @@ import * as DataUnion from '../../contracts/DataUnion.json'
 
 import authFetch, { DEFAULT_HEADERS } from './authFetch'
 
-const { BigNumber, computeAddress, getAddress } = ethersUtils
+const { computeAddress, getAddress } = ethersUtils
 
 const debug = debugFactory('StreamrClient::DataUnionEndpoints')
 
@@ -138,7 +139,7 @@ export async function deployDataUnion(options) {
     await throwIfBadAddress(streamrOperatorAddress, 'options.streamrOperatorAddress')
 
     if (adminFee < 0 || adminFee > 1) { throw new Error('options.adminFeeFraction must be a number between 0...1, got: ' + adminFee) }
-    const adminFeeBN = new BigNumber((adminFee * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
+    const adminFeeBN = BigNumber.from((adminFee * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
 
     const stream = await this.createStream({
         name: `Join-Part-${wallet.address.slice(0, 10)}-${Date.now()}`
@@ -320,14 +321,14 @@ export async function getBalance(dataUnionContractAddress, memberAddress, provid
             total: BigNumber.ZERO, withdrawable: BigNumber.ZERO
         }
     }
-    const earningsBN = new BigNumber(stats.earnings)
+    const earningsBN = BigNumber.from(stats.earnings)
 
     if (stats.withdrawableEarnings === '0') {
         return {
             total: earningsBN, withdrawable: BigNumber.ZERO
         }
     }
-    const withdrawableEarningsBN = new BigNumber(stats.withdrawableEarnings)
+    const withdrawableEarningsBN = BigNumber.from(stats.withdrawableEarnings)
 
     const dataUnionContract = new Contract(dataUnionContractAddress, DataUnion.abi, provider || getDefaultProvider())
     const withdrawnBN = await dataUnionContract.withdrawn(address)

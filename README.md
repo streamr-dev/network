@@ -458,3 +458,22 @@ The Streamr JS client library supports [debug](https://github.com/visionmedia/de
 In node.js, start your app like this: `DEBUG=StreamrClient* node your-app.js`
 
 In the browser, include `debug.js` and set `localStorage.debug = 'StreamrClient'`
+
+
+## Publishing
+
+Publishing to NPM is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
+
+### Publishing `latest`:
+1. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
+https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
+2. `git push --follow-tags`
+3. Wait for Github Actions to run tests
+4. If tests passed, Github Actions will publish the new version to NPM
+
+### Publishing `beta`:
+1. Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
+https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
+2. `git push --follow-tags`
+3. Wait for Github Actions to run tests
+4. If tests passed, Github Actions will publish the new version to NPM
