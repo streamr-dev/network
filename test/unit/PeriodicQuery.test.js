@@ -3,7 +3,7 @@ const Stream = require('stream')
 
 const toArray = require('stream-to-array')
 
-const PeriodicQuery = require('../../src/PeriodicQuery')
+const PeriodicQuery = require('../../src/storage/PeriodicQuery')
 
 describe('PeriodicQuery', () => {
     it('calls queryFunction the right number of times before timeout', async () => {

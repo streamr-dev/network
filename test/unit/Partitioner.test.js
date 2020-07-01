@@ -1,6 +1,6 @@
 const assert = require('assert')
 
-const partition = require('../../src/partition')
+const partition = require('../../src/helpers/partition')
 
 describe('partition', () => {
     it('should throw if partition count is not defined', () => {

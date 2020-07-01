@@ -141,8 +141,8 @@ module.exports = class VolumeLogger {
             formatNumber(storageWriteKbPerSecond),
             networkMetrics.resendMetrics.numOfOngoingResends,
             networkMetrics.resendMetrics.meanAge,
-            storageMisc.Storage && storageMisc.Storage.storeStrategy ? storageMisc.Storage.storeStrategy.totalBatches : 0,
-            storageMisc.Storage && storageMisc.Storage.storeStrategy ? storageMisc.Storage.storeStrategy.meanBatchAge : 0
+            storageMisc.Storage && storageMisc.Storage.batchManager ? storageMisc.Storage.batchManager.totalBatches : 0,
+            storageMisc.Storage && storageMisc.Storage.batchManager ? storageMisc.Storage.batchManager.meanBatchAge : 0
         )
 
         this.inCount = 0

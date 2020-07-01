@@ -6,7 +6,8 @@ const Sentry = require('@sentry/node')
 const CURRENT_VERSION = require('../package.json').version
 
 const StreamFetcher = require('./StreamFetcher')
-const { startCassandraStorage } = require('./Storage')
+const { startCassandraStorage } = require('./storage/Storage')
+const { startCassandraStorage: startCassandraStorageNew } = require('./new-storage/Storage')
 const Publisher = require('./Publisher')
 const VolumeLogger = require('./VolumeLogger')
 const SubscriptionManager = require('./SubscriptionManager')
@@ -37,6 +38,22 @@ module.exports = async (config) => {
         }))
     } else {
         console.info('Cassandra disabled')
+    }
+
+    if (config.cassandraNew) {
+        console.info(`Starting Cassandra ### NEW SCHEMA ### with hosts ${config.cassandraNew.hosts} and keyspace ${config.cassandraNew.keyspace}`)
+        storages.push(await startCassandraStorageNew({
+            contactPoints: [...config.cassandraNew.hosts],
+            localDataCenter: 'datacenter1',
+            keyspace: config.cassandraNew.keyspace,
+            username: config.cassandraNew.username,
+            password: config.cassandraNew.password,
+            bucketManagerOpts: {
+                useTtl: !config.network.isStorageNode
+            }
+        }))
+    } else {
+        console.info('Cassandra ### NEW SCHEMA ### is disabled')
     }
 
     // Start network node

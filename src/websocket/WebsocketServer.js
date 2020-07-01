@@ -7,7 +7,9 @@ const ab2str = require('arraybuffer-to-string')
 const uWS = require('uWebSockets.js')
 
 const HttpError = require('../errors/HttpError')
+const FailedToPublishError = require('../errors/FailedToPublishError')
 const VolumeLogger = require('../VolumeLogger')
+const partition = require('../helpers/partition')
 const StreamStateManager = require('../StreamStateManager')
 
 const Connection = require('./Connection')
@@ -270,6 +272,9 @@ module.exports = class WebsocketServer extends EventEmitter {
             } else if (err instanceof HttpError && err.code === 404) {
                 errorMessage = `Stream ${streamMessage.getStreamId()} not found.`
                 errorCode = 'NOT_FOUND'
+            } else if (err instanceof FailedToPublishError) {
+                errorMessage = err.message
+                errorCode = 'FUTURE_TIMESTAMP'
             } else {
                 errorMessage = `Publish request failed: ${err.message || err}`
                 errorCode = 'REQUEST_FAILED'

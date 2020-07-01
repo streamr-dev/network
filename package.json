@@ -43,6 +43,7 @@
     "mqtt-connection": "^4.0.0",
     "node-fetch": "^2.6.0",
     "public-ip": "^4.0.1",
+    "pump": "^3.0.0",
     "qs": "^6.9.4",
     "streamr-client": "4.1.0-beta.0",
     "streamr-client-protocol": "^5.0.0-beta.9",

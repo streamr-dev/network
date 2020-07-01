@@ -6,7 +6,7 @@ const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 const { InvalidJsonError, ValidationError } = Protocol.Errors
 
 const FailedToPublishError = require('../errors/FailedToPublishError')
-const partition = require('../partition')
+const partition = require('../helpers/partition')
 
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
 

@@ -1,7 +1,5 @@
 const events = require('events')
 
-const debug = require('debug')('streamr:Connection:mqtt')
-
 module.exports = class Connection extends events.EventEmitter {
     constructor(client, clientId = '', token = '', apiKey = '') {
         super()

@@ -5,7 +5,7 @@ const mqttCon = require('mqtt-connection')
 const { MessageLayer } = require('streamr-network').Protocol
 
 const VolumeLogger = require('../VolumeLogger')
-const partition = require('../partition')
+const partition = require('../helpers/partition')
 const StreamStateManager = require('../StreamStateManager')
 
 const Connection = require('./Connection')

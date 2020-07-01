@@ -3,7 +3,7 @@ const toArray = require('stream-to-array')
 const { StreamMessage, MessageIDStrict } = require('streamr-network').Protocol.MessageLayer
 const { wait } = require('streamr-test-utils')
 
-const { startCassandraStorage } = require('../../src/storage/Storage')
+const { startCassandraStorage } = require('../../../src/new-storage/Storage')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
@@ -40,7 +40,7 @@ function buildEncryptedMsg(
     })
 }
 
-describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
+describe('Storage', () => {
     let storage
     let streamId
     let cassandraClient
@@ -62,37 +62,24 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         storage = await startCassandraStorage({
             contactPoints,
             localDataCenter,
-            keyspace,
-            isBatching
+            keyspace
         })
         streamId = `stream-id-${Date.now()}-${streamIdx}`
         streamIdx += 1
     })
 
     afterEach(async () => {
-        storage.close()
-        await wait(1000)
-    })
-
-    test('requestLast throws exception if limit is not strictly positive', async () => {
-        expect(() => storage.requestLast(streamId, -1, 0)).toThrow()
-        expect(() => storage.requestLast(streamId, 10, 0)).toThrow()
-        expect(() => storage.requestLast(streamId, 10, -1)).toThrow()
-    })
-
-    test('requestFrom throws exception if from is not strictly positive', async () => {
-        expect(() => storage.requestFrom(streamId, -10, 3000)).toThrow()
-        expect(() => storage.requestFrom(streamId, 10, -3000)).toThrow()
+        await storage.close()
     })
 
     test('requestFrom and requestLast not throwing exception if timestamp is zero', async () => {
-        const a = storage.requestFrom(streamId, 0, 1)
-        const resultsA = await toArray(a)
-        expect(resultsA).toEqual([])
-
         const b = storage.requestLast(streamId, 0, 1)
         const resultsB = await toArray(b)
         expect(resultsB).toEqual([])
+
+        const a = storage.requestFrom(streamId, 0, 1)
+        const resultsA = await toArray(a)
+        expect(resultsA).toEqual([])
     })
 
     test('store messages into Cassandra', async () => {
@@ -101,11 +88,16 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
             value: 6,
         }
         const msg = buildMsg(streamId, 10, 1545144750494, 0, 'publisher', '1', data)
-        await storage.store(msg)
+        storage.store(msg)
 
-        const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE id = ? AND partition = 10', [
+        await wait(3000)
+
+        const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE id = ? AND partition = 10 ALLOW FILTERING', [
             streamId
         ])
+
+        expect(result.rows.length).toEqual(1)
+
         expect(result.rows.length).toEqual(1)
         expect(result.rows[0]).toEqual({
             id: streamId,
@@ -126,18 +118,19 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         const msg1 = buildMsg(streamId, 10, 3000, 2, 'publisher2')
         const msg2 = buildEncryptedMsg(streamId, 10, 3000, 3)
         const msg3 = buildEncryptedMsg(streamId, 10, 4000, 0)
-        await Promise.all([
-            storage.store(buildEncryptedMsg(streamId, 10, 0, 0)),
-            storage.store(buildEncryptedMsg(streamId, 10, 1000, 0)),
-            storage.store(buildMsg(streamId, 10, 2000, 0)),
-            storage.store(buildMsg(streamId, 10, 3000, 0)),
-            storage.store(msg2),
-            storage.store(msg1),
-            storage.store(buildMsg(streamId, 10, 3000, 1)),
-            storage.store(msg3),
-            storage.store(buildEncryptedMsg(streamId, 666, 8000, 0)),
-            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
-        ])
+
+        storage.store(buildEncryptedMsg(streamId, 10, 0, 0))
+        storage.store(buildEncryptedMsg(streamId, 10, 1000, 0))
+        storage.store(buildMsg(streamId, 10, 2000, 0))
+        storage.store(buildMsg(streamId, 10, 3000, 0))
+        storage.store(msg2)
+        storage.store(msg1)
+        storage.store(buildMsg(streamId, 10, 3000, 1))
+        storage.store(msg3)
+        storage.store(buildEncryptedMsg(streamId, 666, 8000, 0))
+        storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
+
+        await wait(3000)
 
         const streamingResults = storage.requestLast(streamId, 10, 3)
         const results = await toArray(streamingResults)
@@ -151,18 +144,19 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         const msg3 = buildEncryptedMsg(streamId, 10, 3000, 2, 'publisher', '2')
         const msg4 = buildEncryptedMsg(streamId, 10, 3000, 3)
         const msg5 = buildEncryptedMsg(streamId, 10, 4000, 0)
-        await Promise.all([
-            storage.store(buildMsg(streamId, 10, 0, 0)),
-            storage.store(buildMsg(streamId, 10, 1000, 0)),
-            storage.store(buildEncryptedMsg(streamId, 10, 2000, 0)),
-            storage.store(msg1),
-            storage.store(msg4),
-            storage.store(msg3),
-            storage.store(msg2),
-            storage.store(msg5),
-            storage.store(buildMsg(streamId, 666, 8000, 0)),
-            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
-        ])
+
+        storage.store(buildMsg(streamId, 10, 0, 0))
+        storage.store(buildMsg(streamId, 10, 1000, 0))
+        storage.store(buildEncryptedMsg(streamId, 10, 2000, 0))
+        storage.store(msg1)
+        storage.store(msg4)
+        storage.store(msg3)
+        storage.store(msg2)
+        storage.store(msg5)
+        storage.store(buildMsg(streamId, 666, 8000, 0))
+        storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0))
+
+        await wait(3000)
 
         const streamingResults = storage.requestFrom(streamId, 10, 3000)
         const results = await toArray(streamingResults)
@@ -170,23 +164,24 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         expect(results).toEqual([msg1, msg2, msg3, msg4, msg5])
     })
 
-    test('fetch messages starting from a timestamp,sequenceNo for a given publisher, msgChainId', async () => {
+    test('fetch messages starting from a timestamp, sequenceNo for a given publisher, msgChainId', async () => {
         const msg1 = buildEncryptedMsg(streamId, 10, 3000, 1, 'publisher1')
         const msg2 = buildEncryptedMsg(streamId, 10, 3000, 3, 'publisher1')
         const msg3 = buildEncryptedMsg(streamId, 10, 8000, 0, 'publisher1')
-        await Promise.all([
-            storage.store(buildEncryptedMsg(streamId, 10, 0, 0, 'publisher1')),
-            storage.store(buildEncryptedMsg(streamId, 10, 1000, 0, 'publisher2')),
-            storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3')),
-            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1')),
-            storage.store(msg2),
-            storage.store(buildEncryptedMsg(streamId, 10, 3000, 2, 'publisher2')),
-            storage.store(msg1),
-            storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1', '2')),
-            storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3')),
-            storage.store(msg3),
-            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1', '1'))
-        ])
+
+        storage.store(buildEncryptedMsg(streamId, 10, 0, 0, 'publisher1'))
+        storage.store(buildEncryptedMsg(streamId, 10, 1000, 0, 'publisher2'))
+        storage.store(buildMsg(streamId, 10, 2000, 0, 'publisher3'))
+        storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1'))
+        storage.store(msg2)
+        storage.store(buildEncryptedMsg(streamId, 10, 3000, 2, 'publisher2'))
+        storage.store(msg1)
+        storage.store(buildMsg(streamId, 10, 3000, 1, 'publisher1', '2'))
+        storage.store(buildMsg(streamId, 10, 4000, 0, 'publisher3'))
+        storage.store(msg3)
+        storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1', '1'))
+
+        await wait(3000)
 
         const streamingResults = storage.requestFrom(streamId, 10, 3000, 1, 'publisher1', '1')
         const results = await toArray(streamingResults)
@@ -200,18 +195,19 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         const msg3 = buildEncryptedMsg(streamId, 10, 2500, 1)
         const msg4 = buildEncryptedMsg(streamId, 10, 2500, 2, 'publisher2')
         const msg5 = buildEncryptedMsg(streamId, 10, 3000, 0)
-        await Promise.all([
-            storage.store(buildMsg(streamId, 10, 0, 0)),
-            storage.store(buildEncryptedMsg(streamId, 10, 1000, 0)),
-            storage.store(msg1),
-            storage.store(msg2),
-            storage.store(msg4),
-            storage.store(msg3),
-            storage.store(msg5),
-            storage.store(buildEncryptedMsg(streamId, 666, 2500, 0)),
-            storage.store(buildMsg(streamId, 10, 4000, 0)),
-            storage.store(buildMsg(`${streamId}-wrong`, 10, 3000, 0))
-        ])
+
+        storage.store(buildMsg(streamId, 10, 0, 0))
+        storage.store(buildEncryptedMsg(streamId, 10, 1000, 0))
+        storage.store(msg1)
+        storage.store(msg2)
+        storage.store(msg4)
+        storage.store(msg3)
+        storage.store(msg5)
+        storage.store(buildEncryptedMsg(streamId, 666, 2500, 0))
+        storage.store(buildMsg(streamId, 10, 4000, 0))
+        storage.store(buildMsg(`${streamId}-wrong`, 10, 3000, 0))
+
+        await wait(3000)
 
         const streamingResults = storage.requestRange(streamId, 10, 1500, undefined, 3500, undefined)
         const results = await toArray(streamingResults)
@@ -224,19 +220,20 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         const msg2 = buildEncryptedMsg(streamId, 10, 3000, 0, 'publisher1')
         const msg3 = buildEncryptedMsg(streamId, 10, 3000, 1, 'publisher1')
         const msg4 = buildMsg(streamId, 10, 3000, 2, 'publisher1')
-        await Promise.all([
-            storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1')),
-            storage.store(buildMsg(streamId, 10, 1500, 0, 'publisher1')),
-            storage.store(msg1),
-            storage.store(buildMsg(streamId, 10, 2500, 0, 'publisher3')),
-            storage.store(msg2),
-            storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1', '2')),
-            storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1')),
-            storage.store(msg4),
-            storage.store(msg3),
-            storage.store(buildEncryptedMsg(streamId, 10, 8000, 0, 'publisher1')),
-            storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
-        ])
+
+        storage.store(buildMsg(streamId, 10, 0, 0, 'publisher1'))
+        storage.store(buildMsg(streamId, 10, 1500, 0, 'publisher1'))
+        storage.store(msg1)
+        storage.store(buildMsg(streamId, 10, 2500, 0, 'publisher3'))
+        storage.store(msg2)
+        storage.store(buildMsg(streamId, 10, 3000, 0, 'publisher1', '2'))
+        storage.store(buildMsg(streamId, 10, 3000, 3, 'publisher1'))
+        storage.store(msg4)
+        storage.store(msg3)
+        storage.store(buildEncryptedMsg(streamId, 10, 8000, 0, 'publisher1'))
+        storage.store(buildMsg(`${streamId}-wrong`, 10, 8000, 0, 'publisher1'))
+
+        await wait(3000)
 
         const streamingResults = storage.requestRange(streamId, 10, 1500, 3, 3000, 2, 'publisher1', '1')
         const results = await toArray(streamingResults)
@@ -244,21 +241,31 @@ describe.each([false, true])('Storage (isBatching=%s)', (isBatching) => {
         expect(results).toEqual([msg1, msg2, msg3, msg4])
     })
 
-    test('periodically fetch messages in a "recent" range for a particular publisher, msgChainId (not already stored)', async () => {
-        const msg1 = buildEncryptedMsg(streamId, 10, 2000, 0, 'publisher1')
-        // will query periodically until getting some results once the message is stored
-        const streamingResults = storage.requestRange(streamId, 10, 1500, 3, Date.now(), 2, 'publisher1', '1')
-        setTimeout(() => storage.store(msg1), 2000)
-        const results = await toArray(streamingResults)
-        expect(results).toEqual([msg1])
-    }, 8000)
+    test('requestLast fast big stream', async () => {
+        for (let i = 0; i < 10000; i++) {
+            const msg = buildMsg(streamId, 0, (i + 1) * 1000, i, 'publisher1')
+            storage.store(msg)
+        }
 
-    test('does not try to fetch messages in an "old" range for a particular publisher, msgChainId (not already stored)', async () => {
-        const msg1 = buildEncryptedMsg(streamId, 10, 2000, 0, 'publisher1')
-        // will NOT query periodically ('to' timestamp is older than Date.now() - RANGE_THRESHOLD). Returns empty result immediately
-        const streamingResults = storage.requestRange(streamId, 10, 1500, 3, Date.now() - (50 * 1000), 2, 'publisher1', '1')
-        setTimeout(() => storage.store(msg1), 2000)
+        await wait(10000)
+
+        const streamingResults = storage.requestLast(streamId, 0, 10000)
         const results = await toArray(streamingResults)
-        expect(results).toEqual([])
-    }, 8000)
+
+        expect(results.length).toEqual(10000)
+    }, 20000)
+
+    test('requestFrom fast big stream', async () => {
+        for (let i = 0; i < 10000; i++) {
+            const msg = buildMsg(streamId, 0, (i + 1) * 1000, i, 'publisher1')
+            storage.store(msg)
+        }
+
+        await wait(10000)
+
+        const streamingResults = storage.requestFrom(streamId, 0, 1000)
+        const results = await toArray(streamingResults)
+
+        expect(results.length).toEqual(10000)
+    }, 20000)
 })
