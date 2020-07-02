@@ -97,8 +97,19 @@ module.exports = class WebsocketServer extends EventEmitter {
             compression: 0,
             maxPayloadLength: 1024 * 1024,
             idleTimeout: 3600, // 1 hour
-            open: (ws, req) => {
-                const connection = new Connection(ws, req)
+            upgrade: (res, req, context) => {
+                /* This immediately calls open handler, you must not use res after this call */
+                res.upgrade({
+                    query: req.getQuery()
+                },
+                /* Spell these correctly */
+                req.getHeader('sec-websocket-key'),
+                req.getHeader('sec-websocket-protocol'),
+                req.getHeader('sec-websocket-extensions'),
+                context)
+            },
+            open: (ws) => {
+                const connection = new Connection(ws, ws.query)
                 this.connections.set(connection.id, connection)
                 this.volumeLogger.connectionCountWS = this.connections.size
                 debug('onNewClientConnection: socket "%s" connected', connection.id)

@@ -12,7 +12,7 @@ function generateId() {
 }
 
 module.exports = class Connection extends EventEmitter {
-    constructor(socket, socketRequest) {
+    constructor(socket, query) {
         super()
         this.id = generateId()
         this.socket = socket
@@ -25,9 +25,8 @@ module.exports = class Connection extends EventEmitter {
         this.messageLayerVersion = 28
 
         // attempt to parse versions from request parameters
-        const parts = socketRequest.getQuery()
-        if (parts) {
-            const { controlLayerVersion, messageLayerVersion } = qs.parse(parts)
+        if (query) {
+            const { controlLayerVersion, messageLayerVersion } = qs.parse(query)
             if (controlLayerVersion && messageLayerVersion) {
                 this.controlLayerVersion = parseInt(controlLayerVersion)
                 this.messageLayerVersion = parseInt(messageLayerVersion)

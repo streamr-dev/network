@@ -10,11 +10,9 @@ describe('Connection', () => {
     })
 
     describe('version parsing', () => {
-        it('parses versions when present in request url', () => {
-            const request = {
-                getQuery: () => 'controlLayerVersion=1&messageLayerVersion=30',
-            }
-            const connection = new Connection(undefined, request)
+        it('parses versions when present in url', () => {
+            const query = 'controlLayerVersion=1&messageLayerVersion=30'
+            const connection = new Connection(undefined, query)
             expect(connection.controlLayerVersion).toEqual(1)
             expect(connection.messageLayerVersion).toEqual(30)
         })
