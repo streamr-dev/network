@@ -133,4 +133,10 @@ describe('ControlMessage', () => {
             })
         })
     })
+
+    describe('getSupportedVersions', () => {
+        it('returns an array of registered versions', () => {
+            assert.deepStrictEqual(ControlMessage.getSupportedVersions(), [VERSION])
+        })
+    })
 })

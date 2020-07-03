@@ -47,13 +47,17 @@ export default class ControlMessage {
     static getSerializer(version, type) {
         const serializersByType = serializerByVersionAndType[version]
         if (!serializersByType) {
-            throw new UnsupportedVersionError(version, `Supported versions: [${Object.keys(serializerByVersionAndType)}]`)
+            throw new UnsupportedVersionError(version, `Supported versions: [${ControlMessage.getSupportedVersions()}]`)
         }
         const clazz = serializersByType[type]
         if (!clazz) {
             throw new UnsupportedTypeError(type, `Supported types: [${Object.keys(serializersByType)}]`)
         }
         return clazz
+    }
+
+    static getSupportedVersions() {
+        return Object.keys(serializerByVersionAndType).map((key) => parseInt(key, 10))
     }
 
     serialize(version = this.version, ...typeSpecificSerializeArgs) {
