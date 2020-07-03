@@ -206,8 +206,7 @@ describe('StreamrClient Connection', () => {
                 ])
                 done()
             })
-
-            await waitForCondition(() => messages.length === 2)
+            await waitForCondition(() => messages.length >= 2)
         }, 10000)
 
         it('resend range', async (done) => {
@@ -245,7 +244,7 @@ describe('StreamrClient Connection', () => {
                 done()
             })
 
-            await waitForCondition(() => messages.length === 3)
+            await waitForCondition(() => messages.length >= 3)
         }, 10000)
     })
 
