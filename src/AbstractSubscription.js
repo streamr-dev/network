@@ -1,6 +1,4 @@
-import debugFactory from 'debug'
 import { Errors, Utils } from 'streamr-client-protocol'
-import uniqueId from 'lodash.uniqueid'
 
 import VerificationFailedError from './errors/VerificationFailedError'
 import Subscription from './Subscription'
@@ -10,10 +8,14 @@ const { OrderingUtil } = Utils
 
 const MAX_NB_GROUP_KEY_REQUESTS = 10
 
+function decryptErrorToDisplay(error) {
+    const ciphertext = error.streamMessage.getSerializedContent()
+    return ciphertext.length > 100 ? `${ciphertext.slice(0, 100)}...` : ciphertext
+}
+
 export default class AbstractSubscription extends Subscription {
-    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true, onUnableToDecrypt) {
-        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
-        this.debug = debugFactory(`StreamrClient::${uniqueId(this.constructor.name)}`)
+    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true, onUnableToDecrypt, debug) {
+        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, debug)
         this.callback = callback
         this.pendingResendRequestIds = {}
         this._lastMessageHandlerPromise = {}

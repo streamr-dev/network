@@ -22,9 +22,9 @@ export default class Subscription extends EventEmitter {
         const id = uniqueId('sub')
         this.id = id
         if (debug) {
-            this.debug = debug.extend(id)
+            this.debug = debug.extend(this.constructor.name).extend(id)
         } else {
-            this.debug = debugFactory(`StreamrClient::${id}`)
+            this.debug = debugFactory(`StreamrClient::${this.constructor.name}`).extend(id)
         }
 
         if (!streamId) {

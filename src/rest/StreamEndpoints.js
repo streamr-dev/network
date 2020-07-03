@@ -34,18 +34,27 @@ function getKeepAliveAgentForUrl(url) {
 // These function are mixed in to StreamrClient.prototype.
 // In the below functions, 'this' is intended to be the StreamrClient
 export async function getStream(streamId) {
+    this.debug('getStream', {
+        streamId,
+    })
     const url = `${this.options.restUrl}/streams/${streamId}`
     const json = await authFetch(url, this.session)
     return json ? new Stream(this, json) : undefined
 }
 
 export async function listStreams(query = {}) {
+    this.debug('listStreams', {
+        query,
+    })
     const url = `${this.options.restUrl}/streams?${qs.stringify(query)}`
     const json = await authFetch(url, this.session)
     return json ? json.map((stream) => new Stream(this, stream)) : []
 }
 
 export async function getStreamByName(name) {
+    this.debug('getStreamByName', {
+        name,
+    })
     const json = await this.listStreams({
         name,
         public: false,
@@ -54,6 +63,9 @@ export async function getStreamByName(name) {
 }
 
 export async function createStream(props) {
+    this.debug('getStreamByName', {
+        props,
+    })
     if (!props || !props.name) {
         throw new Error('Stream properties must contain a "name" field!')
     }
@@ -70,6 +82,9 @@ export async function createStream(props) {
 }
 
 export async function getOrCreateStream(props) {
+    this.debug('getOrCreateStream', {
+        props,
+    })
     let json
 
     // Try looking up the stream by id or name, whichever is defined
@@ -94,12 +109,19 @@ export async function getOrCreateStream(props) {
 }
 
 export async function getStreamPublishers(streamId) {
+    this.debug('getStreamPublishers', {
+        streamId,
+    })
     const url = `${this.options.restUrl}/streams/${streamId}/publishers`
     const json = await authFetch(url, this.session)
     return json.addresses.map((a) => a.toLowerCase())
 }
 
 export async function isStreamPublisher(streamId, ethAddress) {
+    this.debug('isStreamPublisher', {
+        streamId,
+        ethAddress,
+    })
     const url = `${this.options.restUrl}/streams/${streamId}/publisher/${ethAddress}`
     try {
         await authFetch(url, this.session)
@@ -113,12 +135,19 @@ export async function isStreamPublisher(streamId, ethAddress) {
 }
 
 export async function getStreamSubscribers(streamId) {
+    this.debug('getStreamSubscribers', {
+        streamId,
+    })
     const url = `${this.options.restUrl}/streams/${streamId}/subscribers`
     const json = await authFetch(url, this.session)
     return json.addresses.map((a) => a.toLowerCase())
 }
 
 export async function isStreamSubscriber(streamId, ethAddress) {
+    this.debug('isStreamSubscriber', {
+        streamId,
+        ethAddress,
+    })
     const url = `${this.options.restUrl}/streams/${streamId}/subscriber/${ethAddress}`
     try {
         await authFetch(url, this.session)
@@ -132,6 +161,9 @@ export async function isStreamSubscriber(streamId, ethAddress) {
 }
 
 export async function getStreamValidationInfo(streamId) {
+    this.debug('getStreamValidationInfo', {
+        streamId,
+    })
     const url = `${this.options.restUrl}/streams/${streamId}/validation`
     const json = await authFetch(url, this.session)
     return json
@@ -144,6 +176,9 @@ export function publishHttp(streamObjectOrId, data, requestOptions = {}, keepAli
     } else {
         streamId = streamObjectOrId
     }
+    this.debug('publishHttp', {
+        streamId, data,
+    })
 
     // Send data to the stream
     return authFetch(
