@@ -1,29 +1,26 @@
 import debugFactory from 'debug'
 import { Errors, Utils } from 'streamr-client-protocol'
+import uniqueId from 'lodash.uniqueid'
 
 import VerificationFailedError from './errors/VerificationFailedError'
 import Subscription from './Subscription'
 import UnableToDecryptError from './errors/UnableToDecryptError'
 
 const { OrderingUtil } = Utils
-const debug = debugFactory('StreamrClient::AbstractSubscription')
-
-const defaultUnableToDecrypt = (error) => {
-    const ciphertext = error.streamMessage.getSerializedContent()
-    const toDisplay = ciphertext.length > 100 ? `${ciphertext.slice(0, 100)}...` : ciphertext
-    console.warn(`Unable to decrypt: ${toDisplay}`)
-}
 
 const MAX_NB_GROUP_KEY_REQUESTS = 10
 
 export default class AbstractSubscription extends Subscription {
-    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true,
-        onUnableToDecrypt = defaultUnableToDecrypt) {
+    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true, onUnableToDecrypt) {
         super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
+        this.debug = debugFactory(`StreamrClient::${uniqueId(this.constructor.name)}`)
         this.callback = callback
-        this.onUnableToDecrypt = onUnableToDecrypt
         this.pendingResendRequestIds = {}
         this._lastMessageHandlerPromise = {}
+        if (onUnableToDecrypt) {
+            this.onUnableToDecrypt = onUnableToDecrypt
+        }
+        this.onUnableToDecrypt = this.onUnableToDecrypt.bind(this)
         this.orderingUtil = (orderMessages) ? new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
             this._inOrderHandler(orderedMessage)
         }, (from, to, publisherId, msgChainId) => {
@@ -50,6 +47,13 @@ export default class AbstractSubscription extends Subscription {
         this.encryptedMsgsQueues = {}
         this.waitingForGroupKey = {}
         this.nbGroupKeyRequests = {}
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    onUnableToDecrypt(error) {
+        const ciphertext = error.streamMessage.getSerializedContent()
+        const toDisplay = ciphertext.length > 100 ? `${ciphertext.slice(0, 100)}...` : ciphertext
+        console.warn(`Unable to decrypt: ${toDisplay}`)
     }
 
     _addMsgToQueue(encryptedMsg) {
@@ -214,7 +218,7 @@ export default class AbstractSubscription extends Subscription {
     }
 
     setState(state) {
-        debug(`Subscription: Stream ${this.streamId} state changed ${this.state} => ${state}`)
+        this.debug(`Subscription: Stream ${this.streamId} state changed ${this.state} => ${state}`)
         this.state = state
         this.emit(state)
     }
@@ -273,5 +277,5 @@ export default class AbstractSubscription extends Subscription {
     }
 }
 
-AbstractSubscription.defaultUnableToDecrypt = defaultUnableToDecrypt
+AbstractSubscription.defaultUnableToDecrypt = AbstractSubscription.prototype.defaultUnableToDecrypt
 AbstractSubscription.MAX_NB_GROUP_KEY_REQUESTS = MAX_NB_GROUP_KEY_REQUESTS

@@ -4,17 +4,7 @@ import qs from 'qs'
 import once from 'once'
 import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
-
-const {
-    SubscribeRequest,
-    UnsubscribeRequest,
-    ResendLastRequest,
-    ResendFromRequest,
-    ResendRangeRequest,
-    ControlMessage,
-} = ControlLayer
-const { StreamMessage, MessageRef } = MessageLayer
-const debug = debugFactory('StreamrClient')
+import uniqueId from 'lodash.uniqueid'
 
 import HistoricalSubscription from './HistoricalSubscription'
 import Connection from './Connection'
@@ -24,7 +14,7 @@ import SubscribedStreamPartition from './SubscribedStreamPartition'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
 import MessageCreationUtil from './MessageCreationUtil'
-import { waitFor, getVersionString } from './utils'
+import { waitFor, getVersionString, uuid } from './utils'
 import RealTimeSubscription from './RealTimeSubscription'
 import CombinedSubscription from './CombinedSubscription'
 import Subscription from './Subscription'
@@ -34,12 +24,25 @@ import KeyStorageUtil from './KeyStorageUtil'
 import ResendUtil from './ResendUtil'
 import InvalidContentTypeError from './errors/InvalidContentTypeError'
 
+const {
+    SubscribeRequest,
+    UnsubscribeRequest,
+    ResendLastRequest,
+    ResendFromRequest,
+    ResendRangeRequest,
+    ControlMessage,
+} = ControlLayer
+
+const { StreamMessage, MessageRef } = MessageLayer
+
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
         super()
-
+        this.id = uniqueId('StreamrClient')
+        this.debug = debugFactory(this.id)
         // Default options
         this.options = {
+            debug: this.debug,
             // The server to connect to
             url: 'wss://streamr.network/api/v1/ws',
             restUrl: 'https://streamr.network/api/v1',
@@ -117,7 +120,10 @@ export default class StreamrClient extends EventEmitter {
 
         this.publishQueue = []
         this.session = new Session(this, this.options.auth)
-        this.signer = Signer.createSigner(this.options.auth, this.options.publishWithSignature)
+        this.signer = Signer.createSigner({
+            ...this.options.auth,
+            debug: this.debug,
+        }, this.options.publishWithSignature)
         // Event handling on connection object
         this.connection = connection || new Connection(this.options)
 
@@ -148,7 +154,7 @@ export default class StreamrClient extends EventEmitter {
                 // sub.handleBroadcastMessage never rejects: on any error it emits an 'error' event on the Subscription
                 stream.getSubscriptions().forEach((sub) => sub.handleBroadcastMessage(msg.streamMessage, verifyFn))
             } else {
-                debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
+                this.debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
             }
         })
 
@@ -165,10 +171,10 @@ export default class StreamrClient extends EventEmitter {
                         once(() => stream.verifyStreamMessage(msg.streamMessage)), // ensure verification occurs only once
                     )
                 } else {
-                    debug('WARN: request id not found for stream: %s, sub: %s', msg.streamMessage.getStreamId(), msg.requestId)
+                    this.debug('WARN: request id not found for stream: %s, sub: %s', msg.streamMessage.getStreamId(), msg.requestId)
                 }
             } else {
-                debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
+                this.debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
             }
         })
 
@@ -179,11 +185,11 @@ export default class StreamrClient extends EventEmitter {
                 stream.getSubscriptions().filter((sub) => !sub.resending)
                     .forEach((sub) => sub.setState(Subscription.State.subscribed))
             }
-            debug('Client subscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
+            this.debug('Client subscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
         })
 
         this.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (response) => {
-            debug('Client unsubscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
+            this.debug('Client unsubscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
             const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             if (stream) {
                 stream.getSubscriptions().forEach((sub) => {
@@ -203,7 +209,7 @@ export default class StreamrClient extends EventEmitter {
             if (stream && sub && stream.getSubscription(sub.id)) {
                 stream.getSubscription(sub.id).handleResending(response)
             } else {
-                debug('resent: Subscription %s is gone already', response.requestId)
+                this.debug('resent: Subscription %s is gone already', response.requestId)
             }
         })
 
@@ -215,7 +221,7 @@ export default class StreamrClient extends EventEmitter {
             if (stream && sub && stream.getSubscription(sub.id)) {
                 stream.getSubscription(sub.id).handleNoResend(response)
             } else {
-                debug('resent: Subscription %s is gone already', response.requestId)
+                this.debug('resent: Subscription %s is gone already', response.requestId)
             }
         })
 
@@ -227,13 +233,13 @@ export default class StreamrClient extends EventEmitter {
             if (stream && sub && stream.getSubscription(sub.id)) {
                 stream.getSubscription(sub.id).handleResent(response)
             } else {
-                debug('resent: Subscription %s is gone already', response.requestId)
+                this.debug('resent: Subscription %s is gone already', response.requestId)
             }
         })
 
         // On connect/reconnect, send pending subscription requests
         this.connection.on('connected', async () => {
-            debug('Connected!')
+            this.debug('Connected!')
             this.emit('connected')
 
             await this._subscribeToInboxStream()
@@ -255,7 +261,7 @@ export default class StreamrClient extends EventEmitter {
         })
 
         this.connection.on('disconnected', () => {
-            debug('Disconnected.')
+            this.debug('Disconnected.')
             this.emit('disconnected')
 
             Object.keys(this.subscribedStreamPartitions)
@@ -280,7 +286,7 @@ export default class StreamrClient extends EventEmitter {
                 if (stream) {
                     stream.getSubscriptions().forEach((sub) => sub.handleError(err))
                 } else {
-                    debug('WARN: InvalidJsonError received for stream with no subscriptions: %s', err.streamId)
+                    this.debug('WARN: InvalidJsonError received for stream with no subscriptions: %s', err.streamId)
                 }
             } else {
                 // if it looks like an error emit as-is, otherwise wrap in new Error
@@ -301,7 +307,7 @@ export default class StreamrClient extends EventEmitter {
                         try {
                             await this.keyExchangeUtil.handleGroupKeyRequest(streamMessage)
                         } catch (error) {
-                            debug('WARN: %s', error.message)
+                            this.debug('WARN: %s', error.message)
                             const msg = streamMessage.getParsedContent()
                             const errorMessage = await this.msgCreationUtil.createErrorMessage({
                                 destinationAddress: streamId,
@@ -317,7 +323,7 @@ export default class StreamrClient extends EventEmitter {
                         this.keyExchangeUtil.handleGroupKeyResponse(streamMessage)
                     }
                 } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE) {
-                    debug('WARN: Received error of type %s from %s: %s',
+                    this.debug('WARN: Received error of type %s from %s: %s',
                         streamMessage.getParsedContent().code, streamMessage.getPublisherId(), streamMessage.getParsedContent().message)
                 } else {
                     throw new InvalidContentTypeError(`Cannot handle message with content type: ${streamMessage.contentType}`)
@@ -422,7 +428,7 @@ export default class StreamrClient extends EventEmitter {
                     try {
                         publishRequest = await this._requestPublish(streamMessage, sessionToken)
                     } catch (err) {
-                        debug(`Error: ${err}`)
+                        this.debug(`Error: ${err}`)
                         this.emit('error', err)
                         reject(err)
                         return
@@ -457,7 +463,7 @@ export default class StreamrClient extends EventEmitter {
 
         const sub = new HistoricalSubscription(options.stream, options.partition || 0, callback, options.resend,
             this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter,
-            this.options.orderMessages, options.onUnableToDecrypt)
+            this.options.orderMessages, options.onUnableToDecrypt, this.debug)
 
         // TODO remove _addSubscription after uncoupling Subscription and Resend
         sub.setState(Subscription.State.subscribed)
@@ -527,12 +533,12 @@ export default class StreamrClient extends EventEmitter {
             sub = new CombinedSubscription(
                 options.stream, options.partition || 0, callback, options.resend,
                 groupKeys, this.options.gapFillTimeout, this.options.retryResendAfter,
-                this.options.orderMessages, options.onUnableToDecrypt,
+                this.options.orderMessages, options.onUnableToDecrypt, this.debug,
             )
         } else {
             sub = new RealTimeSubscription(options.stream, options.partition || 0, callback,
                 groupKeys, this.options.gapFillTimeout, this.options.retryResendAfter,
-                this.options.orderMessages, options.onUnableToDecrypt)
+                this.options.orderMessages, options.onUnableToDecrypt, this.debug)
         }
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {
@@ -542,7 +548,7 @@ export default class StreamrClient extends EventEmitter {
             }
         })
         sub.on('done', () => {
-            debug('done event for sub %d', sub.id)
+            this.debug('done event for sub %d', sub.id)
             this.unsubscribe(sub)
         })
         sub.on('groupKeyMissing', async (messagePublisherAddress, start, end) => {
@@ -648,7 +654,7 @@ export default class StreamrClient extends EventEmitter {
             return Promise.reject(new Error('Already connecting!'))
         }
 
-        debug('Connecting to %s', this.options.url)
+        this.debug('Connecting to %s', this.options.url)
         return this.connection.connect()
     }
 
@@ -714,7 +720,7 @@ export default class StreamrClient extends EventEmitter {
     _checkAutoDisconnect() {
         // Disconnect if no longer subscribed to any streams
         if (this.options.autoDisconnect && Object.keys(this.subscribedStreamPartitions).length === 0) {
-            debug('Disconnecting due to no longer being subscribed to any streams')
+            this.debug('Disconnecting due to no longer being subscribed to any streams')
             this.disconnect()
         }
     }
@@ -768,7 +774,7 @@ export default class StreamrClient extends EventEmitter {
                 sessionToken,
                 requestId: this.resendUtil.generateRequestId(),
             })
-            debug('_requestSubscribe: subscribing client: %o', request)
+            this.debug('_requestSubscribe: subscribing client: %o', request)
             sp.setSubscribing(true)
             await this.connection.send(request).catch((err) => {
                 sub.setState(Subscription.State.unsubscribed)
@@ -776,7 +782,7 @@ export default class StreamrClient extends EventEmitter {
             })
         } else if (subscribedSubs.length > 0) {
             // If there already is a subscribed subscription for this stream, this new one will just join it immediately
-            debug('_requestSubscribe: another subscription for same stream: %s, insta-subscribing', sub.streamId)
+            this.debug('_requestSubscribe: another subscription for same stream: %s, insta-subscribing', sub.streamId)
 
             setTimeout(() => {
                 sub.setState(Subscription.State.subscribed)
@@ -785,7 +791,7 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async _requestUnsubscribe(sub) {
-        debug('Client unsubscribing stream %o partition %o', sub.streamId, sub.streamPartition)
+        this.debug('Client unsubscribing stream %o partition %o', sub.streamId, sub.streamPartition)
         const unsubscribeRequest = new UnsubscribeRequest({
             streamId: sub.streamId,
             streamPartition: sub.streamPartition,
@@ -837,7 +843,7 @@ export default class StreamrClient extends EventEmitter {
         }
 
         if (request) {
-            debug('_requestResend: %o', request)
+            this.debug('_requestResend: %o', request)
             await this.connection.send(request).catch((err) => {
                 this.handleError(`Failed to send resend request: ${err}`)
             })
@@ -858,7 +864,7 @@ export default class StreamrClient extends EventEmitter {
             requestId,
             sessionToken,
         })
-        debug('_requestPublish: %o', request)
+        this.debug('_requestPublish: %o', request)
         return this.connection.send(request)
     }
 
@@ -877,7 +883,7 @@ export default class StreamrClient extends EventEmitter {
     }
 
     handleError(msg) {
-        debug(msg)
+        this.debug(msg)
         this.emit('error', msg)
     }
 

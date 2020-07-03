@@ -6,7 +6,7 @@ import pkg from '../package.json'
 const UUID = uuidv4()
 
 export function uuid(label = '') {
-    return uniqueId(`p${UUID}${label ? `.${label}` : ''}`) // incrementing + human readable uuid
+    return uniqueId(`${UUID}${label ? `.${label}` : ''}`) // incrementing + human readable uuid
 }
 
 export function getVersionString() {
