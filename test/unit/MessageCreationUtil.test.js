@@ -506,7 +506,7 @@ describe('MessageCreationUtil', () => {
                 requestId,
             })
 
-            expect(streamMessage.getStreamId()).toBe('destinationAddress'.toLowerCase()) // sending to subscriber's inbox stream
+            expect(streamMessage.getStreamId()).toBe('destinationAddress') // sending to subscriber's inbox stream
 
             const content = streamMessage.getParsedContent()
             expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE)

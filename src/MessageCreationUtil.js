@@ -214,7 +214,7 @@ export default class MessageCreationUtil {
             streamId,
             requestId,
         }
-        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(destinationAddress.toLowerCase(), publisherId)
+        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(destinationAddress, publisherId)
         const streamMessage = new StreamMessage({
             messageId,
             prevMsgRef,
