@@ -5,6 +5,7 @@ import sinon from 'sinon'
 import { MessageLayer } from '../../../../src/index'
 import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
+import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 
 const { StreamMessage, MessageRef, MessageIDStrict } = MessageLayer
 
@@ -295,6 +296,11 @@ describe('StreamMessage', () => {
                     return true
                 })
             })
+        })
+
+        it('returns an array of registered versions', () => {
+            assert(StreamMessage.getSupportedVersions().indexOf(VERSION) >= 0)
+            assert(StreamMessage.getSupportedVersions().indexOf(999) < 0)
         })
     })
 })

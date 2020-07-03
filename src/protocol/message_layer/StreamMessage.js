@@ -171,9 +171,13 @@ export default class StreamMessage {
     static getSerializer(version) {
         const clazz = serializerByVersion[version]
         if (!clazz) {
-            throw new UnsupportedVersionError(version, `Supported versions: [${Object.keys(serializerByVersion)}]`)
+            throw new UnsupportedVersionError(version, `Supported versions: [${StreamMessage.getSupportedVersions()}]`)
         }
         return clazz
+    }
+
+    static getSupportedVersions() {
+        return Object.keys(serializerByVersion).map((key) => parseInt(key, 10))
     }
 
     serialize(version = LATEST_VERSION) {
