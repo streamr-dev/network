@@ -110,7 +110,8 @@ export default class AbstractSubscription extends Subscription {
     _requestGroupKeyAndQueueMessage(msg, start, end) {
         this.emit('groupKeyMissing', msg.getPublisherId(), start, end)
         const publisherId = msg.getPublisherId().toLowerCase()
-        this.nbGroupKeyRequests[publisherId] = 1
+        this.nbGroupKeyRequests[publisherId] = this.nbGroupKeyRequests[publisherId] + 1 || 1
+        clearInterval(this.waitingForGroupKey[publisherId])
         const timer = setInterval(() => {
             if (this.nbGroupKeyRequests[publisherId] < MAX_NB_GROUP_KEY_REQUESTS) {
                 this.nbGroupKeyRequests[publisherId] += 1
@@ -128,8 +129,7 @@ export default class AbstractSubscription extends Subscription {
         this._cancelGroupKeyRequest(publisherId.toLowerCase())
         const queue = this.encryptedMsgsQueues[publisherId.toLowerCase()]
         while (queue.length > 0) {
-            this._decryptAndHandle(queue[0])
-            queue.shift()
+            this._decryptAndHandle(queue.shift())
         }
     }
 
