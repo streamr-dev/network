@@ -169,7 +169,7 @@ export async function getStreamValidationInfo(streamId) {
     return json
 }
 
-export function publishHttp(streamObjectOrId, data, requestOptions = {}, keepAlive = true) {
+export async function publishHttp(streamObjectOrId, data, requestOptions = {}, keepAlive = true) {
     let streamId
     if (streamObjectOrId instanceof Stream) {
         streamId = streamObjectOrId.id

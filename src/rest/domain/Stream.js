@@ -28,7 +28,7 @@ export default class Stream {
         return result
     }
 
-    delete() {
+    async delete() {
         return authFetch(
             `${this._client.options.restUrl}/streams/${this.id}`,
             this._client.session,
@@ -38,14 +38,14 @@ export default class Stream {
         )
     }
 
-    getPermissions() {
+    async getPermissions() {
         return authFetch(
             `${this._client.options.restUrl}/streams/${this.id}/permissions`,
             this._client.session,
         )
     }
 
-    getMyPermissions() {
+    async getMyPermissions() {
         return authFetch(
             `${this._client.options.restUrl}/streams/${this.id}/permissions/me`,
             this._client.session,
@@ -68,7 +68,7 @@ export default class Stream {
         })
     }
 
-    grantPermission(operation, userId) {
+    async grantPermission(operation, userId) {
         const permissionObject = {
             operation,
         }
@@ -91,7 +91,7 @@ export default class Stream {
         )
     }
 
-    revokePermission(permissionId) {
+    async revokePermission(permissionId) {
         return authFetch(
             `${this._client.options.restUrl}/streams/${this.id}/permissions/${permissionId}`,
             this._client.session,
@@ -101,14 +101,14 @@ export default class Stream {
         )
     }
 
-    detectFields() {
+    async detectFields() {
         return authFetch(
             `${this._client.options.restUrl}/streams/${this.id}/detectFields`,
             this._client.session,
         )
     }
 
-    publish(...theArgs) {
+    async publish(...theArgs) {
         return this._client.publish(this.id, ...theArgs)
     }
 }
