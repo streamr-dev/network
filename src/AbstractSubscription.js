@@ -42,8 +42,9 @@ export default class AbstractSubscription extends Subscription {
             this.setResending(false)
         })
 
-        this.on('error', () => {
+        this.on('error', (error) => {
             this._clearGaps()
+            this.onError(error)
         })
 
         this.encryptedMsgsQueues = {}
@@ -51,11 +52,17 @@ export default class AbstractSubscription extends Subscription {
         this.nbGroupKeyRequests = {}
     }
 
+    /**
+     * Override to control output
+     */
+
+    onError(error) { // eslint-disable-line class-methods-use-this
+        console.error(error)
+    }
+
     // eslint-disable-next-line class-methods-use-this
     onUnableToDecrypt(error) {
-        const ciphertext = error.streamMessage.getSerializedContent()
-        const toDisplay = ciphertext.length > 100 ? `${ciphertext.slice(0, 100)}...` : ciphertext
-        console.warn(`Unable to decrypt: ${toDisplay}`)
+        this.debug(`WARN: Unable to decrypt: ${decryptErrorToDisplay(error)}`)
     }
 
     _addMsgToQueue(encryptedMsg) {
@@ -103,7 +110,7 @@ export default class AbstractSubscription extends Subscription {
                 this.emit('done')
             }
         } else {
-            console.warn('Failed to decrypt. Requested the correct decryption key(s) and going to try again.')
+            this.debug('Failed to decrypt. Requested the correct decryption key(s) and going to try again.')
         }
     }
 
@@ -117,7 +124,7 @@ export default class AbstractSubscription extends Subscription {
                 this.nbGroupKeyRequests[publisherId] += 1
                 this.emit('groupKeyMissing', msg.getPublisherId(), start, end)
             } else {
-                console.warn(`Failed to receive group key response from ${publisherId} after ${MAX_NB_GROUP_KEY_REQUESTS} requests.`)
+                this.debug(`WARN: Failed to receive group key response from ${publisherId} after ${MAX_NB_GROUP_KEY_REQUESTS} requests.`)
                 this._cancelGroupKeyRequest(publisherId)
             }
         }, this.propagationTimeout)
@@ -240,7 +247,6 @@ export default class AbstractSubscription extends Subscription {
         try {
             return await fn()
         } catch (err) {
-            console.error(err)
             this.emit('error', err)
             // Swallow rejection
             return Promise.resolve()

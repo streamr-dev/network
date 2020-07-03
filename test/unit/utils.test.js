@@ -1,8 +1,10 @@
 import sinon from 'sinon'
+import debugFactory from 'debug'
 
 import authFetch from '../../src/rest/authFetch'
 import { uuid } from '../../src/utils'
 
+const debug = debugFactory('StreamrClient::test::utils')
 const express = require('express')
 
 describe('utils', () => {
@@ -30,7 +32,7 @@ describe('utils', () => {
         expressApp.get(testUrl, (req, res) => handle(req, res))
 
         server = expressApp.listen(30000, () => {
-            console.info('Mock server started on port 30000\n') // eslint-disable-line no-console
+            debug('Mock server started on port 30000\n') // eslint-disable-line no-console
             done()
         })
     })

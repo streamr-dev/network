@@ -30,7 +30,7 @@ describe('MessageCreationUtil', () => {
                     username: 'username',
                 }),
             }
-            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
+            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(wallet.address.toLowerCase())
         })
@@ -46,7 +46,7 @@ describe('MessageCreationUtil', () => {
                     username: 'username',
                 }),
             }
-            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
+            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
@@ -62,7 +62,7 @@ describe('MessageCreationUtil', () => {
                     username: 'username',
                 }),
             }
-            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
+            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
@@ -78,7 +78,7 @@ describe('MessageCreationUtil', () => {
                     username: 'username',
                 }),
             }
-            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
+            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })

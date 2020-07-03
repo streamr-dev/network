@@ -45,17 +45,14 @@ describe('RealTimeSubscription', () => {
             })
 
             describe('on error', () => {
-                let stdError
                 let sub
 
                 beforeEach(() => {
                     sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => { throw new Error('should not be called!') })
-                    stdError = console.error
-                    console.error = sinon.stub()
+                    sub.onError = jest.fn()
                 })
 
                 afterEach(() => {
-                    console.error = stdError
                     sub.stop()
                 })
 
@@ -74,6 +71,7 @@ describe('RealTimeSubscription', () => {
                     it('emits an error event', async (done) => {
                         sub.once('error', (err) => {
                             expect(err.message).toBe('should not be called!')
+                            expect(sub.onError).toHaveBeenCalled()
                             done()
                         })
                         await sub.handleBroadcastMessage(msg, async () => true)
@@ -82,6 +80,7 @@ describe('RealTimeSubscription', () => {
                     it('prints to standard error stream', async (done) => {
                         sub.once('error', (err) => {
                             expect(err.message).toBe('should not be called!')
+                            expect(sub.onError).toHaveBeenCalled()
                             done()
                         })
                         await sub.handleBroadcastMessage(msg, async () => true)
@@ -120,7 +119,6 @@ describe('RealTimeSubscription', () => {
             })
 
             describe('on error', () => {
-                let stdError
                 let sub
 
                 beforeEach(() => {
@@ -128,20 +126,19 @@ describe('RealTimeSubscription', () => {
                         throw new Error('should not be called!')
                     })
                     sub.setResending(true)
-                    stdError = console.error
-                    console.error = sinon.stub()
                 })
 
                 afterEach(() => {
-                    console.error = stdError
                     sub.stop()
                 })
 
                 describe('when message verification throws', () => {
                     it('emits an error event', async (done) => {
                         const error = new Error('test error')
+                        sub.onError = jest.fn()
                         sub.once('error', (err) => {
                             expect(err).toBe(error)
+                            expect(sub.onError).toHaveBeenCalled()
                             done()
                         })
                         return sub.handleResentMessage(msg, 'requestId', () => { throw error })
@@ -150,16 +147,20 @@ describe('RealTimeSubscription', () => {
 
                 describe('when message handler throws', () => {
                     it('emits an error event', async (done) => {
+                        sub.onError = jest.fn()
                         sub.once('error', (err) => {
                             expect(err.message).toBe('should not be called!')
+                            expect(sub.onError).toHaveBeenCalled()
                             done()
                         })
                         await sub.handleResentMessage(msg, 'requestId', async () => true)
                     })
 
                     it('prints to standard error stream', async (done) => {
+                        sub.onError = jest.fn()
                         sub.once('error', (err) => {
                             expect(err.message).toBe('should not be called!')
+                            expect(sub.onError).toHaveBeenCalled()
                             done()
                         })
                         return sub.handleResentMessage(msg, 'requestId', async () => true)
@@ -701,6 +702,7 @@ describe('RealTimeSubscription', () => {
     })
 
     describe('handleError()', () => {
+
         it('emits an error event', (done) => {
             const err = new Error('Test error')
             const sub = new RealTimeSubscription(
@@ -708,6 +710,7 @@ describe('RealTimeSubscription', () => {
                 msg.getStreamPartition(),
                 () => { throw new Error('Msg handler should not be called!') },
             )
+            sub.onError = jest.fn()
             sub.once('error', (thrown) => {
                 expect(err === thrown).toBeTruthy()
                 done()
@@ -722,6 +725,7 @@ describe('RealTimeSubscription', () => {
                     done()
                 }
             })
+            sub.onError = jest.fn()
 
             sub.once('gap', () => { throw new Error('Should not emit gap!') })
 
@@ -741,6 +745,7 @@ describe('RealTimeSubscription', () => {
 
         it('if an InvalidJsonError AND a gap occur, does not mark it as received and emits gap at the next message', async (done) => {
             const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+            sub.onError = jest.fn()
 
             sub.once('gap', (from, to, publisherId) => {
                 expect(from.timestamp).toEqual(1) // cannot know the first missing message so there will be a duplicate received
@@ -832,21 +837,15 @@ describe('RealTimeSubscription', () => {
         })
 
         describe('on error', () => {
-            let stdError
             let sub
 
-            beforeEach(() => {
-                stdError = console.error
-                console.error = sinon.stub()
-            })
-
             afterEach(() => {
-                console.error = stdError
                 sub.stop()
             })
 
             it('cleans up the resend if event handler throws', async () => {
                 sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                sub.onError = jest.fn()
                 const error = new Error('test error, ignore')
                 sub.addPendingResendRequestId('requestId')
                 sub.once('resent', () => { throw error })
@@ -879,21 +878,15 @@ describe('RealTimeSubscription', () => {
         })
 
         describe('on error', () => {
-            let stdError
             let sub
 
-            beforeEach(() => {
-                stdError = console.error
-                console.error = sinon.stub()
-            })
-
             afterEach(() => {
-                console.error = stdError
                 sub.stop()
             })
 
             it('cleans up the resend if event handler throws', async () => {
                 sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                sub.onError = jest.fn()
                 const error = new Error('test error, ignore')
                 sub.addPendingResendRequestId('requestId')
                 sub.once('no_resend', () => { throw error })

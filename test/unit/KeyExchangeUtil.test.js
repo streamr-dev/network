@@ -8,6 +8,7 @@ import EncryptionUtil from '../../src/EncryptionUtil'
 import KeyStorageUtil from '../../src/KeyStorageUtil'
 import InvalidGroupKeyResponseError from '../../src/errors/InvalidGroupKeyResponseError'
 import InvalidGroupKeyRequestError from '../../src/errors/InvalidGroupKeyRequestError'
+import debugFactory from 'debug'
 import { uid } from '../utils'
 
 const { StreamMessage, MessageIDStrict } = MessageLayer
@@ -19,6 +20,7 @@ subscribers.forEach((p) => {
 
 async function setupClient() {
     const client = {}
+    client.debug = debugFactory('StreamrClient::test')
     client.getStreamSubscribers = sinon.stub()
     client.getStreamSubscribers.withArgs('streamId').resolves(subscribers)
     client.isStreamSubscriber = sinon.stub()

@@ -58,7 +58,7 @@ export default class Session extends EventEmitter {
                     this.options.sessionToken = tokenObj.token
                     this.updateState(Session.State.LOGGED_IN)
                     return tokenObj.token
-                }).catch((err) => {
+                }, (err) => {
                     this.updateState(Session.State.LOGGED_OUT)
                     throw err
                 })

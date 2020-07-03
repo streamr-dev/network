@@ -18,10 +18,10 @@ const { StreamMessage, MessageID, MessageRef } = MessageLayer
 const { getKeyExchangeStreamId } = KeyExchangeUtil
 
 export default class MessageCreationUtil {
-    constructor(auth, signer, userInfoPromise, getStreamFunction, keyStorageUtil) {
+    constructor(auth, signer, getUserInfo, getStreamFunction, keyStorageUtil) {
         this.auth = auth
         this._signer = signer
-        this.userInfoPromise = userInfoPromise
+        this.getUserInfo = getUserInfo
         this.getStreamFunction = getStreamFunction
         this.cachedStreams = new Receptacle({
             max: 10000,
@@ -39,7 +39,7 @@ export default class MessageCreationUtil {
     async getUsername() {
         if (!this.usernamePromise) {
             // In the edge case where StreamrClient.auth.apiKey is an anonymous key, userInfo.id is that anonymous key
-            this.usernamePromise = this.userInfoPromise.then((userInfo) => userInfo.username || userInfo.id)
+            this.usernamePromise = this.getUserInfo().then((userInfo) => userInfo.username || userInfo.id)
         }
         return this.usernamePromise
     }

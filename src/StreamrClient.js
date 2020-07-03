@@ -14,7 +14,7 @@ import SubscribedStreamPartition from './SubscribedStreamPartition'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
 import MessageCreationUtil from './MessageCreationUtil'
-import { waitFor, getVersionString, uuid } from './utils'
+import { waitFor, getVersionString } from './utils'
 import RealTimeSubscription from './RealTimeSubscription'
 import CombinedSubscription from './CombinedSubscription'
 import Subscription from './Subscription'
@@ -127,12 +127,13 @@ export default class StreamrClient extends EventEmitter {
         // Event handling on connection object
         this.connection = connection || new Connection(this.options)
 
+        this.getUserInfo = this.getUserInfo.bind(this)
+
         if (this.session.isUnauthenticated()) {
             this.msgCreationUtil = null
         } else {
             this.msgCreationUtil = new MessageCreationUtil(
-                this.options.auth, this.signer, this.getUserInfo()
-                    .catch((err) => this.emit('error', err)),
+                this.options.auth, this.signer, once(() => this.getUserInfo()),
                 (streamId) => this.getStream(streamId)
                     .catch((err) => this.emit('error', err)), this.keyStorageUtil,
             )
@@ -141,8 +142,8 @@ export default class StreamrClient extends EventEmitter {
         this.resendUtil = new ResendUtil()
         this.resendUtil.on('error', (err) => this.emit('error', err))
 
-        this.on('error', (error) => {
-            console.error(error)
+        this.on('error', (...args) => {
+            this.onError(...args)
             this.ensureDisconnected()
         })
 
@@ -294,6 +295,14 @@ export default class StreamrClient extends EventEmitter {
                 this.emit('error', errorObject)
             }
         })
+    }
+
+    /**
+     * Override to control output
+     */
+
+    onError(error) { // eslint-disable-line class-methods-use-this
+        console.error(error)
     }
 
     async _subscribeToInboxStream() {
