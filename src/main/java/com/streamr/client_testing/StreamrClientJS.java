@@ -38,8 +38,8 @@ public class StreamrClientJS extends StreamrClientWrapper {
     }
 
     @Override
-    public PublisherThread toPublisherThread(Stream stream, PublishFunction publishFunction, long interval) {
-        return new PublisherThreadJS(this, stream, publishFunction, interval);
+    public PublisherThread toPublisherThread(Stream stream, PublishFunction publishFunction, long interval, int maxMessages) {
+        return new PublisherThreadJS(this, stream, publishFunction, interval, maxMessages);
     }
 
     public EncryptionOptions getEncryptionOptions() {

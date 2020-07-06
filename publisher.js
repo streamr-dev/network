@@ -5,7 +5,8 @@ const privateKey = process.argv[2]
 const streamId = process.argv[3]
 const publishFunctionName = process.argv[4]
 const interval = parseInt(process.argv[5])
-const groupKey = process.argv[6]
+const maxMessages = parseInt(process.argv[6])
+const groupKey = process.argv[7]
 
 const options = {
     restUrl: "http://localhost/api/v1",
@@ -21,27 +22,30 @@ if (groupKey) {
 const client = new StreamrClient(options)
 
 let counter = 0
-const rotatingPublishFunction = (msgToPublish) => {
-    counter += 1
+
+const rotatingPublishFunction = async (msgToPublish) => {
     if (counter % 10 === 0) {
         const groupKey = crypto.randomBytes(32)
 
         console.log("Rotating the key. New key: " + ethers.utils.hexlify(groupKey))
-        client.publish(streamId, msgToPublish, Date.now(), null, groupKey)
-            .then(() => console.log('Published: ', JSON.stringify(msgToPublish)))
-            .catch((err) => console.error(err))
-        counter = 0
+        try {
+            await client.publish(streamId, msgToPublish, Date.now(), null, groupKey)
+            console.log('Published: ', JSON.stringify(msgToPublish))
+        } catch (err) {
+            console.error(err)
+        }
     } else {
-        client.publish(streamId, msgToPublish)
-            .then(() => console.log('Published: ', JSON.stringify(msgToPublish)))
-            .catch((err) => console.error(err))
+        await defaultPublishFunction(msgToPublish)
     }
 }
 
-const defaultPublishFunction = (msgToPublish) => {
-    client.publish(streamId, msgToPublish)
-        .then(() => console.log('Published: ', JSON.stringify(msgToPublish)))
-        .catch((err) => console.error(err))
+const defaultPublishFunction = async (msgToPublish) => {
+    try {
+        await client.publish(streamId, msgToPublish)
+        console.log('Published: ', JSON.stringify(msgToPublish))
+    } catch (err) {
+        console.error(err)
+    }
 }
 
 let publishFunction = () => { throw new Error('Undefined publish function') }
@@ -51,7 +55,8 @@ if (publishFunctionName === 'default') {
     publishFunction = rotatingPublishFunction
 }
 
-setInterval(() => {
+const publishInterval = setInterval(async () => {
+    counter++
     const msg = {
         "client-implementation": "Javascript",
         "string-key": Math.random().toString(36).substr(2, 5),
@@ -60,5 +65,15 @@ setInterval(() => {
         "array-key": [4, -5, 19]
     }
     console.log('Going to publish: ', JSON.stringify(msg))
-    publishFunction(msg)
+    await publishFunction(msg)
+
+    if (maxMessages && counter >= maxMessages) {
+        console.log(`Done: All ${maxMessages} messages published. Quitting JS publisher.`)
+        clearInterval(publishInterval)
+        // Disconnect gracefully so that this process will quit.
+        // Don't do it immediately to avoid messing up the last published message in any way.
+        setTimeout(() => {
+            client.disconnect()
+        }, 2000)
+    }
 }, interval)

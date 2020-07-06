@@ -13,8 +13,17 @@ public class PublisherThreadJS extends PublisherThread {
     private final String command;
     private Consumer<String> onPublished = null;
     private final Thread thread;
+    private Thread errorLoggingThread;
 
-    public PublisherThreadJS(StreamrClientJS publisher, Stream stream, PublishFunction publishFunction, long interval) {
+    /**
+     *
+     * @param publisher
+     * @param stream
+     * @param publishFunction
+     * @param interval I
+     * @param maxMessages Number of messages to publish. Pass 0 for infinite.
+     */
+    public PublisherThreadJS(StreamrClientJS publisher, Stream stream, PublishFunction publishFunction, long interval, int maxMessages) {
         super(interval);
         this.publisher = publisher;
         // We assume there is only 1 key since we test only 1 stream
@@ -22,8 +31,16 @@ public class PublisherThreadJS extends PublisherThread {
         if (publisher.getEncryptionOptions() != null) {
             groupKey = publisher.getEncryptionOptions().getPublisherGroupKeys().values().iterator().next().getGroupKeyHex();
         }
-        command = "node publisher.js " + publisher.getPrivateKey() + " " + stream.getId() + " "
-                + publishFunction.getName() + " " + interval + " " + groupKey;
+
+        command = String.format("node publisher.js %s %s %s %s %s %s",
+                publisher.getPrivateKey(),
+                stream.getId(),
+                publishFunction.getName(),
+                interval,
+                maxMessages,
+                groupKey
+        );
+
         thread = new Thread(this::executeNode);
     }
 
@@ -45,24 +62,29 @@ public class PublisherThreadJS extends PublisherThread {
     private void executeNode() {
         try {
             p = Runtime.getRuntime().exec(command);
-            BufferedReader stdInput = new BufferedReader(new
+            final BufferedReader stdInput = new BufferedReader(new
                     InputStreamReader(p.getInputStream()));
 
-            BufferedReader stdError = new BufferedReader(new
+            final BufferedReader stdError = new BufferedReader(new
                     InputStreamReader(p.getErrorStream()));
+
+            errorLoggingThread = new Thread(() -> {
+                try {
+                    String err;
+                    while ((err = stdError.readLine()) != null) {
+                        Main.logger.severe(getPublisherId() + " " + err);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
 
             String s;
             while (!Thread.currentThread().isInterrupted() && (s = stdInput.readLine()) != null) {
                 handleLine(s);
             }
-            // Note: it could happen that a new message is published just before stopping the process.
-            // In this case the subscribers may receive MORE messages than we counted as published.
             if (p.isAlive()) {
                 p.destroy();
-            }
-            // Log any errors if we exited without interrupting
-            while (!Thread.currentThread().isInterrupted() && (s = stdError.readLine()) != null) {
-                Main.logger.severe(getPublisherId() + " " + s);
             }
             if (stdInput != null) {
                 stdInput.close();
@@ -77,6 +99,7 @@ public class PublisherThreadJS extends PublisherThread {
     }
 
     private void handleLine(String s) {
+        // Handle the known things that publisher.js will log
         if (s.startsWith("Published: ")) {
             if (onPublished != null) {
                 onPublished.accept(s.substring(12));
@@ -84,6 +107,8 @@ public class PublisherThreadJS extends PublisherThread {
         } else if (s.startsWith("Going to publish")) {
             Main.logger.finest(getPublisherId() + " " + s);
         } else if (s.startsWith("Rotating")) {
+            Main.logger.info(getPublisherId() + " " + s);
+        } else if (s.startsWith("Done: ")) {
             Main.logger.info(getPublisherId() + " " + s);
         } else {
             Main.logger.warning(getPublisherId() + " " + s);
@@ -93,5 +118,10 @@ public class PublisherThreadJS extends PublisherThread {
     @Override
     public void stop() {
         thread.interrupt();
+    }
+
+    @Override
+    public boolean isReady() {
+        return !thread.isAlive();
     }
 }

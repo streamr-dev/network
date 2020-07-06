@@ -25,39 +25,43 @@ import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.BiConsumer;
 
 public class StreamTester {
     private static SecureRandom secureRandom = new SecureRandom();
     private static Random random = new Random();
     private static final int NETWORK_SETUP_DELAY = 5000;
+    private static final int NETWORK_PROPAGATION_DELAY = 2000;
 
     private final StreamrClient creator;
     private final Stream stream;
     private final ArrayList<PublisherThread> publishers = new ArrayList<>();
     private final ArrayList<Subscriber> subscribers = new ArrayList<>();
     private final boolean testCorrectness;
+    private final int minInterval;
+    private final int maxInterval;
+    private final int maxMessages;
     private ConcurrentHashMap<String, ArrayDeque<String>> publishersMsgStacks = new ConcurrentHashMap<>(); // publisherId --> stack of serialized msg content
     private ConcurrentHashMap<String, ConcurrentHashMap<String, ArrayDeque<String>>> subscribersMsgStacks = new ConcurrentHashMap<>(); // publisherId --> (subscriberId --> stack of serialized msg content)
     private int decryptionErrorsCount = 0;
 
-    public StreamTester(String streamName, String restApiUrl, String websocketApiUrl, boolean testCorrectness) {
+    public StreamTester(String streamName, String restApiUrl, String websocketApiUrl, int minInterval, int maxInterval, int maxMessages, boolean testCorrectness) {
         StreamrClientOptions options = new StreamrClientOptions(new EthereumAuthenticationMethod(generatePrivateKey()),
                 SigningOptions.getDefault(), EncryptionOptions.getDefault(), websocketApiUrl, restApiUrl);
         this.creator = new StreamrClient(options);
-        creator.connect();
         try {
             stream = creator.createStream(new Stream(streamName, ""));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        this.minInterval = minInterval;
+        this.maxInterval = maxInterval;
+        this.maxMessages = maxMessages;
         this.testCorrectness = testCorrectness;
     }
 
-    public void addPublishers(PublishFunction publishFunction,
-                              long minInterval, long maxInterval, StreamrClientWrapper ... publishers) {
+    public void addPublishers(PublishFunction publishFunction, StreamrClientWrapper ... publishers) {
         for (StreamrClientWrapper pub: publishers) {
-            addPublisher(pub, publishFunction, getInterval(minInterval, maxInterval));
+            addPublisher(pub, publishFunction, getInterval(minInterval, maxInterval), maxMessages);
         }
     }
 
@@ -92,29 +96,32 @@ public class StreamTester {
         try {
             // this delay is needed between the moment subscribers are subscribed and publishers start publishing
             // because the nodes stream topology needs some time before it is fully formed.
+            Main.logger.info("Giving subscribers " + NETWORK_SETUP_DELAY + " ms to subscribe before starting to publish...");
             Thread.sleep(NETWORK_SETUP_DELAY);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        } catch (InterruptedException ignored) {}
         for (PublisherThread p: publishers) {
             p.start();
         }
     }
 
     public void stop() {
+        Main.logger.info("Stopping test " + stream.getName());
         for (PublisherThread p: publishers) {
             p.stop();
         }
+        // Give subscribers some time to receive the last messages
         try {
-            // messages might still be propagated to subscribers
-            Thread.sleep(5000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            Thread.sleep(NETWORK_PROPAGATION_DELAY);
+        } catch (InterruptedException ignored) {}
+
         for (Subscriber s: subscribers) {
             s.stop();
         }
-        creator.disconnect();
+    }
+
+    public boolean arePublishersReady() {
+        long publishersNotReady = publishers.stream().filter(p -> !p.isReady()).count();
+        return publishersNotReady == 0;
     }
 
     public String getStreamId() {
@@ -162,9 +169,12 @@ public class StreamTester {
             }
             System.out.println("\nMsgs received from " + pub + " :\n");
             for (String sub: subs.keySet()) {
-                System.out.println(sub + " received " + subs.get(sub).size() + " messages out of " + totalSent + ":");
-                for (String m: subs.get(sub)) {
-                    System.out.println(m);
+                // Only log incorrect reception:
+                if (subs.get(sub).size() != totalSent) {
+                    System.out.println(sub + " received " + subs.get(sub).size() + " messages out of " + totalSent + ":");
+                    for (String m : subs.get(sub)) {
+                        System.out.println(m);
+                    }
                 }
             }
             System.out.println();
@@ -196,8 +206,8 @@ public class StreamTester {
         return subStacks.size() * pubStack.size(); // total received messages
     }
 
-    private void addPublisher(StreamrClientWrapper publisher, PublishFunction publishFunction, long interval) {
-        PublisherThread thread = publisher.toPublisherThread(stream, publishFunction, interval);
+    private void addPublisher(StreamrClientWrapper publisher, PublishFunction publishFunction, long interval, int maxMessages) {
+        PublisherThread thread = publisher.toPublisherThread(stream, publishFunction, interval, maxMessages);
         if (testCorrectness) {
             thread.setOnPublished((payloadString) -> {
                 publishersMsgStacks.get(thread.getPublisherId()).addLast(payloadString);

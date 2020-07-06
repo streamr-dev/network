@@ -12,8 +12,9 @@ public class PublisherThreadJava extends PublisherThread {
     private final Timer timer;
     private TimerTask task;
     private long counter = 0;
+    boolean ready = false;
 
-    public PublisherThreadJava(Stream stream, StreamrClient publisher, PublishFunction publishFunction, long interval) {
+    public PublisherThreadJava(Stream stream, StreamrClient publisher, PublishFunction publishFunction, long interval, final int maxMessages) {
         super(interval);
         this.publisher = publisher;
         this.publisher.connect();
@@ -23,6 +24,10 @@ public class PublisherThreadJava extends PublisherThread {
             public void run() {
                 counter++;
                 publishFunction.getF().apply(publisher, stream, counter);
+                if (counter > 0 && counter >= maxMessages) {
+                    Main.logger.info(publisher.getPublisherId() + " Done: All " + maxMessages + " messages published. Quitting Java publisher.");
+                    stop();
+                }
             }
         };
     }
@@ -44,12 +49,18 @@ public class PublisherThreadJava extends PublisherThread {
 
     @Override
     public void start() {
-        timer.schedule(task, 5000, interval);
+        timer.schedule(task, 0, interval);
     }
 
     @Override
     public void stop() {
         timer.cancel();
         publisher.disconnect();
+        ready = true;
+    }
+
+    @Override
+    public boolean isReady() {
+        return ready;
     }
 }

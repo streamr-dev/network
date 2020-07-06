@@ -26,7 +26,7 @@ public class StreamrClientJava extends StreamrClientWrapper {
     }
 
     @Override
-    public PublisherThread toPublisherThread(Stream stream, PublishFunction publishFunction, long interval) {
-        return new PublisherThreadJava(stream, streamrClient, publishFunction, interval);
+    public PublisherThread toPublisherThread(Stream stream, PublishFunction publishFunction, long interval, int maxMessages) {
+        return new PublisherThreadJava(stream, streamrClient, publishFunction, interval, maxMessages);
     }
 }

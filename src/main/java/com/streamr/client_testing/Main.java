@@ -47,9 +47,11 @@ public class Main {
         stream.setRequired(true);
         options.addOption(stream);
 
-        Option mode = new Option("m", "mode", true, "'test' or 'run'");
-        mode.setRequired(true);
+        Option mode = new Option("i", "infinite", false, "Run the test indefinitely");
         options.addOption(mode);
+
+        Option maxMessagesOption = new Option("n", "number-of-messages", true, "Number of messages to publish in 'test' mode. Default: 30");
+        options.addOption(maxMessagesOption);
 
         Option restApiUrl = new Option("r", "restUrl", true, "REST API url to connect to.");
         options.addOption(restApiUrl);
@@ -68,7 +70,7 @@ public class Main {
             System.exit(1);
         }
 
-        String configFile = cmd.getOptionValue("config") != null ? cmd.getOptionValue("config") : "config/default.conf";
+        String configFile = cmd.getOptionValue("config", "config/default.conf");
         System.out.println("Reading config from " + configFile);
 
         Properties prop = new Properties();
@@ -90,27 +92,29 @@ public class Main {
         logger.setLevel(logLevel);
 
         // Command-line options override config file
-        String restUrl = cmd.getOptionValue("restUrl") != null ? cmd.getOptionValue("restUrl") : prop.getProperty("restUrl");
-        String wsUrl = cmd.getOptionValue("wsUrl") != null ? cmd.getOptionValue("wsUrl") : prop.getProperty("wsUrl");
+        String restUrl = cmd.getOptionValue("restUrl", prop.getProperty("restUrl"));
+        String wsUrl = cmd.getOptionValue("wsUrl", prop.getProperty("wsUrl"));
 
-        boolean testCorrectness = false;
-        if (cmd.getOptionValue("mode").equals("test")) {
-            testCorrectness = true;
-        } else if (cmd.getOptionValue("mode").equals("run")) {
+        int minInterval = 800;
+        int maxInterval = 2000;
+        int maxMessages = Integer.parseInt(cmd.getOptionValue("number-of-messages", "30"));
+        boolean testCorrectness = true;
+
+        if (cmd.hasOption("infinite")) {
+            maxMessages = 0;
             testCorrectness = false;
-        } else {
-            logger.severe("option 'mode' must be either 'test' or 'run'");
-            System.exit(1);
         }
+
         Participants participants = new Participants(
                 Integer.parseInt(prop.getProperty("nbJavaPublishers")),
                 Integer.parseInt(prop.getProperty("nbJavaSubscribers")),
                 Integer.parseInt(prop.getProperty("nbJavascriptPublishers")),
                 Integer.parseInt(prop.getProperty("nbJavascriptSubscribers"))
         );
+
         try {
-        streams = new Streams(participants, restUrl, wsUrl, testCorrectness);
-        streams.start(cmd.getOptionValue("stream"));
+            streams = new Streams(participants, restUrl, wsUrl, minInterval, maxInterval, maxMessages, testCorrectness);
+            streams.runTestBlocking(cmd.getOptionValue("stream"));
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.getMessage(), e);
             System.exit(1);

@@ -29,24 +29,29 @@ npm ci && gradle fatjar
 
 ## Usage
 
-The script `streamr-client-testing.sh` takes 2 required command-line arguments:
+The script `streamr-client-testing.sh` takes one required command-line argument:
 - `-s`, `--stream`: The stream setup to run. Value should be one of the following (the names should be self-explanatory. See the code for more specifics and `application.conf` for the number of publishers/subscribers):
     - `"stream-cleartext-unsigned"`
     - `"stream-cleartext-signed"`
     - `"stream-encrypted-shared-signed"`
     - `"stream-encrypted-shared-rotating-signed"`
     - `"stream-encrypted-exchanged-rotating-signed"`
-
-- `-m`, `--mode`: determines how to run the stream setup. Value should be either `'run'` or `'test'`. In `'run'` mode, the stream setup is started and not stopped unless the process is killed (appropriate to continuously test staging). In `'test'` mode, the stream setup is run for 30 seconds, after which it is stopped and a check is performed to assert that all subscribers have received all messages from all publishers in the correct order and that no exception was thrown in the process (appropriate to be part of the CI/CD pipeline).
-Some additional arguments are specified and can be changed in `application.conf`. The script `streamr-client-testing.sh` optionally accepts to override 2 of these arguments:
+    
+The other command line arguments are optional:
+    
+- `-c`, `--config`: Test config file. Defaults to `config/default.conf`
+- `-n`, `--number-of-messages`: Number of messages that each publisher publishes in the test. Default 30.
+- `-i`, `--infinite`: Infinitely runs the message production instead of the value given by `-n`
 - `-r`, `--resturl`: REST API url to connect to. Example value in the case of local testing: `"http://localhost/api/v1"`
 - `-w`, `--wsurl`: WebSockets API url to connect to. Example value in the case of local testing: `"ws://localhost/api/v1/ws"`
 
-If the number of **subscribers** for each library as specified in `application.conf` is greater than or equal to 3, then 2 of these subscribers will subscribe only after some delay and using a different resend option. For example, if `nbJavaSubscribers=2`, the 2 subscribers will subscribe immediately in real-time. But if `nbJavaSubscribers=5`, 3 of them will subscribe immediately, but 1 will subscribe later with a "resend last option" and 1 other with a "resend from" option.
+The logging level, client connection URLs, number of publishers and subscribers on each platform are set in a `.conf` file. The default is `config/default.conf`, and another file can be specifiec with the `--config` option.
 
-The following example will test locally for 30 seconds that 2 Java subscribers and 4 Javascript subscribers (2 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
+If the number of **subscribers** for each library as specified in the config file is greater than or equal to 3, then 2 of these subscribers will subscribe only after some delay and using a different resend option. For example, if `nbJavaSubscribers=2`, the 2 subscribers will subscribe immediately in real-time. But if `nbJavaSubscribers=5`, 3 of them will subscribe immediately, but 1 will subscribe later with a "resend last option" and 1 other with a "resend from" option.
+
+The following example will test locally that 2 Java subscribers and 4 Javascript subscribers (2 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
 ```
->> cat application.conf
+>> cat config/my-custom-config.conf
 logLevel=INFO
 
 restUrl=http://localhost/api/v1
@@ -57,7 +62,7 @@ nbJavaSubscribers=2
 nbJavascriptPublishers=0
 nbJavascriptSubscribers=4
 
->> sh streamr-client-testing.sh -s stream-encrypted-shared-rotating-signed -m test
+>> sh streamr-client-testing.sh -s stream-encrypted-shared-rotating-signed -c config/my-custom-config.conf
 ```
 
 The log levels follow [this convention](https://docs.oracle.com/javase/7/docs/api/java/util/logging/Level.html). Level `INFO` will output messages specific to this tool (setup and results) + every message received by every subscriber. Level `FINE` will in addition output every message published by every publisher.
