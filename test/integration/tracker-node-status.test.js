@@ -10,6 +10,7 @@ describe('check status message flow between tracker and two nodes', () => {
     let nodeOne
     let nodeTwo
     const streamId = 'stream-1'
+    const streamId2 = 'stream-2'
 
     beforeAll(async () => {
         tracker = await startTracker(LOCALHOST, 30750, 'tracker')
@@ -65,5 +66,29 @@ describe('check status message flow between tracker and two nodes', () => {
 
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
+    })
+
+    it('tracker should receive rtt values from nodes', async (done) => {
+        let receivedTotal = 0
+
+        nodeOne.subscribe(streamId, 0)
+        nodeTwo.subscribe(streamId, 0)
+        tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage }) => {
+            if (statusMessage.getSource() === nodeOne.opts.id) {
+                // eslint-disable-next-line no-underscore-dangle
+                expect(statusMessage.getStatus().rtts[nodeTwo.opts.id]).toBeGreaterThanOrEqual(0)
+            }
+
+            if (statusMessage.getSource() === nodeTwo.opts.id) {
+                // eslint-disable-next-line no-underscore-dangle
+                expect(statusMessage.getStatus().rtts[nodeOne.opts.id]).toBeGreaterThanOrEqual(0)
+            }
+            receivedTotal += 1
+            if (receivedTotal === 2) {
+                done()
+            }
+        })
+        nodeOne.subscribe(streamId2, 0)
+        nodeTwo.subscribe(streamId2, 0)
     })
 })

@@ -347,7 +347,8 @@ class Node extends EventEmitter {
     _getStatus(tracker) {
         return {
             streams: this.streams.getStreamsWithConnections(tracker, this.trackersRing),
-            started: this.started
+            started: this.started,
+            rtts: this.protocols.nodeToNode.getRtts()
         }
     }
 

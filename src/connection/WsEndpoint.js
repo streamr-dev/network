@@ -396,6 +396,19 @@ class WsEndpoint extends EventEmitter {
         return this.connections.has(address)
     }
 
+    getRtts() {
+        const connections = [...this.connections.keys()]
+        const rtts = {}
+        connections.forEach((address) => {
+            const { rtt } = this.connections.get(address)
+            const nodeId = this.peerBook.getPeerId(address)
+            if (rtt !== undefined && rtt !== null) {
+                rtts[nodeId] = rtt
+            }
+        })
+        return rtts
+    }
+
     getAddress() {
         if (this.advertisedWsUrl) {
             return this.advertisedWsUrl

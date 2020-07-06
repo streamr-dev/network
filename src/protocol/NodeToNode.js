@@ -100,6 +100,10 @@ class NodeToNode extends EventEmitter {
             this.emit(eventPerType[message.controlLayerPayload.type], message.controlLayerPayload, message.getSource())
         }
     }
+
+    getRtts() {
+        return this.endpoint.getRtts()
+    }
 }
 
 NodeToNode.events = events
