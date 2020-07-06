@@ -61,9 +61,13 @@ function startBroker(id, networkPort, trackerPort, httpPort, wsPort, mqttPort, e
     })
 }
 
+function getWsUrl(port, ssl = false, controlLayerVersion = 1, messageLayerVersion = 31) {
+    return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`
+}
+
 function createClient(wsPort, clientOptions = DEFAULT_CLIENT_OPTIONS) {
     return new StreamrClient({
-        url: `ws://localhost:${wsPort}/api/v1/ws`,
+        url: getWsUrl(wsPort),
         restUrl: 'http://localhost:8081/streamr-core/api/v1',
         ...clientOptions,
     })
@@ -81,5 +85,6 @@ function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1
 module.exports = {
     startBroker,
     createClient,
-    createMqttClient
+    createMqttClient,
+    getWsUrl,
 }

@@ -2,7 +2,8 @@ const { EventEmitter } = require('events')
 
 const { v4: uuidv4 } = require('uuid')
 const debug = require('debug')('streamr:WebsocketServer')
-const { ControlLayer, Utils } = require('streamr-network').Protocol
+const qs = require('qs')
+const { ControlLayer, MessageLayer, Errors, Utils } = require('streamr-network').Protocol
 const ab2str = require('arraybuffer-to-string')
 const uWS = require('uWebSockets.js')
 
@@ -98,18 +99,43 @@ module.exports = class WebsocketServer extends EventEmitter {
             maxPayloadLength: 1024 * 1024,
             idleTimeout: 3600, // 1 hour
             upgrade: (res, req, context) => {
+                let controlLayerVersion
+                let messageLayerVersion
+
+                // parse protocol version instructions from query parameters
+                if (req.getQuery()) {
+                    const query = qs.parse(req.getQuery())
+                    if (query.controlLayerVersion && query.messageLayerVersion) {
+                        controlLayerVersion = parseInt(query.controlLayerVersion)
+                        messageLayerVersion = parseInt(query.messageLayerVersion)
+                    }
+                }
+
+                try {
+                    WebsocketServer.validateProtocolVersions(controlLayerVersion, messageLayerVersion)
+                } catch (err) {
+                    debug('Rejecting connection with status 400 due to: %s, query params: %s', err.message, req.getQuery())
+                    res.writeStatus('400')
+                    res.write(err.message)
+                    res.end()
+                    return
+                }
+
                 /* This immediately calls open handler, you must not use res after this call */
-                res.upgrade({
-                    query: req.getQuery()
-                },
-                /* Spell these correctly */
-                req.getHeader('sec-websocket-key'),
-                req.getHeader('sec-websocket-protocol'),
-                req.getHeader('sec-websocket-extensions'),
-                context)
+                res.upgrade(
+                    {
+                        controlLayerVersion,
+                        messageLayerVersion,
+                    },
+                    /* Spell these correctly */
+                    req.getHeader('sec-websocket-key'),
+                    req.getHeader('sec-websocket-protocol'),
+                    req.getHeader('sec-websocket-extensions'),
+                    context
+                )
             },
             open: (ws) => {
-                const connection = new Connection(ws, ws.query)
+                const connection = new Connection(ws, ws.controlLayerVersion, ws.messageLayerVersion)
                 this.connections.set(connection.id, connection)
                 this.volumeLogger.connectionCountWS = this.connections.size
                 debug('onNewClientConnection: socket "%s" connected', connection.id)
@@ -188,8 +214,6 @@ module.exports = class WebsocketServer extends EventEmitter {
                 if (connection) {
                     debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
                     this._removeConnection(connection)
-                } else {
-                    console.warn('failed to close websocket, because connection with id %s not found', ws.connectionId)
                 }
             },
             pong: (ws) => {
@@ -201,6 +225,25 @@ module.exports = class WebsocketServer extends EventEmitter {
                 }
             }
         })
+    }
+
+    static validateProtocolVersions(controlLayerVersion, messageLayerVersion) {
+        if (controlLayerVersion === undefined || messageLayerVersion === undefined) {
+            throw new Error('Missing version negotiation! Must give controlLayerVersion and messageLayerVersion as query parameters!')
+        }
+
+        // Validate that the requested versions are supported
+        if (ControlLayer.ControlMessage.getSupportedVersions().indexOf(controlLayerVersion) < 0) {
+            throw new Errors.UnsupportedVersionError(controlLayerVersion, `Supported ControlLayer versions: ${
+                JSON.stringify(ControlLayer.ControlMessage.getSupportedVersions())
+            }. Are you using an outdated library?`)
+        }
+
+        if (MessageLayer.StreamMessage.getSupportedVersions().indexOf(messageLayerVersion) < 0) {
+            throw new Errors.UnsupportedVersionError(messageLayerVersion, `Supported MessageLayer versions: ${
+                JSON.stringify(MessageLayer.StreamMessage.getSupportedVersions())
+            }. Are you using an outdated library?`)
+        }
     }
 
     _removeConnection(connection) {

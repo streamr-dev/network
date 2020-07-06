@@ -2,9 +2,10 @@ const url = require('url')
 
 const WebSocket = require('ws')
 const fetch = require('node-fetch')
-const { startTracker } = require('streamr-network')
+const { startTracker, Protocol } = require('streamr-network')
 const { StreamMessage, MessageIDStrict } = require('streamr-network').Protocol.MessageLayer
-const { ControlLayer } = require('streamr-client-protocol')
+
+const { ControlLayer } = Protocol
 
 const { startBroker, createClient } = require('../utils')
 

@@ -1,7 +1,6 @@
 const { EventEmitter } = require('events')
 
 const debug = require('debug')('streamr:Connection')
-const qs = require('qs')
 
 let nextId = 1
 
@@ -12,26 +11,15 @@ function generateId() {
 }
 
 module.exports = class Connection extends EventEmitter {
-    constructor(socket, query) {
+    constructor(socket, controlLayerVersion, messageLayerVersion) {
         super()
         this.id = generateId()
         this.socket = socket
         this.streams = []
         this.ongoingResends = new Set()
         this.dead = false
-
-        // default versions for old clients
-        this.controlLayerVersion = 0
-        this.messageLayerVersion = 28
-
-        // attempt to parse versions from request parameters
-        if (query) {
-            const { controlLayerVersion, messageLayerVersion } = qs.parse(query)
-            if (controlLayerVersion && messageLayerVersion) {
-                this.controlLayerVersion = parseInt(controlLayerVersion)
-                this.messageLayerVersion = parseInt(messageLayerVersion)
-            }
-        }
+        this.controlLayerVersion = controlLayerVersion
+        this.messageLayerVersion = messageLayerVersion
     }
 
     addStream(stream) {

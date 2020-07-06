@@ -1,41 +1,23 @@
 const Connection = require('../../../src/websocket/Connection.js')
 const Stream = require('../../../src/Stream.js')
 
+let controlLayerVersion
+let messageLayerVersion
+
 describe('Connection', () => {
+    let connection
+
+    beforeEach(() => {
+        controlLayerVersion = 2
+        messageLayerVersion = 31
+        connection = new Connection(undefined, controlLayerVersion, messageLayerVersion)
+    })
+
     it('id is assigned', () => {
-        const connection = new Connection(undefined, {
-            getQuery: () => 'controlLayerVersion=1&messageLayerVersion=30',
-        }, undefined)
         expect(connection.id).toEqual('socketId-1')
     })
 
-    describe('version parsing', () => {
-        it('parses versions when present in url', () => {
-            const query = 'controlLayerVersion=1&messageLayerVersion=30'
-            const connection = new Connection(undefined, query)
-            expect(connection.controlLayerVersion).toEqual(1)
-            expect(connection.messageLayerVersion).toEqual(30)
-        })
-
-        it('uses defaults when versions not present in request url', () => {
-            const request = {
-                getQuery: () => 'url',
-            }
-            const connection = new Connection(undefined, request)
-            expect(connection.controlLayerVersion).toEqual(0)
-            expect(connection.messageLayerVersion).toEqual(28)
-        })
-    })
-
     describe('stream management', () => {
-        let connection
-
-        beforeEach(() => {
-            connection = new Connection(undefined, {
-                getQuery: () => 'url',
-            })
-        })
-
         describe('addStream', () => {
             it('adds stream to the connection', () => {
                 const stream0 = new Stream('stream', 0)
@@ -98,15 +80,12 @@ describe('Connection', () => {
 
     describe('send()', () => {
         let sendFn
-        let connection
 
         beforeEach(() => {
             sendFn = jest.fn()
             connection = new Connection({
                 send: sendFn,
-            }, {
-                getQuery: () => 'url',
-            })
+            }, controlLayerVersion, messageLayerVersion)
         })
 
         it('sends a serialized message to the socket', () => {
@@ -116,19 +95,11 @@ describe('Connection', () => {
             connection.send(msg)
 
             expect(sendFn).toHaveBeenCalledTimes(1)
-            expect(sendFn).toHaveBeenCalledWith('msg:0:28')
+            expect(sendFn).toHaveBeenCalledWith(msg.serialize(controlLayerVersion, messageLayerVersion))
         })
     })
 
     describe('ongoing resends', () => {
-        let connection
-
-        beforeEach(() => {
-            connection = new Connection(undefined, {
-                getQuery: () => 'url',
-            })
-        })
-
         describe('addOngoingResend', () => {
             it('adds resend to the connection', () => {
                 connection.addOngoingResend('resend-1')
