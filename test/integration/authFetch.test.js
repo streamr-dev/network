@@ -14,6 +14,10 @@ describe('authFetch', () => {
         await client.ensureDisconnected()
     })
 
+    afterAll(() => {
+        jest.restoreAllMocks()
+    })
+
     it('sends Streamr-Client header', async () => {
         client = new StreamrClient({
             auth: {
@@ -24,6 +28,8 @@ describe('authFetch', () => {
             ...config.clientOptions,
         })
         await client.connect()
+        expect(fetch).not.toHaveBeenCalled() // will get called in background though (questionable behaviour)
+        await client.session.getSessionToken() // this ensures authentication completed
         expect(fetch).toHaveBeenCalled()
         fetch.mock.calls.forEach(([url, opts]) => {
             expect(typeof url).toEqual('string')
