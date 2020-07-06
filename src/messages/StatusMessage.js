@@ -13,18 +13,4 @@ module.exports = class StatusMessage extends NetworkMessage {
     getStatus() {
         return this.status
     }
-
-    setStatus(status) {
-        this.status = status
-        return this
-    }
-
-    toJSON() {
-        return {
-            version: this.getVersion(),
-            code: this.getCode(),
-            source: this.getSource(),
-            status: this.getStatus()
-        }
-    }
 }

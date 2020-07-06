@@ -210,7 +210,7 @@ class Node extends EventEmitter {
         }
 
         if (nodeAddresses.length !== nodeIds.length) {
-            this.debug('error: failed to fulfill tracker instructions')
+            this.debug('error: failed to fulfill all tracker instructions')
         }
 
         const currentNodes = this.streams.isSetUp(streamId) ? this.streams.getAllNodesForStream(streamId) : []
@@ -223,6 +223,9 @@ class Node extends EventEmitter {
                 }
             })
         })
+
+        const counter = instructionMessage.getCounter()
+        this.streams.updateCounter(streamId, counter)
     }
 
     onDataReceived(streamMessage, source = null) {

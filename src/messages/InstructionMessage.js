@@ -2,7 +2,7 @@ const { msgTypes } = require('./messageTypes')
 const NetworkMessage = require('./NetworkMessage')
 
 module.exports = class InstructionMessage extends NetworkMessage {
-    constructor(streamId, nodeAddresses = [], source = null) {
+    constructor(streamId, nodeAddresses = [], counter = 0, source = null) {
         super(msgTypes.INSTRUCTION, source)
         if (typeof streamId === 'undefined') {
             throw new Error('streamId cant be undefined')
@@ -10,6 +10,7 @@ module.exports = class InstructionMessage extends NetworkMessage {
 
         this.streamId = streamId
         this.nodeAddresses = nodeAddresses
+        this.counter = counter
     }
 
     getStreamId() {
@@ -18,5 +19,9 @@ module.exports = class InstructionMessage extends NetworkMessage {
 
     getNodeAddresses() {
         return this.nodeAddresses
+    }
+
+    getCounter() {
+        return this.counter
     }
 }

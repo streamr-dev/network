@@ -108,7 +108,7 @@ describe('delivery of messages in protocol layer', () => {
     })
 
     test('sendInstruction is delivered', async () => {
-        trackerServer.sendInstruction('trackerNode', new StreamIdAndPartition('stream', 10), ['trackerNode'])
+        trackerServer.sendInstruction('trackerNode', new StreamIdAndPartition('stream', 10), ['trackerNode'], 15)
         const [trackerId, msg] = await waitForEvent(trackerNode, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
 
         expect(trackerId).toEqual('trackerServer')
@@ -116,6 +116,7 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.getSource()).toEqual('trackerServer')
         expect(msg.getStreamId()).toEqual(new StreamIdAndPartition('stream', 10))
         expect(msg.getNodeAddresses()).toEqual(['ws://127.0.0.1:28513'])
+        expect(msg.getCounter()).toEqual(15)
     })
 
     test('resendLastRequest is delivered', async () => {

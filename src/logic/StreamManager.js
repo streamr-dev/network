@@ -19,7 +19,8 @@ module.exports = class StreamManager {
         this.streams.set(streamId.key(), {
             detectors: new Map(), // "publisherId-msgChainId" => DuplicateMessageDetector
             inboundNodes: new Set(), // Nodes that I am subscribed to for messages
-            outboundNodes: new Set() // Nodes (and clients) that subscribe to me for messages
+            outboundNodes: new Set(), // Nodes (and clients) that subscribe to me for messages
+            counter: 0
         })
     }
 
@@ -39,6 +40,10 @@ module.exports = class StreamManager {
                 : new NumberPair(previousMessageReference.timestamp, previousMessageReference.sequenceNumber),
             new NumberPair(messageId.timestamp, messageId.sequenceNumber)
         )
+    }
+
+    updateCounter(streamId, counter) {
+        this.streams.get(streamId.key()).counter = counter
     }
 
     addInboundNode(streamId, node) {
@@ -90,7 +95,7 @@ module.exports = class StreamManager {
 
     getStreamsWithConnections(tracker, trackersRing) {
         const result = {}
-        this.streams.forEach(({ inboundNodes, outboundNodes }, streamKey) => {
+        this.streams.forEach(({ inboundNodes, outboundNodes, counter }, streamKey) => {
             let addToStatus = true
 
             if (tracker && trackersRing) {
@@ -101,7 +106,8 @@ module.exports = class StreamManager {
             if (addToStatus) {
                 result[streamKey] = {
                     inboundNodes: [...inboundNodes],
-                    outboundNodes: [...outboundNodes]
+                    outboundNodes: [...outboundNodes],
+                    counter
                 }
             }
         })

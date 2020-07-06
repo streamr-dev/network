@@ -9,8 +9,8 @@ const WrapperMessage = require('../../src/messages/WrapperMessage')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 
 describe('encoder', () => {
-    it('check streamMessage encoding/decoding', () => {
-        const json = encoder.instructionMessage(new StreamIdAndPartition('stream-id', 0), ['node-1', 'node-2'])
+    it('check encoding INSTRUCTION', () => {
+        const json = encoder.instructionMessage(new StreamIdAndPartition('stream-id', 0), ['ws://node-1', 'ws://node-2'], 15)
         expect(JSON.parse(json)).toEqual({
             code: encoder.INSTRUCTION,
             version,
@@ -18,19 +18,37 @@ describe('encoder', () => {
                 streamId: 'stream-id',
                 streamPartition: 0,
                 nodeAddresses: [
-                    'node-1',
-                    'node-2'
-                ]
+                    'ws://node-1',
+                    'ws://node-2'
+                ],
+                counter: 15
             }
         })
+    })
 
-        const source = '127.0.0.1'
-        const streamMessage = encoder.decode(source, json)
+    it('check decoding INSTRUCTION', () => {
+        const instructionMessage = encoder.decode('127.0.0.1', JSON.stringify({
+            code: encoder.INSTRUCTION,
+            version,
+            payload: {
+                streamId: 'stream-id',
+                streamPartition: 0,
+                nodeAddresses: [
+                    'ws://node-1',
+                    'ws://node-2'
+                ],
+                counter: 15
+            }
+        }))
 
-        expect(streamMessage).toBeInstanceOf(InstructionMessage)
-        expect(streamMessage.getSource()).toEqual('127.0.0.1')
-        expect(streamMessage.getStreamId()).toEqual(new StreamIdAndPartition('stream-id', 0))
-        expect(streamMessage.getNodeAddresses()).toEqual(['node-1', 'node-2'])
+        expect(instructionMessage).toBeInstanceOf(InstructionMessage)
+        expect(instructionMessage.getVersion()).toEqual(version)
+        expect(instructionMessage.getCode()).toEqual(encoder.INSTRUCTION)
+        expect(instructionMessage.getSource()).toEqual('127.0.0.1')
+
+        expect(instructionMessage.getStreamId()).toEqual(new StreamIdAndPartition('stream-id', 0))
+        expect(instructionMessage.getNodeAddresses()).toEqual(['ws://node-1', 'ws://node-2'])
+        expect(instructionMessage.getCounter()).toEqual(15)
     })
 
     it('check encoding WRAPPER', () => {

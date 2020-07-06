@@ -19,9 +19,9 @@ class TrackerServer extends EventEmitter {
         this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
     }
 
-    sendInstruction(receiverNodeId, streamId, listOfNodeIds) {
+    sendInstruction(receiverNodeId, streamId, listOfNodeIds, counter) {
         const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.endpoint.resolveAddress(nodeId))
-        this.endpoint.sendSync(receiverNodeId, encoder.instructionMessage(streamId, listOfNodeAddresses))
+        this.endpoint.sendSync(receiverNodeId, encoder.instructionMessage(streamId, listOfNodeAddresses, counter))
     }
 
     sendStorageNodes(receiverNodeId, streamId, listOfNodeIds) {
