@@ -240,22 +240,31 @@ export default class StreamrClient extends EventEmitter {
 
         // On connect/reconnect, send pending subscription requests
         this.connection.on('connected', async () => {
+            await new Promise((resolve) => setTimeout(resolve, 0)) // wait a tick
+            if (!this.isConnected()) { return }
             this.debug('Connected!')
             this.emit('connected')
-            await this._subscribeToInboxStream()
-            // Check pending subscriptions
-            Object.keys(this.subscribedStreamPartitions).forEach((key) => {
-                this.subscribedStreamPartitions[key].getSubscriptions().forEach((sub) => {
-                    if (sub.getState() !== Subscription.State.subscribed) {
-                        this._resendAndSubscribe(sub)
-                    }
+            try {
+                await this._subscribeToInboxStream()
+                if (!this.isConnected()) { return }
+                // Check pending subscriptions
+                Object.keys(this.subscribedStreamPartitions).forEach((key) => {
+                    this.subscribedStreamPartitions[key].getSubscriptions().forEach((sub) => {
+                        if (sub.getState() !== Subscription.State.subscribed) {
+                            this._resendAndSubscribe(sub).catch((err) => {
+                                this.emit('error', err)
+                            })
+                        }
+                    })
                 })
-            })
 
-            // Check pending publish requests
-            const publishQueueCopy = this.publishQueue.slice(0)
-            this.publishQueue = []
-            publishQueueCopy.forEach((publishFn) => publishFn())
+                // Check pending publish requests
+                const publishQueueCopy = this.publishQueue.slice(0)
+                this.publishQueue = []
+                publishQueueCopy.forEach((publishFn) => publishFn())
+            } catch (err) {
+                this.emit('error', err)
+            }
         })
 
         this.connection.on('disconnected', () => {
@@ -306,6 +315,7 @@ export default class StreamrClient extends EventEmitter {
         if (!this.options.auth.privateKey && !this.options.auth.provider) {
             return
         }
+        await this.session.getSessionToken() // trigger auth errors if any
         // subscribing to own inbox stream
         const publisherId = await this.getPublisherId()
         const streamId = KeyExchangeUtil.getKeyExchangeStreamId(publisherId)
@@ -578,7 +588,7 @@ export default class StreamrClient extends EventEmitter {
         if (this.isConnected()) {
             this._resendAndSubscribe(sub)
         } else if (this.options.autoConnect) {
-            this.ensureConnected().catch((err) => this.emit('error', err))
+            this.ensureConnected()
         }
 
         return sub
@@ -652,16 +662,21 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async connect() {
-        if (this.isConnected()) {
-            throw new Error('Already connected!')
-        }
+        try {
+            if (this.isConnected()) {
+                throw new Error('Already connected!')
+            }
 
-        if (this.connection.state === Connection.State.CONNECTING) {
-            throw new Error('Already connecting!')
-        }
+            if (this.connection.state === Connection.State.CONNECTING) {
+                throw new Error('Already connecting!')
+            }
 
-        this.debug('Connecting to %s', this.options.url)
-        return this.connection.connect()
+            this.debug('Connecting to %s', this.options.url)
+            await this.connection.connect()
+        } catch (err) {
+            this.emit('error', err)
+            throw err
+        }
     }
 
     pause() {
@@ -695,7 +710,7 @@ export default class StreamrClient extends EventEmitter {
         if (this.isConnected()) { return Promise.resolve() }
 
         if (!this.isConnecting()) {
-            this.connect().catch((err) => this.emit('error', err))
+            await this.connect()
         }
         return waitFor(this, 'connected')
     }
@@ -751,7 +766,7 @@ export default class StreamrClient extends EventEmitter {
             sub.once('unsubscribed', handler)
             sub.once('error', handler)
         })
-        this._requestSubscribe(sub)
+        await this._requestSubscribe(sub)
     }
 
     async _requestSubscribe(sub) {

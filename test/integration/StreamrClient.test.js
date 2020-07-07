@@ -3,12 +3,11 @@ import crypto from 'crypto'
 
 import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { wait, waitForEvent } from 'streamr-test-utils'
 import { ethers } from 'ethers'
 
 import { uid } from '../utils'
 import StreamrClient from '../../src'
-import KeyExchangeUtil from '../../src/KeyExchangeUtil'
 
 import config from './config'
 
@@ -16,7 +15,6 @@ const { StreamMessage } = MessageLayer
 const WebSocket = require('ws')
 
 const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest } = ControlLayer
-const { getKeyExchangeStreamId } = KeyExchangeUtil
 
 const createClient = (opts = {}) => new StreamrClient({
     auth: {
@@ -30,92 +28,104 @@ const createClient = (opts = {}) => new StreamrClient({
 
 describe('StreamrClient Connection', () => {
     describe('bad config.url', () => {
-        it('emits error without autoconnect', async (done) => {
+        it('emits error without autoconnect', async () => {
             const client = createClient({
                 url: 'asdasd',
                 autoConnect: false,
                 autoDisconnect: false,
             })
-            client.once('error', async (error) => {
-                expect(error).toBeTruthy()
-                done()
-            })
-            await client.connect().catch(async (error) => {
-                expect(error).toBeTruthy()
-            })
+            client.onError = jest.fn()
+
+            await expect(() => (
+                client.connect()
+            )).rejects.toThrow()
+            expect(client.onError).toHaveBeenCalledTimes(1)
         })
 
-        it('rejects on connect without autoconnect', async (done) => {
+        it('rejects on connect without autoconnect', async () => {
             const client = createClient({
                 url: 'asdasd',
                 autoConnect: false,
                 autoDisconnect: false,
             })
+            client.onError = jest.fn()
 
-            await client.connect().catch(async (error) => {
-                expect(error).toBeTruthy()
-                done()
-            })
+            await expect(() => (
+                client.connect()
+            )).rejects.toThrow()
+            expect(client.onError).toHaveBeenCalledTimes(1)
         })
 
-        it('emits error with autoconnect after first call that triggers connect()', async (done) => {
+        it('emits error with autoconnect after first call that triggers connect()', async () => {
             const client = createClient({
                 url: 'asdasd',
                 autoConnect: true,
                 autoDisconnect: true,
             })
+            const client2 = createClient({
+                autoConnect: true,
+                autoDisconnect: true,
+            })
 
+            client.onError = jest.fn()
             const onError = jest.fn()
-            client.once('error', onError)
+            client.on('error', onError)
 
-            const stream = await client.createStream({
+            const stream = await client2.createStream({
                 name: uid('stream')
             }) // this will succeed because it uses restUrl config, not url
 
             // publish should trigger connect
-            await client.publish(stream, {}).catch((error) => {
-                expect(error).toBeTruthy()
-                // check error is emitted with same error before rejection
-                // not clear if emit or reject *should* occur first
-                expect(onError).toHaveBeenCalledTimes(1)
-                expect(onError).toHaveBeenCalledWith(error)
-
-                done()
-            })
+            await expect(() => (
+                client.publish(stream, {})
+            )).rejects.toThrow('Invalid URL')
+            // check error is emitted with same error before rejection
+            // not clear if emit or reject *should* occur first
+            expect(onError).toHaveBeenCalledTimes(1)
+            expect(client.onError).toHaveBeenCalledTimes(1)
         }, 10000)
     })
 
     describe('bad config.restUrl', () => {
-        it('emits error without autoconnect', async (done) => {
+        it('emits no error with no connection', async (done) => {
             const client = createClient({
                 restUrl: 'asdasd',
                 autoConnect: false,
                 autoDisconnect: false,
             })
-            client.once('error', async (error) => {
-                expect(error).toBeTruthy()
+            client.onError = jest.fn()
+            client.once('error', done)
+            setTimeout(() => {
+                expect(client.onError).not.toHaveBeenCalled()
                 done()
-            })
+            }, 100)
         })
 
-        it('emits error with autoconnect', (done) => {
+        it('emits error with connection', async (done) => {
             const client = createClient({
                 restUrl: 'asdasd',
-                autoConnect: true,
-                autoDisconnect: true,
+                autoConnect: false,
+                autoDisconnect: false,
             })
-            client.once('error', async (error) => {
+            client.onError = jest.fn()
+            client.once('error', (error) => {
                 expect(error).toBeTruthy()
+                expect(client.onError).toHaveBeenCalledTimes(1)
                 done()
             })
+            client.connect()
         })
     })
 
-    it('can disconnect before connected', async (done) => {
+    it('can disconnect before connected', async () => {
         const client = createClient()
-        client.once('error', (err) => {
-            expect(err).toEqual('Failed to send subscribe request: Error: WebSocket is not open: readyState 3 (CLOSED)')
-            done()
+        client.onError = jest.fn()
+        client.once('error', (error) => {
+            expect(error).toMatchObject({
+                message: 'Failed to send subscribe request: Error: WebSocket is not open: readyState 3 (CLOSED)',
+            })
+
+            expect(client.onError).toHaveBeenCalledTimes(1)
         })
         client.connect()
         await client.ensureDisconnected()
@@ -153,7 +163,7 @@ describe('StreamrClient Connection', () => {
             await client.ensureDisconnected()
         })
 
-        it('resend last', async (done) => {
+        it('resend last', async () => {
             const messages = []
 
             const sub = await client.resend({
@@ -165,20 +175,18 @@ describe('StreamrClient Connection', () => {
                 messages.push(message)
             })
 
-            sub.once('resent', () => {
-                expect(messages).toHaveLength(3)
-                expect(messages).toEqual([{
-                    msg: 'message2',
-                }, {
-                    msg: 'message3',
-                }, {
-                    msg: 'message4',
-                }])
-                done()
-            })
+            await waitForEvent(sub, 'resent')
+            expect(messages).toHaveLength(3)
+            expect(messages).toEqual([{
+                msg: 'message2',
+            }, {
+                msg: 'message3',
+            }, {
+                msg: 'message4',
+            }])
         }, 15000)
 
-        it('resend from', async (done) => {
+        it('resend from', async () => {
             const messages = []
 
             const sub = await client.resend(
@@ -195,21 +203,18 @@ describe('StreamrClient Connection', () => {
                 },
             )
 
-            sub.once('resent', () => {
-                expect(messages).toEqual([
-                    {
-                        msg: 'message3',
-                    },
-                    {
-                        msg: 'message4',
-                    },
-                ])
-                done()
-            })
-            await waitForCondition(() => messages.length >= 2)
+            await waitForEvent(sub, 'resent')
+            expect(messages).toEqual([
+                {
+                    msg: 'message3',
+                },
+                {
+                    msg: 'message4',
+                },
+            ])
         }, 10000)
 
-        it('resend range', async (done) => {
+        it('resend range', async () => {
             const messages = []
 
             const sub = await client.resend(
@@ -229,22 +234,18 @@ describe('StreamrClient Connection', () => {
                 },
             )
 
-            sub.once('resent', () => {
-                expect(messages).toEqual([
-                    {
-                        msg: 'message0',
-                    },
-                    {
-                        msg: 'message1',
-                    },
-                    {
-                        msg: 'message2',
-                    },
-                ])
-                done()
-            })
-
-            await waitForCondition(() => messages.length >= 3)
+            await waitForEvent(sub, 'resent')
+            expect(messages).toEqual([
+                {
+                    msg: 'message0',
+                },
+                {
+                    msg: 'message1',
+                },
+                {
+                    msg: 'message2',
+                },
+            ])
         }, 10000)
     })
 
@@ -338,7 +339,6 @@ describe('StreamrClient Connection', () => {
             if (client) {
                 client.removeAllListeners('error')
                 await client.ensureDisconnected()
-                client = undefined
             }
         }
 
@@ -434,6 +434,7 @@ describe('StreamrClient Connection', () => {
             const sub = client.subscribe(stream.id, () => {})
 
             sub.once('subscribed', async () => {
+                await wait(100)
                 client.unsubscribe(sub)
             })
 
@@ -443,7 +444,6 @@ describe('StreamrClient Connection', () => {
                 await client.ensureDisconnected()
 
                 // check whole list of calls after reconnect and disconnect
-                expect(connectionEventSpy.mock.calls.length).toEqual(3)
                 expect(connectionEventSpy.mock.calls[0]).toEqual([new SubscribeRequest({
                     streamId: stream.id,
                     streamPartition: 0,
@@ -458,15 +458,8 @@ describe('StreamrClient Connection', () => {
                     requestId: connectionEventSpy.mock.calls[1][0].requestId,
                 })])
 
-                // key exchange stream subscription:
-                const keyExchangeStreamId = getKeyExchangeStreamId(await client.getPublisherId())
-                expect(connectionEventSpy.mock.calls[2]).toEqual([new SubscribeRequest({
-                    streamId: keyExchangeStreamId,
-                    streamPartition: 0,
-                    sessionToken,
-                    requestId: connectionEventSpy.mock.calls[2][0].requestId,
-                })])
-
+                // key exchange stream subscription should not have been sent yet
+                expect(connectionEventSpy.mock.calls.length).toEqual(2)
                 done()
             })
         })
@@ -495,7 +488,6 @@ describe('StreamrClient Connection', () => {
                     await client.ensureDisconnected()
 
                     // check whole list of calls after reconnect and disconnect
-                    expect(connectionEventSpy.mock.calls.length).toEqual(2)
                     expect(connectionEventSpy.mock.calls[0]).toEqual([new ResendLastRequest({
                         streamId: stream.id,
                         streamPartition: 0,
@@ -504,14 +496,8 @@ describe('StreamrClient Connection', () => {
                         requestId: connectionEventSpy.mock.calls[0][0].requestId,
                     })])
 
-                    // key exchange stream subscription:
-                    const keyExchangeStreamId = getKeyExchangeStreamId(await client.getPublisherId())
-                    expect(connectionEventSpy.mock.calls[1]).toEqual([new SubscribeRequest({
-                        streamId: keyExchangeStreamId,
-                        streamPartition: 0,
-                        sessionToken,
-                        requestId: connectionEventSpy.mock.calls[1][0].requestId,
-                    })])
+                    // key exchange stream subscription should not have been sent yet
+                    expect(connectionEventSpy.mock.calls.length).toEqual(1)
                     done()
                 }, 2000)
             })
@@ -519,7 +505,7 @@ describe('StreamrClient Connection', () => {
 
         it('does not try to reconnect', async (done) => {
             client = createClient()
-
+            client.once('error', done)
             await client.connect()
 
             client.connection.once('disconnecting', async () => {
@@ -559,6 +545,7 @@ describe('StreamrClient Connection', () => {
         afterEach(async () => {
             await teardown()
         })
+
         describe('publish', () => {
             it('will connect if not connected if autoconnect set', async (done) => {
                 client = createClient({
@@ -613,6 +600,7 @@ describe('StreamrClient Connection', () => {
                     autoDisconnect: false,
                 })
 
+                client.onError = jest.fn()
                 client.once('error', done)
                 await client.ensureConnected()
                 const stream = await client.createStream({
@@ -625,11 +613,15 @@ describe('StreamrClient Connection', () => {
 
                 client.publish(stream.id, message).catch((err) => {
                     expect(err).toBeTruthy()
-                    done()
-                })
+                    setTimeout(() => {
+                        // wait in case of delayed errors
+                        expect(client.onError).not.toHaveBeenCalled()
+                        done()
+                    })
+                }) // don't wait
 
-                setTimeout(async () => {
-                    await client.disconnect() // start async disconnect after publish started
+                setTimeout(() => {
+                    client.disconnect() // start async disconnect after publish started
                 })
             })
         })
@@ -640,6 +632,7 @@ describe('StreamrClient Connection', () => {
                     autoDisconnect: true,
                 })
 
+                client.onError = jest.fn()
                 client.once('error', done)
                 await client.ensureConnected()
                 const stream = await client.createStream({
@@ -657,7 +650,10 @@ describe('StreamrClient Connection', () => {
                 sub.once('subscribed', async () => {
                     await client.disconnect()
                     // wait in case of delayed errors
-                    setTimeout(() => done(), 500)
+                    setTimeout(() => {
+                        expect(client.onError).not.toHaveBeenCalled()
+                        done()
+                    }, 100)
                 })
             })
         })
@@ -907,9 +903,7 @@ describe('StreamrClient', () => {
                 let i
                 const loop = async () => {
                     for (i = 1; i <= nbMessages; i++) {
-                        /* eslint-disable no-await-in-loop */
-                        await f(i)
-                        /* eslint-enable no-await-in-loop */
+                        await f(i) // eslint-disable-line no-await-in-loop
                     }
                 }
                 return loop()
