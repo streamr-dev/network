@@ -242,18 +242,15 @@ export default class StreamrClient extends EventEmitter {
         this.connection.on('connected', async () => {
             this.debug('Connected!')
             this.emit('connected')
-
             await this._subscribeToInboxStream()
-
             // Check pending subscriptions
-            Object.keys(this.subscribedStreamPartitions)
-                .forEach((key) => {
-                    this.subscribedStreamPartitions[key].getSubscriptions().forEach((sub) => {
-                        if (sub.getState() !== Subscription.State.subscribed) {
-                            this._resendAndSubscribe(sub)
-                        }
-                    })
+            Object.keys(this.subscribedStreamPartitions).forEach((key) => {
+                this.subscribedStreamPartitions[key].getSubscriptions().forEach((sub) => {
+                    if (sub.getState() !== Subscription.State.subscribed) {
+                        this._resendAndSubscribe(sub)
+                    }
                 })
+            })
 
             // Check pending publish requests
             const publishQueueCopy = this.publishQueue.slice(0)
@@ -306,39 +303,40 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async _subscribeToInboxStream() {
-        if (this.options.auth.privateKey || this.options.auth.provider) {
-            // subscribing to own inbox stream
-            const publisherId = await this.getPublisherId()
-            const streamId = KeyExchangeUtil.getKeyExchangeStreamId(publisherId)
-            this.subscribe(streamId, async (parsedContent, streamMessage) => {
-                if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
-                    if (this.keyExchangeUtil) {
-                        try {
-                            await this.keyExchangeUtil.handleGroupKeyRequest(streamMessage)
-                        } catch (error) {
-                            this.debug('WARN: %s', error.message)
-                            const msg = streamMessage.getParsedContent()
-                            const errorMessage = await this.msgCreationUtil.createErrorMessage({
-                                destinationAddress: streamId,
-                                requestId: msg.requestId,
-                                streamId: msg.streamId,
-                                error,
-                            })
-                            this.publishStreamMessage(errorMessage)
-                        }
-                    }
-                } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
-                    if (this.keyExchangeUtil) {
-                        this.keyExchangeUtil.handleGroupKeyResponse(streamMessage)
-                    }
-                } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE) {
-                    this.debug('WARN: Received error of type %s from %s: %s',
-                        streamMessage.getParsedContent().code, streamMessage.getPublisherId(), streamMessage.getParsedContent().message)
-                } else {
-                    throw new InvalidContentTypeError(`Cannot handle message with content type: ${streamMessage.contentType}`)
-                }
-            })
+        if (!this.options.auth.privateKey && !this.options.auth.provider) {
+            return
         }
+        // subscribing to own inbox stream
+        const publisherId = await this.getPublisherId()
+        const streamId = KeyExchangeUtil.getKeyExchangeStreamId(publisherId)
+        this.subscribe(streamId, async (parsedContent, streamMessage) => {
+            if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
+                if (this.keyExchangeUtil) {
+                    try {
+                        await this.keyExchangeUtil.handleGroupKeyRequest(streamMessage)
+                    } catch (error) {
+                        this.debug('WARN: %s', error.message)
+                        const msg = streamMessage.getParsedContent()
+                        const errorMessage = await this.msgCreationUtil.createErrorMessage({
+                            destinationAddress: streamId,
+                            requestId: msg.requestId,
+                            streamId: msg.streamId,
+                            error,
+                        })
+                        this.publishStreamMessage(errorMessage)
+                    }
+                }
+            } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
+                if (this.keyExchangeUtil) {
+                    this.keyExchangeUtil.handleGroupKeyResponse(streamMessage)
+                }
+            } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+                this.debug('WARN: Received error of type %s from %s: %s',
+                    streamMessage.getParsedContent().code, streamMessage.getPublisherId(), streamMessage.getParsedContent().message)
+            } else {
+                throw new InvalidContentTypeError(`Cannot handle message with content type: ${streamMessage.contentType}`)
+            }
+        })
     }
 
     _getSubscribedStreamPartition(streamId, streamPartition) {
@@ -437,9 +435,8 @@ export default class StreamrClient extends EventEmitter {
                     try {
                         publishRequest = await this._requestPublish(streamMessage, sessionToken)
                     } catch (err) {
-                        this.debug(`Error: ${err}`)
-                        this.emit('error', err)
                         reject(err)
+                        this.emit('error', err)
                         return
                     }
                     resolve(publishRequest)
@@ -654,13 +651,13 @@ export default class StreamrClient extends EventEmitter {
         return this.connect()
     }
 
-    connect() {
+    async connect() {
         if (this.isConnected()) {
-            return Promise.reject(new Error('Already connected!'))
+            throw new Error('Already connected!')
         }
 
         if (this.connection.state === Connection.State.CONNECTING) {
-            return Promise.reject(new Error('Already connecting!'))
+            throw new Error('Already connecting!')
         }
 
         this.debug('Connecting to %s', this.options.url)
@@ -715,15 +712,14 @@ export default class StreamrClient extends EventEmitter {
             this.msgCreationUtil.stop()
         }
 
-        if (this.isDisconnected()) {
-            return Promise.resolve()
-        }
+        if (this.isDisconnected()) { return }
 
         if (this.isDisconnecting()) {
-            return waitFor(this, 'disconnected')
+            await waitFor(this, 'disconnected')
+            return
         }
 
-        return this.disconnect()
+        await this.disconnect()
     }
 
     _checkAutoDisconnect() {
@@ -734,30 +730,28 @@ export default class StreamrClient extends EventEmitter {
         }
     }
 
-    _resendAndSubscribe(sub) {
-        if (sub.getState() !== Subscription.State.subscribing && !sub.resending) {
-            sub.setState(Subscription.State.subscribing)
-            this._requestSubscribe(sub)
+    async _resendAndSubscribe(sub) {
+        if (sub.getState() === Subscription.State.subscribing || sub.resending) { return }
+        sub.setState(Subscription.State.subscribing)
+        // Once subscribed, ask for a resend
+        sub.once('subscribed', () => {
+            if (!sub.hasResendOptions()) { return }
 
-            // Once subscribed, ask for a resend
-            sub.once('subscribed', async () => {
-                if (sub.hasResendOptions()) {
-                    await this._requestResend(sub)
-                    // once a message is received, gap filling in Subscription.js will check if this satisfies the resend and request
-                    // another resend if it doesn't. So we can anyway clear this resend request.
-                    const handler = () => {
-                        sub.removeListener('initial_resend_done', handler)
-                        sub.removeListener('message received', handler)
-                        sub.removeListener('unsubscribed', handler)
-                        sub.removeListener('error', handler)
-                    }
-                    sub.once('initial_resend_done', handler)
-                    sub.once('message received', handler)
-                    sub.once('unsubscribed', handler)
-                    sub.once('error', handler)
-                }
-            })
-        }
+            this._requestResend(sub)
+            // once a message is received, gap filling in Subscription.js will check if this satisfies the resend and request
+            // another resend if it doesn't. So we can anyway clear this resend request.
+            const handler = () => {
+                sub.removeListener('initial_resend_done', handler)
+                sub.removeListener('message received', handler)
+                sub.removeListener('unsubscribed', handler)
+                sub.removeListener('error', handler)
+            }
+            sub.once('initial_resend_done', handler)
+            sub.once('message received', handler)
+            sub.once('unsubscribed', handler)
+            sub.once('error', handler)
+        })
+        this._requestSubscribe(sub)
     }
 
     async _requestSubscribe(sub) {
