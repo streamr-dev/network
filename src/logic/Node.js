@@ -167,8 +167,11 @@ class Node extends EventEmitter {
 
     async onTrackerInstructionReceived(trackerId, instructionMessage) {
         const streamId = instructionMessage.getStreamId()
-        const expectedTrackerId = this.trackersRing.get(streamId.key())
+        const nodeAddresses = instructionMessage.getNodeAddresses()
+        const counter = instructionMessage.getCounter()
 
+        // Check that tracker matches expected tracker
+        const expectedTrackerId = this.trackersRing.get(streamId.key())
         if (trackerId !== expectedTrackerId) {
             this.metrics.inc('onTrackerInstructionReceived.unexpected_tracker')
             console.warn(`Got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
@@ -176,56 +179,54 @@ class Node extends EventEmitter {
         }
 
         this.metrics.inc('onTrackerInstructionReceived')
-        const nodeAddresses = instructionMessage.getNodeAddresses()
-        const nodeIds = []
-
         this.debug('received instructions for %s, nodes to connect %o', streamId, nodeAddresses)
-        this.subscribeToStreamIfHaveNotYet(streamId)
 
-        const connectedNodes = []
-        await allSettled(nodeAddresses.map(async (nodeAddress) => {
+        this.subscribeToStreamIfHaveNotYet(streamId)
+        const currentNodes = this.streams.getAllNodesForStream(streamId)
+        const nodesToUnsubscribeFrom = currentNodes.filter((nodeId) => {
+            const address = this.protocols.nodeToNode.endpoint.resolveAddress(nodeId)
+            return !nodeAddresses.includes(address)
+        })
+
+        const subscribePromises = nodeAddresses.map(async (nodeAddress) => {
             const node = await this.protocols.nodeToNode.connectToNode(nodeAddress)
             this._clearDisconnectionTimer(node)
+            await this._subscribeToStreamOnNode(node, streamId)
             return node
-        })).then((results) => {
-            results.forEach((result) => {
-                if (result.status === 'fulfilled') {
-                    connectedNodes.push(result.value)
-                } else {
-                    this.debug(`failed to connect to node ${result.reason}`)
-                }
-            })
         })
 
-        if (connectedNodes.length) {
-            await allSettled(connectedNodes.map((nodeId) => this._subscribeToStreamOnNode(nodeId, streamId))).then((results) => {
-                results.forEach((result) => {
-                    if (result.status === 'fulfilled') {
-                        nodeIds.push(result.value)
-                    } else {
-                        this.debug(`failed to subscribe to node ${result.reason}`)
-                    }
-                })
-            })
-        }
-
-        if (nodeAddresses.length !== nodeIds.length) {
-            this.debug('error: failed to fulfill all tracker instructions')
-        }
-
-        const currentNodes = this.streams.isSetUp(streamId) ? this.streams.getAllNodesForStream(streamId) : []
-        const nodesToUnsubscribeFrom = currentNodes.filter((node) => !nodeIds.includes(node))
-
-        await allSettled(nodesToUnsubscribeFrom.map((nodeId) => this._unsubscribeFromStreamOnNode(nodeId, streamId))).then((results) => {
-            results.forEach((result) => {
-                if (result.status === 'rejected') {
-                    this.debug(`failed to unsubscribe to node ${result.reason}`)
-                }
-            })
+        const unsubscribePromises = nodesToUnsubscribeFrom.map((nodeId) => {
+            return this._unsubscribeFromStreamOnNode(nodeId, streamId)
         })
 
-        const counter = instructionMessage.getCounter()
+        const results = await allSettled([allSettled(subscribePromises), allSettled(unsubscribePromises)])
         this.streams.updateCounter(streamId, counter)
+
+        // Log success / failures with this.debug
+        const subscribeNodeIds = []
+        const unsubscribeNodeIds = []
+        results[0].value.forEach((res) => {
+            if (res.status === 'fulfilled') {
+                subscribeNodeIds.push(res.value)
+            } else {
+                this.debug(`failed to subscribe (or connect) to node ${res.reason}`)
+            }
+        })
+        results[1].value.forEach((res) => {
+            if (res.status === 'fulfilled') {
+                unsubscribeNodeIds.push(res.value)
+            } else {
+                this.debug(`failed to unsubscribe to node ${res.reason}`)
+            }
+        })
+
+        this.debug('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
+            subscribeNodeIds, unsubscribeNodeIds, streamId, counter)
+
+        if (subscribeNodeIds.length !== nodeAddresses.length) {
+            this.debug('error: failed to fulfill all tracker instructions (streamId=%s, counter=%d)',
+                streamId, counter)
+        }
     }
 
     onDataReceived(streamMessage, source = null) {
