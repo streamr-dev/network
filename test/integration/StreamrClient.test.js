@@ -154,6 +154,8 @@ describe('StreamrClient Connection', () => {
                 // eslint-disable-next-line no-await-in-loop
                 const rawMessage = await client.publish(stream.id, message)
                 timestamps.push(rawMessage.streamMessage.getTimestamp())
+                // eslint-disable-next-line no-await-in-loop
+                await wait(100) // ensure timestamp increments for reliable resend response in test.
             }
 
             await wait(5000) // wait for messages to (probably) land in storage

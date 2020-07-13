@@ -28,15 +28,6 @@ class Connection extends EventEmitter {
     }
 
     async connect() {
-        try {
-            await this._connect()
-        } catch (err) {
-            this.emit('error', err)
-            throw err
-        }
-    }
-
-    async _connect() {
         if (this.state === Connection.State.CONNECTING) {
             return Promise.reject(new Error('Already connecting!'))
         }
@@ -55,6 +46,7 @@ class Connection extends EventEmitter {
             this.debug('Trying to open new websocket to %s', this.options.url)
             this.socket = new WebSocket(this.options.url)
         }
+
         this.socket.binaryType = 'arraybuffer'
         this.socket.events = new EventEmitter()
 
