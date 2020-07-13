@@ -1,7 +1,7 @@
-jest.mock('node-fetch', () => jest.fn(jest.requireActual('node-fetch')))
+jest.mock('node-fetch')
 
-import fetch from 'node-fetch'
 import { ethers } from 'ethers'
+import fetch from 'node-fetch'
 
 import StreamrClient from '../../src'
 
@@ -19,6 +19,12 @@ describe('authFetch', () => {
     })
 
     it('sends Streamr-Client header', async () => {
+        const realFetch = jest.requireActual('node-fetch')
+        fetch.Response = realFetch.Response
+        fetch.Promise = realFetch.Promise
+        fetch.Request = realFetch.Request
+        fetch.Headers = realFetch.Headers
+        fetch.mockImplementation(realFetch)
         client = new StreamrClient({
             auth: {
                 privateKey: ethers.Wallet.createRandom().privateKey,
