@@ -2,13 +2,13 @@ import crypto from 'crypto'
 
 import sinon from 'sinon'
 import { MessageLayer } from 'streamr-client-protocol'
+import debugFactory from 'debug'
 
 import KeyExchangeUtil from '../../src/KeyExchangeUtil'
 import EncryptionUtil from '../../src/EncryptionUtil'
 import KeyStorageUtil from '../../src/KeyStorageUtil'
 import InvalidGroupKeyResponseError from '../../src/errors/InvalidGroupKeyResponseError'
 import InvalidGroupKeyRequestError from '../../src/errors/InvalidGroupKeyRequestError'
-import debugFactory from 'debug'
 import { uid } from '../utils'
 
 const { StreamMessage, MessageIDStrict } = MessageLayer

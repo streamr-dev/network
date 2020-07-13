@@ -702,7 +702,6 @@ describe('RealTimeSubscription', () => {
     })
 
     describe('handleError()', () => {
-
         it('emits an error event', (done) => {
             const err = new Error('Test error')
             const sub = new RealTimeSubscription(
