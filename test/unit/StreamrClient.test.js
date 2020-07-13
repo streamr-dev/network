@@ -806,15 +806,33 @@ describe('StreamrClient', () => {
             expect(connection.connect).toHaveBeenCalledTimes(1)
         })
 
-        it('should reject promise while connecting', async () => {
+        it('should reject promise while connecting', async (done) => {
+            client.onError = jest.fn()
             connection.state = Connection.State.CONNECTING
+            client.once('error', (err) => {
+                errors.pop()
+                expect(err).toMatchObject({
+                    message: 'Already connecting!'
+                })
+                expect(client.onError).toHaveBeenCalledTimes(1)
+                done()
+            })
             await expect(() => (
                 client.connect()
             )).rejects.toThrow()
         })
 
-        it('should reject promise when connected', async () => {
+        it('should reject promise when connected', async (done) => {
+            client.onError = jest.fn()
             connection.state = Connection.State.CONNECTED
+            client.once('error', (err) => {
+                errors.pop()
+                expect(err).toMatchObject({
+                    message: 'Already connected!'
+                })
+                expect(client.onError).toHaveBeenCalledTimes(1)
+                done()
+            })
             await expect(() => (
                 client.connect()
             )).rejects.toThrow()
