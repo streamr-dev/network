@@ -2,7 +2,6 @@ import debugFactory from 'debug'
 import { Errors, Utils } from 'streamr-client-protocol'
 
 import VerificationFailedError from './errors/VerificationFailedError'
-import InvalidSignatureError from './errors/InvalidSignatureError'
 import Subscription from './Subscription'
 import UnableToDecryptError from './errors/UnableToDecryptError'
 
@@ -139,15 +138,14 @@ export default class AbstractSubscription extends Subscription {
     }
 
     async handleResentMessage(msg, requestId, verifyFn) {
-        return this._catchAndEmitErrors(() => {
+        this._lastMessageHandlerPromise[requestId] = this._catchAndEmitErrors(async () => {
             if (!this.isResending()) {
                 throw new Error(`There is no resend in progress, but received resent message ${msg.serialize()}`)
             } else {
-                const handleMessagePromise = this._handleMessage(msg, verifyFn)
-                this._lastMessageHandlerPromise[requestId] = handleMessagePromise
-                return handleMessagePromise
+                await this._handleMessage(msg, verifyFn)
             }
         })
+        return this._lastMessageHandlerPromise[requestId]
     }
 
     async handleResending(response) {
@@ -243,22 +241,29 @@ export default class AbstractSubscription extends Subscription {
         }
     }
 
-    static async validate(msg, verifyFn) {
-        // Make sure the verification is successful before proceeding
-        let valid
-        try {
-            valid = await verifyFn()
-        } catch (cause) {
-            throw new VerificationFailedError(msg, cause)
-        }
+    /**
+     * Ensures validations resolve in order that they were triggered
+     */
 
-        if (!valid) {
-            throw new InvalidSignatureError(msg)
-        }
+    async _queuedValidate(msg, verifyFn) {
+        // wait for previous validation (if any)
+        const queue = Promise.all([
+            this.validationQueue,
+            // kick off job in parallel
+            verifyFn(msg),
+        ]).then((value) => {
+            this.validationQueue = null // clean up (allow gc)
+            return value
+        }, (err) => {
+            this.validationQueue = null // clean up (allow gc)
+            throw err
+        })
+        this.validationQueue = queue
+        return queue
     }
 
     async _handleMessage(msg, verifyFn) {
-        await AbstractSubscription.validate(msg, verifyFn)
+        await this._queuedValidate(msg, verifyFn)
         this.emit('message received')
         if (this.orderingUtil) {
             this.orderingUtil.add(msg)
@@ -267,5 +272,6 @@ export default class AbstractSubscription extends Subscription {
         }
     }
 }
+
 AbstractSubscription.defaultUnableToDecrypt = defaultUnableToDecrypt
 AbstractSubscription.MAX_NB_GROUP_KEY_REQUESTS = MAX_NB_GROUP_KEY_REQUESTS

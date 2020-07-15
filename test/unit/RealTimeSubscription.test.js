@@ -1,28 +1,30 @@
-import assert from 'assert'
 import crypto from 'crypto'
 
 import sinon from 'sinon'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 
 import RealTimeSubscription from '../../src/RealTimeSubscription'
-import InvalidSignatureError from '../../src/errors/InvalidSignatureError'
-import VerificationFailedError from '../../src/errors/VerificationFailedError'
 import EncryptionUtil from '../../src/EncryptionUtil'
 import Subscription from '../../src/Subscription'
 import AbstractSubscription from '../../src/AbstractSubscription'
 
-const { StreamMessage } = MessageLayer
+const { StreamMessage, MessageIDStrict, MessageRef } = MessageLayer
 
 const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp = null,
     prevSequenceNumber = 0, content = {}, publisherId = 'publisherId', msgChainId = '1',
     encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
 ) => {
-    const prevMsgRef = prevTimestamp ? [prevTimestamp, prevSequenceNumber] : null
-    return StreamMessage.create(
-        ['streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId], prevMsgRef,
-        StreamMessage.CONTENT_TYPES.MESSAGE, encryptionType, content, StreamMessage.SIGNATURE_TYPES.NONE,
-    )
+    const prevMsgRef = prevTimestamp ? new MessageRef(prevTimestamp, prevSequenceNumber) : null
+    return new StreamMessage({
+        messageId: new MessageIDStrict('streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId),
+        prevMsgRef,
+        content,
+        contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+        encryptionType,
+        signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
+        signature: '',
+    })
 }
 
 const msg = createMsg()
@@ -30,12 +32,16 @@ const msg = createMsg()
 describe('RealTimeSubscription', () => {
     describe('message handling', () => {
         describe('handleBroadcastMessage()', () => {
-            it('calls the message handler', () => {
+            it('calls the message handler', async (done) => {
+                const handler = jest.fn(async () => true)
+
                 const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
-                    assert.deepEqual(content, msg.getParsedContent())
-                    assert.equal(msg, receivedMsg)
+                    expect(content).toStrictEqual(msg.getParsedContent())
+                    expect(msg).toStrictEqual(receivedMsg)
+                    expect(handler).toHaveBeenCalledTimes(1)
+                    done()
                 })
-                return sub.handleBroadcastMessage(msg, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg, handler)
             })
 
             describe('on error', () => {
@@ -43,7 +49,7 @@ describe('RealTimeSubscription', () => {
                 let sub
 
                 beforeEach(() => {
-                    sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub().throws('should not be called!'))
+                    sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => { throw new Error('should not be called!') })
                     stdError = console.error
                     console.error = sinon.stub()
                 })
@@ -53,55 +59,37 @@ describe('RealTimeSubscription', () => {
                     sub.stop()
                 })
 
-                describe('when message verification returns false', () => {
-                    it('does not call the message handler', async () => sub.handleBroadcastMessage(msg, sinon.stub().resolves(false)))
-
-                    it('prints to standard error stream', async () => {
-                        await sub.handleBroadcastMessage(msg, sinon.stub().resolves(false))
-                        assert(console.error.calledWith(sinon.match.instanceOf(InvalidSignatureError)))
-                    })
-
-                    it('emits an error event', async (done) => {
-                        sub.on('error', (err) => {
-                            assert(err instanceof InvalidSignatureError)
-                            done()
-                        })
-                        return sub.handleBroadcastMessage(msg, sinon.stub().resolves(false))
-                    })
-                })
-
                 describe('when message verification throws', () => {
                     it('emits an error event', async (done) => {
                         const error = new Error('test error')
-                        sub.on('error', (err) => {
-                            assert(err instanceof VerificationFailedError)
-                            assert.strictEqual(err.cause, error)
+                        sub.once('error', (err) => {
+                            expect(err).toBe(error)
                             done()
                         })
-                        return sub.handleBroadcastMessage(msg, sinon.stub().throws(error))
+                        await sub.handleBroadcastMessage(msg, () => { throw error })
                     })
                 })
 
                 describe('when message handler throws', () => {
                     it('emits an error event', async (done) => {
-                        sub.on('error', (err) => {
-                            assert.strictEqual(err.name, 'should not be called!')
+                        sub.once('error', (err) => {
+                            expect(err.message).toBe('should not be called!')
                             done()
                         })
-                        return sub.handleBroadcastMessage(msg, sinon.stub().resolves(true))
+                        await sub.handleBroadcastMessage(msg, async () => true)
                     })
 
                     it('prints to standard error stream', async (done) => {
-                        sub.on('error', (err) => {
-                            assert.strictEqual(err.name, 'should not be called!')
+                        sub.once('error', (err) => {
+                            expect(err.message).toBe('should not be called!')
                             done()
                         })
-                        return sub.handleBroadcastMessage(msg, sinon.stub().resolves(true))
+                        await sub.handleBroadcastMessage(msg, async () => true)
                     })
                 })
             })
 
-            it('calls the callback once for each message in order', () => {
+            it('calls the callback once for each message in order', async (done) => {
                 const msgs = [1, 2, 3, 4, 5].map((timestamp) => createMsg(
                     timestamp,
                     timestamp === 1 ? 0 : timestamp - 1,
@@ -112,22 +100,23 @@ describe('RealTimeSubscription', () => {
                 const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
                     received.push(receivedMsg)
                     if (received.length === 5) {
-                        assert.deepEqual(msgs, received)
+                        expect(msgs).toStrictEqual(received)
+                        done()
                     }
                 })
 
-                return Promise.all(msgs.map((m) => sub.handleBroadcastMessage(m, sinon.stub().resolves(true))))
+                await Promise.all(msgs.map((m) => sub.handleBroadcastMessage(m, async () => true)))
             })
         })
 
         describe('handleResentMessage()', () => {
             it('processes messages if resending is true', async () => {
-                const handler = sinon.stub()
+                const handler = jest.fn()
                 const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
 
                 sub.setResending(true)
-                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
-                assert.equal(handler.callCount, 1)
+                await sub.handleResentMessage(msg, 'requestId', async () => true)
+                expect(handler).toHaveBeenCalledTimes(1)
             })
 
             describe('on error', () => {
@@ -135,8 +124,9 @@ describe('RealTimeSubscription', () => {
                 let sub
 
                 beforeEach(() => {
-                    sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub()
-                        .throws('should not be called!'))
+                    sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {
+                        throw new Error('should not be called!')
+                    })
                     sub.setResending(true)
                     stdError = console.error
                     console.error = sinon.stub()
@@ -147,56 +137,32 @@ describe('RealTimeSubscription', () => {
                     sub.stop()
                 })
 
-                describe('when message verification returns false', () => {
-                    it('does not call the message handler', async () => sub.handleResentMessage(msg, 'requestId', sinon.stub()
-                        .resolves(false)))
-
-                    it('prints to standard error stream', async () => {
-                        await sub.handleResentMessage(msg, 'requestId', sinon.stub()
-                            .resolves(false))
-                        assert(console.error.calledWith(sinon.match.instanceOf(InvalidSignatureError)))
-                    })
-
-                    it('emits an error event', async (done) => {
-                        sub.on('error', (err) => {
-                            assert(err instanceof InvalidSignatureError)
-                            done()
-                        })
-                        return sub.handleResentMessage(msg, 'requestId', sinon.stub()
-                            .resolves(false))
-                    })
-                })
-
                 describe('when message verification throws', () => {
                     it('emits an error event', async (done) => {
                         const error = new Error('test error')
-                        sub.on('error', (err) => {
-                            assert(err instanceof VerificationFailedError)
-                            assert.strictEqual(err.cause, error)
+                        sub.once('error', (err) => {
+                            expect(err).toBe(error)
                             done()
                         })
-                        return sub.handleResentMessage(msg, 'requestId', sinon.stub()
-                            .throws(error))
+                        return sub.handleResentMessage(msg, 'requestId', () => { throw error })
                     })
                 })
 
                 describe('when message handler throws', () => {
                     it('emits an error event', async (done) => {
-                        sub.on('error', (err) => {
-                            assert.strictEqual(err.name, 'should not be called!')
+                        sub.once('error', (err) => {
+                            expect(err.message).toBe('should not be called!')
                             done()
                         })
-                        return sub.handleResentMessage(msg, 'requestId', sinon.stub()
-                            .resolves(true))
+                        await sub.handleResentMessage(msg, 'requestId', async () => true)
                     })
 
                     it('prints to standard error stream', async (done) => {
-                        sub.on('error', (err) => {
-                            assert.strictEqual(err.name, 'should not be called!')
+                        sub.once('error', (err) => {
+                            expect(err.message).toBe('should not be called!')
                             done()
                         })
-                        return sub.handleResentMessage(msg, 'requestId', sinon.stub()
-                            .resolves(true))
+                        return sub.handleResentMessage(msg, 'requestId', async () => true)
                     })
                 })
             })
@@ -204,21 +170,22 @@ describe('RealTimeSubscription', () => {
 
         describe('duplicate handling', () => {
             it('ignores re-received messages', async () => {
-                const handler = sinon.stub()
+                const handler = jest.fn()
                 const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
 
-                await sub.handleBroadcastMessage(msg, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg, sinon.stub().resolves(true))
-                assert.equal(handler.callCount, 1)
+                await sub.handleBroadcastMessage(msg, async () => true)
+                await sub.handleBroadcastMessage(msg, async () => true)
+                expect(handler).toHaveBeenCalledTimes(1)
                 sub.stop()
             })
+
             it('ignores re-received messages if they come from resend', async () => {
-                const handler = sinon.stub()
+                const handler = jest.fn()
                 const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
                 sub.setResending(true)
 
-                await sub.handleBroadcastMessage(msg, sinon.stub().resolves(true))
-                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg, async () => true)
+                await sub.handleResentMessage(msg, 'requestId', async () => true)
                 sub.stop()
             })
         })
@@ -228,40 +195,40 @@ describe('RealTimeSubscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, 100, 100)
-                sub.on('gap', (from, to, publisherId) => {
-                    assert.equal(from.timestamp, 1) // cannot know the first missing message so there will be a duplicate received
-                    assert.equal(from.sequenceNumber, 1)
-                    assert.equal(to.timestamp, 3)
-                    assert.equal(to.sequenceNumber, 0)
-                    assert.equal(publisherId, 'publisherId')
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                sub.once('gap', (from, to, publisherId) => {
+                    expect(from.timestamp).toEqual(1) // cannot know the first missing message so there will be a duplicate received
+                    expect(from.sequenceNumber).toEqual(1)
+                    expect(to.timestamp).toEqual(3)
+                    expect(to.sequenceNumber).toEqual(0)
+                    expect(publisherId).toEqual('publisherId')
                     setTimeout(() => {
                         sub.stop()
                         done()
                     }, 100)
                 })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg4, async () => true)
             })
 
             it('emits second "gap" after the first one if no missing message is received in between', (done) => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, 100, 100)
-                sub.on('gap', (from, to, publisherId) => {
-                    sub.on('gap', (from2, to2, publisherId2) => {
-                        assert.deepStrictEqual(from, from2)
-                        assert.deepStrictEqual(to, to2)
-                        assert.deepStrictEqual(publisherId, publisherId2)
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                sub.once('gap', (from, to, publisherId) => {
+                    sub.once('gap', (from2, to2, publisherId2) => {
+                        expect(from).toStrictEqual(from2)
+                        expect(to).toStrictEqual(to2)
+                        expect(publisherId).toStrictEqual(publisherId2)
                         sub.stop()
                         done()
                     })
                 })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg4, async () => true)
             })
 
             it('does not emit second "gap" after the first one if the missing messages are received in between', (done) => {
@@ -270,112 +237,111 @@ describe('RealTimeSubscription', () => {
                 const msg3 = createMsg(3, undefined, 2)
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, 100, 100)
-                sub.on('gap', () => {
-                    sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
-                    sub.handleBroadcastMessage(msg3, sinon.stub().resolves(true)).then(() => {
-                    })
-                    sub.on('gap', () => { throw new Error('should not emit second gap') })
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                sub.once('gap', () => {
+                    sub.handleBroadcastMessage(msg2, async () => true)
+                    sub.handleBroadcastMessage(msg3, async () => true)
+                    sub.once('gap', () => { throw new Error('should not emit second gap') })
                     setTimeout(() => {
                         sub.stop()
                         done()
                     }, 100 + 1000)
                 })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg4, async () => true)
             })
 
             it('does not emit second "gap" if gets unsubscribed', async (done) => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, 100, 100)
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
                 sub.once('gap', () => {
                     sub.emit('unsubscribed')
-                    sub.on('gap', () => { throw new Error('should not emit second gap') })
+                    sub.once('gap', () => { throw new Error('should not emit second gap') })
                     setTimeout(() => {
                         sub.stop()
                         done()
                     }, 100 + 1000)
                 })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg4, async () => true)
             })
 
             it('does not emit second "gap" if gets disconnected', async (done) => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, 100, 100)
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
                 sub.once('gap', () => {
                     sub.emit('disconnected')
-                    sub.on('gap', () => { throw new Error('should not emit second gap') })
+                    sub.once('gap', () => { throw new Error('should not emit second gap') })
                     setTimeout(() => {
                         sub.stop()
                         done()
                     }, 100 + 1000)
                 })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg4, async () => true)
             })
 
             it('does not emit "gap" if different publishers', () => {
                 const msg1 = msg
                 const msg1b = createMsg(1, 0, undefined, 0, {}, 'anotherPublisherId')
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
-                sub.on('gap', () => {
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                sub.once('gap', () => {
                     throw new Error('unexpected gap')
                 })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg1b, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg1b, async () => true)
             })
 
             it('emits "gap" if a gap is detected (same timestamp but different sequenceNumbers)', (done) => {
                 const msg1 = msg
                 const msg4 = createMsg(1, 4, 1, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, 100, 100)
-                sub.on('gap', (from, to, publisherId) => {
-                    assert.equal(from.timestamp, 1) // cannot know the first missing message so there will be a duplicate received
-                    assert.equal(from.sequenceNumber, 1)
-                    assert.equal(to.timestamp, 1)
-                    assert.equal(to.sequenceNumber, 3)
-                    assert.equal(publisherId, 'publisherId')
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                sub.once('gap', (from, to, publisherId) => {
+                    expect(from.timestamp).toEqual(1) // cannot know the first missing message so there will be a duplicate received
+                    expect(from.sequenceNumber).toEqual(1)
+                    expect(to.timestamp).toEqual(1)
+                    expect(to.sequenceNumber).toEqual(3)
+                    expect(publisherId).toEqual('publisherId')
                     setTimeout(() => {
                         sub.stop()
                         done()
                     }, 100)
                 })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg4, async () => true)
             })
 
             it('does not emit "gap" if a gap is not detected', () => {
                 const msg1 = msg
                 const msg2 = createMsg(2, undefined, 1)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
-                sub.on('gap', sinon.stub().throws())
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                sub.once('gap', () => { throw new Error() })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg2, async () => true)
             })
 
             it('does not emit "gap" if a gap is not detected (same timestamp but different sequenceNumbers)', () => {
                 const msg1 = msg
                 const msg2 = createMsg(1, 1, 1, 0)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
-                sub.on('gap', sinon.stub().throws())
+                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                sub.once('gap', () => { throw new Error() })
 
-                sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                sub.handleBroadcastMessage(msg1, async () => true)
+                sub.handleBroadcastMessage(msg2, async () => true)
             })
         })
 
@@ -390,17 +356,18 @@ describe('RealTimeSubscription', () => {
                 const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
                     received.push(receivedMsg)
                 }, {}, 100, 100, false)
-                sub.on('gap', sinon.stub().throws())
+                sub.once('gap', () => { throw new Error() })
 
-                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg3, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1, async () => true)
+                await sub.handleBroadcastMessage(msg2, async () => true)
+                await sub.handleBroadcastMessage(msg4, async () => true)
+                await sub.handleBroadcastMessage(msg2, async () => true)
+                await sub.handleBroadcastMessage(msg3, async () => true)
+                await sub.handleBroadcastMessage(msg1, async () => true)
 
-                assert.deepStrictEqual(received, [msg1, msg2, msg4, msg2, msg3, msg1])
+                expect(received).toStrictEqual([msg1, msg2, msg4, msg2, msg3, msg1])
             })
+
             it('handles messages in order without duplicates if ordering util is set', async () => {
                 const msg1 = msg
                 const msg2 = createMsg(2, 0, 1, 0)
@@ -412,14 +379,14 @@ describe('RealTimeSubscription', () => {
                     received.push(receivedMsg)
                 })
 
-                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg3, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1, async () => true)
+                await sub.handleBroadcastMessage(msg2, async () => true)
+                await sub.handleBroadcastMessage(msg4, async () => true)
+                await sub.handleBroadcastMessage(msg2, async () => true)
+                await sub.handleBroadcastMessage(msg3, async () => true)
+                await sub.handleBroadcastMessage(msg1, async () => true)
 
-                assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4])
+                expect(received).toStrictEqual([msg1, msg2, msg3, msg4])
             })
         })
 
@@ -427,14 +394,14 @@ describe('RealTimeSubscription', () => {
             const byeMsg = createMsg(1, undefined, null, null, {
                 _bye: true,
             })
-            const handler = sinon.stub()
+            const handler = jest.fn()
             const sub = new RealTimeSubscription(byeMsg.getStreamId(), byeMsg.getStreamPartition(), handler)
-            sub.on('done', () => {
-                assert(handler.calledOnce)
+            sub.once('done', () => {
+                expect(handler).toHaveBeenCalledTimes(1)
                 done()
             })
 
-            sub.handleBroadcastMessage(byeMsg, sinon.stub().resolves(true))
+            sub.handleBroadcastMessage(byeMsg, async () => true)
         })
 
         describe('decryption', () => {
@@ -442,16 +409,18 @@ describe('RealTimeSubscription', () => {
             afterEach(() => {
                 sub.stop()
             })
+
             it('should read clear text content without trying to decrypt', (done) => {
                 const msg1 = createMsg(1, 0, null, 0, {
                     foo: 'bar',
                 })
                 sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
-                    assert.deepStrictEqual(content, msg1.getParsedContent())
+                    expect(content).toStrictEqual(msg1.getParsedContent())
                     done()
                 })
-                return sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleBroadcastMessage(msg1, async () => true)
             })
+
             it('should decrypt encrypted content with the correct key', (done) => {
                 const groupKey = crypto.randomBytes(32)
                 const data = {
@@ -460,13 +429,14 @@ describe('RealTimeSubscription', () => {
                 const msg1 = createMsg(1, 0, null, 0, data)
                 EncryptionUtil.encryptStreamMessage(msg1, groupKey)
                 sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
-                    assert.deepStrictEqual(content, data)
+                    expect(content).toStrictEqual(data)
                     done()
                 }, {
                     publisherId: groupKey,
                 })
-                return sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleBroadcastMessage(msg1, async () => true)
             })
+
             it('should emit "groupKeyMissing" when not able to decrypt with the wrong key', (done) => {
                 const correctGroupKey = crypto.randomBytes(32)
                 const wrongGroupKey = crypto.randomBytes(32)
@@ -474,15 +444,16 @@ describe('RealTimeSubscription', () => {
                     foo: 'bar',
                 })
                 EncryptionUtil.encryptStreamMessage(msg1, correctGroupKey)
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), sinon.stub(), {
+                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), () => {}, {
                     publisherId: wrongGroupKey,
                 })
-                sub.on('groupKeyMissing', (publisherId) => {
-                    assert.strictEqual(publisherId, msg1.getPublisherId())
+                sub.once('groupKeyMissing', (publisherId) => {
+                    expect(publisherId).toBe(msg1.getPublisherId())
                     done()
                 })
-                return sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleBroadcastMessage(msg1, async () => true)
             })
+
             it('emits "groupKeyMissing" multiple times before response received', (done) => {
                 const correctGroupKey = crypto.randomBytes(32)
                 const wrongGroupKey = crypto.randomBytes(32)
@@ -491,12 +462,12 @@ describe('RealTimeSubscription', () => {
                     foo: 'bar',
                 })
                 EncryptionUtil.encryptStreamMessage(msg1, correctGroupKey)
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), sinon.stub(), {
+                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), () => {}, {
                     publisherId: wrongGroupKey,
                 }, 200)
                 sub.on('groupKeyMissing', (publisherId) => {
                     if (counter < 3) {
-                        assert.strictEqual(publisherId, msg1.getPublisherId())
+                        expect(publisherId).toBe(msg1.getPublisherId())
                         counter += 1
                     } else {
                         // fake group key response after 3 requests
@@ -509,8 +480,9 @@ describe('RealTimeSubscription', () => {
                         }, 1000)
                     }
                 })
-                return sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleBroadcastMessage(msg1, async () => true)
             })
+
             it('emits "groupKeyMissing" MAX_NB_GROUP_KEY_REQUESTS times before response received', (done) => {
                 const correctGroupKey = crypto.randomBytes(32)
                 const wrongGroupKey = crypto.randomBytes(32)
@@ -520,19 +492,22 @@ describe('RealTimeSubscription', () => {
                 })
                 const timeout = 200
                 EncryptionUtil.encryptStreamMessage(msg1, correctGroupKey)
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), sinon.stub(), {
+                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), () => {}, {
                     publisherId: wrongGroupKey,
                 }, timeout)
+                let t
                 sub.on('groupKeyMissing', (publisherId) => {
-                    assert.strictEqual(publisherId, msg1.getPublisherId())
+                    expect(publisherId).toBe(msg1.getPublisherId())
                     counter += 1
-                    setTimeout(() => {
-                        assert.strictEqual(counter, AbstractSubscription.MAX_NB_GROUP_KEY_REQUESTS)
+                    clearTimeout(t)
+                    t = setTimeout(() => {
+                        expect(counter).toBe(AbstractSubscription.MAX_NB_GROUP_KEY_REQUESTS)
                         done()
                     }, timeout * (AbstractSubscription.MAX_NB_GROUP_KEY_REQUESTS + 2))
                 })
-                return sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                return sub.handleBroadcastMessage(msg1, async () => true)
             })
+
             it('should queue messages when not able to decrypt and handle them once the key is updated', async () => {
                 const correctGroupKey = crypto.randomBytes(32)
                 const wrongGroupKey = crypto.randomBytes(32)
@@ -558,15 +533,16 @@ describe('RealTimeSubscription', () => {
                     publisherId: wrongGroupKey,
                 })
                 // cannot decrypt msg1, queues it and emits "groupKeyMissing" (should send group key request).
-                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1, async () => true)
                 // cannot decrypt msg2, queues it.
-                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg2, async () => true)
                 // faking the reception of the group key response
                 sub.setGroupKeys('publisherId', [correctGroupKey])
                 // try again to decrypt the queued messages but this time with the correct key
-                assert.deepStrictEqual(received1, data1)
-                assert.deepStrictEqual(received2, data2)
+                expect(received1).toStrictEqual(data1)
+                expect(received2).toStrictEqual(data2)
             })
+
             it('should queue messages when not able to decrypt and handle them once the keys are updated (multiple publishers)', async () => {
                 const groupKey1 = crypto.randomBytes(32)
                 const groupKey2 = crypto.randomBytes(32)
@@ -598,22 +574,23 @@ describe('RealTimeSubscription', () => {
                     publisherId1: wrongGroupKey,
                 })
                 // cannot decrypt msg1, queues it and emits "groupKeyMissing" (should send group key request).
-                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1, async () => true)
                 // cannot decrypt msg2, queues it.
-                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg2, async () => true)
                 // cannot decrypt msg3, queues it and emits "groupKeyMissing" (should send group key request).
-                await sub.handleBroadcastMessage(msg3, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg3, async () => true)
                 // cannot decrypt msg4, queues it.
-                await sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg4, async () => true)
                 // faking the reception of the group key response
                 sub.setGroupKeys('publisherId2', [groupKey2])
                 sub.setGroupKeys('publisherId1', [groupKey1])
                 // try again to decrypt the queued messages but this time with the correct key
-                assert.deepStrictEqual(received[0], data3)
-                assert.deepStrictEqual(received[1], data4)
-                assert.deepStrictEqual(received[2], data1)
-                assert.deepStrictEqual(received[3], data2)
+                expect(received[0]).toStrictEqual(data3)
+                expect(received[1]).toStrictEqual(data4)
+                expect(received[2]).toStrictEqual(data1)
+                expect(received[3]).toStrictEqual(data2)
             })
+
             it('should queue messages when cannot decrypt and handle them once the keys are updated (multiple publishers interleaved)', async () => {
                 const groupKey1 = crypto.randomBytes(32)
                 const groupKey2 = crypto.randomBytes(32)
@@ -648,21 +625,22 @@ describe('RealTimeSubscription', () => {
                 }, {
                     publisherId1: wrongGroupKey,
                 })
-                await sub.handleBroadcastMessage(msg1Pub1, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg1Pub2, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg2Pub1, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1Pub1, async () => true)
+                await sub.handleBroadcastMessage(msg1Pub2, async () => true)
+                await sub.handleBroadcastMessage(msg2Pub1, async () => true)
                 sub.setGroupKeys('publisherId1', [groupKey1])
-                await sub.handleBroadcastMessage(msg3Pub1, sinon.stub().resolves(true))
-                await sub.handleBroadcastMessage(msg2Pub2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg3Pub1, async () => true)
+                await sub.handleBroadcastMessage(msg2Pub2, async () => true)
                 sub.setGroupKeys('publisherId2', [groupKey2])
 
                 // try again to decrypt the queued messages but this time with the correct key
-                assert.deepStrictEqual(received[0], data1)
-                assert.deepStrictEqual(received[1], data2)
-                assert.deepStrictEqual(received[2], data3)
-                assert.deepStrictEqual(received[3], data4)
-                assert.deepStrictEqual(received[4], data5)
+                expect(received[0]).toStrictEqual(data1)
+                expect(received[1]).toStrictEqual(data2)
+                expect(received[2]).toStrictEqual(data3)
+                expect(received[3]).toStrictEqual(data4)
+                expect(received[4]).toStrictEqual(data5)
             })
+
             it('should call "onUnableToDecrypt" when not able to decrypt for the second time', async () => {
                 const correctGroupKey = crypto.randomBytes(32)
                 const wrongGroupKey = crypto.randomBytes(32)
@@ -684,13 +662,14 @@ describe('RealTimeSubscription', () => {
                     undecryptableMsg = error.streamMessage
                 })
                 // cannot decrypt msg1, emits "groupKeyMissing" (should send group key request).
-                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1, async () => true)
                 // cannot decrypt msg2, queues it.
-                await sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg2, async () => true)
                 // faking the reception of the group key response
                 sub.setGroupKeys('publisherId', [otherWrongGroupKey])
-                assert.deepStrictEqual(undecryptableMsg, msg2)
+                expect(undecryptableMsg).toStrictEqual(msg2)
             })
+
             it('should decrypt first content, update key and decrypt second content', async (done) => {
                 const groupKey1 = crypto.randomBytes(32)
                 const groupKey2 = crypto.randomBytes(32)
@@ -707,7 +686,7 @@ describe('RealTimeSubscription', () => {
                 let test1Ok = false
                 sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
                     if (JSON.stringify(content) === JSON.stringify(data1)) {
-                        assert.deepStrictEqual(sub.groupKeys[msg1.getPublisherId().toLowerCase()], groupKey2)
+                        expect(sub.groupKeys[msg1.getPublisherId().toLowerCase()]).toStrictEqual(groupKey2)
                         test1Ok = true
                     } else if (test1Ok && JSON.stringify(content) === JSON.stringify(data2)) {
                         done()
@@ -715,8 +694,8 @@ describe('RealTimeSubscription', () => {
                 }, {
                     publisherId: groupKey1,
                 })
-                await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
-                return sub.handleBroadcastMessage(msg2, sinon.stub().resolves(true))
+                await sub.handleBroadcastMessage(msg1, async () => true)
+                return sub.handleBroadcastMessage(msg2, async () => true)
             })
         })
     })
@@ -727,10 +706,10 @@ describe('RealTimeSubscription', () => {
             const sub = new RealTimeSubscription(
                 msg.getStreamId(),
                 msg.getStreamPartition(),
-                sinon.stub().throws('Msg handler should not be called!'),
+                () => { throw new Error('Msg handler should not be called!') },
             )
-            sub.on('error', (thrown) => {
-                assert(err === thrown)
+            sub.once('error', (thrown) => {
+                expect(err === thrown).toBeTruthy()
                 done()
             })
             sub.handleError(err)
@@ -744,31 +723,31 @@ describe('RealTimeSubscription', () => {
                 }
             })
 
-            sub.on('gap', sinon.stub().throws('Should not emit gap!'))
+            sub.once('gap', () => { throw new Error('Should not emit gap!') })
 
             const msg1 = msg
             const msg3 = createMsg(3, undefined, 2)
 
             // Receive msg1 successfully
-            await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+            await sub.handleBroadcastMessage(msg1, async () => true)
 
             // Get notified of an invalid message
             const err = new Errors.InvalidJsonError(msg.getStreamId(), 'invalid json', 'test error msg', createMsg(2, undefined, 1))
             sub.handleError(err)
 
             // Receive msg3 successfully
-            await sub.handleBroadcastMessage(msg3, sinon.stub().resolves(true))
+            await sub.handleBroadcastMessage(msg3, async () => true)
         })
 
         it('if an InvalidJsonError AND a gap occur, does not mark it as received and emits gap at the next message', async (done) => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {}, 100, 100)
+            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
 
-            sub.on('gap', (from, to, publisherId) => {
-                assert.equal(from.timestamp, 1) // cannot know the first missing message so there will be a duplicate received
-                assert.equal(from.sequenceNumber, 1)
-                assert.equal(to.timestamp, 3)
-                assert.equal(to.sequenceNumber, 0)
-                assert.equal(publisherId, 'publisherId')
+            sub.once('gap', (from, to, publisherId) => {
+                expect(from.timestamp).toEqual(1) // cannot know the first missing message so there will be a duplicate received
+                expect(from.sequenceNumber).toEqual(1)
+                expect(to.timestamp).toEqual(3)
+                expect(to.sequenceNumber).toEqual(0)
+                expect(publisherId).toEqual('publisherId')
                 setTimeout(() => {
                     sub.stop()
                     done()
@@ -779,59 +758,77 @@ describe('RealTimeSubscription', () => {
             const msg4 = createMsg(4, undefined, 3)
 
             // Receive msg1 successfully
-            await sub.handleBroadcastMessage(msg1, sinon.stub().resolves(true))
+            await sub.handleBroadcastMessage(msg1, async () => true)
 
             // Get notified of invalid msg3 (msg2 is missing)
             const err = new Errors.InvalidJsonError(msg.getStreamId(), 'invalid json', 'test error msg', createMsg(3, undefined, 2))
             sub.handleError(err)
 
             // Receive msg4 and should emit gap
-            await sub.handleBroadcastMessage(msg4, sinon.stub().resolves(true))
+            await sub.handleBroadcastMessage(msg4, async () => true)
         })
     })
 
     describe('setState()', () => {
         it('updates the state', () => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
+            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
             sub.setState(Subscription.State.subscribed)
-            assert.equal(sub.getState(), Subscription.State.subscribed)
+            expect(sub.getState()).toEqual(Subscription.State.subscribed)
         })
         it('fires an event', (done) => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
-            sub.on(Subscription.State.subscribed, done)
+            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+            sub.once(Subscription.State.subscribed, done)
             sub.setState(Subscription.State.subscribed)
         })
     })
 
     describe('handleResending()', () => {
         it('emits the resending event', (done) => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
+            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
             sub.addPendingResendRequestId('requestId')
-            sub.on('resending', () => done())
+            sub.once('resending', () => done())
             sub.setResending(true)
-            sub.handleResending(ControlLayer.ResendResponseResending.create('streamId', 0, 'requestId'))
+            sub.handleResending(new ControlLayer.ResendResponseResending({
+                streamId: 'streamId',
+                streamPartition: 0,
+                requestId: 'requestId',
+            }))
         })
     })
 
     describe('handleResent()', () => {
         it('arms the Subscription to emit the resent event on last message (message handler completes BEFORE resent)', async (done) => {
-            const handler = sinon.stub()
+            const handler = jest.fn()
             const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
             sub.addPendingResendRequestId('requestId')
-            sub.on('resent', () => done())
+            sub.once('resent', () => {
+                expect(handler).toHaveBeenCalledTimes(1)
+                done()
+            })
             sub.setResending(true)
-            await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
-            sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
+            await sub.handleResentMessage(msg, 'requestId', async () => true)
+            sub.handleResent(new ControlLayer.ResendResponseResent({
+                streamId: 'streamId',
+                streamPartition: 0,
+                requestId: 'requestId',
+            }))
         })
 
         it('arms the Subscription to emit the resent event on last message (message handler completes AFTER resent)', async (done) => {
-            const handler = sinon.stub()
+            const handler = jest.fn()
             const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
             sub.addPendingResendRequestId('requestId')
-            sub.on('resent', () => done())
+            sub.once('resent', () => {
+                expect(handler).toHaveBeenCalledTimes(1)
+                done()
+            })
             sub.setResending(true)
-            sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
-            sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
+            sub.handleResentMessage(msg, 'requestId', async () => true)
+            sub.handleResent(new ControlLayer.ResendResponseResent({
+                streamId: 'streamId',
+                streamPartition: 0,
+                requestId: 'requestId',
+            }))
         })
 
         describe('on error', () => {
@@ -849,27 +846,36 @@ describe('RealTimeSubscription', () => {
             })
 
             it('cleans up the resend if event handler throws', async () => {
-                const handler = sinon.stub()
-                sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
+                sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
                 const error = new Error('test error, ignore')
                 sub.addPendingResendRequestId('requestId')
-                sub.on('resent', sinon.stub().throws(error))
+                sub.once('resent', () => { throw error })
                 sub.setResending(true)
-                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
+                await sub.handleResentMessage(msg, 'requestId', async () => true)
 
-                await sub.handleResent(ControlLayer.ResendResponseResent.create('streamId', 0, 'requestId'))
-                assert(!sub.isResending())
+                await sub.handleResent(new ControlLayer.ResendResponseResent({
+                    streamId: 'streamId',
+                    streamPartition: 0,
+                    requestId: 'requestId',
+                }))
+                expect(!sub.isResending()).toBeTruthy()
             })
         })
     })
 
     describe('handleNoResend()', () => {
-        it('emits the no_resend event', (done) => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
+        it('emits the no_resend event', async () => {
+            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
             sub.addPendingResendRequestId('requestId')
-            sub.on('no_resend', () => done())
+            const onNoResent = new Promise((resolve) => sub.once('no_resend', resolve))
             sub.setResending(true)
-            sub.handleNoResend(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId'))
+            await sub.handleNoResend(new ControlLayer.ResendResponseNoResend({
+                streamId: 'streamId',
+                streamPartition: 0,
+                requestId: 'requestId',
+            }))
+            expect(!sub.isResending()).toBeTruthy()
+            await onNoResent
         })
 
         describe('on error', () => {
@@ -887,14 +893,17 @@ describe('RealTimeSubscription', () => {
             })
 
             it('cleans up the resend if event handler throws', async () => {
-                sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub())
+                sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
                 const error = new Error('test error, ignore')
                 sub.addPendingResendRequestId('requestId')
-                sub.on('no_resend', sinon.stub()
-                    .throws(error))
+                sub.once('no_resend', () => { throw error })
                 sub.setResending(true)
-                await sub.handleNoResend(ControlLayer.ResendResponseNoResend.create('streamId', 0, 'requestId'))
-                assert(!sub.isResending())
+                await sub.handleNoResend(new ControlLayer.ResendResponseNoResend({
+                    streamId: 'streamId',
+                    streamPartition: 0,
+                    requestId: 'requestId',
+                }))
+                expect(!sub.isResending()).toBeTruthy()
             })
         })
     })

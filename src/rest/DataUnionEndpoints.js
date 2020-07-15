@@ -386,8 +386,8 @@ export async function validateProof(dataUnionContractAddress, options) {
         } else {
             console.error(`Unexpected: ${wasCorrect}`)
         }
-        await new Promise((done) => {
-            wallet.provider.once('block', done)
+        await new Promise((resolve) => {
+            wallet.provider.once('block', resolve)
         })
     }
     throw new Error(`Failed to validate proof after ${retryBlocks} Ethereum blocks`)

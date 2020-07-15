@@ -1,4 +1,13 @@
+import { v4 as uuidv4 } from 'uuid'
+import uniqueId from 'lodash.uniqueid'
+
 import pkg from '../package.json'
+
+const UUID = uuidv4()
+
+export function uuid(label = '') {
+    return uniqueId(`p${UUID}${label ? `.${label}` : ''}`) // incrementing + human readable uuid
+}
 
 export function getVersionString() {
     const isProduction = process.env.NODE_ENV === 'production'

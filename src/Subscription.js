@@ -1,14 +1,8 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
+import uniqueId from 'lodash.uniqueid'
 
 const debug = debugFactory('StreamrClient::Subscription')
-
-let requestId = 0
-function generateSubscriptionId() {
-    const id = requestId
-    requestId += 1
-    return id.toString()
-}
 
 const DEFAULT_PROPAGATION_TIMEOUT = 5000
 const DEFAULT_RESEND_TIMEOUT = 5000
@@ -29,7 +23,7 @@ export default class Subscription extends EventEmitter {
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.callback = callback
-        this.id = generateSubscriptionId()
+        this.id = uniqueId('sub')
         this.groupKeys = {}
         if (groupKeys) {
             Object.keys(groupKeys).forEach((publisherId) => {

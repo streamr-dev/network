@@ -8,11 +8,14 @@ import { ethers } from 'ethers'
 import Stream from './rest/domain/Stream'
 import EncryptionUtil from './EncryptionUtil'
 import KeyStorageUtil from './KeyStorageUtil'
+import KeyExchangeUtil from './KeyExchangeUtil'
 import InvalidGroupKeyRequestError from './errors/InvalidGroupKeyRequestError'
 import InvalidGroupKeyResponseError from './errors/InvalidGroupKeyResponseError'
 import InvalidContentTypeError from './errors/InvalidContentTypeError'
+import { uuid } from './utils'
 
-const { StreamMessage } = MessageLayer
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
+const { getKeyExchangeStreamId } = KeyExchangeUtil
 
 export default class MessageCreationUtil {
     constructor(auth, signer, userInfoPromise, getStreamFunction, keyStorageUtil) {
@@ -95,7 +98,7 @@ export default class MessageCreationUtil {
             return null
         }
         const prevSequenceNumber = this.getPrevSequenceNumber(key)
-        return [prevTimestamp, prevSequenceNumber]
+        return new MessageRef(prevTimestamp, prevSequenceNumber)
     }
 
     getPrevTimestamp(key) {
@@ -119,10 +122,14 @@ export default class MessageCreationUtil {
         const stream = (streamObjectOrId instanceof Stream) ? streamObjectOrId : await this.getStream(streamObjectOrId)
         const streamPartition = this.computeStreamPartition(stream.partitions, partitionKey)
         const publisherId = await this.getPublisherId()
-        const idAndPrevRef = this.createMsgIdAndPrevRef(stream.id, streamPartition, timestamp, publisherId)
+        const [messageId, prevMsgRef] = this.createMsgIdAndPrevRef(stream.id, streamPartition, timestamp, publisherId)
 
-        const streamMessage = StreamMessage.create(idAndPrevRef[0], idAndPrevRef[1], StreamMessage.CONTENT_TYPES.MESSAGE,
-            StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.NONE, null)
+        const streamMessage = new StreamMessage({
+            messageId,
+            prevMsgRef,
+            content: data,
+            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+        })
 
         if (groupKey && this.keyStorageUtil.hasKey(stream.id) && groupKey !== this.keyStorageUtil.getLatestKey(stream.id).groupKey) {
             EncryptionUtil.encryptStreamMessageAndNewKey(groupKey, streamMessage, this.keyStorageUtil.getLatestKey(stream.id).groupKey)
@@ -140,14 +147,22 @@ export default class MessageCreationUtil {
         return streamMessage
     }
 
-    async createGroupKeyRequest(publisherAddress, streamId, rsaPublicKey, start, end) {
+    async createGroupKeyRequest({
+        messagePublisherAddress,
+        streamId,
+        publicKey,
+        start,
+        end,
+    }) {
         if (!this._signer) {
             throw new Error('Cannot create unsigned group key request. Must authenticate with "privateKey" or "provider"')
         }
         const publisherId = await this.getPublisherId()
+        const requestId = uuid('GroupKeyRequest')
         const data = {
             streamId,
-            publicKey: rsaPublicKey,
+            requestId,
+            publicKey,
         }
         if (start && end) {
             data.range = {
@@ -155,30 +170,40 @@ export default class MessageCreationUtil {
                 end,
             }
         }
-        const idAndPrevRef = this.createDefaultMsgIdAndPrevRef(publisherAddress.toLowerCase(), publisherId)
-        const streamMessage = StreamMessage.create(idAndPrevRef[0], idAndPrevRef[1], StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
-            StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.NONE, null)
+        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(getKeyExchangeStreamId(messagePublisherAddress), publisherId)
+        const streamMessage = new StreamMessage({
+            messageId,
+            prevMsgRef,
+            contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
+            content: data,
+        })
         await this._signer.signStreamMessage(streamMessage)
         return streamMessage
     }
 
-    async createGroupKeyResponse(subscriberAddress, streamId, encryptedGroupKeys) {
+    async createGroupKeyResponse({ subscriberAddress, streamId, requestId, encryptedGroupKeys }) {
         if (!this._signer) {
             throw new Error('Cannot create unsigned group key response. Must authenticate with "privateKey" or "provider"')
         }
         const publisherId = await this.getPublisherId()
         const data = {
+            requestId,
             streamId,
             keys: encryptedGroupKeys,
         }
-        const idAndPrevRef = this.createDefaultMsgIdAndPrevRef(subscriberAddress.toLowerCase(), publisherId)
-        const streamMessage = StreamMessage.create(idAndPrevRef[0], idAndPrevRef[1], StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
-            StreamMessage.ENCRYPTION_TYPES.RSA, data, StreamMessage.SIGNATURE_TYPES.NONE, null)
+        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(getKeyExchangeStreamId(subscriberAddress), publisherId)
+        const streamMessage = new StreamMessage({
+            messageId,
+            prevMsgRef,
+            contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
+            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
+            content: data,
+        })
         await this._signer.signStreamMessage(streamMessage)
         return streamMessage
     }
 
-    async createErrorMessage(destinationAddress, error) {
+    async createErrorMessage({ destinationAddress, streamId, error, requestId }) {
         if (!this._signer) {
             throw new Error('Cannot create unsigned error message. Must authenticate with "privateKey" or "provider"')
         }
@@ -186,10 +211,17 @@ export default class MessageCreationUtil {
         const data = {
             code: MessageCreationUtil.getErrorCodeFromError(error),
             message: error.message,
+            streamId,
+            requestId,
         }
-        const idAndPrevRef = this.createDefaultMsgIdAndPrevRef(destinationAddress.toLowerCase(), publisherId)
-        const streamMessage = StreamMessage.create(idAndPrevRef[0], idAndPrevRef[1], StreamMessage.CONTENT_TYPES.ERROR_MSG,
-            StreamMessage.ENCRYPTION_TYPES.NONE, data, StreamMessage.SIGNATURE_TYPES.NONE, null)
+        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(destinationAddress.toLowerCase(), publisherId)
+        const streamMessage = new StreamMessage({
+            messageId,
+            prevMsgRef,
+            contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE,
+            content: data,
+        })
+
         await this._signer.signStreamMessage(streamMessage)
         return streamMessage
     }
@@ -204,11 +236,11 @@ export default class MessageCreationUtil {
         }
 
         const sequenceNumber = this.getNextSequenceNumber(key, timestamp)
-        const msgId = [streamId, streamPartition, timestamp, sequenceNumber, publisherId, this.msgChainId]
-        const prevRef = this.getPrevMsgRef(key)
+        const messageId = new MessageID(streamId, streamPartition, timestamp, sequenceNumber, publisherId, this.msgChainId)
+        const prevMsgRef = this.getPrevMsgRef(key)
         this.publishedStreams[key].prevTimestamp = timestamp
         this.publishedStreams[key].prevSequenceNumber = sequenceNumber
-        return [msgId, prevRef]
+        return [messageId, prevMsgRef]
     }
 
     createDefaultMsgIdAndPrevRef(streamId, publisherId) {

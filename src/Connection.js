@@ -134,7 +134,7 @@ class Connection extends EventEmitter {
         })
     }
 
-    send(controlLayerRequest) {
+    async send(controlLayerRequest) {
         return new Promise((resolve, reject) => {
             try {
                 const serialized = controlLayerRequest.serialize()

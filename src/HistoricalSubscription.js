@@ -48,7 +48,7 @@ export default class HistoricalSubscription extends AbstractSubscription {
     }
 
     async handleBroadcastMessage(msg, verifyFn) {
-        await AbstractSubscription.validate(msg, verifyFn)
+        await this._queuedValidate(msg, verifyFn)
         this.emit('message received', msg)
     }
 

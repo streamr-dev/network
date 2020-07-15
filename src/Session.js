@@ -69,23 +69,24 @@ export default class Session extends EventEmitter {
 
     async logout() {
         if (this.state === Session.State.LOGGED_OUT) {
-            return Promise.reject(new Error('Already logged out!'))
+            throw new Error('Already logged out!')
         }
 
         if (this.state === Session.State.LOGGING_OUT) {
-            return Promise.reject(new Error('Already logging out!'))
+            throw new Error('Already logging out!')
         }
 
         if (this.state === Session.State.LOGGING_IN) {
-            return new Promise((resolve) => {
+            await new Promise((resolve) => {
                 this.once(Session.State.LOGGED_IN, () => resolve(this.logout()))
             })
+            return
         }
+
         this.updateState(Session.State.LOGGING_OUT)
-        return this._client.logoutEndpoint().then(() => {
-            this.options.sessionToken = undefined
-            this.updateState(Session.State.LOGGED_OUT)
-        })
+        await this._client.logoutEndpoint()
+        this.options.sessionToken = undefined
+        this.updateState(Session.State.LOGGED_OUT)
     }
 }
 

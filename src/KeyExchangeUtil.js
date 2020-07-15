@@ -7,59 +7,54 @@ import InvalidGroupKeyError from './errors/InvalidGroupKeyError'
 
 const debug = debugFactory('KeyExchangeUtil')
 const SUBSCRIBERS_EXPIRATION_TIME = 5 * 60 * 1000 // 5 minutes
+
 export default class KeyExchangeUtil {
+    static getKeyExchangeStreamId(publisherId) {
+        if (!publisherId || typeof publisherId !== 'string') { throw new Error(`non-empty publisherId string required: ${publisherId}`) }
+        return `SYSTEM/keyexchange/${publisherId.toLowerCase()}`
+    }
+
     constructor(client) {
         this._client = client
         this.isSubscriberPromises = {}
     }
 
     async handleGroupKeyRequest(streamMessage) {
-        // if it was signed, the StreamrClient already checked the signature. If not, StreamrClient accepted it since the stream
-        // does not require signed data for all types of messages.
-        if (!streamMessage.signature) {
-            throw new InvalidGroupKeyRequestError('Received unsigned group key request (the public key must be signed to avoid MitM attacks).')
-        }
         // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
-        const parsedContent = streamMessage.getParsedContent()
+        const { streamId, range, requestId, publicKey } = streamMessage.getParsedContent()
         let keys = []
-        if (parsedContent.range) {
-            keys = this._client.keyStorageUtil.getKeysBetween(parsedContent.streamId, parsedContent.range.start, parsedContent.range.end)
+        if (range) {
+            keys = this._client.keyStorageUtil.getKeysBetween(streamId, range.start, range.end)
         } else {
-            const groupKeyObj = this._client.keyStorageUtil.getLatestKey(parsedContent.streamId, true)
+            const groupKeyObj = this._client.keyStorageUtil.getLatestKey(streamId, true)
             if (groupKeyObj) {
                 keys.push(groupKeyObj)
             }
         }
 
         if (keys.length === 0) {
-            throw new InvalidGroupKeyRequestError(`Received group key request for stream '${parsedContent.streamId}' but no group key is set`)
+            throw new InvalidGroupKeyRequestError(`Received group key request for stream '${streamId}' but no group key is set`)
         }
         const subscriberId = streamMessage.getPublisherId()
-        const valid = await this.isValidSubscriber(parsedContent.streamId, subscriberId)
-        if (!valid) {
-            throw new InvalidGroupKeyRequestError(
-                `Received group key request for stream '${parsedContent.streamId}' from invalid address '${subscriberId}'`
-            )
-        }
 
         const encryptedGroupKeys = []
         keys.forEach((keyObj) => {
-            const encryptedGroupKey = EncryptionUtil.encryptWithPublicKey(keyObj.groupKey, parsedContent.publicKey, true)
+            const encryptedGroupKey = EncryptionUtil.encryptWithPublicKey(keyObj.groupKey, publicKey, true)
             encryptedGroupKeys.push({
                 groupKey: encryptedGroupKey,
                 start: keyObj.start,
             })
         })
-        const response = await this._client.msgCreationUtil.createGroupKeyResponse(subscriberId, parsedContent.streamId, encryptedGroupKeys)
+        const response = await this._client.msgCreationUtil.createGroupKeyResponse({
+            subscriberAddress: subscriberId,
+            streamId,
+            encryptedGroupKeys,
+            requestId,
+        })
         return this._client.publishStreamMessage(response)
     }
 
     handleGroupKeyResponse(streamMessage) {
-        // if it was signed, the StreamrClient already checked the signature. If not, StreamrClient accepted it since the stream
-        // does not require signed data for all types of messages.
-        if (!streamMessage.signature) {
-            throw new InvalidGroupKeyResponseError('Received unsigned group key response (it must be signed to avoid MitM attacks).')
-        }
         // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
         const parsedContent = streamMessage.getParsedContent()
         // TODO: fix this hack in other PR
@@ -70,6 +65,7 @@ export default class KeyExchangeUtil {
         if (!this._client.encryptionUtil) {
             throw new InvalidGroupKeyResponseError('Cannot decrypt group key response without the private key.')
         }
+
         const decryptedGroupKeys = []
         parsedContent.keys.forEach((encryptedGroupKeyObj) => {
             const groupKey = this._client.encryptionUtil.decryptWithPrivateKey(encryptedGroupKeyObj.groupKey, true)
@@ -117,15 +113,6 @@ export default class KeyExchangeUtil {
         }
         return this.isSubscriberPromises[streamId][subscriberId]
     }
-
-    async isValidSubscriber(streamId, ethAddress) {
-        const cache = await this.getSubscribers(streamId)
-        if (cache[ethAddress]) {
-            return cache[ethAddress]
-        }
-        const isValid = await this.isSubscriber(streamId, ethAddress)
-        cache[ethAddress] = isValid
-        return isValid
-    }
 }
+
 KeyExchangeUtil.SUBSCRIBERS_EXPIRATION_TIME = SUBSCRIBERS_EXPIRATION_TIME

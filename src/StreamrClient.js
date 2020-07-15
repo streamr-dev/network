@@ -6,22 +6,14 @@ import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 
 const {
-    BroadcastMessage,
-    UnicastMessage,
     SubscribeRequest,
-    SubscribeResponse,
     UnsubscribeRequest,
-    UnsubscribeResponse,
-    ResendResponseResending,
-    ResendResponseNoResend,
-    ResendResponseResent,
     ResendLastRequest,
     ResendFromRequest,
     ResendRangeRequest,
-    ErrorResponse,
     ControlMessage,
 } = ControlLayer
-const { StreamMessage } = MessageLayer
+const { StreamMessage, MessageRef } = MessageLayer
 const debug = debugFactory('StreamrClient')
 
 import HistoricalSubscription from './HistoricalSubscription'
@@ -40,9 +32,7 @@ import EncryptionUtil from './EncryptionUtil'
 import KeyExchangeUtil from './KeyExchangeUtil'
 import KeyStorageUtil from './KeyStorageUtil'
 import ResendUtil from './ResendUtil'
-import InvalidGroupKeyResponseError from './errors/InvalidGroupKeyResponseError'
 import InvalidContentTypeError from './errors/InvalidContentTypeError'
-import InvalidGroupKeyRequestError from './errors/InvalidGroupKeyRequestError'
 
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
@@ -151,7 +141,7 @@ export default class StreamrClient extends EventEmitter {
         })
 
         // Broadcast messages to all subs listening on stream-partition
-        this.connection.on(BroadcastMessage.TYPE, (msg) => {
+        this.connection.on(ControlMessage.TYPES.BroadcastMessage, (msg) => {
             const stream = this._getSubscribedStreamPartition(msg.streamMessage.getStreamId(), msg.streamMessage.getStreamPartition())
             if (stream) {
                 const verifyFn = once(() => stream.verifyStreamMessage(msg.streamMessage)) // ensure verification occurs only once
@@ -163,7 +153,7 @@ export default class StreamrClient extends EventEmitter {
         })
 
         // Unicast messages to a specific subscription only
-        this.connection.on(UnicastMessage.TYPE, async (msg) => {
+        this.connection.on(ControlMessage.TYPES.UnicastMessage, async (msg) => {
             const stream = this._getSubscribedStreamPartition(msg.streamMessage.getStreamId(), msg.streamMessage.getStreamPartition())
             if (stream) {
                 const sub = this.resendUtil.getSubFromResendResponse(msg)
@@ -182,7 +172,7 @@ export default class StreamrClient extends EventEmitter {
             }
         })
 
-        this.connection.on(SubscribeResponse.TYPE, (response) => {
+        this.connection.on(ControlMessage.TYPES.SubscribeResponse, (response) => {
             const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             if (stream) {
                 stream.setSubscribing(false)
@@ -192,7 +182,7 @@ export default class StreamrClient extends EventEmitter {
             debug('Client subscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
         })
 
-        this.connection.on(UnsubscribeResponse.TYPE, (response) => {
+        this.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (response) => {
             debug('Client unsubscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
             const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             if (stream) {
@@ -206,7 +196,7 @@ export default class StreamrClient extends EventEmitter {
         })
 
         // Route resending state messages to corresponding Subscriptions
-        this.connection.on(ResendResponseResending.TYPE, (response) => {
+        this.connection.on(ControlMessage.TYPES.ResendResponseResending, (response) => {
             const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             const sub = this.resendUtil.getSubFromResendResponse(response)
 
@@ -217,7 +207,7 @@ export default class StreamrClient extends EventEmitter {
             }
         })
 
-        this.connection.on(ResendResponseNoResend.TYPE, (response) => {
+        this.connection.on(ControlMessage.TYPES.ResendResponseNoResend, (response) => {
             const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             const sub = this.resendUtil.getSubFromResendResponse(response)
             this.resendUtil.deleteDoneSubsByResponse(response)
@@ -229,7 +219,7 @@ export default class StreamrClient extends EventEmitter {
             }
         })
 
-        this.connection.on(ResendResponseResent.TYPE, (response) => {
+        this.connection.on(ControlMessage.TYPES.ResendResponseResent, (response) => {
             const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             const sub = this.resendUtil.getSubFromResendResponse(response)
             this.resendUtil.deleteDoneSubsByResponse(response)
@@ -278,10 +268,9 @@ export default class StreamrClient extends EventEmitter {
                 })
         })
 
-        this.connection.on(ErrorResponse.TYPE, (err) => {
+        this.connection.on(ControlMessage.TYPES.ErrorResponse, (err) => {
             const errorObject = new Error(err.errorMessage)
             this.emit('error', errorObject)
-            console.error(errorObject)
         })
 
         this.connection.on('error', async (err) => {
@@ -297,7 +286,6 @@ export default class StreamrClient extends EventEmitter {
                 // if it looks like an error emit as-is, otherwise wrap in new Error
                 const errorObject = (err && err.stack && err.message) ? err : new Error(err)
                 this.emit('error', errorObject)
-                console.error(errorObject)
             }
         })
     }
@@ -305,47 +293,34 @@ export default class StreamrClient extends EventEmitter {
     async _subscribeToInboxStream() {
         if (this.options.auth.privateKey || this.options.auth.provider) {
             // subscribing to own inbox stream
-            const ethAddress = await this.getPublisherId()
-            this.subscribe(ethAddress, async (parsedContent, streamMessage) => {
-                try {
-                    if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
-                        if (this.keyExchangeUtil) {
+            const publisherId = await this.getPublisherId()
+            const streamId = KeyExchangeUtil.getKeyExchangeStreamId(publisherId)
+            this.subscribe(streamId, async (parsedContent, streamMessage) => {
+                if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
+                    if (this.keyExchangeUtil) {
+                        try {
                             await this.keyExchangeUtil.handleGroupKeyRequest(streamMessage)
-                        }
-                    } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
-                        if (this.keyExchangeUtil) {
-                            const { streamId } = streamMessage.getParsedContent()
-                            // A valid publisher of the client's inbox stream could send key responses for other streams to which
-                            // the publisher doesn't have write permissions. Thus the following additional check is necessary.
-                            // TODO: fix this hack in other PR (and move logic to keyExchangeUtil)
-                            const valid = await this.subscribedStreamPartitions[streamId + '0'].isValidPublisher(streamMessage.getPublisherId())
-                            if (valid) {
-                                this.keyExchangeUtil.handleGroupKeyResponse(streamMessage)
-                            } else {
-                                throw new InvalidGroupKeyResponseError(
-                                    `Received group key from an invalid publisher ${streamMessage.getPublisherId()} for stream ${streamId}`
-                                )
-                            }
-                        }
-                    } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.ERROR_MSG) {
-                        debug('WARN: Received error of type %s from %s: %s',
-                            streamMessage.getParsedContent().code, streamMessage.getPublisherId(), streamMessage.getParsedContent().message)
-                    } else {
-                        throw new InvalidContentTypeError(`Cannot handle message with content type: ${streamMessage.contentType}`)
-                    }
-                } catch (err) {
-                    if (err instanceof InvalidGroupKeyRequestError
-                        || err instanceof InvalidGroupKeyResponseError
-                        || err instanceof InvalidContentTypeError) {
-                        debug('WARN: %s', err.message)
-                        // we don't notify the error to the originator if the message is unauthenticated.
-                        if (streamMessage.signature) {
-                            const errorMessage = await this.msgCreationUtil.createErrorMessage(streamMessage.getPublisherId(), err)
+                        } catch (error) {
+                            debug('WARN: %s', error.message)
+                            const msg = streamMessage.getParsedContent()
+                            const errorMessage = await this.msgCreationUtil.createErrorMessage({
+                                destinationAddress: streamId,
+                                requestId: msg.requestId,
+                                streamId: msg.streamId,
+                                error,
+                            })
                             this.publishStreamMessage(errorMessage)
                         }
-                    } else {
-                        throw err
                     }
+                } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
+                    if (this.keyExchangeUtil) {
+                        this.keyExchangeUtil.handleGroupKeyResponse(streamMessage)
+                    }
+                } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+                    debug('WARN: Received error of type %s from %s: %s',
+                        streamMessage.getParsedContent().code, streamMessage.getPublisherId(), streamMessage.getParsedContent().message)
+                } else {
+                    throw new InvalidContentTypeError(`Cannot handle message with content type: ${streamMessage.contentType}`)
                 }
             })
         }
@@ -570,12 +545,16 @@ export default class StreamrClient extends EventEmitter {
             debug('done event for sub %d', sub.id)
             this.unsubscribe(sub)
         })
-        sub.on('groupKeyMissing', async (publisherId, start, end) => {
+        sub.on('groupKeyMissing', async (messagePublisherAddress, start, end) => {
             if (this.encryptionUtil) {
                 await this.encryptionUtil.onReady()
-                const streamMessage = await this.msgCreationUtil.createGroupKeyRequest(
-                    publisherId, sub.streamId, this.encryptionUtil.getPublicKey(), start, end,
-                )
+                const streamMessage = await this.msgCreationUtil.createGroupKeyRequest({
+                    messagePublisherAddress,
+                    streamId: sub.streamId,
+                    publicKey: this.encryptionUtil.getPublicKey(),
+                    start,
+                    end,
+                })
                 await this.publishStreamMessage(streamMessage)
             }
         })
@@ -717,6 +696,9 @@ export default class StreamrClient extends EventEmitter {
 
     async ensureDisconnected() {
         this.connection.clearReconnectTimeout()
+        if (this.msgCreationUtil) {
+            this.msgCreationUtil.stop()
+        }
 
         if (this.isDisconnected()) {
             return Promise.resolve()
@@ -780,7 +762,12 @@ export default class StreamrClient extends EventEmitter {
 
         // If this is the first subscription for this stream-partition, send a subscription request to the server
         if (!sp.isSubscribing() && subscribedSubs.length === 0) {
-            const request = SubscribeRequest.create(sub.streamId, sub.streamPartition, sessionToken)
+            const request = new SubscribeRequest({
+                streamId: sub.streamId,
+                streamPartition: sub.streamPartition,
+                sessionToken,
+                requestId: this.resendUtil.generateRequestId(),
+            })
             debug('_requestSubscribe: subscribing client: %o', request)
             sp.setSubscribing(true)
             await this.connection.send(request).catch((err) => {
@@ -799,7 +786,11 @@ export default class StreamrClient extends EventEmitter {
 
     async _requestUnsubscribe(sub) {
         debug('Client unsubscribing stream %o partition %o', sub.streamId, sub.streamPartition)
-        const unsubscribeRequest = UnsubscribeRequest.create(sub.streamId, sub.streamPartition)
+        const unsubscribeRequest = new UnsubscribeRequest({
+            streamId: sub.streamId,
+            streamPartition: sub.streamPartition,
+            requestId: this.resendUtil.generateRequestId(),
+        })
         await this.connection.send(unsubscribeRequest).catch((err) => {
             sub.setState(Subscription.State.subscribed)
             this.handleError(`Failed to send unsubscribe request: ${err}`)
@@ -815,18 +806,34 @@ export default class StreamrClient extends EventEmitter {
         if (!this.isConnected()) { return }
         let request
         if (options.last > 0) {
-            request = ResendLastRequest.create(sub.streamId, sub.streamPartition, requestId, options.last, sessionToken)
+            request = new ResendLastRequest({
+                streamId: sub.streamId,
+                streamPartition: sub.streamPartition,
+                requestId,
+                numberLast: options.last,
+                sessionToken,
+            })
         } else if (options.from && !options.to) {
-            request = ResendFromRequest.create(
-                sub.streamId, sub.streamPartition, requestId, [options.from.timestamp, options.from.sequenceNumber],
-                options.publisherId || null, options.msgChainId || null, sessionToken,
-            )
+            request = new ResendFromRequest({
+                streamId: sub.streamId,
+                streamPartition: sub.streamPartition,
+                requestId,
+                fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
+                publisherId: options.publisherId,
+                msgChainId: options.msgChainId,
+                sessionToken,
+            })
         } else if (options.from && options.to) {
-            request = ResendRangeRequest.create(
-                sub.streamId, sub.streamPartition, requestId, [options.from.timestamp, options.from.sequenceNumber],
-                [options.to.timestamp, options.to.sequenceNumber],
-                options.publisherId || null, options.msgChainId || null, sessionToken,
-            )
+            request = new ResendRangeRequest({
+                streamId: sub.streamId,
+                streamPartition: sub.streamPartition,
+                requestId,
+                fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
+                toMsgRef: new MessageRef(options.to.timestamp, options.to.sequenceNumber),
+                publisherId: options.publisherId,
+                msgChainId: options.msgChainId,
+                sessionToken,
+            })
         }
 
         if (request) {
@@ -845,7 +852,12 @@ export default class StreamrClient extends EventEmitter {
     }
 
     _requestPublish(streamMessage, sessionToken) {
-        const request = ControlLayer.PublishRequest.create(streamMessage, sessionToken)
+        const requestId = this.resendUtil.generateRequestId()
+        const request = new ControlLayer.PublishRequest({
+            streamMessage,
+            requestId,
+            sessionToken,
+        })
         debug('_requestPublish: %o', request)
         return this.connection.send(request)
     }

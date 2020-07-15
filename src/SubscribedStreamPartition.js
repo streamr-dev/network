@@ -1,99 +1,85 @@
-import debugFactory from 'debug'
+import { Utils, MessageLayer } from 'streamr-client-protocol'
+import memoize from 'promise-memoize'
 
-import Signer from './Signer'
+import SignatureRequiredError from './errors/SignatureRequiredError'
 
-const debug = debugFactory('StreamrClient::SubscribedStreamPartition')
+const { StreamMessageValidator } = Utils
+const { StreamMessage } = MessageLayer
 
-const PUBLISHERS_EXPIRATION_TIME = 30 * 60 * 1000 // 30 minutes
+const memoizeOpts = {
+    maxAge: 15 * 60 * 1000,
+    maxErrorAge: 60 * 1000,
+}
+
 export default class SubscribedStreamPartition {
     constructor(client, streamId, streamPartition) {
         this._client = client
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.subscriptions = {}
-        this.isPublisherPromises = {}
+        this.getStream = memoize(this.getStream.bind(this), memoizeOpts)
+        this.validator = new StreamMessageValidator({
+            getStream: this.getStream,
+            isPublisher: memoize(async (publisherId, _streamId) => (
+                this._client.isStreamPublisher(_streamId, publisherId)
+            ), memoizeOpts),
+            isSubscriber: memoize(async (ethAddress, _streamId) => (
+                this._client.isStreamSubscriber(_streamId, ethAddress)
+            ), memoizeOpts),
+        })
+        this.getPublishers = memoize(this.getPublishers.bind(this), memoizeOpts)
+        this.getSubscribers = memoize(this.getSubscribers.bind(this), memoizeOpts)
+        this.isValidPublisher = memoize(this.isValidPublisher.bind(this), memoizeOpts)
+        this.isValidSubscriber = memoize(this.isValidSubscriber.bind(this), memoizeOpts)
     }
 
     async getPublishers() {
-        if (!this.publishersPromise || (Date.now() - this.lastUpdated) > PUBLISHERS_EXPIRATION_TIME) {
-            this.publishersPromise = this._client.getStreamPublishers(this.streamId).then((publishers) => {
-                const map = {}
-                publishers.forEach((p) => {
-                    map[p] = true
-                })
-                return map
+        const publishers = await this._client.getStreamPublishers(this.streamId)
+        return publishers.reduce((obj, key) => (
+            Object.assign(obj, {
+                [key]: true
             })
-            this.lastUpdated = Date.now()
-        }
-        return this.publishersPromise
+        ), {})
     }
 
-    async _isPublisher(publisherId) {
-        if (!this.isPublisherPromises[publisherId]) {
-            this.isPublisherPromises[publisherId] = this._client.isStreamPublisher(this.streamId, publisherId)
-        }
-        return this.isPublisherPromises[publisherId]
+    async getSubscribers() {
+        const subscribers = await this._client.getStreamSubscribers(this.streamId)
+        return subscribers.reduce((obj, key) => (
+            Object.assign(obj, {
+                [key]: true
+            })
+        ), {})
     }
 
     async isValidPublisher(publisherId) {
-        const cache = await this.getPublishers()
-        if (cache[publisherId]) {
-            return cache[publisherId]
-        }
-        const isValid = await this._isPublisher(publisherId)
-        cache[publisherId] = isValid
-        return isValid
+        return this._client.isStreamPublisher(this.streamId, publisherId)
+    }
+
+    async isValidSubscriber(ethAddress) {
+        return this._client.isStreamSubscriber(this.streamId, ethAddress)
     }
 
     async verifyStreamMessage(msg) {
-        if (msg.version !== 31) {
-            debug(`Can handle only StreamMessageV31, not version ${msg.version}`)
-            return false
+        // Check special cases controlled by the verifySignatures policy
+        const { options } = this._client
+        if (options.verifySignatures === 'never' && msg.contentType === StreamMessage.CONTENT_TYPES.MESSAGE) {
+            return // no validation required
         }
 
-        if (this._client.options.verifySignatures === 'always') {
-            if (msg.signatureType && msg.signatureType !== 0 && msg.signature) {
-                const isValid = await this.isValidPublisher(msg.getPublisherId().toLowerCase())
-                if (!isValid) {
-                    return false
-                }
-                return Signer.verifyStreamMessage(msg)
-            }
-            return false
+        if (options.verifySignatures === 'always' && !msg.signature) {
+            throw new SignatureRequiredError(msg)
         }
 
-        if (this._client.options.verifySignatures === 'never') {
-            return true
-        }
-
-        // if this._client.options.verifySignatures === 'auto'
-        if (msg.signatureType && msg.signatureType !== 0 && msg.signature) { // always verify in case the message is signed
-            const isValid = await this.isValidPublisher(msg.getPublisherId().toLowerCase())
-            if (!isValid) {
-                return false
-            }
-            return Signer.verifyStreamMessage(msg)
-        }
-        return !(await this.getVerifySignatures())
+        // In all other cases validate using the validator
+        await this.validator.validate(msg) // will throw with appropriate validation failure
     }
 
     async getStream() {
-        if (!this.streamPromise) {
-            this.streamPromise = this._client.getStream(this.streamId)
-        }
-        return this.streamPromise
+        return this._client.getStream(this.streamId)
     }
 
-    async getVerifySignatures() {
-        if (this.requireSignedData === undefined) {
-            const stream = await this.getStream()
-            this.requireSignedData = stream.requireSignedData
-        }
-        return this.requireSignedData
-    }
-
-    getSubscription(requestId) {
-        return this.subscriptions[requestId]
+    getSubscription(subscriptionId) {
+        return this.subscriptions[subscriptionId]
     }
 
     getSubscriptions() {
@@ -129,4 +115,5 @@ export default class SubscribedStreamPartition {
         })
     }
 }
-SubscribedStreamPartition.PUBLISHERS_EXPIRATION_TIME = PUBLISHERS_EXPIRATION_TIME
+
+SubscribedStreamPartition.memoizeOpts = memoizeOpts

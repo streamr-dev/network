@@ -1,17 +1,19 @@
 import EventEmitter from 'eventemitter3'
 import { ControlLayer } from 'streamr-client-protocol'
 
+import { uuid } from './utils'
+
+const { ControlMessage } = ControlLayer
+
 export default class ResendUtil extends EventEmitter {
     constructor() {
         super()
         this.subForRequestId = {}
-        this.counter = 0
     }
 
+    /* eslint-disable-next-line class-methods-use-this */
     generateRequestId() {
-        const id = this.counter
-        this.counter += 1
-        return id.toString()
+        return uuid('r')
     }
 
     _subForRequestIdExists(requestId) {
@@ -29,7 +31,7 @@ export default class ResendUtil extends EventEmitter {
 
     deleteDoneSubsByResponse(response) {
         // TODO: replace with response.requestId
-        if (response.type === ControlLayer.ResendResponseResent.TYPE || response.type === ControlLayer.ResendResponseNoResend.TYPE) {
+        if (response.type === ControlMessage.TYPES.ResendResponseResent || response.type === ControlMessage.TYPES.ResendResponseNoResend) {
             delete this.subForRequestId[response.requestId]
         }
     }

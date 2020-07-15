@@ -75,7 +75,7 @@ describe('Subscription', () => {
         subscription.on('resent', () => events.push('resent'))
         subscription.on('no_resend', () => events.push('no_resend'))
         subscription.on('unsubscribed', () => events.push('unsubscribed'))
-        subscription.on('error', () => events.push('unsubscribed'))
+        subscription.on('error', () => events.push('error'))
         return events
     }
 
