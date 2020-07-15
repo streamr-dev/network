@@ -29,11 +29,11 @@ class Connection extends EventEmitter {
 
     async connect() {
         if (this.state === Connection.State.CONNECTING) {
-            return Promise.reject(new Error('Already connecting!'))
+            throw new Error('Already connecting!')
         }
 
         if (this.state === Connection.State.CONNECTED) {
-            return Promise.reject(new Error('Already connected!'))
+            throw new Error('Already connected!')
         }
 
         if (this.state === Connection.State.DISCONNECTING) {
@@ -106,19 +106,19 @@ class Connection extends EventEmitter {
         clearTimeout(this._reconnectTimeout)
     }
 
-    disconnect() {
+    async disconnect() {
         this.clearReconnectTimeout()
 
         if (this.state === Connection.State.DISCONNECTING) {
-            return Promise.reject(new Error('Already disconnecting!'))
+            throw new Error('Already disconnecting!')
         }
 
         if (this.state === Connection.State.DISCONNECTED) {
-            return Promise.reject(new Error('Already disconnected!'))
+            throw new Error('Already disconnected!')
         }
 
         if (this.socket === undefined) {
-            return Promise.reject(new Error('Something is wrong: socket is undefined!'))
+            throw new Error('Something is wrong: socket is undefined!')
         }
 
         if (this.state === Connection.State.CONNECTING) {
@@ -148,7 +148,7 @@ class Connection extends EventEmitter {
                 })
 
                 if (process.browser) {
-                    resolve()
+                    resolve(controlLayerRequest)
                 }
             } catch (err) {
                 this.emit('error', err)
