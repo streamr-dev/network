@@ -1,4 +1,4 @@
-name: Test, Eslint and Publish
+name: Test, Eslint & Publish
 
 on:
   push:
@@ -116,7 +116,7 @@ jobs:
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed -m test
 
   publish:
-    needs: [test, eslint]
+    needs: [test, eslint, integration, streamr-client-testing-tool]
     name: Publishing master using Node 12
     runs-on: ubuntu-latest
 
