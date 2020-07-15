@@ -117,9 +117,9 @@ export default class AbstractSubscription extends Subscription {
     _requestGroupKeyAndQueueMessage(msg, start, end) {
         this.emit('groupKeyMissing', msg.getPublisherId(), start, end)
         const publisherId = msg.getPublisherId().toLowerCase()
-        this.nbGroupKeyRequests[publisherId] = this.nbGroupKeyRequests[publisherId] + 1 || 1
+        this.nbGroupKeyRequests[publisherId] = 1
         clearInterval(this.waitingForGroupKey[publisherId])
-        const timer = setInterval(() => {
+        this.waitingForGroupKey[publisherId] = setInterval(() => {
             if (this.nbGroupKeyRequests[publisherId] < MAX_NB_GROUP_KEY_REQUESTS) {
                 this.nbGroupKeyRequests[publisherId] += 1
                 this.emit('groupKeyMissing', msg.getPublisherId(), start, end)
@@ -128,7 +128,6 @@ export default class AbstractSubscription extends Subscription {
                 this._cancelGroupKeyRequest(publisherId)
             }
         }, this.propagationTimeout)
-        this.waitingForGroupKey[publisherId] = timer
         this._addMsgToQueue(msg)
     }
 
