@@ -55,9 +55,6 @@ jobs:
       - name: benchmarks
         run: npm run benchmarks
 
-      - name: test-browser
-        run: npm run test-browser
-
   integration:
     name: Integration testing using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -78,6 +75,9 @@ jobs:
           git clone https://github.com/streamr-dev/streamr-docker-dev.git
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
+
+      - name: test-browser
+        run: npm run test-browser
 
       - name: test-integration
         run: npm run test-integration
