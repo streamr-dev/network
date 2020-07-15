@@ -1,6 +1,5 @@
 import { Errors, Utils } from 'streamr-client-protocol'
 
-import VerificationFailedError from './errors/VerificationFailedError'
 import Subscription from './Subscription'
 import UnableToDecryptError from './errors/UnableToDecryptError'
 

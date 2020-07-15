@@ -1,6 +1,5 @@
 import crypto from 'crypto'
 
-import sinon from 'sinon'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 
 import RealTimeSubscription from '../../src/RealTimeSubscription'
