@@ -53,7 +53,7 @@ jobs:
         run: npm run build
 
       - name: benchmarks
-            npm run benchmarks
+        run: npm run benchmarks
 
       - name: test-browser
         run: npm run test-browser
