@@ -376,7 +376,7 @@ describe('MessageCreationUtil', () => {
                 end: 2344155,
             })
 
-            expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('publisherId')) // sending to publisher's inbox stream
+            expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('publisherId')) // sending to publisher's keyexchange stream
             const content = streamMessage.getParsedContent()
             expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST)
             expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.NONE)
@@ -443,7 +443,7 @@ describe('MessageCreationUtil', () => {
                 }]
             })
 
-            expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('subscriberId')) // sending to subscriber's inbox stream
+            expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('subscriberId')) // sending to subscriber's keyexchange stream
             const content = streamMessage.getParsedContent()
             expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE)
             expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.RSA)
@@ -506,7 +506,7 @@ describe('MessageCreationUtil', () => {
                 requestId,
             })
 
-            expect(streamMessage.getStreamId()).toBe('destinationAddress') // sending to subscriber's inbox stream
+            expect(streamMessage.getStreamId()).toBe('destinationAddress') // sending to subscriber's keyexchange stream
 
             const content = streamMessage.getParsedContent()
             expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE)

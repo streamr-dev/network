@@ -89,7 +89,7 @@ describe('KeyExchangeUtil', () => {
         it('should reject request for a stream for which the client does not have a group key', async (done) => {
             const requestId = uid('requestId')
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict('clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''),
+                messageId: new MessageIDStrict('clientKeyExchangeAddress', 0, Date.now(), 0, 'subscriber2', ''),
                 prevMsgRef: null,
                 content: {
                     streamId: 'wrong-streamId',
@@ -114,7 +114,7 @@ describe('KeyExchangeUtil', () => {
             const subscriberKeyPair = new EncryptionUtil()
             await subscriberKeyPair.onReady()
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict('clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''),
+                messageId: new MessageIDStrict('clientKeyExchangeAddress', 0, Date.now(), 0, 'subscriber2', ''),
                 prevMsgRef: null,
                 content: {
                     streamId: 'streamId',
@@ -152,7 +152,7 @@ describe('KeyExchangeUtil', () => {
             const subscriberKeyPair = new EncryptionUtil()
             await subscriberKeyPair.onReady()
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict('clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''),
+                messageId: new MessageIDStrict('clientKeyExchangeAddress', 0, Date.now(), 0, 'subscriber2', ''),
                 prevMsgRef: null,
                 content: {
                     streamId: 'streamId',
@@ -199,7 +199,7 @@ describe('KeyExchangeUtil', () => {
             const subscriberKeyPair = new EncryptionUtil()
             await subscriberKeyPair.onReady()
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict('clientInboxAddress', 0, Date.now(), 0, 'subscriber2', ''),
+                messageId: new MessageIDStrict('clientKeyExchangeAddress', 0, Date.now(), 0, 'subscriber2', ''),
                 prevMsgRef: null,
                 content: {
                     requestId,
@@ -235,7 +235,7 @@ describe('KeyExchangeUtil', () => {
         it('should reject response for a stream to which the client is not subscribed', async (done) => {
             const requestId = uid('requestId')
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict('clientInboxAddress', 0, Date.now(), 0, 'publisherId', ''),
+                messageId: new MessageIDStrict('clientKeyExchangeAddress', 0, Date.now(), 0, 'publisherId', ''),
                 prevMsgRef: null,
                 content: {
                     streamId: 'wrong-streamId',
@@ -264,7 +264,7 @@ describe('KeyExchangeUtil', () => {
             const requestId = uid('requestId')
             const encryptedGroupKey = EncryptionUtil.encryptWithPublicKey(crypto.randomBytes(16), client.encryptionUtil.getPublicKey(), true)
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict('clientInboxAddress', 0, Date.now(), 0, 'publisherId', ''),
+                messageId: new MessageIDStrict('clientKeyExchangeAddress', 0, Date.now(), 0, 'publisherId', ''),
                 prevMsgRef: null,
                 content: {
                     streamId: 'streamId',
@@ -293,7 +293,7 @@ describe('KeyExchangeUtil', () => {
             const groupKey = crypto.randomBytes(32)
             const encryptedGroupKey = EncryptionUtil.encryptWithPublicKey(groupKey, client.encryptionUtil.getPublicKey(), true)
             const streamMessage = new StreamMessage({
-                messageId: new MessageIDStrict('clientInboxAddress', 0, Date.now(), 0, 'publisherId', ''),
+                messageId: new MessageIDStrict('clientKeyExchangeAddress', 0, Date.now(), 0, 'publisherId', ''),
                 prevMsgRef: null,
                 content: {
                     streamId: 'streamId',

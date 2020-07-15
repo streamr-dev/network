@@ -240,12 +240,12 @@ export default class StreamrClient extends EventEmitter {
 
         // On connect/reconnect, send pending subscription requests
         this.connection.on('connected', async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0)) // wait a tick
+            await new Promise((resolve) => setTimeout(resolve, 0)) // wait a tick to let event handlers finish
             if (!this.isConnected()) { return }
             this.debug('Connected!')
             this.emit('connected')
             try {
-                await this._subscribeToInboxStream()
+                await this._subscribeToKeyExchangeStream()
                 if (!this.isConnected()) { return }
                 // Check pending subscriptions
                 Object.keys(this.subscribedStreamPartitions).forEach((key) => {
@@ -311,12 +311,12 @@ export default class StreamrClient extends EventEmitter {
         console.error(error)
     }
 
-    async _subscribeToInboxStream() {
+    async _subscribeToKeyExchangeStream() {
         if (!this.options.auth.privateKey && !this.options.auth.provider) {
             return
         }
         await this.session.getSessionToken() // trigger auth errors if any
-        // subscribing to own inbox stream
+        // subscribing to own keyexchange stream
         const publisherId = await this.getPublisherId()
         const streamId = KeyExchangeUtil.getKeyExchangeStreamId(publisherId)
         this.subscribe(streamId, async (parsedContent, streamMessage) => {
