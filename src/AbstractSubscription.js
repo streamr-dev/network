@@ -117,7 +117,7 @@ export default class AbstractSubscription extends Subscription {
     _requestGroupKeyAndQueueMessage(msg, start, end) {
         this.emit('groupKeyMissing', msg.getPublisherId(), start, end)
         const publisherId = msg.getPublisherId().toLowerCase()
-        this.nbGroupKeyRequests[publisherId] = 1
+        this.nbGroupKeyRequests[publisherId] = 1 // reset retry counter
         clearInterval(this.waitingForGroupKey[publisherId])
         this.waitingForGroupKey[publisherId] = setInterval(() => {
             if (this.nbGroupKeyRequests[publisherId] < MAX_NB_GROUP_KEY_REQUESTS) {
