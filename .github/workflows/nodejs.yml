@@ -1,4 +1,4 @@
-name: Test, Eslint & Publish
+name: Test, lint & Publish
 
 on:
   push:
@@ -15,7 +15,7 @@ on:
 
 jobs:
   lint:
-    name: Run eslint using Node 12
+    name: Run linter using Node 12
     runs-on: ubuntu-latest
 
     steps:
@@ -84,7 +84,7 @@ jobs:
         run: npm run test-integration
 
   streamr-client-testing-tool:
-    needs: [test, eslint]
+    needs: [test, lint]
     runs-on: ubuntu-latest
     steps:
       - name: Use Node.js 12
@@ -117,7 +117,7 @@ jobs:
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed -m test
 
   publish:
-    needs: [test, eslint, integration, streamr-client-testing-tool]
+    needs: [test, lint, integration, streamr-client-testing-tool]
     name: Publishing master using Node 12
     runs-on: ubuntu-latest
 
