@@ -49,6 +49,15 @@ jobs:
       - name: test-unit
         run: npm run test-unit
 
+      - name: build
+        run: npm run build
+
+      - name: benchmarks
+            npm run benchmarks
+
+      - name: test-browser
+        run: npm run test-browser
+
       - name: setup streamr-docker-dev
         run: |
           sudo service mysql stop
@@ -56,14 +65,8 @@ jobs:
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
 
-      - name: test-browser
-        run: npm run test-browser
-
       - name: test-integration
         run: npm run test-integration
-
-      - name: benchmarks
-        run: npm run benchmarks
 
   streamr-client-testing-tool:
     needs: [test, eslint]
