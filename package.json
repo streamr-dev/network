@@ -13,6 +13,7 @@
   },
   "scripts": {
     "build": "rm dist/*; NODE_ENV=production webpack --mode=production --progress",
+    "benchmark": "node test/benchmarks/publish.js",
     "prepack": "npm run build",
     "dev": "webpack --progress --colors --watch --mode=development",
     "eslint": "eslint .",

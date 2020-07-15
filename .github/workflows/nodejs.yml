@@ -62,6 +62,9 @@ jobs:
       - name: test-integration
         run: npm run test-integration
 
+      - name: benchmarks
+        run: npm run benchmarks
+
   streamr-client-testing-tool:
     needs: [test, eslint]
     runs-on: ubuntu-latest

@@ -2,7 +2,7 @@ const { Benchmark } = require('benchmark')
 const { ethers } = require('ethers')
 
 // eslint-disable-next-line import/no-unresolved
-const StreamrClient = require('../../dist/streamr-client')
+const StreamrClient = require('../../dist/streamr-client.nodejs.js')
 const config = require('../integration/config')
 
 const client1 = new StreamrClient({
@@ -27,44 +27,45 @@ const msg = {
 }
 
 async function run() {
-    let stream1
-    await client1.getOrCreateStream({
+    const stream1 = await client1.getOrCreateStream({
         name: 'node-example-data',
-    }).then((stream) => {
-        stream1 = stream
     })
 
-    let stream2
-    await client2.getOrCreateStream({
+    const stream2 = await client2.getOrCreateStream({
         name: 'node-example-data',
-    }).then((stream) => {
-        stream2 = stream
     })
 
     const suite = new Benchmark.Suite()
     suite.add('client publishing with signing', {
         defer: true,
         fn(deferred) {
-            stream1.publish(msg).then(() => deferred.resolve())
+            // eslint-disable-next-line promise/catch-or-return
+            stream1.publish(msg).then(() => deferred.resolve(), () => deferred.resolve())
         }
     })
 
     suite.add('client publishing without signing', {
         defer: true,
         fn(deferred) {
-            stream2.publish(msg).then(() => deferred.resolve())
+            // eslint-disable-next-line promise/catch-or-return
+            stream2.publish(msg).then(() => deferred.resolve(), () => deferred.resolve())
         }
     })
 
     suite.on('cycle', (event) => {
+        // eslint-disable-next-line no-console
         console.log(String(event.target))
     })
 
-    suite.on('complete', async function () {
+    suite.on('complete', async function onComplete() {
+        // eslint-disable-next-line no-console
         console.log('Fastest is ' + this.filter('fastest').map('name'))
+        // eslint-disable-next-line no-console
         console.log('Disconnecting clients')
-        await client1.ensureDisconnected()
-        await client2.ensureDisconnected()
+        await Promise.all([
+            client1.ensureDisconnected(),
+            client2.ensureDisconnected(),
+        ])
     })
 
     suite.run()
