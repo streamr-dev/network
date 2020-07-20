@@ -15,6 +15,7 @@ const Metrics = require('../metrics')
 const { GapMisMatchError, InvalidNumberingError } = require('./DuplicateMessageDetector')
 const StreamManager = require('./StreamManager')
 const ResendHandler = require('./ResendHandler')
+const InstructionThrottler = require('./InstructionThrottler')
 const proxyRequestStream = require('./proxyRequestStream')
 
 const events = Object.freeze({
@@ -98,6 +99,8 @@ class Node extends EventEmitter {
             max: this.opts.bufferMaxSize,
             maxAge: this.opts.bufferMaxSize
         })
+
+        this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
     }
 
     onConnectedToTracker(tracker) {
@@ -120,6 +123,7 @@ class Node extends EventEmitter {
     async unsubscribeFromStream(streamId) {
         this.debug('unsubscribeFromStream: remove %s from streams', streamId)
         const nodes = this.streams.removeStream(streamId)
+        this.instructionThrottler.removeStreamId(streamId)
 
         await allSettled(nodes.map((nodeAddress) => this.protocols.nodeToNode.sendUnsubscribe(nodeAddress, streamId))).then((results) => {
             results.forEach((result) => {
@@ -165,10 +169,15 @@ class Node extends EventEmitter {
         return requestStream
     }
 
-    async onTrackerInstructionReceived(trackerId, instructionMessage) {
+    onTrackerInstructionReceived(trackerId, instructionMessage) {
+        this.instructionThrottler.add(instructionMessage)
+    }
+
+    async handleTrackerInstruction(instructionMessage) {
         const streamId = instructionMessage.getStreamId()
         const nodeAddresses = instructionMessage.getNodeAddresses()
         const counter = instructionMessage.getCounter()
+        const trackerId = instructionMessage.getSource()
 
         // Check that tracker matches expected tracker
         const expectedTrackerId = this.trackersRing.get(streamId.key())
