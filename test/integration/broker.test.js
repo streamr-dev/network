@@ -135,6 +135,7 @@ describe('broker: end-to-end', () => {
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
         await client3.ensureDisconnected()
+        await client4.ensureDisconnected()
         await broker1.close()
         await broker2.close()
         await broker3.close()
@@ -745,6 +746,47 @@ describe('broker: end-to-end', () => {
                 key: 4
             },
         ])
+    })
+
+    it('broker streams long resend from request via http', async () => {
+        const fromTimestamp = Date.now()
+
+        const sentMessages = []
+        for (let i = 0; i < 50; i++) {
+            const msg = {
+                key: i
+            }
+            // eslint-disable-next-line no-await-in-loop
+            await client1.publish(freshStreamId, msg)
+            sentMessages.push(msg)
+        }
+
+        await wait(3000)
+
+        const url = `http://localhost:${httpPort1}/api/v1/streams/${freshStreamId}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
+        const response = await fetch(url, {
+            method: 'get',
+            headers: {
+                Authorization: 'token tester1-api-key'
+            },
+        })
+        const messagesAsObjects = await response.json()
+        const messages = messagesAsObjects.map((msgAsObject) => msgAsObject.content)
+
+        expect(sentMessages).toEqual(messages)
+    })
+
+    it('broker returns [] for empty http resend', async () => {
+        const fromTimestamp = Date.now() + 99999999
+        const url = `http://localhost:${httpPort1}/api/v1/streams/${freshStreamId}/data/partitions/0/from?fromTimestamp=${fromTimestamp}`
+        const response = await fetch(url, {
+            method: 'get',
+            headers: {
+                Authorization: 'token tester1-api-key'
+            },
+        })
+        const messagesAsObjects = await response.json()
+        expect(messagesAsObjects).toEqual([])
     })
 
     it('happy-path: resend from request via http', async () => {

@@ -116,7 +116,10 @@ describe('DataQueryEndpoints', () => {
             it('reports to volumeLogger', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .expect(200, () => {
-                        sinon.assert.calledWith(volumeLogger.logOutput, 22)
+                        // for each row we call volumeLogger.logOutput
+                        expect(volumeLogger.logOutput.callCount).toBe(2)
+                        expect(volumeLogger.logOutput.getCall(0).calledWithExactly(11)).toBe(true)
+                        expect(volumeLogger.logOutput.getCall(1).calledWithExactly(11)).toBe(true)
                         done()
                     })
             })
