@@ -1,7 +1,6 @@
 const io = require('@pm2/io')
 const StreamrClient = require('streamr-client')
 
-
 module.exports = class VolumeLogger {
     constructor(reportingIntervalSeconds = 60, networkNode = undefined, storages = [], client = undefined, streamId = undefined) {
         this.reportingIntervalSeconds = reportingIntervalSeconds
