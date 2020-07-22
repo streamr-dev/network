@@ -18,16 +18,18 @@ const validateConfig = require('./helpers/validateConfig')
 
 const { Utils } = Protocol
 
-module.exports = async (config) => {
+module.exports = async (config, startUpLoggingEnabled = false) => {
     validateConfig(config)
 
-    console.info(`Starting broker version ${CURRENT_VERSION}`)
+    const log = startUpLoggingEnabled ? console.info : () => {}
+
+    log(`Starting broker version ${CURRENT_VERSION}`)
 
     const storages = []
 
     // Start cassandra storage
     if (config.cassandra) {
-        console.info(`Starting Cassandra with hosts ${config.cassandra.hosts} and keyspace ${config.cassandra.keyspace}`)
+        log(`Starting Cassandra with hosts ${config.cassandra.hosts} and keyspace ${config.cassandra.keyspace}`)
         storages.push(await startCassandraStorage({
             contactPoints: [...config.cassandra.hosts],
             localDataCenter: 'datacenter1',
@@ -37,11 +39,11 @@ module.exports = async (config) => {
             useTtl: !config.network.isStorageNode
         }))
     } else {
-        console.info('Cassandra disabled')
+        log('Cassandra disabled')
     }
 
     if (config.cassandraNew) {
-        console.info(`Starting Cassandra ### NEW SCHEMA ### with hosts ${config.cassandraNew.hosts} and keyspace ${config.cassandraNew.keyspace}`)
+        log(`Starting Cassandra ### NEW SCHEMA ### with hosts ${config.cassandraNew.hosts} and keyspace ${config.cassandraNew.keyspace}`)
         storages.push(await startCassandraStorageNew({
             contactPoints: [...config.cassandraNew.hosts],
             localDataCenter: 'datacenter1',
@@ -53,7 +55,7 @@ module.exports = async (config) => {
             }
         }))
     } else {
-        console.info('Cassandra ### NEW SCHEMA ### is disabled')
+        log('Cassandra ### NEW SCHEMA ### is disabled')
     }
 
     // Start network node
@@ -86,7 +88,7 @@ module.exports = async (config) => {
 
     // Set up sentry logging
     if (config.sentry) {
-        console.info('Starting Sentry with dns: %s', config.sentry)
+        log('Starting Sentry with dns: %s', config.sentry)
         Sentry.init({
             dsn: config.sentry,
             integrations: [
@@ -111,7 +113,7 @@ module.exports = async (config) => {
     let client
     const { apiKey, streamId } = config.reporting
     if (config.reporting && streamId !== undefined && apiKey !== undefined) {
-        console.info(`Starting StreamrClient reporting with apiKey: ${apiKey} and streamId: ${streamId}`)
+        log(`Starting StreamrClient reporting with apiKey: ${apiKey} and streamId: ${streamId}`)
         client = new StreamrClient({
             auth: {
                 apiKey
@@ -119,7 +121,7 @@ module.exports = async (config) => {
             autoConnect: false
         })
     } else {
-        console.info('StreamrClient reporting disabled')
+        log('StreamrClient reporting disabled')
     }
 
     // Initialize common utilities
@@ -163,15 +165,15 @@ module.exports = async (config) => {
         }
     })
 
-    console.info(`Network node '${config.network.id}' running on ${config.network.hostname}:${config.network.port}`)
-    console.info(`Configured with trackers: ${[...networkNode.bootstrapTrackerAddresses].join(', ')}`)
-    console.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
+    log(`Network node '${config.network.id}' running on ${config.network.hostname}:${config.network.port}`)
+    log(`Configured with trackers: ${[...networkNode.bootstrapTrackerAddresses].join(', ')}`)
+    log(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
     if (config.cassandra) {
-        console.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
+        log(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
     }
-    console.info(`Configured with Streamr: ${config.streamrUrl}`)
+    log(`Configured with Streamr: ${config.streamrUrl}`)
     if (advertisedWsUrl) {
-        console.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
+        log(`Advertising to tracker WS url: ${advertisedWsUrl}`)
     }
 
     return {

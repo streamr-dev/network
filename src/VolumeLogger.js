@@ -167,7 +167,6 @@ module.exports = class VolumeLogger {
     }
 
     close() {
-        console.log('VolumeLogger closing.')
         clearInterval(this.interval)
     }
 }

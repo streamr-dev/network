@@ -27,7 +27,7 @@ if (program.networkId) {
     config.network.id = program.networkId
 }
 /* eslint-enable prefer-destructuring */
-startBroker(config).catch((err) => {
+startBroker(config, true).catch((err) => {
     console.error(err)
     process.exit(1)
 })
