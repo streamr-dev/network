@@ -1,4 +1,6 @@
+const io = require('@pm2/io')
 const StreamrClient = require('streamr-client')
+
 
 module.exports = class VolumeLogger {
     constructor(reportingIntervalSeconds = 60, networkNode = undefined, storages = [], client = undefined, streamId = undefined) {
@@ -9,16 +11,59 @@ module.exports = class VolumeLogger {
         this.inBytes = 0
         this.outCount = 0
         this.outBytes = 0
-        this.totalBufferSize = 0
         this.storageReadCount = 0
         this.storageReadBytes = 0
         this.storageWriteCount = 0
         this.storageWriteBytes = 0
+        this.totalBufferSize = 0
         this.lastVolumeStatistics = {}
         this.client = client
         this.streamId = streamId
         this.networkNode = networkNode
         this.storages = storages
+
+        this.connectionCountMetric = io.metric({
+            name: 'connectionCountMetric'
+        })
+        this.eventsInPerSecondMetric = io.metric({
+            name: 'eventsIn/sec'
+        })
+        this.eventsOutPerSecondMetric = io.metric({
+            name: 'eventsOut/sec'
+        })
+        this.kbInPerSecondMetric = io.metric({
+            name: 'kbIn/sec'
+        })
+        this.kbOutPerSecondMetric = io.metric({
+            name: 'kbOut/sec'
+        })
+        this.storageReadPerSecondMetric = io.metric({
+            name: 'storageRead/sec'
+        })
+        this.storageWritePerSecondMetric = io.metric({
+            name: 'storageWrite/sec'
+        })
+        this.storageReadKbPerSecondMetric = io.metric({
+            name: 'storageReadKb/sec'
+        })
+        this.storageWriteKbPerSecondMetric = io.metric({
+            name: 'storageWriteKb/sec'
+        })
+        this.totalBufferSizeMetric = io.metric({
+            name: 'totalBufferSize'
+        })
+        this.ongoingResendsMetric = io.metric({
+            name: 'ongoingResends'
+        })
+        this.meanResendAgeMetric = io.metric({
+            name: 'meanResendAge'
+        })
+        this.totalBatchesMetric = io.metric({
+            name: 'totalBatches'
+        })
+        this.meanBatchAge = io.metric({
+            name: 'meanBatchAge'
+        })
 
         if (this.reportingIntervalSeconds > 0) {
             this.interval = setInterval(async () => {
@@ -46,6 +91,10 @@ module.exports = class VolumeLogger {
     logOutput(bytes) {
         this.outCount += 1
         this.outBytes += bytes
+    }
+
+    setTotalBufferSize(totalBufferSize) {
+        this.totalBufferSize = totalBufferSize
     }
 
     async reportAndReset() {
@@ -144,6 +193,23 @@ module.exports = class VolumeLogger {
             storageMisc.Storage && storageMisc.Storage.batchManager ? storageMisc.Storage.batchManager.totalBatches : 0,
             storageMisc.Storage && storageMisc.Storage.batchManager ? storageMisc.Storage.batchManager.meanBatchAge : 0
         )
+
+        this.eventsInPerSecondMetric.set(inPerSecond)
+        this.kbInPerSecondMetric.set(kbInPerSecond)
+        this.eventsOutPerSecondMetric.set(outPerSecond)
+        this.kbOutPerSecondMetric.set(kbOutPerSecond)
+        this.storageReadPerSecondMetric.set(storageReadCountPerSecond)
+        this.storageWritePerSecondMetric.set(storageWriteCountPerSecond)
+        this.storageReadKbPerSecondMetric.set(storageReadKbPerSecond)
+        this.storageWriteKbPerSecondMetric.set(storageWriteKbPerSecond)
+        this.connectionCountMetric.set(connectionCount)
+        this.totalBufferSizeMetric.set(this.totalBufferSize)
+        this.ongoingResendsMetric.set(networkMetrics.resendMetrics.numOfOngoingResends)
+        this.meanResendAgeMetric.set(networkMetrics.resendMetrics.meanAge)
+        if (storageMisc.Storage && storageMisc.Storage.batchManager) {
+            this.totalBatchesMetric.set(storageMisc.Storage.batchManager.totalBatches)
+            this.meanBatchAge.set(storageMisc.Storage.batchManager.meanBatchAge)
+        }
 
         this.inCount = 0
         this.outCount = 0

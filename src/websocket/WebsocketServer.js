@@ -76,7 +76,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                     totalBufferSize += connection.socket.getBufferedAmount()
                 }
             })
-            this.volumeLogger.totalBufferSize = totalBufferSize
+            this.volumeLogger.setTotalBufferSize(totalBufferSize)
         }, 1000)
 
         this._pingInterval = setInterval(() => {
