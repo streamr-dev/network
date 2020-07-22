@@ -27,7 +27,7 @@ module.exports = class Publisher {
 
         // Only publish valid messages
         await this.streamMessageValidator.validate(streamMessage)
-        this.volumeLogger.logInput(streamMessage.getContent().length)
+        this.volumeLogger.logInput(streamMessage.getContent(false).length)
         this.networkNode.publish(streamMessage)
     }
 }

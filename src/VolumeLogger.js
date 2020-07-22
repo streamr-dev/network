@@ -29,11 +29,11 @@ module.exports = class VolumeLogger {
         this.storages.forEach((storage) => {
             storage.on('read', (streamMessage) => {
                 this.storageReadCount += 1
-                this.storageReadBytes += streamMessage.getContent().length
+                this.storageReadBytes += streamMessage.getContent(false).length
             })
             storage.on('write', (streamMessage) => {
                 this.storageWriteCount += 1
-                this.storageWriteBytes += streamMessage.getContent().length
+                this.storageWriteBytes += streamMessage.getContent(false).length
             })
         })
     }
