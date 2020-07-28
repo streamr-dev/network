@@ -227,7 +227,9 @@ module.exports = class VolumeLogger {
 
     _sendReport(data) {
         if (this.client instanceof StreamrClient && this.streamId !== undefined) {
-            this.client.publishHttp(this.streamId, data)
+            this.client.publishHttp(this.streamId, data).catch((e) => {
+                console.warn(`VolumeLogger failed to publish metrics: ${e}`)
+            })
         }
     }
 
