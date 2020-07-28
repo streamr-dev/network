@@ -179,6 +179,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                                 errorMessage: err.message || err,
                                 errorCode: 'INVALID_REQUEST',
                             }))
+                            return
                         }
 
                         try {
