@@ -4,16 +4,16 @@ const debug = require('debug')('streamr:storage:batch-manager')
 
 const Batch = require('./Batch')
 
-const INSERT_STATEMENT = 'INSERT INTO stream_data '
-    + '(id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload) '
-    + 'VALUES (?, ?, ?, ?, ?, ?, ?)'
+const INSERT_STATEMENT = 'INSERT INTO stream_data_new '
+    + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
+    + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 
-const INSERT_STATEMENT_WITH_TTL = 'INSERT INTO stream_data '
-    + '(id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload) '
-    + 'VALUES (?, ?, ?, ?, ?, ?, ?) USING TTL 259200' // 3 days
+const INSERT_STATEMENT_WITH_TTL = 'INSERT INTO stream_data_new '
+    + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
+    + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?) USING TTL 259200' // 3 days
 
 class BatchManager extends EventEmitter {
-    constructor(cassandraClient, opts) {
+    constructor(cassandraClient, opts = {}) {
         super()
 
         const defaultOptions = {
@@ -84,7 +84,7 @@ class BatchManager extends EventEmitter {
                     params: [
                         streamMessage.getStreamId(),
                         streamMessage.getStreamPartition(),
-                        // TODO to be added in next PR batch.getBucketId(),
+                        batch.getBucketId(),
                         streamMessage.getTimestamp(),
                         streamMessage.getSequenceNumber(),
                         streamMessage.getPublisherId(),

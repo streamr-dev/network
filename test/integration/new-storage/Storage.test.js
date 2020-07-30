@@ -92,22 +92,23 @@ describe('Storage', () => {
 
         await wait(3000)
 
-        const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE id = ? AND partition = 10 ALLOW FILTERING', [
+        const result = await cassandraClient.execute('SELECT * FROM stream_data_new WHERE stream_id = ? AND partition = 10 ALLOW FILTERING', [
             streamId
         ])
 
-        expect(result.rows.length).toEqual(1)
+        const {
+            // eslint-disable-next-line camelcase
+            stream_id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload
+        } = result.first()
 
-        expect(result.rows.length).toEqual(1)
-        expect(result.rows[0]).toEqual({
-            id: streamId,
+        expect(result.first().bucket_id).not.toBeUndefined()
+        expect({
+            stream_id, partition, ts, sequence_no, publisher_id, msg_chain_id, payload
+        }).toEqual({
+            stream_id: streamId,
             partition: 10,
             ts: new Date(1545144750494),
-            sequence_no: {
-                high: 0,
-                low: 0,
-                unsigned: false,
-            },
+            sequence_no: 0,
             publisher_id: 'publisher',
             msg_chain_id: '1',
             payload: Buffer.from(msg.serialize()),

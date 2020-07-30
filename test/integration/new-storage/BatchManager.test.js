@@ -92,7 +92,7 @@ describe('BatchManager', () => {
         })
 
         batch.on('inserted', async () => {
-            const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE id = ? ALLOW FILTERING', [
+            const result = await cassandraClient.execute('SELECT * FROM stream_data_new WHERE stream_id = ? ALLOW FILTERING', [
                 streamId
             ])
 

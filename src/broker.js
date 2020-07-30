@@ -50,7 +50,7 @@ module.exports = async (config, startUpLoggingEnabled = false) => {
             keyspace: config.cassandraNew.keyspace,
             username: config.cassandraNew.username,
             password: config.cassandraNew.password,
-            bucketManagerOpts: {
+            opts: {
                 useTtl: !config.network.isStorageNode
             }
         }))
