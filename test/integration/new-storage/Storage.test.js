@@ -7,7 +7,7 @@ const { startCassandraStorage } = require('../../../src/new-storage/Storage')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
-const keyspace = 'streamr_dev'
+const keyspace = 'streamr_dev_v2'
 
 function buildMsg(
     streamId,
@@ -92,7 +92,7 @@ describe('Storage', () => {
 
         await wait(3000)
 
-        const result = await cassandraClient.execute('SELECT * FROM stream_data_new WHERE stream_id = ? AND partition = 10 ALLOW FILTERING', [
+        const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? AND partition = 10 ALLOW FILTERING', [
             streamId
         ])
 
@@ -262,11 +262,11 @@ describe('Storage', () => {
             storage.store(msg)
         }
 
-        await wait(10000)
+        await wait(20000)
 
         const streamingResults = storage.requestFrom(streamId, 0, 1000)
         const results = await toArray(streamingResults)
 
         expect(results.length).toEqual(10000)
-    }, 20000)
+    }, 30000)
 })

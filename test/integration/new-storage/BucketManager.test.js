@@ -6,7 +6,7 @@ const BucketManager = require('../../../src/new-storage/BucketManager')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
-const keyspace = 'streamr_dev'
+const keyspace = 'streamr_dev_v2'
 
 describe('BucketManager', () => {
     let bucketManager

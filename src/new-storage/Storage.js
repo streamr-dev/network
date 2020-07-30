@@ -66,7 +66,7 @@ class Storage extends EventEmitter {
 
         debug(`requestLast, streamId: "${streamId}", partition: "${partition}", limit: "${limit}"`)
 
-        const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data_new WHERE '
+        const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? '
             + 'ORDER BY ts DESC, sequence_no DESC '
             + 'LIMIT ?'
@@ -133,7 +133,7 @@ class Storage extends EventEmitter {
     _fetchFromTimestamp(streamId, partition, fromTimestamp) {
         const resultStream = this._createResultStream()
 
-        const query = 'SELECT payload FROM stream_data_new WHERE '
+        const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
 
         this.bucketManager.getLastBuckets(streamId, partition, 1, fromTimestamp).then((buckets) => {
@@ -172,9 +172,9 @@ class Storage extends EventEmitter {
     _fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
         const resultStream = this._createResultStream()
 
-        const query1 = 'SELECT payload FROM stream_data_new WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
+        const query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
             + 'AND msg_chain_id = ? ALLOW FILTERING'
-        const query2 = 'SELECT payload FROM stream_data_new WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND publisher_id = ? '
+        const query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND publisher_id = ? '
             + 'AND msg_chain_id = ? ALLOW FILTERING'
 
         this.bucketManager.getLastBuckets(streamId, partition, 1, fromTimestamp).then((buckets) => {
@@ -215,7 +215,7 @@ class Storage extends EventEmitter {
     _fetchBetweenTimestamps(streamId, partition, fromTimestamp, toTimestamp) {
         const resultStream = this._createResultStream()
 
-        const query = 'SELECT payload FROM stream_data_new WHERE '
+        const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
 
         Promise.all([
@@ -263,11 +263,11 @@ class Storage extends EventEmitter {
     _fetchBetweenMessageRefsForPublisher(streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId) {
         const resultStream = this._createResultStream()
 
-        const query1 = 'SELECT payload FROM stream_data_new WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
+        const query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
             + 'AND msg_chain_id = ? ALLOW FILTERING'
-        const query2 = 'SELECT payload FROM stream_data_new WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND ts < ? AND publisher_id = ? '
+        const query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND ts < ? AND publisher_id = ? '
             + 'AND msg_chain_id = ? ALLOW FILTERING'
-        const query3 = 'SELECT payload FROM stream_data_new WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no <= ? AND publisher_id = ? '
+        const query3 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no <= ? AND publisher_id = ? '
             + 'AND msg_chain_id = ? ALLOW FILTERING'
 
         // TODO replace with allSettled

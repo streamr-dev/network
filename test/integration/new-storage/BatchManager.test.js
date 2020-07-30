@@ -7,7 +7,7 @@ const BatchManager = require('../../../src/new-storage/BatchManager')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
-const keyspace = 'streamr_dev'
+const keyspace = 'streamr_dev_v2'
 
 function buildMsg(
     streamId,
@@ -92,7 +92,7 @@ describe('BatchManager', () => {
         })
 
         batch.on('inserted', async () => {
-            const result = await cassandraClient.execute('SELECT * FROM stream_data_new WHERE stream_id = ? ALLOW FILTERING', [
+            const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [
                 streamId
             ])
 

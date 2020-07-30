@@ -4,11 +4,11 @@ const debug = require('debug')('streamr:storage:batch-manager')
 
 const Batch = require('./Batch')
 
-const INSERT_STATEMENT = 'INSERT INTO stream_data_new '
+const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
     + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 
-const INSERT_STATEMENT_WITH_TTL = 'INSERT INTO stream_data_new '
+const INSERT_STATEMENT_WITH_TTL = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
     + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?) USING TTL 259200' // 3 days
 
