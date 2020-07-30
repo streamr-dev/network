@@ -2,12 +2,18 @@ package com.streamr.client_testing;
 
 import com.streamr.client.StreamrClient;
 import com.streamr.client.rest.Stream;
+import com.streamr.client.utils.Address;
+import com.streamr.client.utils.GroupKey;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Consumer;
 
 public class PublisherThreadJava extends PublisherThread {
+    private static final Logger log = LogManager.getLogger(PublisherThreadJava.class);
+
     private final StreamrClient publisher;
     private final Timer timer;
     private TimerTask task;
@@ -18,14 +24,16 @@ public class PublisherThreadJava extends PublisherThread {
         super(interval);
         this.publisher = publisher;
         this.publisher.connect();
-        timer = new Timer(true);
+
+        timer = new Timer("Java-pub-" + getPublisherId().toString().substring(0, 6), true);
         task = new TimerTask() {
             @Override
             public void run() {
                 counter++;
                 publishFunction.getF().apply(publisher, stream, counter);
                 if (counter > 0 && counter >= maxMessages) {
-                    Main.logger.info(publisher.getPublisherId() + " Done: All " + maxMessages + " messages published. Quitting Java publisher.");
+                    log.info("Publisher {} done: All {} messages published. Quitting Java publisher.",
+                            publisher.getPublisherId(), maxMessages);
                     stop();
                 }
             }
@@ -33,7 +41,7 @@ public class PublisherThreadJava extends PublisherThread {
     }
 
     @Override
-    public String getPublisherId() {
+    public Address getPublisherId() {
         return publisher.getPublisherId();
     }
 

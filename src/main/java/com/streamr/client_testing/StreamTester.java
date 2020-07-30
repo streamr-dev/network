@@ -1,34 +1,35 @@
 package com.streamr.client_testing;
 
-import com.squareup.moshi.JsonAdapter;
 import com.streamr.client.MessageHandler;
 import com.streamr.client.StreamrClient;
 import com.streamr.client.authentication.EthereumAuthenticationMethod;
-import com.streamr.client.exceptions.InvalidGroupKeyException;
 import com.streamr.client.exceptions.UnableToDecryptException;
 import com.streamr.client.options.EncryptionOptions;
 import com.streamr.client.options.ResendOption;
 import com.streamr.client.options.SigningOptions;
 import com.streamr.client.options.StreamrClientOptions;
 import com.streamr.client.protocol.message_layer.StreamMessage;
+import com.streamr.client.rest.Permission;
 import com.streamr.client.rest.Stream;
 import com.streamr.client.subs.Subscription;
+import com.streamr.client.utils.Address;
+import com.streamr.client.utils.GroupKey;
 import com.streamr.client.utils.HttpUtils;
-import com.streamr.client.utils.UnencryptedGroupKey;
-import okhttp3.*;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.RandomStringUtils;
-import org.json.simple.JSONObject;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 public class StreamTester {
-    private static SecureRandom secureRandom = new SecureRandom();
-    private static Random random = new Random();
+    private static final Logger log = LogManager.getLogger(StreamTester.class);
+
+    private static final SecureRandom secureRandom = new SecureRandom();
+    private static final Random random = new Random();
     private static final int NETWORK_SETUP_DELAY = 5000;
     private static final int NETWORK_PROPAGATION_DELAY = 2000;
 
@@ -40,8 +41,8 @@ public class StreamTester {
     private final int minInterval;
     private final int maxInterval;
     private final int maxMessages;
-    private ConcurrentHashMap<String, ArrayDeque<String>> publishersMsgStacks = new ConcurrentHashMap<>(); // publisherId --> stack of serialized msg content
-    private ConcurrentHashMap<String, ConcurrentHashMap<String, ArrayDeque<String>>> subscribersMsgStacks = new ConcurrentHashMap<>(); // publisherId --> (subscriberId --> stack of serialized msg content)
+    private final ConcurrentHashMap<Address, ArrayDeque<String>> publishersMsgStacks = new ConcurrentHashMap<>(); // publisherId --> stack of serialized msg content
+    private final ConcurrentHashMap<Address, ConcurrentHashMap<Address, ArrayDeque<String>>> subscribersMsgStacks = new ConcurrentHashMap<>(); // publisherId --> (subscriberId --> stack of serialized msg content)
     private int decryptionErrorsCount = 0;
 
     public StreamTester(String streamName, String restApiUrl, String websocketApiUrl, int minInterval, int maxInterval, int maxMessages, boolean testCorrectness) {
@@ -92,11 +93,11 @@ public class StreamTester {
     }
 
     public void start() {
-        Main.logger.info("Starting stream " + stream.getName() + "...\n");
+        log.info("Starting stream {}...\n", stream.getName());
         try {
             // this delay is needed between the moment subscribers are subscribed and publishers start publishing
             // because the nodes stream topology needs some time before it is fully formed.
-            Main.logger.info("Giving subscribers " + NETWORK_SETUP_DELAY + " ms to subscribe before starting to publish...");
+            log.info("Giving subscribers {} ms to subscribe before starting to publish...", NETWORK_SETUP_DELAY);
             Thread.sleep(NETWORK_SETUP_DELAY);
         } catch (InterruptedException ignored) {}
         for (PublisherThread p: publishers) {
@@ -105,7 +106,7 @@ public class StreamTester {
     }
 
     public void stop() {
-        Main.logger.info("Stopping test " + stream.getName());
+        log.info("Stopping test {}", stream.getName());
         for (PublisherThread p: publishers) {
             p.stop();
         }
@@ -134,7 +135,7 @@ public class StreamTester {
         }
         int totalPublished = 0;
         int totalReceived = 0;
-        for (String publisherId: publishersMsgStacks.keySet()) {
+        for (Address publisherId: publishersMsgStacks.keySet()) {
             ArrayDeque<String> pubStack = publishersMsgStacks.get(publisherId);
             ArrayList<ArrayDeque<String>> subStacks = new ArrayList<>();
             for (ArrayDeque<String> s: subscribersMsgStacks.get(publisherId).values()) {
@@ -145,30 +146,30 @@ public class StreamTester {
                 totalReceived += checkMsgs(publisherId, pubStack, subStacks);
             } catch (IllegalStateException e) {
                 printMsgsReceived();
-                Main.logger.warning("\nFAILED test " + stream.getName() + ". On error: '" + e.getMessage() + "'\n");
+                log.error("\nFAILED test {}. On error: '{}'\n", stream.getName(), e.getMessage());
                 System.exit(1);
             }
 
         }
         if (decryptionErrorsCount > 0) {
-            Main.logger.warning("\nFAILED. Got " + decryptionErrorsCount + " UnableToDecryptException(s)\n");
+            log.error("\nFAILED. Got {} UnableToDecryptException(s)\n", decryptionErrorsCount);
             System.exit(1);
         }
-        Main.logger.info("\nPASSED. Checked all " + totalPublished + " published and " + totalReceived + " received messages.\n");
+        log.info("\nPASSED. Checked all {} published and {} received messages.\n", totalPublished, totalReceived);
         System.exit(0);
     }
 
     private void printMsgsReceived() {
         System.out.println("\n");
-        for (String pub: subscribersMsgStacks.keySet()) {
-            ConcurrentHashMap<String, ArrayDeque<String>> subs = subscribersMsgStacks.get(pub);
+        for (Address pub: subscribersMsgStacks.keySet()) {
+            ConcurrentHashMap<Address, ArrayDeque<String>> subs = subscribersMsgStacks.get(pub);
             int totalSent = publishersMsgStacks.get(pub).size();
             System.out.println(totalSent + " msgs sent by " + pub + ":\n");
             for (String m: publishersMsgStacks.get(pub)) {
                 System.out.println(m);
             }
             System.out.println("\nMsgs received from " + pub + " :\n");
-            for (String sub: subs.keySet()) {
+            for (Address sub: subs.keySet()) {
                 // Only log incorrect reception:
                 if (subs.get(sub).size() != totalSent) {
                     System.out.println(sub + " received " + subs.get(sub).size() + " messages out of " + totalSent + ":");
@@ -178,10 +179,11 @@ public class StreamTester {
                 }
             }
             System.out.println();
+            System.out.flush();
         }
     }
 
-    private static int checkMsgs(String publisherId, ArrayDeque<String> pubStack, ArrayList<ArrayDeque<String>> subStacks) {
+    private static int checkMsgs(Address publisherId, ArrayDeque<String> pubStack, ArrayList<ArrayDeque<String>> subStacks) {
         int publishedMessagesCount = pubStack.size();
         // Check that every subscriber received the correct number of messages from this publisher
         for (Collection<String> subStack : subStacks) {
@@ -190,8 +192,8 @@ public class StreamTester {
                 throw new IllegalStateException("Expected to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
             } else if (size != publishedMessagesCount) {
                 // Receiving ~one message more than counted can happen due to a race condition. Not an error but let's log a warning
-                Main.logger.warning("Expected to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
-                Main.logger.warning("This could happen due to a race condition in publishing vs. stopping the publisher. Probably not an issue, but logging it anyway.");
+                log.warn("Expected to receive {} messages from {}, but received {}", publishedMessagesCount, publisherId, size);
+                log.warn("This could happen due to a race condition in publishing vs. stopping the publisher. Probably not an issue, but logging it anyway.");
             }
         }
         // Check that every subscriber received the correct content of messages from this publisher
@@ -211,18 +213,25 @@ public class StreamTester {
         if (testCorrectness) {
             thread.setOnPublished((payloadString) -> {
                 publishersMsgStacks.get(thread.getPublisherId()).addLast(payloadString);
-                Main.logger.fine(thread.getPublisherId() + " published " + payloadString);
+                log.debug("{} published {}", thread.getPublisherId(), payloadString);
             });
         }
-        grantPermission(stream, creator, thread.getPublisherId(), "stream_get");
-        grantPermission(stream, creator, thread.getPublisherId(), "stream_publish");
+
+        try {
+            creator.grant(stream, Permission.Operation.stream_get, thread.getPublisherId().toString());
+            creator.grant(stream, Permission.Operation.stream_publish, thread.getPublisherId().toString());
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Failed to grant permissions on stream %s to publisher %s",
+                    stream.getId(), thread.getPublisherId()));
+        }
+
         publishers.add(thread);
         if (testCorrectness) {
             publishersMsgStacks.put(thread.getPublisherId(), new ArrayDeque<>());
             subscribersMsgStacks.put(thread.getPublisherId(), new ConcurrentHashMap<>());
         }
-        Main.logger.info("Added " + publisher.getImplementation() + " publisher: " + thread.getPublisherId() +
-                " (publication rate in milliseconds: " + thread.getInterval() + ")");
+        log.info("Added {} publisher: {} (publication rate in milliseconds: {})",
+                        publisher.getImplementation(), thread.getPublisherId(), thread.getInterval());
     }
 
     private void addJavaSubscriber(StreamrClientJava subscriber, ResendOption resendOption) {
@@ -240,8 +249,8 @@ public class StreamTester {
                 throw new RuntimeException(e);
             }
         };
-        SubscriberJava subscriberJava = new SubscriberJava(subscriber.getStreamrClient(), () -> subscriber.getStreamrClient().subscribe(stream, 0, handler, resendOption));
-        addSubscriber(subscriberJava, "Java", resendOption);
+        SubscriberJava subscriberJava = new SubscriberJava(subscriber.getStreamrClient(), handler, stream, resendOption);
+        addSubscriber(subscriberJava, "Java");
     }
 
     private void addJavascriptSubscriber(StreamrClientJS subscriber, ResendOption resendOption) {
@@ -249,38 +258,44 @@ public class StreamTester {
         if (testCorrectness) {
             subscriberJS.setOnReceived((publisherId, content) -> onReceivedJavascript(subscriberJS, publisherId, content));
         }
-        addSubscriber(subscriberJS, "Javascript", resendOption);
+        addSubscriber(subscriberJS, "Javascript");
     }
 
-    private synchronized void onReceivedJava(String subscriberId, StreamMessage streamMessage) {
-        Main.logger.fine("Java subscriber " + subscriberId + " received: " + streamMessage.toJson());
-        ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(streamMessage.getPublisherId().toLowerCase()).get(subscriberId);
+    private synchronized void onReceivedJava(Address subscriberId, StreamMessage streamMessage) {
+        log.debug("Java subscriber {} received: {}", subscriberId, streamMessage.serialize());
+        ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(streamMessage.getPublisherId()).get(subscriberId);
         if (subscriberStack == null) {
             subscriberStack = new ArrayDeque<>();
-            subscribersMsgStacks.get(streamMessage.getPublisherId().toLowerCase()).put(subscriberId, subscriberStack);
+            subscribersMsgStacks.get(streamMessage.getPublisherId()).put(subscriberId, subscriberStack);
         }
         subscriberStack.addLast(streamMessage.getSerializedContent());
     }
 
-    private synchronized void onReceivedJavascript(SubscriberJS subscriberJS, String publisherId, String content) {
+    private synchronized void onReceivedJavascript(SubscriberJS subscriberJS, Address publisherId, String content) {
         // logging is in subscriber.js and SubscriberJS.java
-        ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(publisherId.toLowerCase()).get(subscriberJS.getSubscriberId());
+        ArrayDeque<String> subscriberStack = subscribersMsgStacks.get(publisherId).get(subscriberJS.getSubscriberId());
         if (subscriberStack == null) {
             subscriberStack = new ArrayDeque<>();
-            subscribersMsgStacks.get(publisherId.toLowerCase()).put(subscriberJS.getSubscriberId(), subscriberStack);
+            subscribersMsgStacks.get(publisherId).put(subscriberJS.getSubscriberId(), subscriberStack);
         }
         subscriberStack.addLast(content);
     }
 
-    private void addSubscriber(Subscriber subscriber, String implementation, ResendOption resendOption) {
-        grantPermission(stream, creator, subscriber.getSubscriberId(), "stream_get");
-        grantPermission(stream, creator, subscriber.getSubscriberId(), "stream_subscribe");
+    private void addSubscriber(Subscriber subscriber, String implementation) {
+        try {
+            creator.grant(stream, Permission.Operation.stream_get, subscriber.getSubscriberId().toString());
+            creator.grant(stream, Permission.Operation.stream_subscribe, subscriber.getSubscriberId().toString());
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Failed to grant permissions on %s to subscriber %s",
+                    stream.getId(), subscriber.getSubscriberId()));
+        }
+
         subscriber.start();
         subscribers.add(subscriber);
         if (testCorrectness) {
             subscribersMsgStacks.values().forEach(map -> map.put(subscriber.getSubscriberId(), new ArrayDeque<>()));
         }
-        Main.logger.info("Added " + implementation + " subscriber: " + subscriber.getSubscriberId());
+        log.info("Added {} subscriber: {}", implementation, subscriber.getSubscriberId());
     }
 
     private void addDelayedJavaSubscriber(StreamrClientJava subscriber, ResendOption resendOption, int delay) {
@@ -291,7 +306,7 @@ public class StreamTester {
                 addJavaSubscriber(subscriber, resendOption);
             }
         }, NETWORK_SETUP_DELAY + delay);
-        Main.logger.info("Added delayed Java subscriber with resend. Delay: " + delay);
+        log.info("Added delayed Java subscriber with resend. Delay: {}", delay);
     }
 
     private void addDelayedJavascriptSubscriber(StreamrClientJS subscriber, ResendOption resendOption, int delay) {
@@ -302,116 +317,75 @@ public class StreamTester {
                 addJavascriptSubscriber(subscriber, resendOption);
             }
         }, NETWORK_SETUP_DELAY + delay);
-        Main.logger.info("Added delayed JS subscriber with resend. Delay: " + delay);
+        log.info("Added delayed JS subscriber with resend. Delay: {}", delay);
     }
 
     public PublishFunction getDefaultPublishFunction() {
-        PublishFunction.Function f;
-        if (testCorrectness) {
-            f = (publisher, stream, counter) -> {
-                synchronized (this) {
-                    HashMap<String, Object> payload = genPayload();
-                    String payloadString = HttpUtils.mapAdapter.toJson(payload);
-                    Main.logger.finest(publisher.getPublisherId() + " going to publish " + payloadString);
-                    publisher.publish(stream, payload);
+        PublishFunction.Function f = (publisher, stream, counter) -> {
+            synchronized (this) {
+                HashMap<String, Object> payload = genPayload();
+                String payloadString = HttpUtils.mapAdapter.toJson(payload);
+                log.trace("{} going to publish {}", publisher.getPublisherId(), payloadString);
+                publisher.publish(stream, payload);
+
+                if (testCorrectness) {
                     publishersMsgStacks.get(publisher.getPublisherId()).addLast(payloadString);
-                    Main.logger.fine(publisher.getPublisherId() + " published " + payloadString);
                 }
-            };
-        } else {
-            f = (publisher, stream, counter) -> publisher.publish(stream, genPayload());
-        }
+                log.debug("{} published {}", publisher.getPublisherId(), payloadString);
+            }
+        };
         return new PublishFunction("default", f);
     }
 
     public PublishFunction getRotatingPublishFunction(int nbMessagesForSingleKey) {
-        PublishFunction.Function f;
-        if (testCorrectness) {
-            f = (publisher, stream, counter) -> {
-                synchronized (this) {
-                    HashMap<String, Object> payload = genPayload();
-                    String payloadString = HttpUtils.mapAdapter.toJson(payload);
-                    Main.logger.finest(publisher.getPublisherId() + " going to publish " + payloadString);
-                    if (counter % nbMessagesForSingleKey == 0) {
-                        UnencryptedGroupKey newKey = generateGroupKey();
-                        Main.logger.fine(publisher.getPublisherId() + " rotating the key. New key: " + newKey.getGroupKeyHex());
-                        publisher.publish(stream, payload, new Date(), null, newKey);
-                        counter = 0L;
-                    } else {
-                        publisher.publish(stream, payload);
-                    }
+        PublishFunction.Function f = (publisher, stream, counter) -> {
+            synchronized (this) {
+                HashMap<String, Object> payload = genPayload();
+                String payloadString = HttpUtils.mapAdapter.toJson(payload);
+                log.trace("{} going to publish {}", publisher.getPublisherId(), payloadString);
+                if (counter % nbMessagesForSingleKey == 0) {
+                    GroupKey newKey = GroupKey.generate();
+                    log.debug("{} rotating the key. New key: {}", publisher.getPublisherId(), newKey.getGroupKeyHex());
+                    publisher.publish(stream, payload, new Date(), null, newKey);
+                } else {
+                    publisher.publish(stream, payload);
+                }
+
+                if (testCorrectness) {
                     publishersMsgStacks.get(publisher.getPublisherId()).addLast(payloadString);
-                    Main.logger.fine(publisher.getPublisherId() + ": published " + payloadString);
                 }
-            };
-        } else {
-            f = (publisher, stream, counter) -> {
-                synchronized (this) {
-                    HashMap<String, Object> payload = genPayload();
-                    if (counter % nbMessagesForSingleKey == 0) {
-                        publisher.publish(stream, payload, new Date(), null, generateGroupKey());
-                        counter = 0L;
-                    } else {
-                        publisher.publish(stream, payload);
-                    }
-                }
-            };
-        }
+                log.debug("{} published {}", publisher.getPublisherId(), payloadString);
+            }
+        };
         return new PublishFunction("rotating", f);
     }
 
     public PublishFunction getRotatingRevokingPublishFunction(int nbMessagesForSingleKey, int nbMessagesBetweenRevokes) {
-        PublishFunction.Function f;
-        if (testCorrectness) {
-            f = (publisher, stream, counter) -> {
+        PublishFunction.Function f = (publisher, stream, counter) -> {
                 synchronized (this) {
                     HashMap<String, Object> payload = genPayload();
                     String payloadString = HttpUtils.mapAdapter.toJson(payload);
-                    Main.logger.finest(publisher.getPublisherId() + " going to publish " + payloadString);
+                    log.trace("{} going to publish {}", publisher.getPublisherId(), payloadString);
                     if (counter % nbMessagesBetweenRevokes == 0) {
-                        Main.logger.fine(publisher.getPublisherId() + " revoking with a rekey...");
+                        log.debug("{} revoking with a rekey...", publisher.getPublisherId());
                         publisher.rekey(stream);
-                        Main.logger.fine(publisher.getPublisherId() + " revoked with a rekey.");
+                        log.debug("{} revoked with a rekey.", publisher.getPublisherId());
                         publisher.publish(stream, payload);
-                        counter = 0L;
                     } else if (counter % nbMessagesForSingleKey == 0) {
-                        UnencryptedGroupKey newKey = generateGroupKey();
-                        Main.logger.fine(publisher.getPublisherId() + " rotating the key. New key: " + newKey.getGroupKeyHex());
+                        GroupKey newKey = GroupKey.generate();
+                        log.debug("{} rotating the key. New key: {}", publisher.getPublisherId(), newKey.getGroupKeyHex());
                         publisher.publish(stream, payload, new Date(), null, newKey);
                     } else {
                         publisher.publish(stream, payload);
                     }
-                    publishersMsgStacks.get(publisher.getPublisherId()).addLast(payloadString);
-                    Main.logger.fine(publisher.getPublisherId() + ": published " + payloadString);
-                }
-            };
-        } else {
-            f = (publisher, stream, counter) -> {
-                synchronized (this) {
-                    HashMap<String, Object> payload = genPayload();
-                    if (counter % nbMessagesBetweenRevokes == 0) {
-                        publisher.rekey(stream);
-                        publisher.publish(stream, payload);
-                        counter = 0L;
-                    } else if (counter % nbMessagesForSingleKey == 0) {
-                        publisher.publish(stream, payload, new Date(), null, generateGroupKey());
-                    } else {
-                        publisher.publish(stream, payload);
-                    }
-                }
-            };
-        }
-        return new PublishFunction("rotating", f);
-    }
 
-    public static UnencryptedGroupKey generateGroupKey() {
-        byte[] keyBytes = new byte[32];
-        secureRandom.nextBytes(keyBytes);
-        try {
-            return new UnencryptedGroupKey(Hex.encodeHexString(keyBytes), new Date());
-        } catch (InvalidGroupKeyException e) {
-            throw new RuntimeException(e);
-        }
+                    if (testCorrectness) {
+                        publishersMsgStacks.get(publisher.getPublisherId()).addLast(payloadString);
+                    }
+                    log.debug("{} published {}", publisher.getPublisherId(), payloadString);
+                }
+            };
+        return new PublishFunction("rotating", f);
     }
 
     public static String generatePrivateKey() {
@@ -429,59 +403,6 @@ public class StreamTester {
         int[] array = {12, 34, -4};
         payload.put("array-key", array);
         return payload;
-    }
-
-    // TODO: the following (needed to grant permissions) should be part of the StreamrClient library
-
-    private static Request.Builder addAuthenticationHeader(Request.Builder builder, String sessionToken) {
-        builder.removeHeader("Authorization");
-        return builder.addHeader("Authorization", "Bearer " + sessionToken);
-    }
-
-    private static <T> T execute(Request request, JsonAdapter<T> adapter) throws IOException {
-        OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(10, TimeUnit.SECONDS)
-            .writeTimeout(10, TimeUnit.SECONDS)
-            .readTimeout(10, TimeUnit.SECONDS)
-            .build();
-
-        // Execute the request and retrieve the response.
-        Response response = client.newCall(request).execute();
-        try {
-            HttpUtils.assertSuccessful(response);
-
-            // Deserialize HTTP response to concrete type.
-
-            // System.out.println(response.body().string());
-            return adapter == null ? null : adapter.fromJson(response.body().source());
-        } finally {
-            response.close();
-        }
-    }
-
-    private static <T> T executeWithRetry(Request.Builder builder, JsonAdapter<T> adapter, String sessionToken) throws IOException {
-        Request request = addAuthenticationHeader(builder, sessionToken).build();
-        return execute(request, adapter);
-    }
-
-    private static <T> T post(HttpUrl url, String requestBody, JsonAdapter<T> adapter, String sessionToken) throws IOException {
-        Request.Builder builder = new Request.Builder()
-                .url(url)
-                .post(RequestBody.create(HttpUtils.jsonType, requestBody));
-        return executeWithRetry(builder, adapter, sessionToken);
-    }
-
-    private static void grantPermission(Stream s, StreamrClient client, String userId, String operation) {
-        HttpUrl url = HttpUrl.parse(client.getOptions().getRestApiUrl() + "/streams/" + s.getId() + "/permissions");
-        HashMap<String, String> body = new HashMap<>();
-        body.put("operation", operation);
-        // body.put("anonymous", "true");
-        body.put("user", userId);
-        try {
-            post(url, JSONObject.toJSONString(body), null, client.getSessionToken());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private long getInterval(long minInterval, long maxInterval) {

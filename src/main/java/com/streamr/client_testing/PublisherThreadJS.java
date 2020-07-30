@@ -1,6 +1,10 @@
 package com.streamr.client_testing;
 
 import com.streamr.client.rest.Stream;
+import com.streamr.client.utils.Address;
+import com.streamr.client.utils.GroupKey;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -8,6 +12,8 @@ import java.io.InputStreamReader;
 import java.util.function.Consumer;
 
 public class PublisherThreadJS extends PublisherThread {
+    private static final Logger log = LogManager.getLogger(PublisherThreadJS.class);
+
     private final StreamrClientJS publisher;
     private Process p;
     private final String command;
@@ -26,11 +32,6 @@ public class PublisherThreadJS extends PublisherThread {
     public PublisherThreadJS(StreamrClientJS publisher, Stream stream, PublishFunction publishFunction, long interval, int maxMessages) {
         super(interval);
         this.publisher = publisher;
-        // We assume there is only 1 key since we test only 1 stream
-        String groupKey = "";
-        if (publisher.getEncryptionOptions() != null) {
-            groupKey = publisher.getEncryptionOptions().getPublisherGroupKeys().values().iterator().next().getGroupKeyHex();
-        }
 
         command = String.format("node publisher.js %s %s %s %s %s %s",
                 publisher.getPrivateKey(),
@@ -38,14 +39,15 @@ public class PublisherThreadJS extends PublisherThread {
                 publishFunction.getName(),
                 interval,
                 maxMessages,
-                groupKey
+                publisher.getGroupKey() == null ? "" : Utils.groupKeyToJson(publisher.getGroupKey())
         );
 
         thread = new Thread(this::executeNode);
+        thread.setName("JS-pub-" + getPublisherId().toString().substring(0, 6));
     }
 
     @Override
-    public String getPublisherId() {
+    public Address getPublisherId() {
         return publisher.getAddress();
     }
 
@@ -72,7 +74,7 @@ public class PublisherThreadJS extends PublisherThread {
                 try {
                     String err;
                     while ((err = stdError.readLine()) != null) {
-                        Main.logger.severe(getPublisherId() + " " + err);
+                        log.error(getPublisherId() + " " + err);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -105,13 +107,13 @@ public class PublisherThreadJS extends PublisherThread {
                 onPublished.accept(s.substring(12));
             }
         } else if (s.startsWith("Going to publish")) {
-            Main.logger.finest(getPublisherId() + " " + s);
+            log.debug(getPublisherId() + " " + s);
         } else if (s.startsWith("Rotating")) {
-            Main.logger.info(getPublisherId() + " " + s);
+            log.debug(getPublisherId() + " " + s);
         } else if (s.startsWith("Done: ")) {
-            Main.logger.info(getPublisherId() + " " + s);
+            log.debug(getPublisherId() + " " + s);
         } else {
-            Main.logger.warning(getPublisherId() + " " + s);
+            log.warn(getPublisherId() + " " + s);
         }
     }
 

@@ -2,7 +2,7 @@ const StreamrClient = require('streamr-client')
 const privateKey = process.argv[2]
 const streamId = process.argv[3]
 const resendOptions = process.argv[4] === 'real-time' ? undefined : JSON.parse(process.argv[4])
-const groupKeys = process.argv[5] ? JSON.parse(process.argv[5]) : undefined
+const groupKey = process.argv[5] ? JSON.parse(process.argv[5]) : undefined
 
 const clientOptions = {
     restUrl: "http://localhost/api/v1",
@@ -11,13 +11,11 @@ const clientOptions = {
         privateKey: privateKey,
     },
 }
-if (groupKeys) {
-    clientOptions.subscriberGroupKeys = {}
-    clientOptions.subscriberGroupKeys[streamId] = {}
-    Object.keys(groupKeys[streamId]).forEach((publisherId) => {
-        const groupKeyHex = groupKeys[streamId][publisherId]
-        clientOptions.subscriberGroupKeys[streamId][publisherId] = Buffer.from(groupKeyHex, "hex")
-    })
+if (groupKey) {
+    // TODO: update when client implementation is up to date and we know how to pass the GroupKeys there
+    // groupKey has the following fields:
+    // groupKey.groupKeyId
+    // groupKey.groupKeyHex
 }
 const client = new StreamrClient(clientOptions)
 client.connect()

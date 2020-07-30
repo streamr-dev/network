@@ -6,7 +6,7 @@ const streamId = process.argv[3]
 const publishFunctionName = process.argv[4]
 const interval = parseInt(process.argv[5])
 const maxMessages = parseInt(process.argv[6])
-const groupKey = process.argv[7]
+const groupKey = process.argv ? JSON.parse(process.argv[7]) : undefined
 
 const options = {
     restUrl: "http://localhost/api/v1",
@@ -17,7 +17,8 @@ const options = {
     publisherGroupKeys: {}
 }
 if (groupKey) {
-    options.publisherGroupKeys[streamId] = Buffer.from(groupKey, 'hex')
+    // TODO: update when client implementation is up to date and we know how to pass the GroupKeys there
+    options.publisherGroupKeys[streamId] = Buffer.from(groupKey.groupKeyHex, 'hex')
 }
 const client = new StreamrClient(options)
 

@@ -5,8 +5,10 @@ import com.streamr.client.options.ResendLastOption;
 import com.streamr.client.options.ResendOption;
 import com.streamr.client.protocol.message_layer.MessageRef;
 import com.streamr.client.rest.Stream;
+import com.streamr.client.utils.Address;
 import com.streamr.client.utils.HttpUtils;
-import com.streamr.client.utils.UnencryptedGroupKey;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,29 +17,30 @@ import java.util.HashMap;
 import java.util.function.BiConsumer;
 
 public class SubscriberJS extends Subscriber {
+
+    private static final Logger log = LogManager.getLogger(SubscriberJS.class);
+
     private final StreamrClientJS subscriber;
     private Process p;
     private final String command;
-    private BiConsumer<String, String> onReceived = null;
+    private BiConsumer<Address, String> onReceived = null;
     private final Thread thread;
 
     public SubscriberJS(StreamrClientJS subscriber, Stream stream, ResendOption resendOption) {
         this.subscriber = subscriber;
-        String groupKeys = "";
-        if (subscriber.getEncryptionOptions() !=  null) {
-            groupKeys = groupKeysToJson(subscriber);
-        }
+        String groupKeyAsJson = subscriber.getGroupKey() == null ? "" : Utils.groupKeyToJson(subscriber.getGroupKey());
         command = "node subscriber.js " + subscriber.getPrivateKey() + " "
-                + stream.getId() + " " + resendOptionToJson(resendOption) + " " + groupKeys;
+                + stream.getId() + " " + resendOptionToJson(resendOption) + " " + groupKeyAsJson;
         thread = new Thread(this::executeNode);
+        thread.setName("JS-sub-" + getSubscriberId().toString().substring(0, 6));
     }
 
-    public void setOnReceived(BiConsumer<String, String> onReceived) {
+    public void setOnReceived(BiConsumer<Address, String> onReceived) {
         this.onReceived = onReceived;
     }
 
     @Override
-    public String getSubscriberId() {
+    public Address getSubscriberId() {
         return subscriber.getAddress();
     }
 
@@ -60,19 +63,19 @@ public class SubscriberJS extends Subscriber {
                 if (s.startsWith("Received: ")) { // only content, for message validation
                     if (onReceived != null) {
                         String[] parts = s.substring(10).split("###");
-                        onReceived.accept(parts[0], parts[1]);
+                        onReceived.accept(new Address(parts[0]), parts[1]);
                     }
                 } else if (s.startsWith("whole message received: ")) { // whole stream message, for logging
                     String msg = s.split("whole message received: ")[1];
-                    Main.logger.fine("Javascript subscriber " + getSubscriberId() + " received: " + msg);
+                    log.debug("JS subscriber {} received: {}", getSubscriberId(), msg);
                 } else {
-                    Main.logger.warning(getSubscriberId() + " " + s);
+                    log.warn(getSubscriberId() + " " + s);
                 }
             }
             try {
                 while (!Thread.currentThread().isInterrupted() && stdError.ready() && (s = stdError.readLine()) != null) {
                     if (!s.equals("Failed to decrypt. Requested the correct decryption key(s) and going to try again.")) {
-                        Main.logger.severe(s);
+                        log.warn("JS subscriber printed unexpected output: {}", s);
                     }
                 }
             } catch (IOException e) {
@@ -115,18 +118,5 @@ public class SubscriberJS extends Subscriber {
             map.put("from", from);
         }
         return HttpUtils.mapAdapter.toJson(map);
-    }
-
-    private static String groupKeysToJson(StreamrClientJS subscriber) {
-        HashMap<String, HashMap<String, UnencryptedGroupKey>> keys = subscriber.getEncryptionOptions().getSubscriberGroupKeys();
-        HashMap<String, HashMap<String, String>> keysHex = new HashMap<>();
-        for (String streamId: keys.keySet()) {
-            HashMap<String, UnencryptedGroupKey> streamKeys = keys.get(streamId);
-            keysHex.put(streamId, new HashMap<>());
-            for (String publisherId: streamKeys.keySet()) {
-                keysHex.get(streamId).put(publisherId, streamKeys.get(publisherId).getGroupKeyHex());
-            }
-        }
-        return HttpUtils.mapAdapter.toJson(keysHex);
     }
 }

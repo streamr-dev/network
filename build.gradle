@@ -19,6 +19,10 @@ dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.12'
     compile 'com.streamr:client:+' // always run against latest
     compile 'commons-cli:commons-cli:1.4'
+
+    compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.3'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
+    compile group: 'org.apache.logging.log4j', name: 'log4j-slf4j-impl', version: '2.13.3'
 }
 
 task fatJar(type: Jar) {

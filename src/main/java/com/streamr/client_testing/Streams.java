@@ -3,9 +3,10 @@ package com.streamr.client_testing;
 import com.streamr.client.StreamrClient;
 import com.streamr.client.authentication.EthereumAuthenticationMethod;
 import com.streamr.client.options.*;
-import com.streamr.client.utils.UnencryptedGroupKey;
+import com.streamr.client.utils.GroupKey;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,11 +32,13 @@ public class Streams {
     private final int maxMessages;
     private StreamTester activeStreamTester;
 
+    private static final Logger log = LogManager.getLogger(Streams.class);
+
     public Streams(Participants participants, String restApiUrl, String websocketApiUrl, int minInterval, int maxInterval, int maxMessages, boolean testCorrectness) {
         this.ps = participants;
-        Main.logger.info("Using REST URL: " + restApiUrl);
+        log.info("Using REST URL: " + restApiUrl);
         this.restApiUrl = restApiUrl;
-        Main.logger.info("Using WebSockets URL: " + websocketApiUrl);
+        log.info("Using WebSockets URL: " + websocketApiUrl);
         this.websocketApiUrl = websocketApiUrl;
         this.minInterval = minInterval;
         this.maxInterval = maxInterval;
@@ -82,10 +85,10 @@ public class Streams {
 
     private StreamTester build(String name, Consumer<StreamTester> addParticipants) {
         StreamTester streamTester = new StreamTester(name, restApiUrl, websocketApiUrl, minInterval, maxInterval, maxMessages, testCorrectness);
-        Main.logger.info(String.format("Creating:\n%s Java publishers\n%s Java subscribers\n%s JS publishers\n%s JS subscribers",
-                ps.getNbJavaPublishers(), ps.getNbJavaSubscribers(), ps.getNbJavascriptPublishers(), ps.getNbJavascriptSubscribers()));
+        log.info("Creating:\n{} Java publishers\n{} Java subscribers\n{} JS publishers\n{} JS subscribers",
+                ps.getNbJavaPublishers(), ps.getNbJavaSubscribers(), ps.getNbJavascriptPublishers(), ps.getNbJavascriptSubscribers());
         addParticipants.accept(streamTester);
-        Main.logger.info("Created publishers and subscribers for '" + name + "'!");
+        log.info("Created publishers and subscribers for {}", name);
         return streamTester;
     }
 
@@ -138,17 +141,21 @@ public class Streams {
     private void encryptedExchangeStreamHelper(StreamTester streamTester, PublishFunction publishFunction) {
         String streamId = streamTester.getStreamId();
 
+        // Build Java publishers, each with their own GroupKey
         StreamrClientJava[] javaPublishers = new StreamrClientJava[ps.getNbJavaPublishers()];
         for (int i = 0; i < ps.getNbJavaPublishers(); i++) {
-            javaPublishers[i] = buildEncryptedSigningClient(streamId, null, StreamTester.generateGroupKey());
+            javaPublishers[i] = buildEncryptedSigningClient(streamId, GroupKey.generate());
         }
         streamTester.addPublishers(publishFunction, javaPublishers);
+
+        // Build JS publishers, each with their own GroupKey
         StreamrClientJS[] javascriptPublishers = new StreamrClientJS[ps.getNbJavascriptPublishers()];
         for (int i = 0; i < ps.getNbJavascriptPublishers(); i++) {
-            javascriptPublishers[i] = new StreamrClientJS(buildEncryptionOptions(streamId, null, StreamTester.generateGroupKey()));
+            javascriptPublishers[i] = new StreamrClientJS(GroupKey.generate());
         }
         streamTester.addPublishers(publishFunction, javascriptPublishers);
 
+        // Build Java & JS subscribers, no one knows the GroupKeys
         StreamrClientWrapper[] subscribers = buildClientsWithoutKeys(this::buildCleartextSigningClient, ps.getNbJavaSubscribers(), ps.getNbJavascriptSubscribers());
         StreamrClientWrapper[] javaSubscribers = Arrays.copyOfRange(subscribers, 0, ps.getNbJavaSubscribers());
         StreamrClientWrapper[] javascriptSubscribers = Arrays.copyOfRange(subscribers, ps.getNbJavaSubscribers(), subscribers.length);
@@ -184,29 +191,34 @@ public class Streams {
 
     private StreamrClientWrapper[][] buildSharedKeyParticipants(String streamId, int nbJavaPublishers,
         int nbJavaSubscribers, int nbJSPublishers, int nbJSSubscribers) {
-        UnencryptedGroupKey groupKey = StreamTester.generateGroupKey();
+        GroupKey groupKeyUsedByEveryone = GroupKey.generate();
 
         StreamrClientWrapper[] publishers = new StreamrClientWrapper[nbJavaPublishers + nbJSPublishers];
-        ArrayList<String> publisherIds = new ArrayList<>();
-        for (int i = 0; i < nbJavaPublishers; i++) {
-            StreamrClientJava p = buildEncryptedSigningClient(streamId, null, groupKey);
-            publishers[i] = p;
-            publisherIds.add(p.getAddress());
-        }
-        for (int i = nbJavaPublishers; i < nbJavaPublishers + nbJSPublishers; i++) {
-            StreamrClientJS p = new StreamrClientJS(buildEncryptionOptions(streamId, null, groupKey));
-            publishers[i] = p;
-            publisherIds.add(p.getAddress());
-        }
         StreamrClientWrapper[] subscribers = new StreamrClientWrapper[nbJavaSubscribers + nbJSSubscribers];
+
+        // Build Java publishers
+        for (int i = 0; i < nbJavaPublishers; i++) {
+            StreamrClientJava p = buildEncryptedSigningClient(streamId, groupKeyUsedByEveryone);
+            publishers[i] = p;
+        }
+
+        // Build JS publishers
+        for (int i = nbJavaPublishers; i < nbJavaPublishers + nbJSPublishers; i++) {
+            StreamrClientJS p = new StreamrClientJS(groupKeyUsedByEveryone);
+            publishers[i] = p;
+        }
+
+        // Build Java subscribers
         for (int i = 0; i < nbJavaSubscribers; i++) {
-            subscribers[i] = buildEncryptedSigningClient(streamId, publisherIds, groupKey);
+            subscribers[i] = buildEncryptedSigningClient(streamId, groupKeyUsedByEveryone);
         }
+
+        // Build JS subscribers
         for (int i = nbJavaSubscribers; i < nbJavaSubscribers + nbJSSubscribers; i++) {
-            subscribers[i] = new StreamrClientJS(buildEncryptionOptions(streamId, publisherIds, groupKey));
+            subscribers[i] = new StreamrClientJS(groupKeyUsedByEveryone);
         }
-        StreamrClientWrapper[][] participants = {publishers, subscribers};
-        return participants;
+
+        return new StreamrClientWrapper[][]{publishers, subscribers};
     }
 
     /*
@@ -230,26 +242,16 @@ public class Streams {
 
     /*
     Returns a StreamrClient that publishes signed messages encrypted with 'groupKey'. It verifies the signature of
-    the messages received and decrypts them also with 'groupKey'. It already knows all the publishers.
+    the messages received and decrypts them also with 'groupKey'.
      */
-    private StreamrClientJava buildEncryptedSigningClient(String streamId, ArrayList<String> publisherIds, UnencryptedGroupKey groupKey) {
-        EncryptionOptions encryptionOptions = buildEncryptionOptions(streamId, publisherIds, groupKey);
-        return new StreamrClientJava(new StreamrClient(new StreamrClientOptions(
-                new EthereumAuthenticationMethod(StreamTester.generatePrivateKey()), SigningOptions.getDefault(),
-                encryptionOptions, websocketApiUrl, restApiUrl)));
-    }
+    private StreamrClientJava buildEncryptedSigningClient(String streamId, GroupKey groupKey) {
+        StreamrClientOptions clientOptions = new StreamrClientOptions(
+                new EthereumAuthenticationMethod(StreamTester.generatePrivateKey()),
+                SigningOptions.getDefault(), EncryptionOptions.getDefault(), websocketApiUrl, restApiUrl);
 
-    private EncryptionOptions buildEncryptionOptions(String streamId, ArrayList<String> publisherIds, UnencryptedGroupKey groupKey) {
-        HashMap<String, UnencryptedGroupKey> publisher = new HashMap<>();
-        publisher.put(streamId, groupKey);
-        HashMap<String, HashMap<String, UnencryptedGroupKey>> subscriber = new HashMap<>();
-        HashMap<String, UnencryptedGroupKey> keyPerPublisher = new HashMap<>();
-        if (publisherIds != null) {
-            for (String publisherId: publisherIds) {
-                keyPerPublisher.put(publisherId, groupKey);
-            }
-        }
-        subscriber.put(streamId, keyPerPublisher);
-        return new EncryptionOptions(publisher, subscriber);
+        StreamrClient streamrClient = new StreamrClient(clientOptions);
+        streamrClient.getKeyStore().add(streamId, groupKey);
+
+        return new StreamrClientJava(streamrClient);
     }
 }

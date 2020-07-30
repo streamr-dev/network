@@ -6,9 +6,8 @@
         </Console>
     </Appenders>
     <Loggers>
-        <Logger name="streamr.client-testing" level="warn" additivity="false">
-            <AppenderRef ref="Console" />
-        </Logger>
+        <Logger name="com.streamr.client" level="warn"/>
+        <Logger name="com.streamr.client_testing" level="info" />
         <Root level="warn" additivity="false">
             <AppenderRef ref="Console" />
         </Root>

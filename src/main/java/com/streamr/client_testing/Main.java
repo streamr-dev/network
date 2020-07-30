@@ -1,39 +1,16 @@
 package com.streamr.client_testing;
 
 import org.apache.commons.cli.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Properties;
-import java.util.logging.*;
 
 public class Main {
-    private static Streams streams;
-    private static class LogFormatter extends Formatter {
-        private final DateFormat df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS");
-
-        public String format(LogRecord record) {
-            StringBuilder builder = new StringBuilder(1000);
-            builder.append(df.format(new Date(record.getMillis()))).append("-");
-            builder.append(record.getLevel()).append(": ");
-            builder.append(formatMessage(record));
-            builder.append("\n");
-            return builder.toString();
-        }
-
-        public String getHead(Handler h) {
-            return super.getHead(h);
-        }
-
-        public String getTail(Handler h) {
-            return super.getTail(h);
-        }
-    }
-    public static final Logger logger = Logger.getAnonymousLogger();
+    private static final Logger log = LogManager.getLogger(Main.class);
 
     public static void main(String[] args) {
         Options options = new Options();
@@ -83,14 +60,6 @@ public class Main {
             System.exit(1);
         }
 
-        Level logLevel = Level.parse(prop.getProperty("logLevel"));
-        Handler handler = new ConsoleHandler();
-        handler.setLevel(logLevel);
-        handler.setFormatter(new LogFormatter());
-        logger.setUseParentHandlers(false);
-        logger.addHandler(handler);
-        logger.setLevel(logLevel);
-
         // Command-line options override config file
         String restUrl = cmd.getOptionValue("restUrl", prop.getProperty("restUrl"));
         String wsUrl = cmd.getOptionValue("wsUrl", prop.getProperty("wsUrl"));
@@ -113,10 +82,10 @@ public class Main {
         );
 
         try {
-            streams = new Streams(participants, restUrl, wsUrl, minInterval, maxInterval, maxMessages, testCorrectness);
+            Streams streams = new Streams(participants, restUrl, wsUrl, minInterval, maxInterval, maxMessages, testCorrectness);
             streams.runTestBlocking(cmd.getOptionValue("stream"));
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            log.fatal(e.getMessage(), e);
             System.exit(1);
         }
     }
