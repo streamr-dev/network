@@ -687,11 +687,15 @@ describe('StreamrClient', () => {
     }
 
     beforeEach(async () => {
+        client = createClient()
+        // create client before connecting ws
+        // so client generates correct options.url for us
+
         try {
             await Promise.all([
                 fetch(config.clientOptions.restUrl),
                 new Promise((resolve, reject) => {
-                    const ws = new WebSocket(config.clientOptions.url)
+                    const ws = new WebSocket(client.options.url)
                     ws.once('open', () => {
                         resolve()
                         ws.close()
@@ -711,8 +715,6 @@ describe('StreamrClient', () => {
                 throw e
             }
         }
-
-        client = createClient()
         await client.ensureConnected()
         stream = await createStream()
         const publisherId = await client.getPublisherId()
