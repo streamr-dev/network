@@ -554,6 +554,7 @@ describe('StreamrClient', () => {
         })
 
         it('ignores messages for unknown Subscriptions', (done) => {
+            client.onError = jest.fn()
             sub.handleResentMessage = jest.fn()
 
             const msg1 = new UnicastMessage({
@@ -564,31 +565,29 @@ describe('StreamrClient', () => {
                 errors.pop() // remove this error
                 expect(err.message).toEqual(`Received unexpected UnicastMessage message ${msg1.serialize()}`)
                 expect(sub.handleResentMessage).not.toHaveBeenCalled()
+                expect(client.onError).toHaveBeenCalled()
                 done()
             })
 
             connection.emitMessage(msg1)
         })
 
-        it(
-            'should ensure that the promise returned by the verification function is cached',
-            (done) => {
-                const { requestId } = requests[requests.length - 1]
-                sub.handleResentMessage = (message, msgRequestId, verifyFn) => {
-                    expect(msgRequestId).toEqual(requestId)
-                    const firstResult = verifyFn()
-                    expect(firstResult).toBeInstanceOf(Promise)
-                    expect(firstResult).toBe(verifyFn())
-                    done()
-                }
-
-                const msg1 = new UnicastMessage({
-                    streamMessage: getStreamMessage(sub.streamId, {}),
-                    requestId,
-                })
-                connection.emitMessage(msg1)
+        it('should ensure that the promise returned by the verification function is cached', (done) => {
+            const { requestId } = requests[requests.length - 1]
+            sub.handleResentMessage = (message, msgRequestId, verifyFn) => {
+                expect(msgRequestId).toEqual(requestId)
+                const firstResult = verifyFn()
+                expect(firstResult).toBeInstanceOf(Promise)
+                expect(firstResult).toBe(verifyFn())
+                done()
             }
-        )
+
+            const msg1 = new UnicastMessage({
+                streamMessage: getStreamMessage(sub.streamId, {}),
+                requestId,
+            })
+            connection.emitMessage(msg1)
+        })
     })
 
     describe('ResendResponseResending', () => {
@@ -619,6 +618,7 @@ describe('StreamrClient', () => {
         })
 
         it('emits error when unknown request id', (done) => {
+            client.onError = jest.fn()
             sub.handleResending = jest.fn()
             const resendResponse = new ResendResponseResending({
                 streamId: sub.streamId,
@@ -628,6 +628,7 @@ describe('StreamrClient', () => {
             client.once('error', (err) => {
                 errors.pop() // remove this err
                 expect(err.message).toEqual(`Received unexpected ResendResponseResending message ${resendResponse.serialize()}`)
+                expect(client.onError).toHaveBeenCalled()
                 expect(sub.handleResending).not.toHaveBeenCalled()
                 done()
             })
@@ -661,6 +662,7 @@ describe('StreamrClient', () => {
         })
 
         it('ignores messages for unknown subscriptions', (done) => {
+            client.onError = jest.fn()
             sub.handleNoResend = jest.fn()
             const resendResponse = new ResendResponseNoResend({
                 streamId: sub.streamId,
@@ -671,6 +673,7 @@ describe('StreamrClient', () => {
                 errors.pop() // remove this err
                 expect(err.message).toEqual(`Received unexpected ResendResponseNoResend message ${resendResponse.serialize()}`)
                 expect(sub.handleNoResend).not.toHaveBeenCalled()
+                expect(client.onError).toHaveBeenCalled()
                 done()
             })
             connection.emitMessage(resendResponse)
@@ -703,6 +706,7 @@ describe('StreamrClient', () => {
         })
 
         it('does not call event handler for unknown subscriptions', (done) => {
+            client.onError = jest.fn()
             sub.handleResent = jest.fn()
             const resendResponse = new ResendResponseResent({
                 streamId: sub.streamId,
@@ -713,6 +717,7 @@ describe('StreamrClient', () => {
                 errors.pop() // remove this err
                 expect(err.message).toEqual(`Received unexpected ResendResponseResent message ${resendResponse.serialize()}`)
                 expect(sub.handleResent).not.toHaveBeenCalled()
+                expect(client.onError).toHaveBeenCalled()
                 done()
             })
             connection.emitMessage(resendResponse)
@@ -731,6 +736,7 @@ describe('StreamrClient', () => {
         })
 
         it('emits an error event on client', (done) => {
+            client.onError = jest.fn()
             const { requestId } = requests[requests.length - 1]
             const errorResponse = new ErrorResponse({
                 errorMessage: 'Test error',
@@ -741,7 +747,7 @@ describe('StreamrClient', () => {
             client.once('error', async (err) => {
                 errors.pop()
                 expect(err.message).toEqual(errorResponse.errorMessage)
-                await wait(100)
+                expect(client.onError).toHaveBeenCalled()
                 done()
             })
             connection.emitMessage(errorResponse)
@@ -766,21 +772,18 @@ describe('StreamrClient', () => {
 
             sub.handleError = async (err) => {
                 expect(err).toBe(jsonError)
-                await wait(100)
                 done()
             }
-            client.once('error', () => {
-                errors.pop()
-            })
             connection.emit('error', jsonError)
         })
 
         it('emits other errors as error events on client', (done) => {
+            client.onError = jest.fn()
             const testError = new Error('This is a test error message, ignore')
 
             client.once('error', async (err) => {
                 expect(err).toBe(testError)
-                await wait(100)
+                expect(client.onError).toHaveBeenCalled()
                 done()
             })
             client.once('error', () => {
@@ -803,15 +806,33 @@ describe('StreamrClient', () => {
             expect(connection.connect).toHaveBeenCalledTimes(1)
         })
 
-        it('should reject promise while connecting', async () => {
+        it('should reject promise while connecting', async (done) => {
+            client.onError = jest.fn()
             connection.state = Connection.State.CONNECTING
+            client.once('error', (err) => {
+                errors.pop()
+                expect(err).toMatchObject({
+                    message: 'Already connecting!'
+                })
+                expect(client.onError).toHaveBeenCalledTimes(1)
+                done()
+            })
             await expect(() => (
                 client.connect()
             )).rejects.toThrow()
         })
 
-        it('should reject promise when connected', async () => {
+        it('should reject promise when connected', async (done) => {
+            client.onError = jest.fn()
             connection.state = Connection.State.CONNECTED
+            client.once('error', (err) => {
+                errors.pop()
+                expect(err).toMatchObject({
+                    message: 'Already connected!'
+                })
+                expect(client.onError).toHaveBeenCalledTimes(1)
+                done()
+            })
             await expect(() => (
                 client.connect()
             )).rejects.toThrow()

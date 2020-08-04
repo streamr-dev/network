@@ -240,31 +240,28 @@ describe('HistoricalSubscription', () => {
                 }
             )
 
-            it(
-                'does not emit second "gap" after the first one if the missing messages are received in between',
-                (done) => {
-                    const msg1 = msg
-                    const msg2 = createMsg(2, undefined, 1)
-                    const msg3 = createMsg(3, undefined, 2)
-                    const msg4 = createMsg(4, undefined, 3)
+            it('does not emit second "gap" after the first one if the missing messages are received in between', (done) => {
+                const msg1 = msg
+                const msg2 = createMsg(2, undefined, 1)
+                const msg3 = createMsg(3, undefined, 2)
+                const msg4 = createMsg(4, undefined, 3)
 
-                    const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {
-                        last: 1,
-                    }, {}, 100, 100)
-                    sub.once('gap', () => {
-                        sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
-                        sub.handleResentMessage(msg3, 'requestId', sinon.stub().resolves(true)).then(() => {})
-                        sub.once('gap', () => { throw new Error('should not emit second gap') })
-                        setTimeout(() => {
-                            sub.stop()
-                            done()
-                        }, 100 + 1000)
-                    })
+                const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), sinon.stub(), {
+                    last: 1,
+                }, {}, 100, 100)
+                sub.once('gap', () => {
+                    sub.handleResentMessage(msg2, 'requestId', sinon.stub().resolves(true))
+                    sub.handleResentMessage(msg3, 'requestId', sinon.stub().resolves(true)).then(() => {})
+                    sub.once('gap', () => { throw new Error('should not emit second gap') })
+                    setTimeout(() => {
+                        sub.stop()
+                        done()
+                    }, 100 + 1000)
+                })
 
-                    sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
-                    sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
-                }
-            )
+                sub.handleResentMessage(msg1, 'requestId', sinon.stub().resolves(true))
+                sub.handleResentMessage(msg4, 'requestId', sinon.stub().resolves(true))
+            })
 
             it('does not emit second "gap" if gets unsubscribed', async (done) => {
                 const msg1 = msg
@@ -618,8 +615,10 @@ describe('HistoricalSubscription', () => {
                     last: 1,
                 }
             )
+            sub.onError = jest.fn()
             sub.once('error', (thrown) => {
-                expect(err === thrown).toBeTruthy()
+                expect(thrown).toBe(err)
+                expect(sub.onError).toHaveBeenCalled()
                 done()
             })
             sub.handleError(err)
@@ -635,6 +634,8 @@ describe('HistoricalSubscription', () => {
                 last: 1,
             })
 
+            sub.onError = jest.fn()
+
             sub.on('gap', sinon.stub().throws('Should not emit gap!'))
 
             const msg1 = msg
@@ -649,6 +650,7 @@ describe('HistoricalSubscription', () => {
 
             // Receive msg3 successfully
             await sub.handleResentMessage(msg3, 'requestId', sinon.stub().resolves(true))
+            expect(sub.onError).toHaveBeenCalled()
         })
 
         it('if an InvalidJsonError AND a gap occur, does not mark it as received and emits gap at the next message', async (done) => {
@@ -656,13 +658,17 @@ describe('HistoricalSubscription', () => {
                 last: 1,
             }, {}, 100, 100)
 
+            sub.onError = jest.fn()
+
             sub.once('gap', (from, to, publisherId) => {
                 expect(from.timestamp).toEqual(1) // cannot know the first missing message so there will be a duplicate received
                 expect(from.sequenceNumber).toEqual(1)
                 expect(to.timestamp).toEqual(3)
                 expect(to.sequenceNumber).toEqual(0)
                 expect(publisherId).toEqual('publisherId')
+
                 setTimeout(() => {
+                    expect(sub.onError).toHaveBeenCalled()
                     sub.stop()
                     done()
                 }, 100)
@@ -718,43 +724,37 @@ describe('HistoricalSubscription', () => {
     })
 
     describe('handleResent()', () => {
-        it(
-            'emits the "resent" + "initial_resend_done" events on last message (message handler completes BEFORE resent)',
-            async (done) => {
-                const handler = sinon.stub()
-                const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), handler, {
-                    last: 1,
-                })
-                sub.addPendingResendRequestId('requestId')
+        it('emits the "resent" + "initial_resend_done" events on last message (message handler completes BEFORE resent)', async (done) => {
+            const handler = sinon.stub()
+            const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), handler, {
+                last: 1,
+            })
+            sub.addPendingResendRequestId('requestId')
 
-                sub.once('resent', () => sub.once('initial_resend_done', () => done()))
-                await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
-                sub.handleResent(new ControlLayer.ResendResponseResent({
-                    streamId: 'streamId',
-                    streamPartition: 0,
-                    requestId: 'requestId',
-                }))
-            }
-        )
+            sub.once('resent', () => sub.once('initial_resend_done', () => done()))
+            await sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
+            sub.handleResent(new ControlLayer.ResendResponseResent({
+                streamId: 'streamId',
+                streamPartition: 0,
+                requestId: 'requestId',
+            }))
+        })
 
-        it(
-            'arms the Subscription to emit the resent event on last message (message handler completes AFTER resent)',
-            async () => {
-                const handler = sinon.stub()
-                const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), handler, {
-                    last: 1,
-                })
-                sub.addPendingResendRequestId('requestId')
-                const onResent = new Promise((resolve) => sub.once('resent', resolve))
-                sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
-                sub.handleResent(new ControlLayer.ResendResponseResent({
-                    streamId: 'streamId',
-                    streamPartition: 0,
-                    requestId: 'requestId',
-                }))
-                await onResent
-            }
-        )
+        it('arms the Subscription to emit the resent event on last message (message handler completes AFTER resent)', async () => {
+            const handler = sinon.stub()
+            const sub = new HistoricalSubscription(msg.getStreamId(), msg.getStreamPartition(), handler, {
+                last: 1,
+            })
+            sub.addPendingResendRequestId('requestId')
+            const onResent = new Promise((resolve) => sub.once('resent', resolve))
+            sub.handleResentMessage(msg, 'requestId', sinon.stub().resolves(true))
+            sub.handleResent(new ControlLayer.ResendResponseResent({
+                streamId: 'streamId',
+                streamPartition: 0,
+                requestId: 'requestId',
+            }))
+            await onResent
+        })
 
         it('should not emit "initial_resend_done" after receiving "resent" if there are still pending resend requests', async () => {
             const handler = sinon.stub()

@@ -1,15 +1,20 @@
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
+import uniqueId from 'lodash.uniqueid'
 import WebSocket from 'ws'
 import { ControlLayer } from 'streamr-client-protocol'
-
-const debug = debugFactory('StreamrClient::Connection')
 
 class Connection extends EventEmitter {
     constructor(options, socket) {
         super()
         if (!options.url) {
             throw new Error('URL is not defined!')
+        }
+        const id = uniqueId('Connection')
+        if (options.debug) {
+            this.debug = options.debug.extend(id)
+        } else {
+            this.debug = debugFactory(`StreamrClient::${id}`)
         }
         this.options = options
         this.state = Connection.State.DISCONNECTED
@@ -22,13 +27,13 @@ class Connection extends EventEmitter {
         this.emit(state)
     }
 
-    connect() {
+    async connect() {
         if (this.state === Connection.State.CONNECTING) {
-            return Promise.reject(new Error('Already connecting!'))
+            throw new Error('Already connecting!')
         }
 
         if (this.state === Connection.State.CONNECTED) {
-            return Promise.reject(new Error('Already connected!'))
+            throw new Error('Already connected!')
         }
 
         if (this.state === Connection.State.DISCONNECTING) {
@@ -38,15 +43,10 @@ class Connection extends EventEmitter {
         }
 
         if (!this.socket || this.socket.readyState === WebSocket.CLOSED) {
-            try {
-                debug('Trying to open new websocket to %s', this.options.url)
-                this.socket = new WebSocket(this.options.url)
-            } catch (err) {
-                this.emit('error', err)
-                debug(err)
-                return Promise.reject(err)
-            }
+            this.debug('Trying to open new websocket to %s', this.options.url)
+            this.socket = new WebSocket(this.options.url)
         }
+
         this.socket.binaryType = 'arraybuffer'
         this.socket.events = new EventEmitter()
 
@@ -57,12 +57,12 @@ class Connection extends EventEmitter {
         this.updateState(Connection.State.CONNECTING)
 
         this.socket.events.on('open', () => {
-            debug('Connected to ', this.options.url)
+            this.debug('Connected to ', this.options.url)
             this.updateState(Connection.State.CONNECTED)
         })
 
         this.socket.events.on('error', (err) => {
-            debug('Error in websocket.')
+            this.debug('Error in websocket.')
             if (err) {
                 console.error(err)
             }
@@ -71,7 +71,7 @@ class Connection extends EventEmitter {
 
         this.socket.events.on('close', () => {
             if (this.state !== Connection.State.DISCONNECTING) {
-                debug('Connection lost. Attempting to reconnect')
+                this.debug('Connection lost. Attempting to reconnect')
                 clearTimeout(this._reconnectTimeout)
                 this._reconnectTimeout = setTimeout(() => {
                     this.connect().catch((err) => {
@@ -86,7 +86,7 @@ class Connection extends EventEmitter {
         this.socket.onmessage = (messageEvent) => {
             let controlMessage
             try {
-                debug('<< %s', messageEvent.data)
+                this.debug('<< %s', messageEvent.data)
                 controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
             } catch (err) {
                 this.emit('error', err)
@@ -106,19 +106,19 @@ class Connection extends EventEmitter {
         clearTimeout(this._reconnectTimeout)
     }
 
-    disconnect() {
+    async disconnect() {
         this.clearReconnectTimeout()
 
         if (this.state === Connection.State.DISCONNECTING) {
-            return Promise.reject(new Error('Already disconnecting!'))
+            throw new Error('Already disconnecting!')
         }
 
         if (this.state === Connection.State.DISCONNECTED) {
-            return Promise.reject(new Error('Already disconnected!'))
+            throw new Error('Already disconnected!')
         }
 
         if (this.socket === undefined) {
-            return Promise.reject(new Error('Something is wrong: socket is undefined!'))
+            throw new Error('Something is wrong: socket is undefined!')
         }
 
         if (this.state === Connection.State.CONNECTING) {
@@ -138,7 +138,7 @@ class Connection extends EventEmitter {
         return new Promise((resolve, reject) => {
             try {
                 const serialized = controlLayerRequest.serialize()
-                debug('>> %s', serialized)
+                this.debug('>> %s', serialized)
                 this.socket.send(serialized, (err) => {
                     if (err) {
                         reject(err)
@@ -148,7 +148,7 @@ class Connection extends EventEmitter {
                 })
 
                 if (process.browser) {
-                    resolve()
+                    resolve(controlLayerRequest)
                 }
             } catch (err) {
                 this.emit('error', err)

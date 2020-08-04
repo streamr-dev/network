@@ -1,16 +1,23 @@
 import debugFactory from 'debug'
+import uniqueId from 'lodash.uniqueid'
 
 import Subscription from './Subscription'
 import AbstractSubscription from './AbstractSubscription'
 import EncryptionUtil from './EncryptionUtil'
 import UnableToDecryptError from './errors/UnableToDecryptError'
 
-const debug = debugFactory('StreamrClient::Subscription')
-
 export default class RealTimeSubscription extends AbstractSubscription {
     constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true,
-        onUnableToDecrypt = AbstractSubscription.defaultUnableToDecrypt) {
+        onUnableToDecrypt = AbstractSubscription.defaultUnableToDecrypt, debug) {
         super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages, onUnableToDecrypt)
+
+        const id = uniqueId('Subscription')
+        if (debug) {
+            this.debug = debug.extend(id)
+        } else {
+            this.debug = debugFactory(`StreamrClient::${id}`)
+        }
+
         this.alreadyFailedToDecrypt = {}
         this.resending = false
     }
@@ -62,7 +69,7 @@ export default class RealTimeSubscription extends AbstractSubscription {
     }
 
     setResending(resending) {
-        debug(`Subscription: Stream ${this.streamId} resending: ${resending}`)
+        this.debug(`Subscription: Stream ${this.streamId} resending: ${resending}`)
         this.resending = resending
     }
 

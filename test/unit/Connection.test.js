@@ -1,4 +1,5 @@
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import { wait } from 'streamr-test-utils'
 
 import Connection from '../../src/Connection'
 
@@ -221,18 +222,10 @@ describe('Connection', () => {
         })
 
         describe('close', () => {
-            beforeAll(() => {
-                jest.useFakeTimers()
-            })
-
-            afterAll(() => {
-                jest.useRealTimers()
-            })
-
-            it('tries to reconnect after 2 seconds', () => {
+            it('tries to reconnect after 2 seconds', async () => {
                 conn.connect = jest.fn(async () => {})
                 conn.socket.events.emit('close')
-                jest.advanceTimersByTime(2100)
+                await wait(2100)
                 expect(conn.connect).toHaveBeenCalledTimes(1)
             })
         })

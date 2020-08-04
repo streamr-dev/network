@@ -1,29 +1,27 @@
-import debugFactory from 'debug'
 import { Errors, Utils } from 'streamr-client-protocol'
 
-import VerificationFailedError from './errors/VerificationFailedError'
 import Subscription from './Subscription'
 import UnableToDecryptError from './errors/UnableToDecryptError'
 
 const { OrderingUtil } = Utils
-const debug = debugFactory('StreamrClient::AbstractSubscription')
-
-const defaultUnableToDecrypt = (error) => {
-    const ciphertext = error.streamMessage.getSerializedContent()
-    const toDisplay = ciphertext.length > 100 ? `${ciphertext.slice(0, 100)}...` : ciphertext
-    console.warn(`Unable to decrypt: ${toDisplay}`)
-}
 
 const MAX_NB_GROUP_KEY_REQUESTS = 10
 
+function decryptErrorToDisplay(error) {
+    const ciphertext = error.streamMessage.getSerializedContent()
+    return ciphertext.length > 100 ? `${ciphertext.slice(0, 100)}...` : ciphertext
+}
+
 export default class AbstractSubscription extends Subscription {
-    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true,
-        onUnableToDecrypt = defaultUnableToDecrypt) {
-        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
+    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true, onUnableToDecrypt, debug) {
+        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, debug)
         this.callback = callback
-        this.onUnableToDecrypt = onUnableToDecrypt
         this.pendingResendRequestIds = {}
         this._lastMessageHandlerPromise = {}
+        if (onUnableToDecrypt) {
+            this.onUnableToDecrypt = onUnableToDecrypt
+        }
+        this.onUnableToDecrypt = this.onUnableToDecrypt.bind(this)
         this.orderingUtil = (orderMessages) ? new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
             this._inOrderHandler(orderedMessage)
         }, (from, to, publisherId, msgChainId) => {
@@ -43,13 +41,27 @@ export default class AbstractSubscription extends Subscription {
             this.setResending(false)
         })
 
-        this.on('error', () => {
+        this.on('error', (error) => {
             this._clearGaps()
+            this.onError(error)
         })
 
         this.encryptedMsgsQueues = {}
         this.waitingForGroupKey = {}
         this.nbGroupKeyRequests = {}
+    }
+
+    /**
+     * Override to control output
+     */
+
+    onError(error) { // eslint-disable-line class-methods-use-this
+        console.error(error)
+    }
+
+    // eslint-disable-next-line class-methods-use-this
+    onUnableToDecrypt(error) {
+        this.debug(`WARN: Unable to decrypt: ${decryptErrorToDisplay(error)}`)
     }
 
     _addMsgToQueue(encryptedMsg) {
@@ -97,24 +109,24 @@ export default class AbstractSubscription extends Subscription {
                 this.emit('done')
             }
         } else {
-            console.warn('Failed to decrypt. Requested the correct decryption key(s) and going to try again.')
+            this.debug('Failed to decrypt. Requested the correct decryption key(s) and going to try again.')
         }
     }
 
     _requestGroupKeyAndQueueMessage(msg, start, end) {
         this.emit('groupKeyMissing', msg.getPublisherId(), start, end)
         const publisherId = msg.getPublisherId().toLowerCase()
-        this.nbGroupKeyRequests[publisherId] = 1
-        const timer = setInterval(() => {
+        this.nbGroupKeyRequests[publisherId] = 1 // reset retry counter
+        clearInterval(this.waitingForGroupKey[publisherId])
+        this.waitingForGroupKey[publisherId] = setInterval(() => {
             if (this.nbGroupKeyRequests[publisherId] < MAX_NB_GROUP_KEY_REQUESTS) {
                 this.nbGroupKeyRequests[publisherId] += 1
                 this.emit('groupKeyMissing', msg.getPublisherId(), start, end)
             } else {
-                console.warn(`Failed to receive group key response from ${publisherId} after ${MAX_NB_GROUP_KEY_REQUESTS} requests.`)
+                this.debug(`WARN: Failed to receive group key response from ${publisherId} after ${MAX_NB_GROUP_KEY_REQUESTS} requests.`)
                 this._cancelGroupKeyRequest(publisherId)
             }
         }, this.propagationTimeout)
-        this.waitingForGroupKey[publisherId] = timer
         this._addMsgToQueue(msg)
     }
 
@@ -122,8 +134,7 @@ export default class AbstractSubscription extends Subscription {
         this._cancelGroupKeyRequest(publisherId.toLowerCase())
         const queue = this.encryptedMsgsQueues[publisherId.toLowerCase()]
         while (queue.length > 0) {
-            this._decryptAndHandle(queue[0])
-            queue.shift()
+            this._decryptAndHandle(queue.shift())
         }
     }
 
@@ -214,7 +225,7 @@ export default class AbstractSubscription extends Subscription {
     }
 
     setState(state) {
-        debug(`Subscription: Stream ${this.streamId} state changed ${this.state} => ${state}`)
+        this.debug(`Subscription: Stream ${this.streamId} state changed ${this.state} => ${state}`)
         this.state = state
         this.emit(state)
     }
@@ -234,7 +245,6 @@ export default class AbstractSubscription extends Subscription {
         try {
             return await fn()
         } catch (err) {
-            console.error(err)
             this.emit('error', err)
             // Swallow rejection
             return Promise.resolve()
@@ -273,5 +283,5 @@ export default class AbstractSubscription extends Subscription {
     }
 }
 
-AbstractSubscription.defaultUnableToDecrypt = defaultUnableToDecrypt
+AbstractSubscription.defaultUnableToDecrypt = AbstractSubscription.prototype.defaultUnableToDecrypt
 AbstractSubscription.MAX_NB_GROUP_KEY_REQUESTS = MAX_NB_GROUP_KEY_REQUESTS

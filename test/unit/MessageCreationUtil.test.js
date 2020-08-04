@@ -30,7 +30,7 @@ describe('MessageCreationUtil', () => {
                     username: 'username',
                 }),
             }
-            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
+            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(wallet.address.toLowerCase())
         })
@@ -46,7 +46,7 @@ describe('MessageCreationUtil', () => {
                     username: 'username',
                 }),
             }
-            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
+            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
@@ -62,7 +62,7 @@ describe('MessageCreationUtil', () => {
                     username: 'username',
                 }),
             }
-            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
+            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
@@ -78,7 +78,7 @@ describe('MessageCreationUtil', () => {
                     username: 'username',
                 }),
             }
-            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo())
+            const msgCreationUtil = new MessageCreationUtil(client.options.auth, undefined, client.getUserInfo)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
@@ -376,7 +376,7 @@ describe('MessageCreationUtil', () => {
                 end: 2344155,
             })
 
-            expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('publisherId')) // sending to publisher's inbox stream
+            expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('publisherId')) // sending to publisher's keyexchange stream
             const content = streamMessage.getParsedContent()
             expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST)
             expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.NONE)
@@ -443,7 +443,7 @@ describe('MessageCreationUtil', () => {
                 }]
             })
 
-            expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('subscriberId')) // sending to subscriber's inbox stream
+            expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('subscriberId')) // sending to subscriber's keyexchange stream
             const content = streamMessage.getParsedContent()
             expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE)
             expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.RSA)
@@ -473,7 +473,7 @@ describe('MessageCreationUtil', () => {
             }), sinon.stub().resolves(stream))
 
             await util.createErrorMessage({
-                destinationAddress: 'destinationAddress',
+                keyExchangeStreamId: 'keyExchangeStreamId',
                 error: new Error(),
                 streamId: stream.id,
                 requestId: uniqueId('requestId'),
@@ -500,13 +500,13 @@ describe('MessageCreationUtil', () => {
 
             const requestId = uniqueId('requestId')
             const streamMessage = await util.createErrorMessage({
-                destinationAddress: 'destinationAddress',
+                keyExchangeStreamId: 'keyExchangeStreamId',
                 error: new InvalidGroupKeyRequestError('invalid'),
                 streamId: stream.id,
                 requestId,
             })
 
-            expect(streamMessage.getStreamId()).toBe('destinationAddress'.toLowerCase()) // sending to subscriber's inbox stream
+            expect(streamMessage.getStreamId()).toBe('keyExchangeStreamId') // sending to subscriber's keyexchange stream
 
             const content = streamMessage.getParsedContent()
             expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE)

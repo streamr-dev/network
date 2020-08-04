@@ -1,11 +1,10 @@
-import debugFactory from 'debug'
+import uniqueId from 'lodash.uniqueid'
 
 import EncryptionUtil from './EncryptionUtil'
 import InvalidGroupKeyRequestError from './errors/InvalidGroupKeyRequestError'
 import InvalidGroupKeyResponseError from './errors/InvalidGroupKeyResponseError'
 import InvalidGroupKeyError from './errors/InvalidGroupKeyError'
 
-const debug = debugFactory('KeyExchangeUtil')
 const SUBSCRIBERS_EXPIRATION_TIME = 5 * 60 * 1000 // 5 minutes
 
 export default class KeyExchangeUtil {
@@ -16,6 +15,7 @@ export default class KeyExchangeUtil {
 
     constructor(client) {
         this._client = client
+        this.debug = client.debug.extend(uniqueId('KeyExchangeUtil'))
         this.isSubscriberPromises = {}
     }
 
@@ -86,7 +86,7 @@ export default class KeyExchangeUtil {
         /* eslint-disable no-underscore-dangle */
         this._client._setGroupKeys(parsedContent.streamId, streamMessage.getPublisherId(), decryptedGroupKeys)
         /* eslint-enable no-underscore-dangle */
-        debug('INFO: Updated group key for stream "%s" and publisher "%s"', parsedContent.streamId, streamMessage.getPublisherId())
+        this.debug('INFO: Updated group key for stream "%s" and publisher "%s"', parsedContent.streamId, streamMessage.getPublisherId())
     }
 
     async getSubscribers(streamId) {
