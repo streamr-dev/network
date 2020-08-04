@@ -57,7 +57,7 @@
     "qs": "^6.9.4",
     "speedometer": "^1.1.0",
     "streamr-client": "^3.2.1",
-    "streamr-client-protocol": "^5.0.0-beta.15",
+    "streamr-client-protocol": "^5.0.0-beta.16",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.3.0",
     "uuid": "^8.2.0",
     "ws": "^7.3.0"
