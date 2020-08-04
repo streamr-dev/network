@@ -1,5 +1,7 @@
 import assert from 'assert'
 import crypto from 'crypto'
+import fs from 'fs'
+import path from 'path'
 
 import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
@@ -1057,5 +1059,36 @@ describe('StreamrClient', () => {
                 })
             }, TIMEOUT * 0.8)
         }, 2 * TIMEOUT)
+    })
+
+    describe('utf-8 encoding', () => {
+        const publishedMessage = {
+            content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
+        }
+
+        it('decodes realtime messages correctly', async (done) => {
+            client.once('error', done)
+            const sub = client.subscribe(stream.id, (msg) => {
+                expect(msg).toStrictEqual(publishedMessage)
+                done()
+            }).once('subscribed', () => {
+                client.publish(stream.id, publishedMessage)
+            })
+        })
+
+        it('decodes resent messages correctly', async (done) => {
+            client.once('error', done)
+            await client.publish(stream.id, publishedMessage)
+            await wait(5000)
+            await client.resend({
+                stream: stream.id,
+                resend: {
+                    last: 3,
+                },
+            }, (msg) => {
+                expect(msg).toStrictEqual(publishedMessage)
+                done()
+            })
+        }, 10000)
     })
 })
