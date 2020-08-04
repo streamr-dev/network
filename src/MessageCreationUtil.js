@@ -203,7 +203,7 @@ export default class MessageCreationUtil {
         return streamMessage
     }
 
-    async createErrorMessage({ destinationAddress, streamId, error, requestId }) {
+    async createErrorMessage({ keyExchangeStreamId, streamId, error, requestId }) {
         if (!this._signer) {
             throw new Error('Cannot create unsigned error message. Must authenticate with "privateKey" or "provider"')
         }
@@ -214,7 +214,7 @@ export default class MessageCreationUtil {
             streamId,
             requestId,
         }
-        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(destinationAddress, publisherId)
+        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(keyExchangeStreamId, publisherId)
         const streamMessage = new StreamMessage({
             messageId,
             prevMsgRef,

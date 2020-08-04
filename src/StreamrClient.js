@@ -328,7 +328,7 @@ export default class StreamrClient extends EventEmitter {
                         this.debug('WARN: %s', error.message)
                         const msg = streamMessage.getParsedContent()
                         const errorMessage = await this.msgCreationUtil.createErrorMessage({
-                            destinationAddress: streamId,
+                            keyExchangeStreamId: streamId,
                             requestId: msg.requestId,
                             streamId: msg.streamId,
                             error,

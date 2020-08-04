@@ -473,7 +473,7 @@ describe('MessageCreationUtil', () => {
             }), sinon.stub().resolves(stream))
 
             await util.createErrorMessage({
-                destinationAddress: 'destinationAddress',
+                keyExchangeStreamId: 'keyExchangeStreamId',
                 error: new Error(),
                 streamId: stream.id,
                 requestId: uniqueId('requestId'),
@@ -500,13 +500,13 @@ describe('MessageCreationUtil', () => {
 
             const requestId = uniqueId('requestId')
             const streamMessage = await util.createErrorMessage({
-                destinationAddress: 'destinationAddress',
+                keyExchangeStreamId: 'keyExchangeStreamId',
                 error: new InvalidGroupKeyRequestError('invalid'),
                 streamId: stream.id,
                 requestId,
             })
 
-            expect(streamMessage.getStreamId()).toBe('destinationAddress') // sending to subscriber's keyexchange stream
+            expect(streamMessage.getStreamId()).toBe('keyExchangeStreamId') // sending to subscriber's keyexchange stream
 
             const content = streamMessage.getParsedContent()
             expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE)
