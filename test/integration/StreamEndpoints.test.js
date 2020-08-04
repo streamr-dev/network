@@ -54,7 +54,7 @@ describe('StreamEndpoints', () => {
             assert.equal(existingStream.name, createdStream.name)
         })
 
-        it('getOrCreate a new Stream', async () => {
+        it.skip('getOrCreate a new Stream', async () => {
             const newName = Date.now().toString()
             const newStream = await client.getOrCreateStream({
                 name: newName,
