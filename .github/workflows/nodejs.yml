@@ -21,9 +21,11 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
-      - uses: bahmutov/npm-install@v1
         with:
           node-version: 12
+
+      - name: npm ci
+        run: npm ci
 
       - name: npm run eslint
         run: npm run eslint
@@ -65,7 +67,6 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
-      - uses: bahmutov/npm-install@v1
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -75,6 +76,9 @@ jobs:
           git clone https://github.com/streamr-dev/streamr-docker-dev.git
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
+
+      - name: npm ci
+        run: npm ci
 
       - name: build
         run: npm run build
@@ -132,10 +136,12 @@ jobs:
 
       - uses: actions/checkout@master
       - uses: actions/setup-node@v1
-      - uses: bahmutov/npm-install@v1
         with:
           node-version: 12
           registry-url: https://registry.npmjs.org/
+
+      - name: npm ci
+        run: npm ci
 
       - name: build
         run: npm run build --if-present
