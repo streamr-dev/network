@@ -1,77 +1,107 @@
 import { ethers } from 'ethers'
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { wait } from 'streamr-test-utils'
 
-import StreamrClient from '../../src'
 import { uid } from '../utils'
+import StreamrClient from '../../src'
 
 import config from './config'
 
-describe('multiple users', () => {
-    let client1
-    let client2
-    let errors = []
-    function onError(error) {
-        errors.push(error)
+const createClient = (opts = {}) => new StreamrClient({
+    auth: {
+        privateKey: ethers.Wallet.createRandom().privateKey,
+    },
+    autoConnect: false,
+    autoDisconnect: false,
+    ...config.clientOptions,
+    ...opts,
+})
+
+const throwError = (error) => { throw error }
+
+describe('PubSub with multiple clients', () => {
+    let stream
+    let mainClient
+    let otherClient
+    let privateKey
+
+    async function setup() {
+        privateKey = ethers.Wallet.createRandom().privateKey
+
+        mainClient = createClient({
+            auth: {
+                privateKey
+            }
+        })
+        mainClient.once('error', throwError)
+        stream = await mainClient.createStream({
+            name: uid('stream')
+        })
     }
+
+    async function teardown() {
+        if (stream) {
+            await stream.delete()
+            stream = undefined // eslint-disable-line require-atomic-updates
+        }
+
+        if (mainClient) {
+            await mainClient.ensureDisconnected()
+        }
+
+        if (otherClient) {
+            await otherClient.ensureDisconnected()
+        }
+    }
+
     beforeEach(async () => {
-        errors = []
+        await setup()
     })
 
     afterEach(async () => {
-        if (client1) {
-            client1.removeListener('error', onError)
-            await client1.ensureDisconnected()
-        }
-
-        if (client2) {
-            client2.removeListener('error', onError)
-            await client2.ensureDisconnected()
-        }
-
-        expect(errors[0]).toBeFalsy()
-        expect(errors).toHaveLength(0)
+        await teardown()
     })
 
-    it('works with multiple identities', async () => {
-        const wallet1 = ethers.Wallet.createRandom()
-        const wallet2 = ethers.Wallet.createRandom()
-        client1 = new StreamrClient({
+    test('can get messages published from other client', async (done) => {
+        otherClient = createClient({
             auth: {
-                privateKey: wallet1.privateKey,
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            ...config.clientOptions,
+                privateKey
+            }
         })
-        await client1.ensureConnected()
-        const stream = await client1.createStream({
-            name: uid('stream')
-        })
-        await stream.grantPermission('stream_get', wallet2.address)
-        await stream.grantPermission('stream_subscribe', wallet2.address)
-        // NOTE: currently have to connect second client after permissions granted or backend errors
-        client2 = new StreamrClient({
-            auth: {
-                privateKey: wallet1.privateKey,
-            },
-            autoConnect: false,
-            autoDisconnect: false,
-            ...config.clientOptions,
-        })
+        otherClient.once('error', done)
+        mainClient.once('error', done)
+        await otherClient.ensureConnected()
+        await mainClient.ensureConnected()
 
-        await client2.ensureConnected()
-
-        const receivedMessages = []
-        const sub = client2.subscribe(stream.id, (msg) => {
-            receivedMessages.push(msg)
+        const receivedMessagesOther = []
+        const receivedMessagesMain = []
+        // subscribe to stream from other client instance
+        await new Promise((resolve) => {
+            otherClient.subscribe({
+                stream: stream.id,
+            }, (msg) => {
+                receivedMessagesOther.push(msg)
+            }).once('subscribed', resolve)
         })
-        await new Promise((resolve) => sub.once('subscribed', resolve))
-
-        const msg = {
-            msg: uid('msg'),
+        // subscribe to stream from main client instance
+        await new Promise((resolve) => {
+            mainClient.subscribe({
+                stream: stream.id,
+            }, (msg) => {
+                receivedMessagesMain.push(msg)
+            }).once('subscribed', resolve)
+        })
+        const message = {
+            msg: uid('message'),
         }
-        await client1.publish(stream.id, msg)
-        await waitForCondition(() => receivedMessages.length === 1, 10000)
-        expect(receivedMessages).toEqual([msg])
-    })
+        await wait(5000)
+        // publish message on main client
+        await mainClient.publish(stream, message)
+        await wait(5000)
+        // messages should arrive on both clients?
+        expect(receivedMessagesMain).toEqual([message])
+        expect(receivedMessagesOther).toEqual([message])
+        otherClient.removeListener('error', done)
+        mainClient.removeListener('error', done)
+        done()
+    }, 30000)
 })

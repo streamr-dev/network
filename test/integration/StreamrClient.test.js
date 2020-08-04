@@ -931,11 +931,11 @@ describe('StreamrClient', () => {
                 assert(streamMessage.getPublisherId())
                 assert(streamMessage.signature)
 
-                // All good, unsubscribe
-                client.unsubscribe(sub)
                 sub.once('unsubscribed', () => {
                     done()
                 })
+                // All good, unsubscribe
+                client.unsubscribe(sub)
             })
 
             // Publish after subscribed
@@ -944,7 +944,7 @@ describe('StreamrClient', () => {
                     id,
                 })
             })
-        }, 20000)
+        }, 30000)
 
         it('client.subscribe can decrypt encrypted messages if it knows the group key', async (done) => {
             client.once('error', done)
