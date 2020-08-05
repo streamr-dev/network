@@ -948,114 +948,116 @@ describe('StreamrClient', () => {
             })
         }, 30000)
 
-        it('client.subscribe can decrypt encrypted messages if it knows the group key', async (done) => {
-            client.once('error', done)
-            const id = Date.now()
-            const publisherId = await client.getPublisherId()
-            const groupKey = crypto.randomBytes(32)
-            const keys = {}
-            keys[publisherId] = groupKey
-            const sub = client.subscribe({
-                stream: stream.id,
-                groupKeys: keys,
-            }, (parsedContent, streamMessage) => {
-                assert.equal(parsedContent.id, id)
-
-                // Check signature stuff
-                assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
-                assert(streamMessage.getPublisherId())
-                assert(streamMessage.signature)
-
-                // All good, unsubscribe
-                client.unsubscribe(sub)
-                sub.once('unsubscribed', () => {
-                    done()
-                })
-            })
-
-            // Publish after subscribed
-            sub.once('subscribed', () => {
-                client.publish(stream.id, {
-                    id,
-                }, Date.now(), null, groupKey)
-            })
-        })
-
-        it('client.subscribe can get the group key and decrypt encrypted messages using an RSA key pair', async (done) => {
-            client.once('error', done)
-            const id = Date.now()
-            const groupKey = crypto.randomBytes(32)
-            // subscribe without knowing the group key to decrypt stream messages
-            const sub = client.subscribe({
-                stream: stream.id,
-            }, (parsedContent, streamMessage) => {
-                assert.equal(parsedContent.id, id)
-
-                // Check signature stuff
-                assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
-                assert(streamMessage.getPublisherId())
-                assert(streamMessage.signature)
-
-                // Now the subscriber knows the group key
-                assert.deepStrictEqual(sub.groupKeys[streamMessage.getPublisherId().toLowerCase()], groupKey)
-
-                sub.once('unsubscribed', () => {
-                    done()
-                })
-
-                // All good, unsubscribe
-                client.unsubscribe(sub)
-            })
-
-            // Publish after subscribed
-            sub.once('subscribed', () => {
-                client.publish(stream.id, {
-                    id,
-                }, Date.now(), null, groupKey)
-            })
-        }, 2 * TIMEOUT)
-
-        it('client.subscribe with resend last can get the historical keys for previous encrypted messages', (done) => {
-            client.once('error', done)
-            // Publish encrypted messages with different keys
-            const groupKey1 = crypto.randomBytes(32)
-            const groupKey2 = crypto.randomBytes(32)
-            client.publish(stream.id, {
-                test: 'resent msg 1',
-            }, Date.now(), null, groupKey1)
-            client.publish(stream.id, {
-                test: 'resent msg 2',
-            }, Date.now(), null, groupKey2)
-
-            // Add delay: this test needs some time to allow the message to be written to Cassandra
-            let receivedFirst = false
-            setTimeout(() => {
-                // subscribe with resend without knowing the historical keys
+        describe.skip('decryption', () => {
+            it('client.subscribe can decrypt encrypted messages if it knows the group key', async (done) => {
+                client.once('error', done)
+                const id = Date.now()
+                const publisherId = await client.getPublisherId()
+                const groupKey = crypto.randomBytes(32)
+                const keys = {}
+                keys[publisherId] = groupKey
                 const sub = client.subscribe({
                     stream: stream.id,
-                    resend: {
-                        last: 2,
-                    },
-                }, async (parsedContent) => {
-                    // Check message content
-                    if (!receivedFirst) {
-                        assert.strictEqual(parsedContent.test, 'resent msg 1')
-                        receivedFirst = true
-                    } else {
-                        assert.strictEqual(parsedContent.test, 'resent msg 2')
-                    }
+                    groupKeys: keys,
+                }, (parsedContent, streamMessage) => {
+                    assert.equal(parsedContent.id, id)
+
+                    // Check signature stuff
+                    assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+                    assert(streamMessage.getPublisherId())
+                    assert(streamMessage.signature)
+
+                    // All good, unsubscribe
+                    client.unsubscribe(sub)
+                    sub.once('unsubscribed', () => {
+                        done()
+                    })
+                })
+
+                // Publish after subscribed
+                sub.once('subscribed', () => {
+                    client.publish(stream.id, {
+                        id,
+                    }, Date.now(), null, groupKey)
+                })
+            })
+
+            it('client.subscribe can get the group key and decrypt encrypted messages using an RSA key pair', async (done) => {
+                client.once('error', done)
+                const id = Date.now()
+                const groupKey = crypto.randomBytes(32)
+                // subscribe without knowing the group key to decrypt stream messages
+                const sub = client.subscribe({
+                    stream: stream.id,
+                }, (parsedContent, streamMessage) => {
+                    assert.equal(parsedContent.id, id)
+
+                    // Check signature stuff
+                    assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
+                    assert(streamMessage.getPublisherId())
+                    assert(streamMessage.signature)
+
+                    // Now the subscriber knows the group key
+                    assert.deepStrictEqual(sub.groupKeys[streamMessage.getPublisherId().toLowerCase()], groupKey)
 
                     sub.once('unsubscribed', () => {
-                        // TODO: fix this hack in other PR
-                        assert.strictEqual(client.subscribedStreamPartitions[stream.id + '0'], undefined)
                         done()
                     })
 
                     // All good, unsubscribe
                     client.unsubscribe(sub)
                 })
-            }, TIMEOUT * 0.8)
-        }, 2 * TIMEOUT)
+
+                // Publish after subscribed
+                sub.once('subscribed', () => {
+                    client.publish(stream.id, {
+                        id,
+                    }, Date.now(), null, groupKey)
+                })
+            }, 2 * TIMEOUT)
+
+            it('client.subscribe with resend last can get the historical keys for previous encrypted messages', (done) => {
+                client.once('error', done)
+                // Publish encrypted messages with different keys
+                const groupKey1 = crypto.randomBytes(32)
+                const groupKey2 = crypto.randomBytes(32)
+                client.publish(stream.id, {
+                    test: 'resent msg 1',
+                }, Date.now(), null, groupKey1)
+                client.publish(stream.id, {
+                    test: 'resent msg 2',
+                }, Date.now(), null, groupKey2)
+
+                // Add delay: this test needs some time to allow the message to be written to Cassandra
+                let receivedFirst = false
+                setTimeout(() => {
+                    // subscribe with resend without knowing the historical keys
+                    const sub = client.subscribe({
+                        stream: stream.id,
+                        resend: {
+                            last: 2,
+                        },
+                    }, async (parsedContent) => {
+                        // Check message content
+                        if (!receivedFirst) {
+                            assert.strictEqual(parsedContent.test, 'resent msg 1')
+                            receivedFirst = true
+                        } else {
+                            assert.strictEqual(parsedContent.test, 'resent msg 2')
+                        }
+
+                        sub.once('unsubscribed', () => {
+                            // TODO: fix this hack in other PR
+                            assert.strictEqual(client.subscribedStreamPartitions[stream.id + '0'], undefined)
+                            done()
+                        })
+
+                        // All good, unsubscribe
+                        client.unsubscribe(sub)
+                    })
+                }, TIMEOUT * 0.8)
+            }, 2 * TIMEOUT)
+        })
     })
 
     describe('utf-8 encoding', () => {
