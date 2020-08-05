@@ -74,6 +74,7 @@ describe('mqtt: end-to-end', () => {
         const mqttClient = createMqttClient(mqttPort1, 'localhost', 'NOT_VALID_KEY')
         mqttClient.on('error', (err) => {
             expect(err.message).toEqual('Connection refused: Bad username or password')
+            mqttClient.end(true)
             done()
         })
     })

@@ -234,6 +234,7 @@ module.exports = class VolumeLogger {
     }
 
     close() {
+        io.destroy()
         clearInterval(this.interval)
     }
 }

@@ -77,6 +77,8 @@ describe('BucketManager', () => {
         expect(foundBucketId).not.toBeUndefined()
         expect(bucketManager.buckets[foundBucketId].size).toEqual(0)
         expect(bucketManager.buckets[foundBucketId].records).toEqual(0)
+
+        await waitForCondition(() => bucketManager.buckets[foundBucketId].isStored() === true)
         expect(bucketManager.buckets[foundBucketId].isStored()).toBeTruthy()
 
         bucketManager.incrementBucket(foundBucketId, 3)

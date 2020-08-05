@@ -17,6 +17,7 @@ describe('ping-pong test between broker and clients', () => {
     let tracker
     let websocketServer
     let networkNode
+    let volumeLogger
 
     let client1
     let client2
@@ -26,7 +27,7 @@ describe('ping-pong test between broker and clients', () => {
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
         networkNode = await startStorageNode('127.0.0.1', networkNodePort, 'networkNode')
 
-        const volumeLogger = new VolumeLogger(0)
+        volumeLogger = new VolumeLogger(0)
         websocketServer = new WebsocketServer(
             uWS.App(),
             wsPort,
@@ -50,6 +51,7 @@ describe('ping-pong test between broker and clients', () => {
     })
 
     afterEach(async () => {
+        volumeLogger.close()
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
         await client3.ensureDisconnected()

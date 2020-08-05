@@ -19,6 +19,7 @@ const wsPort = 17753
 
 describe('resend cancellation', () => {
     let tracker
+    let volumeLogger
     let websocketServer
     let networkNode
     let client
@@ -26,7 +27,7 @@ describe('resend cancellation', () => {
     let timeoutCleared = false
 
     beforeEach(async () => {
-        const volumeLogger = new VolumeLogger(0)
+        volumeLogger = new VolumeLogger(0)
         tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
         networkNode = await startStorageNode('127.0.0.1', networkNodePort, 'networkNode', [
             {
@@ -72,6 +73,7 @@ describe('resend cancellation', () => {
     })
 
     afterEach(async () => {
+        volumeLogger.close()
         await client.ensureDisconnected()
         await networkNode.stop()
         await websocketServer.close()

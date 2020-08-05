@@ -130,8 +130,8 @@ class MicroBatchingStrategy {
     }
 
     close() {
+        Object.values(this.batches).forEach((batch) => batch.cancel())
         this.allBatches.forEach((batch) => batch.cancel())
-        this.batches = {}
     }
 
     metrics() {
