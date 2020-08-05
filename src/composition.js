@@ -23,8 +23,8 @@ function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4, advert
     })
 }
 
-function startNetworkNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null) {
-    const peerInfo = PeerInfo.newNode(id)
+function startNetworkNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null, name) {
+    const peerInfo = PeerInfo.newNode(id, name)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl).then((endpoint) => {
         const opts = {
             peerInfo,
@@ -38,8 +38,8 @@ function startNetworkNode(host, port, id = uuidv4(), storages = [], advertisedWs
     })
 }
 
-function startStorageNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null) {
-    const peerInfo = PeerInfo.newStorage(id)
+function startStorageNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null, name) {
+    const peerInfo = PeerInfo.newStorage(id, name)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl).then((endpoint) => {
         const opts = {
             peerInfo,

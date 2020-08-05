@@ -51,13 +51,13 @@ describe('check and kill dead connections', () => {
 
         expect(node1._onClose).toBeCalledTimes(1)
         expect(node1._onClose).toBeCalledWith('ws://127.0.0.1:43972', {
-            peerId: 'node2', peerType: 'node'
+            peerId: 'node2', peerName: 'node2', peerType: 'node'
         }, disconnectionCodes.DEAD_CONNECTION, disconnectionReasons.DEAD_CONNECTION)
 
         node1._onClose.mockRestore()
         node1._pingConnections()
 
         const [peerInfo] = await waitForEvent(node1, events.PEER_DISCONNECTED)
-        expect(peerInfo).toEqual(new PeerInfo('node2', 'node'))
+        expect(peerInfo).toEqual(new PeerInfo('node2', 'node', 'node2',))
     })
 })
