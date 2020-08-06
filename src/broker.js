@@ -15,17 +15,20 @@ const MissingConfigError = require('./errors/MissingConfigError')
 const adapterRegistry = require('./adapterRegistry')
 const getTrackers = require('./helpers/getTrackers')
 const validateConfig = require('./helpers/validateConfig')
+const ethereumAuthenticate = require('./helpers/ethereumAuthenticate')
 
 const { Utils } = Protocol
 
 module.exports = async (config, startUpLoggingEnabled = false) => {
     validateConfig(config)
 
-    const log = startUpLoggingEnabled ? console.info : () => {}
+    const log = startUpLoggingEnabled ? console.info : () => {
+    }
 
     log(`Starting broker version ${CURRENT_VERSION}`)
 
     const storages = []
+    const networkNodeName = config.network.name
 
     // Start cassandra storage
     if (config.cassandra) {
@@ -58,6 +61,14 @@ module.exports = async (config, startUpLoggingEnabled = false) => {
         log('Cassandra ### NEW SCHEMA ### is disabled')
     }
 
+    // Ethereum authentication
+    const brokerAddress = ethereumAuthenticate.authenticateFromConfig(config.ethereum, log)
+    if (brokerAddress) {
+        log(`Network node: ${networkNodeName}, id Ethereum address: ${brokerAddress}`)
+    } else {
+        throw new MissingConfigError('Invalid Ethereum authentication options')
+    }
+
     // Start network node
     const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
     const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
@@ -66,9 +77,10 @@ module.exports = async (config, startUpLoggingEnabled = false) => {
     const networkNode = await startFn(
         config.network.hostname,
         config.network.port,
-        config.network.id,
+        brokerAddress,
         storages,
-        advertisedWsUrl
+        advertisedWsUrl,
+        networkNodeName
     )
 
     let trackers
@@ -104,7 +116,7 @@ module.exports = async (config, startUpLoggingEnabled = false) => {
 
         Sentry.configureScope((scope) => {
             scope.setUser({
-                id: config.network.id
+                id: networkNodeName
             })
         })
     }
@@ -165,7 +177,7 @@ module.exports = async (config, startUpLoggingEnabled = false) => {
         }
     })
 
-    log(`Network node '${config.network.id}' running on ${config.network.hostname}:${config.network.port}`)
+    log(`Network node '${networkNodeName}' running on ${config.network.hostname}:${config.network.port}`)
     log(`Configured with trackers: ${[...networkNode.bootstrapTrackerAddresses].join(', ')}`)
     log(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
     if (config.cassandra) {

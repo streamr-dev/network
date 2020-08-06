@@ -4,8 +4,8 @@ const validateConfig = (config) => {
     if (config.network === undefined) {
         throw new MissingConfigError('network')
     }
-    if (config.network.id === undefined) {
-        throw new MissingConfigError('network.id')
+    if (config.network.name === undefined) {
+        throw new MissingConfigError('network.name')
     }
     if (config.network.hostname === undefined) {
         throw new MissingConfigError('network.hostname')
@@ -81,6 +81,15 @@ const validateConfig = (config) => {
     if (config.thresholdForFutureMessageSeconds === undefined) {
         // eslint-disable-next-line no-param-reassign
         config.thresholdForFutureMessageSeconds = 300
+    }
+    if (config.ethereum === undefined) {
+        throw new MissingConfigError('ethereum')
+    }
+    if (config.ethereum.privateKey === undefined && config.ethereum.generateWallet === undefined) {
+        throw new MissingConfigError('ethereum.privateKey or ethereum.generateWallet must be defined.')
+    }
+    if (config.ethereum.privateKey && config.ethereum.generateWallet === true) {
+        throw new MissingConfigError('ethereum.privateKey and ethereum.generateWallet defined, define only one option.')
     }
 
     config.adapters.forEach(({ name }, index) => {
