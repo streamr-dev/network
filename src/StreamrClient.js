@@ -513,7 +513,10 @@ export default class StreamrClient extends EventEmitter {
                 stream: optionsOrStreamId,
             }
         } else if (typeof optionsOrStreamId === 'object') {
-            options = optionsOrStreamId
+            // shallow copy
+            options = {
+                ...optionsOrStreamId
+            }
         } else {
             throw new Error(`subscribe/resend: options must be an object! Given: ${optionsOrStreamId}`)
         }
