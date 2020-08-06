@@ -13,14 +13,16 @@
   },
   "scripts": {
     "build": "rm dist/*; NODE_ENV=production webpack --mode=production --progress",
+    "benchmarks": "node test/benchmarks/publish.js",
+    "benchmark": "npm run benchmarks",
     "prepack": "npm run build",
     "dev": "webpack --progress --colors --watch --mode=development",
     "eslint": "eslint .",
     "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit --detectOpenHandles",
     "coverage": "jest --coverage",
-    "test-integration": "jest test/integration --detectOpenHandles",
-    "test-browser": "npm run build; node ./test/browser/server.js & node node_modules/nightwatch/bin/nightwatch ./test/browser/browser.js && pkill -f server.js",
+    "test-integration": "jest test/integration --forceExit",
+    "test-browser": "node ./test/browser/server.js & node node_modules/nightwatch/bin/nightwatch ./test/browser/browser.js && pkill -f server.js",
     "install-example": "cd examples/webpack && npm ci",
     "build-example": "cd examples/webpack && npm run build-with-parent"
   },

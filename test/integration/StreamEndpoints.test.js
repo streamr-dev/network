@@ -117,7 +117,7 @@ describe('StreamEndpoints', () => {
     })
 
     describe('Stream configuration', () => {
-        it('Stream.detectFields', async () => {
+        it.skip('Stream.detectFields', async () => {
             await client.ensureConnected()
             await client.publish(createdStream.id, {
                 foo: 'bar',

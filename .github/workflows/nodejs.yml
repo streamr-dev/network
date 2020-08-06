@@ -1,4 +1,4 @@
-name: Test, Eslint and Publish
+name: Test, lint & Publish
 
 on:
   push:
@@ -14,8 +14,8 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
-  eslint:
-    name: Run eslint using Node 12
+  lint:
+    name: Run linter using Node 12
     runs-on: ubuntu-latest
 
     steps:
@@ -24,13 +24,14 @@ jobs:
         with:
           node-version: 12
 
+      - name: npm ci
+        run: npm ci
+
       - name: npm run eslint
-        run: |
-          npm ci
-          npm run eslint
+        run: npm run eslint
 
   test:
-    name: Testing using Node ${{ matrix.node-version }}
+    name: Test Unit/Build/Benchmark using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -49,12 +50,38 @@ jobs:
       - name: test-unit
         run: npm run test-unit
 
+      - name: build
+        run: npm run build
+
+      - name: benchmarks
+        run: npm run benchmarks
+
+  integration:
+    name: Test Integration using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x]
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
       - name: setup streamr-docker-dev
         run: |
           sudo service mysql stop
           git clone https://github.com/streamr-dev/streamr-docker-dev.git
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
+
+      - name: npm ci
+        run: npm ci
+
+      - name: build
+        run: npm run build
 
       - name: test-browser
         run: npm run test-browser
@@ -63,7 +90,7 @@ jobs:
         run: npm run test-integration
 
   streamr-client-testing-tool:
-    needs: [test, eslint]
+    needs: [test, lint]
     runs-on: ubuntu-latest
     steps:
       - name: Use Node.js 12
@@ -96,7 +123,7 @@ jobs:
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed -m test
 
   publish:
-    needs: [test, eslint]
+    needs: [test, lint, integration, streamr-client-testing-tool]
     name: Publishing master using Node 12
     runs-on: ubuntu-latest
 
@@ -114,9 +141,10 @@ jobs:
           registry-url: https://registry.npmjs.org/
 
       - name: npm ci
-        run: |
-          npm ci
-          npm run build --if-present
+        run: npm ci
+
+      - name: build
+        run: npm run build --if-present
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword

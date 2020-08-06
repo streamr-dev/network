@@ -239,7 +239,7 @@ describe('StreamrClient', () => {
             await client.ensureConnected()
             await connection.disconnect()
             await client.ensureConnected()
-            await wait()
+            await wait(100)
             expect(connection.send.mock.calls).toHaveLength(2)
             // On connect
             expect(connection.send.mock.calls[0][0]).toMatchObject({
