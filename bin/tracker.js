@@ -14,6 +14,8 @@ const Tracker = require('../src/logic/Tracker')
 
 program
     .version(CURRENT_VERSION)
+    .option('--id <id>', 'Ethereum address / tracker id', undefined)
+    .option('--trackerName <trackerName>', 'Human readable name', undefined)
     .option('--port <port>', 'port', 30300)
     .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
@@ -26,7 +28,8 @@ program
     .description('Run tracker with reporting')
     .parse(process.argv)
 
-const id = `tracker-${program.port}`
+const id = program.id || `tracker-${program.port}`
+const name = program.trackerName || id
 
 if (program.sentryDns) {
     console.log('Configuring Sentry with dns: %s', program.sentryDns)
@@ -103,11 +106,11 @@ function startServer(tracker, endpointServerPort) {
     })
 }
 
-startTracker(program.ip, parseInt(program.port, 10), id, parseInt(program.maxNeighborsPerNode, 10))
+startTracker(program.ip, parseInt(program.port, 10), id, parseInt(program.maxNeighborsPerNode, 10), name)
     .then((tracker) => {
-        console.info('started tracker id: %s, port: %d, ip: %s, maxNeighborsPerNode: %d, '
+        console.info('started tracker id: %s, name: %s, port: %d, ip: %s, maxNeighborsPerNode: %d, '
             + 'metrics: %s, metricsInterval: %d, apiKey: %s, streamId: %s, sentryDns: %s',
-        id, program.port, program.ip, program.maxNeighborsPerNode, program.metrics,
+        id, name, program.port, program.ip, program.maxNeighborsPerNode, program.metrics,
         program.metricsInterval, program.apiKey, program.streamId, program.sentryDns)
 
         if (client || program.metrics) {
