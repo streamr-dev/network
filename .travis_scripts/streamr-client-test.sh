@@ -8,7 +8,7 @@ fi
 ## Switch EE tag to the one built locally
 sed -i "s#$OWNER/$IMAGE_NAME:dev#$OWNER/$IMAGE_NAME\:local#g" $TRAVIS_BUILD_DIR/streamr-docker-dev/docker-compose.override.yml
 sudo ifconfig docker0 10.200.10.1/24
-$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-no-storage-1 smart-contracts-init nginx --wait
+$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
 
 ## Get testing Tool
 git clone https://github.com/streamr-dev/streamr-client-testing.git

@@ -1,4 +1,4 @@
-FROM node:13.10 as build
+FROM node:14.7 as build
 WORKDIR /usr/src/broker
 COPY . .
 
@@ -6,7 +6,7 @@ RUN node --version
 RUN npm --version
 RUN npm ci --only=production
 
-FROM node:13.10-alpine
+FROM node:14.7-alpine
 
 # needed for uWebSockets.js
 RUN apk update && apk add --no-cache gcompat curl

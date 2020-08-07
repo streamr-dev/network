@@ -95,9 +95,12 @@ jobs:
     - docker build -t $OWNER/$IMAGE_NAME:taggit .
     - ".travis_scripts/smoke_test.sh"
     after_failure:
+    - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh log"
     - docker ps;
-    - docker logs streamr_dev_tracker;
-    - docker logs streamr_dev_broker-node-no-storage-1;
+    - docker logs streamr-dev-tracker-1;
+    - docker logs streamr-dev-tracker-2;
+    - docker logs streamr-dev-tracker-3;
+    - docker logs streamr-dev-broker-node-storage-1;
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh dev
@@ -108,9 +111,12 @@ jobs:
     - docker build -t $OWNER/$IMAGE_NAME:taggit .
     - ".travis_scripts/smoke_test.sh"
     after_failure:
+    - "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh log"
     - docker ps;
-    - docker logs streamr_dev_tracker;
-    - docker logs streamr_dev_broker-node-no-storage-1;
+    - docker logs streamr-dev-tracker-1;
+    - docker logs streamr-dev-tracker-2;
+    - docker logs streamr-dev-tracker-3;
+    - docker logs streamr-dev-broker-node-storage-1;
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh production
