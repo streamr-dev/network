@@ -2,7 +2,7 @@ import crypto from 'crypto'
 
 import KeyStorageUtil from '../../src/KeyStorageUtil'
 
-describe('KeyHistoryStorageUtil', () => {
+describe.skip('KeyHistoryStorageUtil', () => {
     describe('hasKey()', () => {
         it('returns true iff there is a GroupKeyHistory for the stream', () => {
             const util = KeyStorageUtil.getKeyStorageUtil({

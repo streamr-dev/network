@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
+import { wait } from 'streamr-test-utils'
 
 import RealTimeSubscription from '../../src/RealTimeSubscription'
 import EncryptionUtil from '../../src/EncryptionUtil'
@@ -34,11 +35,15 @@ describe('RealTimeSubscription', () => {
             it('calls the message handler', async (done) => {
                 const handler = jest.fn(async () => true)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
-                    expect(content).toStrictEqual(msg.getParsedContent())
-                    expect(msg).toStrictEqual(receivedMsg)
-                    expect(handler).toHaveBeenCalledTimes(1)
-                    done()
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: (content, receivedMsg) => {
+                        expect(content).toStrictEqual(msg.getParsedContent())
+                        expect(msg).toStrictEqual(receivedMsg)
+                        expect(handler).toHaveBeenCalledTimes(1)
+                        done()
+                    },
                 })
                 await sub.handleBroadcastMessage(msg, handler)
             })
@@ -47,7 +52,11 @@ describe('RealTimeSubscription', () => {
                 let sub
 
                 beforeEach(() => {
-                    sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => { throw new Error('should not be called!') })
+                    sub = new RealTimeSubscription({
+                        streamId: msg.getStreamId(),
+                        streamPartition: msg.getStreamPartition(),
+                        callback: () => { throw new Error('should not be called!') },
+                    })
                     sub.onError = jest.fn()
                 })
 
@@ -95,11 +104,15 @@ describe('RealTimeSubscription', () => {
 
                 const received = []
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
-                    received.push(receivedMsg)
-                    if (received.length === 5) {
-                        expect(msgs).toStrictEqual(received)
-                        done()
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: (content, receivedMsg) => {
+                        received.push(receivedMsg)
+                        if (received.length === 5) {
+                            expect(msgs).toStrictEqual(received)
+                            done()
+                        }
                     }
                 })
 
@@ -110,7 +123,11 @@ describe('RealTimeSubscription', () => {
         describe('handleResentMessage()', () => {
             it('processes messages if resending is true', async () => {
                 const handler = jest.fn()
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: handler,
+                })
 
                 sub.setResending(true)
                 await sub.handleResentMessage(msg, 'requestId', async () => true)
@@ -121,8 +138,12 @@ describe('RealTimeSubscription', () => {
                 let sub
 
                 beforeEach(() => {
-                    sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {
-                        throw new Error('should not be called!')
+                    sub = new RealTimeSubscription({
+                        streamId: msg.getStreamId(),
+                        streamPartition: msg.getStreamPartition(),
+                        callback: () => {
+                            throw new Error('should not be called!')
+                        },
                     })
                     sub.setResending(true)
                 })
@@ -171,7 +192,11 @@ describe('RealTimeSubscription', () => {
         describe('duplicate handling', () => {
             it('ignores re-received messages', async () => {
                 const handler = jest.fn()
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: handler,
+                })
 
                 await sub.handleBroadcastMessage(msg, async () => true)
                 await sub.handleBroadcastMessage(msg, async () => true)
@@ -181,7 +206,11 @@ describe('RealTimeSubscription', () => {
 
             it('ignores re-received messages if they come from resend', async () => {
                 const handler = jest.fn()
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: handler,
+                })
                 sub.setResending(true)
 
                 await sub.handleBroadcastMessage(msg, async () => true)
@@ -194,8 +223,13 @@ describe('RealTimeSubscription', () => {
             it('emits "gap" if a gap is detected', (done) => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
-
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
                 sub.once('gap', (from, to, publisherId) => {
                     expect(from.timestamp).toEqual(1) // cannot know the first missing message so there will be a duplicate received
                     expect(from.sequenceNumber).toEqual(1)
@@ -216,7 +250,14 @@ describe('RealTimeSubscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
+
                 sub.once('gap', (from, to, publisherId) => {
                     sub.once('gap', (from2, to2, publisherId2) => {
                         expect(from).toStrictEqual(from2)
@@ -237,7 +278,14 @@ describe('RealTimeSubscription', () => {
                 const msg3 = createMsg(3, undefined, 2)
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
+
                 sub.once('gap', () => {
                     sub.handleBroadcastMessage(msg2, async () => true)
                     sub.handleBroadcastMessage(msg3, async () => true)
@@ -256,7 +304,14 @@ describe('RealTimeSubscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
+
                 sub.once('gap', () => {
                     sub.emit('unsubscribed')
                     sub.once('gap', () => { throw new Error('should not emit second gap') })
@@ -274,7 +329,14 @@ describe('RealTimeSubscription', () => {
                 const msg1 = msg
                 const msg4 = createMsg(4, undefined, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
+
                 sub.once('gap', () => {
                     sub.emit('disconnected')
                     sub.once('gap', () => { throw new Error('should not emit second gap') })
@@ -288,24 +350,37 @@ describe('RealTimeSubscription', () => {
                 sub.handleBroadcastMessage(msg4, async () => true)
             })
 
-            it('does not emit "gap" if different publishers', () => {
+            it('does not emit "gap" if different publishers', async () => {
                 const msg1 = msg
                 const msg1b = createMsg(1, 0, undefined, 0, {}, 'anotherPublisherId')
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
                 sub.once('gap', () => {
                     throw new Error('unexpected gap')
                 })
 
                 sub.handleBroadcastMessage(msg1, async () => true)
                 sub.handleBroadcastMessage(msg1b, async () => true)
+                await wait(100)
             })
 
             it('emits "gap" if a gap is detected (same timestamp but different sequenceNumbers)', (done) => {
                 const msg1 = msg
                 const msg4 = createMsg(1, 4, 1, 3)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
                 sub.once('gap', (from, to, publisherId) => {
                     expect(from.timestamp).toEqual(1) // cannot know the first missing message so there will be a duplicate received
                     expect(from.sequenceNumber).toEqual(1)
@@ -322,26 +397,39 @@ describe('RealTimeSubscription', () => {
                 sub.handleBroadcastMessage(msg4, async () => true)
             })
 
-            it('does not emit "gap" if a gap is not detected', () => {
+            it('does not emit "gap" if a gap is not detected', async () => {
                 const msg1 = msg
                 const msg2 = createMsg(2, undefined, 1)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
                 sub.once('gap', () => { throw new Error() })
 
                 sub.handleBroadcastMessage(msg1, async () => true)
                 sub.handleBroadcastMessage(msg2, async () => true)
             })
 
-            it('does not emit "gap" if a gap is not detected (same timestamp but different sequenceNumbers)', () => {
+            it('does not emit "gap" if a gap is not detected (same timestamp but different sequenceNumbers)', async () => {
                 const msg1 = msg
                 const msg2 = createMsg(1, 1, 1, 0)
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                })
                 sub.once('gap', () => { throw new Error() })
 
                 sub.handleBroadcastMessage(msg1, async () => true)
                 sub.handleBroadcastMessage(msg2, async () => true)
+                await wait(100)
             })
         })
 
@@ -352,10 +440,16 @@ describe('RealTimeSubscription', () => {
                 const msg3 = createMsg(3, 0, 2, 0)
                 const msg4 = createMsg(4, 0, 3, 0)
                 const received = []
-
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
-                    received.push(receivedMsg)
-                }, {}, 100, 100, false)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: (content, receivedMsg) => {
+                        received.push(receivedMsg)
+                    },
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                    orderMessages: false,
+                })
                 sub.once('gap', () => { throw new Error() })
 
                 await sub.handleBroadcastMessage(msg1, async () => true)
@@ -375,8 +469,15 @@ describe('RealTimeSubscription', () => {
                 const msg4 = createMsg(4, 0, 3, 0)
                 const received = []
 
-                const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
-                    received.push(receivedMsg)
+                const sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: (content, receivedMsg) => {
+                        received.push(receivedMsg)
+                    },
+                    propagationTimeout: 100,
+                    resendTimeout: 100,
+                    orderMessages: true,
                 })
 
                 await sub.handleBroadcastMessage(msg1, async () => true)
@@ -395,7 +496,11 @@ describe('RealTimeSubscription', () => {
                 _bye: true,
             })
             const handler = jest.fn()
-            const sub = new RealTimeSubscription(byeMsg.getStreamId(), byeMsg.getStreamPartition(), handler)
+            const sub = new RealTimeSubscription({
+                streamId: byeMsg.getStreamId(),
+                streamPartition: byeMsg.getStreamPartition(),
+                callback: handler,
+            })
             sub.once('done', () => {
                 expect(handler).toHaveBeenCalledTimes(1)
                 done()
@@ -414,9 +519,13 @@ describe('RealTimeSubscription', () => {
                 const msg1 = createMsg(1, 0, null, 0, {
                     foo: 'bar',
                 })
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
-                    expect(content).toStrictEqual(msg1.getParsedContent())
-                    done()
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: (content) => {
+                        expect(content).toStrictEqual(msg1.getParsedContent())
+                        done()
+                    },
                 })
                 return sub.handleBroadcastMessage(msg1, async () => true)
             })
@@ -428,11 +537,16 @@ describe('RealTimeSubscription', () => {
                 }
                 const msg1 = createMsg(1, 0, null, 0, data)
                 EncryptionUtil.encryptStreamMessage(msg1, groupKey)
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
-                    expect(content).toStrictEqual(data)
-                    done()
-                }, {
-                    publisherId: groupKey,
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: (content) => {
+                        expect(content).toStrictEqual(msg1.getParsedContent())
+                        done()
+                    },
+                    groupKeys: {
+                        publisherId: groupKey,
+                    }
                 })
                 return sub.handleBroadcastMessage(msg1, async () => true)
             })
@@ -444,8 +558,13 @@ describe('RealTimeSubscription', () => {
                     foo: 'bar',
                 })
                 EncryptionUtil.encryptStreamMessage(msg1, correctGroupKey)
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), () => {}, {
-                    publisherId: wrongGroupKey,
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: () => {},
+                    groupKeys: {
+                        publisherId: wrongGroupKey,
+                    }
                 })
                 sub.once('groupKeyMissing', (publisherId) => {
                     expect(publisherId).toBe(msg1.getPublisherId())
@@ -462,9 +581,15 @@ describe('RealTimeSubscription', () => {
                     foo: 'bar',
                 })
                 EncryptionUtil.encryptStreamMessage(msg1, correctGroupKey)
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), () => {}, {
-                    publisherId: wrongGroupKey,
-                }, 200)
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: () => {},
+                    groupKeys: {
+                        publisherId: wrongGroupKey,
+                    },
+                    propagationTimeout: 200,
+                })
                 sub.on('groupKeyMissing', (publisherId) => {
                     if (counter < 3) {
                         expect(publisherId).toBe(msg1.getPublisherId())
@@ -492,9 +617,15 @@ describe('RealTimeSubscription', () => {
                 })
                 const timeout = 200
                 EncryptionUtil.encryptStreamMessage(msg1, correctGroupKey)
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), () => {}, {
-                    publisherId: wrongGroupKey,
-                }, timeout)
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: () => {},
+                    groupKeys: {
+                        publisherId: wrongGroupKey,
+                    },
+                    propagationTimeout: timeout,
+                })
                 let t
                 sub.on('groupKeyMissing', (publisherId) => {
                     expect(publisherId).toBe(msg1.getPublisherId())
@@ -523,14 +654,19 @@ describe('RealTimeSubscription', () => {
                 EncryptionUtil.encryptStreamMessage(msg2, correctGroupKey)
                 let received1 = null
                 let received2 = null
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
-                    if (!received1) {
-                        received1 = content
-                    } else {
-                        received2 = content
-                    }
-                }, {
-                    publisherId: wrongGroupKey,
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: (content) => {
+                        if (!received1) {
+                            received1 = content
+                        } else {
+                            received2 = content
+                        }
+                    },
+                    groupKeys: {
+                        publisherId: wrongGroupKey,
+                    },
                 })
                 // cannot decrypt msg1, queues it and emits "groupKeyMissing" (should send group key request).
                 await sub.handleBroadcastMessage(msg1, async () => true)
@@ -568,10 +704,15 @@ describe('RealTimeSubscription', () => {
                 EncryptionUtil.encryptStreamMessage(msg3, groupKey2)
                 EncryptionUtil.encryptStreamMessage(msg4, groupKey2)
                 const received = []
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
-                    received.push(content)
-                }, {
-                    publisherId1: wrongGroupKey,
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: (content) => {
+                        received.push(content)
+                    },
+                    groupKeys: {
+                        publisherId: wrongGroupKey,
+                    },
                 })
                 // cannot decrypt msg1, queues it and emits "groupKeyMissing" (should send group key request).
                 await sub.handleBroadcastMessage(msg1, async () => true)
@@ -620,10 +761,15 @@ describe('RealTimeSubscription', () => {
                 EncryptionUtil.encryptStreamMessage(msg1Pub2, groupKey2)
                 EncryptionUtil.encryptStreamMessage(msg2Pub2, groupKey2)
                 const received = []
-                sub = new RealTimeSubscription(msg1Pub1.getStreamId(), msg1Pub1.getStreamPartition(), (content) => {
-                    received.push(content)
-                }, {
-                    publisherId1: wrongGroupKey,
+                sub = new RealTimeSubscription({
+                    streamId: msg1Pub1.getStreamId(),
+                    streamPartition: msg1Pub1.getStreamPartition(),
+                    callback: (content) => {
+                        received.push(content)
+                    },
+                    groupKeys: {
+                        publisherId: wrongGroupKey,
+                    },
                 })
                 await sub.handleBroadcastMessage(msg1Pub1, async () => true)
                 await sub.handleBroadcastMessage(msg1Pub2, async () => true)
@@ -654,12 +800,18 @@ describe('RealTimeSubscription', () => {
                 EncryptionUtil.encryptStreamMessage(msg1, correctGroupKey)
                 EncryptionUtil.encryptStreamMessage(msg2, correctGroupKey)
                 let undecryptableMsg = null
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), () => {
-                    throw new Error('should not call the handler')
-                }, {
-                    publisherId: wrongGroupKey,
-                }, 5000, 5000, true, (error) => {
-                    undecryptableMsg = error.streamMessage
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: () => {
+                        throw new Error('should not call the handler')
+                    },
+                    groupKeys: {
+                        publisherId: wrongGroupKey,
+                    },
+                    onUnableToDecrypt: (error) => {
+                        undecryptableMsg = error.streamMessage
+                    }
                 })
                 // cannot decrypt msg1, emits "groupKeyMissing" (should send group key request).
                 await sub.handleBroadcastMessage(msg1, async () => true)
@@ -684,15 +836,20 @@ describe('RealTimeSubscription', () => {
                 EncryptionUtil.encryptStreamMessageAndNewKey(groupKey2, msg1, groupKey1)
                 EncryptionUtil.encryptStreamMessage(msg2, groupKey2)
                 let test1Ok = false
-                sub = new RealTimeSubscription(msg1.getStreamId(), msg1.getStreamPartition(), (content) => {
-                    if (JSON.stringify(content) === JSON.stringify(data1)) {
-                        expect(sub.groupKeys[msg1.getPublisherId().toLowerCase()]).toStrictEqual(groupKey2)
-                        test1Ok = true
-                    } else if (test1Ok && JSON.stringify(content) === JSON.stringify(data2)) {
-                        done()
-                    }
-                }, {
-                    publisherId: groupKey1,
+                sub = new RealTimeSubscription({
+                    streamId: msg1.getStreamId(),
+                    streamPartition: msg1.getStreamPartition(),
+                    callback: (content) => {
+                        if (JSON.stringify(content) === JSON.stringify(data1)) {
+                            expect(sub.groupKeys[msg1.getPublisherId().toLowerCase()]).toStrictEqual(groupKey2)
+                            test1Ok = true
+                        } else if (test1Ok && JSON.stringify(content) === JSON.stringify(data2)) {
+                            done()
+                        }
+                    },
+                    groupKeys: {
+                        publisherId: groupKey1,
+                    },
                 })
                 await sub.handleBroadcastMessage(msg1, async () => true)
                 return sub.handleBroadcastMessage(msg2, async () => true)
@@ -703,11 +860,13 @@ describe('RealTimeSubscription', () => {
     describe('handleError()', () => {
         it('emits an error event', (done) => {
             const err = new Error('Test error')
-            const sub = new RealTimeSubscription(
-                msg.getStreamId(),
-                msg.getStreamPartition(),
-                () => { throw new Error('Msg handler should not be called!') },
-            )
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: () => {
+                    throw new Error('Msg handler should not be called!')
+                },
+            })
             sub.onError = jest.fn()
             sub.once('error', (thrown) => {
                 expect(err === thrown).toBeTruthy()
@@ -717,11 +876,15 @@ describe('RealTimeSubscription', () => {
         })
 
         it('marks the message as received if an InvalidJsonError occurs, and continue normally on next message', async (done) => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), (content, receivedMsg) => {
-                if (receivedMsg.getTimestamp() === 3) {
-                    sub.stop()
-                    done()
-                }
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: (content, receivedMsg) => {
+                    if (receivedMsg.getTimestamp() === 3) {
+                        sub.stop()
+                        done()
+                    }
+                },
             })
             sub.onError = jest.fn()
 
@@ -742,7 +905,13 @@ describe('RealTimeSubscription', () => {
         })
 
         it('if an InvalidJsonError AND a gap occur, does not mark it as received and emits gap at the next message', async (done) => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {}, {}, 100, 100)
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: () => {},
+                propagationTimeout: 100,
+                resendTimeout: 100,
+            })
             sub.onError = jest.fn()
 
             sub.once('gap', (from, to, publisherId) => {
@@ -774,12 +943,20 @@ describe('RealTimeSubscription', () => {
 
     describe('setState()', () => {
         it('updates the state', () => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: () => {},
+            })
             sub.setState(Subscription.State.subscribed)
             expect(sub.getState()).toEqual(Subscription.State.subscribed)
         })
         it('fires an event', (done) => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: () => {},
+            })
             sub.once(Subscription.State.subscribed, done)
             sub.setState(Subscription.State.subscribed)
         })
@@ -787,7 +964,11 @@ describe('RealTimeSubscription', () => {
 
     describe('handleResending()', () => {
         it('emits the resending event', (done) => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: () => {},
+            })
             sub.addPendingResendRequestId('requestId')
             sub.once('resending', () => done())
             sub.setResending(true)
@@ -802,7 +983,11 @@ describe('RealTimeSubscription', () => {
     describe('handleResent()', () => {
         it('arms the Subscription to emit the resent event on last message (message handler completes BEFORE resent)', async (done) => {
             const handler = jest.fn()
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: handler,
+            })
             sub.addPendingResendRequestId('requestId')
             sub.once('resent', () => {
                 expect(handler).toHaveBeenCalledTimes(1)
@@ -819,7 +1004,11 @@ describe('RealTimeSubscription', () => {
 
         it('arms the Subscription to emit the resent event on last message (message handler completes AFTER resent)', async (done) => {
             const handler = jest.fn()
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), handler)
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: handler,
+            })
             sub.addPendingResendRequestId('requestId')
             sub.once('resent', () => {
                 expect(handler).toHaveBeenCalledTimes(1)
@@ -842,7 +1031,11 @@ describe('RealTimeSubscription', () => {
             })
 
             it('cleans up the resend if event handler throws', async () => {
-                sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                })
                 sub.onError = jest.fn()
                 const error = new Error('test error, ignore')
                 sub.addPendingResendRequestId('requestId')
@@ -862,7 +1055,11 @@ describe('RealTimeSubscription', () => {
 
     describe('handleNoResend()', () => {
         it('emits the no_resend event', async () => {
-            const sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+            const sub = new RealTimeSubscription({
+                streamId: msg.getStreamId(),
+                streamPartition: msg.getStreamPartition(),
+                callback: () => {},
+            })
             sub.addPendingResendRequestId('requestId')
             const onNoResent = new Promise((resolve) => sub.once('no_resend', resolve))
             sub.setResending(true)
@@ -883,7 +1080,11 @@ describe('RealTimeSubscription', () => {
             })
 
             it('cleans up the resend if event handler throws', async () => {
-                sub = new RealTimeSubscription(msg.getStreamId(), msg.getStreamPartition(), () => {})
+                sub = new RealTimeSubscription({
+                    streamId: msg.getStreamId(),
+                    streamPartition: msg.getStreamPartition(),
+                    callback: () => {},
+                })
                 sub.onError = jest.fn()
                 const error = new Error('test error, ignore')
                 sub.addPendingResendRequestId('requestId')

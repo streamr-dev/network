@@ -4,12 +4,41 @@ import Subscription from './Subscription'
 import AbstractSubscription from './AbstractSubscription'
 
 export default class CombinedSubscription extends Subscription {
-    constructor(streamId, streamPartition, callback, options, groupKeys, propagationTimeout, resendTimeout, orderMessages = true,
-        onUnableToDecrypt = AbstractSubscription.defaultUnableToDecrypt, debug) {
-        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout)
+    constructor({
+        streamId,
+        streamPartition,
+        callback,
+        options,
+        propagationTimeout,
+        groupKeys,
+        onUnableToDecrypt,
+        resendTimeout,
+        orderMessages = true,
+        debug,
+    }) {
+        super({
+            streamId,
+            streamPartition,
+            callback,
+            groupKeys,
+            onUnableToDecrypt,
+            propagationTimeout,
+            resendTimeout,
+            debug,
+        })
 
-        this.sub = new HistoricalSubscription(streamId, streamPartition, callback, options,
-            groupKeys, this.propagationTimeout, this.resendTimeout, orderMessages, onUnableToDecrypt, debug)
+        this.sub = new HistoricalSubscription({
+            streamId,
+            streamPartition,
+            callback,
+            options,
+            groupKeys,
+            onUnableToDecrypt,
+            propagationTimeout: this.propagationTimeout,
+            resendTimeout: this.resendTimeout,
+            orderMessages,
+            debug: this.debug,
+        })
         this.realTimeMsgsQueue = []
         this.sub.on('message received', (msg) => {
             if (msg) {
@@ -18,8 +47,17 @@ export default class CombinedSubscription extends Subscription {
         })
         this.sub.on('initial_resend_done', async () => {
             this._unbindListeners(this.sub)
-            const realTime = new RealTimeSubscription(streamId, streamPartition, callback,
-                groupKeys, this.propagationTimeout, this.resendTimeout, orderMessages, onUnableToDecrypt, debug)
+            const realTime = new RealTimeSubscription({
+                streamId,
+                streamPartition,
+                callback,
+                groupKeys,
+                onUnableToDecrypt,
+                propagationTimeout: this.propagationTimeout,
+                resendTimeout: this.resendTimeout,
+                orderMessages,
+                debug: this.debug,
+            })
             this._bindListeners(realTime)
             if (this.sub.orderingUtil) {
                 realTime.orderingUtil.orderedChains = this.sub.orderingUtil.orderedChains

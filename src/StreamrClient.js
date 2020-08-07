@@ -477,10 +477,18 @@ export default class StreamrClient extends EventEmitter {
         }
 
         await this.ensureConnected()
-
-        const sub = new HistoricalSubscription(options.stream, options.partition || 0, callback, options.resend,
-            this.options.subscriberGroupKeys[options.stream], this.options.gapFillTimeout, this.options.retryResendAfter,
-            this.options.orderMessages, options.onUnableToDecrypt, this.debug)
+        const sub = new HistoricalSubscription({
+            streamId: options.stream,
+            streamPartition: options.partition || 0,
+            callback,
+            options: options.resend,
+            groupKeys: this.options.subscriberGroupKeys[options.stream],
+            onUnableToDecrypt: options.onUnableToDecrypt,
+            propagationTimeout: this.options.gapFillTimeout,
+            resendTimeout: this.options.retryResendAfter,
+            orderMessages: this.orderMessages,
+            debug: this.debug,
+        })
 
         // TODO remove _addSubscription after uncoupling Subscription and Resend
         sub.setState(Subscription.State.subscribed)
@@ -547,15 +555,31 @@ export default class StreamrClient extends EventEmitter {
         // Create the Subscription object and bind handlers
         let sub
         if (options.resend) {
-            sub = new CombinedSubscription(
-                options.stream, options.partition || 0, callback, options.resend,
-                groupKeys, this.options.gapFillTimeout, this.options.retryResendAfter,
-                this.options.orderMessages, options.onUnableToDecrypt, this.debug,
-            )
+            sub = new CombinedSubscription({
+                streamId: options.stream,
+                streamPartition: options.partition || 0,
+                callback,
+                options: options.resend,
+                groupKeys,
+                onUnableToDecrypt: options.onUnableToDecrypt,
+                propagationTimeout: this.options.gapFillTimeout,
+                resendTimeout: this.options.retryResendAfter,
+                orderMessages: this.options.orderMessages,
+                debug: this.debug,
+            })
         } else {
-            sub = new RealTimeSubscription(options.stream, options.partition || 0, callback,
-                groupKeys, this.options.gapFillTimeout, this.options.retryResendAfter,
-                this.options.orderMessages, options.onUnableToDecrypt, this.debug)
+            sub = new RealTimeSubscription({
+                streamId: options.stream,
+                streamPartition: options.partition || 0,
+                callback,
+                options: options.resend,
+                groupKeys,
+                onUnableToDecrypt: options.onUnableToDecrypt,
+                propagationTimeout: this.options.gapFillTimeout,
+                resendTimeout: this.options.retryResendAfter,
+                orderMessages: this.options.orderMessages,
+                debug: this.debug,
+            })
         }
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {

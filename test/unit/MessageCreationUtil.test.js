@@ -234,7 +234,7 @@ describe('MessageCreationUtil', () => {
         })
     })
 
-    describe('encryption', () => {
+    describe.skip('encryption', () => {
         const pubMsg = {
             foo: 'bar',
         }
@@ -326,7 +326,7 @@ describe('MessageCreationUtil', () => {
         })
     })
 
-    describe('createGroupKeyRequest', () => {
+    describe.skip('createGroupKeyRequest', () => {
         const stream = new Stream(null, {
             id: 'streamId',
             partitions: 1,
@@ -388,7 +388,7 @@ describe('MessageCreationUtil', () => {
         })
     })
 
-    describe('createGroupKeyResponse', () => {
+    describe.skip('createGroupKeyResponse', () => {
         const stream = new Stream(null, {
             id: 'streamId',
             partitions: 1,
@@ -417,7 +417,7 @@ describe('MessageCreationUtil', () => {
             })
         })
 
-        it('creates correct group key response', async () => {
+        it.skip('creates correct group key response', async () => {
             const signer = {
                 signStreamMessage: (streamMessage) => {
                     /* eslint-disable no-param-reassign */
@@ -457,7 +457,7 @@ describe('MessageCreationUtil', () => {
         })
     })
 
-    describe('createErrorMessage', () => {
+    describe.skip('createErrorMessage', () => {
         const stream = new Stream(null, {
             id: 'streamId',
             partitions: 1,

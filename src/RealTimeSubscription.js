@@ -7,9 +7,28 @@ import EncryptionUtil from './EncryptionUtil'
 import UnableToDecryptError from './errors/UnableToDecryptError'
 
 export default class RealTimeSubscription extends AbstractSubscription {
-    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true,
-        onUnableToDecrypt = AbstractSubscription.defaultUnableToDecrypt, debug) {
-        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages, onUnableToDecrypt)
+    constructor({
+        streamId,
+        streamPartition,
+        callback,
+        groupKeys,
+        onUnableToDecrypt = AbstractSubscription.defaultUnableToDecrypt,
+        propagationTimeout,
+        resendTimeout,
+        orderMessages = true,
+        debug,
+    }) {
+        super({
+            streamId,
+            streamPartition,
+            callback,
+            groupKeys,
+            onUnableToDecrypt,
+            propagationTimeout,
+            resendTimeout,
+            orderMessages,
+            debug,
+        })
 
         const id = uniqueId('Subscription')
         if (debug) {

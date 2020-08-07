@@ -13,8 +13,26 @@ function decryptErrorToDisplay(error) {
 }
 
 export default class AbstractSubscription extends Subscription {
-    constructor(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages = true, onUnableToDecrypt, debug) {
-        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, debug)
+    constructor({
+        streamId,
+        streamPartition,
+        callback,
+        groupKeys,
+        onUnableToDecrypt,
+        propagationTimeout,
+        resendTimeout,
+        orderMessages = true,
+        debug,
+    }) {
+        super({
+            streamId,
+            streamPartition,
+            callback,
+            groupKeys,
+            propagationTimeout,
+            resendTimeout,
+            debug,
+        })
         this.callback = callback
         this.pendingResendRequestIds = {}
         this._lastMessageHandlerPromise = {}

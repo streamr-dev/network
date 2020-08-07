@@ -9,8 +9,15 @@ const DEFAULT_RESEND_TIMEOUT = 5000
 'interface' containing the default parameters and functionalities common to every subscription (Combined, RealTime and Historical)
  */
 export default class Subscription extends EventEmitter {
-    constructor(streamId, streamPartition, callback, groupKeys,
-        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT, resendTimeout = DEFAULT_RESEND_TIMEOUT, debug) {
+    constructor({
+        streamId,
+        streamPartition,
+        callback,
+        groupKeys,
+        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT,
+        resendTimeout = DEFAULT_RESEND_TIMEOUT,
+        debug
+    }) {
         super()
 
         if (!callback) {

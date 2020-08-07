@@ -42,7 +42,7 @@ async function setupClient() {
     return client
 }
 
-describe('KeyExchangeUtil', () => {
+describe.skip('KeyExchangeUtil', () => {
     let client
     let util
     beforeEach(async () => {

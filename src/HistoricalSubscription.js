@@ -6,9 +6,29 @@ import DecryptionKeySequence from './DecryptionKeySequence'
 const { StreamMessage } = MessageLayer
 
 export default class HistoricalSubscription extends AbstractSubscription {
-    constructor(streamId, streamPartition, callback, options, groupKeys, propagationTimeout, resendTimeout, orderMessages = true,
-        onUnableToDecrypt = AbstractSubscription.defaultUnableToDecrypt) {
-        super(streamId, streamPartition, callback, groupKeys, propagationTimeout, resendTimeout, orderMessages, onUnableToDecrypt)
+    constructor({
+        streamId,
+        streamPartition,
+        callback,
+        groupKeys,
+        onUnableToDecrypt = AbstractSubscription.defaultUnableToDecrypt,
+        options,
+        propagationTimeout,
+        resendTimeout,
+        orderMessages = true,
+        debug
+    }) {
+        super({
+            streamId,
+            streamPartition,
+            callback,
+            groupKeys,
+            onUnableToDecrypt,
+            propagationTimeout,
+            resendTimeout,
+            orderMessages,
+            debug,
+        })
         this.resendOptions = options
         if (!this.resendOptions || (!this.resendOptions.from && !this.resendOptions.last)) {
             throw new Error('Resend options (either "from", "from" and "to", or "last") must be defined in a historical subscription.')

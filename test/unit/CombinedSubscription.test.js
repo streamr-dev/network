@@ -27,9 +27,16 @@ const msg1 = createMsg()
 describe('CombinedSubscription', () => {
     it('handles real time gap that occurred during initial resend', (done) => {
         const msg4 = createMsg(4, undefined, 3)
-        const sub = new CombinedSubscription(msg1.getStreamId(), msg1.getStreamPartition(), sinon.stub(), {
-            last: 1
-        }, {}, 100, 100)
+        const sub = new CombinedSubscription({
+            streamId: msg1.getStreamId(),
+            streamPartition: msg1.getStreamPartition(),
+            callback: sinon.stub(),
+            options: {
+                last: 1
+            },
+            propagationTimeout: 100,
+            resendTimeout: 100,
+        })
         sub.on('error', done)
         sub.addPendingResendRequestId('requestId')
         sub.on('gap', (from, to, publisherId) => {

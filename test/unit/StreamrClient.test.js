@@ -966,7 +966,7 @@ describe('StreamrClient', () => {
                 })
             })
 
-            it('sets the group keys if passed as arguments', () => {
+            it.skip('sets the group keys if passed as arguments', () => {
                 const groupKey = crypto.randomBytes(32)
                 const sub = client.subscribe({
                     stream: 'stream1',
@@ -1540,78 +1540,80 @@ describe('StreamrClient', () => {
             expect(c.session.options.unauthenticated).toBeTruthy()
         })
 
-        it('sets start time of group key', () => {
-            const groupKey = crypto.randomBytes(32)
-            const c = new StubbedStreamrClient({
-                subscriberGroupKeys: {
-                    streamId: {
-                        publisherId: groupKey
-                    }
-                }
-            }, createConnectionMock())
-            expect(c.options.subscriberGroupKeys.streamId.publisherId.groupKey).toBe(groupKey)
-            expect(c.options.subscriberGroupKeys.streamId.publisherId.start).toBeTruthy()
-        })
-
-        it('keeps start time passed in the constructor', () => {
-            const groupKey = crypto.randomBytes(32)
-            const c = new StubbedStreamrClient({
-                subscriberGroupKeys: {
-                    streamId: {
-                        publisherId: {
-                            groupKey,
-                            start: 12
+        describe.skip('groupKeys', () => {
+            it('sets start time of group key', () => {
+                const groupKey = crypto.randomBytes(32)
+                const c = new StubbedStreamrClient({
+                    subscriberGroupKeys: {
+                        streamId: {
+                            publisherId: groupKey
                         }
                     }
-                }
-            }, createConnectionMock())
-            expect(c.options.subscriberGroupKeys.streamId.publisherId.groupKey).toBe(groupKey)
-            expect(c.options.subscriberGroupKeys.streamId.publisherId.start).toBe(12)
-        })
+                }, createConnectionMock())
+                expect(c.options.subscriberGroupKeys.streamId.publisherId.groupKey).toBe(groupKey)
+                expect(c.options.subscriberGroupKeys.streamId.publisherId.start).toBeTruthy()
+            })
 
-        it('updates the latest group key with a more recent key', () => {
-            const c = new StubbedStreamrClient({
-                subscriberGroupKeys: {
-                    streamId: {
-                        publisherId: crypto.randomBytes(32)
+            it('keeps start time passed in the constructor', () => {
+                const groupKey = crypto.randomBytes(32)
+                const c = new StubbedStreamrClient({
+                    subscriberGroupKeys: {
+                        streamId: {
+                            publisherId: {
+                                groupKey,
+                                start: 12
+                            }
+                        }
+                    }
+                }, createConnectionMock())
+                expect(c.options.subscriberGroupKeys.streamId.publisherId.groupKey).toBe(groupKey)
+                expect(c.options.subscriberGroupKeys.streamId.publisherId.start).toBe(12)
+            })
+
+            it('updates the latest group key with a more recent key', () => {
+                const c = new StubbedStreamrClient({
+                    subscriberGroupKeys: {
+                        streamId: {
+                            publisherId: crypto.randomBytes(32)
+                        }
+                    }
+                }, createConnectionMock())
+                c.subscribedStreamPartitions = {
+                    streamId0: {
+                        setSubscriptionsGroupKeys: sinon.stub()
                     }
                 }
-            }, createConnectionMock())
-            c.subscribedStreamPartitions = {
-                streamId0: {
-                    setSubscriptionsGroupKeys: sinon.stub()
+                const newGroupKey = {
+                    groupKey: crypto.randomBytes(32),
+                    start: Date.now() + 2000
                 }
-            }
-            const newGroupKey = {
-                groupKey: crypto.randomBytes(32),
-                start: Date.now() + 2000
-            }
-            // eslint-disable-next-line no-underscore-dangle
-            c._setGroupKeys('streamId', 'publisherId', [newGroupKey])
-            expect(c.options.subscriberGroupKeys.streamId.publisherId).toBe(newGroupKey)
-        })
+                // eslint-disable-next-line no-underscore-dangle
+                c._setGroupKeys('streamId', 'publisherId', [newGroupKey])
+                expect(c.options.subscriberGroupKeys.streamId.publisherId).toBe(newGroupKey)
+            })
 
-        it('does not update the latest group key with an older key', () => {
-            const groupKey = crypto.randomBytes(32)
-            const c = new StubbedStreamrClient({
-                subscriberGroupKeys: {
-                    streamId: {
-                        publisherId: groupKey
+            it('does not update the latest group key with an older key', () => {
+                const groupKey = crypto.randomBytes(32)
+                const c = new StubbedStreamrClient({
+                    subscriberGroupKeys: {
+                        streamId: {
+                            publisherId: groupKey
+                        }
+                    }
+                }, createConnectionMock())
+                c.subscribedStreamPartitions = {
+                    streamId0: {
+                        setSubscriptionsGroupKeys: sinon.stub()
                     }
                 }
-            }, createConnectionMock())
-            c.subscribedStreamPartitions = {
-                streamId0: {
-                    setSubscriptionsGroupKeys: sinon.stub()
+                const oldGroupKey = {
+                    groupKey: crypto.randomBytes(32),
+                    start: Date.now() - 2000
                 }
-            }
-            const oldGroupKey = {
-                groupKey: crypto.randomBytes(32),
-                start: Date.now() - 2000
-            }
-            // eslint-disable-next-line no-underscore-dangle
-            c._setGroupKeys('streamId', 'publisherId', [oldGroupKey])
-            expect(c.options.subscriberGroupKeys.streamId.publisherId.groupKey).toBe(groupKey)
+                // eslint-disable-next-line no-underscore-dangle
+                c._setGroupKeys('streamId', 'publisherId', [oldGroupKey])
+                expect(c.options.subscriberGroupKeys.streamId.publisherId.groupKey).toBe(groupKey)
+            })
         })
     })
 
