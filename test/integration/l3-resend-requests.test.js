@@ -45,7 +45,7 @@ describe('resend requests are fulfilled at L3', () => {
             requestRange: () => intoStream.object([]),
         }])
         neighborTwo = await startNetworkNode(LOCALHOST, 28633, 'neighborTwo', [])
-        storageNode = await startStorageNode(LOCALHOST, 28634, 'storageNode', [{
+        storageNode = await startStorageNode(LOCALHOST, 28634, 'main-germany-1', [{
             store: () => {},
             requestLast: () => intoStream.object([
                 new StreamMessage({

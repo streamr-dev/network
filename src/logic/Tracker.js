@@ -96,6 +96,9 @@ module.exports = class Tracker extends EventEmitter {
             foundStorageNodes = [...this.storageNodes.keys()]
         }
 
+        // TODO remove after data migration
+        foundStorageNodes = ['main-germany-1']
+
         this._updateAllStorages()
         this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)
             .catch((e) => console.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`))

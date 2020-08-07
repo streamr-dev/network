@@ -35,7 +35,7 @@ describe('resend requests are fulfilled at L2', () => {
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
         }])
-        n1 = await startNetworkNode(LOCALHOST, 28612, 'n1', [{
+        n1 = await startNetworkNode(LOCALHOST, 28612, 'main-germany-1', [{
             store: () => {},
             requestLast: () => intoStream.object([
                 new StreamMessage({
