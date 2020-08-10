@@ -98,7 +98,8 @@ module.exports = class Tracker extends EventEmitter {
 
         // TODO remove after migration is done
         if (process.env.NODE_ENV === 'production') {
-            foundStorageNodes = ['main-germany-1']
+            // filter existing storage nodes, so we'll not get "Error: Id main-germany-1 not found in peer book"
+            foundStorageNodes = foundStorageNodes.filter((item) => item === '0x31546eEA76F2B2b3C5cC06B1c93601dc35c9D916')
         }
 
         this._updateAllStorages()
