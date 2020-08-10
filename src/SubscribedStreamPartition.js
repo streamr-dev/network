@@ -108,12 +108,6 @@ export default class SubscribedStreamPartition {
             delete this.subscriptions[sub.id]
         }
     }
-
-    setSubscriptionsGroupKeys(publisherId, groupKeys) {
-        Object.values(this.subscriptions).forEach((sub) => {
-            sub.setGroupKeys(publisherId, groupKeys)
-        })
-    }
 }
 
 SubscribedStreamPartition.memoizeOpts = memoizeOpts

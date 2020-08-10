@@ -310,24 +310,5 @@ describe('SubscribedStreamPartition', () => {
         it('should return true', () => {
             expect(subscribedStreamPartition.emptySubscriptionsSet()).toBe(true)
         })
-
-        it.skip('should call setGroupKeys() and checkQueue() for every subscription', async () => {
-            const sub2 = {
-                id: 'sub2Id',
-                setGroupKeys: sinon.stub(),
-            }
-            const sub3 = {
-                id: 'sub3Id',
-                setGroupKeys: sinon.stub(),
-            }
-
-            subscribedStreamPartition.removeSubscription(sub1)
-            subscribedStreamPartition.addSubscription(sub2)
-            subscribedStreamPartition.addSubscription(sub3)
-
-            await subscribedStreamPartition.setSubscriptionsGroupKeys('publisherId', ['group-key-1', 'group-key-2'])
-            expect(sub2.setGroupKeys.calledWith('publisherId', ['group-key-1', 'group-key-2'])).toBeTruthy()
-            expect(sub3.setGroupKeys.calledWith('publisherId', ['group-key-1', 'group-key-2'])).toBeTruthy()
-        })
     })
 })

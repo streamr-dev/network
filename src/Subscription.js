@@ -13,7 +13,6 @@ export default class Subscription extends EventEmitter {
         streamId,
         streamPartition,
         callback,
-        groupKeys,
         propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT,
         resendTimeout = DEFAULT_RESEND_TIMEOUT,
         debug
@@ -36,12 +35,6 @@ export default class Subscription extends EventEmitter {
 
         if (!streamId) {
             throw new Error('No stream id given!')
-        }
-        this.groupKeys = {}
-        if (groupKeys) {
-            Object.keys(groupKeys).forEach((publisherId) => {
-                this.groupKeys[publisherId.toLowerCase()] = groupKeys[publisherId]
-            })
         }
         this.propagationTimeout = propagationTimeout
         this.resendTimeout = resendTimeout

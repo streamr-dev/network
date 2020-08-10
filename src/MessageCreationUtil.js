@@ -6,19 +6,12 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
 
 import Stream from './rest/domain/Stream'
-import EncryptionUtil from './EncryptionUtil'
-import KeyStorageUtil from './KeyStorageUtil'
-import KeyExchangeUtil from './KeyExchangeUtil'
-import InvalidGroupKeyRequestError from './errors/InvalidGroupKeyRequestError'
-import InvalidGroupKeyResponseError from './errors/InvalidGroupKeyResponseError'
 import InvalidMessageTypeError from './errors/InvalidMessageTypeError'
-import { uuid } from './utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
-const { getKeyExchangeStreamId } = KeyExchangeUtil
 
 export default class MessageCreationUtil {
-    constructor(auth, signer, getUserInfo, getStreamFunction, keyStorageUtil) {
+    constructor(auth, signer, getUserInfo, getStreamFunction) {
         this.auth = auth
         this._signer = signer
         this.getUserInfo = getUserInfo
@@ -27,7 +20,6 @@ export default class MessageCreationUtil {
             max: 10000,
         })
         this.publishedStreams = {}
-        this.keyStorageUtil = keyStorageUtil || KeyStorageUtil.getKeyStorageUtil()
         this.msgChainId = randomstring.generate(20)
         this.cachedHashes = {}
     }
@@ -109,14 +101,10 @@ export default class MessageCreationUtil {
         return this.publishedStreams[key].prevSequenceNumber
     }
 
-    async createStreamMessage(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null, groupKey) {
+    async createStreamMessage(streamObjectOrId, data, timestamp = Date.now(), partitionKey = null) {
         // Validate data
         if (typeof data !== 'object') {
             throw new Error(`Message data must be an object! Was: ${data}`)
-        }
-
-        if (groupKey) {
-            EncryptionUtil.validateGroupKey(groupKey)
         }
 
         const stream = (streamObjectOrId instanceof Stream) ? streamObjectOrId : await this.getStream(streamObjectOrId)
@@ -131,98 +119,9 @@ export default class MessageCreationUtil {
             messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
         })
 
-        if (groupKey && this.keyStorageUtil.hasKey(stream.id) && groupKey !== this.keyStorageUtil.getLatestKey(stream.id).groupKey) {
-            EncryptionUtil.encryptStreamMessageAndNewKey(groupKey, streamMessage, this.keyStorageUtil.getLatestKey(stream.id).groupKey)
-            this.keyStorageUtil.addKey(stream.id, groupKey)
-        } else if (groupKey || this.keyStorageUtil.hasKey(stream.id)) {
-            if (groupKey) {
-                this.keyStorageUtil.addKey(stream.id, groupKey)
-            }
-            EncryptionUtil.encryptStreamMessage(streamMessage, this.keyStorageUtil.getLatestKey(stream.id).groupKey)
-        }
-
         if (this._signer) {
             await this._signer.signStreamMessage(streamMessage)
         }
-        return streamMessage
-    }
-
-    async createGroupKeyRequest({
-        messagePublisherAddress,
-        streamId,
-        publicKey,
-        start,
-        end,
-    }) {
-        if (!this._signer) {
-            throw new Error('Cannot create unsigned group key request. Must authenticate with "privateKey" or "provider"')
-        }
-        const publisherId = await this.getPublisherId()
-        const requestId = uuid('GroupKeyRequest')
-        const data = {
-            streamId,
-            requestId,
-            publicKey,
-        }
-        if (start && end) {
-            data.range = {
-                start,
-                end,
-            }
-        }
-        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(getKeyExchangeStreamId(messagePublisherAddress), publisherId)
-        const streamMessage = new StreamMessage({
-            messageId,
-            prevMsgRef,
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
-            content: data,
-        })
-        await this._signer.signStreamMessage(streamMessage)
-        return streamMessage
-    }
-
-    async createGroupKeyResponse({ subscriberAddress, streamId, requestId, encryptedGroupKeys }) {
-        if (!this._signer) {
-            throw new Error('Cannot create unsigned group key response. Must authenticate with "privateKey" or "provider"')
-        }
-        const publisherId = await this.getPublisherId()
-        const data = {
-            requestId,
-            streamId,
-            keys: encryptedGroupKeys,
-        }
-        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(getKeyExchangeStreamId(subscriberAddress), publisherId)
-        const streamMessage = new StreamMessage({
-            messageId,
-            prevMsgRef,
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
-            encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
-            content: data,
-        })
-        await this._signer.signStreamMessage(streamMessage)
-        return streamMessage
-    }
-
-    async createErrorMessage({ keyExchangeStreamId, streamId, error, requestId }) {
-        if (!this._signer) {
-            throw new Error('Cannot create unsigned error message. Must authenticate with "privateKey" or "provider"')
-        }
-        const publisherId = await this.getPublisherId()
-        const data = {
-            code: MessageCreationUtil.getErrorCodeFromError(error),
-            message: error.message,
-            streamId,
-            requestId,
-        }
-        const [messageId, prevMsgRef] = this.createDefaultMsgIdAndPrevRef(keyExchangeStreamId, publisherId)
-        const streamMessage = new StreamMessage({
-            messageId,
-            prevMsgRef,
-            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
-            content: data,
-        })
-
-        await this._signer.signStreamMessage(streamMessage)
         return streamMessage
     }
 
@@ -248,14 +147,6 @@ export default class MessageCreationUtil {
     }
 
     static getErrorCodeFromError(error) {
-        if (error instanceof InvalidGroupKeyRequestError) {
-            return 'INVALID_GROUP_KEY_REQUEST'
-        }
-
-        if (error instanceof InvalidGroupKeyResponseError) {
-            return 'INVALID_GROUP_KEY_RESPONSE'
-        }
-
         if (error instanceof InvalidMessageTypeError) {
             return 'INVALID_MESSAGE_TYPE'
         }

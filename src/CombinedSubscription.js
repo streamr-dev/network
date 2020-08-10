@@ -10,8 +10,6 @@ export default class CombinedSubscription extends Subscription {
         callback,
         options,
         propagationTimeout,
-        groupKeys,
-        onUnableToDecrypt,
         resendTimeout,
         orderMessages = true,
         debug,
@@ -20,8 +18,6 @@ export default class CombinedSubscription extends Subscription {
             streamId,
             streamPartition,
             callback,
-            groupKeys,
-            onUnableToDecrypt,
             propagationTimeout,
             resendTimeout,
             debug,
@@ -32,8 +28,6 @@ export default class CombinedSubscription extends Subscription {
             streamPartition,
             callback,
             options,
-            groupKeys,
-            onUnableToDecrypt,
             propagationTimeout: this.propagationTimeout,
             resendTimeout: this.resendTimeout,
             orderMessages,
@@ -51,8 +45,6 @@ export default class CombinedSubscription extends Subscription {
                 streamId,
                 streamPartition,
                 callback,
-                groupKeys,
-                onUnableToDecrypt,
                 propagationTimeout: this.propagationTimeout,
                 resendTimeout: this.resendTimeout,
                 orderMessages,
@@ -82,7 +74,6 @@ export default class CombinedSubscription extends Subscription {
         sub.on('no_resend', (response) => this.emit('no_resend', response))
         sub.on('initial_resend_done', (response) => this.emit('initial_resend_done', response))
         sub.on('message received', () => this.emit('message received'))
-        sub.on('groupKeyMissing', (publisherId, start, end) => this.emit('groupKeyMissing', publisherId, start, end))
 
         // hack to ensure inner subscription state is reflected in the outer subscription state
         // restore in _unbindListeners
@@ -155,10 +146,6 @@ export default class CombinedSubscription extends Subscription {
     setState(state) {
         this.sub.state = state
         super.setState(state)
-    }
-
-    setGroupKeys(publisherId, groupKeys) {
-        this.sub.setGroupKeys(publisherId, groupKeys)
     }
 
     handleError(err) {
