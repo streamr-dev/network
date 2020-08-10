@@ -96,8 +96,10 @@ module.exports = class Tracker extends EventEmitter {
             foundStorageNodes = [...this.storageNodes.keys()]
         }
 
-        // TODO remove after data migration
-        foundStorageNodes = ['main-germany-1']
+        // TODO remove after migration is done
+        if (process.env.NODE_ENV === 'production') {
+            foundStorageNodes = ['main-germany-1']
+        }
 
         this._updateAllStorages()
         this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)

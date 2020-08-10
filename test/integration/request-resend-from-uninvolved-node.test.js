@@ -36,7 +36,7 @@ describe('request resend from uninvolved node', () => {
             store: () => {},
             requestLast: () => intoStream.object([]),
         }])
-        storageNode = await startStorageNode(LOCALHOST, 28643, 'main-germany-1', [{
+        storageNode = await startStorageNode(LOCALHOST, 28643, 'storageNode', [{
             store: () => {},
             requestLast: () => intoStream.object([
                 new StreamMessage({

@@ -20,7 +20,7 @@ describe('tracker assigns storage node to streams on any resend', () => {
         subscriberOne = await startNetworkNode(LOCALHOST, await getPort(), 'subscriberOne')
         subscriberTwo = await startNetworkNode(LOCALHOST, await getPort(), 'subscriberTwo')
 
-        storageNode = await startStorageNode(LOCALHOST, 18634, 'main-germany-1', [{
+        storageNode = await startStorageNode(LOCALHOST, 18634, 'storageNode', [{
             store: () => {},
             requestLast: () => intoStream.object([
                 new StreamMessage({
@@ -75,7 +75,7 @@ describe('tracker assigns storage node to streams on any resend', () => {
 
         expect(tracker.getTopology()).toEqual({
             'streamId::0': {
-                'main-germany-1': []
+                storageNode: []
             }
         })
 
@@ -85,10 +85,10 @@ describe('tracker assigns storage node to streams on any resend', () => {
 
         expect(tracker.getTopology()).toEqual({
             'streamId::0': {
-                'main-germany-1': []
+                storageNode: []
             },
             'streamId2::1': {
-                'main-germany-1': []
+                storageNode: []
             }
         })
 
@@ -100,10 +100,10 @@ describe('tracker assigns storage node to streams on any resend', () => {
 
         expect(tracker.getTopology()).toEqual({
             'streamId::0': {
-                'main-germany-1': []
+                storageNode: []
             },
             'streamId2::1': {
-                'main-germany-1': []
+                storageNode: []
             }
         })
     }, 15000)
