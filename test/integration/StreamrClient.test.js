@@ -956,7 +956,7 @@ describe('StreamrClient', () => {
 
         it('decodes realtime messages correctly', async (done) => {
             client.once('error', done)
-            const sub = client.subscribe(stream.id, (msg) => {
+            client.subscribe(stream.id, (msg) => {
                 expect(msg).toStrictEqual(publishedMessage)
                 done()
             }).once('subscribed', () => {
@@ -980,7 +980,7 @@ describe('StreamrClient', () => {
         }, 10000)
     })
 
-    describe('decryption', () => {
+    describe.skip('decryption', () => {
         it('client.subscribe can decrypt encrypted messages if it knows the group key', async (done) => {
             client.once('error', done)
             const id = Date.now()
