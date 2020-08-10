@@ -11,6 +11,8 @@ const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 program
     .version(CURRENT_VERSION)
+    .option('--id <id>', 'Ethereum address / node id', undefined)
+    .option('--nodeName <nodeName>', 'Human readble name for node', undefined)
     .option('--port <port>', 'port', 30302)
     .option('--ip <ip>', 'ip', '127.0.0.1')
     .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:30300'])
@@ -20,15 +22,17 @@ program
     .description('Run publisher')
     .parse(process.argv)
 
-const publisherId = `publisher-${program.port}`
+const publisherId = program.id || `publisher-${program.port}`
+const name = program.nodeName || publisherId
+
 const messageChainId = `message-chain-id-${program.port}`
 const streamObj = new StreamIdAndPartition(program.streamId, 0)
 const { id: streamId, partition } = streamObj
 
-startNetworkNode(program.ip, program.port, publisherId)
+startNetworkNode(program.ip, program.port, publisherId, [], null, name)
     .then((publisher) => {
-        console.log('started publisher id: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
-            publisherId, program.port, program.ip, program.trackers.join(', '), program.streamId, program.intervalInMs, program.metrics)
+        console.log('started publisher id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
+            publisherId, name, program.port, program.ip, program.trackers.join(', '), program.streamId, program.intervalInMs, program.metrics)
 
         program.trackers.map((trackerAddress) => publisher.addBootstrapTracker(trackerAddress))
 

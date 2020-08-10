@@ -19,18 +19,20 @@ class PeerBook {
         this.idToAddress = {}
         this.addressToId = {}
         this.addressToType = {}
+        this.addressToName = {}
     }
 
     add(peerAddress, peerInfo) {
-        const { peerId, peerType } = peerInfo
+        const { peerId, peerType, peerName } = peerInfo
         this.idToAddress[peerId] = peerAddress
         this.addressToId[peerAddress] = peerId
         this.addressToType[peerAddress] = peerType
+        this.addressToName[peerAddress] = peerName
     }
 
     getPeerInfo(peerAddress) {
         if (this.hasAddress(peerAddress)) {
-            return new PeerInfo(this.addressToId[peerAddress], this.addressToType[peerAddress])
+            return new PeerInfo(this.addressToId[peerAddress], this.addressToType[peerAddress], this.addressToName[peerAddress])
         }
         return null
     }
@@ -40,6 +42,7 @@ class PeerBook {
         delete this.idToAddress[peerId]
         delete this.addressToId[peerAddress]
         delete this.addressToType[peerAddress]
+        delete this.addressToName[peerAddress]
     }
 
     getAddress(peerId) {
@@ -56,12 +59,23 @@ class PeerBook {
         return this.addressToId[address]
     }
 
+    getPeerName(address) {
+        if (!this.hasName(address)) {
+            throw new NotFoundInPeerBookError(`Address ${address} not found in peer book`)
+        }
+        return this.addressToName[address]
+    }
+
     hasAddress(address) {
         return this.addressToId[address] != null
     }
 
     hasPeerId(peerId) {
         return this.idToAddress[peerId] != null
+    }
+
+    hasName(address) {
+        return this.addressToName[address] != null
     }
 }
 

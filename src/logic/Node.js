@@ -88,7 +88,7 @@ class Node extends EventEmitter {
         })
 
         this.debug = createDebug(`streamr:logic:node:${this.peerInfo.peerId}`)
-        this.debug('started %s', this.peerInfo.peerId)
+        this.debug('started %s (%s)', this.peerInfo.peerId, this.peerInfo.peerName)
 
         this.started = new Date().toLocaleString()
         this.metrics = new Metrics(this.peerInfo.peerId)
