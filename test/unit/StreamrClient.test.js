@@ -1343,7 +1343,7 @@ describe('StreamrClient', () => {
 
     describe('publish', () => {
         function getPublishRequest(content, streamId, timestamp, seqNum, prevMsgRef, requestId) {
-            const messageId = new MessageID(streamId, 0, timestamp, seqNum, StubbedStreamrClient.hashedUsername, client.msgCreationUtil.msgChainId)
+            const messageId = new MessageID(streamId, 0, timestamp, seqNum, StubbedStreamrClient.hashedUsername, client.publisher.msgCreationUtil.msgChainId)
             const streamMessage = new StreamMessage({
                 messageId,
                 prevMsgRef,

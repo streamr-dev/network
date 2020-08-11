@@ -19,6 +19,7 @@ import RealTimeSubscription from './RealTimeSubscription'
 import CombinedSubscription from './CombinedSubscription'
 import Subscription from './Subscription'
 import ResendUtil from './ResendUtil'
+import Publisher from './Publisher'
 
 const {
     SubscribeRequest,
@@ -94,26 +95,11 @@ export default class StreamrClient extends EventEmitter {
             this.options.auth.privateKey = `0x${this.options.auth.privateKey}`
         }
 
-        this.publishQueue = []
         this.session = new Session(this, this.options.auth)
-        this.signer = Signer.createSigner({
-            ...this.options.auth,
-            debug: this.debug,
-        }, this.options.publishWithSignature)
         // Event handling on connection object
         this.connection = connection || new Connection(this.options)
 
         this.getUserInfo = this.getUserInfo.bind(this)
-
-        if (this.session.isUnauthenticated()) {
-            this.msgCreationUtil = null
-        } else {
-            this.msgCreationUtil = new MessageCreationUtil(
-                this.options.auth, this.signer, once(() => this.getUserInfo()),
-                (streamId) => this.getStream(streamId)
-                    .catch((err) => this.emit('error', err)), this.keyStorageUtil,
-            )
-        }
 
         this.resendUtil = new ResendUtil()
         this.resendUtil.on('error', (err) => this.emit('error', err))
@@ -232,11 +218,6 @@ export default class StreamrClient extends EventEmitter {
                         }
                     })
                 })
-
-                // Check pending publish requests
-                const publishQueueCopy = this.publishQueue.slice(0)
-                this.publishQueue = []
-                publishQueueCopy.forEach((publishFn) => publishFn())
             } catch (err) {
                 this.emit('error', err)
             }
@@ -276,6 +257,8 @@ export default class StreamrClient extends EventEmitter {
                 this.emit('error', errorObject)
             }
         })
+
+        this.publisher = new Publisher(this)
     }
 
     /**
@@ -340,76 +323,6 @@ export default class StreamrClient extends EventEmitter {
         }
 
         return subs
-    }
-
-    async publish(streamObjectOrId, data, timestamp = new Date(), partitionKey = null) {
-        if (this.session.isUnauthenticated()) {
-            throw new Error('Need to be authenticated to publish.')
-        }
-        // Validate streamObjectOrId
-        let streamId
-        if (streamObjectOrId instanceof Stream) {
-            streamId = streamObjectOrId.id
-        } else if (typeof streamObjectOrId === 'string') {
-            streamId = streamObjectOrId
-        } else {
-            throw new Error(`First argument must be a Stream object or the stream id! Was: ${streamObjectOrId}`)
-        }
-
-        const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-        const [sessionToken, streamMessage] = await Promise.all([
-            this.session.getSessionToken(),
-            this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestampAsNumber, partitionKey),
-        ])
-
-        if (this.isConnected()) {
-            // If connected, emit a publish request
-            return this._requestPublish(streamMessage, sessionToken)
-        }
-
-        if (this.options.autoConnect) {
-            if (this.publishQueue.length >= this.options.maxPublishQueueSize) {
-                throw new FailedToPublishError(
-                    streamId,
-                    data,
-                    `publishQueue exceeded maxPublishQueueSize=${this.options.maxPublishQueueSize}`,
-                )
-            }
-
-            const published = new Promise((resolve, reject) => {
-                this.publishQueue.push(async () => {
-                    let publishRequest
-                    try {
-                        publishRequest = await this._requestPublish(streamMessage, sessionToken)
-                    } catch (err) {
-                        reject(err)
-                        this.emit('error', err)
-                        return
-                    }
-                    resolve(publishRequest)
-                })
-            })
-            // be sure to trigger connection *after* queueing publish
-            await this.ensureConnected() // await to ensure connection error fails publish
-            return published
-        }
-
-        throw new FailedToPublishError(
-            streamId,
-            data,
-            'Wait for the "connected" event before calling publish, or set autoConnect to true!',
-        )
-    }
-
-    _requestPublish(streamMessage, sessionToken) {
-        const requestId = this.resendUtil.generateRequestId()
-        const request = new ControlLayer.PublishRequest({
-            streamMessage,
-            requestId,
-            sessionToken,
-        })
-        this.debug('_requestPublish: %o', request)
-        return this.connection.send(request)
     }
 
     async resend(optionsOrStreamId, callback) {
@@ -619,10 +532,7 @@ export default class StreamrClient extends EventEmitter {
     }
 
     disconnect() {
-        if (this.msgCreationUtil) {
-            this.msgCreationUtil.stop()
-        }
-
+        this.publisher.stop()
         this.subscribedStreamPartitions = {}
         return this.connection.disconnect()
     }
@@ -631,8 +541,12 @@ export default class StreamrClient extends EventEmitter {
         return this.session.logout()
     }
 
+    async publish(...args) {
+        return this.publisher.publish(...args)
+    }
+
     getPublisherId() {
-        return this.msgCreationUtil.getPublisherId()
+        return this.publisher.getPublisherId()
     }
 
     /**
@@ -658,10 +572,7 @@ export default class StreamrClient extends EventEmitter {
 
     async ensureDisconnected() {
         this.connection.clearReconnectTimeout()
-        if (this.msgCreationUtil) {
-            this.msgCreationUtil.stop()
-        }
-
+        this.publisher.stop()
         if (this.isDisconnected()) { return }
 
         if (this.isDisconnecting()) {
