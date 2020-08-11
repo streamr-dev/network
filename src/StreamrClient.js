@@ -401,6 +401,17 @@ export default class StreamrClient extends EventEmitter {
         )
     }
 
+    _requestPublish(streamMessage, sessionToken) {
+        const requestId = this.resendUtil.generateRequestId()
+        const request = new ControlLayer.PublishRequest({
+            streamMessage,
+            requestId,
+            sessionToken,
+        })
+        this.debug('_requestPublish: %o', request)
+        return this.connection.send(request)
+    }
+
     async resend(optionsOrStreamId, callback) {
         const options = this._validateParameters(optionsOrStreamId, callback)
 
@@ -792,22 +803,6 @@ export default class StreamrClient extends EventEmitter {
         } else {
             this.handleError("Can't _requestResend without resendOptions")
         }
-    }
-
-    async publishStreamMessage(streamMessage) {
-        const sessionToken = await this.session.getSessionToken()
-        return this._requestPublish(streamMessage, sessionToken)
-    }
-
-    _requestPublish(streamMessage, sessionToken) {
-        const requestId = this.resendUtil.generateRequestId()
-        const request = new ControlLayer.PublishRequest({
-            streamMessage,
-            requestId,
-            sessionToken,
-        })
-        this.debug('_requestPublish: %o', request)
-        return this.connection.send(request)
     }
 
     handleError(msg) {
