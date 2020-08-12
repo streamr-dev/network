@@ -15,6 +15,12 @@ describe('check and kill dead connections', () => {
     let node2
     const port2 = 43972
 
+    const defaultLocation = {
+        latitude: null,
+        longitude: null,
+        country: null,
+        city: null
+    }
     beforeEach(async () => {
         node1 = await startEndpoint(LOCALHOST, port1, PeerInfo.newNode('node1'), null)
         node2 = await startEndpoint(LOCALHOST, port2, PeerInfo.newNode('node2'), null)
@@ -51,13 +57,13 @@ describe('check and kill dead connections', () => {
 
         expect(node1._onClose).toBeCalledTimes(1)
         expect(node1._onClose).toBeCalledWith('ws://127.0.0.1:43972', {
-            peerId: 'node2', peerName: 'node2', peerType: 'node'
+            peerId: 'node2', peerName: 'node2', peerType: 'node', location: defaultLocation
         }, disconnectionCodes.DEAD_CONNECTION, disconnectionReasons.DEAD_CONNECTION)
 
         node1._onClose.mockRestore()
         node1._pingConnections()
 
         const [peerInfo] = await waitForEvent(node1, events.PEER_DISCONNECTED)
-        expect(peerInfo).toEqual(new PeerInfo('node2', 'node', 'node2',))
+        expect(peerInfo).toEqual(new PeerInfo('node2', 'node', 'node2', defaultLocation))
     })
 })

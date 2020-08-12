@@ -358,7 +358,8 @@ class Node extends EventEmitter {
         return {
             streams: this.streams.getStreamsWithConnections(tracker, this.trackersRing),
             started: this.started,
-            rtts: this.protocols.nodeToNode.getRtts()
+            rtts: this.protocols.nodeToNode.getRtts(),
+            location: this.peerInfo.location
         }
     }
 

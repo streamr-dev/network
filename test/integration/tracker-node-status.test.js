@@ -91,4 +91,28 @@ describe('check status message flow between tracker and two nodes', () => {
         nodeOne.subscribe(streamId2, 0)
         nodeTwo.subscribe(streamId2, 0)
     })
+
+    it('tracker should receive location information from nodes', async (done) => {
+        let receivedTotal = 0
+
+        nodeOne.subscribe(streamId, 0)
+        nodeTwo.subscribe(streamId, 0)
+        tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage }) => {
+            if (statusMessage.getSource() === nodeOne.opts.id) {
+                // eslint-disable-next-line no-underscore-dangle
+                expect(Object.keys(statusMessage.getStatus().location).length).toEqual(4)
+            }
+
+            if (statusMessage.getSource() === nodeTwo.opts.id) {
+                // eslint-disable-next-line no-underscore-dangle
+                expect(Object.keys(statusMessage.getStatus().location).length).toEqual(4)
+            }
+            receivedTotal += 1
+            if (receivedTotal === 2) {
+                done()
+            }
+        })
+        nodeOne.subscribe(streamId2, 0)
+        nodeTwo.subscribe(streamId2, 0)
+    })
 })

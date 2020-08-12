@@ -17,7 +17,7 @@ class PeerInfo {
         return new PeerInfo(peerId, peerTypes.STORAGE, peerName)
     }
 
-    constructor(peerId, peerType, peerName) {
+    constructor(peerId, peerType, peerName, location) {
         if (!peerId) {
             throw new Error('peerId not given')
         }
@@ -28,6 +28,15 @@ class PeerInfo {
             // eslint-disable-next-line no-param-reassign
             peerName = peerId
         }
+        if (!location) {
+            // eslint-disable-next-line no-param-reassign
+            location = {
+                latitude: null,
+                longitude: null,
+                country: null,
+                city: null
+            }
+        }
         if (!Object.values(peerTypes).includes(peerType)) {
             throw new Error(`peerType ${peerType} not in peerTypes list`)
         }
@@ -35,6 +44,7 @@ class PeerInfo {
         this.peerId = peerId
         this.peerType = peerType
         this.peerName = peerName
+        this.location = location
     }
 
     isTracker() {

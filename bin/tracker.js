@@ -97,7 +97,21 @@ function startServer(tracker, endpointServerPort) {
         reply.send(tracker.getTopology(request.params.streamId, request.params.partition))
     })
 
-    //
+    fastify.get('/location/', async (request, reply) => {
+        reply.send(tracker.getAllNodeLocations())
+    })
+
+    fastify.get('/location/:nodeId', async (request, reply) => {
+        if (request.params.nodeId === '') {
+            throw Error('nodeId must not be an empty string')
+        }
+        const location = tracker.getNodeLocation(request.params.nodeId)
+        if (!location) {
+            throw Error('Node not found')
+        }
+        reply.send(location)
+    })
+
     fastify.listen(endpointServerPort, '0.0.0.0', (err, address) => {
         if (err) {
             throw err
