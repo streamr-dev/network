@@ -91,6 +91,18 @@ const validateConfig = (config) => {
     if (config.ethereum.privateKey && config.ethereum.generateWallet === true) {
         throw new MissingConfigError('ethereum.privateKey and ethereum.generateWallet defined, define only one option.')
     }
+    if (config.location === undefined) {
+        throw new MissingConfigError('location')
+    }
+    if (config.location && config.location.city === undefined) {
+        throw new MissingConfigError('location.city must be defined')
+    }
+    if (config.location && config.location.country === undefined) {
+        throw new MissingConfigError('location.country must be defined')
+    }
+    if (config.location && config.location.latitude === undefined && config.location.latitude === undefined) {
+        throw new MissingConfigError('location.latitude and location.longitude must be defined')
+    }
 
     config.adapters.forEach(({ name }, index) => {
         if (name === undefined) {

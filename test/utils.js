@@ -53,6 +53,12 @@ function startBroker(name, networkPort, trackerPort, httpPort, wsPort, mqttPort,
             privateKey: ethereumPrivateKey,
             generateWallet
         },
+        location: {
+            latitude: 60.19,
+            longitude: 24.95,
+            country: 'Finland',
+            city: 'Helsinki'
+        },
         cassandra: enableCassandra ? {
             hosts: ['localhost'],
             username: '',

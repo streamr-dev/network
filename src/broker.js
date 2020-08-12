@@ -29,6 +29,7 @@ module.exports = async (config, startUpLoggingEnabled = false) => {
 
     const storages = []
     const networkNodeName = config.network.name
+    const { location } = config
 
     // Start cassandra storage
     if (config.cassandra) {
@@ -80,7 +81,8 @@ module.exports = async (config, startUpLoggingEnabled = false) => {
         brokerAddress,
         storages,
         advertisedWsUrl,
-        networkNodeName
+        networkNodeName,
+        location
     )
 
     let trackers
