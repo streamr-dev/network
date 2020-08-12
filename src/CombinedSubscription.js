@@ -1,7 +1,6 @@
 import HistoricalSubscription from './HistoricalSubscription'
 import RealTimeSubscription from './RealTimeSubscription'
 import Subscription from './Subscription'
-import AbstractSubscription from './AbstractSubscription'
 
 export default class CombinedSubscription extends Subscription {
     constructor({

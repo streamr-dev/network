@@ -1508,7 +1508,7 @@ describe('StreamrClient', () => {
             c.once('connected', async () => {
                 await wait()
                 expect(requests[0]).toEqual(new SubscribeRequest({
-                    //streamId: getKeyExchangeStreamId('0x650EBB201f635652b44E4afD1e0193615922381D'),
+                    // streamId: getKeyExchangeStreamId('0x650EBB201f635652b44E4afD1e0193615922381D'),
                     streamPartition: 0,
                     sessionToken,
                     requestId: requests[0].requestId,
