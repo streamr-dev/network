@@ -77,29 +77,26 @@ export default class StreamrClient extends EventEmitter {
             this.options.auth.privateKey = `0x${this.options.auth.privateKey}`
         }
 
-        this.session = new Session(this, this.options.auth)
-        // Event handling on connection object
-        this.connection = connection || new Connection(this.options)
-
+        // bind event handlers
         this.getUserInfo = this.getUserInfo.bind(this)
-        this._onError = this._onError.bind(this)
         this.onConnectionConnected = this.onConnectionConnected.bind(this)
         this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
+        this._onError = this._onError.bind(this)
         this.onErrorResponse = this.onErrorResponse.bind(this)
         this.onConnectionError = this.onConnectionError.bind(this)
 
+        this.on('error', this._onError) // attach before creating sub-components incase they fire error events
 
-        // On connect/reconnect, send pending subscription requests
-        this.connection.on('connected', this.onConnectionConnected)
-        this.connection.on('disconnected', this.onConnectionDisconnected)
-
-        this.connection.on('error', this.onConnectionError)
-        this.connection.on(ControlMessage.TYPES.ErrorResponse, this.onErrorResponse)
-        this.on('error', this._onError)
-
+        this.session = new Session(this, this.options.auth)
+        this.connection = connection || new Connection(this.options)
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
         this.resender = new Resender(this)
+
+        this.connection.on('connected', this.onConnectionConnected)
+        this.connection.on('disconnected', this.onConnectionDisconnected)
+        this.connection.on('error', this.onConnectionError)
+        this.connection.on(ControlMessage.TYPES.ErrorResponse, this.onErrorResponse)
     }
 
     async onConnectionConnected() {
