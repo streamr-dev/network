@@ -1,24 +1,10 @@
-import EventEmitter from 'eventemitter3'
-import debugFactory from 'debug'
-import qs from 'qs'
 import once from 'once'
-import { Wallet } from 'ethers'
-import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
-import uniqueId from 'lodash.uniqueid'
+import { ControlLayer } from 'streamr-client-protocol'
 
-import HistoricalSubscription from './HistoricalSubscription'
-import Connection from './Connection'
-import Session from './Session'
 import Signer from './Signer'
-import SubscribedStreamPartition from './SubscribedStreamPartition'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
 import MessageCreationUtil from './MessageCreationUtil'
-import { waitFor, getVersionString } from './utils'
-import RealTimeSubscription from './RealTimeSubscription'
-import CombinedSubscription from './CombinedSubscription'
-import Subscription from './Subscription'
-import ResendUtil from './ResendUtil'
 
 function getStreamId(streamObjectOrId) {
     if (streamObjectOrId instanceof Stream) {
