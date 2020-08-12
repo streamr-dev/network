@@ -17,13 +17,13 @@ export default class Subscriber {
         // Broadcast messages to all subs listening on stream-partition
         this.client.connection.on(ControlMessage.TYPES.BroadcastMessage, (msg) => {
             const stream = this._getSubscribedStreamPartition(msg.streamMessage.getStreamId(), msg.streamMessage.getStreamPartition())
-            if (stream) {
-                const verifyFn = once(() => stream.verifyStreamMessage(msg.streamMessage)) // ensure verification occurs only once
-                // sub.handleBroadcastMessage never rejects: on any error it emits an 'error' event on the Subscription
-                stream.getSubscriptions().forEach((sub) => sub.handleBroadcastMessage(msg.streamMessage, verifyFn))
-            } else {
+            if (!stream) {
                 this.debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
+                return
             }
+            const verifyFn = once(() => stream.verifyStreamMessage(msg.streamMessage)) // ensure verification occurs only once
+            // sub.handleBroadcastMessage never rejects: on any error it emits an 'error' event on the Subscription
+            stream.getSubscriptions().forEach((sub) => sub.handleBroadcastMessage(msg.streamMessage, verifyFn))
         })
 
         this.client.connection.on(ControlMessage.TYPES.SubscribeResponse, (response) => {
@@ -129,6 +129,7 @@ export default class Subscriber {
         }
         sub.on('gap', (from, to, publisherId, msgChainId) => {
             if (!sub.resending) {
+            // eslint-disable-next-line no-underscore-dangle
                 this.client.resender._requestResend(sub, {
                     from, to, publisherId, msgChainId,
                 })
@@ -231,11 +232,12 @@ export default class Subscriber {
 
     _removeSubscription(sub) {
         const sp = this._getSubscribedStreamPartition(sub.streamId, sub.streamPartition)
-        if (sp) {
-            sp.removeSubscription(sub)
-            if (sp.getSubscriptions().length === 0) {
-                this._deleteSubscribedStreamPartition(sp)
-            }
+        if (!sp) {
+            return
+        }
+        sp.removeSubscription(sub)
+        if (sp.getSubscriptions().length === 0) {
+            this._deleteSubscribedStreamPartition(sp)
         }
     }
 
@@ -261,41 +263,45 @@ export default class Subscriber {
 
     async _requestSubscribe(sub) {
         const sp = this._getSubscribedStreamPartition(sub.streamId, sub.streamPartition)
-        let subscribedSubs = []
         // never reuse subscriptions when incoming subscription needs resends
         // i.e. only reuse realtime subscriptions
         if (!sub.hasResendOptions()) {
-            subscribedSubs = sp.getSubscriptions().filter((it) => (
+            const subscribedSubs = sp.getSubscriptions().filter((it) => (
                 it.getState() === Subscription.State.subscribed
                 // don't resuse subscriptions currently resending
                 && !it.isResending()
             ))
+
+            if (subscribedSubs.length) {
+                // If there already is a subscribed subscription for this stream, this new one will just join it immediately
+                this.debug('_requestSubscribe: another subscription for same stream: %s, insta-subscribing', sub.streamId)
+
+                setTimeout(() => {
+                    sub.setState(Subscription.State.subscribed)
+                })
+                return
+            }
         }
 
         const sessionToken = await this.client.session.getSessionToken()
 
-        // If this is the first subscription for this stream-partition, send a subscription request to the server
-        if (!sp.isSubscribing() && subscribedSubs.length === 0) {
-            const request = new SubscribeRequest({
-                streamId: sub.streamId,
-                streamPartition: sub.streamPartition,
-                sessionToken,
-                requestId: this.client.resender.resendUtil.generateRequestId(),
-            })
-            this.debug('_requestSubscribe: subscribing client: %o', request)
-            sp.setSubscribing(true)
-            await this.client.connection.send(request).catch((err) => {
-                sub.setState(Subscription.State.unsubscribed)
-                this.client.emit('error', err) // `Failed to send subscribe request: ${err}`)
-            })
-        } else if (subscribedSubs.length > 0) {
-            // If there already is a subscribed subscription for this stream, this new one will just join it immediately
-            this.debug('_requestSubscribe: another subscription for same stream: %s, insta-subscribing', sub.streamId)
-
-            setTimeout(() => {
-                sub.setState(Subscription.State.subscribed)
-            })
+        if (sp.isSubscribing()) {
+            return
         }
+
+        // If this is the first subscription for this stream-partition, send a subscription request to the server
+        const request = new SubscribeRequest({
+            streamId: sub.streamId,
+            streamPartition: sub.streamPartition,
+            sessionToken,
+            requestId: this.client.resender.resendUtil.generateRequestId(),
+        })
+        this.debug('_requestSubscribe: subscribing client: %o', request)
+        sp.setSubscribing(true)
+        await this.client.connection.send(request).catch((err) => {
+            sub.setState(Subscription.State.unsubscribed)
+            this.client.emit('error', `Failed to send subscribe request: ${err.stack}`)
+        })
     }
 
     async _requestUnsubscribe(sub) {
@@ -307,7 +313,7 @@ export default class Subscriber {
         })
         await this.client.connection.send(unsubscribeRequest).catch((err) => {
             sub.setState(Subscription.State.subscribed)
-            this.client.handleError(`Failed to send unsubscribe request: ${err}`)
+            this.client.handleError(`Failed to send unsubscribe request: ${err.stack}`)
         })
     }
 
@@ -351,7 +357,7 @@ export default class Subscriber {
         // Once subscribed, ask for a resend
         sub.once('subscribed', () => {
             if (!sub.hasResendOptions()) { return }
-
+            // eslint-disable-next-line no-underscore-dangle
             this.client.resender._requestResend(sub)
         })
         await this._requestSubscribe(sub)
