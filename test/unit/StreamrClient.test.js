@@ -1233,7 +1233,7 @@ describe('StreamrClient', () => {
                     it('unsubscribes', (done) => {
                         const sub = mockSubscription('stream1', () => {})
 
-                        client.unsubscribe = (unsub) => {
+                        client.subscriber.unsubscribe = (unsub) => {
                             expect(sub).toBe(unsub)
                             done()
                         }

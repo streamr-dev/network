@@ -779,7 +779,7 @@ describe('StreamrClient', () => {
 
                     // Check signature stuff
                     // WARNING: digging into internals
-                    const subStream = client._getSubscribedStreamPartition(stream.id, 0) // eslint-disable-line no-underscore-dangle
+                    const subStream = client.subscriber._getSubscribedStreamPartition(stream.id, 0) // eslint-disable-line no-underscore-dangle
                     const publishers = await subStream.getPublishers()
                     const map = {}
                     map[client.publisher.signer.address.toLowerCase()] = true
@@ -821,7 +821,7 @@ describe('StreamrClient', () => {
 
                     // Check signature stuff
                     // WARNING: digging into internals
-                    const subStream = client._getSubscribedStreamPartition(stream.id, 0) // eslint-disable-line no-underscore-dangle
+                    const subStream = client.subscriber._getSubscribedStreamPartition(stream.id, 0) // eslint-disable-line no-underscore-dangle
                     const publishers = await subStream.getPublishers()
                     const map = {}
                     map[client.publisher.signer.address.toLowerCase()] = true

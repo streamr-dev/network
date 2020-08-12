@@ -41,7 +41,7 @@ export default class Publisher {
 
         // On connect/reconnect, send pending subscription requests
         this.onConnected = this.onConnected.bind(this)
-        client.connection.on('connected', this.onConnected)
+        client.on('connected', this.onConnected)
     }
 
     async onConnected() {

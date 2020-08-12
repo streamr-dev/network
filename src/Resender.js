@@ -18,7 +18,7 @@ export default class Resender {
 
         // Unicast messages to a specific subscription only
         this.client.connection.on(ControlMessage.TYPES.UnicastMessage, async (msg) => {
-            const stream = this.client._getSubscribedStreamPartition(msg.streamMessage.getStreamId(), msg.streamMessage.getStreamPartition())
+            const stream = this.client.subscriber._getSubscribedStreamPartition(msg.streamMessage.getStreamId(), msg.streamMessage.getStreamPartition())
             if (stream) {
                 const sub = this.resendUtil.getSubFromResendResponse(msg)
 
@@ -38,7 +38,7 @@ export default class Resender {
 
         // Route resending state messages to corresponding Subscriptions
         this.client.connection.on(ControlMessage.TYPES.ResendResponseResending, (response) => {
-            const stream = this.client._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+            const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             const sub = this.resendUtil.getSubFromResendResponse(response)
 
             if (stream && sub && stream.getSubscription(sub.id)) {
@@ -49,7 +49,7 @@ export default class Resender {
         })
 
         this.client.connection.on(ControlMessage.TYPES.ResendResponseNoResend, (response) => {
-            const stream = this.client._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+            const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             const sub = this.resendUtil.getSubFromResendResponse(response)
             this.resendUtil.deleteDoneSubsByResponse(response)
 
@@ -61,7 +61,7 @@ export default class Resender {
         })
 
         this.client.connection.on(ControlMessage.TYPES.ResendResponseResent, (response) => {
-            const stream = this.client._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+            const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
             const sub = this.resendUtil.getSubFromResendResponse(response)
             this.resendUtil.deleteDoneSubsByResponse(response)
 
@@ -74,7 +74,7 @@ export default class Resender {
     }
 
     async resend(optionsOrStreamId, callback) {
-        const options = this.client._validateParameters(optionsOrStreamId, callback)
+        const options = this.client.subscriber._validateParameters(optionsOrStreamId, callback)
 
         if (!options.stream) {
             throw new Error('resend: Invalid arguments: options.stream is not given')
@@ -98,8 +98,8 @@ export default class Resender {
 
         // TODO remove _addSubscription after uncoupling Subscription and Resend
         sub.setState(Subscription.State.subscribed)
-        this.client._addSubscription(sub)
-        sub.once('initial_resend_done', () => this.client._removeSubscription(sub))
+        this.client.subscriber._addSubscription(sub)
+        sub.once('initial_resend_done', () => this.client.subscriber._removeSubscription(sub))
         await this._requestResend(sub)
         return sub
     }
