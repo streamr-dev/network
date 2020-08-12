@@ -109,7 +109,7 @@ export default class Publisher {
     }
 
     _requestPublish(streamMessage, sessionToken) {
-        const requestId = this.client.resendUtil.generateRequestId()
+        const requestId = this.client.resender.resendUtil.generateRequestId()
         const request = new ControlLayer.PublishRequest({
             streamMessage,
             requestId,
