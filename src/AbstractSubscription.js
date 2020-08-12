@@ -22,7 +22,6 @@ export default class AbstractSubscription extends Subscription {
             resendTimeout,
             debug,
         })
-        this.callback = callback
         this.pendingResendRequestIds = {}
         this._lastMessageHandlerPromise = {}
         this.orderingUtil = (orderMessages) ? new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
