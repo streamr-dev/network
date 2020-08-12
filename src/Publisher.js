@@ -21,13 +21,13 @@ function getStreamId(streamObjectOrId) {
 export default class Publisher {
     constructor(client) {
         this.client = client
+        this.debug = client.debug.extend('Publisher')
+
         this.publishQueue = []
         this.signer = Signer.createSigner({
             ...client.options.auth,
             debug: client.debug,
         }, client.options.publishWithSignature)
-
-        this.debug = client.debug.extend('Publisher')
 
         if (client.session.isUnauthenticated()) {
             this.msgCreationUtil = null

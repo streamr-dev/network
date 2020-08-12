@@ -11,75 +11,92 @@ const { SubscribeRequest, UnsubscribeRequest, ControlMessage } = ControlLayer
 export default class Subscriber {
     constructor(client) {
         this.client = client
-        this.subscribedStreamPartitions = {}
         this.debug = client.debug.extend('Subscriber')
 
+        this.subscribedStreamPartitions = {}
+
+        this.onBroadcastMessage = this.onBroadcastMessage.bind(this)
+        this.client.connection.on(ControlMessage.TYPES.BroadcastMessage, this.onBroadcastMessage)
+
+        this.onSubscribeResponse = this.onSubscribeResponse.bind(this)
+        this.client.connection.on(ControlMessage.TYPES.SubscribeResponse, this.onSubscribeResponse)
+
+        this.onUnsubscribeResponse = this.onUnsubscribeResponse.bind(this)
+        this.client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, this.onUnsubscribeResponse)
+
+        this.onClientConnected = this.onClientConnected.bind(this)
+        this.client.on('connected', this.onClientConnected)
+
+        this.onClientDisconnected = this.onClientDisconnected.bind(this)
+        this.client.on('disconnected', this.onClientDisconnected)
+    }
+
+    onBroadcastMessage(msg) {
         // Broadcast messages to all subs listening on stream-partition
-        this.client.connection.on(ControlMessage.TYPES.BroadcastMessage, (msg) => {
-            const stream = this._getSubscribedStreamPartition(msg.streamMessage.getStreamId(), msg.streamMessage.getStreamPartition())
-            if (!stream) {
-                this.debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
-                return
-            }
-            const verifyFn = once(() => stream.verifyStreamMessage(msg.streamMessage)) // ensure verification occurs only once
-            // sub.handleBroadcastMessage never rejects: on any error it emits an 'error' event on the Subscription
-            stream.getSubscriptions().forEach((sub) => sub.handleBroadcastMessage(msg.streamMessage, verifyFn))
-        })
+        const stream = this._getSubscribedStreamPartition(msg.streamMessage.getStreamId(), msg.streamMessage.getStreamPartition())
+        if (!stream) {
+            this.debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
+            return
+        }
 
-        this.client.connection.on(ControlMessage.TYPES.SubscribeResponse, (response) => {
-            const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
-            if (stream) {
-                stream.setSubscribing(false)
-                stream.getSubscriptions().filter((sub) => !sub.resending)
-                    .forEach((sub) => sub.setState(Subscription.State.subscribed))
-            }
-            this.debug('Client subscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
-        })
+        const verifyFn = once(() => stream.verifyStreamMessage(msg.streamMessage)) // ensure verification occurs only once
+        // sub.handleBroadcastMessage never rejects: on any error it emits an 'error' event on the Subscription
+        stream.getSubscriptions().forEach((sub) => sub.handleBroadcastMessage(msg.streamMessage, verifyFn))
+    }
 
-        this.client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (response) => {
-            this.debug('Client unsubscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
-            const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
-            if (stream) {
-                stream.getSubscriptions().forEach((sub) => {
-                    this._removeSubscription(sub)
-                    sub.setState(Subscription.State.unsubscribed)
+    onSubscribeResponse(response) {
+        const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+        if (stream) {
+            stream.setSubscribing(false)
+            stream.getSubscriptions().filter((sub) => !sub.resending)
+                .forEach((sub) => sub.setState(Subscription.State.subscribed))
+        }
+        this.debug('Client subscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
+    }
+
+    onUnsubscribeResponse(response) {
+        this.debug('Client unsubscribed: streamId: %s, streamPartition: %s', response.streamId, response.streamPartition)
+        const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+        if (stream) {
+            stream.getSubscriptions().forEach((sub) => {
+                this._removeSubscription(sub)
+                sub.setState(Subscription.State.unsubscribed)
+            })
+        }
+
+        this._checkAutoDisconnect()
+    }
+
+    async onClientConnected() {
+        try {
+            if (!this.client.isConnected()) { return }
+            // Check pending subscriptions
+            Object.keys(this.subscribedStreamPartitions).forEach((key) => {
+                this.subscribedStreamPartitions[key].getSubscriptions().forEach((sub) => {
+                    if (sub.getState() !== Subscription.State.subscribed) {
+                        this._resendAndSubscribe(sub).catch((err) => {
+                            this.client.emit('error', err)
+                        })
+                    }
                 })
-            }
+            })
+        } catch (err) {
+            this.client.emit('error', err)
+        }
+    }
 
-            this._checkAutoDisconnect()
-        })
-
-        this.client.on('connected', async () => {
-            try {
-                if (!this.client.isConnected()) { return }
-                // Check pending subscriptions
-                Object.keys(this.subscribedStreamPartitions).forEach((key) => {
-                    this.subscribedStreamPartitions[key].getSubscriptions().forEach((sub) => {
-                        if (sub.getState() !== Subscription.State.subscribed) {
-                            this._resendAndSubscribe(sub).catch((err) => {
-                                this.client.emit('error', err)
-                            })
-                        }
-                    })
-                })
-            } catch (err) {
-                this.client.emit('error', err)
-            }
-        })
-
-        this.client.on('disconnected', () => {
-            Object.keys(this.subscribedStreamPartitions)
-                .forEach((key) => {
-                    const stream = this.subscribedStreamPartitions[key]
-                    stream.setSubscribing(false)
-                    stream.getSubscriptions().forEach((sub) => {
-                        sub.onDisconnected()
-                    })
-                })
+    onClientDisconnected() {
+        Object.keys(this.subscribedStreamPartitions).forEach((key) => {
+            const stream = this.subscribedStreamPartitions[key]
+            stream.setSubscribing(false)
+            stream.getSubscriptions().forEach((sub) => {
+                sub.onDisconnected()
+            })
         })
     }
 
     onErrorMessage(err) {
+        // not ideal, see error handler in client
         if (!(err instanceof Errors.InvalidJsonError)) {
             return
         }

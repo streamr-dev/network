@@ -12,75 +12,94 @@ const { MessageRef } = MessageLayer
 export default class Resender {
     constructor(client) {
         this.client = client
-        this.resendUtil = new ResendUtil()
-        this.resendUtil.on('error', (err) => this.client.emit('error', err))
         this.debug = client.debug.extend('Resends')
 
+        this.resendUtil = new ResendUtil()
+
+        this.onResendUtilError = this.onResendUtilError.bind(this)
+        this.resendUtil.on('error', this.onResendUtilError)
+
         // Unicast messages to a specific subscription only
-        this.client.connection.on(ControlMessage.TYPES.UnicastMessage, async (msg) => {
-            // eslint-disable-next-line no-underscore-dangle
-            const stream = this.client.subscriber._getSubscribedStreamPartition(
-                msg.streamMessage.getStreamId(),
-                msg.streamMessage.getStreamPartition()
-            )
-
-            if (!stream) {
-                this.debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
-                return
-            }
-
-            const sub = this.resendUtil.getSubFromResendResponse(msg)
-
-            if (!sub || !stream.getSubscription(sub.id)) {
-                this.debug('WARN: request id not found for stream: %s, sub: %s', msg.streamMessage.getStreamId(), msg.requestId)
-                return
-            }
-            // sub.handleResentMessage never rejects: on any error it emits an 'error' event on the Subscription
-            sub.handleResentMessage(
-                msg.streamMessage, msg.requestId,
-                once(() => stream.verifyStreamMessage(msg.streamMessage)), // ensure verification occurs only once
-            )
-        })
+        this.onUnicastMessage = this.onUnicastMessage.bind(this)
+        this.client.connection.on(ControlMessage.TYPES.UnicastMessage, this.onUnicastMessage)
 
         // Route resending state messages to corresponding Subscriptions
-        this.client.connection.on(ControlMessage.TYPES.ResendResponseResending, (response) => {
-            // eslint-disable-next-line no-underscore-dangle
-            const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
-            const sub = this.resendUtil.getSubFromResendResponse(response)
+        this.onResendResponseResending = this.onResendResponseResending.bind(this)
+        this.client.connection.on(ControlMessage.TYPES.ResendResponseResending, this.onResendResponseResending)
 
-            if (!stream || !sub || !stream.getSubscription(sub.id)) {
-                this.debug('resent: Subscription %s is gone already', response.requestId)
-                return
-            }
-            stream.getSubscription(sub.id).handleResending(response)
-        })
+        this.onResendResponseNoResend = this.onResendResponseNoResend.bind(this)
+        this.client.connection.on(ControlMessage.TYPES.ResendResponseNoResend, this.onResendResponseNoResend)
 
-        this.client.connection.on(ControlMessage.TYPES.ResendResponseNoResend, (response) => {
-            // eslint-disable-next-line no-underscore-dangle
-            const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
-            const sub = this.resendUtil.getSubFromResendResponse(response)
-            this.resendUtil.deleteDoneSubsByResponse(response)
+        this.onResendResponseResent = this.onResendResponseResent.bind(this)
+        this.client.connection.on(ControlMessage.TYPES.ResendResponseResent, this.onResendResponseResent)
+    }
 
-            if (!stream || !sub || !stream.getSubscription(sub.id)) {
-                this.debug('resent: Subscription %s is gone already', response.requestId)
-                return
-            }
+    onResendUtilError(err) {
+        this.client.emit('error', err)
+    }
 
-            stream.getSubscription(sub.id).handleNoResend(response)
-        })
+    onResendResponseResent(response) {
+        // eslint-disable-next-line no-underscore-dangle
+        const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+        const sub = this.resendUtil.getSubFromResendResponse(response)
+        this.resendUtil.deleteDoneSubsByResponse(response)
 
-        this.client.connection.on(ControlMessage.TYPES.ResendResponseResent, (response) => {
-            // eslint-disable-next-line no-underscore-dangle
-            const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
-            const sub = this.resendUtil.getSubFromResendResponse(response)
-            this.resendUtil.deleteDoneSubsByResponse(response)
+        if (!stream || !sub || !stream.getSubscription(sub.id)) {
+            this.debug('resent: Subscription %s is gone already', response.requestId)
+            return
+        }
+        stream.getSubscription(sub.id).handleResent(response)
+    }
 
-            if (!stream || !sub || !stream.getSubscription(sub.id)) {
-                this.debug('resent: Subscription %s is gone already', response.requestId)
-                return
-            }
-            stream.getSubscription(sub.id).handleResent(response)
-        })
+    onResendResponseNoResend(response) {
+        // eslint-disable-next-line no-underscore-dangle
+        const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+        const sub = this.resendUtil.getSubFromResendResponse(response)
+        this.resendUtil.deleteDoneSubsByResponse(response)
+
+        if (!stream || !sub || !stream.getSubscription(sub.id)) {
+            this.debug('resent: Subscription %s is gone already', response.requestId)
+            return
+        }
+
+        stream.getSubscription(sub.id).handleNoResend(response)
+    }
+
+    onResendResponseResending(response) {
+        // eslint-disable-next-line no-underscore-dangle
+        const stream = this.client.subscriber._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+        const sub = this.resendUtil.getSubFromResendResponse(response)
+
+        if (!stream || !sub || !stream.getSubscription(sub.id)) {
+            this.debug('resent: Subscription %s is gone already', response.requestId)
+            return
+        }
+        stream.getSubscription(sub.id).handleResending(response)
+    }
+
+    async onUnicastMessage(msg) {
+        // eslint-disable-next-line no-underscore-dangle
+        const stream = this.client.subscriber._getSubscribedStreamPartition(
+            msg.streamMessage.getStreamId(),
+            msg.streamMessage.getStreamPartition()
+        )
+
+        if (!stream) {
+            this.debug('WARN: message received for stream with no subscriptions: %s', msg.streamMessage.getStreamId())
+            return
+        }
+
+        const sub = this.resendUtil.getSubFromResendResponse(msg)
+
+        if (!sub || !stream.getSubscription(sub.id)) {
+            this.debug('WARN: request id not found for stream: %s, sub: %s', msg.streamMessage.getStreamId(), msg.requestId)
+            return
+        }
+        // sub.handleResentMessage never rejects: on any error it emits an 'error' event on the Subscription
+        sub.handleResentMessage(
+            msg.streamMessage, msg.requestId,
+            once(() => stream.verifyStreamMessage(msg.streamMessage)), // ensure verification occurs only once
+        )
     }
 
     async resend(optionsOrStreamId, callback) {

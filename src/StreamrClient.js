@@ -82,44 +82,57 @@ export default class StreamrClient extends EventEmitter {
         this.connection = connection || new Connection(this.options)
 
         this.getUserInfo = this.getUserInfo.bind(this)
+        this._onError = this._onError.bind(this)
+        this.onConnectionConnected = this.onConnectionConnected.bind(this)
+        this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
+        this.onErrorResponse = this.onErrorResponse.bind(this)
+        this.onConnectionError = this.onConnectionError.bind(this)
 
-        this.on('error', (...args) => {
-            this.onError(...args)
-            this.ensureDisconnected()
-        })
 
         // On connect/reconnect, send pending subscription requests
-        this.connection.on('connected', async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0)) // wait a tick to let event handlers finish
-            if (!this.isConnected()) { return }
-            this.debug('Connected!')
-            this.emit('connected')
-        })
+        this.connection.on('connected', this.onConnectionConnected)
+        this.connection.on('disconnected', this.onConnectionDisconnected)
 
-        this.connection.on('disconnected', () => {
-            this.debug('Disconnected.')
-            this.emit('disconnected')
-        })
-
-        this.connection.on(ControlMessage.TYPES.ErrorResponse, (err) => {
-            const errorObject = new Error(err.errorMessage)
-            this.emit('error', errorObject)
-        })
-
-        this.connection.on('error', async (err) => {
-            // If there is an error parsing a json message in a stream, fire error events on the relevant subs
-            if ((err instanceof Errors.InvalidJsonError)) {
-                this.subscriber.onErrorMessage(err)
-            } else {
-                // if it looks like an error emit as-is, otherwise wrap in new Error
-                const errorObject = (err && err.stack && err.message) ? err : new Error(err)
-                this.emit('error', errorObject)
-            }
-        })
+        this.connection.on('error', this.onConnectionError)
+        this.connection.on(ControlMessage.TYPES.ErrorResponse, this.onErrorResponse)
+        this.on('error', this._onError)
 
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
         this.resender = new Resender(this)
+    }
+
+    async onConnectionConnected() {
+        await new Promise((resolve) => setTimeout(resolve, 0)) // wait a tick to let event handlers finish
+        if (!this.isConnected()) { return }
+        this.debug('Connected!')
+        this.emit('connected')
+    }
+
+    async onConnectionDisconnected() {
+        this.debug('Disconnected.')
+        this.emit('disconnected')
+    }
+
+    onConnectionError(err) {
+        // If there is an error parsing a json message in a stream, fire error events on the relevant subs
+        if ((err instanceof Errors.InvalidJsonError)) {
+            this.subscriber.onErrorMessage(err)
+        } else {
+            // if it looks like an error emit as-is, otherwise wrap in new Error
+            const errorObject = (err && err.stack && err.message) ? err : new Error(err)
+            this.emit('error', errorObject)
+        }
+    }
+
+    onErrorResponse(err) {
+        const errorObject = new Error(err.errorMessage)
+        this.emit('error', errorObject)
+    }
+
+    _onError(...args) {
+        this.onError(...args)
+        this.ensureDisconnected()
     }
 
     /**
@@ -128,6 +141,11 @@ export default class StreamrClient extends EventEmitter {
 
     onError(error) { // eslint-disable-line class-methods-use-this
         console.error(error)
+    }
+
+    handleError(msg) {
+        this.debug(msg)
+        this.emit('error', msg)
     }
 
     async resend(...args) {
@@ -242,11 +260,6 @@ export default class StreamrClient extends EventEmitter {
         }
 
         await this.disconnect()
-    }
-
-    handleError(msg) {
-        this.debug(msg)
-        this.emit('error', msg)
     }
 
     static generateEthereumAccount() {
