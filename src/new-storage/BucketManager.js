@@ -7,6 +7,10 @@ const Bucket = require('./Bucket')
 
 const toKey = (streamId, partition) => `${streamId}-${partition}`
 
+const instantiateNewHeap = () => new Heap((a, b) => {
+    return b.dateCreate - a.dateCreate
+})
+
 class BucketManager {
     constructor(cassandraClient, opts = {}) {
         const defaultOptions = {
@@ -54,9 +58,7 @@ class BucketManager {
             this.streams[key] = {
                 streamId,
                 partition,
-                buckets: new Heap((a, b) => {
-                    return b.dateCreate - a.dateCreate
-                }),
+                buckets: instantiateNewHeap(),
                 minTimestamp: timestamp
             }
         }
@@ -332,8 +334,9 @@ class BucketManager {
             }
 
             // after removing we need to rebuild heap
-            stream.buckets = Heap.heapify(currentBuckets, (a, b) => {
-                return b.dateCreate - a.dateCreate
+            stream.buckets = instantiateNewHeap()
+            currentBuckets.forEach((bucket) => {
+                stream.buckets.push(bucket)
             })
         }
     }
