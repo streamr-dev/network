@@ -50,7 +50,7 @@ module.exports = async (config, startUpLoggingEnabled = false) => {
         log(`Starting Cassandra ### NEW SCHEMA ### with hosts ${config.cassandraNew.hosts} and keyspace ${config.cassandraNew.keyspace}`)
         storages.push(await startCassandraStorageNew({
             contactPoints: [...config.cassandraNew.hosts],
-            localDataCenter: 'datacenter1',
+            localDataCenter: config.cassandraNew.datacenter,
             keyspace: config.cassandraNew.keyspace,
             username: config.cassandraNew.username,
             password: config.cassandraNew.password,
