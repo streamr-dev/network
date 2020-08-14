@@ -8,8 +8,8 @@ function envOptions(program) {
 
 function authOptions(program) {
     return program
-        .option('--privateKey <key>', 'use an Ethereum private key to authenticate')
-        .option('--apiKey <key>', 'use an API key to authenticate (deprecated)')
+        .option('--private-key <key>', 'use an Ethereum private key to authenticate')
+        .option('--api-key <key>', 'use an API key to authenticate (deprecated)')
 }
 
 function exitWitHelpIfArgsNotBetween(program, min, max) {
