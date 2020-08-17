@@ -39,7 +39,7 @@ class BatchManager extends EventEmitter {
         this.insertStatement = this.opts.useTtl ? INSERT_STATEMENT_WITH_TTL : INSERT_STATEMENT
     }
 
-    store(bucketId, streamMessage) {
+    store(bucketId, streamMessage, doneCb) {
         const batch = this.batches[bucketId]
 
         if (batch && batch.isFull()) {
@@ -57,7 +57,7 @@ class BatchManager extends EventEmitter {
             this.batches[bucketId] = newBatch
         }
 
-        this.batches[bucketId].push(streamMessage)
+        this.batches[bucketId].push(streamMessage, doneCb)
     }
 
     _moveFullBatch(bucketId, batch) {
@@ -99,6 +99,7 @@ class BatchManager extends EventEmitter {
             })
 
             debug(`inserted batch id:${batch.getId()}`)
+            batch.done()
             batch.clear()
             delete this.pendingBatches[batch.getId()]
         } catch (e) {
@@ -121,7 +122,10 @@ class BatchManager extends EventEmitter {
     }
 
     metrics() {
+        const now = Date.now()
         const totalBatches = Object.values(this.batches).length + Object.values(this.pendingBatches).length
+        const meanBatchAge = totalBatches === 0 ? 0
+            : [...Object.values(this.batches), ...Object.values(this.pendingBatches)].reduce((acc, batch) => acc + (now - batch.createdAt), 0) / totalBatches
         const meanBatchRetries = totalBatches === 0 ? 0
             : Object.values(this.pendingBatches).reduce((acc, batch) => acc + batch.retries, 0) / totalBatches
 
@@ -143,6 +147,7 @@ class BatchManager extends EventEmitter {
 
         return {
             totalBatches,
+            meanBatchAge,
             meanBatchRetries,
             batchesWithFiveOrMoreRetries,
             batchesWithTenOrMoreRetries,

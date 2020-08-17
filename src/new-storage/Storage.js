@@ -44,7 +44,8 @@ class Storage extends EventEmitter {
             debug(`found bucketId: ${bucketId}`)
 
             this.bucketManager.incrementBucket(bucketId, Buffer.from(streamMessage.serialize()).length)
-            setImmediate(() => this.batchManager.store(bucketId, streamMessage))
+            const doneCb = () => this.emit('write', streamMessage)
+            setImmediate(() => this.batchManager.store(bucketId, streamMessage, doneCb))
         } else {
             const messageId = streamMessage.messageId.serialize()
             debug(`bucket not found, put ${messageId} to pendingMessages`)

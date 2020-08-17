@@ -37,10 +37,12 @@ class Batch extends EventEmitter {
 
         this._id = uuidv4()
         this._bucketId = bucketId
+        this.createdAt = Date.now()
         this.streamMessages = []
         this.size = 0
         this.retries = 0
         this.state = STATES.OPENED
+        this.doneCbs = []
 
         this.debug = createDebug(`streamr:storage:batch:${this.getId()}`)
 
@@ -86,6 +88,11 @@ class Batch extends EventEmitter {
         }, this._closeTimeout * this.retries)
     }
 
+    done() {
+        this.doneCbs.forEach((doneCb) => doneCb())
+        this.doneCbs = []
+    }
+
     clear() {
         this.debug('cleared')
         clearTimeout(this._timeout)
@@ -93,9 +100,12 @@ class Batch extends EventEmitter {
         this._setState(STATES.INSERTED)
     }
 
-    push(streamMessage) {
+    push(streamMessage, doneCb) {
         this.streamMessages.push(streamMessage)
         this.size += Buffer.from(streamMessage.serialize()).length
+        if (doneCb) {
+            this.doneCbs.push(doneCb)
+        }
     }
 
     isFull() {
