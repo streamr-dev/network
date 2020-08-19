@@ -6,7 +6,7 @@ import WebSocket from 'ws'
 /**
  * Wraps WebSocket open/close with promise methods
  * adds events
- * reconnects on unexpected closure
+ * reopens on unexpected closure
  * handles simultaneous calls to open/close
  * waits for pending close/open before continuing
  */
@@ -15,7 +15,7 @@ export default class SocketConnection extends EventEmitter {
     constructor(options) {
         super()
         this.options = options
-        this.attempts = 0
+        this.shouldBeOpen = false
         if (!options.url) {
             throw new Error('URL is not defined!')
         }
@@ -27,7 +27,13 @@ export default class SocketConnection extends EventEmitter {
         }
     }
 
+    async tryReopen(...args) {
+        this.debug('attempting to reopen')
+        return this.open(...args)
+    }
+
     async open() {
+        this.shouldBeOpen = true
         if (this.isOpen()) {
             this.openTask = undefined
             return Promise.resolve()
@@ -38,6 +44,7 @@ export default class SocketConnection extends EventEmitter {
         }
 
         const openTask = (async () => {
+            this.emit('opening')
             // await pending close operation
             if (this.closeTask) {
                 // ignore failed, original close call will reject
@@ -49,29 +56,31 @@ export default class SocketConnection extends EventEmitter {
                 this.socket.binaryType = 'arraybuffer'
                 this.socket.onopen = (...args) => {
                     this.debug('opened')
-                    try {
-                        this.emit('open', ...args)
-                    } catch (err) {
-                        reject(err)
-                        return
-                    }
                     resolve(...args)
+                    this.emit('open', ...args)
                 }
-                this.socket.onclose = (code, reason) => {
-                    const msg = `unexpected close. code: ${code}, reason: ${reason}`
-                    this.debug(msg)
-                    reject(new Error(msg))
-                    this.open()
+                this.socket.onclose = (event = {}) => {
+                    const { reason, code } = event
+                    this.debug('unexpected close', {
+                        code,
+                        reason,
+                    })
+                    reject(new Error(`unexpected close. code: ${code}, reason: ${reason}`))
+                    this.emit('close', event)
+                    this.tryReopen().catch((error) => {
+                        this.debug('error reopening', {
+                            error,
+                        })
+                        this.emit('error', error)
+                    })
                 }
-                this.socket.onerror = (error, ...args) => {
-                    this.debug(`error: ${error || error.stack}`)
-                    try {
-                        this.emit('error', error, ...args)
-                    } catch (err) {
-                        reject(err)
-                        return
-                    }
+                this.socket.onerror = (err, ...args) => {
+                    const error = err.error || err
+                    this.debug('error while open', {
+                        error,
+                    })
                     reject(error)
+                    this.emit('error', error, ...args)
                 }
                 this.socket.onmessage = (...args) => {
                     this.emit('message', ...args)
@@ -90,6 +99,7 @@ export default class SocketConnection extends EventEmitter {
     }
 
     async close() {
+        this.shouldBeOpen = false
         if (this.isClosed()) {
             this.closeTask = undefined
             return Promise.resolve()
@@ -100,6 +110,7 @@ export default class SocketConnection extends EventEmitter {
         }
 
         const closeTask = (async () => {
+            this.emit('closing')
             // await pending open operation
             if (this.openTask) {
                 // ignore failed, original open call will reject
@@ -114,23 +125,16 @@ export default class SocketConnection extends EventEmitter {
                         // remove socket reference if unchanged
                         this.socket = undefined
                     }
-                    try {
-                        this.emit('close', ...args)
-                    } catch (err) {
-                        reject(err)
-                        return
-                    }
+
                     resolve(...args)
+                    this.emit('close', ...args)
                 }
                 this.socket.onerror = (error, ...args) => {
-                    this.debug(`error: ${error || error.stack}`)
-                    try {
-                        this.emit('error', error, ...args)
-                    } catch (err) {
-                        reject(err)
-                        return
-                    }
+                    this.debug('error while closing', {
+                        error,
+                    })
                     reject(error)
+                    this.emit('error', error, ...args)
                 }
                 this.socket.close()
             })
@@ -145,10 +149,21 @@ export default class SocketConnection extends EventEmitter {
         return this.closeTask
     }
 
-    async send(msg) {
-        if (!this.isOpen()) {
-            throw new Error('cannot send, not open')
+    async waitForOpen() {
+        if (!this.shouldBeOpen) {
+            throw new Error('connection closed or closing')
         }
+
+        if (!this.isOpen()) {
+            return this.open()
+        }
+
+        return Promise.resolve()
+    }
+
+    async send(msg) {
+        await this.waitForOpen()
+
         return new Promise((resolve, reject) => {
             // promisify send
             this.socket.send(msg, (err) => {
@@ -196,6 +211,6 @@ export default class SocketConnection extends EventEmitter {
         if (!this.socket) {
             return false
         }
-        return this.socket.readyState === WebSocket.OPENING
+        return this.socket.readyState === WebSocket.CONNECTING
     }
 }
