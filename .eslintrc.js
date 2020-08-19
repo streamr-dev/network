@@ -19,7 +19,7 @@ module.exports = {
             }
         ],
         'prefer-destructuring': 'warn',
-
+        'max-classes-per-file': 'off', // javascript is not java
         // TODO check all errors/warnings and create separate PR
         'promise/always-return': 'warn',
         'promise/catch-or-return': 'warn',
