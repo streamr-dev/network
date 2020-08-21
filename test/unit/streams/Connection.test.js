@@ -183,6 +183,21 @@ describe('SocketConnection', () => {
         expect(onClose).toHaveBeenCalledTimes(1)
     })
 
+    it('emits error but does not close if open event handler fails', async (done) => {
+        const error = new Error('expected error')
+        s.once('open', () => {
+            throw error
+        })
+        s.once('error', async (err) => {
+            expect(err).toBe(error)
+            await wait()
+            expect(s.isOpen()).toBeTruthy()
+            done()
+        })
+        await s.open()
+        expect(s.isOpen()).toBeTruthy()
+    })
+
     describe('reopening', () => {
         it('reopens if unexpectedly disconnected', async (done) => {
             await s.open()
@@ -283,6 +298,7 @@ describe('SocketConnection', () => {
             s.options.url = 'badurl'
             // once closed due to error, actually close
             s.once('close', async () => {
+                // i.e. would reconnect if not closing
                 s.options.url = goodUrl
                 await s.close()
                 // wait a moment
@@ -293,28 +309,31 @@ describe('SocketConnection', () => {
                     done()
                 }, 10)
             })
+            // trigger reopening cycle
             s.socket.close()
         })
+
         it('stops reopening if closed while reopening, after some delay', async (done) => {
             await s.open()
             const goodUrl = s.options.url
             s.options.url = 'badurl'
             // once closed due to error, actually close
             s.once('close', async () => {
-                s.options.url = goodUrl
-                await s.close()
                 // wait a moment
-                setTimeout(() => {
-                    // ensure is closed, not reopening
-                    expect(s.isClosed()).toBeTruthy()
-                    expect(s.isReopening).toBeFalsy()
-                    done()
+                setTimeout(async () => {
+                    // i.e. would reconnect if not closing
+                    s.options.url = goodUrl
+                    await s.close()
+                    setTimeout(async () => {
+                        // ensure is closed, not reopening
+                        expect(s.isClosed()).toBeTruthy()
+                        expect(s.isReopening).toBeFalsy()
+                        done()
+                    }, 20)
                 }, 10)
             })
-            // some delay
-            setTimeout(() => {
-                s.socket.close()
-            }, 10)
+            // trigger reopening cycle
+            s.socket.close()
         })
     })
 

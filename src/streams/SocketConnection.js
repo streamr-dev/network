@@ -15,10 +15,27 @@ class SocketConnection extends EventEmitter {
         super()
         this.options = options
         const id = uniqueId('SocketConnection')
+        /* istanbul ignore next */
         if (options.debug) {
             this.debug = options.debug.extend(id)
         } else {
             this.debug = debugFactory(`StreamrClient::${id}`)
+        }
+    }
+
+    emit(event, ...args) {
+        if (event === 'error') {
+            return super.emit(event, ...args)
+        }
+
+        // note if event handler is async and it rejects we're kinda hosed
+        // until node lands unhandledrejection support
+        // in eventemitter
+        try {
+            return super.emit(event, ...args)
+        } catch (err) {
+            super.emit('error', err)
+            return true
         }
     }
 
@@ -68,6 +85,8 @@ class SocketConnection extends EventEmitter {
                 resolve(event)
                 this.emit('close', event, ...args)
             }
+
+            /* istanbul ignore next */
             this.socket.onerror = (error, ...args) => {
                 // not sure it's even possible to have an error fire during close
                 this.debug('error while closing', error)
@@ -148,6 +167,7 @@ class SocketConnection extends EventEmitter {
         return new Promise((resolve, reject) => {
             // promisify send
             this.socket.send(msg, (err) => {
+                /* istanbul ignore next */
                 if (err) {
                     reject(err)
                     return
@@ -155,6 +175,7 @@ class SocketConnection extends EventEmitter {
                 resolve(msg)
             })
             // send callback doesn't exist with browser websockets, just resolve
+            /* istanbul ignore next */
             if (process.isBrowser) {
                 resolve(msg)
             }
@@ -281,6 +302,7 @@ export default class ManagedSocketConnection extends SocketConnection {
      */
 
     _open(...args) {
+        /* istanbul ignore next */
         if (!this.shouldBeOpen) {
             // shouldn't get here
             throw new Error('cannot tryOpen, connection closed or closing')
