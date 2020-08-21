@@ -7,6 +7,7 @@ import SocketConnection from '../../../src/streams/SocketConnection'
 describe('SocketConnection', () => {
     let s
     let onOpen
+    let onOpening
     let onClose
     let onError
     let onMessage
@@ -19,6 +20,8 @@ describe('SocketConnection', () => {
 
         onOpen = jest.fn()
         s.on('open', onOpen)
+        onOpening = jest.fn()
+        s.on('opening', onOpening)
         onClose = jest.fn()
         s.on('close', onClose)
         onError = jest.fn()
@@ -67,6 +70,7 @@ describe('SocketConnection', () => {
         expect(s.isOpen()).toBeTruthy()
         // only one open event should fire
         expect(onOpen).toHaveBeenCalledTimes(1)
+        expect(onOpening).toHaveBeenCalledTimes(1)
     })
 
     it('can reopen after close', async () => {
@@ -82,6 +86,18 @@ describe('SocketConnection', () => {
         expect(onClose).toHaveBeenCalledTimes(1)
         // ensure new socket
         expect(s.socket).not.toBe(oldSocket)
+    })
+
+    it('rejects if no url', async () => {
+        s = new SocketConnection({
+            url: undefined,
+        })
+        onOpen = jest.fn()
+        s.on('open', onOpen)
+        await expect(async () => {
+            await s.open()
+        }).rejects.toThrow('not defined')
+        expect(onOpen).toHaveBeenCalledTimes(0)
     })
 
     it('rejects if bad url', async () => {
@@ -278,6 +294,27 @@ describe('SocketConnection', () => {
                 }, 10)
             })
             s.socket.close()
+        })
+        it('stops reopening if closed while reopening, after some delay', async (done) => {
+            await s.open()
+            const goodUrl = s.options.url
+            s.options.url = 'badurl'
+            // once closed due to error, actually close
+            s.once('close', async () => {
+                s.options.url = goodUrl
+                await s.close()
+                // wait a moment
+                setTimeout(() => {
+                    // ensure is closed, not reopening
+                    expect(s.isClosed()).toBeTruthy()
+                    expect(s.isReopening).toBeFalsy()
+                    done()
+                }, 10)
+            })
+            // some delay
+            setTimeout(() => {
+                s.socket.close()
+            }, 10)
         })
     })
 

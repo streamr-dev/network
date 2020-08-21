@@ -14,15 +14,68 @@ class SocketConnection extends EventEmitter {
     constructor(options) {
         super()
         this.options = options
-        if (!options.url) {
-            throw new Error('URL is not defined!')
-        }
         const id = uniqueId('SocketConnection')
         if (options.debug) {
             this.debug = options.debug.extend(id)
         } else {
             this.debug = debugFactory(`StreamrClient::${id}`)
         }
+    }
+
+    async createSocket() {
+        return new Promise((resolve, reject) => {
+            if (!this.options.url) {
+                throw new Error('URL is not defined!')
+            }
+            this.socket = new WebSocket(this.options.url)
+            this.socket.binaryType = 'arraybuffer'
+            this.socket.onopen = (...args) => {
+                this.debug('opened')
+                resolve(...args)
+                this.emit('open', ...args)
+            }
+            this.socket.onclose = (event = {}) => {
+                const { reason, code } = event
+                this.debug('unexpected close. code: %s reason: %s', code, reason)
+                reject(new Error(`unexpected close. code: ${code}, reason: ${reason}`))
+                this.emit('close', event)
+            }
+            this.socket.onerror = (err, ...args) => {
+                const error = err.error || err
+                this.debug('error while open', error)
+                reject(error)
+                this.emit('error', error, ...args)
+            }
+            this.socket.onmessage = (...args) => {
+                this.emit('message', ...args)
+            }
+        })
+    }
+
+    async closeSocket() {
+        const { socket } = this
+        return new Promise((resolve, reject) => {
+            // replace onclose to resolve/reject closeTask
+            this.socket.onclose = (event = {}, ...args) => {
+                const { reason, code } = event
+                this.debug('closed. code: %s reason: %s', code, reason)
+
+                if (this.socket === socket) {
+                    // remove socket reference if unchanged
+                    this.socket = undefined
+                }
+
+                resolve(event)
+                this.emit('close', event, ...args)
+            }
+            this.socket.onerror = (error, ...args) => {
+                // not sure it's even possible to have an error fire during close
+                this.debug('error while closing', error)
+                reject(error)
+                this.emit('error', error, ...args)
+            }
+            this.socket.close()
+        })
     }
 
     async open() {
@@ -42,36 +95,7 @@ class SocketConnection extends EventEmitter {
                 // ignore failed, original close call will reject
                 await this.closeTask.catch(() => {})
             }
-
-            return new Promise((resolve, reject) => {
-                this.socket = new WebSocket(this.options.url)
-                this.socket.binaryType = 'arraybuffer'
-                this.socket.onopen = (...args) => {
-                    this.debug('opened')
-                    resolve(...args)
-                    this.emit('open', ...args)
-                }
-                this.socket.onclose = (event = {}) => {
-                    const { reason, code } = event
-                    this.debug('unexpected close', {
-                        code,
-                        reason,
-                    })
-                    reject(new Error(`unexpected close. code: ${code}, reason: ${reason}`))
-                    this.emit('close', event)
-                }
-                this.socket.onerror = (err, ...args) => {
-                    const error = err.error || err
-                    this.debug('error while open', {
-                        error,
-                    })
-                    reject(error)
-                    this.emit('error', error, ...args)
-                }
-                this.socket.onmessage = (...args) => {
-                    this.emit('message', ...args)
-                }
-            })
+            return this.createSocket()
         })().finally(() => {
             // remove openTask if unchanged
             if (this.openTask === openTask) {
@@ -101,28 +125,7 @@ class SocketConnection extends EventEmitter {
                 // ignore failed, original open call will reject
                 await this.openTask.catch(() => {})
             }
-            const { socket } = this
-            return new Promise((resolve, reject) => {
-                // replace onclose to resolve/reject closeTask
-                this.socket.onclose = (...args) => {
-                    this.debug('closed')
-                    if (this.socket === socket) {
-                        // remove socket reference if unchanged
-                        this.socket = undefined
-                    }
-
-                    resolve(...args)
-                    this.emit('close', ...args)
-                }
-                this.socket.onerror = (error, ...args) => {
-                    this.debug('error while closing', {
-                        error,
-                    })
-                    reject(error)
-                    this.emit('error', error, ...args)
-                }
-                this.socket.close()
-            })
+            return this.closeSocket()
         })().finally(() => {
             // remove closeTask if unchanged
             if (this.closeTask === closeTask) {
@@ -268,9 +271,7 @@ export default class ManagedSocketConnection extends SocketConnection {
         }
 
         return this.reopen().catch((error) => {
-            this.debug('failed reopening', {
-                error,
-            })
+            this.debug('failed reopening', error)
             this.emit('error', error)
         })
     }
