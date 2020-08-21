@@ -6,16 +6,14 @@ import WebSocket from 'ws'
 /**
  * Wraps WebSocket open/close with promise methods
  * adds events
- * reopens on unexpected closure
  * handles simultaneous calls to open/close
  * waits for pending close/open before continuing
  */
 
-export default class SocketConnection extends EventEmitter {
+class SocketConnection extends EventEmitter {
     constructor(options) {
         super()
         this.options = options
-        this.shouldBeOpen = false
         if (!options.url) {
             throw new Error('URL is not defined!')
         }
@@ -27,13 +25,7 @@ export default class SocketConnection extends EventEmitter {
         }
     }
 
-    async tryReopen(...args) {
-        this.debug('attempting to reopen')
-        return this.open(...args)
-    }
-
     async open() {
-        this.shouldBeOpen = true
         if (this.isOpen()) {
             this.openTask = undefined
             return Promise.resolve()
@@ -67,12 +59,6 @@ export default class SocketConnection extends EventEmitter {
                     })
                     reject(new Error(`unexpected close. code: ${code}, reason: ${reason}`))
                     this.emit('close', event)
-                    this.tryReopen().catch((error) => {
-                        this.debug('error reopening', {
-                            error,
-                        })
-                        this.emit('error', error)
-                    })
                 }
                 this.socket.onerror = (err, ...args) => {
                     const error = err.error || err
@@ -99,7 +85,6 @@ export default class SocketConnection extends EventEmitter {
     }
 
     async close() {
-        this.shouldBeOpen = false
         if (this.isClosed()) {
             this.closeTask = undefined
             return Promise.resolve()
@@ -149,20 +134,13 @@ export default class SocketConnection extends EventEmitter {
         return this.closeTask
     }
 
-    async waitForOpen() {
+    async send(msg) {
         if (!this.shouldBeOpen) {
             throw new Error('connection closed or closing')
         }
 
-        if (!this.isOpen()) {
-            return this.open()
-        }
-
-        return Promise.resolve()
-    }
-
-    async send(msg) {
-        await this.waitForOpen()
+        // should be open, so wait for open or trigger new open
+        await this.open()
 
         return new Promise((resolve, reject) => {
             // promisify send
@@ -212,5 +190,116 @@ export default class SocketConnection extends EventEmitter {
             return false
         }
         return this.socket.readyState === WebSocket.CONNECTING
+    }
+}
+
+/**
+ * Extends SocketConnection to include reopening logic.
+ */
+
+export default class ManagedSocketConnection extends SocketConnection {
+    constructor(...args) {
+        super(...args)
+        this.options.maxRetries = this.options.maxRetries != null ? this.options.maxRetries : 10
+        this.options.retryBackoffFactor = this.options.retryBackoffFactor != null ? this.options.retryBackoffFactor : 1.2
+        this.options.maxRetryWait = this.options.maxRetryWait != null ? this.options.maxRetryWait : 10000
+        this.reopenOnClose = this.reopenOnClose.bind(this)
+        this.retryCount = 1
+        this.isReopening = false
+    }
+
+    async backoffWait() {
+        return new Promise((resolve) => {
+            const timeout = Math.min(
+                this.options.maxRetryWait, // max wait time
+                Math.round((this.retryCount * 10) ** this.options.retryBackoffFactor)
+            )
+            this.debug('waiting %sms', timeout)
+            setTimeout(resolve, timeout)
+        })
+    }
+
+    async reopen(...args) {
+        await this.reopenTask
+        this.reopenTask = (async () => {
+            // closed, noop
+            if (!this.shouldBeOpen) {
+                this.isReopening = false
+                return Promise.resolve()
+            }
+            this.isReopening = true
+            // wait for a moment
+            await this.backoffWait()
+
+            // re-check if closed or closing
+            if (!this.shouldBeOpen) {
+                this.isReopening = false
+                return Promise.resolve()
+            }
+
+            this.emit('retry')
+            this.debug('attempting to reopen %s of %s', this.retryCount, this.options.maxRetries)
+
+            return this._open(...args).then((value) => {
+                // reset retry state
+                this.reopenTask = undefined
+                this.retryCount = 1
+                this.isReopening = false
+                return value
+            }, (err) => {
+                this.debug('attempt to reopen %s of %s failed', this.retryCount, this.options.maxRetries, err)
+                this.reopenTask = undefined
+                this.retryCount += 1
+                if (this.retryCount > this.options.maxRetries) {
+                    // no more retries
+                    this.isReopening = false
+                    throw err
+                }
+                // try again
+                return this.reopen()
+            })
+        })()
+        return this.reopenTask
+    }
+
+    async reopenOnClose() {
+        if (!this.shouldBeOpen) {
+            return Promise.resolve()
+        }
+
+        return this.reopen().catch((error) => {
+            this.debug('failed reopening', {
+                error,
+            })
+            this.emit('error', error)
+        })
+    }
+
+    /**
+     * Call this internally so as to not mess with user intent shouldBeOpen
+     */
+
+    _open(...args) {
+        if (!this.shouldBeOpen) {
+            // shouldn't get here
+            throw new Error('cannot tryOpen, connection closed or closing')
+        }
+
+        this.removeListener('close', this.reopenOnClose)
+        return super.open(...args).then((value) => {
+            this.on('close', this.reopenOnClose) // try reopen on close unless purposely closed
+            return value
+        })
+    }
+
+    open(...args) {
+        this.shouldBeOpen = true // user intent
+        return this._open(...args)
+    }
+
+    close(...args) {
+        this.shouldBeOpen = false // user intent
+        this.removeListener('close', this.reopenOnClose)
+        return super.close(...args)
     }
 }

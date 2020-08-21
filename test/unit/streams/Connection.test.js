@@ -2,6 +2,8 @@ import { wait } from 'streamr-test-utils'
 
 import SocketConnection from '../../../src/streams/SocketConnection'
 
+/* eslint-disable require-atomic-updates */
+
 describe('SocketConnection', () => {
     let s
     let onOpen
@@ -11,7 +13,8 @@ describe('SocketConnection', () => {
 
     beforeEach(() => {
         s = new SocketConnection({
-            url: 'wss://echo.websocket.org/'
+            url: 'wss://echo.websocket.org/',
+            maxRetries: 5
         })
 
         onOpen = jest.fn()
@@ -164,27 +167,6 @@ describe('SocketConnection', () => {
         expect(onClose).toHaveBeenCalledTimes(1)
     })
 
-    it('can try reopen after error', async () => {
-        const goodUrl = s.options.url
-        s.options.url = 'badurl'
-        await expect(async () => (
-            s.open()
-        )).rejects.toThrow('badurl')
-        await s.close() // shouldn't throw
-        expect(s.isClosed()).toBeTruthy()
-        // ensure close
-        await expect(async () => (
-            Promise.all([
-                s.open(),
-                s.close(),
-            ])
-        )).rejects.toThrow('badurl')
-        // eslint-disable-next-line require-atomic-updates
-        s.options.url = goodUrl
-        await s.open()
-        expect(s.isOpen()).toBeTruthy()
-    })
-
     describe('reopening', () => {
         it('reopens if unexpectedly disconnected', async (done) => {
             await s.open()
@@ -195,15 +177,105 @@ describe('SocketConnection', () => {
             s.socket.close()
         })
 
-        it('fails if reopen fails', async (done) => {
+        it('errors if reopen fails', async (done) => {
             await s.open()
-            // eslint-disable-next-line require-atomic-updates
             s.options.url = 'badurl'
             s.once('error', (err) => {
                 expect(err).toBeTruthy()
                 expect(onOpen).toHaveBeenCalledTimes(1)
                 expect(s.isClosed()).toBeTruthy()
                 done()
+            })
+            s.socket.close()
+        })
+
+        it('retries multiple times when disconnected', async (done) => {
+            /* eslint-disable no-underscore-dangle */
+            await s.open()
+            const goodUrl = s.options.url
+            let retryCount = 0
+            s.options.url = 'badurl'
+            s.on('retry', () => {
+                retryCount += 1
+                // fail first 3 tries
+                // pass after
+                if (retryCount >= 3) {
+                    s.options.url = goodUrl
+                }
+            })
+            s.once('open', () => {
+                expect(s.isOpen()).toBeTruthy()
+                expect(retryCount).toEqual(3)
+                done()
+            })
+            s.socket.close()
+            /* eslint-enable no-underscore-dangle */
+        })
+
+        it('fails if exceed max retries', async (done) => {
+            await s.open()
+            s.options.maxRetries = 2
+            s.options.url = 'badurl'
+            s.once('error', (err) => {
+                expect(err).toBeTruthy()
+                done()
+            })
+            s.socket.close()
+        })
+
+        it('resets max retries on manual open after failure', async (done) => {
+            await s.open()
+            const goodUrl = s.options.url
+            s.options.maxRetries = 2
+            s.options.url = 'badurl'
+            s.once('error', async (err) => {
+                expect(err).toBeTruthy()
+                s.options.url = goodUrl
+                await s.open()
+                setTimeout(() => {
+                    expect(s.isReopening).toBeFalsy()
+                    expect(s.isOpen()).toBeTruthy()
+                    done()
+                })
+            })
+            s.socket.close()
+        })
+
+        it('can try reopen after error', async () => {
+            const goodUrl = s.options.url
+            s.options.url = 'badurl'
+            await expect(async () => (
+                s.open()
+            )).rejects.toThrow('badurl')
+            await s.close() // shouldn't throw
+            expect(s.isClosed()).toBeTruthy()
+            // ensure close
+            await expect(async () => (
+                Promise.all([
+                    s.open(),
+                    s.close(),
+                ])
+            )).rejects.toThrow('badurl')
+            s.options.url = goodUrl
+            await s.open()
+            expect(s.isOpen()).toBeTruthy()
+        })
+
+        it('stops reopening if closed while reopening', async (done) => {
+            await s.open()
+            const goodUrl = s.options.url
+            s.options.url = 'badurl'
+            // once closed due to error, actually close
+            s.once('close', async () => {
+                s.options.url = goodUrl
+                await s.close()
+                // wait a moment
+                setTimeout(() => {
+                    // ensure is closed, not reopening
+                    expect(s.isClosed()).toBeTruthy()
+                    expect(s.isReopening).toBeFalsy()
+                    done()
+                }, 10)
             })
             s.socket.close()
         })
