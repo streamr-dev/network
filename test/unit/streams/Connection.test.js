@@ -31,18 +31,18 @@ describe('SocketConnection', () => {
     })
 
     afterEach(async () => {
-        await s.close()
+        await s.disconnect()
     })
 
     it('can open & close', async () => {
-        const openTask = s.open()
+        const openTask = s.connect()
         expect(s.isOpening()).toBeTruthy()
         await openTask
         expect(s.isClosed()).toBeFalsy()
         expect(s.isClosing()).toBeFalsy()
         expect(s.isOpening()).toBeFalsy()
         expect(s.isOpen()).toBeTruthy()
-        const closeTask = s.close()
+        const closeTask = s.disconnect()
         expect(s.isClosing()).toBeTruthy()
         await closeTask
         expect(s.isOpen()).toBeFalsy()
@@ -55,8 +55,8 @@ describe('SocketConnection', () => {
     })
 
     it('can open after already open', async () => {
-        await s.open()
-        await s.open()
+        await s.connect()
+        await s.connect()
         expect(s.isOpen()).toBeTruthy()
         // only one open event should fire
         expect(onOpen).toHaveBeenCalledTimes(1)
@@ -64,8 +64,8 @@ describe('SocketConnection', () => {
 
     it('can open twice in same tick', async () => {
         await Promise.all([
-            s.open(),
-            s.open(),
+            s.connect(),
+            s.connect(),
         ])
         expect(s.isOpen()).toBeTruthy()
         // only one open event should fire
@@ -74,12 +74,12 @@ describe('SocketConnection', () => {
     })
 
     it('can reopen after close', async () => {
-        await s.open()
+        await s.connect()
         expect(s.isOpen()).toBeTruthy()
         const oldSocket = s.socket
-        await s.close()
+        await s.disconnect()
         expect(s.isClosed()).toBeTruthy()
-        await s.open()
+        await s.connect()
         expect(s.isOpen()).toBeTruthy()
         // check events
         expect(onOpen).toHaveBeenCalledTimes(2)
@@ -95,7 +95,7 @@ describe('SocketConnection', () => {
         onOpen = jest.fn()
         s.on('open', onOpen)
         await expect(async () => {
-            await s.open()
+            await s.connect()
         }).rejects.toThrow('not defined')
         expect(onOpen).toHaveBeenCalledTimes(0)
     })
@@ -107,7 +107,7 @@ describe('SocketConnection', () => {
         onOpen = jest.fn()
         s.on('open', onOpen)
         await expect(async () => {
-            await s.open()
+            await s.connect()
         }).rejects.toThrow('badurl')
         expect(onOpen).toHaveBeenCalledTimes(0)
     })
@@ -119,32 +119,32 @@ describe('SocketConnection', () => {
         onOpen = jest.fn()
         s.on('open', onOpen)
         await expect(async () => {
-            await s.open()
+            await s.connect()
         }).rejects.toThrow('Unexpected server response')
         expect(onOpen).toHaveBeenCalledTimes(0)
     })
 
     it('close does not error if never opened', async () => {
         expect(s.isClosed()).toBeTruthy()
-        await s.close()
+        await s.disconnect()
         expect(s.isClosed()).toBeTruthy()
         expect(onClose).toHaveBeenCalledTimes(0)
     })
 
     it('close does not error if already closed', async () => {
-        await s.open()
-        await s.close()
+        await s.connect()
+        await s.disconnect()
         expect(s.isClosed()).toBeTruthy()
-        await s.close()
+        await s.disconnect()
         expect(s.isClosed()).toBeTruthy()
         expect(onClose).toHaveBeenCalledTimes(1)
     })
 
     it('close does not error if already closing', async () => {
-        await s.open()
+        await s.connect()
         await Promise.all([
-            s.close(),
-            s.close(),
+            s.disconnect(),
+            s.disconnect(),
         ])
         expect(s.isClosed()).toBeTruthy()
         expect(onOpen).toHaveBeenCalledTimes(1)
@@ -153,8 +153,10 @@ describe('SocketConnection', () => {
 
     it('can handle close before open complete', async () => {
         await Promise.all([
-            s.open(),
-            s.close()
+            expect(async () => (
+                s.connect()
+            )).rejects.toThrow(),
+            s.disconnect()
         ])
         expect(s.isClosed()).toBeTruthy()
         expect(onOpen).toHaveBeenCalledTimes(1)
@@ -162,21 +164,12 @@ describe('SocketConnection', () => {
     })
 
     it('can handle open before close complete', async () => {
-        await s.open()
+        await s.connect()
         await Promise.all([
-            s.close(),
-            s.open()
-        ])
-        expect(s.isOpen()).toBeTruthy()
-        expect(onOpen).toHaveBeenCalledTimes(2)
-        expect(onClose).toHaveBeenCalledTimes(1)
-    })
-
-    it('fails if error connecting', async () => {
-        await s.open()
-        await Promise.all([
-            s.close(),
-            s.open()
+            expect(async () => (
+                s.disconnect()
+            )).rejects.toThrow(),
+            s.connect()
         ])
         expect(s.isOpen()).toBeTruthy()
         expect(onOpen).toHaveBeenCalledTimes(2)
@@ -194,13 +187,13 @@ describe('SocketConnection', () => {
             expect(s.isOpen()).toBeTruthy()
             done()
         })
-        await s.open()
+        await s.connect()
         expect(s.isOpen()).toBeTruthy()
     })
 
     describe('reopening', () => {
         it('reopens if unexpectedly disconnected', async (done) => {
-            await s.open()
+            await s.connect()
             s.once('open', () => {
                 expect(s.isOpen()).toBeTruthy()
                 done()
@@ -209,7 +202,7 @@ describe('SocketConnection', () => {
         })
 
         it('errors if reopen fails', async (done) => {
-            await s.open()
+            await s.connect()
             s.options.url = 'badurl'
             s.once('error', (err) => {
                 expect(err).toBeTruthy()
@@ -222,7 +215,7 @@ describe('SocketConnection', () => {
 
         it('retries multiple times when disconnected', async (done) => {
             /* eslint-disable no-underscore-dangle */
-            await s.open()
+            await s.connect()
             const goodUrl = s.options.url
             let retryCount = 0
             s.options.url = 'badurl'
@@ -244,7 +237,7 @@ describe('SocketConnection', () => {
         })
 
         it('fails if exceed max retries', async (done) => {
-            await s.open()
+            await s.connect()
             s.options.maxRetries = 2
             s.options.url = 'badurl'
             s.once('error', (err) => {
@@ -255,14 +248,14 @@ describe('SocketConnection', () => {
         })
 
         it('resets max retries on manual open after failure', async (done) => {
-            await s.open()
+            await s.connect()
             const goodUrl = s.options.url
             s.options.maxRetries = 2
             s.options.url = 'badurl'
             s.once('error', async (err) => {
                 expect(err).toBeTruthy()
                 s.options.url = goodUrl
-                await s.open()
+                await s.connect()
                 setTimeout(() => {
                     expect(s.isReopening).toBeFalsy()
                     expect(s.isOpen()).toBeTruthy()
@@ -276,31 +269,31 @@ describe('SocketConnection', () => {
             const goodUrl = s.options.url
             s.options.url = 'badurl'
             await expect(async () => (
-                s.open()
+                s.connect()
             )).rejects.toThrow('badurl')
-            await s.close() // shouldn't throw
+            await s.disconnect() // shouldn't throw
             expect(s.isClosed()).toBeTruthy()
             // ensure close
             await expect(async () => (
                 Promise.all([
-                    s.open(),
-                    s.close(),
+                    s.connect(),
+                    s.disconnect(),
                 ])
             )).rejects.toThrow('badurl')
             s.options.url = goodUrl
-            await s.open()
+            await s.connect()
             expect(s.isOpen()).toBeTruthy()
         })
 
         it('stops reopening if closed while reopening', async (done) => {
-            await s.open()
+            await s.connect()
             const goodUrl = s.options.url
             s.options.url = 'badurl'
             // once closed due to error, actually close
             s.once('close', async () => {
                 // i.e. would reconnect if not closing
                 s.options.url = goodUrl
-                await s.close()
+                await s.disconnect()
                 // wait a moment
                 setTimeout(() => {
                     // ensure is closed, not reopening
@@ -314,7 +307,7 @@ describe('SocketConnection', () => {
         })
 
         it('stops reopening if closed while reopening, after some delay', async (done) => {
-            await s.open()
+            await s.connect()
             const goodUrl = s.options.url
             s.options.url = 'badurl'
             // once closed due to error, actually close
@@ -323,7 +316,7 @@ describe('SocketConnection', () => {
                 setTimeout(async () => {
                     // i.e. would reconnect if not closing
                     s.options.url = goodUrl
-                    await s.close()
+                    await s.disconnect()
                     setTimeout(async () => {
                         // ensure is closed, not reopening
                         expect(s.isClosed()).toBeTruthy()
@@ -339,7 +332,7 @@ describe('SocketConnection', () => {
 
     describe('send', () => {
         it('can send and receive messages', async (done) => {
-            await s.open()
+            await s.connect()
             s.once('message', ({ data } = {}) => {
                 expect(data).toEqual('test')
                 done()
@@ -349,9 +342,9 @@ describe('SocketConnection', () => {
         })
 
         it('waits for reopening if sending while reopening', async (done) => {
-            await s.open()
-            const open = s.open.bind(s)
-            s.open = async (...args) => {
+            await s.connect()
+            const open = s.connect.bind(s)
+            s.connect = async (...args) => {
                 await wait(0)
                 return open(...args)
             }
@@ -366,7 +359,7 @@ describe('SocketConnection', () => {
         })
 
         it('fails send if reopen fails', async () => {
-            await s.open()
+            await s.connect()
             // eslint-disable-next-line require-atomic-updates
             s.options.url = 'badurl'
             s.socket.close()
@@ -376,8 +369,8 @@ describe('SocketConnection', () => {
         })
 
         it('fails send if intentionally closed', async () => {
-            await s.open()
-            await s.close()
+            await s.connect()
+            await s.disconnect()
             await expect(async () => {
                 await s.send('test')
             }).rejects.toThrow()

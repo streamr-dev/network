@@ -10,10 +10,16 @@ import WebSocket from 'ws'
  * waits for pending close/open before continuing
  */
 
-class SocketConnection extends EventEmitter {
+export default class SocketConnection extends EventEmitter {
     constructor(options) {
         super()
         this.options = options
+        this.options.maxRetries = this.options.maxRetries != null ? this.options.maxRetries : 10
+        this.options.retryBackoffFactor = this.options.retryBackoffFactor != null ? this.options.retryBackoffFactor : 1.2
+        this.options.maxRetryWait = this.options.maxRetryWait != null ? this.options.maxRetryWait : 10000
+        this.shouldConnect = false
+        this.retryCount = 1
+        this.isReopening = false
         const id = uniqueId('SocketConnection')
         /* istanbul ignore next */
         if (options.debug) {
@@ -21,6 +27,17 @@ class SocketConnection extends EventEmitter {
         } else {
             this.debug = debugFactory(`StreamrClient::${id}`)
         }
+    }
+
+    async backoffWait() {
+        return new Promise((resolve) => {
+            const timeout = Math.min(
+                this.options.maxRetryWait, // max wait time
+                Math.round((this.retryCount * 10) ** this.options.retryBackoffFactor)
+            )
+            this.debug('waiting %sms', timeout)
+            setTimeout(resolve, timeout)
+        })
     }
 
     emit(event, ...args) {
@@ -39,130 +56,182 @@ class SocketConnection extends EventEmitter {
         }
     }
 
-    async createSocket() {
-        return new Promise((resolve, reject) => {
-            if (!this.options.url) {
-                throw new Error('URL is not defined!')
+    async reopen(...args) {
+        await this.reopenTask
+        this.reopenTask = (async () => {
+            // closed, noop
+            if (!this.shouldConnect) {
+                this.isReopening = false
+                return Promise.resolve()
             }
-            this.socket = new WebSocket(this.options.url)
-            this.socket.binaryType = 'arraybuffer'
-            this.socket.onopen = (...args) => {
-                this.debug('opened')
-                resolve(...args)
-                this.emit('open', ...args)
+            this.isReopening = true
+            // wait for a moment
+            await this.backoffWait()
+
+            // re-check if closed or closing
+            if (!this.shouldConnect) {
+                this.isReopening = false
+                return Promise.resolve()
             }
-            this.socket.onclose = (event = {}) => {
-                const { reason, code } = event
-                this.debug('unexpected close. code: %s reason: %s', code, reason)
-                reject(new Error(`unexpected close. code: ${code}, reason: ${reason}`))
-                this.emit('close', event)
-            }
-            this.socket.onerror = (err, ...args) => {
-                const error = err.error || err
-                this.debug('error while open', error)
-                reject(error)
-                this.emit('error', error, ...args)
-            }
-            this.socket.onmessage = (...args) => {
-                this.emit('message', ...args)
-            }
-        })
+
+            this.emit('retry')
+            this.debug('attempting to reopen %s of %s', this.retryCount, this.options.maxRetries)
+
+            return this._connect(...args).then((value) => {
+                // reset retry state
+                this.reopenTask = undefined
+                this.retryCount = 1
+                this.isReopening = false
+                return value
+            }, (err) => {
+                this.debug('attempt to reopen %s of %s failed', this.retryCount, this.options.maxRetries, err)
+                this.reopenTask = undefined
+                this.retryCount += 1
+                if (this.retryCount > this.options.maxRetries) {
+                    // no more retries
+                    this.isReopening = false
+                    throw err
+                }
+                // try again
+                return this.reopen()
+            })
+        })()
+        return this.reopenTask
     }
 
-    async closeSocket() {
-        const { socket } = this
-        return new Promise((resolve, reject) => {
-            // replace onclose to resolve/reject closeTask
-            this.socket.onclose = (event = {}, ...args) => {
-                const { reason, code } = event
-                this.debug('closed. code: %s reason: %s', code, reason)
+    async connect() {
+        this.shouldConnect = true
+        return this._connect()
+    }
 
-                if (this.socket === socket) {
-                    // remove socket reference if unchanged
-                    this.socket = undefined
+    async _connect() {
+        return new Promise((resolve, reject) => {
+            try {
+                if (!this.shouldConnect) {
+                    reject(new Error('disconnected before connected'))
+                    return
+                }
+                let { socket } = this
+                const isNew = !socket
+                if (!socket) {
+                    if (!this.options.url) {
+                        throw new Error('URL is not defined!')
+                    }
+                    socket = new WebSocket(this.options.url)
+                    socket.binaryType = 'arraybuffer'
+                    this.socket = socket
                 }
 
-                resolve(event)
-                this.emit('close', event, ...args)
-            }
+                socket.addEventListener('close', () => {
+                    if (this.shouldConnect) {
+                        this.reopen().then(resolve).catch((error) => {
+                            this.debug('failed reopening', error)
+                            this.emit('error', error)
+                            reject(error)
+                        })
+                    }
+                })
 
-            /* istanbul ignore next */
-            this.socket.onerror = (error, ...args) => {
-                // not sure it's even possible to have an error fire during close
-                this.debug('error while closing', error)
-                reject(error)
-                this.emit('error', error, ...args)
+                socket.addEventListener('open', () => {
+                    if (!this.shouldConnect) {
+                        reject(new Error('disconnected before connected'))
+                        return
+                    }
+                    resolve()
+                })
+
+                socket.addEventListener('error', (err) => {
+                    const error = err.error || new Error(err)
+                    reject(error)
+                })
+
+                if (socket.readyState === WebSocket.OPEN) {
+                    resolve()
+                }
+
+                if (isNew) {
+                    this.emit('opening')
+                    socket.addEventListener('message', (...args) => {
+                        if (this.socket !== socket) { return }
+                        this.emit('message', ...args)
+                    })
+                    socket.addEventListener('open', (event) => {
+                        if (this.socket !== socket) { return }
+                        this.emit('open', event)
+                    })
+                    socket.addEventListener('close', (event) => {
+                        if (this.socket === socket) {
+                            this.socket = undefined
+                            this.emit('close', event)
+                        }
+                    })
+                    socket.addEventListener('error', (err) => {
+                        if (this.socket !== socket) { return }
+                        const error = err.error || new Error(err)
+                        this.emit('error', error)
+                    })
+                }
+            } catch (err) {
+                reject(err)
             }
-            this.socket.close()
         })
     }
 
-    async open() {
-        if (this.isOpen()) {
-            this.openTask = undefined
-            return Promise.resolve()
-        }
-
-        if (this.openTask) {
-            return this.openTask
-        }
-
-        const openTask = (async () => {
-            this.emit('opening')
-            // await pending close operation
-            if (this.closeTask) {
-                // ignore failed, original close call will reject
-                await this.closeTask.catch(() => {})
-            }
-            return this.createSocket()
-        })().finally(() => {
-            // remove openTask if unchanged
-            if (this.openTask === openTask) {
-                this.openTask = undefined
-            }
-        })
-
-        this.openTask = openTask
-
-        return this.openTask
+    async disconnect() {
+        this.shouldConnect = false
+        return this._disconnect()
     }
 
-    async close() {
-        if (this.isClosed()) {
-            this.closeTask = undefined
-            return Promise.resolve()
-        }
+    async _disconnect() {
+        return new Promise((resolve, reject) => {
+            try {
+                if (this.shouldConnect) {
+                    reject(new Error('connected before disconnected'))
+                    return
+                }
 
-        if (this.closeTask) {
-            return this.closeTask
-        }
+                const { socket } = this
+                if (!socket || socket.readyState === WebSocket.CLOSED) {
+                    resolve()
+                    return
+                }
 
-        const closeTask = (async () => {
-            this.emit('closing')
-            // await pending open operation
-            if (this.openTask) {
-                // ignore failed, original open call will reject
-                await this.openTask.catch(() => {})
-            }
-            return this.closeSocket()
-        })().finally(() => {
-            // remove closeTask if unchanged
-            if (this.closeTask === closeTask) {
-                this.closeTask = undefined
+                socket.addEventListener('open', () => {
+                    if (!this.shouldConnect) {
+                        resolve(this._disconnect())
+                    }
+                })
+
+                socket.addEventListener('error', (err) => {
+                    const error = err.error || new Error(err)
+                    reject(error)
+                })
+                socket.addEventListener('close', () => {
+                    if (this.shouldConnect) {
+                        reject(new Error('connected before disconnected'))
+                        return
+                    }
+                    resolve()
+                })
+
+                this.emit('closing')
+
+                if (socket.readyState === WebSocket.OPEN) {
+                    socket.close()
+                }
+            } catch (err) {
+                reject(err)
             }
         })
-
-        this.closeTask = closeTask
-        return this.closeTask
     }
 
     async send(msg) {
-        if (!this.shouldBeOpen) {
+        if (!this.shouldConnect || !this.socket) {
             throw new Error('connection closed or closing')
         }
 
         // should be open, so wait for open or trigger new open
-        await this.open()
+        await this.connect()
 
         return new Promise((resolve, reject) => {
             // promisify send
@@ -181,10 +250,6 @@ class SocketConnection extends EventEmitter {
             }
         })
     }
-
-    /*
-     * Status flag methods
-     */
 
     isOpen() {
         if (!this.socket) {
@@ -214,115 +279,5 @@ class SocketConnection extends EventEmitter {
             return false
         }
         return this.socket.readyState === WebSocket.CONNECTING
-    }
-}
-
-/**
- * Extends SocketConnection to include reopening logic.
- */
-
-export default class ManagedSocketConnection extends SocketConnection {
-    constructor(...args) {
-        super(...args)
-        this.options.maxRetries = this.options.maxRetries != null ? this.options.maxRetries : 10
-        this.options.retryBackoffFactor = this.options.retryBackoffFactor != null ? this.options.retryBackoffFactor : 1.2
-        this.options.maxRetryWait = this.options.maxRetryWait != null ? this.options.maxRetryWait : 10000
-        this.reopenOnClose = this.reopenOnClose.bind(this)
-        this.retryCount = 1
-        this.isReopening = false
-    }
-
-    async backoffWait() {
-        return new Promise((resolve) => {
-            const timeout = Math.min(
-                this.options.maxRetryWait, // max wait time
-                Math.round((this.retryCount * 10) ** this.options.retryBackoffFactor)
-            )
-            this.debug('waiting %sms', timeout)
-            setTimeout(resolve, timeout)
-        })
-    }
-
-    async reopen(...args) {
-        await this.reopenTask
-        this.reopenTask = (async () => {
-            // closed, noop
-            if (!this.shouldBeOpen) {
-                this.isReopening = false
-                return Promise.resolve()
-            }
-            this.isReopening = true
-            // wait for a moment
-            await this.backoffWait()
-
-            // re-check if closed or closing
-            if (!this.shouldBeOpen) {
-                this.isReopening = false
-                return Promise.resolve()
-            }
-
-            this.emit('retry')
-            this.debug('attempting to reopen %s of %s', this.retryCount, this.options.maxRetries)
-
-            return this._open(...args).then((value) => {
-                // reset retry state
-                this.reopenTask = undefined
-                this.retryCount = 1
-                this.isReopening = false
-                return value
-            }, (err) => {
-                this.debug('attempt to reopen %s of %s failed', this.retryCount, this.options.maxRetries, err)
-                this.reopenTask = undefined
-                this.retryCount += 1
-                if (this.retryCount > this.options.maxRetries) {
-                    // no more retries
-                    this.isReopening = false
-                    throw err
-                }
-                // try again
-                return this.reopen()
-            })
-        })()
-        return this.reopenTask
-    }
-
-    async reopenOnClose() {
-        if (!this.shouldBeOpen) {
-            return Promise.resolve()
-        }
-
-        return this.reopen().catch((error) => {
-            this.debug('failed reopening', error)
-            this.emit('error', error)
-        })
-    }
-
-    /**
-     * Call this internally so as to not mess with user intent shouldBeOpen
-     */
-
-    _open(...args) {
-        /* istanbul ignore next */
-        if (!this.shouldBeOpen) {
-            // shouldn't get here
-            throw new Error('cannot tryOpen, connection closed or closing')
-        }
-
-        this.removeListener('close', this.reopenOnClose)
-        return super.open(...args).then((value) => {
-            this.on('close', this.reopenOnClose) // try reopen on close unless purposely closed
-            return value
-        })
-    }
-
-    open(...args) {
-        this.shouldBeOpen = true // user intent
-        return this._open(...args)
-    }
-
-    close(...args) {
-        this.shouldBeOpen = false // user intent
-        this.removeListener('close', this.reopenOnClose)
-        return super.close(...args)
     }
 }
