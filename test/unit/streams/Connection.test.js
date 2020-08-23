@@ -73,7 +73,7 @@ describe('SocketConnection', () => {
         expect(onOpening).toHaveBeenCalledTimes(1)
     })
 
-    it('can reopen after close', async () => {
+    it('can reconnect after close', async () => {
         await s.connect()
         expect(s.isOpen()).toBeTruthy()
         const oldSocket = s.socket
@@ -191,8 +191,8 @@ describe('SocketConnection', () => {
         expect(s.isOpen()).toBeTruthy()
     })
 
-    describe('reopening', () => {
-        it('reopens if unexpectedly disconnected', async (done) => {
+    describe('reconnecting', () => {
+        it('reconnects if unexpectedly disconnected', async (done) => {
             await s.connect()
             s.once('open', () => {
                 expect(s.isOpen()).toBeTruthy()
@@ -201,7 +201,7 @@ describe('SocketConnection', () => {
             s.socket.close()
         })
 
-        it('errors if reopen fails', async (done) => {
+        it('errors if reconnect fails', async (done) => {
             await s.connect()
             s.options.url = 'badurl'
             s.once('error', (err) => {
@@ -257,7 +257,7 @@ describe('SocketConnection', () => {
                 s.options.url = goodUrl
                 await s.connect()
                 setTimeout(() => {
-                    expect(s.isReopening).toBeFalsy()
+                    expect(s.isReconnecting).toBeFalsy()
                     expect(s.isOpen()).toBeTruthy()
                     done()
                 })
@@ -265,7 +265,7 @@ describe('SocketConnection', () => {
             s.socket.close()
         })
 
-        it('can try reopen after error', async () => {
+        it('can try reconnect after error', async () => {
             const goodUrl = s.options.url
             s.options.url = 'badurl'
             await expect(async () => (
@@ -285,7 +285,7 @@ describe('SocketConnection', () => {
             expect(s.isOpen()).toBeTruthy()
         })
 
-        it('stops reopening if closed while reopening', async (done) => {
+        it('stops reconnecting if closed while reconnecting', async (done) => {
             await s.connect()
             const goodUrl = s.options.url
             s.options.url = 'badurl'
@@ -296,17 +296,17 @@ describe('SocketConnection', () => {
                 await s.disconnect()
                 // wait a moment
                 setTimeout(() => {
-                    // ensure is closed, not reopening
+                    // ensure is closed, not reconnecting
                     expect(s.isClosed()).toBeTruthy()
-                    expect(s.isReopening).toBeFalsy()
+                    expect(s.isReconnecting).toBeFalsy()
                     done()
                 }, 10)
             })
-            // trigger reopening cycle
+            // trigger reconnecting cycle
             s.socket.close()
         })
 
-        it('stops reopening if closed while reopening, after some delay', async (done) => {
+        it('stops reconnecting if closed while reconnecting, after some delay', async (done) => {
             await s.connect()
             const goodUrl = s.options.url
             s.options.url = 'badurl'
@@ -318,14 +318,14 @@ describe('SocketConnection', () => {
                     s.options.url = goodUrl
                     await s.disconnect()
                     setTimeout(async () => {
-                        // ensure is closed, not reopening
+                        // ensure is closed, not reconnecting
                         expect(s.isClosed()).toBeTruthy()
-                        expect(s.isReopening).toBeFalsy()
+                        expect(s.isReconnecting).toBeFalsy()
                         done()
                     }, 20)
                 }, 10)
             })
-            // trigger reopening cycle
+            // trigger reconnecting cycle
             s.socket.close()
         })
     })
@@ -341,7 +341,7 @@ describe('SocketConnection', () => {
             await s.send('test')
         })
 
-        it('waits for reopening if sending while reopening', async (done) => {
+        it('waits for reconnecting if sending while reconnecting', async (done) => {
             await s.connect()
             const open = s.connect.bind(s)
             s.connect = async (...args) => {
@@ -358,7 +358,7 @@ describe('SocketConnection', () => {
             await s.send('test')
         })
 
-        it('fails send if reopen fails', async () => {
+        it('fails send if reconnect fails', async () => {
             await s.connect()
             // eslint-disable-next-line require-atomic-updates
             s.options.url = 'badurl'

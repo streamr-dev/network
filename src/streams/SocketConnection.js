@@ -19,7 +19,7 @@ export default class SocketConnection extends EventEmitter {
         this.options.maxRetryWait = this.options.maxRetryWait != null ? this.options.maxRetryWait : 10000
         this.shouldConnect = false
         this.retryCount = 1
-        this.isReopening = false
+        this.isReconnecting = false
         const id = uniqueId('SocketConnection')
         /* istanbul ignore next */
         if (options.debug) {
@@ -56,47 +56,47 @@ export default class SocketConnection extends EventEmitter {
         }
     }
 
-    async reopen(...args) {
-        await this.reopenTask
-        this.reopenTask = (async () => {
+    async reconnect(...args) {
+        await this.reconnectTask
+        this.reconnectTask = (async () => {
             // closed, noop
             if (!this.shouldConnect) {
-                this.isReopening = false
+                this.isReconnecting = false
                 return Promise.resolve()
             }
-            this.isReopening = true
+            this.isReconnecting = true
             // wait for a moment
             await this.backoffWait()
 
             // re-check if closed or closing
             if (!this.shouldConnect) {
-                this.isReopening = false
+                this.isReconnecting = false
                 return Promise.resolve()
             }
 
             this.emit('retry')
-            this.debug('attempting to reopen %s of %s', this.retryCount, this.options.maxRetries)
+            this.debug('attempting to reconnect %s of %s', this.retryCount, this.options.maxRetries)
 
             return this._connect(...args).then((value) => {
                 // reset retry state
-                this.reopenTask = undefined
+                this.reconnectTask = undefined
                 this.retryCount = 1
-                this.isReopening = false
+                this.isReconnecting = false
                 return value
             }, (err) => {
-                this.debug('attempt to reopen %s of %s failed', this.retryCount, this.options.maxRetries, err)
-                this.reopenTask = undefined
+                this.debug('attempt to reconnect %s of %s failed', this.retryCount, this.options.maxRetries, err)
+                this.reconnectTask = undefined
                 this.retryCount += 1
                 if (this.retryCount > this.options.maxRetries) {
                     // no more retries
-                    this.isReopening = false
+                    this.isReconnecting = false
                     throw err
                 }
                 // try again
-                return this.reopen()
+                return this.reconnect()
             })
         })()
-        return this.reopenTask
+        return this.reconnectTask
     }
 
     async connect() {
@@ -113,6 +113,8 @@ export default class SocketConnection extends EventEmitter {
                 }
                 let { socket } = this
                 const isNew = !socket
+
+                // create new socket
                 if (!socket) {
                     if (!this.options.url) {
                         throw new Error('URL is not defined!')
@@ -121,23 +123,27 @@ export default class SocketConnection extends EventEmitter {
                     socket.binaryType = 'arraybuffer'
                     this.socket = socket
                 }
-
                 socket.addEventListener('close', () => {
-                    if (this.shouldConnect) {
-                        this.reopen().then(resolve).catch((error) => {
-                            this.debug('failed reopening', error)
-                            this.emit('error', error)
-                            reject(error)
-                        })
+                    if (!this.shouldConnect) {
+                        return // expected close
                     }
+
+                    // try reconnect on close if should be connected
+                    this.reconnect().then(resolve).catch((error) => {
+                        this.debug('failed reconnect', error)
+                        this.emit('error', error)
+                        reject(error)
+                    })
                 })
 
                 socket.addEventListener('open', () => {
-                    if (!this.shouldConnect) {
-                        reject(new Error('disconnected before connected'))
+                    if (this.shouldConnect) {
+                        resolve() // expected open
                         return
                     }
-                    resolve()
+
+                    // was disconnected while connecting
+                    reject(new Error('disconnected before connected'))
                 })
 
                 socket.addEventListener('error', (err) => {
@@ -150,6 +156,7 @@ export default class SocketConnection extends EventEmitter {
                 }
 
                 if (isNew) {
+                    /// convert WebSocket events to emitter events
                     this.emit('opening')
                     socket.addEventListener('message', (...args) => {
                         if (this.socket !== socket) { return }
