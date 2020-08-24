@@ -19,7 +19,7 @@ export default class SocketConnection extends EventEmitter {
         this.options.maxRetryWait = this.options.maxRetryWait != null ? this.options.maxRetryWait : 10000
         this.shouldConnect = false
         this.retryCount = 1
-        this.isReconnecting = false
+        this._isReconnecting = false
         const id = uniqueId('SocketConnection')
         /* istanbul ignore next */
         if (options.debug) {
@@ -61,27 +61,24 @@ export default class SocketConnection extends EventEmitter {
         this.reconnectTask = (async () => {
             // closed, noop
             if (!this.shouldConnect) {
-                this.isReconnecting = false
+                this._isReconnecting = false
                 return Promise.resolve()
             }
-            this.isReconnecting = true
+            this._isReconnecting = true
             // wait for a moment
             await this.backoffWait()
 
             // re-check if closed or closing
             if (!this.shouldConnect) {
-                this.isReconnecting = false
+                this._isReconnecting = false
                 return Promise.resolve()
             }
-
-            this.emit('retry')
-            this.debug('attempting to reconnect %s of %s', this.retryCount, this.options.maxRetries)
 
             return this._connect(...args).then((value) => {
                 // reset retry state
                 this.reconnectTask = undefined
                 this.retryCount = 1
-                this.isReconnecting = false
+                this._isReconnecting = false
                 return value
             }, (err) => {
                 this.debug('attempt to reconnect %s of %s failed', this.retryCount, this.options.maxRetries, err)
@@ -89,10 +86,12 @@ export default class SocketConnection extends EventEmitter {
                 this.retryCount += 1
                 if (this.retryCount > this.options.maxRetries) {
                     // no more retries
-                    this.isReconnecting = false
+                    this._isReconnecting = false
                     throw err
                 }
                 // try again
+                this.debug('attempting to reconnect %s of %s', this.retryCount, this.options.maxRetries)
+                this.emit('reconnecting')
                 return this.reconnect()
             })
         })()
@@ -157,19 +156,19 @@ export default class SocketConnection extends EventEmitter {
 
                 if (isNew) {
                     /// convert WebSocket events to emitter events
-                    this.emit('opening')
+                    this.emit('connecting')
                     socket.addEventListener('message', (...args) => {
                         if (this.socket !== socket) { return }
                         this.emit('message', ...args)
                     })
                     socket.addEventListener('open', (event) => {
                         if (this.socket !== socket) { return }
-                        this.emit('open', event)
+                        this.emit('connected', event)
                     })
                     socket.addEventListener('close', (event) => {
                         if (this.socket === socket) {
                             this.socket = undefined
-                            this.emit('close', event)
+                            this.emit('disconnected', event)
                         }
                     })
                     socket.addEventListener('error', (err) => {
@@ -221,9 +220,8 @@ export default class SocketConnection extends EventEmitter {
                     resolve()
                 })
 
-                this.emit('closing')
-
                 if (socket.readyState === WebSocket.OPEN) {
+                    this.emit('disconnecting')
                     socket.close()
                 }
             } catch (err) {
@@ -258,7 +256,11 @@ export default class SocketConnection extends EventEmitter {
         })
     }
 
-    isOpen() {
+    isReconnecting() {
+        return this._isReconnecting
+    }
+
+    isConnected() {
         if (!this.socket) {
             return false
         }
@@ -266,7 +268,7 @@ export default class SocketConnection extends EventEmitter {
         return this.socket.readyState === WebSocket.OPEN
     }
 
-    isClosed() {
+    isDisconnected() {
         if (!this.socket) {
             return true
         }
@@ -274,14 +276,14 @@ export default class SocketConnection extends EventEmitter {
         return this.socket.readyState === WebSocket.CLOSED
     }
 
-    isClosing() {
+    isDisconnecting() {
         if (!this.socket) {
             return false
         }
         return this.socket.readyState === WebSocket.CLOSING
     }
 
-    isOpening() {
+    isConnecting() {
         if (!this.socket) {
             return false
         }
