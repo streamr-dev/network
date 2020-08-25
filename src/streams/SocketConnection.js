@@ -14,6 +14,7 @@ export default class SocketConnection extends EventEmitter {
     constructor(options) {
         super()
         this.options = options
+        this.options.autoConnect = !!this.options.autoConnect
         this.options.maxRetries = this.options.maxRetries != null ? this.options.maxRetries : 10
         this.options.retryBackoffFactor = this.options.retryBackoffFactor != null ? this.options.retryBackoffFactor : 1.2
         this.options.maxRetryWait = this.options.maxRetryWait != null ? this.options.maxRetryWait : 10000
@@ -231,12 +232,14 @@ export default class SocketConnection extends EventEmitter {
     }
 
     async send(msg) {
+        if (this.options.autoConnect || this.shouldConnect) {
+            // should be open, so wait for open or trigger new open
+            await this.connect()
+        }
+
         if (!this.shouldConnect || !this.socket) {
             throw new Error('connection closed or closing')
         }
-
-        // should be open, so wait for open or trigger new open
-        await this.connect()
 
         return new Promise((resolve, reject) => {
             // promisify send

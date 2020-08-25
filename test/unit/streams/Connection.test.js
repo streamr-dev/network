@@ -382,6 +382,32 @@ describe('SocketConnection', () => {
             await s.send('test')
         })
 
+        it('fails if not autoconnecting or manually connected', async () => {
+            await expect(async () => {
+                await s.send('test')
+            }).rejects.toThrow('connection')
+        })
+
+        it('waits for connection if sending while connecting', async (done) => {
+            s.once('message', ({ data } = {}) => {
+                expect(data).toEqual('test')
+                done()
+            })
+
+            s.connect() // no await
+            await s.send('test')
+        })
+
+        it('creates connection and waits if autoconnect true', async (done) => {
+            s.options.autoConnect = true
+            s.once('message', ({ data } = {}) => {
+                expect(data).toEqual('test')
+                done()
+            })
+            // no connect
+            await s.send('test')
+        })
+
         it('waits for reconnecting if sending while reconnecting', async (done) => {
             await s.connect()
             const connect = s.connect.bind(s)
