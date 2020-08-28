@@ -72,12 +72,20 @@ describe('Storage', () => {
         await storage.close()
     })
 
-    test('requestFrom and requestLast not throwing exception if timestamp is zero', async () => {
-        const b = storage.requestLast(streamId, 0, 1)
+    test('requestLast not throwing exception if no buckets found', async () => {
+        const b = storage.requestLast(streamId, 777, 10)
         const resultsB = await toArray(b)
         expect(resultsB).toEqual([])
+    })
 
-        const a = storage.requestFrom(streamId, 0, 1)
+    test('requestFrom not throwing exception if no buckets found', async () => {
+        const a = storage.requestFrom(streamId, 777, 1)
+        const resultsB = await toArray(a)
+        expect(resultsB).toEqual([])
+    })
+
+    test('requestFrom not throwing exception if timestamp is zero', async () => {
+        const a = storage.requestFrom(streamId, 0, 0)
         const resultsA = await toArray(a)
         expect(resultsA).toEqual([])
     })

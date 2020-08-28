@@ -71,31 +71,75 @@ class Storage extends EventEmitter {
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? '
             + 'ORDER BY ts DESC, sequence_no DESC '
             + 'LIMIT ?'
+        const COUNT_MESSAGES = 'SELECT COUNT(*) AS total FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?'
+        const GET_BUCKETS = 'SELECT id FROM bucket WHERE stream_id = ? AND partition = ?'
+
+        let total = 0
+        const options = {
+            prepare: true, fetchSize: 1
+        }
+
         const resultStream = this._createResultStream()
 
-        // Assumption: If a stream has more than MAX_RESEND_LAST messages, at least MAX_RESEND_LAST messages are present in the latest 100 buckets.
-        this.bucketManager.getLastBuckets(streamId, partition, 100).then((buckets) => {
-            return bucketsToIds(buckets)
-        }).then((bucketsForQuery) => {
-            if (!bucketsForQuery.length) {
-                throw new Error('Buckets not found')
-            }
-
-            const params = [streamId, partition, bucketsForQuery, limit]
-            return this.cassandraClient.execute(GET_LAST_N_MESSAGES, params, {
+        const makeLastQuery = (bucketIds) => {
+            const params = [streamId, partition, bucketIds, limit]
+            debug(`requestLast query: ${GET_LAST_N_MESSAGES}, params: ${params}`)
+            this.cassandraClient.execute(GET_LAST_N_MESSAGES, params, {
                 prepare: true,
                 fetchSize: 0 // disable paging
-            })
-        }).then((resultSet) => {
-            resultSet.rows.reverse().forEach((r) => {
-                resultStream.write(r)
-            })
-            resultStream.push(null)
-        })
-            .catch((e) => {
+            }).then((resultSet) => {
+                resultSet.rows.reverse().forEach((r) => {
+                    resultStream.write(r)
+                })
+                resultStream.push(null)
+            }).catch((e) => {
                 console.warn(e)
                 resultStream.push(null)
             })
+        }
+
+        let bucketId
+        const bucketIds = []
+        /**
+         * Process:
+         * - get latest bucketId => count number of messages in this bucket
+         * - if enough => get all messages and return
+         * - if not => move to the next bucket and repeat cycle
+         */
+        this.cassandraClient.eachRow(GET_BUCKETS, [streamId, partition], options, (n, row) => {
+            bucketId = row.id
+            bucketIds.push(bucketId)
+        }, (err, result) => {
+            if (err) {
+                console.error(err)
+                resultStream.push(null)
+            } else {
+                // no buckets found at all
+                if (!bucketId) {
+                    resultStream.push(null)
+                    return
+                }
+
+                // get total stored message in bucket
+                this.cassandraClient.execute(COUNT_MESSAGES, [streamId, partition, bucketId], {
+                    prepare: true,
+                    fetchSize: 0 // disable paging
+                }).then((resultSet) => {
+                    const row = resultSet.first()
+                    total += row.total.low
+
+                    // if not enough messages and we next page exists, repeat eachRow
+                    if (result.nextPage && total < limit && total < MAX_RESEND_LAST) {
+                        result.nextPage()
+                    } else {
+                        makeLastQuery(bucketIds)
+                    }
+                }).catch((e) => {
+                    console.warn(e)
+                    resultStream.push(null)
+                })
+            }
+        })
 
         return resultStream
     }
