@@ -64,7 +64,7 @@ export default class Subscriber {
             })
         }
 
-        this._checkAutoDisconnect()
+        return this._checkAutoDisconnect()
     }
 
     async onClientConnected() {
@@ -170,24 +170,24 @@ export default class Subscriber {
         return sub
     }
 
-    unsubscribe(sub) {
+    async unsubscribe(sub) {
         if (!sub || !sub.streamId) {
             throw new Error('unsubscribe: please give a Subscription object as an argument!')
         }
 
         const sp = this._getSubscribedStreamPartition(sub.streamId, sub.streamPartition)
-
         // If this is the last subscription for this stream-partition, unsubscribe the client too
         if (sp && sp.getSubscriptions().length === 1
-            && this.client.isConnected()
             && sub.getState() === Subscription.State.subscribed) {
             sub.setState(Subscription.State.unsubscribing)
-            this._requestUnsubscribe(sub)
-        } else if (sub.getState() !== Subscription.State.unsubscribing && sub.getState() !== Subscription.State.unsubscribed) {
+            return this._requestUnsubscribe(sub)
+        }
+
+        if (sub.getState() !== Subscription.State.unsubscribing && sub.getState() !== Subscription.State.unsubscribed) {
             // Else the sub can be cleaned off immediately
             this._removeSubscription(sub)
             sub.setState(Subscription.State.unsubscribed)
-            this._checkAutoDisconnect()
+            return this._checkAutoDisconnect()
         }
     }
 
@@ -315,6 +315,7 @@ export default class Subscriber {
         })
         this.debug('_requestSubscribe: subscribing client: %o', request)
         sp.setSubscribing(true)
+        await this.client.connection.nextConnection()
         await this.client.connection.send(request).catch((err) => {
             sub.setState(Subscription.State.unsubscribed)
             this.client.emit('error', `Failed to send subscribe request: ${err.stack}`)
@@ -332,13 +333,14 @@ export default class Subscriber {
             sub.setState(Subscription.State.subscribed)
             this.client.handleError(`Failed to send unsubscribe request: ${err.stack}`)
         })
+        return this._checkAutoDisconnect()
     }
 
-    _checkAutoDisconnect() {
+    async _checkAutoDisconnect() {
         // Disconnect if no longer subscribed to any streams
         if (this.client.options.autoDisconnect && Object.keys(this.subscribedStreamPartitions).length === 0) {
             this.debug('Disconnecting due to no longer being subscribed to any streams')
-            this.client.disconnect()
+            return this.client.disconnect()
         }
     }
 
@@ -369,14 +371,25 @@ export default class Subscriber {
     }
 
     async _resendAndSubscribe(sub) {
-        if (sub.getState() === Subscription.State.subscribing || sub.resending) { return }
+        if (sub.getState() === Subscription.State.subscribing || sub.resending) {
+            return Promise.resolve()
+        }
+
         sub.setState(Subscription.State.subscribing)
-        // Once subscribed, ask for a resend
-        sub.once('subscribed', () => {
-            if (!sub.hasResendOptions()) { return }
-            // eslint-disable-next-line no-underscore-dangle
-            this.client.resender._requestResend(sub)
+        if (!sub.hasResendOptions()) {
+            return this._requestSubscribe(sub)
+        }
+
+        const onSubscribed = new Promise((resolve, reject) => {
+            // Once subscribed, ask for a resend
+            sub.once('subscribed', () => {
+                // eslint-disable-next-line no-underscore-dangle
+                resolve(this.client.resender._requestResend(sub))
+            })
+            sub.once('error', reject)
         })
         await this._requestSubscribe(sub)
+
+        return onSubscribed
     }
 }

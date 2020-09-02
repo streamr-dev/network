@@ -38,22 +38,6 @@ export default class Publisher {
                     .catch((err) => client.emit('error', err))
             )
         }
-
-        // On connect/reconnect, send pending subscription requests
-        this.onConnected = this.onConnected.bind(this)
-        client.on('connected', this.onConnected)
-    }
-
-    async onConnected() {
-        if (!this.client.isConnected()) { return }
-        try {
-            // Check pending publish requests
-            const publishQueueCopy = this.publishQueue.slice(0)
-            this.publishQueue = []
-            publishQueueCopy.forEach((publishFn) => publishFn())
-        } catch (err) {
-            this.client.emit('error', err)
-        }
     }
 
     async publish(streamObjectOrId, data, timestamp = new Date(), partitionKey = null) {
@@ -69,46 +53,6 @@ export default class Publisher {
             this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestampAsNumber, partitionKey),
         ])
 
-        if (this.client.isConnected()) {
-            // If connected, emit a publish request
-            return this._requestPublish(streamMessage, sessionToken)
-        }
-
-        if (this.client.options.autoConnect) {
-            if (this.publishQueue.length >= this.client.options.maxPublishQueueSize) {
-                throw new FailedToPublishError(
-                    streamId,
-                    data,
-                    `publishQueue exceeded maxPublishQueueSize=${this.options.maxPublishQueueSize}`,
-                )
-            }
-
-            const published = new Promise((resolve, reject) => {
-                this.publishQueue.push(async () => {
-                    let publishRequest
-                    try {
-                        publishRequest = await this._requestPublish(streamMessage, sessionToken)
-                    } catch (err) {
-                        reject(err)
-                        this.client.emit('error', err)
-                        return
-                    }
-                    resolve(publishRequest)
-                })
-            })
-            // be sure to trigger connection *after* queueing publish
-            await this.client.ensureConnected() // await to ensure connection error fails publish
-            return published
-        }
-
-        throw new FailedToPublishError(
-            streamId,
-            data,
-            'Wait for the "connected" event before calling publish, or set autoConnect to true!',
-        )
-    }
-
-    _requestPublish(streamMessage, sessionToken) {
         const requestId = this.client.resender.resendUtil.generateRequestId()
         const request = new ControlLayer.PublishRequest({
             streamMessage,
@@ -116,7 +60,16 @@ export default class Publisher {
             sessionToken,
         })
         this.debug('_requestPublish: %o', request)
-        return this.client.connection.send(request)
+        try {
+            await this.client.connection.send(request)
+        } catch (err) {
+            this.debug('adasd: %o', err)
+            throw new FailedToPublishError(
+                streamId,
+                data,
+                err
+            )
+        }
     }
 
     getPublisherId() {

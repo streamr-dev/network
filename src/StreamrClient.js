@@ -5,7 +5,7 @@ import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 import uniqueId from 'lodash.uniqueid'
 
-import Connection from './Connection'
+import Connection from './streams/SocketConnection'
 import Session from './Session'
 import { waitFor, getVersionString } from './utils'
 import Publisher from './Publisher'
@@ -89,6 +89,18 @@ export default class StreamrClient extends EventEmitter {
 
         this.session = new Session(this, this.options.auth)
         this.connection = connection || new Connection(this.options)
+        this.connection.on('message', (messageEvent) => {
+            let controlMessage
+            try {
+                controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
+            } catch (err) {
+                this.debug('deserialize error', err)
+                this.emit('error', err)
+                return
+            }
+            this.connection.emit(controlMessage.type, controlMessage)
+        })
+
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
         this.resender = new Resender(this)
@@ -96,6 +108,7 @@ export default class StreamrClient extends EventEmitter {
         this.connection.on('connected', this.onConnectionConnected)
         this.connection.on('disconnected', this.onConnectionDisconnected)
         this.connection.on('error', this.onConnectionError)
+
         this.connection.on(ControlMessage.TYPES.ErrorResponse, this.onErrorResponse)
     }
 
@@ -127,8 +140,9 @@ export default class StreamrClient extends EventEmitter {
         this.emit('error', errorObject)
     }
 
-    _onError(...args) {
-        this.onError(...args)
+    _onError(err, ...args) {
+        this.debug('disconnecting due to error', err)
+        this.onError(err, ...args)
         this.ensureDisconnected()
     }
 
@@ -150,41 +164,28 @@ export default class StreamrClient extends EventEmitter {
     }
 
     isConnected() {
-        return this.connection.state === Connection.State.CONNECTED
+        return this.connection.isConnected()
     }
 
     isConnecting() {
-        return this.connection.state === Connection.State.CONNECTING
+        return this.connection.isConnecting()
     }
 
     isDisconnecting() {
-        return this.connection.state === Connection.State.DISCONNECTING
+        return this.connection.isDisconnecting()
     }
 
     isDisconnected() {
-        return this.connection.state === Connection.State.DISCONNECTED
-    }
-
-    reconnect() {
-        return this.connect()
+        return this.connection.isDisconnected()
     }
 
     async connect() {
-        try {
-            if (this.isConnected()) {
-                throw new Error('Already connected!')
-            }
+        this.debug('Connecting to %s', this.options.url)
+        return this.connection.connect()
+    }
 
-            if (this.connection.state === Connection.State.CONNECTING) {
-                throw new Error('Already connecting!')
-            }
-
-            this.debug('Connecting to %s', this.options.url)
-            await this.connection.connect()
-        } catch (err) {
-            this.emit('error', err)
-            throw err
-        }
+    async nextConnection() {
+        return this.connection.nextConnection()
     }
 
     pause() {
@@ -225,38 +226,12 @@ export default class StreamrClient extends EventEmitter {
         return this.subscriber.getSubscriptions(...args)
     }
 
-    /**
-     * Starts new connection if disconnected.
-     * Waits for connection if connecting.
-     * No-op if already connected.
-     */
-
     async ensureConnected() {
-        if (this.isConnected()) { return Promise.resolve() }
-
-        if (!this.isConnecting()) {
-            await this.connect()
-        }
-        return waitFor(this, 'connected')
+        return this.connect()
     }
 
-    /**
-     * Starts disconnection if connected.
-     * Waits for disconnection if disconnecting.
-     * No-op if already disconnected.
-     */
-
     async ensureDisconnected() {
-        this.connection.clearReconnectTimeout()
-        this.publisher.stop()
-        if (this.isDisconnected()) { return }
-
-        if (this.isDisconnecting()) {
-            await waitFor(this, 'disconnected')
-            return
-        }
-
-        await this.disconnect()
+        return this.disconnect()
     }
 
     static generateEthereumAccount() {

@@ -109,7 +109,6 @@ export default class SocketConnection extends EventEmitter {
             this.debug('emit', event, args)
             return super.emit(event, ...args)
         }
-
         this.debug('emit', event)
 
         // note if event handler is async and it rejects we're kinda hosed
@@ -319,6 +318,26 @@ export default class SocketConnection extends EventEmitter {
         this.emit('connected')
     }
 
+    async nextDisconnection() {
+        if (this.isDisconnected()) {
+            return Promise.resolve()
+        }
+
+        return new Promise((resolve, reject) => {
+            let onError
+            const onDisconnected = () => {
+                this.off('error', onError)
+                resolve()
+            }
+            onError = (err) => {
+                this.off('disconnected', onDisconnected)
+                reject(err)
+            }
+            this.once('disconnected', onDisconnected)
+            this.once('error', onError)
+        })
+    }
+
     async disconnect() {
         this.debug('disconnect()')
         this.shouldConnect = false
@@ -390,15 +409,15 @@ export default class SocketConnection extends EventEmitter {
     }
 
     async maybeConnect() {
-        this.debug('maybeConnect', this.options.autoConnect || this.shouldConnect)
+        this.debug('maybeConnect', this.options.autoConnect, this.shouldConnect)
         if (this.options.autoConnect || this.shouldConnect) {
             // should be open, so wait for open or trigger new open
             await this.connect()
         }
     }
 
-    async send(msg) {
-        this.debug('send()')
+    async needsConnection() {
+        this.debug('needsConnection')
         await this.maybeConnect()
         if (!this.isConnected()) {
             // note we can't just let socket.send fail,
@@ -406,7 +425,18 @@ export default class SocketConnection extends EventEmitter {
             // to be uncatchable in the browser
             throw new Error('connection closed or closing')
         }
+    }
 
+    async send(msg) {
+        this.debug('send()')
+        if (!this.isConnected()) {
+            // shortcut await if connected
+            await this.needsConnection()
+        }
+        return this._send(msg)
+    }
+
+    async _send(msg) {
         return new Promise((resolve, reject) => {
             this.debug('>> %s', msg)
             // promisify send

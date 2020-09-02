@@ -14,7 +14,9 @@ export default class Resender {
         this.client = client
         this.debug = client.debug.extend('Resends')
 
-        this.resendUtil = new ResendUtil()
+        this.resendUtil = new ResendUtil({
+            debug: this.debug,
+        })
 
         this.onResendUtilError = this.onResendUtilError.bind(this)
         this.resendUtil.on('error', this.onResendUtilError)
@@ -114,7 +116,6 @@ export default class Resender {
             throw new Error('resend: Invalid arguments: options.resend is not given')
         }
 
-        await this.client.ensureConnected()
         const sub = new HistoricalSubscription({
             streamId: options.stream,
             streamPartition: options.partition || 0,
@@ -126,10 +127,10 @@ export default class Resender {
             debug: this.debug,
         })
 
-        // TODO remove _addSubscription after uncoupling Subscription and Resend
-        sub.setState(Subscription.State.subscribed)
         // eslint-disable-next-line no-underscore-dangle
         this.client.subscriber._addSubscription(sub)
+        // TODO remove _addSubscription after uncoupling Subscription and Resend
+        sub.setState(Subscription.State.subscribed)
         // eslint-disable-next-line no-underscore-dangle
         sub.once('initial_resend_done', () => this.client.subscriber._removeSubscription(sub))
         await this._requestResend(sub)
@@ -141,8 +142,6 @@ export default class Resender {
         const requestId = this.resendUtil.registerResendRequestForSub(sub)
         const options = resendOptions || sub.getResendOptions()
         const sessionToken = await this.client.session.getSessionToken()
-        // don't bother requesting resend if not connected
-        if (!this.client.isConnected()) { return }
         let request
         if (options.last > 0) {
             request = new ResendLastRequest({
