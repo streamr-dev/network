@@ -53,10 +53,10 @@ describe('SocketConnection', () => {
     afterEach(async () => {
         debug('disconnecting after test')
         await s.disconnect()
-        if (SocketConnection.getOpen() !== 0) {
-            throw new Error('not closed')
+        const openSockets = SocketConnection.getOpen()
+        if (openSockets !== 0) {
+            throw new Error(`sockets not closed: ${openSockets}`)
         }
-        await wait(1000)
     })
 
     describe('basics', () => {
@@ -367,6 +367,55 @@ describe('SocketConnection', () => {
             }).rejects.toThrow()
             await expect(task).rejects.toThrow()
             expect(s.isDisconnected()).toBeTruthy()
+        })
+    })
+
+    describe('nextConnection', () => {
+        it('resolves on next connection', async () => {
+            let resolved = false
+            const next = s.nextConnection().then((v) => {
+                resolved = true
+                return v
+            })
+            await s.connect()
+            expect(resolved).toBe(true)
+            await next
+        })
+
+        it('rejects on next error', async () => {
+            expectErrors = 1
+            let errored = false
+            s.options.url = 'badurl'
+            const next = s.nextConnection().catch((err) => {
+                errored = true
+                throw err
+            })
+            await expect(async () => {
+                await s.connect()
+            }).rejects.toThrow()
+            expect(errored).toBe(true)
+            await expect(async () => {
+                await next
+            }).rejects.toThrow()
+        })
+
+        it('rejects if disconnected while connecting', async () => {
+            expectErrors = 1
+            let errored = false
+            const next = s.nextConnection().catch((err) => {
+                errored = true
+                throw err
+            })
+            await Promise.all([
+                expect(async () => {
+                    await s.connect()
+                }).rejects.toThrow(),
+                s.disconnect()
+            ])
+            expect(errored).toBe(true)
+            await expect(async () => {
+                await next
+            }).rejects.toThrow()
         })
     })
 
