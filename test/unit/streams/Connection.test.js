@@ -1,8 +1,11 @@
 import { wait } from 'streamr-test-utils'
+import Debug from 'debug'
 
 import SocketConnection from '../../../src/streams/SocketConnection'
 
 /* eslint-disable require-atomic-updates */
+
+const debug = Debug('StreamrClient').extend('test')
 
 describe('SocketConnection', () => {
     let s
@@ -17,9 +20,10 @@ describe('SocketConnection', () => {
     let expectErrors = 0 // check no errors by default
 
     beforeEach(() => {
+        jest.setTimeout(2000)
         s = new SocketConnection({
             url: 'wss://echo.websocket.org/',
-            maxRetries: 3
+            maxRetries: 2
         })
 
         onConnected = jest.fn()
@@ -37,6 +41,7 @@ describe('SocketConnection', () => {
         onMessage = jest.fn()
         s.on('message', onMessage)
         expectErrors = 0
+        debug('starting test')
     })
 
     afterEach(async () => {
@@ -46,7 +51,12 @@ describe('SocketConnection', () => {
     })
 
     afterEach(async () => {
+        debug('disconnecting after test')
         await s.disconnect()
+        if (SocketConnection.getOpen() !== 0) {
+            throw new Error('not closed')
+        }
+        await wait(1000)
     })
 
     describe('basics', () => {
@@ -74,7 +84,7 @@ describe('SocketConnection', () => {
             await s.connect()
             await s.connect()
             expect(s.isConnected()).toBeTruthy()
-            // only one connect event should fire
+
             expect(onConnected).toHaveBeenCalledTimes(1)
             expect(onConnecting).toHaveBeenCalledTimes(1)
         })
@@ -85,7 +95,6 @@ describe('SocketConnection', () => {
                 s.connect(),
             ])
             expect(s.isConnected()).toBeTruthy()
-            // only one connect event should fire
             expect(onConnected).toHaveBeenCalledTimes(1)
             expect(onConnecting).toHaveBeenCalledTimes(1)
         })
@@ -101,7 +110,7 @@ describe('SocketConnection', () => {
                 s.disconnect(),
             ])
             expect(s.isDisconnected()).toBeTruthy()
-            // only one connect event should fire
+
             expect(onConnected).toHaveBeenCalledTimes(1)
             expect(onDisconnected).toHaveBeenCalledTimes(1)
             expect(onDisconnecting).toHaveBeenCalledTimes(1)
@@ -118,7 +127,6 @@ describe('SocketConnection', () => {
 
             expect(s.isConnected()).toBeTruthy()
 
-            // only one connect event should fire
             expect(onConnected).toHaveBeenCalledTimes(2)
             expect(onDisconnected).toHaveBeenCalledTimes(1)
             expect(onDisconnecting).toHaveBeenCalledTimes(0)
@@ -140,11 +148,71 @@ describe('SocketConnection', () => {
             expect(s.socket).not.toBe(oldSocket)
         })
 
+        describe('connect/disconnect inside event handlers', () => {
+            it('can handle disconnect on connecting event', async (done) => {
+                expectErrors = 1
+                s.once('connecting', async () => {
+                    await s.disconnect()
+                    expect(s.isDisconnected()).toBeTruthy()
+                    done()
+                })
+                await expect(async () => {
+                    await s.connect()
+                }).rejects.toThrow()
+                expect(s.isDisconnected()).toBeTruthy()
+            })
+
+            it('can handle disconnect on connected event', async (done) => {
+                expectErrors = 1
+                s.once('connected', async () => {
+                    await s.disconnect()
+                    expect(s.isDisconnected()).toBeTruthy()
+                    done()
+                })
+
+                await expect(async () => {
+                    await s.connect()
+                }).rejects.toThrow()
+                expect(s.isConnected()).toBeFalsy()
+            })
+
+            it('can handle connect on disconnecting event', async (done) => {
+                expectErrors = 1
+                s.once('disconnecting', async () => {
+                    await s.connect()
+                    expect(s.isConnected()).toBeTruthy()
+                    done()
+                })
+                await s.connect()
+                await expect(async () => {
+                    await s.disconnect()
+                }).rejects.toThrow()
+                expect(s.isDisconnected()).toBeFalsy()
+            })
+
+            it('can handle connect on disconnected event', async (done) => {
+                expectErrors = 1
+                await s.connect()
+
+                s.once('disconnected', async () => {
+                    await s.connect()
+                    s.debug('connect done')
+                    expect(s.isConnected()).toBeTruthy()
+                    done()
+                })
+
+                await expect(async () => {
+                    await s.disconnect()
+                }).rejects.toThrow()
+                expect(s.isConnected()).toBeFalsy()
+            })
+        })
+
         it('rejects if no url', async () => {
             expectErrors = 1
             s = new SocketConnection({
                 url: undefined,
-                maxRetries: 3,
+                maxRetries: 2,
             })
             onConnected = jest.fn()
             s.on('connected', onConnected)
@@ -160,7 +228,7 @@ describe('SocketConnection', () => {
             expectErrors = 1
             s = new SocketConnection({
                 url: 'badurl',
-                maxRetries: 3,
+                maxRetries: 2,
             })
             onConnected = jest.fn()
             s.on('connected', onConnected)
@@ -176,7 +244,7 @@ describe('SocketConnection', () => {
             expectErrors = 1
             s = new SocketConnection({
                 url: 'wss://streamr.network/nope',
-                maxRetries: 3,
+                maxRetries: 2,
             })
             onConnected = jest.fn()
             s.on('connected', onConnected)
@@ -326,6 +394,7 @@ describe('SocketConnection', () => {
         })
 
         it('retries multiple times when disconnected', async (done) => {
+            s.options.maxRetries = 3
             /* eslint-disable no-underscore-dangle */
             await s.connect()
             const goodUrl = s.options.url
@@ -346,7 +415,7 @@ describe('SocketConnection', () => {
             })
             s.socket.close()
             /* eslint-enable no-underscore-dangle */
-        })
+        }, 3000)
 
         it('fails if exceed max retries', async (done) => {
             expectErrors = 1

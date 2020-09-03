@@ -5,25 +5,49 @@ import debugFactory from 'debug'
 import uniqueId from 'lodash.uniqueid'
 import WebSocket from 'ws'
 
+class ConnectionError extends Error {
+    constructor(err, ...args) {
+        if (err instanceof ConnectionError) {
+            return err
+        }
+
+        if (err && err.stack) {
+            const { message, stack } = err
+            super(message, ...args)
+            this.stack = stack
+        } else {
+            super(err, ...args)
+            if (Error.captureStackTrace) {
+                Error.captureStackTrace(this, this.constructor)
+            }
+        }
+    }
+}
+
+let openSockets = 0
+
 async function OpenWebSocket(url, ...args) {
     return new Promise((resolve, reject) => {
         try {
             if (!url) {
-                throw new Error('URL is not defined!')
+                throw new ConnectionError('URL is not defined!')
             }
             const socket = new WebSocket(url, ...args)
+            socket.id = uniqueId('socket')
             socket.binaryType = 'arraybuffer'
-            socket.onopen = () => resolve(socket)
+            let opened = 0
+            socket.onopen = () => {
+                opened = 1
+                openSockets += opened
+                resolve(socket)
+            }
             let error
             socket.onclose = () => {
-                if (error) {
-                    reject(error)
-                    return
-                }
-                reject(new Error('socket closed'))
+                openSockets -= opened
+                reject(new ConnectionError(error || 'socket closed'))
             }
             socket.onerror = (event) => {
-                error = event.error || new Error(event)
+                error = new ConnectionError(event.error || event)
             }
             return
         } catch (err) {
@@ -72,6 +96,10 @@ async function CloseWebSocket(socket) {
  */
 
 export default class SocketConnection extends EventEmitter {
+    static getOpen() {
+        return openSockets
+    }
+
     constructor(options) {
         super()
         this.options = options
@@ -106,20 +134,39 @@ export default class SocketConnection extends EventEmitter {
 
     emit(event, ...args) {
         if (event === 'error') {
-            this.debug('emit', event, args)
-            return super.emit(event, ...args)
+            let [err] = args
+            const [, ...rest] = args
+            err = new ConnectionError(err)
+            this.debug('emit', event, ...args)
+            return super.emit(event, err, ...rest)
         }
         this.debug('emit', event)
 
         // note if event handler is async and it rejects we're kinda hosed
         // until node lands unhandledrejection support
         // in eventemitter
+        let result
         try {
-            return super.emit(event, ...args)
+            result = super.emit(event, ...args)
         } catch (err) {
             super.emit('error', err)
             return true
         }
+        return result
+    }
+
+    emitTransition(event, ...args) {
+        const previousConnectionState = this.shouldConnect
+        const result = this.emit(event, ...args)
+        // if event emitter changed shouldConnect state, throw
+        if (!!previousConnectionState !== !!this.shouldConnect) {
+            this.debug('transitioned in event handler %s: shouldConnect %s -> %s', event, previousConnectionState, this.shouldConnect)
+            if (this.shouldConnect) {
+                throw new ConnectionError(`connect called in ${event} handler`)
+            }
+            throw new ConnectionError(`disconnect called in ${event} handler`)
+        }
+        return result
     }
 
     async reconnect(...args) {
@@ -160,7 +207,7 @@ export default class SocketConnection extends EventEmitter {
             const { maxRetries } = this.options
             // try again
             this.debug('attempting to reconnect %s of %s', retryCount, maxRetries)
-            this.emit('reconnecting')
+            this.emitTransition('reconnecting')
             return this._connectOnce(...args).then((value) => {
                 this.debug('reconnect %s of %s successful', retryCount, maxRetries)
                 // reset retry state
@@ -219,10 +266,11 @@ export default class SocketConnection extends EventEmitter {
                     throw error
                 })
             }).catch((error) => {
+                const err = new ConnectionError(error)
                 if (!this._isReconnecting) {
-                    this.emit('error', error)
+                    this.emit('error', err)
                 }
-                throw error
+                throw err
             })
             .finally(() => {
                 if (this.initialConnectTask === initialConnectTask) {
@@ -233,22 +281,10 @@ export default class SocketConnection extends EventEmitter {
         return this.initialConnectTask
     }
 
-    async reconnectOnUnexpectedClose() {
-        if (!this.shouldConnect) {
-            return
-        }
-
-        this.debug('unexpected close')
-        await this.reconnect().catch((error) => {
-            this.debug('failed reconnect after connected', error)
-            this.emit('error', error)
-        })
-    }
-
     async _connectOnce() {
         const { debug } = this
         if (!this.shouldConnect) {
-            throw new Error('disconnected before connected')
+            throw new ConnectionError('disconnected before connected')
         }
 
         if (this.isConnected()) {
@@ -266,10 +302,22 @@ export default class SocketConnection extends EventEmitter {
             return this.connectTask
         }
 
-        debug('connect()', this.socket && this.socket.readyState)
         const connectTask = this._connect().then((value) => {
-            // reconnect on unexpected failure
-            this.socket.addEventListener('close', () => this.reconnectOnUnexpectedClose())
+            const debugCurrent = this.debug
+            const { socket } = this // capture so we can ignore if not current
+            socket.addEventListener('close', async () => {
+                // reconnect on unexpected failure
+                if ((this.socket && socket !== this.socket) || !this.shouldConnect) {
+                    return
+                }
+
+                debug('unexpected close')
+                // eslint-disable-next-line promise/no-nesting
+                await this.reconnect().catch((error) => {
+                    debugCurrent('failed reconnect after connected', error)
+                    this.emit('error', error)
+                })
+            })
             return value
         }).finally(() => {
             this.connectTask = undefined
@@ -282,14 +330,23 @@ export default class SocketConnection extends EventEmitter {
     async _connect() {
         this.debug = this._debug.extend(uniqueId('socket'))
         const { debug } = this
-        this.emit('connecting')
+        debug('connect()', this.socket && this.socket.readyState)
+        this.emitTransition('connecting')
+
+        if (!this.shouldConnect) {
+            // was disconnected in connecting event
+            throw new ConnectionError('disconnected before connected')
+        }
+
         const socket = await OpenWebSocket(this.options.url)
         debug('connected')
-        this.socket = socket
         if (!this.shouldConnect) {
+            await CloseWebSocket(socket)
             // was disconnected while connecting
-            throw new Error('disconnected before connected')
+            throw new ConnectionError('disconnected before connected')
         }
+
+        this.socket = socket
 
         socket.addEventListener('message', (messageEvent, ...args) => {
             if (this.socket !== socket) { return }
@@ -297,11 +354,24 @@ export default class SocketConnection extends EventEmitter {
             this.emit('message', messageEvent, ...args)
         })
 
-        socket.addEventListener('close', (event) => {
+        socket.addEventListener('close', () => {
             debug('closed')
-            if (this.socket === socket) {
-                this.socket = undefined
-                this.emit('disconnected', event)
+
+            if (this.socket !== socket) {
+                if (this.debug === debug) {
+                    this.debug = this._debug
+                }
+                return
+            }
+
+            this.socket = undefined
+            try {
+                this.emit('disconnected')
+            } catch (err) {
+                this.emit('error', err)
+            }
+
+            if (this.debug === debug) {
                 this.debug = this._debug
             }
         })
@@ -309,13 +379,13 @@ export default class SocketConnection extends EventEmitter {
         socket.addEventListener('error', (err) => {
             debug('error', this.socket !== socket, err)
             if (this.socket !== socket) { return }
-            const error = err.error || new Error(err)
+            const error = new ConnectionError(err.error || err)
             if (!this._isReconnecting) {
                 this.emit('error', error)
             }
         })
 
-        this.emit('connected')
+        this.emitTransition('connected')
     }
 
     async nextDisconnection() {
@@ -339,11 +409,11 @@ export default class SocketConnection extends EventEmitter {
     }
 
     async disconnect() {
-        this.debug('disconnect()')
         this.shouldConnect = false
         if (this.disconnectTask) {
-            await this.disconnectTask
+            return this.disconnectTask
         }
+        this.debug('disconnect()')
         const disconnectTask = this._disconnect()
             .catch((err) => {
                 this.emit('error', err)
@@ -358,6 +428,7 @@ export default class SocketConnection extends EventEmitter {
     }
 
     async _disconnect() {
+        this.debug('_disconnect()')
         if (this.connectTask) {
             try {
                 await this.connectTask
@@ -367,17 +438,21 @@ export default class SocketConnection extends EventEmitter {
         }
 
         if (this.shouldConnect) {
-            throw new Error('connected before disconnected')
+            throw new ConnectionError('connect before disconnect started')
         }
 
         if (this.isConnected()) {
-            this.emit('disconnecting')
+            this.emitTransition('disconnecting')
+        }
+
+        if (this.shouldConnect) {
+            throw new ConnectionError('connect while disconnecting')
         }
 
         await CloseWebSocket(this.socket)
 
         if (this.shouldConnect) {
-            throw new Error('connected before disconnected')
+            throw new ConnectionError('connect before disconnected')
         }
     }
 
@@ -423,7 +498,7 @@ export default class SocketConnection extends EventEmitter {
             // note we can't just let socket.send fail,
             // have to do this check ourselves because the error appears
             // to be uncatchable in the browser
-            throw new Error('connection closed or closing')
+            throw new ConnectionError('connection closed or closing')
         }
     }
 
@@ -440,18 +515,19 @@ export default class SocketConnection extends EventEmitter {
         return new Promise((resolve, reject) => {
             this.debug('>> %s', msg)
             // promisify send
-            this.socket.send(msg, (err) => {
+            const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
+            this.socket.send(data, (err) => {
                 /* istanbul ignore next */
                 if (err) {
-                    reject(err)
+                    reject(new ConnectionError(err))
                     return
                 }
-                resolve(msg)
+                resolve(data)
             })
             // send callback doesn't exist with browser websockets, just resolve
             /* istanbul ignore next */
             if (process.isBrowser) {
-                resolve(msg)
+                resolve(data)
             }
         })
     }
@@ -491,3 +567,5 @@ export default class SocketConnection extends EventEmitter {
         return this.socket.readyState === WebSocket.CONNECTING
     }
 }
+
+SocketConnection.ConnectionError = ConnectionError
