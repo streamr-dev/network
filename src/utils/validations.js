@@ -49,6 +49,16 @@ export function validateIsNotNegativeInteger(varName, varValue, allowNull = fals
     }
 }
 
+export function validateIsArray(varName, varValue, allowNull = false) {
+    if (allowNull && varValue == null) {
+        return
+    }
+    validateIsNotNullOrUndefined(varName, varValue)
+    if (!Array.isArray(varValue)) {
+        throw new ValidationError(`Expected ${varName} to be an array but was a ${typeof varValue} (${varValue}).`)
+    }
+}
+
 export function validateIsType(varName, varValue, typeName, typeClass, allowNull = false) {
     if (allowNull && varValue == null) {
         return

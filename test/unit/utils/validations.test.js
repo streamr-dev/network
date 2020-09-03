@@ -4,6 +4,7 @@ import {
     validateIsNotEmptyString,
     validateIsInteger,
     validateIsNotNegativeInteger,
+    validateIsArray
 } from '../../../src/utils/validations'
 import ValidationError from '../../../src/errors/ValidationError'
 
@@ -263,6 +264,60 @@ describe('validations', () => {
         it('does not throw on number that is representable as an integer', () => {
             expect(() => {
                 validateIsNotNegativeInteger('varName', 10.00)
+            }).not.toThrow()
+        })
+    })
+
+    describe('validateIsArray', () => {
+        describe('when allowNull = false (default)', () => {
+            it('throws ValidationError on undefined', () => {
+                expect(() => {
+                    validateIsArray('varName', undefined)
+                }).toThrow(new ValidationError('Expected varName to not be undefined.'))
+            })
+            it('throws ValidationError on null', () => {
+                expect(() => {
+                    validateIsArray('varName', null)
+                }).toThrow(new ValidationError('Expected varName to not be null.'))
+            })
+        })
+        describe('when allowNull = true', () => {
+            it('does not throw on undefined', () => {
+                expect(() => {
+                    validateIsArray('varName', undefined, true)
+                }).not.toThrow()
+            })
+            it('does not throw on null', () => {
+                expect(() => {
+                    validateIsArray('varName', null, true)
+                }).not.toThrow()
+            })
+        })
+        it('throws ValidationError on number', () => {
+            expect(() => {
+                validateIsArray('varName', 10)
+            }).toThrow(new ValidationError('Expected varName to be an array but was a number (10).'))
+        })
+        it('throws ValidationError on object', () => {
+            expect(() => {
+                validateIsArray('varName', {
+                    hello: 'world',
+                })
+            }).toThrow(new ValidationError('Expected varName to be an array but was a object ([object Object]).'))
+        })
+        it('throws ValidationError on string', () => {
+            expect(() => {
+                validateIsArray('varName', 'string')
+            }).toThrow(new ValidationError('Expected varName to be an array but was a string (string).'))
+        })
+        it('does not throw on empty array', () => {
+            expect(() => {
+                validateIsArray('varName', [])
+            }).not.toThrow()
+        })
+        it('does not throw on array', () => {
+            expect(() => {
+                validateIsArray('varName', ['a', 'b', 'c', 'd'])
             }).not.toThrow()
         })
     })
