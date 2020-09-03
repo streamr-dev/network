@@ -409,6 +409,7 @@ export default class SocketConnection extends EventEmitter {
     }
 
     async disconnect() {
+        this.options.autoConnect = false // reset auto-connect on manual disconnect
         this.shouldConnect = false
         if (this.disconnectTask) {
             return this.disconnectTask

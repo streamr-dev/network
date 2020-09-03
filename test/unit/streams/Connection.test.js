@@ -473,7 +473,10 @@ describe('SocketConnection', () => {
             s.options.url = 'badurl'
             s.once('error', (err) => {
                 expect(err).toBeTruthy()
-                done()
+                // wait a moment for late errors
+                setTimeout(() => {
+                    done()
+                }, 100)
             })
             s.socket.close()
         })
@@ -629,6 +632,25 @@ describe('SocketConnection', () => {
             await expect(async () => {
                 await s.send('test')
             }).rejects.toThrow()
+        })
+
+        it('fails send if autoconnected but intentionally disconnected', async () => {
+            s.options.autoConnect = true
+            const received = []
+            s.on('message', ({ data } = {}) => {
+                received.push(data)
+            })
+
+            const nextMessage = new Promise((resolve) => s.once('message', resolve))
+            await s.send('test') // ok
+            await nextMessage
+            expect(received).toEqual(['test'])
+            await s.disconnect() // messages after this point should fail
+            await expect(async () => {
+                await s.send('test2')
+            }).rejects.toThrow('connection')
+            await wait(100)
+            expect(received).toEqual(['test'])
         })
     })
 })
