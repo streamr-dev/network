@@ -283,6 +283,10 @@ module.exports = class Tracker extends EventEmitter {
         return this.nodeLocations[node]
     }
 
+    getStorageNodes() {
+        return [...this.storageNodes.keys()]
+    }
+
     async getMetrics() {
         const endpointMetrics = this.protocols.trackerServer.endpoint.getMetrics()
         const processMetrics = await this.metrics.getPidusage()
