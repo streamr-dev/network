@@ -521,6 +521,26 @@ export default class SocketConnection extends EventEmitter {
         }
     }
 
+    getState() {
+        if (this.isConnected()) {
+            return 'connected'
+        }
+
+        if (this.isDisconnected()) {
+            return 'disconnected'
+        }
+
+        if (this.isConnecting()) {
+            return 'connecting'
+        }
+
+        if (this.isDisconnecting()) {
+            return 'disconnecting'
+        }
+
+        return 'unknown'
+    }
+
     async send(msg) {
         this.debug('send()')
         if (!this.isConnected()) {
@@ -545,7 +565,7 @@ export default class SocketConnection extends EventEmitter {
             })
             // send callback doesn't exist with browser websockets, just resolve
             /* istanbul ignore next */
-            if (process.isBrowser) {
+            if (process.browser) {
                 resolve(data)
             }
         })

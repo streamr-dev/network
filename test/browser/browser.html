@@ -42,8 +42,8 @@ const resetResults = () => $('#result').html('')
 
 $('#connect').on('click', async () => {
     resetResults()
-    await client.ensureConnected()
-    $('#result').html(client.connection.state)
+    await client.connect()
+    $('#result').html(client.connection.getState())
 })
 
 $('#create').on('click', () => {
@@ -100,8 +100,8 @@ $('#resend').on('click', async () => {
 })
 
 $('#disconnect').on('click', async () => {
-    await client.ensureDisconnected()
-    $('#result').html(client.connection.state)
+    await client.disconnect()
+    $('#result').html(client.connection.getState())
 })
 
 client.on('error', (err) => {
