@@ -180,7 +180,7 @@ export default class Resender {
         }
 
         this.debug('_requestResend: %o', request)
-        await this.client.connection.send(request).catch((err) => {
+        await this.client.send(request).catch((err) => {
             this.client.handleError(`Failed to send resend request: ${err}`)
         })
     }

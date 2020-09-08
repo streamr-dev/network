@@ -41,6 +41,11 @@ export default class Subscription extends EventEmitter {
         this.state = Subscription.State.unsubscribed
     }
 
+    emit(event, ...args) {
+        this.debug('emit', event)
+        return super.emit(event, ...args)
+    }
+
     getState() {
         return this.state
     }

@@ -173,11 +173,18 @@ describe('StreamrClient', () => {
         client.on('error', onError)
     })
 
-    afterEach(async () => {
+    afterEach(() => {
         client.removeListener('error', onError)
-        await client.ensureDisconnected()
         expect(errors[0]).toBeFalsy()
         expect(errors).toHaveLength(0)
+    })
+
+    afterEach(async () => {
+        await client.disconnect()
+        const openSockets = Connection.getOpen()
+        if (openSockets !== 0) {
+            throw new Error(`sockets not closed: ${openSockets}`)
+        }
     })
 
     afterAll(async () => {
@@ -235,21 +242,33 @@ describe('StreamrClient', () => {
     })
 
     describe('disconnection behaviour', () => {
-        beforeEach(async () => client.ensureConnected())
+        beforeEach(async () => client.connect())
 
         it('emits disconnected event on client', async (done) => {
             client.once('disconnected', done)
             await connection.disconnect()
         })
 
-        it('does not remove subscriptions', async () => {
+        it('removes subscriptions', async () => {
+            const sub = mockSubscription('stream1', () => {})
+            await new Promise((resolve) => sub.once('subscribed', resolve))
+            await client.disconnect()
+            expect(client.getSubscriptions(sub.streamId)).toEqual([])
+        })
+
+        it('does not remove subscriptions if disconnected accidentally', async () => {
             const sub = client.subscribe('stream1', () => {})
-            await connection.disconnect()
+            client.connection.socket.close()
+            await new Promise((resolve) => client.once('disconnected', resolve))
+            expect(client.getSubscriptions(sub.streamId)).toEqual([sub])
+            expect(sub.getState()).toEqual(Subscription.State.unsubscribed)
+            await client.connect()
             expect(client.getSubscriptions(sub.streamId)).toEqual([sub])
         })
 
         it('sets subscription state to unsubscribed', async () => {
-            const sub = client.subscribe('stream1', () => {})
+            const sub = mockSubscription('stream1', () => {})
+            await new Promise((resolve) => sub.once('subscribed', resolve))
             await connection.disconnect()
             expect(sub.getState()).toEqual(Subscription.State.unsubscribed)
         })
@@ -286,7 +305,8 @@ describe('StreamrClient', () => {
             }, () => {})
             sub.once('subscribed', async () => {
                 await wait(100)
-                const { requestId } = requests[requests.length - 1]
+                const { requestId, type } = requests[requests.length - 1]
+                expect(type).toEqual(ControlMessage.TYPES.ResendLastRequest)
                 const streamMessage = getStreamMessage(sub.streamId, {})
                 connection.emitMessage(new UnicastMessage({
                     requestId,
@@ -742,7 +762,7 @@ describe('StreamrClient', () => {
             )
 
             sub.handleError = async (err) => {
-                expect(err).toBe(jsonError)
+                expect(err && err.message).toMatch(jsonError.message)
                 done()
             }
             connection.emit('error', jsonError)
@@ -753,7 +773,7 @@ describe('StreamrClient', () => {
             const testError = new Error('This is a test error message, ignore')
 
             client.once('error', async (err) => {
-                expect(err).toBe(testError)
+                expect(err.message).toMatch(testError.message)
                 expect(client.onError).toHaveBeenCalled()
                 done()
             })
@@ -1388,28 +1408,25 @@ describe('StreamrClient', () => {
     describe('disconnect()', () => {
         beforeEach(() => client.connect())
 
-        it('calls connection.disconnect()', (done) => {
-            connection.disconnect = () => done()
-            client.disconnect()
-        })
-
-        it('resets subscriptions', async () => {
-            const sub = mockSubscription('stream1', () => {})
+        it('calls connection.disconnect()', async () => {
+            const disconnect = jest.spyOn(connection, 'disconnect')
             await client.disconnect()
-            expect(client.getSubscriptions(sub.streamId)).toEqual([])
+            expect(disconnect).toHaveBeenCalledTimes(1)
         })
     })
 
     describe('pause()', () => {
         beforeEach(() => client.connect())
 
-        it('calls connection.disconnect()', (done) => {
-            connection.disconnect = done
-            client.pause()
+        it('calls connection.disconnect()', async () => {
+            const disconnect = jest.spyOn(connection, 'disconnect')
+            await client.pause()
+            expect(disconnect).toHaveBeenCalledTimes(1)
         })
 
         it('does not reset subscriptions', async () => {
             const sub = mockSubscription('stream1', () => {})
+            await new Promise((resolve) => sub.once('subscribed', resolve))
             await client.pause()
             expect(client.getSubscriptions(sub.streamId)).toEqual([sub])
         })

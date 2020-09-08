@@ -90,6 +90,7 @@ export default class StreamrClient extends EventEmitter {
         this.session = new Session(this, this.options.auth)
         this.connection = connection || new Connection(this.options)
         this.connection.on('message', (messageEvent) => {
+            if (!this.connection.isConnected()) { return } // ignore messages if not connected
             let controlMessage
             try {
                 controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
@@ -98,6 +99,10 @@ export default class StreamrClient extends EventEmitter {
                 this.emit('error', err)
                 return
             }
+            const [typeName] = Object.entries(ControlMessage.TYPES).find(([, value]) => (
+                value === controlMessage.type
+            )) || []
+            this.debug('message type', typeName)
             this.connection.emit(controlMessage.type, controlMessage)
         })
 
@@ -113,8 +118,6 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async onConnectionConnected() {
-        await new Promise((resolve) => setTimeout(resolve, 0)) // wait a tick to let event handlers finish
-        if (!this.isConnected()) { return }
         this.debug('Connected!')
         this.emit('connected')
     }
@@ -126,12 +129,11 @@ export default class StreamrClient extends EventEmitter {
 
     onConnectionError(err) {
         // If there is an error parsing a json message in a stream, fire error events on the relevant subs
-        if ((err instanceof Errors.InvalidJsonError)) {
+        if ((err instanceof Errors.InvalidJsonError || err.reason instanceof Errors.InvalidJsonError)) {
             this.subscriber.onErrorMessage(err)
         } else {
             // if it looks like an error emit as-is, otherwise wrap in new Error
-            const errorObject = (err && err.stack && err.message) ? err : new Error(err)
-            this.emit('error', errorObject)
+            this.emit('error', new Connection.ConnectionError(err))
         }
     }
 
@@ -141,9 +143,17 @@ export default class StreamrClient extends EventEmitter {
     }
 
     _onError(err, ...args) {
-        this.debug('disconnecting due to error', err)
         this.onError(err, ...args)
-        this.ensureDisconnected()
+        if (!(err instanceof Connection.ConnectionError)) {
+            this.debug('disconnecting due to error', err)
+            this.disconnect()
+        }
+    }
+
+    async send(request) {
+        const serialized = request.serialize()
+        this.debug('>> %s', serialized)
+        return this.connection.send(request)
     }
 
     /**
@@ -180,7 +190,6 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async connect() {
-        this.debug('Connecting to %s', this.options.url)
         return this.connection.connect()
     }
 

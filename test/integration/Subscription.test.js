@@ -48,9 +48,9 @@ describe('Subscription', () => {
             stream = undefined
         }
 
-        if (client && client.isConnected()) {
-            await client.disconnect()
+        if (client) {
             client.off('error', throwError)
+            await client.disconnect()
             client = undefined
         }
     }

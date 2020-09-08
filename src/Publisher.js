@@ -5,6 +5,7 @@ import Signer from './Signer'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
 import MessageCreationUtil from './MessageCreationUtil'
+import Connection from './streams/SocketConnection'
 
 function getStreamId(streamObjectOrId) {
     if (streamObjectOrId instanceof Stream) {
@@ -40,7 +41,19 @@ export default class Publisher {
         }
     }
 
-    async publish(streamObjectOrId, data, timestamp = new Date(), partitionKey = null) {
+    async publish(...args) {
+        return this._publish(...args).catch((err) => {
+            this.client.debug({ publishError: err })
+            if (!(err instanceof Connection.ConnectionError || err.reason instanceof Connection.ConnectionError)) {
+                // emit non-connection errors
+                this.client.emit('error', err)
+            }
+            throw err
+        })
+    }
+
+    async _publish(streamObjectOrId, data, timestamp = new Date(), partitionKey = null) {
+        this.debug('publish()')
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
@@ -53,6 +66,7 @@ export default class Publisher {
             this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestampAsNumber, partitionKey),
         ])
 
+        this.debug('sessionToken, streamMessage')
         const requestId = this.client.resender.resendUtil.generateRequestId()
         const request = new ControlLayer.PublishRequest({
             streamMessage,
@@ -61,15 +75,15 @@ export default class Publisher {
         })
         this.debug('_requestPublish: %o', request)
         try {
-            await this.client.connection.send(request)
+            await this.client.send(request)
         } catch (err) {
-            this.debug('adasd: %o', err)
             throw new FailedToPublishError(
                 streamId,
                 data,
                 err
             )
         }
+        return request
     }
 
     getPublisherId() {

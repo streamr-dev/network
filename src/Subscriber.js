@@ -45,7 +45,9 @@ export default class Subscriber {
     }
 
     onSubscribeResponse(response) {
+        if (!this.client.isConnected()) { return }
         const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
+        this.debug('onSubscribeResponse')
         if (stream) {
             stream.setSubscribing(false)
             stream.getSubscriptions().filter((sub) => !sub.resending)
@@ -68,6 +70,7 @@ export default class Subscriber {
     }
 
     async onClientConnected() {
+        this.debug('onClientConnected')
         try {
             if (!this.client.isConnected()) { return }
             // Check pending subscriptions
@@ -97,7 +100,7 @@ export default class Subscriber {
 
     onErrorMessage(err) {
         // not ideal, see error handler in client
-        if (!(err instanceof Errors.InvalidJsonError)) {
+        if (!(err instanceof Errors.InvalidJsonError || err.reason instanceof Errors.InvalidJsonError)) {
             return
         }
         // If there is an error parsing a json message in a stream, fire error events on the relevant subs
@@ -114,6 +117,8 @@ export default class Subscriber {
 
         // Backwards compatibility for giving an options object as third argument
         Object.assign(options, legacyOptions)
+
+        this.debug('subscribe', options)
 
         if (!options.stream) {
             throw new Error('subscribe: Invalid arguments: options.stream is not given')
@@ -145,6 +150,9 @@ export default class Subscriber {
             })
         }
         sub.on('gap', (from, to, publisherId, msgChainId) => {
+            this.debug('gap', {
+                from, to, publisherId, msgChainId
+            })
             if (!sub.resending) {
             // eslint-disable-next-line no-underscore-dangle
                 this.client.resender._requestResend(sub, {
@@ -153,7 +161,7 @@ export default class Subscriber {
             }
         })
         sub.on('done', () => {
-            this.debug('done event for sub %d', sub.id)
+            this.debug('done event for sub %s', sub.id)
             this.unsubscribe(sub)
         })
 
@@ -175,20 +183,33 @@ export default class Subscriber {
             throw new Error('unsubscribe: please give a Subscription object as an argument!')
         }
 
-        const sp = this._getSubscribedStreamPartition(sub.streamId, sub.streamPartition)
+        const { streamId, streamPartition } = sub
+
+        this.debug('unsubscribe', {
+            streamId,
+            streamPartition,
+        })
+
+        const sp = this._getSubscribedStreamPartition(streamId, streamPartition)
+
         // If this is the last subscription for this stream-partition, unsubscribe the client too
-        if (sp && sp.getSubscriptions().length === 1
-            && sub.getState() === Subscription.State.subscribed) {
+        if (sp
+            && sp.getSubscriptions().length === 1
+            && sub.getState() === Subscription.State.subscribed
+        ) {
+            this.debug('last subscription')
             sub.setState(Subscription.State.unsubscribing)
             return this._requestUnsubscribe(sub)
         }
 
         if (sub.getState() !== Subscription.State.unsubscribing && sub.getState() !== Subscription.State.unsubscribed) {
-            // Else the sub can be cleaned off immediately
+            this.debug('remove sub')
             this._removeSubscription(sub)
+            // Else the sub can be cleaned off immediately
             sub.setState(Subscription.State.unsubscribed)
             return this._checkAutoDisconnect()
         }
+        return Promise.resolve()
     }
 
     unsubscribeAll(streamId, streamPartition) {
@@ -313,12 +334,11 @@ export default class Subscriber {
             sessionToken,
             requestId: this.client.resender.resendUtil.generateRequestId(),
         })
-        this.debug('_requestSubscribe: subscribing client: %o', request)
         sp.setSubscribing(true)
-        await this.client.connection.nextConnection()
-        await this.client.connection.send(request).catch((err) => {
+        this.debug('_requestSubscribe: subscribing client: %o', request)
+        await this.client.send(request).catch((err) => {
             sub.setState(Subscription.State.unsubscribed)
-            this.client.emit('error', `Failed to send subscribe request: ${err.stack}`)
+            this.client.emit('error', new Error(`Failed to send subscribe request: ${err.stack}`))
         })
     }
 
@@ -342,6 +362,7 @@ export default class Subscriber {
             this.debug('Disconnecting due to no longer being subscribed to any streams')
             return this.client.disconnect()
         }
+        return Promise.resolve()
     }
 
     // eslint-disable-next-line class-methods-use-this
@@ -376,20 +397,23 @@ export default class Subscriber {
         }
 
         sub.setState(Subscription.State.subscribing)
-        if (!sub.hasResendOptions()) {
-            return this._requestSubscribe(sub)
-        }
+        return Promise.all([
+            this._requestSubscribe(sub),
+            // eslint-disable-next-line no-underscore-dangle
+            sub.hasResendOptions() && this.client.resender._requestResend(sub),
+        ])
 
-        const onSubscribed = new Promise((resolve, reject) => {
-            // Once subscribed, ask for a resend
-            sub.once('subscribed', () => {
-                // eslint-disable-next-line no-underscore-dangle
-                resolve(this.client.resender._requestResend(sub))
-            })
-            sub.once('error', reject)
-        })
-        await this._requestSubscribe(sub)
+        //const onSubscribed = new Promise((resolve, reject) => {
+            //this.debug('add resend on sub')
+            //// Once subscribed, ask for a resend
+            //sub.once('subscribed', () => {
+                //// eslint-disable-next-line no-underscore-dangle
+                //resolve(this.client.resender._requestResend(sub))
+            //})
+            //sub.once('error', reject)
+        //})
+        //await this._requestSubscribe(sub)
 
-        return onSubscribed
+        //return onSubscribed
     }
 }

@@ -149,6 +149,18 @@ describe('SocketConnection', () => {
         })
 
         describe('connect/disconnect inside event handlers', () => {
+            it('can handle connect on connecting event', async (done) => {
+                s.once('connecting', async () => {
+                    await s.connect()
+                    expect(s.isConnected()).toBeTruthy()
+                    expect(onConnected).toHaveBeenCalledTimes(1)
+                    expect(onConnecting).toHaveBeenCalledTimes(1)
+                    done()
+                })
+                await s.connect()
+                expect(s.isConnected()).toBeTruthy()
+            })
+
             it('can handle disconnect on connecting event', async (done) => {
                 expectErrors = 1
                 s.once('connecting', async () => {
@@ -174,6 +186,28 @@ describe('SocketConnection', () => {
                     await s.connect()
                 }).rejects.toThrow()
                 expect(s.isConnected()).toBeFalsy()
+            })
+
+            it('can handle disconnect on connected event, repeated', async (done) => {
+                expectErrors = 3
+                s.once('connected', async () => {
+                    await expect(async () => {
+                        await s.disconnect()
+                    }).rejects.toThrow()
+                })
+                s.once('disconnected', async () => {
+                    s.once('connected', async () => {
+                        await s.disconnect()
+                        done()
+                    })
+
+                    await expect(async () => {
+                        await s.connect()
+                    }).rejects.toThrow()
+                })
+                await expect(async () => {
+                    await s.connect()
+                }).rejects.toThrow()
             })
 
             it('can handle connect on disconnecting event', async (done) => {
@@ -515,7 +549,7 @@ describe('SocketConnection', () => {
                     s.connect(),
                     s.disconnect(),
                 ])
-            )).rejects.toThrow('badurl')
+            )).rejects.toThrow('disconnected before connected')
             s.options.url = goodUrl
             await s.connect()
             expect(s.isConnected()).toBeTruthy()
