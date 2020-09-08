@@ -43,7 +43,9 @@ export default class Publisher {
 
     async publish(...args) {
         return this._publish(...args).catch((err) => {
-            this.client.debug({ publishError: err })
+            this.client.debug({
+                publishError: err
+            })
             if (!(err instanceof Connection.ConnectionError || err.reason instanceof Connection.ConnectionError)) {
                 // emit non-connection errors
                 this.client.emit('error', err)

@@ -403,17 +403,17 @@ export default class Subscriber {
             sub.hasResendOptions() && this.client.resender._requestResend(sub),
         ])
 
-        //const onSubscribed = new Promise((resolve, reject) => {
-            //this.debug('add resend on sub')
-            //// Once subscribed, ask for a resend
-            //sub.once('subscribed', () => {
-                //// eslint-disable-next-line no-underscore-dangle
-                //resolve(this.client.resender._requestResend(sub))
-            //})
-            //sub.once('error', reject)
-        //})
-        //await this._requestSubscribe(sub)
+        // const onSubscribed = new Promise((resolve, reject) => {
+        // this.debug('add resend on sub')
+        /// / Once subscribed, ask for a resend
+        // sub.once('subscribed', () => {
+        /// / eslint-disable-next-line no-underscore-dangle
+        // resolve(this.client.resender._requestResend(sub))
+        // })
+        // sub.once('error', reject)
+        // })
+        // await this._requestSubscribe(sub)
 
-        //return onSubscribed
+        // return onSubscribed
     }
 }

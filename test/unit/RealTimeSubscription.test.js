@@ -3,7 +3,6 @@ import { wait } from 'streamr-test-utils'
 
 import RealTimeSubscription from '../../src/RealTimeSubscription'
 import Subscription from '../../src/Subscription'
-import AbstractSubscription from '../../src/AbstractSubscription'
 
 const { StreamMessage, MessageIDStrict, MessageRef } = MessageLayer
 

@@ -7,7 +7,7 @@ import uniqueId from 'lodash.uniqueid'
 
 import Connection from './streams/SocketConnection'
 import Session from './Session'
-import { waitFor, getVersionString } from './utils'
+import { getVersionString } from './utils'
 import Publisher from './Publisher'
 import Resender from './Resender'
 import Subscriber from './Subscriber'

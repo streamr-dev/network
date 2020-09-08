@@ -1,6 +1,4 @@
-import EventEmitter from 'eventemitter3'
 import sinon from 'sinon'
-import debug from 'debug'
 import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
@@ -34,32 +32,14 @@ const {
 } = ControlLayer
 
 const { StreamMessage, MessageRef, MessageID, MessageIDStrict } = MessageLayer
-const mockDebug = debug('mock')
 
 describe('StreamrClient', () => {
     let client
     let connection
-    let asyncs = []
     let requests = []
 
     const streamPartition = 0
     const sessionToken = 'session-token'
-
-    function async(func) {
-        const me = setTimeout(() => {
-            expect(me).toEqual(asyncs[0])
-            asyncs.shift()
-            func()
-        }, 0)
-        asyncs.push(me)
-    }
-
-    function clearAsync() {
-        asyncs.forEach((it) => {
-            clearTimeout(it)
-        })
-        asyncs = []
-    }
 
     function setupSubscription(
         streamId, emitSubscribed = true, subscribeOptions = {}, handler = sinon.stub(),
@@ -154,7 +134,8 @@ describe('StreamrClient', () => {
     const STORAGE_DELAY = 2000
 
     beforeEach(() => {
-        clearAsync()
+        errors = []
+        requests = []
         connection = createConnectionMock()
         client = new StubbedStreamrClient({
             autoConnect: false,
@@ -168,8 +149,6 @@ describe('StreamrClient', () => {
         }, connection)
 
         connection.options = client.options
-        errors = []
-        requests = []
         client.on('error', onError)
     })
 
@@ -1299,7 +1278,9 @@ describe('StreamrClient', () => {
 
     describe('publish', () => {
         function getPublishRequest(content, streamId, timestamp, seqNum, prevMsgRef, requestId) {
-            const messageId = new MessageID(streamId, 0, timestamp, seqNum, StubbedStreamrClient.hashedUsername, client.publisher.msgCreationUtil.msgChainId)
+            const { hashedUsername } = StubbedStreamrClient
+            const { msgChainId } = client.publisher.msgCreationUtil
+            const messageId = new MessageID(streamId, 0, timestamp, seqNum, hashedUsername, msgChainId)
             const streamMessage = new StreamMessage({
                 messageId,
                 prevMsgRef,
@@ -1485,4 +1466,3 @@ describe('StreamrClient', () => {
         })
     })
 })
-
