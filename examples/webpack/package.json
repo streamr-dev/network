@@ -29,7 +29,7 @@
   },
   "#": "Update core-js -> 3.6.2, after releasing new version of client",
   "dependencies": {
-    "streamr-client": "^3.0.0",
-    "@babel/runtime": "^7.7.7"
+    "@babel/runtime": "^7.11.2",
+    "streamr-client": "^4.1.0"
   }
 }
