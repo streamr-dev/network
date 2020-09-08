@@ -20,7 +20,6 @@ describe('SocketConnection', () => {
     let expectErrors = 0 // check no errors by default
 
     beforeEach(() => {
-        jest.setTimeout(2000)
         s = new SocketConnection({
             url: 'wss://echo.websocket.org/',
             maxRetries: 2
