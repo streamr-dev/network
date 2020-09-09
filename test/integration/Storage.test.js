@@ -1,7 +1,6 @@
 const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
 const { StreamMessage, MessageIDStrict } = require('streamr-network').Protocol.MessageLayer
-const { wait } = require('streamr-test-utils')
 
 const { startCassandraStorage } = require('../../src/storage/Storage')
 

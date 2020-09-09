@@ -10,7 +10,6 @@ const uWS = require('uWebSockets.js')
 const HttpError = require('../errors/HttpError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const VolumeLogger = require('../VolumeLogger')
-const partition = require('../helpers/partition')
 const StreamStateManager = require('../StreamStateManager')
 
 const Connection = require('./Connection')

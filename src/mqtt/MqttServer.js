@@ -117,8 +117,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         connection.on('connect', (packet) => {
             debug('connect request %o', packet)
 
-            const { username, password } = packet
-            const apiKey = password.toString()
+            const apiKey = packet.password.toString()
 
             this.streamFetcher.getToken(apiKey)
                 .then((res) => {

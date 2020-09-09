@@ -1,5 +1,4 @@
 const WebSocket = require('ws')
-const StreamrClient = require('streamr-client')
 const { startTracker } = require('streamr-network')
 const fetch = require('node-fetch')
 const { wait, waitForCondition } = require('streamr-test-utils')

@@ -37,6 +37,13 @@ Then run the command tracker with default values
 tracker
 ```
 
+## Deleting expired data from Storage node
+`broker <configFile> --deleteExpired` 
+
+or 
+
+`node app.js <configFile> --deleteExpired`
+
 
 ## Publishing
 

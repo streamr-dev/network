@@ -22,7 +22,9 @@ module.exports = class Publisher {
 
     async validateAndPublish(streamMessage) {
         if (isTimestampTooFarInTheFuture(streamMessage.getTimestamp(), this._thresholdForFutureMessageSeconds)) {
-            throw new FailedToPublishError(streamMessage.getStreamId(), `future timestamps are not allowed, max allowed +${this._thresholdForFutureMessageSeconds} seconds`)
+            throw new FailedToPublishError(
+                streamMessage.getStreamId(), `future timestamps are not allowed, max allowed +${this._thresholdForFutureMessageSeconds} seconds`
+            )
         }
 
         // Only publish valid messages
