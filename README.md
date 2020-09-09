@@ -44,6 +44,33 @@ or
 
 `node app.js <configFile> --deleteExpired`
 
+## Config logging levels
+
+`LOG_LEVEL=debug broker <configFile>`
+
+`LOG_LEVEL=[debug|info|warn|error] node app.js ./configs/development-1.env.json`
+
+### Disabling all logs
+
+`NOLOG=true node app.js ./configs/development-1.env.json`
+
+### Logging to file and logrotate.d
+
+`LOG_LEVEL=[debug|info|warn|error] node app.js ./configs/development-1.env.json > /var/log/broker.log`
+
+**/etc/logrotate.d/broker**
+```
+/var/log/broker.log {
+       su root
+       daily
+       rotate 7
+       delaycompress
+       compress
+       notifempty
+       missingok
+       copytruncate
+}
+```
 
 ## Publishing
 

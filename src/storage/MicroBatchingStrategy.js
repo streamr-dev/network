@@ -10,6 +10,8 @@
  * Background: https://dzone.com/articles/efficient-cassandra-write
  */
 
+const logger = require('../helpers/logger')('streamr:storage:MicroBatchingStrategy')
+
 class SharedContext {
     constructor(insertFn, baseCommitIntervalInMs, maxFailMultiplier, doNotGrowBatchAfterBytes, logErrors) {
         this.insertFn = insertFn
@@ -27,7 +29,7 @@ class SharedContext {
         } catch (e) {
             const key = `${streamMessages[0].getStreamId()}::${streamMessages[0].getStreamPartition()}`
             if (this.logErrors) {
-                console.error(`Failed to insert (${key}): ${e.stack ? e.stack : e}`)
+                logger.error(`Failed to insert (${key}): ${e.stack ? e.stack : e}`)
             }
             this._growFailMultiplier()
             throw e

@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run Broker (8890,8891)" type="NodeJSConfigurationType" application-parameters="configs/development-1.env.json" path-to-js-file="app.js" working-dir="$PROJECT_DIR$">
     <envs>
-      <env name="DEBUG" value="streamr:*" />
+      <env name="LOG_LEVEL" value="debug" />
     </envs>
     <method v="2" />
   </configuration>

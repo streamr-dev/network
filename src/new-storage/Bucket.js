@@ -1,4 +1,4 @@
-const createDebug = require('debug')
+const getLogger = require('../helpers/logger')
 
 class Bucket {
     constructor(id, streamId, partition, size, records, dateCreate, maxSize, maxRecords, keepAliveSeconds) {
@@ -45,8 +45,8 @@ class Bucket {
         this.records = records
         this.dateCreate = dateCreate
 
-        this.debug = createDebug(`streamr:storage:bucket:${this.id}`)
-        this.debug(`init bucket: ${this.getId()}, dateCreate: ${this.dateCreate}`)
+        this.logger = getLogger(`streamr:storage:bucket:${this.id}`)
+        this.logger.debug(`init bucket: ${this.getId()}, dateCreate: ${this.dateCreate}`)
 
         this._maxSize = maxSize
         this._maxRecords = maxRecords
@@ -68,7 +68,7 @@ class Bucket {
     _checkSize(percentDeduction = 0) {
         const maxPercentSize = (this._maxSize * (100 - percentDeduction)) / 100
         const maxRecords = (this._maxRecords * (100 - percentDeduction)) / 100
-        this.debug(`_checkSize: ${this.size >= maxPercentSize || this.records >= maxRecords} => ${this.size} >= ${maxPercentSize} || ${this.records} >= ${maxRecords}`)
+        this.logger.debug(`_checkSize: ${this.size >= maxPercentSize || this.records >= maxRecords} => ${this.size} >= ${maxPercentSize} || ${this.records} >= ${maxRecords}`)
 
         return this.size >= maxPercentSize || this.records >= maxRecords
     }
@@ -85,7 +85,7 @@ class Bucket {
         this.size += size
         this.records += 1
 
-        this.debug(`incremented bucket => size: ${this.size}, records: ${this.records}`)
+        this.logger.debug(`incremented bucket => size: ${this.size}, records: ${this.records}`)
 
         this._stored = false
         this._updateTTL()
@@ -94,12 +94,12 @@ class Bucket {
     _updateTTL() {
         this.ttl = new Date()
         this.ttl.setSeconds(this.ttl.getSeconds() + this._keepAliveSeconds)
-        this.debug(`new ttl: ${this.ttl}`)
+        this.logger.debug(`new ttl: ${this.ttl}`)
     }
 
     isAlive() {
         const isAlive = this.ttl >= new Date()
-        this.debug(`isAlive: ${isAlive}, ${this.ttl} >= ${new Date()}`)
+        this.logger.debug(`isAlive: ${isAlive}, ${this.ttl} >= ${new Date()}`)
         return this.ttl >= new Date()
     }
 }

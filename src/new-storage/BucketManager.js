@@ -1,7 +1,8 @@
-const debug = require('debug')('streamr:storage:bucket-manager')
 const Heap = require('heap')
 const { TimeUuid } = require('cassandra-driver').types
 const allSettled = require('promise.allsettled')
+
+const logger = require('../helpers/logger')('streamr:storage:BucketManager')
 
 const Bucket = require('./Bucket')
 
@@ -45,7 +46,7 @@ class BucketManager {
         const key = toKey(streamId, partition)
 
         if (this.streams[key]) {
-            debug(`stream ${key} found`)
+            logger.debug(`stream ${key} found`)
             bucketId = this._findBucketId(key, timestamp)
 
             if (!bucketId) {
@@ -53,7 +54,7 @@ class BucketManager {
                 stream.minTimestamp = stream.minTimestamp !== undefined ? Math.min(stream.minTimestamp, timestamp) : timestamp
             }
         } else {
-            debug(`stream ${key} not found, create new`)
+            logger.debug(`stream ${key} not found, create new`)
 
             this.streams[key] = {
                 streamId,
@@ -71,7 +72,7 @@ class BucketManager {
         if (bucket) {
             bucket.incrementBucket(size)
         } else {
-            console.warn(`${bucketId} not found`)
+            logger.warn(`${bucketId} not found`)
         }
     }
 
@@ -85,7 +86,7 @@ class BucketManager {
 
     _findBucketId(key, timestamp) {
         let bucketId
-        debug(`checking stream: ${key}, timestamp: ${timestamp} in BucketManager state`)
+        logger.debug(`checking stream: ${key}, timestamp: ${timestamp} in BucketManager state`)
 
         const stream = this.streams[key]
         if (stream) {
@@ -111,8 +112,8 @@ class BucketManager {
             }
         }
 
-        // just for debugging
-        debug(`bucketId ${bucketId ? 'FOUND' : ' NOT FOUND'} for stream: ${key}, timestamp: ${timestamp}`)
+        // just for logger.debugging
+        logger.debug(`bucketId ${bucketId ? 'FOUND' : ' NOT FOUND'} for stream: ${key}, timestamp: ${timestamp}`)
         return bucketId
     }
 
@@ -168,7 +169,7 @@ class BucketManager {
             }
 
             if (insertNewBucket) {
-                debug(`bucket for timestamp: ${minTimestamp} not found, create new bucket`)
+                logger.debug(`bucket for timestamp: ${minTimestamp} not found, create new bucket`)
 
                 // we create first in memory, so don't wait for database, then _storeBuckets inserts bucket into database
                 const newBucket = new Bucket(
@@ -266,7 +267,7 @@ class BucketManager {
             })
         } catch (e) {
             if (this.opts.logErrors) {
-                console.error(e)
+                logger.error(e)
             }
         }
 

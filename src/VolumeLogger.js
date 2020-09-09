@@ -1,6 +1,8 @@
 const io = require('@pm2/io')
 const StreamrClient = require('streamr-client')
 
+const logger = require('./helpers/logger')('streamr:VolumeLogger')
+
 module.exports = class VolumeLogger {
     constructor(reportingIntervalSeconds = 60, networkNode = undefined, storages = [], client = undefined, streamId = undefined) {
         this.reportingIntervalSeconds = reportingIntervalSeconds
@@ -163,7 +165,7 @@ module.exports = class VolumeLogger {
             return n < 10 ? n.toFixed(1) : Math.round(n)
         }
 
-        console.log(
+        logger.info(
             'Report\n'
             + '\tBroker connections: %d\n'
             + '\tBroker in: %d events/s, %d kb/s\n'
@@ -228,7 +230,7 @@ module.exports = class VolumeLogger {
     _sendReport(data) {
         if (this.client instanceof StreamrClient && this.streamId !== undefined) {
             this.client.publishHttp(this.streamId, data).catch((e) => {
-                console.warn(`VolumeLogger failed to publish metrics: ${e}`)
+                logger.warn(`VolumeLogger failed to publish metrics: ${e}`)
             })
         }
     }

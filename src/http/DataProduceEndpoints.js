@@ -5,6 +5,7 @@ const { Protocol } = require('streamr-network')
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 const { InvalidJsonError, ValidationError } = Protocol.Errors
 
+const logger = require('../helpers/logger')('streamr:http:DataProduceEndpoints')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const partition = require('../helpers/partition')
 
@@ -61,8 +62,11 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
         async (req, res) => {
             // Validate body
             if (!req.body || !req.body.length) {
+                const errMsg = 'No request body or invalid request body.'
+                logger.error(errMsg)
+
                 res.status(400).send({
-                    error: 'No request body or invalid request body.',
+                    error: errMsg
                 })
                 return
             }
@@ -82,6 +86,7 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
                 }
                 signatureType = req.query.signatureType ? parsePositiveInteger(req.query.signatureType) : 0
             } catch (err) {
+                logger.error(err)
                 res.status(400).send({
                     error: err.message
                 })
@@ -115,7 +120,7 @@ module.exports = (streamFetcher, publisher, partitionFn = partition) => {
                         error: err.message,
                     })
                 } else {
-                    console.error(err)
+                    logger.error(err)
                 }
             }
         },

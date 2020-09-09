@@ -1,5 +1,4 @@
-const debug = require('debug')('streamr:StreamStateManager')
-
+const logger = require('./helpers/logger')('streamr:StreamStateManager')
 const Stream = require('./Stream')
 
 function getStreamLookupKey(streamId, streamPartition) {
@@ -60,12 +59,12 @@ module.exports = class StreamStateManager {
          */
         this._timeouts[key] = setTimeout(() => {
             if (stream.state !== 'subscribed') {
-                debug('Stream "%s:%d" never subscribed, cleaning..', streamId, streamPartition)
+                logger.debug('Stream "%s:%d" never subscribed, cleaning..', streamId, streamPartition)
                 this.delete(streamId, streamPartition)
             }
         }, 60 * 1000)
 
-        debug('Stream object "%s" created', stream.toString())
+        logger.debug('Stream object "%s" created', stream.toString())
         return stream
     }
 
@@ -82,7 +81,7 @@ module.exports = class StreamStateManager {
             delete this._streams[key]
         }
 
-        debug('Stream object "%s" deleted', stream.toString())
+        logger.debug('Stream object "%s" deleted', stream.toString())
     }
 
     close() {

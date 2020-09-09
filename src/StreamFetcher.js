@@ -1,7 +1,7 @@
 const fetch = require('node-fetch')
 const memoize = require('memoizee')
-const debug = require('debug')('streamr:StreamFetcher')
 
+const logger = require('./helpers/logger')('streamr:StreamFetcher')
 const HttpError = require('./errors/HttpError')
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
@@ -70,13 +70,13 @@ module.exports = class StreamFetcher {
         return fetch(url, {
             headers,
         }).catch((e) => {
-            console.error(`failed to communicate with E&E: ${e}`)
+            logger.error(`failed to communicate with E&E: ${e}`)
             throw e
-        }).then((response) => {
+        }).then(async (response) => {
             if (response.status !== 200) {
-                debug(
+                logger.debug(
                     'fetch failed with status %d for streamId %s, apiKey %s, sessionToken %s : %o',
-                    response.status, streamId, apiKey, sessionToken, response.text(),
+                    response.status, streamId, apiKey, sessionToken, await response.text(),
                 )
                 this.fetch.delete(streamId, apiKey, sessionToken) // clear cache result
                 throw new HttpError(response.status, 'GET', url)
@@ -108,19 +108,19 @@ module.exports = class StreamFetcher {
         return fetch(url, {
             headers,
         }).catch((e) => {
-            console.error(`failed to communicate with E&E: ${e}`)
+            logger.error(`failed to communicate with E&E: ${e}`)
             throw e
         }).then((response) => {
             if (response.status !== 200) {
                 return response.text().then((errorMsg) => {
-                    debug(
+                    logger.debug(
                         'checkPermission failed with status %d for streamId %s, apiKey %s, sessionToken %s, operation %s: %s',
                         response.status, streamId, apiKey, sessionToken, operation, errorMsg,
                     )
                     this.checkPermission.delete(streamId, apiKey, sessionToken, operation) // clear cache result
                     throw new HttpError(response.status, 'GET', url)
                 }).catch((err) => {
-                    console.error(err)
+                    logger.error(err)
                     throw err
                 })
             }
@@ -130,7 +130,7 @@ module.exports = class StreamFetcher {
                     return true
                 }
 
-                debug(
+                logger.debug(
                     'checkPermission failed for streamId %s, apiKey %s, sessionToken %s, operation %s. permissions were: %o',
                     streamId, apiKey, sessionToken, operation, permissions,
                 )
@@ -148,11 +148,11 @@ module.exports = class StreamFetcher {
             body: JSON.stringify(fields),
             headers,
         }).catch((e) => {
-            console.error(`failed to communicate with E&E: ${e}`)
+            logger.error(`failed to communicate with E&E: ${e}`)
             throw e
         }).then(async (response) => {
             if (response.status !== 200) {
-                debug(
+                logger.debug(
                     'fetch failed with status %d for streamId %s, apiKey %s, sessionToken %s : %o',
                     response.status, streamId, apiKey, sessionToken, response.text(),
                 )

@@ -1,5 +1,7 @@
 const events = require('events')
 
+const logger = require('../helpers/logger')('streamr:MqttServer:Connection')
+
 module.exports = class Connection extends events.EventEmitter {
     constructor(client, clientId = '', token = '', apiKey = '') {
         super()
@@ -51,7 +53,7 @@ module.exports = class Connection extends events.EventEmitter {
                 returnCode: code
             })
         } catch (e) {
-            console.error(`Failed to send connack: ${e.message}`)
+            logger.error(`Failed to send connack: ${e.message}`)
         }
     }
 
@@ -61,7 +63,7 @@ module.exports = class Connection extends events.EventEmitter {
                 this.client.unsubscribe(packet)
             }
         } catch (e) {
-            console.error(`Failed to unsubscribe: ${e.message}`)
+            logger.error(`Failed to unsubscribe: ${e.message}`)
         }
     }
 
@@ -84,7 +86,7 @@ module.exports = class Connection extends events.EventEmitter {
         try {
             this.client.destroy()
         } catch (e) {
-            console.error(`Failed to destroy mqtt client: ${e.message}`)
+            logger.error(`Failed to destroy mqtt client: ${e.message}`)
         }
 
         this.streams = []

@@ -1,6 +1,6 @@
 const { EventEmitter } = require('events')
 
-const debug = require('debug')('streamr:Connection')
+const logger = require('../helpers/logger')('streamr:WebsocketServer:Connection')
 
 let nextId = 1
 
@@ -71,7 +71,7 @@ module.exports = class Connection extends EventEmitter {
 
     send(msg) {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
-        debug('send: %s: %o', this.id, serialized)
+        logger.debug('send: %s: %o', this.id, serialized)
         try {
             this.socket.send(serialized)
         } catch (e) {

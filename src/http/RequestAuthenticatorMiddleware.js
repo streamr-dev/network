@@ -1,4 +1,5 @@
 const HttpError = require('../errors/HttpError')
+const logger = require('../helpers/logger')('streamr:http:RequestAuthenticatorMiddleware')
 
 /**
  * Middleware used to authenticate REST API requests
@@ -12,8 +13,11 @@ module.exports = (streamFetcher, permission = 'stream_subscribe') => (req, res, 
         const apiKeyHeaderValid = req.headers.authorization.toLowerCase().startsWith('token ')
         const sessionTokenHeaderValid = req.headers.authorization.startsWith('Bearer ')
         if (!(apiKeyHeaderValid || sessionTokenHeaderValid)) {
+            const errMsg = 'Authorization header malformed. Should be of form "[Bearer|token] authKey".'
+            logger.error(errMsg)
+
             res.status(400).send({
-                error: 'Authorization header malformed. Should be of form "[Bearer|token] authKey".',
+                error: errMsg
             })
             return
         }
@@ -40,9 +44,11 @@ module.exports = (streamFetcher, permission = 'stream_subscribe') => (req, res, 
             } else if (err instanceof HttpError && err.code === 404) {
                 errorMsg = `Stream ${req.params.id} not found.`
             } else {
-                console.error(err)
                 errorMsg = 'Request failed.'
             }
+
+            logger.error(err)
+            logger.error(errorMsg)
 
             res.status(err.code || 503).send({
                 error: errorMsg,

@@ -5,6 +5,8 @@ const merge2 = require('merge2')
 const cassandra = require('cassandra-driver')
 const { StreamMessage } = require('streamr-network').Protocol.MessageLayer
 
+const logger = require('../helpers/logger')('streamr:storage')
+
 const MicroBatchingStrategy = require('./MicroBatchingStrategy')
 const PeriodicQuery = require('./PeriodicQuery')
 
@@ -110,7 +112,7 @@ class Storage extends EventEmitter {
                 readableStream.push(null)
             })
             .catch((err) => {
-                console.error(err)
+                logger.error(err)
                 readableStream.push(null)
             })
 
@@ -281,7 +283,7 @@ class Storage extends EventEmitter {
         })
 
         cassandraStream.on('error', (err) => {
-            console.error(err)
+            logger.error(err)
         })
 
         return cassandraStream.pipe(new Transform({
@@ -316,7 +318,7 @@ const startCassandraStorage = async ({
     const requestLogger = new cassandra.tracker.RequestLogger({
         slowThreshold: 10 * 1000, // 10 secs
     })
-    requestLogger.emitter.on('slow', (message) => console.warn(message))
+    requestLogger.emitter.on('slow', (message) => logger.warn(message))
     const cassandraClient = new cassandra.Client({
         contactPoints,
         localDataCenter,
@@ -336,7 +338,7 @@ const startCassandraStorage = async ({
             await cassandraClient.connect().catch((err) => { throw err })
             return new Storage(cassandraClient, useTtl, isBatching)
         } catch (err) {
-            console.log('Cassandra not responding yet...')
+            logger.log('Cassandra not responding yet...')
             retryCount -= 1
             await sleep(5000)
             lastError = err

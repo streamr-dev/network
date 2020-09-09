@@ -2,6 +2,7 @@ const net = require('net')
 
 const MissingConfigError = require('../errors/MissingConfigError')
 const adapterRegistry = require('../adapterRegistry')
+const logger = require('../helpers/logger')('streamr:mqttAdapter')
 
 const MqttServer = require('./MqttServer')
 
@@ -18,7 +19,7 @@ adapterRegistry.register('mqtt', ({ port, streamsTimeout }, {
     }
 
     const mqttServer = new MqttServer(
-        new net.Server().listen(port).on('listening', () => console.info(`Mqtt adapter listening on ${port}`)),
+        new net.Server().listen(port).on('listening', () => logger.info(`Mqtt adapter listening on ${port}`)),
         streamsTimeout,
         networkNode,
         streamFetcher,

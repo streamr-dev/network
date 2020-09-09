@@ -1,9 +1,9 @@
 const events = require('events')
 
-const debug = require('debug')('streamr:MqttServer')
 const mqttCon = require('mqtt-connection')
 const { MessageLayer } = require('streamr-network').Protocol
 
+const logger = require('../helpers/logger')('streamr:MqttServer')
 const VolumeLogger = require('../VolumeLogger')
 const partition = require('../helpers/partition')
 const StreamStateManager = require('../StreamStateManager')
@@ -73,20 +73,20 @@ module.exports = class MqttServer extends events.EventEmitter {
         const connection = new Connection(client)
 
         connection.on('close', () => {
-            debug('closing client')
+            logger.debug('closing client')
             connection.markAsDead()
             this._closeConnection(connection)
         })
 
         connection.on('error', (err) => {
-            console.error(`dropping client because: ${err.message}`)
-            debug('error in client %s', err)
+            logger.error(`dropping client because: ${err.message}`)
+            logger.debug('error in client %s', err)
             connection.markAsDead()
             this._closeConnection(connection)
         })
 
         connection.on('disconnect', () => {
-            debug('client disconnected')
+            logger.debug('client disconnected')
         })
 
         connection.on('publish', (publishPacket) => {
@@ -110,12 +110,12 @@ module.exports = class MqttServer extends events.EventEmitter {
 
         mqttStream.setTimeout(this.streamsTimeout)
         mqttStream.on('timeout', () => {
-            debug('mqttStream timeout')
+            logger.debug('mqttStream timeout')
             this._closeConnection(connection)
         })
 
         connection.on('connect', (packet) => {
-            debug('connect request %o', packet)
+            logger.debug('connect request %o', packet)
 
             const apiKey = packet.password.toString()
 
@@ -132,7 +132,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                         connection.sendConnectionAccepted()
                         connection.setClientId(packet.clientId).setApiKey(apiKey).setToken(res.token)
 
-                        debug('onNewClientConnection: mqtt "%s" connected', connection.id)
+                        logger.debug('onNewClientConnection: mqtt "%s" connected', connection.id)
                     }
                 })
 
@@ -141,7 +141,7 @@ module.exports = class MqttServer extends events.EventEmitter {
     }
 
     async handlePublishRequest(connection, packet) {
-        debug('publish request %o', packet)
+        logger.debug('publish request %o', packet)
 
         const { topic, payload, qos } = packet
 
@@ -166,7 +166,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                 })
             }
         } catch (err) {
-            debug(
+            logger.debug(
                 'handlePublishRequest: socket "%s" failed to publish to stream "%s:%d" because of "%o"',
                 connection.id, topic, 0, err
             )
@@ -175,7 +175,7 @@ module.exports = class MqttServer extends events.EventEmitter {
     }
 
     handleUnsubscribeRequest(connection, packet) {
-        debug('unsubscribe request %o', packet)
+        logger.debug('unsubscribe request %o', packet)
 
         const topic = packet.unsubscriptions[0]
         const stream = this.streams.get(topic, 0)
@@ -189,7 +189,7 @@ module.exports = class MqttServer extends events.EventEmitter {
     }
 
     async handleSubscribeRequest(connection, packet) {
-        debug('subscribe request %o', packet)
+        logger.debug('subscribe request %o', packet)
 
         const { topic } = packet.subscriptions[0]
 
@@ -206,7 +206,7 @@ module.exports = class MqttServer extends events.EventEmitter {
 
             newOrExistingStream.addConnection(connection)
             connection.addStream(newOrExistingStream)
-            debug(
+            logger.debug(
                 'handleSubscribeRequest: client "%s" is now subscribed to streams "%o"',
                 connection.id, connection.streamsAsString()
             )
@@ -215,7 +215,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                 granted: [packet.qos], messageId: packet.messageId
             })
         } catch (err) {
-            debug(
+            logger.debug(
                 'handleSubscribeRequest: socket "%s" failed to subscribe to stream "%s:%d" because of "%o"',
                 connection.id, topic, 0, err
             )
@@ -225,7 +225,7 @@ module.exports = class MqttServer extends events.EventEmitter {
 
     _closeConnection(connection) {
         this.connections.delete(connection)
-        debug('closing client "%s" on streams "%o"', connection.id, connection.streamsAsString())
+        logger.debug('closing client "%s" on streams "%o"', connection.id, connection.streamsAsString())
 
         // Unsubscribe from all streams
         connection.forEachStream((stream) => {
@@ -242,7 +242,7 @@ module.exports = class MqttServer extends events.EventEmitter {
                 streamObj.removeConnection(connection)
 
                 if (streamObj.getConnections().length === 0) {
-                    debug(
+                    logger.debug(
                         'checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.',
                         stream.getId(), stream.getPartition()
                     )
@@ -276,7 +276,7 @@ module.exports = class MqttServer extends events.EventEmitter {
 
             this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * stream.getConnections().length)
         } else {
-            debug('broadcastMessage: stream "%s::%d" not found', streamId, streamPartition)
+            logger.debug('broadcastMessage: stream "%s::%d" not found', streamId, streamPartition)
         }
     }
 }

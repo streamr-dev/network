@@ -1,7 +1,8 @@
 const EventEmitter = require('events')
 
-const createDebug = require('debug')
 const { v4: uuidv4 } = require('uuid')
+
+const getLogger = require('../helpers/logger')
 
 const STATES = Object.freeze({
     // OPENED => LOCKED => PENDING => INSERTED
@@ -44,7 +45,7 @@ class Batch extends EventEmitter {
         this.state = STATES.OPENED
         this.doneCbs = []
 
-        this.debug = createDebug(`streamr:storage:batch:${this.getId()}`)
+        this.logger = getLogger(`streamr:storage:batch:${this.getId()}`)
 
         this._maxSize = maxSize
         this._maxRecords = maxRecords
@@ -52,11 +53,11 @@ class Batch extends EventEmitter {
         this._closeTimeout = closeTimeout
 
         this._timeout = setTimeout(() => {
-            this.debug('lock timeout')
+            this.logger.debug('lock timeout')
             this.lock()
         }, this._closeTimeout)
 
-        this.debug('init new batch')
+        this.logger.debug('init new batch')
     }
 
     reachedMaxRetries() {
@@ -78,7 +79,7 @@ class Batch extends EventEmitter {
 
     scheduleInsert() {
         clearTimeout(this._timeout)
-        this.debug(`scheduleRetry. retries:${this.retries}`)
+        this.logger.debug(`scheduleRetry. retries:${this.retries}`)
 
         this._timeout = setTimeout(() => {
             if (this.retries < this._maxRetries) {
@@ -94,7 +95,7 @@ class Batch extends EventEmitter {
     }
 
     clear() {
-        this.debug('cleared')
+        this.logger.debug('cleared')
         clearTimeout(this._timeout)
         this.streamMessages = []
         this._setState(STATES.INSERTED)
@@ -118,7 +119,7 @@ class Batch extends EventEmitter {
 
     _setState(state) {
         this.state = state
-        this.debug(`emit state: ${this.state}`)
+        this.logger.debug(`emit state: ${this.state}`)
         this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this._getNumberOrMessages())
     }
 }

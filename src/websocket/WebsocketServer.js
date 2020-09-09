@@ -1,12 +1,12 @@
 const { EventEmitter } = require('events')
 
 const { v4: uuidv4 } = require('uuid')
-const debug = require('debug')('streamr:WebsocketServer')
 const qs = require('qs')
 const { ControlLayer, MessageLayer, Errors, Utils } = require('streamr-network').Protocol
 const ab2str = require('arraybuffer-to-string')
 const uWS = require('uWebSockets.js')
 
+const logger = require('../helpers/logger')('streamr:WebsocketServer')
 const HttpError = require('../errors/HttpError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
 const VolumeLogger = require('../VolumeLogger')
@@ -85,9 +85,9 @@ module.exports = class WebsocketServer extends EventEmitter {
         this.wss.listen(port, (token) => {
             if (token) {
                 this._listenSocket = token
-                console.log('WS adapter listening on ' + port)
+                logger.info('WS adapter listening on ' + port)
             } else {
-                console.log('Failed to listen to port ' + port)
+                logger.info('Failed to listen to port ' + port)
                 this.close()
             }
         })
@@ -113,7 +113,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                 try {
                     WebsocketServer.validateProtocolVersions(controlLayerVersion, messageLayerVersion)
                 } catch (err) {
-                    debug('Rejecting connection with status 400 due to: %s, query params: %s', err.message, req.getQuery())
+                    logger.debug('Rejecting connection with status 400 due to: %s, query params: %s', err.message, req.getQuery())
                     res.writeStatus('400')
                     res.write(err.message)
                     res.end()
@@ -137,7 +137,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                 const connection = new Connection(ws, ws.controlLayerVersion, ws.messageLayerVersion)
                 this.connections.set(connection.id, connection)
                 this.volumeLogger.connectionCountWS = this.connections.size
-                debug('onNewClientConnection: socket "%s" connected', connection.id)
+                logger.debug('onNewClientConnection: socket "%s" connected', connection.id)
                 // eslint-disable-next-line no-param-reassign
                 ws.connectionId = connection.id
 
@@ -147,7 +147,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                     } catch (e) {
                         // no need to check this error
                     } finally {
-                        console.warn('forceClose connection with id %s, because of %s', connection.id, err)
+                        logger.warn('forceClose connection with id %s, because of %s', connection.id, err)
                         this._removeConnection(connection)
                     }
                 })
@@ -184,7 +184,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                         try {
                             const handler = this.requestHandlersByMessageType[request.type]
                             if (handler) {
-                                debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
+                                logger.debug('socket "%s" sent request "%s" with contents "%o"', connection.id, request.type, request)
                                 handler.call(this, connection, request)
                             } else {
                                 connection.send(new ControlLayer.ErrorResponse({
@@ -206,13 +206,13 @@ module.exports = class WebsocketServer extends EventEmitter {
                 }
             },
             drain: (ws) => {
-                console.log('WebSocket backpressure: ' + ws.getBufferedAmount())
+                logger.info('WebSocket backpressure: ' + ws.getBufferedAmount())
             },
             close: (ws, code, message) => {
                 const connection = this.connections.get(ws.connectionId)
 
                 if (connection) {
-                    debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
+                    logger.debug('closing socket "%s" on streams "%o"', connection.id, connection.streamsAsString())
                     this._removeConnection(connection)
                 }
             },
@@ -220,7 +220,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                 const connection = this.connections.get(ws.connectionId)
 
                 if (connection) {
-                    debug(`received from ${connection.id} "pong" frame`)
+                    logger.debug(`received from ${connection.id} "pong" frame`)
                     connection.respondedPong = true
                 }
             }
@@ -311,7 +311,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             if (!Utils.StreamMessageValidator.isKeyExchangeStream(request.streamMessage.getStreamId())) {
                 this.fieldDetector.detectAndSetFields(streamMessage, request.apiKey, request.sessionToken)
                     .catch((err) => {
-                        console.error(`detectAndSetFields request failed: ${err}`)
+                        logger.error(`detectAndSetFields request failed: ${err}`)
                     })
             }
         } catch (err) {
@@ -452,7 +452,7 @@ module.exports = class WebsocketServer extends EventEmitter {
 
             this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * stream.getConnections().length)
         } else {
-            debug('broadcastMessage: stream "%s:%d" not found', streamId, streamPartition)
+            logger.debug('broadcastMessage: stream "%s:%d" not found', streamId, streamPartition)
         }
     }
 
@@ -468,9 +468,9 @@ module.exports = class WebsocketServer extends EventEmitter {
                 // eslint-disable-next-line no-param-reassign
                 connection.respondedPong = false
                 connection.ping()
-                debug(`pinging ${connection.id}`)
+                logger.debug(`pinging ${connection.id}`)
             } catch (e) {
-                console.error(`Failed to ping connection: ${connection.id}, error ${e}`)
+                logger.error(`Failed to ping connection: ${connection.id}, error ${e}`)
                 connection.emit('forceClose')
             }
         })
@@ -483,7 +483,7 @@ module.exports = class WebsocketServer extends EventEmitter {
         if (stream) {
             setImmediate(() => stream.passToOrderingUtil(streamMessage), 0)
         } else {
-            debug('_handleStreamMessage: stream "%s:%d" not found', streamId, streamPartition)
+            logger.debug('_handleStreamMessage: stream "%s:%d" not found', streamId, streamPartition)
         }
     }
 
@@ -515,7 +515,7 @@ module.exports = class WebsocketServer extends EventEmitter {
 
             stream.addConnection(connection)
             connection.addStream(stream)
-            debug(
+            logger.debug(
                 'handleSubscribeRequest: socket "%s" is now subscribed to streams "%o"',
                 connection.id, connection.streamsAsString()
             )
@@ -526,7 +526,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                 streamPartition: request.streamPartition,
             }))
         } catch (err) {
-            debug(
+            logger.debug(
                 'handleSubscribeRequest: socket "%s" failed to subscribe to stream %s:%d because of "%o"',
                 connection.id, request.streamId, request.streamPartition, err
             )
@@ -560,24 +560,24 @@ module.exports = class WebsocketServer extends EventEmitter {
         const stream = this.streams.get(request.streamId, request.streamPartition)
 
         if (stream) {
-            debug('handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"', connection.id,
+            logger.debug('handleUnsubscribeRequest: socket "%s" unsubscribing from stream "%s:%d"', connection.id,
                 request.streamId, request.streamPartition)
 
             stream.removeConnection(connection)
             connection.removeStream(request.streamId, request.streamPartition)
 
-            debug(
+            logger.debug(
                 'handleUnsubscribeRequest: socket "%s" is still subscribed to streams "%o"',
                 connection.id, connection.streamsAsString()
             )
 
             // Unsubscribe from stream if no connections left
-            debug(
+            logger.debug(
                 'checkRoomEmpty: "%d" sockets remaining on stream "%s:%d"',
                 stream.getConnections().length, request.streamId, request.streamPartition
             )
             if (stream.getConnections().length === 0) {
-                debug(
+                logger.debug(
                     'checkRoomEmpty: stream "%s:%d" is empty. Unsubscribing from NetworkNode.',
                     request.streamId, request.streamPartition
                 )
@@ -594,7 +594,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                 }))
             }
         } else {
-            debug(
+            logger.debug(
                 'handleUnsubscribeRequest: stream "%s:%d" no longer exists',
                 request.streamId, request.streamPartition
             )

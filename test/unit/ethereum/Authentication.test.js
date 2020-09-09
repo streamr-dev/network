@@ -1,6 +1,4 @@
-const assert = require('assert')
-
-const { wait, waitForCondition } = require('streamr-test-utils')
+const logger = require('pino')()
 
 const ethereumAuthenticate = require('../../../src/helpers/ethereumAuthenticate')
 
@@ -13,21 +11,21 @@ describe('Ethereum authentication', () => {
         const config = {
             privateKey
         }
-        const brokerAddress = ethereumAuthenticate.authenticateFromConfig(config)
-        assert.equal(brokerAddress, address)
+        const brokerAddress = ethereumAuthenticate.authenticateFromConfig(config, logger)
+        expect(brokerAddress).toEqual(address)
     })
     it('authenticates with a randomly generated wallet', () => {
         const config = {
             generateWallet: true
         }
-        const brokerAddress = ethereumAuthenticate.authenticateFromConfig(config)
-        assert.notEqual(brokerAddress, undefined)
+        const brokerAddress = ethereumAuthenticate.authenticateFromConfig(config, logger)
+        expect(brokerAddress).not.toEqual(undefined)
     })
     it('skips authentication if necessary', () => {
         const config = {
             generateWallet: false
         }
-        const brokerAddress = ethereumAuthenticate.authenticateFromConfig(config)
-        assert.equal(brokerAddress, undefined)
+        const brokerAddress = ethereumAuthenticate.authenticateFromConfig(config, logger)
+        expect(brokerAddress).toEqual(undefined)
     })
 })

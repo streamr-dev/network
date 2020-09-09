@@ -1,6 +1,6 @@
 const EventEmitter = require('events')
 
-const debug = require('debug')('streamr:storage:batch-manager')
+const logger = require('../helpers/logger')('streamr:storage:BatchManager')
 
 const Batch = require('./Batch')
 
@@ -47,7 +47,7 @@ class BatchManager extends EventEmitter {
         }
 
         if (this.batches[bucketId] === undefined) {
-            debug('creating new batch')
+            logger.debug('creating new batch')
 
             const newBatch = new Batch(bucketId, this.opts.batchMaxSize, this.opts.batchMaxRecords, this.opts.batchCloseTimeout, this.opts.batchMaxRetries)
 
@@ -61,7 +61,7 @@ class BatchManager extends EventEmitter {
     }
 
     _moveFullBatch(bucketId, batch) {
-        debug('moving batch to pendingBatches')
+        logger.debug('moving batch to pendingBatches')
 
         this.pendingBatches[batch.getId()] = batch
         this.pendingBatches[batch.getId()].scheduleInsert()
@@ -98,20 +98,20 @@ class BatchManager extends EventEmitter {
                 prepare: true
             })
 
-            debug(`inserted batch id:${batch.getId()}`)
+            logger.debug(`inserted batch id:${batch.getId()}`)
             batch.done()
             batch.clear()
             delete this.pendingBatches[batch.getId()]
         } catch (e) {
-            debug(`failed to insert batch, error ${e}`)
+            logger.debug(`failed to insert batch, error ${e}`)
             if (this.opts.logErrors) {
-                console.error(`Failed to insert batchId: (${batchId})`)
-                console.error(e)
+                logger.error(`Failed to insert batchId: (${batchId})`)
+                logger.error(e)
             }
 
             if (batch.reachedMaxRetries()) {
                 if (this.opts.logErrors) {
-                    console.error(`Batch ${batchId} reached max retries, dropping batch`)
+                    logger.error(`Batch ${batchId} reached max retries, dropping batch`)
                 }
                 batch.clear()
                 delete this.pendingBatches[batch.getId()]
