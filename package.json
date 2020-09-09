@@ -57,9 +57,9 @@
     "promise.allsettled": "^1.0.2",
     "qs": "^6.9.4",
     "speedometer": "^1.1.0",
-    "streamr-client": "^4.1.0",
-    "streamr-client-protocol": "^5.0.0-beta.16",
-    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.4.0",
+    "streamr-client": "^4.1.1",
+    "streamr-client-protocol": "^5.0.0",
+    "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.5.0",
     "uuid": "^8.3.0",
     "ws": "^7.3.1"
   },
@@ -70,7 +70,7 @@
     "eslint-plugin-import": "^2.22.0",
     "eslint-plugin-import-order": "2.1.4",
     "eslint-plugin-promise": "^4.2.1",
-    "into-stream": "^5.1.1",
+    "into-stream": "^6.0.0",
     "jest": "^26.4.2",
     "portfinder": "^1.0.28",
     "streamr-test-utils": "^1.0.4"

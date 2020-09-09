@@ -11,8 +11,8 @@
     "svelte": "^3.20.0"
   },
   "dependencies": {
-    "sirv-cli": "^0.4.4",
-    "vis-network": "^7.4.0"
+    "sirv-cli": "^1.0.6",
+    "vis-network": "^8.3.2"
   },
   "scripts": {
     "build": "rollup -c",

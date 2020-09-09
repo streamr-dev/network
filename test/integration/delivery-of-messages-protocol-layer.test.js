@@ -57,7 +57,7 @@ describe('delivery of messages in protocol layer', () => {
             content: {
                 hello: 'world'
             },
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            messageType: StreamMessage.CONTENT_TYPES.MESSAGE,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: 'signature',
         })
@@ -82,7 +82,7 @@ describe('delivery of messages in protocol layer', () => {
             content: {
                 hello: 'world'
             },
-            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
+            messageType: StreamMessage.CONTENT_TYPES.MESSAGE,
             signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
             signature: 'signature',
         })

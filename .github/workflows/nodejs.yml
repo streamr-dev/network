@@ -15,14 +15,14 @@ on:
 
 jobs:
   eslint:
-    name: Run eslint using Node 14
+    name: Run eslint using Node 12
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 12
 
       - name: npm run eslint
         run: |
@@ -51,7 +51,7 @@ jobs:
 
   publish:
     needs: [test, eslint]
-    name: Publishing master using Node 14
+    name: Publishing master using Node 12
     runs-on: ubuntu-latest
 
     # run job only for tags and skip for cron
@@ -64,7 +64,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-node@v1
         with:
-          node-version: 14
+          node-version: 12
           registry-url: https://registry.npmjs.org/
 
       - name: npm ci

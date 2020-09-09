@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "mqtt": "^3.0.0",
-    "streamr-network": "^17.4.0"
+    "mqtt": "^4.2.1",
+    "streamr-network": "^19.0.6"
   }
 }
