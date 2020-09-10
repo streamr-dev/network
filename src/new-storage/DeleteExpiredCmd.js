@@ -3,6 +3,7 @@ const fetch = require('node-fetch')
 const pLimit = require('p-limit')
 
 const validateConfig = require('../helpers/validateConfig')
+const logger = require('../helpers/logger')('streamr:DeleteExpiredCmd')
 
 class DeleteExpiredCmd {
     constructor(config) {
@@ -29,7 +30,7 @@ class DeleteExpiredCmd {
         const result = []
 
         const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
-        const resultSet = await this.cassandraClient.execute(query).catch((err) => console.error(err))
+        const resultSet = await this.cassandraClient.execute(query).catch((err) => logger.error(err))
 
         if (resultSet) {
             resultSet.rows.forEach((row) => {
@@ -53,7 +54,7 @@ class DeleteExpiredCmd {
                         partition: stream.partition,
                         storageDays: parseInt(json.storageDays)
                     }
-                }).catch((err) => console.error(err))
+                }).catch((err) => logger.error(err))
             })
         })
 
@@ -77,7 +78,7 @@ class DeleteExpiredCmd {
             return this.limit(async () => {
                 await this.cassandraClient.batch(queries, {
                     prepare: true
-                }).catch((err) => console.error(err))
+                }).catch((err) => logger.error(err))
             })
         })
 
@@ -97,7 +98,7 @@ class DeleteExpiredCmd {
             return this.limit(async () => {
                 const resultSet = await this.cassandraClient.execute(query, params, {
                     prepare: true,
-                }).catch((err) => console.error(err))
+                }).catch((err) => logger.error(err))
 
                 if (resultSet) {
                     resultSet.rows.forEach((row) => {
@@ -119,12 +120,12 @@ class DeleteExpiredCmd {
 
     async run() {
         const streams = await this._getStreams()
-        console.info(`Found ${streams.length} unique streams`)
+        logger.info(`Found ${streams.length} unique streams`)
 
         const streamsInfo = await this._fetchStreamsInfo(streams)
         const expiredBuckets = await this._getExpiredBuckets(streamsInfo)
 
-        console.info(`Found ${expiredBuckets.length} expired buckets`)
+        logger.info(`Found ${expiredBuckets.length} expired buckets`)
         await this._deleteExpired(expiredBuckets)
 
         await this.cassandraClient.shutdown()

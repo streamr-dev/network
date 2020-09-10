@@ -460,7 +460,7 @@ const startCassandraStorage = async ({
             await cassandraClient.connect().catch((err) => { throw err })
             return new Storage(cassandraClient, opts || {})
         } catch (err) {
-            logger.info('Cassandra not responding yet...')
+            console.log('Cassandra not responding yet...')
             retryCount -= 1
             await sleep(5000)
             lastError = err
