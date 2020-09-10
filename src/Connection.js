@@ -98,7 +98,7 @@ async function CloseWebSocket(socket) {
  * waits for pending close/open before continuing
  */
 
-export default class SocketConnection extends EventEmitter {
+export default class Connection extends EventEmitter {
     static getOpen() {
         return openSockets
     }
@@ -113,7 +113,7 @@ export default class SocketConnection extends EventEmitter {
         this.shouldConnect = false
         this.retryCount = 1
         this._isReconnecting = false
-        const id = uniqueId('SocketConnection')
+        const id = uniqueId('Connection')
         /* istanbul ignore next */
         if (options.debug) {
             this._debug = options.debug.extend(id)
@@ -607,4 +607,4 @@ export default class SocketConnection extends EventEmitter {
     }
 }
 
-SocketConnection.ConnectionError = ConnectionError
+Connection.ConnectionError = ConnectionError

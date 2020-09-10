@@ -1,13 +1,13 @@
 import { wait } from 'streamr-test-utils'
 import Debug from 'debug'
 
-import SocketConnection from '../../../src/streams/SocketConnection'
+import Connection from '../../src/Connection'
 
 /* eslint-disable require-atomic-updates */
 
 const debug = Debug('StreamrClient').extend('test')
 
-describe('SocketConnection', () => {
+describe('Connection', () => {
     let s
     let onConnected
     let onConnecting
@@ -20,7 +20,7 @@ describe('SocketConnection', () => {
     let expectErrors = 0 // check no errors by default
 
     beforeEach(() => {
-        s = new SocketConnection({
+        s = new Connection({
             url: 'wss://echo.websocket.org/',
             maxRetries: 2
         })
@@ -52,7 +52,7 @@ describe('SocketConnection', () => {
     afterEach(async () => {
         debug('disconnecting after test')
         await s.disconnect()
-        const openSockets = SocketConnection.getOpen()
+        const openSockets = Connection.getOpen()
         if (openSockets !== 0) {
             throw new Error(`sockets not closed: ${openSockets}`)
         }
@@ -243,7 +243,7 @@ describe('SocketConnection', () => {
 
         it('rejects if no url', async () => {
             expectErrors = 1
-            s = new SocketConnection({
+            s = new Connection({
                 url: undefined,
                 maxRetries: 2,
             })
@@ -259,7 +259,7 @@ describe('SocketConnection', () => {
 
         it('rejects if bad url', async () => {
             expectErrors = 1
-            s = new SocketConnection({
+            s = new Connection({
                 url: 'badurl',
                 maxRetries: 2,
             })
@@ -275,7 +275,7 @@ describe('SocketConnection', () => {
 
         it('rejects if cannot connect', async () => {
             expectErrors = 1
-            s = new SocketConnection({
+            s = new Connection({
                 url: 'wss://streamr.network/nope',
                 maxRetries: 2,
             })

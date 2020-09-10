@@ -9,7 +9,7 @@ import Debug from 'debug'
 
 import { uid } from '../utils'
 import StreamrClient from '../../src'
-import SocketConnection from '../../src/streams/SocketConnection'
+import Connection from '../../src/Connection'
 
 import config from './config'
 
@@ -108,7 +108,7 @@ describe('StreamrClient', () => {
             await client.disconnect()
         }
 
-        const openSockets = SocketConnection.getOpen()
+        const openSockets = Connection.getOpen()
         if (openSockets !== 0) {
             throw new Error(`sockets not closed: ${openSockets}`)
         }
@@ -794,7 +794,7 @@ describe('StreamrClient', () => {
                 await client.disconnect()
             }
 
-            const openSockets = SocketConnection.getOpen()
+            const openSockets = Connection.getOpen()
             if (openSockets !== 0) {
                 throw new Error(`sockets not closed: ${openSockets}`)
             }

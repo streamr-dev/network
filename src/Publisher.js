@@ -5,7 +5,7 @@ import Signer from './Signer'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
 import MessageCreationUtil from './MessageCreationUtil'
-import Connection from './streams/SocketConnection'
+import Connection from './Connection'
 
 function getStreamId(streamObjectOrId) {
     if (streamObjectOrId instanceof Stream) {

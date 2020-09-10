@@ -5,7 +5,7 @@ import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 import uniqueId from 'lodash.uniqueid'
 
-import Connection from './streams/SocketConnection'
+import Connection from './Connection'
 import Session from './Session'
 import { getVersionString } from './utils'
 import Publisher from './Publisher'

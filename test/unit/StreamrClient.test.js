@@ -5,7 +5,7 @@ import { wait } from 'streamr-test-utils'
 
 import FailedToPublishError from '../../src/errors/FailedToPublishError'
 import Subscription from '../../src/Subscription'
-import Connection from '../../src/streams/SocketConnection'
+import Connection from '../../src/Connection'
 // import StreamrClient from '../../src/StreamrClient'
 import { uid } from '../utils'
 
