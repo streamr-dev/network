@@ -6,6 +6,7 @@ const { MessageLayer } = require('streamr-client-protocol')
 const CURRENT_VERSION = require('../package.json').version
 const { startNetworkNode } = require('../src/composition')
 const { StreamIdAndPartition } = require('../src/identifiers')
+const logger = require('../src/helpers/logger')('streamr:bin:publisher')
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -31,7 +32,7 @@ const { id: streamId, partition } = streamObj
 
 startNetworkNode(program.ip, program.port, publisherId, [], null, name)
     .then((publisher) => {
-        console.log('started publisher id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
+        logger.info('started publisher id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
             publisherId, name, program.port, program.ip, program.trackers.join(', '), program.streamId, program.intervalInMs, program.metrics)
 
         program.trackers.map((trackerAddress) => publisher.addBootstrapTracker(trackerAddress))
@@ -58,7 +59,7 @@ startNetworkNode(program.ip, program.port, publisherId, [], null, name)
 
         if (program.metrics) {
             setInterval(async () => {
-                console.info(JSON.stringify(await publisher.getMetrics(), null, 3))
+                logger.info(JSON.stringify(await publisher.getMetrics(), null, 3))
             }, 5000)
         }
     })

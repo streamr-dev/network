@@ -8,6 +8,8 @@ const WrapperMessage = require('../messages/WrapperMessage')
 const { StreamIdAndPartition } = require('../identifiers')
 const { msgTypes, CURRENT_VERSION } = require('../messages/messageTypes')
 
+const logger = require('./logger')('streamr:MessageEncoder')
+
 const encode = (type, payload) => {
     if (type < 0 || type > 4) {
         throw new Error(`Unknown message type: ${type}`)
@@ -59,7 +61,7 @@ const decode = (source, message) => {
             return new WrapperMessage(ControlLayer.ControlMessage.deserialize(payload.serializedControlLayerPayload, false), source)
 
         default:
-            console.warn(`Got from "${source}" unknown message type with content: "${message}"`)
+            logger.warn(`Got from "${source}" unknown message type with content: "${message}"`)
             return undefined
     }
 }

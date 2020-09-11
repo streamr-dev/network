@@ -5,6 +5,7 @@ const { ControlLayer } = require('streamr-client-protocol')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const { StreamIdAndPartition } = require('../identifiers')
+const logger = require('../helpers/logger')('streamr:resendStrategies')
 
 function toUnicastMessage(request) {
     return new Transform({
@@ -182,7 +183,7 @@ class ProxiedResend {
         }, () => {
             this._askNextNeighbor()
         }).catch((e) => {
-            console.error(`Failed to _askNextNeighbor: ${neighborId}, error ${e}`)
+            logger.error(`Failed to _askNextNeighbor: ${neighborId}, error ${e}`)
         })
     }
 
@@ -393,7 +394,7 @@ class StorageNodeResendStrategy {
                 () => this.pendingTrackerResponse.addEntry(request, responseStream),
                 () => responseStream.push(null)
             ).catch((e) => {
-                console.error(`Failed to _requestStorageNodes, error: ${e}`)
+                logger.error(`Failed to _requestStorageNodes, error: ${e}`)
             })
         }
     }

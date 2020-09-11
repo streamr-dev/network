@@ -5,6 +5,7 @@ const program = require('commander')
 const CURRENT_VERSION = require('../package.json').version
 const { startNetworkNode } = require('../src/composition')
 const NodeToNode = require('../src/protocol/NodeToNode')
+const logger = require('../src/helpers/logger')('streamr:bin:publisher')
 
 program
     .version(CURRENT_VERSION)
@@ -22,7 +23,7 @@ const id = program.id || `subscriber-${program.port}`
 const name = program.nodeName || id
 
 startNetworkNode(program.ip, program.port, id, [], null, name).then((subscriber) => {
-    console.log('started subscriber id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, metrics: %s',
+    logger.info('started subscriber id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, metrics: %s',
         id, name, program.port, program.ip, program.trackers.join(', '), program.streamId, program.metrics)
 
     subscriber.subscribe(program.streamId, 0)
@@ -30,12 +31,12 @@ startNetworkNode(program.ip, program.port, id, [], null, name).then((subscriber)
 
     subscriber.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (brodcastMessage) => {
         const { streamMessage } = brodcastMessage
-        console.log('received %j, data %j', streamMessage.messageId, streamMessage.getParsedContent())
+        logger.log('received %j, data %j', streamMessage.messageId, streamMessage.getParsedContent())
     })
 
     if (program.metrics) {
         setInterval(async () => {
-            console.info(JSON.stringify(await subscriber.getMetrics(), null, 3))
+            logger.info(JSON.stringify(await subscriber.getMetrics(), null, 3))
         }, 5000)
     }
 }).catch((err) => {

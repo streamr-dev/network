@@ -1,7 +1,6 @@
 const { EventEmitter } = require('events')
 
-const createDebug = require('debug')
-
+const getLogger = require('../helpers/logger')
 const TrackerServer = require('../protocol/TrackerServer')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
@@ -44,8 +43,8 @@ module.exports = class Tracker extends EventEmitter {
 
         this.metrics = new Metrics(this.peerInfo.peerId)
 
-        this.debug = createDebug(`streamr:logic:tracker:${this.peerInfo.peerId}`)
-        this.debug('started %s', this.peerInfo.peerId)
+        this.logger = getLogger(`streamr:logic:tracker:${this.peerInfo.peerId}`)
+        this.logger.debug('started %s', this.peerInfo.peerId)
     }
 
     processNodeStatus(statusMessage, isStorage) {
@@ -69,7 +68,7 @@ module.exports = class Tracker extends EventEmitter {
         this.metrics.inc('onNodeDisconnected')
         this.storageNodes.delete(node)
         this._removeNode(node)
-        this.debug('unregistered node %s from tracker', node)
+        this.logger.debug('unregistered node %s from tracker', node)
     }
 
     findStorageNodes(findStorageNodesMessage) {
@@ -107,11 +106,11 @@ module.exports = class Tracker extends EventEmitter {
 
         this._updateAllStorages()
         this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)
-            .catch((e) => console.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`))
+            .catch((e) => this.logger.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`))
     }
 
     stop() {
-        this.debug('stopping tracker')
+        this.logger.debug('stopping tracker')
         return this.protocols.trackerServer.stop()
     }
 
@@ -172,9 +171,9 @@ module.exports = class Tracker extends EventEmitter {
             .forEach(([streamKey, overlayTopology]) => this._leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node))
 
         if (newNode) {
-            this.debug('registered new node %s for streams %j', node, Object.keys(streams))
+            this.logger.debug('registered new node %s for streams %j', node, Object.keys(streams))
         } else {
-            this.debug('setup existing node %s for streams %j', node, Object.keys(streams))
+            this.logger.debug('setup existing node %s for streams %j', node, Object.keys(streams))
         }
     }
 
@@ -186,9 +185,9 @@ module.exports = class Tracker extends EventEmitter {
                 try {
                     const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamKey)
                     this.protocols.trackerServer.sendInstruction(nodeId, StreamIdAndPartition.fromKey(streamKey), newNeighbors, counterValue)
-                    this.debug('sent instruction %j (%d) for stream %s to node %s', newNeighbors, counterValue, streamKey, nodeId)
+                    this.logger.debug('sent instruction %j (%d) for stream %s to node %s', newNeighbors, counterValue, streamKey, nodeId)
                 } catch (e) {
-                    console.error(`Failed to _formAndSendInstructions to node ${nodeId}, streamKey ${streamKey}, because of ${e}`)
+                    this.logger.error(`Failed to _formAndSendInstructions to node ${nodeId}, streamKey ${streamKey}, because of ${e}`)
                 }
             })
         })
@@ -264,7 +263,7 @@ module.exports = class Tracker extends EventEmitter {
                 const ip = address.split(':')[1].replace('//', '')
                 return getGeoIp(ip)
             } catch (e) {
-                console.error('Tracker could not parse ip from address', node, address)
+                this.logger.error('Tracker could not parse ip from address', node, address)
             }
         }
         return null

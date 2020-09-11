@@ -11,6 +11,7 @@ const cors = require('fastify-cors')
 const CURRENT_VERSION = require('../package.json').version
 const { startTracker } = require('../src/composition')
 const Tracker = require('../src/logic/Tracker')
+const logger = require('../src/helpers/logger')('streamr:bin:tracker')
 
 program
     .version(CURRENT_VERSION)
@@ -32,7 +33,7 @@ const id = program.id || `tracker-${program.port}`
 const name = program.trackerName || id
 
 if (program.sentryDns) {
-    console.log('Configuring Sentry with dns: %s', program.sentryDns)
+    logger.info('Configuring Sentry with dns: %s', program.sentryDns)
     Sentry.init({
         dsn: program.sentryDns,
         integrations: [
@@ -116,13 +117,13 @@ function startServer(tracker, endpointServerPort) {
         if (err) {
             throw err
         }
-        console.info(`tracker is listening on ${address}`)
+        logger.info(`tracker is listening on ${address}`)
     })
 }
 
 startTracker(program.ip, parseInt(program.port, 10), id, parseInt(program.maxNeighborsPerNode, 10), name)
     .then((tracker) => {
-        console.info('started tracker id: %s, name: %s, port: %d, ip: %s, maxNeighborsPerNode: %d, '
+        logger.info('started tracker id: %s, name: %s, port: %d, ip: %s, maxNeighborsPerNode: %d, '
             + 'metrics: %s, metricsInterval: %d, apiKey: %s, streamId: %s, sentryDns: %s',
         id, name, program.port, program.ip, program.maxNeighborsPerNode, program.metrics,
         program.metricsInterval, program.apiKey, program.streamId, program.sentryDns)
@@ -138,7 +139,7 @@ startTracker(program.ip, parseInt(program.port, 10), id, parseInt(program.maxNei
 
                 // output to console
                 if (program.metrics) {
-                    console.log(JSON.stringify(metrics, null, 3))
+                    logger.log(JSON.stringify(metrics, null, 3))
                 }
             }, program.metricsInterval)
         }
@@ -148,11 +149,11 @@ startTracker(program.ip, parseInt(program.port, 10), id, parseInt(program.maxNei
         }
     })
     .catch((err) => {
-        console.error(err)
+        logger.error(err)
         process.exit(1)
     })
 
 if (process.env.checkUncaughtException === 'true') {
-    process.on('uncaughtException', (err) => console.error((err && err.stack) ? err.stack : err))
+    process.on('uncaughtException', (err) => logger.error((err && err.stack) ? err.stack : err))
 }
 
