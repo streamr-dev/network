@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@pm2/io": "^4.3.5",
-    "@sentry/node": "^5.22.3",
+    "@sentry/node": "^5.23.0",
     "arraybuffer-to-string": "^1.0.2",
     "body-parser": "^1.19.0",
     "cassandra-driver": "^4.6.0",
@@ -49,7 +49,7 @@
     "pump": "^3.0.0",
     "qs": "^6.9.4",
     "streamr-client": "^4.1.1",
-    "streamr-network": "^19.0.7",
+    "streamr-network": "^19.0.8",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.5.0",
     "uuid": "^8.3.0",
     "ws": "^7.3.1"
