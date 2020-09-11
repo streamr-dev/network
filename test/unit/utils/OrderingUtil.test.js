@@ -2,11 +2,10 @@ import assert from 'assert'
 
 import shuffle from 'array-shuffle'
 
-import OrderingUtil from '../../../src/utils/OrderingUtil'
-import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
-import StreamMessageSerializerV31 from '../../../src/protocol/message_layer/StreamMessageSerializerV31' // eslint-disable-line no-unused-vars
-import MessageID from '../../../src/protocol/message_layer/MessageID'
-import MessageRef from '../../../src/protocol/message_layer/MessageRef'
+import { Utils, MessageLayer } from '../../../src'
+
+const { OrderingUtil } = Utils
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp = null,

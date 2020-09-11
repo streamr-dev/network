@@ -1,10 +1,7 @@
-import ControlMessage from '../../src/protocol/control_layer/ControlMessage'
-import PublishRequestSerializerV1 from '../../src/protocol/control_layer/publish_request/PublishRequestSerializerV1'
-import PublishRequest from '../../src/protocol/control_layer/publish_request/PublishRequest'
-import StreamMessage from '../../src/protocol/message_layer/StreamMessage'
-import MessageID from '../../src/protocol/message_layer/MessageID'
-import MessageRef from '../../src/protocol/message_layer/MessageRef'
-import StreamMessageSerializerV31 from '../../src/protocol/message_layer/StreamMessageSerializerV31'
+import { ControlLayer, MessageLayer } from '../../src'
+
+const { ControlMessage, PublishRequest } = ControlLayer
+const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const ITERATIONS = 1000000
 
@@ -54,13 +51,6 @@ describe('deserialize', () => {
             })
         }, 'new StreamMessage({...})')
 
-        // Decomposition and object creation
-
-        const preParsedJson = JSON.parse(serializedStreamMessage)
-        run(() => {
-            return StreamMessageSerializerV31.fromArray(preParsedJson)
-        }, 'PublishRequestSerializerV1.fromArray(preParsedJson)')
-
         // Whole thing
 
         run(() => StreamMessage.deserialize(serializedStreamMessage), 'StreamMessage.deserialize(serializedStreamMessage)')
@@ -82,13 +72,6 @@ describe('deserialize', () => {
                 sessionToken: 'sessionToken',
             })
         }, 'new PublishRequest(...) with ready-made StreamMessage')
-
-        // Decomposition and object creation
-
-        const preParsedJson = JSON.parse(serializedPublishRequest)
-        run(() => {
-            return PublishRequestSerializerV1.fromArray(preParsedJson)
-        }, 'PublishRequestSerializerV1.fromArray(messageArray) with pre-parsed JSON')
 
         // Whole thing
         run(() => ControlMessage.deserialize(serializedPublishRequest), 'ControlMessage.deserialize(serializedPublishRequest)')

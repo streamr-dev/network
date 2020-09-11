@@ -5,18 +5,22 @@ import { validateIsNotEmptyString, validateIsString, validateIsType } from '../.
 
 import MessageRef from './MessageRef'
 import MessageID from './MessageID'
+import EncryptedGroupKey from './EncryptedGroupKey'
 
 const serializerByVersion = {}
 const BYE_KEY = '_bye'
-const LATEST_VERSION = 31
+const LATEST_VERSION = 32
 
 export default class StreamMessage {
     constructor({
         messageId,
         prevMsgRef = null,
         content,
-        contentType = StreamMessage.CONTENT_TYPES.MESSAGE,
+        messageType = StreamMessage.MESSAGE_TYPES.MESSAGE,
+        contentType = StreamMessage.CONTENT_TYPES.JSON,
         encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE,
+        groupKeyId = null,
+        newGroupKey = null,
         signatureType = StreamMessage.SIGNATURE_TYPES.NONE,
         signature = null,
     }) {
@@ -26,11 +30,20 @@ export default class StreamMessage {
         validateIsType('prevMsgRef', prevMsgRef, 'MessageRef', MessageRef, true)
         this.prevMsgRef = prevMsgRef
 
+        StreamMessage.validateMessageType(messageType)
+        this.messageType = messageType
+
         StreamMessage.validateContentType(contentType)
         this.contentType = contentType
 
         StreamMessage.validateEncryptionType(encryptionType)
         this.encryptionType = encryptionType
+
+        validateIsString('groupKeyId', groupKeyId, true)
+        this.groupKeyId = groupKeyId
+
+        validateIsType('newGroupKey', newGroupKey, 'EncryptedGroupKey', EncryptedGroupKey, true)
+        this.newGroupKey = newGroupKey
 
         StreamMessage.validateSignatureType(signatureType)
         this.signatureType = signatureType
@@ -38,7 +51,7 @@ export default class StreamMessage {
         validateIsString('signature', signature, true)
         this.signature = signature
 
-        if (typeof content === 'object') {
+        if (typeof content === 'object' && contentType === StreamMessage.CONTENT_TYPES.JSON) {
             this.parsedContent = content
             this.serializedContent = JSON.stringify(content)
         } else {
@@ -46,11 +59,6 @@ export default class StreamMessage {
             this.serializedContent = content
         }
         validateIsNotEmptyString('content', this.serializedContent)
-
-        // Parse and validate content of message types related to key exchange (non-message types)
-        if (contentType !== StreamMessage.CONTENT_TYPES.MESSAGE) {
-            StreamMessage.validateContent(this.getParsedContent(), this.contentType)
-        }
     }
 
     getStreamId() {
@@ -99,20 +107,23 @@ export default class StreamMessage {
     getParsedContent() {
         if (!this.parsedContent) {
             // Don't try to parse encrypted messages
-            if (this.contentType === StreamMessage.CONTENT_TYPES.MESSAGE && this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
+            if (this.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE && this.encryptionType !== StreamMessage.ENCRYPTION_TYPES.NONE) {
                 return this.serializedContent
             }
 
-            try {
-                const parsed = JSON.parse(this.serializedContent)
-                this.parsedContent = parsed
-            } catch (err) {
-                throw new InvalidJsonError(
-                    this.streamId,
-                    this.serializedContent,
-                    err,
-                    this,
-                )
+            if (this.contentType === StreamMessage.CONTENT_TYPES.JSON) {
+                try {
+                    this.parsedContent = JSON.parse(this.serializedContent)
+                } catch (err) {
+                    throw new InvalidJsonError(
+                        this.streamId,
+                        this.serializedContent,
+                        err,
+                        this,
+                    )
+                }
+            } else {
+                throw new Error(`Unsupported contentType for getParsedContent: ${this.contentType}`)
             }
         }
         return this.parsedContent
@@ -125,18 +136,22 @@ export default class StreamMessage {
         return this.getSerializedContent()
     }
 
+    getNewGroupKey() {
+        return this.newGroupKey
+    }
+
     isByeMessage() {
         return !!this.getParsedContent()[BYE_KEY]
     }
 
     getPayloadToSign() {
         if (this.signatureType === StreamMessage.SIGNATURE_TYPES.ETH) {
-            let prev = ''
-            if (this.prevMsgRef) {
-                prev = `${this.prevMsgRef.timestamp}${this.prevMsgRef.sequenceNumber}`
-            }
+            // Nullable fields
+            const prev = (this.prevMsgRef ? `${this.prevMsgRef.timestamp}${this.prevMsgRef.sequenceNumber}` : '')
+            const newGroupKey = (this.newGroupKey ? this.newGroupKey.serialize() : '')
+
             return `${this.getStreamId()}${this.getStreamPartition()}${this.getTimestamp()}${this.messageId.sequenceNumber}`
-                + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}`
+                + `${this.getPublisherId().toLowerCase()}${this.messageId.msgChainId}${prev}${this.getSerializedContent()}${newGroupKey}`
         }
 
         if (this.signatureType === StreamMessage.SIGNATURE_TYPES.ETH_LEGACY) {
@@ -199,8 +214,14 @@ export default class StreamMessage {
         return C.fromArray(messageArray)
     }
 
+    static validateMessageType(messageType) {
+        if (!StreamMessage.VALID_MESSAGE_TYPES.has(messageType)) {
+            throw new ValidationError(`Unsupported message type: ${messageType}`)
+        }
+    }
+
     static validateContentType(contentType) {
-        if (!StreamMessage.VALID_CONTENTS.has(contentType)) {
+        if (!StreamMessage.VALID_CONTENT_TYPES.has(contentType)) {
             throw new ValidationError(`Unsupported content type: ${contentType}`)
         }
     }
@@ -217,34 +238,6 @@ export default class StreamMessage {
         }
     }
 
-    static validateContent(content, contentType) {
-        if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
-            this._requireFields(['requestId', 'publicKey', 'streamId'], content, contentType)
-            if (content.range && !content.range.start && !content.range.end) {
-                throw new ValidationError(`Field 'range' in content of type ${contentType} must contain fields 'start' and 'end'.`)
-            }
-        } else if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
-            this._requireFields(['requestId', 'streamId', 'keys'], content, contentType)
-            content.keys.forEach((keyResponse) => {
-                if (!keyResponse.groupKey || !keyResponse.start) {
-                    throw new Error(`Each element in field 'keys' of content of type ${contentType} must contain 'groupKey' and 'start' fields.`)
-                }
-            })
-        } else if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE) {
-            this._requireFields(['streamId', 'groupKey', 'start'], content, contentType)
-        } else if (contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE) {
-            this._requireFields(['requestId', 'streamId', 'code', 'message'], content, contentType)
-        }
-    }
-
-    static _requireFields(fieldsArr, content, contentType) {
-        fieldsArr.forEach((fieldName) => {
-            if (!content[fieldName]) {
-                throw new ValidationError(`Content of type ${contentType} must contain fields ${JSON.stringify(fieldsArr)}. Content was: ${JSON.stringify(content)}`)
-            }
-        })
-    }
-
     static versionSupportsEncryption(streamMessageVersion) {
         return streamMessageVersion >= 31
     }
@@ -257,9 +250,11 @@ export default class StreamMessage {
             sequenceNumber: this.getSequenceNumber(),
             publisherId: this.getPublisherId(),
             msgChainId: this.getMsgChainId(),
+            messageType: this.messageType,
             contentType: this.contentType,
             encryptionType: this.encryptionType,
-            content: this.getParsedContent(),
+            groupKeyId: this.groupKeyId,
+            content: (this.encryptionType === StreamMessage.ENCRYPTION_TYPES.NONE ? this.getParsedContent() : this.getSerializedContent()),
             signatureType: this.signatureType,
             signature: this.signature,
         }
@@ -269,28 +264,30 @@ export default class StreamMessage {
 /* static */
 StreamMessage.LATEST_VERSION = LATEST_VERSION
 
-StreamMessage.CONTENT_TYPES = {
+StreamMessage.MESSAGE_TYPES = {
     MESSAGE: 27,
     GROUP_KEY_REQUEST: 28,
-    GROUP_KEY_RESPONSE_SIMPLE: 29,
-    GROUP_KEY_RESET_SIMPLE: 30,
+    GROUP_KEY_RESPONSE: 29,
+    GROUP_KEY_ANNOUNCE: 30,
     GROUP_KEY_ERROR_RESPONSE: 31,
 }
-StreamMessage.VALID_CONTENTS = new Set(Object.values(StreamMessage.CONTENT_TYPES))
+StreamMessage.VALID_MESSAGE_TYPES = new Set(Object.values(StreamMessage.MESSAGE_TYPES))
+
+StreamMessage.CONTENT_TYPES = {
+    JSON: 0,
+}
+StreamMessage.VALID_CONTENT_TYPES = new Set(Object.values(StreamMessage.CONTENT_TYPES))
 
 StreamMessage.SIGNATURE_TYPES = {
     NONE: 0,
     ETH_LEGACY: 1,
     ETH: 2,
 }
-
 StreamMessage.VALID_SIGNATURE_TYPES = new Set(Object.values(StreamMessage.SIGNATURE_TYPES))
 
 StreamMessage.ENCRYPTION_TYPES = {
     NONE: 0,
     RSA: 1,
     AES: 2,
-    NEW_KEY_AND_AES: 3,
 }
-
 StreamMessage.VALID_ENCRYPTIONS = new Set(Object.values(StreamMessage.ENCRYPTION_TYPES))

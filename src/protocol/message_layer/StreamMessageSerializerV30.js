@@ -10,7 +10,7 @@ export default class StreamMessageSerializerV30 {
             VERSION,
             streamMessage.messageId.toArray(),
             streamMessage.prevMsgRef ? streamMessage.prevMsgRef.toArray() : null,
-            streamMessage.contentType,
+            streamMessage.messageType,
             streamMessage.serializedContent,
             streamMessage.signatureType,
             streamMessage.signature,
@@ -22,7 +22,7 @@ export default class StreamMessageSerializerV30 {
             version, // eslint-disable-line no-unused-vars
             messageIdArr,
             prevMsgRefArr,
-            contentType,
+            messageType,
             serializedContent,
             signatureType,
             signature,
@@ -32,7 +32,8 @@ export default class StreamMessageSerializerV30 {
             messageId: MessageID.fromArray(messageIdArr),
             prevMsgRef: prevMsgRefArr ? MessageRef.fromArray(prevMsgRefArr) : null,
             content: serializedContent,
-            contentType,
+            messageType,
+            contentType: StreamMessage.CONTENT_TYPES.JSON,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE, // encryption not supported in V30
             signatureType,
             signature,

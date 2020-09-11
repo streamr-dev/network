@@ -55,6 +55,7 @@ import MessageRef from './protocol/message_layer/MessageRef'
 import StreamMessage from './protocol/message_layer/StreamMessage'
 import './protocol/message_layer/StreamMessageSerializerV30'
 import './protocol/message_layer/StreamMessageSerializerV31'
+import './protocol/message_layer/StreamMessageSerializerV32'
 import InvalidJsonError from './errors/InvalidJsonError'
 import UnsupportedVersionError from './errors/UnsupportedVersionError'
 import GapFillFailedError from './errors/GapFillFailedError'
@@ -66,6 +67,12 @@ import StreamMessageValidator from './utils/StreamMessageValidator'
 import CachingStreamMessageValidator from './utils/CachingStreamMessageValidator'
 import MessageIDStrict from './protocol/message_layer/MessageIDStrict'
 import MessageRefStrict from './protocol/message_layer/MessageRefStrict'
+import GroupKeyMessage from './protocol/message_layer/GroupKeyMessage'
+import GroupKeyRequest from './protocol/message_layer/GroupKeyRequest'
+import GroupKeyResponse from './protocol/message_layer/GroupKeyResponse'
+import GroupKeyAnnounce from './protocol/message_layer/GroupKeyAnnounce'
+import GroupKeyErrorResponse from './protocol/message_layer/GroupKeyErrorResponse'
+import EncryptedGroupKey from './protocol/message_layer/EncryptedGroupKey'
 import TrackerMessage from './protocol/tracker_layer/TrackerMessage'
 
 export const ControlLayer = {
@@ -91,7 +98,13 @@ export const MessageLayer = {
     MessageIDStrict,
     MessageRef,
     MessageRefStrict,
-    StreamMessage
+    StreamMessage,
+    GroupKeyMessage,
+    GroupKeyRequest,
+    GroupKeyResponse,
+    GroupKeyAnnounce,
+    GroupKeyErrorResponse,
+    EncryptedGroupKey,
 }
 
 export const TrackerLayer = {

@@ -1,6 +1,6 @@
 import assert from 'assert'
 
-import { TrackerLayer } from '../../../../src'
+import '../../../../src/index' // imported for side effects
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 import StorageNodesRequest from '../../../../src/protocol/tracker_layer/storage_nodes_request/StorageNodesRequest'
 

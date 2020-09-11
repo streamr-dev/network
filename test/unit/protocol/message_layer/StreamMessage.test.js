@@ -5,23 +5,25 @@ import sinon from 'sinon'
 import { MessageLayer } from '../../../../src/index'
 import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
-import ControlMessage from '../../../../src/protocol/control_layer/ControlMessage'
 
-const { StreamMessage, MessageRef, MessageIDStrict } = MessageLayer
+const { StreamMessage, MessageRef, MessageIDStrict, EncryptedGroupKey } = MessageLayer
 
 const content = {
     hello: 'world',
 }
+
+const newGroupKey = new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex')
 
 const msg = (overrides = {}) => {
     return new StreamMessage({
         messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
         prevMsgRef: new MessageRef(1564046132168, 5),
         content: JSON.stringify(content),
-        contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+        messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
         encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
         signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
         signature: 'signature',
+        newGroupKey,
         ...overrides
     })
 }
@@ -37,10 +39,13 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getPublisherId(), 'publisherId')
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
             assert.deepStrictEqual(streamMessage.prevMsgRef, new MessageRef(1564046132168, 5))
-            assert.strictEqual(streamMessage.contentType, StreamMessage.CONTENT_TYPES.MESSAGE)
+            assert.strictEqual(streamMessage.messageType, StreamMessage.MESSAGE_TYPES.MESSAGE)
+            assert.strictEqual(streamMessage.contentType, StreamMessage.CONTENT_TYPES.JSON)
             assert.strictEqual(streamMessage.encryptionType, StreamMessage.ENCRYPTION_TYPES.NONE)
+            assert.strictEqual(streamMessage.groupKeyId, null)
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
+            assert.deepStrictEqual(streamMessage.getNewGroupKey(), newGroupKey)
             assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.ETH)
             assert.strictEqual(streamMessage.signature, 'signature')
         })
@@ -57,10 +62,13 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getPublisherId(), 'publisherId')
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
             assert.deepStrictEqual(streamMessage.prevMsgRef, null)
-            assert.strictEqual(streamMessage.contentType, StreamMessage.CONTENT_TYPES.MESSAGE)
+            assert.strictEqual(streamMessage.messageType, StreamMessage.MESSAGE_TYPES.MESSAGE)
+            assert.strictEqual(streamMessage.contentType, StreamMessage.CONTENT_TYPES.JSON)
             assert.strictEqual(streamMessage.encryptionType, StreamMessage.ENCRYPTION_TYPES.NONE)
+            assert.strictEqual(streamMessage.groupKeyId, null)
             assert.deepStrictEqual(streamMessage.getContent(), content)
             assert.strictEqual(streamMessage.getSerializedContent(), JSON.stringify(content))
+            assert.strictEqual(streamMessage.getNewGroupKey(), null)
             assert.strictEqual(streamMessage.signatureType, StreamMessage.SIGNATURE_TYPES.NONE)
             assert.strictEqual(streamMessage.signature, null)
         })
@@ -94,135 +102,23 @@ describe('StreamMessage', () => {
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.AES,
             }))
         })
+
         it('Throws with an invalid content type', () => {
             assert.throws(() => msg({
                 contentType: 999, // invalid
             }), ValidationError)
         })
-        it('Throws with an invalid content of type GROUP_KEY_REQUEST', () => {
+
+        it('Throws with an invalid newGroupKey', () => {
             assert.throws(() => msg({
-                content: {
-                    wrongField: 'some-public-key',
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
-            }), ValidationError)
-        })
-        it('Does not throw with a valid content of type GROUP_KEY_REQUEST (1)', () => {
-            const m = msg({
-                content: {
-                    requestId: 'requestId',
-                    streamId: 'streamId',
-                    publicKey: 'some-public-key',
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
-            })
-            assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
-        })
-        it('Does not throw with a valid content of type GROUP_KEY_REQUEST (2)', () => {
-            const m = msg({
-                content: {
-                    requestId: 'requestId',
-                    streamId: 'streamId',
-                    publicKey: 'some-public-key',
-                    range: {
-                        start: 123,
-                        end: 456,
-                    },
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
-            })
-            assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
-        })
-        it('Throws with an invalid content of type GROUP_KEY_RESPONSE_SIMPLE (1)', () => {
-            assert.throws(() => msg({
-                content: {
-                    foo: 'bar',
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
-            }), ValidationError)
-        })
-        it('Throws with an invalid content of type GROUP_KEY_RESPONSE_SIMPLE (2)', () => {
-            assert.throws(() => msg({
-                content: {
-                    requestId: 'requestId',
-                    streamId: 'streamId',
-                    keys: [{
-                        groupKey: 'some-group-key',
-                        start: 23314,
-                    }, {
-                        groupKey: 'some-group-key2',
-                        wrong: 233142345,
-                    }],
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
-            }), (err) => {
-                assert.strictEqual(err.message, 'Each element in field \'keys\' of content of type 29 must contain \'groupKey\' and \'start\' fields.')
-                return true
-            })
-        })
-        it('Does not throw with a valid content of type GROUP_KEY_RESPONSE_SIMPLE', () => {
-            const m = msg({
-                content: {
-                    requestId: 'requestId',
-                    streamId: 'streamId',
-                    keys: [{
-                        groupKey: 'some-group-key',
-                        start: 23314,
-                    }, {
-                        groupKey: 'some-group-key2',
-                        start: 233142345,
-                    }],
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
-            })
-            assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
-        })
-        it('Does not throw with a valid content of type GROUP_KEY_RESET_SIMPLE', () => {
-            const m = msg({
-                content: {
-                    streamId: 'streamId',
-                    groupKey: 'some-group-key',
-                    start: 96789,
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE,
-            })
-            assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
-        })
-        it('Throws with an invalid content of type GROUP_KEY_RESET_SIMPLE', () => {
-            assert.throws(() => msg({
-                content: {
-                    streamId: 'streamId',
-                    groupKey: 'some-group-key2',
-                    wrong: 233142345,
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESET_SIMPLE,
-            }), ValidationError)
-        })
-        it('Does not throw with a valid content of type GROUP_KEY_ERROR_RESPONSE', () => {
-            const m = msg({
-                content: {
-                    requestId: 'requestId',
-                    streamId: 'streamId',
-                    code: 'some_error_code',
-                    message: 'error message',
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE,
-            })
-            assert.deepStrictEqual(StreamMessage.deserialize(m.serialize()), m)
-        })
-        it('Throws with an invalid content of type ERROR_MSG', () => {
-            assert.throws(() => msg({
-                content: {
-                    wrong: 233142345,
-                },
-                contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE,
+                newGroupKey: 'foo', // invalid
             }), ValidationError)
         })
     })
 
     describe('serialization', () => {
         let serializer
-        const VERSION = 31
+        const VERSION = StreamMessage.LATEST_VERSION + 100
 
         beforeEach(() => {
             serializer = {
@@ -266,7 +162,7 @@ describe('StreamMessage', () => {
 
             it('calls toArray() on the configured serializer and stringifies it', () => {
                 serializer.toArray = sinon.stub().returns([12345])
-                assert.strictEqual(m.serialize(), '[12345]')
+                assert.strictEqual(m.serialize(VERSION), '[12345]')
                 assert(serializer.toArray.calledWith(m))
             })
 

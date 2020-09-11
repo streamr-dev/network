@@ -67,3 +67,4 @@ export function validateIsType(varName, varValue, typeName, typeClass, allowNull
         throw new ValidationError(`Expected ${varName} to be an instance of (${typeName}), but it was: ${JSON.stringify(varValue)}`)
     }
 }
+
