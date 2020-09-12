@@ -75,20 +75,16 @@ describe('PubSub with multiple clients', () => {
         const receivedMessagesOther = []
         const receivedMessagesMain = []
         // subscribe to stream from other client instance
-        await new Promise((resolve) => {
-            otherClient.subscribe({
-                stream: stream.id,
-            }, (msg) => {
-                receivedMessagesOther.push(msg)
-            }).once('subscribed', resolve)
+        await otherClient.subscribe({
+            stream: stream.id,
+        }, (msg) => {
+            receivedMessagesOther.push(msg)
         })
         // subscribe to stream from main client instance
-        await new Promise((resolve) => {
-            mainClient.subscribe({
-                stream: stream.id,
-            }, (msg) => {
-                receivedMessagesMain.push(msg)
-            }).once('subscribed', resolve)
+        await mainClient.subscribe({
+            stream: stream.id,
+        }, (msg) => {
+            receivedMessagesMain.push(msg)
         })
         const message = {
             msg: uid('message'),

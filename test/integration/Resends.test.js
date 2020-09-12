@@ -26,7 +26,7 @@ describe('StreamrClient resends', () => {
 
         beforeEach(async () => {
             client = createClient()
-            await client.ensureConnected()
+            await client.connect()
 
             publishedMessages = []
 
@@ -69,7 +69,7 @@ describe('StreamrClient resends', () => {
                     resentMessages.push(message)
                 })
 
-                client.subscribe({
+                await client.subscribe({
                     stream: stream.id,
                 }, (message) => {
                     realtimeMessages.push(message)
@@ -92,7 +92,7 @@ describe('StreamrClient resends', () => {
                     msg: uid('realtimeMessage'),
                 }
 
-                client.subscribe({
+                await client.subscribe({
                     stream: stream.id,
                 }, (message) => {
                     realtimeMessages.push(message)
@@ -217,32 +217,25 @@ describe('StreamrClient resends', () => {
                 const receivedMessages = []
 
                 // eslint-disable-next-line no-await-in-loop
-                const sub = client.subscribe(
-                    {
-                        stream: stream.id,
-                        resend: {
-                            last: MAX_MESSAGES,
-                        },
+                const sub = await client.subscribe({
+                    stream: stream.id,
+                    resend: {
+                        last: MAX_MESSAGES,
                     },
-                    (message) => {
-                        receivedMessages.push(message)
-                    },
-                )
-
-                // eslint-disable-next-line no-loop-func
-                sub.once('resent', () => {
-                    expect(receivedMessages).toStrictEqual(publishedMessages)
+                }, (message) => {
+                    receivedMessages.push(message)
                 })
 
-                // eslint-disable-next-line no-await-in-loop
-                await waitForCondition(() => receivedMessages.length === MAX_MESSAGES, 10000)
+                // eslint-disable-next-line no-loop-func
+                await waitForEvent(sub, 'resent')
+                expect(receivedMessages).toStrictEqual(publishedMessages)
             }, 10000)
         }
 
         it('resend last using subscribe and publish messages after resend', async () => {
             const receivedMessages = []
 
-            client.subscribe({
+            await client.subscribe({
                 stream: stream.id,
                 resend: {
                     last: MAX_MESSAGES,
@@ -273,7 +266,7 @@ describe('StreamrClient resends', () => {
         it('resend last using subscribe and publish realtime messages', async () => {
             const receivedMessages = []
 
-            const sub = client.subscribe({
+            const sub = await client.subscribe({
                 stream: stream.id,
                 resend: {
                     last: MAX_MESSAGES,

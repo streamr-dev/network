@@ -41,6 +41,45 @@ export default class Subscription extends EventEmitter {
         this.state = Subscription.State.unsubscribed
     }
 
+    async waitForSubscribed() {
+        if (this._subscribedPromise) {
+            return this._subscribedPromise
+        }
+
+        const subscribedPromise = new Promise((resolve, reject) => {
+            if (this.state === Subscription.State.subscribed) {
+                resolve()
+                return
+            }
+            let onError
+            const onSubscribed = () => {
+                this.off('error', onError)
+                resolve()
+            }
+            onError = (err) => {
+                this.off('subscribed', onSubscribed)
+                reject(err)
+            }
+
+            const onUnsubscribed = () => {
+                if (this._subscribedPromise === subscribedPromise) {
+                    this._subscribedPromise = undefined
+                }
+            }
+
+            this.once('subscribed', onSubscribed)
+            this.once('unsubscribed', onUnsubscribed)
+            this.once('error', reject)
+        }).then(() => this).finally(() => {
+            if (this._subscribedPromise === subscribedPromise) {
+                this._subscribedPromise = undefined
+            }
+        })
+
+        this._subscribedPromise = subscribedPromise
+        return this._subscribedPromise
+    }
+
     emit(event, ...args) {
         this.debug('emit', event)
         return super.emit(event, ...args)

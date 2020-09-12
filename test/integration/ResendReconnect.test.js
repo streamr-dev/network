@@ -57,8 +57,8 @@ describe('resend/reconnect', () => {
     describe('reconnect after resend', () => {
         let sub
         let messages = []
-        beforeEach((done) => {
-            sub = client.subscribe({
+        beforeEach(async (done) => {
+            sub = await client.subscribe({
                 stream: stream.id,
                 resend: {
                     last: MAX_MESSAGES,
