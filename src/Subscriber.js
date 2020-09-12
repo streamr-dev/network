@@ -366,7 +366,7 @@ export default class Subscriber {
         this.debug('_requestSubscribe: subscribing client: %o', request)
         await this.client.send(request).catch((err) => {
             sub.setState(Subscription.State.unsubscribed)
-            const error = new Error(`Failed to sendnsubscribe request: ${err.stack}`)
+            const error = new Error(`Failed to send subscribe request: ${err.stack}`)
             this.onErrorEmit(error)
             throw error
         })
@@ -381,9 +381,8 @@ export default class Subscriber {
         })
         await this.client.connection.send(unsubscribeRequest).catch((err) => {
             sub.setState(Subscription.State.subscribed)
-            const error = new Error(`Failed to send unsubscribe request: ${err.stack}`)
-            this.onErrorEmit(error)
-            throw error
+            this.client.emit(new Error(`Failed to send unsubscribe request: ${err.stack}`))
+            throw err
         })
         return this._checkAutoDisconnect()
     }
