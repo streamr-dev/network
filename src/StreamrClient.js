@@ -95,14 +95,12 @@ export default class StreamrClient extends EventEmitter {
             try {
                 controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
             } catch (err) {
+                this.connection.debug('<< %o', messageEvent && messageEvent.data)
                 this.debug('deserialize error', err)
                 this.emit('error', err)
                 return
             }
-            const [typeName] = Object.entries(ControlMessage.TYPES).find(([, value]) => (
-                value === controlMessage.type
-            )) || []
-            this.debug('message type', typeName)
+            this.connection.debug('<< %o', controlMessage)
             this.connection.emit(controlMessage.type, controlMessage)
         })
 
@@ -151,8 +149,6 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async send(request) {
-        const serialized = request.serialize()
-        this.debug('>> %s', serialized)
         return this.connection.send(request)
     }
 

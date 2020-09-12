@@ -42,20 +42,19 @@ export default class Publisher {
     }
 
     async publish(...args) {
+        this.debug('publish()')
         return this._publish(...args).catch((err) => {
-            this.client.debug({
-                publishError: err
-            })
             if (!(err instanceof Connection.ConnectionError || err.reason instanceof Connection.ConnectionError)) {
                 // emit non-connection errors
                 this.client.emit('error', err)
+            } else {
+                this.debug(err)
             }
             throw err
         })
     }
 
     async _publish(streamObjectOrId, data, timestamp = new Date(), partitionKey = null) {
-        this.debug('publish()')
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
@@ -68,14 +67,12 @@ export default class Publisher {
             this.msgCreationUtil.createStreamMessage(streamObjectOrId, data, timestampAsNumber, partitionKey),
         ])
 
-        this.debug('sessionToken, streamMessage')
         const requestId = this.client.resender.resendUtil.generateRequestId()
         const request = new ControlLayer.PublishRequest({
             streamMessage,
             requestId,
             sessionToken,
         })
-        this.debug('_requestPublish: %o', request)
         try {
             await this.client.send(request)
         } catch (err) {

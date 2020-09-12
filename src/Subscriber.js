@@ -46,8 +46,8 @@ export default class Subscriber {
 
     onSubscribeResponse(response) {
         if (!this.client.isConnected()) { return }
-        const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
         this.debug('onSubscribeResponse')
+        const stream = this._getSubscribedStreamPartition(response.streamId, response.streamPartition)
         if (stream) {
             stream.setSubscribing(false)
             stream.getSubscriptions().filter((sub) => !sub.resending)
@@ -70,7 +70,6 @@ export default class Subscriber {
     }
 
     async onClientConnected() {
-        this.debug('onClientConnected')
         try {
             if (!this.client.isConnected()) { return }
             // Check pending subscriptions
