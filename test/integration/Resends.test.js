@@ -1,11 +1,10 @@
+import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
 import Debug from 'debug'
 
 import { uid } from '../utils'
 import StreamrClient from '../../src'
 
 import config from './config'
-
-const { wait, waitForCondition } = require('streamr-test-utils')
 
 const createClient = (opts = {}) => new StreamrClient({
     apiKey: 'tester1-api-key',
