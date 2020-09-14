@@ -91,9 +91,9 @@ jobs:
       - name: test-integration
         run: npm run test-integration
 
-      - name: test-integration-flakey
+      - name: test-flakey
         continue-on-error: true
-        run: npm run test-integration-flakey
+        run: npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
   streamr-client-testing-tool:
     needs: [test, lint]
