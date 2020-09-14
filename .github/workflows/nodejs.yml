@@ -95,6 +95,9 @@ jobs:
         continue-on-error: true
         run: npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
+      - name: test-flakey
+        run: npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
+
   streamr-client-testing-tool:
     needs: [test, lint]
     runs-on: ubuntu-latest
