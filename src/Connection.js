@@ -1,10 +1,7 @@
-import { ControlLayer } from 'streamr-client-protocol'
 import EventEmitter from 'eventemitter3'
 import debugFactory from 'debug'
 import uniqueId from 'lodash.uniqueid'
 import WebSocket from 'ws'
-
-const { ControlMessage } = ControlLayer
 
 class ConnectionError extends Error {
     constructor(err, ...args) {
