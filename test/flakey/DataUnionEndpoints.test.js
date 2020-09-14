@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 import { Contract, providers, utils, Wallet } from 'ethers'
 import debug from 'debug'
 import { wait } from 'streamr-test-utils'
@@ -7,10 +6,11 @@ import StreamrClient from '../../src'
 import * as Token from '../../contracts/TestToken.json'
 import { getEndpointUrl } from '../../src/utils'
 import authFetch from '../../src/rest/authFetch'
-
-import config from './config'
+import config from '../integration/config'
 
 const log = debug('StreamrClient::DataUnionEndpoints::integration-test')
+
+/* eslint-disable no-await-in-loop */
 
 describe('DataUnionEndPoints', () => {
     let dataUnion
