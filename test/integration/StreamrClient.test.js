@@ -759,9 +759,6 @@ describe('StreamrClient', () => {
             client = createClient()
             await client.connect()
             stream = await createStream()
-            const publisherId = await client.getPublisherId()
-            const res = await client.isStreamPublisher(stream.id, publisherId.toLowerCase())
-            expect(res).toBe(true)
             expect(onError).toHaveBeenCalledTimes(0)
         })
 
@@ -783,6 +780,12 @@ describe('StreamrClient', () => {
             if (openSockets !== 0) {
                 throw new Error(`sockets not closed: ${openSockets}`)
             }
+        })
+
+        it('is stream publisher', async () => {
+            const publisherId = await client.getPublisherId()
+            const res = await client.isStreamPublisher(stream.id, publisherId)
+            expect(res).toBe(true)
         })
 
         describe('Pub/Sub', () => {
