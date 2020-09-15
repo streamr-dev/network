@@ -117,7 +117,7 @@ export default class Subscriber {
         // Backwards compatibility for giving an options object as third argument
         Object.assign(options, legacyOptions)
 
-        this.debug('subscribe', options)
+        this.debug('subscribe %o', options)
 
         if (!options.stream) {
             throw new Error('subscribe: Invalid arguments: options.stream is not given')
@@ -149,8 +149,15 @@ export default class Subscriber {
             })
         }
         sub.on('gap', (from, to, publisherId, msgChainId) => {
-            this.debug('gap', {
-                from, to, publisherId, msgChainId
+            this.debug('gap %o %o', {
+                id: sub.id,
+                streamId: sub.streamId,
+                streamPartition: sub.streamPartition,
+            }, {
+                from,
+                to,
+                publisherId,
+                msgChainId,
             })
             if (!sub.resending) {
             // eslint-disable-next-line no-underscore-dangle
@@ -182,12 +189,14 @@ export default class Subscriber {
             throw new Error('unsubscribe: please give a Subscription object as an argument!')
         }
 
-        const { streamId, streamPartition } = sub
-
-        this.debug('unsubscribe', {
+        const { streamId, streamPartition, id } = sub
+        const info = {
+            id,
             streamId,
             streamPartition,
-        })
+        }
+
+        this.debug('unsubscribe %o', info)
 
         const sp = this._getSubscribedStreamPartition(streamId, streamPartition)
 
@@ -196,13 +205,13 @@ export default class Subscriber {
             && sp.getSubscriptions().length === 1
             && sub.getState() === Subscription.State.subscribed
         ) {
-            this.debug('last subscription')
+            this.debug('last subscription %o', info)
             sub.setState(Subscription.State.unsubscribing)
             return this._requestUnsubscribe(sub)
         }
 
         if (sub.getState() !== Subscription.State.unsubscribing && sub.getState() !== Subscription.State.unsubscribed) {
-            this.debug('remove sub')
+            this.debug('remove subcription %o', info)
             this._removeSubscription(sub)
             // Else the sub can be cleaned off immediately
             sub.setState(Subscription.State.unsubscribed)
