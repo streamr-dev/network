@@ -41,36 +41,6 @@ describe('StreamrClient', () => {
     const streamPartition = 0
     const sessionToken = 'session-token'
 
-    function setupSubscription(
-        streamId, emitSubscribed = true, subscribeOptions = {}, handler = sinon.stub(),
-        expectSubscribeRequest = !client.getSubscriptions(streamId).length,
-    ) {
-        expect(client.isConnected()).toBeTruthy()
-        const requestId = uid('request')
-
-        if (expectSubscribeRequest) {
-            connection.expect(new SubscribeRequest({
-                requestId,
-                streamId,
-                streamPartition,
-                sessionToken,
-            }))
-        }
-        const sub = client.subscribe({
-            stream: streamId,
-            ...subscribeOptions,
-        }, handler)
-
-        if (emitSubscribed) {
-            connection.emitMessage(new SubscribeResponse({
-                streamId: sub.streamId,
-                requestId,
-                streamPartition,
-            }))
-        }
-        return sub
-    }
-
     function getStreamMessage(streamId = 'stream1', content = {}, publisherId = '') {
         const timestamp = Date.now()
         return new StreamMessage({
