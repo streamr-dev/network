@@ -40,32 +40,33 @@ let messages = []
 
 const resetResults = () => $('#result').html('')
 
+client.on('error', (err) => {
+    console.error(err)
+    $('#result').html('Error: ' + err)
+})
+
 $('#connect').on('click', async () => {
     resetResults()
     await client.connect()
     $('#result').html(client.connection.getState())
 })
 
-$('#create').on('click', () => {
+$('#create').on('click', async () => {
     resetResults()
-    client.createStream({
+    stream = await client.createStream({
         name: streamName
-    }).then((newStream) => {
-        stream = newStream
-        $('#result').html(stream.name)
     })
+    $('#result').html(stream.name)
 })
 
-$('#subscribe').on('click', () => {
+$('#subscribe').on('click', async () => {
     resetResults()
-    const sub = client.subscribe({
-            stream: stream.id
-        },
-        (message, metadata) => {
-            messages.push(message)
-        }
-    )
-    sub.on('subscribed', () => $('#result').html('subscribed'))
+    await client.subscribe({
+        stream: stream.id
+    }, (message, metadata) => {
+        messages.push(message)
+    })
+    $('#result').html('subscribed')
 })
 
 $('#publish').on('click', async () => {
@@ -84,15 +85,13 @@ $('#resend').on('click', async () => {
     messages = []
 
     const sub = await client.resend({
-            stream: stream.id,
-            resend: {
-                last: 10,
-            },
+        stream: stream.id,
+        resend: {
+            last: 10,
         },
-        (message) => {
-            messages.push(message)
-        }
-    )
+    }, (message) => {
+        messages.push(message)
+    })
 
     sub.on('resent', () => {
         $('#result').html('Resend: ' + JSON.stringify(messages))
@@ -102,11 +101,6 @@ $('#resend').on('click', async () => {
 $('#disconnect').on('click', async () => {
     await client.disconnect()
     $('#result').html(client.connection.getState())
-})
-
-client.on('error', (err) => {
-    console.error(err)
-    $('#result').html('Error: ' + err)
 })
 </script>
 </html>
