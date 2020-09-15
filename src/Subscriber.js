@@ -30,7 +30,7 @@ export default class Subscriber {
         this.onClientDisconnected = this.onClientDisconnected.bind(this)
         this.client.on('disconnected', this.onClientDisconnected)
 
-        this.onError = this.client.getErrorHandler(this)
+        this.onErrorEmit = this.client.getErrorEmitter(this)
     }
 
     onBroadcastMessage(msg) {
@@ -78,12 +78,12 @@ export default class Subscriber {
             Object.keys(this.subscribedStreamPartitions).forEach((key) => {
                 this.subscribedStreamPartitions[key].getSubscriptions().forEach((sub) => {
                     if (sub.getState() !== Subscription.State.subscribed) {
-                        this._resendAndSubscribe(sub).catch(this.onError)
+                        this._resendAndSubscribe(sub).catch(this.onErrorEmit)
                     }
                 })
             })
         } catch (err) {
-            this.onError(err)
+            this.onErrorEmit(err)
         }
     }
 
@@ -163,14 +163,14 @@ export default class Subscriber {
             // eslint-disable-next-line no-underscore-dangle
                 this.client.resender._requestResend(sub, {
                     from, to, publisherId, msgChainId,
-                }).catch((err) => (
-                    this.onError(new Error(`Failed to send resend request: ${err.stack}`))
-                ))
+                }).catch((err) => {
+                    this.onErrorEmit(new Error(`Failed to send resend request: ${err.stack}`))
+                })
             }
         })
         sub.on('done', () => {
             this.debug('done event for sub %s', sub.id)
-            this.unsubscribe(sub).catch(this.onError)
+            this.unsubscribe(sub).catch(this.onErrorEmit)
         })
 
         // Add to lookups
@@ -178,7 +178,7 @@ export default class Subscriber {
 
         // If connected, emit a subscribe request
         if (this.client.isConnected()) {
-            this._resendAndSubscribe(sub).catch(this.onError)
+            this._resendAndSubscribe(sub).catch(this.onErrorEmit)
         } else if (this.client.options.autoConnect) {
             this.client.ensureConnected()
         }
@@ -348,7 +348,9 @@ export default class Subscriber {
         this.debug('_requestSubscribe: subscribing client: %o', request)
         await this.client.send(request).catch((err) => {
             sub.setState(Subscription.State.unsubscribed)
-            return this.onError(new Error(`Failed to sendnsubscribe request: ${err.stack}`))
+            const error = new Error(`Failed to sendnsubscribe request: ${err.stack}`)
+            this.onErrorEmit(error)
+            throw error
         })
     }
 
@@ -361,7 +363,9 @@ export default class Subscriber {
         })
         await this.client.connection.send(unsubscribeRequest).catch((err) => {
             sub.setState(Subscription.State.subscribed)
-            return this.onError(new Error(`Failed to send unsubscribe request: ${err.stack}`))
+            const error = new Error(`Failed to send unsubscribe request: ${err.stack}`)
+            this.onErrorEmit(error)
+            throw error
         })
         return this._checkAutoDisconnect()
     }

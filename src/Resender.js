@@ -13,13 +13,13 @@ export default class Resender {
     constructor(client) {
         this.client = client
         this.debug = client.debug.extend('Resends')
-        this.onError = this.client.getErrorHandler(this)
+        this.onErrorEmit = this.client.getErrorEmitter(this)
 
         this.resendUtil = new ResendUtil({
             debug: this.debug,
         })
 
-        this.resendUtil.on('error', this.onError)
+        this.resendUtil.on('error', this.onErrorEmit)
 
         // Unicast messages to a specific subscription only
         this.onUnicastMessage = this.onUnicastMessage.bind(this)
@@ -129,7 +129,10 @@ export default class Resender {
         sub.setState(Subscription.State.subscribed)
         // eslint-disable-next-line no-underscore-dangle
         sub.once('initial_resend_done', () => this.client.subscriber._removeSubscription(sub))
-        await this._requestResend(sub).catch(this.onError)
+        await this._requestResend(sub).catch((err) => {
+            this.onErrorEmit(err)
+            throw err
+        })
         return sub
     }
 

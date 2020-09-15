@@ -81,9 +81,11 @@ export default class StreamrClient extends EventEmitter {
         this.getUserInfo = this.getUserInfo.bind(this)
         this.onConnectionConnected = this.onConnectionConnected.bind(this)
         this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
+
         this._onError = this._onError.bind(this)
         this.onErrorResponse = this.onErrorResponse.bind(this)
         this.onConnectionError = this.onConnectionError.bind(this)
+        this.getErrorEmitter = this.getErrorEmitter.bind(this)
 
         this.on('error', this._onError) // attach before creating sub-components incase they fire error events
 
@@ -135,7 +137,7 @@ export default class StreamrClient extends EventEmitter {
         }
     }
 
-    getErrorHandler(source) {
+    getErrorEmitter(source) {
         return (err) => {
             if (!(err instanceof Connection.ConnectionError || err.reason instanceof Connection.ConnectionError)) {
                 // emit non-connection errors
@@ -143,7 +145,6 @@ export default class StreamrClient extends EventEmitter {
             } else {
                 source.debug(err)
             }
-            throw err
         }
     }
 

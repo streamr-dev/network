@@ -30,21 +30,24 @@ export default class Publisher {
             debug: client.debug,
         }, client.options.publishWithSignature)
 
-        this.onError = this.client.getErrorHandler(this)
+        this.onErrorEmit = this.client.getErrorEmitter(this)
 
         if (client.session.isUnauthenticated()) {
             this.msgCreationUtil = null
         } else {
             this.msgCreationUtil = new MessageCreationUtil(
                 client.options.auth, this.signer, once(() => client.getUserInfo()),
-                (streamId) => client.getStream(streamId).catch(this.onError)
+                (streamId) => client.getStream(streamId).catch(this.onErrorEmit)
             )
         }
     }
 
     async publish(...args) {
         this.debug('publish()')
-        return this._publish(...args).catch(this.onError)
+        return this._publish(...args).catch((err) => {
+            this.onErrorEmit(err)
+            throw err
+        })
     }
 
     async _publish(streamObjectOrId, data, timestamp = new Date(), partitionKey = null) {
