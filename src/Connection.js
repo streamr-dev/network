@@ -1,7 +1,10 @@
 import EventEmitter from 'eventemitter3'
-import debugFactory from 'debug'
+import Debug from 'debug'
 import uniqueId from 'lodash.uniqueid'
 import WebSocket from 'ws'
+
+// add global support for pretty millisecond formatting with %n
+Debug.formatters.n = (v) => Debug.humanize(v)
 
 class ConnectionError extends Error {
     constructor(err, ...args) {
@@ -88,6 +91,8 @@ async function CloseWebSocket(socket) {
     })
 }
 
+const DEFAULT_MAX_RETRIES = 10
+
 /**
  * Wraps WebSocket open/close with promise methods
  * adds events
@@ -104,9 +109,6 @@ export default class Connection extends EventEmitter {
         super()
         this.options = options
         this.options.autoConnect = !!this.options.autoConnect
-        this.options.maxRetries = this.options.maxRetries != null ? this.options.maxRetries : 10
-        this.options.retryBackoffFactor = this.options.retryBackoffFactor != null ? this.options.retryBackoffFactor : 1.2
-        this.options.maxRetryWait = this.options.maxRetryWait != null ? this.options.maxRetryWait : 10000
         this.shouldConnect = false
         this.retryCount = 1
         this._isReconnecting = false
@@ -115,19 +117,26 @@ export default class Connection extends EventEmitter {
         if (options.debug) {
             this._debug = options.debug.extend(id)
         } else {
-            this._debug = debugFactory(`StreamrClient::${id}`)
+            this._debug = Debug(`StreamrClient::${id}`)
         }
         this.debug = this._debug
     }
 
     async backoffWait() {
+        const { retryBackoffFactor = 1.2, maxRetryWait = 10000 } = this.options
         return new Promise((resolve) => {
             clearTimeout(this._backoffTimeout)
             const timeout = Math.min(
-                this.options.maxRetryWait, // max wait time
-                Math.round((this.retryCount * 10) ** this.options.retryBackoffFactor)
+                maxRetryWait, // max wait time
+                Math.round((this.retryCount * 10) ** retryBackoffFactor)
             )
-            this.debug('waiting %sms', timeout)
+            if (!timeout) {
+                this.debug({
+                    retryCount: this.retryCount,
+                    options: this.options,
+                })
+            }
+            this.debug('waiting %n', timeout)
             this._backoffTimeout = setTimeout(resolve, timeout)
         })
     }
@@ -173,13 +182,14 @@ export default class Connection extends EventEmitter {
         return result
     }
 
-    async reconnect(...args) {
+    async reconnect() {
+        const { maxRetries = DEFAULT_MAX_RETRIES } = this.options
         if (this.reconnectTask) {
             return this.reconnectTask
         }
 
         const reconnectTask = (async () => {
-            if (this.retryCount > this.options.maxRetries) {
+            if (this.retryCount > maxRetries) {
                 // no more retries
                 this._isReconnecting = false
                 return Promise.resolve()
@@ -208,11 +218,10 @@ export default class Connection extends EventEmitter {
             }
 
             const { retryCount } = this
-            const { maxRetries } = this.options
             // try again
             this.debug('attempting to reconnect %s of %s', retryCount, maxRetries)
             this.emitTransition('reconnecting')
-            return this._connectOnce(...args).then((value) => {
+            return this._connectOnce().then((value) => {
                 this.debug('reconnect %s of %s successful', retryCount, maxRetries)
                 // reset retry state
                 this.reconnectTask = undefined
@@ -224,7 +233,7 @@ export default class Connection extends EventEmitter {
                 this.debug = this._debug
                 this.reconnectTask = undefined
                 this.retryCount += 1
-                if (this.retryCount > this.options.maxRetries) {
+                if (this.retryCount > maxRetries) {
                     this.debug('no more retries')
                     // no more retries
                     this._isReconnecting = false
