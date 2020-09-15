@@ -1,3 +1,5 @@
+import Debug from 'debug'
+
 import { uid } from '../utils'
 import StreamrClient from '../../src'
 
@@ -299,6 +301,8 @@ describe('StreamrClient resends', () => {
         }, 40000)
 
         it('long resend', async (done) => {
+            client.debug('disabling verbose logging')
+            Debug.disable()
             const LONG_RESEND = 10000
             const publishedMessages2 = []
 
