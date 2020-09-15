@@ -777,40 +777,33 @@ describe('StreamrClient', () => {
         })
 
         async function mockResend(...opts) {
-            let sub
-            connection._send = jest.fn(async (request) => {
-                requests.push(request)
-                await wait()
-                if (request.type === ControlMessage.TYPES.SubscribeRequest) {
-                    connection.emitMessage(new SubscribeResponse({
-                        streamId: sub.streamId,
-                        requestId: request.requestId,
-                        streamPartition,
-                    }))
-                }
-
-                if (request.type === ControlMessage.TYPES.UnsubscribeRequest) {
-                    connection.emitMessage(new UnsubscribeResponse({
-                        streamId: sub.streamId,
-                        requestId: request.requestId,
-                        streamPartition,
-                    }))
-                }
-            })
-            sub = await client.resend(...opts)
+            const sub = await client.resend(...opts)
             sub.on('error', onError)
             return sub
         }
 
-        it('should not send SubscribeRequest on reconnection', async () => {
+        it('should reject if cannot send', async () => {
+            client.options.autoConnect = false
+            await expect(async () => {
+                await mockResend({
+                    stream: 'stream1',
+                    resend: {
+                        last: 10
+                    }
+                }, () => {})
+            }).rejects.toThrow()
+        })
+
+        it('should not send SubscribeRequest/ResendRequest on reconnection', async () => {
             await mockResend({
                 stream: 'stream1',
                 resend: {
                     last: 10
                 }
             }, () => {})
-            await client.pause()
-            await client.connect()
+            client.connection.socket.close()
+            await client.nextConnection()
+            client.debug(connection._send.mock.calls)
             expect(connection._send.mock.calls.filter(([arg]) => arg.type === ControlMessage.TYPES.SubscribeRequest)).toHaveLength(0)
         })
 
@@ -829,8 +822,8 @@ describe('StreamrClient', () => {
                 requestId,
             })
             connection.emitMessage(resendResponse)
-            await client.pause()
-            await client.connect()
+            client.connection.socket.close()
+            await client.nextConnection()
             expect(connection._send.mock.calls.filter(([arg]) => arg.type === ControlMessage.TYPES.SubscribeRequest)).toHaveLength(0)
         })
 
@@ -854,7 +847,7 @@ describe('StreamrClient', () => {
                 requestId,
             })
             connection.emitMessage(resendResponse)
-            await client.pause()
+            client.connection.socket.close()
             await client.connect()
             expect(requests.filter((req) => req.type === ControlMessage.TYPES.SubscribeRequest)).toHaveLength(0)
         })

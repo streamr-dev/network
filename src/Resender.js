@@ -137,10 +137,9 @@ export default class Resender {
         return sub
     }
 
-    async _requestResend(sub, resendOptions) {
+    async _requestResend(sub, options = sub.getResendOptions()) {
         sub.setResending(true)
         const requestId = this.resendUtil.registerResendRequestForSub(sub)
-        const options = resendOptions || sub.getResendOptions()
         const sessionToken = await this.client.session.getSessionToken()
         let request
         if (options.last > 0) {
@@ -175,13 +174,10 @@ export default class Resender {
         }
 
         if (!request) {
-            this.client.handleError("Can't _requestResend without resendOptions")
-            return
+            throw new Error("Can't _requestResend without resend options")
         }
 
         this.debug('_requestResend: %o', request)
-        await this.client.send(request).catch((err) => {
-            this.client.handleError(`Failed to send resend request: ${err}`)
-        })
+        await this.client.send(request)
     }
 }
