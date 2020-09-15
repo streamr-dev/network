@@ -5,15 +5,12 @@ import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { wait, waitForEvent } from 'streamr-test-utils'
 import { ethers } from 'ethers'
-import Debug from 'debug'
 
 import { uid } from '../utils'
 import StreamrClient from '../../src'
 import Connection from '../../src/Connection'
 
 import config from './config'
-
-const debug = Debug('StreamrClient').extend('test')
 
 const { StreamMessage } = MessageLayer
 const WebSocket = require('ws')

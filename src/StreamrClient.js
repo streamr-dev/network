@@ -135,6 +135,18 @@ export default class StreamrClient extends EventEmitter {
         }
     }
 
+    getErrorHandler(source) {
+        return (err) => {
+            if (!(err instanceof Connection.ConnectionError || err.reason instanceof Connection.ConnectionError)) {
+                // emit non-connection errors
+                this.emit('error', err)
+            } else {
+                source.debug(err)
+            }
+            throw err
+        }
+    }
+
     onErrorResponse(err) {
         const errorObject = new Error(err.errorMessage)
         this.emit('error', errorObject)
@@ -158,11 +170,6 @@ export default class StreamrClient extends EventEmitter {
 
     onError(error) { // eslint-disable-line class-methods-use-this
         console.error(error)
-    }
-
-    handleError(msg) {
-        this.debug(msg)
-        this.emit('error', msg)
     }
 
     async resend(...args) {
