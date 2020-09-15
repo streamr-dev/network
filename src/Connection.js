@@ -120,6 +120,8 @@ export default class Connection extends EventEmitter {
             this._debug = Debug(`StreamrClient::${id}`)
         }
         this.debug = this._debug
+        this.onConnectError = this.onConnectError.bind(this)
+        this.onDisconnectError = this.onDisconnectError.bind(this)
     }
 
     async backoffWait() {
@@ -251,6 +253,21 @@ export default class Connection extends EventEmitter {
         return this.reconnectTask
     }
 
+    onConnectError(error) {
+        const err = new ConnectionError(error)
+        if (!this._isReconnecting) {
+            this.emit('error', err)
+        }
+        throw err
+    }
+
+    onDisconnectError(error) {
+        const err = new ConnectionError(error)
+        // no check for reconnecting
+        this.emit('error', err)
+        throw err
+    }
+
     async connect() {
         this.shouldConnect = true
         if (this.initialConnectTask) {
@@ -275,16 +292,11 @@ export default class Connection extends EventEmitter {
 
                 // eslint-disable-next-line promise/no-nesting
                 return this.reconnect().catch((error) => {
-                    this.debug('failed reconnect during initial connection', error)
+                    this.debug('failed reconnect during initial connection')
                     throw error
                 })
-            }).catch((error) => {
-                const err = new ConnectionError(error)
-                if (!this._isReconnecting) {
-                    this.emit('error', err)
-                }
-                throw err
             })
+            .catch(this.onConnectError)
             .finally(() => {
                 if (this.initialConnectTask === initialConnectTask) {
                     this.initialConnectTask = undefined
@@ -325,9 +337,9 @@ export default class Connection extends EventEmitter {
 
                     debug('unexpected close')
                     // eslint-disable-next-line promise/no-nesting
-                    await this.reconnect().catch((error) => {
-                        this.debug('failed reconnect after connected', error)
-                        this.emit('error', error)
+                    await this.reconnect().catch((err) => {
+                        this.debug('failed reconnect after connected')
+                        this.emit('error', new ConnectionError(err))
                     })
                 })
                 return value
@@ -380,11 +392,7 @@ export default class Connection extends EventEmitter {
             }
 
             this.socket = undefined
-            try {
-                this.emit('disconnected')
-            } catch (err) {
-                this.emit('error', err)
-            }
+            this.emit('disconnected')
 
             if (this.debug === debug) {
                 this.debug = this._debug
@@ -392,12 +400,8 @@ export default class Connection extends EventEmitter {
         })
 
         socket.addEventListener('error', (err) => {
-            debug('error', err)
             if (this.socket !== socket) { return }
-            const error = new ConnectionError(err.error || err)
-            if (!this._isReconnecting) {
-                this.emit('error', error)
-            }
+            this.emit('error', new ConnectionError(err))
         })
 
         this.emitTransition('connected')
@@ -406,6 +410,10 @@ export default class Connection extends EventEmitter {
     async nextDisconnection() {
         if (this.isDisconnected()) {
             return Promise.resolve()
+        }
+
+        if (this.disconnectTask) {
+            return this.disconnectTask
         }
 
         return new Promise((resolve, reject) => {
@@ -430,10 +438,8 @@ export default class Connection extends EventEmitter {
             return this.disconnectTask
         }
         const disconnectTask = this._disconnect()
-            .catch((err) => {
-                this.emit('error', err)
-                throw err
-            }).finally(() => {
+            .catch(this.onDisconnectError)
+            .finally(() => {
                 if (this.disconnectTask === disconnectTask) {
                     this.disconnectTask = undefined
                 }
@@ -474,6 +480,10 @@ export default class Connection extends EventEmitter {
     async nextConnection() {
         if (this.isConnected()) {
             return Promise.resolve()
+        }
+
+        if (this.initialConnectTask) {
+            return this.initialConnectTask
         }
 
         return new Promise((resolve, reject) => {

@@ -466,7 +466,7 @@ describe('Connection', () => {
             expectErrors = 1
             await s.connect()
             s.options.url = 'badurl'
-            s.on('error', async (err) => {
+            s.once('error', async (err) => {
                 expect(err).toBeTruthy()
                 expect(onConnected).toHaveBeenCalledTimes(1)
                 expect(s.isDisconnected()).toBeTruthy()
