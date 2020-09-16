@@ -1,14 +1,13 @@
-import { ethers } from 'ethers'
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { uid } from '../utils'
+import { uid, fakePrivateKey } from '../utils'
 import StreamrClient from '../../src'
 
 import config from './config'
 
 const createClient = (opts = {}) => new StreamrClient({
     auth: {
-        privateKey: ethers.Wallet.createRandom().privateKey,
+        privateKey: fakePrivateKey(),
     },
     autoConnect: false,
     autoDisconnect: false,

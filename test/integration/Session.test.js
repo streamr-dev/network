@@ -1,6 +1,5 @@
-import { ethers } from 'ethers'
-
 import StreamrClient from '../../src'
+import { fakePrivateKey } from '../utils'
 
 import config from './config'
 
@@ -37,7 +36,7 @@ describe('Session', () => {
             expect.assertions(1)
             await expect(createClient({
                 auth: {
-                    privateKey: ethers.Wallet.createRandom().privateKey,
+                    privateKey: fakePrivateKey(),
                 },
             }).session.getSessionToken()).resolves.toBeTruthy()
         })

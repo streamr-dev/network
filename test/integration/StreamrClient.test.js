@@ -4,9 +4,8 @@ import path from 'path'
 import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { wait, waitForEvent } from 'streamr-test-utils'
-import { ethers } from 'ethers'
 
-import { uid } from '../utils'
+import { uid, fakePrivateKey } from '../utils'
 import StreamrClient from '../../src'
 import Connection from '../../src/Connection'
 
@@ -25,7 +24,7 @@ describe('StreamrClient', () => {
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
             auth: {
-                privateKey: ethers.Wallet.createRandom().privateKey,
+                privateKey: fakePrivateKey(),
             },
             autoConnect: false,
             autoDisconnect: false,

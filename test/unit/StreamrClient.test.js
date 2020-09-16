@@ -6,7 +6,6 @@ import { wait, waitForEvent } from 'streamr-test-utils'
 import FailedToPublishError from '../../src/errors/FailedToPublishError'
 import Subscription from '../../src/Subscription'
 import Connection from '../../src/Connection'
-// import StreamrClient from '../../src/StreamrClient'
 import { uid } from '../utils'
 
 // eslint-disable-next-line import/no-named-as-default-member

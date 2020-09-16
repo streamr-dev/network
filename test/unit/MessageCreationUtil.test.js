@@ -5,72 +5,67 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { MessageCreationUtil } from '../../src/Publisher'
 import Stream from '../../src/rest/domain/Stream'
 
+// eslint-disable-next-line import/no-named-as-default-member
+import StubbedStreamrClient from './StubbedStreamrClient'
+
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 describe('MessageCreationUtil', () => {
     const hashedUsername = '0x16F78A7D6317F102BBD95FC9A4F3FF2E3249287690B8BDAD6B7810F82B34ACE3'.toLowerCase()
 
+    const createClient = (opts = {}) => {
+        return new StubbedStreamrClient({
+            auth: {
+                username: 'username',
+            },
+            autoConnect: false,
+            autoDisconnect: false,
+            maxRetries: 2,
+            ...opts,
+        })
+    }
+
     describe('getPublisherId', () => {
-        it('uses address', async () => {
+        it('uses address for privateKey auth', async () => {
             const wallet = ethers.Wallet.createRandom()
-            const client = {
-                options: {
-                    auth: {
-                        privateKey: wallet.privateKey,
-                    },
+            const client = createClient({
+                auth: {
+                    privateKey: wallet.privateKey,
                 },
-                getUserInfo: sinon.stub().resolves({
-                    username: 'username',
-                }),
-            }
+            })
             const msgCreationUtil = new MessageCreationUtil(client)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(wallet.address.toLowerCase())
         })
 
-        it('uses hash of username', async () => {
-            const client = {
-                options: {
-                    auth: {
-                        apiKey: 'apiKey',
-                    },
+        it('uses hash of username for apiKey auth', async () => {
+            const client = createClient({
+                auth: {
+                    apiKey: 'apiKey',
                 },
-                getUserInfo: sinon.stub().resolves({
-                    username: 'username',
-                }),
-            }
+            })
             const msgCreationUtil = new MessageCreationUtil(client)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
 
-        it('uses hash of username', async () => {
-            const client = {
-                options: {
-                    auth: {
-                        username: 'username',
-                    },
-                },
-                getUserInfo: sinon.stub().resolves({
+        it('uses hash of username for username auth', async () => {
+            const client = createClient({
+                auth: {
                     username: 'username',
-                }),
-            }
+                },
+            })
             const msgCreationUtil = new MessageCreationUtil(client)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
 
-        it('uses hash of username', async () => {
-            const client = {
-                options: {
-                    auth: {
-                        sessionToken: 'session-token',
-                    },
+        it('uses hash of username for sessionToken auth', async () => {
+            const client = createClient({
+                auth: {
+                    sessionToken: 'session-token',
                 },
-                getUserInfo: sinon.stub().resolves({
-                    username: 'username',
-                }),
-            }
+            })
             const msgCreationUtil = new MessageCreationUtil(client)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
@@ -78,15 +73,21 @@ describe('MessageCreationUtil', () => {
     })
 
     describe('partitioner', () => {
+        let client
+
+        beforeAll(() => {
+            client = createClient()
+        })
+
         it('should throw if partition count is not defined', () => {
             expect(() => {
-                new MessageCreationUtil().computeStreamPartition(undefined, 'foo')
+                new MessageCreationUtil(client).computeStreamPartition(undefined, 'foo')
             }).toThrow()
         })
 
         it('should always return partition 0 for all keys if partition count is 1', () => {
             for (let i = 0; i < 100; i++) {
-                expect(new MessageCreationUtil().computeStreamPartition(1, `foo${i}`)).toEqual(0)
+                expect(new MessageCreationUtil(client).computeStreamPartition(1, `foo${i}`)).toEqual(0)
             }
         })
 
@@ -104,7 +105,7 @@ describe('MessageCreationUtil', () => {
             expect(correctResults.length).toEqual(keys.length)
 
             for (let i = 0; i < keys.length; i++) {
-                const partition = new MessageCreationUtil().computeStreamPartition(10, keys[i])
+                const partition = new MessageCreationUtil(client).computeStreamPartition(10, keys[i])
                 expect(correctResults[i]).toStrictEqual(partition)
             }
         })
@@ -115,35 +116,24 @@ describe('MessageCreationUtil', () => {
             foo: 'bar',
         }
 
-        const stream = new Stream(null, {
-            id: 'streamId',
-            partitions: 1,
-        })
-
         let client
         let msgCreationUtil
+        let stream
+
+        beforeAll(() => {
+            client = createClient({
+                auth: {
+                    username: 'username',
+                },
+            })
+        })
 
         beforeEach(() => {
-            client = {
-                options: {
-                    auth: {
-                        username: 'username',
-                    },
-                },
-                signer: {
-                    signStreamMessage: (streamMessage) => {
-                        /* eslint-disable no-param-reassign */
-                        streamMessage.signatureType = StreamMessage.SIGNATURE_TYPES.ETH
-                        streamMessage.signature = 'signature'
-                        /* eslint-enable no-param-reassign */
-                        return Promise.resolve()
-                    },
-                },
-                getUserInfo: () => Promise.resolve({
-                    username: 'username',
-                }),
-                getStream: sinon.stub().resolves(stream),
-            }
+            stream = new Stream(null, {
+                id: 'streamId',
+                partitions: 1,
+            })
+            client.getStream = sinon.stub().resolves(stream)
             msgCreationUtil = new MessageCreationUtil(client)
         })
 
