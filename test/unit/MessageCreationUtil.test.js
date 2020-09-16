@@ -153,7 +153,7 @@ describe('MessageCreationUtil', () => {
         function getStreamMessage(streamId, timestamp, sequenceNumber, prevMsgRef) {
             return new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, hashedUsername, msgCreationUtil.msgChainer.msgChainId),
-                prevMesssageRef: prevMsgRef,
+                prevMsgRef,
                 content: pubMsg,
                 messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
@@ -162,38 +162,28 @@ describe('MessageCreationUtil', () => {
 
         it('should create messages with increasing sequence numbers', async () => {
             const ts = Date.now()
-            const promises = []
             let prevMsgRef = null
             for (let i = 0; i < 10; i++) {
-                /* eslint-disable no-loop-func */
-                prevMsgRef = new MessageRef(ts, i)
-                promises.push(async () => {
-                    const streamMessage = await msgCreationUtil.createStreamMessage(stream, {
-                        data: pubMsg, timestamp: ts
-                    })
-                    expect(streamMessage).toStrictEqual(getStreamMessage('streamId', ts, i, prevMsgRef))
+                // eslint-disable-next-line no-await-in-loop
+                const streamMessage = await msgCreationUtil.createStreamMessage(stream, {
+                    data: pubMsg, timestamp: ts,
                 })
-                /* eslint-enable no-loop-func */
+                expect(streamMessage).toStrictEqual(getStreamMessage('streamId', ts, i, prevMsgRef))
+                prevMsgRef = new MessageRef(ts, i)
             }
-            await Promise.all(promises)
         })
 
-        it('should create messages with sequence number 0', async () => {
+        it('should create messages with sequence number 0 if different timestamp', async () => {
             const ts = Date.now()
-            const promises = []
             let prevMsgRef = null
             for (let i = 0; i < 10; i++) {
-                prevMsgRef = new MessageRef(ts + i, i)
-                /* eslint-disable no-loop-func */
-                promises.push(async () => {
-                    const streamMessage = await msgCreationUtil.createStreamMessage(stream, {
-                        data: pubMsg, timestamp: ts + i
-                    })
-                    expect(streamMessage).toStrictEqual(getStreamMessage('streamId', ts + i, 0, prevMsgRef))
+                // eslint-disable-next-line no-await-in-loop
+                const streamMessage = await msgCreationUtil.createStreamMessage(stream, {
+                    data: pubMsg, timestamp: ts + i,
                 })
-                /* eslint-enable no-loop-func */
+                expect(streamMessage).toStrictEqual(getStreamMessage('streamId', ts + i, 0, prevMsgRef))
+                prevMsgRef = new MessageRef(ts + i, 0)
             }
-            await Promise.all(promises)
         })
 
         it('should publish messages with sequence number 0 (different streams)', async () => {
