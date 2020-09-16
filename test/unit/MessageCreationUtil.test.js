@@ -11,6 +11,8 @@ import StubbedStreamrClient from './StubbedStreamrClient'
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 describe('MessageCreationUtil', () => {
+    let client
+    let msgCreationUtil
     const hashedUsername = '0x16F78A7D6317F102BBD95FC9A4F3FF2E3249287690B8BDAD6B7810F82B34ACE3'.toLowerCase()
 
     const createClient = (opts = {}) => {
@@ -25,69 +27,78 @@ describe('MessageCreationUtil', () => {
         })
     }
 
+    afterEach(async () => {
+        msgCreationUtil.stop()
+        if (client) {
+            await client.disconnect()
+        }
+    })
+
     describe('getPublisherId', () => {
         it('uses address for privateKey auth', async () => {
             const wallet = ethers.Wallet.createRandom()
-            const client = createClient({
+            client = createClient({
                 auth: {
                     privateKey: wallet.privateKey,
                 },
             })
-            const msgCreationUtil = new MessageCreationUtil(client)
+            msgCreationUtil = new MessageCreationUtil(client)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(wallet.address.toLowerCase())
         })
 
         it('uses hash of username for apiKey auth', async () => {
-            const client = createClient({
+            client = createClient({
                 auth: {
                     apiKey: 'apiKey',
                 },
             })
-            const msgCreationUtil = new MessageCreationUtil(client)
+            msgCreationUtil = new MessageCreationUtil(client)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
 
         it('uses hash of username for username auth', async () => {
-            const client = createClient({
+            client = createClient({
                 auth: {
                     username: 'username',
                 },
             })
-            const msgCreationUtil = new MessageCreationUtil(client)
+            msgCreationUtil = new MessageCreationUtil(client)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
 
         it('uses hash of username for sessionToken auth', async () => {
-            const client = createClient({
+            client = createClient({
                 auth: {
                     sessionToken: 'session-token',
                 },
             })
-            const msgCreationUtil = new MessageCreationUtil(client)
+            msgCreationUtil = new MessageCreationUtil(client)
             const publisherId = await msgCreationUtil.getPublisherId()
             expect(publisherId).toBe(hashedUsername)
         })
     })
 
     describe('partitioner', () => {
-        let client
-
         beforeAll(() => {
             client = createClient()
         })
 
+        beforeEach(() => {
+            msgCreationUtil = new MessageCreationUtil(client)
+        })
+
         it('should throw if partition count is not defined', () => {
             expect(() => {
-                new MessageCreationUtil(client).computeStreamPartition(undefined, 'foo')
+                msgCreationUtil.computeStreamPartition(undefined, 'foo')
             }).toThrow()
         })
 
         it('should always return partition 0 for all keys if partition count is 1', () => {
             for (let i = 0; i < 100; i++) {
-                expect(new MessageCreationUtil(client).computeStreamPartition(1, `foo${i}`)).toEqual(0)
+                expect(msgCreationUtil.computeStreamPartition(1, `foo${i}`)).toEqual(0)
             }
         })
 
@@ -105,7 +116,7 @@ describe('MessageCreationUtil', () => {
             expect(correctResults.length).toEqual(keys.length)
 
             for (let i = 0; i < keys.length; i++) {
-                const partition = new MessageCreationUtil(client).computeStreamPartition(10, keys[i])
+                const partition = msgCreationUtil.computeStreamPartition(10, keys[i])
                 expect(correctResults[i]).toStrictEqual(partition)
             }
         })
@@ -116,8 +127,6 @@ describe('MessageCreationUtil', () => {
             foo: 'bar',
         }
 
-        let client
-        let msgCreationUtil
         let stream
 
         beforeAll(() => {
@@ -137,7 +146,7 @@ describe('MessageCreationUtil', () => {
             msgCreationUtil = new MessageCreationUtil(client)
         })
 
-        afterAll(() => {
+        afterEach(() => {
             msgCreationUtil.stop()
         })
 

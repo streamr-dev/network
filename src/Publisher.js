@@ -81,7 +81,6 @@ export class MessageCreationUtil {
             return partitions
         })
         this.getUserInfo = AsyncCacheFn(this.getUserInfo.bind(this))
-
         this.getPublisherId = AsyncCacheFn(this.getPublisherId.bind(this))
         this.cachedHashes = {}
     }
@@ -247,10 +246,14 @@ export default class Publisher {
     }
 
     getPublisherId() {
+        if (this.client.session.isUnauthenticated()) {
+            throw new Error('Need to be authenticated to getPublisherId.')
+        }
         return this.msgCreationUtil.getPublisherId()
     }
 
     stop() {
-        return this.msgCreationUtil.stop()
+        if (!this.msgCreationUtil) { return }
+        this.msgCreationUtil.stop()
     }
 }
