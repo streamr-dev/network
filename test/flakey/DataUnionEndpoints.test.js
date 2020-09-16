@@ -58,7 +58,7 @@ describe('DataUnionEndPoints', () => {
     }, 10000)
 
     beforeEach(async () => {
-        await adminClient.ensureConnected()
+        await adminClient.connect()
         dataUnion = await adminClient.deployDataUnion({
             provider: testProvider,
         })
@@ -72,7 +72,7 @@ describe('DataUnionEndPoints', () => {
 
     afterAll(async () => {
         if (!adminClient) { return }
-        await adminClient.ensureDisconnected()
+        await adminClient.disconnect()
     })
 
     afterAll(async () => {
@@ -121,12 +121,12 @@ describe('DataUnionEndPoints', () => {
                 autoDisconnect: false,
                 ...config.clientOptions,
             })
-            await memberClient.ensureConnected()
+            await memberClient.connect()
         })
 
         afterAll(async () => {
             if (!memberClient) { return }
-            await memberClient.ensureDisconnected()
+            await memberClient.disconnect()
         })
 
         it('can join the dataUnion, and get their balances and stats, and check proof, and withdraw', async () => {
@@ -222,7 +222,7 @@ describe('DataUnionEndPoints', () => {
         })
         afterAll(async () => {
             if (!client) { return }
-            await client.ensureDisconnected()
+            await client.disconnect()
         })
 
         it('can get dataUnion stats, member list, and member stats', async () => {

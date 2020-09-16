@@ -63,8 +63,8 @@ async function run() {
         // eslint-disable-next-line no-console
         console.log('Disconnecting clients')
         await Promise.all([
-            client1.ensureDisconnected(),
-            client2.ensureDisconnected(),
+            client1.disconnect(),
+            client2.disconnect(),
         ])
     })
 

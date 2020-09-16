@@ -44,11 +44,11 @@ describe('PubSub with multiple clients', () => {
         }
 
         if (mainClient) {
-            await mainClient.ensureDisconnected()
+            await mainClient.disconnect()
         }
 
         if (otherClient) {
-            await otherClient.ensureDisconnected()
+            await otherClient.disconnect()
         }
 
         const openSockets = Connection.getOpen()
@@ -65,8 +65,8 @@ describe('PubSub with multiple clients', () => {
         })
         otherClient.once('error', done)
         mainClient.once('error', done)
-        await otherClient.ensureConnected()
-        await mainClient.ensureConnected()
+        await otherClient.connect()
+        await mainClient.connect()
 
         const receivedMessagesOther = []
         const receivedMessagesMain = []

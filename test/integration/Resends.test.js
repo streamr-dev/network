@@ -47,7 +47,7 @@ describe('StreamrClient resends', () => {
         }, 10 * 1000)
 
         afterEach(async () => {
-            await client.ensureDisconnected()
+            await client.disconnect()
         })
 
         describe('issue resend and subscribe at the same time', () => {
@@ -313,10 +313,10 @@ describe('StreamrClient resends', () => {
             }
 
             await wait(30000)
-            await client.ensureDisconnected()
+            await client.disconnect()
 
             // resend from LONG_RESEND messages
-            await client.ensureConnected()
+            await client.connect()
             const receivedMessages = []
 
             const sub = await client.resend({

@@ -27,7 +27,7 @@ describe('resend/reconnect', () => {
 
     beforeEach(async () => {
         client = createClient()
-        await client.ensureConnected()
+        await client.connect()
 
         publishedMessages = []
 
@@ -49,7 +49,7 @@ describe('resend/reconnect', () => {
     }, 10 * 1000)
 
     afterEach(async () => {
-        await client.ensureDisconnected()
+        await client.disconnect()
     })
 
     describe('reconnect after resend', () => {
