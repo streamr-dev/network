@@ -28,7 +28,10 @@ describe('MessageCreationUtil', () => {
     }
 
     afterEach(async () => {
-        msgCreationUtil.stop()
+        if (msgCreationUtil) {
+            msgCreationUtil.stop()
+        }
+
         if (client) {
             await client.disconnect()
         }
@@ -144,10 +147,6 @@ describe('MessageCreationUtil', () => {
             })
             client.getStream = sinon.stub().resolves(stream)
             msgCreationUtil = new MessageCreationUtil(client)
-        })
-
-        afterEach(() => {
-            msgCreationUtil.stop()
         })
 
         function getStreamMessage(streamId, timestamp, sequenceNumber, prevMsgRef) {

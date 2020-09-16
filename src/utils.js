@@ -1,6 +1,8 @@
-import Receptacle from 'receptacle'
 import { v4 as uuidv4 } from 'uuid'
 import uniqueId from 'lodash.uniqueid'
+import LRU from 'quick-lru'
+import pMemoize from 'p-memoize'
+import mem from 'mem'
 
 import pkg from '../package.json'
 
@@ -41,50 +43,34 @@ export const getEndpointUrl = (baseUrl, ...pathParts) => {
     return baseUrl + '/' + pathParts.map((part) => encodeURIComponent(part)).join('/')
 }
 
-export class AsyncCacheMap {
-    /* eslint-disable object-curly-newline */
-    constructor(fn, {
-        max = 10000,
-        ttl = 30 * 60 * 1000, // 30 minutes
-        refresh = true, // reset ttl on access
-    } = {}) {
-        /* eslint-disable-next-line object-curly-newline */
-        this.ttl = ttl
-        this.refresh = refresh
-        this.fn = fn
-        this.cache = new Receptacle({
-            max,
+/* eslint-disable object-curly-newline */
+export function CacheAsyncFn(fn, {
+    maxSize = 10000,
+    maxAge = 30 * 60 * 1000, // 30 minutes
+    cachePromiseRejection = false,
+} = {}) {
+    const cachedFn = pMemoize(fn, {
+        maxAge,
+        cachePromiseRejection,
+        cache: new LRU({
+            maxSize,
         })
-    }
-
-    load(id, { ttl = this.ttl, refresh = this.refresh, } = {}) {
-        if (!this.cache.get(id)) {
-            const promise = this.fn(id)
-            const success = this.cache.set(id, promise, {
-                ttl,
-                refresh,
-            })
-            if (!success) {
-                console.warn(`Could not store ${id} in local cache.`)
-                return promise
-            }
-        }
-        return this.cache.get(id)
-    }
-
-    stop() {
-        this.cache.clear()
-    }
+    })
+    cachedFn.clear = () => pMemoize.clear(cachedFn)
+    return cachedFn
 }
 
-export function AsyncCacheFn(fn, options) {
-    const cache = new AsyncCacheMap(fn, options)
-    const cacheFn = async (opts) => {
-        return cache.load('value', opts)
-    }
-    cacheFn.cache = cache
-    cacheFn.stop = () => {
-        return cache.stop()
-    }
-    return cacheFn
+export function CacheFn(fn, {
+    maxSize = 10000,
+    maxAge = 30 * 60 * 1000, // 30 minutes
+} = {}) {
+    const cachedFn = mem(fn, {
+        maxAge,
+        cache: new LRU({
+            maxSize,
+        })
+    })
+    cachedFn.clear = () => mem.clear(cachedFn)
+    return cachedFn
 }
+/* eslint-enable object-curly-newline */

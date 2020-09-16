@@ -7,7 +7,7 @@ import { ethers } from 'ethers'
 import Signer from './Signer'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
-import { AsyncCacheMap, AsyncCacheFn } from './utils'
+import { CacheAsyncFn, CacheFn } from './utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -23,77 +23,62 @@ function getStreamId(streamObjectOrId) {
     throw new Error(`First argument must be a Stream object or the stream id! Was: ${streamObjectOrId}`)
 }
 
-class MessageChainer {
+function hash(stringToHash) {
+    return crypto.createHash('md5').update(stringToHash).digest()
+}
+
+class OrderedMessageChainCreator {
     constructor() {
         this.msgChainId = randomstring.generate(20)
-        this.publishedStreams = {}
+        this.messageRefs = new Map()
     }
 
-    create(streamId, streamPartition, timestamp, publisherId) {
-        const key = streamId + streamPartition
-        if (!this.publishedStreams[key]) {
-            this.publishedStreams[key] = {
-                prevTimestamp: null,
-                prevSequenceNumber: 0,
-            }
-        }
-
+    create({ streamId, streamPartition, timestamp, publisherId, }) {
+        const key = `${streamId}|${streamPartition}`
+        const prevMsgRef = this.messageRefs.get(key)
         const sequenceNumber = this.getNextSequenceNumber(key, timestamp)
         const messageId = new MessageID(streamId, streamPartition, timestamp, sequenceNumber, publisherId, this.msgChainId)
-        const prevMsgRef = this.getPrevMsgRef(key)
-        this.publishedStreams[key].prevTimestamp = timestamp
-        this.publishedStreams[key].prevSequenceNumber = sequenceNumber
+        this.messageRefs.set(key, new MessageRef(timestamp, sequenceNumber))
         return [messageId, prevMsgRef]
     }
 
-    getPrevMsgRef(key) {
-        const prevTimestamp = this.getPrevTimestamp(key)
-        if (!prevTimestamp) {
-            return null
-        }
-        const prevSequenceNumber = this.getPrevSequenceNumber(key)
-        return new MessageRef(prevTimestamp, prevSequenceNumber)
-    }
-
     getNextSequenceNumber(key, timestamp) {
-        if (timestamp !== this.getPrevTimestamp(key)) {
+        if (!this.messageRefs.has(key)) { return 0 }
+        const prev = this.messageRefs.get(key)
+        if (timestamp !== prev.timestamp) {
             return 0
         }
-        return this.getPrevSequenceNumber(key) + 1
+        return prev.sequenceNumber + 1
     }
 
-    getPrevTimestamp(key) {
-        return this.publishedStreams[key] && this.publishedStreams[key].prevTimestamp
-    }
-
-    getPrevSequenceNumber(key) {
-        return this.publishedStreams[key].prevSequenceNumber
+    clear() {
+        this.messageRefs.clear()
     }
 }
 
 export class MessageCreationUtil {
     constructor(client) {
         this.client = client
-        this.msgChainer = new MessageChainer()
+        const cacheOptions = client.options.cache
+        this.msgChainer = new OrderedMessageChainCreator(cacheOptions)
 
-        this.streamPartitionCache = new AsyncCacheMap(async (streamId) => {
-            const { partitions } = await this.client.getStream(streamId)
-            return partitions
-        })
-        this.getUserInfo = AsyncCacheFn(this.getUserInfo.bind(this))
-        this.getPublisherId = AsyncCacheFn(this.getPublisherId.bind(this))
-        this.cachedHashes = {}
+        this._getStreamPartitions = CacheAsyncFn(this._getStreamPartitions.bind(this), cacheOptions)
+        this.getUserInfo = CacheAsyncFn(this.getUserInfo.bind(this), cacheOptions)
+        this.getPublisherId = CacheAsyncFn(this.getPublisherId.bind(this), cacheOptions)
+        this.hash = CacheFn(hash, cacheOptions)
     }
 
     stop() {
-        this.msgChainer = new MessageChainer()
-        this.getUserInfo.stop()
-        this.getPublisherId.stop()
-        this.streamPartitionCache.stop()
+        this.msgChainer.clear()
+        this.msgChainer = new OrderedMessageChainCreator()
+        this.getUserInfo.clear()
+        this.getPublisherId.clear()
+        this._getStreamPartitions.clear()
+        this.hash.clear()
     }
 
     async getPublisherId() {
-        const { auth = {} } = this.client.options
+        const { options: { auth = {} } = {} } = this.client
         if (auth.privateKey !== undefined) {
             return ethers.utils.computeAddress(auth.privateKey).toLowerCase()
         }
@@ -129,15 +114,15 @@ export class MessageCreationUtil {
         if (streamObjectOrId && streamObjectOrId.partitions != null) {
             return streamObjectOrId.partitions
         }
+
+        // get streamId here so caching based on id works
         const streamId = getStreamId(streamObjectOrId)
-        return this.streamPartitionCache.load(streamId)
+        return this._getStreamPartitions(streamId)
     }
 
-    hash(stringToHash) {
-        if (this.cachedHashes[stringToHash] === undefined) {
-            this.cachedHashes[stringToHash] = crypto.createHash('md5').update(stringToHash).digest()
-        }
-        return this.cachedHashes[stringToHash]
+    async _getStreamPartitions(streamId) {
+        const { partitions } = await this.client.getStream(streamId)
+        return partitions
     }
 
     computeStreamPartition(partitionCount, partitionKey) {
@@ -169,7 +154,12 @@ export class MessageCreationUtil {
         ])
 
         const streamPartition = this.computeStreamPartition(streamPartitions, partitionKey)
-        const [messageId, prevMsgRef] = this.msgChainer.create(streamId, streamPartition, timestamp, publisherId)
+        const [messageId, prevMsgRef] = this.msgChainer.create({
+            streamId,
+            streamPartition,
+            timestamp,
+            publisherId,
+        })
 
         return new StreamMessage({
             messageId,
