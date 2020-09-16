@@ -37,9 +37,9 @@ module.exports = class Tracker extends EventEmitter {
         this.protocols = opts.protocols
         this.peerInfo = opts.peerInfo
 
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, ({ statusMessage, isStorage }) => this.processNodeStatus(statusMessage, isStorage))
-        this.protocols.trackerServer.on(TrackerServer.events.FIND_STORAGE_NODES_REQUEST, this.findStorageNodes.bind(this))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (nodeId, isStorage) => this.onNodeDisconnected(nodeId))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage, nodeId, isStorage) => this.processNodeStatus(statusMessage, nodeId, isStorage))
+        this.protocols.trackerServer.on(TrackerServer.events.STORAGE_NODES_REQUEST, (message, nodeId, isStorage) => this.findStorageNodes(message, nodeId))
 
         this.metrics = new Metrics(this.peerInfo.peerId)
 
@@ -47,12 +47,11 @@ module.exports = class Tracker extends EventEmitter {
         this.logger.debug('started %s', this.peerInfo.peerId)
     }
 
-    processNodeStatus(statusMessage, isStorage) {
+    processNodeStatus(statusMessage, source, isStorage) {
         this.metrics.inc('processNodeStatus')
-        const source = statusMessage.getSource()
-        const status = statusMessage.getStatus()
+        const { status } = statusMessage
         const { rtts, location } = status
-        const streams = this.instructionCounter.filterStatus(statusMessage)
+        const streams = this.instructionCounter.filterStatus(status, source)
         if (isStorage) {
             this.storageNodes.set(source, streams)
         }
@@ -71,10 +70,9 @@ module.exports = class Tracker extends EventEmitter {
         this.logger.debug('unregistered node %s from tracker', node)
     }
 
-    findStorageNodes(findStorageNodesMessage) {
+    findStorageNodes(storageNodesRequest, source) {
         this.metrics.inc('findStorageNodes')
-        const streamId = findStorageNodesMessage.getStreamId()
-        const source = findStorageNodesMessage.getSource()
+        const streamId = StreamIdAndPartition.fromMessage(storageNodesRequest)
 
         // Storage node may have restarted which means it will be no longer assigned to its previous streams,
         // especially those that aren't actively being subscribed or produced to. Thus on encountering a
@@ -105,7 +103,7 @@ module.exports = class Tracker extends EventEmitter {
         }
 
         this._updateAllStorages()
-        this.protocols.trackerServer.sendStorageNodes(source, streamId, foundStorageNodes)
+        this.protocols.trackerServer.sendStorageNodesResponse(source, streamId, foundStorageNodes)
             .catch((e) => this.logger.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`))
     }
 

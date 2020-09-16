@@ -3,8 +3,7 @@ const { EventEmitter } = require('events')
 const { v4: uuidv4 } = require('uuid')
 const { ControlLayer } = require('streamr-client-protocol')
 
-const encoder = require('../helpers/MessageEncoder')
-const WrapperMessage = require('../messages/WrapperMessage')
+const { decode } = require('../helpers/MessageEncoder')
 const endpointEvents = require('../connection/WsEndpoint').events
 
 const events = Object.freeze({
@@ -34,9 +33,9 @@ class NodeToNode extends EventEmitter {
     constructor(endpoint) {
         super()
         this.endpoint = endpoint
-        this.endpoint.on(endpointEvents.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
-        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, (peerInfo, reason) => this.onPeerDisconnected(peerInfo, reason))
-        this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
+        endpoint.on(endpointEvents.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
+        endpoint.on(endpointEvents.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
+        endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
     }
 
     connectToNode(address) {
@@ -44,10 +43,10 @@ class NodeToNode extends EventEmitter {
     }
 
     sendData(receiverNodeId, streamMessage) {
-        this.endpoint.sendSync(receiverNodeId, encoder.wrapperMessage(new ControlLayer.BroadcastMessage({
+        this.send(receiverNodeId, new ControlLayer.BroadcastMessage({
             requestId: '', // TODO: how to echo here the requestId of the original SubscribeRequest?
             streamMessage,
-        })))
+        }))
     }
 
     sendSubscribe(receiverNodeId, streamIdAndPartition) {
@@ -71,7 +70,7 @@ class NodeToNode extends EventEmitter {
     }
 
     send(receiverNodeId, message) {
-        return this.endpoint.send(receiverNodeId, encoder.wrapperMessage(message))
+        return this.endpoint.send(receiverNodeId, message.serialize())
     }
 
     getAddress() {
@@ -88,16 +87,20 @@ class NodeToNode extends EventEmitter {
         }
     }
 
-    onPeerDisconnected(peerInfo, reason) {
+    onPeerDisconnected(peerInfo) {
         if (peerInfo.isNode()) {
             this.emit(events.NODE_DISCONNECTED, peerInfo.peerId)
         }
     }
 
     onMessageReceived(peerInfo, rawMessage) {
-        const message = encoder.decode(peerInfo.peerId, rawMessage)
-        if (message instanceof WrapperMessage) {
-            this.emit(eventPerType[message.controlLayerPayload.type], message.controlLayerPayload, message.getSource())
+        if (peerInfo.isNode()) {
+            const message = decode(rawMessage, ControlLayer.ControlMessage.deserialize)
+            if (message != null) {
+                this.emit(eventPerType[message.type], message, peerInfo.peerId)
+            } else {
+                console.warn(`NodeToNode: invalid message from ${peerInfo}: ${rawMessage}`)
+            }
         }
     }
 

@@ -1,5 +1,6 @@
+const { ControlLayer } = require('streamr-client-protocol')
+
 const InstructionCounter = require('../../src/logic/InstructionCounter')
-const StatusMessage = require('../../src/messages/StatusMessage')
 
 describe('InstructionCounter', () => {
     let instructionCounter
@@ -23,8 +24,7 @@ describe('InstructionCounter', () => {
                 },
             }
         }
-        const filtered = instructionCounter.filterStatus(new StatusMessage(status, 'node'))
-
+        const filtered = instructionCounter.filterStatus(status, 'node')
         expect(filtered).toEqual(status.streams)
     })
 
@@ -57,8 +57,7 @@ describe('InstructionCounter', () => {
                 },
             }
         }
-        const filtered = instructionCounter.filterStatus(new StatusMessage(status, 'node'))
-
+        const filtered = instructionCounter.filterStatus(status, 'node')
         expect(filtered).toEqual({
             'stream-2': {
                 inboundNodes: [],
@@ -100,8 +99,7 @@ describe('InstructionCounter', () => {
                 },
             }
         }
-        const filtered = instructionCounter.filterStatus(new StatusMessage(status, 'another-node'))
-
+        const filtered = instructionCounter.filterStatus(status, 'another-node')
         expect(filtered).toEqual(status.streams)
     })
 
@@ -139,8 +137,7 @@ describe('InstructionCounter', () => {
         }
 
         instructionCounter.removeNode('node')
-        const filtered = instructionCounter.filterStatus(new StatusMessage(status, 'node'))
-
+        const filtered = instructionCounter.filterStatus(status, 'node')
         expect(filtered).toEqual(status.streams)
     })
 
@@ -178,7 +175,7 @@ describe('InstructionCounter', () => {
         }
 
         instructionCounter.removeStream('stream-3')
-        const filtered = instructionCounter.filterStatus(new StatusMessage(status, 'node'))
+        const filtered = instructionCounter.filterStatus(status, 'node')
 
         expect(filtered).toEqual({
             'stream-2': {

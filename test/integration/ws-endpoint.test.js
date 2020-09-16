@@ -6,7 +6,7 @@ const endpointEvents = require('../../src/connection/WsEndpoint').events
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { startTracker } = require('../../src/composition')
-const { disconnectionCodes } = require('../../src/messages/messageTypes')
+const { disconnectionCodes } = require('../../src/messageTypes')
 
 describe('ws-endpoint', () => {
     const MAX = 5

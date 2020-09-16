@@ -6,7 +6,7 @@ const { startEndpoint } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { events } = require('../../src/connection/WsEndpoint')
 const { LOCALHOST } = require('../util')
-const { disconnectionReasons, disconnectionCodes } = require('../../src/messages/messageTypes')
+const { disconnectionReasons, disconnectionCodes } = require('../../src/messageTypes')
 
 describe('check and kill dead connections', () => {
     let node1

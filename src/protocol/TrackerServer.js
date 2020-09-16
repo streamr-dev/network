@@ -1,32 +1,54 @@
 const { EventEmitter } = require('events')
 
-const encoder = require('../helpers/MessageEncoder')
+const { v4: uuidv4 } = require('uuid')
+const { TrackerLayer } = require('streamr-client-protocol')
+
+const { decode } = require('../helpers/MessageEncoder')
 const endpointEvents = require('../connection/WsEndpoint').events
 
 const events = Object.freeze({
     NODE_CONNECTED: 'streamr:tracker:send-peers',
     NODE_STATUS_RECEIVED: 'streamr:tracker:peer-status',
     NODE_DISCONNECTED: 'streamr:tracker:node-disconnected',
-    FIND_STORAGE_NODES_REQUEST: 'streamr:tracker:find-storage-nodes-request'
+    STORAGE_NODES_REQUEST: 'streamr:tracker:find-storage-nodes-request'
 })
+
+const eventPerType = {}
+eventPerType[TrackerLayer.TrackerMessage.TYPES.StatusMessage] = events.NODE_STATUS_RECEIVED
+eventPerType[TrackerLayer.TrackerMessage.TYPES.StorageNodesRequest] = events.STORAGE_NODES_REQUEST
 
 class TrackerServer extends EventEmitter {
     constructor(endpoint) {
         super()
         this.endpoint = endpoint
-        this.endpoint.on(endpointEvents.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
-        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, (peerInfo, reason) => this.onPeerDisconnected(peerInfo, reason))
-        this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
+        endpoint.on(endpointEvents.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
+        endpoint.on(endpointEvents.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
+        endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
     }
 
     sendInstruction(receiverNodeId, streamId, listOfNodeIds, counter) {
-        const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.endpoint.resolveAddress(nodeId))
-        this.endpoint.sendSync(receiverNodeId, encoder.instructionMessage(streamId, listOfNodeAddresses, counter))
+        const nodeAddresses = listOfNodeIds.map((nodeId) => this.endpoint.resolveAddress(nodeId))
+        return this.send(receiverNodeId, new TrackerLayer.InstructionMessage({
+            requestId: uuidv4(),
+            streamId: streamId.id,
+            streamPartition: streamId.partition,
+            nodeAddresses,
+            counter
+        }))
     }
 
-    sendStorageNodes(receiverNodeId, streamId, listOfNodeIds) {
-        const listOfNodeAddresses = listOfNodeIds.map((nodeId) => this.endpoint.resolveAddress(nodeId))
-        return this.endpoint.send(receiverNodeId, encoder.storageNodesMessage(streamId, listOfNodeAddresses))
+    sendStorageNodesResponse(receiverNodeId, streamId, listOfNodeIds) {
+        const nodeAddresses = listOfNodeIds.map((nodeId) => this.endpoint.resolveAddress(nodeId))
+        return this.send(receiverNodeId, new TrackerLayer.StorageNodesResponse({
+            requestId: '', // TODO: set requestId
+            streamId: streamId.id,
+            streamPartition: streamId.partition,
+            nodeAddresses
+        }))
+    }
+
+    send(receiverNodeId, message) {
+        return this.endpoint.send(receiverNodeId, message.serialize())
     }
 
     getAddress() {
@@ -39,32 +61,22 @@ class TrackerServer extends EventEmitter {
 
     onPeerConnected(peerInfo) {
         if (peerInfo.isNode()) {
-            this.emit(events.NODE_CONNECTED, peerInfo.peerId)
+            this.emit(events.NODE_CONNECTED, peerInfo.peerId, peerInfo.isStorage())
         }
     }
 
-    onPeerDisconnected(peerInfo, reason) {
+    onPeerDisconnected(peerInfo) {
         if (peerInfo.isNode()) {
-            this.emit(events.NODE_DISCONNECTED, peerInfo.peerId)
+            this.emit(events.NODE_DISCONNECTED, peerInfo.peerId, peerInfo.isStorage())
         }
     }
 
     onMessageReceived(peerInfo, rawMessage) {
-        const message = encoder.decode(peerInfo.peerId, rawMessage)
-        if (message) {
-            switch (message.getCode()) {
-                case encoder.STATUS:
-                    this.emit(events.NODE_STATUS_RECEIVED, {
-                        statusMessage: message,
-                        isStorage: peerInfo.isStorage()
-                    })
-                    break
-                case encoder.FIND_STORAGE_NODES:
-                    this.emit(events.FIND_STORAGE_NODES_REQUEST, message)
-                    break
-                default:
-                    break
-            }
+        const message = decode(rawMessage, TrackerLayer.TrackerMessage.deserialize)
+        if (message != null) {
+            this.emit(eventPerType[message.type], message, peerInfo.peerId, peerInfo.isStorage())
+        } else {
+            console.warn(`TrackerServer: invalid message from ${peerInfo}: ${rawMessage}`)
         }
     }
 }

@@ -1,30 +1,48 @@
 const { EventEmitter } = require('events')
 
-const encoder = require('../helpers/MessageEncoder')
+const { v4: uuidv4 } = require('uuid')
+const { TrackerLayer } = require('streamr-client-protocol')
+
+const { decode } = require('../helpers/MessageEncoder')
 const endpointEvents = require('../connection/WsEndpoint').events
 
 const events = Object.freeze({
     CONNECTED_TO_TRACKER: 'streamr:tracker-node:send-status',
     TRACKER_INSTRUCTION_RECEIVED: 'streamr:tracker-node:tracker-instruction-received',
     TRACKER_DISCONNECTED: 'streamr:tracker-node:tracker-disconnected',
-    STORAGE_NODES_RECEIVED: 'streamr:tracker-node:storage-nodes-received'
+    STORAGE_NODES_RESPONSE_RECEIVED: 'streamr:tracker-node:storage-nodes-received'
 })
+
+const eventPerType = {}
+eventPerType[TrackerLayer.TrackerMessage.TYPES.InstructionMessage] = events.TRACKER_INSTRUCTION_RECEIVED
+eventPerType[TrackerLayer.TrackerMessage.TYPES.StorageNodesResponse] = events.STORAGE_NODES_RESPONSE_RECEIVED
 
 class TrackerNode extends EventEmitter {
     constructor(endpoint) {
         super()
         this.endpoint = endpoint
         this.endpoint.on(endpointEvents.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
-        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, (peerInfo, reason) => this.onPeerDisconnected(peerInfo, reason))
+        this.endpoint.on(endpointEvents.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         this.endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
     }
 
     sendStatus(trackerId, status) {
-        return this.endpoint.send(trackerId, encoder.statusMessage(status))
+        return this.send(trackerId, new TrackerLayer.StatusMessage({
+            requestId: uuidv4(),
+            status
+        }))
     }
 
-    findStorageNodes(trackerId, streamId) {
-        return this.endpoint.send(trackerId, encoder.findStorageNodesMessage(streamId))
+    sendStorageNodesRequest(trackerId, streamId) {
+        return this.send(trackerId, new TrackerLayer.StorageNodesRequest({
+            requestId: uuidv4(),
+            streamId: streamId.id,
+            streamPartition: streamId.partition
+        }))
+    }
+
+    send(receiverNodeId, message) {
+        return this.endpoint.send(receiverNodeId, message.serialize())
     }
 
     stop() {
@@ -32,18 +50,11 @@ class TrackerNode extends EventEmitter {
     }
 
     onMessageReceived(peerInfo, rawMessage) {
-        const message = encoder.decode(peerInfo.peerId, rawMessage)
-        if (message) {
-            switch (message.getCode()) {
-                case encoder.INSTRUCTION:
-                    this.emit(events.TRACKER_INSTRUCTION_RECEIVED, peerInfo.peerId, message)
-                    break
-                case encoder.STORAGE_NODES:
-                    this.emit(events.STORAGE_NODES_RECEIVED, message)
-                    break
-                default:
-                    break
-            }
+        const message = decode(rawMessage, TrackerLayer.TrackerMessage.deserialize)
+        if (message != null) {
+            this.emit(eventPerType[message.type], message, peerInfo.peerId)
+        } else {
+            console.warn(`TrackerNode: invalid message from ${peerInfo}: ${rawMessage}`)
         }
     }
 
@@ -57,7 +68,7 @@ class TrackerNode extends EventEmitter {
         }
     }
 
-    onPeerDisconnected(peerInfo, reason) {
+    onPeerDisconnected(peerInfo) {
         if (peerInfo.isTracker()) {
             this.emit(events.TRACKER_DISCONNECTED, peerInfo.peerId)
         }

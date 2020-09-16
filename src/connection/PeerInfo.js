@@ -5,16 +5,16 @@ const peerTypes = Object.freeze({
 })
 
 class PeerInfo {
-    static newTracker(peerId, peerName) {
-        return new PeerInfo(peerId, peerTypes.TRACKER, peerName)
+    static newTracker(peerId, peerName, location) {
+        return new PeerInfo(peerId, peerTypes.TRACKER, peerName, location)
     }
 
-    static newNode(peerId, peerName) {
-        return new PeerInfo(peerId, peerTypes.NODE, peerName)
+    static newNode(peerId, peerName, location) {
+        return new PeerInfo(peerId, peerTypes.NODE, peerName, location)
     }
 
-    static newStorage(peerId, peerName) {
-        return new PeerInfo(peerId, peerTypes.STORAGE, peerName)
+    static newStorage(peerId, peerName, location) {
+        return new PeerInfo(peerId, peerTypes.STORAGE, peerName, location)
     }
 
     constructor(peerId, peerType, peerName, location) {

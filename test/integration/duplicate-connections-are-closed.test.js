@@ -2,7 +2,7 @@ const { waitForEvent } = require('streamr-test-utils')
 
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
-const { disconnectionReasons } = require('../../src/messages/messageTypes')
+const { disconnectionReasons } = require('../../src/messageTypes')
 const { LOCALHOST } = require('../util')
 
 describe('duplicate connections are closed', () => {

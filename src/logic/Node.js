@@ -8,7 +8,7 @@ const getLogger = require('../helpers/logger')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
-const { disconnectionReasons } = require('../messages/messageTypes')
+const { disconnectionReasons } = require('../messageTypes')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
 
@@ -77,13 +77,13 @@ class Node extends EventEmitter {
         this.trackers = new Set()
         this.trackersRing = new HashRing([], 'sha256')
 
-        this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (tracker) => this.onConnectedToTracker(tracker))
-        this.protocols.trackerNode.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, (trackerId, streamMessage) => this.onTrackerInstructionReceived(trackerId, streamMessage))
-        this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, (tracker) => this.onTrackerDisconnected(tracker))
-        this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (broadcastMessage, source) => this.onDataReceived(broadcastMessage.streamMessage, source))
-        this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage, source) => this.onSubscribeRequest(subscribeMessage, source))
-        this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage, source) => this.onUnsubscribeRequest(unsubscribeMessage, source))
-        this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (node) => this.onNodeDisconnected(node))
+        this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
+        this.protocols.trackerNode.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))
+        this.protocols.trackerNode.on(TrackerNode.events.TRACKER_DISCONNECTED, (trackerId) => this.onTrackerDisconnected(trackerId))
+        this.protocols.nodeToNode.on(NodeToNode.events.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
+        this.protocols.nodeToNode.on(NodeToNode.events.SUBSCRIBE_REQUEST, (subscribeMessage, nodeId) => this.onSubscribeRequest(subscribeMessage, nodeId))
+        this.protocols.nodeToNode.on(NodeToNode.events.UNSUBSCRIBE_REQUEST, (unsubscribeMessage, nodeId) => this.onUnsubscribeRequest(unsubscribeMessage, nodeId))
+        this.protocols.nodeToNode.on(NodeToNode.events.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
         this.protocols.nodeToNode.on(NodeToNode.events.RESEND_REQUEST, (request, source) => this.requestResend(request, source))
         this.on(events.NODE_SUBSCRIBED, ({ streamId }) => {
             this._handleBufferedMessages(streamId)
@@ -170,14 +170,12 @@ class Node extends EventEmitter {
     }
 
     onTrackerInstructionReceived(trackerId, instructionMessage) {
-        this.instructionThrottler.add(instructionMessage)
+        this.instructionThrottler.add(instructionMessage, trackerId)
     }
 
-    async handleTrackerInstruction(instructionMessage) {
-        const streamId = instructionMessage.getStreamId()
-        const nodeAddresses = instructionMessage.getNodeAddresses()
-        const counter = instructionMessage.getCounter()
-        const trackerId = instructionMessage.getSource()
+    async handleTrackerInstruction(instructionMessage, trackerId) {
+        const streamId = StreamIdAndPartition.fromMessage(instructionMessage)
+        const { nodeAddresses, counter } = instructionMessage
 
         // Check that tracker matches expected tracker
         const expectedTrackerId = this.trackersRing.get(streamId.key())

@@ -318,9 +318,9 @@ class StorageNodeResendStrategy {
         this.pendingTrackerResponse = new PendingTrackerResponseBookkeeper(timeout)
         this.pendingResends = {} // storageNode => [...proxiedResend]
 
-        this.trackerNode.on(TrackerNode.events.STORAGE_NODES_RECEIVED, async (storageNodesMessage) => {
-            const streamId = storageNodesMessage.getStreamId()
-            const storageNodeAddresses = storageNodesMessage.getNodeAddresses()
+        this.trackerNode.on(TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED, async (storageNodesResponse) => {
+            const streamId = new StreamIdAndPartition(storageNodesResponse.streamId, storageNodesResponse.streamPartition)
+            const storageNodeAddresses = storageNodesResponse.nodeAddresses
 
             const entries = this.pendingTrackerResponse.popEntries(streamId)
             if (entries.length === 0) {
@@ -390,7 +390,7 @@ class StorageNodeResendStrategy {
         if (tracker == null) {
             responseStream.push(null)
         } else {
-            this.trackerNode.findStorageNodes(tracker, streamIdAndPartition).then(
+            this.trackerNode.sendStorageNodesRequest(tracker, streamIdAndPartition).then(
                 () => this.pendingTrackerResponse.addEntry(request, responseStream),
                 () => responseStream.push(null)
             ).catch((e) => {

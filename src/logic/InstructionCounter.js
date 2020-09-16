@@ -9,10 +9,10 @@ module.exports = class InstructionCounter {
         return this.counters[nodeId][streamKey]
     }
 
-    filterStatus(statusMessage) {
+    filterStatus(status, source) {
         const filteredStreams = {}
-        Object.entries(statusMessage.status.streams).forEach(([streamKey, entry]) => {
-            const currentCounter = this._getAndSetIfNecessary(statusMessage.getSource(), streamKey)
+        Object.entries(status.streams).forEach(([streamKey, entry]) => {
+            const currentCounter = this._getAndSetIfNecessary(source, streamKey)
             if (entry.counter >= currentCounter) {
                 filteredStreams[streamKey] = entry
             }

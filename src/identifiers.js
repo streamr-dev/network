@@ -21,8 +21,9 @@ class StreamIdAndPartition {
         return `${this.id}::${this.partition}`
     }
 
-    static fromObject({ id, partition }) {
-        return new StreamIdAndPartition(id, partition)
+    static fromMessage(message) {
+        // streamr-client-protocol-js convention
+        return new StreamIdAndPartition(message.streamId, message.streamPartition)
     }
 
     static fromKey(key) {
