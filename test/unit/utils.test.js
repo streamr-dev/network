@@ -53,8 +53,8 @@ describe('utils', () => {
             session.getSessionToken = sinon.stub().resolves('invalid token')
             return authFetch(baseUrl + testUrl, session).catch((err) => {
                 expect(session.getSessionToken.calledTwice).toBeTruthy()
-                expect(err.toString()).toEqual(
-                    `Error: Request to ${baseUrl + testUrl} returned with error code 401. Unauthorized`
+                expect(err.toString()).toMatch(
+                    `${baseUrl + testUrl} returned with error code 401. Unauthorized`
                 )
                 expect(err.body).toEqual('Unauthorized')
                 done()

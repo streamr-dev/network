@@ -1,5 +1,5 @@
 import fetch from 'node-fetch'
-import debugFactory from 'debug'
+import Debug from 'debug'
 
 import AuthFetchError from '../errors/AuthFetchError'
 import { getVersionString } from '../utils'
@@ -8,14 +8,20 @@ export const DEFAULT_HEADERS = {
     'Streamr-Client': `streamr-client-javascript/${getVersionString()}`,
 }
 
-const debug = debugFactory('StreamrClient:utils')
+const debug = Debug('StreamrClient:utils:authfetch')
 
-const authFetch = async (url, session, opts = {}, requireNewToken = false) => {
+let ID = 0
+
+export default async function authFetch(url, session, opts, requireNewToken = false) {
+    ID += 1
+    const timeStart = Date.now()
+    const id = ID
+
     const options = {
         ...opts,
         headers: {
             ...DEFAULT_HEADERS,
-            ...opts.headers,
+            ...(opts && opts.headers),
         }
     }
     // add default 'Content-Type: application/json' header for all POST and PUT requests
@@ -23,7 +29,7 @@ const authFetch = async (url, session, opts = {}, requireNewToken = false) => {
         options.headers['Content-Type'] = 'application/json'
     }
 
-    debug('authFetch: ', url, opts)
+    debug('%d %s >> %o', id, url, opts)
 
     const response = await fetch(url, {
         ...opts,
@@ -34,6 +40,8 @@ const authFetch = async (url, session, opts = {}, requireNewToken = false) => {
             ...options.headers,
         },
     })
+    const timeEnd = Date.now()
+    debug('%d %s << %d %s %s %s', id, url, response.status, response.statusText, Debug.humanize(timeEnd - timeStart))
 
     const body = await response.text()
 
@@ -41,13 +49,14 @@ const authFetch = async (url, session, opts = {}, requireNewToken = false) => {
         try {
             return JSON.parse(body || '{}')
         } catch (e) {
+            debug('%d %s – failed to parse body: %s', id, url, e.stack)
             throw new AuthFetchError(e.message, response, body)
         }
     } else if ([400, 401].includes(response.status) && !requireNewToken) {
+        debug('%d %s – revalidating session')
         return authFetch(url, session, options, true)
     } else {
-        throw new AuthFetchError(`Request to ${url} returned with error code ${response.status}.`, response, body)
+        debug('%d %s – failed', id, url)
+        throw new AuthFetchError(`Request ${id} to ${url} returned with error code ${response.status}.`, response, body)
     }
 }
-
-export default authFetch
