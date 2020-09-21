@@ -206,15 +206,14 @@ export class MessageCreationUtil {
      * Should resolve in call-order per-stream + timestamp to guarantee correct sequencing.
      */
 
-    async _getDependencies(streamObjectOrId, { partitionKey, timestamp }) {
+    async _getDependencies(streamObjectOrId, { partitionKey }) {
         // This queue guarantees stream messages for the same timestamp are sequenced in-order
         // regardless of the async resolution order.
         // otherwise, if async calls happen to resolve in a different order
         // than they were issued we will end up generating the wrong sequence numbers
         const streamId = getStreamId(streamObjectOrId)
-        const key = `${streamId}|${timestamp}`
+        const key = streamId
         const queue = this.pending.get(key) || this.pending.set(key, pLimit(1)).get(key)
-
         try {
             return await queue(() => (
                 Promise.all([
@@ -224,6 +223,7 @@ export class MessageCreationUtil {
             ))
         } finally {
             if (!queue.activeCount && !queue.pendingCount) {
+                // clean up
                 this.pending.delete(key)
             }
         }
