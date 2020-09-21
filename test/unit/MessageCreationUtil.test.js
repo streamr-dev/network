@@ -1,8 +1,9 @@
 import sinon from 'sinon'
 import { ethers } from 'ethers'
+import { wait } from 'streamr-test-utils'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import { MessageCreationUtil } from '../../src/Publisher'
+import { MessageCreationUtil, StreamPartitioner } from '../../src/Publisher'
 import Stream from '../../src/rest/domain/Stream'
 
 // eslint-disable-next-line import/no-named-as-default-member
@@ -84,24 +85,26 @@ describe('MessageCreationUtil', () => {
         })
     })
 
-    describe('partitioner', () => {
+    describe('StreamPartitioner', () => {
+        let streamPartitioner
+
         beforeAll(() => {
             client = createClient()
         })
 
         beforeEach(() => {
-            msgCreationUtil = new MessageCreationUtil(client)
+            streamPartitioner = new StreamPartitioner(client)
         })
 
         it('should throw if partition count is not defined', () => {
             expect(() => {
-                msgCreationUtil.computeStreamPartition(undefined, 'foo')
+                streamPartitioner.computeStreamPartition(undefined, 'foo')
             }).toThrow()
         })
 
         it('should always return partition 0 for all keys if partition count is 1', () => {
             for (let i = 0; i < 100; i++) {
-                expect(msgCreationUtil.computeStreamPartition(1, `foo${i}`)).toEqual(0)
+                expect(streamPartitioner.computeStreamPartition(1, `foo${i}`)).toEqual(0)
             }
         })
 
@@ -119,7 +122,7 @@ describe('MessageCreationUtil', () => {
             expect(correctResults.length).toEqual(keys.length)
 
             for (let i = 0; i < keys.length; i++) {
-                const partition = msgCreationUtil.computeStreamPartition(10, keys[i])
+                const partition = streamPartitioner.computeStreamPartition(10, keys[i])
                 expect(correctResults[i]).toStrictEqual(partition)
             }
         })
@@ -165,7 +168,7 @@ describe('MessageCreationUtil', () => {
             for (let i = 0; i < 10; i++) {
                 // eslint-disable-next-line no-await-in-loop
                 const streamMessage = await msgCreationUtil.createStreamMessage(stream, {
-                    data: pubMsg, timestamp: ts,
+                    content: pubMsg, timestamp: ts,
                 })
                 expect(streamMessage).toStrictEqual(getStreamMessage('streamId', ts, i, prevMsgRef))
                 prevMsgRef = new MessageRef(ts, i)
@@ -178,11 +181,58 @@ describe('MessageCreationUtil', () => {
             for (let i = 0; i < 10; i++) {
                 // eslint-disable-next-line no-await-in-loop
                 const streamMessage = await msgCreationUtil.createStreamMessage(stream, {
-                    data: pubMsg, timestamp: ts + i,
+                    content: pubMsg, timestamp: ts + i,
                 })
                 expect(streamMessage).toStrictEqual(getStreamMessage('streamId', ts + i, 0, prevMsgRef))
                 prevMsgRef = new MessageRef(ts + i, 0)
             }
+        })
+
+        it('should sequence in order even if async dependencies resolve out of order', async () => {
+            const ts = Date.now()
+            let calls = 0
+            const getStreamPartitions = msgCreationUtil.partitioner.getStreamPartitions.bind(msgCreationUtil.partitioner)
+            msgCreationUtil.partitioner.getStreamPartitions = async (...args) => {
+                calls += 1
+                if (calls === 2) {
+                    const result = await getStreamPartitions(...args)
+                    // delay resolving this call
+                    await wait(100)
+                    return result
+                }
+                return getStreamPartitions(...args)
+            }
+
+            // simultaneously publish 3 messages, but the second item's dependencies will resolve late.
+            // this shouldn't affect the sequencing
+            const messages = await Promise.all([
+                msgCreationUtil.createStreamMessage(stream, {
+                    content: pubMsg, timestamp: ts,
+                }),
+                msgCreationUtil.createStreamMessage(stream, {
+                    content: pubMsg, timestamp: ts,
+                }),
+                msgCreationUtil.createStreamMessage(stream, {
+                    content: pubMsg, timestamp: ts,
+                })
+            ])
+            const sequenceNumbers = messages.map((m) => m.getSequenceNumber())
+            expect(sequenceNumbers).toEqual([0, 1, 2])
+        })
+
+        it('should handle old timestamps', async () => {
+            const ts = Date.now()
+            const streamMessage1 = await msgCreationUtil.createStreamMessage(stream, {
+                content: pubMsg, timestamp: ts,
+            })
+            const streamMessage2 = await msgCreationUtil.createStreamMessage(stream, {
+                content: pubMsg, timestamp: ts + 1,
+            })
+            const streamMessage3 = await msgCreationUtil.createStreamMessage(stream, {
+                content: pubMsg, timestamp: ts,
+            })
+            const sequenceNumbers = [streamMessage1, streamMessage2, streamMessage3].map((m) => m.getSequenceNumber())
+            expect(sequenceNumbers).toEqual([0, 0, 1])
         })
 
         it('should publish messages with sequence number 0 (different streams)', async () => {
@@ -197,13 +247,13 @@ describe('MessageCreationUtil', () => {
             })
 
             const msg1 = await msgCreationUtil.createStreamMessage(stream, {
-                data: pubMsg, timestamp: ts
+                content: pubMsg, timestamp: ts
             })
             const msg2 = await msgCreationUtil.createStreamMessage(stream2, {
-                data: pubMsg, timestamp: ts
+                content: pubMsg, timestamp: ts
             })
             const msg3 = await msgCreationUtil.createStreamMessage(stream3, {
-                data: pubMsg, timestamp: ts
+                content: pubMsg, timestamp: ts
             })
 
             expect(msg1).toEqual(getStreamMessage('streamId', ts, 0, null))
@@ -213,7 +263,7 @@ describe('MessageCreationUtil', () => {
 
         it.skip('should sign messages if signer is defined', async () => {
             const msg1 = await msgCreationUtil.createStreamMessage(stream, {
-                data: pubMsg, timestamp: Date.now()
+                content: pubMsg, timestamp: Date.now()
             })
             expect(msg1.signature).toBe('signature')
         })
@@ -221,7 +271,7 @@ describe('MessageCreationUtil', () => {
         it('should create message from a stream id by fetching the stream', async () => {
             const ts = Date.now()
             const streamMessage = await msgCreationUtil.createStreamMessage(stream.id, {
-                data: pubMsg, timestamp: ts
+                content: pubMsg, timestamp: ts
             })
             expect(streamMessage).toEqual(getStreamMessage(stream.id, ts, 0, null))
         })

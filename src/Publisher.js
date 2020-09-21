@@ -2,6 +2,8 @@ import crypto from 'crypto'
 
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import randomstring from 'randomstring'
+import pLimit from 'p-limit'
+import LRU from 'quick-lru'
 import { ethers } from 'ethers'
 
 import Signer from './Signer'
@@ -27,28 +29,38 @@ function hash(stringToHash) {
     return crypto.createHash('md5').update(stringToHash).digest()
 }
 
-class OrderedMessageChainCreator {
-    constructor() {
+/**
+ * Message Chain Sequencing
+ */
+
+class MessageChainSequence {
+    constructor({ maxSize = 10000 } = {}) {
         this.msgChainId = randomstring.generate(20)
-        this.messageRefs = new Map()
+        this.messageRefs = new LRU({
+            maxSize, // should never exceed this except in pathological cases
+        })
     }
 
-    create({ streamId, streamPartition, timestamp, publisherId, }) {
+    /**
+     * Generate the next message MessageID + previous MessageRef for this message chain.
+     * Messages with same timestamp get incremented sequence numbers.
+     */
+
+    add({ streamId, streamPartition, timestamp, publisherId, }) {
+        // NOTE: adding back-dated (i.e. non-sequentially timestamped) messages may 'break' sequencing.
+        // i.e. we lose track of biggest sequence number whenever timestamp changes for stream id+partition combo
+        // so backdated messsages will start at sequence 0 again, regardless of the sequencing of existing messages.
+        // storage considers timestamp+sequence number unique, so the newer messages will clobber the older messages
+        // Not feasible to keep greatest sequence number for every millisecond timestamp so not sure a good way around this.
         const key = `${streamId}|${streamPartition}`
         const prevMsgRef = this.messageRefs.get(key)
-        const sequenceNumber = this.getNextSequenceNumber(key, timestamp)
-        const messageId = new MessageID(streamId, streamPartition, timestamp, sequenceNumber, publisherId, this.msgChainId)
-        this.messageRefs.set(key, new MessageRef(timestamp, sequenceNumber))
+        const isSameTimestamp = prevMsgRef && prevMsgRef.timestamp === timestamp
+        // increment if timestamp the same, otherwise 0
+        const nextSequenceNumber = isSameTimestamp ? prevMsgRef.sequenceNumber + 1 : 0
+        const messageId = new MessageID(streamId, streamPartition, timestamp, nextSequenceNumber, publisherId, this.msgChainId)
+        // update latest timestamp + sequence for this streamId+partition (see note above about clobbering sequencing)
+        this.messageRefs.set(key, new MessageRef(timestamp, nextSequenceNumber))
         return [messageId, prevMsgRef]
-    }
-
-    getNextSequenceNumber(key, timestamp) {
-        if (!this.messageRefs.has(key)) { return 0 }
-        const prev = this.messageRefs.get(key)
-        if (timestamp !== prev.timestamp) {
-            return 0
-        }
-        return prev.sequenceNumber + 1
     }
 
     clear() {
@@ -56,25 +68,86 @@ class OrderedMessageChainCreator {
     }
 }
 
+/**
+ * Computes appropriate stream partition
+ */
+
+export class StreamPartitioner {
+    constructor(client) {
+        this.client = client
+        const cacheOptions = client.options.cache
+        this._getStreamPartitions = CacheAsyncFn(this._getStreamPartitions.bind(this), cacheOptions)
+        this.hash = CacheFn(hash, cacheOptions)
+    }
+
+    clear() {
+        this._getStreamPartitions.clear()
+        this.hash.clear()
+    }
+
+    /**
+     * Get partition for given stream/streamId + partitionKey
+     */
+
+    async get(streamObjectOrId, partitionKey) {
+        const streamPartitions = await this.getStreamPartitions(streamObjectOrId)
+        return this.computeStreamPartition(streamPartitions, partitionKey)
+    }
+
+    async getStreamPartitions(streamObjectOrId) {
+        if (streamObjectOrId && streamObjectOrId.partitions != null) {
+            return streamObjectOrId.partitions
+        }
+
+        // get streamId here so caching based on id works
+        const streamId = getStreamId(streamObjectOrId)
+        return this._getStreamPartitions(streamId)
+    }
+
+    async _getStreamPartitions(streamId) {
+        const { partitions } = await this.client.getStream(streamId)
+        return partitions
+    }
+
+    computeStreamPartition(partitionCount, partitionKey) {
+        if (!(Number.isSafeInteger(partitionCount) && partitionCount > 0)) {
+            throw new Error(`partitionCount is not a safe positive integer! ${partitionCount}`)
+        }
+
+        if (partitionCount === 1) {
+            // Fast common case
+            return 0
+        }
+
+        if (!partitionKey) {
+            // Fallback to random partition if no key
+            return Math.floor(Math.random() * partitionCount)
+        }
+
+        const buffer = this.hash(partitionKey)
+        const intHash = buffer.readInt32LE()
+        return Math.abs(intHash) % partitionCount
+    }
+}
+
 export class MessageCreationUtil {
     constructor(client) {
         this.client = client
         const cacheOptions = client.options.cache
-        this.msgChainer = new OrderedMessageChainCreator(cacheOptions)
-
-        this._getStreamPartitions = CacheAsyncFn(this._getStreamPartitions.bind(this), cacheOptions)
+        this.msgChainer = new MessageChainSequence(cacheOptions)
+        this.partitioner = new StreamPartitioner(client)
         this.getUserInfo = CacheAsyncFn(this.getUserInfo.bind(this), cacheOptions)
         this.getPublisherId = CacheAsyncFn(this.getPublisherId.bind(this), cacheOptions)
-        this.hash = CacheFn(hash, cacheOptions)
+        this.pending = new Map()
     }
 
     stop() {
         this.msgChainer.clear()
-        this.msgChainer = new OrderedMessageChainCreator()
         this.getUserInfo.clear()
         this.getPublisherId.clear()
-        this._getStreamPartitions.clear()
-        this.hash.clear()
+        this.partitioner.clear()
+        this.pending.forEach((p) => p.clearQueue())
+        this.pending.clear()
     }
 
     async getPublisherId() {
@@ -104,57 +177,64 @@ export class MessageCreationUtil {
     }
 
     async getUsername() {
-        return this.getUserInfo().then((userInfo) => (
-            userInfo.username
-            || userInfo.id // In the edge case where StreamrClient.auth.apiKey is an anonymous key, userInfo.id is that anonymous key
-        ))
+        const { username, id } = await this.client.getUserInfo()
+        return (
+            username
+            // edge case: if auth.apiKey is an anonymous key, userInfo.id is that anonymous key
+            || id
+        )
     }
 
-    async getStreamPartitions(streamObjectOrId) {
-        if (streamObjectOrId && streamObjectOrId.partitions != null) {
-            return streamObjectOrId.partitions
+    async createStreamMessage(streamObjectOrId, options = {}) {
+        const { content } = options
+        // Validate content
+        if (typeof content !== 'object') {
+            throw new Error(`Message content must be an object! Was: ${content}`)
         }
 
-        // get streamId here so caching based on id works
+        // queued depdendencies fetching
+        const [publisherId, streamPartition] = await this._getDependencies(streamObjectOrId, options)
+        return this._createStreamMessage(getStreamId(streamObjectOrId), {
+            publisherId,
+            streamPartition,
+            ...options
+        })
+    }
+
+    /**
+     * Fetch async dependencies for publishing.
+     * Should resolve in call-order per-stream + timestamp to guarantee correct sequencing.
+     */
+
+    async _getDependencies(streamObjectOrId, { partitionKey, timestamp }) {
+        // This queue guarantees stream messages for the same timestamp are sequenced in-order
+        // regardless of the async resolution order.
+        // otherwise, if async calls happen to resolve in a different order
+        // than they were issued we will end up generating the wrong sequence numbers
         const streamId = getStreamId(streamObjectOrId)
-        return this._getStreamPartitions(streamId)
-    }
+        const key = `${streamId}|${timestamp}`
+        const queue = this.pending.get(key) || this.pending.set(key, pLimit(1)).get(key)
 
-    async _getStreamPartitions(streamId) {
-        const { partitions } = await this.client.getStream(streamId)
-        return partitions
-    }
-
-    computeStreamPartition(partitionCount, partitionKey) {
-        if (!partitionCount) {
-            throw new Error('partitionCount is falsey!')
-        } else if (partitionCount === 1) {
-            // Fast common case
-            return 0
-        } else if (partitionKey) {
-            const buffer = this.hash(partitionKey)
-            const intHash = buffer.readInt32LE()
-            return Math.abs(intHash) % partitionCount
-        } else {
-            // Fallback to random partition if no key
-            return Math.floor(Math.random() * partitionCount)
+        try {
+            return await queue(() => (
+                Promise.all([
+                    this.getPublisherId(),
+                    this.partitioner.get(streamObjectOrId, partitionKey),
+                ])
+            ))
+        } finally {
+            if (!queue.activeCount && !queue.pendingCount) {
+                this.pending.delete(key)
+            }
         }
     }
 
-    async createStreamMessage(streamObjectOrId, { data, timestamp, partitionKey } = {}) {
-        // Validate data
-        if (typeof data !== 'object') {
-            throw new Error(`Message data must be an object! Was: ${data}`)
-        }
+    _createStreamMessage(streamId, options = {}) {
+        const {
+            content, streamPartition, timestamp, publisherId, ...opts
+        } = options
 
-        const streamId = getStreamId(streamObjectOrId)
-        const [streamPartitions, publisherId] = await Promise.all([
-            this.getStreamPartitions(streamObjectOrId),
-            this.getPublisherId(),
-        ])
-
-        const streamPartition = this.computeStreamPartition(streamPartitions, partitionKey)
-        const [messageId, prevMsgRef] = this.msgChainer.create({
+        const [messageId, prevMsgRef] = this.msgChainer.add({
             streamId,
             streamPartition,
             timestamp,
@@ -164,7 +244,8 @@ export class MessageCreationUtil {
         return new StreamMessage({
             messageId,
             prevMsgRef,
-            content: data,
+            content,
+            ...opts
         })
     }
 }
@@ -197,19 +278,19 @@ export default class Publisher {
         })
     }
 
-    async _publish(streamObjectOrId, data, timestamp = new Date(), partitionKey = null) {
+    async _publish(streamObjectOrId, content, timestamp = new Date(), partitionKey = null) {
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
 
         const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-        const [sessionToken, streamMessage] = await Promise.all([
-            this.client.session.getSessionToken(),
+        const [streamMessage, sessionToken] = await Promise.all([
             this.msgCreationUtil.createStreamMessage(streamObjectOrId, {
-                data,
+                content,
                 timestamp: timestampAsNumber,
                 partitionKey
             }),
+            this.client.session.getSessionToken(),
         ])
 
         if (this.signer) {
@@ -228,7 +309,7 @@ export default class Publisher {
             const streamId = getStreamId(streamObjectOrId)
             throw new FailedToPublishError(
                 streamId,
-                data,
+                content,
                 err
             )
         }
