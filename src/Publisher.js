@@ -36,6 +36,7 @@ function hash(stringToHash) {
 class MessageChainSequence {
     constructor({ maxSize = 10000 } = {}) {
         this.msgChainId = randomstring.generate(20)
+        // tracks previous timestamp+sequence for stream+partition
         this.messageRefs = new LRU({
             maxSize, // should never exceed this except in pathological cases
         })
@@ -145,7 +146,7 @@ export class MessageCreationUtil {
         this.partitioner = new StreamPartitioner(client)
         this.getUserInfo = CacheAsyncFn(this.getUserInfo.bind(this), cacheOptions)
         this.getPublisherId = CacheAsyncFn(this.getPublisherId.bind(this), cacheOptions)
-        this.pending = new Map()
+        this.pending = new Map() // stores an async queue for each stream's async deps
     }
 
     stop() {
@@ -210,7 +211,7 @@ export class MessageCreationUtil {
 
     /**
      * Fetch async dependencies for publishing.
-     * Should resolve in call-order per-stream + timestamp to guarantee correct sequencing.
+     * Should resolve in call-order per-stream to guarantee correct sequencing.
      */
 
     async _getDependencies(streamObjectOrId, { partitionKey }) {
@@ -235,6 +236,10 @@ export class MessageCreationUtil {
             }
         }
     }
+
+    /**
+     * Synchronously generate chain sequence + stream message after async deps resolved.
+     */
 
     _createStreamMessage(streamId, options = {}) {
         const {
@@ -277,8 +282,7 @@ export default class Publisher {
     }
 
     async publish(...args) {
-        this.debug('publish()')
-
+        // wrap publish in error emitter
         return this._publish(...args).catch((err) => {
             this.onErrorEmit(err)
             throw err
@@ -286,21 +290,27 @@ export default class Publisher {
     }
 
     async _publish(streamObjectOrId, content, timestamp = new Date(), partitionKey = null) {
+        this.debug('publish()')
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
 
         const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
+        // get session + generate stream message
+        // important: stream message call must be executed in publish() call order
+        // or sequencing will be broken.
+        // i.e. do not put async work before call to createStreamMessage
         const [streamMessage, sessionToken] = await Promise.all([
             this.msgCreationUtil.createStreamMessage(streamObjectOrId, {
                 content,
                 timestamp: timestampAsNumber,
                 partitionKey
             }),
-            this.client.session.getSessionToken(),
+            this.client.session.getSessionToken(), // fetch in parallel
         ])
 
         if (this.signer) {
+            // optional
             await this.signer.signStreamMessage(streamMessage)
         }
 
@@ -310,6 +320,7 @@ export default class Publisher {
             requestId,
             sessionToken,
         })
+
         try {
             await this.client.send(request)
         } catch (err) {
@@ -320,10 +331,11 @@ export default class Publisher {
                 err
             )
         }
+
         return request
     }
 
-    getPublisherId() {
+    async getPublisherId() {
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to getPublisherId.')
         }
