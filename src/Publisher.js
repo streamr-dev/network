@@ -47,19 +47,26 @@ class MessageChainSequence {
      */
 
     add({ streamId, streamPartition, timestamp, publisherId, }) {
-        // NOTE: adding back-dated (i.e. non-sequentially timestamped) messages may 'break' sequencing.
+        // NOTE: publishing back-dated (i.e. non-sequentially timestamped) messages will 'break' sequencing.
         // i.e. we lose track of biggest sequence number whenever timestamp changes for stream id+partition combo
-        // so backdated messsages will start at sequence 0 again, regardless of the sequencing of existing messages.
+        // so backdated messages will start at sequence 0 again, regardless of the sequencing of existing messages.
         // storage considers timestamp+sequence number unique, so the newer messages will clobber the older messages
         // Not feasible to keep greatest sequence number for every millisecond timestamp so not sure a good way around this.
+        // Possible we should keep a global sequence number
         const key = `${streamId}|${streamPartition}`
         const prevMsgRef = this.messageRefs.get(key)
         const isSameTimestamp = prevMsgRef && prevMsgRef.timestamp === timestamp
+        const isBackdated = prevMsgRef && prevMsgRef.timestamp > timestamp
         // increment if timestamp the same, otherwise 0
         const nextSequenceNumber = isSameTimestamp ? prevMsgRef.sequenceNumber + 1 : 0
         const messageId = new MessageID(streamId, streamPartition, timestamp, nextSequenceNumber, publisherId, this.msgChainId)
-        // update latest timestamp + sequence for this streamId+partition (see note above about clobbering sequencing)
-        this.messageRefs.set(key, new MessageRef(timestamp, nextSequenceNumber))
+        // update latest timestamp + sequence for this streamId+partition
+        // (see note above about clobbering sequencing)
+        // don't update latest if timestamp < previous timestamp
+        // this "fixes" the sequence breaking issue above, but this message will silently disappear
+        if (!isBackdated) {
+            this.messageRefs.set(key, new MessageRef(timestamp, nextSequenceNumber))
+        }
         return [messageId, prevMsgRef]
     }
 

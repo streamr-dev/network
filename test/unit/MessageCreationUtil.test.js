@@ -232,7 +232,7 @@ describe('MessageCreationUtil', () => {
                 content: pubMsg, timestamp: ts,
             })
             const sequenceNumbers = [streamMessage1, streamMessage2, streamMessage3].map((m) => m.getSequenceNumber())
-            expect(sequenceNumbers).toEqual([0, 0, 1])
+            expect(sequenceNumbers).toEqual([0, 0, 0])
         })
 
         it('should publish messages with sequence number 0 (different streams)', async () => {
