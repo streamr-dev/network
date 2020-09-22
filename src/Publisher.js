@@ -2,14 +2,13 @@ import crypto from 'crypto'
 
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import randomstring from 'randomstring'
-import pLimit from 'p-limit'
 import LRU from 'quick-lru'
 import { ethers } from 'ethers'
 
 import Signer from './Signer'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
-import { CacheAsyncFn, CacheFn } from './utils'
+import { CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from './utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -146,7 +145,7 @@ export class MessageCreationUtil {
         this.partitioner = new StreamPartitioner(client)
         this.getUserInfo = CacheAsyncFn(this.getUserInfo.bind(this), cacheOptions)
         this.getPublisherId = CacheAsyncFn(this.getPublisherId.bind(this), cacheOptions)
-        this.pending = new Map() // stores an async queue for each stream's async deps
+        this.queue = LimitAsyncFnByKey(1) // an async queue for each stream's async deps
     }
 
     stop() {
@@ -154,8 +153,7 @@ export class MessageCreationUtil {
         this.getUserInfo.clear()
         this.getPublisherId.clear()
         this.partitioner.clear()
-        this.pending.forEach((p) => p.clearQueue())
-        this.pending.clear()
+        this.queue.clear()
     }
 
     async getPublisherId() {
@@ -220,21 +218,12 @@ export class MessageCreationUtil {
         // otherwise, if async calls happen to resolve in a different order
         // than they were issued we will end up generating the wrong sequence numbers
         const streamId = getStreamId(streamObjectOrId)
-        const key = streamId
-        const queue = this.pending.get(key) || this.pending.set(key, pLimit(1)).get(key)
-        try {
-            return await queue(() => (
-                Promise.all([
-                    this.getPublisherId(),
-                    this.partitioner.get(streamObjectOrId, partitionKey),
-                ])
-            ))
-        } finally {
-            if (!queue.activeCount && !queue.pendingCount) {
-                // clean up
-                this.pending.delete(key)
-            }
-        }
+        return this.queue(streamId, async () => (
+            Promise.all([
+                this.getPublisherId(),
+                this.partitioner.get(streamObjectOrId, partitionKey),
+            ])
+        ))
     }
 
     /**
