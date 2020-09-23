@@ -2,7 +2,7 @@ const { EventEmitter } = require('events')
 
 const LRU = require('lru-cache')
 const allSettled = require('promise.allsettled')
-const HashRing = require('hashring')
+const { Utils } = require('streamr-client-protocol')
 
 const getLogger = require('../helpers/logger')
 const NodeToNode = require('../protocol/NodeToNode')
@@ -75,7 +75,7 @@ class Node extends EventEmitter {
         this.resendHandler = new ResendHandler(this.opts.resendStrategies, this.logger.error.bind(this.logger)) // TODO remove notifyError?
 
         this.trackers = new Set()
-        this.trackersRing = new HashRing([], 'sha256')
+        this.trackersRing = Utils.createTrackerRegistry()
 
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))
