@@ -6,7 +6,7 @@ process.env.NODE_ENV = process.env.NODE_ENV || 'development' // set a default NO
 const path = require('path')
 
 const TerserPlugin = require('terser-webpack-plugin')
-const merge = require('webpack-merge')
+const { merge } = require('webpack-merge')
 const nodeExternals = require('webpack-node-externals')
 
 const pkg = require('./package.json')

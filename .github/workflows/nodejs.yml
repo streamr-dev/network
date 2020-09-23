@@ -30,12 +30,12 @@ jobs:
           npm run eslint
 
   test:
-    name: Testing using Node ${{ matrix.node-version }}
+    name: Test Unit/Build/Benchmark using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        node-version: [10.x, 12.x, 13.x, 14.x]
+        node-version: [12.x, 14.x]
 
     steps:
       - uses: actions/checkout@v1
@@ -46,11 +46,47 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      - name: test
-        run: npm run test
+      - name: test-unit
+        run: npm run test-unit
+
+      - name: build
+        run: npm run build
+
+      - name: benchmarks
+        run: npm run benchmark
+
+  integration:
+    name: Test Integration using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x]
+
+    steps:
+      - uses: actions/checkout@v1
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: setup streamr-docker-dev
+        run: |
+          sudo service mysql stop
+          git clone https://github.com/streamr-dev/streamr-docker-dev.git
+          sudo ifconfig docker0 10.200.10.1/24
+          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
+
+      - name: npm ci
+        run: npm ci
+
+      - name: build
+        run: npm run build
+
+      - name: test-integration
+        run: npm run test-integration
 
   publish:
-    needs: [test, eslint]
+    needs: [eslint, test, integration]
     name: Publishing master using Node 12
     runs-on: ubuntu-latest
 
