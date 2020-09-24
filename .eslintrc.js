@@ -24,6 +24,9 @@ module.exports = {
         'promise/always-return': 'warn',
         'promise/catch-or-return': 'warn',
         'require-atomic-updates': 'warn',
-        'promise/param-names': 'warn'
+        'promise/param-names': 'warn',
+        'no-restricted-syntax': [
+            'error', 'ForInStatement', 'LabeledStatement', 'WithStatement'
+        ],
     }
 }

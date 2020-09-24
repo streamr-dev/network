@@ -72,6 +72,7 @@
     "eventemitter3": "^4.0.7",
     "lodash.uniqueid": "^4.0.1",
     "mem": "^6.1.1",
+    "node-abort-controller": "^1.1.0",
     "node-fetch": "^2.6.1",
     "node-webcrypto-ossl": "^2.1.1",
     "once": "^1.4.0",
