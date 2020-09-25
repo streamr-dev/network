@@ -134,9 +134,8 @@ describe('PushQueue', () => {
 
         await wait(10) // wait for maybe push
         // push('c') shouldn't have worked
-        expect(q.length).toBe(0)
-
         expect(msgs).toEqual(['a', 'b'])
+        expect(q.length).toBe(0)
     })
 
     it('handles throw early', async () => {
