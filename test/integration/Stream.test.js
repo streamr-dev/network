@@ -193,13 +193,13 @@ describe('StreamrClient Stream', () => {
     })
 
     it('finishes unsubscribe before returning', async () => {
-        const msgEvents = []
+        const unsubscribeEvents = []
         client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
-            msgEvents.push(m)
+            unsubscribeEvents.push(m)
         })
+
         const M = new MessageStream(client)
         const sub = await M.subscribe(stream.id)
-        expect(M.count(stream.id)).toBe(1)
 
         const published = []
         for (let i = 0; i < 5; i++) {
@@ -212,13 +212,14 @@ describe('StreamrClient Stream', () => {
         const received = []
         for await (const m of sub) {
             received.push(m)
-            if (received.length === 1) {
+            if (received.length === 2) {
+                expect(unsubscribeEvents).toHaveLength(0)
                 await sub.return()
-                expect(msgEvents).toHaveLength(1)
+                expect(unsubscribeEvents).toHaveLength(1)
+                expect(M.count(stream.id)).toBe(0)
             }
         }
-
-        expect(received.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 1))
+        expect(received).toHaveLength(2)
 
         expect(M.count(stream.id)).toBe(0)
     })
@@ -324,10 +325,40 @@ describe('StreamrClient Stream', () => {
         expect(M.count(stream.id)).toBe(0)
     })
 
-    it('can subscribe then unsubscribe then subscribe', async () => {
-        const msgEvents = []
+    it('will clean up if iterator returned before start', async () => {
+        const unsubscribeEvents = []
         client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
-            msgEvents.push(m)
+            unsubscribeEvents.push(m)
+        })
+
+        const M = new MessageStream(client)
+        const sub = await M.subscribe(stream.id)
+        expect(M.count(stream.id)).toBe(1)
+        await sub.return()
+        expect(M.count(stream.id)).toBe(0)
+
+        const published = []
+        for (let i = 0; i < 5; i++) {
+            const message = Msg()
+            // eslint-disable-next-line no-await-in-loop
+            await client.publish(stream.id, message)
+            published.push(message)
+        }
+
+        const received = []
+        for await (const m of sub) {
+            received.push(m)
+        }
+        expect(received).toHaveLength(0)
+        expect(unsubscribeEvents).toHaveLength(1)
+
+        expect(M.count(stream.id)).toBe(0)
+    })
+
+    it('can subscribe then unsubscribe in parallel', async () => {
+        const unsubscribeEvents = []
+        client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+            unsubscribeEvents.push(m)
         })
         const M = new MessageStream(client)
         const [sub] = await Promise.all([
@@ -344,13 +375,13 @@ describe('StreamrClient Stream', () => {
         }
 
         const received = []
-
         for await (const m of sub) {
             received.push(m)
         }
-        expect(msgEvents).toHaveLength(1)
 
+        // shouldn't get any messages
         expect(received).toHaveLength(0)
+        expect(unsubscribeEvents).toHaveLength(1)
         expect(M.count(stream.id)).toBe(0)
     })
 })

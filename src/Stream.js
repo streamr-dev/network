@@ -140,35 +140,55 @@ function SubKey({ streamId, streamPartition = 0 }) {
     return `${streamId}|${streamPartition}`
 }
 
-function Iterator(iterator, onFinally) {
-    return (async function* It() {
+/**
+ * Allows injecting a function to execute after an iterator finishes.
+ * Executes finally function even if generator not started.
+ */
+
+function iteratorFinally(iterator, onFinally) {
+    let started = false
+    const g = (async function* It() {
+        started = true
         try {
             yield* iterator
         } finally {
             await onFinally(iterator)
         }
     }())
+
+    // overrides return/throw to call onFinally even if generator was never started
+    const oldReturn = g.return
+    g.return = async (...args) => {
+        if (!started) {
+            await onFinally(iterator)
+        }
+        return oldReturn.call(g, ...args)
+    }
+    const oldThrow = g.throw
+    g.throw = async (...args) => {
+        if (!started) {
+            await onFinally(iterator)
+        }
+        return oldThrow.call(g, ...args)
+    }
+    return g
 }
 
 class Subscription {
     constructor(client, options) {
         this.client = client
         this.options = validateOptions(options)
-        this.key = SubKey(this.options)
         this.abortController = new AbortController()
         this.iterators = new Set()
+
         this.queue = pLimit(1)
         const sub = this.subscribe.bind(this)
         const unsub = this.unsubscribe.bind(this)
         this.subscribe = () => this.queue(sub)
         this.unsubscribe = () => this.queue(unsub)
         this.return = this.return.bind(this)
-        this._subscribe = pMemoize(() => {
-            return subscribe(this.client, this.options)
-        })
-        this._unsubscribe = pMemoize(() => {
-            return unsubscribe(this.client, this.options)
-        })
+        this.sendSubscribe = pMemoize(this.sendSubscribe.bind(this))
+        this.sendUnsubscribe = pMemoize(this.sendUnsubscribe.bind(this))
     }
 
     async abort() {
@@ -176,29 +196,33 @@ class Subscription {
         await this.queue(() => {}) // pending tasks done
     }
 
+    async sendSubscribe() {
+        return subscribe(this.client, this.options)
+    }
+
+    async sendUnsubscribe() {
+        return unsubscribe(this.client, this.options)
+    }
+
     async subscribe() {
-        this.shouldSubscribe = true
-        pMemoize.clear(this._unsubscribe)
-        await this._subscribe()
+        pMemoize.clear(this.sendUnsubscribe)
+        await this.sendSubscribe()
         return this.iterate()
     }
 
     async unsubscribe() {
-        this.shouldSubscribe = false
-        pMemoize.clear(this._subscribe)
-        await this._unsubscribe()
+        pMemoize.clear(this.sendSubscribe)
+        await this.sendUnsubscribe()
     }
 
     async return() {
-        this.shouldSubscribe = false
         await Promise.all([...this.iterators].map(async (it) => {
             await it.return()
-            await this.cleanup(it)
         }))
     }
 
-    async cleanup(it) {
-        // if iterator never started need to manually clean it
+    async _cleanup(it) {
+        // if iterator never started, finally block never called, thus need to manually clean it
         this.iterators.delete(it)
         if (!this.iterators.size) {
             // unsubscribe if no more iterators
@@ -210,21 +234,13 @@ class Subscription {
         return this.iterators.size
     }
 
-    async* createIterator() {
-        if (!this.shouldSubscribe) {
-            return
-        }
-
-        yield* messageIterator(this.client, {
+    iterate() {
+        const it = iteratorFinally(messageIterator(this.client, {
             signal: this.abortController.signal,
             ...this.options,
-        })
-    }
-
-    iterate() {
-        const it = Iterator(this.createIterator(), async () => {
-            await this.cleanup(it)
-        })
+        }), async () => (
+            this._cleanup(it)
+        ))
         this.iterators.add(it)
         return it
     }
