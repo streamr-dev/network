@@ -124,9 +124,14 @@ export default class PushQueue {
 
     async* iterate() {
         while (true) {
-            // always feed from buffer first
-            while (this.buffer.length) {
-                yield this.buffer.shift()
+            // feed from buffer first
+            const buffer = this.buffer.slice()
+            this.buffer.length = 0 // prevent endless loop
+            while (buffer.length) {
+                if (this.error || this.finished) {
+                    break
+                }
+                yield buffer.shift()
             }
 
             // handle queued error
