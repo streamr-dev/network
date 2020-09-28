@@ -112,34 +112,6 @@ async function unsubscribe(client, { streamId, streamPartition = 0 }) {
     return onResponse
 }
 
-async function* messageIterator(client, { streamId, streamPartition, signal }) {
-    let onMessage
-    try {
-        const queue = new PushQueue([], {
-            signal,
-        })
-        const isMatchingStreamMessage = getIsMatchingStreamMessage({
-            streamId,
-            streamPartition
-        })
-        onMessage = (msg) => {
-            if (isMatchingStreamMessage(msg)) {
-                queue.push(msg)
-            }
-        }
-        client.connection.on(ControlMessage.TYPES.BroadcastMessage, onMessage)
-        yield* queue
-    } finally {
-        // clean up
-        client.connection.off(ControlMessage.TYPES.BroadcastMessage, onMessage)
-    }
-}
-
-function SubKey({ streamId, streamPartition = 0 }) {
-    if (streamId == null) { throw new Error(`SubKey: invalid streamId: ${streamId} ${streamPartition}`) }
-    return `${streamId}|${streamPartition}`
-}
-
 /**
  * Allows injecting a function to execute after an iterator finishes.
  * Executes finally function even if generator not started.
@@ -174,6 +146,30 @@ function iteratorFinally(iterator, onFinally) {
     return g
 }
 
+function messageIterator(client, { streamId, streamPartition, signal }) {
+    const queue = new PushQueue([], {
+        signal,
+    })
+    const isMatchingStreamMessage = getIsMatchingStreamMessage({
+        streamId,
+        streamPartition
+    })
+    const onMessage = (msg) => {
+        if (isMatchingStreamMessage(msg)) {
+            queue.push(msg)
+        }
+    }
+    client.connection.on(ControlMessage.TYPES.BroadcastMessage, onMessage)
+    return iteratorFinally(queue, () => {
+        client.connection.off(ControlMessage.TYPES.BroadcastMessage, onMessage)
+    })
+}
+
+function SubKey({ streamId, streamPartition = 0 }) {
+    if (streamId == null) { throw new Error(`SubKey: invalid streamId: ${streamId} ${streamPartition}`) }
+    return `${streamId}|${streamPartition}`
+}
+
 class Subscription {
     constructor(client, options) {
         this.client = client
@@ -189,6 +185,10 @@ class Subscription {
         this.return = this.return.bind(this)
         this.sendSubscribe = pMemoize(this.sendSubscribe.bind(this))
         this.sendUnsubscribe = pMemoize(this.sendUnsubscribe.bind(this))
+    }
+
+    hasPending() {
+        return !!(this.queue.activeCount || this.queue.pendingCount)
     }
 
     async abort() {
@@ -285,7 +285,12 @@ export default class Subscriptions {
         const key = SubKey(validateOptions(options))
         const sub = this.subscriptions.get(key)
         if (!sub) { return }
-        await sub.queue(() => {}) // wait for any outstanding operations
+
+        // wait for any outstanding operations
+        if (sub.hasPending()) {
+            await sub.queue(() => {})
+        }
+
         await sub.return() // close all iterators (thus unsubscribe)
     }
 }
