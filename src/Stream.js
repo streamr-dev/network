@@ -1,12 +1,22 @@
+import { PassThrough } from 'stream'
+
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import { ControlLayer } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 
-import PushQueue, { AbortError } from './PushQueue'
 import { uuid } from './utils'
 
 const { SubscribeRequest, UnsubscribeRequest, ControlMessage } = ControlLayer
+
+export class AbortError extends Error {
+    constructor(msg = '', ...args) {
+        super(`The operation was aborted. ${msg}`, ...args)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+}
 
 function validateOptions(optionsOrStreamId) {
     if (!optionsOrStreamId) {
@@ -147,22 +157,43 @@ function iteratorFinally(iterator, onFinally) {
 }
 
 function messageIterator(client, { streamId, streamPartition, signal }) {
-    const queue = new PushQueue([], {
-        signal,
+    if (signal.aborted) {
+        throw new AbortError()
+    }
+
+    const queue = new PassThrough({
+        objectMode: true,
     })
+
+    const onAbort = () => {
+        return queue.destroy(new AbortError())
+    }
+
+    signal.addEventListener('abort', onAbort, {
+        once: true
+    })
+
     const isMatchingStreamMessage = getIsMatchingStreamMessage({
         streamId,
         streamPartition
     })
+
     const onMessage = (msg) => {
         if (isMatchingStreamMessage(msg)) {
-            queue.push(msg)
+            queue.write(msg)
         }
     }
+
     client.connection.on(ControlMessage.TYPES.BroadcastMessage, onMessage)
-    return iteratorFinally(queue, () => {
+    queue.once('close', () => {
         client.connection.off(ControlMessage.TYPES.BroadcastMessage, onMessage)
+        if (signal) {
+            signal.removeEventListener('abort', onAbort, {
+                once: true,
+            })
+        }
     })
+    return queue
 }
 
 function SubKey({ streamId, streamPartition = 0 }) {
