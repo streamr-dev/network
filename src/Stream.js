@@ -305,43 +305,57 @@ class Subscription {
     }
 }
 
-async function resend(client, { requestId = uuid('rs'), streamId, streamPartition = 0, ...options } = {}) {
-    const sessionToken = await client.session.getSessionToken()
+function createResendRequest({
+    requestId = uuid('rs'),
+    streamId,
+    streamPartition = 0,
+    publisherId,
+    msgChainId,
+    sessionToken,
+    ...options
+}) {
     let request
+    const opts = {
+        streamId,
+        streamPartition,
+        requestId,
+        sessionToken,
+    }
+
     if (options.last > 0) {
         request = new ResendLastRequest({
-            streamId,
-            streamPartition,
-            requestId,
+            ...opts,
             numberLast: options.last,
-            sessionToken,
         })
     } else if (options.from && !options.to) {
         request = new ResendFromRequest({
-            streamId,
-            streamPartition,
-            requestId,
+            ...opts,
             fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
-            publisherId: options.publisherId,
-            msgChainId: options.msgChainId,
-            sessionToken,
+            publisherId,
+            msgChainId,
         })
     } else if (options.from && options.to) {
         request = new ResendRangeRequest({
-            streamId,
-            streamPartition,
-            requestId,
+            ...opts,
             fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
             toMsgRef: new MessageRef(options.to.timestamp, options.to.sequenceNumber),
-            publisherId: options.publisherId,
-            msgChainId: options.msgChainId,
-            sessionToken,
+            publisherId,
+            msgChainId,
         })
     }
 
     if (!request) {
         throw new Error("Can't _requestResend without resend options")
     }
+    return request
+}
+
+async function resend(client, options) {
+    const sessionToken = await client.session.getSessionToken()
+    const request = createResendRequest({
+        ...options,
+        sessionToken,
+    })
 
     const onResponse = waitForRequestResponse(client, request)
 
