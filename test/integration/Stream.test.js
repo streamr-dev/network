@@ -241,6 +241,95 @@ describe('StreamrClient Stream', () => {
                 expect(M.count(stream.id)).toBe(0)
             })
 
+            describe('resends', () => {
+                it('handles nothing to resend', async () => {
+                    const M = new MessageStream(client)
+                    const sub = await M.resend({
+                        streamId: stream.id,
+                        last: 5,
+                    })
+
+                    const receivedMsgs = await collect(sub)
+                    expect(receivedMsgs).toHaveLength(0)
+                    expect(M.count(stream.id)).toBe(0)
+                })
+
+                describe('with resend data', () => {
+                    let published
+                    beforeEach(async () => {
+                        published = []
+                        for (let i = 0; i < 5; i++) {
+                            const message = Msg()
+                            // eslint-disable-next-line no-await-in-loop
+                            await client.publish(stream.id, message)
+                            published.push(message)
+                        }
+                        await wait(5000)
+                    }, 10000)
+
+                    it('requests resend', async () => {
+                        const M = new MessageStream(client)
+                        const sub = await M.resend({
+                            streamId: stream.id,
+                            last: published.length,
+                        })
+
+                        const receivedMsgs = await collect(sub)
+                        expect(receivedMsgs).toHaveLength(published.length)
+                        expect(receivedMsgs.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published)
+                        expect(M.count(stream.id)).toBe(0)
+                    })
+
+
+                    describe('resendSubscribe', () => {
+                        it('can request both', async () => {
+                            const M = new MessageStream(client)
+                            const sub = await M.resendSubscribe({
+                                streamId: stream.id,
+                                last: published.length,
+                            })
+
+                            const message = Msg()
+                            // eslint-disable-next-line no-await-in-loop
+                            await client.publish(stream.id, message)
+                            const receivedMsgs = await collect(sub, async ({ received }) => {
+                                if (received.length === published.length + 1) {
+                                    await sub.return()
+                                }
+                            })
+                            expect(receivedMsgs).toHaveLength(published.length + 1)
+                            expect(receivedMsgs.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.concat(message))
+                            expect(M.count(stream.id)).toBe(0)
+                        }, 6000)
+
+                        it('handles ending prematurely', async () => {
+                            const unsubscribeEvents = []
+                            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+                                unsubscribeEvents.push(m)
+                            })
+                            const M = new MessageStream(client)
+                            const sub = await M.resendSubscribe({
+                                streamId: stream.id,
+                                last: published.length,
+                            })
+
+                            const message = Msg()
+                            // eslint-disable-next-line no-await-in-loop
+                            await client.publish(stream.id, message)
+                            const receivedMsgs = await collect(sub, async ({ received }) => {
+                                if (received.length === 3) {
+                                    await sub.return()
+                                    expect(unsubscribeEvents).toHaveLength(1)
+                                }
+                            })
+                            expect(receivedMsgs).toHaveLength(3)
+                            expect(receivedMsgs.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 3))
+                            expect(M.count(stream.id)).toBe(0)
+                        }, 6000)
+                    })
+                })
+            })
+
             describe('mid-stream stop methods', () => {
                 let sub1
                 let sub2

@@ -2,12 +2,17 @@ import { PassThrough } from 'stream'
 
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
-import { ControlLayer } from 'streamr-client-protocol'
+import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 
 import { uuid } from './utils'
 
-const { SubscribeRequest, UnsubscribeRequest, ControlMessage } = ControlLayer
+const {
+    SubscribeRequest, UnsubscribeRequest, ControlMessage,
+    ResendLastRequest, ResendFromRequest, ResendRangeRequest,
+} = ControlLayer
+
+const { MessageRef } = MessageLayer
 
 export class AbortError extends Error {
     constructor(msg = '', ...args) {
@@ -47,29 +52,45 @@ function validateOptions(optionsOrStreamId) {
     return options
 }
 
+const ResendResponses = [ControlMessage.TYPES.ResendResponseResending, ControlMessage.TYPES.ResendResponseNoResend]
+
 const PAIRS = new Map([
-    [ControlMessage.TYPES.SubscribeRequest, ControlMessage.TYPES.SubscribeResponse],
-    [ControlMessage.TYPES.UnsubscribeRequest, ControlMessage.TYPES.UnsubscribeResponse],
+    [ControlMessage.TYPES.SubscribeRequest, [ControlMessage.TYPES.SubscribeResponse]],
+    [ControlMessage.TYPES.UnsubscribeRequest, [ControlMessage.TYPES.UnsubscribeResponse]],
+    [ControlMessage.TYPES.ResendLastRequest, ResendResponses],
+    [ControlMessage.TYPES.ResendFromRequest, ResendResponses],
+    [ControlMessage.TYPES.ResendRangeRequest, ResendResponses],
 ])
 
-async function waitForResponse({ connection, type, requestId }) {
+async function waitForResponse({ connection, types, requestId }) {
     return new Promise((resolve, reject) => {
-        let onErrorResponse
+        let cleanup
         const onResponse = (res) => {
             if (res.requestId !== requestId) { return }
             // clean up err handler
-            connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
+            cleanup()
             resolve(res)
         }
-        onErrorResponse = (res) => {
+
+        const onErrorResponse = (res) => {
             if (res.requestId !== requestId) { return }
             // clean up success handler
-            connection.off(type, onResponse)
+            cleanup()
             const error = new Error(res.errorMessage)
             error.code = res.errorCode
             reject(error)
         }
-        connection.on(type, onResponse)
+
+        cleanup = () => {
+            types.forEach((type) => {
+                connection.off(type, onResponse)
+            })
+            connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
+        }
+
+        types.forEach((type) => {
+            connection.on(type, onResponse)
+        })
         connection.on(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
     })
 }
@@ -77,7 +98,7 @@ async function waitForResponse({ connection, type, requestId }) {
 async function waitForRequestResponse(client, request) {
     return waitForResponse({
         connection: client.connection,
-        type: PAIRS.get(request.type),
+        types: PAIRS.get(request.type),
         requestId: request.requestId,
     })
 }
@@ -127,7 +148,7 @@ async function unsubscribe(client, { streamId, streamPartition = 0 }) {
  * Executes finally function even if generator not started.
  */
 
-function iteratorFinally(iterator, onFinally) {
+function iteratorFinally(iterator, onFinally = () => {}) {
     let started = false
     const g = (async function* It() {
         started = true
@@ -156,8 +177,8 @@ function iteratorFinally(iterator, onFinally) {
     return g
 }
 
-function messageIterator(client, { streamId, streamPartition, signal }) {
-    if (signal.aborted) {
+function messageStream(client, { streamId, streamPartition, signal, type = ControlMessage.TYPES.BroadcastMessage }) {
+    if (signal && signal.aborted) {
         throw new AbortError()
     }
 
@@ -169,9 +190,11 @@ function messageIterator(client, { streamId, streamPartition, signal }) {
         return queue.destroy(new AbortError())
     }
 
-    signal.addEventListener('abort', onAbort, {
-        once: true
-    })
+    if (signal) {
+        signal.addEventListener('abort', onAbort, {
+            once: true
+        })
+    }
 
     const isMatchingStreamMessage = getIsMatchingStreamMessage({
         streamId,
@@ -184,9 +207,9 @@ function messageIterator(client, { streamId, streamPartition, signal }) {
         }
     }
 
-    client.connection.on(ControlMessage.TYPES.BroadcastMessage, onMessage)
+    client.connection.on(type, onMessage)
     queue.once('close', () => {
-        client.connection.off(ControlMessage.TYPES.BroadcastMessage, onMessage)
+        client.connection.off(type, onMessage)
         if (signal) {
             signal.removeEventListener('abort', onAbort, {
                 once: true,
@@ -206,7 +229,7 @@ class Subscription {
         this.client = client
         this.options = validateOptions(options)
         this.abortController = new AbortController()
-        this.iterators = new Set()
+        this.streams = new Set()
 
         this.queue = pLimit(1)
         const sub = this.subscribe.bind(this)
@@ -247,38 +270,83 @@ class Subscription {
     }
 
     async return() {
-        await Promise.all([...this.iterators].map(async (it) => {
+        await Promise.all([...this.streams].map(async (it) => {
             await it.return()
         }))
     }
 
     async _cleanup(it) {
         // if iterator never started, finally block never called, thus need to manually clean it
-        this.iterators.delete(it)
-        if (!this.iterators.size) {
-            // unsubscribe if no more iterators
+        this.streams.delete(it)
+        if (!this.streams.size) {
+            // unsubscribe if no more streams
             await this.unsubscribe()
         }
     }
 
     count() {
-        return this.iterators.size
+        return this.streams.size
     }
 
     iterate() {
-        const it = iteratorFinally(messageIterator(this.client, {
+        const it = iteratorFinally(messageStream(this.client, {
             signal: this.abortController.signal,
             ...this.options,
+            type: ControlMessage.TYPES.BroadcastMessage,
         }), async () => (
             this._cleanup(it)
         ))
-        this.iterators.add(it)
+        this.streams.add(it)
         return it
     }
 
     [Symbol.asyncIterator]() {
         return this.iterate()
     }
+}
+
+async function resend(client, { requestId = uuid('rs'), streamId, streamPartition = 0, ...options } = {}) {
+    const sessionToken = await client.session.getSessionToken()
+    let request
+    if (options.last > 0) {
+        request = new ResendLastRequest({
+            streamId,
+            streamPartition,
+            requestId,
+            numberLast: options.last,
+            sessionToken,
+        })
+    } else if (options.from && !options.to) {
+        request = new ResendFromRequest({
+            streamId,
+            streamPartition,
+            requestId,
+            fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
+            publisherId: options.publisherId,
+            msgChainId: options.msgChainId,
+            sessionToken,
+        })
+    } else if (options.from && options.to) {
+        request = new ResendRangeRequest({
+            streamId,
+            streamPartition,
+            requestId,
+            fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
+            toMsgRef: new MessageRef(options.to.timestamp, options.to.sequenceNumber),
+            publisherId: options.publisherId,
+            msgChainId: options.msgChainId,
+            sessionToken,
+        })
+    }
+
+    if (!request) {
+        throw new Error("Can't _requestResend without resend options")
+    }
+
+    const onResponse = waitForRequestResponse(client, request)
+
+    await client.send(request)
+    return onResponse
 }
 
 export default class Subscriptions {
@@ -299,7 +367,57 @@ export default class Subscriptions {
 
     count(options) {
         const sub = this.get(options)
-        return sub ? sub.count() : -1
+        return sub ? sub.count() : 0
+    }
+
+    async resend(opts) {
+        const options = validateOptions(opts)
+        const stream = messageStream(this.client, {
+            ...options,
+            type: ControlMessage.TYPES.UnicastMessage,
+        })
+
+        const it = iteratorFinally(stream)
+
+        const requestId = uuid('rs')
+        // eslint-disable-next-line promise/catch-or-return
+        const onResendDone = waitForResponse({
+            connection: this.client.connection,
+            types: [
+                ControlMessage.TYPES.ResendResponseResent,
+                ControlMessage.TYPES.ResendResponseNoResend,
+            ],
+            requestId,
+        }).then(() => {
+            return stream.end()
+        }, (err) => {
+            return stream.destroy(err)
+        })
+
+        await Promise.race([
+            resend(this.client, {
+                requestId,
+                ...options,
+            }),
+            onResendDone
+        ])
+
+        return it
+    }
+
+    async resendSubscribe(options) {
+        const sub = await this.subscribe(options)
+        const resendSub = await this.resend(options)
+
+        return iteratorFinally((async function* ResendSubIterator() {
+            yield* resendSub
+            yield* sub
+        }()), () => {
+            return Promise.all([
+                resendSub.return(),
+                sub.return(),
+            ])
+        })
     }
 
     async subscribe(options) {
@@ -322,6 +440,6 @@ export default class Subscriptions {
             await sub.queue(() => {})
         }
 
-        await sub.return() // close all iterators (thus unsubscribe)
+        await sub.return() // close all streams (thus unsubscribe)
     }
 }

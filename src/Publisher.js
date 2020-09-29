@@ -8,7 +8,7 @@ import { ethers } from 'ethers'
 import Signer from './Signer'
 import Stream from './rest/domain/Stream'
 import FailedToPublishError from './errors/FailedToPublishError'
-import { CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from './utils'
+import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from './utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -303,7 +303,7 @@ export default class Publisher {
             await this.signer.signStreamMessage(streamMessage)
         }
 
-        const requestId = this.client.resender.resendUtil.generateRequestId()
+        const requestId = uuid('pub')
         const request = new ControlLayer.PublishRequest({
             streamMessage,
             requestId,
