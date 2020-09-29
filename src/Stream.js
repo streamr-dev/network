@@ -378,8 +378,6 @@ function createResendRequest({
     requestId = uuid('rs'),
     streamId,
     streamPartition = 0,
-    publisherId,
-    msgChainId,
     sessionToken,
     ...options
 }) {
@@ -391,23 +389,34 @@ function createResendRequest({
         sessionToken,
     }
 
-    if (options.last > 0) {
+    const {
+        from,
+        to,
+        last,
+        publisherId,
+        msgChainId,
+    } = {
+        ...options,
+        ...options.resend
+    }
+
+    if (last > 0) {
         request = new ResendLastRequest({
             ...opts,
-            numberLast: options.last,
+            numberLast: last,
         })
-    } else if (options.from && !options.to) {
+    } else if (from && !to) {
         request = new ResendFromRequest({
             ...opts,
-            fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
+            fromMsgRef: new MessageRef(from.timestamp, from.sequenceNumber),
             publisherId,
             msgChainId,
         })
-    } else if (options.from && options.to) {
+    } else if (from && to) {
         request = new ResendRangeRequest({
             ...opts,
-            fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
-            toMsgRef: new MessageRef(options.to.timestamp, options.to.sequenceNumber),
+            fromMsgRef: new MessageRef(from.timestamp, from.sequenceNumber),
+            toMsgRef: new MessageRef(to.timestamp, to.sequenceNumber),
             publisherId,
             msgChainId,
         })
@@ -416,6 +425,7 @@ function createResendRequest({
     if (!request) {
         throw new Error("Can't _requestResend without resend options")
     }
+
     return request
 }
 

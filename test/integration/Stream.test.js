@@ -60,6 +60,7 @@ describe('StreamrClient Stream', () => {
         if (client) {
             await client.disconnect()
         }
+        // eslint-disable-next-line require-atomic-updates
         client = createClient()
         await client.connect()
         console.log = client.debug
@@ -524,6 +525,7 @@ describe('StreamrClient Stream', () => {
                                     expect(unsubscribeEvents).toHaveLength(1)
                                 }
                             })
+
                             expect(receivedMsgs).toHaveLength(3)
                             expect(receivedMsgs.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 3))
                             expect(M.count(stream.id)).toBe(0)
