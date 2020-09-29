@@ -110,8 +110,8 @@ export default class Subscriber {
             this.debug('WARN: InvalidJsonError received for stream with no subscriptions: %s', err.streamId)
         }
     }
-
     async subscribe(...args) {
+
         const sub = this.createSubscription(...args)
         await Promise.all([
             sub.waitForSubscribed(),

@@ -11,6 +11,7 @@ import { getVersionString } from './utils'
 import Publisher from './Publisher'
 import Resender from './Resender'
 import Subscriber from './Subscriber'
+import MessageStream from './Stream'
 
 const { ControlMessage } = ControlLayer
 
@@ -107,8 +108,9 @@ export default class StreamrClient extends EventEmitter {
         })
 
         this.publisher = new Publisher(this)
-        this.subscriber = new Subscriber(this)
-        this.resender = new Resender(this)
+        this.messageStream = new MessageStream(this)
+        //this.subscriber = new Subscriber(this)
+        //this.resender = new Resender(this)
 
         this.connection.on('connected', this.onConnectionConnected)
         this.connection.on('disconnected', this.onConnectionDisconnected)
@@ -130,7 +132,7 @@ export default class StreamrClient extends EventEmitter {
     onConnectionError(err) {
         // If there is an error parsing a json message in a stream, fire error events on the relevant subs
         if ((err instanceof Errors.InvalidJsonError || err.reason instanceof Errors.InvalidJsonError)) {
-            this.subscriber.onErrorMessage(err)
+            //this.subscriber.onErrorMessage(err)
         } else {
             // if it looks like an error emit as-is, otherwise wrap in new Error
             this.emit('error', new Connection.ConnectionError(err))
@@ -207,7 +209,7 @@ export default class StreamrClient extends EventEmitter {
 
     disconnect() {
         this.publisher.stop()
-        this.subscriber.stop()
+        //this.subscriber.stop()
         return this.connection.disconnect()
     }
 
@@ -224,20 +226,20 @@ export default class StreamrClient extends EventEmitter {
     }
 
     subscribe(...args) {
-        return this.subscriber.subscribe(...args)
+        return this.messageStream.subscribe(...args)
     }
 
     unsubscribe(...args) {
-        return this.subscriber.unsubscribe(...args)
+        return this.messageStream.unsubscribe(...args)
     }
 
-    unsubscribeAll(...args) {
-        return this.subscriber.unsubscribeAll(...args)
-    }
+    //unsubscribeAll(...args) {
+        //return this.subscriber.unsubscribeAll(...args)
+    //}
 
-    getSubscriptions(...args) {
-        return this.subscriber.getSubscriptions(...args)
-    }
+    //getSubscriptions(...args) {
+        //return this.subscriber.getSubscriptions(...args)
+    //}
 
     async ensureConnected() {
         return this.connect()

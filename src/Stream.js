@@ -1,4 +1,5 @@
-import { PassThrough } from 'stream'
+import { PassThrough, Readable, finished } from 'stream'
+import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
@@ -7,12 +8,16 @@ import AbortController from 'node-abort-controller'
 
 import { uuid } from './utils'
 
+const pFinished = promisify(finished)
+
 const {
     SubscribeRequest, UnsubscribeRequest, ControlMessage,
     ResendLastRequest, ResendFromRequest, ResendRangeRequest,
 } = ControlLayer
 
 const { MessageRef } = MessageLayer
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 export class AbortError extends Error {
     constructor(msg = '', ...args) {
@@ -113,6 +118,23 @@ function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
     }
 }
 
+function pTimeout(p, ms, msg = '') {
+    let t
+    const start = Date.now()
+    return (
+        Promise.race([
+            p.finally(() => {
+                clearTimeout(t)
+            }),
+            new Promise(() => {
+                t = setTimeout((resolve, reject) => {
+                    reject(new Error(`timed out: ${Date.now() - start}ms > ${ms}ms. ${msg}`))
+                })
+            })
+        ])
+    )
+}
+
 async function subscribe(client, { streamId, streamPartition = 0 }) {
     const sessionToken = await client.session.getSessionToken()
     const request = new SubscribeRequest({
@@ -177,14 +199,61 @@ function iteratorFinally(iterator, onFinally = () => {}) {
     return g
 }
 
+function addBeforeDestroy(stream) {
+    const d = stream.destroy.bind(stream)
+    const destroyFns = new Set()
+    // eslint-disable-next-line no-param-reassign
+    stream.destroy = async (...args) => {
+        if (!destroyFns || !destroyFns.size) {
+            return d(...args)
+        }
+        try {
+            for (const fn of destroyFns) {
+                // eslint-disable-next-line no-await-in-loop
+                await fn()
+            }
+        } catch (error) {
+            return d(error, ...args.slice(1))
+        } finally {
+            destroyFns.clear()
+        }
+
+        return d(...args)
+    }
+
+    // eslint-disable-next-line no-param-reassign
+    stream.beforeDestroy = (fn) => {
+        destroyFns.add(fn)
+    }
+
+    // eslint-disable-next-line no-param-reassign
+    stream.throw = async (err) => {
+        const it = stream[Symbol.asyncIterator]()
+        await it.throw(err)
+        await pFinished(stream)
+    }
+
+    // eslint-disable-next-line no-param-reassign
+    stream.return = async () => {
+        // little trick to ensure stream cleaned up
+        // iterator.return won't exit until destroy handler finished
+        const it = stream[Symbol.asyncIterator]()
+        await it.return()
+        await stream.destroy()
+        await pFinished(stream)
+    }
+
+    return stream
+}
+
 function messageStream(client, { streamId, streamPartition, signal, type = ControlMessage.TYPES.BroadcastMessage }) {
     if (signal && signal.aborted) {
         throw new AbortError()
     }
 
-    const queue = new PassThrough({
+    const queue = addBeforeDestroy(new PassThrough({
         objectMode: true,
-    })
+    }))
 
     const onAbort = () => {
         return queue.destroy(new AbortError())
@@ -236,7 +305,6 @@ class Subscription {
         const unsub = this.unsubscribe.bind(this)
         this.subscribe = () => this.queue(sub)
         this.unsubscribe = () => this.queue(unsub)
-        this.return = this.return.bind(this)
         this.sendSubscribe = pMemoize(this.sendSubscribe.bind(this))
         this.sendUnsubscribe = pMemoize(this.sendUnsubscribe.bind(this))
     }
@@ -270,14 +338,14 @@ class Subscription {
     }
 
     async return() {
-        await Promise.all([...this.streams].map(async (it) => {
-            await it.return()
+        await Promise.all([...this.streams].map(async (stream) => {
+            await stream.return()
         }))
     }
 
-    async _cleanup(it) {
-        // if iterator never started, finally block never called, thus need to manually clean it
-        this.streams.delete(it)
+    async _cleanup(stream) {
+        // if stream never started, finally block never called, thus need to manually clean it
+        this.streams.delete(stream)
         if (!this.streams.size) {
             // unsubscribe if no more streams
             await this.unsubscribe()
@@ -289,15 +357,16 @@ class Subscription {
     }
 
     iterate() {
-        const it = iteratorFinally(messageStream(this.client, {
+        const stream = messageStream(this.client, {
             signal: this.abortController.signal,
             ...this.options,
             type: ControlMessage.TYPES.BroadcastMessage,
-        }), async () => (
-            this._cleanup(it)
-        ))
-        this.streams.add(it)
-        return it
+        })
+        stream.beforeDestroy(async () => {
+            await this._cleanup(stream)
+        })
+        this.streams.add(stream)
+        return stream
     }
 
     [Symbol.asyncIterator]() {
@@ -384,56 +453,6 @@ export default class Subscriptions {
         return sub ? sub.count() : 0
     }
 
-    async resend(opts) {
-        const options = validateOptions(opts)
-        const stream = messageStream(this.client, {
-            ...options,
-            type: ControlMessage.TYPES.UnicastMessage,
-        })
-
-        const it = iteratorFinally(stream)
-
-        const requestId = uuid('rs')
-        // eslint-disable-next-line promise/catch-or-return
-        const onResendDone = waitForResponse({
-            connection: this.client.connection,
-            types: [
-                ControlMessage.TYPES.ResendResponseResent,
-                ControlMessage.TYPES.ResendResponseNoResend,
-            ],
-            requestId,
-        }).then(() => {
-            return stream.end()
-        }, (err) => {
-            return stream.destroy(err)
-        })
-
-        await Promise.race([
-            resend(this.client, {
-                requestId,
-                ...options,
-            }),
-            onResendDone
-        ])
-
-        return it
-    }
-
-    async resendSubscribe(options) {
-        const sub = await this.subscribe(options)
-        const resendSub = await this.resend(options)
-
-        return iteratorFinally((async function* ResendSubIterator() {
-            yield* resendSub
-            yield* sub
-        }()), () => {
-            return Promise.all([
-                resendSub.return(),
-                sub.return(),
-            ])
-        })
-    }
-
     async subscribe(options) {
         const key = SubKey(validateOptions(options))
         const sub = (
@@ -455,5 +474,65 @@ export default class Subscriptions {
         }
 
         await sub.return() // close all streams (thus unsubscribe)
+    }
+
+    async resend(opts) {
+        const options = validateOptions(opts)
+        const stream = messageStream(this.client, {
+            ...options,
+            type: ControlMessage.TYPES.UnicastMessage,
+        })
+
+        const requestId = uuid('rs')
+        // eslint-disable-next-line promise/catch-or-return
+        const onResendDone = waitForResponse({
+            connection: this.client.connection,
+            types: [
+                ControlMessage.TYPES.ResendResponseResent,
+                ControlMessage.TYPES.ResendResponseNoResend,
+            ],
+            requestId,
+        }).then(() => {
+            // close off resend
+            return stream.push(null)
+        }, (err) => {
+            return stream.throw(err)
+        })
+
+        await Promise.race([
+            resend(this.client, {
+                requestId,
+                ...options,
+            }),
+            onResendDone
+        ])
+
+        return stream
+    }
+
+    async resendSubscribe(options) {
+        const [sub, resendSub] = await Promise.all([
+            this.subscribe(options),
+            this.resend(options),
+        ])
+
+        const it = iteratorFinally((async function* ResendSubIterator() {
+            yield* resendSub
+            yield* sub
+        }()), async () => {
+            await Promise.all([
+                resendSub.return(),
+                sub.return(),
+            ])
+        })
+        const stream = addBeforeDestroy(Readable.from(it))
+        stream.beforeDestroy(async () => {
+            await Promise.all([
+                resendSub.return(),
+                sub.return(),
+            ])
+        })
+
+        return stream
     }
 }
