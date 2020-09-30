@@ -16,7 +16,9 @@ describe('tracker assigns storage node to streams on any resend', () => {
     beforeAll(async () => {
         trackerPort = await getPort()
 
-        tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: trackerPort, id: 'tracker'
+        })
         subscriberOne = await startNetworkNode(LOCALHOST, await getPort(), 'subscriberOne')
         subscriberTwo = await startNetworkNode(LOCALHOST, await getPort(), 'subscriberTwo')
 
@@ -94,7 +96,9 @@ describe('tracker assigns storage node to streams on any resend', () => {
 
         await tracker.stop()
         // eslint-disable-next-line require-atomic-updates
-        tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: trackerPort, id: 'tracker'
+        })
 
         await waitForCondition(() => Object.keys(tracker.getTopology()).length === 2, 10000)
 

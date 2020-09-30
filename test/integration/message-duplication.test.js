@@ -15,7 +15,9 @@ describe('duplicate message detection and avoidance', () => {
     let numOfReceivedMessages
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 30350, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 30350, id: 'tracker'
+        })
         contactNode = await startNetworkNode(LOCALHOST, 30351, 'node-0')
         contactNode.addBootstrapTracker(tracker.getAddress())
 

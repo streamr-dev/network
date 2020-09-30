@@ -17,7 +17,6 @@ program
 const { nodes: numberOfNodes } = program
 const startingPort = 30400
 const trackerPort = 27777
-const trackerEndpointServerPort = 11111
 const startingDebugPort = 9200
 const streams = []
 
@@ -28,12 +27,11 @@ for (let i = 0; i < program.streams; i++) {
 let debug = false
 
 const productionEnv = Object.create(process.env)
-productionEnv.DEBUG = 'streamr:*,-streamr:connection:*'
-productionEnv.checkUncaughtException = true
+productionEnv.LOG_LEVEL = productionEnv.LOG_LEVEL || 'debug'
 
 // create tracker
 const tracker = path.resolve('./bin/tracker.js')
-let args = [tracker, '--port=' + trackerPort, '--endpointServerPort=' + trackerEndpointServerPort]
+let args = [tracker, '--port=' + trackerPort]
 
 if (process.env.NODE_DEBUG_OPTION !== undefined) {
     debug = true

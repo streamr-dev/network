@@ -18,7 +18,9 @@ describe('multiple storage nodes', () => {
     const nodePort = 49805
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: trackerPort, id: 'tracker'
+        })
 
         node = await startNetworkNode(LOCALHOST, nodePort, 'node')
         storageOne = await startStorageNode(LOCALHOST, storageOnePort, 'storageOne')

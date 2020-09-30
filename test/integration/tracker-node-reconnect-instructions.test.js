@@ -20,7 +20,9 @@ describe('Check tracker instructions to node', () => {
     const streamId = 'stream-1'
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 30950, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 30950, id: 'tracker'
+        })
 
         nodeOne = await startNetworkNode(LOCALHOST, 30952, 'node-1')
         nodeTwo = await startNetworkNode(LOCALHOST, 30953, 'node-2')

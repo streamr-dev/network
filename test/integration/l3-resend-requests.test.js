@@ -31,7 +31,9 @@ describe('resend requests are fulfilled at L3', () => {
     let storageNode
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, 28630, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 28630, id: 'tracker'
+        })
         contactNode = await startNetworkNode(LOCALHOST, 28631, 'contactNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),

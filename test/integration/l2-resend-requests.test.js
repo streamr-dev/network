@@ -28,7 +28,9 @@ describe('resend requests are fulfilled at L2', () => {
     let n2
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, 28610, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 28610, id: 'tracker'
+        })
         contactNode = await startNetworkNode(LOCALHOST, 28611, 'contactNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),

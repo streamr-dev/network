@@ -15,7 +15,9 @@ describe('optimization: do not propagate to sender', () => {
     let n3
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 30410, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 30410, id: 'tracker'
+        })
         n1 = await startNetworkNode(LOCALHOST, 30411, 'node-1')
         n2 = await startNetworkNode(LOCALHOST, 30412, 'node-2')
         n3 = await startNetworkNode(LOCALHOST, 30413, 'node-3')

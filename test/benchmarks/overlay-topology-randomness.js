@@ -6,7 +6,7 @@ const numOfNodes = 1000
 const printProgress = true
 
 const idxToNodeId = (idx) => `${idx + 1}`
-const nodeIdToIdx = (nodeId) => parseInt(nodeId, 10) - 1
+const nodeIdToIdx = (nodeId) => Number.parseInt(nodeId, 10) - 1
 
 // Run topology experiment
 const states = []

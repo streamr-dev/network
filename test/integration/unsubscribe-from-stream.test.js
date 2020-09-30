@@ -12,7 +12,9 @@ describe('node unsubscribing from a stream', () => {
     let nodeB
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, 30450, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 30450, id: 'tracker'
+        })
         nodeA = await startNetworkNode(LOCALHOST, 30451, 'a')
         nodeB = await startNetworkNode(LOCALHOST, 30452, 'b')
 

@@ -18,7 +18,9 @@ describe('message buffering of Node', () => {
     let destinationNode
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 30320, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 30320, id: 'tracker'
+        })
 
         sourceNode = await startNetworkNode(LOCALHOST, 30321, 'source-node')
         await sourceNode.addBootstrapTracker(tracker.getAddress())

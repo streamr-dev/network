@@ -22,7 +22,9 @@ describe('check status message flow between tracker and two nodes', () => {
     }
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, 30750, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 30750, id: 'tracker'
+        })
         nodeOne = await startNetworkNode(LOCALHOST, 30752, 'node-1', [], null, 'node-1', null, 100)
         nodeTwo = await startNetworkNode(LOCALHOST, 30753, 'node-2', [], null, 'node-2', location, 100)
     })

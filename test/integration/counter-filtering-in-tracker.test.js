@@ -30,7 +30,9 @@ describe('tracker: counter filtering', () => {
     let trackerNode2
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, 30420, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 30420, id: 'tracker'
+        })
         const endpoint1 = await startEndpoint('127.0.0.1', 30421, PeerInfo.newNode('trackerNode1'), null)
         const endpoint2 = await startEndpoint('127.0.0.1', 30422, PeerInfo.newNode('trackerNode2'), null)
         trackerNode1 = new TrackerNode(endpoint1)

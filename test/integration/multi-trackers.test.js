@@ -28,9 +28,15 @@ describe('multi trackers', () => {
         nodeOne = await startNetworkNode(LOCALHOST, nodeOnePort, 'nodeOne')
         nodeTwo = await startNetworkNode(LOCALHOST, nodeTwoPort, 'nodeTwo')
 
-        trackerOne = await startTracker(LOCALHOST, trackerOnePort, 'trackerOne')
-        trackerTwo = await startTracker(LOCALHOST, trackerTwoPort, 'trackerTwo')
-        trackerThree = await startTracker(LOCALHOST, trackerThreePort, 'trackerThree')
+        trackerOne = await startTracker({
+            host: LOCALHOST, port: trackerOnePort, id: 'trackerOne'
+        })
+        trackerTwo = await startTracker({
+            host: LOCALHOST, port: trackerTwoPort, id: 'trackerTwo'
+        })
+        trackerThree = await startTracker({
+            host: LOCALHOST, port: trackerThreePort, id: 'trackerThree'
+        })
     })
 
     afterEach(async () => {

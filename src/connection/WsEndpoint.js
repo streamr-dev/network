@@ -13,6 +13,7 @@ const uWS = require('uWebSockets.js')
 const { disconnectionCodes, disconnectionReasons } = require('../messageTypes')
 const Metrics = require('../metrics')
 const getLogger = require('../helpers/logger')
+const extraLogger = require('../helpers/logger')('streamr:ws-endpoint')
 
 const { PeerBook } = require('./PeerBook')
 const { PeerInfo } = require('./PeerInfo')
@@ -545,10 +546,19 @@ class WsEndpoint extends EventEmitter {
     }
 }
 
-async function startWebSocketServer(host, port) {
+async function startWebSocketServer(host, port, privateKeyFileName = undefined, certFileName = undefined) {
     return new Promise((resolve, reject) => {
-        // TODO add SSL support uWS.SSLApp()
-        const server = uWS.App()
+        let server
+        if (privateKeyFileName && certFileName) {
+            extraLogger.debug(`starting SSL uWS server (host: ${host}, port: ${port}, using ${privateKeyFileName}, ${certFileName}`)
+            server = uWS.SSLApp({
+                key_file_name: privateKeyFileName,
+                cert_file_name: certFileName,
+            })
+        } else {
+            extraLogger.debug(`starting non-SSL uWS (host: ${host}, port: ${port}`)
+            server = uWS.App()
+        }
 
         const cb = (listenSocket) => {
             if (listenSocket) {
@@ -566,8 +576,8 @@ async function startWebSocketServer(host, port) {
     })
 }
 
-async function startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval) {
-    return startWebSocketServer(host, port).then(([wss, listenSocket]) => {
+async function startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval, privateKeyFileName = undefined, certFileName = undefined) {
+    return startWebSocketServer(host, port, privateKeyFileName, certFileName).then(([wss, listenSocket]) => {
         return new WsEndpoint(host, port, wss, listenSocket, peerInfo, advertisedWsUrl, pingInterval)
     })
 }

@@ -21,7 +21,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
     const s1 = new StreamIdAndPartition('stream-1', 0)
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: trackerPort, id: 'tracker'
+        })
         // disable trackers formAndSendInstructions function
         // eslint-disable-next-line no-underscore-dangle
         tracker._formAndSendInstructions = () => {}

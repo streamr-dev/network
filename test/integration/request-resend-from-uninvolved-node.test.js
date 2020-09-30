@@ -27,7 +27,9 @@ describe('request resend from uninvolved node', () => {
     let storageNode
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 28640, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 28640, id: 'tracker'
+        })
         uninvolvedNode = await startNetworkNode(LOCALHOST, 28641, 'uninvolvedNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),

@@ -69,19 +69,19 @@ Debugging:
 
 To get all Streamr Network debug messages  
 
-    export DEBUG=streamr:*
+    LOG_LEVEL=debug
     
 Or adjust debugging to desired level 
 
-- connection layer `export DEBUG=streamr:connection:*`
-- logic layer `export DEBUG=streamr:logic:*`
-- protocol layer `export DEBUG=streamr:protocol:*`
-
-Excluding level
-
-    export DEBUG=streamr:*,-streamr:connection:*
+    LOG_LEVEL=[debug|info|warn|error]
     
-    
+## Generating fixture self signed certificate
+To regenerate self signed certificate in `./test/fixtures` run:
+
+``
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -nodes -subj "/CN=localhost"
+``
+
 ## Publishing
 
 Publishing to NPM is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.

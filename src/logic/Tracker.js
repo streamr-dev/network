@@ -222,8 +222,8 @@ module.exports = class Tracker extends EventEmitter {
             streamKeys = Object.keys(this.overlayPerStream).filter((streamKey) => streamKey.includes(streamId))
         } else {
             let askedStreamKey = null
-            if (streamId && partition) {
-                askedStreamKey = new StreamIdAndPartition(streamId, parseInt(partition, 10))
+            if (streamId && Number.isSafeInteger(partition) && partition >= 0) {
+                askedStreamKey = new StreamIdAndPartition(streamId, Number.parseInt(partition, 10))
             }
 
             streamKeys = askedStreamKey

@@ -74,7 +74,9 @@ describe('ws-endpoint', () => {
         let tracker
 
         beforeEach(async () => {
-            tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
+            tracker = await startTracker({
+                host: LOCALHOST, port: trackerPort, id: 'tracker'
+            })
         })
 
         afterEach(async () => {

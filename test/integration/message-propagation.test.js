@@ -12,7 +12,9 @@ describe('message propagation in network', () => {
     let n4
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 33300, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 33300, id: 'tracker'
+        })
 
         await Promise.all([
             startNetworkNode('127.0.0.1', 33312, 'node-1'),

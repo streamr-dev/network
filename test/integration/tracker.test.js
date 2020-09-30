@@ -15,7 +15,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
     const s2 = new StreamIdAndPartition('stream-2', 2)
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, 32400, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 32400, id: 'tracker'
+        })
         subscriberOne = await startNetworkNode(LOCALHOST, 33371, 'subscriberOne')
         subscriberTwo = await startNetworkNode(LOCALHOST, 33372, 'subscriberTwo')
 

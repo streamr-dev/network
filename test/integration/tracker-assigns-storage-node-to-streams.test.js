@@ -12,7 +12,9 @@ describe('tracker assigns storage node to streams', () => {
     let storageNode
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 31950, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 31950, id: 'tracker'
+        })
         storageNode = await startStorageNode(LOCALHOST, 31954, 'storageNode')
         subscriberOne = await startNetworkNode(LOCALHOST, 31952, 'subscriberOne')
         subscriberTwo = await startNetworkNode(LOCALHOST, 31953, 'subscriberTwo')

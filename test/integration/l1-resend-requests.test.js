@@ -26,7 +26,9 @@ describe('resend requests are fulfilled at L1', () => {
     let contactNode
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, 28600, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 28600, id: 'tracker'
+        })
         contactNode = await startNetworkNode(LOCALHOST, 28601, 'contactNode', [{
             store: () => {},
             requestLast: () => intoStream.object([

@@ -7,20 +7,33 @@ const NodeToNode = require('./protocol/NodeToNode')
 const { PeerInfo } = require('./connection/PeerInfo')
 const Tracker = require('./logic/Tracker')
 const NetworkNode = require('./NetworkNode')
-const { startEndpoint } = require('./connection/WsEndpoint')
+const logger = require('./helpers/logger')('streamr:bin:composition')
+const { trackerHttpEndpoints } = require('./helpers/trackerHelpers')
+const { startEndpoint, startWebSocketServer, WsEndpoint } = require('./connection/WsEndpoint')
 
-function startTracker(host, port, id = uuidv4(), maxNeighborsPerNode = 4, advertisedWsUrl = null, name, location, pingInterval) {
+const startTracker = async ({
+    host, port, id = uuidv4(), exposeHttpEndpoints = true,
+    maxNeighborsPerNode = 4, advertisedWsUrl = null, name, location, pingInterval,
+    privateKeyFileName, certFileName
+}) => {
     const peerInfo = PeerInfo.newTracker(id, name, location)
-    return startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval).then((endpoint) => {
-        const opts = {
-            peerInfo,
-            protocols: {
-                trackerServer: new TrackerServer(endpoint)
-            },
-            maxNeighborsPerNode
-        }
-        return new Tracker(opts)
-    })
+    const endpoint = await startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval, privateKeyFileName, certFileName)
+
+    const opts = {
+        peerInfo,
+        protocols: {
+            trackerServer: new TrackerServer(endpoint)
+        },
+        maxNeighborsPerNode
+    }
+    const tracker = new Tracker(opts)
+
+    if (exposeHttpEndpoints) {
+        logger.debug('adding http endpoints to the tracker')
+        trackerHttpEndpoints(endpoint.wss, tracker)
+    }
+
+    return tracker
 }
 
 function startNetworkNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null, name, location, pingInterval) {

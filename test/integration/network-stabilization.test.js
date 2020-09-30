@@ -12,7 +12,9 @@ describe('check network stabilization', () => {
     const stream = 'super-stream'
 
     beforeEach(async () => {
-        tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: trackerPort, id: 'tracker'
+        })
         // eslint-disable-next-line no-underscore-dangle
         expect(tracker._formAndSendInstructions).toBeInstanceOf(Function)
 

@@ -57,7 +57,9 @@ describe('resend cancellation on disconnect', () => {
     let neighborThree
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, 28650, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: 28650, id: 'tracker'
+        })
         contactNode = await startNetworkNode(LOCALHOST, 28651, 'contactNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),

@@ -8,6 +8,7 @@ module.exports = {
         'plugin:promise/recommended'
     ],
     rules: {
+        'newline-per-chained-call': DISABLED,
         'max-len': [WARN, {
             code: 150
         }],

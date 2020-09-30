@@ -6,7 +6,9 @@ describe('tracker', () => {
     let tracker
 
     beforeAll(async () => {
-        tracker = await startTracker(LOCALHOST, trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: LOCALHOST, port: trackerPort, id: 'tracker'
+        })
     })
 
     afterAll(async () => {
