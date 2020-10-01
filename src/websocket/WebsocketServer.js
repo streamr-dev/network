@@ -208,6 +208,10 @@ module.exports = class WebsocketServer extends EventEmitter {
             },
             drain: (ws) => {
                 logger.info('WebSocket backpressure: ' + ws.getBufferedAmount())
+                const connection = this.connections.get(ws.connectionId)
+                if (connection) {
+                    connection.evaluateBackPressure()
+                }
             },
             close: (ws, code, message) => {
                 const connection = this.connections.get(ws.connectionId)
@@ -387,11 +391,17 @@ module.exports = class WebsocketServer extends EventEmitter {
                 return
             }
             const streamingStorageData = resendTypeHandler()
+            const pauseHandler = () => streamingStorageData.pause()
+            const resumeHandler = () => streamingStorageData.resume()
             connection.addOngoingResend(streamingStorageData)
             streamingStorageData.on('data', msgHandler)
             streamingStorageData.on('end', doneHandler)
+            connection.on('highBackPressure', pauseHandler)
+            connection.on('lowBackPressure', resumeHandler)
             streamingStorageData.once('end', () => {
                 connection.removeOngoingResend(streamingStorageData)
+                connection.removeListener('highBackPressure', pauseHandler)
+                connection.removeListener('lowBackPressure', resumeHandler)
             })
         } catch (err) {
             connection.send(new ControlLayer.ErrorResponse({

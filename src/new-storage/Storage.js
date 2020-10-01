@@ -388,7 +388,7 @@ class Storage extends EventEmitter {
     _queryWithStreamingResults(query, queryParams) {
         const cassandraStream = this.cassandraClient.stream(query, queryParams, {
             prepare: true,
-            autoPage: true
+            autoPage: false
         })
 
         // To avoid blocking main thread for too long, on every 1000th message

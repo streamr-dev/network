@@ -10,6 +10,9 @@ function generateId() {
     return id
 }
 
+const LOW_BACK_PRESSURE = 1024 * 1024 * 2 // 2 megabytes
+const HIGH_BACK_PRESSURE = 1024 * 1024 * 16 // 16 megabytes
+
 module.exports = class Connection extends EventEmitter {
     constructor(socket, controlLayerVersion, messageLayerVersion) {
         super()
@@ -20,6 +23,7 @@ module.exports = class Connection extends EventEmitter {
         this.dead = false
         this.controlLayerVersion = controlLayerVersion
         this.messageLayerVersion = messageLayerVersion
+        this.highBackPressure = false
     }
 
     addStream(stream) {
@@ -65,6 +69,16 @@ module.exports = class Connection extends EventEmitter {
         return this.dead
     }
 
+    evaluateBackPressure() {
+        if (!this.highBackPressure && this.socket.getBufferedAmount() > HIGH_BACK_PRESSURE) {
+            this.emit('highBackPressure')
+            this.highBackPressure = true
+        } else if (this.highBackPressure && this.socket.getBufferedAmount() < LOW_BACK_PRESSURE) {
+            this.emit('lowBackPressure')
+            this.highBackPressure = false
+        }
+    }
+
     ping() {
         this.socket.ping()
     }
@@ -74,6 +88,7 @@ module.exports = class Connection extends EventEmitter {
         logger.debug('send: %s: %o', this.id, serialized)
         try {
             this.socket.send(serialized)
+            this.evaluateBackPressure()
         } catch (e) {
             this.emit('forceClose', e)
         }
