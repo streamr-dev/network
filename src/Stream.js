@@ -28,7 +28,7 @@ export class AbortError extends Error {
     }
 }
 
-function validateOptions(optionsOrStreamId) {
+export function validateOptions(optionsOrStreamId) {
     if (!optionsOrStreamId) {
         throw new Error('options is required!')
     }

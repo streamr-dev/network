@@ -114,6 +114,19 @@ describe('StreamEndpoints', () => {
         })
     })
 
+    describe('getStreamLast', () => {
+        it('does not error', async () => {
+            const stream = await client.createStream({
+                name,
+                requireSignedData: true,
+                requireEncryptedData: false,
+            })
+            createdStream = stream
+            const result = await client.getStreamLast(createdStream.id)
+            expect(result).toEqual([])
+        })
+    })
+
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
