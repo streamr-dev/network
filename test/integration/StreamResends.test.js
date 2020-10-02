@@ -1,5 +1,5 @@
 import { ControlLayer } from 'streamr-client-protocol'
-import { wait, waitForCondition } from 'streamr-test-utils'
+import { wait } from 'streamr-test-utils'
 import Debug from 'debug'
 
 import { uid, fakePrivateKey } from '../utils'
@@ -35,7 +35,7 @@ const TEST_REPEATS = 1
 
 console.log = Debug('Streamr::   CONSOLE   ')
 
-const WAIT_FOR_STORAGE_TIMEOUT = 30000
+const WAIT_FOR_STORAGE_TIMEOUT = 6000
 
 describe('resends', () => {
     let expectErrors = 0 // check no errors by default
@@ -61,7 +61,7 @@ describe('resends', () => {
         return c
     }
 
-    async function waitForStorage(msg, timeout = 5000) {
+    async function waitForStorage({ streamId, streamPartition = 0, msg, timeout = 5000 }) {
         const start = Date.now()
         let last
         // eslint-disable-next-line no-constant-condition
@@ -81,8 +81,9 @@ describe('resends', () => {
             }
 
             last = await client.getStreamLast({
-                streamId: stream.id,
-                count: 9999,
+                streamId,
+                streamPartition,
+                count: 3,
             })
 
             let found = false
@@ -97,7 +98,7 @@ describe('resends', () => {
                 return
             }
 
-            client.debug('message not found', {
+            client.debug('message not found, retrying... %o', {
                 msg, last: last.map(({ content }) => content)
             })
             await wait(500)
@@ -108,7 +109,7 @@ describe('resends', () => {
         // eslint-disable-next-line require-atomic-updates
         client = createClient()
         stream = await client.createStream({
-            name: uid('stream')
+            name: uid('stream'),
         })
 
         published = []
@@ -121,8 +122,11 @@ describe('resends', () => {
         }
 
         const lastMessage = published[published.length - 1]
-        await waitForStorage(lastMessage, WAIT_FOR_STORAGE_TIMEOUT)
-        await client.disconnect()
+        await waitForStorage({
+            msg: lastMessage,
+            timeout: WAIT_FOR_STORAGE_TIMEOUT,
+            streamId: stream.id,
+        })
     }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
     beforeEach(async () => {
@@ -143,17 +147,8 @@ describe('resends', () => {
         }
     })
 
-
     afterAll(async () => {
         await wait(500)
-        const last = await client.getStreamLast({
-            streamId: stream.id,
-            count: 9999,
-        })
-        console.log({
-            published,
-            last: last.map((l) => l.content)
-        })
         if (client) {
             client.debug('disconnecting after test')
             await client.disconnect()
@@ -208,7 +203,12 @@ describe('resends', () => {
             describe('with resend data', () => {
                 beforeEach(async () => {
                     // ensure last message is in storage
-                    await waitForStorage(published[published.length - 1], WAIT_FOR_STORAGE_TIMEOUT)
+                    const lastMessage = published[published.length - 1]
+                    await waitForStorage({
+                        msg: lastMessage,
+                        timeout: WAIT_FOR_STORAGE_TIMEOUT,
+                        streamId: stream.id,
+                    })
                 }, WAIT_FOR_STORAGE_TIMEOUT * 1.2)
 
                 it('requests resend', async () => {
@@ -263,7 +263,32 @@ describe('resends', () => {
                         })
 
                         const message = Msg()
-                        console.log('1 PUBLISHING', message)
+                        // eslint-disable-next-line no-await-in-loop
+                        await client.publish(stream.id, message) // should be realtime
+                        published.push(message)
+                        const receivedMsgs = await collect(sub, async ({ received }) => {
+                            if (received.length === published.length) {
+                                await wait()
+                                await sub.return()
+                            }
+                        })
+
+                        const msgs = receivedMsgs.map(({ streamMessage }) => streamMessage.getParsedContent())
+                        expect(msgs).toHaveLength(published.length)
+                        expect(msgs).toEqual(published)
+                        expect(M.count(stream.id)).toBe(0)
+                        expect(sub.realtime.stream.readable).toBe(false)
+                        expect(sub.resend.stream.writable).toBe(false)
+                    })
+
+                    it('sees resends and realtime 2', async () => {
+                        const M = new MessageStream(client)
+                        const sub = await M.resendSubscribe({
+                            streamId: stream.id,
+                            last: published.length,
+                        })
+
+                        const message = Msg()
                         // eslint-disable-next-line no-await-in-loop
                         await client.publish(stream.id, message) // should be realtime
                         published.push(message)
@@ -292,7 +317,6 @@ describe('resends', () => {
                         const message = Msg()
 
                         await sub.return()
-                        console.log('2 PUBLISHING', message)
                         // eslint-disable-next-line no-await-in-loop
                         await client.publish(stream.id, message)
                         published.push(message)
@@ -315,7 +339,6 @@ describe('resends', () => {
                         })
 
                         const message = Msg()
-                        console.log('3 PUBLISHING', message)
                         // eslint-disable-next-line no-await-in-loop
                         await client.publish(stream.id, message)
                         published.push(message)
@@ -354,7 +377,6 @@ describe('resends', () => {
                         })
 
                         const message = Msg()
-                        console.log('4 PUBLISHING', message)
                         // eslint-disable-next-line no-await-in-loop
                         await client.publish(stream.id, message)
                         published.push(message)
@@ -365,7 +387,6 @@ describe('resends', () => {
                                 expect(unsubscribeEvents).toHaveLength(1)
                             }
                         })
-                        console.log('OUT LOOP', receivedMsgs.length)
                         const msgs = receivedMsgs.map(({ streamMessage }) => streamMessage.getParsedContent())
                         expect(msgs).toHaveLength(END_AFTER)
                         expect(msgs).toEqual(published.slice(0, END_AFTER))
