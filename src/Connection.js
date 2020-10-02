@@ -3,6 +3,8 @@ import Debug from 'debug'
 import uniqueId from 'lodash.uniqueid'
 import WebSocket from 'ws'
 
+import { getAgent } from './rest/authFetch'
+
 // add global support for pretty millisecond formatting with %n
 Debug.formatters.n = (v) => Debug.humanize(v)
 
@@ -366,7 +368,10 @@ export default class Connection extends EventEmitter {
             throw new ConnectionError('disconnected before connected')
         }
 
-        const socket = await OpenWebSocket(this.options.url)
+        const socket = await OpenWebSocket(this.options.url, {
+            perMessageDeflate: false,
+            agent: getAgent(this.options.url.startsWith('wss:') ? 'https:' : 'http:'),
+        })
         debug('connected')
         if (!this.shouldConnect) {
             await CloseWebSocket(socket)

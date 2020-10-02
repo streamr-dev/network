@@ -1,11 +1,39 @@
 import fetch from 'node-fetch'
 import Debug from 'debug'
+import http from 'http'
+import https from 'https'
 
 import AuthFetchError from '../errors/AuthFetchError'
 import { getVersionString } from '../utils'
 
 export const DEFAULT_HEADERS = {
     'Streamr-Client': `streamr-client-javascript/${getVersionString()}`,
+}
+
+export function getAgent(protocol) {
+    /* eslint-disable consistent-return */
+    if (process.browser) {
+        return
+    }
+
+    if (protocol === 'http:') {
+        if (!getAgent.httpAgent) {
+            getAgent.httpAgent = new http.Agent({
+                keepAlive: true,
+                keepAliveMsecs: 10000,
+            })
+        }
+        return getAgent.httpAgent
+    }
+
+    if (!getAgent.httpsAgent) {
+        getAgent.httpsAgent = new https.Agent({
+            keepAlive: true,
+            keepAliveMsecs: 10000,
+        })
+    }
+    return getAgent.httpsAgent
+    /* eslint-enable consistent-return */
 }
 
 const debug = Debug('StreamrClient:utils:authfetch')
@@ -22,7 +50,8 @@ export default async function authFetch(url, session, opts, requireNewToken = fa
         headers: {
             ...DEFAULT_HEADERS,
             ...(opts && opts.headers),
-        }
+        },
+        agent: ({ protocol }) => getAgent(protocol),
     }
     // add default 'Content-Type: application/json' header for all POST and PUT requests
     if (!options.headers['Content-Type'] && (options.method === 'POST' || options.method === 'PUT')) {
