@@ -6,7 +6,7 @@ import pLimit from 'p-limit'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 
-import { uuid, Defer } from './utils'
+import { uuid } from './utils'
 
 const pFinished = promisify(finished)
 
@@ -33,31 +33,28 @@ export class AbortError extends Error {
 
 function iteratorFinally(iterator, onFinally = () => {}) {
     let started = false
-    let finallyRun = false
+    const onFinallyOnce = pMemoize(onFinally)
     const g = (async function* It() {
         started = true
         try {
             yield* iterator
         } finally {
-            finallyRun = true
-            await onFinally(iterator)
+            await onFinallyOnce(iterator)
         }
     }())
 
     // overrides return/throw to call onFinally even if generator was never started
     const oldReturn = g.return
     g.return = async (...args) => {
-        if (!started && !finallyRun) {
-            finallyRun = true
-            await onFinally(iterator)
+        if (!started) {
+            await onFinallyOnce(iterator)
         }
         return oldReturn.call(g, ...args)
     }
     const oldThrow = g.throw
     g.throw = async (...args) => {
-        if (!started && !finallyRun) {
-            finallyRun = true
-            await onFinally(iterator)
+        if (!started) {
+            await onFinallyOnce(iterator)
         }
         return oldThrow.call(g, ...args)
     }
@@ -299,10 +296,9 @@ function SubKey({ streamId, streamPartition = 0 }) {
     return `${streamId}|${streamPartition}`
 }
 
-function streamIterator(stream, abortController) {
-    const it = iteratorFinally((async function* streamIteratorFn() {
-        yield* stream
-    }()), async () => {
+function streamIterator(stream, { abortController, onFinally = () => {}, }) {
+    const onFinallyOnce = pMemoize(onFinally)
+    const endStreamOnce = pMemoize(async () => {
         stream.destroy()
         await pFinished(stream, {
             readable: false,
@@ -310,16 +306,20 @@ function streamIterator(stream, abortController) {
         })
     })
 
+    const it = iteratorFinally((async function* streamIteratorFn() {
+        yield* stream
+    }()), async () => {
+        await endStreamOnce(stream)
+        await onFinallyOnce()
+    })
+
     it.stream = stream
     it.abort = () => abortController && abortController.abort()
     it.stop = async () => {
-        stream.destroy()
-        await pFinished(stream, {
-            readable: false,
-            writable: false,
-        })
+        await endStreamOnce(stream)
         await it.return()
     }
+
     return it
 }
 
@@ -360,8 +360,7 @@ class Subscription {
     async subscribe() {
         pMemoize.clear(this.sendUnsubscribe)
         await this.sendSubscribe()
-        this.initialIterator = this.iterate()
-        return this
+        return this.iterate()
     }
 
     async unsubscribe() {
@@ -383,8 +382,9 @@ class Subscription {
 
     async _cleanup(it) {
         // if iterator never started, finally block never called, thus need to manually clean it
+        const hadStream = this.streams.has(it)
         this.streams.delete(it)
-        if (!this.streams.size) {
+        if (hadStream && !this.streams.size) {
             // unsubscribe if no more streams
             await this.unsubscribe()
         }
@@ -400,28 +400,18 @@ class Subscription {
             ...this.options,
             type: ControlMessage.TYPES.BroadcastMessage,
         })
-        const streamIt = streamIterator(stream)
-        const it = iteratorFinally(streamIt, async () => {
-            await this._cleanup(it)
+        const streamIt = streamIterator(stream, {
+            abortController: this.abortController,
+            onFinally: async () => {
+                await this._cleanup(streamIt)
+            }
         })
-        it.stream = stream
-        it.stop = async () => {
-            await streamIt.stop()
-            await it.return()
-        }
-        this.streams.add(it)
+        this.streams.add(streamIt)
 
-        return it
+        return streamIt
     }
 
     [Symbol.asyncIterator]() {
-        if (this.initialIterator) {
-            const it = this.initialIterator
-            delete this.initialIterator
-            if (this.streams.has(it)) {
-                return it
-            }
-        }
         return this.iterate()
     }
 }
@@ -449,12 +439,17 @@ export default class Subscriptions {
 
     async resend(opts) {
         const options = validateOptions(opts)
+        const abortController = new AbortController()
         const stream = messageStream(this.client, {
-            ...options,
+            signal: abortController.signal,
             type: ControlMessage.TYPES.UnicastMessage,
+            ...options,
         })
 
-        const it = streamIterator(stream)
+        const streamIt = streamIterator(stream, {
+            abortController,
+        })
+
         const requestId = uuid('rs')
         // eslint-disable-next-line promise/catch-or-return
         const onResendDone = waitForResponse({
@@ -470,7 +465,7 @@ export default class Subscriptions {
             }
             return v
         }, (err) => {
-            return it.stop(err)
+            return streamIt.stop(err)
         })
 
         await Promise.race([
@@ -481,11 +476,11 @@ export default class Subscriptions {
             onResendDone
         ])
 
-        return it
+        return streamIt
     }
 
     async resendSubscribe(options) {
-        const sub = (await this.subscribe(options))[Symbol.asyncIterator]()
+        const sub = await this.subscribe(options)
         const resendSub = await this.resend(options)
         const stop = async () => {
             await Promise.all([
