@@ -126,6 +126,10 @@ export class StreamPartitioner {
             return 0
         }
 
+        if (typeof partitionKey === 'number') {
+            return Math.abs(partitionKey) % partitionCount
+        }
+
         if (!partitionKey) {
             // Fallback to random partition if no key
             return Math.floor(Math.random() * partitionCount)
