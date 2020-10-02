@@ -27,6 +27,23 @@ export class AbortError extends Error {
 }
 
 /**
+ * Convert allSettled results into a thrown Aggregate error if necessary.
+ */
+
+async function allSettledValues(items, errorMessage) {
+    const result = await Promise.allSettled(items)
+
+    const errs = result.filter(({ status }) => status === 'rejected').map(({ reason }) => reason)
+    if (errs.length) {
+        const err = new Error([errorMessage, ...errs].filter(Boolean).join('\n'))
+        err.errors = errs
+        throw err
+    }
+
+    return result.map(({ value }) => value)
+}
+
+/**
  * Allows injecting a function to execute after an iterator finishes.
  * Executes finally function even if generator not started.
  */
@@ -39,26 +56,147 @@ function iteratorFinally(iterator, onFinally = () => {}) {
         try {
             yield* iterator
         } finally {
-            await onFinallyOnce(iterator)
+            await onFinallyOnce()
         }
     }())
 
     // overrides return/throw to call onFinally even if generator was never started
     const oldReturn = g.return
-    g.return = async (...args) => {
-        if (!started) {
-            await onFinallyOnce(iterator)
-        }
-        return oldReturn.call(g, ...args)
-    }
     const oldThrow = g.throw
-    g.throw = async (...args) => {
-        if (!started) {
-            await onFinallyOnce(iterator)
+    return Object.assign(g, {
+        return: async (...args) => {
+            if (!started) {
+                await onFinallyOnce(iterator)
+            }
+            return oldReturn.call(g, ...args)
+        },
+        throw: async (...args) => {
+            if (!started) {
+                await onFinallyOnce()
+            }
+            return oldThrow.call(g, ...args)
+        },
+    })
+}
+
+/**
+ * Iterates over a Stream
+ * Cleans up stream/stops iterator if either stream or iterator ends.
+ * Adds abort + end methods to iterator
+ */
+
+function streamIterator(stream, { abortController, onFinally = () => {}, }) {
+    const onFinallyOnce = pMemoize(onFinally) // called once when stream ends
+    const endStreamOnce = pMemoize(async (optionalErr) => {
+        // ends stream + waits for end
+        stream.destroy(optionalErr)
+        await pFinished(stream, {
+            // necessary or can get premature close errors
+            // TODO: figure out why
+            readable: false,
+            writable: false,
+        })
+    })
+
+    const it = iteratorFinally((async function* streamIteratorFn() {
+        yield* stream
+    }()), async () => {
+        await endStreamOnce()
+        await onFinallyOnce()
+    })
+
+    return Object.assign(it, {
+        stream,
+        async abort() {
+            if (abortController) {
+                abortController.abort()
+            } else {
+                await it.end(new AbortError())
+            }
+        },
+        async end(optionalErr) {
+            await endStreamOnce(optionalErr)
+
+            if (optionalErr) {
+                await it.throw(optionalErr)
+                return
+            }
+
+            await it.return()
         }
-        return oldThrow.call(g, ...args)
+    })
+}
+
+function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
+    return function isMatchingStreamMessage({ streamMessage }) {
+        const msgStreamId = streamMessage.getStreamId()
+        if (streamId !== msgStreamId) { return false }
+        const msgPartition = streamMessage.getStreamPartition()
+        if (streamPartition !== msgPartition) { return false }
+        return true
     }
-    return g
+}
+
+/**
+ * Listen for matching stream messages on connection.
+ * Write messages into a Stream.
+ */
+
+function messageStream(connection, { streamId, streamPartition, signal, type = ControlMessage.TYPES.BroadcastMessage }) {
+    if (signal && signal.aborted) {
+        throw new AbortError()
+    }
+
+    // stream acts as buffer
+    const msgStream = new PassThrough({
+        objectMode: true,
+    })
+
+    const onAbort = () => {
+        return msgStream.destroy(new AbortError())
+    }
+
+    if (signal) {
+        signal.addEventListener('abort', onAbort, {
+            once: true
+        })
+    }
+
+    const isMatchingStreamMessage = getIsMatchingStreamMessage({
+        streamId,
+        streamPartition
+    })
+
+    // write matching messages to stream
+    const onMessage = (msg) => {
+        if (!isMatchingStreamMessage(msg)) { return }
+        msgStream.write(msg)
+    }
+
+    connection.on(type, onMessage)
+
+    // remove onMessage handler & clean up as soon as we see any 'end' events
+    const onClose = () => {
+        connection.off(type, onMessage)
+        // clean up abort signal
+        if (signal) {
+            signal.removeEventListener('abort', onAbort, {
+                once: true,
+            })
+        }
+        // clean up other handlers
+        msgStream
+            .off('close', onClose)
+            .off('end', onClose)
+            .off('destroy', onClose)
+            .off('finish', onClose)
+    }
+
+    return msgStream
+        .once('close', onClose)
+        .once('end', onClose)
+        .once('destroy', onClose)
+        .once('finish', onClose)
 }
 
 export function validateOptions(optionsOrStreamId) {
@@ -99,6 +237,10 @@ const PAIRS = new Map([
     [ControlMessage.TYPES.ResendFromRequest, ResendResponses],
     [ControlMessage.TYPES.ResendRangeRequest, ResendResponses],
 ])
+
+/**
+ * Wait for matching response types to requestId, or ErrorResponse.
+ */
 
 async function waitForResponse({ connection, types, requestId }) {
     return new Promise((resolve, reject) => {
@@ -141,15 +283,9 @@ async function waitForRequestResponse(client, request) {
     })
 }
 
-function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
-    return function isMatchingStreamMessage({ streamMessage }) {
-        const msgStreamId = streamMessage.getStreamId()
-        if (streamId !== msgStreamId) { return false }
-        const msgPartition = streamMessage.getStreamPartition()
-        if (streamPartition !== msgPartition) { return false }
-        return true
-    }
-}
+//
+// Subscribe/Unsubscribe
+//
 
 async function subscribe(client, { streamId, streamPartition = 0 }) {
     const sessionToken = await client.session.getSessionToken()
@@ -180,6 +316,10 @@ async function unsubscribe(client, { streamId, streamPartition = 0 }) {
     await client.send(request)
     return onResponse
 }
+
+//
+// Resends
+//
 
 function createResendRequest({
     requestId = uuid('rs'),
@@ -239,88 +379,47 @@ async function resend(client, options) {
     return onResponse
 }
 
-function messageStream(client, { streamId, streamPartition, signal, type = ControlMessage.TYPES.BroadcastMessage }) {
-    if (signal && signal.aborted) {
-        throw new AbortError()
-    }
-
-    const queue = new PassThrough({
-        objectMode: true,
+async function iterateResend(client, opts) {
+    const options = validateOptions(opts)
+    const abortController = new AbortController()
+    const stream = messageStream(client.connection, {
+        signal: abortController.signal,
+        type: ControlMessage.TYPES.UnicastMessage,
+        ...options,
     })
 
-    const onAbort = () => {
-        return queue.destroy(new AbortError())
-    }
-
-    if (signal) {
-        signal.addEventListener('abort', onAbort, {
-            once: true
-        })
-    }
-
-    const isMatchingStreamMessage = getIsMatchingStreamMessage({
-        streamId,
-        streamPartition
+    const streamIt = streamIterator(stream, {
+        abortController,
     })
 
-    const onMessage = (msg) => {
-        if (isMatchingStreamMessage(msg)) {
-            queue.write(msg)
+    const requestId = uuid('rs')
+
+    // wait for resend complete message(s)
+    const onResendDone = waitForResponse({ // eslint-disable-line promise/catch-or-return
+        requestId,
+        connection: client.connection,
+        types: [
+            ControlMessage.TYPES.ResendResponseResent,
+            ControlMessage.TYPES.ResendResponseNoResend,
+        ],
+    }).then((v) => {
+        if (stream.writable) {
+            stream.end()
         }
-    }
-
-    client.connection.on(type, onMessage)
-    const onClose = () => {
-        queue.off('close', onClose)
-        queue.off('end', onClose)
-        queue.off('destroy', onClose)
-        queue.off('finish', onClose)
-        client.connection.off(type, onMessage)
-        if (signal) {
-            signal.removeEventListener('abort', onAbort, {
-                once: true,
-            })
-        }
-    }
-
-    queue.once('close', onClose)
-    queue.once('end', onClose)
-    queue.once('destroy', onClose)
-    queue.once('finish', onClose)
-
-    return queue
-}
-
-function SubKey({ streamId, streamPartition = 0 }) {
-    if (streamId == null) { throw new Error(`SubKey: invalid streamId: ${streamId} ${streamPartition}`) }
-    return `${streamId}|${streamPartition}`
-}
-
-function streamIterator(stream, { abortController, onFinally = () => {}, }) {
-    const onFinallyOnce = pMemoize(onFinally)
-    const endStreamOnce = pMemoize(async () => {
-        stream.destroy()
-        await pFinished(stream, {
-            readable: false,
-            writable: false,
-        })
+        return v
+    }, (err) => {
+        return streamIt.end(err)
     })
 
-    const it = iteratorFinally((async function* streamIteratorFn() {
-        yield* stream
-    }()), async () => {
-        await endStreamOnce(stream)
-        await onFinallyOnce()
-    })
+    // wait for resend complete message or resend request done
+    await Promise.race([
+        resend(client, {
+            requestId, ...options,
+        }),
+        onResendDone
+    ])
 
-    it.stream = stream
-    it.abort = () => abortController && abortController.abort()
-    it.end = async () => {
-        await endStreamOnce(stream)
-        await it.return()
-    }
-
-    return it
+    return streamIt
 }
 
 /**
@@ -374,16 +473,16 @@ class Subscription {
         await this.sendUnsubscribe()
     }
 
-    async end() {
-        await Promise.all([...this.streams].map(async (it) => {
-            await it.end()
-        }))
+    async end(optionalErr) {
+        await allSettledValues([...this.streams].map(async (it) => {
+            await it.end(optionalErr)
+        }), 'end failed')
     }
 
     async return() {
-        await Promise.all([...this.streams].map(async (it) => {
+        await allSettledValues([...this.streams].map(async (it) => {
             await it.return()
-        }))
+        }), 'return failed')
     }
 
     async _cleanup(it) {
@@ -401,17 +500,19 @@ class Subscription {
     }
 
     iterate() {
-        const stream = messageStream(this.client, {
-            signal: this.abortController.signal,
+        const stream = messageStream(this.client.connection, {
             ...this.options,
+            signal: this.abortController.signal,
             type: ControlMessage.TYPES.BroadcastMessage,
         })
+
         const streamIt = streamIterator(stream, {
             abortController: this.abortController,
             onFinally: async () => {
                 await this._cleanup(streamIt)
             }
         })
+
         this.streams.add(streamIt)
 
         return streamIt
@@ -421,6 +522,15 @@ class Subscription {
         return this.iterate()
     }
 }
+
+function SubKey({ streamId, streamPartition = 0 }) {
+    if (streamId == null) { throw new Error(`SubKey: invalid streamId: ${streamId} ${streamPartition}`) }
+    return `${streamId}::${streamPartition}`
+}
+
+/**
+ * Top-level interface for creating/destroying subscriptions.
+ */
 
 export default class Subscriptions {
     constructor(client) {
@@ -443,72 +553,17 @@ export default class Subscriptions {
         return sub ? sub.count() : 0
     }
 
-    async resend(opts) {
-        const options = validateOptions(opts)
-        const abortController = new AbortController()
-        const stream = messageStream(this.client, {
-            signal: abortController.signal,
-            type: ControlMessage.TYPES.UnicastMessage,
-            ...options,
-        })
+    async unsubscribe(options) {
+        const key = SubKey(validateOptions(options))
+        const sub = this.subscriptions.get(key)
+        if (!sub) { return }
 
-        const streamIt = streamIterator(stream, {
-            abortController,
-        })
-
-        const requestId = uuid('rs')
-        // eslint-disable-next-line promise/catch-or-return
-        const onResendDone = waitForResponse({
-            connection: this.client.connection,
-            types: [
-                ControlMessage.TYPES.ResendResponseResent,
-                ControlMessage.TYPES.ResendResponseNoResend,
-            ],
-            requestId,
-        }).then((v) => {
-            if (stream.writable) {
-                stream.end()
-            }
-            return v
-        }, (err) => {
-            return streamIt.end(err)
-        })
-
-        await Promise.race([
-            resend(this.client, {
-                requestId,
-                ...options,
-            }),
-            onResendDone
-        ])
-
-        return streamIt
-    }
-
-    async resendSubscribe(options) {
-        const sub = await this.subscribe(options)
-        const resendSub = await this.resend(options)
-        const end = async () => {
-            await Promise.all([
-                sub.end(),
-                resendSub.end(),
-            ])
+        // wait for any outstanding operations
+        if (sub.hasPending()) {
+            await sub.queue(() => {})
         }
 
-        const it = iteratorFinally((async function* ResendSubIterator() {
-            yield* resendSub
-            yield* sub
-        }()), end)
-
-        it.abort = () => this.abortController && this.abortController.abort()
-        it.end = async () => {
-            await end()
-            return it.return()
-        }
-
-        it.resend = resendSub
-        it.realtime = sub
-        return it
+        await sub.return() // close all streams (thus unsubscribe)
     }
 
     async subscribe(options) {
@@ -521,16 +576,45 @@ export default class Subscriptions {
         return sub.subscribe()
     }
 
-    async unsubscribe(options) {
-        const key = SubKey(validateOptions(options))
-        const sub = this.subscriptions.get(key)
-        if (!sub) { return }
+    async resend(opts) {
+        return iterateResend(this.client, opts)
+    }
 
-        // wait for any outstanding operations
-        if (sub.hasPending()) {
-            await sub.queue(() => {})
+    async resendSubscribe(options) {
+        // create realtime subscription
+        const sub = await this.subscribe(options)
+        // create resend
+        const resendSub = await this.resend(options)
+
+        // end both on end
+        async function end(optionalErr) {
+            await allSettledValues([
+                sub.end(optionalErr),
+                resendSub.end(optionalErr),
+            ], 'resend end failed')
         }
 
-        await sub.return() // close all streams (thus unsubscribe)
+        const it = iteratorFinally((async function* ResendSubIterator() {
+            // iterate over resend
+            yield* resendSub
+            // then iterate over realtime subscription
+            yield* sub
+        }()), () => end())
+
+        // attach additional utility functions
+        return Object.assign(it, {
+            realtime: sub,
+            resend: resendSub,
+            abort: () => (
+                this.abortController && this.abortController.abort()
+            ),
+            async end(optionalErr) { // eslint-disable-line require-atomic-updates
+                try {
+                    await end(optionalErr)
+                } finally {
+                    await it.return()
+                }
+            }
+        })
     }
 }

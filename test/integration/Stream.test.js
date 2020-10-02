@@ -190,6 +190,40 @@ describe('StreamrClient Stream', () => {
                     expect(M.count(stream.id)).toBe(0)
                 })
 
+                it('can kill stream with throw', async () => {
+                    const unsubscribeEvents = []
+                    client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+                        unsubscribeEvents.push(m)
+                    })
+                    const M = new MessageStream(client)
+                    const sub = await M.subscribe(stream.id)
+                    expect(M.count(stream.id)).toBe(1)
+
+                    const published = []
+                    for (let i = 0; i < 2; i++) {
+                        const message = Msg()
+                        // eslint-disable-next-line no-await-in-loop
+                        await client.publish(stream.id, message)
+                        published.push(message)
+                    }
+
+                    const err = new Error('expected error')
+                    const received = []
+                    await expect(async () => {
+                        for await (const m of sub) {
+                            received.push(m)
+                            // after first message schedule end
+                            if (received.length) {
+                                throw err
+                            }
+                        }
+                    }).rejects.toThrow(err)
+                    // gets some messages but not all
+                    expect(received).toHaveLength(1)
+                    expect(unsubscribeEvents).toHaveLength(1)
+                    expect(M.count(stream.id)).toBe(0)
+                })
+
                 it('can subscribe to stream multiple times, get updates then unsubscribe', async () => {
                     const M = new MessageStream(client)
                     const sub1 = await M.subscribe(stream.id)
