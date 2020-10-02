@@ -315,13 +315,18 @@ function streamIterator(stream, { abortController, onFinally = () => {}, }) {
 
     it.stream = stream
     it.abort = () => abortController && abortController.abort()
-    it.stop = async () => {
+    it.end = async () => {
         await endStreamOnce(stream)
         await it.return()
     }
 
     return it
 }
+
+/**
+ * Manages creating iterators for a streamr stream.
+ * When all iterators are done, calls unsubscribe.
+ */
 
 class Subscription {
     constructor(client, options) {
@@ -359,8 +364,9 @@ class Subscription {
 
     async subscribe() {
         pMemoize.clear(this.sendUnsubscribe)
+        const iterator = this.iterate() // start iterator immediately
         await this.sendSubscribe()
-        return this.iterate()
+        return iterator
     }
 
     async unsubscribe() {
@@ -368,9 +374,9 @@ class Subscription {
         await this.sendUnsubscribe()
     }
 
-    async stop() {
+    async end() {
         await Promise.all([...this.streams].map(async (it) => {
-            await it.stop()
+            await it.end()
         }))
     }
 
@@ -465,7 +471,7 @@ export default class Subscriptions {
             }
             return v
         }, (err) => {
-            return streamIt.stop(err)
+            return streamIt.end(err)
         })
 
         await Promise.race([
@@ -482,21 +488,21 @@ export default class Subscriptions {
     async resendSubscribe(options) {
         const sub = await this.subscribe(options)
         const resendSub = await this.resend(options)
-        const stop = async () => {
+        const end = async () => {
             await Promise.all([
-                sub.stop(),
-                resendSub.stop(),
+                sub.end(),
+                resendSub.end(),
             ])
         }
 
         const it = iteratorFinally((async function* ResendSubIterator() {
             yield* resendSub
             yield* sub
-        }()), stop)
+        }()), end)
 
         it.abort = () => this.abortController && this.abortController.abort()
-        it.stop = async () => {
-            await stop()
+        it.end = async () => {
+            await end()
             return it.return()
         }
 

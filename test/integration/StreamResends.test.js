@@ -278,10 +278,12 @@ describe('resends', () => {
                         expect(msgs).toEqual(published)
                         expect(M.count(stream.id)).toBe(0)
                         expect(sub.realtime.stream.readable).toBe(false)
+                        expect(sub.realtime.stream.writable).toBe(false)
+                        expect(sub.resend.stream.readable).toBe(false)
                         expect(sub.resend.stream.writable).toBe(false)
                     })
 
-                    it('sees resends and realtime 2', async () => {
+                    it('sees resends and realtime again', async () => {
                         const M = new MessageStream(client)
                         const sub = await M.resendSubscribe({
                             streamId: stream.id,
@@ -303,6 +305,8 @@ describe('resends', () => {
                         expect(msgs).toEqual(published)
                         expect(M.count(stream.id)).toBe(0)
                         expect(sub.realtime.stream.readable).toBe(false)
+                        expect(sub.realtime.stream.writable).toBe(false)
+                        expect(sub.resend.stream.readable).toBe(false)
                         expect(sub.resend.stream.writable).toBe(false)
                     })
 
@@ -331,7 +335,7 @@ describe('resends', () => {
                         expect(sub.resend.stream.writable).toBe(false)
                     })
 
-                    it('can stop asynchronously', async () => {
+                    it('can end asynchronously', async () => {
                         const M = new MessageStream(client)
                         const sub = await M.resendSubscribe({
                             streamId: stream.id,
@@ -349,7 +353,7 @@ describe('resends', () => {
                             receivedMsgs = await collect(sub, async ({ received }) => {
                                 if (received.length === published.length) {
                                     t = setTimeout(() => {
-                                        sub.stop()
+                                        sub.end()
                                     })
                                 }
                             })
@@ -383,7 +387,7 @@ describe('resends', () => {
                         const END_AFTER = 3
                         const receivedMsgs = await collect(sub, async ({ received }) => {
                             if (received.length === END_AFTER) {
-                                await sub.stop()
+                                await sub.end()
                                 expect(unsubscribeEvents).toHaveLength(1)
                             }
                         })

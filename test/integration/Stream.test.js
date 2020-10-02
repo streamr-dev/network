@@ -153,7 +153,7 @@ describe('StreamrClient Stream', () => {
                     expect(M.count(stream.id)).toBe(0)
                 })
 
-                it('can kill stream using async stop', async () => {
+                it('can kill stream using async end', async () => {
                     const M = new MessageStream(client)
                     const sub = await M.subscribe(stream.id)
                     expect(M.count(stream.id)).toBe(1)
@@ -172,13 +172,13 @@ describe('StreamrClient Stream', () => {
                     try {
                         for await (const m of sub) {
                             received.push(m)
-                            // after first message schedule stop
+                            // after first message schedule end
                             if (received.length === 1) {
                                 // eslint-disable-next-line no-loop-func
                                 t = setTimeout(() => {
                                     expectedLength = received.length
-                                    // should not see any more messages after stop
-                                    sub.stop()
+                                    // should not see any more messages after end
+                                    sub.end()
                                 })
                             }
                         }
@@ -258,7 +258,7 @@ describe('StreamrClient Stream', () => {
                     expect(M.count(stream.id)).toBe(0)
                 })
 
-                it('can subscribe to stream and get some updates then unsubscribe mid-stream with stop', async () => {
+                it('can subscribe to stream and get some updates then unsubscribe mid-stream with end', async () => {
                     const M = new MessageStream(client)
                     const sub = await M.subscribe(stream.id)
                     expect(M.count(stream.id)).toBe(1)
@@ -275,7 +275,7 @@ describe('StreamrClient Stream', () => {
                     for await (const m of sub) {
                         received.push(m)
                         if (received.length === 1) {
-                            await sub.stop()
+                            await sub.end()
                         }
                     }
 
@@ -304,7 +304,7 @@ describe('StreamrClient Stream', () => {
                         received.push(m)
                         if (received.length === 2) {
                             expect(unsubscribeEvents).toHaveLength(0)
-                            await sub.stop()
+                            await sub.end()
                             expect(unsubscribeEvents).toHaveLength(1)
                             expect(M.count(stream.id)).toBe(0)
                         }
@@ -313,7 +313,7 @@ describe('StreamrClient Stream', () => {
                     expect(M.count(stream.id)).toBe(0)
                 })
 
-                it('can stop + return and it will wait for unsubscribe', async () => {
+                it('can end + return and it will wait for unsubscribe', async () => {
                     const unsubscribeEvents = []
                     client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
                         unsubscribeEvents.push(m)
@@ -334,10 +334,50 @@ describe('StreamrClient Stream', () => {
                         received.push(m)
                         if (received.length === 2) {
                             expect(unsubscribeEvents).toHaveLength(0)
-                            await Promise.race([
+                            const tasks = [
                                 sub.return(),
-                                sub.stop(),
-                            ])
+                                sub.end(),
+                            ]
+                            await Promise.race(tasks)
+                            expect(unsubscribeEvents).toHaveLength(1)
+                            await Promise.all(tasks)
+                            expect(unsubscribeEvents).toHaveLength(1)
+                            expect(M.count(stream.id)).toBe(0)
+                        }
+                    }
+                    expect(received).toHaveLength(2)
+                    expect(M.count(stream.id)).toBe(0)
+                })
+
+                it('can end + multiple times and it will wait for unsubscribe', async () => {
+                    const unsubscribeEvents = []
+                    client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+                        unsubscribeEvents.push(m)
+                    })
+
+                    const M = new MessageStream(client)
+                    const sub = await M.subscribe(stream.id)
+
+                    const published = []
+                    for (let i = 0; i < 5; i++) {
+                        const message = Msg()
+                        // eslint-disable-next-line no-await-in-loop
+                        await client.publish(stream.id, message)
+                        published.push(message)
+                    }
+                    const received = []
+                    for await (const m of sub) {
+                        received.push(m)
+                        if (received.length === 2) {
+                            expect(unsubscribeEvents).toHaveLength(0)
+                            const tasks = [
+                                sub.end(),
+                                sub.end(),
+                                sub.end(),
+                            ]
+                            await Promise.race(tasks)
+                            expect(unsubscribeEvents).toHaveLength(1)
+                            await Promise.all(tasks)
                             expect(unsubscribeEvents).toHaveLength(1)
                             expect(M.count(stream.id)).toBe(0)
                         }
