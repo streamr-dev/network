@@ -138,3 +138,30 @@ export function LimitAsyncFnByKey(limit) {
     return f
 }
 
+/**
+ * Deferred promise allowing external control of resolve/reject.
+ * Returns a Promise with resolve/reject functions attached.
+ * Also has a wrap(fn) method that wraps a function to settle this promise
+ * Defer optionally takes executor function ala `new Promise(executor)`
+ */
+
+export function Defer(executor = () => {}) {
+    let resolve
+    let reject
+    // eslint-disable-next-line promise/param-names
+    const p = new Promise((_resolve, _reject) => {
+        resolve = _resolve
+        reject = _reject
+        executor(resolve, reject)
+    })
+
+    function wrap(fn) {
+        return async (...args) => Promise.resolve(fn(...args)).then(resolve, reject)
+    }
+
+    return Object.assign(p, {
+        resolve,
+        reject,
+        wrap,
+    })
+}

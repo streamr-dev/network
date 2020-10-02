@@ -1,4 +1,4 @@
-import { PassThrough, Readable, finished } from 'stream'
+import { PassThrough, finished } from 'stream'
 import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
@@ -6,7 +6,7 @@ import pLimit from 'p-limit'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 
-import { uuid } from './utils'
+import { uuid, Defer } from './utils'
 
 const pFinished = promisify(finished)
 
@@ -17,8 +17,6 @@ const {
 
 const { MessageRef } = MessageLayer
 
-const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
 export class AbortError extends Error {
     constructor(msg = '', ...args) {
         super(`The operation was aborted. ${msg}`, ...args)
@@ -26,6 +24,44 @@ export class AbortError extends Error {
             Error.captureStackTrace(this, this.constructor)
         }
     }
+}
+
+/**
+ * Allows injecting a function to execute after an iterator finishes.
+ * Executes finally function even if generator not started.
+ */
+
+function iteratorFinally(iterator, onFinally = () => {}) {
+    let started = false
+    let finallyRun = false
+    const g = (async function* It() {
+        started = true
+        try {
+            yield* iterator
+        } finally {
+            finallyRun = true
+            await onFinally(iterator)
+        }
+    }())
+
+    // overrides return/throw to call onFinally even if generator was never started
+    const oldReturn = g.return
+    g.return = async (...args) => {
+        if (!started && !finallyRun) {
+            finallyRun = true
+            await onFinally(iterator)
+        }
+        return oldReturn.call(g, ...args)
+    }
+    const oldThrow = g.throw
+    g.throw = async (...args) => {
+        if (!started && !finallyRun) {
+            finallyRun = true
+            await onFinally(iterator)
+        }
+        return oldThrow.call(g, ...args)
+    }
+    return g
 }
 
 export function validateOptions(optionsOrStreamId) {
@@ -118,23 +154,6 @@ function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
     }
 }
 
-function pTimeout(p, ms, msg = '') {
-    let t
-    const start = Date.now()
-    return (
-        Promise.race([
-            p.finally(() => {
-                clearTimeout(t)
-            }),
-            new Promise(() => {
-                t = setTimeout((resolve, reject) => {
-                    reject(new Error(`timed out: ${Date.now() - start}ms > ${ms}ms. ${msg}`))
-                })
-            })
-        ])
-    )
-}
-
 async function subscribe(client, { streamId, streamPartition = 0 }) {
     const sessionToken = await client.session.getSessionToken()
     const request = new SubscribeRequest({
@@ -165,85 +184,62 @@ async function unsubscribe(client, { streamId, streamPartition = 0 }) {
     return onResponse
 }
 
-/**
- * Allows injecting a function to execute after an iterator finishes.
- * Executes finally function even if generator not started.
- */
-
-function iteratorFinally(iterator, onFinally = () => {}) {
-    let started = false
-    const g = (async function* It() {
-        started = true
-        try {
-            yield* iterator
-        } finally {
-            await onFinally(iterator)
-        }
-    }())
-
-    // overrides return/throw to call onFinally even if generator was never started
-    const oldReturn = g.return
-    g.return = async (...args) => {
-        if (!started) {
-            await onFinally(iterator)
-        }
-        return oldReturn.call(g, ...args)
+function createResendRequest({
+    requestId = uuid('rs'),
+    streamId,
+    streamPartition = 0,
+    publisherId,
+    msgChainId,
+    sessionToken,
+    ...options
+}) {
+    let request
+    const opts = {
+        streamId,
+        streamPartition,
+        requestId,
+        sessionToken,
     }
-    const oldThrow = g.throw
-    g.throw = async (...args) => {
-        if (!started) {
-            await onFinally(iterator)
-        }
-        return oldThrow.call(g, ...args)
+
+    if (options.last > 0) {
+        request = new ResendLastRequest({
+            ...opts,
+            numberLast: options.last,
+        })
+    } else if (options.from && !options.to) {
+        request = new ResendFromRequest({
+            ...opts,
+            fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
+            publisherId,
+            msgChainId,
+        })
+    } else if (options.from && options.to) {
+        request = new ResendRangeRequest({
+            ...opts,
+            fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
+            toMsgRef: new MessageRef(options.to.timestamp, options.to.sequenceNumber),
+            publisherId,
+            msgChainId,
+        })
     }
-    return g
+
+    if (!request) {
+        throw new Error("Can't _requestResend without resend options")
+    }
+    return request
 }
 
-function addBeforeDestroy(stream) {
-    const d = stream.destroy.bind(stream)
-    const destroyFns = new Set()
-    // eslint-disable-next-line no-param-reassign
-    stream.destroy = async (...args) => {
-        if (!destroyFns || !destroyFns.size) {
-            return d(...args)
-        }
-        try {
-            for (const fn of destroyFns) {
-                // eslint-disable-next-line no-await-in-loop
-                await fn()
-            }
-        } catch (error) {
-            return d(error, ...args.slice(1))
-        } finally {
-            destroyFns.clear()
-        }
+async function resend(client, options) {
+    const sessionToken = await client.session.getSessionToken()
+    const request = createResendRequest({
+        ...options,
+        sessionToken,
+    })
 
-        return d(...args)
-    }
+    const onResponse = waitForRequestResponse(client, request)
 
-    // eslint-disable-next-line no-param-reassign
-    stream.beforeDestroy = (fn) => {
-        destroyFns.add(fn)
-    }
-
-    // eslint-disable-next-line no-param-reassign
-    stream.throw = async (err) => {
-        const it = stream[Symbol.asyncIterator]()
-        await it.throw(err)
-        await pFinished(stream)
-    }
-
-    // eslint-disable-next-line no-param-reassign
-    stream.return = async () => {
-        // little trick to ensure stream cleaned up
-        // iterator.return won't exit until destroy handler finished
-        const it = stream[Symbol.asyncIterator]()
-        await it.return()
-        await stream.destroy()
-        await pFinished(stream)
-    }
-
-    return stream
+    await client.send(request)
+    return onResponse
 }
 
 function messageStream(client, { streamId, streamPartition, signal, type = ControlMessage.TYPES.BroadcastMessage }) {
@@ -251,9 +247,9 @@ function messageStream(client, { streamId, streamPartition, signal, type = Contr
         throw new AbortError()
     }
 
-    const queue = addBeforeDestroy(new PassThrough({
+    const queue = new PassThrough({
         objectMode: true,
-    }))
+    })
 
     const onAbort = () => {
         return queue.destroy(new AbortError())
@@ -277,20 +273,54 @@ function messageStream(client, { streamId, streamPartition, signal, type = Contr
     }
 
     client.connection.on(type, onMessage)
-    queue.once('close', () => {
+    const onClose = () => {
+        queue.off('close', onClose)
+        queue.off('end', onClose)
+        queue.off('destroy', onClose)
+        queue.off('finish', onClose)
         client.connection.off(type, onMessage)
         if (signal) {
             signal.removeEventListener('abort', onAbort, {
                 once: true,
             })
         }
-    })
+    }
+
+    queue.once('close', onClose)
+    queue.once('end', onClose)
+    queue.once('destroy', onClose)
+    queue.once('finish', onClose)
+
     return queue
 }
 
 function SubKey({ streamId, streamPartition = 0 }) {
     if (streamId == null) { throw new Error(`SubKey: invalid streamId: ${streamId} ${streamPartition}`) }
     return `${streamId}|${streamPartition}`
+}
+
+function streamIterator(stream, abortController) {
+    const it = iteratorFinally((async function* streamIteratorFn() {
+        yield* stream
+    }()), async () => {
+        stream.destroy()
+        await pFinished(stream, {
+            readable: false,
+            writable: false,
+        })
+    })
+
+    it.stream = stream
+    it.abort = () => abortController && abortController.abort()
+    it.stop = async () => {
+        stream.destroy()
+        await pFinished(stream, {
+            readable: false,
+            writable: false,
+        })
+        await it.return()
+    }
+    return it
 }
 
 class Subscription {
@@ -305,6 +335,7 @@ class Subscription {
         const unsub = this.unsubscribe.bind(this)
         this.subscribe = () => this.queue(sub)
         this.unsubscribe = () => this.queue(unsub)
+        this.return = this.return.bind(this)
         this.sendSubscribe = pMemoize(this.sendSubscribe.bind(this))
         this.sendUnsubscribe = pMemoize(this.sendUnsubscribe.bind(this))
     }
@@ -329,7 +360,8 @@ class Subscription {
     async subscribe() {
         pMemoize.clear(this.sendUnsubscribe)
         await this.sendSubscribe()
-        return this.iterate()
+        this.initialIterator = this.iterate()
+        return this
     }
 
     async unsubscribe() {
@@ -337,15 +369,21 @@ class Subscription {
         await this.sendUnsubscribe()
     }
 
-    async return() {
-        await Promise.all([...this.streams].map(async (stream) => {
-            await stream.return()
+    async stop() {
+        await Promise.all([...this.streams].map(async (it) => {
+            await it.stop()
         }))
     }
 
-    async _cleanup(stream) {
-        // if stream never started, finally block never called, thus need to manually clean it
-        this.streams.delete(stream)
+    async return() {
+        await Promise.all([...this.streams].map(async (it) => {
+            await it.return()
+        }))
+    }
+
+    async _cleanup(it) {
+        // if iterator never started, finally block never called, thus need to manually clean it
+        this.streams.delete(it)
         if (!this.streams.size) {
             // unsubscribe if no more streams
             await this.unsubscribe()
@@ -362,84 +400,30 @@ class Subscription {
             ...this.options,
             type: ControlMessage.TYPES.BroadcastMessage,
         })
-        stream.beforeDestroy(async () => {
-            await this._cleanup(stream)
+        const streamIt = streamIterator(stream)
+        const it = iteratorFinally(streamIt, async () => {
+            await this._cleanup(it)
         })
-        this.streams.add(stream)
-        return stream
+        it.stream = stream
+        it.stop = async () => {
+            await streamIt.stop()
+            await it.return()
+        }
+        this.streams.add(it)
+
+        return it
     }
 
     [Symbol.asyncIterator]() {
+        if (this.initialIterator) {
+            const it = this.initialIterator
+            delete this.initialIterator
+            if (this.streams.has(it)) {
+                return it
+            }
+        }
         return this.iterate()
     }
-}
-
-function createResendRequest({
-    requestId = uuid('rs'),
-    streamId,
-    streamPartition = 0,
-    sessionToken,
-    ...options
-}) {
-    let request
-    const opts = {
-        streamId,
-        streamPartition,
-        requestId,
-        sessionToken,
-    }
-
-    const {
-        from,
-        to,
-        last,
-        publisherId,
-        msgChainId,
-    } = {
-        ...options,
-        ...options.resend
-    }
-
-    if (last > 0) {
-        request = new ResendLastRequest({
-            ...opts,
-            numberLast: last,
-        })
-    } else if (from && !to) {
-        request = new ResendFromRequest({
-            ...opts,
-            fromMsgRef: new MessageRef(from.timestamp, from.sequenceNumber),
-            publisherId,
-            msgChainId,
-        })
-    } else if (from && to) {
-        request = new ResendRangeRequest({
-            ...opts,
-            fromMsgRef: new MessageRef(from.timestamp, from.sequenceNumber),
-            toMsgRef: new MessageRef(to.timestamp, to.sequenceNumber),
-            publisherId,
-            msgChainId,
-        })
-    }
-
-    if (!request) {
-        throw new Error("Can't _requestResend without resend options")
-    }
-
-    return request
-}
-
-async function resend(client, options) {
-    const sessionToken = await client.session.getSessionToken()
-    const request = createResendRequest({
-        ...options,
-        sessionToken,
-    })
-
-    const onResponse = waitForRequestResponse(client, request)
-
-    await client.send(request)
-    return onResponse
 }
 
 export default class Subscriptions {
@@ -463,6 +447,69 @@ export default class Subscriptions {
         return sub ? sub.count() : 0
     }
 
+    async resend(opts) {
+        const options = validateOptions(opts)
+        const stream = messageStream(this.client, {
+            ...options,
+            type: ControlMessage.TYPES.UnicastMessage,
+        })
+
+        const it = streamIterator(stream)
+        const requestId = uuid('rs')
+        // eslint-disable-next-line promise/catch-or-return
+        const onResendDone = waitForResponse({
+            connection: this.client.connection,
+            types: [
+                ControlMessage.TYPES.ResendResponseResent,
+                ControlMessage.TYPES.ResendResponseNoResend,
+            ],
+            requestId,
+        }).then((v) => {
+            if (stream.writable) {
+                stream.end()
+            }
+            return v
+        }, (err) => {
+            return it.stop(err)
+        })
+
+        await Promise.race([
+            resend(this.client, {
+                requestId,
+                ...options,
+            }),
+            onResendDone
+        ])
+
+        return it
+    }
+
+    async resendSubscribe(options) {
+        const sub = (await this.subscribe(options))[Symbol.asyncIterator]()
+        const resendSub = await this.resend(options)
+        const stop = async () => {
+            await Promise.all([
+                sub.stop(),
+                resendSub.stop(),
+            ])
+        }
+
+        const it = iteratorFinally((async function* ResendSubIterator() {
+            yield* resendSub
+            yield* sub
+        }()), stop)
+
+        it.abort = () => this.abortController && this.abortController.abort()
+        it.stop = async () => {
+            await stop()
+            return it.return()
+        }
+
+        it.resend = resendSub
+        it.realtime = sub
+        return it
+    }
+
     async subscribe(options) {
         const key = SubKey(validateOptions(options))
         const sub = (
@@ -484,65 +531,5 @@ export default class Subscriptions {
         }
 
         await sub.return() // close all streams (thus unsubscribe)
-    }
-
-    async resend(opts) {
-        const options = validateOptions(opts)
-        const stream = messageStream(this.client, {
-            ...options,
-            type: ControlMessage.TYPES.UnicastMessage,
-        })
-
-        const requestId = uuid('rs')
-        // eslint-disable-next-line promise/catch-or-return
-        const onResendDone = waitForResponse({
-            connection: this.client.connection,
-            types: [
-                ControlMessage.TYPES.ResendResponseResent,
-                ControlMessage.TYPES.ResendResponseNoResend,
-            ],
-            requestId,
-        }).then(() => {
-            // close off resend
-            return stream.push(null)
-        }, (err) => {
-            return stream.throw(err)
-        })
-
-        await Promise.race([
-            resend(this.client, {
-                requestId,
-                ...options,
-            }),
-            onResendDone
-        ])
-
-        return stream
-    }
-
-    async resendSubscribe(options) {
-        const [sub, resendSub] = await Promise.all([
-            this.subscribe(options),
-            this.resend(options),
-        ])
-
-        const it = iteratorFinally((async function* ResendSubIterator() {
-            yield* resendSub
-            yield* sub
-        }()), async () => {
-            await Promise.all([
-                resendSub.return(),
-                sub.return(),
-            ])
-        })
-        const stream = addBeforeDestroy(Readable.from(it))
-        stream.beforeDestroy(async () => {
-            await Promise.all([
-                resendSub.return(),
-                sub.return(),
-            ])
-        })
-
-        return stream
     }
 }
