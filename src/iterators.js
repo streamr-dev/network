@@ -1,4 +1,4 @@
-import { PassThrough, finished } from 'stream'
+import { finished } from 'stream'
 import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
@@ -30,7 +30,7 @@ export async function endStream(stream, optionalErr) {
  * Allows injecting a function to execute after an iterator finishes.
  * Executes finally function even if generator not started.
  */
-const isIteratorFinally = Symbol('iteratorFinally')
+
 export function iteratorFinally(iterator, onFinally = () => {}) {
     let started = false
     const onFinallyOnce = pMemoize(onFinally)
@@ -42,7 +42,6 @@ export function iteratorFinally(iterator, onFinally = () => {}) {
             await onFinallyOnce()
         }
     }())
-    g[isIteratorFinally] = true
 
     // overrides return/throw to call onFinally even if generator was never started
     const oldReturn = g.return
@@ -63,69 +62,111 @@ export function iteratorFinally(iterator, onFinally = () => {}) {
     })
 }
 
-const isCancelableIterator = Symbol('CancelableIterator')
-export function CancelableIterator(iterable) {
+export function CancelableIterator(iterable, onFinally = () => {}) {
     let cancel
+    let cancelled = false
+    let cancelableIterator
+    let error
+    let waiting = false
+
     const onCancel = new Promise((resolve, reject) => {
         cancel = (value) => {
+            if (cancelled) { return }
+
+            cancelled = true
+
             if (value instanceof Error) {
-                reject(value)
+                error = value
+                if (!waiting) {
+                    cancelableIterator.throw(error)
+                    return
+                }
+                reject(error)
                 return
             }
-            resolve(value)
+
+            if (!waiting) {
+                cancelableIterator.return()
+                return
+            }
+
+            try {
+                resolve({
+                    value,
+                    done: true,
+                })
+            } catch (err) {
+                reject(err)
+            }
         }
+    }).finally(() => {
+        cancel = () => onCancel
     })
 
-    const cancelableIterator = iteratorFinally((async function* Gen() {
-        const it = iterable[Symbol.asyncIterator]()
+    let innerIterator
+    cancelableIterator = iteratorFinally((async function* Gen() {
+        innerIterator = iterable[Symbol.asyncIterator]()
         while (true) {
-            // eslint-disable-next-line no-await-in-loop
-            const { value, done } = await Promise.race([
-                it.next(),
-                onCancel,
-            ])
+            waiting = true
+            let value
+            let done
+            try {
+                // eslint-disable-next-line no-await-in-loop
+                ({ value, done } = await Promise.race([
+                    innerIterator.next(),
+                    onCancel,
+                ]))
+            } finally {
+                waiting = false
+            }
             if (done) {
                 return value
             }
             yield value
         }
-    }()), () => {
-        cancel({
-            done: true,
-            value: undefined,
-        })
+    }()), async () => {
+        if (innerIterator) {
+            innerIterator.return()
+        }
+        try {
+            await onFinally()
+        } finally {
+            await cancel()
+        }
     })
 
     return Object.assign(cancelableIterator, {
-        [isCancelableIterator]: true,
         onCancel,
         cancel,
     })
 }
-CancelableIterator.is = (it) => it[isCancelableIterator]
 
 export function pipeline(...iterables) {
-    const iterators = new Set()
+    let final
     function done(err) {
-        const its = new Set(iterators)
-        iterators.clear()
-        its.forEach((it) => {
-            it.cancel(err)
-        })
+        final.cancel(err)
     }
 
-    return iterables.reduce((prev, next) => {
-        const it = CancelableIterator(async function* Gen() {
+    let error
+
+    const last = iterables.reduce((prev, next) => {
+        return CancelableIterator((async function* Gen() {
             try {
                 const nextIterable = typeof next === 'function' ? next(prev) : next
                 yield* nextIterable
             } catch (err) {
-                done(err)
+                if (!error) {
+                    error = err
+                    return final.cancel(err)
+                }
+                throw err
             }
-        }())
-        iterators.add(it)
-        return it
+        }()))
     }, undefined)
+    final = CancelableIterator((async function* Gen() {
+        yield* last
+    }()), () => done(error))
+    return final
 }
 
 /**
@@ -133,8 +174,6 @@ export function pipeline(...iterables) {
  * Cleans up stream/stops iterator if either stream or iterator ends.
  * Adds abort + end methods to iterator
  */
-
-const isStreamIterator = Symbol('StreamIterator')
 
 export function StreamIterator(stream, { abortController, onFinally = () => {}, } = {}) {
     const onFinallyOnce = pMemoize(onFinally) // called once when stream ends
@@ -150,7 +189,6 @@ export function StreamIterator(stream, { abortController, onFinally = () => {}, 
     })
 
     return Object.assign(it, {
-        [isStreamIterator]: true,
         stream,
         async abort() {
             if (abortController) {
