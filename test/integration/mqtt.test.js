@@ -35,7 +35,11 @@ describe('mqtt: end-to-end', () => {
     let mqttClient3
 
     beforeEach(async () => {
-        tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
+        })
 
         broker1 = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, mqttPort1, true)
         broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, mqttPort2, true)

@@ -32,7 +32,11 @@ describe('message ordering and gap filling in websocket adapter', () => {
     let freshStreamId
 
     beforeEach(async () => {
-        tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
+        })
         publisherNode = await startNetworkNode('127.0.0.1', networkPort1, 'publisherNode')
         publisherNode.addBootstrapTracker(`ws://127.0.0.1:${trackerPort}`)
         broker = await startBroker('broker1', networkPort2, trackerPort, null, wsPort, null, true)

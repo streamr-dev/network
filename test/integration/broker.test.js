@@ -96,7 +96,11 @@ describe('broker: end-to-end', () => {
     let freshStreamId
 
     beforeAll(async () => {
-        tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
+        })
         broker1 = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, true)
         broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, null, true)
         broker3 = await startBroker('broker3', networkPort3, trackerPort, httpPort3, wsPort3, null, true)

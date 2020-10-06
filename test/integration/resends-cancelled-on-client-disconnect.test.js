@@ -28,7 +28,11 @@ describe('resend cancellation', () => {
 
     beforeEach(async () => {
         volumeLogger = new VolumeLogger(0)
-        tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
+        })
         networkNode = await startStorageNode('127.0.0.1', networkNodePort, 'networkNode', [
             {
                 requestLast: (streamId, streamPartition, n) => {

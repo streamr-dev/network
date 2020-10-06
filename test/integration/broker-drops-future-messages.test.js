@@ -41,7 +41,11 @@ describe('broker drops future messages', () => {
     let token
 
     beforeEach(async () => {
-        tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
+        })
         broker = await startBroker('broker', networkPort, trackerPort, httpPort, wsPort, mqttPort, false)
 
         client = createClient(wsPort)

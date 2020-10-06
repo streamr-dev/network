@@ -49,7 +49,7 @@
     "pump": "^3.0.0",
     "qs": "^6.9.4",
     "streamr-client": "^4.1.1",
-    "streamr-network": "^19.1.0",
+    "streamr-network": "^20.1.0",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.5.0",
     "uuid": "^8.3.0",
     "ws": "^7.3.1"

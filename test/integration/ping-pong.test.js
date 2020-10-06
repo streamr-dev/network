@@ -24,7 +24,11 @@ describe('ping-pong test between broker and clients', () => {
     let client3
 
     beforeEach(async () => {
-        tracker = await startTracker('127.0.0.1', trackerPort, 'tracker')
+        tracker = await startTracker({
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
+        })
         networkNode = await startStorageNode('127.0.0.1', networkNodePort, 'networkNode')
 
         volumeLogger = new VolumeLogger(0)
