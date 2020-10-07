@@ -1,8 +1,7 @@
-const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageID } = require('streamr-client-protocol').MessageLayer
 const { waitForCondition, waitForEvent, wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 
 /**
@@ -16,17 +15,19 @@ describe('duplicate message detection and avoidance', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 30350, id: 'tracker'
+            host: '127.0.0.1',
+            port: 30350,
+            id: 'tracker'
         })
-        contactNode = await startNetworkNode(LOCALHOST, 30351, 'node-0')
+        contactNode = await startNetworkNode('127.0.0.1', 30351, 'node-0')
         contactNode.addBootstrapTracker(tracker.getAddress())
 
         otherNodes = await Promise.all([
-            startNetworkNode(LOCALHOST, 30352, 'node-1'),
-            startNetworkNode(LOCALHOST, 30353, 'node-2'),
-            startNetworkNode(LOCALHOST, 30354, 'node-3'),
-            startNetworkNode(LOCALHOST, 30355, 'node-4'),
-            startNetworkNode(LOCALHOST, 30356, 'node-5'),
+            startNetworkNode('127.0.0.1', 30352, 'node-1'),
+            startNetworkNode('127.0.0.1', 30353, 'node-2'),
+            startNetworkNode('127.0.0.1', 30354, 'node-3'),
+            startNetworkNode('127.0.0.1', 30355, 'node-4'),
+            startNetworkNode('127.0.0.1', 30356, 'node-5'),
         ])
 
         otherNodes.forEach((node) => node.addBootstrapTracker(tracker.getAddress()))

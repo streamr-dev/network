@@ -8,7 +8,7 @@ const getLogger = require('../helpers/logger')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
-const { disconnectionReasons } = require('../messageTypes')
+const { disconnectionReasons } = require('../connection/WsEndpoint')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
 

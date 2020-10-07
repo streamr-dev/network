@@ -50,11 +50,13 @@ class TrackerNode extends EventEmitter {
     }
 
     onMessageReceived(peerInfo, rawMessage) {
-        const message = decode(rawMessage, TrackerLayer.TrackerMessage.deserialize)
-        if (message != null) {
-            this.emit(eventPerType[message.type], message, peerInfo.peerId)
-        } else {
-            console.warn(`TrackerNode: invalid message from ${peerInfo}: ${rawMessage}`)
+        if (peerInfo.isTracker()) {
+            const message = decode(rawMessage, TrackerLayer.TrackerMessage.deserialize)
+            if (message != null) {
+                this.emit(eventPerType[message.type], message, peerInfo.peerId)
+            } else {
+                console.warn(`TrackerNode: invalid message from ${peerInfo}: ${rawMessage}`)
+            }
         }
     }
 

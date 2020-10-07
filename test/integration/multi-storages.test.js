@@ -1,8 +1,7 @@
-const { wait, waitForEvent, waitForCondition } = require('streamr-test-utils')
+const { waitForEvent, waitForCondition } = require('streamr-test-utils')
 
 const { startStorageNode, startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const { LOCALHOST } = require('../util')
 
 describe('multiple storage nodes', () => {
     let tracker
@@ -19,13 +18,15 @@ describe('multiple storage nodes', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: trackerPort, id: 'tracker'
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
         })
 
-        node = await startNetworkNode(LOCALHOST, nodePort, 'node')
-        storageOne = await startStorageNode(LOCALHOST, storageOnePort, 'storageOne')
-        storageTwo = await startStorageNode(LOCALHOST, storageTwoPort, 'storageTwo')
-        storageThree = await startStorageNode(LOCALHOST, storageThreePort, 'storageThree')
+        node = await startNetworkNode('127.0.0.1', nodePort, 'node')
+        storageOne = await startStorageNode('127.0.0.1', storageOnePort, 'storageOne')
+        storageTwo = await startStorageNode('127.0.0.1', storageTwoPort, 'storageTwo')
+        storageThree = await startStorageNode('127.0.0.1', storageThreePort, 'storageThree')
 
         node.addBootstrapTracker(tracker.getAddress())
         storageOne.addBootstrapTracker(tracker.getAddress())

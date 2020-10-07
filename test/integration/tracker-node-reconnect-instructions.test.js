@@ -2,12 +2,11 @@ const { waitForEvent } = require('streamr-test-utils')
 const { TrackerLayer } = require('streamr-client-protocol')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const endpointEvents = require('../../src/connection/WsEndpoint').events
-const { disconnectionReasons } = require('../../src/messageTypes')
+const { disconnectionReasons } = require('../../src/connection/WsEndpoint')
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions
@@ -16,16 +15,17 @@ describe('Check tracker instructions to node', () => {
     let tracker
     let nodeOne
     let nodeTwo
-    // let otherNodes
     const streamId = 'stream-1'
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 30950, id: 'tracker'
+            host: '127.0.0.1',
+            port: 30950,
+            id: 'tracker'
         })
 
-        nodeOne = await startNetworkNode(LOCALHOST, 30952, 'node-1')
-        nodeTwo = await startNetworkNode(LOCALHOST, 30953, 'node-2')
+        nodeOne = await startNetworkNode('127.0.0.1', 30952, 'node-1')
+        nodeTwo = await startNetworkNode('127.0.0.1', 30953, 'node-2')
 
         // TODO: a better way of achieving this would be to pass via constructor, but currently not possible when using
         // startNetworkNode function

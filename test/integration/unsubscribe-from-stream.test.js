@@ -1,10 +1,9 @@
-const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
+const { StreamMessage, MessageID } = require('streamr-client-protocol').MessageLayer
 const { waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const { LOCALHOST } = require('../util')
 
 describe('node unsubscribing from a stream', () => {
     let tracker
@@ -13,10 +12,12 @@ describe('node unsubscribing from a stream', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 30450, id: 'tracker'
+            host: '127.0.0.1',
+            port: 30450,
+            id: 'tracker'
         })
-        nodeA = await startNetworkNode(LOCALHOST, 30451, 'a')
-        nodeB = await startNetworkNode(LOCALHOST, 30452, 'b')
+        nodeA = await startNetworkNode('127.0.0.1', 30451, 'a')
+        nodeB = await startNetworkNode('127.0.0.1', 30452, 'b')
 
         nodeA.addBootstrapTracker(tracker.getAddress())
         nodeB.addBootstrapTracker(tracker.getAddress())

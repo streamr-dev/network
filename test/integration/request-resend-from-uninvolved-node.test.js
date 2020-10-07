@@ -3,10 +3,9 @@ const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForStreamToEnd, waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 
-const { UnicastMessage, ControlMessage } = ControlLayer
+const { ControlMessage } = ControlLayer
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const typesOfStreamItems = async (stream) => {
@@ -28,17 +27,19 @@ describe('request resend from uninvolved node', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 28640, id: 'tracker'
+            host: '127.0.0.1',
+            port: 28640,
+            id: 'tracker'
         })
-        uninvolvedNode = await startNetworkNode(LOCALHOST, 28641, 'uninvolvedNode', [{
+        uninvolvedNode = await startNetworkNode('127.0.0.1', 28641, 'uninvolvedNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),
         }])
-        involvedNode = await startNetworkNode(LOCALHOST, 28642, 'involvedNode', [{
+        involvedNode = await startNetworkNode('127.0.0.1', 28642, 'involvedNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),
         }])
-        storageNode = await startStorageNode(LOCALHOST, 28643, 'storageNode', [{
+        storageNode = await startStorageNode('127.0.0.1', 28643, 'storageNode', [{
             store: () => {},
             requestLast: () => intoStream.object([
                 new StreamMessage({

@@ -9,12 +9,20 @@ const Tracker = require('./logic/Tracker')
 const NetworkNode = require('./NetworkNode')
 const logger = require('./helpers/logger')('streamr:bin:composition')
 const { trackerHttpEndpoints } = require('./helpers/trackerHelpers')
-const { startEndpoint, startWebSocketServer, WsEndpoint } = require('./connection/WsEndpoint')
+const { startEndpoint } = require('./connection/WsEndpoint')
 
 const startTracker = async ({
-    host, port, id = uuidv4(), exposeHttpEndpoints = true,
-    maxNeighborsPerNode = 4, advertisedWsUrl = null, name, location, pingInterval,
-    privateKeyFileName, certFileName
+    host,
+    port,
+    id = uuidv4(),
+    exposeHttpEndpoints = true,
+    maxNeighborsPerNode = 4,
+    advertisedWsUrl = null,
+    name,
+    location,
+    pingInterval,
+    privateKeyFileName,
+    certFileName
 }) => {
     const peerInfo = PeerInfo.newTracker(id, name, location)
     const endpoint = await startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval, privateKeyFileName, certFileName)

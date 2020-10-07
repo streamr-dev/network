@@ -2,7 +2,6 @@ const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protoco
 const { wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 
 /**
  * This test verifies that on receiving a message, the receiver will not propagate the message to the sender as they
@@ -16,11 +15,13 @@ describe('optimization: do not propagate to sender', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 30410, id: 'tracker'
+            host: '127.0.0.1',
+            port: 30410,
+            id: 'tracker'
         })
-        n1 = await startNetworkNode(LOCALHOST, 30411, 'node-1')
-        n2 = await startNetworkNode(LOCALHOST, 30412, 'node-2')
-        n3 = await startNetworkNode(LOCALHOST, 30413, 'node-3')
+        n1 = await startNetworkNode('127.0.0.1', 30411, 'node-1')
+        n2 = await startNetworkNode('127.0.0.1', 30412, 'node-2')
+        n3 = await startNetworkNode('127.0.0.1', 30413, 'node-3')
 
         n1.addBootstrapTracker(tracker.getAddress())
         n2.addBootstrapTracker(tracker.getAddress())

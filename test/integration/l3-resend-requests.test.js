@@ -3,10 +3,9 @@ const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForEvent, waitForStreamToEnd } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 
-const { UnicastMessage, ControlMessage } = ControlLayer
+const { ControlMessage } = ControlLayer
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const typesOfStreamItems = async (stream) => {
@@ -32,22 +31,24 @@ describe('resend requests are fulfilled at L3', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 28630, id: 'tracker'
+            host: '127.0.0.1',
+            port: 28630,
+            id: 'tracker'
         })
-        contactNode = await startNetworkNode(LOCALHOST, 28631, 'contactNode', [{
+        contactNode = await startNetworkNode('127.0.0.1', 28631, 'contactNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
         }])
-        neighborOne = await startNetworkNode(LOCALHOST, 28632, 'neighborOne', [{
+        neighborOne = await startNetworkNode('127.0.0.1', 28632, 'neighborOne', [{
             store: () => {},
             requestLast: () => intoStream.object([]),
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
         }])
-        neighborTwo = await startNetworkNode(LOCALHOST, 28633, 'neighborTwo', [])
-        storageNode = await startStorageNode(LOCALHOST, 28634, 'storageNode', [{
+        neighborTwo = await startNetworkNode('127.0.0.1', 28633, 'neighborTwo', [])
+        storageNode = await startStorageNode('127.0.0.1', 28634, 'storageNode', [{
             store: () => {},
             requestLast: () => intoStream.object([
                 new StreamMessage({

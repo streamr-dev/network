@@ -1,20 +1,15 @@
 const { waitForEvent } = require('streamr-test-utils')
 
-const { startEndpoint } = require('../../src/connection/WsEndpoint')
+const { startEndpoint, disconnectionReasons } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
-const { disconnectionReasons } = require('../../src/messageTypes')
-const { LOCALHOST } = require('../util')
 
 describe('duplicate connections are closed', () => {
-    const port1 = 28501
-    const port2 = 28502
-
     let wsEndpoint1
     let wsEndpoint2
 
     beforeEach(async () => {
-        wsEndpoint1 = await startEndpoint(LOCALHOST, port1, PeerInfo.newNode('wsEndpoint1'), null)
-        wsEndpoint2 = await startEndpoint(LOCALHOST, port2, PeerInfo.newNode('wsEndpoint2'), null)
+        wsEndpoint1 = await startEndpoint('127.0.0.1', 28501, PeerInfo.newNode('wsEndpoint1'), null)
+        wsEndpoint2 = await startEndpoint('127.0.0.1', 28502, PeerInfo.newNode('wsEndpoint2'), null)
     })
 
     afterAll(async () => {

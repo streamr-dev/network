@@ -3,7 +3,6 @@ const { waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
-const { LOCALHOST } = require('../util')
 
 describe('tracker assigns storage node to streams', () => {
     let tracker
@@ -13,11 +12,13 @@ describe('tracker assigns storage node to streams', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 31950, id: 'tracker'
+            host: '127.0.0.1',
+            port: 31950,
+            id: 'tracker'
         })
-        storageNode = await startStorageNode(LOCALHOST, 31954, 'storageNode')
-        subscriberOne = await startNetworkNode(LOCALHOST, 31952, 'subscriberOne')
-        subscriberTwo = await startNetworkNode(LOCALHOST, 31953, 'subscriberTwo')
+        storageNode = await startStorageNode('127.0.0.1', 31951, 'storageNode')
+        subscriberOne = await startNetworkNode('127.0.0.1', 31952, 'subscriberOne')
+        subscriberTwo = await startNetworkNode('127.0.0.1', 31953, 'subscriberTwo')
 
         subscriberOne.subscribe('stream-1', 0)
         subscriberTwo.subscribe('stream-2', 0)

@@ -2,7 +2,6 @@ const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protoco
 const { waitForCondition } = require('streamr-test-utils')
 
 const { startTracker, startNetworkNode } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 
 describe('message propagation in network', () => {
     let tracker
@@ -13,7 +12,9 @@ describe('message propagation in network', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 33300, id: 'tracker'
+            host: '127.0.0.1',
+            port: 33300,
+            id: 'tracker'
         })
 
         await Promise.all([

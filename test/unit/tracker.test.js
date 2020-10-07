@@ -1,4 +1,3 @@
-const { LOCALHOST } = require('../util')
 const { startTracker } = require('../../src/composition')
 
 describe('tracker', () => {
@@ -7,7 +6,9 @@ describe('tracker', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: trackerPort, id: 'tracker'
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
         })
     })
 
@@ -16,6 +17,6 @@ describe('tracker', () => {
     })
 
     it('tracker should be able to start and stop successfully', async () => {
-        expect(tracker.getAddress()).toEqual(`ws://${LOCALHOST}:30300`)
+        expect(tracker.getAddress()).toEqual('ws://127.0.0.1:30300')
     })
 })

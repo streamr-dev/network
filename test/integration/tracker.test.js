@@ -3,7 +3,6 @@ const { waitForEvent, waitForCondition } = require('streamr-test-utils')
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const Node = require('../../src/logic/Node')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const { LOCALHOST } = require('../util')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 
 describe('check tracker, nodes and statuses from nodes', () => {
@@ -16,10 +15,12 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 32400, id: 'tracker'
+            host: '127.0.0.1',
+            port: 32400,
+            id: 'tracker'
         })
-        subscriberOne = await startNetworkNode(LOCALHOST, 33371, 'subscriberOne')
-        subscriberTwo = await startNetworkNode(LOCALHOST, 33372, 'subscriberTwo')
+        subscriberOne = await startNetworkNode('127.0.0.1', 33371, 'subscriberOne')
+        subscriberTwo = await startNetworkNode('127.0.0.1', 33372, 'subscriberTwo')
 
         subscriberOne.subscribeToStreamIfHaveNotYet(s1)
         subscriberOne.subscribeToStreamIfHaveNotYet(s2)

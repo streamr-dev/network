@@ -1,10 +1,7 @@
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 
 describe('check network stabilization', () => {
     let tracker
-    const trackerPort = 39000
-
     let nodes
     const MAX_NODES = 10
     const startingPort = 39001
@@ -13,7 +10,9 @@ describe('check network stabilization', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: trackerPort, id: 'tracker'
+            host: '127.0.0.1',
+            port: 39000,
+            id: 'tracker'
         })
         // eslint-disable-next-line no-underscore-dangle
         expect(tracker._formAndSendInstructions).toBeInstanceOf(Function)
@@ -21,7 +20,7 @@ describe('check network stabilization', () => {
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const node = await startNetworkNode(LOCALHOST, startingPort + i, `node-${i}`)
+            const node = await startNetworkNode('127.0.0.1', startingPort + i, `node-${i}`)
             node.subscribe(stream, 0)
             node.addBootstrapTracker(tracker.getAddress())
             nodes.push(node)

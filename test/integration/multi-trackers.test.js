@@ -3,39 +3,33 @@ const { TrackerLayer } = require('streamr-client-protocol')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const { LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 
 describe('multi trackers', () => {
-    const ITERATIONS = 5
-
     let trackerOne
-    const trackerOnePort = 49000
-
     let trackerTwo
-    const trackerTwoPort = 49001
-
     let trackerThree
-    const trackerThreePort = 49002
-
     let nodeOne
-    const nodeOnePort = 49003
-
     let nodeTwo
-    const nodeTwoPort = 49004
 
     beforeEach(async () => {
-        nodeOne = await startNetworkNode(LOCALHOST, nodeOnePort, 'nodeOne')
-        nodeTwo = await startNetworkNode(LOCALHOST, nodeTwoPort, 'nodeTwo')
+        nodeOne = await startNetworkNode('127.0.0.1', 49003, 'nodeOne')
+        nodeTwo = await startNetworkNode('127.0.0.1', 49004, 'nodeTwo')
 
         trackerOne = await startTracker({
-            host: LOCALHOST, port: trackerOnePort, id: 'trackerOne'
+            host: '127.0.0.1',
+            port: 49000,
+            id: 'trackerOne'
         })
         trackerTwo = await startTracker({
-            host: LOCALHOST, port: trackerTwoPort, id: 'trackerTwo'
+            host: '127.0.0.1',
+            port: 49001,
+            id: 'trackerTwo'
         })
         trackerThree = await startTracker({
-            host: LOCALHOST, port: trackerThreePort, id: 'trackerThree'
+            host: '127.0.0.1',
+            port: 49002,
+            id: 'trackerThree'
         })
     })
 
@@ -50,7 +44,7 @@ describe('multi trackers', () => {
         await trackerThree.stop()
     })
 
-    test.each([...Array(ITERATIONS).keys()])('(run %i) node sends stream status to specific tracker', async () => {
+    test('node sends stream status to specific tracker', async () => {
         nodeOne.addBootstrapTracker(trackerOne.getAddress())
         nodeOne.addBootstrapTracker(trackerTwo.getAddress())
         nodeOne.addBootstrapTracker(trackerThree.getAddress())
@@ -95,7 +89,7 @@ describe('multi trackers', () => {
         expect(spyTrackerThree).toBeCalledTimes(1)
     })
 
-    test.each([...Array(ITERATIONS).keys()])('(run %i) only one specific tracker sends instructions about stream', async () => {
+    test('only one specific tracker sends instructions about stream', async () => {
         nodeOne.addBootstrapTracker(trackerOne.getAddress())
         nodeOne.addBootstrapTracker(trackerTwo.getAddress())
         nodeOne.addBootstrapTracker(trackerThree.getAddress())

@@ -5,7 +5,6 @@ const intoStream = require('into-stream')
 const { waitForEvent, wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 /**
  * This test verifies that a node does not attempt to send a resend response to
@@ -58,22 +57,24 @@ describe('resend cancellation on disconnect', () => {
 
     beforeAll(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 28650, id: 'tracker'
+            host: '127.0.0.1',
+            port: 28650,
+            id: 'tracker'
         })
-        contactNode = await startNetworkNode(LOCALHOST, 28651, 'contactNode', [{
+        contactNode = await startNetworkNode('127.0.0.1', 28651, 'contactNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
         }])
-        neighborOne = await startNetworkNode(LOCALHOST, 28652, 'neighborOne', [{
+        neighborOne = await startNetworkNode('127.0.0.1', 28652, 'neighborOne', [{
             store: () => {},
             requestLast: () => createSlowStream(),
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
         }])
-        neighborTwo = await startNetworkNode(LOCALHOST, 28653, 'neighborTwo', [])
-        neighborThree = await startStorageNode(LOCALHOST, 28654, 'neighborThree', [{
+        neighborTwo = await startNetworkNode('127.0.0.1', 28653, 'neighborTwo', [])
+        neighborThree = await startStorageNode('127.0.0.1', 28654, 'neighborThree', [{
             store: () => {},
             requestLast: () => createSlowStream(),
             requestFrom: () => intoStream.object([]),

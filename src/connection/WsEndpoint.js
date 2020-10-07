@@ -1,22 +1,37 @@
-const events = Object.freeze({
-    PEER_CONNECTED: 'streamr:peer:connect',
-    PEER_DISCONNECTED: 'streamr:peer:disconnect',
-    MESSAGE_RECEIVED: 'streamr:message-received'
-})
-
 const { EventEmitter } = require('events')
 
 const qs = require('qs')
 const WebSocket = require('ws')
 const uWS = require('uWebSockets.js')
 
-const { disconnectionCodes, disconnectionReasons } = require('../messageTypes')
 const Metrics = require('../metrics')
 const getLogger = require('../helpers/logger')
 const extraLogger = require('../helpers/logger')('streamr:ws-endpoint')
 
 const { PeerBook } = require('./PeerBook')
 const { PeerInfo } = require('./PeerInfo')
+
+const events = Object.freeze({
+    PEER_CONNECTED: 'streamr:peer:connect',
+    PEER_DISCONNECTED: 'streamr:peer:disconnect',
+    MESSAGE_RECEIVED: 'streamr:message-received'
+})
+
+const disconnectionCodes = Object.freeze({
+    GRACEFUL_SHUTDOWN: 1000,
+    DUPLICATE_SOCKET: 1002,
+    NO_SHARED_STREAMS: 1000,
+    MISSING_REQUIRED_PARAMETER: 1002,
+    DEAD_CONNECTION: 1002
+})
+
+const disconnectionReasons = Object.freeze({
+    GRACEFUL_SHUTDOWN: 'streamr:node:graceful-shutdown',
+    DUPLICATE_SOCKET: 'streamr:endpoint:duplicate-connection',
+    NO_SHARED_STREAMS: 'streamr:node:no-shared-streams',
+    MISSING_REQUIRED_PARAMETER: 'streamr:node:missing-required-parameter',
+    DEAD_CONNECTION: 'streamr:endpoint:dead-connection'
+})
 
 const ab2str = (buf) => Buffer.from(buf).toString('utf8')
 
@@ -586,5 +601,7 @@ module.exports = {
     WsEndpoint,
     events,
     startWebSocketServer,
-    startEndpoint
+    startEndpoint,
+    disconnectionCodes,
+    disconnectionReasons
 }

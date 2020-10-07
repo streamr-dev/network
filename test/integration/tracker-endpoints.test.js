@@ -2,14 +2,13 @@ const got = require('got')
 const { waitForCondition } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 
 describe('tracker endpoint', () => {
     let tracker
     let nodeOne
     let nodeTwo
 
-    const trackerPort = '31750'
+    const trackerPort = 31750
     const streamId = 'stream-1'
     const streamId2 = 'stream-2'
 
@@ -22,10 +21,13 @@ describe('tracker endpoint', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: trackerPort, id: 'tracker', exposeHttpEndpoints: true
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker',
+            exposeHttpEndpoints: true
         })
-        nodeOne = await startNetworkNode(LOCALHOST, 31752, 'node-1', [], null, 'node-1', null, 100)
-        nodeTwo = await startNetworkNode(LOCALHOST, 31753, 'node-2', [], null, 'node-2', location, 100)
+        nodeOne = await startNetworkNode('127.0.0.1', 31751, 'node-1', [], null, 'node-1', null, 100)
+        nodeTwo = await startNetworkNode('127.0.0.1', 31752, 'node-2', [], null, 'node-2', location, 100)
 
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
@@ -45,31 +47,31 @@ describe('tracker endpoint', () => {
     })
 
     it('/topology/', async () => {
-        const jsonResult = await got(`http://${LOCALHOST}:${trackerPort}/topology/`).json()
+        const jsonResult = await got(`http://127.0.0.1:${trackerPort}/topology/`).json()
         expect(jsonResult['stream-1::0']).not.toBeUndefined()
         expect(jsonResult['stream-2::0']).not.toBeUndefined()
     })
 
     it('/topology/stream-1/', async () => {
-        const jsonResult = await got(`http://${LOCALHOST}:${trackerPort}/topology/stream-1/`).json()
+        const jsonResult = await got(`http://127.0.0.1:${trackerPort}/topology/stream-1/`).json()
         expect(jsonResult['stream-1::0']).not.toBeUndefined()
         expect(jsonResult['stream-2::0']).toBeUndefined()
     })
 
     it('/topology/stream-1/0/', async () => {
-        const jsonResult = await got(`http://${LOCALHOST}:${trackerPort}/topology/stream-1/0/`).json()
+        const jsonResult = await got(`http://127.0.0.1:${trackerPort}/topology/stream-1/0/`).json()
         expect(jsonResult['stream-1::0']).not.toBeUndefined()
         expect(jsonResult['stream-2::0']).toBeUndefined()
     })
 
     it('/location/', async () => {
-        const jsonResult = await got(`http://${LOCALHOST}:${trackerPort}/topology/stream-1/0/`).json()
+        const jsonResult = await got(`http://127.0.0.1:${trackerPort}/topology/stream-1/0/`).json()
         expect(jsonResult['stream-1::0']).not.toBeUndefined()
         expect(jsonResult['stream-2::0']).toBeUndefined()
     })
 
     it('/metrics/ endpoint', async () => {
-        const jsonResult = await got(`http://${LOCALHOST}:${trackerPort}/metrics/`).json()
+        const jsonResult = await got(`http://127.0.0.1:${trackerPort}/metrics/`).json()
         expect(jsonResult.trackerMetrics).not.toBeUndefined()
     })
 })

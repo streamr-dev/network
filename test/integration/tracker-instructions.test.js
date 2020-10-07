@@ -4,9 +4,7 @@ const { TrackerLayer } = require('streamr-client-protocol')
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
-const { LOCALHOST } = require('../util')
 const { StreamIdAndPartition } = require('../../src/identifiers')
-const { decode } = require('../../src/helpers/MessageEncoder')
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker
@@ -22,13 +20,15 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: trackerPort, id: 'tracker'
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
         })
         // disable trackers formAndSendInstructions function
         // eslint-disable-next-line no-underscore-dangle
         tracker._formAndSendInstructions = () => {}
-        node1 = await startNetworkNode(LOCALHOST, port1, 'node1')
-        node2 = await startNetworkNode(LOCALHOST, port2, 'node2')
+        node1 = await startNetworkNode('127.0.0.1', port1, 'node1')
+        node2 = await startNetworkNode('127.0.0.1', port2, 'node2')
 
         node1.subscribeToStreamIfHaveNotYet(s1)
         node2.subscribeToStreamIfHaveNotYet(s1)
@@ -54,8 +54,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
             streamId: s1.id,
             streamPartition: s1.partition,
             nodeAddresses: [
-                `ws://${LOCALHOST}:${port1}`,
-                `ws://${LOCALHOST}:${port2}`,
+                `ws://127.0.0.1:${port1}`,
+                `ws://127.0.0.1:${port2}`,
                 'OOPS'
             ],
             counter: 0
@@ -82,10 +82,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         expect([...node1.protocols.nodeToNode.endpoint.getPeers().keys()]).toEqual([
-            `ws://${LOCALHOST}:${trackerPort}`, `ws://${LOCALHOST}:${port2}`
+            `ws://127.0.0.1:${trackerPort}`, `ws://127.0.0.1:${port2}`
         ])
         expect([...node2.protocols.nodeToNode.endpoint.getPeers().keys()]).toEqual([
-            `ws://${LOCALHOST}:${trackerPort}`, `ws://${LOCALHOST}:${port1}`
+            `ws://127.0.0.1:${trackerPort}`, `ws://127.0.0.1:${port1}`
         ])
     })
 })

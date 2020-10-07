@@ -4,25 +4,24 @@ const { waitForEvent, waitForCondition, waitForStreamToEnd } = require('streamr-
 
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
-const { LOCALHOST, getPort } = require('../util')
 
 describe('tracker assigns storage node to streams on any resend', () => {
     let tracker
-    let trackerPort
+    const trackerPort = 32908
     let subscriberOne
     let subscriberTwo
     let storageNode
 
     beforeAll(async () => {
-        trackerPort = await getPort()
-
         tracker = await startTracker({
-            host: LOCALHOST, port: trackerPort, id: 'tracker'
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
         })
-        subscriberOne = await startNetworkNode(LOCALHOST, await getPort(), 'subscriberOne')
-        subscriberTwo = await startNetworkNode(LOCALHOST, await getPort(), 'subscriberTwo')
+        subscriberOne = await startNetworkNode('127.0.0.1', 32905, 'subscriberOne')
+        subscriberTwo = await startNetworkNode('127.0.0.1', 32906, 'subscriberTwo')
 
-        storageNode = await startStorageNode(LOCALHOST, 18634, 'storageNode', [{
+        storageNode = await startStorageNode('127.0.0.1', 32907, 'storageNode', [{
             store: () => {},
             requestLast: () => intoStream.object([
                 new StreamMessage({
@@ -97,7 +96,9 @@ describe('tracker assigns storage node to streams on any resend', () => {
         await tracker.stop()
         // eslint-disable-next-line require-atomic-updates
         tracker = await startTracker({
-            host: LOCALHOST, port: trackerPort, id: 'tracker'
+            host: '127.0.0.1',
+            port: trackerPort,
+            id: 'tracker'
         })
 
         await waitForCondition(() => Object.keys(tracker.getTopology()).length === 2, 10000)

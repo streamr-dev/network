@@ -1,7 +1,6 @@
 const WebSocket = require('ws')
 const uWS = require('uWebSockets.js')
 
-const { LOCALHOST } = require('../util')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEndpoint')
 
@@ -21,7 +20,7 @@ describe('test starting startWebSocketServer', () => {
     })
 
     test('wss using host and port', async (done) => {
-        await startWebSocketServer(LOCALHOST, wssPort).then(async ([wss, listenSocket]) => {
+        await startWebSocketServer('127.0.0.1', wssPort).then(async ([wss, listenSocket]) => {
             expect(wss.constructor.name).toBe('uWS.App')
             expect(typeof listenSocket).toBe('object')
 
@@ -38,11 +37,11 @@ describe('test starting startWebSocketServer', () => {
     })
 
     test('receives unencrypted connections', async (done) => {
-        const [wss, listenSocket] = await startWebSocketServer(LOCALHOST, wssPort)
+        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort)
 
         const peerInfo = PeerInfo.newTracker('id', 'name')
-        const endpoint = new WsEndpoint(LOCALHOST, wssPort, wss, listenSocket, peerInfo, null)
-        const ws = new WebSocket(`ws://${LOCALHOST}:${wssPort}/ws?address=${LOCALHOST}`,
+        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
+        const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
             undefined, {
                 headers: {
                     'streamr-peer-id': 'peerId',
@@ -60,11 +59,11 @@ describe('test starting startWebSocketServer', () => {
     })
 
     test('receives encrypted connections', async (done) => {
-        const [wss, listenSocket] = await startWebSocketServer(LOCALHOST, wssPort, 'test/fixtures/key.pem', 'test/fixtures/cert.pem')
+        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort, 'test/fixtures/key.pem', 'test/fixtures/cert.pem')
 
         const peerInfo = PeerInfo.newTracker('id', 'name')
-        const endpoint = new WsEndpoint(LOCALHOST, wssPort, wss, listenSocket, peerInfo, null, false)
-        const ws = new WebSocket(`wss://${LOCALHOST}:${wssPort}/ws?address=${LOCALHOST}`,
+        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, false)
+        const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
             undefined, {
                 rejectUnauthorized: false, // needed to accept self-signed certificate
                 headers: {

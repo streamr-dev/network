@@ -1,37 +1,34 @@
 const WebSocket = require('ws')
 const { waitForEvent, wait } = require('streamr-test-utils')
 
-const { LOCALHOST } = require('../util')
 const endpointEvents = require('../../src/connection/WsEndpoint').events
-const { startEndpoint } = require('../../src/connection/WsEndpoint')
+const { startEndpoint, disconnectionCodes } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { startTracker } = require('../../src/composition')
-const { disconnectionCodes } = require('../../src/messageTypes')
 
 describe('ws-endpoint', () => {
-    const MAX = 5
     const endpoints = []
 
     it('create five endpoints and init connection between them, should be able to start and stop successfully', async () => {
-        for (let i = 0; i < MAX; i++) {
+        for (let i = 0; i < 5; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const endpoint = await startEndpoint(LOCALHOST, 30690 + i, PeerInfo.newNode(`endpoint-${i}`), null)
+            const endpoint = await startEndpoint('127.0.0.1', 30690 + i, PeerInfo.newNode(`endpoint-${i}`), null)
                 .catch((err) => {
                     throw err
                 })
             endpoints.push(endpoint)
         }
 
-        for (let i = 0; i < MAX; i++) {
+        for (let i = 0; i < 5; i++) {
             expect(endpoints[i].getPeers().size).toBe(0)
         }
 
         const promises = []
 
-        for (let i = 0; i < MAX; i++) {
+        for (let i = 0; i < 5; i++) {
             promises.push(waitForEvent(endpoints[i], endpointEvents.PEER_CONNECTED))
 
-            const nextEndpoint = i + 1 === MAX ? endpoints[0] : endpoints[i + 1]
+            const nextEndpoint = i + 1 === 5 ? endpoints[0] : endpoints[i + 1]
 
             // eslint-disable-next-line no-await-in-loop
             endpoints[i].connect(nextEndpoint.getAddress())
@@ -40,19 +37,19 @@ describe('ws-endpoint', () => {
         await Promise.all(promises)
         await wait(100)
 
-        for (let i = 0; i < MAX; i++) {
+        for (let i = 0; i < 5; i++) {
             expect(endpoints[i].getPeers().size).toEqual(2)
         }
 
-        for (let i = 0; i < MAX; i++) {
+        for (let i = 0; i < 5; i++) {
             // eslint-disable-next-line no-await-in-loop
             await endpoints[i].stop()
         }
     })
 
     it('peer infos are exchanged between connecting endpoints', async () => {
-        const endpointOne = await startEndpoint(LOCALHOST, 30695, PeerInfo.newNode('endpointOne'), null)
-        const endpointTwo = await startEndpoint(LOCALHOST, 30696, PeerInfo.newNode('endpointTwo'), null)
+        const endpointOne = await startEndpoint('127.0.0.1', 30695, PeerInfo.newNode('endpointOne'), null)
+        const endpointTwo = await startEndpoint('127.0.0.1', 30696, PeerInfo.newNode('endpointTwo'), null)
 
         const e1 = waitForEvent(endpointOne, endpointEvents.PEER_CONNECTED)
         const e2 = waitForEvent(endpointTwo, endpointEvents.PEER_CONNECTED)
@@ -75,7 +72,9 @@ describe('ws-endpoint', () => {
 
         beforeEach(async () => {
             tracker = await startTracker({
-                host: LOCALHOST, port: trackerPort, id: 'tracker'
+                host: '127.0.0.1',
+                port: trackerPort,
+                id: 'tracker'
             })
         })
 
@@ -84,19 +83,19 @@ describe('ws-endpoint', () => {
         })
 
         it('tracker must check all required information for new incoming connection and not crash', async () => {
-            let ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/ws`)
+            let ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws`)
             let close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: address not given'])
 
-            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/ws?address`)
+            ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws?address`)
             close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: address not given'])
 
-            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/ws?address=address`)
+            ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws?address=address`)
             close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: peerId not given'])
 
-            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/ws?address=address`,
+            ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws?address=address`,
                 undefined,
                 {
                     headers: {
@@ -106,7 +105,7 @@ describe('ws-endpoint', () => {
             close = await waitForEvent(ws, 'close')
             expect(close).toEqual([disconnectionCodes.MISSING_REQUIRED_PARAMETER, 'Error: peerType not given'])
 
-            ws = new WebSocket(`ws://${LOCALHOST}:${trackerPort}/ws?address=address`,
+            ws = new WebSocket(`ws://127.0.0.1:${trackerPort}/ws?address=address`,
                 undefined, {
                     headers: {
                         'streamr-peer-id': 'peerId',

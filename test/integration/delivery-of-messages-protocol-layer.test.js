@@ -7,7 +7,6 @@ const NodeToNode = require('../../src/protocol/NodeToNode')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
-const { LOCALHOST } = require('../util')
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -20,10 +19,10 @@ describe('delivery of messages in protocol layer', () => {
     let trackerServer
 
     beforeAll(async () => {
-        const wsEndpoint1 = await startEndpoint(LOCALHOST, 28511, PeerInfo.newNode('nodeToNode1'), null)
-        const wsEndpoint2 = await startEndpoint(LOCALHOST, 28512, PeerInfo.newNode('nodeToNode2'), null)
-        const wsEndpoint3 = await startEndpoint(LOCALHOST, 28513, PeerInfo.newNode('trackerNode'), null)
-        const wsEndpoint4 = await startEndpoint(LOCALHOST, 28514, PeerInfo.newNode('trackerServer'), null)
+        const wsEndpoint1 = await startEndpoint('127.0.0.1', 28511, PeerInfo.newNode('nodeToNode1'), null)
+        const wsEndpoint2 = await startEndpoint('127.0.0.1', 28512, PeerInfo.newNode('nodeToNode2'), null)
+        const wsEndpoint3 = await startEndpoint('127.0.0.1', 28513, PeerInfo.newNode('trackerNode'), null)
+        const wsEndpoint4 = await startEndpoint('127.0.0.1', 28514, PeerInfo.newTracker('trackerServer'), null)
 
         nodeToNode1 = new NodeToNode(wsEndpoint1)
         nodeToNode2 = new NodeToNode(wsEndpoint2)

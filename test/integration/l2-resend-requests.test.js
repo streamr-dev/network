@@ -3,10 +3,9 @@ const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForStreamToEnd, waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { LOCALHOST } = require('../util')
 const Node = require('../../src/logic/Node')
 
-const { UnicastMessage, ControlMessage } = ControlLayer
+const { ControlMessage } = ControlLayer
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 const typesOfStreamItems = async (stream) => {
@@ -29,15 +28,17 @@ describe('resend requests are fulfilled at L2', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 28610, id: 'tracker'
+            host: '127.0.0.1',
+            port: 28610,
+            id: 'tracker'
         })
-        contactNode = await startNetworkNode(LOCALHOST, 28611, 'contactNode', [{
+        contactNode = await startNetworkNode('127.0.0.1', 28611, 'contactNode', [{
             store: () => {},
             requestLast: () => intoStream.object([]),
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
         }])
-        n1 = await startNetworkNode(LOCALHOST, 28612, 'n1', [{
+        n1 = await startNetworkNode('127.0.0.1', 28612, 'n1', [{
             store: () => {},
             requestLast: () => intoStream.object([
                 new StreamMessage({
@@ -48,7 +49,7 @@ describe('resend requests are fulfilled at L2', () => {
             requestFrom: () => intoStream.object([]),
             requestRange: () => intoStream.object([]),
         }])
-        n2 = await startNetworkNode(LOCALHOST, 28613, 'n2', [{
+        n2 = await startNetworkNode('127.0.0.1', 28613, 'n2', [{
             store: () => {},
             requestLast: () => intoStream.object([]),
             requestFrom: () => intoStream.object([

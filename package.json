@@ -73,7 +73,6 @@
     "got": "^11.7.0",
     "into-stream": "^6.0.0",
     "jest": "^26.4.2",
-    "portfinder": "^1.0.28",
     "streamr-test-utils": "^1.0.4"
   },
   "optionalDependencies": {

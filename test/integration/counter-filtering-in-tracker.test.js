@@ -3,9 +3,7 @@ const { wait, waitForEvent } = require('streamr-test-utils')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { startTracker } = require('../../src/composition')
 const TrackerNode = require('../../src/protocol/TrackerNode')
-const Tracker = require('../../src/logic/Tracker')
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
-const { LOCALHOST } = require('../util')
 
 const WAIT_TIME = 200
 
@@ -31,7 +29,9 @@ describe('tracker: counter filtering', () => {
 
     beforeEach(async () => {
         tracker = await startTracker({
-            host: LOCALHOST, port: 30420, id: 'tracker'
+            host: '127.0.0.1',
+            port: 30420,
+            id: 'tracker'
         })
         const endpoint1 = await startEndpoint('127.0.0.1', 30421, PeerInfo.newNode('trackerNode1'), null)
         const endpoint2 = await startEndpoint('127.0.0.1', 30422, PeerInfo.newNode('trackerNode2'), null)
