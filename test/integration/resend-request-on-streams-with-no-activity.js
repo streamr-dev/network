@@ -1,26 +1,24 @@
 const intoStream = require('into-stream')
 const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
-const { waitForEvent, waitForCondition, waitForStreamToEnd } = require('streamr-test-utils')
+const { waitForEvent, waitForStreamToEnd } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 
-describe('tracker assigns storage node to streams on any resend', () => {
+describe('resend requests on streams with no activity', () => {
     let tracker
-    const trackerPort = 32908
     let subscriberOne
     let subscriberTwo
     let storageNode
 
-    beforeAll(async () => {
+    beforeEach(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
-            port: trackerPort,
+            port: 32904,
             id: 'tracker'
         })
         subscriberOne = await startNetworkNode('127.0.0.1', 32905, 'subscriberOne')
         subscriberTwo = await startNetworkNode('127.0.0.1', 32906, 'subscriberTwo')
-
         storageNode = await startStorageNode('127.0.0.1', 32907, 'storageNode', [{
             store: () => {},
             requestLast: () => intoStream.object([
@@ -60,56 +58,17 @@ describe('tracker assigns storage node to streams on any resend', () => {
         ])
     })
 
-    afterAll(async () => {
+    afterEach(async () => {
         await storageNode.stop()
         await subscriberOne.stop()
         await subscriberTwo.stop()
         await tracker.stop()
     })
 
-    it('tracker assigns storage node to any streams on any resend by default', async () => {
-        expect(tracker.getTopology()).toEqual({})
-
+    it('resend request works on streams that are not subscribed to', async () => {
         const stream = subscriberOne.requestResendLast('streamId', 0, 'requestId', 10)
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.STORAGE_NODES_REQUEST)
-        await waitForStreamToEnd(stream)
-
-        expect(tracker.getTopology()).toEqual({
-            'streamId::0': {
-                storageNode: []
-            }
-        })
-
-        const stream2 = subscriberTwo.requestResendLast('streamId2', 1, 'requestId2', 10)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.STORAGE_NODES_REQUEST)
-        await waitForStreamToEnd(stream2)
-
-        expect(tracker.getTopology()).toEqual({
-            'streamId::0': {
-                storageNode: []
-            },
-            'streamId2::1': {
-                storageNode: []
-            }
-        })
-
-        await tracker.stop()
-        // eslint-disable-next-line require-atomic-updates
-        tracker = await startTracker({
-            host: '127.0.0.1',
-            port: trackerPort,
-            id: 'tracker'
-        })
-
-        await waitForCondition(() => Object.keys(tracker.getTopology()).length === 2, 10000)
-
-        expect(tracker.getTopology()).toEqual({
-            'streamId::0': {
-                storageNode: []
-            },
-            'streamId2::1': {
-                storageNode: []
-            }
-        })
-    }, 15000)
+        const data = await waitForStreamToEnd(stream)
+        expect(data.length).toEqual(0)
+    })
 })

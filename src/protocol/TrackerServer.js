@@ -74,7 +74,7 @@ class TrackerServer extends EventEmitter {
     onMessageReceived(peerInfo, rawMessage) {
         const message = decode(rawMessage, TrackerLayer.TrackerMessage.deserialize)
         if (message != null) {
-            this.emit(eventPerType[message.type], message, peerInfo.peerId, peerInfo.isStorage())
+            this.emit(eventPerType[message.type], message, peerInfo.peerId)
         } else {
             console.warn(`TrackerServer: invalid message from ${peerInfo}: ${rawMessage}`)
         }

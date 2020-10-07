@@ -47,16 +47,15 @@ describe('multiple storage nodes', () => {
 
         await waitForCondition(() => Object.keys(tracker.getTopology()).length === 2)
 
-        // TODO why node is not subscribed to both? weird topologies
         expect(tracker.getTopology()).toEqual({
             'stream-1::0': {
-                node: ['storageTwo'],
-                storageOne: ['storageTwo'],
+                node: ['storageOne', 'storageTwo'],
+                storageOne: ['node', 'storageTwo'],
                 storageTwo: ['node', 'storageOne']
             },
             'stream-2::0': {
-                node: ['storageTwo'],
-                storageOne: ['storageTwo'],
+                node: ['storageOne', 'storageTwo'],
+                storageOne: ['node', 'storageTwo'],
                 storageTwo: ['node', 'storageOne']
             }
         })

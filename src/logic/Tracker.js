@@ -32,14 +32,23 @@ module.exports = class Tracker extends EventEmitter {
         this.overlayConnectionRtts = {} // nodeId => connected nodeId => rtt
         this.nodeLocations = {} // nodeId => location
         this.instructionCounter = new InstructionCounter()
-        this.storageNodes = new Map()
+        this.storageNodes = new Set()
 
         this.protocols = opts.protocols
         this.peerInfo = opts.peerInfo
 
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (nodeId, isStorage) => this.onNodeDisconnected(nodeId))
-        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage, nodeId, isStorage) => this.processNodeStatus(statusMessage, nodeId, isStorage))
-        this.protocols.trackerServer.on(TrackerServer.events.STORAGE_NODES_REQUEST, (message, nodeId, isStorage) => this.findStorageNodes(message, nodeId))
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_CONNECTED, (nodeId, isStorage) => {
+            this.onNodeConnected(nodeId, isStorage)
+        })
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_DISCONNECTED, (nodeId) => {
+            this.onNodeDisconnected(nodeId)
+        })
+        this.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
+            this.processNodeStatus(statusMessage, nodeId)
+        })
+        this.protocols.trackerServer.on(TrackerServer.events.STORAGE_NODES_REQUEST, (message, nodeId) => {
+            this.findStorageNodes(message, nodeId)
+        })
 
         this.metrics = new Metrics(this.peerInfo.peerId)
 
@@ -47,58 +56,46 @@ module.exports = class Tracker extends EventEmitter {
         this.logger.debug('started %s', this.peerInfo.peerId)
     }
 
-    processNodeStatus(statusMessage, source, isStorage) {
-        this.metrics.inc('processNodeStatus')
-        const { status } = statusMessage
-        const { rtts, location } = status
-        const streams = this.instructionCounter.filterStatus(status, source)
+    onNodeConnected(node, isStorage) {
         if (isStorage) {
-            this.storageNodes.set(source, streams)
+            this.storageNodes.add(node)
         }
-        this._updateRtts(source, rtts)
-        this._updateLocation(source, location)
-        this._createNewOverlayTopologies(streams)
-        this._updateAllStorages()
-        this._updateNode(source, streams)
-        this._formAndSendInstructions(source, streams)
     }
 
     onNodeDisconnected(node) {
         this.metrics.inc('onNodeDisconnected')
-        this.storageNodes.delete(node)
         this._removeNode(node)
         this.logger.debug('unregistered node %s from tracker', node)
+    }
+
+    processNodeStatus(statusMessage, source) {
+        this.metrics.inc('processNodeStatus')
+        const { status } = statusMessage
+        const { streams, rtts, location } = status
+        const filteredStreams = this.instructionCounter.filterStatus(status, source)
+
+        // update RTTs and location
+        this.overlayConnectionRtts[source] = rtts
+        this._updateLocation(source, location)
+
+        // update topology
+        this._createNewOverlayTopologies(streams)
+        this._updateAllStorages()
+        if (!this.storageNodes.has(source)) {
+            this._updateNode(source, filteredStreams, streams)
+            this._formAndSendInstructions(source, Object.keys(streams))
+        } else {
+            this._formAndSendInstructions(source, Object.keys(this.overlayPerStream))
+        }
     }
 
     findStorageNodes(storageNodesRequest, source) {
         this.metrics.inc('findStorageNodes')
         const streamId = StreamIdAndPartition.fromMessage(storageNodesRequest)
-
-        // Storage node may have restarted which means it will be no longer assigned to its previous streams,
-        // especially those that aren't actively being subscribed or produced to. Thus on encountering a
-        // unknown streamId, we need to create a new topology and assign storage node(s) to it to ensure
-        // that resend requests for inactive streams get properly handled.
-        const requestStreams = {}
-        requestStreams[streamId.key()] = {
-            inboundNodes: [], outboundNodes: []
-        }
-
-        this._createNewOverlayTopologies(requestStreams)
-
-        let foundStorageNodes = []
-        this.storageNodes.forEach((streams, node) => {
-            if (Object.keys(streams).includes(streamId.key())) {
-                foundStorageNodes.push(node)
-            }
-        })
-
-        if (!foundStorageNodes.length) {
-            foundStorageNodes = [...this.storageNodes.keys()]
-        }
-
-        this._updateAllStorages()
-        this.protocols.trackerServer.sendStorageNodesResponse(source, streamId, foundStorageNodes)
-            .catch((e) => this.logger.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`))
+        this.protocols.trackerServer.sendStorageNodesResponse(source, streamId, [...this.storageNodes])
+            .catch((e) => {
+                this.logger.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`)
+            })
     }
 
     stop() {
@@ -110,29 +107,6 @@ module.exports = class Tracker extends EventEmitter {
         return this.protocols.trackerServer.getAddress()
     }
 
-    _addMissingStreams(streams) {
-        const existingStreams = Object.keys(this.overlayPerStream)
-        const storageStreams = Object.keys(streams)
-        const missingStreams = existingStreams.filter((stream) => !storageStreams.includes(stream))
-
-        missingStreams.forEach((stream) => {
-            // eslint-disable-next-line no-param-reassign
-            streams[stream] = {
-                inboundNodes: [], outboundNodes: []
-            }
-        })
-
-        return streams
-    }
-
-    _updateAllStorages() {
-        this.storageNodes.forEach((streams, storageId) => {
-            const updateStreams = this._addMissingStreams(streams)
-            this.storageNodes.set(storageId, updateStreams)
-            this._updateNode(storageId, updateStreams)
-        })
-    }
-
     _createNewOverlayTopologies(streams) {
         Object.keys(streams).forEach((streamId) => {
             if (this.overlayPerStream[streamId] == null) {
@@ -141,36 +115,35 @@ module.exports = class Tracker extends EventEmitter {
         })
     }
 
-    _updateNode(node, streams) {
-        if (isEmpty(streams)) {
-            this._removeNode(node)
-            return
-        }
+    // Ensure each storage node is associated with each stream
+    _updateAllStorages() {
+        Object.values(this.overlayPerStream).forEach((overlayTopology) => {
+            this.storageNodes.forEach((storageNode) => {
+                if (!overlayTopology.hasNode(storageNode)) {
+                    overlayTopology.update(storageNode, [])
+                }
+            })
+        })
+    }
 
-        let newNode = true
-
+    _updateNode(node, filteredStreams, allStreams) {
         // Add or update
-        Object.entries(streams).forEach(([streamKey, { inboundNodes, outboundNodes }]) => {
-            newNode = this.overlayPerStream[streamKey].hasNode(node) ? false : newNode
+        Object.entries(filteredStreams).forEach(([streamKey, { inboundNodes, outboundNodes }]) => {
             const neighbors = new Set([...inboundNodes, ...outboundNodes])
             this.overlayPerStream[streamKey].update(node, neighbors)
         })
 
         // Remove
-        const currentStreamKeys = new Set(Object.keys(streams))
+        const currentStreamKeys = new Set(Object.keys(allStreams))
         Object.entries(this.overlayPerStream)
             .filter(([streamKey, _]) => !currentStreamKeys.has(streamKey))
             .forEach(([streamKey, overlayTopology]) => this._leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node))
 
-        if (newNode) {
-            this.logger.debug('registered new node %s for streams %j', node, Object.keys(streams))
-        } else {
-            this.logger.debug('setup existing node %s for streams %j', node, Object.keys(streams))
-        }
+        this.logger.debug('update node %s for streams %j', node, Object.keys(allStreams))
     }
 
-    _formAndSendInstructions(node, streams) {
-        Object.keys(streams).forEach((streamKey) => {
+    _formAndSendInstructions(node, streamKeys) {
+        streamKeys.forEach((streamKey) => {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
             Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
                 this.metrics.inc('sendInstruction')
@@ -187,6 +160,7 @@ module.exports = class Tracker extends EventEmitter {
 
     _removeNode(node) {
         this.metrics.inc('_removeNode')
+        this.storageNodes.delete(node)
         delete this.overlayConnectionRtts[node]
         delete this.nodeLocations[node]
         Object.entries(this.overlayPerStream)
@@ -201,10 +175,6 @@ module.exports = class Tracker extends EventEmitter {
             this.instructionCounter.removeStream(streamKey)
             delete this.overlayPerStream[streamKey]
         }
-    }
-
-    _updateRtts(source, rtts) {
-        this.overlayConnectionRtts[source] = rtts
     }
 
     getTopology(streamId = null, partition = null) {
