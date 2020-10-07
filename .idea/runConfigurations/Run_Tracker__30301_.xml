@@ -1,0 +1,5 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Run Tracker (30301)" type="NodeJSConfigurationType" application-parameters="0x1d61714986096078dd2052667321dcacf2ea2bbc7df5a22d11979103b1a1d951 tracker --port=30301" path-to-js-file="tracker.js" working-dir="$PROJECT_DIR$">
+    <method v="2" />
+  </configuration>
+</component>
