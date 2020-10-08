@@ -43,7 +43,7 @@ class NodeToNode extends EventEmitter {
     }
 
     sendData(receiverNodeId, streamMessage) {
-        this.send(receiverNodeId, new ControlLayer.BroadcastMessage({
+        return this.send(receiverNodeId, new ControlLayer.BroadcastMessage({
             requestId: '', // TODO: how to echo here the requestId of the original SubscribeRequest?
             streamMessage,
         }))
