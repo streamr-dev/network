@@ -4,12 +4,10 @@ const getLogger = require('../helpers/logger')
 const TrackerServer = require('../protocol/TrackerServer')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
-const { getGeoIp } = require('../helpers/GeoIpLookup')
 
 const InstructionCounter = require('./InstructionCounter')
+const LocationManager = require('./LocationManager')
 const OverlayTopology = require('./OverlayTopology')
-
-const isEmpty = (obj) => Object.keys(obj).length === 0 && obj.constructor === Object
 
 module.exports = class Tracker extends EventEmitter {
     constructor(opts) {
@@ -30,7 +28,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this.overlayPerStream = {} // streamKey => overlayTopology, where streamKey = streamId::partition
         this.overlayConnectionRtts = {} // nodeId => connected nodeId => rtt
-        this.nodeLocations = {} // nodeId => location
+        this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
         this.storageNodes = new Set()
 
@@ -76,7 +74,11 @@ module.exports = class Tracker extends EventEmitter {
 
         // update RTTs and location
         this.overlayConnectionRtts[source] = rtts
-        this._updateLocation(source, location)
+        this.locationManager.updateLocation({
+            node: source,
+            location,
+            address: this.protocols.trackerServer.endpoint.resolveAddress(source),
+        })
 
         // update topology
         this._createNewOverlayTopologies(streams)
@@ -162,7 +164,7 @@ module.exports = class Tracker extends EventEmitter {
         this.metrics.inc('_removeNode')
         this.storageNodes.delete(node)
         delete this.overlayConnectionRtts[node]
-        delete this.nodeLocations[node]
+        this.locationManager.removeNode(node)
         Object.entries(this.overlayPerStream)
             .forEach(([streamKey, overlayTopology]) => this._leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node))
     }
@@ -202,46 +204,12 @@ module.exports = class Tracker extends EventEmitter {
         return topology
     }
 
-    _updateLocation(node, location) {
-        if (this._isValidNodeLocation(location)) {
-            this.nodeLocations[node] = location
-        } else if (!this._isValidNodeLocation(this.getNodeLocation(node))) {
-            const geoip = this._getGeoIpLocation(node)
-            if (geoip) {
-                this.nodeLocations[node] = {
-                    country: geoip.country,
-                    city: geoip.city,
-                    latitude: geoip.ll[0],
-                    longitude: geoip.ll[1]
-                }
-            }
-        }
-    }
-
-    _getGeoIpLocation(node) {
-        const address = this.protocols.trackerServer.endpoint.peerBook.getAddress(node)
-        if (address) {
-            try {
-                const ip = address.split(':')[1].replace('//', '')
-                return getGeoIp(ip)
-            } catch (e) {
-                this.logger.error('Tracker could not parse ip from address', node, address)
-            }
-        }
-        return null
-    }
-
-    // eslint-disable-next-line class-methods-use-this
-    _isValidNodeLocation(location) {
-        return location && (location.country || location.city || location.latitude || location.longitude)
-    }
-
     getAllNodeLocations() {
-        return this.nodeLocations
+        return this.locationManager.getAllNodeLocations()
     }
 
     getNodeLocation(node) {
-        return this.nodeLocations[node]
+        return this.locationManager.getNodeLocation(node)
     }
 
     getStorageNodes() {
