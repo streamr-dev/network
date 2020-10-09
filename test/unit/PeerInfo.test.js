@@ -38,4 +38,19 @@ describe('PeerInfo', () => {
     it('PeerInfo constructor throws if unknown peerType', () => {
         expect(() => new PeerInfo('peerId', 'unknownPeerType')).toThrow()
     })
+
+    it('use id as name if name not given', () => {
+        const peerInfo = PeerInfo.newNode('nodeId', null, {})
+        expect(peerInfo.peerName).toEqual('nodeId')
+    })
+
+    it('use default location if not given', () => {
+        const peerInfo = PeerInfo.newNode('nodeId', 'nodeName', null)
+        expect(peerInfo.location).toEqual({
+            city: null,
+            country: null,
+            latitude: null,
+            longitude: null
+        })
+    })
 })

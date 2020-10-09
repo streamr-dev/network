@@ -62,7 +62,7 @@ describe('Check tracker instructions to node', () => {
             waitForEvent(nodeTwo, Node.events.NODE_SUBSCRIBED)
         ])
         // send empty list
-        await tracker.protocols.trackerServer.endpoint.sendSync(
+        await tracker.protocols.trackerServer.endpoint.send(
             'node-1',
             new TrackerLayer.InstructionMessage({
                 requestId: 'requestId',

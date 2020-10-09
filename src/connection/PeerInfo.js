@@ -24,27 +24,19 @@ class PeerInfo {
         if (!peerType) {
             throw new Error('peerType not given')
         }
-        if (!peerName) {
-            // eslint-disable-next-line no-param-reassign
-            peerName = peerId
-        }
-        if (!location) {
-            // eslint-disable-next-line no-param-reassign
-            location = {
-                latitude: null,
-                longitude: null,
-                country: null,
-                city: null
-            }
-        }
         if (!Object.values(peerTypes).includes(peerType)) {
             throw new Error(`peerType ${peerType} not in peerTypes list`)
         }
 
         this.peerId = peerId
         this.peerType = peerType
-        this.peerName = peerName
-        this.location = location
+        this.peerName = peerName || peerId
+        this.location = location || {
+            latitude: null,
+            longitude: null,
+            country: null,
+            city: null
+        }
     }
 
     isTracker() {

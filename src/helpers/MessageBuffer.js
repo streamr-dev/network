@@ -1,38 +1,49 @@
-const LRU = require('lru-cache')
-
 module.exports = class MessageBuffer {
-    constructor(timeoutInMs, maxSize = 10000) {
+    constructor(timeoutInMs, maxSize = 10000, onTimeout = () => {}) {
         this.buffer = {}
+        this.timeoutRefs = {}
         this.timeoutInMs = timeoutInMs
         this.maxSize = maxSize
-        this.pruneInterval = null
+        this.onTimeout = onTimeout
     }
 
     put(id, message) {
-        if (!this._hasBufferFor(id)) {
-            this.buffer[id] = new LRU({
-                max: this.maxSize,
-                maxAge: this.timeoutInMs
-            })
+        if (!this.buffer[id]) {
+            this.buffer[id] = []
+            this.timeoutRefs[id] = []
         }
 
-        this.buffer[id].set(message, true)
-
-        // 'lru-cache' library itself does not pro-actively prune items as they get old
-        if (this.pruneInterval === null) {
-            this.pruneInterval = setInterval(() => {
-                Object.values(this.buffer).forEach((messages) => messages.prune())
-            }, this.timeoutInMs)
+        if (this.buffer[id].length >= this.maxSize) {
+            this.pop(id)
         }
+
+        this.buffer[id].push(message)
+        this.timeoutRefs[id].push(setTimeout(() => {
+            this.pop(id)
+            this.onTimeout(id)
+        }, this.timeoutInMs))
+    }
+
+    pop(id) {
+        if (this.buffer[id]) {
+            const message = this.buffer[id].shift()
+            const ref = this.timeoutRefs[id].shift()
+            clearTimeout(ref)
+
+            if (!this.buffer[id].length) {
+                delete this.buffer[id]
+            }
+
+            return message
+        }
+        return null
     }
 
     popAll(id) {
-        if (this._hasBufferFor(id)) {
-            const messages = []
-            if (this.buffer[id].length) {
-                this.buffer[id].rforEach((value, key) => messages.push(key))
-            }
-            this.buffer[id].reset()
+        if (this.buffer[id]) {
+            const messages = this.buffer[id]
+            this.timeoutRefs[id].forEach((ref) => clearTimeout(ref))
+            delete this.timeoutRefs[id]
             delete this.buffer[id]
             return messages
         }
@@ -41,8 +52,6 @@ module.exports = class MessageBuffer {
 
     clear() {
         Object.keys(this.buffer).forEach((id) => this.popAll(id))
-        clearInterval(this.pruneInterval)
-        this.pruneInterval = null
     }
 
     size() {
@@ -51,9 +60,5 @@ module.exports = class MessageBuffer {
             total += messages.length
         })
         return total
-    }
-
-    _hasBufferFor(id) {
-        return this.buffer[id]
     }
 }

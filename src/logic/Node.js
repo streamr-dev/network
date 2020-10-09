@@ -1,6 +1,5 @@
 const { EventEmitter } = require('events')
 
-const LRU = require('lru-cache')
 const allSettled = require('promise.allsettled')
 const { Utils } = require('streamr-client-protocol')
 
@@ -8,6 +7,7 @@ const getLogger = require('../helpers/logger')
 const NodeToNode = require('../protocol/NodeToNode')
 const TrackerNode = require('../protocol/TrackerNode')
 const MessageBuffer = require('../helpers/MessageBuffer')
+const SeenButNotPropagatedSet = require('../helpers/SeenButNotPropagatedSet')
 const { disconnectionReasons } = require('../connection/WsEndpoint')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
@@ -30,10 +30,6 @@ const events = Object.freeze({
 })
 
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
-
-const messageIdToStr = ({
-    streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId
-}) => `${streamId}-${streamPartition}-${timestamp}-${sequenceNumber}-${publisherId}-${msgChainId}`
 
 class Node extends EventEmitter {
     constructor(opts) {
@@ -71,7 +67,10 @@ class Node extends EventEmitter {
         this.logger.debug('started %s (%s)', this.peerInfo.peerId, this.peerInfo.peerName)
 
         this.streams = new StreamManager()
-        this.messageBuffer = new MessageBuffer(this.opts.bufferTimeoutInMs, this.opts.bufferMaxSize)
+        this.messageBuffer = new MessageBuffer(this.opts.bufferTimeoutInMs, this.opts.bufferMaxSize, (streamId) => {
+            this.logger.debug(`failed to deliver buffered messages of stream ${streamId}`)
+        })
+        this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
         this.resendHandler = new ResendHandler(this.opts.resendStrategies, this.logger.error.bind(this.logger)) // TODO remove notifyError?
 
         this.trackers = new Set()
@@ -94,12 +93,6 @@ class Node extends EventEmitter {
         this.metrics = new Metrics(this.peerInfo.peerId)
 
         this.disconnectionTimers = {}
-
-        this.seenButNotPropagated = new LRU({
-            max: this.opts.bufferMaxSize,
-            maxAge: this.opts.bufferMaxSize
-        })
-
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
     }
 
@@ -269,7 +262,7 @@ class Node extends EventEmitter {
         if (isUnseen) {
             this.emit(events.UNSEEN_MESSAGE_RECEIVED, streamMessage, source)
         }
-        if (isUnseen || this.seenButNotPropagated.has(messageIdToStr(streamMessage.messageId))) {
+        if (isUnseen || this.seenButNotPropagatedSet.has(streamMessage)) {
             this.logger.debug('received from %s data %j', source, streamMessage.messageId)
             this._propagateMessage(streamMessage, source)
         } else {
@@ -291,12 +284,12 @@ class Node extends EventEmitter {
                 })
             })
 
-            this.seenButNotPropagated.del(messageIdToStr(streamMessage.messageId))
+            this.seenButNotPropagatedSet.delete(streamMessage)
             this.emit(events.MESSAGE_PROPAGATED, streamMessage)
         } else {
             this.logger.debug('put %j back to buffer because could not propagate to %d nodes or more',
                 streamMessage.messageId, MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION)
-            this.seenButNotPropagated.set(messageIdToStr(streamMessage.messageId), true)
+            this.seenButNotPropagatedSet.add(streamMessage)
             this.messageBuffer.put(streamIdAndPartition.key(), [streamMessage, source])
         }
     }
@@ -484,7 +477,7 @@ class Node extends EventEmitter {
             nodeMetrics,
             resendMetrics,
             messageBufferSize: this.messageBuffer.size(),
-            seenButNotPropagated: this.seenButNotPropagated.length
+            seenButNotPropagated: this.seenButNotPropagatedSet.size()
         }
     }
 }
