@@ -13,14 +13,7 @@ function hashCode(str) {
 
 class TrackerRegistry {
     constructor(records) {
-        this.records = []
-        for (let i = 0; i < records.length; ++i) {
-            try {
-                this.records.push(JSON.parse(records[i]))
-            } catch (e) {
-                throw new Error(`Element records[${i}] not parsable as object: ${records[i]}`)
-            }
-        }
+        this.records = records
     }
 
     getTracker(streamKey) {
@@ -55,7 +48,15 @@ function createTrackerRegistry(servers) {
 
 async function getTrackerRegistryFromContract({ contractAddress, jsonRpcProvider }) {
     const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
-    return createTrackerRegistry(trackers)
+    const records = []
+    for (let i = 0; i < trackers.length; ++i) {
+        try {
+            records.push(JSON.parse(trackers[i]))
+        } catch (e) {
+            throw new Error(`Element trackers[${i}] not parsable as object: ${trackers[i]}`)
+        }
+    }
+    return createTrackerRegistry(records)
 }
 
 export {

@@ -79,13 +79,13 @@ describe('TrackerRegistry', () => {
     })
 
     test('createTrackerRegistry', () => {
-        const trackerRegistry = createTrackerRegistry([JSON.stringify({
+        const trackerRegistry = createTrackerRegistry([{
             http: 'http://10.200.10.1:11111',
             ws: 'ws://10.200.10.1:30301'
-        }), JSON.stringify({
+        }, {
             http: 'http://10.200.10.1:11112',
             ws: 'ws://10.200.10.1:30302'
-        })])
+        }])
 
         expect(trackerRegistry.getAllTrackers()).toStrictEqual([
             {
