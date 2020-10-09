@@ -65,7 +65,7 @@ import OrderingUtil from './utils/OrderingUtil'
 import SigningUtil from './utils/SigningUtil'
 import StreamMessageValidator from './utils/StreamMessageValidator'
 import CachingStreamMessageValidator from './utils/CachingStreamMessageValidator'
-import { TrackerRegistry, getTrackerRegistryFromContract, createTrackerRegistry, fetchTrackers } from './utils/TrackerRegistry'
+import { getTrackerRegistryFromContract, createTrackerRegistry } from './utils/TrackerRegistry'
 import MessageIDStrict from './protocol/message_layer/MessageIDStrict'
 import MessageRefStrict from './protocol/message_layer/MessageRefStrict'
 import GroupKeyMessage from './protocol/message_layer/GroupKeyMessage'
@@ -129,10 +129,8 @@ export const Utils = {
     StreamMessageValidator,
     CachingStreamMessageValidator,
     SigningUtil,
-    TrackerRegistry,
-    getTrackerRegistryFromContract,
     createTrackerRegistry,
-    fetchTrackers
+    getTrackerRegistryFromContract
 }
 
 export default {

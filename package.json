@@ -64,7 +64,6 @@
     "debug": "^4.2.0",
     "ethers": "^5.0.14",
     "eventemitter3": "^4.0.7",
-    "hashring": "^3.2.0",
     "heap": "^0.2.6",
     "promise-memoize": "^1.2.1",
     "secp256k1": "^4.0.2",

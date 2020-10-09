@@ -1,4 +1,4 @@
-import { createTrackerRegistry, getTrackerRegistryFromContract, fetchTrackers } from '../../src/utils/TrackerRegistry'
+import { createTrackerRegistry, getTrackerRegistryFromContract } from '../../src/utils/TrackerRegistry'
 
 const contractAddress = '0xBFCF120a8fD17670536f1B27D9737B775b2FD4CF'
 const jsonRpcProvider = 'http://localhost:8545'
@@ -10,9 +10,18 @@ describe('TrackerRegistry', () => {
         })
 
         expect(trackerRegistry.getAllTrackers()).toStrictEqual([
-            'ws://10.200.10.1:30301',
-            'ws://10.200.10.1:30302',
-            'ws://10.200.10.1:30303'
+            {
+                http: 'http://10.200.10.1:11111',
+                ws: 'ws://10.200.10.1:30301'
+            },
+            {
+                http: 'http://10.200.10.1:11112',
+                ws: 'ws://10.200.10.1:30302'
+            },
+            {
+                http: 'http://10.200.10.1:11113',
+                ws: 'ws://10.200.10.1:30303'
+            }
         ])
     })
 
@@ -49,78 +58,44 @@ describe('TrackerRegistry', () => {
         }
     })
 
-    test('has method', async () => {
-        const trackerRegistry = await getTrackerRegistryFromContract({
-            contractAddress, jsonRpcProvider
-        })
-
-        expect(trackerRegistry.has('ws://10.200.10.1:30301')).toBeTruthy()
-        expect(trackerRegistry.has('ws://10.200.10.1:30302')).toBeTruthy()
-        expect(trackerRegistry.has('ws://10.200.10.1:30303')).toBeTruthy()
-    })
-
-    test('add/remove servers', async () => {
-        const trackerRegistry = await getTrackerRegistryFromContract({
-            contractAddress, jsonRpcProvider
-        })
-
-        trackerRegistry.remove('ws://10.200.10.1:30301')
-        expect(trackerRegistry.has('ws://10.200.10.1:30301')).toBeFalsy()
-        expect(trackerRegistry.has('ws://10.200.10.1:30302')).toBeTruthy()
-        expect(trackerRegistry.has('ws://10.200.10.1:30303')).toBeTruthy()
-
-        trackerRegistry.add('ws://10.200.10.1:30301')
-        expect(trackerRegistry.has('ws://10.200.10.1:30301')).toBeTruthy()
-        expect(trackerRegistry.has('ws://10.200.10.1:30302')).toBeTruthy()
-        expect(trackerRegistry.has('ws://10.200.10.1:30303')).toBeTruthy()
-
-        trackerRegistry.reset()
-        expect(trackerRegistry.has('ws://10.200.10.1:30301')).toBeFalsy()
-        expect(trackerRegistry.has('ws://10.200.10.1:30302')).toBeFalsy()
-        expect(trackerRegistry.has('ws://10.200.10.1:30303')).toBeFalsy()
-    })
-
     it('get tracker by stream key', async () => {
         const trackerRegistry = await getTrackerRegistryFromContract({
             contractAddress, jsonRpcProvider
         })
 
-        expect(trackerRegistry.get('stream-1::0')).toEqual('ws://10.200.10.1:30302')
-        expect(trackerRegistry.get('stream-3::0')).toEqual('ws://10.200.10.1:30303')
-        expect(trackerRegistry.get('stream-6::0')).toEqual('ws://10.200.10.1:30301')
-
-        trackerRegistry.remove('ws://10.200.10.1:30303')
-        expect(trackerRegistry.get('stream-1::0')).toEqual('ws://10.200.10.1:30302')
-        expect(trackerRegistry.get('stream-3::0')).toEqual('ws://10.200.10.1:30301')
-        expect(trackerRegistry.get('stream-6::0')).toEqual('ws://10.200.10.1:30301')
-
-        trackerRegistry.remove('ws://10.200.10.1:30302')
-        expect(trackerRegistry.get('stream-1::0')).toEqual('ws://10.200.10.1:30301')
-        expect(trackerRegistry.get('stream-3::0')).toEqual('ws://10.200.10.1:30301')
-        expect(trackerRegistry.get('stream-6::0')).toEqual('ws://10.200.10.1:30301')
-
-        trackerRegistry.remove('ws://10.200.10.1:30301')
-        expect(trackerRegistry.get('stream-1::0')).toBeUndefined()
-        expect(trackerRegistry.get('stream-2::0')).toBeUndefined()
-        expect(trackerRegistry.get('stream-6::0')).toBeUndefined()
-    })
-
-    test('fetchTrackers', async () => {
-        const trackers = await fetchTrackers(contractAddress, jsonRpcProvider)
-
-        expect(trackers).toStrictEqual([
-            'ws://10.200.10.1:30301',
-            'ws://10.200.10.1:30302',
-            'ws://10.200.10.1:30303'
-        ])
+        // 1->1, 2->2, 3->3 coincidence
+        expect(trackerRegistry.getTracker('stream-1::0')).toEqual({
+            http: 'http://10.200.10.1:11111',
+            ws: 'ws://10.200.10.1:30301'
+        })
+        expect(trackerRegistry.getTracker('stream-2::0')).toEqual({
+            http: 'http://10.200.10.1:11112',
+            ws: 'ws://10.200.10.1:30302'
+        })
+        expect(trackerRegistry.getTracker('stream-3::0')).toEqual({
+            http: 'http://10.200.10.1:11113',
+            ws: 'ws://10.200.10.1:30303'
+        })
     })
 
     test('createTrackerRegistry', () => {
-        const trackerRegistry = createTrackerRegistry(['ws://10.200.10.1:30301', 'ws://10.200.10.1:30302'])
+        const trackerRegistry = createTrackerRegistry([JSON.stringify({
+            http: 'http://10.200.10.1:11111',
+            ws: 'ws://10.200.10.1:30301'
+        }), JSON.stringify({
+            http: 'http://10.200.10.1:11112',
+            ws: 'ws://10.200.10.1:30302'
+        })])
 
         expect(trackerRegistry.getAllTrackers()).toStrictEqual([
-            'ws://10.200.10.1:30301',
-            'ws://10.200.10.1:30302'
+            {
+                http: 'http://10.200.10.1:11111',
+                ws: 'ws://10.200.10.1:30301'
+            },
+            {
+                http: 'http://10.200.10.1:11112',
+                ws: 'ws://10.200.10.1:30302'
+            }
         ])
     })
 })
