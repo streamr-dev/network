@@ -75,7 +75,7 @@ module.exports = class Tracker extends EventEmitter {
         // update RTTs and location
         this.overlayConnectionRtts[source] = rtts
         this.locationManager.updateLocation({
-            node: source,
+            nodeId: source,
             location,
             address: this.protocols.trackerServer.endpoint.resolveAddress(source),
         })
