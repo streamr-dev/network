@@ -1029,6 +1029,26 @@ describe('Iterator Utils', () => {
             expect(shouldNotGetHere).toHaveBeenCalledTimes(0)
             expect(received).toEqual(expected.slice(0, MAX_ITEMS))
         })
+
+        it('runs finallyfn', async () => {
+            const onFinally = jest.fn()
+            const p = pipeline(
+                generate(),
+                async function* Step1(s) {
+                    yield* s
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinally)
+                }
+            )
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            expect(received).toEqual(expected)
+        })
     })
 
     describe('stream utilities', () => {
