@@ -3,6 +3,8 @@ import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
 
+import { Defer } from './utils'
+
 export class AbortError extends Error {
     constructor(msg = '', ...args) {
         super(`The operation was aborted. ${msg}`, ...args)
@@ -27,146 +29,265 @@ export async function endStream(stream, optionalErr) {
 }
 
 /**
- * Allows injecting a function to execute after an iterator finishes.
- * Executes finally function even if generator not started.
+ * Convert allSettled results into a thrown Aggregate error if necessary.
  */
 
-export function iteratorFinally(iterator, onFinally = () => {}) {
-    let started = false
+class AggregatedError extends Error {
+    // specifically not using AggregateError name
+    constructor(errors = [], errorMessage = '') {
+        super(errorMessage)
+        this.errors = errors
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+}
+
+async function allSettledValues(items, errorMessage = '') {
+    const result = await Promise.allSettled(items)
+
+    const errs = result.filter(({ status }) => status === 'rejected').map(({ reason }) => reason)
+    if (errs.length) {
+        throw new AggregatedError(errs, errorMessage)
+    }
+
+    return result.map(({ value }) => value)
+}
+
+/**
+ * Allows injecting a function to execute after an iterator finishes.
+ * Executes finally function even if generator not started.
+ * Returns new generator.
+ */
+
+export function iteratorFinally(iterable, onFinally) {
+    if (!onFinally) {
+        // noop if no onFinally
+        return iterable
+    }
+
+    // ensure finally only runs once
     const onFinallyOnce = pMemoize(onFinally)
-    const g = (async function* It() {
+
+    let started = false
+    let ended = false
+
+    // wraps return/throw to call onFinally even if generator was never started
+    const handleFinally = (originalFn) => async (...args) => {
+        // Important to:
+        // * only await onFinally if not started
+        // * call original return/throw *immediately* in either case
+        // Otherwise:
+        // * if started, iterator won't stop until onFinally finishes
+        // * if not started, iterator can still be started before onFinally finishes
+        // This function handles both cases, but note here as a reminder.
+        ended = true
+        if (started) {
+            return originalFn(...args)
+        }
+
+        // otherwise iteration can still start if finally function still pending
+        try {
+            return await originalFn(...args)
+        } finally {
+            await onFinallyOnce()
+        }
+    }
+
+    // wrap in generator to track if generator was started
+    const g = (async function* TrackStarted() {
         started = true
         try {
-            yield* iterator
+            yield* iterable
         } finally {
             await onFinallyOnce()
         }
     }())
 
-    // overrides return/throw to call onFinally even if generator was never started
-    const oldReturn = g.return
-    const oldThrow = g.throw
+    const it = g[Symbol.asyncIterator].bind(g)
+    // replace generator methods
     return Object.assign(g, {
-        return: async (...args) => {
-            if (!started) {
-                await onFinallyOnce(iterator)
+        return: handleFinally(g.return.bind(g)),
+        throw: handleFinally(g.throw.bind(g)),
+        [Symbol.asyncIterator]() {
+            if (ended && !started) {
+                // return a generator that simply runs finally script (once)
+                return (async function* generatorRunFinally() { // eslint-disable-line require-yield
+                    await onFinallyOnce()
+                }())
             }
-            return oldReturn.call(g, ...args)
-        },
-        throw: async (...args) => {
-            if (!started) {
-                await onFinallyOnce()
-            }
-            return oldThrow.call(g, ...args)
-        },
+            return it()
+        }
     })
 }
 
-export function CancelableIterator(iterable, onFinally = () => {}) {
-    let cancel
+/**
+ * Creates a generator that can be cancelled and perform optional final cleanup.
+ * const [cancal, generator] = CancelableGenerator(iterable, onFinally)
+ */
+
+export function CancelableGenerator(iterable, onFinally) {
+    let started = false
     let cancelled = false
-    let cancelableIterator
+    let finalCalled = false
+    let pendingNextCount = 0
     let error
-    let waiting = false
 
-    const onCancel = new Promise((resolve, reject) => {
-        cancel = (value) => {
-            if (cancelled) { return }
+    const onCancel = Defer()
+    const onDone = Defer()
 
-            cancelled = true
-
-            if (value instanceof Error) {
-                error = value
-                if (!waiting) {
-                    cancelableIterator.throw(error)
-                    return
-                }
-                reject(error)
-                return
-            }
-
-            if (!waiting) {
-                cancelableIterator.return()
-                return
-            }
-
-            try {
-                resolve({
-                    value,
-                    done: true,
-                })
-            } catch (err) {
-                reject(err)
+    const cancel = (gtr) => async (value) => {
+        if (value instanceof Error) {
+            if (value !== error) {
+                // collect errors
+                error = !error
+                    ? value
+                    : new AggregatedError([value, ...(error.errors || [])], value.message)
             }
         }
-    }).finally(() => {
-        cancel = () => onCancel
-    })
 
-    let innerIterator
-    cancelableIterator = iteratorFinally((async function* Gen() {
-        innerIterator = iterable[Symbol.asyncIterator]()
-        while (true) {
-            waiting = true
-            let value
-            let done
+        if (cancelled) {
+            // prevent recursion
+            return onDone
+        }
+
+        cancelled = true
+
+        // need to make sure we don't try return inside final otherwise we end up deadlocked
+        if (!finalCalled && !pendingNextCount) {
+            // try end generator
+            const onGenEnd = error
+                ? gtr.throw(error).catch(() => {})
+                : gtr.return()
+
+            // wait for generator if it didn't start
+            // i.e. wait for finally
+            if (!started) {
+                await onGenEnd
+                return onDone
+            }
+        }
+
+        if (error) {
+            onCancel.reject(error)
+        } else {
+            onCancel.resolve({
+                value,
+                done: true,
+            })
+        }
+
+        return onDone
+    }
+
+    async function* CancelableGeneratorFn() {
+        started = true
+
+        // manually iterate
+        const iterator = iterable[Symbol.asyncIterator]()
+
+        // keep track of pending calls to next()
+        // so we can cancel early if nothing pending
+        async function next(...args) {
+            // use symbol instead of true so we can tell if called multiple times
+            // see === comparison below
+            pendingNextCount += 1
             try {
-                // eslint-disable-next-line no-await-in-loop
-                ({ value, done } = await Promise.race([
-                    innerIterator.next(),
-                    onCancel,
-                ]))
+                return await iterator.next(...args)
             } finally {
-                waiting = false
+                pendingNextCount = Math.max(0, pendingNextCount - 1) // eslint-disable-line require-atomic-updates
             }
-            if (done) {
-                return value
-            }
-            yield value
         }
-    }()), async () => {
-        if (innerIterator) {
-            innerIterator.return()
-        }
+
         try {
-            await onFinally()
+            yield* {
+                // here is the meat:
+                // each next() races against cancel promise
+                next: async (...args) => Promise.race([
+                    next(...args),
+                    onCancel,
+                ]),
+                [Symbol.asyncIterator]() {
+                    return this
+                },
+            }
         } finally {
-            await cancel()
+            // try end iterator
+            if (iterator) {
+                if (pendingNextCount) {
+                    iterator.return()
+                } else {
+                    await iterator.return()
+                }
+            }
         }
+    }
+
+    const cancelableGenerator = iteratorFinally(CancelableGeneratorFn(), async () => {
+        finalCalled = true
+        try {
+            if (onFinally) {
+                await onFinally()
+            }
+        } finally {
+            onDone.resolve()
+        }
+
+        // error whole generator, for await of will reject.
+        if (error) {
+            throw error
+        }
+
+        return onDone
     })
 
-    return Object.assign(cancelableIterator, {
-        onCancel,
-        cancel,
-    })
+    return [
+        cancel(cancelableGenerator),
+        cancelableGenerator
+    ]
 }
+
+/**
+ * Pipeline of async generators
+ */
 
 export function pipeline(...iterables) {
-    let final
-    function done(err) {
-        final.cancel(err)
+    const cancelFns = new Set()
+    async function cancelAll(err) {
+        try {
+            await allSettledValues([...cancelFns].map(async (cancel) => (
+                cancel(err)
+            )))
+        } finally {
+            cancelFns.clear()
+        }
     }
 
     let error
-
     const last = iterables.reduce((prev, next) => {
-        return CancelableIterator((async function* Gen() {
+        const [cancelCurrent, it] = CancelableGenerator((async function* Gen() {
             try {
                 const nextIterable = typeof next === 'function' ? next(prev) : next
                 yield* nextIterable
             } catch (err) {
                 if (!error) {
                     error = err
-                    return final.cancel(err)
+                    cancelAll(err)
                 }
                 throw err
             }
         }()))
+        cancelFns.add(cancelCurrent)
+        return it
     }, undefined)
-    final = CancelableIterator((async function* Gen() {
-        yield* last
-    }()), () => done(error))
-    return final
+
+    const pipelineValue = iteratorFinally(last, () => {
+        cancelFns.clear()
+    })
+
+    return Object.assign(pipelineValue, {
+        cancel: cancelAll,
+    })
 }
 
 /**
