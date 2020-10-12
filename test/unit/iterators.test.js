@@ -960,10 +960,6 @@ describe('Iterator Utils', () => {
             })
 
             it('closes stream when iterator complete', async () => {
-                expected.forEach((item) => {
-                    stream.write(item)
-                })
-
                 const received = []
                 for await (const msg of stream) {
                     received.push(msg)
@@ -978,10 +974,6 @@ describe('Iterator Utils', () => {
             })
 
             it('closes stream when iterator returns during iteration', async () => {
-                expected.forEach((item) => {
-                    stream.write(item)
-                })
-
                 const received = []
                 for await (const msg of stream) {
                     received.push(msg)
@@ -995,11 +987,21 @@ describe('Iterator Utils', () => {
                 expect(onError).toHaveBeenCalledTimes(0)
             })
 
-            it('closes stream when iterator throws during iteration', async () => {
-                expected.forEach((item) => {
-                    stream.write(item)
-                })
+            it('closes stream when stream ends during iteration', async () => {
+                const received = []
+                for await (const msg of stream) {
+                    received.push(msg)
+                    if (received.length === MAX_ITEMS) {
+                        stream.end()
+                    }
+                }
 
+                expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+                expect(onClose).toHaveBeenCalledTimes(1)
+                expect(onError).toHaveBeenCalledTimes(0)
+            })
+
+            it('closes stream when iterator throws during iteration', async () => {
                 const received = []
                 const err = new Error('expected err')
                 await expect(async () => {
@@ -1017,10 +1019,6 @@ describe('Iterator Utils', () => {
             })
 
             it('closes stream when iterator returns asynchronously', async () => {
-                expected.forEach((item) => {
-                    stream.write(item)
-                })
-
                 const itr = stream[Symbol.asyncIterator]()
                 let receievedAtCallTime
                 const received = []
