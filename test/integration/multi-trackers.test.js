@@ -5,6 +5,10 @@ const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
 
+const FIRST_STREAM = 'stream-1' // assigned to trackerOne (arbitrarily by hashing algo)
+const SECOND_STREAM = 'stream-3' // assigned to trackerTwo
+const THIRD_STREAM = 'stream-5' // assigned to trackerThree
+
 describe('multi trackers', () => {
     let trackerOne
     let trackerTwo
@@ -60,9 +64,13 @@ describe('multi trackers', () => {
         const spyTrackerThree = jest.spyOn(trackerThree, 'processNodeStatus')
 
         // first stream, first tracker
-        nodeOne.subscribe('stream-1', 0)
+        nodeOne.subscribe(FIRST_STREAM, 0)
 
-        await waitForEvent(trackerOne.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await Promise.race([
+            waitForEvent(trackerOne.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+            waitForEvent(trackerTwo.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+            waitForEvent(trackerThree.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+        ])
 
         expect(spyTrackerOne).toBeCalledTimes(1)
         expect(spyTrackerTwo).not.toBeCalled()
@@ -70,9 +78,13 @@ describe('multi trackers', () => {
         jest.clearAllMocks()
 
         // second stream, second tracker
-        nodeOne.subscribe('stream-10', 0)
+        nodeOne.subscribe(SECOND_STREAM, 0)
 
-        await waitForEvent(trackerTwo.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await Promise.race([
+            waitForEvent(trackerOne.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+            waitForEvent(trackerTwo.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+            waitForEvent(trackerThree.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+        ])
 
         expect(spyTrackerOne).not.toBeCalled()
         expect(spyTrackerTwo).toBeCalledTimes(1)
@@ -80,9 +92,13 @@ describe('multi trackers', () => {
         jest.clearAllMocks()
 
         // third stream, third tracker
-        nodeOne.subscribe('stream-20', 0)
+        nodeOne.subscribe(THIRD_STREAM, 0)
 
-        await waitForEvent(trackerThree.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await Promise.race([
+            waitForEvent(trackerOne.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+            waitForEvent(trackerTwo.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+            waitForEvent(trackerThree.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
+        ])
 
         expect(spyTrackerOne).not.toBeCalled()
         expect(spyTrackerTwo).not.toBeCalled()
@@ -118,8 +134,8 @@ describe('multi trackers', () => {
         const spyTrackerThree = jest.spyOn(trackerThree.protocols.trackerServer, 'sendInstruction')
 
         // first stream, first tracker
-        nodeOne.subscribe('stream-1', 0)
-        nodeTwo.subscribe('stream-1', 0)
+        nodeOne.subscribe(FIRST_STREAM, 0)
+        nodeTwo.subscribe(FIRST_STREAM, 0)
 
         await Promise.all([
             waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
@@ -135,8 +151,8 @@ describe('multi trackers', () => {
         jest.clearAllMocks()
 
         // second stream, second tracker
-        nodeOne.subscribe('stream-10', 0)
-        nodeTwo.subscribe('stream-10', 0)
+        nodeOne.subscribe(SECOND_STREAM, 0)
+        nodeTwo.subscribe(SECOND_STREAM, 0)
 
         await Promise.all([
             waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
@@ -152,8 +168,8 @@ describe('multi trackers', () => {
         jest.clearAllMocks()
 
         // third stream, third tracker
-        nodeOne.subscribe('stream-20', 0)
-        nodeTwo.subscribe('stream-20', 0)
+        nodeOne.subscribe(THIRD_STREAM, 0)
+        nodeTwo.subscribe(THIRD_STREAM, 0)
 
         await Promise.all([
             waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
