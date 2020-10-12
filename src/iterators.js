@@ -67,10 +67,13 @@ export function iteratorFinally(iterable, onFinally) {
     }
 
     // ensure finally only runs once
-    const onFinallyOnce = pMemoize(onFinally)
+    const onFinallyOnce = pMemoize(onFinally, {
+        cacheKey: () => true // always same key
+    })
 
     let started = false
     let ended = false
+    let error
 
     // wraps return/throw to call onFinally even if generator was never started
     const handleFinally = (originalFn) => async (...args) => {
@@ -89,8 +92,13 @@ export function iteratorFinally(iterable, onFinally) {
         // otherwise iteration can still start if finally function still pending
         try {
             return await originalFn(...args)
+        } catch (err) {
+            if (!error) {
+                error = err
+            }
+            throw err
         } finally {
-            await onFinallyOnce()
+            await onFinallyOnce(error)
         }
     }
 
@@ -99,8 +107,13 @@ export function iteratorFinally(iterable, onFinally) {
         started = true
         try {
             yield* iterable
+        } catch (err) {
+            if (!error) {
+                error = err
+            }
+            throw err
         } finally {
-            await onFinallyOnce()
+            await onFinallyOnce(error)
         }
     }())
 
@@ -113,6 +126,10 @@ export function iteratorFinally(iterable, onFinally) {
             if (ended && !started) {
                 // return a generator that simply runs finally script (once)
                 return (async function* generatorRunFinally() { // eslint-disable-line require-yield
+                    if (typeof iterable.return === 'function') {
+                        await iterable.return() // run onFinally for nested iterable
+                    }
+
                     await onFinallyOnce()
                 }())
             }
@@ -180,11 +197,12 @@ export function CancelableGenerator(iterable, onFinally) {
         return onDone
     }
 
+    let iterator
     async function* CancelableGeneratorFn() {
         started = true
 
         // manually iterate
-        const iterator = iterable[Symbol.asyncIterator]()
+        iterator = iterable[Symbol.asyncIterator]()
 
         // keep track of pending calls to next()
         // so we can cancel early if nothing pending
@@ -226,6 +244,13 @@ export function CancelableGenerator(iterable, onFinally) {
     const cancelableGenerator = iteratorFinally(CancelableGeneratorFn(), async () => {
         finalCalled = true
         try {
+            // cancel inner if has cancel
+            if (iterable && iterable.cancel) {
+                await iterable.cancel()
+            } else if (iterator && iterator.cancel) {
+                await iterator.cancel()
+            }
+
             if (onFinally) {
                 await onFinally()
             }
@@ -241,8 +266,10 @@ export function CancelableGenerator(iterable, onFinally) {
         return onDone
     })
 
+    const cancelFn = cancel(cancelableGenerator)
+    cancelableGenerator.cancel = cancelFn
     return [
-        cancel(cancelableGenerator),
+        cancelFn,
         cancelableGenerator
     ]
 }

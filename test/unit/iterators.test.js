@@ -1,9 +1,12 @@
 import { Readable, PassThrough } from 'stream'
 
+import Debug from 'debug'
 import { wait } from 'streamr-test-utils'
 
 import { iteratorFinally, CancelableGenerator, pipeline } from '../../src/iterators'
 import { Defer } from '../../src/utils'
+
+console.log = Debug('Streamr::   CONSOLE   ')
 
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 
@@ -173,6 +176,24 @@ describe('Iterator Utils', () => {
             expect(received).toEqual(expected.slice(0, MAX_ITEMS))
         })
 
+        it('does not call inner iterators onFinally with error if outer errors', async () => {
+            // maybe not desirable, but captures existing behaviour.
+            // this matches native generator/iterator behaviour, only outermost iteration actually errors
+            const received = []
+            const err = new Error('expected err')
+            const itr = iteratorFinally(generate(), onFinally)
+            await expect(async () => {
+                for await (const msg of itr) {
+                    received.push(msg)
+                    if (received.length === MAX_ITEMS) {
+                        throw err
+                    }
+                }
+            }).rejects.toThrow(err)
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(onFinally).not.toHaveBeenCalledWith(err)
+        })
+
         it('runs fn when iterator returns + throws during iteration', async () => {
             const received = []
             const err = new Error('expected err')
@@ -187,6 +208,7 @@ describe('Iterator Utils', () => {
                 }
             }).rejects.toThrow(err)
             expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(onFinally).not.toHaveBeenCalledWith(err) // only outer onFinally will have err
         })
 
         it('runs fn when iterator returns before iteration', async () => {
@@ -252,26 +274,92 @@ describe('Iterator Utils', () => {
             expect(received).toEqual([])
         })
 
-        it('works nested', async () => {
-            const onFinallyAfterInner = jest.fn()
-            const onFinallyInner = jest.fn(async () => {
-                await wait(WAIT)
-                onFinallyAfterInner()
+        describe('nesting', () => {
+            let onFinallyAfterInner
+            let onFinallyInner
+
+            beforeEach(() => {
+                onFinallyAfterInner = jest.fn()
+                const afterInner = onFinallyAfterInner // capture so won't run afterInner of another test
+                onFinallyInner = jest.fn(async () => {
+                    await wait(WAIT)
+                    afterInner()
+                })
             })
-            const itrInner = iteratorFinally(generate(), onFinallyInner)
-            const itr = iteratorFinally(itrInner, onFinally)
 
-            const received = []
-            for await (const msg of itr) {
-                received.push(msg)
-                if (received.length === MAX_ITEMS) {
-                    break
+            afterEach(() => {
+                expect(onFinallyInner).toHaveBeenCalledTimes(1)
+                expect(onFinallyAfterInner).toHaveBeenCalledTimes(1)
+            })
+
+            IteratorTest('iteratorFinally nested', () => {
+                const itrInner = iteratorFinally(generate(), onFinallyInner)
+                return iteratorFinally(itrInner, onFinally)
+            })
+
+            it('works nested', async () => {
+                const itrInner = iteratorFinally(generate(), onFinallyInner)
+                const itr = iteratorFinally(itrInner, onFinally)
+
+                const received = []
+                for await (const msg of itr) {
+                    received.push(msg)
+                    if (received.length === MAX_ITEMS) {
+                        break
+                    }
                 }
-            }
 
-            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
-            expect(onFinallyInner).toHaveBeenCalledTimes(1)
-            expect(onFinallyAfterInner).toHaveBeenCalledTimes(1)
+                expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            })
+
+            it('calls iterator onFinally with error if outer errors', async () => {
+                const received = []
+                const err = new Error('expected err')
+                const innerItr = iteratorFinally(generate(), onFinallyInner)
+                const itr = iteratorFinally((async function* Outer() {
+                    for await (const msg of innerItr) {
+                        yield msg
+                        if (received.length === MAX_ITEMS) {
+                            throw err
+                        }
+                    }
+                }()), onFinally)
+
+                await expect(async () => {
+                    for await (const msg of itr) {
+                        received.push(msg)
+                    }
+                }).rejects.toThrow(err)
+
+                expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+                expect(onFinally).toHaveBeenCalledWith(err)
+                expect(onFinallyInner).not.toHaveBeenCalledWith(err)
+            })
+
+            it('calls iterator onFinally with error if inner errors', async () => {
+                const received = []
+                const err = new Error('expected err')
+                const itrInner = iteratorFinally((async function* Outer() {
+                    for await (const msg of generate()) {
+                        yield msg
+                        if (received.length === MAX_ITEMS) {
+                            throw err
+                        }
+                    }
+                }()), onFinallyInner)
+                const itr = iteratorFinally(itrInner, onFinally)
+
+                await expect(async () => {
+                    for await (const msg of itr) {
+                        received.push(msg)
+                    }
+                }).rejects.toThrow(err)
+
+                expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+                // both should see error
+                expect(onFinally).toHaveBeenCalledWith(err)
+                expect(onFinallyInner).toHaveBeenCalledWith(err)
+            })
         })
 
         it('runs finally once, waits for outstanding', async () => {
@@ -289,23 +377,6 @@ describe('Iterator Utils', () => {
                     await Promise.all([t1, t2])
                     expect(onFinally).toHaveBeenCalledTimes(1)
                     expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-                    break
-                }
-            }
-
-            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
-        })
-
-        it.skip('can call return() inside finally function', async () => {
-            const received = []
-            const itr = iteratorFinally(generate(), async () => {
-                await onFinally()
-                await itr.return()
-            })
-
-            for await (const msg of itr) {
-                received.push(msg)
-                if (received.length === MAX_ITEMS) {
                     break
                 }
             }
@@ -558,80 +629,101 @@ describe('Iterator Utils', () => {
             expect(received).toEqual(receievedAtCallTime)
         })
 
-        it('can cancel nested cancellable iterator in finally', async () => {
-            const onFinallyInner = jest.fn()
-            const waitInner = jest.fn()
-            const [cancelInner, itrInner] = CancelableGenerator((async function* Gen() {
-                yield* generate()
-                yield await new Promise(() => {
-                    // should not get here
-                    waitInner()
-                }) // would wait forever
-            }()), onFinallyInner)
+        describe('nesting', () => {
+            let onFinallyAfterInner
+            let onFinallyInner
 
-            const waitOuter = jest.fn()
-            const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
-                yield* itrInner
-                yield await new Promise(() => {
-                    // should not get here
-                    waitOuter()
-                }) // would wait forever
-            }()), async () => {
-                await cancelInner()
-                await onFinally()
+            beforeEach(() => {
+                onFinallyAfterInner = jest.fn()
+                const afterInner = onFinallyAfterInner // capture so won't run afterInner of another test
+                onFinallyInner = jest.fn(async () => {
+                    await wait(WAIT)
+                    afterInner()
+                })
             })
 
-            const received = []
-            for await (const msg of itrOuter) {
-                received.push(msg)
-                if (received.length === expected.length) {
-                    await cancelOuter()
-                }
-            }
-
-            expect(waitOuter).toHaveBeenCalledTimes(0)
-            expect(waitInner).toHaveBeenCalledTimes(0)
-            expect(received).toEqual(expected)
-            expect(onFinallyInner).toHaveBeenCalledTimes(1)
-        })
-
-        it('can cancels nested cancellable iterator in finally, asynchronously', async () => {
-            const onFinallyInner = jest.fn()
-            const waitInner = jest.fn()
-            const [cancelInner, itrInner] = CancelableGenerator((async function* Gen() {
-                yield* generate()
-                yield await new Promise(() => {
-                    // should not get here
-                    waitInner()
-                }) // would wait forever
-            }()), onFinallyInner)
-
-            const waitOuter = jest.fn()
-            const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
-                yield* itrInner
-                yield await new Promise(() => {
-                    // should not get here
-                    waitOuter()
-                }) // would wait forever
-            }()), async () => {
-                await cancelInner()
-                await onFinally()
+            afterEach(() => {
+                expect(onFinallyInner).toHaveBeenCalledTimes(1)
+                expect(onFinallyAfterInner).toHaveBeenCalledTimes(1)
             })
 
-            const received = []
-            for await (const msg of itrOuter) {
-                received.push(msg)
-                if (received.length === expected.length) {
-                    setTimeout(() => {
-                        cancelOuter()
-                    })
-                }
-            }
+            IteratorTest('CancelableGenerator nested', () => {
+                const [, itrInner] = CancelableGenerator(generate(), onFinallyInner)
+                const [, itrOuter] = CancelableGenerator(itrInner, onFinally)
+                return itrOuter
+            })
 
-            expect(waitOuter).toHaveBeenCalledTimes(1)
-            expect(waitInner).toHaveBeenCalledTimes(1)
-            expect(received).toEqual(expected)
-            expect(onFinallyInner).toHaveBeenCalledTimes(1)
+            it('can cancel nested cancellable iterator in finally', async () => {
+                const waitInner = jest.fn()
+                const [cancelInner, itrInner] = CancelableGenerator((async function* Gen() {
+                    yield* generate()
+                    yield await new Promise(() => {
+                        // should not get here
+                        waitInner()
+                    }) // would wait forever
+                }()), onFinallyInner)
+
+                const waitOuter = jest.fn()
+                const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
+                    yield* itrInner
+                    yield await new Promise(() => {
+                        // should not get here
+                        waitOuter()
+                    }) // would wait forever
+                }()), async () => {
+                    await cancelInner()
+                    await onFinally()
+                })
+
+                const received = []
+                for await (const msg of itrOuter) {
+                    received.push(msg)
+                    if (received.length === expected.length) {
+                        await cancelOuter()
+                    }
+                }
+
+                expect(received).toEqual(expected)
+                expect(waitOuter).toHaveBeenCalledTimes(0)
+                expect(waitInner).toHaveBeenCalledTimes(0)
+            })
+
+            it('can cancel nested cancellable iterator in finally, asynchronously', async () => {
+                const waitInner = jest.fn()
+                const [cancelInner, itrInner] = CancelableGenerator((async function* Gen() {
+                    yield* generate()
+                    yield await new Promise(() => {
+                        // should not get here
+                        waitInner()
+                    }) // would wait forever
+                }()), onFinallyInner)
+
+                const waitOuter = jest.fn()
+                const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
+                    yield* itrInner
+                    yield await new Promise(() => {
+                        // should not get here
+                        waitOuter()
+                    }) // would wait forever
+                }()), async () => {
+                    await cancelInner()
+                    await onFinally()
+                })
+
+                const received = []
+                for await (const msg of itrOuter) {
+                    received.push(msg)
+                    if (received.length === expected.length) {
+                        setTimeout(() => {
+                            cancelOuter()
+                        })
+                    }
+                }
+
+                expect(waitOuter).toHaveBeenCalledTimes(1)
+                expect(waitInner).toHaveBeenCalledTimes(1)
+                expect(received).toEqual(expected)
+            })
         })
 
         it('can cancel in parallel and wait correctly for both', async () => {
