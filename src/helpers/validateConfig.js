@@ -84,9 +84,6 @@ const validateConfig = (config) => {
     if (config.sentry === undefined) {
         throw new MissingConfigError('sentry')
     }
-    if (config.trackerRegistry && config.trackerRegistry.config === undefined) {
-        throw new MissingConfigError('trackerRegistry.config')
-    }
     if (config.trackerRegistry && config.trackerRegistry.jsonRpcProvider === undefined) {
         throw new MissingConfigError('trackerRegistry.jsonRpcProvider')
     }

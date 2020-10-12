@@ -15,7 +15,6 @@ const VolumeLogger = require('./VolumeLogger')
 const SubscriptionManager = require('./SubscriptionManager')
 const MissingConfigError = require('./errors/MissingConfigError')
 const adapterRegistry = require('./adapterRegistry')
-const getTrackers = require('./helpers/getTrackers')
 const validateConfig = require('./helpers/validateConfig')
 const ethereumAuthenticate = require('./helpers/ethereumAuthenticate')
 
@@ -86,7 +85,11 @@ module.exports = async (config) => {
 
     let trackers
     if (config.trackerRegistry) {
-        trackers = await getTrackers(config.trackerRegistry.address, config.trackerRegistry.config, config.trackerRegistry.jsonRpcProvider)
+        const registry = await Protocol.Utils.getTrackerRegistryFromContract({
+            contractAddress: config.trackerRegistry.address,
+            jsonRpcProvider: config.trackerRegistry.jsonRpcProvider
+        })
+        trackers = registry.getAllTrackers().map((record) => record.ws)
     }
 
     // from smart contract
