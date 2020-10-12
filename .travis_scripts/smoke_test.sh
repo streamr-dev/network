@@ -13,12 +13,13 @@ sed -i "s#$OWNER/$IMAGE_NAME:dev#$OWNER/$IMAGE_NAME\:taggit#g" $TRAVIS_BUILD_DIR
 
 ## Start up services needed
 $TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start tracker-1 tracker-2 tracker-3 --wait
-$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-storage-1
+$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-no-storage-1
 
 ## Wait for the service to come online and test
+## TODO: can this be replaced with `--wait`?
 wait_time=10;
 for (( i=0; i < 5; i=i+1 )); do
-    curl -s http://localhost:8891/api/v1/volume;
+    curl -s http://localhost:8791/api/v1/volume;
     res=$?;
     if test "$res" != "0"; then
         echo "Attempting to connect to broker retrying in $wait_time seconds";
