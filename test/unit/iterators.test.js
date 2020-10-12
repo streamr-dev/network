@@ -1049,6 +1049,289 @@ describe('Iterator Utils', () => {
             expect(onFinally).toHaveBeenCalledTimes(1)
             expect(received).toEqual(expected)
         })
+
+        it('works with streams', async () => {
+            const onFinally = jest.fn()
+            const p = pipeline(
+                Readable.from(generate()),
+                async function* Step1(s) {
+                    yield* s
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinally)
+                }
+            )
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            expect(received).toEqual(expected)
+        })
+
+        it('works with nested pipelines', async () => {
+            const onFinally = jest.fn()
+            const onFinallyFirst = jest.fn()
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const onFirstStreamClose = jest.fn()
+            const onInputStreamClose = jest.fn()
+            const onIntermediateStreamClose = jest.fn()
+
+            const inputStream = new PassThrough({
+                objectMode: true,
+            })
+            inputStream.once('close', onInputStreamClose)
+            const p1 = pipeline(
+                inputStream,
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                    }
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinallyFirst)
+                }
+            )
+
+            const firstStream = Readable.from(generate())
+            firstStream.once('close', onFirstStreamClose)
+            let intermediateStream
+            const p = pipeline(
+                firstStream,
+                (s) => {
+                    intermediateStream = Readable.from(s).pipe(inputStream)
+                    intermediateStream.once('close', onIntermediateStreamClose)
+                    return p1
+                },
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        receivedStep2.push(msg)
+                        yield msg
+                    }
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinally)
+                }
+            )
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            expect(onFinallyFirst).toHaveBeenCalledTimes(1)
+            expect(received).toEqual(expected)
+            expect(receivedStep1).toEqual(expected)
+            expect(receivedStep2).toEqual(expected)
+            // all streams were closed
+            expect(onFirstStreamClose).toHaveBeenCalledTimes(1)
+            expect(onInputStreamClose).toHaveBeenCalledTimes(1)
+            expect(onIntermediateStreamClose).toHaveBeenCalledTimes(1)
+        })
+
+        it('works with streams as pipeline steps', async () => {
+            const onFinally = jest.fn()
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const onThroughStreamClose = jest.fn()
+
+            const throughStream = new PassThrough({
+                objectMode: true,
+            })
+            throughStream.once('close', onThroughStreamClose)
+            const p = pipeline(
+                generate(),
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                    }
+                },
+                throughStream,
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        receivedStep2.push(msg)
+                        yield msg
+                    }
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinally)
+                }
+            )
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(received).toEqual(expected)
+            expect(receivedStep1).toEqual(expected)
+            expect(receivedStep2).toEqual(expected)
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            // all streams were closed
+            expect(onThroughStreamClose).toHaveBeenCalledTimes(1)
+        })
+
+        it('passes outer pipeline to inner pipeline', async () => {
+            const onFinally = jest.fn()
+            const onFinallyFirst = jest.fn()
+            const receivedStep1 = []
+            const receivedStep2 = []
+
+            const p1 = pipeline(
+                async function* Step1(s) { // s should come from outer pipeline
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                    }
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinallyFirst)
+                }
+            )
+
+            const p = pipeline(
+                generate(),
+                p1,
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        receivedStep2.push(msg)
+                        yield msg
+                    }
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinally)
+                }
+            )
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            expect(onFinallyFirst).toHaveBeenCalledTimes(1)
+            expect(received).toEqual(expected)
+            expect(receivedStep1).toEqual(expected)
+            expect(receivedStep2).toEqual(expected)
+            // all streams were closed
+        })
+
+        it('works with nested pipelines & streams', async () => {
+            const onFinally = jest.fn()
+            const onFinallyFirst = jest.fn()
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const onFirstStreamClose = jest.fn()
+            const onInputStreamClose = jest.fn()
+
+            const inputStream = new PassThrough({
+                objectMode: true,
+            })
+            inputStream.once('close', onInputStreamClose)
+            const p1 = pipeline(
+                inputStream,
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                    }
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinallyFirst)
+                }
+            )
+
+            const firstStream = Readable.from(generate())
+            firstStream.once('close', onFirstStreamClose)
+            const p = pipeline(
+                firstStream,
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        receivedStep2.push(msg)
+                        yield msg
+                    }
+                },
+                p1,
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinally)
+                }
+            )
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            expect(onFinallyFirst).toHaveBeenCalledTimes(1)
+            expect(received).toEqual(expected)
+            expect(receivedStep1).toEqual(expected)
+            expect(receivedStep2).toEqual(expected)
+            // all streams were closed
+            expect(onFirstStreamClose).toHaveBeenCalledTimes(1)
+            expect(onInputStreamClose).toHaveBeenCalledTimes(1)
+        })
+
+        it('works with nested pipelines at top level', async () => {
+            const onFinally = jest.fn()
+            const onFinallyFirst = jest.fn()
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const onFirstStreamClose = jest.fn()
+            const onInputStreamClose = jest.fn()
+
+            const inputStream = new PassThrough({
+                objectMode: true,
+            })
+            inputStream.once('close', onInputStreamClose)
+            const p1 = pipeline(
+                inputStream,
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                    }
+                },
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinallyFirst)
+                }
+            )
+
+            const firstStream = Readable.from(generate())
+            firstStream.once('close', onFirstStreamClose)
+            const p = pipeline(
+                firstStream,
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        receivedStep2.push(msg)
+                        yield msg
+                    }
+                },
+                p1,
+                async function* finallyFn(s) {
+                    yield* iteratorFinally(s, onFinally)
+                }
+            )
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            expect(onFinallyFirst).toHaveBeenCalledTimes(1)
+            expect(received).toEqual(expected)
+            expect(receivedStep1).toEqual(expected)
+            expect(receivedStep2).toEqual(expected)
+            // all streams were closed
+            expect(onFirstStreamClose).toHaveBeenCalledTimes(1)
+            expect(onInputStreamClose).toHaveBeenCalledTimes(1)
+        })
     })
 
     describe('stream utilities', () => {

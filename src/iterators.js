@@ -1,4 +1,4 @@
-import { finished } from 'stream'
+import { finished, Readable } from 'stream'
 import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
@@ -278,6 +278,10 @@ export function CancelableGenerator(iterable, onFinally) {
  * Pipeline of async generators
  */
 
+const isPipeline = Symbol('isPipeline')
+
+const getIsStream = (item) => typeof item.pipe === 'function'
+
 export function pipeline(...iterables) {
     const cancelFns = new Set()
     async function cancelAll(err) {
@@ -290,11 +294,28 @@ export function pipeline(...iterables) {
         }
     }
 
+    let firstSrc
+    const setFirstSource = (v) => {
+        firstSrc = v
+    }
+
     let error
-    const last = iterables.reduce((prev, next) => {
+    let first
+    const last = iterables.reduce((_prev, next, index) => {
         const [cancelCurrent, it] = CancelableGenerator((async function* Gen() {
+            // take first "prev" from outer iterator, if one exists
+            const prev = index === 0 ? firstSrc : _prev
+            const nextIterable = typeof next === 'function' ? next(prev) : next
+
+            if (nextIterable[isPipeline]) {
+                nextIterable.setFirstSource(prev)
+            }
+
+            if (prev && getIsStream(nextIterable)) {
+                const input = getIsStream(prev) ? prev : Readable.from(prev)
+                input.pipe(nextIterable)
+            }
             try {
-                const nextIterable = typeof next === 'function' ? next(prev) : next
                 yield* nextIterable
             } catch (err) {
                 if (!error) {
@@ -304,6 +325,7 @@ export function pipeline(...iterables) {
                 throw err
             }
         }()))
+
         cancelFns.add(cancelCurrent)
         return it
     }, undefined)
@@ -313,6 +335,9 @@ export function pipeline(...iterables) {
     })
 
     return Object.assign(pipelineValue, {
+        first,
+        [isPipeline]: true,
+        setFirstSource,
         cancel: cancelAll,
     })
 }
