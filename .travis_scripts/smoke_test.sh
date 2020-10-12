@@ -12,8 +12,7 @@ git clone https://github.com/streamr-dev/streamr-docker-dev.git
 sed -i "s#$OWNER/$IMAGE_NAME:dev#$OWNER/$IMAGE_NAME\:taggit#g" $TRAVIS_BUILD_DIR/streamr-docker-dev/docker-compose.override.yml
 
 ## Start up services needed
-$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start tracker-1 tracker-2 tracker-3 --wait
-$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-no-storage-1
+$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-no-storage-1 --wait
 
 ## Wait for the service to come online and test
 ## TODO: can this be replaced with `--wait`?
