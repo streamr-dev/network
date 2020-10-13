@@ -147,6 +147,10 @@ export function iteratorFinally(iterable, onFinally) {
     }())
 
     const it = g[Symbol.asyncIterator].bind(g)
+    if (iterable.cancel) {
+        g.cancel = (...args) => iterable.cancel(...args)
+    }
+
     // replace generator methods
     return Object.assign(g, {
         return: handleFinally(g.return.bind(g)),
@@ -311,13 +315,24 @@ const isPipeline = Symbol('isPipeline')
 
 const getIsStream = (item) => typeof item.pipe === 'function'
 
-export function pipeline(...iterables) {
+export function pipeline(iterables = [], onFinally) {
     const cancelFns = new Set()
-    async function cancelAll(err) {
+    let cancelled = false
+    let error
+    const onCancelDone = Defer()
+    const cancelAll = async (err) => {
+        if (cancelled) {
+            await onCancelDone
+            return
+        }
+
+        cancelled = true
+        error = err
         try {
-            await allSettledValues([...cancelFns].map(async (cancel) => (
+            // eslint-disable-next-line promise/no-promise-in-callback
+            await Promise.all([...cancelFns].map(async (cancel) => (
                 cancel(err)
-            )))
+            ))).then(onCancelDone.resolve, onCancelDone.reject)
         } finally {
             cancelFns.clear()
         }
@@ -328,8 +343,6 @@ export function pipeline(...iterables) {
         firstSrc = v
     }
 
-    let error
-    let first
     const last = iterables.reduce((_prev, next, index) => {
         let stream
 
@@ -339,6 +352,7 @@ export function pipeline(...iterables) {
             let nextIterable = typeof next === 'function' ? next(prev) : next
 
             if (nextIterable[isPipeline]) {
+                cancelFns.add(nextIterable.cancel)
                 nextIterable.setFirstSource(prev)
             }
 
@@ -355,15 +369,18 @@ export function pipeline(...iterables) {
             try {
                 yield* nextIterable
             } catch (err) {
-                if (!error) {
+                if (!error && err && error !== err) {
                     error = err
-                    await cancelAll(err)
                 }
                 throw err
             }
         }()), async (err) => {
+            if (!cancelled && err) {
+                await cancelAll(err || error)
+            }
+
             if (stream) {
-                await endStream(stream, err)
+                await endStream(stream, err || error)
             }
         })
 
@@ -371,12 +388,15 @@ export function pipeline(...iterables) {
         return it
     }, undefined)
 
-    const pipelineValue = iteratorFinally(last, () => {
+    const pipelineValue = iteratorFinally(last, async () => {
+        if (!cancelled) {
+            await cancelAll(error)
+        }
         cancelFns.clear()
+        await onFinally(error)
     })
 
     return Object.assign(pipelineValue, {
-        first,
         [isPipeline]: true,
         setFirstSource,
         cancel: cancelAll,
