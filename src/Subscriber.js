@@ -110,17 +110,8 @@ export default class Subscriber {
             this.debug('WARN: InvalidJsonError received for stream with no subscriptions: %s', err.streamId)
         }
     }
-    async subscribe(...args) {
 
-        const sub = this.createSubscription(...args)
-        await Promise.all([
-            sub.waitForSubscribed(),
-            this._resendAndSubscribe(sub),
-        ])
-        return sub
-    }
-
-    createSubscription(optionsOrStreamId, callback, legacyOptions) {
+    subscribe(optionsOrStreamId, callback, legacyOptions) {
         const options = this._validateParameters(optionsOrStreamId, callback)
 
         // Backwards compatibility for giving an options object as third argument
@@ -185,25 +176,17 @@ export default class Subscriber {
         // Add to lookups
         this._addSubscription(sub)
 
+        // If connected, emit a subscribe request
+        if (this.client.isConnected()) {
+            this._resendAndSubscribe(sub).catch(this.onErrorEmit)
+        } else if (this.client.options.autoConnect) {
+            this.client.ensureConnected()
+        }
+
         return sub
     }
 
     async unsubscribe(sub) {
-        if (!sub || !sub.streamId) {
-            throw new Error('unsubscribe: please give a Subscription object as an argument!')
-        }
-
-        if (sub.getState() === Subscription.State.unsubscribed) {
-            return Promise.resolve()
-        }
-
-        return Promise.all([
-            new Promise((resolve) => sub.once('unsubscribed', resolve)),
-            this._sendUnsubscribe(sub)
-        ]).then(() => Promise.resolve())
-    }
-
-    async _sendUnsubscribe(sub) {
         if (!sub || !sub.streamId) {
             throw new Error('unsubscribe: please give a Subscription object as an argument!')
         }
@@ -340,16 +323,16 @@ export default class Subscriber {
             if (subscribedSubs.length) {
                 // If there already is a subscribed subscription for this stream, this new one will just join it immediately
                 this.debug('_requestSubscribe: another subscription for same stream: %s, insta-subscribing', sub.streamId)
-                await true // wait a tick
-                sub.setState(Subscription.State.subscribed)
+
+                setTimeout(() => {
+                    sub.setState(Subscription.State.subscribed)
+                })
                 return
             }
         }
 
         const sessionToken = await this.client.session.getSessionToken()
 
-        // this should come after an async call e.g. getSessionToken
-        // so only one parallel call will send the subscription request
         if (sp.isSubscribing()) {
             return
         }
@@ -361,12 +344,11 @@ export default class Subscriber {
             sessionToken,
             requestId: this.client.resender.resendUtil.generateRequestId(),
         })
-
         sp.setSubscribing(true)
         this.debug('_requestSubscribe: subscribing client: %o', request)
         await this.client.send(request).catch((err) => {
             sub.setState(Subscription.State.unsubscribed)
-            const error = new Error(`Failed to send subscribe request: ${err.stack}`)
+            const error = new Error(`Failed to sendnsubscribe request: ${err.stack}`)
             this.onErrorEmit(error)
             throw error
         })
@@ -381,8 +363,9 @@ export default class Subscriber {
         })
         await this.client.connection.send(unsubscribeRequest).catch((err) => {
             sub.setState(Subscription.State.subscribed)
-            this.client.emit(new Error(`Failed to send unsubscribe request: ${err.stack}`))
-            throw err
+            const error = new Error(`Failed to send unsubscribe request: ${err.stack}`)
+            this.onErrorEmit(error)
+            throw error
         })
         return this._checkAutoDisconnect()
     }

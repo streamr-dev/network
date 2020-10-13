@@ -1,8 +1,11 @@
 import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
+import Debug from 'debug'
 
 import { uid, fakePrivateKey } from '../utils'
 import StreamrClient from '../../src'
+import { pTimeout } from '../../src/iterators'
+import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 import MessageStream from '../../src/Stream'
 
@@ -18,7 +21,7 @@ const Msg = (opts) => ({
 async function collect(iterator, fn = () => {}) {
     const received = []
     for await (const msg of iterator) {
-        received.push(msg)
+        received.push(msg.getParsedContent())
         await fn({
             msg, iterator, received,
         })
@@ -27,7 +30,9 @@ async function collect(iterator, fn = () => {}) {
     return received
 }
 
-const TEST_REPEATS = 1
+const TEST_REPEATS = 3
+
+console.log = Debug('Streamr::   CONSOLE   ')
 
 describe('StreamrClient Stream', () => {
     let expectErrors = 0 // check no errors by default
@@ -51,20 +56,32 @@ describe('StreamrClient Stream', () => {
         return c
     }
 
-    beforeEach(async () => {
+    beforeAll(async () => {
         if (client) {
             await client.disconnect()
         }
-        // eslint-disable-next-line require-atomic-updates
-        client = createClient()
-        await client.connect()
-        console.log = client.debug
+    })
+
+    beforeEach(async () => {
         expectErrors = 0
         onError = jest.fn()
-        stream = await client.createStream({
-            name: uid('stream')
-        })
     })
+
+    beforeAll(async () => {
+        // eslint-disable-next-line require-atomic-updates
+        client = createClient()
+
+        await pTimeout(client.connect(), 4500, 'client.connect')
+    })
+
+    beforeAll(async () => {
+        stream = undefined
+        stream = await pTimeout(client.createStream({
+            name: uid('stream')
+        }), 10000, 'createStream')
+
+        await wait(250) // prevent timing issues
+    }, 11000)
 
     afterEach(async () => {
         await wait()
@@ -75,11 +92,12 @@ describe('StreamrClient Stream', () => {
         }
     })
 
-    afterEach(async () => {
+    afterAll(async () => {
         await wait()
         if (client) {
             client.debug('disconnecting after test')
-            await client.disconnect()
+            await pTimeout(client.disconnect(), 4500, 'client.disconnect')
+            client.debug('disconnected after test')
         }
 
         const openSockets = Connection.getOpen()
@@ -123,7 +141,7 @@ describe('StreamrClient Stream', () => {
                             return
                         }
                     }
-                    expect(received.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published)
+                    expect(received).toEqual(published)
                     expect(M.count(stream.id)).toBe(0)
                 })
 
@@ -133,13 +151,11 @@ describe('StreamrClient Stream', () => {
 
                     expect(M.count(stream.id)).toBe(1)
                     const published = []
-                    for (let i = 0; i < 5; i++) {
+                    for (let i = 0; i < 8; i++) {
                         const message = Msg()
                         // eslint-disable-next-line no-await-in-loop
                         await client.publish(stream.id, message)
                         published.push(message)
-                        // eslint-disable-next-line no-await-in-loop
-                        await wait(100)
                     }
 
                     const received = []
@@ -149,7 +165,7 @@ describe('StreamrClient Stream', () => {
                             return
                         }
                     }
-                    expect(received.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published)
+                    expect(received).toEqual(published)
                     expect(M.count(stream.id)).toBe(0)
                 })
 
@@ -178,7 +194,7 @@ describe('StreamrClient Stream', () => {
                                 t = setTimeout(() => {
                                     expectedLength = received.length
                                     // should not see any more messages after end
-                                    sub.end()
+                                    sub.cancel()
                                 })
                             }
                         }
@@ -224,6 +240,39 @@ describe('StreamrClient Stream', () => {
                     expect(M.count(stream.id)).toBe(0)
                 })
 
+                it('can kill stream with abort', async () => {
+                    const unsubscribeEvents = []
+                    client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+                        unsubscribeEvents.push(m)
+                    })
+                    const M = new MessageStream(client)
+                    const sub = await M.subscribe(stream.id)
+                    expect(M.count(stream.id)).toBe(1)
+
+                    const published = []
+                    for (let i = 0; i < 5; i++) {
+                        const message = Msg()
+                        // eslint-disable-next-line no-await-in-loop
+                        await client.publish(stream.id, message)
+                        published.push(message)
+                    }
+
+                    const received = []
+                    await expect(async () => {
+                        for await (const m of sub) {
+                            received.push(m)
+                            // after first message schedule end
+                            if (received.length === 1) {
+                                await M.abort(stream.id)
+                            }
+                        }
+                    }).rejects.toThrow('abort')
+                    // gets some messages but not all
+                    expect(received).toHaveLength(1)
+                    expect(unsubscribeEvents).toHaveLength(1)
+                    expect(M.count(stream.id)).toBe(0)
+                })
+
                 it('can subscribe to stream multiple times, get updates then unsubscribe', async () => {
                     const M = new MessageStream(client)
                     const sub1 = await M.subscribe(stream.id)
@@ -253,7 +302,7 @@ describe('StreamrClient Stream', () => {
                         })
                     ])
 
-                    expect(received1.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published)
+                    expect(received1).toEqual(published)
                     expect(received2).toEqual(received1)
                     expect(M.count(stream.id)).toBe(0)
                 })
@@ -287,7 +336,7 @@ describe('StreamrClient Stream', () => {
                         })
                     ])
 
-                    expect(received1.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published)
+                    expect(received1).toEqual(published)
                     expect(received2).toEqual(received1)
                     expect(M.count(stream.id)).toBe(0)
                 })
@@ -307,13 +356,13 @@ describe('StreamrClient Stream', () => {
 
                     const received = []
                     for await (const m of sub) {
-                        received.push(m)
+                        received.push(m.getParsedContent())
                         if (received.length === 1) {
-                            await sub.end()
+                            await sub.cancel()
                         }
                     }
 
-                    expect(received.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 1))
+                    expect(received).toEqual(published.slice(0, 1))
                     expect(M.count(stream.id)).toBe(0)
                 })
 
@@ -335,10 +384,40 @@ describe('StreamrClient Stream', () => {
                     }
                     const received = []
                     for await (const m of sub) {
-                        received.push(m)
+                        received.push(m.getParsedContent())
                         if (received.length === 2) {
                             expect(unsubscribeEvents).toHaveLength(0)
-                            await sub.end()
+                            await sub.return()
+                            expect(unsubscribeEvents).toHaveLength(1)
+                            expect(M.count(stream.id)).toBe(0)
+                        }
+                    }
+                    expect(received).toHaveLength(2)
+                    expect(M.count(stream.id)).toBe(0)
+                })
+
+                it('finishes unsubscribe before returning from cancel', async () => {
+                    const unsubscribeEvents = []
+                    client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+                        unsubscribeEvents.push(m)
+                    })
+
+                    const M = new MessageStream(client)
+                    const sub = await M.subscribe(stream.id)
+
+                    const published = []
+                    for (let i = 0; i < 5; i++) {
+                        const message = Msg()
+                        // eslint-disable-next-line no-await-in-loop
+                        await client.publish(stream.id, message)
+                        published.push(message)
+                    }
+                    const received = []
+                    for await (const m of sub) {
+                        received.push(m.getParsedContent())
+                        if (received.length === 2) {
+                            expect(unsubscribeEvents).toHaveLength(0)
+                            await sub.cancel()
                             expect(unsubscribeEvents).toHaveLength(1)
                             expect(M.count(stream.id)).toBe(0)
                         }
@@ -365,12 +444,12 @@ describe('StreamrClient Stream', () => {
                     }
                     const received = []
                     for await (const m of sub) {
-                        received.push(m)
+                        received.push(m.getParsedContent())
                         if (received.length === 2) {
                             expect(unsubscribeEvents).toHaveLength(0)
                             const tasks = [
                                 sub.return(),
-                                sub.end(),
+                                sub.cancel(),
                             ]
                             await Promise.race(tasks)
                             expect(unsubscribeEvents).toHaveLength(1)
@@ -401,13 +480,13 @@ describe('StreamrClient Stream', () => {
                     }
                     const received = []
                     for await (const m of sub) {
-                        received.push(m)
+                        received.push(m.getParsedContent())
                         if (received.length === 2) {
                             expect(unsubscribeEvents).toHaveLength(0)
                             const tasks = [
-                                sub.end(),
-                                sub.end(),
-                                sub.end(),
+                                sub.cancel(),
+                                sub.cancel(),
+                                sub.cancel(),
                             ]
                             await Promise.race(tasks)
                             expect(unsubscribeEvents).toHaveLength(1)
@@ -429,14 +508,18 @@ describe('StreamrClient Stream', () => {
 
                 beforeEach(async () => {
                     M = new MessageStream(client)
-                    sub1 = await M.subscribe(stream.id)
-                    sub2 = await M.subscribe(stream.id)
+                    sub1 = await pTimeout(M.subscribe(stream.id), 1500, 'subscribe 1')
+                    sub2 = await pTimeout(M.subscribe(stream.id), 1500, 'subscribe 2')
+                })
 
+                beforeEach(async () => {
                     published = []
                     for (let i = 0; i < 5; i++) {
                         const message = Msg()
                         // eslint-disable-next-line no-await-in-loop
-                        await client.publish(stream.id, message)
+                        await pTimeout((
+                            client.publish(stream.id, message)
+                        ), 1500, `publish msg ${i}`)
                         published.push(message)
                         // eslint-disable-next-line no-await-in-loop
                         await wait(100)
@@ -444,36 +527,51 @@ describe('StreamrClient Stream', () => {
                 })
 
                 it('can subscribe to stream multiple times then unsubscribe all mid-stream', async () => {
+                    let sub1Received
+                    let sub1ReceivedAtUnsubscribe
+                    const gotOne = Defer()
                     const [received1, received2] = await Promise.all([
-                        collect(sub1),
+                        collect(sub1, async ({ received }) => {
+                            sub1Received = received
+                            gotOne.resolve()
+                        }),
                         collect(sub2, async ({ received }) => {
+                            await gotOne
                             if (received.length === 1) {
+                                sub1ReceivedAtUnsubscribe = sub1Received.slice()
                                 await M.unsubscribe(stream.id)
                             }
                         }),
                     ])
-                    expect(received1.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 1))
-                    expect(received2.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 1))
+                    expect(received2).toEqual(published.slice(0, 1))
+                    expect(received1).toEqual(published.slice(0, sub1ReceivedAtUnsubscribe.length))
+                    expect(sub1ReceivedAtUnsubscribe).toEqual(sub1Received)
                     expect(M.count(stream.id)).toBe(0)
                 })
 
                 it('can subscribe to stream multiple times then abort mid-stream', async () => {
                     let received1
                     let received2
+                    let sub1ReceivedAtUnsubscribe
+                    const gotOne = Defer()
                     await Promise.all([
                         expect(() => collect(sub1, ({ received }) => {
                             received1 = received
+                            gotOne.resolve()
                         })).rejects.toThrow('abort'),
                         expect(() => collect(sub2, async ({ received }) => {
+                            await gotOne
                             received2 = received
                             if (received.length === 1) {
+                                sub1ReceivedAtUnsubscribe = received1.slice()
                                 await M.abort(stream.id)
                             }
                         })).rejects.toThrow('abort'),
                     ])
 
-                    expect(received1.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 1))
-                    expect(received2.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 1))
+                    expect(received1).toEqual(sub1ReceivedAtUnsubscribe)
+                    expect(received1).toEqual(published.slice(0, sub1ReceivedAtUnsubscribe.length))
+                    expect(received2).toEqual(published.slice(0, 1))
 
                     expect(M.count(stream.id)).toBe(0)
                 })
@@ -492,8 +590,8 @@ describe('StreamrClient Stream', () => {
                         })
                     ])
 
-                    expect(received1.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 4))
-                    expect(received2.map(({ streamMessage }) => streamMessage.getParsedContent())).toEqual(published.slice(0, 1))
+                    expect(received1).toEqual(published.slice(0, 4))
+                    expect(received2).toEqual(published.slice(0, 1))
 
                     expect(M.count(stream.id)).toBe(0)
                 })
@@ -513,7 +611,7 @@ describe('StreamrClient Stream', () => {
 
                 const received = []
                 for await (const m of sub) {
-                    received.push(m)
+                    received.push(m.getParsedContent())
                 }
                 expect(received).toHaveLength(0)
                 expect(unsubscribeEvents).toHaveLength(1)
@@ -542,7 +640,7 @@ describe('StreamrClient Stream', () => {
 
                 const received = []
                 for await (const m of sub) {
-                    received.push(m)
+                    received.push(m.getParsedContent())
                 }
 
                 // shouldn't get any messages

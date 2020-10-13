@@ -1,12 +1,9 @@
-import { Readable, PassThrough, finished } from 'stream'
+import { Readable, PassThrough } from 'stream'
 
-import Debug from 'debug'
 import { wait } from 'streamr-test-utils'
 
 import { iteratorFinally, CancelableGenerator, pipeline } from '../../src/iterators'
 import { Defer } from '../../src/utils'
-
-console.log = Debug('Streamr::   CONSOLE   ')
 
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 
@@ -294,12 +291,12 @@ describe('Iterator Utils', () => {
         })
 
         describe('nesting', () => {
-            let onFinallyAfterInner
+            let onFinallyInnerAfter
             let onFinallyInner
 
             beforeEach(() => {
-                onFinallyAfterInner = jest.fn()
-                const afterInner = onFinallyAfterInner // capture so won't run afterInner of another test
+                onFinallyInnerAfter = jest.fn()
+                const afterInner = onFinallyInnerAfter // capture so won't run afterInner of another test
                 onFinallyInner = jest.fn(async () => {
                     await wait(WAIT)
                     afterInner()
@@ -308,7 +305,7 @@ describe('Iterator Utils', () => {
 
             afterEach(() => {
                 expect(onFinallyInner).toHaveBeenCalledTimes(1)
-                expect(onFinallyAfterInner).toHaveBeenCalledTimes(1)
+                expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
             })
 
             IteratorTest('iteratorFinally nested', () => {
@@ -466,15 +463,19 @@ describe('Iterator Utils', () => {
 
         it('cancels when iterator.cancel() is called asynchronously', async () => {
             const received = []
-            const [cancel, itr] = CancelableGenerator(generate(), onFinally)
+            const [cancel, itr] = CancelableGenerator(generate(), onFinally, {
+                timeout: WAIT,
+            })
             let receievedAtCallTime
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === MAX_ITEMS) {
                     // eslint-disable-next-line no-loop-func
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         receievedAtCallTime = received
-                        cancel()
+                        await cancel()
+                        expect(onFinally).toHaveBeenCalledTimes(1)
+                        expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                     })
                 }
             }
@@ -493,6 +494,8 @@ describe('Iterator Utils', () => {
                 received.push(msg)
                 if (received.length === expected.length) {
                     await cancel()
+                    expect(onFinally).toHaveBeenCalledTimes(1)
+                    expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                 }
             }
 
@@ -504,14 +507,18 @@ describe('Iterator Utils', () => {
             const [cancel, itr] = CancelableGenerator((async function* Gen() {
                 yield* expected
                 yield await new Promise(() => {}) // would wait forever
-            }()), onFinally)
+            }()), onFinally, {
+                timeout: WAIT,
+            })
 
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === expected.length) {
                     // eslint-disable-next-line no-loop-func
-                    setTimeout(() => {
-                        cancel()
+                    setTimeout(async () => {
+                        await cancel()
+                        expect(onFinally).toHaveBeenCalledTimes(1)
+                        expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                     })
                 }
             }
@@ -551,7 +558,9 @@ describe('Iterator Utils', () => {
             const [cancel, itr] = CancelableGenerator((async function* Gen() {
                 yield* expected
                 yield await new Promise(() => {}) // would wait forever
-            }()), onFinally)
+            }()), onFinally, {
+                timeout: WAIT,
+            })
 
             const err = new Error('expected')
 
@@ -561,9 +570,12 @@ describe('Iterator Utils', () => {
                     received.push(msg)
                     if (received.length === MAX_ITEMS) {
                         // eslint-disable-next-line no-loop-func
-                        setTimeout(() => {
+                        setTimeout(async () => {
                             receievedAtCallTime = received
-                            cancel(err)
+                            await cancel(err)
+
+                            expect(onFinally).toHaveBeenCalledTimes(1)
+                            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                         })
                     }
                 }
@@ -576,13 +588,18 @@ describe('Iterator Utils', () => {
             const triggeredForever = jest.fn()
             const [cancel, itr] = CancelableGenerator((async function* Gen() {
                 yield* expected
-                setTimeout(() => {
-                    cancel()
+                setTimeout(async () => {
+                    await cancel()
+
+                    expect(onFinally).toHaveBeenCalledTimes(1)
+                    expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                 }, WAIT * 2)
                 yield await new Promise(() => {
                     triggeredForever()
                 }) // would wait forever
-            }()), onFinally)
+            }()), onFinally, {
+                timeout: WAIT,
+            })
 
             const tasks = expected.map(async () => itr.next())
             tasks.push(itr.next()) // one more over the edge (should trigger forever promise)
@@ -601,14 +618,19 @@ describe('Iterator Utils', () => {
                     yield v
                 }
 
-                setTimeout(() => {
-                    cancel()
+                setTimeout(async () => {
+                    await cancel()
+
+                    expect(onFinally).toHaveBeenCalledTimes(1)
+                    expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                 }, WAIT * 2)
 
                 yield await new Promise(() => {
                     triggeredForever()
                 }) // would wait forever
-            }()), onFinally)
+            }()), onFinally, {
+                timeout: WAIT,
+            })
 
             const tasks = expected.map(async () => itr.next())
             tasks.push(itr.next()) // one more over the edge (should trigger forever promise)
@@ -634,9 +656,12 @@ describe('Iterator Utils', () => {
                     received.push(msg)
                     if (received.length === MAX_ITEMS) {
                         // eslint-disable-next-line no-loop-func
-                        setTimeout(() => {
+                        setTimeout(async () => {
                             receievedAtCallTime = received
-                            cancel(err)
+                            await cancel(err)
+
+                            expect(onFinally).toHaveBeenCalledTimes(1)
+                            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                         })
                     }
                 }
@@ -649,12 +674,12 @@ describe('Iterator Utils', () => {
         })
 
         describe('nesting', () => {
-            let onFinallyAfterInner
+            let onFinallyInnerAfter
             let onFinallyInner
 
             beforeEach(() => {
-                onFinallyAfterInner = jest.fn()
-                const afterInner = onFinallyAfterInner // capture so won't run afterInner of another test
+                onFinallyInnerAfter = jest.fn()
+                const afterInner = onFinallyInnerAfter // capture so won't run afterInner of another test
                 onFinallyInner = jest.fn(async () => {
                     await wait(WAIT)
                     afterInner()
@@ -663,7 +688,7 @@ describe('Iterator Utils', () => {
 
             afterEach(() => {
                 expect(onFinallyInner).toHaveBeenCalledTimes(1)
-                expect(onFinallyAfterInner).toHaveBeenCalledTimes(1)
+                expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
             })
 
             IteratorTest('CancelableGenerator nested', () => {
@@ -680,7 +705,9 @@ describe('Iterator Utils', () => {
                         // should not get here
                         waitInner()
                     }) // would wait forever
-                }()), onFinallyInner)
+                }()), onFinallyInner, {
+                    timeout: WAIT,
+                })
 
                 const waitOuter = jest.fn()
                 const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
@@ -691,7 +718,11 @@ describe('Iterator Utils', () => {
                     }) // would wait forever
                 }()), async () => {
                     await cancelInner()
+                    expect(onFinallyInner).toHaveBeenCalledTimes(1)
+                    expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
                     await onFinally()
+                }, {
+                    timeout: WAIT,
                 })
 
                 const received = []
@@ -715,7 +746,9 @@ describe('Iterator Utils', () => {
                         // should not get here
                         waitInner()
                     }) // would wait forever
-                }()), onFinallyInner)
+                }()), onFinallyInner, {
+                    timeout: WAIT,
+                })
 
                 const waitOuter = jest.fn()
                 const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
@@ -727,6 +760,8 @@ describe('Iterator Utils', () => {
                 }()), async () => {
                     await cancelInner()
                     await onFinally()
+                }, {
+                    timeout: WAIT,
                 })
 
                 const received = []
@@ -1260,7 +1295,9 @@ describe('Iterator Utils', () => {
                     }
                 },
                 p1
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             await expect(async () => {
@@ -1307,7 +1344,9 @@ describe('Iterator Utils', () => {
                     }
                 },
                 throughStream2,
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             for await (const msg of p) {
@@ -1348,7 +1387,9 @@ describe('Iterator Utils', () => {
                     }
                 },
                 throughStream2,
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             for await (const msg of p) {
@@ -1384,7 +1425,9 @@ describe('Iterator Utils', () => {
                         }
                     }
                 },
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             await expect(async () => {
@@ -1435,7 +1478,9 @@ describe('Iterator Utils', () => {
                         }
                     }
                 },
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             await expect(async () => {
@@ -1469,7 +1514,9 @@ describe('Iterator Utils', () => {
                         yield msg
                     }
                 },
-            ], onFinallyInner)
+            ], onFinallyInner, {
+                timeout: WAIT,
+            })
 
             const p = pipeline([
                 generate(),
@@ -1480,7 +1527,9 @@ describe('Iterator Utils', () => {
                         yield msg
                     }
                 },
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             for await (const msg of p) {
@@ -1518,7 +1567,9 @@ describe('Iterator Utils', () => {
                         yield msg
                     }
                 },
-            ], onFinallyInner)
+            ], onFinallyInner, {
+                timeout: WAIT,
+            })
 
             const firstStream = Readable.from(generate())
             firstStream.once('close', onFirstStreamClose)
@@ -1531,7 +1582,9 @@ describe('Iterator Utils', () => {
                     }
                 },
                 p1,
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             for await (const msg of p) {
@@ -1574,7 +1627,9 @@ describe('Iterator Utils', () => {
                         }
                     }
                 },
-            ], onFinallyInner)
+            ], onFinallyInner, {
+                timeout: WAIT,
+            })
 
             const firstStream = Readable.from(generate())
             firstStream.once('close', onFirstStreamClose)
@@ -1587,14 +1642,142 @@ describe('Iterator Utils', () => {
                         yield msg
                     }
                 },
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             for await (const msg of p) {
                 received.push(msg)
             }
 
-            await wait(1000)
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(receivedStep1).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(receivedStep2).toEqual(expected.slice(0, MAX_ITEMS))
+            // all streams were closed
+            expect(onFirstStreamClose).toHaveBeenCalledTimes(1)
+            expect(onInputStreamClose).toHaveBeenCalledTimes(1)
+
+            expect(onFinallyInner).toHaveBeenCalledTimes(1)
+            expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
+        })
+
+        it('works with nested pipelines & streams + cancel before done', async () => {
+            const onFinallyInnerAfter = jest.fn()
+            const onFinallyInner = jest.fn(async () => {
+                await wait(WAIT)
+                onFinallyInnerAfter()
+            })
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const onFirstStreamClose = jest.fn()
+            const onInputStreamClose = jest.fn()
+
+            const inputStream = new PassThrough({
+                objectMode: true,
+            })
+            inputStream.once('close', onInputStreamClose)
+            const p1 = pipeline([
+                inputStream,
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                        if (receivedStep1.length === MAX_ITEMS) {
+                            await p1.cancel()
+                        }
+                    }
+                },
+            ], onFinallyInner, {
+                timeout: WAIT,
+            })
+
+            const firstStream = Readable.from(generate())
+            firstStream.once('close', onFirstStreamClose)
+            const p = pipeline([
+                firstStream,
+                p1,
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        receivedStep2.push(msg)
+                        yield msg
+                    }
+                },
+            ], onFinally, {
+                timeout: WAIT,
+            })
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(receivedStep1).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(receivedStep2).toEqual(expected.slice(0, MAX_ITEMS))
+            // all streams were closed
+            expect(onFirstStreamClose).toHaveBeenCalledTimes(1)
+            expect(onInputStreamClose).toHaveBeenCalledTimes(1)
+
+            expect(onFinallyInner).toHaveBeenCalledTimes(1)
+            expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
+        })
+
+        it('works with nested pipelines & streams + cancel before done in second pipeline', async () => {
+            const onFinallyInnerAfter = jest.fn()
+            const onFinallyInner = jest.fn(async () => {
+                await wait(WAIT)
+                onFinallyInnerAfter()
+            })
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const onFirstStreamClose = jest.fn()
+            const onInputStreamClose = jest.fn()
+
+            const inputStream = new PassThrough({
+                objectMode: true,
+            })
+            inputStream.once('close', onInputStreamClose)
+
+            let p
+            const p1 = pipeline([
+                inputStream,
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                        if (receivedStep1.length === MAX_ITEMS) {
+                            await p.cancel()
+                            expect(onFinally).toHaveBeenCalledTimes(1)
+                            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+                            expect(onFinallyInner).toHaveBeenCalledTimes(1)
+                            expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
+                        }
+                    }
+                },
+            ], onFinallyInner, {
+                timeout: WAIT,
+            })
+
+            const firstStream = Readable.from(generate())
+            firstStream.once('close', onFirstStreamClose)
+            p = pipeline([
+                firstStream,
+                p1,
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        receivedStep2.push(msg)
+                        yield msg
+                    }
+                },
+            ], onFinally, {
+                timeout: WAIT,
+            })
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
 
             expect(received).toEqual(expected.slice(0, MAX_ITEMS))
             expect(receivedStep1).toEqual(expected.slice(0, MAX_ITEMS))
@@ -1631,7 +1814,9 @@ describe('Iterator Utils', () => {
                         yield msg
                     }
                 },
-            ], onFinallyInner)
+            ], onFinallyInner, {
+                timeout: WAIT,
+            })
 
             const firstStream = Readable.from(generate())
             firstStream.once('close', onFirstStreamClose)
@@ -1644,7 +1829,9 @@ describe('Iterator Utils', () => {
                     }
                 },
                 p1,
-            ], onFinally)
+            ], onFinally, {
+                timeout: WAIT,
+            })
 
             const received = []
             for await (const msg of p) {

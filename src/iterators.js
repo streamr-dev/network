@@ -15,14 +15,14 @@ class TimeoutError extends Error {
     }
 }
 
-async function pTimeout(promise, timeout, message = '') {
+export async function pTimeout(promise, timeout = 0, message = '') {
     let t
     return Promise.race([
         promise,
         new Promise((resolve, reject) => {
             t = setTimeout(() => {
                 reject(new TimeoutError(message, timeout))
-            })
+            }, timeout)
         })
     ]).finally(() => {
         clearTimeout(t)
@@ -176,7 +176,7 @@ export function iteratorFinally(iterable, onFinally) {
  * const [cancal, generator] = CancelableGenerator(iterable, onFinally)
  */
 
-export function CancelableGenerator(iterable, onFinally, { timeout = 1000 } = {}) {
+export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {}) {
     let started = false
     let cancelled = false
     let finalCalled = false
@@ -315,27 +315,39 @@ const isPipeline = Symbol('isPipeline')
 
 const getIsStream = (item) => typeof item.pipe === 'function'
 
-export function pipeline(iterables = [], onFinally) {
+export function pipeline(iterables = [], onFinally, opts) {
     const cancelFns = new Set()
     let cancelled = false
     let error
     const onCancelDone = Defer()
-    const cancelAll = async (err) => {
-        if (cancelled) {
-            await onCancelDone
-            return
-        }
+    let pipelineValue
 
+    const cancelAll = async (err) => {
         cancelled = true
         error = err
         try {
             // eslint-disable-next-line promise/no-promise-in-callback
-            await Promise.all([...cancelFns].map(async (cancel) => (
+            await allSettledValues([...cancelFns].map(async (cancel) => (
                 cancel(err)
-            ))).then(onCancelDone.resolve, onCancelDone.reject)
+            )))
         } finally {
             cancelFns.clear()
         }
+    }
+
+    const cancel = async (err) => {
+        if (cancelled) {
+            await onCancelDone
+            return
+        }
+        await cancelAll(err)
+        if (error) {
+            // eslint-disable-next-line promise/no-promise-in-callback
+            pipelineValue.throw(error).catch(() => {}) // ignore err
+        } else {
+            pipelineValue.return()
+        }
+        await onCancelDone
     }
 
     let firstSrc
@@ -352,8 +364,11 @@ export function pipeline(iterables = [], onFinally) {
             let nextIterable = typeof next === 'function' ? next(prev) : next
 
             if (nextIterable[isPipeline]) {
-                cancelFns.add(nextIterable.cancel)
                 nextIterable.setFirstSource(prev)
+            }
+
+            if (nextIterable.cancel) {
+                cancelFns.add(nextIterable.cancel)
             }
 
             if (nextIterable && getIsStream(nextIterable)) {
@@ -382,24 +397,31 @@ export function pipeline(iterables = [], onFinally) {
             if (stream) {
                 await endStream(stream, err || error)
             }
-        })
+        }, opts)
 
         cancelFns.add(cancelCurrent)
         return it
     }, undefined)
 
-    const pipelineValue = iteratorFinally(last, async () => {
+    pipelineValue = iteratorFinally(last, async () => {
         if (!cancelled) {
             await cancelAll(error)
         }
         cancelFns.clear()
-        await onFinally(error)
+        try {
+            await onFinally(error)
+            if (error) {
+                throw error
+            }
+        } finally {
+            onCancelDone.resolve()
+        }
     })
 
     return Object.assign(pipelineValue, {
         [isPipeline]: true,
         setFirstSource,
-        cancel: cancelAll,
+        cancel,
     })
 }
 

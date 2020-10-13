@@ -75,6 +75,9 @@ const clientConfig = merge({}, commonConfig, {
         libraryTarget: 'umd2',
         filename: libraryName + '.web.js',
     },
+    node: {
+        stream: 'readable-stream',
+    },
     resolve: {
         alias: {
             http: path.resolve(__dirname, './src/shim/http-https.js'),

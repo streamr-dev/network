@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid'
 import uniqueId from 'lodash.uniqueid'
 import LRU from 'quick-lru'
 import pMemoize from 'p-memoize'
+import pQueue from 'p-queue'
 import pLimit from 'p-limit'
 import mem from 'mem'
 
@@ -164,4 +165,23 @@ export function Defer(executor = () => {}) {
         reject,
         wrap,
     })
+}
+
+export function pOrderedResolve(fn) {
+    const queue = pLimit(1)
+    return async (...args) => {
+        const d = Defer()
+        const done = queue(() => d)
+        // eslint-disable-next-line promise/catch-or-return
+        await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
+        return done
+    }
+}
+
+export function pOrderedResolveLimit(limit = 6, fn) {
+    const queue = pLimit(limit)
+    const orderedFn = pOrderedResolve(fn)
+    return async (...args) => (
+        queue(orderedFn(...args))
+    )
 }

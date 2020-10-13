@@ -1,7 +1,8 @@
-import fetch from 'node-fetch'
-import Debug from 'debug'
 import http from 'http'
 import https from 'https'
+
+import fetch from 'node-fetch'
+import Debug from 'debug'
 
 import AuthFetchError from '../errors/AuthFetchError'
 import { getVersionString } from '../utils'
@@ -20,7 +21,6 @@ export function getAgent(protocol) {
         if (!getAgent.httpAgent) {
             getAgent.httpAgent = new http.Agent({
                 keepAlive: true,
-                keepAliveMsecs: 10000,
             })
         }
         return getAgent.httpAgent
@@ -29,7 +29,6 @@ export function getAgent(protocol) {
     if (!getAgent.httpsAgent) {
         getAgent.httpsAgent = new https.Agent({
             keepAlive: true,
-            keepAliveMsecs: 10000,
         })
     }
     return getAgent.httpsAgent

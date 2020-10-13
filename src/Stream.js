@@ -1,30 +1,26 @@
-import { PassThrough, finished } from 'stream'
-import { promisify } from 'util'
+import { PassThrough } from 'stream'
 
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
-import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import { ControlLayer, MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 import AbortController from 'node-abort-controller'
 
-import { uuid } from './utils'
+import SignatureRequiredError from './errors/SignatureRequiredError'
+import { uuid, CacheAsyncFn, pOrderedResolve } from './utils'
+import { endStream, pipeline, AbortError, CancelableGenerator } from './iterators'
 
-const pFinished = promisify(finished)
+const { OrderingUtil, StreamMessageValidator } = Utils
+
+const { ValidationError } = Errors
 
 const {
     SubscribeRequest, UnsubscribeRequest, ControlMessage,
     ResendLastRequest, ResendFromRequest, ResendRangeRequest,
 } = ControlLayer
 
-const { MessageRef } = MessageLayer
+const { MessageRef, StreamMessage } = MessageLayer
 
-export class AbortError extends Error {
-    constructor(msg = '', ...args) {
-        super(`The operation was aborted. ${msg}`, ...args)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
-    }
-}
+export { AbortError }
 
 /**
  * Convert allSettled results into a thrown Aggregate error if necessary.
@@ -43,90 +39,6 @@ async function allSettledValues(items, errorMessage) {
     return result.map(({ value }) => value)
 }
 
-/**
- * Allows injecting a function to execute after an iterator finishes.
- * Executes finally function even if generator not started.
- */
-
-function iteratorFinally(iterator, onFinally = () => {}) {
-    let started = false
-    const onFinallyOnce = pMemoize(onFinally)
-    const g = (async function* It() {
-        started = true
-        try {
-            yield* iterator
-        } finally {
-            await onFinallyOnce()
-        }
-    }())
-
-    // overrides return/throw to call onFinally even if generator was never started
-    const oldReturn = g.return
-    const oldThrow = g.throw
-    return Object.assign(g, {
-        return: async (...args) => {
-            if (!started) {
-                await onFinallyOnce(iterator)
-            }
-            return oldReturn.call(g, ...args)
-        },
-        throw: async (...args) => {
-            if (!started) {
-                await onFinallyOnce()
-            }
-            return oldThrow.call(g, ...args)
-        },
-    })
-}
-
-/**
- * Iterates over a Stream
- * Cleans up stream/stops iterator if either stream or iterator ends.
- * Adds abort + end methods to iterator
- */
-
-function streamIterator(stream, { abortController, onFinally = () => {}, }) {
-    const onFinallyOnce = pMemoize(onFinally) // called once when stream ends
-    const endStreamOnce = pMemoize(async (optionalErr) => {
-        // ends stream + waits for end
-        stream.destroy(optionalErr)
-        await pFinished(stream, {
-            // necessary or can get premature close errors
-            // TODO: figure out why
-            readable: false,
-            writable: false,
-        })
-    })
-
-    const it = iteratorFinally((async function* streamIteratorFn() {
-        yield* stream
-    }()), async () => {
-        await endStreamOnce()
-        await onFinallyOnce()
-    })
-
-    return Object.assign(it, {
-        stream,
-        async abort() {
-            if (abortController) {
-                abortController.abort()
-            } else {
-                await it.end(new AbortError())
-            }
-        },
-        async end(optionalErr) {
-            await endStreamOnce(optionalErr)
-
-            if (optionalErr) {
-                await it.throw(optionalErr)
-                return
-            }
-
-            await it.return()
-        }
-    })
-}
-
 function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
     return function isMatchingStreamMessage({ streamMessage }) {
         const msgStreamId = streamMessage.getStreamId()
@@ -142,25 +54,11 @@ function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
  * Write messages into a Stream.
  */
 
-function messageStream(connection, { streamId, streamPartition, signal, type = ControlMessage.TYPES.BroadcastMessage }) {
-    if (signal && signal.aborted) {
-        throw new AbortError()
-    }
-
+function messageStream(connection, { streamId, streamPartition, type = ControlMessage.TYPES.BroadcastMessage }) {
     // stream acts as buffer
     const msgStream = new PassThrough({
         objectMode: true,
     })
-
-    const onAbort = () => {
-        return msgStream.destroy(new AbortError())
-    }
-
-    if (signal) {
-        signal.addEventListener('abort', onAbort, {
-            once: true
-        })
-    }
 
     const isMatchingStreamMessage = getIsMatchingStreamMessage({
         streamId,
@@ -178,17 +76,10 @@ function messageStream(connection, { streamId, streamPartition, signal, type = C
     // remove onMessage handler & clean up as soon as we see any 'end' events
     const onClose = () => {
         connection.off(type, onMessage)
-        // clean up abort signal
-        if (signal) {
-            signal.removeEventListener('abort', onAbort, {
-                once: true,
-            })
-        }
         // clean up other handlers
         msgStream
             .off('close', onClose)
             .off('end', onClose)
-            .off('destroy', onClose)
             .off('finish', onClose)
     }
 
@@ -280,6 +171,153 @@ async function waitForRequestResponse(client, request) {
         connection: client.connection,
         types: PAIRS.get(request.type),
         requestId: request.requestId,
+    })
+}
+
+function OrderMessages(client, options = {}) {
+    const { gapFillTimeout, retryResendAfter } = client.options
+    const { streamId, streamPartition } = validateOptions(options)
+
+    const outStream = new PassThrough({
+        objectMode: true,
+    })
+
+    let done = false
+
+    const orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
+        if (!outStream.writable || done) {
+            return
+        }
+
+        if (orderedMessage.isByeMessage()) {
+            outStream.end(orderedMessage)
+        } else {
+            outStream.write(orderedMessage)
+        }
+    }, (from, to, publisherId, msgChainId) => async () => {
+        // eslint-disable-next-line no-use-before-define
+        const resendIt = await getResendStream(client, {
+            streamId, streamPartition, from, to, publisherId, msgChainId,
+        })
+        if (done) {
+            return
+        }
+        for (const { streamMessage } of resendIt) {
+            orderingUtil.add(streamMessage)
+        }
+    }, gapFillTimeout, retryResendAfter)
+
+    const markMessageExplicitly = orderingUtil.markMessageExplicitly.bind(orderingUtil)
+
+    return Object.assign(pipeline([
+        // eslint-disable-next-line require-yield
+        async function* WriteToOrderingUtil(src) {
+            for await (const msg of src) {
+                orderingUtil.add(msg)
+            }
+        },
+        outStream,
+        async function* WriteToOrderingUtil(src) {
+            for await (const msg of src) {
+                yield msg
+            }
+        },
+    ], async (err) => {
+        done = true
+        orderingUtil.clearGaps()
+        await endStream(outStream, err)
+        orderingUtil.clearGaps()
+    }), {
+        markMessageExplicitly,
+    })
+}
+
+function Validator(client, opts) {
+    const options = validateOptions(opts)
+    const cacheOptions = client.options.cache
+    const getStream = CacheAsyncFn(client.getStream.bind(client), cacheOptions)
+    const isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), cacheOptions)
+    const isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), cacheOptions)
+
+    const validator = new StreamMessageValidator({
+        getStream,
+        isPublisher: CacheAsyncFn(async (publisherId, _streamId) => (
+            isStreamPublisher(_streamId, publisherId)
+        ), cacheOptions),
+        isSubscriber: CacheAsyncFn(async (ethAddress, _streamId) => (
+            isStreamSubscriber(_streamId, ethAddress)
+        ), cacheOptions)
+    })
+
+    // return validation function that resolves in call order
+    return pOrderedResolve(async (msg) => {
+        // Check special cases controlled by the verifySignatures policy
+        if (client.options.verifySignatures === 'never' && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
+            return msg // no validation required
+        }
+
+        if (options.verifySignatures === 'always' && !msg.signature) {
+            throw new SignatureRequiredError(msg)
+        }
+
+        // In all other cases validate using the validator
+        await validator.validate(msg) // will throw with appropriate validation failure
+        return msg
+    })
+}
+
+function MessagePipeline(client, opts = {}, onFinally = () => {}) {
+    const options = validateOptions(opts)
+    const { signal, validate = Validator(client, options) } = options
+    const stream = messageStream(client.connection, options)
+    const orderingUtil = OrderMessages(client, options)
+    let p
+    const onAbort = () => {
+        p.cancel(new AbortError())
+    }
+
+    signal.addEventListener('abort', onAbort, {
+        once: true
+    })
+
+    if (signal.aborted) {
+        stream.destroy(new AbortError())
+    }
+
+    p = pipeline([
+        stream,
+        async function* Validate(src) {
+            for await (const { streamMessage } of src) {
+                try {
+                    yield await validate(streamMessage)
+                } catch (err) {
+                    if (err instanceof ValidationError) {
+                        orderingUtil.markMessageExplicitly(streamMessage)
+                        // eslint-disable-next-line no-continue
+                        continue
+                    }
+                }
+            }
+        },
+        orderingUtil,
+    ], async (err) => {
+        signal.removeEventListener('abort', onAbort, {
+            once: true,
+        })
+        try {
+            await endStream(stream, err)
+        } finally {
+            await onFinally(err)
+        }
+    })
+
+    return Object.assign(p, {
+        stream,
+        done: () => {
+            if (stream.writable) {
+                stream.end()
+            }
+        }
     })
 }
 
@@ -379,17 +417,14 @@ async function resend(client, options) {
     return onResponse
 }
 
-async function iterateResend(client, opts) {
+async function getResendStream(client, opts) {
     const options = validateOptions(opts)
     const abortController = new AbortController()
-    const stream = messageStream(client.connection, {
-        signal: abortController.signal,
-        type: ControlMessage.TYPES.UnicastMessage,
-        ...options,
-    })
 
-    const streamIt = streamIterator(stream, {
-        abortController,
+    const msgs = MessagePipeline(client, {
+        ...options,
+        type: ControlMessage.TYPES.UnicastMessage,
+        signal: abortController.signal,
     })
 
     const requestId = uuid('rs')
@@ -403,12 +438,10 @@ async function iterateResend(client, opts) {
             ControlMessage.TYPES.ResendResponseNoResend,
         ],
     }).then((v) => {
-        if (stream.writable) {
-            stream.end()
-        }
+        msgs.done()
         return v
     }, (err) => {
-        return streamIt.end(err)
+        return msgs.cancel(err)
     })
 
     // wait for resend complete message or resend request done
@@ -419,7 +452,7 @@ async function iterateResend(client, opts) {
         onResendDone
     ])
 
-    return streamIt
+    return msgs
 }
 
 /**
@@ -442,6 +475,7 @@ class Subscription {
         this.return = this.return.bind(this)
         this.sendSubscribe = pMemoize(this.sendSubscribe.bind(this))
         this.sendUnsubscribe = pMemoize(this.sendUnsubscribe.bind(this))
+        this.validate = Validator(client, options)
     }
 
     hasPending() {
@@ -449,8 +483,7 @@ class Subscription {
     }
 
     async abort() {
-        this.abortController.abort()
-        await this.queue(() => {}) // pending tasks done
+        await this.abortController.abort()
     }
 
     async sendSubscribe() {
@@ -468,15 +501,18 @@ class Subscription {
         return iterator
     }
 
-    async unsubscribe() {
+    async _unsubscribe() {
         pMemoize.clear(this.sendSubscribe)
         await this.sendUnsubscribe()
     }
 
-    async end(optionalErr) {
-        await allSettledValues([...this.streams].map(async (it) => {
-            await it.end(optionalErr)
-        }), 'end failed')
+    async cancel(optionalErr) {
+        if (this.hasPending()) {
+            await this.queue(() => {})
+        }
+        await allSettledValues([...this.streams].map(async (it) => (
+            it.cancel(optionalErr)
+        )), 'cancel failed')
     }
 
     async return() {
@@ -485,13 +521,17 @@ class Subscription {
         }), 'return failed')
     }
 
+    async unsubscribe(...args) {
+        return this.cancel(...args)
+    }
+
     async _cleanup(it) {
         // if iterator never started, finally block never called, thus need to manually clean it
         const hadStream = this.streams.has(it)
         this.streams.delete(it)
         if (hadStream && !this.streams.size) {
             // unsubscribe if no more streams
-            await this.unsubscribe()
+            await this._unsubscribe()
         }
     }
 
@@ -500,22 +540,18 @@ class Subscription {
     }
 
     iterate() {
-        const stream = messageStream(this.client.connection, {
-            ...this.options,
+        const msgs = MessagePipeline(this.client, {
             signal: this.abortController.signal,
+            validate: this.validate,
             type: ControlMessage.TYPES.BroadcastMessage,
+            ...this.options,
+        }, async () => {
+            await this._cleanup(msgs)
         })
 
-        const streamIt = streamIterator(stream, {
-            abortController: this.abortController,
-            onFinally: async () => {
-                await this._cleanup(streamIt)
-            }
-        })
+        this.streams.add(msgs)
 
-        this.streams.add(streamIt)
-
-        return streamIt
+        return msgs
     }
 
     [Symbol.asyncIterator]() {
@@ -556,14 +592,11 @@ export default class Subscriptions {
     async unsubscribe(options) {
         const key = SubKey(validateOptions(options))
         const sub = this.subscriptions.get(key)
-        if (!sub) { return }
-
-        // wait for any outstanding operations
-        if (sub.hasPending()) {
-            await sub.queue(() => {})
+        if (!sub) {
+            return
         }
 
-        await sub.return() // close all streams (thus unsubscribe)
+        await sub.cancel() // close all streams (thus unsubscribe)
     }
 
     async subscribe(options) {
@@ -577,7 +610,7 @@ export default class Subscriptions {
     }
 
     async resend(opts) {
-        return iterateResend(this.client, opts)
+        return getResendStream(this.client, opts)
     }
 
     async resendSubscribe(options) {
@@ -588,18 +621,20 @@ export default class Subscriptions {
 
         // end both on end
         async function end(optionalErr) {
-            await allSettledValues([
-                sub.end(optionalErr),
-                resendSub.end(optionalErr),
-            ], 'resend end failed')
+            await Promise.all([
+                sub.cancel(optionalErr),
+                resendSub.cancel(optionalErr),
+            ])
         }
 
-        const it = iteratorFinally((async function* ResendSubIterator() {
+        const [, it] = CancelableGenerator((async function* ResendSubIterator() {
             // iterate over resend
             yield* resendSub
             // then iterate over realtime subscription
             yield* sub
-        }()), () => end())
+        }()), async (err) => {
+            await end(err)
+        })
 
         // attach additional utility functions
         return Object.assign(it, {
@@ -608,13 +643,6 @@ export default class Subscriptions {
             abort: () => (
                 this.abortController && this.abortController.abort()
             ),
-            async end(optionalErr) { // eslint-disable-line require-atomic-updates
-                try {
-                    await end(optionalErr)
-                } finally {
-                    await it.return()
-                }
-            }
         })
     }
 }
