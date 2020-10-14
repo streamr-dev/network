@@ -229,12 +229,10 @@ class WsEndpoint extends EventEmitter {
         try {
             if (ws.constructor.name === 'uWS.WebSocket') {
                 const res = ws.send(message)
-
-                if (!res) {
-                    errorCallback(new Error(`Failed to send to message to ${recipientId}`))
-                } else {
-                    onSuccess(recipientAddress, recipientId, message)
+                if (!res && ws.getBufferedAmount() > 8 * 1024 * 1024) {
+                    this.logger.warn(`buffer high for ${recipientId} at ${ws.getBufferedAmount()}`)
                 }
+                onSuccess(recipientAddress, recipientId, message)
             } else {
                 ws.send(message, (err) => {
                     if (err) {
