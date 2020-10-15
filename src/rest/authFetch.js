@@ -18,9 +18,8 @@ const authFetch = async (url, session, opts = {}, requireNewToken = false) => {
             ...opts.headers,
         }
     }
-    // add default 'Content-Type: application/json' header for all requests
-    // including 0 body length POST calls
-    if (!options.headers['Content-Type']) {
+    // add default 'Content-Type: application/json' header for all POST and PUT requests
+    if (!options.headers['Content-Type'] && (options.method === 'POST' || options.method === 'PUT')) {
         options.headers['Content-Type'] = 'application/json'
     }
 
