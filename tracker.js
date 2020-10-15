@@ -30,7 +30,7 @@ const address = authenticateFromConfig({
 })
 
 process.argv.splice(2, 2)
-const argv = process.argv.concat(['--trackerName', trackerName, '--id', address, '--exposeHttpEndpoints'])
+const argv = process.argv.concat(['--trackerName', trackerName, '--id', address])
 spawn(path.resolve(__dirname, './node_modules/streamr-network/bin/tracker.js'), argv, {
     cwd: process.cwd(),
     detached: false,
