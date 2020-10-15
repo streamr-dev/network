@@ -16,14 +16,11 @@ const validateConfig = (config) => {
     if (config.network.advertisedWsUrl === undefined) {
         throw new MissingConfigError('network.advertisedWsUrl')
     }
-    if (config.network.tracker) {
-        throw new Error('Not allowed to use network.tracker, instead use network.trackers or trackerRegistry parameter')
-    }
     if (config.network.trackers === undefined && config.trackerRegistry === undefined) {
         throw new MissingConfigError('network.trackers or network.trackerRegistry must be defined')
     }
     if (config.network.trackers && config.trackerRegistry) {
-        throw new Error('Not allowed to use both network.trackers and trackerRegistry. Only one parameter must be defined in config')
+        throw new Error('Not allowed to set both network.trackers and trackerRegistry.')
     }
     if (config.network.trackers && !Array.isArray(config.network.trackers)) {
         throw new MissingConfigError('network.trackers must be array')
@@ -46,20 +43,8 @@ const validateConfig = (config) => {
     if (config.cassandra && config.cassandra.keyspace === undefined) {
         throw new MissingConfigError('cassandra.keyspace')
     }
-    if (config.cassandraNew && config.cassandraNew.hosts === undefined) {
-        throw new MissingConfigError('cassandraNew.hosts')
-    }
-    if (config.cassandraNew && config.cassandraNew.username === undefined) {
-        throw new MissingConfigError('cassandraNew.username')
-    }
-    if (config.cassandraNew && config.cassandraNew.password === undefined) {
-        throw new MissingConfigError('cassandraNew.password')
-    }
-    if (config.cassandraNew && config.cassandraNew.keyspace === undefined) {
-        throw new MissingConfigError('cassandraNew.keyspace')
-    }
-    if (config.cassandraNew && config.cassandraNew.datacenter === undefined) {
-        throw new MissingConfigError('cassandraNew.datacenter')
+    if (config.cassandra && config.cassandra.datacenter === undefined) {
+        throw new MissingConfigError('cassandra.datacenter')
     }
     if (config.streamrUrl === undefined) {
         throw new MissingConfigError('streamrUrl')
@@ -107,13 +92,16 @@ const validateConfig = (config) => {
         throw new MissingConfigError('location')
     }
     if (config.location && config.location.city === undefined) {
-        throw new MissingConfigError('location.city must be defined')
+        throw new MissingConfigError('location.city')
     }
     if (config.location && config.location.country === undefined) {
-        throw new MissingConfigError('location.country must be defined')
+        throw new MissingConfigError('location.country')
     }
-    if (config.location && config.location.latitude === undefined && config.location.latitude === undefined) {
-        throw new MissingConfigError('location.latitude and location.longitude must be defined')
+    if (config.location && config.location.latitude === undefined) {
+        throw new MissingConfigError('location.latitude')
+    }
+    if (config.location && config.location.longitude === undefined) {
+        throw new MissingConfigError('location.longitude')
     }
 
     config.adapters.forEach(({ name }, index) => {

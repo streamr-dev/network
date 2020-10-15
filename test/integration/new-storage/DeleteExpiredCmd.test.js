@@ -1,12 +1,8 @@
 const cassandra = require('cassandra-driver')
 const { TimeUuid } = require('cassandra-driver').types
 
-jest.mock('../../../src/helpers/validateConfig')
-const validateConfig = require('../../../src/helpers/validateConfig')
 const DeleteExpiredCmd = require('../../../src/new-storage/DeleteExpiredCmd')
-const { startBrokerNewSchema, createClient } = require('../../utils')
-
-validateConfig.mockImplementation(() => true)
+const { startBroker, createClient, formConfig } = require('../../utils')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
@@ -66,7 +62,7 @@ describe('DeleteExpiredCmd', () => {
             keyspace,
         })
 
-        broker = await startBrokerNewSchema('broker', networkPort, trackerPort, httpPort, wsPort, null, true)
+        broker = await startBroker('broker', networkPort, trackerPort, httpPort, wsPort, null, true)
         client = createClient(wsPort, {
             auth: {
                 apiKey: 'tester1-api-key'
@@ -100,18 +96,7 @@ describe('DeleteExpiredCmd', () => {
             await fixtures(cassandraClient, streamId, 2)
             await fixtures(cassandraClient, streamId, 3)
 
-            const deleteExpiredCmd = new DeleteExpiredCmd({
-                streamrUrl: 'http://localhost:8081/streamr-core',
-                cassandraNew: {
-                    hosts: [
-                        '127.0.0.1'
-                    ],
-                    username: '',
-                    password: '',
-                    keyspace,
-                    datacenter: localDataCenter
-                },
-            })
+            const deleteExpiredCmd = new DeleteExpiredCmd(formConfig('name', 0, 0, 0, 0, 0, true))
             await deleteExpiredCmd.run()
             await checkDBCount(cassandraClient, streamId, days)
         })

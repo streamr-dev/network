@@ -8,8 +8,7 @@ const CURRENT_VERSION = require('../package.json').version
 
 const logger = require('./helpers/logger')('streamr:broker')
 const StreamFetcher = require('./StreamFetcher')
-const { startCassandraStorage } = require('./storage/Storage')
-const { startCassandraStorage: startCassandraStorageNew } = require('./new-storage/Storage')
+const { startCassandraStorage } = require('./new-storage/Storage')
 const Publisher = require('./Publisher')
 const VolumeLogger = require('./VolumeLogger')
 const SubscriptionManager = require('./SubscriptionManager')
@@ -34,30 +33,16 @@ module.exports = async (config) => {
         logger.info(`Starting Cassandra with hosts ${config.cassandra.hosts} and keyspace ${config.cassandra.keyspace}`)
         storages.push(await startCassandraStorage({
             contactPoints: [...config.cassandra.hosts],
-            localDataCenter: 'datacenter1',
+            localDataCenter: config.cassandra.datacenter,
             keyspace: config.cassandra.keyspace,
             username: config.cassandra.username,
             password: config.cassandra.password,
-            useTtl: !config.network.isStorageNode
-        }))
-    } else {
-        logger.info('Cassandra disabled')
-    }
-
-    if (config.cassandraNew) {
-        logger.info(`Starting Cassandra ### NEW SCHEMA ### with hosts ${config.cassandraNew.hosts} and keyspace ${config.cassandraNew.keyspace}`)
-        storages.push(await startCassandraStorageNew({
-            contactPoints: [...config.cassandraNew.hosts],
-            localDataCenter: config.cassandraNew.datacenter,
-            keyspace: config.cassandraNew.keyspace,
-            username: config.cassandraNew.username,
-            password: config.cassandraNew.password,
             opts: {
                 useTtl: !config.network.isStorageNode
             }
         }))
     } else {
-        logger.info('Cassandra ### NEW SCHEMA ### is disabled')
+        logger.info('Cassandra disabled')
     }
 
     // Ethereum authentication

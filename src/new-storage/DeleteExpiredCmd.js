@@ -11,11 +11,11 @@ class DeleteExpiredCmd {
 
         this.baseUrl = config.streamrUrl
 
-        const authProvider = new cassandra.auth.PlainTextAuthProvider(config.cassandraNew.username, config.cassandraNew.password)
+        const authProvider = new cassandra.auth.PlainTextAuthProvider(config.cassandra.username, config.cassandra.password)
         this.cassandraClient = new cassandra.Client({
-            contactPoints: [...config.cassandraNew.hosts],
-            localDataCenter: config.cassandraNew.datacenter,
-            keyspace: config.cassandraNew.keyspace,
+            contactPoints: [...config.cassandra.hosts],
+            localDataCenter: config.cassandra.datacenter,
+            keyspace: config.cassandra.keyspace,
             authProvider,
             pooling: {
                 maxRequestsPerConnection: 32768

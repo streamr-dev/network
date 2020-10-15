@@ -84,7 +84,6 @@ class Storage extends EventEmitter {
 
         const makeLastQuery = (bucketIds) => {
             const params = [streamId, partition, bucketIds, limit]
-            logger.info(params) // TODO can be removed later
 
             this.cassandraClient.execute(GET_LAST_N_MESSAGES, params, {
                 prepare: true,
@@ -196,8 +195,6 @@ class Storage extends EventEmitter {
 
             const queryParams = [streamId, partition, bucketsForQuery, fromTimestamp]
             const cassandraStream = this._queryWithStreamingResults(query, queryParams)
-
-            logger.info(queryParams) // TODO can be removed later
 
             return pump(
                 cassandraStream,
