@@ -12,24 +12,13 @@ function hashCode(str) {
 }
 
 class TrackerRegistry {
-    // TODO: remove default value
-    constructor(records = []) {
+    constructor(records) {
         this.records = records
+        this.records.sort()
     }
 
     getTracker(streamKey) {
         return this.records[hashCode(streamKey) % this.records.length]
-    }
-
-    // TODO: remove soon
-    add(tracker) {
-        this.records.push(tracker)
-        this.records.sort()
-    }
-
-    // TODO: remove soon
-    get(streamKey) {
-        return this.getTracker(streamKey)
     }
 
     getAllTrackers() {
