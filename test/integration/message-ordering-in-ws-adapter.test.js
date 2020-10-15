@@ -37,8 +37,13 @@ describe('message ordering and gap filling in websocket adapter', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        publisherNode = await startNetworkNode('127.0.0.1', networkPort1, 'publisherNode')
-        publisherNode.addBootstrapTracker(`ws://127.0.0.1:${trackerPort}`)
+        publisherNode = await startNetworkNode({
+            host: '127.0.0.1',
+            port: networkPort1,
+            id: 'publisherNode',
+            trackers: [tracker.getAddress()]
+        })
+        publisherNode.start()
         broker = await startBroker('broker1', networkPort2, trackerPort, null, wsPort, null, true)
 
         subscriber = createClient(wsPort, {
@@ -113,18 +118,24 @@ describe('message ordering and gap filling in websocket adapter', () => {
     it('missing messages are gap filled by ws adapter', async () => {
         // Set up new network node that has missing messages in its storage
         const resendRequests = []
-        nodeWithMissingMessages = await startNetworkNode('127.0.0.1', networkPort3, 'missingMessagesNode', [{
-            store() {},
-            requestRange(...args) {
-                resendRequests.push(args)
-                return intoStream.object([
-                    createStreamMessage(freshStreamId, 200, 100),
-                    createStreamMessage(freshStreamId, 300, 200)
-                ])
-            }
-        }])
-        nodeWithMissingMessages.addBootstrapTracker(`ws://127.0.0.1:${trackerPort}`)
+        nodeWithMissingMessages = await startNetworkNode({
+            host: '127.0.0.1',
+            port: networkPort3,
+            id: 'missingMessagesNode',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store() {},
+                requestRange(...args) {
+                    resendRequests.push(args)
+                    return intoStream.object([
+                        createStreamMessage(freshStreamId, 200, 100),
+                        createStreamMessage(freshStreamId, 300, 200)
+                    ])
+                }
+            }]
+        })
         nodeWithMissingMessages.subscribe(freshStreamId, 0)
+        nodeWithMissingMessages.start()
 
         const receivedMessages = []
         subscriber.subscribe({

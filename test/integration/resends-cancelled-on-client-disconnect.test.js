@@ -33,34 +33,40 @@ describe('resend cancellation', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        networkNode = await startStorageNode('127.0.0.1', networkNodePort, 'networkNode', [
-            {
-                requestLast: (streamId, streamPartition, n) => {
-                    const stream = new Readable({
-                        objectMode: true,
-                        read() {}
-                    })
-                    const timeoutRef = setTimeout(() => {
-                        // eslint-disable-next-line no-undef
-                        fail('pushed to destroyed stream')
-                    }, 2000)
-                    stream.on('close', () => {
-                        if (stream.destroyed) {
-                            clearTimeout(timeoutRef)
-                            timeoutCleared = true
-                        }
-                    })
-                    stream.push(
-                        new StreamMessage({
-                            messageId: new MessageID(streamId, streamPartition, 0, 0, 'publisherId', 'msgChainId'),
-                            content: {},
+        networkNode = await startStorageNode({
+            host: '127.0.0.1',
+            port: networkNodePort,
+            id: 'networkNode',
+            trackers: [tracker.getAddress()],
+            storages: [
+                {
+                    requestLast: (streamId, streamPartition, n) => {
+                        const stream = new Readable({
+                            objectMode: true,
+                            read() {}
                         })
-                    )
-                    return stream
-                },
-                store: () => {}
-            }
-        ])
+                        const timeoutRef = setTimeout(() => {
+                            // eslint-disable-next-line no-undef
+                            fail('pushed to destroyed stream')
+                        }, 2000)
+                        stream.on('close', () => {
+                            if (stream.destroyed) {
+                                clearTimeout(timeoutRef)
+                                timeoutCleared = true
+                            }
+                        })
+                        stream.push(
+                            new StreamMessage({
+                                messageId: new MessageID(streamId, streamPartition, 0, 0, 'publisherId', 'msgChainId'),
+                                content: {},
+                            })
+                        )
+                        return stream
+                    },
+                    store: () => {}
+                }
+            ]
+        })
         websocketServer = new WebsocketServer(
             ws.App(),
             wsPort,

@@ -68,21 +68,7 @@ module.exports = async (config) => {
         throw new MissingConfigError('Invalid Ethereum authentication options')
     }
 
-    // Start network node
-    const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
-    const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
-        ? config.network.advertisedWsUrl
-        : await publicIp.v4().then((ip) => `ws://${ip}:${config.network.port}`)
-    const networkNode = await startFn(
-        config.network.hostname,
-        config.network.port,
-        brokerAddress,
-        storages,
-        advertisedWsUrl,
-        networkNodeName,
-        location
-    )
-
+    // Form tracker list
     let trackers
     if (config.trackerRegistry) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
@@ -90,17 +76,26 @@ module.exports = async (config) => {
             jsonRpcProvider: config.trackerRegistry.jsonRpcProvider
         })
         trackers = registry.getAllTrackers().map((record) => record.ws)
+    } else {
+        trackers = config.network.trackers
     }
 
-    // from smart contract
-    if (trackers) {
-        trackers.forEach((tracker) => networkNode.addBootstrapTracker(tracker))
-    }
-
-    // from config
-    if (config.network.trackers) {
-        config.network.trackers.forEach((tracker) => networkNode.addBootstrapTracker(tracker))
-    }
+    // Start network node
+    const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
+    const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
+        ? config.network.advertisedWsUrl
+        : await publicIp.v4().then((ip) => `ws://${ip}:${config.network.port}`)
+    const networkNode = await startFn({
+        host: config.network.hostname,
+        port: config.network.port,
+        id: brokerAddress,
+        name: networkNodeName,
+        trackers,
+        storages,
+        advertisedWsUrl,
+        location
+    })
+    networkNode.start()
 
     // Set up sentry logging
     if (config.sentry) {
@@ -182,7 +177,7 @@ module.exports = async (config) => {
     })
 
     logger.info(`Network node '${networkNodeName}' running on ${config.network.hostname}:${config.network.port}`)
-    logger.info(`Configured with trackers: ${[...networkNode.bootstrapTrackerAddresses].join(', ')}`)
+    logger.info(`Configured with trackers: ${trackers.join(', ')}`)
     logger.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
     if (config.cassandra) {
         logger.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)

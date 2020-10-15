@@ -29,7 +29,12 @@ describe('ping-pong test between broker and clients', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        networkNode = await startStorageNode('127.0.0.1', networkNodePort, 'networkNode')
+        networkNode = await startStorageNode({
+            host: '127.0.0.1',
+            port: networkNodePort,
+            id: 'networkNode',
+            trackers: [tracker.getAddress()]
+        })
 
         volumeLogger = new VolumeLogger(0)
         websocketServer = new WebsocketServer(
