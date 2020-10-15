@@ -3,45 +3,8 @@ import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
 
-import { Defer } from './utils'
+import { Defer, pTimeout } from './utils'
 
-class TimeoutError extends Error {
-    constructor(msg = '', timeout = 0, ...args) {
-        super(`The operation timed out. ${timeout}ms. ${msg}`, ...args)
-        this.timeout = timeout
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
-    }
-}
-
-export async function pTimeout(promise, timeout = 0, message = '') {
-    let t
-    return Promise.race([
-        promise,
-        new Promise((resolve, reject) => {
-            t = setTimeout(() => {
-                reject(new TimeoutError(message, timeout))
-            }, timeout)
-        })
-    ]).finally(() => {
-        clearTimeout(t)
-    })
-}
-
-pTimeout.ignoreError = (err) => {
-    if (err instanceof TimeoutError) { return }
-    throw err
-}
-
-export class AbortError extends Error {
-    constructor(msg = '', ...args) {
-        super(`The operation was aborted. ${msg}`, ...args)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
-    }
-}
 const pFinished = promisify(finished)
 
 export async function endStream(stream, optionalErr) {
@@ -422,47 +385,5 @@ export function pipeline(iterables = [], onFinally, opts) {
         [isPipeline]: true,
         setFirstSource,
         cancel,
-    })
-}
-
-/**
- * Iterates over a Stream
- * Cleans up stream/stops iterator if either stream or iterator ends.
- * Adds abort + end methods to iterator
- */
-
-export function StreamIterator(stream, { abortController, onFinally = () => {}, } = {}) {
-    const onFinallyOnce = pMemoize(onFinally) // called once when stream ends
-
-    const it = iteratorFinally((async function* StreamIteratorFn() {
-        yield* stream
-    }()), async () => {
-        try {
-            await endStream(stream)
-        } finally {
-            await onFinallyOnce()
-        }
-    })
-
-    return Object.assign(it, {
-        stream,
-        async abort() {
-            if (abortController) {
-                abortController.abort()
-            } else {
-                await it.end(new AbortError())
-            }
-        },
-        async end(optionalErr) {
-            try {
-                await endStream(stream, optionalErr)
-            } finally {
-                if (optionalErr) {
-                    await it.throw(optionalErr)
-                } else {
-                    await it.return()
-                }
-            }
-        }
     })
 }

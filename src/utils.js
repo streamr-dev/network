@@ -178,10 +178,31 @@ export function pOrderedResolve(fn) {
     }
 }
 
-export function pOrderedResolveLimit(limit = 6, fn) {
-    const queue = pLimit(limit)
-    const orderedFn = pOrderedResolve(fn)
-    return async (...args) => (
-        queue(orderedFn(...args))
-    )
+export class TimeoutError extends Error {
+    constructor(msg = '', timeout = 0, ...args) {
+        super(`The operation timed out. ${timeout}ms. ${msg}`, ...args)
+        this.timeout = timeout
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+}
+
+export async function pTimeout(promise, timeout = 0, message = '') {
+    let t
+    return Promise.race([
+        promise,
+        new Promise((resolve, reject) => {
+            t = setTimeout(() => {
+                reject(new TimeoutError(message, timeout))
+            }, timeout)
+        })
+    ]).finally(() => {
+        clearTimeout(t)
+    })
+}
+
+pTimeout.ignoreError = (err) => {
+    if (err instanceof TimeoutError) { return }
+    throw err
 }

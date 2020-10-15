@@ -3,11 +3,10 @@ import { PassThrough } from 'stream'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import { ControlLayer, MessageLayer, Utils, Errors } from 'streamr-client-protocol'
-import AbortController from 'node-abort-controller'
 
 import SignatureRequiredError from './errors/SignatureRequiredError'
 import { uuid, CacheAsyncFn, pOrderedResolve } from './utils'
-import { endStream, pipeline, AbortError, CancelableGenerator } from './iterators'
+import { endStream, pipeline, CancelableGenerator } from './iterators'
 
 const { OrderingUtil, StreamMessageValidator } = Utils
 
@@ -19,8 +18,6 @@ const {
 } = ControlLayer
 
 const { MessageRef, StreamMessage } = MessageLayer
-
-export { AbortError }
 
 /**
  * Convert allSettled results into a thrown Aggregate error if necessary.
@@ -268,23 +265,12 @@ function Validator(client, opts) {
 
 function MessagePipeline(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
-    const { signal, validate = Validator(client, options) } = options
+    const { validate = Validator(client, options) } = options
+
     const stream = messageStream(client.connection, options)
     const orderingUtil = OrderMessages(client, options)
-    let p
-    const onAbort = () => {
-        p.cancel(new AbortError())
-    }
 
-    signal.addEventListener('abort', onAbort, {
-        once: true
-    })
-
-    if (signal.aborted) {
-        stream.destroy(new AbortError())
-    }
-
-    p = pipeline([
+    const p = pipeline([
         stream,
         async function* Validate(src) {
             for await (const { streamMessage } of src) {
@@ -301,9 +287,6 @@ function MessagePipeline(client, opts = {}, onFinally = () => {}) {
         },
         orderingUtil,
     ], async (err) => {
-        signal.removeEventListener('abort', onAbort, {
-            once: true,
-        })
         try {
             await endStream(stream, err)
         } finally {
@@ -352,7 +335,13 @@ async function unsubscribe(client, { streamId, streamPartition = 0 }) {
     const onResponse = waitForRequestResponse(client, request)
 
     await client.send(request)
-    return onResponse
+    return onResponse.catch((err) => {
+        if (err.message.startsWith('Not subscribed to stream')) {
+            // noop if unsubscribe failed because we are already unsubscribed
+            return
+        }
+        throw err
+    })
 }
 
 //
@@ -419,12 +408,10 @@ async function resend(client, options) {
 
 async function getResendStream(client, opts) {
     const options = validateOptions(opts)
-    const abortController = new AbortController()
 
     const msgs = MessagePipeline(client, {
         ...options,
         type: ControlMessage.TYPES.UnicastMessage,
-        signal: abortController.signal,
     })
 
     const requestId = uuid('rs')
@@ -464,7 +451,6 @@ class Subscription {
     constructor(client, options) {
         this.client = client
         this.options = validateOptions(options)
-        this.abortController = new AbortController()
         this.streams = new Set()
 
         this.queue = pLimit(1)
@@ -480,10 +466,6 @@ class Subscription {
 
     hasPending() {
         return !!(this.queue.activeCount || this.queue.pendingCount)
-    }
-
-    async abort() {
-        await this.abortController.abort()
     }
 
     async sendSubscribe() {
@@ -541,7 +523,6 @@ class Subscription {
 
     iterate() {
         const msgs = MessagePipeline(this.client, {
-            signal: this.abortController.signal,
             validate: this.validate,
             type: ControlMessage.TYPES.BroadcastMessage,
             ...this.options,
@@ -577,11 +558,6 @@ export default class Subscriptions {
     get(options) {
         const key = SubKey(validateOptions(options))
         return this.subscriptions.get(key)
-    }
-
-    abort(options) {
-        const sub = this.get(options)
-        return sub && sub.abort()
     }
 
     count(options) {
@@ -640,9 +616,6 @@ export default class Subscriptions {
         return Object.assign(it, {
             realtime: sub,
             resend: resendSub,
-            abort: () => (
-                this.abortController && this.abortController.abort()
-            ),
         })
     }
 }
