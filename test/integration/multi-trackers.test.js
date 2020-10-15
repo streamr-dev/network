@@ -5,9 +5,10 @@ const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
 
+// TODO: maybe worth re-designing this in a way that isn't this arbitrary?
 const FIRST_STREAM = 'stream-1' // assigned to trackerOne (arbitrarily by hashing algo)
-const SECOND_STREAM = 'stream-3' // assigned to trackerTwo
-const THIRD_STREAM = 'stream-5' // assigned to trackerThree
+const SECOND_STREAM = 'stream-8' // assigned to trackerTwo
+const THIRD_STREAM = 'stream-9' // assigned to trackerThree
 
 describe('multi trackers', () => {
     let trackerOne
@@ -17,9 +18,6 @@ describe('multi trackers', () => {
     let nodeTwo
 
     beforeEach(async () => {
-        nodeOne = await startNetworkNode('127.0.0.1', 49003, 'nodeOne')
-        nodeTwo = await startNetworkNode('127.0.0.1', 49004, 'nodeTwo')
-
         trackerOne = await startTracker({
             host: '127.0.0.1',
             port: 49000,
@@ -35,6 +33,19 @@ describe('multi trackers', () => {
             port: 49002,
             id: 'trackerThree'
         })
+        const trackerAddresses = [trackerOne.getAddress(), trackerTwo.getAddress(), trackerThree.getAddress()]
+        nodeOne = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 49003,
+            id: 'nodeOne',
+            trackers: trackerAddresses
+        })
+        nodeTwo = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 49004,
+            id: 'nodeTwo',
+            trackers: trackerAddresses
+        })
     })
 
     afterEach(async () => {
@@ -49,9 +60,7 @@ describe('multi trackers', () => {
     })
 
     test('node sends stream status to specific tracker', async () => {
-        nodeOne.addBootstrapTracker(trackerOne.getAddress())
-        nodeOne.addBootstrapTracker(trackerTwo.getAddress())
-        nodeOne.addBootstrapTracker(trackerThree.getAddress())
+        nodeOne.start()
 
         await Promise.all([
             waitForEvent(trackerOne.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
@@ -106,9 +115,7 @@ describe('multi trackers', () => {
     })
 
     test('only one specific tracker sends instructions about stream', async () => {
-        nodeOne.addBootstrapTracker(trackerOne.getAddress())
-        nodeOne.addBootstrapTracker(trackerTwo.getAddress())
-        nodeOne.addBootstrapTracker(trackerThree.getAddress())
+        nodeOne.start()
 
         await Promise.all([
             waitForEvent(trackerOne.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
@@ -116,9 +123,7 @@ describe('multi trackers', () => {
             waitForEvent(trackerThree.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
         ])
 
-        nodeTwo.addBootstrapTracker(trackerOne.getAddress())
-        nodeTwo.addBootstrapTracker(trackerTwo.getAddress())
-        nodeTwo.addBootstrapTracker(trackerThree.getAddress())
+        nodeTwo.start()
 
         await Promise.all([
             waitForEvent(trackerOne.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
@@ -186,9 +191,7 @@ describe('multi trackers', () => {
     })
 
     test('node ignores instructions from unexpected tracker', async () => {
-        nodeOne.addBootstrapTracker(trackerOne.getAddress())
-        nodeOne.addBootstrapTracker(trackerTwo.getAddress())
-        nodeOne.addBootstrapTracker(trackerThree.getAddress())
+        nodeOne.start()
 
         await Promise.all([
             waitForEvent(trackerOne.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),

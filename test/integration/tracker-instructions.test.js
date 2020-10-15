@@ -27,14 +27,24 @@ describe('check tracker, nodes and statuses from nodes', () => {
         // disable trackers formAndSendInstructions function
         // eslint-disable-next-line no-underscore-dangle
         tracker._formAndSendInstructions = () => {}
-        node1 = await startNetworkNode('127.0.0.1', port1, 'node1')
-        node2 = await startNetworkNode('127.0.0.1', port2, 'node2')
+        node1 = await startNetworkNode({
+            host: '127.0.0.1',
+            port: port1,
+            id: 'node1',
+            trackers: [tracker.getAddress()]
+        })
+        node2 = await startNetworkNode({
+            host: '127.0.0.1',
+            port: port2,
+            id: 'node2',
+            trackers: [tracker.getAddress()]
+        })
 
         node1.subscribeToStreamIfHaveNotYet(s1)
         node2.subscribeToStreamIfHaveNotYet(s1)
 
-        node1.addBootstrapTracker(tracker.getAddress())
-        node2.addBootstrapTracker(tracker.getAddress())
+        node1.start()
+        node2.start()
 
         await Promise.all([
             waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),

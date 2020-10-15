@@ -32,57 +32,75 @@ describe('resend requests are fulfilled at L2', () => {
             port: 28610,
             id: 'tracker'
         })
-        contactNode = await startNetworkNode('127.0.0.1', 28611, 'contactNode', [{
-            store: () => {},
-            requestLast: () => intoStream.object([]),
-            requestFrom: () => intoStream.object([]),
-            requestRange: () => intoStream.object([]),
-        }])
-        n1 = await startNetworkNode('127.0.0.1', 28612, 'n1', [{
-            store: () => {},
-            requestLast: () => intoStream.object([
-                new StreamMessage({
-                    messageId: new MessageID('streamId', 0, 666, 50, 'publisherId', 'msgChainId'),
-                    content: {},
-                }),
-            ]),
-            requestFrom: () => intoStream.object([]),
-            requestRange: () => intoStream.object([]),
-        }])
-        n2 = await startNetworkNode('127.0.0.1', 28613, 'n2', [{
-            store: () => {},
-            requestLast: () => intoStream.object([]),
-            requestFrom: () => intoStream.object([
-                new StreamMessage({
-                    messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
-                    prevMsgRef: new MessageRef(666, 50),
-                    content: {},
-                }),
-                new StreamMessage({
-                    messageId: new MessageID('streamId', 0, 800, 0, 'publisherId', 'msgChainId'),
-                    prevMsgRef: new MessageRef(756, 0),
-                    content: {},
-                }),
-                new StreamMessage({
-                    messageId: new MessageID('streamId', 0, 900, 0, 'publisherId', 'msgChainId'),
-                    prevMsgRef: new MessageRef(800, 0),
-                    content: {},
-                }),
-                new StreamMessage({
-                    messageId: new MessageID('streamId', 0, 512012, 0, 'publisherId2', 'msgChainId'),
-                    content: {},
-                }),
-            ]),
-            requestRange: () => intoStream.object([]),
-        }])
+        contactNode = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 28611,
+            id: 'contactNode',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => intoStream.object([]),
+                requestFrom: () => intoStream.object([]),
+                requestRange: () => intoStream.object([]),
+            }]
+        })
+        n1 = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 28612,
+            id: 'n1',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => intoStream.object([
+                    new StreamMessage({
+                        messageId: new MessageID('streamId', 0, 666, 50, 'publisherId', 'msgChainId'),
+                        content: {},
+                    }),
+                ]),
+                requestFrom: () => intoStream.object([]),
+                requestRange: () => intoStream.object([]),
+            }]
+        })
+        n2 = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 28613,
+            id: 'n2',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => intoStream.object([]),
+                requestFrom: () => intoStream.object([
+                    new StreamMessage({
+                        messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
+                        prevMsgRef: new MessageRef(666, 50),
+                        content: {},
+                    }),
+                    new StreamMessage({
+                        messageId: new MessageID('streamId', 0, 800, 0, 'publisherId', 'msgChainId'),
+                        prevMsgRef: new MessageRef(756, 0),
+                        content: {},
+                    }),
+                    new StreamMessage({
+                        messageId: new MessageID('streamId', 0, 900, 0, 'publisherId', 'msgChainId'),
+                        prevMsgRef: new MessageRef(800, 0),
+                        content: {},
+                    }),
+                    new StreamMessage({
+                        messageId: new MessageID('streamId', 0, 512012, 0, 'publisherId2', 'msgChainId'),
+                        content: {},
+                    }),
+                ]),
+                requestRange: () => intoStream.object([]),
+            }]
+        })
 
         n1.subscribe('streamId', 0)
         n2.subscribe('streamId', 0)
         contactNode.subscribe('streamId', 0)
 
-        n1.addBootstrapTracker(tracker.getAddress())
-        n2.addBootstrapTracker(tracker.getAddress())
-        contactNode.addBootstrapTracker(tracker.getAddress())
+        n1.start()
+        n2.start()
+        contactNode.start()
 
         await Promise.all([
             waitForEvent(contactNode, Node.events.NODE_SUBSCRIBED),

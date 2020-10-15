@@ -20,9 +20,14 @@ describe('check network stabilization', () => {
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {
             // eslint-disable-next-line no-await-in-loop
-            const node = await startNetworkNode('127.0.0.1', startingPort + i, `node-${i}`)
+            const node = await startNetworkNode({
+                host: '127.0.0.1',
+                port: startingPort + i,
+                id: `node-${i}`,
+                trackers: [tracker.getAddress()]
+            })
             node.subscribe(stream, 0)
-            node.addBootstrapTracker(tracker.getAddress())
+            node.start()
             nodes.push(node)
         }
     }, 20000)

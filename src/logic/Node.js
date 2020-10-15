@@ -43,9 +43,8 @@ class Node extends EventEmitter {
             bufferMaxSize: 10000,
             disconnectionWaitTime: 10 * 1000,
             protocols: [],
-            resendStrategies: []
+            resendStrategies: [],
         }
-
         this.opts = {
             ...defaultOptions, ...opts
         }
@@ -53,28 +52,26 @@ class Node extends EventEmitter {
         if (!(this.opts.protocols.trackerNode instanceof TrackerNode) || !(this.opts.protocols.nodeToNode instanceof NodeToNode)) {
             throw new Error('Provided protocols are not correct')
         }
+        if (!this.opts.trackers) {
+            throw new Error('No trackers given')
+        }
 
-        this.connectToBoostrapTrackersInterval = setInterval(
-            this._connectToBootstrapTrackers.bind(this),
-            this.opts.connectToBootstrapTrackersInterval
-        )
+        this.logger = getLogger(`streamr:logic:node:${this.opts.peerInfo.peerId}`)
         this.sendStatusTimeout = new Map()
-        this.bootstrapTrackerAddresses = new Set()
+        this.disconnectionTimers = {}
         this.protocols = this.opts.protocols
         this.peerInfo = this.opts.peerInfo
-
-        this.logger = getLogger(`streamr:logic:node:${this.peerInfo.peerId}`)
-        this.logger.debug('started %s (%s)', this.peerInfo.peerId, this.peerInfo.peerName)
-
         this.streams = new StreamManager()
         this.messageBuffer = new MessageBuffer(this.opts.bufferTimeoutInMs, this.opts.bufferMaxSize, (streamId) => {
             this.logger.debug(`failed to deliver buffered messages of stream ${streamId}`)
         })
         this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
-        this.resendHandler = new ResendHandler(this.opts.resendStrategies, this.logger.error.bind(this.logger)) // TODO remove notifyError?
-
-        this.trackers = new Set()
-        this.trackersRing = Utils.createTrackerRegistry()
+        this.resendHandler = new ResendHandler(this.opts.resendStrategies, this.logger.error.bind(this.logger))
+        this.trackerRegistry = Utils.createTrackerRegistry(this.opts.trackers)
+        this.trackerBook = {} // address => id
+        this.started = new Date().toLocaleString()
+        this.metrics = new Metrics(this.peerInfo.peerId)
+        this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
 
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
         this.protocols.trackerNode.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))
@@ -88,20 +85,20 @@ class Node extends EventEmitter {
             this._handleBufferedMessages(streamId)
             this._sendStreamStatus(streamId)
         })
+    }
 
-        this.started = new Date().toLocaleString()
-        this.metrics = new Metrics(this.peerInfo.peerId)
-
-        this.disconnectionTimers = {}
-        this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
+    start() {
+        this.logger.debug('started %s (%s)', this.peerInfo.peerId, this.peerInfo.peerName)
+        this._connectToBootstrapTrackers()
+        this.connectToBoostrapTrackersInterval = setInterval(
+            this._connectToBootstrapTrackers.bind(this),
+            this.opts.connectToBootstrapTrackersInterval
+        )
     }
 
     onConnectedToTracker(tracker) {
         this.logger.debug('connected to tracker %s', tracker)
-
-        this.trackers.add(tracker)
-        this.trackersRing.add(tracker)
-
+        this.trackerBook[this.protocols.trackerNode.endpoint.resolveAddress(tracker)] = tracker
         this._sendStatus(tracker)
     }
 
@@ -171,7 +168,7 @@ class Node extends EventEmitter {
         const { nodeAddresses, counter } = instructionMessage
 
         // Check that tracker matches expected tracker
-        const expectedTrackerId = this.trackersRing.get(streamId.key())
+        const expectedTrackerId = this._getTrackerId(streamId.key())
         if (trackerId !== expectedTrackerId) {
             this.metrics.inc('onTrackerInstructionReceived.unexpected_tracker')
             this.logger.warn(`Got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
@@ -345,7 +342,7 @@ class Node extends EventEmitter {
 
     _getStatus(tracker) {
         return {
-            streams: this.streams.getStreamsWithConnections(tracker, this.trackersRing),
+            streams: this.streams.getStreamsWithConnections((streamKey) => this._getTrackerId(streamKey) === tracker),
             started: this.started,
             rtts: this.protocols.nodeToNode.getRtts(),
             location: this.peerInfo.location
@@ -353,8 +350,7 @@ class Node extends EventEmitter {
     }
 
     _sendStreamStatus(streamId) {
-        const streamKey = streamId.key()
-        const trackerId = this.trackersRing.get(streamKey)
+        const trackerId = this._getTrackerId(streamId.key())
 
         if (trackerId) {
             clearTimeout(this.sendStatusTimeout.get(trackerId))
@@ -394,8 +390,9 @@ class Node extends EventEmitter {
         return node
     }
 
-    _getTracker(streamKey) {
-        return this.trackersRing.get(streamKey)
+    _getTrackerId(streamKey) {
+        const address = this.trackerRegistry.getTracker(streamKey)
+        return this.trackerBook[address] || null
     }
 
     async _unsubscribeFromStreamOnNode(node, streamId) {
@@ -424,7 +421,7 @@ class Node extends EventEmitter {
     }
 
     onTrackerDisconnected(tracker) {
-        this.trackers.delete(tracker)
+        this.logger.debug('disconnected from tracker %s', tracker)
     }
 
     _handleBufferedMessages(streamId) {
@@ -435,13 +432,8 @@ class Node extends EventEmitter {
             })
     }
 
-    addBootstrapTracker(trackerAddress) {
-        this.bootstrapTrackerAddresses.add(trackerAddress)
-        this._connectToBootstrapTrackers()
-    }
-
     _connectToBootstrapTrackers() {
-        this.bootstrapTrackerAddresses.forEach((address) => {
+        this.trackerRegistry.getAllTrackers().forEach((address) => {
             this.protocols.trackerNode.connectToTracker(address)
                 .catch((err) => {
                     this.logger.error('Could not connect to tracker %s because %j', address, err.toString())

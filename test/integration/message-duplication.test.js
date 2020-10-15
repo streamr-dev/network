@@ -19,18 +19,48 @@ describe('duplicate message detection and avoidance', () => {
             port: 30350,
             id: 'tracker'
         })
-        contactNode = await startNetworkNode('127.0.0.1', 30351, 'node-0')
-        contactNode.addBootstrapTracker(tracker.getAddress())
+        contactNode = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30351,
+            id: 'node-0',
+            trackers: [tracker.getAddress()]
+        })
+        contactNode.start()
 
         otherNodes = await Promise.all([
-            startNetworkNode('127.0.0.1', 30352, 'node-1'),
-            startNetworkNode('127.0.0.1', 30353, 'node-2'),
-            startNetworkNode('127.0.0.1', 30354, 'node-3'),
-            startNetworkNode('127.0.0.1', 30355, 'node-4'),
-            startNetworkNode('127.0.0.1', 30356, 'node-5'),
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 30352,
+                id: 'node-1',
+                trackers: [tracker.getAddress()]
+            }),
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 30353,
+                id: 'node-2',
+                trackers: [tracker.getAddress()]
+            }),
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 30354,
+                id: 'node-3',
+                trackers: [tracker.getAddress()]
+            }),
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 30355,
+                id: 'node-4',
+                trackers: [tracker.getAddress()]
+            }),
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 30356,
+                id: 'node-5',
+                trackers: [tracker.getAddress()]
+            }),
         ])
 
-        otherNodes.forEach((node) => node.addBootstrapTracker(tracker.getAddress()))
+        otherNodes.forEach((node) => node.start())
         await Promise.all(otherNodes.map((node) => waitForEvent(node.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER)))
 
         // Become subscribers (one-by-one, for well connected graph)

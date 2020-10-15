@@ -23,14 +23,34 @@ describe('multiple storage nodes', () => {
             id: 'tracker'
         })
 
-        node = await startNetworkNode('127.0.0.1', nodePort, 'node')
-        storageOne = await startStorageNode('127.0.0.1', storageOnePort, 'storageOne')
-        storageTwo = await startStorageNode('127.0.0.1', storageTwoPort, 'storageTwo')
-        storageThree = await startStorageNode('127.0.0.1', storageThreePort, 'storageThree')
+        node = await startNetworkNode({
+            host: '127.0.0.1',
+            port: nodePort,
+            id: 'node',
+            trackers: [tracker.getAddress()]
+        })
+        storageOne = await startStorageNode({
+            host: '127.0.0.1',
+            port: storageOnePort,
+            id: 'storageOne',
+            trackers: [tracker.getAddress()]
+        })
+        storageTwo = await startStorageNode({
+            host: '127.0.0.1',
+            port: storageTwoPort,
+            id: 'storageTwo',
+            trackers: [tracker.getAddress()]
+        })
+        storageThree = await startStorageNode({
+            host: '127.0.0.1',
+            port: storageThreePort,
+            id: 'storageThree',
+            trackers: [tracker.getAddress()]
+        })
 
-        node.addBootstrapTracker(tracker.getAddress())
-        storageOne.addBootstrapTracker(tracker.getAddress())
-        storageTwo.addBootstrapTracker(tracker.getAddress())
+        node.start()
+        storageOne.start()
+        storageTwo.start()
     })
 
     afterEach(async () => {
@@ -69,7 +89,7 @@ describe('multiple storage nodes', () => {
         node.subscribe('stream-3', 0)
 
         await waitForCondition(() => Object.keys(tracker.getTopology()).length === 3)
-        storageThree.addBootstrapTracker(tracker.getAddress())
+        storageThree.start()
 
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
 

@@ -24,8 +24,18 @@ describe('Check tracker instructions to node', () => {
             id: 'tracker'
         })
 
-        nodeOne = await startNetworkNode('127.0.0.1', 30952, 'node-1')
-        nodeTwo = await startNetworkNode('127.0.0.1', 30953, 'node-2')
+        nodeOne = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30952,
+            id: 'node-1',
+            trackers: [tracker.getAddress()]
+        })
+        nodeTwo = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30953,
+            id: 'node-2',
+            trackers: [tracker.getAddress()]
+        })
 
         // TODO: a better way of achieving this would be to pass via constructor, but currently not possible when using
         // startNetworkNode function
@@ -35,8 +45,8 @@ describe('Check tracker instructions to node', () => {
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
 
-        nodeOne.addBootstrapTracker(tracker.getAddress())
-        nodeTwo.addBootstrapTracker(tracker.getAddress())
+        nodeOne.start()
+        nodeTwo.start()
     })
 
     afterAll(async () => {

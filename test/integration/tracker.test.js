@@ -19,8 +19,18 @@ describe('check tracker, nodes and statuses from nodes', () => {
             port: 32400,
             id: 'tracker'
         })
-        subscriberOne = await startNetworkNode('127.0.0.1', 33371, 'subscriberOne')
-        subscriberTwo = await startNetworkNode('127.0.0.1', 33372, 'subscriberTwo')
+        subscriberOne = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 33371,
+            id: 'subscriberOne',
+            trackers: [tracker.getAddress()]
+        })
+        subscriberTwo = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 33372,
+            id: 'subscriberTwo',
+            trackers: [tracker.getAddress()]
+        })
 
         subscriberOne.subscribeToStreamIfHaveNotYet(s1)
         subscriberOne.subscribeToStreamIfHaveNotYet(s2)
@@ -39,7 +49,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(0)
         expect(tracker.overlayPerStream).toEqual({})
 
-        subscriberOne.addBootstrapTracker(tracker.getAddress())
+        subscriberOne.start()
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
         expect(tracker.protocols.trackerServer.endpoint.connections.size).toBe(1)
 
@@ -51,7 +61,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             subscriberOne: []
         })
 
-        subscriberTwo.addBootstrapTracker(tracker.getAddress())
+        subscriberTwo.start()
 
         await Promise.all([
             waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED),
@@ -74,8 +84,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
     })
 
     it('tracker should update correctly overlayPerStream on subscribe/unsubscribe', async () => {
-        subscriberOne.addBootstrapTracker(tracker.getAddress())
-        subscriberTwo.addBootstrapTracker(tracker.getAddress())
+        subscriberOne.start()
+        subscriberTwo.start()
 
         await Promise.all([
             waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED),
@@ -116,7 +126,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     it('tracker getTopology should report correct topology based on parameters and current state', async () => {
         expect(tracker.getTopology()).toEqual({})
-        subscriberOne.addBootstrapTracker(tracker.getAddress())
+        subscriberOne.start()
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
         expect(tracker.getTopology()).toEqual({
             'stream-1::0': {
@@ -138,7 +148,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             }
         })
 
-        subscriberTwo.addBootstrapTracker(tracker.getAddress())
+        subscriberTwo.start()
 
         await Promise.all([
             waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED),

@@ -61,35 +61,59 @@ describe('resend cancellation on disconnect', () => {
             port: 28650,
             id: 'tracker'
         })
-        contactNode = await startNetworkNode('127.0.0.1', 28651, 'contactNode', [{
-            store: () => {},
-            requestLast: () => intoStream.object([]),
-            requestFrom: () => intoStream.object([]),
-            requestRange: () => intoStream.object([]),
-        }])
-        neighborOne = await startNetworkNode('127.0.0.1', 28652, 'neighborOne', [{
-            store: () => {},
-            requestLast: () => createSlowStream(),
-            requestFrom: () => intoStream.object([]),
-            requestRange: () => intoStream.object([]),
-        }])
-        neighborTwo = await startNetworkNode('127.0.0.1', 28653, 'neighborTwo', [])
-        neighborThree = await startStorageNode('127.0.0.1', 28654, 'neighborThree', [{
-            store: () => {},
-            requestLast: () => createSlowStream(),
-            requestFrom: () => intoStream.object([]),
-            requestRange: () => intoStream.object([]),
-        }])
+        contactNode = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 28651,
+            id: 'contactNode',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => intoStream.object([]),
+                requestFrom: () => intoStream.object([]),
+                requestRange: () => intoStream.object([]),
+            }]
+        })
+        neighborOne = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 28652,
+            id: 'neighborOne',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => createSlowStream(),
+                requestFrom: () => intoStream.object([]),
+                requestRange: () => intoStream.object([]),
+            }]
+        })
+        neighborTwo = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 28653,
+            id: 'neighborTwo',
+            trackers: [tracker.getAddress()],
+            storages: []
+        })
+        neighborThree = await startStorageNode({
+            host: '127.0.0.1',
+            port: 28654,
+            id: 'neighborThree',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => createSlowStream(),
+                requestFrom: () => intoStream.object([]),
+                requestRange: () => intoStream.object([]),
+            }]
+        })
 
         contactNode.subscribe('streamId', 0)
         neighborOne.subscribe('streamId', 0)
         neighborTwo.subscribe('streamId', 0)
         neighborThree.subscribe('streamId', 0)
 
-        contactNode.addBootstrapTracker(tracker.getAddress())
-        neighborOne.addBootstrapTracker(tracker.getAddress())
-        neighborTwo.addBootstrapTracker(tracker.getAddress())
-        neighborThree.addBootstrapTracker(tracker.getAddress())
+        contactNode.start()
+        neighborOne.start()
+        neighborTwo.start()
+        neighborThree.start()
 
         await Promise.all([
             waitForEvent(contactNode, Node.events.NODE_SUBSCRIBED),

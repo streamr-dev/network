@@ -1,4 +1,4 @@
-const { wait } = require('streamr-test-utils')
+const { wait, waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
@@ -26,8 +26,21 @@ describe('check status message flow between tracker and two nodes', () => {
             port: 30750,
             id: 'tracker'
         })
-        nodeOne = await startNetworkNode('127.0.0.1', 30751, 'node-1', [], null, 'node-1', null, 100)
-        nodeTwo = await startNetworkNode('127.0.0.1', 30752, 'node-2', [], null, 'node-2', location, 100)
+        nodeOne = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30751,
+            id: 'node-1',
+            trackers: [tracker.getAddress()],
+            pingInterval: 100
+        })
+        nodeTwo = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30752,
+            id: 'node-2',
+            trackers: [tracker.getAddress()],
+            location,
+            pingInterval: 100
+        })
     })
 
     afterEach(async () => {
@@ -44,7 +57,7 @@ describe('check status message flow between tracker and two nodes', () => {
             done()
         })
 
-        nodeOne.addBootstrapTracker(tracker.getAddress())
+        nodeOne.start()
     })
 
     it('tracker should receive status from second node', async (done) => {
@@ -54,12 +67,12 @@ describe('check status message flow between tracker and two nodes', () => {
             expect(statusMessage.status).toEqual(nodeTwo._getStatus())
             done()
         })
-        nodeTwo.addBootstrapTracker(tracker.getAddress())
+        nodeTwo.start()
     })
 
     it('tracker should receive from both nodes new statuses', async (done) => {
-        nodeOne.addBootstrapTracker(tracker.getAddress())
-        nodeTwo.addBootstrapTracker(tracker.getAddress())
+        nodeOne.start()
+        nodeTwo.start()
 
         let receivedTotal = 0
         tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
@@ -80,6 +93,8 @@ describe('check status message flow between tracker and two nodes', () => {
             }
         })
 
+        await wait(100)
+
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
     })
@@ -87,8 +102,8 @@ describe('check status message flow between tracker and two nodes', () => {
     it('tracker should receive rtt values from nodes', async (done) => {
         let receivedTotal = 0
 
-        nodeOne.addBootstrapTracker(tracker.getAddress())
-        nodeTwo.addBootstrapTracker(tracker.getAddress())
+        nodeOne.start()
+        nodeTwo.start()
 
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
@@ -118,8 +133,8 @@ describe('check status message flow between tracker and two nodes', () => {
     it('tracker should receive location information from nodes', async (done) => {
         let receivedTotal = 0
 
-        nodeOne.addBootstrapTracker(tracker.getAddress())
-        nodeTwo.addBootstrapTracker(tracker.getAddress())
+        nodeOne.start()
+        nodeTwo.start()
 
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)

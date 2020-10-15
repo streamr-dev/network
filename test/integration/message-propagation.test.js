@@ -18,15 +18,35 @@ describe('message propagation in network', () => {
         })
 
         await Promise.all([
-            startNetworkNode('127.0.0.1', 33312, 'node-1'),
-            startNetworkNode('127.0.0.1', 33313, 'node-2'),
-            startNetworkNode('127.0.0.1', 33314, 'node-3'),
-            startNetworkNode('127.0.0.1', 33315, 'node-4')
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 33312,
+                id: 'node-1',
+                trackers: [tracker.getAddress()]
+            }),
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 33313,
+                id: 'node-2',
+                trackers: [tracker.getAddress()]
+            }),
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 33314,
+                id: 'node-3',
+                trackers: [tracker.getAddress()]
+            }),
+            startNetworkNode({
+                host: '127.0.0.1',
+                port: 33315,
+                id: 'node-4',
+                trackers: [tracker.getAddress()]
+            })
         ]).then((res) => {
             [n1, n2, n3, n4] = res
         });
 
-        [n1, n2, n3, n4].forEach((node) => node.addBootstrapTracker(tracker.getAddress()))
+        [n1, n2, n3, n4].forEach((node) => node.start())
     })
 
     afterAll(async () => {

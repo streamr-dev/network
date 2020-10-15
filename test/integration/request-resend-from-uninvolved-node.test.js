@@ -31,36 +31,54 @@ describe('request resend from uninvolved node', () => {
             port: 28640,
             id: 'tracker'
         })
-        uninvolvedNode = await startNetworkNode('127.0.0.1', 28641, 'uninvolvedNode', [{
-            store: () => {},
-            requestLast: () => intoStream.object([]),
-        }])
-        involvedNode = await startNetworkNode('127.0.0.1', 28642, 'involvedNode', [{
-            store: () => {},
-            requestLast: () => intoStream.object([]),
-        }])
-        storageNode = await startStorageNode('127.0.0.1', 28643, 'storageNode', [{
-            store: () => {},
-            requestLast: () => intoStream.object([
-                new StreamMessage({
-                    messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
-                    prevMsgRef: new MessageRef(666, 50),
-                    content: {},
-                }),
-                new StreamMessage({
-                    messageId: new MessageID('streamId', 0, 800, 0, 'publisherId', 'msgChainId'),
-                    prevMsgRef: new MessageRef(756, 0),
-                    content: {},
-                }),
-            ])
-        }])
+        uninvolvedNode = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 28641,
+            id: 'uninvolvedNode',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => intoStream.object([]),
+            }]
+        })
+        involvedNode = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 28642,
+            id: 'involvedNode',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => intoStream.object([]),
+            }]
+        })
+        storageNode = await startStorageNode({
+            host: '127.0.0.1',
+            port: 28643,
+            id: 'storageNode',
+            trackers: [tracker.getAddress()],
+            storages: [{
+                store: () => {},
+                requestLast: () => intoStream.object([
+                    new StreamMessage({
+                        messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
+                        prevMsgRef: new MessageRef(666, 50),
+                        content: {},
+                    }),
+                    new StreamMessage({
+                        messageId: new MessageID('streamId', 0, 800, 0, 'publisherId', 'msgChainId'),
+                        prevMsgRef: new MessageRef(756, 0),
+                        content: {},
+                    }),
+                ])
+            }]
+        })
 
         involvedNode.subscribe('streamId', 0)
         // storageNode automatically assigned (subscribed) by tracker
 
-        uninvolvedNode.addBootstrapTracker(tracker.getAddress())
-        involvedNode.addBootstrapTracker(tracker.getAddress())
-        storageNode.addBootstrapTracker(tracker.getAddress())
+        uninvolvedNode.start()
+        involvedNode.start()
+        storageNode.start()
 
         await Promise.all([
             waitForEvent(involvedNode, Node.events.NODE_SUBSCRIBED),

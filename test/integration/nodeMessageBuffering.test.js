@@ -23,13 +23,21 @@ describe('message buffering of Node', () => {
             id: 'tracker'
         })
 
-        sourceNode = await startNetworkNode('127.0.0.1', 30321, 'source-node')
-        await sourceNode.addBootstrapTracker(tracker.getAddress())
+        sourceNode = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30321,
+            id: 'source-node',
+            trackers: [tracker.getAddress()]
+        })
+        destinationNode = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30322,
+            id: 'destination-node',
+            trackers: [tracker.getAddress()]
+        })
 
-        await wait(1000)
-
-        destinationNode = await startNetworkNode('127.0.0.1', 30322, 'destination-node')
-        await destinationNode.addBootstrapTracker(tracker.getAddress())
+        sourceNode.start()
+        destinationNode.start()
     })
 
     afterAll(async () => {

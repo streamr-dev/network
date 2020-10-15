@@ -16,11 +16,18 @@ describe('node unsubscribing from a stream', () => {
             port: 30450,
             id: 'tracker'
         })
-        nodeA = await startNetworkNode('127.0.0.1', 30451, 'a')
-        nodeB = await startNetworkNode('127.0.0.1', 30452, 'b')
-
-        nodeA.addBootstrapTracker(tracker.getAddress())
-        nodeB.addBootstrapTracker(tracker.getAddress())
+        nodeA = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30451,
+            id: 'a',
+            trackers: [tracker.getAddress()]
+        })
+        nodeB = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 30452,
+            id: 'b',
+            trackers: [tracker.getAddress()]
+        })
 
         // TODO: a better way of achieving this would be to pass via constructor, but currently not possible when using
         // startNetworkNode function
@@ -31,6 +38,9 @@ describe('node unsubscribing from a stream', () => {
         nodeB.subscribe('s', 1)
         nodeA.subscribe('s', 2)
         nodeB.subscribe('s', 2)
+
+        nodeA.start()
+        nodeB.start()
 
         await Promise.all([
             waitForEvent(nodeA, Node.events.NODE_SUBSCRIBED),

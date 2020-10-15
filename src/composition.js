@@ -11,11 +11,11 @@ const logger = require('./helpers/logger')('streamr:bin:composition')
 const { trackerHttpEndpoints } = require('./helpers/trackerHelpers')
 const { startEndpoint } = require('./connection/WsEndpoint')
 
-const startTracker = async ({
+function startTracker({
     host,
     port,
     id = uuidv4(),
-    exposeHttpEndpoints = true,
+    attachHttpEndpoints = true,
     maxNeighborsPerNode = 4,
     advertisedWsUrl = null,
     name,
@@ -23,54 +23,78 @@ const startTracker = async ({
     pingInterval,
     privateKeyFileName,
     certFileName
-}) => {
+}) {
     const peerInfo = PeerInfo.newTracker(id, name, location)
-    const endpoint = await startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval, privateKeyFileName, certFileName)
+    return startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval, privateKeyFileName, certFileName)
+        .then((endpoint) => {
+            const tracker = new Tracker({
+                peerInfo,
+                protocols: {
+                    trackerServer: new TrackerServer(endpoint)
+                },
+                maxNeighborsPerNode
+            })
 
-    const opts = {
-        peerInfo,
-        protocols: {
-            trackerServer: new TrackerServer(endpoint)
-        },
-        maxNeighborsPerNode
-    }
-    const tracker = new Tracker(opts)
+            if (attachHttpEndpoints) {
+                logger.debug('attaching HTTP endpoints to the tracker on port %s', port)
+                trackerHttpEndpoints(endpoint.wss, tracker)
+            }
 
-    if (exposeHttpEndpoints) {
-        logger.debug('adding http endpoints to the tracker')
-        trackerHttpEndpoints(endpoint.wss, tracker)
-    }
-
-    return tracker
+            return tracker
+        })
 }
 
-function startNetworkNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null, name, location, pingInterval) {
+function startNetworkNode({
+    host,
+    port,
+    id = uuidv4(),
+    name,
+    trackers,
+    storages = [],
+    advertisedWsUrl = null,
+    location,
+    pingInterval,
+    disconnectionWaitTime
+}) {
     const peerInfo = PeerInfo.newNode(id, name, location)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval).then((endpoint) => {
-        const opts = {
+        return new NetworkNode({
             peerInfo,
+            trackers,
             protocols: {
                 trackerNode: new TrackerNode(endpoint),
                 nodeToNode: new NodeToNode(endpoint)
             },
-            storages
-        }
-        return new NetworkNode(opts)
+            storages,
+            disconnectionWaitTime
+        })
     })
 }
 
-function startStorageNode(host, port, id = uuidv4(), storages = [], advertisedWsUrl = null, name, location, pingInterval) {
+function startStorageNode({
+    host,
+    port,
+    id = uuidv4(),
+    trackers,
+    storages = [],
+    advertisedWsUrl = null,
+    name,
+    location,
+    pingInterval,
+    disconnectionWaitTime
+}) {
     const peerInfo = PeerInfo.newStorage(id, name, location)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval).then((endpoint) => {
-        const opts = {
+        return new NetworkNode({
             peerInfo,
+            trackers,
             protocols: {
                 trackerNode: new TrackerNode(endpoint),
                 nodeToNode: new NodeToNode(endpoint)
             },
-            storages
-        }
-        return new NetworkNode(opts)
+            storages,
+            disconnectionWaitTime
+        })
     })
 }
 

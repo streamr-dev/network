@@ -116,7 +116,7 @@ describe('StreamManager', () => {
         expect(manager.getInboundNodesForStream(streamId)).toEqual(['node-1', 'node-2'])
         expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-1', 'node-3'])
         expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-1', 'node-3'])
-        expect(manager.getStreamsWithConnections()).toEqual({
+        expect(manager.getStreamsWithConnections((streamKey) => ['stream-id-2::0', 'stream-id::0'].includes(streamKey))).toEqual({
             'stream-id-2::0': {
                 inboundNodes: ['node-1', 'node-2'],
                 outboundNodes: ['node-3'],
@@ -172,7 +172,7 @@ describe('StreamManager', () => {
 
         expect(manager.getInboundNodesForStream(streamId)).toEqual(['node-2'])
         expect(manager.getOutboundNodesForStream(streamId)).toEqual(['node-3'])
-        expect(manager.getStreamsWithConnections()).toEqual({
+        expect(manager.getStreamsWithConnections((streamKey) => ['stream-id-2::0', 'stream-id::0'].includes(streamKey))).toEqual({
             'stream-id-2::0': {
                 inboundNodes: ['node-1', 'node-2'],
                 outboundNodes: [],
@@ -219,7 +219,7 @@ describe('StreamManager', () => {
         expect(manager.getOutboundNodesForStream(new StreamIdAndPartition('stream-1', 1))).toEqual(['should-not-be-removed'])
         expect(manager.getInboundNodesForStream(new StreamIdAndPartition('stream-2', 0))).toEqual(['should-not-be-removed'])
         expect(manager.getOutboundNodesForStream(new StreamIdAndPartition('stream-2', 0))).toEqual([])
-        expect(manager.getStreamsWithConnections()).toEqual({
+        expect(manager.getStreamsWithConnections((streamKey) => ['stream-2::0', 'stream-1::0', 'stream-1::1'].includes(streamKey))).toEqual({
             'stream-1::0': {
                 inboundNodes: [],
                 outboundNodes: ['should-not-be-removed'],
@@ -262,7 +262,7 @@ describe('StreamManager', () => {
             new StreamIdAndPartition('stream-2', 0)
         ])
 
-        expect(manager.getStreamsWithConnections()).toEqual({
+        expect(manager.getStreamsWithConnections((streamKey) => ['stream-2::0', 'stream-1::0', 'stream-1::1'].includes(streamKey))).toEqual({
             'stream-2::0': {
                 inboundNodes: ['n1'],
                 outboundNodes: ['n1'],
@@ -275,7 +275,7 @@ describe('StreamManager', () => {
         manager.setUpStream(new StreamIdAndPartition('stream-1', 0))
         manager.setUpStream(new StreamIdAndPartition('stream-2', 0))
 
-        expect(manager.getStreamsWithConnections()).toEqual({
+        expect(manager.getStreamsWithConnections((streamKey) => ['stream-2::0', 'stream-1::0', 'stream-1::1'].includes(streamKey))).toEqual({
             'stream-1::0': {
                 inboundNodes: [],
                 outboundNodes: [],
@@ -291,7 +291,7 @@ describe('StreamManager', () => {
         manager.updateCounter(new StreamIdAndPartition('stream-1', 0), 50)
         manager.updateCounter(new StreamIdAndPartition('stream-2', 0), 100)
 
-        expect(manager.getStreamsWithConnections()).toEqual({
+        expect(manager.getStreamsWithConnections((streamKey) => ['stream-2::0', 'stream-1::0', 'stream-1::1'].includes(streamKey))).toEqual({
             'stream-1::0': {
                 inboundNodes: [],
                 outboundNodes: [],

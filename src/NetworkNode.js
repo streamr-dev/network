@@ -21,7 +21,7 @@ class NetworkNode extends Node {
                 new StorageNodeResendStrategy(
                     opts.protocols.trackerNode,
                     opts.protocols.nodeToNode,
-                    (streamKey) => this._getTracker(streamKey),
+                    (streamKey) => this._getTrackerId(streamKey),
                     (node) => this.streams.isNodePresent(node)
                 )
             ]

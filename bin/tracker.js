@@ -16,7 +16,7 @@ program
     .option('--port <port>', 'port', 30300)
     .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
-    .option('--exposeHttpEndpoints', 'expose http endpoints')
+    .option('--attachHttpEndpoints', 'attach http endpoints')
     .option('--apiKey <apiKey>', 'apiKey for StreamrClient', undefined)
     .option('--streamId <streamId>', 'streamId for StreamrClient', undefined)
     .option('--sentryDns <sentryDns>', 'sentryDns', undefined)
@@ -57,7 +57,7 @@ async function main() {
             id,
             maxNeighborsPerNode: Number.parseInt(program.maxNeighborsPerNode, 10),
             name,
-            exposeHttpEndpoints: program.exposeHttpEndpoints,
+            attachHttpEndpoints: program.attachHttpEndpoints,
             privateKeyFileName: program.privateKeyFileName,
             certFileName: program.certFileName
         })
@@ -65,7 +65,7 @@ async function main() {
         const trackerObj = {}
         const fields = [
             'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName', 'metrics',
-            'metricsInterval', 'apiKey', 'streamId', 'sentryDns', 'exposeHttpEndpoints']
+            'metricsInterval', 'apiKey', 'streamId', 'sentryDns', 'attachHttpEndpoints']
         fields.forEach((prop) => {
             trackerObj[prop] = program[prop]
         })

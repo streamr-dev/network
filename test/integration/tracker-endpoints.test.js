@@ -24,18 +24,31 @@ describe('tracker endpoint', () => {
             host: '127.0.0.1',
             port: trackerPort,
             id: 'tracker',
-            exposeHttpEndpoints: true
+            attachHttpEndpoints: true
         })
-        nodeOne = await startNetworkNode('127.0.0.1', 31751, 'node-1', [], null, 'node-1', null, 100)
-        nodeTwo = await startNetworkNode('127.0.0.1', 31752, 'node-2', [], null, 'node-2', location, 100)
+        nodeOne = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 31751,
+            id: 'node-1',
+            trackers: [tracker.getAddress()],
+            pingInterval: 100
+        })
+        nodeTwo = await startNetworkNode({
+            host: '127.0.0.1',
+            port: 31752,
+            id: 'node-2',
+            trackers: [tracker.getAddress()],
+            location,
+            pingInterval: 100
+        })
 
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
 
         nodeOne.subscribe(streamId2, 0)
 
-        nodeOne.addBootstrapTracker(tracker.getAddress())
-        nodeTwo.addBootstrapTracker(tracker.getAddress())
+        nodeOne.start()
+        nodeTwo.start()
 
         await waitForCondition(() => Object.keys(tracker.overlayPerStream).length === 2)
     })
