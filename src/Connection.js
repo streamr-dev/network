@@ -246,6 +246,7 @@ export default class Connection extends EventEmitter {
             })
         })().finally(() => {
             if (this.reconnectTask === reconnectTask) {
+                this._isReconnecting = false
                 this.reconnectTask = undefined
             }
         })
@@ -255,9 +256,11 @@ export default class Connection extends EventEmitter {
 
     onConnectError(error) {
         const err = new ConnectionError(error)
+        this.checkDone()
         if (!this._isReconnecting) {
             this.emit('error', err)
         }
+
         throw err
     }
 
@@ -265,14 +268,24 @@ export default class Connection extends EventEmitter {
         const err = new ConnectionError(error)
         // no check for reconnecting
         this.emit('error', err)
+
         throw err
     }
 
+    checkDone() {
+        if (!this.isDone && !this._isReconnecting && !this.disconnectTask) {
+            this.isDone = true
+            this.shouldConnect = false
+            this.emit('done')
+        }
+    }
+
     async connect() {
-        this.shouldConnect = true
         if (this.initialConnectTask) {
             return this.initialConnectTask
         }
+        this.shouldConnect = true
+        this.isDone = false
         const initialConnectTask = this._connectOnce()
             .catch((err) => {
                 if (this.initialConnectTask === initialConnectTask) {
@@ -339,6 +352,7 @@ export default class Connection extends EventEmitter {
                     // eslint-disable-next-line promise/no-nesting
                     await this.reconnect().catch((err) => {
                         this.debug('failed reconnect after connected')
+                        this.checkDone()
                         this.emit('error', new ConnectionError(err))
                     })
                 })
@@ -436,22 +450,30 @@ export default class Connection extends EventEmitter {
     async disconnect() {
         this.options.autoConnect = false // reset auto-connect on manual disconnect
         this.shouldConnect = false
+        this._isReconnecting = false
         if (this.disconnectTask) {
             return this.disconnectTask
         }
+        let hadError = false
         const disconnectTask = this._disconnect()
-            .catch(this.onDisconnectError)
+            .catch((err) => {
+                hadError = true
+                return this.onDisconnectError(err)
+            })
             .finally(() => {
                 if (this.disconnectTask === disconnectTask) {
                     this.disconnectTask = undefined
+                    if (!hadError) {
+                        this.checkDone()
+                    }
                 }
+
             })
         this.disconnectTask = disconnectTask
         return this.disconnectTask
     }
 
     async _disconnect() {
-        this.debug('disconnect()')
         if (this.connectTask) {
             try {
                 await this.connectTask
@@ -477,8 +499,6 @@ export default class Connection extends EventEmitter {
         if (this.shouldConnect) {
             throw new ConnectionError('connect before disconnected')
         }
-
-        this.emit('done')
     }
 
     async nextConnection() {
