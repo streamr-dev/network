@@ -33,8 +33,8 @@ describe('StreamEndpoints', () => {
         })
     })
 
-    describe('Stream creation', () => {
-        it('createStream', async () => {
+    describe('createStream', () => {
+        it('creates a stream with correct values', async () => {
             const stream = await client.createStream({
                 name,
                 requireSignedData: true,
@@ -42,25 +42,52 @@ describe('StreamEndpoints', () => {
             })
             createdStream = stream
             assert(createdStream.id)
-            assert.equal(createdStream.name, name)
+            assert.strictEqual(createdStream.name, name)
             assert.strictEqual(createdStream.requireSignedData, true)
         })
+    })
 
+    describe('getOrCreate', () => {
         it('getOrCreate an existing Stream', async () => {
-            const existingStream = await client.getOrCreateStream({
-                name,
+            const stream = await client.createStream({
+                name: `StreamEndpoints-integration-${Date.now()}`,
             })
-            assert.equal(existingStream.id, createdStream.id)
-            assert.equal(existingStream.name, createdStream.name)
+
+            const existingStream = await client.getOrCreateStream({
+                name: stream.name,
+            })
+            assert.strictEqual(existingStream.id, stream.id)
+            assert.strictEqual(existingStream.name, stream.name)
         })
 
-        it.skip('getOrCreate a new Stream', async () => {
-            const newName = Date.now().toString()
+        it('getOrCreate a new Stream', async () => {
+            const newName = `StreamEndpoints-integration-${Date.now()}`
             const newStream = await client.getOrCreateStream({
                 name: newName,
             })
 
-            assert.notEqual(newStream.id, createdStream.id)
+            assert.strictEqual(newStream.name, newName)
+        })
+    })
+
+    describe('listStreams', () => {
+        it('filters by given criteria (match)', async () => {
+            const stream = await client.createStream({
+                name: `StreamEndpoints-integration-${Date.now()}`,
+            })
+
+            const result = await client.listStreams({
+                name: stream.name,
+            })
+            assert.strictEqual(result.length, 1)
+            assert.strictEqual(result[0].id, stream.id)
+        })
+
+        it('filters by given criteria (no  match)', async () => {
+            const result = await client.listStreams({
+                name: `non-existent-${Date.now()}`,
+            })
+            assert.strictEqual(result.length, 0)
         })
     })
 
@@ -126,7 +153,7 @@ describe('StreamEndpoints', () => {
             // Need time to propagate to storage
             await wait(10000)
             const stream = await createdStream.detectFields()
-            assert.deepEqual(
+            assert.deepStrictEqual(
                 stream.config.fields,
                 [
                     {
@@ -147,7 +174,7 @@ describe('StreamEndpoints', () => {
         it('Stream.getPermissions', async () => {
             const permissions = await createdStream.getPermissions()
             // get, edit, delete, subscribe, publish, share
-            assert.equal(permissions.length, 6, `Unexpected number of permissions: ${JSON.stringify(permissions)}`)
+            assert.strictEqual(permissions.length, 6, `Unexpected number of permissions: ${JSON.stringify(permissions)}`)
         })
 
         it('Stream.hasPermission', async () => {
@@ -169,7 +196,7 @@ describe('StreamEndpoints', () => {
     describe('Stream deletion', () => {
         it('Stream.delete', async () => {
             await createdStream.delete()
-            assert.rejects(async () => {
+            await assert.rejects(async () => {
                 await client.getStream(createdStream.id)
             })
         })
