@@ -11,12 +11,12 @@ const SeenButNotPropagatedSet = require('../helpers/SeenButNotPropagatedSet')
 const { disconnectionReasons } = require('../connection/WsEndpoint')
 const { StreamIdAndPartition } = require('../identifiers')
 const Metrics = require('../metrics')
+const ResendHandler = require('../resend/ResendHandler')
+const proxyRequestStream = require('../resend/proxyRequestStream')
 
 const { GapMisMatchError, InvalidNumberingError } = require('./DuplicateMessageDetector')
 const StreamManager = require('./StreamManager')
-const ResendHandler = require('./ResendHandler')
 const InstructionThrottler = require('./InstructionThrottler')
-const proxyRequestStream = require('./proxyRequestStream')
 
 const events = Object.freeze({
     MESSAGE_RECEIVED: 'streamr:node:message-received',

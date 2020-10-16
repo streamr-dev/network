@@ -8,7 +8,7 @@ const {
 } = require('streamr-client-protocol').ControlLayer
 const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
 
-const proxyRequestStream = require('../../src/logic/proxyRequestStream')
+const proxyRequestStream = require('../../src/resend/proxyRequestStream')
 
 describe('proxyRequestStream', () => {
     let sendFn

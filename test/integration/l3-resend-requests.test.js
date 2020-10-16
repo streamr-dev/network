@@ -116,11 +116,6 @@ describe('resend requests are fulfilled at L3', () => {
             waitForEvent(neighborTwo, Node.events.NODE_SUBSCRIBED),
             waitForEvent(storageNode, Node.events.NODE_SUBSCRIBED)
         ])
-
-        // Prevent storageNode from being a neighbor of contactNode. Otherwise
-        // L2 will be used to fulfill resend request, which will mean that L3
-        // is skipped and we are just testing L2 again.
-        contactNode.resendHandler.resendStrategies.splice(1, 1)
     })
 
     afterEach(async () => {
