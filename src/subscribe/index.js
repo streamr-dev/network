@@ -1,4 +1,5 @@
 import { PassThrough } from 'stream'
+import Emitter from 'events'
 
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
@@ -100,6 +101,18 @@ export function validateOptions(optionsOrStreamId) {
             streamPartition: 0,
         }
     } else if (typeof optionsOrStreamId === 'object') {
+        if (optionsOrStreamId.stream) {
+            return validateOptions(optionsOrStreamId.stream)
+        }
+
+        if (optionsOrStreamId.id != null && optionsOrStreamId.streamId == null) {
+            optionsOrStreamId.streamId = optionsOrStreamId.id
+        }
+
+        if (optionsOrStreamId.partition == null && optionsOrStreamId.streamPartition == null) {
+            optionsOrStreamId.streamPartition = optionsOrStreamId.partition
+        }
+
         // shallow copy
         options = {
             streamPartition: 0,
@@ -447,21 +460,49 @@ async function getResendStream(client, opts) {
  * When all iterators are done, calls unsubscribe.
  */
 
-class Subscription {
+class Subscription extends Emitter {
     constructor(client, options) {
+        super()
         this.client = client
         this.options = validateOptions(options)
         this.streams = new Set()
 
         this.queue = pLimit(1)
-        const sub = this.subscribe.bind(this)
+        const sub = this._subscribe.bind(this)
         const unsub = this.unsubscribe.bind(this)
-        this.subscribe = () => this.queue(sub)
+        this._subscribe = () => this.queue(sub)
         this.unsubscribe = () => this.queue(unsub)
         this.return = this.return.bind(this)
         this.sendSubscribe = pMemoize(this.sendSubscribe.bind(this))
         this.sendUnsubscribe = pMemoize(this.sendUnsubscribe.bind(this))
         this.validate = Validator(client, options)
+        this.onConnected = this.onConnected.bind(this)
+        this.onDisconnected = this.onDisconnected.bind(this)
+        this.onDisconnecting = this.onDisconnecting.bind(this)
+        this.onConnectionDone = this.onConnectionDone.bind(this)
+    }
+
+    async onConnected() {
+        try {
+            await this.sendSubscribe()
+        } catch (err) {
+            this.emit('error', err)
+        }
+    }
+
+    async onDisconnected() {
+        // unblock subscribe
+        pMemoize.clear(this.sendSubscribe)
+    }
+
+    async onDisconnecting() {
+        if (!this.client.connection.shouldConnect) {
+            this.cancel()
+        }
+    }
+
+    onConnectionDone() {
+        this.cancel()
     }
 
     hasPending() {
@@ -476,25 +517,27 @@ class Subscription {
         return unsubscribe(this.client, this.options)
     }
 
-    async subscribe() {
+    _cleanupConnectionHandlers() {
+        // noop will be replaced in subscribe
+    }
+
+    async _subscribe() {
         pMemoize.clear(this.sendUnsubscribe)
-        const iterator = this.iterate() // start iterator immediately
+        const { connection } = this.client
+        this._cleanupConnectionHandlers = connection.onTransition({
+            connection: this.client.connection,
+            onConnected: this.onConnected,
+            onDisconnected: this.onDisconnected,
+            onDisconnecting: this.onDisconnecting,
+            onDone: this.onConnectionDone,
+        })
         await this.sendSubscribe()
+    }
+
+    async subscribe() {
+        const iterator = this.iterate() // start iterator immediately
+        await this._subscribe()
         return iterator
-    }
-
-    async _unsubscribe() {
-        pMemoize.clear(this.sendSubscribe)
-        await this.sendUnsubscribe()
-    }
-
-    async cancel(optionalErr) {
-        if (this.hasPending()) {
-            await this.queue(() => {})
-        }
-        await allSettledValues([...this.streams].map(async (it) => (
-            it.cancel(optionalErr)
-        )), 'cancel failed')
     }
 
     async return() {
@@ -503,8 +546,26 @@ class Subscription {
         }), 'return failed')
     }
 
+    async onSubscriptionDone() {
+        pMemoize.clear(this.sendSubscribe)
+        this._cleanupConnectionHandlers()
+        if (this.client.connection.shouldConnect) {
+            await this.sendUnsubscribe()
+        }
+    }
+
     async unsubscribe(...args) {
         return this.cancel(...args)
+    }
+
+    async cancel(optionalErr) {
+        this._cleanupConnectionHandlers()
+        if (this.hasPending()) {
+            await this.queue(() => {})
+        }
+        await allSettledValues([...this.streams].map(async (it) => (
+            it.cancel(optionalErr)
+        )), 'cancel failed')
     }
 
     async _cleanup(it) {
@@ -513,7 +574,7 @@ class Subscription {
         this.streams.delete(it)
         if (hadStream && !this.streams.size) {
             // unsubscribe if no more streams
-            await this._unsubscribe()
+            await this.onSubscriptionDone()
         }
     }
 
@@ -553,6 +614,10 @@ export default class Subscriptions {
     constructor(client) {
         this.client = client
         this.subscriptions = new Map()
+    }
+
+    getAll() {
+        return [...this.subscriptions.values()]
     }
 
     get(options) {

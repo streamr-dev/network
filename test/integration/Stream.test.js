@@ -498,6 +498,90 @@ describe('StreamrClient Stream', () => {
                     expect(M.count(stream.id)).toBe(0)
                 })
             })
+
+            describe('connection states', () => {
+                let sub
+
+                beforeEach(async () => {
+                    if (sub) {
+                        await sub.cancel()
+                    }
+                })
+
+                it('should reconnect subscriptions when connection disconnected before subscribed & reconnected', async () => {
+                    await client.connect()
+                    const subTask = M.subscribe(stream.id)
+                    await true
+                    client.connection.socket.close()
+                    const published = await publishTestMessages(2)
+                    sub = await subTask
+                    const received = []
+                    for await (const msg of sub) {
+                        received.push(msg.getParsedContent())
+                        if (received.length === published.length) {
+                            expect(received).toEqual(published)
+                        }
+                        break
+                    }
+                })
+
+                it('should re-subscribe when subscribed then reconnected', async () => {
+                    await client.connect()
+                    const sub = await M.subscribe(stream.id)
+                    let published = await publishTestMessages(2)
+                    let received = []
+                    for await (const msg of sub) {
+                        received.push(msg.getParsedContent())
+                        if (received.length === 2) {
+                            expect(received).toEqual(published)
+                            client.connection.socket.close()
+                            published.push(...(await publishTestMessages(2)))
+                        }
+                        if (received.length === 4) {
+                            expect(received).toEqual(published)
+                            break
+                        }
+                    }
+                })
+
+                it('should end when subscribed then disconnected', async () => {
+                    await client.connect()
+                    const sub = await M.subscribe(stream.id)
+                    let published = await publishTestMessages(2)
+                    let received = []
+                    for await (const msg of sub) {
+                        received.push(msg.getParsedContent())
+                        if (received.length === 1) {
+                            expect(received).toEqual(published.slice(0, 1))
+                            client.disconnect() // should trigger break
+                            // no await, should be immediate
+                        }
+                    }
+                    expect(received).toEqual(published.slice(0, 1))
+                })
+
+                it('should end when subscribed then disconnected', async () => {
+                    await client.connect()
+                    const sub = await M.subscribe(stream.id)
+                    let published = await publishTestMessages(2)
+                    let received = []
+                    await client.disconnect()
+                    for await (const msg of sub) {
+                        received.push(msg.getParsedContent())
+                    }
+                    client.connect() // no await, should be ok
+                    const sub2 = await M.subscribe(stream.id)
+                    let published2 = await publishTestMessages(2)
+                    let received2 = []
+                    for await (const msg of sub2) {
+                        received2.push(msg.getParsedContent())
+                        if (received2.length === 1) {
+                            await client.disconnect()
+                        }
+                    }
+                    expect(received2).toEqual(published2.slice(0, 1))
+                })
+            })
         })
     }
 })
