@@ -70,6 +70,27 @@ describe('StreamEndpoints', () => {
         })
     })
 
+    describe('listStreams', () => {
+        it('filters by given criteria (match)', async () => {
+            const stream = await client.createStream({
+                name: `StreamEndpoints-integration-${Date.now()}`,
+            })
+
+            const result = await client.listStreams({
+                name: stream.name,
+            })
+            assert.strictEqual(result.length, 1)
+            assert.strictEqual(result[0].id, stream.id)
+        })
+
+        it('filters by given criteria (no  match)', async () => {
+            const result = await client.listStreams({
+                name: `non-existent-${Date.now()}`,
+            })
+            assert.strictEqual(result.length, 0)
+        })
+    })
+
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
