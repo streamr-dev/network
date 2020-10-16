@@ -2,7 +2,7 @@ import { Readable, PassThrough } from 'stream'
 
 import { wait } from 'streamr-test-utils'
 
-import { iteratorFinally, CancelableGenerator, pipeline } from '../../src/iterators'
+import { iteratorFinally, CancelableGenerator, pipeline } from '../../src/utils/iterators'
 import { Defer } from '../../src/utils'
 
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]

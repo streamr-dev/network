@@ -9,9 +9,7 @@ import Connection from './Connection'
 import Session from './Session'
 import { getVersionString } from './utils'
 import Publisher from './Publisher'
-import Resender from './Resender'
-import Subscriber from './Subscriber'
-import MessageStream from './Stream'
+import MessageStream from './subscribe'
 
 const { ControlMessage } = ControlLayer
 

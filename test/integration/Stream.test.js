@@ -5,7 +5,7 @@ import { uid, fakePrivateKey } from '../utils'
 import StreamrClient from '../../src'
 import { Defer, pTimeout } from '../../src/utils'
 import Connection from '../../src/Connection'
-import MessageStream from '../../src/Stream'
+import MessageStream from '../../src/subscribe'
 
 import config from './config'
 

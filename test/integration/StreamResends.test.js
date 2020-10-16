@@ -4,7 +4,7 @@ import { wait } from 'streamr-test-utils'
 import { uid, fakePrivateKey } from '../utils'
 import StreamrClient from '../../src'
 import Connection from '../../src/Connection'
-import MessageStream from '../../src/Stream'
+import MessageStream from '../../src/subscribe'
 
 import config from './config'
 
@@ -218,7 +218,7 @@ describe('resends', () => {
                     })
                 }, WAIT_FOR_STORAGE_TIMEOUT * 1.2)
 
-                it.only('requests resend', async () => {
+                it('requests resend', async () => {
                     const sub = await M.resend({
                         streamId: stream.id,
                         last: published.length,

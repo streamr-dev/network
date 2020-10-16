@@ -3,7 +3,7 @@ import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
 
-import { Defer, pTimeout } from './utils'
+import { Defer, pTimeout } from '../utils'
 
 const pFinished = promisify(finished)
 

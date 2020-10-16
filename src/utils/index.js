@@ -2,11 +2,10 @@ import { v4 as uuidv4 } from 'uuid'
 import uniqueId from 'lodash.uniqueid'
 import LRU from 'quick-lru'
 import pMemoize from 'p-memoize'
-import pQueue from 'p-queue'
 import pLimit from 'p-limit'
 import mem from 'mem'
 
-import pkg from '../package.json'
+import pkg from '../../package.json'
 
 const UUID = uuidv4()
 

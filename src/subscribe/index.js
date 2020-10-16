@@ -4,9 +4,9 @@ import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import { ControlLayer, MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
-import SignatureRequiredError from './errors/SignatureRequiredError'
-import { uuid, CacheAsyncFn, pOrderedResolve } from './utils'
-import { endStream, pipeline, CancelableGenerator } from './iterators'
+import SignatureRequiredError from '../errors/SignatureRequiredError'
+import { uuid, CacheAsyncFn, pOrderedResolve } from '../utils'
+import { endStream, pipeline, CancelableGenerator } from '../utils/iterators'
 
 const { OrderingUtil, StreamMessageValidator } = Utils
 
