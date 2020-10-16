@@ -477,6 +477,8 @@ export default class Connection extends EventEmitter {
         if (this.shouldConnect) {
             throw new ConnectionError('connect before disconnected')
         }
+
+        this.emit('done')
     }
 
     async nextConnection() {
@@ -517,13 +519,13 @@ export default class Connection extends EventEmitter {
         }
     }
 
-    async needsConnection() {
+    async needsConnection(msg) {
         await this.maybeConnect()
         if (!this.isConnected()) {
             // note we can't just let socket.send fail,
             // have to do this check ourselves because the error appears
             // to be uncatchable in the browser
-            throw new ConnectionError('needs connection but connection closed or closing')
+            throw new ConnectionError(`needs connection but connection ${this.getState()}. ${msg}`)
         }
     }
 
@@ -551,7 +553,8 @@ export default class Connection extends EventEmitter {
         this.debug('send()')
         if (!this.isConnected()) {
             // shortcut await if connected
-            await this.needsConnection()
+            const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
+            await this.needsConnection(`sending ${data.slice(0, 1024)}...`)
         }
         this.debug('>> %o', msg)
         return this._send(msg)
@@ -610,6 +613,46 @@ export default class Connection extends EventEmitter {
             return false
         }
         return this.socket.readyState === WebSocket.CONNECTING
+    }
+
+    onTransition({
+        onConnected = () => {},
+        onConnecting = () => {},
+        onDisconnecting = () => {},
+        onDisconnected = () => {},
+        onDone = () => {},
+        onError,
+    }) {
+        let onDoneHandler
+        const cleanUp = async (...args) => {
+            this
+                .off('connecting', onConnecting)
+                .off('connected', onConnected)
+                .off('disconnecting', onDisconnecting)
+                .off('disconnected', onDisconnected)
+                .off('done', onDoneHandler)
+            if (onError) {
+                this.off('error', onError)
+            }
+        }
+
+        onDoneHandler = async (...args) => {
+            cleanUp(...args)
+            return onDone(...args)
+        }
+
+        this
+            .on('connecting', onConnecting)
+            .on('connected', onConnected)
+            .on('disconnecting', onDisconnecting)
+            .on('disconnected', onDisconnected)
+            .on('done', onDoneHandler)
+
+        if (onError) {
+            this.on('error', onError)
+        }
+
+        return cleanUp
     }
 }
 

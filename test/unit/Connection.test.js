@@ -686,5 +686,49 @@ describe('Connection', () => {
             expect(received).toEqual(['test'])
         })
     })
+
+    describe('onTransition', () => {
+        it('runs functions', async () => {
+            const onError = jest.fn()
+            const transitionFns = {
+                onConnected: jest.fn(),
+                onConnecting: jest.fn(),
+                onDisconnected: jest.fn(),
+                onDisconnecting: jest.fn(),
+                onDone: jest.fn(),
+                onError: jest.fn(),
+            }
+
+            s.onTransition(transitionFns)
+
+            await s.connect()
+            expect(transitionFns.onConnecting).toHaveBeenCalledTimes(1)
+            expect(transitionFns.onConnected).toHaveBeenCalledTimes(1)
+            s.socket.close()
+            await s.nextConnection()
+            expect(transitionFns.onDisconnecting).toHaveBeenCalledTimes(0)
+            expect(transitionFns.onDisconnected).toHaveBeenCalledTimes(1)
+            expect(transitionFns.onConnecting).toHaveBeenCalledTimes(2)
+            expect(transitionFns.onConnected).toHaveBeenCalledTimes(2)
+            expect(transitionFns.onDone).toHaveBeenCalledTimes(0)
+            await s.disconnect()
+            expect(transitionFns.onConnecting).toHaveBeenCalledTimes(2)
+            expect(transitionFns.onConnected).toHaveBeenCalledTimes(2)
+            expect(transitionFns.onDisconnecting).toHaveBeenCalledTimes(1)
+            expect(transitionFns.onDisconnected).toHaveBeenCalledTimes(2)
+            expect(transitionFns.onDone).toHaveBeenCalledTimes(1)
+            expect(transitionFns.onError).toHaveBeenCalledTimes(0)
+
+            await s.connect()
+            // no more fired after disconnect done
+            expect(transitionFns.onConnecting).toHaveBeenCalledTimes(2)
+            expect(transitionFns.onConnected).toHaveBeenCalledTimes(2)
+            expect(transitionFns.onDisconnecting).toHaveBeenCalledTimes(1)
+            expect(transitionFns.onDisconnected).toHaveBeenCalledTimes(2)
+            expect(transitionFns.onDone).toHaveBeenCalledTimes(1)
+            expect(transitionFns.onError).toHaveBeenCalledTimes(0)
+        })
+    })
+
 })
 
