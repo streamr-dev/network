@@ -134,6 +134,30 @@ test('test', async () => {
 })
 ``` 
 
+### toReadableStream
+```
+toReadableStream(...args)
+```
+
+Make a `ReadableStream` out of an array of items. Any item of type `Error` will be emitted as an error event instead
+of pushed to stream.
+
+```js
+test('test', () => {
+    const stream = toReadableStream([
+        StreamMessage.create(...),
+        StreamMessage.create(...),
+        StreamMessage.create(...),
+        StreamMessage.create(...)
+    ])
+    stream.on('data', (data) => {
+        console.info(data)
+    })
+    stream.on('end', () => {
+        console.info('DONE')
+    })
+})
+```
 
 ### callbackToPromise
 ```

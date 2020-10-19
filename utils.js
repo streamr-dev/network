@@ -1,3 +1,5 @@
+const { Readable } = require('stream')
+
 const pEvent = require('p-event')
 
 /**
@@ -122,10 +124,35 @@ const callbackToPromise = (fn, ...args) => {
     })
 }
 
+/**
+ * Create a {ReadableStream} out of an array of items. Any {Error} items will
+ * be emitted as error events instead of pushed to stream.
+ * @param args an array of items
+ * @returns {ReadableStream}
+ */
+const toReadableStream = (...args) => {
+    const messagesOrErrors = [...args]
+    const rs = new Readable({
+        objectMode: true,
+        read: () => {
+            const item = messagesOrErrors.shift()
+            if (item == null) {
+                rs.push(null) // end-of-stream
+            } else if (item instanceof Error) {
+                rs.emit('error', item)
+            } else {
+                rs.push(item)
+            }
+        }
+    })
+    return rs
+}
+
 module.exports = {
     callbackToPromise,
     eventsToArray,
     eventsWithArgsToArray,
+    toReadableStream,
     wait,
     waitForEvent,
     waitForCondition,
