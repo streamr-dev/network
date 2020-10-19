@@ -96,6 +96,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             /* Options */
             compression: 0,
             maxPayloadLength: 1024 * 1024,
+            maxBackpressure: Connection.HIGH_BACK_PRESSURE + (1024 * 1024), // add 1MB safety margin
             idleTimeout: 3600, // 1 hour
             upgrade: (res, req, context) => {
                 let controlLayerVersion
@@ -207,7 +208,6 @@ module.exports = class WebsocketServer extends EventEmitter {
                 }
             },
             drain: (ws) => {
-                logger.info('WebSocket backpressure: ' + ws.getBufferedAmount())
                 const connection = this.connections.get(ws.connectionId)
                 if (connection) {
                     connection.evaluateBackPressure()
@@ -351,6 +351,7 @@ module.exports = class WebsocketServer extends EventEmitter {
     // TODO: Extract resend stuff to class?
     async handleResendRequest(connection, request, resendTypeHandler) {
         let nothingToResend = true
+        let sentMessages = 0
 
         const msgHandler = (unicastMessage) => {
             if (nothingToResend) {
@@ -360,6 +361,7 @@ module.exports = class WebsocketServer extends EventEmitter {
 
             const { streamMessage } = unicastMessage
             this.volumeLogger.logOutput(streamMessage.getSerializedContent().length)
+            sentMessages += 1
             connection.send(new ControlLayer.UnicastMessage({
                 version: request.version,
                 requestId: request.requestId,
@@ -368,6 +370,7 @@ module.exports = class WebsocketServer extends EventEmitter {
         }
 
         const doneHandler = () => {
+            logger.info('Finished resend %s for stream %s with a total of %d sent messages', request.requestId, request.streamId, sentMessages)
             if (nothingToResend) {
                 connection.send(new ControlLayer.ResendResponseNoResend({
                     version: request.version,

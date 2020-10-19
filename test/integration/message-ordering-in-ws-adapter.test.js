@@ -1,4 +1,4 @@
-const { startTracker, startNetworkNode, Protocol } = require('streamr-network')
+const { startTracker, startNetworkNode, startStorageNode, Protocol } = require('streamr-network')
 const intoStream = require('into-stream')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
@@ -118,7 +118,7 @@ describe('message ordering and gap filling in websocket adapter', () => {
     it('missing messages are gap filled by ws adapter', async () => {
         // Set up new network node that has missing messages in its storage
         const resendRequests = []
-        nodeWithMissingMessages = await startNetworkNode({
+        nodeWithMissingMessages = await startStorageNode({
             host: '127.0.0.1',
             port: networkPort3,
             id: 'missingMessagesNode',

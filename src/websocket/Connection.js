@@ -10,10 +10,7 @@ function generateId() {
     return id
 }
 
-const LOW_BACK_PRESSURE = 1024 * 1024 * 2 // 2 megabytes
-const HIGH_BACK_PRESSURE = 1024 * 1024 * 16 // 16 megabytes
-
-module.exports = class Connection extends EventEmitter {
+class Connection extends EventEmitter {
     constructor(socket, controlLayerVersion, messageLayerVersion) {
         super()
         this.id = generateId()
@@ -70,10 +67,12 @@ module.exports = class Connection extends EventEmitter {
     }
 
     evaluateBackPressure() {
-        if (!this.highBackPressure && this.socket.getBufferedAmount() > HIGH_BACK_PRESSURE) {
+        if (!this.highBackPressure && this.socket.getBufferedAmount() > Connection.HIGH_BACK_PRESSURE) {
+            logger.debug('Back pressure HIGH for %s at %d', this.id, this.socket.getBufferedAmount())
             this.emit('highBackPressure')
             this.highBackPressure = true
-        } else if (this.highBackPressure && this.socket.getBufferedAmount() < LOW_BACK_PRESSURE) {
+        } else if (this.highBackPressure && this.socket.getBufferedAmount() < Connection.LOW_BACK_PRESSURE) {
+            logger.debug('Back pressure LOW for %s at %d', this.id, this.socket.getBufferedAmount())
             this.emit('lowBackPressure')
             this.highBackPressure = false
         }
@@ -94,3 +93,8 @@ module.exports = class Connection extends EventEmitter {
         }
     }
 }
+
+Connection.LOW_BACK_PRESSURE = 1024 * 1024 // 1 megabytes
+Connection.HIGH_BACK_PRESSURE = 1024 * 1024 * 2 // 2 megabytes
+
+module.exports = Connection
