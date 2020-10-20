@@ -41,8 +41,8 @@ module.exports = class FieldDetector {
                 await this.streamFetcher.setFields(stream.id, fields, apiKey, sessionToken)
             }
         } catch (e) {
-            // Can try again unless we get a 403 response (permission denied)
-            if (!(e instanceof HttpError && e.code === 403)) {
+            // Can try again unless we get a 403 response (permission denied) or 401 response ()
+            if (!(e instanceof HttpError && (e.code === 403 || e.code === 401))) {
                 this.configuredStreamIds.delete(streamMessage.getStreamId())
             }
             throw e
