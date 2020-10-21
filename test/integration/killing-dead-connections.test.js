@@ -46,7 +46,7 @@ describe('check and kill dead connections', () => {
 
         // check connections
         jest.spyOn(connection, 'ping').mockImplementation(() => {
-            throw new Error()
+            throw new Error('test error')
         })
         node1._pingConnections()
 

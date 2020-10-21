@@ -1,4 +1,20 @@
+const assert = require('assert')
+
+const { wait } = require('streamr-test-utils')
+
 const { startNetworkNode, startTracker } = require('../../src/composition')
+
+function areEqual(a, b) {
+    try {
+        assert.deepStrictEqual(a, b)
+    } catch (error) {
+        if (error.code === 'ERR_ASSERTION') {
+            return false
+        }
+        throw error
+    }
+    return true
+}
 
 describe('check network stabilization', () => {
     let tracker
@@ -6,16 +22,12 @@ describe('check network stabilization', () => {
     const MAX_NODES = 10
     const startingPort = 39001
 
-    const stream = 'super-stream'
-
     beforeEach(async () => {
         tracker = await startTracker({
             host: '127.0.0.1',
             port: 39000,
             id: 'tracker'
         })
-        // eslint-disable-next-line no-underscore-dangle
-        expect(tracker._formAndSendInstructions).toBeInstanceOf(Function)
 
         nodes = []
         for (let i = 0; i < MAX_NODES; i++) {
@@ -26,11 +38,11 @@ describe('check network stabilization', () => {
                 id: `node-${i}`,
                 trackers: [tracker.getAddress()]
             })
-            node.subscribe(stream, 0)
+            node.subscribe('stream', 0)
             node.start()
             nodes.push(node)
         }
-    }, 20000)
+    })
 
     afterEach(async () => {
         for (let i = 0; i < MAX_NODES; i++) {
@@ -38,19 +50,19 @@ describe('check network stabilization', () => {
             await nodes[i].stop()
         }
         await tracker.stop()
-    }, 40000)
+    })
 
-    it('network must become stable in less than 15 seconds', async (done) => {
-        let doneTimeout
-        const spy = jest.spyOn(tracker, '_formAndSendInstructions').mockImplementation(() => {
-            // reset spy calls and timeout
-            clearTimeout(doneTimeout)
-            jest.clearAllMocks()
-
-            doneTimeout = setTimeout(() => {
-                expect(spy).not.toHaveBeenCalled()
+    it('network must become stable in less than 10 seconds', async (done) => {
+        for (let i = 0; i < 10; ++i) {
+            const beforeTopology = tracker.getTopology()
+            // eslint-disable-next-line no-await-in-loop
+            await wait(800)
+            const afterTopology = tracker.getTopology()
+            if (areEqual(beforeTopology, afterTopology)) {
                 done()
-            }, 5000)
-        })
-    }, 15000)
+                return
+            }
+        }
+        done('did not stabilize')
+    }, 11000)
 })

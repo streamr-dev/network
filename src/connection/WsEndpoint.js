@@ -183,7 +183,7 @@ class WsEndpoint extends EventEmitter {
             try {
                 // didn't get "pong" in pingInterval
                 if (ws.respondedPong !== undefined && !ws.respondedPong) {
-                    throw Error('ws is not active')
+                    throw new Error('ws is not active')
                 }
 
                 // eslint-disable-next-line no-param-reassign

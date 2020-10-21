@@ -28,9 +28,9 @@ describe('duplicate connections are closed', () => {
             connectionsOpened += 1
         })
 
-        await Promise.all([
-            wsEndpoint1.connect('ws://127.0.0.1:28502').catch((e) => console.log(e.toString())),
-            wsEndpoint2.connect('ws://127.0.0.1:28501').catch((e) => console.log(e.toString()))
+        await Promise.allSettled([
+            wsEndpoint1.connect('ws://127.0.0.1:28502'),
+            wsEndpoint2.connect('ws://127.0.0.1:28501')
         ])
 
         await Promise.race([

@@ -229,14 +229,17 @@ describe('ResendHandler', () => {
         }], notifyError)
 
         const requestStream = resendHandler.handleRequest(request, 'source')
+
         requestStream.on('pause', () => {
             expect(underlyingResponseStream.isPaused()).toEqual(true)
             requestStream.on('resume', () => {
                 expect(underlyingResponseStream.isPaused()).toEqual(false)
+                requestStream.destroy() // clean up
                 done()
             })
             requestStream.resume()
         })
+
         requestStream.pause()
     })
 
