@@ -1,4 +1,5 @@
 import authFetch from '../authFetch'
+import { getEndpointUrl }  from '../../utils'
 
 export default class Stream {
     constructor(client, props) {
@@ -8,7 +9,7 @@ export default class Stream {
 
     async update() {
         const json = await authFetch(
-            `${this._client.options.restUrl}/streams/${this.id}`,
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id),
             this._client.session,
             {
                 method: 'PUT',
@@ -30,7 +31,7 @@ export default class Stream {
 
     async delete() {
         return authFetch(
-            `${this._client.options.restUrl}/streams/${this.id}`,
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id),
             this._client.session,
             {
                 method: 'DELETE',
@@ -40,14 +41,14 @@ export default class Stream {
 
     async getPermissions() {
         return authFetch(
-            `${this._client.options.restUrl}/streams/${this.id}/permissions`,
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions'),
             this._client.session,
         )
     }
 
     async getMyPermissions() {
         return authFetch(
-            `${this._client.options.restUrl}/streams/${this.id}/permissions/me`,
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions', 'me'),
             this._client.session,
         )
     }
@@ -82,7 +83,7 @@ export default class Stream {
         }
 
         return authFetch(
-            `${this._client.options.restUrl}/streams/${this.id}/permissions`,
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions'),
             this._client.session,
             {
                 method: 'POST',
@@ -93,7 +94,7 @@ export default class Stream {
 
     async revokePermission(permissionId) {
         return authFetch(
-            `${this._client.options.restUrl}/streams/${this.id}/permissions/${permissionId}`,
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions', permissionId),
             this._client.session,
             {
                 method: 'DELETE',
@@ -103,7 +104,7 @@ export default class Stream {
 
     async detectFields() {
         return authFetch(
-            `${this._client.options.restUrl}/streams/${this.id}/detectFields`,
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'detectFields'),
             this._client.session,
         )
     }

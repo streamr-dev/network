@@ -2,7 +2,7 @@ import sinon from 'sinon'
 import debugFactory from 'debug'
 
 import authFetch from '../../src/rest/authFetch'
-import { uuid } from '../../src/utils'
+import { uuid, getEndpointUrl } from '../../src/utils'
 
 const debug = debugFactory('StreamrClient::test::utils')
 const express = require('express')
@@ -83,5 +83,11 @@ describe('utils', () => {
             const uid = uuid('test') // generate new text to ensure count starts at 1
             expect(uuid(uid) < uuid(uid)).toBeTruthy()
         })
-    })
+	})
+
+	describe('getEndpointUrl', () => {
+		const streamId = 'x/y'
+		const url = getEndpointUrl('http://example.com', 'abc', streamId, 'def')
+		expect(url.toLowerCase()).toBe('http://example.com/abc/x%2fy/def')
+	});
 })

@@ -6,6 +6,7 @@ import debugFactory from 'debug'
 
 import Stream from './domain/Stream'
 import authFetch from './authFetch'
+import { getEndpointUrl }  from '../utils'
 
 const debug = debugFactory('StreamrClient')
 
@@ -37,7 +38,7 @@ export async function getStream(streamId) {
     this.debug('getStream', {
         streamId,
     })
-    const url = `${this.options.restUrl}/streams/${streamId}`
+    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId)
     const json = await authFetch(url, this.session)
     return json ? new Stream(this, json) : undefined
 }
@@ -46,7 +47,7 @@ export async function listStreams(query = {}) {
     this.debug('listStreams', {
         query,
     })
-    const url = `${this.options.restUrl}/streams?${qs.stringify(query)}`
+    const url = getEndpointUrl(this.options.restUrl, 'streams') + '?' + qs.stringify(query)
     const json = await authFetch(url, this.session)
     return json ? json.map((stream) => new Stream(this, stream)) : []
 }
@@ -112,7 +113,7 @@ export async function getStreamPublishers(streamId) {
     this.debug('getStreamPublishers', {
         streamId,
     })
-    const url = `${this.options.restUrl}/streams/${streamId}/publishers`
+    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'publishers')
     const json = await authFetch(url, this.session)
     return json.addresses.map((a) => a.toLowerCase())
 }
@@ -122,7 +123,7 @@ export async function isStreamPublisher(streamId, ethAddress) {
         streamId,
         ethAddress,
     })
-    const url = `${this.options.restUrl}/streams/${streamId}/publisher/${ethAddress}`
+    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'publisher', ethAddress)
     try {
         await authFetch(url, this.session)
         return true
@@ -138,7 +139,7 @@ export async function getStreamSubscribers(streamId) {
     this.debug('getStreamSubscribers', {
         streamId,
     })
-    const url = `${this.options.restUrl}/streams/${streamId}/subscribers`
+    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'subscribers')
     const json = await authFetch(url, this.session)
     return json.addresses.map((a) => a.toLowerCase())
 }
@@ -148,7 +149,7 @@ export async function isStreamSubscriber(streamId, ethAddress) {
         streamId,
         ethAddress,
     })
-    const url = `${this.options.restUrl}/streams/${streamId}/subscriber/${ethAddress}`
+    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'subscriber', ethAddress)
     try {
         await authFetch(url, this.session)
         return true
@@ -164,7 +165,7 @@ export async function getStreamValidationInfo(streamId) {
     this.debug('getStreamValidationInfo', {
         streamId,
     })
-    const url = `${this.options.restUrl}/streams/${streamId}/validation`
+    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'validation')
     const json = await authFetch(url, this.session)
     return json
 }
