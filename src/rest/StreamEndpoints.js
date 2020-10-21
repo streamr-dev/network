@@ -4,9 +4,10 @@ import { Agent as HttpsAgent } from 'https'
 import qs from 'qs'
 import debugFactory from 'debug'
 
+import { getEndpointUrl } from '../utils'
+
 import Stream from './domain/Stream'
 import authFetch from './authFetch'
-import { getEndpointUrl }  from '../utils'
 
 const debug = debugFactory('StreamrClient')
 

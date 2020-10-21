@@ -19,9 +19,11 @@ import {
     utils as ethersUtils,
 } from 'ethers'
 import debugFactory from 'debug'
+
 import * as DataUnion from '../../contracts/DataUnion.json'
+import { getEndpointUrl } from '../utils'
+
 import authFetch, { DEFAULT_HEADERS } from './authFetch'
-import { getEndpointUrl }  from '../utils'
 
 const { computeAddress, getAddress } = ethersUtils
 
