@@ -215,6 +215,31 @@ describe('ResendHandler', () => {
         requestStream.destroy()
     })
 
+    test('pausing/resuming returned stream pauses/resumes underlying response stream ', (done) => {
+        let underlyingResponseStream = null
+
+        resendHandler = new ResendHandler([{
+            getResendResponseStream: () => {
+                underlyingResponseStream = new Readable({
+                    objectMode: true,
+                    read() {}
+                })
+                return underlyingResponseStream
+            }
+        }], notifyError)
+
+        const requestStream = resendHandler.handleRequest(request, 'source')
+        requestStream.on('pause', () => {
+            expect(underlyingResponseStream.isPaused()).toEqual(true)
+            requestStream.on('resume', () => {
+                expect(underlyingResponseStream.isPaused()).toEqual(false)
+                done()
+            })
+            requestStream.resume()
+        })
+        requestStream.pause()
+    })
+
     test('arguments to notifyError are formed correctly', async () => {
         resendHandler = new ResendHandler([{
             getResendResponseStream: () => intoStream.object(Promise.reject(new Error('yikes')))

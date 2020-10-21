@@ -116,6 +116,16 @@ class ResendHandler {
                     ctx.cancel()
                 }
             })
+            requestStream.on('pause', () => {
+                if (ctx.responseStream) {
+                    ctx.responseStream.pause()
+                }
+            })
+            requestStream.on('resume', () => {
+                if (ctx.responseStream) {
+                    ctx.responseStream.resume()
+                }
+            })
 
             for (let i = 0; i < this.resendStrategies.length && !ctx.stop; ++i) {
                 ctx.responseStream = this.resendStrategies[i].getResendResponseStream(request, source)
