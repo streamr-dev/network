@@ -37,5 +37,5 @@ export function waitFor(emitter, event) {
 }
 
 export const getEndpointUrl = (baseUrl, ...pathParts) => {
-	return baseUrl + '/' + pathParts.map(part => encodeURIComponent(part)).join('/')
+    return baseUrl + '/' + pathParts.map(part => encodeURIComponent(part)).join('/')
 }
