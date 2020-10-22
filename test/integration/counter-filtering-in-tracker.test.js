@@ -78,7 +78,7 @@ describe('tracker: counter filtering', () => {
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []))
 
         let numOfInstructions = 0
-        trackerNode1.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, (fafa, baba) => {
+        trackerNode1.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
 

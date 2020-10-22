@@ -62,6 +62,7 @@ startNetworkNode(program.ip, program.port, publisherId, [], null, name)
                 logger.info(JSON.stringify(await publisher.getMetrics(), null, 3))
             }, 5000)
         }
+        return true
     })
     .catch((err) => {
         console.error(err)

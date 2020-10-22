@@ -462,6 +462,10 @@ class Node extends EventEmitter {
         }
     }
 
+    getStreams() {
+        return this.streams.getStreamsAsKeys()
+    }
+
     async getMetrics() {
         const endpointMetrics = this.protocols.nodeToNode.endpoint.getMetrics()
         const processMetrics = await this.metrics.getPidusage()

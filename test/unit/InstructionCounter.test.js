@@ -1,5 +1,3 @@
-const { ControlLayer } = require('streamr-client-protocol')
-
 const InstructionCounter = require('../../src/logic/InstructionCounter')
 
 describe('InstructionCounter', () => {

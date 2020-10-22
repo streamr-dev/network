@@ -7,33 +7,25 @@ const { startWebSocketServer, WsEndpoint } = require('../../src/connection/WsEnd
 const wssPort = 7777
 
 describe('test starting startWebSocketServer', () => {
-    test('wss using only port', async (done) => {
-        await startWebSocketServer(null, wssPort).then(async ([wss, listenSocket]) => {
-            expect(wss.constructor.name).toBe('uWS.App')
-            expect(typeof listenSocket).toBe('object')
-
-            uWS.us_listen_socket_close(listenSocket)
-            // eslint-disable-next-line no-param-reassign
-            listenSocket = null
-            done()
-        })
+    test('wss using only port', async () => {
+        const [wss, listenSocket] = await startWebSocketServer(null, wssPort)
+        expect(wss.constructor.name).toBe('uWS.App')
+        expect(typeof listenSocket).toBe('object')
+        uWS.us_listen_socket_close(listenSocket)
     })
 
-    test('wss using host and port', async (done) => {
-        await startWebSocketServer('127.0.0.1', wssPort).then(async ([wss, listenSocket]) => {
-            expect(wss.constructor.name).toBe('uWS.App')
-            expect(typeof listenSocket).toBe('object')
-
-            uWS.us_listen_socket_close(listenSocket)
-            // eslint-disable-next-line no-param-reassign
-            listenSocket = null
-            done()
-        })
+    test('wss using host and port', async () => {
+        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort)
+        expect(wss.constructor.name).toBe('uWS.App')
+        expect(typeof listenSocket).toBe('object')
+        uWS.us_listen_socket_close(listenSocket)
     })
 
     test('wss raises error', () => {
         // host must be 'Text and data can only be passed by String, ArrayBuffer or TypedArray.'
-        return expect(startWebSocketServer(null, null)).rejects.toEqual('Text and data can only be passed by String, ArrayBuffer or TypedArray.')
+        return expect(startWebSocketServer(null, null))
+            .rejects
+            .toEqual('Text and data can only be passed by String, ArrayBuffer or TypedArray.')
     })
 
     test('receives unencrypted connections', async (done) => {
@@ -59,7 +51,12 @@ describe('test starting startWebSocketServer', () => {
     })
 
     test('receives encrypted connections', async (done) => {
-        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort, 'test/fixtures/key.pem', 'test/fixtures/cert.pem')
+        const [wss, listenSocket] = await startWebSocketServer(
+            '127.0.0.1',
+            wssPort,
+            'test/fixtures/key.pem',
+            'test/fixtures/cert.pem'
+        )
 
         const peerInfo = PeerInfo.newTracker('id', 'name')
         const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, false)

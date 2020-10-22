@@ -6,7 +6,7 @@ const { waitForStreamToEnd } = require('streamr-test-utils')
 
 const ResendHandler = require('../../src/resend/ResendHandler')
 
-const { StreamMessage, MessageID, MessageRef } = MessageLayer
+const { StreamMessage, MessageID } = MessageLayer
 
 const streamMessage1 = new StreamMessage({
     messageId: new MessageID('streamId', 0, 1000, 0, 'publisherId', 'msgChainId'),
@@ -403,7 +403,7 @@ describe('ResendHandler', () => {
             }
         }], notifyError)
 
-        const rs = resendHandler.handleRequest(request, 'source')
+        resendHandler.handleRequest(request, 'source')
 
         expect(() => {
             resendHandler.pauseResendsOfNode('non-existing-node')

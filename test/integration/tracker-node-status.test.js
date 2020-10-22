@@ -1,4 +1,4 @@
-const { wait, waitForEvent } = require('streamr-test-utils')
+const { wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')

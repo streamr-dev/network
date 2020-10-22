@@ -179,6 +179,7 @@ class ProxiedResend {
         this.nodeToNode.send(neighborId, this.request).then(() => {
             this.currentNeighbor = neighborId
             this._resetTimeout()
+            return true
         }, () => {
             this._askNextNeighbor()
         }).catch((e) => {

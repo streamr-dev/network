@@ -1,5 +1,5 @@
 const { waitForCondition } = require('streamr-test-utils')
-const { ControlLayer, TrackerLayer } = require('streamr-client-protocol')
+const { TrackerLayer } = require('streamr-client-protocol')
 
 const InstructionThrottler = require('../../src/logic/InstructionThrottler')
 
@@ -81,7 +81,7 @@ describe('InstructionThrottler', () => {
         const events = []
         handlerCb.mockReset().mockImplementation(() => {
             events.push('in')
-            return new Promise((resolve, reject) => {
+            return new Promise((resolve) => {
                 setTimeout(() => {
                     resolve(true)
                     events.push('out')

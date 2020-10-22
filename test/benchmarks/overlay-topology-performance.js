@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 const OverlayTopology = require('../../src/logic/OverlayTopology')
 
 const numOfRounds = 10

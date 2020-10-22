@@ -44,6 +44,7 @@ describe('message propagation in network', () => {
             })
         ]).then((res) => {
             [n1, n2, n3, n4] = res
+            return res
         });
 
         [n1, n2, n3, n4].forEach((node) => node.start())

@@ -204,6 +204,10 @@ module.exports = class Tracker extends EventEmitter {
         return topology
     }
 
+    getStreams() {
+        return Object.keys(this.overlayPerStream)
+    }
+
     getAllNodeLocations() {
         return this.locationManager.getAllNodeLocations()
     }

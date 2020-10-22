@@ -39,6 +39,7 @@ describe('duplicate connections are closed', () => {
         ]).then((res) => {
             const reason = res[2]
             connectionsClosedReasons.push(reason)
+            return res
         })
 
         expect(connectionsOpened).toEqual(2) // sanity check

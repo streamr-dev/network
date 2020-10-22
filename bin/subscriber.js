@@ -39,6 +39,7 @@ startNetworkNode(program.ip, program.port, id, [], null, name).then((subscriber)
             logger.info(JSON.stringify(await subscriber.getMetrics(), null, 3))
         }, 5000)
     }
+    return true
 }).catch((err) => {
     throw err
 })
