@@ -1,23 +1,22 @@
-# Streamr network 
+# streamr-network
  ![Travis](https://travis-ci.com/streamr-dev/network.svg?token=qNNVCnYJo1fz18VTNpPZ&branch=master)
- 
-> Peer-to-peer publish-subscribe network for real-time data with support for long-term data persistence
 
-This repository/package contains an extendable implementation of the
-[Streamr protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) written in Node.js.
-The code contains a tracker implementation and a minimal network node implementation.
-This package acts as a library for other Node.js packages, but also provides a few of its own executables as well.
+> Peer-to-peer-based publish-subscribe system for real-time and persisted data.
+
+This package contains an extendable implementation of the server-side
+[Streamr protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) logic written in Node.js.
+The package mostly acts as a library for other packages wishing to implement a broker node, but additionally
+provides a tracker executable, and a stripped-down network node executable of its own.
 
 
 The main executable for running a broker node in the Streamr Network resides in the
-[Broker](https://github.com/streamr-dev/broker) repository. Although this repository does contain a
-fully-operational minimal network node implementation, we recommend running the broker node because it includes
-useful client-facing features for interacting with the Streamr Network. 
+[streamr-broker](https://github.com/streamr-dev/broker) package. Although _streamr-network_ contains a
+fully-operational minimal network node implementation, we recommend running the node executable found in
+_streamr-broker_ as it includes useful client-facing features for interacting with the Streamr Network.
 
-The [wiki](https://github.com/streamr-dev/network/wiki) of this project outlines the technical and architectural
-decisions made during development. It also provides explanations of some the more involved features. There is also a
-glossary for often used terms. We aim to keep the wiki updated regularly so it is an accurate reflection of the code
-base.
+The [wiki](https://github.com/streamr-dev/network/wiki) outlines the technical and architectural
+decisions of the project. It provides thorough explanations of some the more involved features.
+A glossary is also included.
 
 ## Table of Contents
 - [Installation](#installation)
@@ -28,32 +27,34 @@ base.
 
 ## Installation
 
-Prerequisites: [Node.js](https://nodejs.org/) `>=14.x`, npm version `>=6.14`
+Prerequisites are [Node.js](https://nodejs.org/) `14.x` and npm version `>=6.14`.
 
-You can install Streamr Network using npm:
+You can install streamr-network as a library in your project using npm:
 
+```bash
+npm install streamr-network --save
 ```
-$ npm install streamr-network --save
-```
 
-It is also possible to install Streamr Network globally (using `npm install streamr-network --global`)
+To install streamr-network system-wide:
+```bash
+npm install streamr-network --global
+```
 
 ## Examples
 
-Check the [examples folder](./examples) for examples of using the network node in different settings. Examples include:
-typical pub/sub setting, and publishing and subscribing using MQTT.
+Check the [examples folder](./examples) for examples of using the network node in different settings.
 
 ## Development
 
 Install dependencies:
 
     npm ci
-    
+
 Run the tests:
 
     npm run test
 
-Run an example network locally (10 nodes):
+Run an example network of 100 nodes (locally):
 
     npm run network
 
@@ -64,38 +65,39 @@ We use [eslint](https://github.com/eslint/eslint) for code formatting:
 Code coverage:
 
     npm run coverage
-    
-Debugging:
 
-To get all Streamr Network debug messages  
+### Debugging
+
+To get all debug messages:
 
     LOG_LEVEL=debug
-    
-Or adjust debugging to desired level 
+
+... or adjust debugging to desired level:
 
     LOG_LEVEL=[debug|info|warn|error]
-    
-## Generating fixture self signed certificate
+
+### Generating fixture self-signed certificate
 To regenerate self signed certificate in `./test/fixtures` run:
 
-``
+```bash
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -nodes -subj "/CN=localhost"
-``
+```
 
 ## Publishing
 
 Publishing to NPM is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
 
 ### Publishing `latest`:
-1. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
-2. `git push --follow-tags`
-3. Wait for Github Actions to run tests
-4. If tests passed, Github Actions will publish the new version to NPM
+1. `git co master && git pull`
+2. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
+https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
+3. `git push --follow-tags`
+4. Wait for Github Actions to run tests
+5. If tests passed, Github Actions will publish the new version to NPM
 
 ### Publishing `beta`:
 1. Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
+https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
 2. `git push --follow-tags`
 3. Wait for Github Actions to run tests
 4. If tests passed, Github Actions will publish the new version to NPM
