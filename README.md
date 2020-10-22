@@ -88,17 +88,17 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -no
 
 ## Release
 
-Publishing to NPM is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
+Publishing to NPM is automated via Github Actions. Follow the steps below to publish stable (`latest`) or `beta`.
 
-### Publishing `latest`:
-1. `git co master && git pull`
+### Publishing stable (latest)
+1. `git checkout master && git pull`
 2. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
 https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
 3. `git push --follow-tags`
 4. Wait for Github Actions to run tests
 5. If tests passed, Github Actions will publish the new version to NPM
 
-### Publishing `beta`:
+### Publishing beta
 1. Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
 https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
 2. `git push --follow-tags`
