@@ -32,9 +32,9 @@
   },
   "homepage": "https://github.com/streamr-dev/cli-tools#readme",
   "dependencies": {
-    "commander": "^4.0.1",
+    "commander": "^6.1.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
-    "streamr-client": "^4.1.1"
+    "streamr-client": "^4.1.2"
   }
 }

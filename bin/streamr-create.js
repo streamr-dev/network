@@ -11,6 +11,7 @@ const {
 
 program
     .usage('<name>')
+    .storeOptionsAsProperties(true) // override name clash issue in Commander (https://git.io/JJc0W)
     .description('create a new stream')
     .option('-d, --description <description>', 'define a description')
     .option('-c, --config <config>', 'define a configuration as JSON', (s) => JSON.parse(s))
