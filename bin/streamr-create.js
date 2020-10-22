@@ -4,7 +4,7 @@ const create = require('../src/create')
 const {
     envOptions,
     authOptions,
-    exitWitHelpIfArgsNotBetween,
+    exitWithHelpIfArgsNotBetween,
     formStreamrOptionsWithEnv,
     createFnParseInt
 } = require('./common')
@@ -22,7 +22,7 @@ envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
 
-exitWitHelpIfArgsNotBetween(program, 1, 1)
+exitWithHelpIfArgsNotBetween(program, 1, 1)
 
 const body = {
     name: program.args[0]

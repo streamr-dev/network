@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander')
 const resend = require('../src/resend')
-const { envOptions, authOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+const { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
 
 function handlePublisherIdAndMsgChainId(cmd, resendOptions) {
     if ('publisherId' in cmd && !('msgChainId' in cmd)) {
@@ -98,4 +98,4 @@ envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
 
-exitWitHelpIfArgsNotBetween(program, 1, Number.MAX_VALUE)
+exitWithHelpIfArgsNotBetween(program, 1, Number.MAX_VALUE)

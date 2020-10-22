@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander')
 const subscribe = require('../src/subscribe')
-const { envOptions, authOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv, createFnParseInt } = require('./common')
+const { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, createFnParseInt } = require('./common')
 
 program
     .usage('<streamId>')
@@ -13,7 +13,7 @@ envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
 
-exitWitHelpIfArgsNotBetween(program, 1, 1)
+exitWithHelpIfArgsNotBetween(program, 1, 1)
 
 const options = formStreamrOptionsWithEnv(program)
 options.orderMessages = !program.disableOrdering

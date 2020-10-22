@@ -2,7 +2,7 @@
 const es = require('event-stream')
 const program = require('commander')
 const publishStream = require('../src/publish')
-const { envOptions, authOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+const { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
 
 program
     .usage('<streamId>')
@@ -13,7 +13,7 @@ envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
 
-exitWitHelpIfArgsNotBetween(program, 1, 1)
+exitWithHelpIfArgsNotBetween(program, 1, 1)
 
 const options = formStreamrOptionsWithEnv(program)
 const ps = publishStream(program.args[0], program.partitionKey, options)

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander')
 const list = require('../src/list')
-const { envOptions, authOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+const { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
 
 program
     .description('fetch a list of streams that are accessible by the authenticated user')
@@ -14,7 +14,7 @@ envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
 
-exitWitHelpIfArgsNotBetween(program, 0, 0)
+exitWithHelpIfArgsNotBetween(program, 0, 0)
 
 const query = {
     operation: program.operation,

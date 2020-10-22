@@ -12,7 +12,7 @@ function authOptions(program) {
         .option('--api-key <key>', 'use an API key to authenticate (deprecated)')
 }
 
-function exitWitHelpIfArgsNotBetween(program, min, max) {
+function exitWithHelpIfArgsNotBetween(program, min, max) {
     if (program.args.length < min || program.args.length > max) {
         program.help()
     }
@@ -73,7 +73,7 @@ function createFnParseInt(name) {
 module.exports = {
     envOptions,
     authOptions,
-    exitWitHelpIfArgsNotBetween,
+    exitWithHelpIfArgsNotBetween,
     formStreamrOptionsWithEnv,
     createFnParseInt
 }

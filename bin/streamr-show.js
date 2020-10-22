@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander')
 const show = require('../src/show')
-const { envOptions, authOptions, exitWitHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+const { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
 
 program
     .usage('<streamId>')
@@ -12,7 +12,7 @@ envOptions(program)
     .version(require('../package.json').version)
     .parse(process.argv)
 
-exitWitHelpIfArgsNotBetween(program, 1, 1)
+exitWithHelpIfArgsNotBetween(program, 1, 1)
 
 const options = formStreamrOptionsWithEnv(program);
 show(program.args[0], program.includePermissions, options)
