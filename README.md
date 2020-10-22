@@ -1,16 +1,18 @@
-[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-protocol-js.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-protocol-js)
+# streamr-client-protocol
 
-This repository contains ES6 JS implementations of the Streamr [protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages. This is shared code used by:
+ES6 JS implementations of [Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) messages. This is shared code used by (at least):
  
  - [streamr-client-javascript](https://github.com/streamr-dev/streamr-client-javascript)
- - [broker](https://github.com/streamr-dev/broker)
- - [network](https://github.com/streamr-dev/network)
+ - [streamr-broker](https://github.com/streamr-dev/streamr-broker)
+ - [streamr-network](https://github.com/streamr-dev/streamr-network)
  
- This package is available on npm as `streamr-client-protocol`.
+ The package is available on npm as `streamr-client-protocol`.
+ 
+ ## Table of Contents
+- [Use](#use)
+- [Release](#release)
 
-### Usage
-
-This section describes how to use the Javascript implementation of the [protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md).
+## Use
 
 #### Creating messages from arguments
 
@@ -76,18 +78,19 @@ if (controlMessage.type === ControlMessage.TYPES.UnicastMessage) {
 }
 ```
 
-## Publishing
+## Release
 
-Publishing to NPM is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
+Publishing to NPM is automated via Github Actions. Follow the steps below to publish stable (`latest`) or `beta`.
 
-### Publishing `latest`:
-1. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
+### Publishing stable (latest)
+1. `git checkout master && git pull`
+2. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
 https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
-2. `git push --follow-tags`
-3. Wait for Github Actions to run tests
-4. If tests passed, Github Actions will publish the new version to NPM
+3. `git push --follow-tags`
+4. Wait for Github Actions to run tests
+5. If tests passed, Github Actions will publish the new version to NPM
 
-### Publishing `beta`:
+### Publishing beta
 1. Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
 https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
 2. `git push --follow-tags`
