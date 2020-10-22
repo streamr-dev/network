@@ -12,13 +12,17 @@ class ResendBookkeeper {
         this.resends[node].add(ctx)
     }
 
-    popContexts(node) {
+    getContexts(node) {
         if (this.resends[node] == null) {
             return []
         }
-        const contexts = this.resends[node]
+        return [...this.resends[node]]
+    }
+
+    popContexts(node) {
+        const contexts = this.getContexts(node)
         delete this.resends[node]
-        return [...contexts]
+        return contexts
     }
 
     delete(node, ctx) {
@@ -70,6 +74,16 @@ class ResendHandler {
         return requestStream
     }
 
+    pauseResendsOfNode(node) {
+        const contexts = this.ongoingResends.getContexts(node)
+        contexts.forEach((ctx) => ctx.pause())
+    }
+
+    resumeResendsOfNode(node) {
+        const contexts = this.ongoingResends.getContexts(node)
+        contexts.forEach((ctx) => ctx.resume())
+    }
+
     cancelResendsOfNode(node) {
         const contexts = this.ongoingResends.popContexts(node)
         contexts.forEach((ctx) => ctx.cancel())
@@ -100,6 +114,8 @@ class ResendHandler {
             startTime: Date.now(),
             stop: false,
             responseStream: null,
+            pause: () => requestStream.pause(),
+            resume: () => requestStream.resume(),
             cancel: () => {
                 ctx.stop = true
                 if (ctx.responseStream != null) {

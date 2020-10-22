@@ -14,7 +14,9 @@ const events = Object.freeze({
     NODE_DISCONNECTED: 'streamr:node-node:node-disconnected',
     RESEND_REQUEST: 'streamr:node-node:resend-request',
     RESEND_RESPONSE: 'streamr:node-node:resend-response',
-    UNICAST_RECEIVED: 'streamr:node-node:unicast-received'
+    UNICAST_RECEIVED: 'streamr:node-node:unicast-received',
+    LOW_BACK_PRESSURE: 'streamr:node-node:low-back-pressure',
+    HIGH_BACK_PRESSURE: 'streamr:node-node:high-back-pressure',
 })
 
 const eventPerType = {}
@@ -36,6 +38,8 @@ class NodeToNode extends EventEmitter {
         endpoint.on(endpointEvents.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         endpoint.on(endpointEvents.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
+        endpoint.on(endpointEvents.LOW_BACK_PRESSURE, (peerInfo) => this.onLowBackPressure(peerInfo))
+        endpoint.on(endpointEvents.HIGH_BACK_PRESSURE, (peerInfo) => this.onHighBackPressure(peerInfo))
     }
 
     connectToNode(address) {
@@ -101,6 +105,18 @@ class NodeToNode extends EventEmitter {
             } else {
                 console.warn(`NodeToNode: invalid message from ${peerInfo}: ${rawMessage}`)
             }
+        }
+    }
+
+    onLowBackPressure(peerInfo) {
+        if (peerInfo.isNode()) {
+            this.emit(events.LOW_BACK_PRESSURE, peerInfo.peerId)
+        }
+    }
+
+    onHighBackPressure(peerInfo) {
+        if (peerInfo.isNode()) {
+            this.emit(events.HIGH_BACK_PRESSURE, peerInfo.peerId)
         }
     }
 

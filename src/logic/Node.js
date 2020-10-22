@@ -85,6 +85,13 @@ class Node extends EventEmitter {
             this._handleBufferedMessages(streamId)
             this._sendStreamStatus(streamId)
         })
+        this.protocols.nodeToNode.on(NodeToNode.events.LOW_BACK_PRESSURE, (nodeId) => {
+            this.resendHandler.resumeResendsOfNode(nodeId)
+        })
+
+        this.protocols.nodeToNode.on(NodeToNode.events.HIGH_BACK_PRESSURE, (nodeId) => {
+            this.resendHandler.pauseResendsOfNode(nodeId)
+        })
     }
 
     start() {

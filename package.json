@@ -1,6 +1,6 @@
 {
   "name": "streamr-network",
-  "version": "21.2.1",
+  "version": "21.2.1-backpressure.0",
   "description": "Streamr P2P network",
   "repository": {
     "type": "git",

@@ -353,4 +353,61 @@ describe('ResendHandler', () => {
             numOfOngoingResends: 0
         })
     })
+
+    test('pausing and resuming all streams of node ', () => {
+        resendHandler = new ResendHandler([{
+            getResendResponseStream: () => {
+                return new Readable({
+                    objectMode: true,
+                    read() {
+                        if (!this.first) {
+                            this.first = true
+                            this.push('first')
+                        } else {
+                            this.push(null)
+                        }
+                    }
+                })
+            }
+        }], notifyError)
+
+        const rs1 = resendHandler.handleRequest(request, 'source')
+        const rs2 = resendHandler.handleRequest(request, 'source')
+        const rs3 = resendHandler.handleRequest(request, 'anotherSource')
+
+        resendHandler.pauseResendsOfNode('source')
+        expect(rs1.isPaused()).toEqual(true)
+        expect(rs2.isPaused()).toEqual(true)
+        expect(rs3.isPaused()).toEqual(false)
+
+        resendHandler.resumeResendsOfNode('source')
+        expect(rs1.isPaused()).toEqual(false)
+        expect(rs2.isPaused()).toEqual(false)
+        expect(rs3.isPaused()).toEqual(false)
+    })
+
+    test('pausing and resuming all streams of non-existing node does not throw error ', () => {
+        resendHandler = new ResendHandler([{
+            getResendResponseStream: () => {
+                return new Readable({
+                    objectMode: true,
+                    read() {
+                        if (!this.first) {
+                            this.first = true
+                            this.push('first')
+                        } else {
+                            this.push(null)
+                        }
+                    }
+                })
+            }
+        }], notifyError)
+
+        const rs = resendHandler.handleRequest(request, 'source')
+
+        expect(() => {
+            resendHandler.pauseResendsOfNode('non-existing-node')
+            resendHandler.resumeResendsOfNode('non-existing-node')
+        }).not.toThrowError()
+    })
 })
