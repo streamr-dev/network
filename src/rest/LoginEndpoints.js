@@ -1,3 +1,5 @@
+import { getEndpointUrl } from '../utils'
+
 import authFetch from './authFetch'
 
 async function getSessionToken(url, props) {
@@ -18,7 +20,7 @@ export async function getChallenge(address) {
     this.debug('getChallenge', {
         address,
     })
-    const url = `${this.options.restUrl}/login/challenge/${address}`
+    const url = getEndpointUrl(this.options.restUrl, 'login', 'challenge', address)
     return authFetch(
         url,
         undefined,
@@ -34,7 +36,7 @@ export async function sendChallengeResponse(challenge, signature, address) {
         signature,
         address,
     })
-    const url = `${this.options.restUrl}/login/response`
+    const url = getEndpointUrl(this.options.restUrl, 'login', 'response')
     const props = {
         challenge,
         signature,
@@ -56,7 +58,7 @@ export async function loginWithApiKey(apiKey) {
     this.debug('loginWithApiKey', {
         apiKey,
     })
-    const url = `${this.options.restUrl}/login/apikey`
+    const url = getEndpointUrl(this.options.restUrl, 'login', 'apikey')
     const props = {
         apiKey,
     }
@@ -67,7 +69,7 @@ export async function loginWithUsernamePassword(username, password) {
     this.debug('loginWithUsernamePassword', {
         username,
     })
-    const url = `${this.options.restUrl}/login/password`
+    const url = getEndpointUrl(this.options.restUrl, 'login', 'password')
     const props = {
         username,
         password,
