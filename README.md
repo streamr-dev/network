@@ -1,15 +1,12 @@
 # streamr-network
- ![Travis](https://travis-ci.com/streamr-dev/network.svg?token=qNNVCnYJo1fz18VTNpPZ&branch=master)
 
-> Peer-to-peer-based publish-subscribe system for real-time and persisted data.
-
-This package contains an extendable implementation of the server-side
-[Streamr protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) logic written in Node.js.
+An extendable implementation of the server-side
+[Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) logic written in Node.js.
 The package mostly acts as a library for other packages wishing to implement a broker node, but additionally
-provides a tracker executable, and a stripped-down network node executable of its own.
+provides a full tracker executable, and a stripped-down network node executable.
 
 
-The main executable for running a broker node in the Streamr Network resides in the
+The primary executable for running a broker node in the Streamr Network resides in the
 [streamr-broker](https://github.com/streamr-dev/broker) package. Although _streamr-network_ contains a
 fully-operational minimal network node implementation, we recommend running the node executable found in
 _streamr-broker_ as it includes useful client-facing features for interacting with the Streamr Network.
@@ -19,13 +16,12 @@ decisions of the project. It provides thorough explanations of some the more inv
 A glossary is also included.
 
 ## Table of Contents
-- [Installation](#installation)
-- [Architectural decisions](https://github.com/streamr-dev/network/wiki)
-- [Examples](#examples)
-- [Development](#development)
-- [Releasing](#releasing)
+- [Install](#install)
+- [Run](#run)
+- [Develop](#develop)
+- [Release](#release)
 
-## Installation
+## Install
 
 Prerequisites are [Node.js](https://nodejs.org/) `14.x` and npm version `>=6.14`.
 
@@ -40,11 +36,18 @@ To install streamr-network system-wide:
 npm install streamr-network --global
 ```
 
-## Examples
+## Run
 
-Check the [examples folder](./examples) for examples of using the network node in different settings.
+Run an example network of 100 nodes (locally):
 
-## Development
+    npm run network
+
+### Examples
+
+Check the [examples folder](./examples) for more interesting examples of using
+the network node in different settings.
+
+## Develop
 
 Install dependencies:
 
@@ -54,10 +57,6 @@ Run the tests:
 
     npm run test
 
-Run an example network of 100 nodes (locally):
-
-    npm run network
-
 We use [eslint](https://github.com/eslint/eslint) for code formatting:
 
     npm run eslint
@@ -66,7 +65,7 @@ Code coverage:
 
     npm run coverage
 
-### Debugging
+### Debug
 
 To get all debug messages:
 
@@ -76,14 +75,18 @@ To get all debug messages:
 
     LOG_LEVEL=[debug|info|warn|error]
 
-### Generating fixture self-signed certificate
+To disable all logs
+
+    NOLOG=true
+
+### Regenerate self-signed certificate fixture
 To regenerate self signed certificate in `./test/fixtures` run:
 
 ```bash
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -nodes -subj "/CN=localhost"
 ```
 
-## Publishing
+## Release
 
 Publishing to NPM is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
 
