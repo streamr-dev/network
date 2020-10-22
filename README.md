@@ -12,6 +12,7 @@ The broker node extends the minimal network node provided by the
 - [Run](#run)
 - [Develop](#develop)
 - [Release](#release)
+- [Misc](#misc)
 
 ## Install
 
