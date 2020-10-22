@@ -1,7 +1,7 @@
 module.exports = {
     clientOptions: {
         url: process.env.WEBSOCKET_URL || 'ws://localhost/api/v1/ws',
-        restUrl: process.env.REST_URL || 'http://localhost:8081/streamr-core/api/v1',
+        restUrl: process.env.REST_URL || 'http://localhost/api/v1',
         tokenAddress: process.env.TOKEN_ADDRESS || '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         streamrNodeAddress: process.env.STREAMR_NODE_ADDRESS || '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
         streamrOperatorAddress: process.env.OPERATOR_ADDRESS || '0xa3d1F77ACfF0060F7213D7BF3c7fEC78df847De1',
