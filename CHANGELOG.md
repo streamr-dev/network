@@ -5,7 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-## Changed
+
+## [4.1.0] - 2020-10-12
+### Changed
+- Bump dependency streamr-client to ^4.1.1.
 - Turn option `--privateKey` into `--private-key` for consistency.
 - Turn `--apiKey` into `--api-key` for consistency.
 
@@ -40,7 +43,8 @@ ordering and gap filling.
 - Bump dependency commander to ^4.0.1.
 - Re-organize README.md and a few touches to Developing section paragraphs.
 
-[Unreleased]: https://github.com/streamr-dev/cli-tools/compare/v4.0.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/cli-tools/compare/v4.1.0...HEAD
+[4.1.0]: https://github.com/streamr-dev/cli-tools/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/streamr-dev/cli-tools/compare/v3.1.1...v4.0.0
 [3.1.1]: https://github.com/streamr-dev/cli-tools/compare/v3.1.0...v3.1.1
 [3.1.0]: https://github.com/streamr-dev/cli-tools/compare/v3.0.1...v3.1.0
