@@ -51,7 +51,7 @@ const sub = client.subscribe(
 )
 ```
 
-#### Resending historical data 
+#### Resending historical data
 
 ```javascript
 const sub = await client.resend(
@@ -214,9 +214,9 @@ All the below functions return a Promise which gets resolved with the result. Th
 Name | Description
 ---- | -----------
 getStream(streamId) | Fetches a Stream object from the API.
-listStreams(query) | Fetches an array of Stream objects from the API. For the query params, consult the API docs.
+listStreams(query) | Fetches an array of Stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com).
 getStreamByName(name) | Fetches a Stream which exactly matches the given name.
-createStream(properties) | Creates a Stream with the given properties. For more information on the Stream properties, consult the API docs.
+createStream(properties) | Creates a Stream with the given properties. For more information on the Stream properties, consult the [API docs](https://api-explorer.streamr.com).
 getOrCreateStream(properties) | Gets a Stream with the id or name given in `properties`, or creates it if one is not found.
 publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given Stream.
 
@@ -387,7 +387,7 @@ error | Error object | Reports errors, for example problems with message content
 
 ### Partitioning
 
-Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning). 
+Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
 
 **Creating partitioned streams**
 
@@ -404,9 +404,9 @@ client.createStream({
 
 **Publishing to partitioned streams**
 
-In most use cases, a user wants related events (e.g. events from a particular device) to be assigned to the same partition, so that the events retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly. 
+In most use cases, a user wants related events (e.g. events from a particular device) to be assigned to the same partition, so that the events retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly.
 
-The library allows the user to choose a *partition key*, which simplifies publishing to partitioned streams by not requiring the user to assign a partition number explicitly. The same partition key always maps to the same partition. In an IoT use case, the device id can be used as partition key; in user interaction data it could be the user id, and so on. 
+The library allows the user to choose a *partition key*, which simplifies publishing to partitioned streams by not requiring the user to assign a partition number explicitly. The same partition key always maps to the same partition. In an IoT use case, the device id can be used as partition key; in user interaction data it could be the user id, and so on.
 
 The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
 
@@ -466,14 +466,14 @@ Publishing to NPM is automated via Github Actions. Follow the steps below to pub
 
 ### Publishing `latest`:
 1. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
+https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
 2. `git push --follow-tags`
 3. Wait for Github Actions to run tests
 4. If tests passed, Github Actions will publish the new version to NPM
 
 ### Publishing `beta`:
 1. Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
-https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created. 
+https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
 2. `git push --follow-tags`
 3. Wait for Github Actions to run tests
 4. If tests passed, Github Actions will publish the new version to NPM
