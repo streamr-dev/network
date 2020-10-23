@@ -467,8 +467,8 @@ export default class Connection extends EventEmitter {
                         this.checkDone()
                     }
                 }
-
             })
+
         this.disconnectTask = disconnectTask
         return this.disconnectTask
     }
