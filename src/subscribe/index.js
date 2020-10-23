@@ -462,9 +462,10 @@ async function getResendStream(client, opts) {
  */
 
 class Subscription extends Emitter {
-    constructor(client, options) {
+    constructor(client, options, onFinal) {
         super()
         this.client = client
+        this.onFinal = onFinal
         this.options = validateOptions(options)
         this.streams = new Set()
 
@@ -569,13 +570,18 @@ class Subscription extends Emitter {
         )), 'cancel failed')
     }
 
+    async _cleanupFinal() {
+        this.onFinal()
+        // unsubscribe if no more streams
+        await this.onSubscriptionDone()
+    }
+
     async _cleanup(it) {
         // if iterator never started, finally block never called, thus need to manually clean it
         const hadStream = this.streams.has(it)
         this.streams.delete(it)
         if (hadStream && !this.streams.size) {
-            // unsubscribe if no more streams
-            await this.onSubscriptionDone()
+            await this._cleanupFinal()
         }
     }
 
@@ -643,10 +649,13 @@ export default class Subscriptions {
 
     async subscribe(options) {
         const key = SubKey(validateOptions(options))
-        const sub = (
-            this.subscriptions.get(key)
-            || this.subscriptions.set(key, new Subscription(this.client, options)).get(key)
-        )
+        let sub = this.subscriptions.get(key)
+        if (!sub) {
+            sub = new Subscription(this.client, options, () => {
+                this.subscriptions.delete(key, sub)
+            })
+            this.subscriptions.set(key, sub)
+        }
 
         return sub.subscribe()
     }

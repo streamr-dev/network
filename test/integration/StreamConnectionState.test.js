@@ -39,7 +39,7 @@ describeRepeats('Connection State', () => {
     beforeEach(async () => {
         // eslint-disable-next-line require-atomic-updates
         client = createClient()
-        M = new MessageStream(client)
+        M = client.messageStream
         client.debug('connecting before test >>')
         await Promise.all([
             client.connect(),
@@ -51,6 +51,11 @@ describeRepeats('Connection State', () => {
 
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)
+    })
+
+    afterEach(() => {
+        expect(M.count(stream.id)).toBe(0)
+        expect(client.getSubscriptions(stream.id)).toEqual([])
     })
 
     afterEach(async () => {
@@ -93,6 +98,7 @@ describeRepeats('Connection State', () => {
         client.connection.socket.close()
         const published = await publishTestMessages(2)
         const sub = await subTask
+        expect(client.getSubscriptions(stream.id)).toHaveLength(1)
         subs.push(sub)
         const received = []
         for await (const msg of sub) {
@@ -148,7 +154,7 @@ describeRepeats('Connection State', () => {
         expect(client.getSubscriptions(stream.id)).toEqual([])
     })
 
-    it('should end when subscribed then disconnected', async () => {
+    it('should end when subscribed then disconnected then connected', async () => {
         await client.connect()
         const sub = await M.subscribe(stream.id)
         expect(client.getSubscriptions(stream.id)).toHaveLength(1)
@@ -187,6 +193,5 @@ describeRepeats('Connection State', () => {
         subs.push(sub)
         await client.disconnect()
         expect(M.count(stream.id)).toBe(0)
-        expect(client.getSubscriptions(stream.id)).toEqual([])
     })
 })

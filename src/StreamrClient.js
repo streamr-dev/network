@@ -235,9 +235,9 @@ export default class StreamrClient extends EventEmitter {
         //return this.subscriber.unsubscribeAll(...args)
     //}
 
-    //getSubscriptions(...args) {
-        //return this.subscriber.getSubscriptions(...args)
-    //}
+    getSubscriptions(...args) {
+        return this.messageStream.getAll(...args)
+    }
 
     async ensureConnected() {
         return this.connect()

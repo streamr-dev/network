@@ -644,7 +644,7 @@ export default class Connection extends EventEmitter {
         onError,
     }) {
         let onDoneHandler
-        const cleanUp = async (...args) => {
+        const cleanUp = async () => {
             this
                 .off('connecting', onConnecting)
                 .off('connected', onConnected)
