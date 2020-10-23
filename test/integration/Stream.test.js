@@ -218,6 +218,7 @@ describeRepeats('StreamrClient Stream', () => {
         })
 
         it('can subscribe to stream multiple times, get updates then unsubscribe', async () => {
+            const send = jest.spyOn(M.client.connection, 'send')
             const sub1 = await M.subscribe(stream.id)
             const sub2 = await M.subscribe(stream.id)
 
@@ -240,9 +241,15 @@ describeRepeats('StreamrClient Stream', () => {
 
             expect(received1).toEqual(published)
             expect(received2).toEqual(received1)
+
+            // only subscribed once
+            expect(send.mock.calls.filter(([msg]) => (
+                msg.type === ControlMessage.TYPES.SubscribeRequest
+            ))).toHaveLength(1)
         })
 
         it('can subscribe to stream multiple times in parallel, get updates then unsubscribe', async () => {
+            const send = jest.spyOn(M.client.connection, 'send')
             const [sub1, sub2] = await Promise.all([
                 M.subscribe(stream.id),
                 M.subscribe(stream.id),
@@ -266,6 +273,11 @@ describeRepeats('StreamrClient Stream', () => {
 
             expect(received1).toEqual(published)
             expect(received2).toEqual(received1)
+
+            // only subscribed once
+            expect(send.mock.calls.filter(([msg]) => (
+                msg.type === ControlMessage.TYPES.SubscribeRequest
+            ))).toHaveLength(1)
         })
 
         it('can subscribe to stream and get some updates then unsubscribe mid-stream with end', async () => {
