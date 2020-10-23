@@ -94,7 +94,7 @@ export function validateOptions(optionsOrStreamId) {
     }
 
     // Backwards compatibility for giving a streamId as first argument
-    let options
+    let options = {}
     if (typeof optionsOrStreamId === 'string') {
         options = {
             streamId: optionsOrStreamId,
@@ -106,23 +106,24 @@ export function validateOptions(optionsOrStreamId) {
         }
 
         if (optionsOrStreamId.id != null && optionsOrStreamId.streamId == null) {
-            optionsOrStreamId.streamId = optionsOrStreamId.id
+            options.streamId = optionsOrStreamId.id
         }
 
         if (optionsOrStreamId.partition == null && optionsOrStreamId.streamPartition == null) {
-            optionsOrStreamId.streamPartition = optionsOrStreamId.partition
+            options.streamPartition = optionsOrStreamId.partition
         }
 
         // shallow copy
         options = {
             streamPartition: 0,
+            ...options,
             ...optionsOrStreamId
         }
     } else {
         throw new Error(`options must be an object! Given: ${optionsOrStreamId}`)
     }
 
-    if (!options.streamId) {
+    if (options.streamId == null) {
         throw new Error(`streamId must be set, given: ${optionsOrStreamId}`)
     }
 

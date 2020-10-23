@@ -58,6 +58,10 @@ describeRepeats('StreamrClient Stream', () => {
         publishTestMessages = getPublishTestMessages(client, stream.id)
     })
 
+    afterEach(() => {
+        expect(M.count(stream.id)).toBe(0)
+    })
+
     afterEach(async () => {
         await wait()
         // ensure no unexpected errors
@@ -88,10 +92,43 @@ describeRepeats('StreamrClient Stream', () => {
         expect(afterCount).toBeGreaterThan(beforeCount)
         expect(M.count(stream.id)).toBe(1)
         await sub.return()
-        expect(M.count(stream.id)).toBe(0)
     })
 
     describe('basics', () => {
+        it('works when passing stream', async () => {
+            const sub = await M.subscribe(stream)
+            expect(M.count(stream.id)).toBe(1)
+
+            const published = await publishTestMessages()
+
+            const received = []
+            for await (const m of sub) {
+                received.push(m)
+                if (received.length === published.length) {
+                    return
+                }
+            }
+            expect(received).toEqual(published)
+        })
+
+        it('works when passing { stream: stream }', async () => {
+            const sub = await M.subscribe({
+                stream,
+            })
+            expect(M.count(stream.id)).toBe(1)
+
+            const published = await publishTestMessages()
+
+            const received = []
+            for await (const m of sub) {
+                received.push(m)
+                if (received.length === published.length) {
+                    return
+                }
+            }
+            expect(received).toEqual(published)
+        })
+
         it('can subscribe to stream and get updates then auto unsubscribe', async () => {
             const sub = await M.subscribe(stream.id)
             expect(M.count(stream.id)).toBe(1)
@@ -106,7 +143,6 @@ describeRepeats('StreamrClient Stream', () => {
                 }
             }
             expect(received).toEqual(published)
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('subscribes immediately', async () => {
@@ -125,7 +161,6 @@ describeRepeats('StreamrClient Stream', () => {
             }
 
             expect(received).toEqual(published)
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('can kill stream using async end', async () => {
@@ -154,7 +189,6 @@ describeRepeats('StreamrClient Stream', () => {
             }
             // gets some messages but not all
             expect(received).toHaveLength(expectedLength)
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('can kill stream with throw', async () => {
@@ -181,7 +215,6 @@ describeRepeats('StreamrClient Stream', () => {
             // gets some messages but not all
             expect(received).toHaveLength(1)
             expect(unsubscribeEvents).toHaveLength(1)
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('can subscribe to stream multiple times, get updates then unsubscribe', async () => {
@@ -207,7 +240,6 @@ describeRepeats('StreamrClient Stream', () => {
 
             expect(received1).toEqual(published)
             expect(received2).toEqual(received1)
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('can subscribe to stream multiple times in parallel, get updates then unsubscribe', async () => {
@@ -234,8 +266,6 @@ describeRepeats('StreamrClient Stream', () => {
 
             expect(received1).toEqual(published)
             expect(received2).toEqual(received1)
-            expect(M.count(stream.id)).toBe(0)
-            expect(M.get(stream.id)).toBeFalsey()
         })
 
         it('can subscribe to stream and get some updates then unsubscribe mid-stream with end', async () => {
@@ -278,7 +308,6 @@ describeRepeats('StreamrClient Stream', () => {
             }
             expect(received).toHaveLength(MAX_ITEMS)
             expect(received).toEqual(published.slice(0, MAX_ITEMS))
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('finishes unsubscribe before returning from cancel', async () => {
@@ -303,7 +332,6 @@ describeRepeats('StreamrClient Stream', () => {
             }
             expect(received).toHaveLength(MAX_ITEMS)
             expect(received).toEqual(published.slice(0, MAX_ITEMS))
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('can cancel + return and it will wait for unsubscribe', async () => {
@@ -334,7 +362,6 @@ describeRepeats('StreamrClient Stream', () => {
             }
             expect(received).toHaveLength(MAX_ITEMS)
             expect(received).toEqual(published.slice(0, MAX_ITEMS))
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('can cancel multiple times and it will wait for unsubscribe', async () => {
@@ -366,7 +393,6 @@ describeRepeats('StreamrClient Stream', () => {
             }
             expect(received).toHaveLength(MAX_ITEMS)
             expect(received).toEqual(published.slice(0, MAX_ITEMS))
-            expect(M.count(stream.id)).toBe(0)
         })
 
         it('will clean up if iterator returned before start', async () => {
