@@ -122,6 +122,7 @@ export default class Connection extends EventEmitter {
         this.debug = this._debug
         this.onConnectError = this.onConnectError.bind(this)
         this.onDisconnectError = this.onDisconnectError.bind(this)
+        this.connectionHandles = new Set()
     }
 
     emit(event, ...args) {
@@ -179,6 +180,7 @@ export default class Connection extends EventEmitter {
 
     async connect() {
         this.shouldConnect = true
+        this.shouldReconnect = true
         this.isDone = false
 
         if (this.initialConnectTask) {
@@ -401,6 +403,7 @@ export default class Connection extends EventEmitter {
         this.didDisableAutoConnectAfterDisconnect = !!this.options.autoConnect
         this.options.autoConnect = false // reset auto-connect on manual disconnect
         this.shouldConnect = false
+        this.shouldReconnect = true
         this._isReconnecting = false
 
         if (this.disconnectTask) {
@@ -486,6 +489,10 @@ export default class Connection extends EventEmitter {
             return this.reconnectTask
         }
 
+        if (!this.shouldReconnect) {
+            return Promise.resolve()
+        }
+
         const reconnectTask = (async () => {
             if (this.retryCount > maxRetries) {
                 // no more retries
@@ -567,6 +574,37 @@ export default class Connection extends EventEmitter {
             this.debug('waiting %n', timeout)
             this._backoffTimeout = setTimeout(resolve, timeout)
         })
+    }
+
+    /**
+     * Auto Connect/Disconnect counters.
+     */
+
+    async addHandle(id) {
+        this.connectionHandles.add(id)
+    }
+
+    /**
+     * When no more handles and autoDisconnect is true, disconnect.
+     */
+
+    async removeHandle(id) {
+        const hadConnection = this.connectionHandles.has(id)
+        this.connectionHandles.delete(id)
+        const { socket } = this
+        if (hadConnection && this.connectionHandles.size === 0 && this.options.autoDisconnect) {
+            this.shouldReconnect = false
+            await this.__disconnect().catch(async (err) => {
+                if (err instanceof ConnectionError) {
+                    if (!this.shouldReconnect) {
+                        await CloseWebSocket(socket)
+                    }
+                    return
+                }
+                throw err
+            })
+            this.shouldReconnect = false
+        }
     }
 
     async send(msg) {
