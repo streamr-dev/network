@@ -1,3 +1,4 @@
+import { Server } from 'ws'
 import { wait } from 'streamr-test-utils'
 import Debug from 'debug'
 
@@ -19,12 +20,30 @@ describe('Connection', () => {
     let onDone
     let onError
     let onMessage
+    let wss
+    let port
 
     let expectErrors = 0 // check no errors by default
+    beforeAll((done) => {
+        wss = new Server({
+            port: 0,
+        }).once('listening', () => {
+            port = wss.address().port
+            done()
+        })
+
+        wss.on('connection', (ws) => {
+            ws.on('message', (msg) => ws.send(msg))
+        })
+    })
+
+    afterAll((done) => {
+        wss.close(done)
+    })
 
     beforeEach(() => {
         s = new Connection({
-            url: 'wss://echo.websocket.org/',
+            url: `ws://localhost:${port}/`,
             maxRetries: 2
         })
 
