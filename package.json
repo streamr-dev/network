@@ -45,7 +45,6 @@
   },
   "engineStrict": true,
   "dependencies": {
-    "@sentry/node": "^5.27.0",
     "commander": "^6.1.0",
     "fastify": "^3.7.0",
     "fastify-cors": "^4.1.0",
@@ -57,7 +56,6 @@
     "promise.allsettled": "^1.0.2",
     "qs": "^6.9.4",
     "speedometer": "^1.1.0",
-    "streamr-client": "^4.1.2",
     "streamr-client-protocol": "^6.0.3",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.8.0",
     "uuid": "^8.3.1",
