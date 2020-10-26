@@ -7,6 +7,8 @@ import Connection from '../../src/Connection'
 
 const debug = Debug('StreamrClient').extend('test')
 
+console.log = Debug('Streamr::   CONSOLE   ')
+
 describe('Connection', () => {
     let s
     let onConnected
@@ -712,9 +714,137 @@ describe('Connection', () => {
         })
     })
 
+    describe('autoDisconnect', () => {
+        it('auto-disconnects when all handles removed', async () => {
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
+            expect(s.isDisconnected()).toBeTruthy()
+            await s.addHandle(1)
+            await s.removeHandle(1) // noop
+            await s.connect()
+            // must have had handle previously to disconnect
+            await s.removeHandle(1)
+            expect(s.isConnected()).toBeTruthy()
+            await s.addHandle(1)
+            expect(s.isConnected()).toBeTruthy()
+            // can take multiple of the same handle (no error)
+            await s.addHandle(1)
+            expect(s.isConnected()).toBeTruthy()
+            await s.addHandle(2)
+            expect(s.isConnected()).toBeTruthy()
+            await s.removeHandle(2)
+            expect(s.isConnected()).toBeTruthy()
+            // once both 1 & 2 are removed, should disconnect
+            await s.removeHandle(1)
+            expect(s.isDisconnected()).toBeTruthy()
+            // can remove multiple of same handle (noop)
+            await s.removeHandle(1)
+            expect(s.isDisconnected()).toBeTruthy()
+            // should not try reconnect
+            await wait(1000)
+            expect(s.isDisconnected()).toBeTruthy()
+            // auto disconnect should not affect auto-connect
+            expect(s.options.autoConnect).toBeTruthy()
+            await s.send('test') // ok
+            expect(s.isConnected()).toBeTruthy()
+        })
+
+        it('handles concurrent call to removeHandle then connect', async () => {
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
+            await s.connect()
+            await s.addHandle(1)
+            await Promise.all([
+                s.removeHandle(1),
+                s.connect(),
+            ])
+
+            expect(s.isConnected()).toBeTruthy()
+        })
+
+        it('handles concurrent call to connect then removeHandle', async () => {
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
+            await s.connect()
+
+            expect(s.isConnected()).toBeTruthy()
+            await s.addHandle(1)
+            await Promise.all([
+                s.connect(),
+                s.removeHandle(1),
+            ])
+            expect(s.isDisconnected()).toBeTruthy()
+            expect(s.options.autoConnect).toBeTruthy()
+        })
+
+        it('handles concurrent call to disconnect then removeHandle', async () => {
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
+            await s.connect()
+
+            expect(s.isConnected()).toBeTruthy()
+            await s.addHandle(1)
+            await Promise.all([
+                s.disconnect(),
+                s.removeHandle(1),
+            ])
+            expect(s.isDisconnected()).toBeTruthy()
+            expect(s.options.autoConnect).not.toBeTruthy()
+        })
+
+        it('handles concurrent call to removeHandle then disconnect', async () => {
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
+            await s.connect()
+
+            expect(s.isConnected()).toBeTruthy()
+            await s.addHandle(1)
+            await Promise.all([
+                s.disconnect(),
+                s.removeHandle(1),
+            ])
+            expect(s.isDisconnected()).toBeTruthy()
+            expect(s.options.autoConnect).not.toBeTruthy()
+        })
+
+        it('handles concurrent call to removeHandle then disconnect + connect', async () => {
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
+            await s.connect()
+            expectErrors = 1
+            expect(s.isConnected()).toBeTruthy()
+            await s.addHandle(1)
+            const tasks = Promise.all([
+                expect(() => {
+                    return s.disconnect()
+                }).rejects.toThrow(),
+                s.connect(), // this will cause disconnect call to throw
+            ])
+            await s.removeHandle(1)
+            await tasks
+            expect(s.isConnected()).toBeTruthy()
+            expect(s.options.autoConnect).not.toBeTruthy()
+        })
+
+        it('does nothing if autoDisconnect is false', async () => {
+            s.options.autoDisconnect = false
+            s.options.autoConnect = false
+            await s.connect()
+            expect(s.isConnected()).toBeTruthy()
+            await s.addHandle(1)
+            expect(s.isConnected()).toBeTruthy()
+            await s.addHandle(2)
+            expect(s.isConnected()).toBeTruthy()
+            await s.removeHandle(2)
+            expect(s.isConnected()).toBeTruthy()
+            await s.removeHandle(1)
+            expect(s.isConnected()).toBeTruthy()
+            expect(s.options.autoConnect).not.toBeTruthy()
+        })
+    })
+
     describe('onTransition', () => {
         it('runs functions', async () => {
-            const onError = jest.fn()
             const transitionFns = {
                 onConnected: jest.fn(),
                 onConnecting: jest.fn(),
@@ -754,6 +884,5 @@ describe('Connection', () => {
             expect(transitionFns.onError).toHaveBeenCalledTimes(0)
         })
     })
-
 })
 
