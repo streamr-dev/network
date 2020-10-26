@@ -609,12 +609,13 @@ export default class Connection extends EventEmitter {
             return 'connected'
         }
 
-        if (this.isDisconnected()) {
-            return 'disconnected'
+        if (this.isConnecting()) {
+            // this check must go before isDisconnected
+            return 'connecting'
         }
 
-        if (this.isConnecting()) {
-            return 'connecting'
+        if (this.isDisconnected()) {
+            return 'disconnected'
         }
 
         if (this.isDisconnecting()) {
