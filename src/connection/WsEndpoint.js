@@ -513,7 +513,8 @@ class WsEndpoint extends EventEmitter {
             this.metrics.speed('_msgSpeed')(1)
             this.metrics.speed('_msgInSpeed')(1)
 
-            setImmediate(() => this.onReceive(peerInfo, address, message))
+            // toString() needed for SSL connections as message will be Buffer instead of String
+            setImmediate(() => this.onReceive(peerInfo, address, message.toString()))
         })
 
         ws.on('pong', () => {

@@ -77,4 +77,72 @@ describe('test starting startWebSocketServer', () => {
             done(err)
         })
     })
+
+    /**
+     * This test replicates weird behaviour I encountered while working on "NET-56: Make production
+     * tracker run under SSL". When messages arrive to (pure) ws client from a SSL-enabled uWS server,
+     * they arrive as type Buffer and not String... which is different to when SSL is disabled...
+     */
+    test('messages over encrypted connections arrive as binary', async (done) => {
+        const [wss, listenSocket] = await startWebSocketServer(
+            '127.0.0.1',
+            wssPort,
+            'test/fixtures/key.pem',
+            'test/fixtures/cert.pem'
+        )
+
+        const peerInfo = PeerInfo.newTracker('serverId', 'name')
+        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, false)
+        const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
+            undefined, {
+                rejectUnauthorized: false, // needed to accept self-signed certificate
+                headers: {
+                    'streamr-peer-id': 'clientId',
+                    'streamr-peer-type': 'node',
+                }
+            })
+        ws.on('message', async (msg) => {
+            expect(msg).toBeInstanceOf(Buffer) // Weird...
+            expect(msg.toString()).toEqual('Hello, World!')
+            ws.close()
+            await endpoint.stop()
+            done()
+        })
+        ws.on('error', (err) => {
+            done(err)
+        })
+        ws.on('open', () => {
+            endpoint.send('clientId', 'Hello, World!')
+        })
+    })
+
+    /**
+     * Related to above test: check that messages indeed arrive as string from non-SSL uWS server.
+     */
+    test('messages over unencrypted connections arrive as string', async (done) => {
+        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort)
+
+        const peerInfo = PeerInfo.newTracker('serverId', 'name')
+        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, false)
+        const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
+            undefined, {
+                headers: {
+                    'streamr-peer-id': 'clientId',
+                    'streamr-peer-type': 'node',
+                }
+            })
+        ws.on('message', async (msg) => {
+            expect(typeof msg).toEqual('string')
+            expect(msg).toEqual('Hello, World!')
+            ws.close()
+            await endpoint.stop()
+            done()
+        })
+        ws.on('error', (err) => {
+            done(err)
+        })
+        ws.on('open', () => {
+            endpoint.send('clientId', 'Hello, World!')
+        })
+    })
 })
