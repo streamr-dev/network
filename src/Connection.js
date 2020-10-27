@@ -370,8 +370,19 @@ export default class Connection extends EventEmitter {
         })
     }
 
+    isConnectionValid() {
+        return !!(
+            this.wantsState !== STATE.DISCONNECTED
+            && (
+                this.wantsState === STATE.CONNECTED
+                || this.options.autoConnect
+                || this.isConnected()
+            )
+        )
+    }
+
     async maybeConnect() {
-        if (this.wantsState === STATE.CONNECTED || (this.options.autoConnect && this.wantsState !== STATE.DISCONNECTED)) {
+        if (this.isConnectionValid()) {
             // should be open, so wait for open or trigger new open
             await this._connect()
         }
@@ -632,7 +643,11 @@ export default class Connection extends EventEmitter {
     }
 
     _couldAutoDisconnect() {
-        return this.options.autoDisconnect && this.wantsState !== STATE.CONNECTED && this.connectionHandles.size === 0
+        return !!(
+            this.options.autoDisconnect
+            && this.wantsState !== STATE.CONNECTED
+            && this.connectionHandles.size === 0
+        )
     }
 
     async _autoDisconnect() {

@@ -397,6 +397,39 @@ describe('Connection', () => {
         })
     })
 
+    describe('isConnectionValid', () => {
+        it('works with explicit connect/disconnect', async () => {
+            expect(s.isConnectionValid()).not.toBeTruthy()
+            const onConnect = s.connect()
+            expect(s.isConnectionValid()).toBeTruthy()
+            await onConnect
+            expect(s.isConnectionValid()).toBeTruthy()
+            const onDisconnect = s.disconnect()
+            expect(s.isConnectionValid()).not.toBeTruthy()
+            await onDisconnect
+            expect(s.isConnectionValid()).not.toBeTruthy()
+        })
+
+        it('works with autoConnect', async () => {
+            s.options.autoConnect = true
+            expect(s.isConnectionValid()).toBeTruthy()
+        })
+
+        it('works with autoDisconnect', async () => {
+            s.options.autoConnect = true
+            s.options.autoDisconnect = true
+            expect(s.isConnectionValid()).toBeTruthy()
+            await s.addHandle(1)
+            expect(s.isConnectionValid()).toBeTruthy()
+            await s.removeHandle(1)
+            expect(s.isConnectionValid()).toBeTruthy()
+            const onDisconnect = s.disconnect()
+            expect(s.isConnectionValid()).not.toBeTruthy()
+            await onDisconnect
+            expect(s.isConnectionValid()).not.toBeTruthy()
+        })
+    })
+
     describe('nextConnection', () => {
         it('resolves on next connection', async () => {
             let resolved = false
