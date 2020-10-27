@@ -397,49 +397,6 @@ describe('Connection', () => {
         })
     })
 
-    describe('triggerConnectionOrWait', () => {
-        it('connects if no autoconnect', async () => {
-            s.options.autoConnect = false
-            const task = s.triggerConnectionOrWait()
-            expect(s.getState()).toBe('disconnected')
-            await wait(20)
-            await Promise.all([
-                task,
-                s.connect()
-            ])
-            expect(s.getState()).toBe('connected')
-        })
-
-        it('connects if autoconnect', async () => {
-            s.options.autoConnect = true
-            await s.triggerConnectionOrWait()
-            expect(s.getState()).toBe('connected')
-        })
-
-        it('errors if connect errors', async () => {
-            expectErrors = 1
-            s.options.autoConnect = true
-            s.options.url = 'badurl'
-            await expect(async () => {
-                await s.triggerConnectionOrWait()
-            }).rejects.toThrow()
-            expect(s.getState()).toBe('disconnected')
-        })
-
-        it('errors if connect errors without autoconnect', async () => {
-            expectErrors = 1
-            s.options.autoConnect = false
-            s.options.url = 'badurl'
-            const task = s.triggerConnectionOrWait()
-            await wait(20)
-            await expect(async () => {
-                await s.connect()
-            }).rejects.toThrow()
-            await expect(task).rejects.toThrow()
-            expect(s.getState()).toBe('disconnected')
-        })
-    })
-
     describe('nextConnection', () => {
         it('resolves on next connection', async () => {
             let resolved = false
@@ -736,14 +693,14 @@ describe('Connection', () => {
             s.options.autoDisconnect = true
             s.options.autoConnect = true
             expect(s.getState()).toBe('disconnected')
-            await s.addHandle(1)
             await s.removeHandle(1) // noop
-            await s.connect()
-            // must have had handle previously to disconnect
-            await s.removeHandle(1)
-            expect(s.getState()).toBe('connected')
+            expect(s.getState()).toBe('disconnected')
             await s.addHandle(1)
+            // must have had handle previously to disconnect
+            await s.removeHandle(2)
             expect(s.getState()).toBe('connected')
+            await s.removeHandle(1)
+            expect(s.getState()).toBe('disconnected')
             // can take multiple of the same handle (no error)
             await s.addHandle(1)
             expect(s.getState()).toBe('connected')
@@ -766,7 +723,7 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
         })
 
-        it('auto-disconnects when all handles removed without explicit connect first', async () => {
+        it('auto-disconnects when all handles removed without explicit connect', async () => {
             s.options.autoDisconnect = true
             s.options.autoConnect = true
             expect(s.getState()).toBe('disconnected')
@@ -775,12 +732,18 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
             await s.removeHandle(1)
             expect(s.getState()).toBe('disconnected')
+            await s.addHandle(1)
+            await s.send('test')
+            expect(s.getState()).toBe('connected')
+            await s.removeHandle(1)
+            expect(s.getState()).toBe('disconnected')
+            await s.send('test')
+            expect(s.getState()).toBe('connected')
         })
 
         it('handles concurrent call to removeHandle then connect', async () => {
             s.options.autoDisconnect = true
             s.options.autoConnect = true
-            await s.connect()
             await s.addHandle(1)
             await Promise.all([
                 s.removeHandle(1),
@@ -788,6 +751,12 @@ describe('Connection', () => {
             ])
 
             expect(s.getState()).toBe('connected')
+            // auto-disconnect disabled after connect
+            await s.addHandle(1)
+            await s.removeHandle(1)
+            expect(s.getState()).toBe('connected')
+            expect(s.options.autoConnect).not.toBeTruthy()
+            expect(s.options.autoDisconnect).not.toBeTruthy()
         })
 
         it('handles concurrent call to connect then removeHandle', async () => {
@@ -802,7 +771,8 @@ describe('Connection', () => {
                 s.removeHandle(1),
             ])
             expect(s.getState()).toBe('connected')
-            expect(s.options.autoConnect).toBeTruthy()
+            expect(s.options.autoConnect).not.toBeTruthy()
+            expect(s.options.autoDisconnect).not.toBeTruthy()
         })
 
         it('handles concurrent call to disconnect then removeHandle', async () => {
@@ -818,6 +788,7 @@ describe('Connection', () => {
             ])
             expect(s.getState()).toBe('disconnected')
             expect(s.options.autoConnect).not.toBeTruthy()
+            expect(s.options.autoDisconnect).not.toBeTruthy()
         })
 
         it('handles concurrent call to removeHandle then disconnect', async () => {
@@ -828,11 +799,12 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
             await s.addHandle(1)
             await Promise.all([
-                s.disconnect(),
                 s.removeHandle(1),
+                s.disconnect(),
             ])
             expect(s.getState()).toBe('disconnected')
             expect(s.options.autoConnect).not.toBeTruthy()
+            expect(s.options.autoDisconnect).not.toBeTruthy()
         })
 
         it('handles concurrent call to removeHandle then disconnect + connect', async () => {
@@ -867,30 +839,27 @@ describe('Connection', () => {
                 s.removeHandle(1),
             ])
             expect(s.getState()).toBe('connected')
-            expect(s.options.autoConnect).toBeTruthy()
+            expect(s.options.autoConnect).not.toBeTruthy()
         })
 
         it('late disconnect', async () => {
-            s.options.autoDisconnect = false
-            s.options.autoConnect = false
-            await s.connect()
-            expect(s.getState()).toBe('connected')
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
             await s.addHandle(1)
-            expect(s.getState()).toBe('connected')
             await s.addHandle(2)
             expect(s.getState()).toBe('connected')
             await s.removeHandle(2)
             expect(s.getState()).toBe('connected')
-            await s.removeHandle(1)
-            expect(s.getState()).toBe('connected')
-            expect(s.options.autoConnect).not.toBeTruthy()
+            const t = s.removeHandle(1)
+            await wait()
+            await s.disconnect() // disconnect while auto-disconnecting
+            await t
+            expect(s.getState()).toBe('disconnected')
         })
 
         it('does nothing if autoDisconnect is false', async () => {
             s.options.autoDisconnect = false
-            s.options.autoConnect = false
-            await s.connect()
-            expect(s.getState()).toBe('connected')
+            s.options.autoConnect = true
             await s.addHandle(1)
             expect(s.getState()).toBe('connected')
             await s.addHandle(2)
@@ -899,7 +868,8 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
             await s.removeHandle(1)
             expect(s.getState()).toBe('connected')
-            expect(s.options.autoConnect).not.toBeTruthy()
+            expect(s.options.autoConnect).toBeTruthy()
+            expect(s.options.autoDisconnect).not.toBeTruthy()
         })
     })
 
