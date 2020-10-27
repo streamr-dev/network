@@ -2,17 +2,17 @@
 
 set -e
 
-## Script for preparing smoke test
-sudo ifconfig docker0 10.200.10.1/24
-
 ## Get Streamr Docker dev
 git clone --depth 1 https://github.com/streamr-dev/streamr-docker-dev.git
 
+## Script for preparing smoke test
+sudo ifconfig docker0 10.200.10.1/24
+
 ## Switch out image for local one
-sed -i "s#$OWNER/$IMAGE_NAME:dev#$OWNER/$IMAGE_NAME\:taggit#g" $TRAVIS_BUILD_DIR/streamr-docker-dev/docker-compose.override.yml
+sed -i "s#$OWNER/$IMAGE_NAME:dev#$OWNER/$IMAGE_NAME\:taggit#g" $GITHUB_WORKSPACE/streamr-docker-dev/docker-compose.override.yml
 
 ## Start up services needed
-$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-no-storage-1 parity-node0 --wait
+$GITHUB_WORKSPACE/streamr-docker-dev/streamr-docker-dev/bin.sh start broker-node-no-storage-1 parity-node0 --wait
 
 ## Wait for the service to come online and test
 ## TODO: can this be replaced with `--wait`?
