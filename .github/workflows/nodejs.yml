@@ -36,6 +36,7 @@ jobs:
       - run: npm run test-integration
         env:
           CI: true
+          LOG_LEVEL: warn
 
   docker:
     needs: [test]
@@ -45,6 +46,7 @@ jobs:
     # run job only for master and tags
     if: github.ref == 'refs/heads/master'
     steps:
+      - uses: actions/checkout@v2
       - run: docker build -t $OWNER/$IMAGE_NAME:taggit .
       - run: sh .ci_scripts/smoke_test.sh
       - run: sh .ci_scripts/deploy_docker.sh dev
