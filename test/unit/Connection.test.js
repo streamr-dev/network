@@ -8,8 +8,6 @@ import Connection from '../../src/Connection'
 
 const debug = Debug('StreamrClient').extend('test')
 
-console.log = Debug('Streamr::   CONSOLE   ')
-
 describe('Connection', () => {
     let s
     let onConnected
@@ -70,7 +68,13 @@ describe('Connection', () => {
     afterEach(async () => {
         await wait()
         // ensure no unexpected errors
-        expect(onError).toHaveBeenCalledTimes(expectErrors)
+        try {
+            expect(onError).toHaveBeenCalledTimes(expectErrors)
+        } catch (err) {
+            // print errors
+            debug('onError calls:', onError.mock.calls)
+            throw err
+        }
     })
 
     afterEach(async () => {
@@ -762,6 +766,17 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
         })
 
+        it('auto-disconnects when all handles removed without explicit connect first', async () => {
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
+            expect(s.getState()).toBe('disconnected')
+            await s.addHandle(1)
+            await s.send('test')
+            expect(s.getState()).toBe('connected')
+            await s.removeHandle(1)
+            expect(s.getState()).toBe('disconnected')
+        })
+
         it('handles concurrent call to removeHandle then connect', async () => {
             s.options.autoDisconnect = true
             s.options.autoConnect = true
@@ -786,7 +801,7 @@ describe('Connection', () => {
                 s.connect(),
                 s.removeHandle(1),
             ])
-            expect(s.getState()).toBe('disconnected')
+            expect(s.getState()).toBe('connected')
             expect(s.options.autoConnect).toBeTruthy()
         })
 
@@ -835,6 +850,38 @@ describe('Connection', () => {
             ])
             await s.removeHandle(1)
             await tasks
+            expect(s.getState()).toBe('connected')
+            expect(s.options.autoConnect).not.toBeTruthy()
+        })
+
+        it('handles concurrent call to removeHandle', async () => {
+            s.options.autoDisconnect = true
+            s.options.autoConnect = true
+            await s.connect()
+            expect(s.getState()).toBe('connected')
+            await s.addHandle(1)
+            await Promise.all([
+                s.removeHandle(1),
+                s.addHandle(1),
+                s.connect(),
+                s.removeHandle(1),
+            ])
+            expect(s.getState()).toBe('connected')
+            expect(s.options.autoConnect).toBeTruthy()
+        })
+
+        it('late disconnect', async () => {
+            s.options.autoDisconnect = false
+            s.options.autoConnect = false
+            await s.connect()
+            expect(s.getState()).toBe('connected')
+            await s.addHandle(1)
+            expect(s.getState()).toBe('connected')
+            await s.addHandle(2)
+            expect(s.getState()).toBe('connected')
+            await s.removeHandle(2)
+            expect(s.getState()).toBe('connected')
+            await s.removeHandle(1)
             expect(s.getState()).toBe('connected')
             expect(s.options.autoConnect).not.toBeTruthy()
         })

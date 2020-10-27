@@ -180,6 +180,10 @@ export default class Connection extends EventEmitter {
 
     async connect() {
         this.shouldConnect = true
+        if (this.connectedOnce) {
+            this.options.autoDisconnect = false // reset auto-connect on manual disconnect
+        }
+        this.connectedOnce = true
         this.shouldReconnect = true
         this.isDone = false
 
@@ -402,6 +406,7 @@ export default class Connection extends EventEmitter {
     async disconnect() {
         this.didDisableAutoConnectAfterDisconnect = !!this.options.autoConnect
         this.options.autoConnect = false // reset auto-connect on manual disconnect
+        this.options.autoDisconnect = false // reset auto-disconnect on manual disconnect
         this.shouldConnect = false
         this.shouldReconnect = true
         this._isReconnecting = false
@@ -581,6 +586,7 @@ export default class Connection extends EventEmitter {
      */
 
     async addHandle(id) {
+        this.shouldReconnect = true
         this.connectionHandles.add(id)
     }
 
@@ -591,20 +597,51 @@ export default class Connection extends EventEmitter {
     async removeHandle(id) {
         const hadConnection = this.connectionHandles.has(id)
         this.connectionHandles.delete(id)
-        const { socket } = this
         if (hadConnection && this.connectionHandles.size === 0 && this.options.autoDisconnect) {
-            this.shouldReconnect = false
-            await this.__disconnect().catch(async (err) => {
-                if (err instanceof ConnectionError) {
-                    if (!this.shouldReconnect) {
-                        await CloseWebSocket(socket)
-                    }
-                    return
-                }
-                throw err
-            })
-            this.shouldReconnect = false
+            return this._autoDisconnect()
         }
+
+        return Promise.resolve()
+    }
+
+    async waitForPending() {
+        if (this.connectTask || this.disconnectTask) {
+            await Promise.all([
+                Promise.resolve(this.connectTask).catch(() => {}), // ignore errors
+                Promise.resolve(this.disconnectTask).catch(() => {}), // ignore errors
+            ])
+
+            await true
+
+            // wait for any additional queued tasks
+            return this.waitForPending()
+        }
+        return Promise.resolve()
+    }
+
+    async _autoDisconnect() {
+        if (this.autoDisconnectTask) {
+            return this.autoDisconnectTask
+        }
+
+        this.autoDisconnectTask = Promise.resolve().then(async () => {
+            this.shouldReconnect = false
+            await this.waitForPending()
+            // eslint-disable-next-line promise/always-return
+            if (this.connectionHandles.size === 0 && !this.shouldReconnect && this.options.autoDisconnect) {
+                await CloseWebSocket(this.socket)
+            }
+        }).catch(async (err) => {
+            if (err instanceof ConnectionError) {
+                // ignore ConnectionErrors because not user-initiated
+                return
+            }
+            throw err
+        }).finally(() => {
+            this.autoDisconnectTask = undefined
+        })
+
+        return this.autoDisconnectTask
     }
 
     async send(msg) {
