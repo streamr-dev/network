@@ -18,7 +18,7 @@ async function getSessionToken(url, props) {
 }
 
 export async function getChallenge(address) {
-    this.debug('getChallenge', {
+    this.debug('getChallenge %o', {
         address,
     })
     const url = getEndpointUrl(this.options.restUrl, 'login', 'challenge', address)
@@ -32,7 +32,7 @@ export async function getChallenge(address) {
 }
 
 export async function sendChallengeResponse(challenge, signature, address) {
-    this.debug('sendChallengeResponse', {
+    this.debug('sendChallengeResponse %o', {
         challenge,
         signature,
         address,
@@ -47,7 +47,7 @@ export async function sendChallengeResponse(challenge, signature, address) {
 }
 
 export async function loginWithChallengeResponse(signingFunction, address) {
-    this.debug('loginWithChallengeResponse', {
+    this.debug('loginWithChallengeResponse &o', {
         address,
     })
     const challenge = await this.getChallenge(address)
@@ -56,7 +56,7 @@ export async function loginWithChallengeResponse(signingFunction, address) {
 }
 
 export async function loginWithApiKey(apiKey) {
-    this.debug('loginWithApiKey', {
+    this.debug('loginWithApiKey %o', {
         apiKey,
     })
     const url = getEndpointUrl(this.options.restUrl, 'login', 'apikey')
@@ -67,6 +67,9 @@ export async function loginWithApiKey(apiKey) {
 }
 
 export async function loginWithUsernamePassword(username, password) {
+    this.debug('loginWithUsernamePassword %o', {
+        username,
+    })
     const url = getEndpointUrl(this.options.restUrl, 'login', 'password')
     const props = {
         username,
