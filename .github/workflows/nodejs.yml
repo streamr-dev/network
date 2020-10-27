@@ -55,6 +55,8 @@ jobs:
     env:
       OWNER: streamr
       IMAGE_NAME: broker-node
+      DOCKER_USER: ${{ secrets.DOCKER_USER }}
+      DOCKER_PASS: ${{ secrets.DOCKER_PASS }}
 
   publish:
     needs: [test]
