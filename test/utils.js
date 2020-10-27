@@ -1,3 +1,5 @@
+import { wait } from 'streamr-test-utils'
+
 import { pTimeout } from '../src/utils'
 
 const crypto = require('crypto')
@@ -26,7 +28,7 @@ describeRepeats.skip = (msg, fn) => {
 }
 
 describeRepeats.only = (msg, fn) => {
-    describeRepeats(fn, describe.only)
+    describeRepeats(msg, fn, describe.only)
 }
 
 export async function collect(iterator, fn = () => {}) {
@@ -57,4 +59,55 @@ export function getPublishTestMessages(client, defaultStreamId) {
         }
         return published
     }
+}
+
+export function getWaitForStorage(client) {
+    /* eslint-disable no-await-in-loop */
+    return async ({
+        streamId,
+        streamPartition = 0,
+        msg,
+        interval = 500,
+        timeout = 5000,
+    }) => {
+        const start = Date.now()
+        let last
+        // eslint-disable-next-line no-constant-condition
+        let found = false
+        while (!found) {
+            const duration = Date.now() - start
+            if (duration > timeout) {
+                client.debug('waitForStorage timeout %o', {
+                    timeout,
+                    duration
+                }, {
+                    msg,
+                    last: last.map((l) => l.content),
+                })
+                const err = new Error(`timed out after ${duration}ms waiting for message`)
+                err.msg = msg
+                throw err
+            }
+
+            last = await client.getStreamLast({
+                streamId,
+                streamPartition,
+                count: 3,
+            })
+
+            for (const { content } of last) {
+                if (content.value === msg.value) {
+                    found = true
+                    return
+                }
+            }
+
+            client.debug('message not found, retrying... %o', {
+                msg, last: last.map(({ content }) => content)
+            })
+
+            await wait(interval)
+        }
+    }
+    /* eslint-enable no-await-in-loop */
 }

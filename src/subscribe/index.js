@@ -107,7 +107,11 @@ export function validateOptions(optionsOrStreamId) {
         }
     } else if (typeof optionsOrStreamId === 'object') {
         if (optionsOrStreamId.stream) {
-            return validateOptions(optionsOrStreamId.stream)
+            const { stream, ...other } = optionsOrStreamId
+            return validateOptions({
+                ...other,
+                ...validateOptions(stream),
+            })
         }
 
         if (optionsOrStreamId.id != null && optionsOrStreamId.streamId == null) {
@@ -379,47 +383,59 @@ async function unsubscribe(client, { streamId, streamPartition = 0 }) {
 // Resends
 //
 
-function createResendRequest({
-    requestId = uuid('rs'),
-    streamId,
-    streamPartition = 0,
-    publisherId,
-    msgChainId,
-    sessionToken,
-    ...options
-}) {
-    let request
-    const opts = {
+function createResendRequest(resendOptions) {
+    const {
+        requestId = uuid('rs'),
+        streamId,
+        streamPartition = 0,
+        sessionToken,
+        ...options
+    } = resendOptions
+
+    const {
+        from,
+        to,
+        last,
+        publisherId,
+        msgChainId,
+    } = {
+        ...options,
+        ...options.resend
+    }
+
+    const commonOpts = {
         streamId,
         streamPartition,
         requestId,
         sessionToken,
     }
 
-    if (options.last > 0) {
+    let request
+
+    if (last > 0) {
         request = new ResendLastRequest({
-            ...opts,
-            numberLast: options.last,
+            ...commonOpts,
+            numberLast: last,
         })
-    } else if (options.from && !options.to) {
+    } else if (from && !to) {
         request = new ResendFromRequest({
-            ...opts,
-            fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
+            ...commonOpts,
+            fromMsgRef: new MessageRef(from.timestamp, from.sequenceNumber),
             publisherId,
             msgChainId,
         })
-    } else if (options.from && options.to) {
+    } else if (from && to) {
         request = new ResendRangeRequest({
-            ...opts,
-            fromMsgRef: new MessageRef(options.from.timestamp, options.from.sequenceNumber),
-            toMsgRef: new MessageRef(options.to.timestamp, options.to.sequenceNumber),
+            ...commonOpts,
+            fromMsgRef: new MessageRef(from.timestamp, from.sequenceNumber),
+            toMsgRef: new MessageRef(to.timestamp, to.sequenceNumber),
             publisherId,
             msgChainId,
         })
     }
 
     if (!request) {
-        throw new Error("Can't _requestResend without resend options")
+        throw new Error(`Can't _requestResend without resend options. Got: ${JSON.stringify(resendOptions)}`)
     }
     return request
 }
@@ -465,7 +481,8 @@ async function getResendStream(client, opts) {
     // wait for resend complete message or resend request done
     await Promise.race([
         resend(client, {
-            requestId, ...options,
+            requestId,
+            ...options,
         }),
         onResendDone
     ])
@@ -718,9 +735,9 @@ export default class Subscriptions {
 
         const [, it] = CancelableGenerator((async function* ResendSubIterator() {
             // iterate over resend
-            yield* resendSub
+            yield* it.resend
             // then iterate over realtime subscription
-            yield* sub
+            yield* it.realtime
         }()), async (err) => {
             await end(err)
         })

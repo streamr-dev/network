@@ -1,53 +1,92 @@
 import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
 import Debug from 'debug'
 
-import { uid } from '../utils'
+import { uid, describeRepeats, fakePrivateKey, getWaitForStorage, getPublishTestMessages } from '../utils'
 import StreamrClient from '../../src'
+import Connection from '../../src/Connection'
 
 import config from './config'
 
-const createClient = (opts = {}) => new StreamrClient({
-    apiKey: 'tester1-api-key',
-    autoConnect: false,
-    autoDisconnect: false,
-    ...config.clientOptions,
-    ...opts,
-})
-
 const MAX_MESSAGES = 10
-const TEST_REPEATS = 10
+const WAIT_FOR_STORAGE_TIMEOUT = 6000
+
+/* eslint-disable no-await-in-loop */
 
 describe('StreamrClient resends', () => {
     describe('resend', () => {
+        let expectErrors = 0 // check no errors by default
+        let onError = jest.fn()
+
+        const createClient = (opts = {}) => {
+            const c = new StreamrClient({
+                auth: {
+                    privateKey: fakePrivateKey(),
+                },
+                autoConnect: false,
+                autoDisconnect: false,
+                maxRetries: 2,
+                ...config.clientOptions,
+                ...opts,
+            })
+            c.onError = jest.fn()
+            c.on('error', onError)
+            return c
+        }
+
         let client
         let stream
-        let publishedMessages
+        let published
+        let publishTestMessages
 
         beforeEach(async () => {
             client = createClient()
             await client.connect()
 
-            publishedMessages = []
+            published = []
 
             stream = await client.createStream({
                 name: uid('resends')
             })
 
-            for (let i = 0; i < MAX_MESSAGES; i++) {
-                const message = {
-                    msg: uid('message'),
-                }
+            publishTestMessages = getPublishTestMessages(client, stream.id)
 
-                // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, message)
-                publishedMessages.push(message)
-            }
+            published = await publishTestMessages(MAX_MESSAGES)
 
-            await wait(5000) // wait for messages to (hopefully) land in storage
-        }, 10 * 1000)
+            const waitForStorage = getWaitForStorage(client)
+            const lastMessage = published[published.length - 1]
+            await waitForStorage({
+                msg: lastMessage,
+                timeout: WAIT_FOR_STORAGE_TIMEOUT,
+                streamId: stream.id,
+            })
+        })
+
+        beforeEach(async () => {
+            await client.connect()
+            expectErrors = 0
+            onError = jest.fn()
+        })
 
         afterEach(async () => {
-            await client.disconnect()
+            await wait()
+            // ensure no unexpected errors
+            expect(onError).toHaveBeenCalledTimes(expectErrors)
+            if (client) {
+                expect(client.onError).toHaveBeenCalledTimes(expectErrors)
+            }
+        })
+
+        afterEach(async () => {
+            await wait(500)
+            if (client) {
+                client.debug('disconnecting after test')
+                await client.disconnect()
+            }
+
+            const openSockets = Connection.getOpen()
+            if (openSockets !== 0) {
+                throw new Error(`sockets not closed: ${openSockets}`)
+            }
         })
 
         describe('issue resend and subscribe at the same time', () => {
@@ -79,7 +118,7 @@ describe('StreamrClient resends', () => {
                     client.publish(stream.id, realtimeMessage),
                     waitForCondition(() => realtimeMessages.length === 1, 10000)
                 ])
-                expect(resentMessages).toStrictEqual(publishedMessages)
+                expect(resentMessages).toStrictEqual(published)
                 expect(realtimeMessages).toStrictEqual([realtimeMessage])
             }, 18000)
 
@@ -112,7 +151,7 @@ describe('StreamrClient resends', () => {
                     client.publish(stream.id, realtimeMessage),
                     waitForCondition(() => realtimeMessages.length === 1, 5000)
                 ])
-                expect(resentMessages).toStrictEqual(publishedMessages)
+                expect(resentMessages).toStrictEqual(published)
                 expect(realtimeMessages).toStrictEqual([realtimeMessage])
             }, 15000)
 
@@ -144,7 +183,7 @@ describe('StreamrClient resends', () => {
                     client.publish(stream.id, realtimeMessage),
                     waitForCondition(() => realtimeMessages.length === 1, 5000)
                 ])
-                expect(resentMessages).toStrictEqual([...publishedMessages, realtimeMessage])
+                expect(resentMessages).toStrictEqual([...published, realtimeMessage])
                 expect(realtimeMessages).toStrictEqual([realtimeMessage])
             }, 15000)
 
@@ -177,14 +216,14 @@ describe('StreamrClient resends', () => {
                     client.publish(stream.id, realtimeMessage),
                     waitForCondition(() => realtimeMessages.length === 1, 5000)
                 ])
-                expect(resentMessages).toStrictEqual([...publishedMessages, realtimeMessage])
+                expect(resentMessages).toStrictEqual([...published, realtimeMessage])
                 expect(realtimeMessages).toStrictEqual([realtimeMessage])
             }, 15000)
         })
 
-        for (let i = 0; i < TEST_REPEATS; i++) {
+        describeRepeats('resend repeats', () => {
             // eslint-disable-next-line no-loop-func
-            it(`resend last using resend function on try ${i}`, async () => {
+            test('resend last using resend function', async () => {
                 const receivedMessages = []
 
                 // eslint-disable-next-line no-await-in-loop
@@ -202,17 +241,15 @@ describe('StreamrClient resends', () => {
 
                 // eslint-disable-next-line no-loop-func
                 sub.once('resent', () => {
-                    expect(receivedMessages).toStrictEqual(publishedMessages)
+                    expect(receivedMessages).toStrictEqual(published)
                 })
 
                 // eslint-disable-next-line no-await-in-loop
                 await waitForCondition(() => receivedMessages.length === MAX_MESSAGES, 10000)
-            }, 10000)
-        }
+            }, 10000 * 1.2)
 
-        for (let i = 0; i < TEST_REPEATS; i++) {
             // eslint-disable-next-line no-loop-func
-            it(`resend last using subscribe function on try ${i}`, async () => {
+            test('resend last using subscribe function', async () => {
                 const receivedMessages = []
 
                 // eslint-disable-next-line no-await-in-loop
@@ -224,12 +261,11 @@ describe('StreamrClient resends', () => {
                 }, (message) => {
                     receivedMessages.push(message)
                 })
-
                 // eslint-disable-next-line no-loop-func
-                await waitForEvent(sub, 'resent')
-                expect(receivedMessages).toStrictEqual(publishedMessages)
-            }, 10000)
-        }
+                await waitForEvent(sub, 'resent', 10000)
+                expect(receivedMessages).toStrictEqual(published)
+            }, 10000 * 1.2)
+        })
 
         it('resend last using subscribe and publish messages after resend', async () => {
             const receivedMessages = []
@@ -245,7 +281,7 @@ describe('StreamrClient resends', () => {
 
             // wait for resend MAX_MESSAGES
             await waitForCondition(() => receivedMessages.length === MAX_MESSAGES, 20000)
-            expect(receivedMessages).toStrictEqual(publishedMessages)
+            expect(receivedMessages).toStrictEqual(published)
 
             // publish after resend, realtime subscription messages
             for (let i = MAX_MESSAGES; i < MAX_MESSAGES * 2; i++) {
@@ -255,11 +291,11 @@ describe('StreamrClient resends', () => {
 
                 // eslint-disable-next-line no-await-in-loop
                 await client.publish(stream.id, message)
-                publishedMessages.push(message)
+                published.push(message)
             }
 
             await waitForCondition(() => receivedMessages.length === MAX_MESSAGES * 2, 10000)
-            expect(receivedMessages).toStrictEqual(publishedMessages)
+            expect(receivedMessages).toStrictEqual(published)
         }, 40000)
 
         it('resend last using subscribe and publish realtime messages', async () => {
@@ -275,7 +311,7 @@ describe('StreamrClient resends', () => {
             })
 
             sub.once('resent', async () => {
-                expect(receivedMessages).toStrictEqual(publishedMessages)
+                expect(receivedMessages).toStrictEqual(published)
                 expect(receivedMessages).toHaveLength(MAX_MESSAGES)
                 for (let i = MAX_MESSAGES; i < MAX_MESSAGES * 2; i++) {
                     const message = {
@@ -284,35 +320,35 @@ describe('StreamrClient resends', () => {
 
                     // eslint-disable-next-line no-await-in-loop
                     await client.publish(stream.id, message)
-                    publishedMessages.push(message)
+                    published.push(message)
                 }
             })
 
             await waitForCondition(() => receivedMessages.length === MAX_MESSAGES * 2, 20000)
-            expect(receivedMessages).toStrictEqual(publishedMessages)
+            expect(receivedMessages).toStrictEqual(published)
         }, 40000)
 
         it('long resend', async (done) => {
             client.debug('disabling verbose logging')
             Debug.disable()
-            const LONG_RESEND = 10000
-            const publishedMessages2 = []
 
             stream = await client.createStream({
                 name: uid('resends')
             })
 
-            for (let i = 0; i < LONG_RESEND; i++) {
-                const message = {
-                    msg: uid('message'),
-                }
+            const LONG_RESEND = 10000
 
-                // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, message)
-                publishedMessages2.push(message)
-            }
+            publishTestMessages = getPublishTestMessages(client, stream.id)
+            published = await publishTestMessages(LONG_RESEND)
 
-            await wait(30000)
+            const waitForStorage = getWaitForStorage(client)
+            const lastMessage = published[published.length - 1]
+            await waitForStorage({
+                msg: lastMessage,
+                timeout: 60000,
+                streamId: stream.id,
+            })
+
             await client.disconnect()
 
             // resend from LONG_RESEND messages
@@ -331,8 +367,8 @@ describe('StreamrClient resends', () => {
             })
 
             sub.once('resent', () => {
-                expect(receivedMessages).toEqual(publishedMessages2)
-                expect(publishedMessages2.length).toBe(LONG_RESEND)
+                expect(receivedMessages).toEqual(published)
+                expect(published.length).toBe(LONG_RESEND)
                 done()
             })
         }, 300000)

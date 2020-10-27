@@ -8,12 +8,26 @@ import uniqueId from 'lodash.uniqueid'
 import Connection from './Connection'
 import Session from './Session'
 import { getVersionString } from './utils'
+import { iteratorFinally } from './utils/iterators'
 import Publisher from './Publisher'
 import MessageStream from './subscribe'
 
 const { ControlMessage } = ControlLayer
 
 const { StreamMessage } = MessageLayer
+
+function emitterMixin(obj) {
+    const emitter = new EventEmitter()
+    return Object.assign(obj, {
+        once: emitter.once.bind(emitter),
+        emit: emitter.emit.bind(emitter),
+        on: emitter.on.bind(emitter),
+        off: emitter.off.bind(emitter),
+        removeListener: emitter.removeListener.bind(emitter),
+        addListener: emitter.addListener.bind(emitter),
+        removeAllListeners: emitter.removeAllListeners.bind(emitter),
+    })
+}
 
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
@@ -107,8 +121,6 @@ export default class StreamrClient extends EventEmitter {
 
         this.publisher = new Publisher(this)
         this.messageStream = new MessageStream(this)
-        //this.subscriber = new Subscriber(this)
-        //this.resender = new Resender(this)
 
         this.connection.on('connected', this.onConnectionConnected)
         this.connection.on('disconnected', this.onConnectionDisconnected)
@@ -155,10 +167,6 @@ export default class StreamrClient extends EventEmitter {
 
     _onError(err, ...args) {
         this.onError(err, ...args)
-        if (!(err instanceof Connection.ConnectionError)) {
-            this.debug('disconnecting due to error', err)
-            this.disconnect()
-        }
     }
 
     async send(request) {
@@ -173,8 +181,26 @@ export default class StreamrClient extends EventEmitter {
         console.error(error)
     }
 
-    async resend(...args) {
-        return this.resender.resend(...args)
+    async resend(opts, fn) {
+        const task = this.messageStream.resend(opts)
+        if (!fn) {
+            return task
+        }
+
+        const r = task.then((sub) => emitterMixin(sub))
+
+        Promise.resolve(r).then(async (sub) => {
+            sub.emit('resending')
+            for await (const msg of sub) {
+                await fn(msg.getParsedContent(), msg)
+            }
+            sub.emit('resent')
+            return sub
+        }).catch((err) => {
+            this.emit('error', err)
+        })
+
+        return r
     }
 
     isConnected() {
@@ -207,7 +233,6 @@ export default class StreamrClient extends EventEmitter {
 
     disconnect() {
         this.publisher.stop()
-        //this.subscriber.stop()
         return this.connection.disconnect()
     }
 
@@ -224,14 +249,28 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async subscribe(opts, fn) {
-        this.emit('subscribing')
-        const subTask = this.messageStream.subscribe(opts)
-        if (!fn) {
-            const sub = await subTask
-            this.emit('subscribed')
-            return sub
+        let subTask
+        if (opts.resend || opts.from || opts.to || opts.last) {
+            subTask = this.messageStream.resendSubscribe(opts)
+        } else {
+            subTask = this.messageStream.subscribe(opts)
         }
-        Promise.resolve(subTask).then(async (sub) => {
+
+        if (!fn) {
+            return subTask
+        }
+
+        const r = Promise.resolve(subTask).then((sub) => {
+            const sub2 = emitterMixin(sub)
+            if (!sub.resend) { return sub2 }
+            sub2.resend = iteratorFinally(sub.resend, () => {
+                sub.emit('resent')
+            })
+            return sub2
+        })
+
+        Promise.resolve(r).then(async (sub) => {
+            sub.emit('subscribed')
             for await (const msg of sub) {
                 await fn(msg.getParsedContent(), msg)
             }
@@ -239,16 +278,12 @@ export default class StreamrClient extends EventEmitter {
         }).catch((err) => {
             this.emit('error', err)
         })
-        return subTask
+        return r
     }
 
     unsubscribe(...args) {
         return this.messageStream.unsubscribe(...args)
     }
-
-    //unsubscribeAll(...args) {
-        //return this.subscriber.unsubscribeAll(...args)
-    //}
 
     getSubscriptions(...args) {
         return this.messageStream.getAll(...args)
