@@ -88,6 +88,11 @@ function messageStream(connection, { streamId, streamPartition, type = ControlMe
         .once('finish', onClose)
 }
 
+function SubKey({ streamId, streamPartition = 0 }) {
+    if (streamId == null) { throw new Error(`SubKey: invalid streamId: ${streamId} ${streamPartition}`) }
+    return `${streamId}::${streamPartition}`
+}
+
 export function validateOptions(optionsOrStreamId) {
     if (!optionsOrStreamId) {
         throw new Error('options is required!')
@@ -126,6 +131,8 @@ export function validateOptions(optionsOrStreamId) {
     if (options.streamId == null) {
         throw new Error(`streamId must be set, given: ${optionsOrStreamId}`)
     }
+
+    options.key = SubKey(options)
 
     return options
 }
@@ -467,6 +474,7 @@ class Subscription extends Emitter {
         this.client = client
         this.onFinal = onFinal
         this.options = validateOptions(options)
+        this.key = this.options.key
         this.streams = new Set()
 
         this.queue = pLimit(1)
@@ -498,8 +506,9 @@ class Subscription extends Emitter {
     }
 
     async onDisconnecting() {
-        if (!this.client.connection.shouldConnect) {
-            this.cancel()
+        // should actually reconnect
+        if (!this.client.connection.isConnectionValid()) {
+            await this.cancel()
         }
     }
 
@@ -519,20 +528,21 @@ class Subscription extends Emitter {
         return unsubscribe(this.client, this.options)
     }
 
-    _cleanupConnectionHandlers() {
+    _cleanupHandlers() { // eslint-disable-line class-methods-use-this
         // noop will be replaced in subscribe
     }
 
     async _subscribe() {
         pMemoize.clear(this.sendUnsubscribe)
         const { connection } = this.client
-        this._cleanupConnectionHandlers = connection.onTransition({
+        this._cleanupHandlers = connection.onTransition({
             connection: this.client.connection,
             onConnected: this.onConnected,
             onDisconnected: this.onDisconnected,
             onDisconnecting: this.onDisconnecting,
             onDone: this.onConnectionDone,
         })
+        await connection.addHandle(this.key)
         await this.sendSubscribe()
     }
 
@@ -550,8 +560,9 @@ class Subscription extends Emitter {
 
     async onSubscriptionDone() {
         pMemoize.clear(this.sendSubscribe)
-        this._cleanupConnectionHandlers()
-        if (this.client.connection.shouldConnect) {
+        this._cleanupHandlers()
+        await this.client.connection.removeHandle(this.key)
+        if (this.client.connection.isConnectionValid()) {
             await this.sendUnsubscribe()
         }
     }
@@ -561,7 +572,7 @@ class Subscription extends Emitter {
     }
 
     async cancel(optionalErr) {
-        this._cleanupConnectionHandlers()
+        this._cleanupHandlers()
         if (this.hasPending()) {
             await this.queue(() => {})
         }
@@ -608,11 +619,6 @@ class Subscription extends Emitter {
     }
 }
 
-function SubKey({ streamId, streamPartition = 0 }) {
-    if (streamId == null) { throw new Error(`SubKey: invalid streamId: ${streamId} ${streamPartition}`) }
-    return `${streamId}::${streamPartition}`
-}
-
 /**
  * Top-level interface for creating/destroying subscriptions.
  */
@@ -628,7 +634,7 @@ export default class Subscriptions {
     }
 
     get(options) {
-        const key = SubKey(validateOptions(options))
+        const { key } = validateOptions(options)
         return this.subscriptions.get(key)
     }
 
@@ -638,7 +644,7 @@ export default class Subscriptions {
     }
 
     async unsubscribe(options) {
-        const key = SubKey(validateOptions(options))
+        const { key } = validateOptions(options)
         const sub = this.subscriptions.get(key)
         if (!sub) {
             return
@@ -648,7 +654,7 @@ export default class Subscriptions {
     }
 
     async subscribe(options) {
-        const key = SubKey(validateOptions(options))
+        const { key } = validateOptions(options)
         let sub = this.subscriptions.get(key)
         if (!sub) {
             sub = new Subscription(this.client, options, () => {

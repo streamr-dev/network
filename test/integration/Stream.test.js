@@ -163,6 +163,52 @@ describeRepeats('StreamrClient Stream', () => {
             expect(received).toEqual(published)
         })
 
+        it('errors if not connected', async () => {
+            await client.disconnect()
+            await expect(() => (
+                M.subscribe(stream)
+            )).rejects.toThrow('connect')
+            expect(M.count(stream.id)).toBe(0)
+        })
+    })
+
+    describe('auto connect/disconnect', () => {
+        beforeEach(async () => {
+            await client.disconnect()
+            // eslint-disable-next-line require-atomic-updates
+            client = createClient({
+                autoConnect: true,
+                autoDisconnect: true,
+            })
+
+            M = new MessageStream(client)
+            await client.session.getSessionToken()
+            stream = await client.createStream({
+                name: uid('stream')
+            })
+            publishTestMessages = getPublishTestMessages(client, stream.id)
+        })
+
+        it('connects on subscribe, disconnects on end', async () => {
+            const sub = await M.subscribe(stream.id)
+            expect(client.connection.getState()).toBe('connected')
+            expect(M.count(stream.id)).toBe(1)
+
+            const published = await publishTestMessages()
+
+            const received = []
+            for await (const m of sub) {
+                received.push(m)
+                if (received.length === published.length) {
+                    return
+                }
+            }
+            expect(received).toEqual(published)
+            expect(client.connection.getState()).toBe('disconnected')
+        })
+    })
+
+    describe('ending a subscription', () => {
         it('can kill stream using async end', async () => {
             const sub = await M.subscribe(stream.id)
             expect(M.count(stream.id)).toBe(1)
