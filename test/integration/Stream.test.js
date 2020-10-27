@@ -103,9 +103,9 @@ describeRepeats('StreamrClient Stream', () => {
 
             const received = []
             for await (const m of sub) {
-                received.push(m)
+                received.push(m.getParsedContent())
                 if (received.length === published.length) {
-                    return
+                    break
                 }
             }
             expect(received).toEqual(published)
@@ -121,9 +121,9 @@ describeRepeats('StreamrClient Stream', () => {
 
             const received = []
             for await (const m of sub) {
-                received.push(m)
+                received.push(m.getParsedContent())
                 if (received.length === published.length) {
-                    return
+                    break
                 }
             }
             expect(received).toEqual(published)
@@ -137,9 +137,9 @@ describeRepeats('StreamrClient Stream', () => {
 
             const received = []
             for await (const m of sub) {
-                received.push(m)
+                received.push(m.getParsedContent())
                 if (received.length === published.length) {
-                    return
+                    break
                 }
             }
             expect(received).toEqual(published)
@@ -154,9 +154,9 @@ describeRepeats('StreamrClient Stream', () => {
 
             const received = []
             for await (const m of sub) {
-                received.push(m)
+                received.push(m.getParsedContent())
                 if (received.length === published.length) {
-                    return
+                    break
                 }
             }
 
@@ -172,76 +172,6 @@ describeRepeats('StreamrClient Stream', () => {
         })
     })
 
-    describe('auto connect/disconnect', () => {
-        beforeEach(async () => {
-            await client.disconnect()
-            // eslint-disable-next-line require-atomic-updates
-            client = createClient({
-                autoConnect: true,
-                autoDisconnect: true,
-            })
-
-            M = new MessageStream(client)
-            await client.session.getSessionToken()
-            stream = await client.createStream({
-                name: uid('stream')
-            })
-            publishTestMessages = getPublishTestMessages(client, stream.id)
-        })
-
-        it('connects on subscribe, disconnects on end', async () => {
-            const sub = await M.subscribe(stream.id)
-            expect(client.connection.getState()).toBe('connected')
-            expect(M.count(stream.id)).toBe(1)
-
-            const published = await publishTestMessages()
-
-            const received = []
-            for await (const m of sub) {
-                received.push(m)
-                if (received.length === published.length) {
-                    return
-                }
-            }
-            expect(received).toEqual(published)
-            expect(client.connection.getState()).toBe('disconnected')
-        })
-
-        it('connects on subscribe, disconnects on end with two subs', async () => {
-            const [sub1, sub2] = await Promise.all([
-                M.subscribe(stream.id),
-                M.subscribe(stream.id),
-            ])
-
-            expect(client.connection.getState()).toBe('connected')
-            expect(M.count(stream.id)).toBe(2)
-
-            const published = await publishTestMessages()
-
-            const received1 = []
-            for await (const m of sub1) {
-                received1.push(m)
-                if (received1.length === published.length) {
-                    return
-                }
-            }
-
-            expect(received1).toEqual(published)
-            expect(client.connection.getState()).toBe('connected')
-
-            const received2 = []
-            for await (const m of sub2) {
-                received2.push(m)
-                if (received2.length === published.length) {
-                    return
-                }
-            }
-            expect(client.connection.getState()).toBe('disconnected')
-
-            expect(received2).toEqual(received1)
-        })
-    })
-
     describe('ending a subscription', () => {
         it('can kill stream using async end', async () => {
             const sub = await M.subscribe(stream.id)
@@ -253,7 +183,7 @@ describeRepeats('StreamrClient Stream', () => {
             const received = []
             try {
                 for await (const m of sub) {
-                    received.push(m)
+                    received.push(m.getParsedContent())
                     // after first message schedule end
                     if (received.length === 1) {
                         // eslint-disable-next-line no-loop-func
@@ -285,7 +215,7 @@ describeRepeats('StreamrClient Stream', () => {
             const received = []
             await expect(async () => {
                 for await (const m of sub) {
-                    received.push(m)
+                    received.push(m.getParsedContent())
                     // after first message schedule end
                     if (received.length === 1) {
                         throw err
@@ -322,7 +252,7 @@ describeRepeats('StreamrClient Stream', () => {
             expect(received1).toEqual(published)
             expect(received2).toEqual(received1)
 
-            // only subscribed once
+            // subscribed once
             expect(send.mock.calls.filter(([msg]) => (
                 msg.type === ControlMessage.TYPES.SubscribeRequest
             ))).toHaveLength(1)
@@ -354,7 +284,7 @@ describeRepeats('StreamrClient Stream', () => {
             expect(received1).toEqual(published)
             expect(received2).toEqual(received1)
 
-            // only subscribed once
+            // subscribed once
             expect(send.mock.calls.filter(([msg]) => (
                 msg.type === ControlMessage.TYPES.SubscribeRequest
             ))).toHaveLength(1)

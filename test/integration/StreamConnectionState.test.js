@@ -35,9 +35,8 @@ describeRepeats('Connection State', () => {
         client = createClient(opts)
         M = client.messageStream
         client.debug('connecting before test >>')
+        await client.session.getSessionToken()
         await Promise.all([
-            client.connect(),
-            client.session.getSessionToken(),
         ])
         stream = await client.createStream({
             name: uid('stream')
@@ -91,39 +90,75 @@ describeRepeats('Connection State', () => {
         )))
     })
 
-    describe.only('autoConnect/Disconnect enabled', () => {
+    describe('autoConnect/Disconnect enabled', () => {
         beforeEach(async () => {
             await setupClient({ // new client with autoConnect
                 autoConnect: true,
                 autoDisconnect: true,
             })
-            // don't explicitly disconnect
+            // don't explicitly connect
         })
 
-        it('should connect on subscribe', async () => {
+        it('connects on subscribe, disconnects on end', async () => {
             const sub = await M.subscribe(stream.id)
-            const published = await publishTestMessages(2)
-            expect(client.getSubscriptions(stream.id)).toHaveLength(1)
-            subs.push(sub)
+            expect(client.connection.getState()).toBe('connected')
+            expect(M.count(stream.id)).toBe(1)
+
+            const published = await publishTestMessages()
+
             const received = []
-            for await (const msg of sub) {
-                received.push(msg.getParsedContent())
+            for await (const m of sub) {
+                received.push(m.getParsedContent())
                 if (received.length === published.length) {
-                    expect(received).toEqual(published)
+                    break
                 }
-                break
             }
-            expect(M.count(stream.id)).toBe(0)
-            expect(client.getSubscriptions(stream.id)).toEqual([])
-            expect(client.isConnected()).toBeFalsy()
+            expect(received).toEqual(published)
+            expect(client.connection.getState()).toBe('disconnected')
+        })
+
+        it('connects on subscribe, disconnects on end with two subs', async () => {
+            const [sub1, sub2] = await Promise.all([
+                M.subscribe(stream.id),
+                M.subscribe(stream.id),
+            ])
+
+            expect(client.connection.getState()).toBe('connected')
+            expect(M.count(stream.id)).toBe(2)
+
+            const published = await publishTestMessages()
+
+            const received1 = []
+            for await (const m of sub1) {
+                received1.push(m.getParsedContent())
+                if (received1.length === published.length) {
+                    break
+                }
+            }
+
+            expect(received1).toEqual(published)
+            expect(client.connection.getState()).toBe('connected')
+
+            const received2 = []
+            for await (const m of sub2) {
+                received2.push(m)
+                if (received2.length === published.length) {
+                    return
+                }
+            }
+            expect(client.connection.getState()).toBe('disconnected')
+
+            expect(received2).toEqual(received1)
         })
     })
 
     describe('autoConnect disabled', () => {
         beforeEach(async () => {
-            return setupClient({
+            await setupClient({
                 autoConnect: false,
+                autoDisconnect: false,
             })
+            await client.connect()
         })
 
         it('should error subscribe if client disconnected', async () => {
