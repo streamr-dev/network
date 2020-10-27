@@ -114,8 +114,8 @@ module.exports = class WebsocketServer extends EventEmitter {
                 try {
                     WebsocketServer.validateProtocolVersions(controlLayerVersion, messageLayerVersion)
                 } catch (err) {
-                    logger.error('Rejecting connection with status 400 due to: %s, query params: %s', err.message, req.getQuery())
-                    logger.error(err)
+                    logger.debug('Rejecting connection with status 400 due to: %s, query params: %s', err.message, req.getQuery())
+                    logger.debug(err)
                     res.writeStatus('400')
                     res.write(err.message)
                     res.end()
