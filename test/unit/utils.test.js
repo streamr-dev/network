@@ -49,16 +49,18 @@ describe('utils', () => {
             expect(res.test).toBeTruthy()
         })
 
-        it('should return 401 error when invalid session token is passed twice', (done) => {
+        it('should return 401 error when invalid session token is passed twice', async () => {
             session.getSessionToken = sinon.stub().resolves('invalid token')
-            return authFetch(baseUrl + testUrl, session).catch((err) => {
+            const onCaught = jest.fn()
+            await authFetch(baseUrl + testUrl, session).catch((err) => {
+                onCaught()
                 expect(session.getSessionToken.calledTwice).toBeTruthy()
                 expect(err.toString()).toMatch(
                     `${baseUrl + testUrl} returned with error code 401. Unauthorized`
                 )
                 expect(err.body).toEqual('Unauthorized')
-                done()
             })
+            expect(onCaught).toHaveBeenCalledTimes(1)
         })
 
         it('should return normally when valid session token is passed after expired session token', async () => {
