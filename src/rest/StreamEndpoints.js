@@ -65,7 +65,7 @@ export async function getStreamByName(name) {
 }
 
 export async function createStream(props) {
-    this.debug('getStreamByName', {
+    this.debug('createStream', {
         props,
     })
     if (!props || !props.name) {
