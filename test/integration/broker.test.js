@@ -15,6 +15,9 @@ const networkPort1 = 12361
 const networkPort2 = 12362
 const networkPort3 = 12363
 const trackerPort = 12370
+const broker1Key = '0x241b3f241b110ff7b3e6d52e74fea922006a83e33ff938e6e3cba8a460c02513'
+const broker2Key = '0x3816c1d1a81588cecf9ac271a4758ed08f208902c2dcda82ba1a2f458ac23a15'
+const broker3Key = '0xe8af31f5c61b64f44adcdab8c5c78a7bc0beea9dbf43af63f80544a1b84ec149'
 
 describe('websocket server', () => {
     let ws
@@ -28,7 +31,14 @@ describe('websocket server', () => {
     })
 
     it('receives unencrypted connections', async (done) => {
-        broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, false)
+        broker = await startBroker({
+            name: 'broker1',
+            privateKey: broker1Key,
+            networkPort: networkPort1,
+            trackerPort,
+            httpPort: httpPort1,
+            wsPort: wsPort1
+        })
         ws = new WebSocket(getWsUrl(wsPort1))
         ws.on('open', async () => {
             done()
@@ -37,7 +47,16 @@ describe('websocket server', () => {
     })
 
     it('receives encrypted connections', async (done) => {
-        broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, false, 'test/fixtures/key.pem', 'test/fixtures/cert.pem')
+        broker = await startBroker({
+            name: 'broker1',
+            privateKey: broker1Key,
+            networkPort: networkPort1,
+            trackerPort,
+            httpPort: httpPort1,
+            wsPort: wsPort1,
+            privateKeyFileName: 'test/fixtures/key.pem',
+            certFileName: 'test/fixtures/cert.pem'
+        })
         ws = new WebSocket(getWsUrl(wsPort1, true), {
             rejectUnauthorized: false // needed to accept self-signed certificate
         })
@@ -49,7 +68,14 @@ describe('websocket server', () => {
 
     describe('rejections', () => {
         const testRejection = async (connectionUrl) => {
-            broker = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, false)
+            broker = await startBroker({
+                name: 'broker1',
+                privateKey: broker1Key,
+                networkPort: networkPort1,
+                trackerPort,
+                httpPort: httpPort1,
+                wsPort: wsPort1
+            })
             ws = new WebSocket(connectionUrl)
             let gotError = false
             let closed = false
@@ -101,9 +127,33 @@ describe('broker: end-to-end', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        broker1 = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, null, true)
-        broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, null, true)
-        broker3 = await startBroker('broker3', networkPort3, trackerPort, httpPort3, wsPort3, null, true)
+        broker1 = await startBroker({
+            name: 'broker1',
+            privateKey: broker1Key,
+            networkPort: networkPort1,
+            trackerPort,
+            httpPort: httpPort1,
+            wsPort: wsPort1,
+            enableCassandra: true
+        })
+        broker2 = await startBroker({
+            name: 'broker2',
+            privateKey: broker2Key,
+            networkPort: networkPort2,
+            trackerPort,
+            httpPort: httpPort2,
+            wsPort: wsPort2,
+            enableCassandra: true
+        })
+        broker3 = await startBroker({
+            name: 'broker3',
+            privateKey: broker3Key,
+            networkPort: networkPort3,
+            trackerPort,
+            httpPort: httpPort3,
+            wsPort: wsPort3,
+            enableCassandra: true
+        })
 
         client1 = createClient(wsPort1)
         client2 = createClient(wsPort2)

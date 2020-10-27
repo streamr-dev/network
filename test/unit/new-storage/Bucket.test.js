@@ -61,18 +61,18 @@ describe('Bucket', () => {
         expect(bucket.isAlmostFull(0)).toBeTruthy()
     })
 
-    it('ttl is updated on each incrementBucket, if not isAlive switches to false', (done) => {
+    it('ttl is updated on each incrementBucket, if not isAlive switches to false', () => {
+        jest.useFakeTimers('modern').setSystemTime(0)
         const bucket = new Bucket('id', 'streamId', 0, 0, 0, new Date(), 3, 9, 1)
 
         expect(bucket.getId()).toEqual('id')
         expect(bucket.isAlive()).toBeTruthy()
 
-        setTimeout(() => {
-            expect(bucket.isAlive()).toBeFalsy()
-            bucket.incrementBucket(1, 3)
-            expect(bucket.isAlive()).toBeTruthy()
-            done()
-        }, 1000 + 1)
+        jest.advanceTimersByTime(1001)
+
+        expect(bucket.isAlive()).toBeFalsy()
+        bucket.incrementBucket(1, 3)
+        expect(bucket.isAlive()).toBeTruthy()
     })
 
     it('on each incrementBucket isStored becomes false', () => {

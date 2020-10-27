@@ -44,7 +44,13 @@ describe('message ordering and gap filling in websocket adapter', () => {
             trackers: [tracker.getAddress()]
         })
         publisherNode.start()
-        broker = await startBroker('broker1', networkPort2, trackerPort, null, wsPort, null, true)
+        broker = await startBroker({
+            name: 'broker1',
+            privateKey: '0x14a779a0147670070a71e539ae830c162abd8b3b74f807880b05d2cd80a9c729',
+            networkPort: networkPort2,
+            trackerPort,
+            wsPort
+        })
 
         subscriber = createClient(wsPort, {
             auth: {

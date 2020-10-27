@@ -35,8 +35,24 @@ describe('SubscriptionManager', () => {
             id: 'tracker'
         })
 
-        broker1 = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, mqttPort1, true)
-        broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, mqttPort2, true)
+        broker1 = await startBroker({
+            name: 'broker1',
+            privateKey: '0xd622f9e4dbcd8b98f12604f0af8ac1cbc75004829e505fdd0ed04f456ef52828',
+            networkPort: networkPort1,
+            trackerPort,
+            httpPort: httpPort1,
+            wsPort: wsPort1,
+            mqttPort: mqttPort1
+        })
+        broker2 = await startBroker({
+            name: 'broker2',
+            privateKey: '0xbaa8e6137a9474ecb6694ad3e4f1743732e38c36e9bdda628e651d36ed732241',
+            networkPort: networkPort2,
+            trackerPort,
+            httpPort: httpPort2,
+            wsPort: wsPort2,
+            mqttPort: mqttPort2
+        })
 
         await wait(2000)
 

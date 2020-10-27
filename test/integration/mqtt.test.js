@@ -16,6 +16,9 @@ const trackerPort = 12410
 const mqttPort1 = 12551
 const mqttPort2 = 12552
 const mqttPort3 = 12553
+const broker1Key = '0x0d4f33e0e76e9f7c26178db90319617a798819acd51004693f65bd9b86444e4b'
+const broker2Key = '0xd2672dce1578d6b75a58e11fa96c978b3b500750be287fc4e7f1e894eb179da7'
+const broker3Key = '0xa417da20e3afeb69544585c6b44b95ad4d987f38cf257f4a53eab415cc12334f'
 
 describe('mqtt: end-to-end', () => {
     let tracker
@@ -40,10 +43,33 @@ describe('mqtt: end-to-end', () => {
             port: trackerPort,
             id: 'tracker'
         })
-
-        broker1 = await startBroker('broker1', networkPort1, trackerPort, httpPort1, wsPort1, mqttPort1, true)
-        broker2 = await startBroker('broker2', networkPort2, trackerPort, httpPort2, wsPort2, mqttPort2, true)
-        broker3 = await startBroker('broker3', networkPort3, trackerPort, httpPort3, wsPort3, mqttPort3, true)
+        broker1 = await startBroker({
+            name: 'broker1',
+            privateKey: broker1Key,
+            networkPort: networkPort1,
+            trackerPort,
+            httpPort: httpPort1,
+            wsPort: wsPort1,
+            mqttPort: mqttPort1
+        })
+        broker2 = await startBroker({
+            name: 'broker2',
+            privateKey: broker2Key,
+            networkPort: networkPort2,
+            trackerPort,
+            httpPort: httpPort2,
+            wsPort: wsPort2,
+            mqttPort: mqttPort2
+        })
+        broker3 = await startBroker({
+            name: 'broker3',
+            privateKey: broker3Key,
+            networkPort: networkPort3,
+            trackerPort,
+            httpPort: httpPort3,
+            wsPort: wsPort3,
+            mqttPort: mqttPort3
+        })
 
         client1 = createClient(wsPort1)
         client2 = createClient(wsPort2)

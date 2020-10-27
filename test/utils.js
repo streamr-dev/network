@@ -9,8 +9,18 @@ const DEFAULT_CLIENT_OPTIONS = {
     }
 }
 
-function formConfig(name, networkPort, trackerPort, httpPort, wsPort, mqttPort, enableCassandra, privateKeyFileName, certFileName,
-    generateWallet = true, ethereumPrivateKey) {
+function formConfig({
+    name,
+    networkPort,
+    trackerPort,
+    privateKey,
+    httpPort = null,
+    wsPort = null,
+    mqttPort = null,
+    enableCassandra = false,
+    privateKeyFileName = null,
+    certFileName = null
+}) {
     const adapters = []
     if (httpPort) {
         adapters.push({
@@ -47,8 +57,7 @@ function formConfig(name, networkPort, trackerPort, httpPort, wsPort, mqttPort, 
             isStorageNode: true
         },
         ethereum: {
-            privateKey: ethereumPrivateKey,
-            generateWallet
+            privateKey
         },
         location: {
             latitude: 60.19,

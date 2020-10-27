@@ -5,7 +5,7 @@ const { startTracker } = require('streamr-network')
 const { startBroker } = require('../utils')
 
 const trackerPort = 12411
-const brokerPort = 12412
+const networkPort = 12412
 const mqttPort = 12413
 
 describe('non-mqtt connection to MQTT adapter', () => {
@@ -21,7 +21,13 @@ describe('non-mqtt connection to MQTT adapter', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        broker = await startBroker('broker', brokerPort, trackerPort, null, null, mqttPort, false)
+        broker = await startBroker({
+            name: 'broker',
+            privateKey: '0x4e850f1940b1901ca926f20e121f40ba6f6730eaae655d827f48eccf01e32f40',
+            networkPort,
+            trackerPort,
+            mqttPort
+        })
     })
 
     afterEach(async () => {

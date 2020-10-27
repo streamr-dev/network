@@ -19,7 +19,13 @@ describe('broker resistance to invalid data', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        broker = await startBroker('broker', networkPort, trackerPort, httpPort, null, null, false)
+        broker = await startBroker({
+            name: 'broker',
+            privateKey: '0xbc19ba842352248cb9132cc212f35d2f947dd66a0fda1e19021f9231e069c12d',
+            networkPort,
+            trackerPort,
+            httpPort
+        })
 
         // Create new stream
         const client = createClient(0)

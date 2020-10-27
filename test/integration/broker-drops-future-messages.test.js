@@ -46,7 +46,15 @@ describe('broker drops future messages', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        broker = await startBroker('broker', networkPort, trackerPort, httpPort, wsPort, mqttPort, false)
+        broker = await startBroker({
+            name: 'broker',
+            privateKey: '0x0381aa979c2b85ce409f70f6c64c66f70677596c7acad0b58763b0990cd5fbff',
+            networkPort,
+            trackerPort,
+            httpPort,
+            wsPort,
+            mqttPort
+        })
 
         client = createClient(wsPort)
         const freshStream = await client.createStream({

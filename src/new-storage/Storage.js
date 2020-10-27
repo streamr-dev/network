@@ -41,23 +41,33 @@ class Storage extends EventEmitter {
     store(streamMessage) {
         const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
 
-        if (bucketId) {
-            logger.debug(`found bucketId: ${bucketId}`)
+        return new Promise((resolve, reject) => {
+            if (bucketId) {
+                logger.debug(`found bucketId: ${bucketId}`)
 
-            this.bucketManager.incrementBucket(bucketId, Buffer.from(streamMessage.serialize()).length)
-            const doneCb = () => this.emit('write', streamMessage)
-            setImmediate(() => this.batchManager.store(bucketId, streamMessage, doneCb))
-        } else {
-            const messageId = streamMessage.messageId.serialize()
-            logger.debug(`bucket not found, put ${messageId} to pendingMessages`)
+                this.bucketManager.incrementBucket(bucketId, Buffer.from(streamMessage.serialize()).length)
+                setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err) => {
+                    if (err) {
+                        reject(err)
+                    } else {
+                        this.emit('write', streamMessage)
+                        resolve()
+                    }
+                }))
+            } else {
+                const messageId = streamMessage.messageId.serialize()
+                logger.debug(`bucket not found, put ${messageId} to pendingMessages`)
 
-            const uuid = uuidv1()
-            const timeout = setTimeout(() => {
-                this.pendingStores.delete(uuid)
-                this.store(streamMessage)
-            }, this.opts.retriesIntervalMilliseconds)
-            this.pendingStores.set(uuid, timeout)
-        }
+                const uuid = uuidv1()
+                const timeout = setTimeout(() => {
+                    this.pendingStores.delete(uuid)
+                    this.store(streamMessage)
+                        .then(resolve)
+                        .catch(reject)
+                }, this.opts.retriesIntervalMilliseconds)
+                this.pendingStores.set(uuid, timeout)
+            }
+        })
     }
 
     requestLast(streamId, partition, limit) {
