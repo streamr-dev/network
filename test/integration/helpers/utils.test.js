@@ -1,13 +1,13 @@
 const { isTimestampTooFarInTheFuture } = require('../../../src/helpers/utils')
 
 describe('utils', () => {
-    test('test isTimestampTooFarInTheFuture', async () => {
-        const currentTimestamp = Date.now()
+    test('test isTimestampTooFarInTheFuture', () => {
+        const now = Date.now()
 
-        expect(isTimestampTooFarInTheFuture(currentTimestamp, 1)).toBeFalsy()
-        expect(isTimestampTooFarInTheFuture(currentTimestamp, 0)).toBeFalsy()
+        expect(isTimestampTooFarInTheFuture(now, 1, now)).toBeFalsy()
+        expect(isTimestampTooFarInTheFuture(now, 0, now)).toBeFalsy()
 
-        expect(isTimestampTooFarInTheFuture(currentTimestamp, -1)).toBeTruthy()
-        expect(isTimestampTooFarInTheFuture(currentTimestamp + 3 * 1000, 2)).toBeTruthy()
+        expect(isTimestampTooFarInTheFuture(now, -1, now)).toBeTruthy()
+        expect(isTimestampTooFarInTheFuture(now + 3 * 1000, 2, now)).toBeTruthy()
     })
 })
