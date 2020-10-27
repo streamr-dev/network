@@ -223,8 +223,23 @@ export default class StreamrClient extends EventEmitter {
         return this.publisher.getPublisherId()
     }
 
-    subscribe(...args) {
-        return this.messageStream.subscribe(...args)
+    async subscribe(opts, fn) {
+        this.emit('subscribing')
+        const subTask = this.messageStream.subscribe(opts)
+        if (!fn) {
+            const sub = await subTask
+            this.emit('subscribed')
+            return sub
+        }
+        Promise.resolve(subTask).then(async (sub) => {
+            for await (const msg of sub) {
+                await fn(msg.getParsedContent(), msg)
+            }
+            return sub
+        }).catch((err) => {
+            this.emit('error', err)
+        })
+        return subTask
     }
 
     unsubscribe(...args) {

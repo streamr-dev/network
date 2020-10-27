@@ -292,7 +292,7 @@ export default class Connection extends EventEmitter {
     async __connect() {
         this.debug = this._debug.extend(uniqueId('socket'))
         const { debug } = this
-        await true // wait a tick
+        await true // wait a microtask
         debug('connecting...', this.options.url)
         this.emitTransition('connecting')
 
@@ -305,7 +305,7 @@ export default class Connection extends EventEmitter {
             perMessageDeflate: false,
         })
 
-        debug('connected', this.wantsState)
+        debug('socket connected')
 
         if (this.wantsState === STATE.DISCONNECTED) {
             await CloseWebSocket(socket)

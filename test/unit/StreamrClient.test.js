@@ -2,6 +2,7 @@ import sinon from 'sinon'
 import { Wallet } from 'ethers'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 import { wait, waitForEvent } from 'streamr-test-utils'
+import Debug from 'debug'
 
 import FailedToPublishError from '../../src/errors/FailedToPublishError'
 import Subscription from '../../src/Subscription'
@@ -31,6 +32,8 @@ const {
 } = ControlLayer
 
 const { StreamMessage, MessageRef, MessageID, MessageIDStrict } = MessageLayer
+
+console.log = Debug('Streamr::   CONSOLE   ')
 
 describe('StreamrClient', () => {
     let client
@@ -63,7 +66,10 @@ describe('StreamrClient', () => {
         })
 
         c.emitMessage = (message) => {
-            c.emit(message.type, message)
+            c.emit('message', {
+                type: 'message',
+                data: message.serialize(),
+            })
         }
 
         return c
@@ -138,11 +144,11 @@ describe('StreamrClient', () => {
     })
 
     describe('connecting behaviour', () => {
-        it('connected event should emit an event on client', async (done) => {
-            client.once('connected', () => {
-                done()
-            })
+        it('connected event should emit an event on client', async () => {
+            const onConnected = jest.fn()
+            client.once('connected', onConnected)
             await client.connect()
+            expect(onConnected).toHaveBeenCalledTimes(1)
         })
 
         it('should not send anything if not subscribed to anything', async () => {
@@ -227,7 +233,7 @@ describe('StreamrClient', () => {
         })
     })
 
-    describe('disconnection behaviour', () => {
+    describe.only('disconnection behaviour', () => {
         beforeEach(async () => client.connect())
 
         it('emits disconnected event on client', async (done) => {
@@ -245,10 +251,10 @@ describe('StreamrClient', () => {
             const sub = await mockSubscription('stream1', () => {})
             client.connection.socket.close()
             await waitForEvent(client, 'disconnected')
-            expect(client.getSubscriptions(sub.streamId)).toEqual([sub])
+            expect(client.getSubscriptions(sub.streamId)).toHaveLength(1)
             expect(sub.getState()).toEqual(Subscription.State.unsubscribed)
             await client.connect()
-            expect(client.getSubscriptions(sub.streamId)).toEqual([sub])
+            expect(client.getSubscriptions(sub.streamId)).toHaveLength(1)
             // re-subscribes
             expect(sub.getState()).toEqual(Subscription.State.subscribing)
         })

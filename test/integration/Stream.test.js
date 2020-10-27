@@ -206,6 +206,40 @@ describeRepeats('StreamrClient Stream', () => {
             expect(received).toEqual(published)
             expect(client.connection.getState()).toBe('disconnected')
         })
+
+        it('connects on subscribe, disconnects on end with two subs', async () => {
+            const [sub1, sub2] = await Promise.all([
+                M.subscribe(stream.id),
+                M.subscribe(stream.id),
+            ])
+
+            expect(client.connection.getState()).toBe('connected')
+            expect(M.count(stream.id)).toBe(2)
+
+            const published = await publishTestMessages()
+
+            const received1 = []
+            for await (const m of sub1) {
+                received1.push(m)
+                if (received1.length === published.length) {
+                    return
+                }
+            }
+
+            expect(received1).toEqual(published)
+            expect(client.connection.getState()).toBe('connected')
+
+            const received2 = []
+            for await (const m of sub2) {
+                received2.push(m)
+                if (received2.length === published.length) {
+                    return
+                }
+            }
+            expect(client.connection.getState()).toBe('disconnected')
+
+            expect(received2).toEqual(received1)
+        })
     })
 
     describe('ending a subscription', () => {
