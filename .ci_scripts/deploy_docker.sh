@@ -1,6 +1,4 @@
 #!/bin/bash
-## Script for logging in to docker service and upload docker images
-docker login -u "$DOCKER_USER" -p "$DOCKER_PASS"
 if [ "$1" == "dev" ]; then
     # If the build is a cron build then it should tag and push a nightly build but if it is not a cronjob
     # then it is just another dev tag and push
