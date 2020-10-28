@@ -110,8 +110,11 @@ describe('duplicate message detection and avoidance', () => {
         expect(numOfReceivedMessages).toEqual([2, 2, 2, 2, 2])
     })
 
-    test('maximum times a node receives duplicates of message is bounded by total number of repeaters', () => {
-        const numOfDuplicates = otherNodes.map((n) => n.metrics.get('onDataReceived:ignoring:duplicate'))
+    test('maximum times a node receives duplicates of message is bounded by total number of repeaters', async () => {
+        const numOfDuplicates = await Promise.all(otherNodes.map(async (n) => {
+            const report = await n.metrics.report()
+            return report['onDataReceived:ignoredDuplicate'].total
+        }))
 
         expect(numOfDuplicates).toHaveLength(5)
         numOfDuplicates.forEach((n) => {

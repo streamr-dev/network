@@ -6,7 +6,7 @@ const writeCorsHeaders = (res, req) => {
     res.writeHeader('Access-Control-Allow-Credentials', 'true')
 }
 
-const trackerHttpEndpoints = (wss, tracker) => {
+const trackerHttpEndpoints = (wss, tracker, metricsContext) => {
     wss.get('/topology/', (res, req) => {
         writeCorsHeaders(res, req)
         extraLogger.debug('request to /topology/')
@@ -64,7 +64,7 @@ const trackerHttpEndpoints = (wss, tracker) => {
             res.aborted = true
         })
 
-        const metrics = await tracker.getMetrics()
+        const metrics = await metricsContext.report()
 
         if (!res.aborted) {
             extraLogger.debug('request to /metrics/')

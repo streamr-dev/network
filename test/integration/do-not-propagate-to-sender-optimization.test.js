@@ -69,9 +69,14 @@ describe('optimization: do not propagate to sender', () => {
         }))
         await wait(250)
 
-        expect(n1.metrics.get('onDataReceived:ignoring:duplicate')
-            + n2.metrics.get('onDataReceived:ignoring:duplicate')
-            + n3.metrics.get('onDataReceived:ignoring:duplicate'))
-            .toEqual(2)
+        const reportN1 = await n1.metrics.report()
+        const reportN2 = await n2.metrics.report()
+        const reportN3 = await n3.metrics.report()
+
+        const totalDuplicates = reportN1['onDataReceived:ignoredDuplicate'].total
+            + reportN2['onDataReceived:ignoredDuplicate'].total
+            + reportN3['onDataReceived:ignoredDuplicate'].total
+
+        expect(totalDuplicates).toEqual(2)
     })
 })

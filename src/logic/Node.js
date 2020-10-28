@@ -10,9 +10,9 @@ const MessageBuffer = require('../helpers/MessageBuffer')
 const SeenButNotPropagatedSet = require('../helpers/SeenButNotPropagatedSet')
 const { disconnectionReasons } = require('../connection/WsEndpoint')
 const { StreamIdAndPartition } = require('../identifiers')
-const Metrics = require('../metrics')
 const ResendHandler = require('../resend/ResendHandler')
 const proxyRequestStream = require('../resend/proxyRequestStream')
+const MetricsContext = require('../helpers/MetricsContext')
 
 const { GapMisMatchError, InvalidNumberingError } = require('./DuplicateMessageDetector')
 const StreamManager = require('./StreamManager')
@@ -44,6 +44,7 @@ class Node extends EventEmitter {
             disconnectionWaitTime: 10 * 1000,
             protocols: [],
             resendStrategies: [],
+            metricsContext: new MetricsContext(null)
         }
         this.opts = {
             ...defaultOptions, ...opts
@@ -66,11 +67,14 @@ class Node extends EventEmitter {
             this.logger.debug(`failed to deliver buffered messages of stream ${streamId}`)
         })
         this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
-        this.resendHandler = new ResendHandler(this.opts.resendStrategies, this.logger.error.bind(this.logger))
+        this.resendHandler = new ResendHandler(
+            this.opts.resendStrategies,
+            this.logger.error.bind(this.logger),
+            this.opts.metricsContext
+        )
         this.trackerRegistry = Utils.createTrackerRegistry(this.opts.trackers)
         this.trackerBook = {} // address => id
         this.started = new Date().toLocaleString()
-        this.metrics = new Metrics(this.peerInfo.peerId)
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
 
         this.protocols.trackerNode.on(TrackerNode.events.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
@@ -92,6 +96,21 @@ class Node extends EventEmitter {
         this.protocols.nodeToNode.on(NodeToNode.events.HIGH_BACK_PRESSURE, (nodeId) => {
             this.resendHandler.pauseResendsOfNode(nodeId)
         })
+
+        this.metrics = this.opts.metricsContext.create('node')
+            .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
+            .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
+            .addRecordedMetric('resendRequests')
+            .addRecordedMetric('unexpectedTrackerInstructions')
+            .addRecordedMetric('trackerInstructions')
+            .addRecordedMetric('onDataReceived')
+            .addRecordedMetric('onDataReceived:invalidNumbering')
+            .addRecordedMetric('onDataReceived:gapMismatch')
+            .addRecordedMetric('onDataReceived:ignoredDuplicate')
+            .addRecordedMetric('propagateMessage')
+            .addRecordedMetric('onSubscribeRequest')
+            .addRecordedMetric('onUnsubscribeRequest')
+            .addRecordedMetric('onNodeDisconnect')
     }
 
     start() {
@@ -134,7 +153,7 @@ class Node extends EventEmitter {
     }
 
     requestResend(request, source) {
-        this.metrics.inc('requestResend')
+        this.metrics.record('resendRequests', 1)
         this.logger.debug('received %s resend request %s with requestId %s',
             source === null ? 'local' : `from ${source}`,
             request.constructor.name,
@@ -177,12 +196,12 @@ class Node extends EventEmitter {
         // Check that tracker matches expected tracker
         const expectedTrackerId = this._getTrackerId(streamId.key())
         if (trackerId !== expectedTrackerId) {
-            this.metrics.inc('onTrackerInstructionReceived.unexpected_tracker')
+            this.metrics.record('unexpectedTrackerInstructions', 1)
             this.logger.warn(`Got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
             return
         }
 
-        this.metrics.inc('onTrackerInstructionReceived')
+        this.metrics.record('trackerInstructions', 1)
         this.logger.debug('received instructions for %s, nodes to connect %o', streamId, nodeAddresses)
 
         this.subscribeToStreamIfHaveNotYet(streamId)
@@ -234,7 +253,7 @@ class Node extends EventEmitter {
     }
 
     onDataReceived(streamMessage, source = null) {
-        this.metrics.inc('onDataReceived')
+        this.metrics.record('onDataReceived', 1)
         const streamIdAndPartition = new StreamIdAndPartition(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
         this.emit(events.MESSAGE_RECEIVED, streamMessage, source)
@@ -251,13 +270,13 @@ class Node extends EventEmitter {
         } catch (e) {
             if (e instanceof InvalidNumberingError) {
                 this.logger.debug('received from %s data %j with invalid numbering', source, streamMessage.messageId)
-                this.metrics.inc('onDataReceived:ignoring:invalid-numbering')
+                this.metrics.record('onDataReceived:invalidNumber', 1)
                 return
             }
             if (e instanceof GapMisMatchError) {
                 this.logger.warn(e)
                 this.logger.debug('received from %s data %j with gap mismatch detected', source, streamMessage.messageId)
-                this.metrics.inc('onDataReceived:ignoring:gap-mismatch')
+                this.metrics.record('onDataReceived:gapMismatch', 1)
                 return
             }
             throw e
@@ -271,12 +290,12 @@ class Node extends EventEmitter {
             this._propagateMessage(streamMessage, source)
         } else {
             this.logger.debug('ignoring duplicate data %j (from %s)', streamMessage.messageId, source)
-            this.metrics.inc('onDataReceived:ignoring:duplicate')
+            this.metrics.record('onDataReceived:ignoredDuplicate', 1)
         }
     }
 
     _propagateMessage(streamMessage, source) {
-        this.metrics.inc('_propagateMessage')
+        this.metrics.record('propagateMessage', 1)
         const streamIdAndPartition = new StreamIdAndPartition(streamMessage.getStreamId(), streamMessage.getStreamPartition())
 
         const subscribers = this.streams.getOutboundNodesForStream(streamIdAndPartition).filter((n) => n !== source)
@@ -299,7 +318,7 @@ class Node extends EventEmitter {
     }
 
     onSubscribeRequest(subscribeMessage, source) {
-        this.metrics.inc('onSubscribeRequest')
+        this.metrics.record('onSubscribeRequest', 1)
         const streamId = new StreamIdAndPartition(subscribeMessage.streamId, subscribeMessage.streamPartition)
         this.emit(events.SUBSCRIPTION_REQUEST, {
             streamId,
@@ -322,7 +341,7 @@ class Node extends EventEmitter {
         const streamIdAndPartition = new StreamIdAndPartition(unsubscribeMessage.streamId, unsubscribeMessage.streamPartition)
 
         if (this.streams.isSetUp(streamIdAndPartition)) {
-            this.metrics.inc('onUnsubscribeRequest')
+            this.metrics.record('onUnsubscribeRequest', 1)
             this.streams.removeNodeFromStream(streamIdAndPartition, source)
             this.logger.debug('node %s unsubscribed from stream %s', source, streamIdAndPartition)
             this.emit(events.NODE_UNSUBSCRIBED, source, streamIdAndPartition)
@@ -420,7 +439,7 @@ class Node extends EventEmitter {
     }
 
     onNodeDisconnected(node) {
-        this.metrics.inc('onNodeDisconnected')
+        this.metrics.record('onNodeDisconnect', 1)
         this.resendHandler.cancelResendsOfNode(node)
         this.streams.removeNodeFromAllStreams(node)
         this.logger.debug('removed all subscriptions of node %s', node)
@@ -464,24 +483,6 @@ class Node extends EventEmitter {
 
     getStreams() {
         return this.streams.getStreamsAsKeys()
-    }
-
-    async getMetrics() {
-        const endpointMetrics = this.protocols.nodeToNode.endpoint.getMetrics()
-        const processMetrics = await this.metrics.getPidusage()
-        const nodeMetrics = this.metrics.report()
-        const mainMetrics = this.metrics.prettify(endpointMetrics)
-        const resendMetrics = this.resendHandler.metrics()
-
-        return {
-            mainMetrics,
-            endpointMetrics,
-            processMetrics,
-            nodeMetrics,
-            resendMetrics,
-            messageBufferSize: this.messageBuffer.size(),
-            seenButNotPropagated: this.seenButNotPropagatedSet.size()
-        }
     }
 }
 

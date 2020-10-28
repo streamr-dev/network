@@ -1,9 +1,9 @@
 const { EventEmitter } = require('events')
 
 const getLogger = require('../helpers/logger')
+const MetricsContext = require('../helpers/MetricsContext')
 const TrackerServer = require('../protocol/TrackerServer')
 const { StreamIdAndPartition } = require('../identifiers')
-const Metrics = require('../metrics')
 
 const InstructionCounter = require('./InstructionCounter')
 const LocationManager = require('./LocationManager')
@@ -19,6 +19,7 @@ module.exports = class Tracker extends EventEmitter {
 
         this.opts = {
             protocols: [],
+            metricsContext: new MetricsContext(null),
             ...opts
         }
 
@@ -48,10 +49,15 @@ module.exports = class Tracker extends EventEmitter {
             this.findStorageNodes(message, nodeId)
         })
 
-        this.metrics = new Metrics(this.peerInfo.peerId)
-
         this.logger = getLogger(`streamr:logic:tracker:${this.peerInfo.peerId}`)
         this.logger.debug('started %s', this.peerInfo.peerId)
+
+        this.metrics = this.opts.metricsContext.create('tracker')
+            .addRecordedMetric('onNodeDisconnected')
+            .addRecordedMetric('processNodeStatus')
+            .addRecordedMetric('findStorageNodes')
+            .addRecordedMetric('instructionsSent')
+            .addRecordedMetric('_removeNode')
     }
 
     onNodeConnected(node, isStorage) {
@@ -61,13 +67,13 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     onNodeDisconnected(node) {
-        this.metrics.inc('onNodeDisconnected')
+        this.metrics.record('onNodeDisconnected', 1)
         this._removeNode(node)
         this.logger.debug('unregistered node %s from tracker', node)
     }
 
     processNodeStatus(statusMessage, source) {
-        this.metrics.inc('processNodeStatus')
+        this.metrics.record('processNodeStatus', 1)
         const { status } = statusMessage
         const { streams, rtts, location } = status
         const filteredStreams = this.instructionCounter.filterStatus(status, source)
@@ -92,7 +98,7 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     findStorageNodes(storageNodesRequest, source) {
-        this.metrics.inc('findStorageNodes')
+        this.metrics.record('findStorageNodes', 1)
         const streamId = StreamIdAndPartition.fromMessage(storageNodesRequest)
         this.protocols.trackerServer.sendStorageNodesResponse(source, streamId, [...this.storageNodes])
             .catch((e) => {
@@ -148,7 +154,7 @@ module.exports = class Tracker extends EventEmitter {
         streamKeys.forEach((streamKey) => {
             const instructions = this.overlayPerStream[streamKey].formInstructions(node)
             Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
-                this.metrics.inc('sendInstruction')
+                this.metrics.record('instructionsSent', 1)
                 try {
                     const counterValue = this.instructionCounter.setOrIncrement(nodeId, streamKey)
                     this.protocols.trackerServer.sendInstruction(nodeId, StreamIdAndPartition.fromKey(streamKey), newNeighbors, counterValue)
@@ -161,7 +167,7 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     _removeNode(node) {
-        this.metrics.inc('_removeNode')
+        this.metrics.record('_removeNode', 1)
         this.storageNodes.delete(node)
         delete this.overlayConnectionRtts[node]
         this.locationManager.removeNode(node)
@@ -218,21 +224,5 @@ module.exports = class Tracker extends EventEmitter {
 
     getStorageNodes() {
         return [...this.storageNodes.keys()]
-    }
-
-    async getMetrics() {
-        const endpointMetrics = this.protocols.trackerServer.endpoint.getMetrics()
-        const processMetrics = await this.metrics.getPidusage()
-        const trackerMetrics = this.metrics.report()
-        const mainMetrics = this.metrics.prettify(endpointMetrics)
-
-        mainMetrics.id = this.opts.id
-
-        return {
-            trackerMetrics,
-            mainMetrics,
-            endpointMetrics,
-            processMetrics
-        }
     }
 }

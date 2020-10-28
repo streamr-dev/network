@@ -8,6 +8,7 @@ const { PeerInfo } = require('./connection/PeerInfo')
 const Tracker = require('./logic/Tracker')
 const NetworkNode = require('./NetworkNode')
 const logger = require('./helpers/logger')('streamr:bin:composition')
+const MetricsContext = require('./helpers/MetricsContext')
 const { trackerHttpEndpoints } = require('./helpers/trackerHelpers')
 const { startEndpoint } = require('./connection/WsEndpoint')
 
@@ -18,26 +19,28 @@ function startTracker({
     attachHttpEndpoints = true,
     maxNeighborsPerNode = 4,
     advertisedWsUrl = null,
+    metricsContext = new MetricsContext(id),
     name,
     location,
     pingInterval,
     privateKeyFileName,
-    certFileName
+    certFileName,
 }) {
     const peerInfo = PeerInfo.newTracker(id, name, location)
-    return startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval, privateKeyFileName, certFileName)
+    return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval, privateKeyFileName, certFileName)
         .then((endpoint) => {
             const tracker = new Tracker({
                 peerInfo,
                 protocols: {
                     trackerServer: new TrackerServer(endpoint)
                 },
-                maxNeighborsPerNode
+                metricsContext,
+                maxNeighborsPerNode,
             })
 
             if (attachHttpEndpoints) {
                 logger.debug('attaching HTTP endpoints to the tracker on port %s', port)
-                trackerHttpEndpoints(endpoint.wss, tracker)
+                trackerHttpEndpoints(endpoint.wss, tracker, metricsContext)
             }
 
             return tracker
@@ -52,12 +55,13 @@ function startNetworkNode({
     trackers,
     storages = [],
     advertisedWsUrl = null,
+    metricsContext = new MetricsContext(id),
     location,
     pingInterval,
     disconnectionWaitTime
 }) {
     const peerInfo = PeerInfo.newNode(id, name, location)
-    return startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval).then((endpoint) => {
+    return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
         return new NetworkNode({
             peerInfo,
             trackers,
@@ -65,6 +69,7 @@ function startNetworkNode({
                 trackerNode: new TrackerNode(endpoint),
                 nodeToNode: new NodeToNode(endpoint)
             },
+            metricsContext,
             storages,
             disconnectionWaitTime
         })
@@ -78,13 +83,14 @@ function startStorageNode({
     trackers,
     storages = [],
     advertisedWsUrl = null,
+    metricsContext = new MetricsContext(id),
     name,
     location,
     pingInterval,
     disconnectionWaitTime
 }) {
     const peerInfo = PeerInfo.newStorage(id, name, location)
-    return startEndpoint(host, port, peerInfo, advertisedWsUrl, pingInterval).then((endpoint) => {
+    return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
         return new NetworkNode({
             peerInfo,
             trackers,
@@ -92,6 +98,7 @@ function startStorageNode({
                 trackerNode: new TrackerNode(endpoint),
                 nodeToNode: new NodeToNode(endpoint)
             },
+            metricsContext,
             storages,
             disconnectionWaitTime
         })
@@ -102,5 +109,6 @@ module.exports = {
     startTracker,
     startNetworkNode,
     startStorageNode,
+    MetricsContext,
     Protocol,
 }

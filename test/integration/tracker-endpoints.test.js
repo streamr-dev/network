@@ -104,6 +104,6 @@ describe('tracker endpoint', () => {
 
     it('/metrics/ endpoint', async () => {
         const jsonResult = await getHttp(`http://127.0.0.1:${trackerPort}/metrics/`)
-        expect(jsonResult.trackerMetrics).not.toBeUndefined()
+        expect(jsonResult).not.toBeUndefined()
     })
 })

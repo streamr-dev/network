@@ -277,7 +277,7 @@ describe('ResendHandler', () => {
         beforeEach(() => {
             resendHandler = new ResendHandler([{
                 getResendResponseStream: () => getResendResponseStreamFn()
-            }], notifyError, maxInactivityPeriodInMs)
+            }], notifyError, undefined, maxInactivityPeriodInMs)
         })
 
         afterEach(() => {
@@ -335,20 +335,20 @@ describe('ResendHandler', () => {
             }
         }], notifyError)
 
-        expect(resendHandler.metrics()).toEqual({
+        expect(await resendHandler.metrics.report()).toEqual({
             meanAge: 0,
             numOfOngoingResends: 0
         })
 
         const p1 = waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
         const p2 = waitForStreamToEnd(resendHandler.handleRequest(request, 'source'))
-        expect(resendHandler.metrics()).toMatchObject({
+        expect(await resendHandler.metrics.report()).toMatchObject({
             meanAge: expect.any(Number),
             numOfOngoingResends: 2
         })
 
         await Promise.all([p1, p2])
-        expect(resendHandler.metrics()).toEqual({
+        expect(await resendHandler.metrics.report()).toEqual({
             meanAge: 0,
             numOfOngoingResends: 0
         })

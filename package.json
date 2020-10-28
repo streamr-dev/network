@@ -50,7 +50,6 @@
     "fastify-cors": "^4.1.0",
     "geoip-lite": "^1.4.2",
     "lru-cache": "^6.0.0",
-    "pidusage": "^2.0.21",
     "pino": "^6.7.0",
     "pino-pretty": "^4.3.0",
     "promise.allsettled": "^1.0.2",

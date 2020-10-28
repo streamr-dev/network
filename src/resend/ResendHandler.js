@@ -1,5 +1,7 @@
 const { Readable } = require('stream')
 
+const MetricsContext = require('../helpers/MetricsContext')
+
 class ResendBookkeeper {
     constructor() {
         this.resends = {} // nodeId => Set[Ctx]
@@ -51,7 +53,9 @@ class ResendBookkeeper {
 }
 
 class ResendHandler {
-    constructor(resendStrategies, notifyError, maxInactivityPeriodInMs = 5 * 60 * 1000) {
+    constructor(resendStrategies, notifyError,
+        metricsContext = new MetricsContext(null),
+        maxInactivityPeriodInMs = 5 * 60 * 1000) {
         if (resendStrategies == null) {
             throw new Error('resendStrategies not given')
         }
@@ -63,6 +67,9 @@ class ResendHandler {
         this.notifyError = notifyError
         this.maxInactivityPeriodInMs = maxInactivityPeriodInMs
         this.ongoingResends = new ResendBookkeeper()
+        this.metrics = metricsContext.create('resends')
+            .addQueriedMetric('numOfOngoingResends', () => this.ongoingResends.size())
+            .addQueriedMetric('meanAge', () => this.ongoingResends.meanAge())
     }
 
     handleRequest(request, source) {
@@ -99,13 +106,6 @@ class ResendHandler {
                 resendStrategy.stop()
             }
         })
-    }
-
-    metrics() {
-        return {
-            numOfOngoingResends: this.ongoingResends.size(),
-            meanAge: this.ongoingResends.meanAge()
-        }
     }
 
     async _loopThruResendStrategies(request, source, requestStream) {
