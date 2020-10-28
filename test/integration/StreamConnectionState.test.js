@@ -245,6 +245,7 @@ describeRepeats('Connection State', () => {
             }
             expect(received).toEqual([])
             client.connect() // no await, should be ok
+            await wait(1000)
             const sub2 = await M.subscribe(stream.id)
             subs.push(sub)
             const published2 = await publishTestMessages(2)

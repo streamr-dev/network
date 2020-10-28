@@ -281,8 +281,11 @@ export default class StreamrClient extends EventEmitter {
         return r
     }
 
-    unsubscribe(...args) {
-        return this.messageStream.unsubscribe(...args)
+    async unsubscribe(opts) {
+        const sub = await this.messageStream.unsubscribe(opts)
+        if (sub && opts.emit) {
+            opts.emit('unsubscribed')
+        }
     }
 
     getSubscriptions(...args) {

@@ -1,6 +1,6 @@
 import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey } from '../utils'
+import { uid, fakePrivateKey, getWaitForStorage } from '../utils'
 import StreamrClient from '../../src'
 import Connection from '../../src/Connection'
 
@@ -107,7 +107,7 @@ describe('Sequencing', () => {
 
         await waitForCondition(() => (
             msgsReceieved.length === msgsPublished.length
-        ), 5000).catch(() => {}) // ignore, tests will fail anyway
+        ), 8000).catch(() => {}) // ignore, tests will fail anyway
 
         expect(msgsReceieved).toEqual(msgsPublished)
     }, 10000)
@@ -195,6 +195,13 @@ describe('Sequencing', () => {
             msgsReceieved.length === msgsPublished.length
         ), 2000).catch(() => {}) // ignore, tests will fail anyway
 
+        const lastMessage = msgsPublished[msgsPublished.length - 1]
+        const waitForStorage = getWaitForStorage(client)
+        await waitForStorage({
+            msg: lastMessage,
+            timeout: 6000,
+            streamId: stream.id,
+        })
         const msgsResent = []
         const sub = await client.resend({
             stream: stream.id,
@@ -257,6 +264,14 @@ describe('Sequencing', () => {
         await waitForCondition(() => (
             msgsReceieved.length === msgsPublished.length
         ), 2000).catch(() => {}) // ignore, tests will fail anyway
+
+        const lastMessage = msgsPublished[msgsPublished.length - 1]
+        const waitForStorage = getWaitForStorage(client)
+        await waitForStorage({
+            msg: lastMessage,
+            timeout: 6000,
+            streamId: stream.id,
+        })
 
         const msgsResent = []
         const sub = await client.resend({

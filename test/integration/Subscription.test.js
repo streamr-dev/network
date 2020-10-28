@@ -48,9 +48,7 @@ describe('Subscription', () => {
             events.push(message)
         })
         subscription.on('subscribed', () => events.push('subscribed'))
-        subscription.on('resending', () => events.push('resending'))
         subscription.on('resent', () => events.push('resent'))
-        subscription.on('no_resend', () => events.push('no_resend'))
         subscription.on('unsubscribed', () => events.push('unsubscribed'))
         subscription.on('error', () => events.push('error'))
         return events
@@ -89,10 +87,10 @@ describe('Subscription', () => {
     describe('subscribe/unsubscribe events', () => {
         it('fires events in correct order 1', async () => {
             const subscriptionEvents = await createMonitoredSubscription()
-            await waitForEvent(subscription, 'no_resend')
+            await waitForEvent(subscription, 'resent')
             await client.unsubscribe(subscription)
             expect(subscriptionEvents).toEqual([
-                'no_resend',
+                'resent',
                 'unsubscribed',
             ])
         })
@@ -101,9 +99,9 @@ describe('Subscription', () => {
     describe('resending/no_resend events', () => {
         it('fires events in correct order 2', async () => {
             const subscriptionEvents = await createMonitoredSubscription()
-            await waitForEvent(subscription, 'no_resend')
+            await waitForEvent(subscription, 'resent')
             expect(subscriptionEvents).toEqual([
-                'no_resend',
+                'resent',
             ])
         })
     })
@@ -117,7 +115,6 @@ describe('Subscription', () => {
             await waitForEvent(subscription, 'resent')
             await wait(500) // wait in case messages appear after resent event
             expect(subscriptionEvents).toEqual([
-                'resending',
                 message1,
                 message2,
                 'resent',

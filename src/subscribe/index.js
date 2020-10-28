@@ -693,13 +693,18 @@ export default class Subscriptions {
     }
 
     async unsubscribe(options) {
+        if (options && options.options) {
+            return this.unsubscribe(options.options)
+        }
+
         const { key } = validateOptions(options)
         const sub = this.subscriptions.get(key)
         if (!sub) {
-            return
+            return Promise.resolve()
         }
 
         await sub.cancel() // close all streams (thus unsubscribe)
+        return sub
     }
 
     async subscribe(options) {
@@ -744,6 +749,7 @@ export default class Subscriptions {
 
         // attach additional utility functions
         return Object.assign(it, {
+            options,
             realtime: sub,
             resend: resendSub,
         })

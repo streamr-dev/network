@@ -179,7 +179,7 @@ describe('StreamEndpoints', () => {
         })
     })
 
-    describe('Stream configuration', () => {
+    describe.skip('Stream configuration', () => {
         it('Stream.detectFields', async () => {
             await client.connect()
             await client.publish(createdStream.id, {
