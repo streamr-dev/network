@@ -1,8 +1,78 @@
-Placeholder License
+STREAMR NETWORK OPEN SOURCE LICENSE
+-----------------------------------
 
-The code in this repository will be licensed under the Streamr Network Open Source License, 
-which is still work in progress. It will be based on AGPLv3, adding a few clauses related to
-the DATA token.
+PREAMBLE
 
-The real license will be added shortly. In the meanwhile, feel free to copy and modify the 
-software for development and testing purposes only.
+This software is licensed under the Streamr Network Open 
+Source License. The Streamr Network Open Source License is 
+based on the GNU Affero General Public License, version 3 
+(19 November 2007), but it contains a few additional 
+limitations and requirements.
+
+The main addition is the introduction of operating parameters 
+which apply to the software. These parameters may induce the 
+use of specific cryptographic tokens (such as the Streamr
+DATAcoin) in the operations of the Streamr Network. Doing so 
+protects the considerable effort already undertaken by the
+Streamr community.
+
+These license terms allow you to create, modify and propagate 
+new versions of the Streamr Network software (“Program”). Any
+copy or modified version shall always comply with certain 
+network operating parameters, as amended from time to time. 
+In a manner to be determined in the future, it is Streamr’s 
+intention to decentralize the governance and decision-making 
+processes relating to the network operating parameters. The 
+Streamr Network is also available under a proprietary 
+commercial license pursuant to a dual licensing scheme. 
+Please contact Streamr directly at contact@streamr.network if 
+you are interested in such a proprietary license. 
+
+ADDITIONAL TERMS
+
+1. These additional terms (“Additional Terms”) shall be in 
+addition to and have precedence over the GNU Affero General 
+Public License, Version 3 (“License Terms”). The License Terms 
+shall be deemed to be incorporated herein as a material part 
+of these Additional Terms. Any capitalized terms herein shall 
+have the meaning given to them in the License Terms. 
+
+2. Unless explicitly otherwise stated in these Additional 
+Terms, the License Terms shall be applicable on and govern 
+your use, modification and propagation of the Program. 
+
+3. Definitions:
+
+    a. “Supported Parameters” means the operating parameters 
+    of the Program that are indicated in the smart contract 
+    pointed to by Ethereum Name Service (ENS) registry entry 
+    network-parameters.streamr.eth from time to time. 
+    
+    b. “Reference Versions” means the minimum version number 
+    of the Program that is indicated in the Supported Parameters 
+    as well as any newer version of the Program (as indicated 
+    by a higher version number). 
+    
+    c. “DATA” means the Streamr DATAcoin cryptographic token, 
+    in each case as set out in and as supported by the Supported 
+    Parameters from time to time.
+    
+4. Subject to Section 5, any modified version of the Program 
+shall incorporate and implement all of, and only operate in
+accordance with, the Supported Parameters, as implemented in 
+the Reference Versions. For the avoidance of doubt, as an 
+example, if the modified version involves the use of crypto-
+graphic tokens (such as DATA), such tokens must be set out in
+the Supported Parameters. Any breach of this Section 4 is 
+considered a material breach of these Additional Terms. 
+
+5. Notwithstanding anything to the contrary in Section 4, 
+modification and propagation of the Program for development 
+and testing purposes (meaning e.g., creation of small-scale 
+prototypes or proofs of concept) is allowed without implementing 
+the Supported Parameters; provided, however, that the use of 
+such modified version shall be limited only to the time period 
+necessary for such development or testing purposes. 
+
+6. Any violation or breach of these Additional Terms shall be 
+deemed a violation or breach of the License Terms.
