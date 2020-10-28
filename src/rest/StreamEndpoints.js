@@ -68,10 +68,6 @@ export async function createStream(props) {
     this.debug('createStream', {
         props,
     })
-    if (!props || !props.name) {
-        throw new Error('Stream properties must contain a "name" field!')
-    }
-
     const json = await authFetch(
         `${this.options.restUrl}/streams`,
         this.session,
