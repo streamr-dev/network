@@ -92,7 +92,7 @@ describe('test starting startWebSocketServer', () => {
         )
 
         const peerInfo = PeerInfo.newTracker('serverId', 'name')
-        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, false)
+        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
         const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
             undefined, {
                 rejectUnauthorized: false, // needed to accept self-signed certificate
@@ -123,7 +123,7 @@ describe('test starting startWebSocketServer', () => {
         const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort)
 
         const peerInfo = PeerInfo.newTracker('serverId', 'name')
-        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, false)
+        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
         const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
             undefined, {
                 headers: {
