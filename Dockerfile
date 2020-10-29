@@ -1,4 +1,4 @@
-FROM node:14.7 as build
+FROM node:14-alpine as build
 WORKDIR /usr/src/broker
 COPY . .
 
@@ -6,7 +6,7 @@ RUN node --version
 RUN npm --version
 RUN npm ci --only=production
 
-FROM node:14.7-alpine
+FROM node:14-alpine
 
 # needed for uWebSockets.js
 RUN apk update && apk add --no-cache gcompat curl
@@ -23,7 +23,7 @@ EXPOSE 8891
 # MQTT
 EXPOSE 9000
 
-ENV DEBUG=streamr:logic:*
+ENV LOG_LEVEL=info
 ENV CONFIG_FILE configs/docker-1.env.json
 ENV STREAMR_URL http://127.0.0.1:8081/streamr-core
 
