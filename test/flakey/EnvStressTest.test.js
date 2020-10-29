@@ -3,8 +3,8 @@ import StreamrClient from '../../src'
 import { fakePrivateKey, uid } from '../utils'
 import config from '../integration/config'
 
-const TEST_REPEATS = 4
-const MAX_CONCURRENCY = 16
+const TEST_REPEATS = 6
+const MAX_CONCURRENCY = 24
 const TEST_TIMEOUT = 2000
 const INC_FACTOR = 1.5
 
