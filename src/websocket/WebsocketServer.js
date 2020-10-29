@@ -66,6 +66,32 @@ module.exports = class WebsocketServer extends EventEmitter {
                 })
                 return totalBufferSize
             })
+            .addQueriedMetric('clientVersions', () => {
+                const control = {}
+                const message = {}
+                const pairs = {}
+                this.connections.forEach((id, connection) => {
+                    const { controlLayerVersion, messageLayerVersion } = connection
+                    const pairKey = controlLayerVersion + '->' + messageLayerVersion
+                    if (control[controlLayerVersion] == null) {
+                        control[controlLayerVersion] = 0
+                    }
+                    if (message[messageLayerVersion] == null) {
+                        message[messageLayerVersion] = 0
+                    }
+                    if (pairs[pairKey] == null) {
+                        pairs[pairKey] = 0
+                    }
+                    control[controlLayerVersion] += 1
+                    message[messageLayerVersion] += 1
+                    pairs[pairKey] += 1
+                })
+                return {
+                    control,
+                    message,
+                    pairs
+                }
+            })
 
         this.requestHandlersByMessageType = {
             [ControlLayer.ControlMessage.TYPES.SubscribeRequest]: this.handleSubscribeRequest,
