@@ -5,7 +5,7 @@ const program = require('commander')
 
 const CURRENT_VERSION = require('./package.json').version
 const startBroker = require('./src/broker')
-const DeleteExpiredCmd = require('./src/new-storage/DeleteExpiredCmd')
+const DeleteExpiredCmd = require('./src/storage/DeleteExpiredCmd')
 
 program
     .version(CURRENT_VERSION)

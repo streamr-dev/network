@@ -1,5 +1,5 @@
 /* eslint-disable no-new */
-const Batch = require('../../../src/new-storage/Batch')
+const Batch = require('../../../src/storage/Batch')
 
 const streamMessage = {
     serialize() {

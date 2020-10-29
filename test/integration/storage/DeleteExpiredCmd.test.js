@@ -1,7 +1,7 @@
 const cassandra = require('cassandra-driver')
 const { TimeUuid } = require('cassandra-driver').types
 
-const DeleteExpiredCmd = require('../../../src/new-storage/DeleteExpiredCmd')
+const DeleteExpiredCmd = require('../../../src/storage/DeleteExpiredCmd')
 const { createClient, formConfig } = require('../../utils')
 
 const contactPoints = ['127.0.0.1']

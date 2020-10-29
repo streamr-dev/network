@@ -9,7 +9,7 @@ const CURRENT_VERSION = require('../package.json').version
 
 const logger = require('./helpers/logger')('streamr:broker')
 const StreamFetcher = require('./StreamFetcher')
-const { startCassandraStorage } = require('./new-storage/Storage')
+const { startCassandraStorage } = require('./storage/Storage')
 const Publisher = require('./Publisher')
 const VolumeLogger = require('./VolumeLogger')
 const SubscriptionManager = require('./SubscriptionManager')

@@ -2,7 +2,7 @@ const cassandra = require('cassandra-driver')
 const { waitForCondition } = require('streamr-test-utils')
 const { TimeUuid } = require('cassandra-driver').types
 
-const BucketManager = require('../../../src/new-storage/BucketManager')
+const BucketManager = require('../../../src/storage/BucketManager')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'

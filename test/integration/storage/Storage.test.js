@@ -2,7 +2,7 @@ const cassandra = require('cassandra-driver')
 const toArray = require('stream-to-array')
 const { StreamMessage, MessageIDStrict } = require('streamr-network').Protocol.MessageLayer
 
-const { startCassandraStorage } = require('../../../src/new-storage/Storage')
+const { startCassandraStorage } = require('../../../src/storage/Storage')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'

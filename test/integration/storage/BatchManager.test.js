@@ -3,7 +3,7 @@ const { TimeUuid } = require('cassandra-driver').types
 const { StreamMessage, MessageIDStrict } = require('streamr-network').Protocol.MessageLayer
 const { waitForCondition } = require('streamr-test-utils')
 
-const BatchManager = require('../../../src/new-storage/BatchManager')
+const BatchManager = require('../../../src/storage/BatchManager')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'

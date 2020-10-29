@@ -1,5 +1,5 @@
 /* eslint-disable no-new */
-const Bucket = require('../../../src/new-storage/Bucket')
+const Bucket = require('../../../src/storage/Bucket')
 
 describe('Bucket', () => {
     it('should throw if constructor parameters are not correct', () => {
