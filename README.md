@@ -329,7 +329,7 @@ sub.on('initial_resend_done', () => {
 })
 ```
 
-### Data Unions API
+### Data Unions
 
 This library provides functions for working with Data Unions. All of the below methods return a Promise.
 
