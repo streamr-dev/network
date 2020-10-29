@@ -28,11 +28,17 @@ describe('StreamFetcher', () => {
 
         expressApp.use(bodyParser.json())
 
-        expressApp.get('/api/v1/streams/:id/permissions/me', (req, res) => requestHandlers.permissions(req, res))
+        expressApp.get('/api/v1/streams/:id/permissions/me', (req, res) => {
+            requestHandlers.permissions(req, res)
+        })
 
-        expressApp.get('/api/v1/streams/:id', (req, res) => requestHandlers.stream(req, res))
+        expressApp.get('/api/v1/streams/:id', (req, res) => {
+            requestHandlers.stream(req, res)
+        })
 
-        expressApp.post('/api/v1/streams/:id/fields', (req, res) => requestHandlers.fields(req, res))
+        expressApp.post('/api/v1/streams/:id/fields', (req, res) => {
+            requestHandlers.fields(req, res)
+        })
 
         server = expressApp.listen(6194, () => {
             console.info('Server for StreamFetcher.test.js started on port 6194\n')
@@ -126,26 +132,10 @@ describe('StreamFetcher', () => {
     })
 
     describe('checkPermission', () => {
-        it('returns Promise when API key given', (done) => {
+        it('returns Promise', async () => {
             const promise = streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe')
-            promise.then((response) => {
-                assert.deepEqual(response, true)
-                done()
-            }).catch((err) => {
-                done(err)
-            })
             assert(promise instanceof Promise)
-        })
-
-        it('returns Promise when session token given', (done) => {
-            const promise = streamFetcher.checkPermission(streamId, undefined, 'session-token', 'stream_subscribe')
-            promise.then((response) => {
-                assert.deepEqual(response, true)
-                done()
-            }).catch((err) => {
-                done(err)
-            })
-            assert(promise instanceof Promise)
+            await promise
         })
 
         it('rejects with 404 if stream does not exist', (done) => {
@@ -157,7 +147,7 @@ describe('StreamFetcher', () => {
         })
 
         it('rejects with 403 if key does not grant access to stream', (done) => {
-            streamFetcher.checkPermission(streamId, 'nonExistantKey', undefined, 'stream_subscribe').catch((err) => {
+            streamFetcher.checkPermission(streamId, 'nonExistentKey', undefined, 'stream_subscribe').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 403)
                 done()
@@ -217,6 +207,12 @@ describe('StreamFetcher', () => {
             })
         })
 
+        it('escapes any forward slashes ("/") in streamId', async () => {
+            streamId = 'sandbox/stream/aaa'
+            await streamFetcher.checkPermission('sandbox/stream/aaa', 'key', undefined, 'stream_subscribe')
+            expect(numOfRequests).toEqual(1) // would not land at handler if "/" not escaped
+        })
+
         it('caches repeated invocations', (done) => {
             const streamId2 = getUniqueStreamId()
             const streamId3 = getUniqueStreamId()
@@ -260,24 +256,10 @@ describe('StreamFetcher', () => {
     })
 
     describe('fetch', () => {
-        it('returns Promise when API key given', (done) => {
+        it('returns Promise', async () => {
             const promise = streamFetcher.fetch(streamId, 'key')
-            promise.then(() => {
-                done()
-            }).catch((err) => {
-                done(err)
-            })
             assert(promise instanceof Promise)
-        })
-
-        it('returns Promise when session token given', (done) => {
-            const promise = streamFetcher.fetch(streamId, undefined, 'session-token')
-            promise.then(() => {
-                done()
-            }).catch((err) => {
-                done(err)
-            })
-            assert(promise instanceof Promise)
+            await promise
         })
 
         it('rejects with 404 if stream does not exist', (done) => {
@@ -335,6 +317,12 @@ describe('StreamFetcher', () => {
             }).catch((err) => {
                 done(err)
             })
+        })
+
+        it('escapes any forward slashes ("/") in streamId', async () => {
+            streamId = 'sandbox/stream/aaa'
+            await streamFetcher.fetch('sandbox/stream/aaa', 'key', undefined, 'stream_subscribe')
+            expect(numOfRequests).toEqual(1) // would not land at handler if "/" not escaped
         })
 
         it('caches repeated invocations', (done) => {
@@ -417,18 +405,53 @@ describe('StreamFetcher', () => {
                 done()
             })
         })
+
+        it('escapes any forward slashes ("/") in streamId', async () => {
+            streamId = 'sandbox/stream/aaa'
+            await streamFetcher.authenticate('sandbox/stream/aaa', 'key', undefined, 'stream_subscribe')
+            expect(numOfRequests).toEqual(2) // would not land at handlers if "/" not escaped
+        })
+
+        // TODO: write cache tests
     })
 
     describe('setFields', () => {
-        it('sets fields', (done) => {
-            const fields = [{
-                name: 'field1',
-                type: 'type1',
-            }]
-            streamFetcher.setFields(streamId, fields, undefined, 'session-token').then(() => {
-                assert.deepStrictEqual(streamJson.config.fields, fields)
+        const fields = [{
+            name: 'field1',
+            type: 'type1',
+        }]
+
+        it('returns Promise', async () => {
+            const promise = streamFetcher.setFields(streamId, fields, undefined, 'session-token')
+            assert(promise instanceof Promise)
+            await promise
+        })
+
+        it('rejects with 404 if stream does not exist', (done) => {
+            streamFetcher.setFields('nonExistingStream', fields, undefined, 'session-token').catch((err) => {
+                assert(err instanceof HttpError)
+                assert.equal(err.code, 404)
                 done()
             })
+        })
+
+        it('rejects with 403 if key does not grant access to stream', (done) => {
+            streamFetcher.setFields(streamId, fields, 'nonExistingKey', undefined).catch((err) => {
+                assert(err instanceof HttpError)
+                assert.equal(err.code, 403)
+                done()
+            })
+        })
+
+        it('sets field with valid streamId and sessionToken', async () => {
+            await streamFetcher.setFields(streamId, fields, undefined, 'session-token')
+            assert.deepStrictEqual(streamJson.config.fields, fields)
+        })
+
+        it('escapes any forward slashes ("/") in streamId', async () => {
+            streamId = 'sandbox/stream/aaa'
+            await streamFetcher.setFields('sandbox/stream/aaa', fields, undefined, 'session-token')
+            expect(numOfRequests).toEqual(1) // would not land at handlers if "/" not escaped
         })
     })
 })

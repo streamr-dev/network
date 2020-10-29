@@ -87,6 +87,6 @@ describe('DeleteExpiredCmd', () => {
             }))
             await deleteExpiredCmd.run()
             await checkDBCount(cassandraClient, streamId, days)
-        })
+        }, 10 * 1000)
     })
 })

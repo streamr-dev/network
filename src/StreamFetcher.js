@@ -17,6 +17,24 @@ function formHeaders(authKey, sessionToken) {
     return headers
 }
 
+async function fetchWithErrorLogging(...args) {
+    try {
+        return await fetch(...args)
+    } catch (e) {
+        logger.error(`failed to communicate with E&E: ${e}`)
+        throw e
+    }
+}
+
+async function handleNon2xxResponse(funcName, response, streamId, apiKey, sessionToken, method, url) {
+    const errorMsg = await response.text()
+    logger.debug(
+        '%s failed with status %d for streamId %s, apiKey %s, sessionToken %s : %o',
+        funcName, response.status, streamId, apiKey, sessionToken, errorMsg,
+    )
+    throw new HttpError(response.status, method, url)
+}
+
 module.exports = class StreamFetcher {
     constructor(baseUrl) {
         this.streamResourceUrl = `${baseUrl}/api/v1/streams`
@@ -40,18 +58,17 @@ module.exports = class StreamFetcher {
             .then(() => this.fetch(streamId, apiKey, sessionToken))
     }
 
-    getToken(apiKey) {
-        return new Promise((resolve, reject) => {
-            fetch(this.loginUrl, {
-                method: 'POST',
-                body: JSON.stringify({
-                    apiKey
-                }),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            }).then((res) => res.json()).then((json) => resolve(json))
+    async getToken(apiKey) {
+        const response = await fetchWithErrorLogging(this.loginUrl, {
+            method: 'POST',
+            body: JSON.stringify({
+                apiKey
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            },
         })
+        return response.json()
     }
 
     /**
@@ -63,27 +80,19 @@ module.exports = class StreamFetcher {
      * @returns {Promise.<TResult>}
      * @private
      */
-    _fetch(streamId, apiKey, sessionToken) {
+    async _fetch(streamId, apiKey, sessionToken) {
+        const url = `${this.streamResourceUrl}/${encodeURIComponent(streamId)}`
         const headers = formHeaders(apiKey, sessionToken)
 
-        const url = `${this.streamResourceUrl}/${streamId}`
-        return fetch(url, {
-            headers,
-        }).catch((e) => {
-            logger.error(`failed to communicate with E&E: ${e}`)
-            throw e
-        }).then(async (response) => {
-            if (response.status !== 200) {
-                logger.debug(
-                    'fetch failed with status %d for streamId %s, apiKey %s, sessionToken %s : %o',
-                    response.status, streamId, apiKey, sessionToken, await response.text(),
-                )
-                this.fetch.delete(streamId, apiKey, sessionToken) // clear cache result
-                throw new HttpError(response.status, 'GET', url)
-            } else {
-                return response.json()
-            }
+        const response = await fetchWithErrorLogging(url, {
+            headers
         })
+
+        if (response.status !== 200) {
+            this.fetch.delete(streamId, apiKey, sessionToken) // clear cache result
+            return handleNon2xxResponse('_fetch', response, streamId, apiKey, sessionToken, 'GET', url)
+        }
+        return response.json()
     }
 
     /**
@@ -97,69 +106,49 @@ module.exports = class StreamFetcher {
      * @returns {Promise}
      * @private
      */
-    _checkPermission(streamId, apiKey, sessionToken, operation = 'stream_subscribe') {
-        const headers = formHeaders(apiKey, sessionToken)
-
+    async _checkPermission(streamId, apiKey, sessionToken, operation = 'stream_subscribe') {
         if (streamId == null) {
             throw new Error('streamId can not be null!')
         }
 
-        const url = `${this.streamResourceUrl}/${streamId}/permissions/me`
-        return fetch(url, {
+        const url = `${this.streamResourceUrl}/${encodeURIComponent(streamId)}/permissions/me`
+        const headers = formHeaders(apiKey, sessionToken)
+
+        const response = await fetchWithErrorLogging(url, {
             headers,
-        }).catch((e) => {
-            logger.error(`failed to communicate with E&E: ${e}`)
-            throw e
-        }).then((response) => {
-            if (response.status !== 200) {
-                return response.text().then((errorMsg) => {
-                    logger.debug(
-                        'checkPermission failed with status %d for streamId %s, apiKey %s, sessionToken %s, operation %s: %s',
-                        response.status, streamId, apiKey, sessionToken, operation, errorMsg,
-                    )
-                    this.checkPermission.delete(streamId, apiKey, sessionToken, operation) // clear cache result
-                    throw new HttpError(response.status, 'GET', url)
-                }).catch((err) => {
-                    logger.error(err)
-                    throw err
-                })
-            }
-
-            return response.json().then((permissions) => {
-                if (permissions.some((p) => p.operation === operation)) {
-                    return true
-                }
-
-                logger.debug(
-                    'checkPermission failed for streamId %s, apiKey %s, sessionToken %s, operation %s. permissions were: %o',
-                    streamId, apiKey, sessionToken, operation, permissions,
-                )
-                throw new HttpError(403, 'GET', url)
-            })
         })
+
+        if (response.status !== 200) {
+            this.checkPermission.delete(streamId, apiKey, sessionToken) // clear cache result
+            return handleNon2xxResponse('_checkPermission', response, streamId, apiKey, sessionToken, 'GET', url)
+        }
+
+        const permissions = await response.json()
+        if (permissions.some((p) => p.operation === operation)) {
+            return true
+        }
+
+        logger.debug(
+            'checkPermission failed for streamId %s, apiKey %s, sessionToken %s, operation %s. permissions were: %o',
+            streamId, apiKey, sessionToken, operation, permissions,
+        )
+        throw new HttpError(403, 'GET', url)
     }
 
-    setFields(streamId, fields, apiKey, sessionToken) {
+    async setFields(streamId, fields, apiKey, sessionToken) {
+        const url = `${this.streamResourceUrl}/${encodeURIComponent(streamId)}/fields`
         const headers = formHeaders(apiKey, sessionToken)
         headers['Content-Type'] = 'application/json'
-        const url = `${this.streamResourceUrl}/${streamId}/fields`
-        return fetch(url, {
+
+        const response = await fetchWithErrorLogging(url, {
             method: 'POST',
             body: JSON.stringify(fields),
             headers,
-        }).catch((e) => {
-            logger.error(`failed to communicate with E&E: ${e}`)
-            throw e
-        }).then(async (response) => {
-            if (response.status !== 200) {
-                logger.debug(
-                    'fetch failed with status %d for streamId %s, apiKey %s, sessionToken %s : %o',
-                    response.status, streamId, apiKey, sessionToken, response.text(),
-                )
-                throw new HttpError(response.status, 'POST', url)
-            } else {
-                return response.json()
-            }
         })
+
+        if (response.status !== 200) {
+            return handleNon2xxResponse('setFields', response, streamId, apiKey, sessionToken, 'POST', url)
+        }
+        return response.json()
     }
 }
