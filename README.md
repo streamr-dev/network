@@ -1,12 +1,49 @@
-# Streamr JavaScript Client
-
-[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
+<p align="center">
+  <a href="https://streamr.network">
+    <img alt="Streamr" src="https://streamr.network/resources/logos/Streamr_mark_positive.svg" width="60" />
+  </a>
+</p>
+<h1 align="center">
+  Streamr JavaScript Client
+</h1>
 
 By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in Streams, produce new data to Streams, and create new Streams.
 
-This library is work-in-progress and doesn't provide wrapper functions for all the endpoints in the Streamr API. Currently it covers producing and subscribing to data as well as manipulating Stream objects.
-
 The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
+
+[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
+
+- [Streamr JavaScript Client](#streamr-javascript-client)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Creating a StreamrClient instance](#creating-a-streamrclient-instance)
+    - [Subscribing to real-time events in a stream](#subscribing-to-real-time-events-in-a-stream)
+    - [Resending historical data](#resending-historical-data)
+    - [Programmatically creating a Stream](#programmatically-creating-a-stream)
+    - [Publishing data points to a Stream](#publishing-data-points-to-a-stream)
+  - [Client options](#client-options)
+  - [Authentication options](#authentication-options)
+  - [Message handler callback](#message-handler-callback)
+  - [StreamrClient object](#streamrclient-object)
+    - [Connecting](#connecting)
+    - [Managing subscriptions](#managing-subscriptions)
+    - [Stream API](#stream-api)
+    - [Listening to state changes of the client](#listening-to-state-changes-of-the-client)
+  - [Stream object](#stream-object)
+  - [Subscription options](#subscription-options)
+  - [Data Unions](#data-unions)
+    - [Admin functions](#admin-functions)
+    - [Member functions](#member-functions)
+    - [Query functions](#query-functions)
+  - [Utility functions](#utility-functions)
+  - [Binding to events](#binding-to-events)
+  - [Events on the StreamrClient instance](#events-on-the-streamrclient-instance)
+  - [Events on the Subscription object](#events-on-the-subscription-object)
+  - [Partitioning](#partitioning)
+  - [Logging](#logging)
+  - [NPM Publishing](#npm-publishing)
+    - [Publishing `latest`:](#publishing-latest)
+    - [Publishing `beta`:](#publishing-beta)
 
 ### Installation
 
