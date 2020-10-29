@@ -9,7 +9,7 @@ const Tracker = require('./logic/Tracker')
 const NetworkNode = require('./NetworkNode')
 const logger = require('./helpers/logger')('streamr:bin:composition')
 const MetricsContext = require('./helpers/MetricsContext')
-const { trackerHttpEndpoints } = require('./helpers/trackerHelpers')
+const { trackerHttpEndpoints } = require('./helpers/trackerHttpEndpoints')
 const { startEndpoint } = require('./connection/WsEndpoint')
 
 function startTracker({
