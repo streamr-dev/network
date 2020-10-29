@@ -59,7 +59,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             .addQueriedMetric('connections', () => this.connections.size)
             .addQueriedMetric('totalWebSocketBuffer', () => {
                 let totalBufferSize = 0
-                this.connections.forEach((id, connection) => {
+                this.connections.forEach((connection, id) => {
                     if (connection.socket) {
                         totalBufferSize += connection.socket.getBufferedAmount()
                     }
@@ -70,7 +70,7 @@ module.exports = class WebsocketServer extends EventEmitter {
                 const control = {}
                 const message = {}
                 const pairs = {}
-                this.connections.forEach((id, connection) => {
+                this.connections.forEach((connection, id) => {
                     const { controlLayerVersion, messageLayerVersion } = connection
                     const pairKey = controlLayerVersion + '->' + messageLayerVersion
                     if (control[controlLayerVersion] == null) {
