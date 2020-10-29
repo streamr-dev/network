@@ -15,7 +15,6 @@ const httpPort = 19422
 const wsPort = 19423
 const mqttPort = 19424
 
-// default thresholdForFutureMessageSeconds is 300 seconds = 5 minutes
 const thresholdForFutureMessageSeconds = 5 * 60
 
 function buildMsg(
@@ -67,7 +66,6 @@ describe('broker drops future messages', () => {
     afterEach(async () => {
         await broker.close()
         await tracker.stop()
-
         await client.ensureDisconnected()
     })
 

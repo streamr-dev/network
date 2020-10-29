@@ -4,10 +4,10 @@ const StreamrClient = require('streamr-client')
 const { startTracker } = require('streamr-network')
 const Sentry = require('@sentry/node')
 const pino = require('pino')
+const ethers = require('ethers')
 
 const CURRENT_VERSION = require('./package.json').version
 const logger = require('./src/helpers/logger')('streamr:broker:tracker')
-const { authenticateFromConfig } = require('./src/helpers/ethereumAuthenticate')
 
 program
     .version(CURRENT_VERSION)
@@ -31,9 +31,8 @@ if (program.args.length < 2) {
 }
 const privateKey = program.args[0]
 const trackerName = program.args[1]
-const address = authenticateFromConfig({
-    privateKey
-})
+const wallet = new ethers.Wallet(privateKey)
+const address = wallet ? wallet.address : null
 const id = address || `tracker-${program.port}`
 const name = trackerName || address
 

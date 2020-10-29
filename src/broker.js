@@ -3,6 +3,7 @@ const pino = require('pino')
 const StreamrClient = require('streamr-client')
 const publicIp = require('public-ip')
 const Sentry = require('@sentry/node')
+const ethers = require('ethers')
 
 const CURRENT_VERSION = require('../package.json').version
 
@@ -15,7 +16,6 @@ const SubscriptionManager = require('./SubscriptionManager')
 const MissingConfigError = require('./errors/MissingConfigError')
 const adapterRegistry = require('./adapterRegistry')
 const validateConfig = require('./helpers/validateConfig')
-const ethereumAuthenticate = require('./helpers/ethereumAuthenticate')
 
 const { Utils } = Protocol
 
@@ -27,6 +27,13 @@ module.exports = async (config) => {
     const networkNodeName = config.network.name
     const metricsContext = new MetricsContext(networkNodeName)
     const storages = []
+
+    // Ethereum wallet retrieval
+    const wallet = new ethers.Wallet(config.ethereumPrivateKey)
+    if (!wallet) {
+        throw new Error('Could not resolve Ethereum address from given config.ethereumPrivateKey')
+    }
+    const brokerAddress = wallet.address
 
     // Start cassandra storage
     if (config.cassandra) {
@@ -45,12 +52,6 @@ module.exports = async (config) => {
         storages.push(cassandraStorage)
     } else {
         logger.info('Cassandra disabled')
-    }
-
-    // Ethereum authentication
-    const brokerAddress = ethereumAuthenticate.authenticateFromConfig(config.ethereum)
-    if (!brokerAddress) {
-        throw new MissingConfigError('Invalid Ethereum authentication options')
     }
 
     // Form tracker list
@@ -78,7 +79,7 @@ module.exports = async (config) => {
         trackers,
         storages,
         advertisedWsUrl,
-        location: config.location,
+        location: config.network.location,
         metricsContext
     })
     networkNode.start()
@@ -123,7 +124,7 @@ module.exports = async (config) => {
 
     // Initialize common utilities
     const volumeLogger = new VolumeLogger(
-        config.reporting.reportingIntervalSeconds,
+        config.reporting.intervalInSeconds,
         metricsContext,
         client,
         streamId
@@ -138,7 +139,7 @@ module.exports = async (config) => {
         isSubscriber: (address, sId) => unauthenticatedClient.isStreamSubscriber(sId, address),
     })
     const streamFetcher = new StreamFetcher(config.streamrUrl)
-    const publisher = new Publisher(networkNode, streamMessageValidator, config.thresholdForFutureMessageSeconds, metricsContext)
+    const publisher = new Publisher(networkNode, streamMessageValidator, metricsContext)
     const subscriptionManager = new SubscriptionManager(networkNode)
 
     // Start up adapters one-by-one, storing their close functions for further use
@@ -162,12 +163,13 @@ module.exports = async (config) => {
     })
 
     logger.info(`Network node '${networkNodeName}' running on ${config.network.hostname}:${config.network.port}`)
+    logger.info(`Ethereum address ${brokerAddress}`)
     logger.info(`Configured with trackers: ${trackers.join(', ')}`)
+    logger.info(`Configured with Streamr: ${config.streamrUrl}`)
     logger.info(`Adapters: ${JSON.stringify(config.adapters.map((a) => a.name))}`)
     if (config.cassandra) {
         logger.info(`Configured with Cassandra: hosts=${config.cassandra.hosts} and keyspace=${config.cassandra.keyspace}`)
     }
-    logger.info(`Configured with Streamr: ${config.streamrUrl}`)
     if (advertisedWsUrl) {
         logger.info(`Advertising to tracker WS url: ${advertisedWsUrl}`)
     }

@@ -1,8 +1,13 @@
 const FailedToPublishError = require('./errors/FailedToPublishError')
-const { isTimestampTooFarInTheFuture } = require('./helpers/utils')
+
+const THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS = 300 * 1000
+
+const isTimestampTooFarInTheFuture = (timestamp) => {
+    return timestamp > Date.now() + THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS
+}
 
 module.exports = class Publisher {
-    constructor(networkNode, streamMessageValidator, thresholdForFutureMessageSeconds, metricsContext) {
+    constructor(networkNode, streamMessageValidator, metricsContext) {
         if (!networkNode) {
             throw new Error('No networkNode defined!')
         }
@@ -14,16 +19,16 @@ module.exports = class Publisher {
         }
         this.networkNode = networkNode
         this.streamMessageValidator = streamMessageValidator
-        this.thresholdForFutureMessageSeconds = thresholdForFutureMessageSeconds
         this.metrics = metricsContext.create('broker/publisher')
             .addRecordedMetric('bytes')
             .addRecordedMetric('messages')
     }
 
     async validateAndPublish(streamMessage) {
-        if (isTimestampTooFarInTheFuture(streamMessage.getTimestamp(), this.thresholdForFutureMessageSeconds)) {
+        if (isTimestampTooFarInTheFuture(streamMessage.getTimestamp())) {
             throw new FailedToPublishError(
-                streamMessage.getStreamId(), `future timestamps are not allowed, max allowed +${this.thresholdForFutureMessageSeconds} seconds`
+                streamMessage.getStreamId(),
+                `future timestamps are not allowed, max allowed +${THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS} ms`
             )
         }
 

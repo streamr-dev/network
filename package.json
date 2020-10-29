@@ -1,7 +1,7 @@
 {
   "name": "streamr-broker",
   "version": "14.2.0",
-  "description": "",
+  "description": "A full-featured broker node implementation for the Streamr Network.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/streamr-dev/broker.git"
@@ -20,12 +20,8 @@
     "test-integration": "jest --detectOpenHandles test/integration",
     "eslint": "eslint ."
   },
-  "author": "Streamr <contact@streamr.com>",
-  "license": "",
-  "engines": {
-    "node": "14.7.0",
-    "npm": "6.14.7"
-  },
+  "author": "Streamr Network AG <contact@streamr.com>",
+  "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "@pm2/io": "^4.3.5",
     "@sentry/node": "^5.27.1",

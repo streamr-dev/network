@@ -1,3 +1,4 @@
+/* eslint-disable no-new */
 const Batch = require('../../../src/new-storage/Batch')
 
 const streamMessage = {
@@ -9,27 +10,27 @@ const streamMessage = {
 describe('Batch', () => {
     it('should throw if constructor parameters are not correct', () => {
         expect(() => {
-            const a = new Batch()
+            new Batch()
         }).toThrow(new TypeError('bucketId must be not empty string'))
 
         expect(() => {
-            const a = new Batch('bucketId')
+            new Batch('bucketId')
         }).toThrow(new TypeError('maxSize must be > 0'))
 
         expect(() => {
-            const a = new Batch('bucketId', 1)
+            new Batch('bucketId', 1)
         }).toThrow(new TypeError('maxRecords must be > 0'))
 
         expect(() => {
-            const a = new Batch('bucketId', 1, 1)
+            new Batch('bucketId', 1, 1)
         }).toThrow(new TypeError('closeTimeout must be > 0'))
 
         expect(() => {
-            const a = new Batch('bucketId', 1, 1, 1)
+            new Batch('bucketId', 1, 1, 1)
         }).toThrow(new TypeError('maxRetries must be > 0'))
 
         expect(() => {
-            const a = new Batch('bucketId', 1, 1, 1, 1)
+            new Batch('bucketId', 1, 1, 1, 1)
         }).not.toThrow()
     })
 

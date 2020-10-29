@@ -1,45 +1,46 @@
+/* eslint-disable no-new */
 const Bucket = require('../../../src/new-storage/Bucket')
 
 describe('Bucket', () => {
     it('should throw if constructor parameters are not correct', () => {
         expect(() => {
-            const a = new Bucket()
+            new Bucket()
         }).toThrow(new TypeError('id must be not empty string'))
 
         expect(() => {
-            const a = new Bucket('id')
+            new Bucket('id')
         }).toThrow(new TypeError('streamId must be not empty string'))
 
         expect(() => {
-            const a = new Bucket('id', 'streamId')
+            new Bucket('id', 'streamId')
         }).toThrow(new TypeError('partition must be >= 0'))
 
         expect(() => {
-            const a = new Bucket('id', 'streamId', 0)
+            new Bucket('id', 'streamId', 0)
         }).toThrow(new TypeError('size must be => 0'))
 
         expect(() => {
-            const a = new Bucket('id', 'streamId', 0, 0)
+            new Bucket('id', 'streamId', 0, 0)
         }).toThrow(new TypeError('records must be => 0'))
 
         expect(() => {
-            const a = new Bucket('id', 'streamId', 0, 0, 0)
+            new Bucket('id', 'streamId', 0, 0, 0)
         }).toThrow(new TypeError('dateCreate must be instance of Date'))
 
         expect(() => {
-            const a = new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'))
+            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'))
         }).toThrow(new TypeError('maxSize must be > 0'))
 
         expect(() => {
-            const a = new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1)
+            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1)
         }).toThrow(new TypeError('maxRecords must be > 0'))
 
         expect(() => {
-            const a = new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 1)
+            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 1)
         }).toThrow(new TypeError('keepAliveSeconds must be > 0'))
 
         expect(() => {
-            const a = new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 1, 1)
+            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 1, 1)
         }).not.toThrow()
     })
 

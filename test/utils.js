@@ -46,24 +46,22 @@ function formConfig({
     }
 
     return {
+        ethereumPrivateKey: privateKey,
         network: {
             name,
             hostname: '127.0.0.1',
             port: networkPort,
             advertisedWsUrl: null,
+            isStorageNode: true,
             trackers: [
                 `ws://127.0.0.1:${trackerPort}`
             ],
-            isStorageNode: true
-        },
-        ethereum: {
-            privateKey
-        },
-        location: {
-            latitude: 60.19,
-            longitude: 24.95,
-            country: 'Finland',
-            city: 'Helsinki'
+            location: {
+                latitude: 60.19,
+                longitude: 24.95,
+                country: 'Finland',
+                city: 'Helsinki'
+            }
         },
         cassandra: enableCassandra ? {
             hosts: ['localhost'],
