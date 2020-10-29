@@ -19,7 +19,7 @@ const validateConfig = (config) => {
     if (config.network.advertisedWsUrl === undefined) {
         throw new MissingConfigError('network.advertisedWsUrl')
     }
-    if (config.network.trackers === undefined && config.trackerRegistry === undefined) {
+    if (config.network.trackers === undefined && config.network.trackerRegistry === undefined) {
         throw new MissingConfigError('network.trackers or network.trackerRegistry must be defined')
     }
     if (config.network.trackers && config.network.trackerRegistry) {
