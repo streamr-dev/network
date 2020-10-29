@@ -1,4 +1,4 @@
-FROM node:14-alpine as build
+FROM node:14 as build
 WORKDIR /usr/src/broker
 COPY . .
 
