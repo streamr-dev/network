@@ -59,9 +59,8 @@ Here are some quick examples. More detailed examples for the browser and node.js
 
 ```javascript
 const client = new StreamrClient({
-    // See below for more options
     auth: {
-        apiKey: 'your-api-key'
+        privateKey: 'your-private-key'
     }
 })
 ```
@@ -172,14 +171,8 @@ keyExchange | {} | Defines RSA key pair to use for group key exchange. Can defin
 
 ### Authentication options
 
-Authenticating with an API key (you can manage your API keys in the [Streamr web app](https://streamr.network)):
-```javascript
-new StreamrClient({
-    auth: {
-        apiKey: 'your-api-key'
-    }
-})
-```
+**Authenticating with an API key has been deprecated. Support for email/password authentication will be dropped in the future with authentication by cryptographic keys/wallets will be the only supported method of authentication.**
+
 Authenticating with an Ethereum private key by cryptographically signing a challenge. Note the utility function `StreamrClient.generateEthereumAccount()`, which can be used to easily get the address and private key for a newly generated account. Authenticating with Ethereum also automatically creates an associated Streamr user, if it doesn't exist:
 ```javascript
 new StreamrClient({
