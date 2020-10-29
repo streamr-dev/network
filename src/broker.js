@@ -85,10 +85,10 @@ module.exports = async (config) => {
     networkNode.start()
 
     // Set up sentry logging
-    if (config.sentry) {
-        logger.info('Starting Sentry with dns: %s', config.sentry)
+    if (config.reporting.sentry) {
+        logger.info('Starting Sentry with dns: %s', config.reporting.sentry)
         Sentry.init({
-            dsn: config.sentry,
+            dsn: config.reporting.sentry,
             integrations: [
                 new Sentry.Integrations.Console({
                     levels: ['error']
@@ -109,8 +109,11 @@ module.exports = async (config) => {
 
     // Set up reporting to Streamr stream
     let client
-    const { apiKey, streamId } = config.reporting
-    if (config.reporting && streamId !== undefined && apiKey !== undefined) {
+    let streamId
+    let apiKey
+    if (config.reporting.streamr) {
+        streamId = config.reporting.streamr.streamId
+        apiKey = config.reporting.streamr.apiKey
         logger.info(`Starting StreamrClient reporting with apiKey: ${apiKey} and streamId: ${streamId}`)
         client = new StreamrClient({
             auth: {
