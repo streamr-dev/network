@@ -8,7 +8,7 @@ const MqttServer = require('./MqttServer')
 
 // eslint-disable-next-line max-len
 adapterRegistry.register('mqtt', ({ port, streamsTimeout }, {
-    networkNode, publisher, streamFetcher, volumeLogger, subscriptionManager
+    networkNode, publisher, streamFetcher, metricsContext, subscriptionManager
 }) => {
     if (port === undefined) {
         throw new MissingConfigError('port')
@@ -24,7 +24,7 @@ adapterRegistry.register('mqtt', ({ port, streamsTimeout }, {
         networkNode,
         streamFetcher,
         publisher,
-        volumeLogger,
+        metricsContext,
         subscriptionManager
     )
 

@@ -3,7 +3,6 @@
  */
 const express = require('express')
 
-const VolumeLogger = require('../VolumeLogger')
 const logger = require('../helpers/logger')('streamr:http:DataQueryEndpoints')
 
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
@@ -15,21 +14,22 @@ const onStarted = (res) => {
     res.write('[')
 }
 
-const onRow = (res, unicastMessage, delimiter, format = 'object', version, volumeLogger) => {
+const onRow = (res, unicastMessage, delimiter, format = 'object', version, metrics) => {
     const { streamMessage } = unicastMessage
-    volumeLogger.logOutput(streamMessage.getSerializedContent().length)
     res.write(delimiter) // because can't have trailing comma in JSON array
     res.write(format === 'protocol' ? JSON.stringify(streamMessage.serialize(version)) : JSON.stringify(streamMessage.toObject()))
+    metrics.record('outBytes', streamMessage.getSerializedContent().length)
+    metrics.record('outMessages', 1)
 }
 
-const streamData = (res, stream, format, version, volumeLogger) => {
+const streamData = (res, stream, format, version, metrics) => {
     let delimiter = ''
     stream.on('data', (row) => {
         // first row
         if (delimiter === '') {
             onStarted(res)
         }
-        onRow(res, row, delimiter, format, version, volumeLogger)
+        onRow(res, row, delimiter, format, version, metrics)
         delimiter = ','
     })
     stream.on('end', () => {
@@ -60,8 +60,14 @@ function generateSubId() {
     return result
 }
 
-module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)) => {
+module.exports = (networkNode, streamFetcher, metricsContext) => {
     const router = express.Router()
+    const metrics = metricsContext.create('broker/http')
+        .addRecordedMetric('outBytes')
+        .addRecordedMetric('outMessages')
+        .addRecordedMetric('lastRequests')
+        .addRecordedMetric('fromRequests')
+        .addRecordedMetric('rangeRequests')
 
     router.use(
         '/streams/:id/data/partitions/:partition',
@@ -85,6 +91,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
         const partition = parseInt(req.params.partition)
         const count = req.query.count === undefined ? 1 : parseInt(req.query.count)
         const version = parseIntIfExists(req.query.version)
+        metrics.record('lastRequests', 1)
 
         if (Number.isNaN(count)) {
             const errMsg = `Query parameter "count" not a number: ${req.query.count}`
@@ -101,7 +108,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
                 count,
             )
 
-            streamData(res, streamingData, req.query.format, version, volumeLogger)
+            streamData(res, streamingData, req.query.format, version, metrics)
         }
     })
 
@@ -111,6 +118,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
         const { publisherId } = req.query
         const version = parseIntIfExists(req.query.version)
+        metrics.record('fromRequests', 1)
 
         if (fromTimestamp === undefined) {
             const errMsg = 'Query parameter "fromTimestamp" required.'
@@ -137,7 +145,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
                 null,
             )
 
-            streamData(res, streamingData, req.query.format, version, volumeLogger)
+            streamData(res, streamingData, req.query.format, version, metrics)
         }
     })
 
@@ -149,6 +157,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
         const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber)
         const { publisherId } = req.query
+        metrics.record('rangeRequests', 1)
 
         if (req.query.fromOffset !== undefined || req.query.toOffset !== undefined) {
             const errMsg = 'Query parameters "fromOffset" and "toOffset" are no longer supported. '
@@ -200,7 +209,7 @@ module.exports = (networkNode, streamFetcher, volumeLogger = new VolumeLogger(0)
                 null,
             )
 
-            streamData(res, streamingData, req.query.format, version, volumeLogger)
+            streamData(res, streamingData, req.query.format, version, metrics)
         }
     })
 

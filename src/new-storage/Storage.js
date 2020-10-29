@@ -186,6 +186,36 @@ class Storage extends EventEmitter {
         throw new Error('Invalid combination of requestFrom arguments')
     }
 
+    enableMetrics(metricsContext) {
+        const cassandraMetrics = metricsContext.create('broker/cassandra')
+            .addRecordedMetric('readCount')
+            .addRecordedMetric('readBytes')
+            .addRecordedMetric('writeCount')
+            .addRecordedMetric('writeBytes')
+            .addQueriedMetric('batchManager', () => this.batchManager.metrics())
+        this.on('read', (streamMessage) => {
+            cassandraMetrics.record('readCount', 1)
+            cassandraMetrics.record('readBytes', streamMessage.getContent(false).length)
+        })
+        this.on('write', (streamMessage) => {
+            cassandraMetrics.record('writeCount', 1)
+            cassandraMetrics.record('writeBytes', streamMessage.getContent(false).length)
+        })
+    }
+
+    close() {
+        const keys = [...this.pendingStores.keys()]
+        keys.forEach((key) => {
+            const timeout = this.pendingStores.get(key)
+            clearTimeout(timeout)
+            this.pendingStores.delete(key)
+        })
+
+        this.bucketManager.stop()
+        this.batchManager.stop()
+        return this.cassandraClient.shutdown()
+    }
+
     _fetchFromTimestamp(streamId, partition, fromTimestamp) {
         const resultStream = this._createResultStream()
 
@@ -371,25 +401,6 @@ class Storage extends EventEmitter {
             })
 
         return resultStream
-    }
-
-    metrics() {
-        return {
-            batchManager: this.batchManager.metrics()
-        }
-    }
-
-    close() {
-        const keys = [...this.pendingStores.keys()]
-        keys.forEach((key) => {
-            const timeout = this.pendingStores.get(key)
-            clearTimeout(timeout)
-            this.pendingStores.delete(key)
-        })
-
-        this.bucketManager.stop()
-        this.batchManager.stop()
-        return this.cassandraClient.shutdown()
     }
 
     _queryWithStreamingResults(query, queryParams) {

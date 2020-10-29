@@ -1,4 +1,4 @@
-const { startTracker, startStorageNode } = require('streamr-network')
+const { startTracker, startStorageNode, MetricsContext } = require('streamr-network')
 const { waitForCondition } = require('streamr-test-utils')
 const uWS = require('uWebSockets.js')
 
@@ -6,7 +6,6 @@ const { createClient } = require('../utils')
 const StreamFetcher = require('../../src/StreamFetcher')
 const WebsocketServer = require('../../src/websocket/WebsocketServer')
 const Publisher = require('../../src/Publisher')
-const VolumeLogger = require('../../src/VolumeLogger')
 const SubscriptionManager = require('../../src/SubscriptionManager')
 
 const trackerPort = 17370
@@ -17,7 +16,7 @@ describe('ping-pong test between broker and clients', () => {
     let tracker
     let websocketServer
     let networkNode
-    let volumeLogger
+    let metricsContext
 
     let client1
     let client2
@@ -36,14 +35,14 @@ describe('ping-pong test between broker and clients', () => {
             trackers: [tracker.getAddress()]
         })
 
-        volumeLogger = new VolumeLogger(0)
+        metricsContext = new MetricsContext(null)
         websocketServer = new WebsocketServer(
             uWS.App(),
             wsPort,
             networkNode,
             new StreamFetcher('http://localhost:8081/streamr-core'),
-            new Publisher(networkNode, volumeLogger),
-            volumeLogger,
+            new Publisher(networkNode, {}, 1000, metricsContext),
+            metricsContext,
             new SubscriptionManager(networkNode)
         )
 
@@ -60,7 +59,6 @@ describe('ping-pong test between broker and clients', () => {
     })
 
     afterEach(async () => {
-        volumeLogger.close()
         await client1.ensureDisconnected()
         await client2.ensureDisconnected()
         await client3.ensureDisconnected()

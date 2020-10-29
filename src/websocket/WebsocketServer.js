@@ -9,7 +9,6 @@ const uWS = require('uWebSockets.js')
 const logger = require('../helpers/logger')('streamr:WebsocketServer')
 const HttpError = require('../errors/HttpError')
 const FailedToPublishError = require('../errors/FailedToPublishError')
-const VolumeLogger = require('../VolumeLogger')
 const StreamStateManager = require('../StreamStateManager')
 
 const Connection = require('./Connection')
@@ -22,7 +21,7 @@ module.exports = class WebsocketServer extends EventEmitter {
         networkNode,
         streamFetcher,
         publisher,
-        volumeLogger = new VolumeLogger(0),
+        metricsContext,
         subscriptionManager,
         pingInterval = 60 * 1000,
     ) {
@@ -32,7 +31,6 @@ module.exports = class WebsocketServer extends EventEmitter {
         this.networkNode = networkNode
         this.streamFetcher = streamFetcher
         this.publisher = publisher
-        this.volumeLogger = volumeLogger
         this.connections = new Map()
         this.streams = new StreamStateManager(
             this._broadcastMessage.bind(this),
@@ -52,10 +50,22 @@ module.exports = class WebsocketServer extends EventEmitter {
                 })
             }
         )
-
         this.pingInterval = pingInterval
         this.fieldDetector = new FieldDetector(streamFetcher)
         this.subscriptionManager = subscriptionManager
+        this.metrics = metricsContext.create('broker/ws')
+            .addRecordedMetric('outBytes')
+            .addRecordedMetric('outMessages')
+            .addQueriedMetric('connections', () => this.connections.size)
+            .addQueriedMetric('totalWebSocketBuffer', () => {
+                let totalBufferSize = 0
+                this.connections.forEach((id, connection) => {
+                    if (connection.socket) {
+                        totalBufferSize += connection.socket.getBufferedAmount()
+                    }
+                })
+                return totalBufferSize
+            })
 
         this.requestHandlersByMessageType = {
             [ControlLayer.ControlMessage.TYPES.SubscribeRequest]: this.handleSubscribeRequest,
@@ -67,16 +77,6 @@ module.exports = class WebsocketServer extends EventEmitter {
         }
 
         this.networkNode.addMessageListener(this._handleStreamMessage.bind(this))
-
-        this._updateTotalBufferSizeInterval = setInterval(() => {
-            let totalBufferSize = 0
-            this.connections.forEach((id, connection) => {
-                if (connection.socket) {
-                    totalBufferSize += connection.socket.getBufferedAmount()
-                }
-            })
-            this.volumeLogger.setTotalBufferSize(totalBufferSize)
-        }, 1000)
 
         this._pingInterval = setInterval(() => {
             this._pingConnections()
@@ -138,7 +138,6 @@ module.exports = class WebsocketServer extends EventEmitter {
             open: (ws) => {
                 const connection = new Connection(ws, ws.controlLayerVersion, ws.messageLayerVersion)
                 this.connections.set(connection.id, connection)
-                this.volumeLogger.connectionCountWS = this.connections.size
                 logger.debug('onNewClientConnection: socket "%s" connected', connection.id)
                 // eslint-disable-next-line no-param-reassign
                 ws.connectionId = connection.id
@@ -253,7 +252,6 @@ module.exports = class WebsocketServer extends EventEmitter {
 
     _removeConnection(connection) {
         this.connections.delete(connection.id)
-        this.volumeLogger.connectionCountWS = this.connections.size
 
         // Unsubscribe from all streams
         connection.forEachStream((stream) => {
@@ -278,7 +276,6 @@ module.exports = class WebsocketServer extends EventEmitter {
     }
 
     close() {
-        clearInterval(this._updateTotalBufferSizeInterval)
         clearInterval(this._pingInterval)
 
         this.streams.close()
@@ -360,7 +357,8 @@ module.exports = class WebsocketServer extends EventEmitter {
             }
 
             const { streamMessage } = unicastMessage
-            this.volumeLogger.logOutput(streamMessage.getSerializedContent().length)
+            this.metrics.record('outBytes', streamMessage.getSerializedContent().length)
+            this.metrics.record('outMessages', 1)
             sentMessages += 1
             connection.send(new ControlLayer.UnicastMessage({
                 version: request.version,
@@ -464,7 +462,8 @@ module.exports = class WebsocketServer extends EventEmitter {
                 }))
             })
 
-            this.volumeLogger.logOutput(streamMessage.getSerializedContent().length * stream.getConnections().length)
+            this.metrics.record('outBytes', streamMessage.getSerializedContent().length * stream.getConnections().length)
+            this.metrics.record('outMessages', stream.getConnections().length)
         } else {
             logger.debug('broadcastMessage: stream "%s:%d" not found', streamId, streamPartition)
         }

@@ -3,28 +3,18 @@ const StreamrClient = require('streamr-client')
 
 const logger = require('./helpers/logger')('streamr:VolumeLogger')
 
+function formatNumber(n) {
+    return n < 10 ? n.toFixed(1) : Math.round(n)
+}
+
 module.exports = class VolumeLogger {
-    constructor(reportingIntervalSeconds = 60, networkNode = undefined, storages = [], client = undefined, streamId = undefined) {
-        this.reportingIntervalSeconds = reportingIntervalSeconds
-        this.connectionCountMQTT = 0
-        this.connectionCountWS = 0
-        this.inCount = 0
-        this.inBytes = 0
-        this.outCount = 0
-        this.outBytes = 0
-        this.storageReadCount = 0
-        this.storageReadBytes = 0
-        this.storageWriteCount = 0
-        this.storageWriteBytes = 0
-        this.totalBufferSize = 0
-        this.lastVolumeStatistics = {}
+    constructor(reportingIntervalSeconds = 60, metricsContext, client = undefined, streamId = undefined) {
+        this.metricsContext = metricsContext
         this.client = client
         this.streamId = streamId
-        this.networkNode = networkNode
-        this.storages = storages
 
-        this.connectionCountMetric = io.metric({
-            name: 'connectionCountMetric'
+        this.brokerConnectionCountMetric = io.metric({
+            name: 'brokerConnectionCountMetric'
         })
         this.eventsInPerSecondMetric = io.metric({
             name: 'eventsIn/sec'
@@ -66,121 +56,87 @@ module.exports = class VolumeLogger {
             name: 'meanBatchAge'
         })
 
-        if (this.reportingIntervalSeconds > 0) {
-            this.interval = setInterval(async () => {
-                await this.reportAndReset()
-            }, this.reportingIntervalSeconds * 1000)
+        if (reportingIntervalSeconds > 0) {
+            const reportingIntervalInMs = reportingIntervalSeconds * 1000
+            const reportFn = async () => {
+                try {
+                    await this.reportAndReset()
+                } catch (e) {
+                    logger.warn(`Error reporting metrics ${e}`)
+                }
+                this.timeout = setTimeout(reportFn, reportingIntervalInMs)
+            }
+            this.timeout = setTimeout(reportFn, reportingIntervalInMs)
         }
-
-        this.storages.forEach((storage) => {
-            storage.on('read', (streamMessage) => {
-                this.storageReadCount += 1
-                this.storageReadBytes += streamMessage.getContent(false).length
-            })
-            storage.on('write', (streamMessage) => {
-                this.storageWriteCount += 1
-                this.storageWriteBytes += streamMessage.getContent(false).length
-            })
-        })
-    }
-
-    logInput(bytes) {
-        this.inCount += 1
-        this.inBytes += bytes
-    }
-
-    logOutput(bytes) {
-        this.outCount += 1
-        this.outBytes += bytes
-    }
-
-    setTotalBufferSize(totalBufferSize) {
-        this.totalBufferSize = totalBufferSize
     }
 
     async reportAndReset() {
-        const inPerSecond = this.inCount / this.reportingIntervalSeconds
-        const outPerSecond = this.outCount / this.reportingIntervalSeconds
-        const kbInPerSecond = (this.inBytes / this.reportingIntervalSeconds) / 1000
-        const kbOutPerSecond = (this.outBytes / this.reportingIntervalSeconds) / 1000
+        const report = await this.metricsContext.report(true)
 
-        const storageReadCountPerSecond = this.storageReadCount / this.reportingIntervalSeconds
-        const storageWriteCountPerSecond = this.storageWriteCount / this.reportingIntervalSeconds
-        const storageReadKbPerSecond = (this.storageReadBytes / this.reportingIntervalSeconds) / 1000
-        const storageWriteKbPerSecond = (this.storageWriteBytes / this.reportingIntervalSeconds) / 1000
-
-        const connectionCount = this.connectionCountWS + this.connectionCountMQTT
-
-        const networkMetrics = await this.networkNode.getMetrics()
-        const networkInPerSecond = networkMetrics.mainMetrics.msgInSpeed
-        const networkOutPerSecond = networkMetrics.mainMetrics.msgOutSpeed
-        const networkKbInPerSecond = networkMetrics.mainMetrics.inSpeed / 1000
-        const networkKbOutPerSecond = networkMetrics.mainMetrics.outSpeed / 1000
-
-        const storageMisc = this.storages.length === 0 ? {} : Object.assign({}, ...this.storages.map((storage) => ({
-            [storage.constructor.name]: storage.metrics()
-        })))
-
-        this.lastVolumeStatistics = {
-            id: this.networkNode.peerInfo.peerId,
-            timestamp: Date.now(),
-            network: {
-                input: {
-                    eventsPerSecond: Math.round(networkInPerSecond),
-                    kbPerSecond: Math.round(networkKbInPerSecond),
-                },
-                output: {
-                    eventsPerSecond: Math.round(networkOutPerSecond),
-                    kbInPerSecond: Math.round(networkKbOutPerSecond)
-                }
-            },
-            broker: {
-                totalBufferSize: this.totalBufferSize,
-                connectionCount,
-                connectionCountMQTT: this.connectionCountMQTT,
-                connectionCountWS: this.connectionCountWS,
-                input: {
-                    eventsPerSecond: Math.round(inPerSecond),
-                    kbPerSecond: Math.round(kbInPerSecond),
-                },
-                output: {
-                    eventsPerSecond: Math.round(outPerSecond),
-                    kbPerSecond: Math.round(kbOutPerSecond),
-                },
-            },
-            storage: {
-                read: {
-                    eventsPerSecond: Math.round(storageReadCountPerSecond),
-                    kbPerSecond: Math.round(storageReadKbPerSecond)
-                },
-                write: {
-                    eventsPerSecond: Math.round(storageWriteCountPerSecond),
-                    kbPerSecond: Math.round(storageWriteKbPerSecond)
-                },
-                misc: storageMisc
-            }
+        // Report metrics to Streamr stream
+        if (this.client instanceof StreamrClient && this.streamId !== undefined) {
+            this.client.publishHttp(this.streamId, report).catch((e) => {
+                logger.warn(`failed to publish metrics to ${this.streamId} because ${e}`)
+            })
         }
 
-        function formatNumber(n) {
-            return n < 10 ? n.toFixed(1) : Math.round(n)
+        const inPerSecond = report.metrics['broker/publisher'].messages.rate
+        const kbInPerSecond = report.metrics['broker/publisher'].bytes.rate / 1000
+        const outPerSecond = (report.metrics['broker/ws'] ? report.metrics['broker/ws'].outMessages.rate : 0)
+            + (report.metrics['broker/mqtt'] ? report.metrics['broker/mqtt'].outMessages.rate : 0)
+            + (report.metrics['broker/http'] ? report.metrics['broker/http'].outMessages.rate : 0)
+        const kbOutPerSecond = ((report.metrics['broker/ws'] ? report.metrics['broker/ws'].outBytes.rate : 0)
+            + (report.metrics['broker/mqtt'] ? report.metrics['broker/mqtt'].outBytes.rate : 0)
+            + (report.metrics['broker/http'] ? report.metrics['broker/http'].outBytes.rate : 0)) / 1000
+
+        let storageReadCountPerSecond = 0
+        let storageWriteCountPerSecond = 0
+        let storageReadKbPerSecond = 0
+        let storageWriteKbPerSecond = 0
+        let totalBatches = 0
+        let meanBatchAge = 0
+        if (report.metrics['broker/cassandra']) {
+            storageReadCountPerSecond = report.metrics['broker/cassandra'].readCount.rate
+            storageWriteCountPerSecond = report.metrics['broker/cassandra'].writeCount.rate
+            storageReadKbPerSecond = report.metrics['broker/cassandra'].readBytes.rate / 1000
+            storageWriteKbPerSecond = report.metrics['broker/cassandra'].writeBytes.rate / 1000
+            totalBatches = report.metrics['broker/cassandra'].batchManager.totalBatches
+            meanBatchAge = report.metrics['broker/cassandra'].batchManager.meanBatchAge
         }
+
+        const brokerConnectionCount = (report.metrics['broker/ws'] ? report.metrics['broker/ws'].connections : 0)
+            + (report.metrics['broker/mqtt'] ? report.metrics['broker/mqtt'].connections : 0)
+
+        const networkConnectionCount = report.metrics.WsEndpoint.connections
+        const networkInPerSecond = report.metrics.WsEndpoint.msgInSpeed.rate
+        const networkOutPerSecond = report.metrics.WsEndpoint.msgOutSpeed.rate
+        const networkKbInPerSecond = report.metrics.WsEndpoint.inSpeed.rate / 1000
+        const networkKbOutPerSecond = report.metrics.WsEndpoint.outSpeed.rate / 1000
+
+        const ongoingResends = report.metrics.resends.numOfOngoingResends
+        const resendMeanAge = report.metrics.resends.meanAge
+
+        const totalWebSocketBuffer = report.metrics.WsEndpoint.totalWebSocketBuffer
+            + (report.metrics['broker/ws'] ? report.metrics['broker/ws'].totalWebSocketBuffer : 0)
 
         logger.info(
             'Report\n'
             + '\tBroker connections: %d\n'
             + '\tBroker in: %d events/s, %d kb/s\n'
             + '\tBroker out: %d events/s, %d kb/s\n'
+            + '\tNetwork connections %d\n'
             + '\tNetwork in: %d events/s, %d kb/s\n'
             + '\tNetwork out: %d events/s, %d kb/s\n'
             + '\tStorage read: %d events/s, %d kb/s\n'
             + '\tStorage write: %d events/s, %d kb/s\n'
             + '\tTotal ongoing resends: %d (mean age %d ms)\n'
             + '\tTotal batches: %d (mean age %d ms)\n',
-            connectionCount,
+            brokerConnectionCount,
             formatNumber(inPerSecond),
             formatNumber(kbInPerSecond),
             formatNumber(outPerSecond),
             formatNumber(kbOutPerSecond),
+            networkConnectionCount,
             formatNumber(networkInPerSecond),
             formatNumber(networkKbInPerSecond),
             formatNumber(networkOutPerSecond),
@@ -189,10 +145,10 @@ module.exports = class VolumeLogger {
             formatNumber(storageReadKbPerSecond),
             formatNumber(storageWriteCountPerSecond),
             formatNumber(storageWriteKbPerSecond),
-            networkMetrics.resendMetrics.numOfOngoingResends,
-            networkMetrics.resendMetrics.meanAge,
-            storageMisc.Storage && storageMisc.Storage.batchManager ? storageMisc.Storage.batchManager.totalBatches : 0,
-            storageMisc.Storage && storageMisc.Storage.batchManager ? storageMisc.Storage.batchManager.meanBatchAge : 0
+            ongoingResends,
+            resendMeanAge,
+            totalBatches,
+            meanBatchAge
         )
 
         this.eventsInPerSecondMetric.set(inPerSecond)
@@ -203,40 +159,18 @@ module.exports = class VolumeLogger {
         this.storageWritePerSecondMetric.set(storageWriteCountPerSecond)
         this.storageReadKbPerSecondMetric.set(storageReadKbPerSecond)
         this.storageWriteKbPerSecondMetric.set(storageWriteKbPerSecond)
-        this.connectionCountMetric.set(connectionCount)
-        this.totalBufferSizeMetric.set(this.totalBufferSize)
-        this.ongoingResendsMetric.set(networkMetrics.resendMetrics.numOfOngoingResends)
-        this.meanResendAgeMetric.set(networkMetrics.resendMetrics.meanAge)
-        if (storageMisc.Storage && storageMisc.Storage.batchManager) {
-            this.totalBatchesMetric.set(storageMisc.Storage.batchManager.totalBatches)
-            this.meanBatchAge.set(storageMisc.Storage.batchManager.meanBatchAge)
-        }
-
-        this.inCount = 0
-        this.outCount = 0
-        this.inBytes = 0
-        this.outBytes = 0
-        this.storageReadCount = 0
-        this.storageReadBytes = 0
-        this.storageWriteCount = 0
-        this.storageWriteBytes = 0
-
-        this._sendReport({
-            broker: this.lastVolumeStatistics,
-            network: networkMetrics
-        })
-    }
-
-    _sendReport(data) {
-        if (this.client instanceof StreamrClient && this.streamId !== undefined) {
-            this.client.publishHttp(this.streamId, data).catch((e) => {
-                logger.warn(`VolumeLogger failed to publish metrics: ${e}`)
-            })
+        this.brokerConnectionCountMetric.set(brokerConnectionCount)
+        this.totalBufferSizeMetric.set(totalWebSocketBuffer)
+        this.ongoingResendsMetric.set(ongoingResends)
+        this.meanResendAgeMetric.set(resendMeanAge)
+        if (report.metrics['broker/cassandra']) {
+            this.totalBatchesMetric.set(totalBatches)
+            this.meanBatchAge.set(meanBatchAge)
         }
     }
 
     close() {
         io.destroy()
-        clearInterval(this.interval)
+        clearTimeout(this.timeout)
     }
 }

@@ -1,8 +1,7 @@
 const express = require('express')
 const request = require('supertest')
-const sinon = require('sinon')
 const intoStream = require('into-stream')
-const { Protocol } = require('streamr-network')
+const { Protocol, MetricsContext } = require('streamr-network')
 
 const { ControlLayer, MessageLayer } = Protocol
 const { StreamMessage, MessageID } = MessageLayer
@@ -14,7 +13,6 @@ describe('DataQueryEndpoints', () => {
     let app
     let networkNode
     let streamFetcher
-    let volumeLogger
 
     function testGetRequest(url, key = 'authKey') {
         return request(app)
@@ -51,10 +49,7 @@ describe('DataQueryEndpoints', () => {
                 }))
             },
         }
-        volumeLogger = {
-            logOutput: sinon.stub(),
-        }
-        app.use('/api/v1', restEndpointRouter(networkNode, streamFetcher, volumeLogger))
+        app.use('/api/v1', restEndpointRouter(networkNode, streamFetcher, new MetricsContext(null)))
     })
 
     describe('Getting last events', () => {
@@ -111,17 +106,6 @@ describe('DataQueryEndpoints', () => {
             it('responds with object representation of messages by default', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .expect(streamMessages.map((m) => m.toObject()), done)
-            })
-
-            it('reports to volumeLogger', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
-                    .expect(200, () => {
-                        // for each row we call volumeLogger.logOutput
-                        expect(volumeLogger.logOutput.callCount).toBe(2)
-                        expect(volumeLogger.logOutput.getCall(0).calledWithExactly(11)).toBe(true)
-                        expect(volumeLogger.logOutput.getCall(1).calledWithExactly(11)).toBe(true)
-                        done()
-                    })
             })
 
             it('responds with latest version protocol serialization of messages given format=protocol', (done) => {

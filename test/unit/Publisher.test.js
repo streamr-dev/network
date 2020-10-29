@@ -2,6 +2,7 @@ const events = require('events')
 
 const sinon = require('sinon')
 const { StreamMessage, MessageID } = require('streamr-network').Protocol.MessageLayer
+const { MetricsContext } = require('streamr-network')
 
 const Publisher = require('../../src/Publisher')
 
@@ -20,7 +21,7 @@ describe('Publisher', () => {
     let validator
     const thresholdForFutureMessageSeconds = 5 * 60
 
-    const getPublisher = () => new Publisher(networkNode, validator, thresholdForFutureMessageSeconds)
+    const getPublisher = () => new Publisher(networkNode, validator, thresholdForFutureMessageSeconds, new MetricsContext(null))
 
     beforeEach(() => {
         streamMessage = new StreamMessage({

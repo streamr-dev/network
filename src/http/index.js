@@ -11,16 +11,16 @@ const dataQueryEndpoints = require('./DataQueryEndpoints')
 const dataProduceEndpoints = require('./DataProduceEndpoints')
 const volumeEndpoint = require('./VolumeEndpoint')
 
-adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, { networkNode, publisher, streamFetcher, volumeLogger }) => {
+adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, { networkNode, publisher, streamFetcher, metricsContext }) => {
     const app = express()
 
     // Add CORS headers
     app.use(cors())
 
     // Rest endpoints
-    app.use('/api/v1', dataQueryEndpoints(networkNode, streamFetcher, volumeLogger))
+    app.use('/api/v1', dataQueryEndpoints(networkNode, streamFetcher, metricsContext))
     app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher))
-    app.use('/api/v1', volumeEndpoint(volumeLogger))
+    app.use('/api/v1', volumeEndpoint(metricsContext))
 
     let httpServer
     if (privateKeyFileName && certFileName) {

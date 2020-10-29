@@ -1,29 +1,29 @@
-const VolumeLogger = require('./VolumeLogger')
 const FailedToPublishError = require('./errors/FailedToPublishError')
 const { isTimestampTooFarInTheFuture } = require('./helpers/utils')
 
 module.exports = class Publisher {
-    constructor(networkNode, streamMessageValidator, thresholdForFutureMessageSeconds, volumeLogger = new VolumeLogger(0)) {
-        this.networkNode = networkNode
-        this.streamMessageValidator = streamMessageValidator
-        this.volumeLogger = volumeLogger
-        this._thresholdForFutureMessageSeconds = thresholdForFutureMessageSeconds
-
+    constructor(networkNode, streamMessageValidator, thresholdForFutureMessageSeconds, metricsContext) {
         if (!networkNode) {
             throw new Error('No networkNode defined!')
         }
         if (!streamMessageValidator) {
             throw new Error('No streamMessageValidator defined!')
         }
-        if (!volumeLogger) {
-            throw new Error('No volumeLogger defined!')
+        if (!metricsContext) {
+            throw new Error('No metricsContext defined!')
         }
+        this.networkNode = networkNode
+        this.streamMessageValidator = streamMessageValidator
+        this.thresholdForFutureMessageSeconds = thresholdForFutureMessageSeconds
+        this.metrics = metricsContext.create('broker/publisher')
+            .addRecordedMetric('bytes')
+            .addRecordedMetric('messages')
     }
 
     async validateAndPublish(streamMessage) {
-        if (isTimestampTooFarInTheFuture(streamMessage.getTimestamp(), this._thresholdForFutureMessageSeconds)) {
+        if (isTimestampTooFarInTheFuture(streamMessage.getTimestamp(), this.thresholdForFutureMessageSeconds)) {
             throw new FailedToPublishError(
-                streamMessage.getStreamId(), `future timestamps are not allowed, max allowed +${this._thresholdForFutureMessageSeconds} seconds`
+                streamMessage.getStreamId(), `future timestamps are not allowed, max allowed +${this.thresholdForFutureMessageSeconds} seconds`
             )
         }
 
@@ -33,7 +33,8 @@ module.exports = class Publisher {
         // This throws if content not valid JSON
         streamMessage.getContent(true)
 
-        this.volumeLogger.logInput(streamMessage.getContent(false).length)
+        this.metrics.record('bytes', streamMessage.getContent(false).length)
+        this.metrics.record('messages', 1)
         this.networkNode.publish(streamMessage)
     }
 }

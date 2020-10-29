@@ -1,6 +1,6 @@
 const { Readable } = require('stream')
 
-const { startTracker, startStorageNode, Protocol } = require('streamr-network')
+const { startTracker, startStorageNode, Protocol, MetricsContext } = require('streamr-network')
 const { waitForCondition } = require('streamr-test-utils')
 const ws = require('uWebSockets.js')
 
@@ -8,7 +8,6 @@ const WebsocketServer = require('../../src/websocket/WebsocketServer')
 const { createClient } = require('../utils')
 const StreamFetcher = require('../../src/StreamFetcher')
 const Publisher = require('../../src/Publisher')
-const VolumeLogger = require('../../src/VolumeLogger')
 const SubscriptionManager = require('../../src/SubscriptionManager')
 
 const { StreamMessage, MessageID } = Protocol.MessageLayer
@@ -19,7 +18,7 @@ const wsPort = 17753
 
 describe('resend cancellation', () => {
     let tracker
-    let volumeLogger
+    let metricsContext
     let websocketServer
     let networkNode
     let client
@@ -27,7 +26,7 @@ describe('resend cancellation', () => {
     let timeoutCleared = false
 
     beforeEach(async () => {
-        volumeLogger = new VolumeLogger(0)
+        metricsContext = new MetricsContext(null)
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
@@ -72,8 +71,8 @@ describe('resend cancellation', () => {
             wsPort,
             networkNode,
             new StreamFetcher('http://localhost:8081/streamr-core'),
-            new Publisher(networkNode, volumeLogger),
-            volumeLogger,
+            new Publisher(networkNode, {}, 1000, metricsContext),
+            metricsContext,
             new SubscriptionManager(networkNode)
         )
         client = createClient(wsPort)
@@ -83,7 +82,6 @@ describe('resend cancellation', () => {
     })
 
     afterEach(async () => {
-        volumeLogger.close()
         await client.ensureDisconnected()
         await networkNode.stop()
         await websocketServer.close()
