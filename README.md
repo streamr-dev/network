@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://streamr.network">
-    <img alt="Streamr" src="https://www.dropbox.com/s/39gw9e6dj8n0wzf/JS_Client.png?raw=1" width="1320" />
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/streamr-client-javascript/master/readme-header-img.png" width="1320" />
   </a>
 </p>
 <h1 align="left">
