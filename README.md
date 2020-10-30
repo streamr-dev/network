@@ -125,7 +125,7 @@ stream.publish(msg)
 ## Client options
 
 | Option                   | Default value                   | Description                                                  |
-| ------------------------ | ------------------------------- | ------------------------------------------------------------ |
+| :------------------------ | :------------------------------- | :------------------------------------------------------------ |
 | url                      | wss://streamr.network/api/v1/ws | Address of the Streamr websocket endpoint to connect to.     |
 | restUrl                  | https://streamr.network/api/v1  | Base URL of the Streamr REST API.                            |
 | auth                     | {}                              | Object that can contain different information to authenticate. More details below. |
@@ -190,7 +190,7 @@ new StreamrClient({
 The second argument to `client.subscribe(options, callback)` is the callback function that will be called for each message as they arrive. Its arguments are as follows:
 
 | Argument      | Description                                                  |
-| ------------- | ------------------------------------------------------------ |
+| :------------- | :------------------------------------------------------------ |
 | payload       | A JS object containing the message payload itself            |
 | streamMessage | The whole [StreamMessage](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/message_layer/StreamMessage.js) object containing various metadata, for example `streamMessage.getTimestamp()` etc. |
 
@@ -199,7 +199,7 @@ The second argument to `client.subscribe(options, callback)` is the callback fun
 #### Connecting
 
 | Name                 | Description                                                  |
-| -------------------- | ------------------------------------------------------------ |
+| :-------------------- | :------------------------------------------------------------ |
 | connect()            | Connects to the server, and also subscribes to any streams for which `subscribe()` has been called before calling `connect()`. Returns a Promise. Rejects if already connected or connecting. |
 | disconnect()         | Disconnects from the server, clearing all subscriptions. Returns a Promise.  Rejects if already disconnected or disconnecting. |
 | pause()              | Disconnects from the server without clearing subscriptions.  |
@@ -209,7 +209,7 @@ The second argument to `client.subscribe(options, callback)` is the callback fun
 #### Managing subscriptions
 
 | Name                         | Description                                                  |
-| ---------------------------- | ------------------------------------------------------------ |
+| :---------------------------- | :------------------------------------------------------------ |
 | subscribe(options, callback) | Subscribes to a stream. Messages in this stream are passed to the `callback` function. See below for subscription options. Returns a `Subscription` object. |
 | unsubscribe(Subscription)    | Unsubscribes the given `Subscription`.                       |
 | unsubscribeAll(`streamId`)   | Unsubscribes all `Subscriptions` for `streamId`.             |
@@ -220,7 +220,7 @@ The second argument to `client.subscribe(options, callback)` is the callback fun
 All the below functions return a Promise which gets resolved with the result. They can also take an `apiKey` as an extra argument. Otherwise the `apiKey` defined in the `StreamrClient` options is used, if any.
 
 | Name                                                | Description                                                  |
-| --------------------------------------------------- | ------------------------------------------------------------ |
+| :--------------------------------------------------- | :------------------------------------------------------------ |
 | getStream(streamId)                                 | Fetches a Stream object from the API.                        |
 | listStreams(query)                                  | Fetches an array of Stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com). |
 | getStreamByName(name)                               | Fetches a Stream which exactly matches the given name.       |
@@ -239,7 +239,7 @@ removeListener(eventName, function) | Unbinds the `function` from events called 
 All the below functions return a Promise which gets resolved with the result. They can also take an `apiKey` as an extra argument. Otherwise the `apiKey` defined in the `StreamrClient` options is used, if any.
 
 | Name                                      | Description                                                  |
-| ----------------------------------------- | ------------------------------------------------------------ |
+| :----------------------------------------- | :------------------------------------------------------------ |
 | update()                                  | Updates the properties of this Stream object by sending them to the API. |
 | delete()                                  | Deletes this Stream.                                         |
 | getPermissions()                          | Returns the list of permissions for this Stream.             |
@@ -254,7 +254,7 @@ All the below functions return a Promise which gets resolved with the result. Th
 Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
 
 | Name      | Description                                                  |
-| --------- | ------------------------------------------------------------ |
+| :--------- | :------------------------------------------------------------ |
 | stream    | Stream id to subscribe to                                    |
 | partition | Partition number to subscribe to. Defaults to partition 0.   |
 | resend    | Object defining the resend options. Below are examples of its contents. |
@@ -307,7 +307,7 @@ This library provides functions for working with Data Unions. All of the below m
 #### Admin functions
 
 | Name                                                    | Returns     | Description                                                |
-| ------------------------------------------------------- | ----------- | ---------------------------------------------------------- |
+| :------------------------------------------------------- | :----------- | :---------------------------------------------------------- |
 | deployDataUnion()                                       | Transaction | Deploy a new Data Union                                    |
 | createSecret(dataUnionContractAddress, secret[, name])  |             | Create a secret for a Data Union                           |
 | dataUnionIsReady(address)                               |             | Wait until a new Data Union is initialized by its Operator |
@@ -324,7 +324,7 @@ await dataUnion.isReady()   // waits until data union is operated
 #### Member functions
 
 | Name                                                         | Returns     | Description                                                  |
-| ------------------------------------------------------------ | ----------- | ------------------------------------------------------------ |
+| :------------------------------------------------------------ | :----------- | :------------------------------------------------------------ |
 | joinDataUnion(dataUnionContractAddress[, secret])            | JoinRequest | Join a Data Union                                            |
 | hasJoined(dataUnionContractAddress[, memberAddress])         |             | Wait until member has been accepted                          |
 | validateProof(dataUnionContractAddress, options)             | true/false  | Check that server is giving a proof that allows withdrawing  |
@@ -335,7 +335,7 @@ await dataUnion.isReady()   // waits until data union is operated
 The options object for withdraw functions above may contain following overrides:
 
 | Property      | Default   | Description                                                  |
-| ------------- | --------- | ------------------------------------------------------------ |
+| :------------- | :--------- | :------------------------------------------------------------ |
 | wallet        | auth      | ethers.js Wallet object to use to sign and send withdraw transaction |
 | provider      | mainnet   | ethers.js Provider to use if wallet wasn't provided          |
 | confirmations | 1         | Number of blocks to wait after the withdraw transaction is mined |
@@ -346,7 +346,7 @@ The options object for withdraw functions above may contain following overrides:
 These are available for everyone and anyone, to query publicly available info from a Data Union:
 
 | Name                                                      | Returns                           | Description                 |
-| --------------------------------------------------------- | --------------------------------- | --------------------------- |
+| :--------------------------------------------------------- | :--------------------------------- | :--------------------------- |
 | getMemberStats(dataUnionContractAddress[, memberAddress]) | {earnings, proof, ...}            | Get member's stats          |
 | getDataUnionStats(dataUnionContractAddress)               | {memberCount, totalEarnings, ...} | Get Data Union's statistics |
 | getMembers(dataUnionContractAddress)                      | [{address, earnings}, ...]        | Get Data Union's members    |
@@ -354,7 +354,7 @@ These are available for everyone and anyone, to query publicly available info fr
 ## Utility functions
 
 | Name                                    | Description                                                  |
-| --------------------------------------- | ------------------------------------------------------------ |
+| :--------------------------------------- | :------------------------------------------------------------ |
 | StreamrClient.generateEthereumAccount() | Generates a random Ethereum private key and returns an object with fields `address` and privateKey. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document. |
 
 ## Events
@@ -379,14 +379,14 @@ The client and the subscriptions can fire events as detailed below. You can bind
 #### Events on the StreamrClient instance
 
 | Name         | Handler Arguments | Description                                           |
-| ------------ | ----------------- | ----------------------------------------------------- |
+| :------------ | :----------------- | :----------------------------------------------------- |
 | connected    |                   | Fired when the client has connected (or reconnected). |
 | disconnected |                   | Fired when the client has disconnected (or paused).   |
 
 #### Events on the Subscription object
 
 | Name         | Handler Arguments                                            | Description                                                  |
-| ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| :------------ | :------------------------------------------------------------ | :------------------------------------------------------------ |
 | subscribed   |                                                              | Fired when a subscription request is acknowledged by the server. |
 | unsubscribed |                                                              | Fired when an unsubscription is acknowledged by the server.  |
 | resending    | [ResendResponseResending](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resending/ResendResponseResendingV1.js) | Fired when the subscription starts resending. Followed by the `resent` event to mark completion of the resend after resent messages have been processed by the message handler function. |
