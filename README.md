@@ -357,8 +357,9 @@ These are available for everyone and anyone, to query publicly available info fr
 | --------------------------------------- | ------------------------------------------------------------ |
 | StreamrClient.generateEthereumAccount() | Generates a random Ethereum private key and returns an object with fields `address` and privateKey. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document. |
 
+## Events
 
-### Binding to events
+#### Binding to events
 
 The client and the subscriptions can fire events as detailed below. You can bind to them using `on`:
 
@@ -375,14 +376,14 @@ The client and the subscriptions can fire events as detailed below. You can bind
 	})
 ```
 
-## Events on the StreamrClient instance
+#### Events on the StreamrClient instance
 
 | Name         | Handler Arguments | Description                                           |
 | ------------ | ----------------- | ----------------------------------------------------- |
 | connected    |                   | Fired when the client has connected (or reconnected). |
 | disconnected |                   | Fired when the client has disconnected (or paused).   |
 
-### Events on the Subscription object
+#### Events on the Subscription object
 
 | Name         | Handler Arguments                                            | Description                                                  |
 | ------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
