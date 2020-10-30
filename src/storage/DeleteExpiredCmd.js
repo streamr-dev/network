@@ -2,82 +2,74 @@ const cassandra = require('cassandra-driver')
 const fetch = require('node-fetch')
 const pLimit = require('p-limit')
 
-const validateConfig = require('../helpers/validateConfig')
 const logger = require('../helpers/logger')('streamr:DeleteExpiredCmd')
 
+const totalSizeOfBuckets = (buckets) => buckets.reduce((mem, { size }) => mem + size, 0) / (1024 * 1024)
+
+const totalNumOfRecords = (buckets) => buckets.reduce((mem, { records }) => mem + records, 0)
+
 class DeleteExpiredCmd {
-    constructor(config) {
-        validateConfig(config)
+    constructor({
+        streamrBaseUrl,
+        cassandraUsername,
+        cassandraPassword,
+        cassandraHosts,
+        cassandraDatacenter,
+        cassandraKeyspace,
+        dryRun = true
+    }) {
+        this.streamrBaseUrl = streamrBaseUrl
+        this.dryRun = dryRun
 
-        this.baseUrl = config.streamrUrl
-
-        const authProvider = new cassandra.auth.PlainTextAuthProvider(config.cassandra.username, config.cassandra.password)
+        const authProvider = new cassandra.auth.PlainTextAuthProvider(cassandraUsername, cassandraPassword)
         this.cassandraClient = new cassandra.Client({
-            contactPoints: [...config.cassandra.hosts],
-            localDataCenter: config.cassandra.datacenter,
-            keyspace: config.cassandra.keyspace,
+            contactPoints: [...cassandraHosts],
+            localDataCenter: cassandraDatacenter,
+            keyspace: cassandraKeyspace,
             authProvider,
-            pooling: {
-                maxRequestsPerConnection: 32768
-            }
         })
 
         // used for limited concurrency
         this.limit = pLimit(5)
     }
 
-    async _getStreams() {
-        const result = []
+    async run() {
+        const streams = await this._getStreams()
+        logger.info(`Found ${streams.length} unique streams`)
 
-        const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
-        const resultSet = await this.cassandraClient.execute(query).catch((err) => logger.error(err))
+        const streamsInfo = await this._fetchStreamsInfo(streams)
+        const expiredBuckets = await this._getExpiredBuckets(streamsInfo)
 
-        if (resultSet) {
-            resultSet.rows.forEach((row) => {
-                result.push({
-                    streamId: row.stream_id,
-                    partition: row.partition
-                })
-            })
+        logger.info('Found %d expired buckets (total records %d and size %d MB)',
+            expiredBuckets.length,
+            totalNumOfRecords(expiredBuckets),
+            totalSizeOfBuckets(expiredBuckets))
+        if (!this.dryRun) {
+            await this._deleteExpired(expiredBuckets)
         }
 
-        return result
+        await this.cassandraClient.shutdown()
+    }
+
+    async _getStreams() {
+        const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
+        const resultSet = await this.cassandraClient.execute(query)
+        return resultSet.rows.map((row) => ({
+            streamId: row.stream_id,
+            partition: row.partition
+        }))
     }
 
     async _fetchStreamsInfo(streams) {
         const tasks = streams.filter(Boolean).map((stream) => {
             return this.limit(async () => {
-                const url = `${this.baseUrl}/api/v1/streams/${stream.streamId}/validation`
+                const url = `${this.streamrBaseUrl}/api/v1/streams/${stream.streamId}/validation`
                 return fetch(url).then((res) => res.json()).then((json) => {
                     return {
                         streamId: stream.streamId,
                         partition: stream.partition,
                         storageDays: parseInt(json.storageDays)
                     }
-                }).catch((err) => logger.error(err))
-            })
-        })
-
-        return Promise.all(tasks)
-    }
-
-    async _deleteExpired(expiredBuckets) {
-        const tasks = expiredBuckets.filter(Boolean).map((stream) => {
-            const { bucketId, dateCreate, streamId, partition } = stream
-            const queries = [
-                {
-                    query: 'DELETE FROM bucket WHERE stream_id = ? AND partition = ? AND date_create = ?',
-                    params: [streamId, partition, dateCreate]
-                },
-                {
-                    query: 'DELETE FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?',
-                    params: [streamId, partition, bucketId]
-                }
-            ]
-
-            return this.limit(async () => {
-                await this.cassandraClient.batch(queries, {
-                    prepare: true
                 }).catch((err) => logger.error(err))
             })
         })
@@ -107,6 +99,8 @@ class DeleteExpiredCmd {
                             dateCreate: row.date_create,
                             streamId: row.stream_id,
                             partition: row.partition,
+                            records: row.records,
+                            size: row.size,
                             storageDays
                         })
                     })
@@ -118,17 +112,30 @@ class DeleteExpiredCmd {
         return result
     }
 
-    async run() {
-        const streams = await this._getStreams()
-        logger.info(`Found ${streams.length} unique streams`)
+    async _deleteExpired(expiredBuckets) {
+        const tasks = expiredBuckets.filter(Boolean).map((stream) => {
+            const { bucketId, dateCreate, streamId, partition } = stream
+            const queries = [
+                {
+                    query: 'DELETE FROM bucket WHERE stream_id = ? AND partition = ? AND date_create = ?',
+                    params: [streamId, partition, dateCreate]
+                },
+                {
+                    query: 'DELETE FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?',
+                    params: [streamId, partition, bucketId]
+                }
+            ]
 
-        const streamsInfo = await this._fetchStreamsInfo(streams)
-        const expiredBuckets = await this._getExpiredBuckets(streamsInfo)
+            logger.info('Deleting expired bucket [%s, %d, %s]', streamId, partition, bucketId)
 
-        logger.info(`Found ${expiredBuckets.length} expired buckets`)
-        await this._deleteExpired(expiredBuckets)
+            return this.limit(async () => {
+                await this.cassandraClient.batch(queries, {
+                    prepare: true
+                }).catch((err) => logger.error(err))
+            })
+        })
 
-        await this.cassandraClient.shutdown()
+        return Promise.all(tasks)
     }
 }
 

@@ -2,7 +2,7 @@ const cassandra = require('cassandra-driver')
 const { TimeUuid } = require('cassandra-driver').types
 
 const DeleteExpiredCmd = require('../../../src/storage/DeleteExpiredCmd')
-const { createClient, formConfig } = require('../../utils')
+const { createClient } = require('../../utils')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
@@ -78,13 +78,15 @@ describe('DeleteExpiredCmd', () => {
             await fixtures(cassandraClient, streamId, 2)
             await fixtures(cassandraClient, streamId, 3)
 
-            const deleteExpiredCmd = new DeleteExpiredCmd(formConfig({
-                name: 'name',
-                networkPort: 0,
-                trackerPort: 0,
-                privateKey: '0x09a0c3b1de507fe8655d6d042176c68f7905a77248b0c7c6671d2d94b1fda83e',
-                enableCassandra: true
-            }))
+            const deleteExpiredCmd = new DeleteExpiredCmd({
+                streamrBaseUrl: 'http://localhost:8081/streamr-core',
+                cassandraUsername: '',
+                cassandraPassword: '',
+                cassandraHosts: ['localhost'],
+                cassandraDatacenter: 'datacenter1',
+                cassandraKeyspace: 'streamr_dev_v2',
+                dryRun: false
+            })
             await deleteExpiredCmd.run()
             await checkDBCount(cassandraClient, streamId, days)
         }, 10 * 1000)
