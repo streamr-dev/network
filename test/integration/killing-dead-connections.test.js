@@ -1,5 +1,4 @@
 /* eslint-disable no-underscore-dangle */
-const allSettled = require('promise.allsettled')
 const { waitForEvent } = require('streamr-test-utils')
 
 const { startEndpoint, disconnectionReasons, disconnectionCodes } = require('../../src/connection/WsEndpoint')
@@ -25,7 +24,7 @@ describe('check and kill dead connections', () => {
     })
 
     afterEach(async () => {
-        allSettled([
+        Promise.allSettled([
             node1.stop(),
             node2.stop()
         ])

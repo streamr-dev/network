@@ -1,6 +1,5 @@
 const { EventEmitter } = require('events')
 
-const allSettled = require('promise.allsettled')
 const { Utils } = require('streamr-client-protocol')
 
 const getLogger = require('../helpers/logger')
@@ -141,7 +140,7 @@ class Node extends EventEmitter {
         const nodes = this.streams.removeStream(streamId)
         this.instructionThrottler.removeStreamId(streamId)
 
-        await allSettled(nodes.map((nodeAddress) => this.protocols.nodeToNode.sendUnsubscribe(nodeAddress, streamId))).then((results) => {
+        await Promise.allSettled(nodes.map((nodeAddress) => this.protocols.nodeToNode.sendUnsubscribe(nodeAddress, streamId))).then((results) => {
             results.forEach((result) => {
                 if (result.status !== 'fulfilled') {
                     this.logger.debug(`unsubscribed, but failed to send unsubscribe request for the stream ${streamId}, reason: ${result.reason}`)
@@ -222,7 +221,10 @@ class Node extends EventEmitter {
             return this._unsubscribeFromStreamOnNode(nodeId, streamId)
         })
 
-        const results = await allSettled([allSettled(subscribePromises), allSettled(unsubscribePromises)])
+        const results = await Promise.allSettled([
+            Promise.allSettled(subscribePromises),
+            Promise.allSettled(unsubscribePromises)
+        ])
         this.streams.updateCounter(streamId, counter)
 
         // Log success / failures

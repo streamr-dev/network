@@ -1,6 +1,5 @@
 const { EventEmitter } = require('events')
 
-const qs = require('qs')
 const WebSocket = require('ws')
 const uWS = require('uWebSockets.js')
 
@@ -125,7 +124,7 @@ class WsEndpoint extends EventEmitter {
 
                 /* This immediately calls open handler, you must not use res after this call */
                 res.upgrade({
-                    query: req.getQuery(),
+                    address: req.getQuery('address'),
                     peerId: req.getHeader('streamr-peer-id'),
                     peerType: req.getHeader('streamr-peer-type'),
                 },
@@ -442,8 +441,7 @@ class WsEndpoint extends EventEmitter {
     }
 
     _onIncomingConnection(ws) {
-        const { address } = qs.parse(ws.query)
-        const { peerId, peerType } = ws
+        const { address, peerId, peerType } = ws
 
         try {
             if (!address) {

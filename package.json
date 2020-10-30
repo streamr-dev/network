@@ -6,17 +6,6 @@
     "type": "git",
     "url": "git+https://github.com/streamr-dev/network.git"
   },
-  "bugs": {
-    "url": "https://github.com/streamr-dev/network/issues"
-  },
-  "homepage": "https://github.com/streamr-dev/network#readme",
-  "keywords": [
-    "p2p",
-    "pub-sub",
-    "networking",
-    "streamr",
-    "streamr-network"
-  ],
   "bin": {
     "tracker": "./bin/tracker.js",
     "subscriber": "./bin/subscriber.js",
@@ -42,14 +31,10 @@
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
     "commander": "^6.2.0",
-    "fastify": "^3.7.0",
-    "fastify-cors": "^4.1.0",
     "geoip-lite": "^1.4.2",
     "lru-cache": "^6.0.0",
     "pino": "^6.7.0",
     "pino-pretty": "^4.3.0",
-    "promise.allsettled": "^1.0.2",
-    "qs": "^6.9.4",
     "speedometer": "^1.1.0",
     "streamr-client-protocol": "^6.0.3",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.8.0",

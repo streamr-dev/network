@@ -1,5 +1,3 @@
-const allSettled = require('promise.allsettled')
-
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { events } = require('../../src/connection/WsEndpoint')
@@ -15,7 +13,7 @@ describe('WsEndpoint: back pressure handling', () => {
     })
 
     afterEach(async () => {
-        allSettled([
+        Promise.allSettled([
             ep1.stop(),
             ep2.stop()
         ])
