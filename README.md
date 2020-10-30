@@ -393,11 +393,11 @@ The client and the subscriptions can fire events as detailed below. You can bind
 | no_resend    | [ResendResponseNoResend](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_no_resend/ResendResponseNoResendV1.js) | This will occur instead of the `resending` - `resent` sequence in case there were no messages to resend. |
 | error        | Error object                                                 | Reports errors, for example problems with message content    |
 
-### Partitioning
+## Partitioning
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
 
-**Creating partitioned streams**
+#### Creating partitioned streams
 
 By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (1-100 is reasonable). An example of creating a partitioned stream using the JS client:
 
@@ -410,7 +410,7 @@ client.createStream({
 })
 ```
 
-**Publishing to partitioned streams**
+#### Publishing to partitioned streams
 
 In most use cases, a user wants related events (e.g. events from a particular device) to be assigned to the same partition, so that the events retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly.
 
@@ -425,7 +425,7 @@ client.publish('my-stream-id', msg, Date.now(), msg.vehicleId)
 stream.publish(msg, Date.now(), msg.vehicleId)
 ```
 
-**Subscribing to partitioned streams**
+#### Subscribing to partitioned streams
 
 By default, the JS client subscribes to the first partition (partition `0`) in a stream. The partition number can be explicitly given in the subscribe call:
 
@@ -459,7 +459,7 @@ const handler = (payload, streamMessage) => {
 })
 ```
 
-### Logging
+## Logging
 
 The Streamr JS client library supports [debug](https://github.com/visionmedia/debug) for logging.
 
