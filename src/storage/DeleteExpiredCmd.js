@@ -63,7 +63,7 @@ class DeleteExpiredCmd {
     async _fetchStreamsInfo(streams) {
         const tasks = streams.filter(Boolean).map((stream) => {
             return this.limit(async () => {
-                const url = `${this.streamrBaseUrl}/api/v1/streams/${stream.streamId}/validation`
+                const url = `${this.streamrBaseUrl}/api/v1/streams/${encodeURIComponent(stream.streamId)}/validation`
                 return fetch(url).then((res) => res.json()).then((json) => {
                     return {
                         streamId: stream.streamId,

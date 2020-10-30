@@ -8,7 +8,8 @@
   },
   "bin": {
     "broker": "./app.js",
-    "tracker": "./tracker.js"
+    "tracker": "./tracker.js",
+    "delete-expired-data": "./bin/delete-expired-data.js"
   },
   "main": "app.js",
   "directories": {

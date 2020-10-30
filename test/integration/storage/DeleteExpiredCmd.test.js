@@ -67,8 +67,10 @@ describe('DeleteExpiredCmd', () => {
     const daysArray = [0, 1, 2, 3]
     daysArray.map(async (days) => {
         test(`keep in database ${days} days of data`, async () => {
+            const id = 'sandbox/DeleteExpiredCmd.test.js-' + Date.now()
             const stream = await client.createStream({
-                name: 'DeleteExpiredCmd.test.js-' + Date.now(),
+                id,
+                name: id,
                 storageDays: days
             })
             const streamId = stream.id
