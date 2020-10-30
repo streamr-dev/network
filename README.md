@@ -8,7 +8,7 @@
 </h1>
 
 
-By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in Streams, produce new data to Streams, and create new Streams.
+By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams.
 
 The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
 
@@ -53,7 +53,7 @@ const sub = client.subscribe(
         // optional resend options here
     },
     (message, metadata) => {
-        // This is the message handler which gets called for every incoming message in the Stream.
+        // This is the message handler which gets called for every incoming message in the stream.
         // Do something with the message here!
     }
 )
@@ -70,7 +70,7 @@ const sub = await client.resend(
         },
     },
     (message) => {
-        // This is the message handler which gets called for every received message in the Stream.
+        // This is the message handler which gets called for every received message in the stream.
         // Do something with the message here!
     }
 )
@@ -78,19 +78,19 @@ const sub = await client.resend(
 
 See "Subscription options" for resend options
 
-#### Programmatically creating a Stream
+#### Programmatically creating a stream
 
 ```javascript
 client.getOrCreateStream({
-    name: 'My awesome Stream created via the API',
+    name: 'My awesome stream created via the API',
 })
     .then((stream) => {
         console.log(`Stream ${stream.id} has been created!`)
-        // Do something with the Stream, for example call stream.publish(message)
+        // Do something with the stream, for example call stream.publish(message)
     })
 ```
 
-#### Publishing data points to a Stream
+#### Publishing data points to a stream
 
 ```javascript
 // Here's our example data point
@@ -100,10 +100,10 @@ const msg = {
     happy: true
 }
 
-// Publish using the Stream id only
+// Publish using the stream id only
 client.publish('my-stream-id', msg)
 
-// The first argument can also be the Stream object
+// The first argument can also be the stream object
 client.publish(stream, msg)
 
 // Publish with a specific timestamp as a Date object (default is now)
@@ -221,12 +221,12 @@ All the below functions return a Promise which gets resolved with the result. Th
 
 | Name                                                | Description                                                  |
 | :--------------------------------------------------- | :------------------------------------------------------------ |
-| getStream(streamId)                                 | Fetches a Stream object from the API.                        |
-| listStreams(query)                                  | Fetches an array of Stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com). |
-| getStreamByName(name)                               | Fetches a Stream which exactly matches the given name.       |
-| createStream(properties)                            | Creates a Stream with the given properties. For more information on the Stream properties, consult the [API docs](https://api-explorer.streamr.com). |
-| getOrCreateStream(properties)                       | Gets a Stream with the id or name given in `properties`, or creates it if one is not found. |
-| publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given Stream.                 |
+| getStream(streamId)                                 | Fetches a stream object from the API.                        |
+| listStreams(query)                                  | Fetches an array of stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com). |
+| getStreamByName(name)                               | Fetches a stream which exactly matches the given name.       |
+| createStream(properties)                            | Creates a stream with the given properties. For more information on the stream properties, consult the [API docs](https://api-explorer.streamr.com). |
+| getOrCreateStream(properties)                       | Gets a stream with the id or name given in `properties`, or creates it if one is not found. |
+| publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given stream.                 |
 
 #### Listening to state changes of the client
 
@@ -240,14 +240,14 @@ All the below functions return a Promise which gets resolved with the result. Th
 
 | Name                                      | Description                                                  |
 | :----------------------------------------- | :------------------------------------------------------------ |
-| update()                                  | Updates the properties of this Stream object by sending them to the API. |
-| delete()                                  | Deletes this Stream.                                         |
-| getPermissions()                          | Returns the list of permissions for this Stream.             |
+| update()                                  | Updates the properties of this stream object by sending them to the API. |
+| delete()                                  | Deletes this stream.                                         |
+| getPermissions()                          | Returns the list of permissions for this stream.             |
 | hasPermission(operation, user)            | Returns a permission object, or null if no such permission was found. Valid `operation` values for streams are: stream_get, stream_edit, stream_delete, stream_publish, stream_subscribe, and stream_share. `user` is the username of a user, or null for public permissions. |
 | grantPermission(operation, user)          | Grants the permission to do `operation` to `user`, which are defined as above. |
 | revokePermission(permissionId)            | Revokes a permission identified by its `id`.                 |
-| detectFields()                            | Updates the Stream field config (schema) to match the latest data point in the Stream. |
-| publish(message, timestamp, partitionKey) | Publishes a new message to this Stream.                      |
+| detectFields()                            | Updates the stream field config (schema) to match the latest data point in the stream. |
+| publish(message, timestamp, partitionKey) | Publishes a new message to this stream.                      |
 
 ## Subscription options
 
