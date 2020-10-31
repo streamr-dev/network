@@ -270,6 +270,13 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
                     next(...args),
                     onCancel,
                 ]),
+                async throw(err) {
+                    return cancel(err)
+                },
+                async return(v) {
+                    await cancel()
+                    return v
+                },
                 [Symbol.asyncIterator]() {
                     return this
                 },
