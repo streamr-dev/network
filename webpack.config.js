@@ -37,9 +37,6 @@ const commonConfig = {
                 exclude: /(node_modules|bower_components)/,
                 use: {
                     loader: 'babel-loader',
-                    options: {
-                        presets: ['@babel/preset-env']
-                    }
                 }
             },
             {
@@ -76,10 +73,11 @@ const clientConfig = merge({}, commonConfig, {
         filename: libraryName + '.web.js',
     },
     node: {
-        stream: 'readable-stream',
+        stream: true,
     },
     resolve: {
         alias: {
+            stream: 'readable-stream',
             http: path.resolve(__dirname, './src/shim/http-https.js'),
             https: path.resolve(__dirname, './src/shim/http-https.js'),
             ws: path.resolve(__dirname, './src/shim/ws.js'),

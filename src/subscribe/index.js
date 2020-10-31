@@ -335,21 +335,16 @@ function MessagePipeline(client, opts = {}, onFinally = () => {}) {
         },
         orderingUtil,
     ], async (err) => {
-        console.log('FINALLY endStream >>', err)
         try {
             await endStream(stream, err)
-            console.log('FINALLY endStream <<')
         } finally {
-            console.log('FINALLY onFinally >>')
             await onFinally(err)
-            console.log('FINALLY onFinally <<')
         }
     })
 
     return Object.assign(p, {
         stream,
         done: () => {
-            console.log('done?', stream.writable)
             if (stream.writable) {
                 stream.end()
             }
@@ -490,7 +485,6 @@ async function getResendStream(client, opts) {
             ControlMessage.TYPES.ResendResponseNoResend,
         ],
     }).then((v) => {
-        console.log('done')
         msgs.done()
         return v
     }, (err) => {

@@ -1,5 +1,4 @@
-import Debug from 'debug'
-import { Readable, PassThrough } from 'readable-stream'
+import { Readable, PassThrough } from 'stream'
 
 import { wait } from 'streamr-test-utils'
 
@@ -8,7 +7,6 @@ import { Defer } from '../../src/utils'
 
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 const WAIT = 20
-console.log = Debug('Streamr::   CONSOLE   ')
 
 async function* generate(items = expected) {
     await wait(WAIT * 0.1)

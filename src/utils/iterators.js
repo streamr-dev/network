@@ -1,4 +1,4 @@
-import { finished, Readable, pipeline as streamPipeline } from 'readable-stream'
+import { Readable } from 'stream'
 import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
@@ -52,7 +52,8 @@ Readable.from = function from(iterable, opts) {
 
 export async function endStream(stream, optionalErr) {
     if (!stream.readable && !stream.writable) {
-        return promisify(stream.destroy.bind(stream))(optionalErr)
+        await promisify(stream.destroy.bind(stream))(optionalErr)
+        return
     }
 
     if (stream.writable) {
@@ -399,9 +400,6 @@ export function pipeline(iterables = [], onFinally, opts) {
                         await endStream(input)
                     }
                 })
-            }
-            if (nextStream) {
-                nextStream.once('error', (er) => console.error({ er }))
             }
 
             try {
