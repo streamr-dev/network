@@ -1,7 +1,6 @@
 import { getEndpointUrl } from '../utils'
-import AuthFetchError from '../errors/AuthFetchError'
 
-import authFetch from './authFetch'
+import authFetch, { AuthFetchError } from './authFetch'
 
 async function getSessionToken(url, props) {
     return authFetch(

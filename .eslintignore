@@ -2,5 +2,6 @@ node_modules/**
 examples/**
 coverage/**
 dist/**
+test/legacy/**
 src/shim/**
 test/unit/StubbedStreamrClient.js

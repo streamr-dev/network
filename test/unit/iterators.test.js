@@ -1,4 +1,5 @@
-import { Readable, PassThrough } from 'stream'
+import Debug from 'debug'
+import { Readable, PassThrough } from 'readable-stream'
 
 import { wait } from 'streamr-test-utils'
 
@@ -6,8 +7,8 @@ import { iteratorFinally, CancelableGenerator, pipeline } from '../../src/utils/
 import { Defer } from '../../src/utils'
 
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]
-
 const WAIT = 20
+console.log = Debug('Streamr::   CONSOLE   ')
 
 async function* generate(items = expected) {
     await wait(WAIT * 0.1)
@@ -1182,8 +1183,11 @@ describe('Iterator Utils', () => {
                 await wait(WAIT)
                 onFinallyInnerAfter()
             })
+            const inputStream = Readable.from(generate())
+            const onInputStreamClose = jest.fn()
+            inputStream.once('close', onInputStreamClose)
             const p = pipeline([
-                Readable.from(generate()),
+                inputStream,
                 async function* Step1(s) {
                     yield* s
                 },
@@ -1199,6 +1203,8 @@ describe('Iterator Utils', () => {
             expect(onFinallyInner).toHaveBeenCalledTimes(1)
             expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
             expect(received).toEqual(expected)
+            expect(inputStream.readable).toBe(false)
+            expect(onInputStreamClose).toHaveBeenCalledTimes(1)
         })
 
         it('works with nested pipelines', async () => {
@@ -1207,6 +1213,7 @@ describe('Iterator Utils', () => {
                 await wait(WAIT)
                 onFinallyInnerAfter()
             })
+
             const receivedStep1 = []
             const receivedStep2 = []
             const onFirstStreamClose = jest.fn()
@@ -1216,6 +1223,7 @@ describe('Iterator Utils', () => {
             const inputStream = new PassThrough({
                 objectMode: true,
             })
+            inputStream.id = 'inputStream'
             inputStream.once('close', onInputStreamClose)
             const p1 = pipeline([
                 inputStream,
@@ -1228,12 +1236,14 @@ describe('Iterator Utils', () => {
             ], onFinallyInner)
 
             const firstStream = Readable.from(generate())
+            firstStream.id = 'firststream'
             firstStream.once('close', onFirstStreamClose)
             let intermediateStream
             const p = pipeline([
                 firstStream,
                 (s) => {
                     intermediateStream = Readable.from(s).pipe(inputStream)
+                    intermediateStream.id = 'intermediateStream'
                     intermediateStream.once('close', onIntermediateStreamClose)
                     return p1
                 },

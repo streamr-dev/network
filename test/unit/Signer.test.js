@@ -1,6 +1,6 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
-import Signer from '../../src/Signer'
+import Signer from '../../src/publish/Signer'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 /*

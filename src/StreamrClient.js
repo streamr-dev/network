@@ -1,16 +1,16 @@
-import EventEmitter from 'eventemitter3'
-import debugFactory from 'debug'
 import qs from 'qs'
-import { Wallet } from 'ethers'
-import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
+import EventEmitter from 'eventemitter3'
 import uniqueId from 'lodash.uniqueid'
+import { Wallet } from 'ethers'
+import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import Debug from 'debug'
 
-import Connection from './Connection'
-import Session from './Session'
 import { getVersionString } from './utils'
 import { iteratorFinally } from './utils/iterators'
-import Publisher from './Publisher'
-import MessageStream from './subscribe'
+import Connection from './Connection'
+import Session from './Session'
+import Publisher from './publish'
+import Subscriber from './subscribe'
 
 const { ControlMessage } = ControlLayer
 
@@ -33,7 +33,7 @@ export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
         super()
         this.id = uniqueId('StreamrClient')
-        this.debug = debugFactory(this.id)
+        this.debug = Debug(this.id)
         // Default options
         this.options = {
             debug: this.debug,
@@ -94,39 +94,42 @@ export default class StreamrClient extends EventEmitter {
         this.getUserInfo = this.getUserInfo.bind(this)
         this.onConnectionConnected = this.onConnectionConnected.bind(this)
         this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
-
         this._onError = this._onError.bind(this)
         this.onErrorResponse = this.onErrorResponse.bind(this)
         this.onConnectionError = this.onConnectionError.bind(this)
         this.getErrorEmitter = this.getErrorEmitter.bind(this)
+        this.onConnectionMessage = this.onConnectionMessage.bind(this)
 
         this.on('error', this._onError) // attach before creating sub-components incase they fire error events
 
         this.session = new Session(this, this.options.auth)
         this.connection = connection || new Connection(this.options)
-        this.connection.on('message', (messageEvent) => {
-            if (!this.connection.isConnected()) { return } // ignore messages if not connected
-            let controlMessage
-            try {
-                controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
-            } catch (err) {
-                this.connection.debug('<< %o', messageEvent && messageEvent.data)
-                this.debug('deserialize error', err)
-                this.emit('error', err)
-                return
-            }
-            this.connection.debug('<< %o', controlMessage)
-            this.connection.emit(controlMessage.type, controlMessage)
-        })
+
+        this.connection
+            .on('message', this.onConnectionMessage)
+            .on('connected', this.onConnectionConnected)
+            .on('disconnected', this.onConnectionDisconnected)
+            .on('error', this.onConnectionError)
+            .on(ControlMessage.TYPES.ErrorResponse, this.onErrorResponse)
 
         this.publisher = new Publisher(this)
-        this.messageStream = new MessageStream(this)
+        this.subscriber = new Subscriber(this)
+    }
 
-        this.connection.on('connected', this.onConnectionConnected)
-        this.connection.on('disconnected', this.onConnectionDisconnected)
-        this.connection.on('error', this.onConnectionError)
+    onConnectionMessage(messageEvent) {
+        if (!this.connection.isConnected()) { return } // ignore messages if not connected
+        let controlMessage
+        try {
+            controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
+        } catch (err) {
+            this.connection.debug('<< %o', messageEvent && messageEvent.data)
+            this.debug('deserialize error', err)
+            this.emit('error', err)
+            return
+        }
 
-        this.connection.on(ControlMessage.TYPES.ErrorResponse, this.onErrorResponse)
+        this.connection.debug('<< %o', controlMessage)
+        this.connection.emit(controlMessage.type, controlMessage)
     }
 
     async onConnectionConnected() {
@@ -140,13 +143,7 @@ export default class StreamrClient extends EventEmitter {
     }
 
     onConnectionError(err) {
-        // If there is an error parsing a json message in a stream, fire error events on the relevant subs
-        if ((err instanceof Errors.InvalidJsonError || err.reason instanceof Errors.InvalidJsonError)) {
-            //this.subscriber.onErrorMessage(err)
-        } else {
-            // if it looks like an error emit as-is, otherwise wrap in new Error
-            this.emit('error', new Connection.ConnectionError(err))
-        }
+        this.emit('error', new Connection.ConnectionError(err))
     }
 
     getErrorEmitter(source) {
@@ -179,28 +176,6 @@ export default class StreamrClient extends EventEmitter {
 
     onError(error) { // eslint-disable-line class-methods-use-this
         console.error(error)
-    }
-
-    async resend(opts, fn) {
-        const task = this.messageStream.resend(opts)
-        if (!fn) {
-            return task
-        }
-
-        const r = task.then((sub) => emitterMixin(sub))
-
-        Promise.resolve(r).then(async (sub) => {
-            sub.emit('resending')
-            for await (const msg of sub) {
-                await fn(msg.getParsedContent(), msg)
-            }
-            sub.emit('resent')
-            return sub
-        }).catch((err) => {
-            this.emit('error', err)
-        })
-
-        return r
     }
 
     isConnected() {
@@ -236,6 +211,18 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.disconnect()
     }
 
+    getSubscriptions(...args) {
+        return this.subscriber.getAll(...args)
+    }
+
+    async ensureConnected() {
+        return this.connect()
+    }
+
+    async ensureDisconnected() {
+        return this.disconnect()
+    }
+
     logout() {
         return this.session.logout()
     }
@@ -251,15 +238,15 @@ export default class StreamrClient extends EventEmitter {
     async subscribe(opts, fn) {
         let subTask
         if (opts.resend || opts.from || opts.to || opts.last) {
-            subTask = this.messageStream.resendSubscribe(opts)
+            subTask = this.subscriber.resendSubscribe(opts)
         } else {
-            subTask = this.messageStream.subscribe(opts)
+            subTask = this.subscriber.subscribe(opts)
         }
 
         if (!fn) {
             return subTask
         }
-
+        // legacy event wrapper
         const r = Promise.resolve(subTask).then((sub) => {
             const sub2 = emitterMixin(sub)
             if (!sub.resend) { return sub2 }
@@ -282,22 +269,34 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async unsubscribe(opts) {
-        const sub = await this.messageStream.unsubscribe(opts)
+        const sub = await this.subscriber.unsubscribe(opts)
         if (sub && opts.emit) {
             opts.emit('unsubscribed')
         }
     }
 
-    getSubscriptions(...args) {
-        return this.messageStream.getAll(...args)
-    }
+    async resend(opts, fn) {
+        const task = this.subscriber.resend(opts)
+        if (!fn) {
+            return task
+        }
 
-    async ensureConnected() {
-        return this.connect()
-    }
+        // legacy event wrapper
+        const r = task.then((sub) => emitterMixin(sub))
 
-    async ensureDisconnected() {
-        return this.disconnect()
+        Promise.resolve(r).then(async (sub) => {
+            sub.emit('resending')
+            for await (const msg of sub) {
+                await fn(msg.getParsedContent(), msg)
+            }
+            console.log('done')
+            sub.emit('resent')
+            return sub
+        }).catch((err) => {
+            this.emit('error', err)
+        })
+
+        return r
     }
 
     static generateEthereumAccount() {

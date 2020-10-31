@@ -198,7 +198,7 @@ describe('StreamrClient', () => {
             })
         })
 
-        describe('resend', () => {
+        describe.only('resend', () => {
             let stream
 
             let timestamps = []

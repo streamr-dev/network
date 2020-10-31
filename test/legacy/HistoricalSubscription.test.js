@@ -1,3 +1,4 @@
+/
 import sinon from 'sinon'
 import { ControlLayer, MessageLayer, Errors } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'

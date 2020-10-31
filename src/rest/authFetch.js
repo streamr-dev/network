@@ -1,11 +1,24 @@
 import fetch from 'node-fetch'
 import Debug from 'debug'
 
-import AuthFetchError from '../errors/AuthFetchError'
 import { getVersionString } from '../utils'
 
 export const DEFAULT_HEADERS = {
     'Streamr-Client': `streamr-client-javascript/${getVersionString()}`,
+}
+
+export class AuthFetchError extends Error {
+    constructor(message, response, body) {
+        // add leading space if there is a body set
+        const bodyMessage = body ? ` ${(typeof body === 'string' ? body : JSON.stringify(body).slice(0, 1024))}...` : ''
+        super(message + bodyMessage)
+        this.response = response
+        this.body = body
+
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
 }
 
 const debug = Debug('StreamrClient:utils:authfetch')

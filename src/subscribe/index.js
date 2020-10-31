@@ -5,8 +5,7 @@ import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import { ControlLayer, MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
-import SignatureRequiredError from '../errors/SignatureRequiredError'
-import { uuid, CacheAsyncFn, pOrderedResolve, Defer } from '../utils'
+import { uuid, CacheAsyncFn, pOrderedResolve } from '../utils'
 import { endStream, pipeline, CancelableGenerator } from '../utils/iterators'
 
 const { OrderingUtil, StreamMessageValidator } = Utils
@@ -19,6 +18,20 @@ const {
 } = ControlLayer
 
 const { MessageRef, StreamMessage } = MessageLayer
+
+const EMPTY_MESSAGE = {
+    serialize() {}
+}
+
+export class SignatureRequiredError extends Errors.ValidationError {
+    constructor(streamMessage = EMPTY_MESSAGE) {
+        super(`Client requires data to be signed. Message: ${streamMessage.serialize()}`)
+        this.streamMessage = streamMessage
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+}
 
 /**
  * Convert allSettled results into a thrown Aggregate error if necessary.
@@ -322,16 +335,21 @@ function MessagePipeline(client, opts = {}, onFinally = () => {}) {
         },
         orderingUtil,
     ], async (err) => {
+        console.log('FINALLY endStream >>', err)
         try {
             await endStream(stream, err)
+            console.log('FINALLY endStream <<')
         } finally {
+            console.log('FINALLY onFinally >>')
             await onFinally(err)
+            console.log('FINALLY onFinally <<')
         }
     })
 
     return Object.assign(p, {
         stream,
         done: () => {
+            console.log('done?', stream.writable)
             if (stream.writable) {
                 stream.end()
             }
@@ -472,6 +490,7 @@ async function getResendStream(client, opts) {
             ControlMessage.TYPES.ResendResponseNoResend,
         ],
     }).then((v) => {
+        console.log('done')
         msgs.done()
         return v
     }, (err) => {

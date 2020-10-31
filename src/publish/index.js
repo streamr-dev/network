@@ -5,10 +5,22 @@ import randomstring from 'randomstring'
 import LRU from 'quick-lru'
 import { ethers } from 'ethers'
 
+import Stream from '../rest/domain/Stream'
+import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from '../utils'
+
 import Signer from './Signer'
-import Stream from './rest/domain/Stream'
-import FailedToPublishError from './errors/FailedToPublishError'
-import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from './utils'
+
+export class FailedToPublishError extends Error {
+    constructor(streamId, msg, reason) {
+        super(`Failed to publish to stream ${streamId} due to: ${reason}. Message was: ${msg}`)
+        this.streamId = streamId
+        this.msg = msg
+        this.reason = reason
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+}
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 

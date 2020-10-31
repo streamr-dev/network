@@ -1,22 +1,70 @@
-import { finished, Readable, pipeline as streamPipeline } from 'stream'
+import { finished, Readable, pipeline as streamPipeline } from 'readable-stream'
 import { promisify } from 'util'
 
 import pMemoize from 'p-memoize'
 
-import { Defer, pTimeout } from '../utils'
+import { Defer, pTimeout } from './index'
 
-const pFinished = promisify(finished)
+Readable.from = function from(iterable, opts) {
+    let iterator
+    if (iterable && iterable[Symbol.asyncIterator]) {
+        iterator = iterable[Symbol.asyncIterator]()
+    } else if (iterable && iterable[Symbol.iterator]) {
+        iterator = iterable[Symbol.iterator]()
+    } else {
+        throw new Error('invalid arg type')
+    }
+
+    const readable = new Readable({
+        objectMode: true,
+        ...opts
+    })
+
+    // Reading boolean to protect against _read
+    // being called before last iteration completion.
+    let reading = false
+
+    async function next() {
+        try {
+            const { value, done } = await iterator.next()
+            if (done) {
+                readable.push(null)
+            } else if (readable.push(await value)) {
+                next()
+            } else {
+                reading = false
+            }
+        } catch (err) {
+            readable.destroy(err)
+        }
+    }
+
+    // eslint-disable-next-line no-underscore-dangle
+    readable._read = function _read() {
+        if (!reading) {
+            reading = true
+            next()
+        }
+    }
+
+    return readable
+}
 
 export async function endStream(stream, optionalErr) {
-    // ends stream + waits for end
-    stream.destroy(optionalErr)
-    await true
-    try {
-        await pFinished(stream)
-    } catch (err) {
-        if (err.code === 'ERR_STREAM_PREMATURE_CLOSE') {
-            await pFinished(stream, optionalErr)
+    if (!stream.readable && !stream.writable) {
+        return promisify(stream.destroy.bind(stream))(optionalErr)
+    }
+
+    if (stream.writable) {
+        if (optionalErr) {
+            await promisify(stream.destroy.bind(stream))(optionalErr)
+        } else {
+            await promisify(stream.end.bind(stream))(optionalErr)
         }
+    }
+
+    if (stream.readable) {
+        await promisify(stream.destroy.bind(stream))(optionalErr)
     }
 }
 
@@ -338,12 +386,24 @@ export function pipeline(iterables = [], onFinally, opts) {
                 stream = nextIterable
             }
 
-            if (prev && getIsStream(nextIterable)) {
+            const nextStream = getIsStream(nextIterable) ? nextIterable : undefined
+            if (prev && nextStream) {
                 const input = getIsStream(prev) ? prev : Readable.from(prev)
-                nextIterable = streamPipeline(input, nextIterable, () => {
-                    // ignore error
+                nextIterable = iteratorFinally((async function* pipeStream() {
+                    input.pipe(nextStream)
+                    yield* nextStream
+                }()), async (err) => {
+                    try {
+                        await endStream(nextStream, err)
+                    } finally {
+                        await endStream(input)
+                    }
                 })
             }
+            if (nextStream) {
+                nextStream.once('error', (er) => console.error({ er }))
+            }
+
             try {
                 yield* nextIterable
             } catch (err) {
@@ -351,6 +411,10 @@ export function pipeline(iterables = [], onFinally, opts) {
                     error = err
                 }
                 throw err
+            } finally {
+                if (nextStream) {
+                    await endStream(nextStream)
+                }
             }
         }()), async (err) => {
             if (!cancelled && err) {
