@@ -76,6 +76,25 @@ describe('PushQueue', () => {
     })
 
     describe('from', () => {
+        it('supports iterable', async () => {
+            const q = PushQueue.from(expected)
+
+            const msgs = []
+            // will end when source ends
+            for await (const msg of q) {
+                msgs.push(msg)
+            }
+
+            expect(msgs).toEqual(expected)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+
+            // these should have no effect
+            q.push('c')
+            await q.return()
+        })
+
         it('supports async iterable', async () => {
             const q = PushQueue.from(generate())
 
@@ -92,7 +111,7 @@ describe('PushQueue', () => {
 
             // these should have no effect
             q.push('c')
-            await q.return()
+            expect(q.length).toBe(0)
         })
 
         it('can be aborted while waiting', async () => {
@@ -126,6 +145,131 @@ describe('PushQueue', () => {
         })
     })
 
+    describe('end', () => {
+        it('can clean end after emptying buffer by pushing null', async () => {
+            const q = new PushQueue() // wouldn't end on its own
+            q.push(...expected)
+            expect(q.length).toBe(expected.length)
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === 1) {
+                    q.push(null) // won't end immediately
+                }
+            }
+
+            expect(msgs).toEqual(expected)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+
+            // these should have no effect
+            q.push('c')
+            expect(q.length).toBe(0)
+        })
+
+        it('does not buffer items after null', async () => {
+            const q = new PushQueue() // wouldn't end on its own
+            q.push(...expected, null, 'c')
+            expect(q.length).toBe(expected.length)
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+            }
+
+            expect(msgs).toEqual(expected)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+        })
+
+        it('does not buffer more items after end', async () => {
+            const q = new PushQueue() // wouldn't end on its own
+            expected.forEach((v) => q.push(v))
+            expect(q.length).toBe(expected.length)
+            q.end()
+            expect(q.length).toBe(expected.length)
+            q.push('c') // should have no effect
+            expect(q.length).toBe(expected.length)
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+            }
+
+            expect(msgs).toEqual(expected)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+        })
+
+        it('can clean end after emptying buffer with end', async () => {
+            const q = new PushQueue() // wouldn't end on its own
+            q.push(...expected)
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === 1) {
+                    q.end() // won't end immediately
+                }
+            }
+
+            expect(msgs).toEqual(expected)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+
+            // these should have no effect
+            q.push('c')
+            expect(q.length).toBe(0)
+        })
+
+        it('can push final value then end after emptying buffer with end', async () => {
+            const q = new PushQueue() // wouldn't end on its own
+            q.push(...expected)
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === 1) {
+                    q.end('c') // won't end immediately
+                }
+            }
+
+            expect(msgs).toEqual([...expected, 'c'])
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+        })
+
+        it('works with pending next', async () => {
+            const q = new PushQueue()
+            q.push(expected[0]) // preload first item
+            const msgsTask = Promise.all([
+                q.next(),
+                q.next(),
+            ]).then((m) => m.map(({ value }) => value))
+            q.push(...expected.slice(1)) // push rest after calls to next
+            q.end() // finish up
+
+            const msgs = await msgsTask
+            for await (const msg of q) {
+                msgs.push(msg) // gets rest of messages
+            }
+
+            expect(msgs).toEqual(expected)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+        })
+    })
+
     it('does not consume buffered items after return', async () => {
         const q = new PushQueue(['a', 'b'])
         expect(q.length).toBe(2)
@@ -134,6 +278,17 @@ describe('PushQueue', () => {
         for await (const msg of q) {
             throw new Error('should not get here ' + msg)
         }
+    })
+
+    it('handles break', async () => {
+        const q = new PushQueue(['a', 'b'])
+        expect(q.length).toBe(2)
+        const msgs = []
+        for await (const msg of q) {
+            msgs.push(msg) // gets rest of messages
+            break
+        }
+        expect(msgs).toEqual(['a'])
     })
 
     it('handles iterating again', async () => {

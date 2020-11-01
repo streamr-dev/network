@@ -77,10 +77,22 @@ export default class PushQueue {
             for await (const item of iterable) {
                 this.push(item)
             }
-            return this.return()
+            this.end()
         } catch (err) {
-            return this.throw(err)
+            await this.throw(err)
         }
+    }
+
+    /**
+     * signals no more data should be buffered
+     */
+
+    end(v) {
+        if (v != null) {
+            this.push(v)
+        }
+        this.push(null)
+        this.ended = true
     }
 
     onAbort() {
@@ -110,7 +122,8 @@ export default class PushQueue {
     }
 
     get length() {
-        return this.pending + this.buffer.length
+        const count = this.pending + this.buffer.length
+        return this.ended && count ? count - 1 : count
     }
 
     _cleanup() {
@@ -123,20 +136,25 @@ export default class PushQueue {
     }
 
     push(...values) {
-        if (this.finished) {
+        if (this.finished || this.ended) {
             // do nothing if done
             return
         }
 
-        if (!values.length) { return }
-        const p = this.nextQueue.shift()
-        if (p) {
-            const [first, ...rest] = values
-            p.resolve(first)
-            if (rest.length) {
-                this.buffer.push(...rest)
-            }
-        } else {
+        const nullIndex = values.findIndex((v) => v === null)
+        if (nullIndex !== -1) {
+            this.ended = true
+            // include null but trim rest
+            values = values.slice(0, nullIndex + 1) // eslint-disable-line no-param-reassign
+        }
+
+        while (this.nextQueue.length && values.length) {
+            const p = this.nextQueue.shift()
+            p.resolve(values.shift())
+        }
+
+        // push remaining into buffer
+        if (values.length) {
             this.buffer.push(...values)
         }
     }
@@ -150,7 +168,13 @@ export default class PushQueue {
                 this.buffer.length = 0 // prevent endless loop
                 while (buffer.length && !this.error && !this.finished) {
                     this.pending = Math.max(this.pending - 1, 0)
-                    yield buffer.shift()
+                    const value = buffer.shift()
+                    if (value === null) {
+                        this.return()
+                        return
+                    }
+
+                    yield value
                 }
 
                 // handle queued error
@@ -181,6 +205,11 @@ export default class PushQueue {
 
                 // ignore value if finished
                 if (this.finished) {
+                    return
+                }
+
+                if (value === null) {
+                    this.return()
                     return
                 }
 
