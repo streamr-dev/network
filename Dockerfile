@@ -9,7 +9,7 @@ RUN npm ci --only=production
 FROM node:14-alpine
 
 # needed for uWebSockets.js
-RUN apk update && apk add --no-cache gcompat curl
+RUN apk --update add --no-cache gcompat curl
 
 COPY --from=build /usr/src/broker /usr/src/broker
 WORKDIR /usr/src/broker
