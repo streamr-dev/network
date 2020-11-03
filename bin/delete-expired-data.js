@@ -12,6 +12,7 @@ program
     .requiredOption('--cassandra-datacenter <datacenter>')
     .requiredOption('--cassandra-keyspace <keyspace>')
     .requiredOption('--streamr-base-url <baseUrl>')
+    .requiredOption('--limit <limit>', 'max number of streams to fetch')
     .option('--real-run', 'delete data for real', false)
     .description('Delete expired data')
     .parse(process.argv)
@@ -23,6 +24,7 @@ const deleteExpiredCommand = new DeleteExpiredCmd({
     cassandraDatacenter: program.cassandraDatacenter,
     cassandraKeyspace: program.cassandraKeyspace,
     streamrBaseUrl: program.streamrBaseUrl,
+    limit: program.limit,
     dryRun: !program.realRun
 })
 deleteExpiredCommand.run()

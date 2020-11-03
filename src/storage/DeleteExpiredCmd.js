@@ -16,10 +16,12 @@ class DeleteExpiredCmd {
         cassandraHosts,
         cassandraDatacenter,
         cassandraKeyspace,
+        limit,
         dryRun = true
     }) {
         this.streamrBaseUrl = streamrBaseUrl
         this.dryRun = dryRun
+        this.limit = limit || 100000
 
         const authProvider = new cassandra.auth.PlainTextAuthProvider(cassandraUsername, cassandraPassword)
         this.cassandraClient = new cassandra.Client({
@@ -57,7 +59,7 @@ class DeleteExpiredCmd {
     async _getStreams() {
         const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
         const resultSet = await this.cassandraClient.execute(query, [], {
-            fetchSize: 100000
+            fetchSize: this.limit
         })
         return resultSet.rows.map((row) => ({
             streamId: row.stream_id,
@@ -132,7 +134,7 @@ class DeleteExpiredCmd {
                     prepare: true,
                 }).catch((err) => logger.error(err))
 
-                if (resultSet.rows.length === 0 || resultSet.rows[0].m.getTime() < timestampBefore) {
+                if (resultSet && (resultSet.rows.length === 0 || resultSet.rows[0].m.getTime() < timestampBefore)) {
                     result.push(bucket)
                 }
             })
