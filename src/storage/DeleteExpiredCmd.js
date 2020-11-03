@@ -38,12 +38,15 @@ class DeleteExpiredCmd {
         logger.info(`Found ${streams.length} unique streams`)
 
         const streamsInfo = await this._fetchStreamsInfo(streams)
-        const expiredBuckets = await this._getExpiredBuckets(streamsInfo)
+        const potentialBuckets = await this._getPotentiallyExpiredBuckets(streamsInfo)
+        logger.info('Found %d potentially expired buckets', potentialBuckets.length)
 
+        const expiredBuckets = await this._filterExpiredBuckets(potentialBuckets)
         logger.info('Found %d expired buckets (total records %d and size %d MB)',
             expiredBuckets.length,
             totalNumOfRecords(expiredBuckets),
             totalSizeOfBuckets(expiredBuckets))
+
         if (!this.dryRun) {
             await this._deleteExpired(expiredBuckets)
         }
@@ -53,7 +56,9 @@ class DeleteExpiredCmd {
 
     async _getStreams() {
         const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
-        const resultSet = await this.cassandraClient.execute(query)
+        const resultSet = await this.cassandraClient.execute(query, [], {
+            fetchSize: 100000
+        })
         return resultSet.rows.map((row) => ({
             streamId: row.stream_id,
             partition: row.partition
@@ -68,7 +73,7 @@ class DeleteExpiredCmd {
                     return {
                         streamId: stream.streamId,
                         partition: stream.partition,
-                        storageDays: parseInt(json.storageDays)
+                        storageDays: json.storageDays != null ? parseInt(json.storageDays) : 365,
                     }
                 }).catch((err) => logger.error(err))
             })
@@ -77,7 +82,7 @@ class DeleteExpiredCmd {
         return Promise.all(tasks)
     }
 
-    async _getExpiredBuckets(streamsInfo) {
+    async _getPotentiallyExpiredBuckets(streamsInfo) {
         const result = []
 
         const query = 'SELECT * FROM bucket WHERE stream_id = ? AND partition = ? AND date_create <= ?'
@@ -104,6 +109,31 @@ class DeleteExpiredCmd {
                             storageDays
                         })
                     })
+                }
+            })
+        })
+
+        await Promise.all(tasks)
+        return result
+    }
+
+    async _filterExpiredBuckets(potentialBuckets) {
+        const result = []
+
+        const query = 'SELECT MAX(ts) AS m FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id = ?'
+
+        const tasks = potentialBuckets.filter(Boolean).map((bucket) => {
+            const { streamId, partition, bucketId, storageDays } = bucket
+            const timestampBefore = Date.now() - 1000 * 60 * 60 * 24 * storageDays
+            const params = [streamId, partition, bucketId]
+
+            return this.limit(async () => {
+                const resultSet = await this.cassandraClient.execute(query, params, {
+                    prepare: true,
+                }).catch((err) => logger.error(err))
+
+                if (resultSet.rows.length === 0 || resultSet.rows[0].m.getTime() < timestampBefore) {
+                    result.push(bucket)
                 }
             })
         })
