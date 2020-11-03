@@ -40,16 +40,20 @@ export class AbortError extends Error {
  */
 
 export default class PushQueue {
-    constructor(items = [], { signal, onEnd } = {}) {
+    constructor(items = [], { signal, onEnd, timeout = 0 } = {}) {
         this.buffer = [...items]
         this.finished = false
         this.error = null // queued error
         this.nextQueue = [] // queued promises for next()
         this.pending = 0
-        this.onEnd = onEnd
+        this._onEnd = onEnd
+        this.timeout = timeout
 
         this[Symbol.asyncIterator] = this[Symbol.asyncIterator].bind(this)
         this.onAbort = this.onAbort.bind(this)
+        this.onEnd = this.onEnd.bind(this)
+        this.cancel = this.cancel.bind(this)
+        this.end = this.end.bind(this)
 
         // abort signal handling
         this.signal = signal
@@ -83,6 +87,15 @@ export default class PushQueue {
         }
     }
 
+    onEnd(...args) {
+        if (this._onEndCalled || !this._onEnd) {
+            return Promise.resolve()
+        }
+
+        this._onEndCalled = true
+        return this._onEnd(...args)
+    }
+
     /**
      * signals no more data should be buffered
      */
@@ -91,6 +104,7 @@ export default class PushQueue {
         if (v != null) {
             this.push(v)
         }
+
         this.push(null)
         this.ended = true
     }
@@ -101,6 +115,14 @@ export default class PushQueue {
 
     async next(...args) {
         return this.iterator.next(...args)
+    }
+
+    isWritable() {
+        return !(this.finished || this.ended)
+    }
+
+    isReadable() {
+        return !(this.finished || this.ended)
     }
 
     async return() {
@@ -133,6 +155,7 @@ export default class PushQueue {
         }
         this.pending = 0
         this.buffer.length = 0
+        return this.onEnd(this.error)
     }
 
     push(...values) {
@@ -141,6 +164,7 @@ export default class PushQueue {
             return
         }
 
+        // if values contains null, treat null as end
         const nullIndex = values.findIndex((v) => v === null)
         if (nullIndex !== -1) {
             this.ended = true
@@ -148,20 +172,35 @@ export default class PushQueue {
             values = values.slice(0, nullIndex + 1) // eslint-disable-line no-param-reassign
         }
 
+        // resolve pending next calls
         while (this.nextQueue.length && values.length) {
             const p = this.nextQueue.shift()
             p.resolve(values.shift())
         }
 
-        // push remaining into buffer
+        // push any remaining values into buffer
         if (values.length) {
             this.buffer.push(...values)
         }
     }
 
     iterate() { // eslint-disable-line class-methods-use-this
+        const handleTerminalValues = (value) => {
+            // returns final task to perform before returning, or false
+            if (value === null) {
+                return this.return()
+            }
+
+            if (value instanceof Error) {
+                return this.throw(value)
+            }
+
+            return false
+        }
+
         const [cancel, itr] = CancelableGenerator(async function* iterate() {
             while (true) {
+                /* eslint-disable no-await-in-loop */
                 // feed from buffer first
                 const buffer = this.buffer.slice()
                 this.pending += buffer.length
@@ -169,9 +208,10 @@ export default class PushQueue {
                 while (buffer.length && !this.error && !this.finished) {
                     this.pending = Math.max(this.pending - 1, 0)
                     const value = buffer.shift()
-                    if (value === null) {
-                        this.return()
-                        return
+                    const endTask = handleTerminalValues(value)
+                    if (endTask) {
+                        await endTask
+                        break
                     }
 
                     yield value
@@ -194,7 +234,6 @@ export default class PushQueue {
                     continue // eslint-disable-line no-continue
                 }
 
-                // eslint-disable-next-line no-await-in-loop
                 const value = await new Promise((resolve, reject) => {
                     // wait for next push
                     this.nextQueue.push({
@@ -208,29 +247,42 @@ export default class PushQueue {
                     return
                 }
 
-                if (value === null) {
-                    this.return()
-                    return
+                const endTask = handleTerminalValues(value)
+                if (endTask) {
+                    await endTask
+                    continue // eslint-disable-line no-continue
                 }
 
                 yield value
+                /* eslint-enable no-await-in-loop */
             }
-        }.call(this), this.onEnd)
+        }.call(this), async (err) => {
+            return this.onEnd(err)
+        }, {
+            timeout: this.timeout,
+        })
 
         return Object.assign(itr, {
             cancel,
         })
     }
 
-    cancel(...args) {
+    pipe(next) {
+        return next.from(this)
+    }
+
+    async cancel(...args) {
         this.finished = true
         return this.iterator.cancel(...args)
+    }
+
+    isCancelled(...args) {
+        return this.iterator.isCancelled(...args)
     }
 
     async* [Symbol.asyncIterator]() {
         // NOTE: consider throwing if trying to iterate after finished
         // or maybe returning a new iterator?
-
         try {
             yield* this.iterator
         } finally {

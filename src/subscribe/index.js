@@ -1,4 +1,3 @@
-import { PassThrough } from 'stream'
 import Emitter from 'events'
 
 import pMemoize from 'p-memoize'
@@ -6,7 +5,8 @@ import pLimit from 'p-limit'
 import { ControlLayer, MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
 import { uuid, CacheAsyncFn, pOrderedResolve } from '../utils'
-import { endStream, pipeline, CancelableGenerator } from '../utils/iterators'
+import { pipeline, CancelableGenerator } from '../utils/iterators'
+import PushQueue from '../utils/PushQueue'
 
 const { OrderingUtil, StreamMessageValidator } = Utils
 
@@ -66,39 +66,29 @@ function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
  */
 
 function messageStream(connection, { streamId, streamPartition, type = ControlMessage.TYPES.BroadcastMessage }) {
-    // stream acts as buffer
-    const msgStream = new PassThrough({
-        objectMode: true,
-    })
-
     const isMatchingStreamMessage = getIsMatchingStreamMessage({
         streamId,
         streamPartition
     })
 
+    let msgStream
     // write matching messages to stream
     const onMessage = (msg) => {
         if (!isMatchingStreamMessage(msg)) { return }
-        msgStream.write(msg)
+        msgStream.push(msg)
     }
+
+    // stream acts as buffer
+    msgStream = new PushQueue([], {
+        onEnd() {
+            // remove onMessage handler & clean up
+            connection.off(type, onMessage)
+        }
+    })
 
     connection.on(type, onMessage)
 
-    // remove onMessage handler & clean up as soon as we see any 'end' events
-    const onClose = () => {
-        connection.off(type, onMessage)
-        // clean up other handlers
-        msgStream
-            .off('close', onClose)
-            .off('end', onClose)
-            .off('finish', onClose)
-    }
-
     return msgStream
-        .once('close', onClose)
-        .once('end', onClose)
-        .once('destroy', onClose)
-        .once('finish', onClose)
 }
 
 function SubKey({ streamId, streamPartition = 0 }) {
@@ -223,21 +213,19 @@ function OrderMessages(client, options = {}) {
     const { gapFillTimeout, retryResendAfter } = client.options
     const { streamId, streamPartition } = validateOptions(options)
 
-    const outStream = new PassThrough({
-        objectMode: true,
-    })
+    const outStream = new PushQueue()
 
     let done = false
 
     const orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
-        if (!outStream.writable || done) {
+        if (!outStream.isWritable() || done) {
             return
         }
 
         if (orderedMessage.isByeMessage()) {
             outStream.end(orderedMessage)
         } else {
-            outStream.write(orderedMessage)
+            outStream.push(orderedMessage)
         }
     }, (from, to, publisherId, msgChainId) => async () => {
         // eslint-disable-next-line no-use-before-define
@@ -270,7 +258,15 @@ function OrderMessages(client, options = {}) {
     ], async (err) => {
         done = true
         orderingUtil.clearGaps()
-        await endStream(outStream, err)
+        try {
+            if (err) {
+                await outStream.throw(err)
+            } else {
+                await outStream.return()
+            }
+        } catch (_err) {
+            // ignore
+        }
         orderingUtil.clearGaps()
     }), {
         markMessageExplicitly,
@@ -334,20 +330,12 @@ function MessagePipeline(client, opts = {}, onFinally = () => {}) {
             }
         },
         orderingUtil,
-    ], async (err) => {
-        try {
-            await endStream(stream, err)
-        } finally {
-            await onFinally(err)
-        }
-    })
+    ], onFinally)
 
     return Object.assign(p, {
         stream,
         done: () => {
-            if (stream.writable) {
-                stream.end()
-            }
+            return stream.end()
         }
     })
 }

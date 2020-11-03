@@ -4,6 +4,7 @@ import { promisify } from 'util'
 import pMemoize from 'p-memoize'
 
 import { Defer, pTimeout } from './index'
+import PushQueue from './PushQueue'
 
 Readable.from = function from(iterable, opts) {
     let iterator
@@ -161,6 +162,7 @@ export function iteratorFinally(iterable, onFinally) {
     const it = g[Symbol.asyncIterator].bind(g)
     if (iterable.cancel) {
         g.cancel = (...args) => iterable.cancel(...args)
+        g.isCancelled = (...args) => iterable.isCancelled(...args)
     }
 
     // replace generator methods
@@ -198,16 +200,18 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
     const onCancel = Defer()
     const onDone = Defer()
 
-    const cancel = (gtr) => async (value) => {
-        if (value instanceof Error) {
-            if (value !== error) {
-                // collect errors
-                error = !error
-                    ? value
-                    : new AggregatedError([value, ...(error.errors || [])], value.message)
-            }
-        }
+    let iterator
 
+    async function cancelIterable(err) {
+        // cancel inner if has cancel
+        if (iterable && iterable.cancel) {
+            await iterable.cancel(err)
+        } else if (iterator && iterator.cancel) {
+            await iterator.cancel(err)
+        }
+    }
+
+    const cancel = (gtr) => async (value) => {
         if (cancelled) {
             // prevent recursion
             return onDone
@@ -215,34 +219,48 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
 
         cancelled = true
 
-        // need to make sure we don't try return inside final otherwise we end up deadlocked
-        if (!finalCalled && !pendingNextCount) {
-            // try end generator
-            const onGenEnd = error
-                ? gtr.throw(error).catch(() => {})
-                : gtr.return()
-
-            // wait for generator if it didn't start or there's a timeout
-            // i.e. wait for finally
-            if (!started || timeout) {
-                await pTimeout(onGenEnd, timeout).catch(pTimeout.ignoreError)
-                return onDone
+        try {
+            if (value instanceof Error) {
+                if (value !== error) {
+                    // collect errors
+                    error = !error
+                        ? value
+                        : new AggregatedError([value, ...(error.errors || [])], value.message)
+                }
             }
-        }
 
-        if (error) {
-            onCancel.reject(error)
-        } else {
-            onCancel.resolve({
-                value,
-                done: true,
-            })
-        }
+            // need to make sure we don't try return inside final otherwise we end up deadlocked
+            if (!finalCalled && !pendingNextCount) {
+                await cancelIterable(error)
+                // try end generator
+                const onGenEnd = error
+                    ? gtr.throw(error).catch(() => {})
+                    : gtr.return()
 
-        return onDone
+                // wait for generator if it didn't start or there's a timeout
+                // i.e. wait for finally
+                if (!started || timeout) {
+                    await pTimeout(onGenEnd, timeout).catch(pTimeout.ignoreError)
+                    return onDone
+                }
+            }
+
+            if (error) {
+                onCancel.reject(error)
+            } else {
+                onCancel.resolve({
+                    value,
+                    done: true,
+                })
+            }
+
+            return onDone
+        } catch (err) {
+            onCancel.reject(err)
+            return onDone
+        }
     }
 
-    let iterator
     async function* CancelableGeneratorFn() {
         started = true
 
@@ -275,7 +293,10 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
                 },
                 async return(v) {
                     await cancel()
-                    return v
+                    return {
+                        value: v,
+                        done: true,
+                    }
                 },
                 [Symbol.asyncIterator]() {
                     return this
@@ -284,27 +305,24 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
         } finally {
             // try end iterator
             if (iterator) {
+                const task = iterator.return()
                 if (!pendingNextCount || timeout) {
-                    await pTimeout(iterator.return(), timeout).catch(pTimeout.ignoreError)
+                    const wait = timeout || 250
+                    await pTimeout(task, wait).catch(pTimeout.ignoreError)
                 } else {
-                    iterator.return()
+                    // trigger return but don't await
                 }
             }
         }
     }
-
-    const cancelableGenerator = iteratorFinally(CancelableGeneratorFn(), async () => {
+    const cancelableGenerator = iteratorFinally(CancelableGeneratorFn(), async (err) => {
         finalCalled = true
         try {
             // cancel inner if has cancel
-            if (iterable && iterable.cancel) {
-                await iterable.cancel()
-            } else if (iterator && iterator.cancel) {
-                await iterator.cancel()
-            }
+            await cancelIterable(err || error)
 
             if (onFinally) {
-                await onFinally()
+                await onFinally(err)
             }
         } finally {
             onDone.resolve()
@@ -320,6 +338,8 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
 
     const cancelFn = cancel(cancelableGenerator)
     cancelableGenerator.cancel = cancelFn
+    cancelableGenerator.timeout = timeout
+    cancelableGenerator.isCancelled = () => cancelled
     return [
         cancelFn,
         cancelableGenerator
@@ -346,92 +366,86 @@ export function pipeline(iterables = [], onFinally, opts) {
         error = err
         try {
             // eslint-disable-next-line promise/no-promise-in-callback
-            await allSettledValues([...cancelFns].map(async (cancel) => (
-                cancel(err)
+            await allSettledValues([...cancelFns].map(async ({ isCancelled, cancel }) => (
+                isCancelled ? cancel(err) : undefined
             )))
+        } catch (errr) {
+            throw errr
         } finally {
             cancelFns.clear()
         }
     }
 
     const cancel = async (err) => {
-        if (cancelled) {
+        try {
+            if (cancelled) {
+                await onCancelDone
+                return
+            }
+            if (error) {
+                // eslint-disable-next-line promise/no-promise-in-callback
+                pipelineValue.throw(error).catch(() => {}) // ignore err
+            } else {
+                pipelineValue.return()
+            }
+            await cancelAll(err)
             await onCancelDone
-            return
+        } finally {
+            await true
         }
-        await cancelAll(err)
-        if (error) {
-            // eslint-disable-next-line promise/no-promise-in-callback
-            pipelineValue.throw(error).catch(() => {}) // ignore err
-        } else {
-            pipelineValue.return()
-        }
-        await onCancelDone
     }
 
     let firstSrc
     const setFirstSource = (v) => {
+        cancelFns.add(v)
         firstSrc = v
     }
 
     const last = iterables.reduce((_prev, next, index) => {
-        let stream
+        let prev
+        let nextIterable
 
-        const [cancelCurrent, it] = CancelableGenerator((async function* Gen() {
+        const [, it] = CancelableGenerator((async function* Gen() {
+            prev = index === 0 ? firstSrc : _prev
             // take first "prev" from outer iterator, if one exists
-            const prev = index === 0 ? firstSrc : _prev
-            let nextIterable = typeof next === 'function' ? next(prev) : next
+            nextIterable = typeof next === 'function' ? next(prev) : next
+            let nextStream
 
             if (nextIterable[isPipeline]) {
                 nextIterable.setFirstSource(prev)
             }
 
             if (nextIterable.cancel) {
-                cancelFns.add(nextIterable.cancel)
+                cancelFns.add(nextIterable)
             }
 
             if (nextIterable && getIsStream(nextIterable)) {
-                stream = nextIterable
+                nextStream = nextIterable
             }
 
-            const nextStream = getIsStream(nextIterable) ? nextIterable : undefined
             if (prev && nextStream) {
-                const input = getIsStream(prev) ? prev : Readable.from(prev)
-                nextIterable = iteratorFinally((async function* pipeStream() {
-                    input.pipe(nextStream)
-                    yield* nextStream
-                }()), async (err) => {
-                    try {
-                        await endStream(nextStream, err)
-                    } finally {
-                        await endStream(input)
-                    }
-                })
+                prev = getIsStream(prev) ? prev : PushQueue.from(prev)
+
+                prev.id = prev.id || 'inter-' + nextStream.id
+                prev.pipe(nextStream)
             }
 
-            try {
-                yield* nextIterable
-            } catch (err) {
-                if (!error && err && error !== err) {
-                    error = err
-                }
-                throw err
-            } finally {
-                if (nextStream) {
-                    await endStream(nextStream)
-                }
-            }
+            yield* nextIterable
         }()), async (err) => {
-            if (!cancelled && err) {
-                await cancelAll(err || error)
+            if (!error && err && error !== err) {
+                error = err
             }
 
-            if (stream) {
-                await endStream(stream, err || error)
+            if (nextIterable && typeof nextIterable.cancel === 'function' && !nextIterable.isCancelled()) {
+                await nextIterable.cancel(err || error).catch(() => {})
+            }
+
+            if (prev && prev.cancel && !prev.isCancelled()) {
+                await prev.cancel(err || error).catch(() => {})
             }
         }, opts)
 
-        cancelFns.add(cancelCurrent)
+        cancelFns.add(it)
         return it
     }, undefined)
 
@@ -447,11 +461,13 @@ export function pipeline(iterables = [], onFinally, opts) {
             }
         } finally {
             onCancelDone.resolve()
+            await onCancelDone
         }
     })
 
     return Object.assign(pipelineValue, {
         [isPipeline]: true,
+        isCancelled: () => cancelled,
         setFirstSource,
         cancel,
     })
