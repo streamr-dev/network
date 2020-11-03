@@ -16,12 +16,12 @@ class DeleteExpiredCmd {
         cassandraHosts,
         cassandraDatacenter,
         cassandraKeyspace,
-        limit,
+                    bucketLimit,
         dryRun = true
     }) {
         this.streamrBaseUrl = streamrBaseUrl
         this.dryRun = dryRun
-        this.limit = limit || 100000
+        this.bucketLimit = bucketLimit || 10000000
 
         const authProvider = new cassandra.auth.PlainTextAuthProvider(cassandraUsername, cassandraPassword)
         this.cassandraClient = new cassandra.Client({
@@ -43,7 +43,10 @@ class DeleteExpiredCmd {
         const potentialBuckets = await this._getPotentiallyExpiredBuckets(streamsInfo)
         logger.info('Found %d potentially expired buckets', potentialBuckets.length)
 
-        const expiredBuckets = await this._filterExpiredBuckets(potentialBuckets)
+        const cutPotentialBuckets = potentialBuckets.slice(0, this.bucketLimit)
+        logger.info('Left with %d potentially expired buckets fater cutting', cutPotentialBuckets.length)
+
+        const expiredBuckets = await this._filterExpiredBuckets(cutPotentialBuckets)
         logger.info('Found %d expired buckets (total records %d and size %d MB)',
             expiredBuckets.length,
             totalNumOfRecords(expiredBuckets),
@@ -59,7 +62,7 @@ class DeleteExpiredCmd {
     async _getStreams() {
         const query = 'SELECT DISTINCT stream_id, partition FROM bucket'
         const resultSet = await this.cassandraClient.execute(query, [], {
-            fetchSize: this.limit
+            fetchSize: 100000
         })
         return resultSet.rows.map((row) => ({
             streamId: row.stream_id,
