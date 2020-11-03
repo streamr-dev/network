@@ -82,7 +82,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         })
 
         connection.on('error', (err) => {
-            logger.error(`dropping client because: ${err.message}`)
+            logger.warn(`dropping client because: ${err.message}`)
             logger.debug('error in client %s', err)
             connection.markAsDead()
             this._closeConnection(connection)
@@ -120,6 +120,11 @@ module.exports = class MqttServer extends events.EventEmitter {
         connection.on('connect', (packet) => {
             logger.debug('connect request %o', packet)
 
+            if (packet.password == null) {
+                connection.sendConnectionRefused()
+                return
+            }
+
             const apiKey = packet.password.toString()
 
             this.streamFetcher.getToken(apiKey)
@@ -137,6 +142,10 @@ module.exports = class MqttServer extends events.EventEmitter {
 
                         logger.debug('onNewClientConnection: mqtt "%s" connected', connection.id)
                     }
+                })
+                .catch((err) => {
+                    logger.warn('onNewClientConnection: error fetching token %o', err)
+                    connection.sendConnectionRefusedServerUnavailable()
                 })
         })
     }

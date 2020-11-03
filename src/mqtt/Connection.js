@@ -33,6 +33,11 @@ module.exports = class Connection extends events.EventEmitter {
         return this.dead
     }
 
+    // Connection refused, server unavailable
+    sendConnectionRefusedServerUnavailable() {
+        this._sendConnack(3)
+    }
+
     // Connection refused, bad user name or password
     sendConnectionRefused() {
         this._sendConnack(4)

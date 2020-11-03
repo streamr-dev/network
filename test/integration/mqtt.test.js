@@ -100,26 +100,6 @@ describe('mqtt: end-to-end', () => {
         await broker3.close()
     }, 15000)
 
-    it('test not valid api key', async (done) => {
-        const mqttClient = createMqttClient(mqttPort1, 'localhost', 'NOT_VALID_KEY')
-        mqttClient.on('error', (err) => {
-            expect(err.message).toEqual('Connection refused: Bad username or password')
-            mqttClient.end(true)
-            done()
-        })
-    })
-
-    it('test valid api key without permissions to stream', async (done) => {
-        mqttClient1.on('error', (err) => {
-            expect(err.message).toEqual('Connection refused: Not authorized')
-            done()
-        })
-
-        mqttClient1.publish('NOT_VALID_STREAM', 'key: 1', {
-            qos: 1
-        })
-    })
-
     it('happy-path: real-time mqtt plain text producing and consuming', async () => {
         const client1Messages = []
         const client2Messages = []

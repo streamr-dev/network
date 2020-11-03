@@ -19,7 +19,8 @@ function formConfig({
     mqttPort = null,
     enableCassandra = false,
     privateKeyFileName = null,
-    certFileName = null
+    certFileName = null,
+    streamrUrl = 'http://localhost:8081/streamr-core'
 }) {
     const adapters = []
     if (httpPort) {
@@ -72,7 +73,7 @@ function formConfig({
         } : false,
         reporting: false,
         sentry: false,
-        streamrUrl: 'http://localhost:8081/streamr-core',
+        streamrUrl,
         adapters
     }
 }
