@@ -16,7 +16,7 @@ class DeleteExpiredCmd {
         cassandraHosts,
         cassandraDatacenter,
         cassandraKeyspace,
-                    bucketLimit,
+        bucketLimit,
         dryRun = true
     }) {
         this.streamrBaseUrl = streamrBaseUrl
