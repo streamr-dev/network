@@ -70,9 +70,12 @@ function formConfig({
             username: '',
             password: '',
             keyspace: 'streamr_dev_v2',
-        } : false,
-        reporting: false,
-        sentry: false,
+        } : null,
+        reporting: {
+            intervalInSeconds: 30,
+            sentry: null,
+            streamr: null
+        },
         streamrUrl,
         adapters
     }

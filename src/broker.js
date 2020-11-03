@@ -56,10 +56,10 @@ module.exports = async (config) => {
 
     // Form tracker list
     let trackers
-    if (config.network.trackerRegistry) {
+    if (config.network.trackers.registryAddress) {
         const registry = await Protocol.Utils.getTrackerRegistryFromContract({
-            contractAddress: config.network.trackerRegistry.address,
-            jsonRpcProvider: config.network.trackerRegistry.jsonRpcProvider
+            contractAddress: config.network.trackers.registryAddress,
+            jsonRpcProvider: config.network.trackers.jsonRpcProvider
         })
         trackers = registry.getAllTrackers().map((record) => record.ws)
     } else {

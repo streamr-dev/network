@@ -134,7 +134,10 @@ class DeleteExpiredCmd {
                     prepare: true,
                 }).catch((err) => logger.error(err))
 
-                if (resultSet && (resultSet.rows.length === 0 || resultSet.rows[0].m.getTime() < timestampBefore)) {
+                if (resultSet && (
+                    resultSet.rows.length === 0
+                    || resultSet.rows[0].m === null
+                    || resultSet.rows[0].m.getTime() < timestampBefore)) {
                     result.push(bucket)
                 }
             })
