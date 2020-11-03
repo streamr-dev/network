@@ -3,16 +3,14 @@ const fs = require('fs')
 
 const program = require('commander')
 
-const CURRENT_VERSION = require('./package.json').version
-const startBroker = require('./src/broker')
-const DeleteExpiredCmd = require('./src/storage/DeleteExpiredCmd')
+const CURRENT_VERSION = require('../package.json').version
+const startBroker = require('../src/broker')
 
 program
     .version(CURRENT_VERSION)
     .name('broker')
     .description('Run broker under environment specified by given configuration file.')
     .arguments('<configFile>')
-    .option('--deleteExpired', 'remove expired data from storage', false)
     .option('--streamrUrl <url>', 'override streamrUrl with given value')
     .option('--networkId <id>', 'override networkId with given value')
     .action(async (configFile) => {
@@ -23,13 +21,6 @@ program
         }
         if (program.networkId) {
             config.network.id = program.networkId
-        }
-
-        if (program.deleteExpired === true) {
-            console.info('Starting removing expired data from database')
-            const cmd = new DeleteExpiredCmd(config)
-            await cmd.run()
-            return
         }
 
         await startBroker(config, true).catch((err) => {

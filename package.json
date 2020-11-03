@@ -7,14 +7,11 @@
     "url": "git+https://github.com/streamr-dev/broker.git"
   },
   "bin": {
-    "broker": "./app.js",
-    "tracker": "./tracker.js",
-    "delete-expired-data": "./bin/delete-expired-data.js"
+    "broker": "bin/broker.js",
+    "tracker": "bin/tracker.js",
+    "delete-expired-data": "bin/delete-expired-data.js"
   },
-  "main": "app.js",
-  "directories": {
-    "test": "test"
-  },
+  "main": "bin/broker.js",
   "scripts": {
     "test": "eslint . && jest",
     "test-unit": "jest test/unit",
