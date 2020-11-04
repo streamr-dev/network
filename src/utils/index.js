@@ -188,11 +188,16 @@ export class TimeoutError extends Error {
 }
 
 export async function pTimeout(promise, timeout = 0, message = '') {
+    let timedOut = false
     let t
     return Promise.race([
-        promise,
+        promise.catch((err) => {
+            if (timedOut) {} // ignore errors after timeout
+            throw err
+        }),
         new Promise((resolve, reject) => {
             t = setTimeout(() => {
+                timedOut = true
                 reject(new TimeoutError(message, timeout))
             }, timeout)
         })

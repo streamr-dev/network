@@ -78,10 +78,18 @@ class AggregatedError extends Error {
     // specifically not using AggregateError name
     constructor(errors = [], errorMessage = '') {
         super(errorMessage)
-        this.errors = errors
+        this.errors = new Set(errors)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
+    }
+
+    extend(err, message = '') {
+        if (err === this || this.errors.has(err)) {
+            return this
+        }
+
+        return new AggregatedError([err, ...this.errors], [message, this.message || ''].join('\n'))
     }
 }
 
@@ -110,6 +118,7 @@ export function iteratorFinally(iterable, onFinally) {
 
     // ensure finally only runs once
     const onFinallyOnce = pMemoize(onFinally, {
+        cachePromiseRejection: true,
         cacheKey: () => true // always same key
     })
 
@@ -185,12 +194,41 @@ export function iteratorFinally(iterable, onFinally) {
     })
 }
 
+async function endGenerator(gtr, error) {
+    return error
+        ? gtr.throw(error).catch(() => {}) // ignore err
+        : gtr.return()
+}
+
+function canCancel(gtr) {
+    return (
+        gtr
+        && typeof gtr.cancel === 'function'
+        && typeof gtr.isCancelled === 'function'
+        && !gtr.isCancelled()
+    )
+}
+
+async function cancelGenerator(gtr, error) {
+    if (!canCancel(gtr)) { return }
+    await gtr.cancel(error)
+}
+
+const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
+    await pTimeout(endGenerator(gtr, error), timeout).catch(pTimeout.ignoreError)
+    if (canCancel(gtr)) {
+        await cancelGenerator(gtr, error)
+    }
+}, {
+    cachePromiseRejection: true,
+})
+
 /**
  * Creates a generator that can be cancelled and perform optional final cleanup.
  * const [cancal, generator] = CancelableGenerator(iterable, onFinally)
  */
 
-export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {}) {
+export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 250 } = {}) {
     let started = false
     let cancelled = false
     let finalCalled = false
@@ -204,61 +242,53 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
 
     async function cancelIterable(err) {
         // cancel inner if has cancel
-        if (iterable && iterable.cancel) {
-            await iterable.cancel(err)
-        } else if (iterator && iterator.cancel) {
-            await iterator.cancel(err)
+        await cancelGenerator(iterable, err)
+        await cancelGenerator(iterator, err)
+    }
+
+    function collectErrors(value) {
+        if (!value || value === error) { return }
+
+        if (!error) {
+            error = value
+            return
+        }
+
+        error = error.extend
+            ? error.extend(value, value.message)
+            : new AggregatedError([value, error], value.message)
+    }
+
+    function resolveCancel(value) {
+        if (value instanceof Error) {
+            collectErrors(value)
+        }
+
+        if (error) {
+            onCancel.reject(error)
+            if (!started) {
+                onCancel.catch(() => {})
+            }
+        } else {
+            onCancel.resolve({
+                value,
+                done: true,
+            })
         }
     }
 
     const cancel = (gtr) => async (value) => {
-        if (cancelled) {
+        if (cancelled || finalCalled) {
             // prevent recursion
             return onDone
         }
 
         cancelled = true
+        resolveCancel(value)
 
-        try {
-            if (value instanceof Error) {
-                if (value !== error) {
-                    // collect errors
-                    error = !error
-                        ? value
-                        : new AggregatedError([value, ...(error.errors || [])], value.message)
-                }
-            }
-
-            // need to make sure we don't try return inside final otherwise we end up deadlocked
-            if (!finalCalled && !pendingNextCount) {
-                await cancelIterable(error)
-                // try end generator
-                const onGenEnd = error
-                    ? gtr.throw(error).catch(() => {})
-                    : gtr.return()
-
-                // wait for generator if it didn't start or there's a timeout
-                // i.e. wait for finally
-                if (!started || timeout) {
-                    await pTimeout(onGenEnd, timeout).catch(pTimeout.ignoreError)
-                    return onDone
-                }
-            }
-
-            if (error) {
-                onCancel.reject(error)
-            } else {
-                onCancel.resolve({
-                    value,
-                    done: true,
-                })
-            }
-
-            return onDone
-        } catch (err) {
-            onCancel.reject(err)
-            return onDone
-        }
+        // need to make sure we don't try return inside final otherwise we end up deadlocked
+        await endGeneratorTimeout(gtr, error, timeout)
+        return onDone
     }
 
     async function* CancelableGeneratorFn() {
@@ -289,10 +319,10 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
                     onCancel,
                 ]),
                 async throw(err) {
-                    return cancel(err)
+                    await endGeneratorTimeout(iterator, error, timeout)
                 },
                 async return(v) {
-                    await cancel()
+                    await endGeneratorTimeout(iterator, error, timeout)
                     return {
                         value: v,
                         done: true,
@@ -305,25 +335,17 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
         } finally {
             // try end iterator
             if (iterator) {
-                const task = iterator.return()
-                if (!pendingNextCount || timeout) {
-                    const wait = timeout || 250
-                    await pTimeout(task, wait).catch(pTimeout.ignoreError)
-                } else {
-                    // trigger return but don't await
-                }
+                await endGeneratorTimeout(iterator, error, timeout)
             }
         }
     }
+
     const cancelableGenerator = iteratorFinally(CancelableGeneratorFn(), async (err) => {
         finalCalled = true
         try {
             // cancel inner if has cancel
             await cancelIterable(err || error)
-
-            if (onFinally) {
-                await onFinally(err)
-            }
+            await onFinally(err || error)
         } finally {
             onDone.resolve()
         }
@@ -337,9 +359,14 @@ export function CancelableGenerator(iterable, onFinally, { timeout = 250 } = {})
     })
 
     const cancelFn = cancel(cancelableGenerator)
-    cancelableGenerator.cancel = cancelFn
-    cancelableGenerator.timeout = timeout
-    cancelableGenerator.isCancelled = () => cancelled
+
+    Object.assign(cancelableGenerator, {
+        cancel: cancelFn,
+        timeout,
+        isCancelled: () => cancelled,
+        isDone: () => finalCalled,
+    })
+
     return [
         cancelFn,
         cancelableGenerator

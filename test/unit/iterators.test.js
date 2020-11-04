@@ -1,9 +1,11 @@
 import { wait } from 'streamr-test-utils'
+import Debug from 'debug'
 
 import { iteratorFinally, CancelableGenerator, pipeline } from '../../src/utils/iterators'
 import { Defer } from '../../src/utils'
 import PushQueue from '../../src/utils/PushQueue'
 
+console.log = Debug('Streamr::   CONSOLE   ')
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 const WAIT = 20
 
@@ -432,21 +434,26 @@ describe('Iterator Utils', () => {
             }
 
             expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(itr.isCancelled()).toEqual(true)
         })
 
         it('can cancel before iteration', async () => {
             const [cancel, itr] = CancelableGenerator(generate(), onFinally)
             const received = []
             cancel()
+            expect(itr.isCancelled()).toEqual(true)
             for await (const msg of itr) {
                 received.push(msg)
             }
 
             expect(received).toEqual([])
+            expect(itr.isCancelled()).toEqual(true)
         })
 
         it('can cancel with error before iteration', async () => {
-            const [cancel, itr] = CancelableGenerator(generate(), onFinally)
+            const [cancel, itr] = CancelableGenerator(generate(), () => {
+                return onFinally()
+            })
             const received = []
             const err = new Error('expected')
             cancel(err)
@@ -479,13 +486,17 @@ describe('Iterator Utils', () => {
             }
 
             expect(received).toEqual(receievedAtCallTime)
+            expect(itr.isCancelled()).toEqual(true)
         })
 
-        it('interrupts outstanding .next call', async () => {
+        it('prevents subsequent .next call', async () => {
             const received = []
+            const triggeredForever = jest.fn()
             const [cancel, itr] = CancelableGenerator((async function* Gen() {
                 yield* expected
-                yield await new Promise(() => {}) // would wait forever
+                yield await new Promise(() => {
+                    triggeredForever() // should not get here
+                })
             }()), onFinally)
 
             for await (const msg of itr) {
@@ -497,14 +508,39 @@ describe('Iterator Utils', () => {
                 }
             }
 
+            expect(triggeredForever).toHaveBeenCalledTimes(0)
             expect(received).toEqual(expected)
+            expect(itr.isCancelled()).toEqual(true)
+        })
+
+        it('interrupts outstanding .next call', async () => {
+            const received = []
+            const triggeredForever = jest.fn()
+            const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                yield* expected
+                yield await new Promise(() => {
+                    triggeredForever()
+                    cancel()
+                }) // would wait forever
+            }()), onFinally)
+
+            for await (const msg of itr) {
+                received.push(msg)
+            }
+
+            expect(triggeredForever).toHaveBeenCalledTimes(1)
+            expect(received).toEqual(expected)
+            expect(itr.isCancelled()).toEqual(true)
         })
 
         it('interrupts outstanding .next call when called asynchronously', async () => {
             const received = []
+            const triggeredForever = jest.fn()
             const [cancel, itr] = CancelableGenerator((async function* Gen() {
                 yield* expected
-                yield await new Promise(() => {}) // would wait forever
+                yield await new Promise(() => {
+                    triggeredForever()
+                }) // would wait forever
             }()), onFinally, {
                 timeout: WAIT,
             })
@@ -522,6 +558,7 @@ describe('Iterator Utils', () => {
             }
 
             expect(received).toEqual(expected)
+            expect(itr.isCancelled()).toEqual(true)
         })
 
         it('stops iterator', async () => {
@@ -536,19 +573,22 @@ describe('Iterator Utils', () => {
                 } finally {
                     shouldRunFinally()
                 }
-            }()), onFinally)
+            }()), onFinally, { timeout: WAIT * 2 })
 
             const received = []
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === 2) {
                     cancel()
+                    expect(itr.isCancelled()).toEqual(true)
                 }
             }
 
             expect(received).toEqual([1, 2])
             await wait(WAIT)
+            expect(onFinally).toHaveBeenCalledTimes(1)
             expect(shouldRunFinally).toHaveBeenCalledTimes(1)
+            expect(itr.isCancelled()).toEqual(true)
         })
 
         it('interrupts outstanding .next call with error', async () => {
@@ -580,6 +620,7 @@ describe('Iterator Utils', () => {
             }).rejects.toThrow(err)
 
             expect(received).toEqual(receievedAtCallTime)
+            expect(itr.isCancelled()).toEqual(true)
         })
 
         it('can handle queued next calls', async () => {
@@ -604,6 +645,7 @@ describe('Iterator Utils', () => {
             const received = await Promise.all(tasks)
             expect(received.map(({ value }) => value)).toEqual([...expected, undefined])
             expect(triggeredForever).toHaveBeenCalledTimes(1)
+            expect(itr.isCancelled()).toEqual(true)
         })
 
         it('can handle queued next calls resolving out of order', async () => {
@@ -803,7 +845,7 @@ describe('Iterator Utils', () => {
         })
     })
 
-    describe.only('pipeline', () => {
+    describe('pipeline', () => {
         let onFinally
         let onFinallyAfter
 
