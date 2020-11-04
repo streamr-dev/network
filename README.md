@@ -1,3 +1,10 @@
+<p align="center">
+  <a href="https://streamr.network">
+    <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/streamr-client-javascript/master/readme-header-img.png" width="1320" />
+  </a>
+</p>
+<h1 align="left">
+
 # streamr-network
 
 An extendable implementation of the server-side
