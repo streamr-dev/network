@@ -8,13 +8,15 @@ import { allSettledValues } from '../utils'
 import { pipeline } from '../utils/iterators'
 
 import {
-    MessagePipeline,
     validateOptions,
     subscribe,
     unsubscribe,
+} from './api'
+import {
+    MessagePipeline,
     Validator,
     getResendStream,
-} from './api'
+} from './pipeline'
 
 export { validateOptions }
 
