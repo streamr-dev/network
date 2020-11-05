@@ -192,7 +192,10 @@ export async function pTimeout(promise, timeout = 0, message = '') {
     let t
     return Promise.race([
         promise.catch((err) => {
-            if (timedOut) {} // ignore errors after timeout
+            if (timedOut) {
+                // ignore errors after timeout
+            }
+
             throw err
         }),
         new Promise((resolve, reject) => {
@@ -209,4 +212,21 @@ export async function pTimeout(promise, timeout = 0, message = '') {
 pTimeout.ignoreError = (err) => {
     if (err instanceof TimeoutError) { return }
     throw err
+}
+
+/**
+ * Convert allSettled results into a thrown Aggregate error if necessary.
+ */
+
+export async function allSettledValues(items, errorMessage) {
+    const result = await Promise.allSettled(items)
+
+    const errs = result.filter(({ status }) => status === 'rejected').map(({ reason }) => reason)
+    if (errs.length) {
+        const err = new Error([errorMessage, ...errs].filter(Boolean).join('\n'))
+        err.errors = errs
+        throw err
+    }
+
+    return result.map(({ value }) => value)
 }
