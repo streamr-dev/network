@@ -42,22 +42,17 @@ describe('StreamrClient resends', () => {
             client = createClient()
             await client.connect()
 
-            published = []
-
             stream = await client.createStream({
                 name: uid('resends')
             })
 
-            publishTestMessages = getPublishTestMessages(client, stream.id)
+            publishTestMessages = getPublishTestMessages(client, {
+                stream
+            })
 
-            published = await publishTestMessages(MAX_MESSAGES)
-
-            const waitForStorage = getWaitForStorage(client)
-            const lastMessage = published[published.length - 1]
-            await waitForStorage({
-                msg: lastMessage,
-                timeout: WAIT_FOR_STORAGE_TIMEOUT,
-                streamId: stream.id,
+            published = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: true,
+                waitForLastTimeout: WAIT_FOR_STORAGE_TIMEOUT,
             })
         })
 
@@ -338,15 +333,12 @@ describe('StreamrClient resends', () => {
 
             const LONG_RESEND = 10000
 
-            publishTestMessages = getPublishTestMessages(client, stream.id)
-            published = await publishTestMessages(LONG_RESEND)
+            publishTestMessages = getPublishTestMessages(client, {
+                stream
+            })
 
-            const waitForStorage = getWaitForStorage(client)
-            const lastMessage = published[published.length - 1]
-            await waitForStorage({
-                msg: lastMessage,
-                timeout: 60000,
-                streamId: stream.id,
+            published = await publishTestMessages(LONG_RESEND, {
+                waitForLast: true,
             })
 
             await client.disconnect()

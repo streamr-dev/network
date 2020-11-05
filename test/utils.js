@@ -1,6 +1,7 @@
 import { wait } from 'streamr-test-utils'
 
 import { pTimeout } from '../src/utils'
+import { validateOptions } from '../src/subscribe'
 
 const crypto = require('crypto')
 
@@ -48,28 +49,14 @@ export const Msg = (opts) => ({
     ...opts,
 })
 
-export function getPublishTestMessages(client, defaultStreamId) {
-    return async (n = 4, streamId = defaultStreamId) => {
-        const published = []
-        for (let i = 0; i < n; i++) {
-            const message = Msg()
-            // eslint-disable-next-line no-await-in-loop, no-loop-func
-            await pTimeout(client.publish(streamId, message), 1500, `publish timeout ${streamId}: ${i} ${JSON.stringify(message)}`)
-            published.push(message)
-        }
-        return published
-    }
-}
-
-export function getWaitForStorage(client) {
+export function getWaitForStorage(client, defaultOpts = {}) {
     /* eslint-disable no-await-in-loop */
-    return async ({
-        streamId,
-        streamPartition = 0,
-        msg,
-        interval = 500,
-        timeout = 5000,
-    }) => {
+    return async (msg, opts = {}) => {
+        const { streamId, streamPartition = 0, interval = 500, timeout = 5000 } = validateOptions({
+            ...defaultOpts,
+            ...opts,
+        })
+
         const start = Date.now()
         let last
         // eslint-disable-next-line no-constant-condition
@@ -110,4 +97,62 @@ export function getWaitForStorage(client) {
         }
     }
     /* eslint-enable no-await-in-loop */
+}
+
+export function getPublishTestMessages(client, defaultOpts = {}) {
+    // second argument could also be streamId
+    if (typeof defaultOpts === 'string') {
+        // eslint-disable-next-line no-param-reassign
+        defaultOpts = {
+            streamId: defaultOpts,
+        }
+    }
+
+    const publishTestMessagesRaw = async (n = 4, opts = {}) => {
+        const {
+            streamId,
+            streamPartition = 0,
+            delay = 100,
+            timeout = 1500,
+            waitForLast = false, // wait for message to hit storage
+            waitForLastTimeout,
+        } = validateOptions({
+            ...defaultOpts,
+            ...opts,
+        })
+
+        const published = []
+        for (let i = 0; i < n; i++) {
+            const message = Msg()
+            published.push([
+                message,
+                // eslint-disable-next-line no-await-in-loop, no-loop-func
+                await pTimeout(client.publish({
+                    streamId,
+                    streamPartition,
+                }, message), timeout, `publish timeout ${streamId}: ${i} ${JSON.stringify(message)}`)
+            ])
+            // eslint-disable-next-line no-await-in-loop, no-loop-func
+            await wait(delay) // ensure timestamp increments for reliable resend response in test.
+        }
+
+        if (waitForLast) {
+            const msg = published[published.length - 1]
+            await getWaitForStorage(client)(msg, {
+                streamId,
+                streamPartition,
+                timeout: waitForLastTimeout,
+            })
+        }
+
+        return published
+    }
+
+    const publishTestMessages = async (...args) => {
+        const published = await publishTestMessagesRaw(...args)
+        return published.map(([msg]) => msg)
+    }
+
+    publishTestMessages.raw = publishTestMessagesRaw
+    return publishTestMessages
 }

@@ -55,20 +55,21 @@ describeRepeats('resends', () => {
         })
         client.debug('connecting before test <<')
 
-        publishTestMessages = getPublishTestMessages(client, stream.id)
+        publishTestMessages = getPublishTestMessages(client, {
+            stream,
+        })
+
+        waitForStorage = getWaitForStorage(client, {
+            stream,
+            timeout: WAIT_FOR_STORAGE_TIMEOUT,
+        })
 
         published = await publishTestMessages(MAX_MESSAGES)
-
-        waitForStorage = getWaitForStorage(client)
     })
 
     beforeAll(async () => {
         const lastMessage = published[published.length - 1]
-        await waitForStorage({
-            msg: lastMessage,
-            timeout: WAIT_FOR_STORAGE_TIMEOUT,
-            streamId: stream.id,
-        })
+        await waitForStorage(lastMessage)
     }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
     beforeEach(async () => {
@@ -106,14 +107,13 @@ describeRepeats('resends', () => {
             emptyStream = await client.createStream({
                 name: uid('stream')
             })
-            await wait(3000)
 
             const sub = await subscriber.resend({
                 streamId: emptyStream.id,
                 last: 5,
             })
 
-            const receivedMsgs = await collect(sub)
+            const receivedMsgs = await sub.collect()
             expect(receivedMsgs).toHaveLength(0)
             expect(subscriber.count(emptyStream.id)).toBe(0)
         })
@@ -122,23 +122,25 @@ describeRepeats('resends', () => {
             emptyStream = await client.createStream({
                 name: uid('stream')
             })
+
             const sub = await subscriber.resendSubscribe({
                 streamId: emptyStream.id,
                 last: 5,
             })
 
             expect(subscriber.count(emptyStream.id)).toBe(1)
-            const message = Msg()
+            const msg = Msg()
             // eslint-disable-next-line no-await-in-loop
-            await client.publish(emptyStream.id, message)
+            await client.publish(emptyStream.id, msg)
 
             const received = []
             for await (const m of sub) {
                 received.push(m)
-                wait(100)
-                break
+                setTimeout(() => {
+                    sub.return()
+                }, 250)
             }
-            expect(received).toHaveLength(1)
+            expect(received).toEqual([msg])
             expect(subscriber.count(emptyStream.id)).toBe(0)
         })
     })
@@ -147,11 +149,7 @@ describeRepeats('resends', () => {
         beforeEach(async () => {
             // ensure last message is in storage
             const lastMessage = published[published.length - 1]
-            await waitForStorage({
-                msg: lastMessage,
-                timeout: WAIT_FOR_STORAGE_TIMEOUT,
-                streamId: stream.id,
-            })
+            await waitForStorage(lastMessage)
         }, WAIT_FOR_STORAGE_TIMEOUT * 1.2)
 
         it('requests resend', async () => {
@@ -159,7 +157,8 @@ describeRepeats('resends', () => {
                 streamId: stream.id,
                 last: published.length,
             })
-            const receivedMsgs = await collect(sub)
+
+            const receivedMsgs = await sub.collect()
             expect(receivedMsgs).toHaveLength(published.length)
             expect(receivedMsgs).toEqual(published)
             expect(subscriber.count(stream.id)).toBe(0)
@@ -171,7 +170,7 @@ describeRepeats('resends', () => {
                 last: 2,
             })
 
-            const receivedMsgs = await collect(sub)
+            const receivedMsgs = await sub.collect()
             expect(receivedMsgs).toHaveLength(2)
             expect(receivedMsgs).toEqual(published.slice(-2))
             expect(subscriber.count(stream.id)).toBe(0)
@@ -187,10 +186,10 @@ describeRepeats('resends', () => {
             for await (const m of sub) {
                 received.push(m)
             }
+
             expect(received).toHaveLength(published.length)
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(sub.stream.readable).toBe(false)
-            expect(sub.stream.writable).toBe(false)
+            expect(sub.stream.isReadable()).toBe(false)
         })
 
         describe('resendSubscribe', () => {
@@ -200,10 +199,10 @@ describeRepeats('resends', () => {
                     last: published.length,
                 })
 
-                const message = Msg()
+                const msg = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, message) // should be realtime
-                published.push(message)
+                await client.publish(stream.id, msg) // should be realtime
+                published.push(msg)
                 const receivedMsgs = await collect(sub, async ({ received }) => {
                     if (received.length === published.length) {
                         await wait()
@@ -215,10 +214,10 @@ describeRepeats('resends', () => {
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.readable).toBe(false)
-                expect(sub.realtime.stream.writable).toBe(false)
-                expect(sub.resend.stream.readable).toBe(false)
-                expect(sub.resend.stream.writable).toBe(false)
+                expect(sub.realtime.stream.isReadable()).toBe(false)
+                expect(sub.realtime.stream.isWritable()).toBe(false)
+                expect(sub.resend.stream.isReadable()).toBe(false)
+                expect(sub.resend.stream.isWritable()).toBe(false)
             })
 
             it('sees resends and realtime again', async () => {
@@ -242,10 +241,37 @@ describeRepeats('resends', () => {
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.readable).toBe(false)
-                expect(sub.realtime.stream.writable).toBe(false)
-                expect(sub.resend.stream.readable).toBe(false)
-                expect(sub.resend.stream.writable).toBe(false)
+                expect(sub.realtime.stream.isReadable()).toBe(false)
+                expect(sub.realtime.stream.isWritable()).toBe(false)
+                expect(sub.resend.stream.isReadable()).toBe(false)
+                expect(sub.resend.stream.isWritable()).toBe(false)
+            })
+
+            it('ends resend if unsubscribed', async () => {
+                const sub = await subscriber.resendSubscribe({
+                    streamId: stream.id,
+                    last: published.length,
+                })
+
+                const message = Msg()
+                // eslint-disable-next-line no-await-in-loop
+                await client.publish(stream.id, message) // should be realtime
+                published.push(message)
+                await wait(500)
+                const receivedMsgs = await collect(sub, async ({ received }) => {
+                    if (received.length === published.length) {
+                        await sub.return()
+                    }
+                })
+
+                const msgs = receivedMsgs
+                expect(msgs).toHaveLength(published.length)
+                expect(msgs).toEqual(published)
+                expect(subscriber.count(stream.id)).toBe(0)
+                expect(sub.realtime.stream.isReadable()).toBe(false)
+                expect(sub.realtime.stream.isWritable()).toBe(false)
+                expect(sub.resend.stream.isReadable()).toBe(false)
+                expect(sub.resend.stream.isWritable()).toBe(false)
             })
 
             it('can return before start', async () => {
@@ -269,8 +295,8 @@ describeRepeats('resends', () => {
 
                 expect(received).toHaveLength(0)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.readable).toBe(false)
-                expect(sub.resend.stream.writable).toBe(false)
+                expect(sub.realtime.stream.isReadable()).toBe(false)
+                expect(sub.resend.stream.isWritable()).toBe(false)
             })
 
             it('can end asynchronously', async () => {
@@ -303,8 +329,8 @@ describeRepeats('resends', () => {
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.readable).toBe(false)
-                expect(sub.resend.stream.writable).toBe(false)
+                expect(sub.realtime.stream.isReadable()).toBe(false)
+                expect(sub.resend.stream.isWritable()).toBe(false)
             })
 
             it('can end inside resend', async () => {
@@ -333,8 +359,8 @@ describeRepeats('resends', () => {
                 expect(msgs).toHaveLength(END_AFTER)
                 expect(msgs).toEqual(published.slice(0, END_AFTER))
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.readable).toBe(false)
-                expect(sub.resend.stream.writable).toBe(false)
+                expect(sub.realtime.stream.isReadable()).toBe(false)
+                expect(sub.resend.stream.isWritable()).toBe(false)
             })
         })
     })

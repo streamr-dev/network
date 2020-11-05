@@ -196,12 +196,11 @@ describe('Sequencing', () => {
         ), 2000).catch(() => {}) // ignore, tests will fail anyway
 
         const lastMessage = msgsPublished[msgsPublished.length - 1]
-        const waitForStorage = getWaitForStorage(client)
-        await waitForStorage({
-            msg: lastMessage,
+        const waitForStorage = getWaitForStorage(client, {
+            stream,
             timeout: 6000,
-            streamId: stream.id,
         })
+        await waitForStorage(lastMessage)
         const msgsResent = []
         const sub = await client.resend({
             stream: stream.id,
@@ -266,12 +265,11 @@ describe('Sequencing', () => {
         ), 2000).catch(() => {}) // ignore, tests will fail anyway
 
         const lastMessage = msgsPublished[msgsPublished.length - 1]
-        const waitForStorage = getWaitForStorage(client)
-        await waitForStorage({
-            msg: lastMessage,
+        const waitForStorage = getWaitForStorage(client, {
+            stream,
             timeout: 6000,
-            streamId: stream.id,
         })
+        await waitForStorage(lastMessage)
 
         const msgsResent = []
         const sub = await client.resend({

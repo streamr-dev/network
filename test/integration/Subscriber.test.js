@@ -48,7 +48,7 @@ describeRepeats('StreamrClient Stream', () => {
     beforeEach(async () => {
         // eslint-disable-next-line require-atomic-updates
         client = createClient()
-        M = new MessageStream(client)
+        M = client.subscriber
         client.debug('connecting before test >>')
         await Promise.all([
             client.connect(),
@@ -58,7 +58,9 @@ describeRepeats('StreamrClient Stream', () => {
             name: uid('stream')
         })
         client.debug('connecting before test <<')
-        publishTestMessages = getPublishTestMessages(client, stream.id)
+        publishTestMessages = getPublishTestMessages(client, {
+            stream
+        })
     })
 
     afterEach(() => {

@@ -6,7 +6,7 @@ import pLimit from 'p-limit'
 import { ControlLayer, MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
 import { uuid, CacheAsyncFn, pOrderedResolve } from '../utils'
-import { pipeline, CancelableGenerator } from '../utils/iterators'
+import { pipeline, iteratorFinally, CancelableGenerator } from '../utils/iterators'
 import PushQueue from '../utils/PushQueue'
 
 const { OrderingUtil, StreamMessageValidator } = Utils
@@ -87,6 +87,11 @@ function messageStream(connection, { streamId, streamPartition, type = ControlMe
         }
     })
 
+    Object.assign(msgStream, {
+        streamId,
+        streamPartition,
+    })
+
     connection.on(type, onMessage)
 
     return msgStream
@@ -95,6 +100,15 @@ function messageStream(connection, { streamId, streamPartition, type = ControlMe
 function SubKey({ streamId, streamPartition = 0 }) {
     if (streamId == null) { throw new Error(`SubKey: invalid streamId: ${streamId} ${streamPartition}`) }
     return `${streamId}::${streamPartition}`
+}
+
+async function collect(src) {
+    const msgs = []
+    for await (const msg of src) {
+        msgs.push(msg.getParsedContent())
+    }
+
+    return msgs
 }
 
 export function validateOptions(optionsOrStreamId) {
@@ -229,14 +243,16 @@ function OrderMessages(client, options = {}) {
             outStream.push(orderedMessage)
         }
     }, (from, to, publisherId, msgChainId) => async () => {
+        if (done) { return }
         // eslint-disable-next-line no-use-before-define
         const resendIt = await getResendStream(client, {
             streamId, streamPartition, from, to, publisherId, msgChainId,
-        })
-        if (done) {
-            return
-        }
-        for (const { streamMessage } of resendIt) {
+        }).subscribe()
+
+        if (done) { return }
+
+        for await (const { streamMessage } of resendIt) {
+            if (done) { return }
             orderingUtil.add(streamMessage)
         }
     }, gapFillTimeout, retryResendAfter)
@@ -335,9 +351,8 @@ function MessagePipeline(client, opts = {}, onFinally = () => {}) {
 
     return Object.assign(p, {
         stream,
-        done: () => {
-            return stream.end()
-        }
+        collect: collect.bind(null, p),
+        end: stream.end,
     })
 }
 
@@ -459,7 +474,7 @@ async function resend(client, options) {
 async function getResendStream(client, opts) {
     const options = validateOptions(opts)
 
-    const msgs = MessagePipeline(client, {
+    const msgStream = MessagePipeline(client, {
         ...options,
         type: ControlMessage.TYPES.UnicastMessage,
     })
@@ -474,23 +489,24 @@ async function getResendStream(client, opts) {
             ControlMessage.TYPES.ResendResponseResent,
             ControlMessage.TYPES.ResendResponseNoResend,
         ],
-    }).then((v) => {
-        msgs.done()
-        return v
-    }, (err) => {
-        return msgs.cancel(err)
+    }).then(() => msgStream.end(), (err) => msgStream.cancel(err))
+
+    return Object.assign(msgStream, {
+        async subscribe() {
+            // wait for resend complete message or resend request done
+            await Promise.race([
+                resend(client, {
+                    requestId,
+                    ...options,
+                }),
+                onResendDone
+            ])
+            return this
+        },
+        async unsubscribe() {
+            return this.cancel()
+        }
     })
-
-    // wait for resend complete message or resend request done
-    await Promise.race([
-        resend(client, {
-            requestId,
-            ...options,
-        }),
-        onResendDone
-    ])
-
-    return msgs
 }
 
 /**
@@ -724,7 +740,7 @@ export default class Subscriptions {
     }
 
     async resend(opts) {
-        return getResendStream(this.client, opts)
+        return getResendStream(this.client, opts).subscribe()
     }
 
     async resendSubscribe(options) {
@@ -752,6 +768,10 @@ export default class Subscriptions {
 
         // attach additional utility functions
         return Object.assign(it, {
+            get isActive() {
+                return sub.isActive
+            },
+            collect: sub.collect.bind(it),
             options,
             realtime: sub,
             resend: resendSub,

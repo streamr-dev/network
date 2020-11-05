@@ -25,11 +25,15 @@ export class FailedToPublishError extends Error {
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
 function getStreamId(streamObjectOrId) {
-    if (streamObjectOrId instanceof Stream) {
+    if (streamObjectOrId.streamId != null) {
+        return streamObjectOrId.streamId
+    }
+
+    if (streamObjectOrId.id != null) {
         return streamObjectOrId.id
     }
 
-    if (typeof streamObjectOrId === 'string') {
+    if (streamObjectOrId && typeof streamObjectOrId === 'string') {
         return streamObjectOrId
     }
 
