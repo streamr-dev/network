@@ -46,7 +46,7 @@ export async function sendChallengeResponse(challenge, signature, address) {
 }
 
 export async function loginWithChallengeResponse(signingFunction, address) {
-    this.debug('loginWithChallengeResponse &o', {
+    this.debug('loginWithChallengeResponse %o', {
         address,
     })
     const challenge = await this.getChallenge(address)

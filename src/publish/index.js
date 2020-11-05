@@ -1,3 +1,4 @@
+import { inspect } from 'util'
 import crypto from 'crypto'
 
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
@@ -5,14 +6,13 @@ import randomstring from 'randomstring'
 import LRU from 'quick-lru'
 import { ethers } from 'ethers'
 
-import Stream from '../rest/domain/Stream'
 import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from '../utils'
 
 import Signer from './Signer'
 
 export class FailedToPublishError extends Error {
     constructor(streamId, msg, reason) {
-        super(`Failed to publish to stream ${streamId} due to: ${reason}. Message was: ${msg}`)
+        super(`Failed to publish to stream ${streamId} due to: ${reason}. Message was: ${inspect(msg)}`)
         this.streamId = streamId
         this.msg = msg
         this.reason = reason
@@ -33,7 +33,7 @@ function getStreamId(streamObjectOrId) {
         return streamObjectOrId
     }
 
-    throw new Error(`First argument must be a Stream object or the stream id! Was: ${streamObjectOrId}`)
+    throw new Error(`First argument must be a Stream object or the stream id! Was: ${inspect(streamObjectOrId)}`)
 }
 
 function hash(stringToHash) {
@@ -211,7 +211,7 @@ export class MessageCreationUtil {
         const { content } = options
         // Validate content
         if (typeof content !== 'object') {
-            throw new Error(`Message content must be an object! Was: ${content}`)
+            throw new Error(`Message content must be an object! Was: ${inspect(content)}`)
         }
 
         // queued depdendencies fetching

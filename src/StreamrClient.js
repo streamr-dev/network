@@ -289,7 +289,7 @@ export default class StreamrClient extends EventEmitter {
             for await (const msg of sub) {
                 await fn(msg.getParsedContent(), msg)
             }
-            console.log('done')
+
             sub.emit('resent')
             return sub
         }).catch((err) => {

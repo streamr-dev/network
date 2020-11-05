@@ -396,8 +396,6 @@ export function pipeline(iterables = [], onFinally, opts) {
             await allSettledValues([...cancelFns].map(async ({ isCancelled, cancel }) => (
                 isCancelled ? cancel(err) : undefined
             )))
-        } catch (errr) {
-            throw errr
         } finally {
             cancelFns.clear()
         }
@@ -409,6 +407,7 @@ export function pipeline(iterables = [], onFinally, opts) {
                 await onCancelDone
                 return
             }
+
             if (error) {
                 // eslint-disable-next-line promise/no-promise-in-callback
                 pipelineValue.throw(error).catch(() => {}) // ignore err

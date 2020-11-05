@@ -1,4 +1,5 @@
 import Emitter from 'events'
+import { inspect } from 'util'
 
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
@@ -25,7 +26,7 @@ const EMPTY_MESSAGE = {
 
 export class SignatureRequiredError extends Errors.ValidationError {
     constructor(streamMessage = EMPTY_MESSAGE) {
-        super(`Client requires data to be signed. Message: ${streamMessage.serialize()}`)
+        super(`Client requires data to be signed. Message: ${inspect(streamMessage)}`)
         this.streamMessage = streamMessage
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
@@ -132,11 +133,11 @@ export function validateOptions(optionsOrStreamId) {
             ...optionsOrStreamId
         }
     } else {
-        throw new Error(`options must be an object! Given: ${optionsOrStreamId}`)
+        throw new Error(`options must be an object! Given: ${inspect(optionsOrStreamId)}`)
     }
 
     if (options.streamId == null) {
-        throw new Error(`streamId must be set, given: ${optionsOrStreamId}`)
+        throw new Error(`streamId must be set! Given: ${inspect(optionsOrStreamId)}`)
     }
 
     options.key = SubKey(options)
@@ -436,8 +437,9 @@ function createResendRequest(resendOptions) {
     }
 
     if (!request) {
-        throw new Error(`Can't _requestResend without resend options. Got: ${JSON.stringify(resendOptions)}`)
+        throw new Error(`Can't _requestResend without resend options. Got: ${inspect(resendOptions)}`)
     }
+
     return request
 }
 
