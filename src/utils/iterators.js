@@ -1,74 +1,7 @@
-import { Readable } from 'stream'
-import { promisify } from 'util'
-
 import pMemoize from 'p-memoize'
 
 import { Defer, pTimeout } from './index'
 import PushQueue from './PushQueue'
-
-Readable.from = function from(iterable, opts) {
-    let iterator
-    if (iterable && iterable[Symbol.asyncIterator]) {
-        iterator = iterable[Symbol.asyncIterator]()
-    } else if (iterable && iterable[Symbol.iterator]) {
-        iterator = iterable[Symbol.iterator]()
-    } else {
-        throw new Error('invalid arg type')
-    }
-
-    const readable = new Readable({
-        objectMode: true,
-        ...opts
-    })
-
-    // Reading boolean to protect against _read
-    // being called before last iteration completion.
-    let reading = false
-
-    async function next() {
-        try {
-            const { value, done } = await iterator.next()
-            if (done) {
-                readable.push(null)
-            } else if (readable.push(await value)) {
-                next()
-            } else {
-                reading = false
-            }
-        } catch (err) {
-            readable.destroy(err)
-        }
-    }
-
-    // eslint-disable-next-line no-underscore-dangle
-    readable._read = function _read() {
-        if (!reading) {
-            reading = true
-            next()
-        }
-    }
-
-    return readable
-}
-
-export async function endStream(stream, optionalErr) {
-    if (!stream.readable && !stream.writable) {
-        await promisify(stream.destroy.bind(stream))(optionalErr)
-        return
-    }
-
-    if (stream.writable) {
-        if (optionalErr) {
-            await promisify(stream.destroy.bind(stream))(optionalErr)
-        } else {
-            await promisify(stream.end.bind(stream))(optionalErr)
-        }
-    }
-
-    if (stream.readable) {
-        await promisify(stream.destroy.bind(stream))(optionalErr)
-    }
-}
 
 /**
  * Convert allSettled results into a thrown Aggregate error if necessary.
@@ -116,15 +49,15 @@ export function iteratorFinally(iterable, onFinally) {
         return iterable
     }
 
-    // ensure finally only runs once
-    const onFinallyOnce = pMemoize(onFinally, {
-        cachePromiseRejection: true,
-        cacheKey: () => true // always same key
-    })
-
     let started = false
     let ended = false
     let error
+
+    // ensure finally only runs once
+    const onFinallyOnce = pMemoize(onFinally, {
+        cachePromiseRejection: true, // don't run again if failed
+        cacheKey: () => true // always same key
+    })
 
     // wraps return/throw to call onFinally even if generator was never started
     const handleFinally = (originalFn) => async (...args) => {
@@ -169,6 +102,8 @@ export function iteratorFinally(iterable, onFinally) {
     }())
 
     const it = g[Symbol.asyncIterator].bind(g)
+
+    // copy cancel api across if exists
     if (iterable.cancel) {
         g.cancel = (...args) => iterable.cancel(...args)
         g.isCancelled = (...args) => iterable.isCancelled(...args)
@@ -179,16 +114,20 @@ export function iteratorFinally(iterable, onFinally) {
         return: handleFinally(g.return.bind(g)),
         throw: handleFinally(g.throw.bind(g)),
         [Symbol.asyncIterator]() {
+            // if ended before started
             if (ended && !started) {
                 // return a generator that simply runs finally script (once)
                 return (async function* generatorRunFinally() { // eslint-disable-line require-yield
-                    if (typeof iterable.return === 'function') {
-                        await iterable.return() // run onFinally for nested iterable
+                    try {
+                        if (typeof iterable.return === 'function') {
+                            await iterable.return() // runs onFinally for nested iterable
+                        }
+                    } finally {
+                        await onFinallyOnce()
                     }
-
-                    await onFinallyOnce()
                 }())
             }
+
             return it()
         }
     })
