@@ -148,7 +148,7 @@ export async function subscribe(client, { streamId, streamPartition = 0 }) {
     return onResponse
 }
 
-export async function unsubscribe(client, { streamId, streamPartition = 0 }) {
+async function _unsubscribe(client, { streamId, streamPartition = 0 }) { // eslint-disable-line no-underscore-dangle
     const sessionToken = await client.session.getSessionToken()
     const request = new UnsubscribeRequest({
         streamId,
@@ -167,6 +167,19 @@ export async function unsubscribe(client, { streamId, streamPartition = 0 }) {
         }
         throw err
     })
+}
+
+export async function unsubscribe(client, ...args) {
+    // disconnection auto-unsubs, so if already disconnected/disconnecting no need to send unsub
+    const { connection } = client
+    if (
+        connection.isConnectionValid()
+        && !connection.isDisconnected()
+        && !connection.isDisconnecting()) {
+        return _unsubscribe(client, ...args)
+    }
+
+    return Promise.resolve()
 }
 
 //

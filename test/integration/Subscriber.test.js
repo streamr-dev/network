@@ -96,7 +96,7 @@ describeRepeats('StreamrClient Stream', () => {
         const afterCount = client.connection.listenerCount(ControlMessage.TYPES.BroadcastMessage)
         expect(afterCount).toBeGreaterThan(beforeCount)
         expect(M.count(stream.id)).toBe(1)
-        await sub.return()
+        await sub.cancel()
     })
 
     describe('basics', () => {
@@ -450,10 +450,13 @@ describeRepeats('StreamrClient Stream', () => {
             client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
                 unsubscribeEvents.push(m)
             })
+
             const [sub] = await Promise.all([
                 M.subscribe(stream.id),
                 M.unsubscribe(stream.id),
             ])
+
+            expect(M.count(stream.id)).toBe(0)
 
             await publishTestMessages()
 
@@ -464,7 +467,7 @@ describeRepeats('StreamrClient Stream', () => {
 
             // shouldn't get any messages
             expect(received).toHaveLength(0)
-            expect(unsubscribeEvents).toHaveLength(1)
+            expect(unsubscribeEvents).toHaveLength(0)
             expect(M.count(stream.id)).toBe(0)
         })
     })

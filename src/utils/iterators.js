@@ -258,7 +258,8 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
                     onCancel,
                 ]),
                 async throw(err) {
-                    await endGeneratorTimeout(iterator, error, timeout)
+                    await endGeneratorTimeout(iterator, err, timeout)
+                    throw err
                 },
                 async return(v) {
                     await endGeneratorTimeout(iterator, error, timeout)
@@ -324,10 +325,16 @@ export function pipeline(iterables = [], onFinally, opts) {
     const cancelFns = new Set()
     let cancelled = false
     let error
+    let finallyCalled = false
     const onCancelDone = Defer()
     let pipelineValue
 
     const cancelAll = async (err) => {
+        if (cancelled) {
+            await onCancelDone
+            return
+        }
+
         cancelled = true
         error = err
         try {
@@ -341,6 +348,10 @@ export function pipeline(iterables = [], onFinally, opts) {
     }
 
     const cancel = async (err) => {
+        if (finallyCalled) {
+            return
+        }
+
         try {
             if (cancelled) {
                 await onCancelDone
@@ -401,13 +412,13 @@ export function pipeline(iterables = [], onFinally, opts) {
                 error = err
             }
 
-            if (nextIterable && typeof nextIterable.cancel === 'function' && !nextIterable.isCancelled()) {
-                await nextIterable.cancel(err || error).catch(() => {})
-            }
+            //if (nextIterable && typeof nextIterable.cancel === 'function' && !nextIterable.isCancelled()) {
+                //await nextIterable.cancel(err || error).catch(() => {})
+            //}
 
-            if (prev && prev.cancel && !prev.isCancelled()) {
-                await prev.cancel(err || error).catch(() => {})
-            }
+            //if (prev && prev.cancel && !prev.isCancelled()) {
+                //await prev.cancel(err || error).catch(() => {})
+            //}
         }, opts)
 
         cancelFns.add(it)
@@ -420,7 +431,9 @@ export function pipeline(iterables = [], onFinally, opts) {
         }
         cancelFns.clear()
         try {
+            finallyCalled = true
             await onFinally(error)
+            finallyCalled = false
             if (error) {
                 throw error
             }

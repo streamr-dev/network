@@ -95,7 +95,6 @@ export default class StreamrClient extends EventEmitter {
         this.onConnectionConnected = this.onConnectionConnected.bind(this)
         this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
         this._onError = this._onError.bind(this)
-        this.onErrorResponse = this.onErrorResponse.bind(this)
         this.onConnectionError = this.onConnectionError.bind(this)
         this.getErrorEmitter = this.getErrorEmitter.bind(this)
         this.onConnectionMessage = this.onConnectionMessage.bind(this)
@@ -110,7 +109,6 @@ export default class StreamrClient extends EventEmitter {
             .on('connected', this.onConnectionConnected)
             .on('disconnected', this.onConnectionDisconnected)
             .on('error', this.onConnectionError)
-            .on(ControlMessage.TYPES.ErrorResponse, this.onErrorResponse)
 
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
@@ -155,11 +153,6 @@ export default class StreamrClient extends EventEmitter {
                 source.debug(err)
             }
         }
-    }
-
-    onErrorResponse(err) {
-        const errorObject = new Error(err.errorMessage)
-        this.emit('error', errorObject)
     }
 
     _onError(err, ...args) {
@@ -215,6 +208,10 @@ export default class StreamrClient extends EventEmitter {
         return this.subscriber.getAll(...args)
     }
 
+    getSubscription(...args) {
+        return this.subscriber.get(...args)
+    }
+
     async ensureConnected() {
         return this.connect()
     }
@@ -237,42 +234,30 @@ export default class StreamrClient extends EventEmitter {
 
     async subscribe(opts, fn) {
         let subTask
-        if (opts.resend || opts.from || opts.to || opts.last) {
+        const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
+        if (hasResend) {
             subTask = this.subscriber.resendSubscribe(opts)
         } else {
             subTask = this.subscriber.subscribe(opts)
         }
 
-        if (!fn) {
-            return subTask
-        }
-        // legacy event wrapper
-        const r = Promise.resolve(subTask).then((sub) => {
-            const sub2 = emitterMixin(sub)
-            if (!sub.resend) { return sub2 }
-            sub2.resend = iteratorFinally(sub.resend, () => {
-                sub.emit('resent')
-            })
-            return sub2
-        })
-
-        Promise.resolve(r).then(async (sub) => {
-            sub.emit('subscribed')
+        Promise.resolve(subTask).then(async (sub) => {
             for await (const msg of sub) {
-                await fn(msg.getParsedContent(), msg)
+                const parsedContent = msg.getParsedContent()
+                if (typeof fn === 'function') {
+                    await fn(parsedContent, msg)
+                }
+                sub.emit('message', parsedContent, msg)
             }
             return sub
         }).catch((err) => {
             this.emit('error', err)
         })
-        return r
+        return subTask
     }
 
     async unsubscribe(opts) {
-        const sub = await this.subscriber.unsubscribe(opts)
-        if (sub && opts.emit) {
-            opts.emit('unsubscribed')
-        }
+        await this.subscriber.unsubscribe(opts)
     }
 
     async resend(opts, fn) {

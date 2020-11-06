@@ -4,7 +4,7 @@ import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import { ControlLayer } from 'streamr-client-protocol'
 
-import { allSettledValues } from '../utils'
+import { allSettledValues, LimitAsyncFnByKey } from '../utils'
 import { pipeline } from '../utils/iterators'
 
 import {
@@ -34,199 +34,162 @@ function emitterMixin(obj, emitter = new Emitter()) {
     })
 }
 
-/**
- * Manages creating iterators for a streamr stream.
- * When all iterators are done, calls unsubscribe.
- */
+class Subscription {
+    static add() {
+        this.count = this.count + 1 || 1
+    }
 
-class Subscription extends Emitter {
-    constructor(client, options, onFinal) {
-        super()
+    static remove() {
+        this.count = Math.max(this.count - 1 || 0, 0)
+    }
+
+    count() {
+        return this.constructor.count || 0
+    }
+
+    constructor(client, opts, onFinally = () => {}) {
         this.client = client
-        this.onFinal = onFinal
-        this.options = validateOptions(options)
+        this.options = validateOptions(opts)
         this.key = this.options.key
-        this.streams = new Set()
-
-        this.queue = pLimit(1)
-        const sub = this._subscribe.bind(this)
-        const unsub = this._unsubscribe.bind(this)
-        this._subscribe = () => this.queue(sub)
-        this._unsubscribe = () => this.queue(unsub)
-        this.return = this.return.bind(this)
-        this.sendSubscribe = pMemoize(this.sendSubscribe.bind(this))
-        this.sendUnsubscribe = pMemoize(this.sendUnsubscribe.bind(this))
-        this.validate = Validator(client, options)
-        this._onConnected = this._onConnected.bind(this)
-        this._onDisconnected = this._onDisconnected.bind(this)
-        this._onDisconnecting = this._onDisconnecting.bind(this)
-        this._onConnectionDone = this._onConnectionDone.bind(this)
-        this._didSubscribe = false
-        this.isActive = false
+        this._onFinally = onFinally
+        this.onFinally = this.onFinally.bind(this)
+        this.iterator = this.listen()
     }
 
-    emit(...args) {
-        // forward events to streams
-        this.streams.forEach((s) => s.emit(...args))
-        return super.emit(...args)
+    async onFinally(err) {
+        await this._onFinally(err)
     }
 
-    async _onConnected() {
+    listen() {
+        const { client, options, onFinally } = this
+        const validate = Validator(client, options)
+        return MessagePipeline(client, {
+            validate,
+            type: ControlMessage.TYPES.BroadcastMessage,
+            ...options,
+        }, onFinally)
+    }
+
+    [Symbol.asyncIterator]() {
+        return this.iterator
+    }
+
+    async cancel(...args) {
+        return this.iterator.cancel(...args)
+    }
+
+    async return(...args) {
+        return this.iterator.return(...args)
+    }
+
+    async throw(...args) {
+        return this.iterator.throw(...args)
+    }
+
+    async unsubscribe(...args) {
+        return this.cancel(...args)
+    }
+}
+
+class SubscriptionManager {
+    constructor(client) {
+        this.client = client
+        this.subscriptions = new Map()
+        this.queue = LimitAsyncFnByKey(1)
+    }
+
+    _subscribe(options) {
+        const { key } = options
+        return this.queue(key, async () => {
+            if (!this.count(options)) { return }
+            await subscribe(this.client, options)
+        })
+    }
+
+    _unsubscribe(options) {
+        const { key } = options
+        return this.queue(key, async () => {
+            if (this.count(options)) { return }
+            await unsubscribe(this.client, options)
+        })
+    }
+
+    async add(sub) {
         try {
-            await this.sendSubscribe()
+            const { key, options } = sub
+            const isNew = !this.subscriptions.has(key)
+            const subs = isNew ? new Set() : this.subscriptions.get(key)
+            subs.add(sub)
+            this.subscriptions.set(key, subs)
+            const { connection } = this.client
+            await connection.addHandle(key)
+            if (isNew && this.count(options)) {
+                await this._subscribe(options)
+            }
         } catch (err) {
-            this.emit('error', err)
-        }
-    }
-
-    async _onDisconnected() {
-        // unblock subscribe
-        pMemoize.clear(this.sendSubscribe)
-    }
-
-    async _onDisconnecting() {
-        // otherwise should eventually reconnect
-        if (!this.client.connection.isConnectionValid()) {
-            await this.cancel()
-        }
-    }
-
-    async _onConnectionDone() {
-        await this.cancel()
-    }
-
-    hasPending() {
-        return !!(this.queue.activeCount || this.queue.pendingCount)
-    }
-
-    async sendSubscribe() {
-        this.emit('subscribing')
-        await subscribe(this.client, this.options)
-        this.emit('subscribed')
-    }
-
-    async sendUnsubscribe() {
-        const { connection } = this.client
-        // disconnection auto-unsubs, so if already disconnected/disconnecting no need to send unsub
-        if (connection.isConnectionValid() && !connection.isDisconnected() && !connection.isDisconnecting()) {
-            this.emit('unsubscribing')
-            await unsubscribe(this.client, this.options)
-            this.emit('unsubscribed')
-        }
-    }
-
-    _cleanupHandlers() { // eslint-disable-line class-methods-use-this
-        // noop will be replaced in subscribe
-    }
-
-    async _subscribe() {
-        const { connection } = this.client
-        try {
-            pMemoize.clear(this.sendUnsubscribe)
-            this._cleanupHandlers = connection.onTransition({
-                connection: this.client.connection,
-                onConnected: this._onConnected,
-                onDisconnected: this._onDisconnected,
-                onDisconnecting: this._onDisconnecting,
-                onDone: this._onConnectionDone,
-            })
-            await connection.addHandle(this.key)
-            await this.sendSubscribe()
-            this._didSubscribe = true
-        } catch (err) {
-            await this._cleanupFinal()
+            await this.remove(sub)
             throw err
         }
     }
 
-    async subscribe(onFinally) {
-        this.isActive = true
-        const iterator = this.iterate(onFinally) // start iterator immediately
-        await this._subscribe()
-        return iterator
-    }
+    async remove(sub) {
+        const { key, options } = sub
+        const hadSub = this.subscriptions.has(key)
+        let cancelTask
+        try {
+            if (!hadSub) { return }
+            cancelTask = sub.cancel()
+            const subs = this.subscriptions.get(key)
+            subs.delete(sub)
+            if (subs.size) {
+                this.subscriptions.set(key, subs)
+            } else {
+                this.subscriptions.delete(key)
+            }
+            const { connection } = this.client
 
-    async return() {
-        this.isActive = false
-        await allSettledValues([...this.streams].map(async (it) => {
-            await it.return()
-        }), 'return failed')
-    }
-
-    async unsubscribe(...args) {
-        this.isActive = false
-        return this._unsubscribe(...args)
-    }
-
-    async _unsubscribe(...args) {
-        return this.cancel(...args)
-    }
-
-    async cancel(optionalErr) {
-        this.isActive = false
-        this._cleanupHandlers()
-        if (this.hasPending()) {
-            await this.queue(() => {})
-        }
-        await allSettledValues([...this.streams].map(async (it) => (
-            it.cancel(optionalErr)
-        )), 'cancel failed')
-    }
-
-    async _onSubscriptionDone() {
-        const didSubscribe = !!this._didSubscribe
-        pMemoize.clear(this.sendSubscribe)
-        this._cleanupHandlers()
-        await this.client.connection.removeHandle(this.key)
-        if (!didSubscribe) { return }
-
-        if (this.client.connection.isConnectionValid()) {
-            await this.sendUnsubscribe()
+            if (!this.count(options)) {
+                await connection.removeHandle(key)
+            }
+        } finally {
+            if (hadSub && !this.count(options)) {
+                await this._unsubscribe(options)
+            }
+            await cancelTask
         }
     }
 
-    async _cleanupFinal() {
-        // unsubscribe if no more streams
-        await this._onSubscriptionDone()
-        return this.onFinal()
+    async removeAll(options) {
+        const subs = this.get(options)
+        return allSettledValues(subs.map((sub) => (
+            this.remove(sub)
+        )))
     }
 
-    async _cleanupIterator(it) {
-        // if iterator never started, finally block never called, thus need to manually clean it
-        const hadStream = this.streams.has(it)
-        this.streams.delete(it)
-        if (hadStream && !this.streams.size) {
-            await this._cleanupFinal()
-        }
-    }
-
-    count() {
-        return this.streams.size
-    }
-
-    iterate(onFinally = () => {}) {
-        const msgStream = MessagePipeline(this.client, {
-            validate: this.validate,
-            type: ControlMessage.TYPES.BroadcastMessage,
-            ...this.options,
-        }, async (err) => {
-            await this._cleanupIterator(msgStream)
-            await onFinally(err)
+    countAll() {
+        let count = 0
+        this.subscriptions.forEach((s) => {
+            count += s.size
         })
-
-        emitterMixin(msgStream) // forward subscription events to pipeline
-
-        this.streams.add(msgStream)
-
-        return Object.assign(msgStream, {
-            count: this.count.bind(this),
-            unsubscribe: this.unsubscribe.bind(this),
-            subscribe: this.subscribe.bind(this),
-        })
+        return count
     }
 
-    [Symbol.asyncIterator](fn) {
-        return this.iterate(fn)
+    count(options) {
+        if (options === undefined) { return this.countAll() }
+        return this.get(options).length
+    }
+
+    getAll() {
+        return [this.subscriptions].reduce((o, s) => {
+            o.push(...s)
+            return o
+        }, [])
+    }
+
+    get(options) {
+        if (options === undefined) { return this.getAll() }
+        const { key } = validateOptions(options)
+        return [...(this.subscriptions.get(key) || new Set())]
     }
 }
 
@@ -237,63 +200,38 @@ class Subscription extends Emitter {
 export default class Subscriptions {
     constructor(client) {
         this.client = client
-        this.subscriptions = new Map()
-    }
-
-    getAll(options) {
-        if (options) {
-            return [this.get(options)].filter(Boolean)
-        }
-
-        return [...this.subscriptions.values()]
-    }
-
-    get(options) {
-        const { key } = validateOptions(options)
-        return this.subscriptions.get(key)
+        this.subscriptions = new SubscriptionManager(client)
     }
 
     count(options) {
-        const sub = this.get(options)
-        return sub ? sub.count() : 0
+        return this.subscriptions.count(options)
     }
 
     async unsubscribe(options) {
+        if (options instanceof Subscription) {
+            const sub = options
+            return sub.cancel()
+        }
+
         if (options && options.options) {
             return this.unsubscribe(options.options)
         }
 
-        const { key } = validateOptions(options)
-        const sub = this.subscriptions.get(key)
-        if (!sub) {
-            return Promise.resolve()
-        }
-
-        this.subscriptions.delete(key)
-
-        await sub.cancel() // close all streams (thus unsubscribe)
-        return sub
+        return this.subscriptions.removeAll(options)
     }
 
-    _loadSubscription(options) {
-        const { key } = validateOptions(options)
-        let sub = this.subscriptions.get(key)
-        if (!sub) {
-            sub = new Subscription(this.client, options, () => {
-                // clean up
-                if (this.subscriptions.get(key) === sub) {
-                    this.subscriptions.delete(key)
-                }
-            })
-            this.subscriptions.set(key, sub)
-        }
+    async subscribe(options, onFinally = () => {}) {
+        const sub = new Subscription(this.client, options, async (err) => {
+            try {
+                await this.subscriptions.remove(sub)
+            } finally {
+                await onFinally(err)
+            }
+        })
+
+        await this.subscriptions.add(sub)
 
         return sub
-    }
-
-    async subscribe(options, onFinally) {
-        const sub = this._loadSubscription(options)
-        return sub.subscribe(onFinally)
     }
 
     async resend(opts) {
