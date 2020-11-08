@@ -35,7 +35,7 @@ async function OpenWebSocket(url, ...args) {
             if (!url) {
                 throw new ConnectionError('URL is not defined!')
             }
-            const socket = new WebSocket(url)
+            const socket = process.browser ? new WebSocket(url) : new WebSocket(url, ...args)
             socket.id = uniqueId('socket')
             socket.binaryType = 'arraybuffer'
             let opened = 0
