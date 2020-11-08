@@ -202,6 +202,23 @@ export default class Connection extends EventEmitter {
         return this._connect()
     }
 
+    enableAutoDisconnect(autoDisconnect = true) {
+        autoDisconnect = !!autoDisconnect // eslint-disable-line no-param-reassign
+        this.options.autoDisconnect = autoDisconnect
+        if (autoDisconnect) {
+            this.wantsState = STATE.ANY
+        }
+    }
+
+    enableAutoConnect(autoConnect = true) {
+        autoConnect = !!autoConnect // eslint-disable-line no-param-reassign
+        this.options.autoConnect = autoConnect
+        if (autoConnect) {
+            this.didDisableAutoConnect = false
+            this.wantsState = STATE.ANY
+        }
+    }
+
     async _connect() {
         this.shouldReconnect = true
         this.isDone = false

@@ -411,13 +411,13 @@ describe('Connection', () => {
         })
 
         it('works with autoConnect', async () => {
-            s.options.autoConnect = true
+            s.enableAutoConnect()
             expect(s.isConnectionValid()).toBeTruthy()
         })
 
         it('works with autoDisconnect', async () => {
-            s.options.autoConnect = true
-            s.options.autoDisconnect = true
+            s.enableAutoConnect()
+            s.enableAutoDisconnect()
             expect(s.isConnectionValid()).toBeTruthy()
             await s.addHandle(1)
             expect(s.isConnectionValid()).toBeTruthy()
@@ -661,7 +661,7 @@ describe('Connection', () => {
         })
 
         it('creates connection and waits if autoconnect true', async (done) => {
-            s.options.autoConnect = true
+            s.enableAutoConnect()
             s.once('message', ({ data } = {}) => {
                 expect(data).toEqual('test')
                 done()
@@ -702,7 +702,7 @@ describe('Connection', () => {
         })
 
         it('fails send if autoconnected but intentionally disconnected', async () => {
-            s.options.autoConnect = true
+            s.enableAutoConnect()
             const received = []
             s.on('message', ({ data } = {}) => {
                 received.push(data)
@@ -719,12 +719,27 @@ describe('Connection', () => {
             await wait(100)
             expect(received).toEqual(['test'])
         })
+
+        it('connects after autoconnect enabled after disconnect', async () => {
+            await s.connect()
+            await s.disconnect()
+            s.enableAutoConnect()
+            s.enableAutoDisconnect()
+            await s.addHandle(1)
+            await s.send('test')
+            expect(s.getState()).toBe('connected')
+            await s.removeHandle(1)
+            expect(s.getState()).toBe('disconnected')
+        })
     })
 
     describe('autoDisconnect', () => {
+        beforeEach(() => {
+            s.enableAutoDisconnect()
+            s.enableAutoConnect()
+        })
+
         it('auto-disconnects when all handles removed', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
             expect(s.getState()).toBe('disconnected')
             await s.removeHandle(1) // noop
             expect(s.getState()).toBe('disconnected')
@@ -756,27 +771,22 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
         })
 
-        it('auto-disconnects when all handles removed without explicit connect', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
+        it('auto-disconnects when all handles removed after enabling', async () => {
+            s.enableAutoDisconnect(false)
             expect(s.getState()).toBe('disconnected')
             await s.addHandle(1)
             await s.send('test')
             expect(s.getState()).toBe('connected')
             await s.removeHandle(1)
-            expect(s.getState()).toBe('disconnected')
+            expect(s.getState()).toBe('connected')
+            s.enableAutoDisconnect(true)
             await s.addHandle(1)
-            await s.send('test')
             expect(s.getState()).toBe('connected')
             await s.removeHandle(1)
             expect(s.getState()).toBe('disconnected')
-            await s.send('test')
-            expect(s.getState()).toBe('connected')
         })
 
         it('handles concurrent call to removeHandle then connect', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
             await s.addHandle(1)
             await Promise.all([
                 s.removeHandle(1),
@@ -793,8 +803,6 @@ describe('Connection', () => {
         })
 
         it('handles concurrent call to connect then removeHandle', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
             await s.connect()
 
             expect(s.getState()).toBe('connected')
@@ -809,8 +817,6 @@ describe('Connection', () => {
         })
 
         it('handles concurrent call to disconnect then removeHandle', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
             await s.connect()
 
             expect(s.getState()).toBe('connected')
@@ -825,8 +831,6 @@ describe('Connection', () => {
         })
 
         it('handles concurrent call to removeHandle then disconnect', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
             await s.connect()
 
             expect(s.getState()).toBe('connected')
@@ -841,8 +845,6 @@ describe('Connection', () => {
         })
 
         it('handles concurrent call to removeHandle then disconnect + connect', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
             await s.connect()
             expectErrors = 1
             expect(s.getState()).toBe('connected')
@@ -860,8 +862,6 @@ describe('Connection', () => {
         })
 
         it('handles concurrent call to removeHandle', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
             await s.connect()
             expect(s.getState()).toBe('connected')
             await s.addHandle(1)
@@ -876,8 +876,6 @@ describe('Connection', () => {
         })
 
         it('late disconnect', async () => {
-            s.options.autoDisconnect = true
-            s.options.autoConnect = true
             await s.addHandle(1)
             await s.addHandle(2)
             expect(s.getState()).toBe('connected')
@@ -891,8 +889,8 @@ describe('Connection', () => {
         })
 
         it('does nothing if autoDisconnect is false', async () => {
-            s.options.autoDisconnect = false
-            s.options.autoConnect = true
+            s.enableAutoConnect()
+            s.enableAutoDisconnect(false)
             await s.addHandle(1)
             expect(s.getState()).toBe('connected')
             await s.addHandle(2)
