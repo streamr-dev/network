@@ -378,14 +378,6 @@ export function pipeline(iterables = [], onFinally, opts) {
             if (!error && err && error !== err) {
                 error = err
             }
-
-            //if (nextIterable && typeof nextIterable.cancel === 'function' && !nextIterable.isCancelled()) {
-                //await nextIterable.cancel(err || error).catch(() => {})
-            //}
-
-            //if (prev && prev.cancel && !prev.isCancelled()) {
-                //await prev.cancel(err || error).catch(() => {})
-            //}
         }, opts)
 
         cancelFns.add(it)
