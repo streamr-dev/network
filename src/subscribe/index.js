@@ -4,7 +4,7 @@ import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import { ControlLayer } from 'streamr-client-protocol'
 
-import { allSettledValues, LimitAsyncFnByKey } from '../utils'
+import { allSettledValues, LimitAsyncFnByKey, AggregatedError } from '../utils'
 import { pipeline } from '../utils/iterators'
 
 import {

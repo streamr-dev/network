@@ -214,18 +214,35 @@ pTimeout.ignoreError = (err) => {
     throw err
 }
 
+export class AggregatedError extends Error {
+    // specifically not using AggregateError name as this has slightly different API
+    constructor(errors = [], errorMessage = '') {
+        super(errorMessage)
+        this.errors = new Set(errors)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, this.constructor)
+        }
+    }
+
+    extend(err, message = '') {
+        if (err === this || this.errors.has(err)) {
+            return this
+        }
+
+        return new AggregatedError([err, ...this.errors], [message, this.message || ''].join('\n'))
+    }
+}
+
 /**
  * Convert allSettled results into a thrown Aggregate error if necessary.
  */
 
-export async function allSettledValues(items, errorMessage) {
+export async function allSettledValues(items, errorMessage = '') {
     const result = await Promise.allSettled(items)
 
     const errs = result.filter(({ status }) => status === 'rejected').map(({ reason }) => reason)
     if (errs.length) {
-        const err = new Error([errorMessage, ...errs].filter(Boolean).join('\n'))
-        err.errors = errs
-        throw err
+        throw new AggregatedError(errs, errorMessage)
     }
 
     return result.map(({ value }) => value)
