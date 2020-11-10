@@ -137,7 +137,7 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
         }
 
         if (waitForLast) {
-            const msg = published[published.length - 1]
+            const msg = published[published.length - 1][0]
             await getWaitForStorage(client)(msg, {
                 streamId,
                 streamPartition,

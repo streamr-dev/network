@@ -107,38 +107,6 @@ export function CacheFn(fn, {
 /* eslint-enable object-curly-newline */
 
 /**
- * Returns a limit function that limits concurrency per-key.
- *
- * ```js
- * const limit = LimitAsyncFnByKey(1)
- * limit('channel1', fn)
- * limit('channel2', fn)
- * limit('channel2', fn)
- * ```
- */
-
-export function LimitAsyncFnByKey(limit) {
-    const pending = new Map()
-    const f = async (id, fn) => {
-        const limitFn = pending.get(id) || pending.set(id, pLimit(limit)).get(id)
-        try {
-            return await limitFn(fn)
-        } finally {
-            if (!limitFn.activeCount && !limitFn.pendingCount && pending.get(id) === limitFn) {
-                // clean up if no more active entries (if not cleared)
-                pending.delete(id)
-            }
-        }
-    }
-    f.clear = () => {
-        // note: does not cancel promises
-        pending.forEach((p) => p.clearQueue())
-        pending.clear()
-    }
-    return f
-}
-
-/**
  * Deferred promise allowing external control of resolve/reject.
  * Returns a Promise with resolve/reject functions attached.
  * Also has a wrap(fn) method that wraps a function to settle this promise
@@ -164,6 +132,50 @@ export function Defer(executor = () => {}) {
         reject,
         wrap,
     })
+}
+
+/**
+ * Returns a limit function that limits concurrency per-key.
+ *
+ * ```js
+ * const limit = LimitAsyncFnByKey(1)
+ * limit('channel1', fn)
+ * limit('channel2', fn)
+ * limit('channel2', fn)
+ * ```
+ */
+
+export function LimitAsyncFnByKey(limit) {
+    const pending = new Map()
+    const queueOnEmptyTasks = new Map()
+    const f = async (id, fn) => {
+        const limitFn = pending.get(id) || pending.set(id, pLimit(limit)).get(id)
+        const onQueueEmpty = queueOnEmptyTasks.get(id) || queueOnEmptyTasks.set(id, Defer()).get(id)
+        try {
+            return await limitFn(fn)
+        } finally {
+            if (!limitFn.activeCount && !limitFn.pendingCount) {
+                if (pending.get(id) === limitFn) {
+                    // clean up if no more active entries (if not cleared)
+                    pending.delete(id)
+                }
+                queueOnEmptyTasks.delete(id)
+                onQueueEmpty.resolve()
+            }
+        }
+    }
+
+    f.getOnQueueEmpty = async (id) => {
+        return queueOnEmptyTasks.get(id) || pending.set(id, Defer()).get(id)
+    }
+
+    f.clear = () => {
+        // note: does not cancel promises
+        pending.forEach((p) => p.clearQueue())
+        pending.clear()
+        queueOnEmptyTasks.forEach((p) => p.resolve())
+    }
+    return f
 }
 
 export function pOrderedResolve(fn) {

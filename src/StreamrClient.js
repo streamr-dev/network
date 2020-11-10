@@ -232,27 +232,34 @@ export default class StreamrClient extends EventEmitter {
         return this.publisher.getPublisherId()
     }
 
-    async subscribe(opts, fn) {
+    async subscribe(opts, onMessage) {
         let subTask
+        let sub
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
-        if (hasResend) {
-            subTask = this.subscriber.resendSubscribe(opts)
-        } else {
-            subTask = this.subscriber.subscribe(opts)
+        const onEnd = () => {
+            if (sub && typeof onMessage === 'function') {
+                sub.off('message', onMessage)
+            }
         }
 
-        Promise.resolve(subTask).then(async (sub) => {
-            for await (const msg of sub) {
-                const parsedContent = msg.getParsedContent()
-                if (typeof fn === 'function') {
-                    await fn(parsedContent, msg)
+        if (hasResend) {
+            subTask = this.subscriber.resendSubscribe(opts, onEnd)
+        } else {
+            subTask = this.subscriber.subscribe(opts, onEnd)
+        }
+
+        if (typeof onMessage === 'function') {
+            Promise.resolve(subTask).then(async (s) => {
+                sub = s
+                sub.on('message', onMessage)
+                for await (const msg of sub) {
+                    sub.emit('message', msg.getParsedContent(), msg)
                 }
-                sub.emit('message', parsedContent, msg)
-            }
-            return sub
-        }).catch((err) => {
-            this.emit('error', err)
-        })
+                return sub
+            }).catch((err) => {
+                this.emit('error', err)
+            })
+        }
         return subTask
     }
 
@@ -266,10 +273,7 @@ export default class StreamrClient extends EventEmitter {
             return task
         }
 
-        // legacy event wrapper
-        const r = task.then((sub) => emitterMixin(sub))
-
-        Promise.resolve(r).then(async (sub) => {
+        Promise.resolve(task).then(async (sub) => {
             sub.emit('resending')
             for await (const msg of sub) {
                 await fn(msg.getParsedContent(), msg)
@@ -281,7 +285,15 @@ export default class StreamrClient extends EventEmitter {
             this.emit('error', err)
         })
 
-        return r
+        return task
+    }
+
+    enableAutoConnect(...args) {
+        return this.connection.enableAutoConnect(...args)
+    }
+
+    enableAutoDisonnect(...args) {
+        return this.connection.enableAutoDisconnect(...args)
     }
 
     static generateEthereumAccount() {

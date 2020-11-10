@@ -101,10 +101,10 @@ export async function waitForResponse({ connection, types, requestId }) {
 
         cleanup = () => {
             connection.off('disconnected', onDisconnected)
+            connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
             types.forEach((type) => {
                 connection.off(type, onResponse)
             })
-            connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
         }
 
         types.forEach((type) => {
@@ -114,7 +114,7 @@ export async function waitForResponse({ connection, types, requestId }) {
 
         onDisconnected = () => {
             cleanup()
-            reject(new Error('disconnected before got response'))
+            resolve() // noop
         }
 
         connection.once('disconnected', onDisconnected)
@@ -157,16 +157,16 @@ async function _unsubscribe(client, { streamId, streamPartition = 0 }) { // esli
         requestId: uuid('unsub'),
     })
 
-    const onResponse = waitForRequestResponse(client, request)
-
-    await client.send(request)
-    return onResponse.catch((err) => {
-        if (err.message.startsWith('Not subscribed to stream')) {
+    const onResponse = waitForRequestResponse(client, request).catch((err) => {
+        if (err.message.contains('Not subscribed to stream')) {
             // noop if unsubscribe failed because we are already unsubscribed
             return
         }
         throw err
     })
+
+    await client.send(request)
+    return onResponse
 }
 
 export async function unsubscribe(client, ...args) {

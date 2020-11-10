@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
-import Debug from 'debug'
 
+import Debug from 'debug'
 import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { wait, waitForEvent } from 'streamr-test-utils'
@@ -13,11 +13,12 @@ import Connection from '../../src/Connection'
 
 import config from './config'
 
-const { StreamMessage } = MessageLayer
 const WebSocket = require('ws')
+
+const { StreamMessage } = MessageLayer
 const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest } = ControlLayer
 
-console.log = Debug('Streamr::   CONSOLE   ')
+console.log = Debug('Streamr::CONSOLE   ')
 
 describe('StreamrClient', () => {
     let expectErrors = 0 // check no errors by default
@@ -709,7 +710,7 @@ describe('StreamrClient', () => {
             expect(res).toBe(true)
         })
 
-        describe.only('Pub/Sub', () => {
+        describe('Pub/Sub', () => {
             it('client.publish does not error', async (done) => {
                 await client.publish(stream.id, {
                     test: 'client.publish',
@@ -751,24 +752,55 @@ describe('StreamrClient', () => {
                 }, TIMEOUT)
 
                 it('client.subscribe then unsubscribe before subscribed without resend', async () => {
-                    const sub = await client.subscribe({
+                    client.connection.enableAutoDisconnect(false)
+                    const subTask = client.subscribe({
                         stream: stream.id,
                     }, () => {})
 
-                    const events = attachSubListeners(sub)
+                    const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
 
                     expect(client.getSubscriptions(stream.id)).toHaveLength(1)
-                    const t = client.unsubscribe(sub)
+
+                    const unsubTask = client.unsubscribe(stream)
+
                     expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
-                    await t
+                    await unsubTask
+                    await subTask
                     await wait(TIMEOUT * 0.2)
+                    expect(events.onResent).toHaveBeenCalledTimes(0)
+                    expect(events.onSubscribed).toHaveBeenCalledTimes(0)
+                    expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
+                }, TIMEOUT)
+
+                it('client.subscribe then unsubscribe before subscribed after started subscribing without resend', async () => {
+                    client.connection.enableAutoDisconnect(false)
+                    const subTask = client.subscribe({
+                        stream: stream.id,
+                    }, () => {})
+                    const subSession = client.subscriber.getSubscriptionSession(stream)
+                    const events = attachSubListeners(subSession)
+                    let unsubTask
+                    const startedSubscribing = Defer()
+                    subSession.once('subscribing', startedSubscribing.wrap(() => {
+                        unsubTask = client.unsubscribe(stream)
+                    }))
+
+                    await Promise.all([
+                        startedSubscribing,
+                        unsubTask,
+                        subTask,
+                    ])
+                    expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
+                    await wait(TIMEOUT * 0.2)
+                    expect(events.onResent).toHaveBeenCalledTimes(0)
                     expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
                 }, TIMEOUT)
 
                 describe('with resend', () => {
                     it('client.subscribe then unsubscribe before subscribed', async () => {
-                        const sub = await client.subscribe({
+                        client.connection.enableAutoDisconnect(false)
+                        const subTask = client.subscribe({
                             stream: stream.id,
                             resend: {
                                 from: {
@@ -777,45 +809,24 @@ describe('StreamrClient', () => {
                             },
                         }, () => {})
 
-                        const events = attachSubListeners(sub)
-                        expect(client.getSubscriptions(stream.id)).toHaveLength(1)
-                        const t = client.unsubscribe(sub)
-                        expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
-                        await t
-                        expect(events.onSubscribed).toHaveBeenCalledTimes(0)
-                        expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
-                        expect(events.onResent).toHaveBeenCalledTimes(0)
-                        await wait(TIMEOUT * 0.2)
-                    }, TIMEOUT)
-
-                    it('client.subscribe then unsubscribe before subscribed', async () => {
-                        const sub = await client.subscribe({
-                            stream: stream.id,
-                            resend: {
-                                from: {
-                                    timestamp: 0,
-                                },
-                            },
-                        }, () => {})
+                        const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
 
                         expect(client.getSubscriptions(stream.id)).toHaveLength(1)
-                        const events = attachSubListeners(sub)
-                        const t = client.unsubscribe(sub)
+
+                        const unsubTask = client.unsubscribe(stream)
+
                         expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
-                        await t
+                        await unsubTask
+                        await subTask
                         await wait(TIMEOUT * 0.2)
                         expect(events.onResent).toHaveBeenCalledTimes(0)
                         expect(events.onSubscribed).toHaveBeenCalledTimes(0)
-                        expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
+                        expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
                     }, TIMEOUT)
 
                     it('client.subscribe then unsubscribe ignores messages with resend', async () => {
-                        const msg = Msg()
-                        await stream.publish(msg)
-                        await waitForStorage(msg)
-
                         const onMessage = jest.fn()
-                        const sub = await client.subscribe({
+                        const subTask = client.subscribe({
                             stream: stream.id,
                             resend: {
                                 from: {
@@ -824,14 +835,21 @@ describe('StreamrClient', () => {
                             },
                         }, onMessage)
 
-                        expect(client.getSubscriptions(stream.id)).toHaveLength(1)
-                        const events = attachSubListeners(sub)
-                        await client.unsubscribe(sub)
+                        const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
+                        const unsubTask = client.unsubscribe(stream)
                         expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
+
+                        const msg = Msg()
+                        await stream.publish(msg)
+                        await waitForStorage(msg)
+
+                        await unsubTask
+                        await subTask
+                        await wait(TIMEOUT * 0.2)
                         expect(events.onResent).toHaveBeenCalledTimes(0)
-                        expect(events.onMessage).toHaveBeenCalledTimes(0)
                         expect(events.onSubscribed).toHaveBeenCalledTimes(0)
-                        expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
+                        expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
+                        expect(onMessage).toHaveBeenCalledTimes(0)
                     }, TIMEOUT)
                 })
 
@@ -879,24 +897,21 @@ describe('StreamrClient', () => {
             })
 
             it('publish and subscribe a sequence of messages', async () => {
-                client.options.autoConnect = true
+                client.enableAutoConnect()
                 const done = Defer()
                 const nbMessages = 3
                 const intervalMs = 100
                 const received = []
                 const sub = await client.subscribe({
                     stream: stream.id,
-                }, async (parsedContent, streamMessage) => {
+                }, (parsedContent, streamMessage) => {
                     received.push(parsedContent)
                     // Check signature stuff
                     expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                     expect(streamMessage.getPublisherId()).toBeTruthy()
                     expect(streamMessage.signature).toBeTruthy()
                     if (received.length === nbMessages) {
-                        // All good, unsubscribe
-                        await client.unsubscribe(sub)
-                        await client.disconnect()
-                        done.resolve()
+                        done.resolve(client.unsubscribe(sub))
                     }
                 })
 
@@ -1007,76 +1022,69 @@ describe('StreamrClient', () => {
                 publishTestMessages = getPublishTestMessages(client, {
                     stream,
                     waitForLast: true,
+                    waitForLastTimeout: 9000,
                 })
-            })
 
-            beforeEach(async () => {
                 const publishedRaw = await publishTestMessages.raw(5)
                 timestamps = publishedRaw.map(([, raw]) => raw.streamMessage.getTimestamp())
                 published = publishedRaw.map(([msg]) => msg)
-            }, 10 * 1000)
+            })
 
             it('resend last', async () => {
-                const messages = []
-
                 const sub = await client.resend({
                     stream: stream.id,
                     resend: {
                         last: 3,
                     },
-                }, (message) => {
-                    messages.push(message)
+                })
+
+                expect(await sub.collect()).toEqual(published.slice(-3))
+            })
+
+            it('resend from', async () => {
+                const sub = await client.resend({
+                    stream: stream.id,
+                    resend: {
+                        from: {
+                            timestamp: timestamps[3],
+                        },
+                    },
+                })
+
+                expect(await sub.collect()).toEqual(published.slice(3))
+            })
+
+            it('resend range', async () => {
+                const sub = await client.resend({
+                    stream: stream.id,
+                    resend: {
+                        from: {
+                            timestamp: timestamps[0],
+                        },
+                        to: {
+                            timestamp: timestamps[3] - 1,
+                        },
+                    },
+                })
+
+                expect(await sub.collect()).toEqual(published.slice(0, 3))
+            })
+
+            it('works with message handler + resent event', async () => {
+                const messages = []
+                const sub = await client.resend({
+                    stream: stream.id,
+                    resend: {
+                        last: 3,
+                    },
+                }, (msg) => {
+                    messages.push(msg)
                 })
 
                 await waitForEvent(sub, 'resent')
-                expect(messages).toEqual(published)
-            }, 15000)
-
-            it('resend from', async () => {
-                const messages = []
-
-                const sub = await client.resend(
-                    {
-                        stream: stream.id,
-                        resend: {
-                            from: {
-                                timestamp: timestamps[3],
-                            },
-                        },
-                    },
-                    (message) => {
-                        messages.push(message)
-                    },
-                )
-
-                await waitForEvent(sub, 'resent')
-                expect(messages).toEqual(messages.slice(3))
-            }, 10000)
-
-            it('resend range', async () => {
-                const messages = []
-
-                const sub = await client.resend(
-                    {
-                        stream: stream.id,
-                        resend: {
-                            from: {
-                                timestamp: timestamps[0],
-                            },
-                            to: {
-                                timestamp: timestamps[3] - 1,
-                            },
-                        },
-                    },
-                    (message) => {
-                        messages.push(message)
-                    },
-                )
-
-                await waitForEvent(sub, 'resent')
-                expect(messages).toEqual(published.slice(0, 3))
-            }, 10000)
-        })
+                expect(messages).toEqual(published.slice(-3))
+            })
+        }, 10000)
 
         describe('utf-8 encoding', () => {
             const publishedMessage = {
@@ -1084,7 +1092,6 @@ describe('StreamrClient', () => {
             }
 
             it('decodes realtime messages correctly', async (done) => {
-                client.once('error', done)
                 await client.subscribe(stream.id, (msg) => {
                     expect(msg).toStrictEqual(publishedMessage)
                     done()
@@ -1093,9 +1100,8 @@ describe('StreamrClient', () => {
             })
 
             it('decodes resent messages correctly', async (done) => {
-                client.once('error', done)
                 await client.publish(stream.id, publishedMessage)
-                await wait(5000)
+                await waitForStorage(publishedMessage)
                 await client.resend({
                     stream: stream.id,
                     resend: {

@@ -51,7 +51,12 @@ function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
  * Write messages into a Stream.
  */
 
-function messageStream(connection, { streamId, streamPartition, type = ControlMessage.TYPES.BroadcastMessage }) {
+function messageStream(connection, { streamId, streamPartition, isUnicast, type }) {
+    if (!type) {
+        // eslint-disable-next-line no-param-reassign
+        type = isUnicast ? ControlMessage.TYPES.UnicastMessage : ControlMessage.TYPES.BroadcastMessage
+    }
+
     const isMatchingStreamMessage = getIsMatchingStreamMessage({
         streamId,
         streamPartition
@@ -176,10 +181,14 @@ export function Validator(client, opts) {
 
 export function MessagePipeline(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
-    const { validate = Validator(client, options) } = options
+    /* eslint-disable object-curly-newline */
+    const {
+        validate = Validator(client, options),
+        stream = messageStream(client.connection, options),
+        orderingUtil = OrderMessages(client, options)
+    } = options
+    /* eslint-enable object-curly-newline */
 
-    const stream = messageStream(client.connection, options)
-    const orderingUtil = OrderMessages(client, options)
     const p = pipeline([
         stream,
         async function* Validate(src) {
@@ -215,7 +224,7 @@ export function getResendStream(client, opts = {}, onFinally = () => {}) {
 
     const msgStream = MessagePipeline(client, {
         ...options,
-        type: ControlMessage.TYPES.UnicastMessage,
+        isUnicast: true,
     }, async (err) => {
         try {
             await connection.removeHandle(requestId)

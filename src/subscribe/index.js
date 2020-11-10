@@ -18,8 +18,6 @@ import {
 
 export { validateOptions }
 
-const { ControlMessage } = ControlLayer
-
 function emitterMixin(obj, emitter = new Emitter()) {
     return Object.assign(obj, {
         once: emitter.once.bind(emitter),
@@ -33,44 +31,17 @@ function emitterMixin(obj, emitter = new Emitter()) {
 }
 
 class Subscription extends Emitter {
-    static add() {
-        this.count = this.count + 1 || 1
-    }
-
-    static remove() {
-        this.count = Math.max(this.count - 1 || 0, 0)
-    }
-
     constructor(client, opts, onFinally = () => {}) {
         super()
-        this.constructor.add()
         this.client = client
         this.options = validateOptions(opts)
-        this.validate = opts.validate || Validator(client, this.options)
         this.key = this.options.key
-        this._onFinally = onFinally
-        this.onFinally = this.onFinally.bind(this)
-        this.iterator = this.listen()
-    }
-
-    async onFinally(err) {
-        this.constructor.remove()
-        await this._onFinally(err)
-    }
-
-    listen() {
-        const { client, options, validate, onFinally } = this
-        this.pipeline = MessagePipeline(client, {
-            type: ControlMessage.TYPES.BroadcastMessage,
-            ...options,
-            validate,
+        this.validate = opts.validate || Validator(client, this.options)
+        this.pipeline = opts.pipeline || MessagePipeline(client, {
+            ...this.options,
+            validate: this.validate,
         }, onFinally)
         this.stream = this.pipeline.stream
-        return this.pipeline
-    }
-
-    count() {
-        return this.constructor.count || 0
     }
 
     async collect() {
@@ -83,67 +54,23 @@ class Subscription extends Emitter {
     }
 
     [Symbol.asyncIterator]() {
-        return this.iterator
+        return this.pipeline
     }
 
     async cancel(...args) {
-        return this.iterator.cancel(...args)
+        return this.pipeline.cancel(...args)
     }
 
     async return(...args) {
-        return this.iterator.return(...args)
+        return this.pipeline.return(...args)
     }
 
     async throw(...args) {
-        return this.iterator.throw(...args)
+        return this.pipeline.throw(...args)
     }
 
     async unsubscribe(...args) {
         return this.cancel(...args)
-    }
-}
-
-/**
- * A Map of Sets
- * Each key (should) contain a set.
- */
-
-class MapSet extends Map {
-    setGet(key) {
-        return this.get(key) || new Set()
-    }
-
-    setAdd(key, item) {
-        const items = this.setGet(key)
-        items.add(item)
-        this.set(key, items)
-        return this
-    }
-
-    setHas(key, item) {
-        const items = this.get(key)
-        return !!(items && items.has(item))
-    }
-
-    setDelete(key, item) {
-        const items = this.setGet(key)
-        items.delete(item)
-        if (!items.size) {
-            super.delete(key)
-        } else {
-            this.set(key, items)
-        }
-        return this
-    }
-
-    setClear(key) {
-        const items = this.setGet(key)
-        items.clear()
-        return this
-    }
-
-    setSize(key) {
-        return this.setGet(key).size
     }
 }
 
@@ -162,6 +89,91 @@ function multiEmit(emitters, ...args) {
     }
 }
 
+class SubscriptionSession extends Emitter {
+    constructor(client, options) {
+        super()
+        this.client = client
+        this.options = validateOptions(options)
+        const { key } = this.options
+        this.subscriptions = new Set()
+        this.validate = Validator(client, this.options)
+        this.deletedSubscriptions = new Set()
+        const { connection } = this.client
+
+        let deleted = new Set()
+        this.step = pUpDownSteps([
+            () => {
+                this.emit('subscribing')
+                return async () => {
+                    this.isActive = false
+                    try {
+                        this.emit('unsubscribed')
+                    } finally {
+                        deleted.forEach((s) => {
+                            this.deletedSubscriptions.delete(s)
+                        })
+                    }
+                }
+            },
+            async () => {
+                await connection.addHandle(key)
+                return async () => {
+                    deleted = new Set(this.deletedSubscriptions)
+                    await connection.removeHandle(key)
+                    return deleted
+                }
+            },
+            async () => {
+                await subscribe(this.client, this.options)
+                this.emit('subscribed')
+                return async () => {
+                    this.emit('unsubscribing')
+                    await unsubscribe(this.client, this.options)
+                }
+            }
+        ], () => this.count())
+    }
+
+    has(sub) {
+        return this.subscriptions.has(sub)
+    }
+
+    emit(...args) {
+        const subs = this._getSubs()
+        try {
+            multiEmit(subs, ...args)
+        } catch (error) {
+            return super.emit('error', error)
+        }
+
+        return super.emit(...args)
+    }
+
+    _getSubs() {
+        return new Set([
+            ...this.deletedSubscriptions,
+            ...this.subscriptions,
+        ])
+    }
+
+    async add(sub) {
+        this.subscriptions.add(sub)
+        await this.step()
+    }
+
+    async remove(sub) {
+        const cancelTask = sub.cancel()
+        this.subscriptions.delete(sub)
+        this.deletedSubscriptions.add(sub)
+        await this.step()
+        await cancelTask
+    }
+
+    count() {
+        return this.subscriptions.size
+    }
+}
+
 /**
  * Keeps track of subscriptions.
  * Sends Subscribe/Unsubscribe requests as needed.
@@ -171,73 +183,38 @@ function multiEmit(emitters, ...args) {
 class Subscriptions {
     constructor(client) {
         this.client = client
-        this.subscriptions = new MapSet()
-        this.subTasks = new MapSet()
-        this.deletedSubs = new MapSet()
+        this.subSessions = new Map()
     }
 
-    sendEvent(options, ...args) {
-        options = validateOptions(options) // eslint-disable-line no-param-reassign
-        const subs = this.getSubs(options)
-        return multiEmit(subs, ...args)
-    }
-
-    getSubs(options) {
+    async add(opts, onFinally = () => {}) {
+        const options = validateOptions(opts)
         const { key } = options
-        return new Set([
-            ...this.deletedSubs.setGet(key),
-            ...this.subscriptions.setGet(key),
-        ])
-    }
+        const subSession = this.subSessions.get(key) || new SubscriptionSession(this.client, options)
+        const sub = new Subscription(this.client, {
+            ...options,
+            validate: subSession.validate,
+        }, async (err) => {
+            try {
+                await this.remove(sub)
+            } finally {
+                await onFinally(err)
+            }
+        })
 
-    setup(sub) {
-        const { options } = sub
-        const { key } = options
-        if (!this.subTasks.has(key)) {
-            const { connection } = this.client
-            const next = pUpDownSteps([
-                async () => {
-                    this.sendEvent(options, 'subscribing')
-                    await connection.addHandle(key)
-                    return async () => {
-                        await connection.removeHandle(key)
-                        this.sendEvent(options, 'unsubscribed')
-                        this.deletedSubs.delete(key)
-                    }
-                },
-                async () => {
-                    await subscribe(this.client, options)
-                    this.sendEvent(options, 'subscribed')
-                    return async () => {
-                        this.sendEvent(options, 'unsubscribing')
-                        await unsubscribe(this.client, options)
-                    }
-                }
-            ], () => this.count(options))
-
-            this.subTasks.set(key, next)
+        sub.count = () => {
+            return this.count(options)
         }
 
-        return this.subTasks.get(key)
-    }
+        this.subSessions.set(key, subSession)
 
-    async step(key) {
-        const next = this.subTasks.get(key)
-        if (typeof next === 'function') {
-            await next()
-        }
-    }
-
-    async add(sub) {
         try {
-            const { key } = sub
-            this.subscriptions.setAdd(key, sub)
-            this.setup(sub)
-            await this.step(key)
+            await subSession.add(sub)
         } catch (err) {
             await this.remove(sub)
             throw err
         }
+
+        return sub
     }
 
     async remove(sub) {
@@ -245,11 +222,14 @@ class Subscriptions {
         let cancelTask
         try {
             cancelTask = sub.cancel()
-            // remove from set
-            this.subscriptions.setDelete(key, sub)
-            this.deletedSubs.setAdd(key, sub)
+            const subSession = this.subSessions.get(key)
+            if (subSession) {
+                await subSession.remove(sub)
+                if (!subSession.count()) {
+                    this.subSessions.delete(key)
+                }
+            }
         } finally {
-            await this.step(key, sub)
             await cancelTask // only wait for cancel at end
         }
     }
@@ -263,8 +243,8 @@ class Subscriptions {
 
     countAll() {
         let count = 0
-        this.subscriptions.forEach((s) => {
-            count += s.size
+        this.subSessions.forEach((s) => {
+            count += s.count()
         })
         return count
     }
@@ -275,16 +255,23 @@ class Subscriptions {
     }
 
     getAll() {
-        return [this.subscriptions].reduce((o, s) => {
-            o.push(...s)
+        return [...this.subSessions.values()].reduce((o, s) => {
+            o.push(...s.subscriptions)
             return o
         }, [])
+    }
+
+    getSubscriptionSession(options) {
+        const { key } = validateOptions(options)
+        return this.subSessions.get(key)
     }
 
     get(options) {
         if (options === undefined) { return this.getAll() }
         const { key } = validateOptions(options)
-        return [...(this.subscriptions.get(key) || new Set())]
+        const subSession = this.subSessions.get(key)
+        if (!subSession) { return [] }
+        return [...subSession.subscriptions]
     }
 }
 
@@ -296,6 +283,10 @@ export default class Subscriber {
     constructor(client) {
         this.client = client
         this.subscriptions = new Subscriptions(client)
+    }
+
+    getSubscriptionSession(...args) {
+        return this.subscriptions.getSubscriptionSession(...args)
     }
 
     getAll(...args) {
@@ -319,22 +310,20 @@ export default class Subscriber {
         return this.subscriptions.removeAll(options)
     }
 
-    async subscribe(options, onFinally = () => {}) {
-        const sub = new Subscription(this.client, options, async (err) => {
-            try {
-                await this.subscriptions.remove(sub)
-            } finally {
-                await onFinally(err)
-            }
-        })
-
-        await this.subscriptions.add(sub)
-
-        return sub
+    async subscribe(...args) {
+        return this.subscriptions.add(...args)
     }
 
     async resend(opts) {
-        return getResendStream(this.client, opts).subscribe()
+        const resendStream = getResendStream(this.client, opts)
+        const sub = new Subscription(this.client, {
+            pipeline: resendStream,
+            ...opts,
+        }, () => {
+            sub.emit('resent')
+        })
+        resendStream.subscribe().catch(() => {})
+        return sub
     }
 
     async resendSubscribe(options) {
@@ -355,26 +344,30 @@ export default class Subscriber {
             ])
         }
 
+        let resendSubscribeSub
+
         const it = pipeline([
             async function* ResendSubIterator() {
                 await resendSub.subscribe()
                 // iterate over resend
-                yield* it.resend
-                emitter.emit('resent')
+                yield* resendSubscribeSub.resend
+                resendSubscribeSub.emit('resent')
                 // then iterate over realtime subscription
-                yield* it.realtime
+                yield* resendSubscribeSub.realtime
             },
         ], end)
 
-        emitterMixin(it, emitter)
+        resendSubscribeSub = new Subscription(this.client, {
+            pipeline: it,
+            validate: sub.validate.bind(sub),
+            ...options
+        }, end)
 
         // attach additional utility functions
-        return Object.assign(it, {
+        return Object.assign(resendSubscribeSub, {
             get isActive() {
                 return sub.isActive
             },
-            collect: sub.collect.bind(it),
-            options,
             realtime: sub,
             resend: resendSub,
         })
