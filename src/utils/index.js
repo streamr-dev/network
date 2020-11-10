@@ -247,3 +247,30 @@ export async function allSettledValues(items, errorMessage = '') {
 
     return result.map(({ value }) => value)
 }
+
+export function pUpDownSteps(sequence = [], checkFn) {
+    const onDownSteps = []
+    const nextSteps = sequence.slice().reverse()
+    const prevSteps = []
+    const queue = pLimit(1)
+    async function next(...args) {
+        if (await checkFn()) {
+            if (nextSteps.length) {
+                const stepFn = nextSteps.pop()
+                const onDownStep = await stepFn()
+                prevSteps.push(stepFn)
+                onDownSteps.push(onDownStep)
+                return next(...args)
+            }
+        } else if (onDownSteps.length) {
+            const stepFn = onDownSteps.pop()
+            await stepFn()
+            nextSteps.push(prevSteps.pop())
+            return next(...args)
+        }
+
+        return Promise.resolve()
+    }
+
+    return (...args) => queue(() => next(...args))
+}
