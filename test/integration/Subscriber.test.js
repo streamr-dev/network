@@ -179,6 +179,11 @@ describeRepeats('StreamrClient Stream', () => {
 
     describe('ending a subscription', () => {
         it('can kill stream using async end', async () => {
+            const unsubscribeEvents = []
+            client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+                unsubscribeEvents.push(m)
+            })
+
             const sub = await M.subscribe(stream.id)
             expect(M.count(stream.id)).toBe(1)
 
@@ -204,6 +209,7 @@ describeRepeats('StreamrClient Stream', () => {
             }
             // gets some messages but not all
             expect(received).toHaveLength(expectedLength)
+            expect(unsubscribeEvents).toHaveLength(1)
         })
 
         it('can kill stream with throw', async () => {
@@ -211,6 +217,7 @@ describeRepeats('StreamrClient Stream', () => {
             client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
                 unsubscribeEvents.push(m)
             })
+
             const sub = await M.subscribe(stream.id)
             expect(M.count(stream.id)).toBe(1)
 

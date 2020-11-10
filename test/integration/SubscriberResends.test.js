@@ -135,9 +135,9 @@ describeRepeats('resends', () => {
 
             const received = []
             for await (const m of sub) {
-                received.push(m)
+                received.push(m.getParsedContent())
                 setTimeout(() => {
-                    sub.return()
+                    sub.cancel()
                 }, 250)
             }
             expect(received).toEqual([msg])
@@ -187,6 +187,24 @@ describeRepeats('resends', () => {
                 received.push(m)
             }
 
+            expect(received).toHaveLength(published.length)
+            expect(subscriber.count(stream.id)).toBe(0)
+            expect(sub.stream.isReadable()).toBe(false)
+        })
+
+        it('closes connection with autoDisconnect', async () => {
+            client.connection.enableAutoDisconnect()
+            const sub = await subscriber.resend({
+                streamId: stream.id,
+                last: published.length,
+            })
+
+            const received = []
+            for await (const m of sub) {
+                received.push(m)
+            }
+
+            expect(client.connection.getState()).toBe('disconnected')
             expect(received).toHaveLength(published.length)
             expect(subscriber.count(stream.id)).toBe(0)
             expect(sub.stream.isReadable()).toBe(false)

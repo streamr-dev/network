@@ -133,15 +133,7 @@ function OrderMessages(client, options = {}) {
     ], async (err) => {
         done = true
         orderingUtil.clearGaps()
-        try {
-            if (err) {
-                await outStream.throw(err)
-            } else {
-                await outStream.return()
-            }
-        } catch (_err) {
-            // ignore
-        }
+        await outStream.cancel(err)
         orderingUtil.clearGaps()
     }), {
         markMessageExplicitly,
@@ -204,7 +196,10 @@ export function MessagePipeline(client, opts = {}, onFinally = () => {}) {
             }
         },
         orderingUtil,
-    ], onFinally)
+    ], async (err, ...args) => {
+        await stream.cancel()
+        return onFinally(err, ...args)
+    })
 
     return Object.assign(p, {
         stream,
@@ -215,13 +210,19 @@ export function MessagePipeline(client, opts = {}, onFinally = () => {}) {
 
 export function getResendStream(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
+    const { connection } = client
+    const requestId = uuid(`${options.key}-resend`)
 
     const msgStream = MessagePipeline(client, {
         ...options,
         type: ControlMessage.TYPES.UnicastMessage,
-    }, onFinally)
-
-    const requestId = uuid('rs')
+    }, async (err) => {
+        try {
+            await connection.removeHandle(requestId)
+        } finally {
+            await onFinally(err)
+        }
+    })
 
     // wait for resend complete message(s)
     const onResendDone = waitForResponse({ // eslint-disable-line promise/catch-or-return
@@ -235,6 +236,7 @@ export function getResendStream(client, opts = {}, onFinally = () => {}) {
 
     return Object.assign(msgStream, {
         async subscribe() {
+            connection.addHandle(requestId)
             // wait for resend complete message or resend request done
             await Promise.race([
                 resend(client, {
