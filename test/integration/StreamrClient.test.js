@@ -915,6 +915,44 @@ describe('StreamrClient', () => {
                 expect(onMessageMsgs).toEqual(published)
             })
 
+            it('should resubscribe on unexpected disconnection', async () => {
+                const otherClient = createClient({
+                    auth: client.options.auth,
+                })
+                try {
+                    await otherClient.connect()
+                    await otherClient.session.getSessionToken()
+                    const done = Defer()
+
+                    const msgs = []
+                    await otherClient.subscribe(stream, (msg) => {
+                        msgs.push(msg)
+                        if (msgs.length === 1) {
+                            // disconnect
+                            otherClient.connection.socket.close()
+                        }
+
+                        if (msgs.length === MAX_MESSAGES) {
+                            // should eventually get here
+                            done.resolve()
+                        }
+                    })
+
+                    const published = await publishTestMessages(MAX_MESSAGES, {
+                        wait: 500,
+                    })
+
+                    await done
+
+                    expect(msgs).toEqual(published)
+                } finally {
+                    await Promise.all([
+                        otherClient.disconnect(),
+                        client.disconnect(),
+                    ])
+                }
+            })
+
             it('publish and subscribe a sequence of messages', async () => {
                 client.enableAutoConnect()
                 const done = Defer()

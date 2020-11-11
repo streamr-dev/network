@@ -97,13 +97,25 @@ class SubscriptionSession extends Emitter {
         this.validate = Validator(client, this.options)
         this.deletedSubscriptions = new Set()
         const { connection } = this.client
+        let needsReset = false
+
+        const onDisconnected = async () => {
+            if (!connection.isConnectionValid() || !this.count()) { return }
+            needsReset = true
+            await this.step()
+            needsReset = false
+            await this.step()
+        }
 
         let deleted = new Set()
         this.step = pUpDownSteps([
             () => {
+                needsReset = false
+                connection.on('disconnected', onDisconnected)
                 this.emit('subscribing')
                 return async () => {
-                    this.isActive = false
+                    connection.off('disconnected', onDisconnected)
+                    if (needsReset) { return }
                     try {
                         this.emit('unsubscribed')
                     } finally {
@@ -116,20 +128,23 @@ class SubscriptionSession extends Emitter {
             async () => {
                 await connection.addHandle(key)
                 return async () => {
+                    if (needsReset) { return }
                     deleted = new Set(this.deletedSubscriptions)
                     await connection.removeHandle(key)
-                    return deleted
                 }
             },
             async () => {
                 await subscribe(this.client, this.options)
                 this.emit('subscribed')
                 return async () => {
+                    if (needsReset) { return }
                     this.emit('unsubscribing')
                     await unsubscribe(this.client, this.options)
                 }
             }
-        ], () => this.count())
+        ], () => (
+            !needsReset && this.count()
+        ))
     }
 
     has(sub) {

@@ -1,7 +1,8 @@
-import { wait } from 'streamr-test-utils'
+import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey } from '../utils'
+import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
 import StreamrClient from '../../src'
+import { Defer } from '../../src/utils'
 
 import config from './config'
 
@@ -24,38 +25,35 @@ describe('resend/reconnect', () => {
     let client
     let stream
     let publishedMessages
+    let publishTestMessages
 
     beforeEach(async () => {
         client = createClient()
         await client.connect()
 
-        publishedMessages = []
-
         stream = await client.createStream({
             name: uid('resends')
         })
 
-        for (let i = 0; i < MAX_MESSAGES; i++) {
-            const message = {
-                msg: uid('message'),
-            }
+        publishTestMessages = getPublishTestMessages(client, {
+            streamId: stream.id,
+            waitForLast: true,
+        })
 
-            // eslint-disable-next-line no-await-in-loop
-            await client.publish(stream.id, message)
-            publishedMessages.push(message)
-        }
-
-        await wait(5000) // wait for messages to (hopefully) land in storage
+        publishedMessages = await publishTestMessages(MAX_MESSAGES)
+        client.enableAutoConnect()
     }, 10 * 1000)
 
     afterEach(async () => {
         await client.disconnect()
     })
 
-    describe('reconnect after resend', () => {
+    describe('reconnect with resend', () => {
         let sub
         let messages = []
-        beforeEach(async (done) => {
+        beforeEach(async () => {
+            const done = Defer()
+            messages = []
             sub = await client.subscribe({
                 stream: stream.id,
                 resend: {
@@ -64,32 +62,27 @@ describe('resend/reconnect', () => {
             }, (message) => {
                 messages.push(message)
             })
-            sub.once('resent', () => {
-                done()
-            })
+            sub.once('resent', done.resolve)
+            await done
+            expect(messages).toEqual(publishedMessages.slice(-MAX_MESSAGES))
         }, 15000)
 
-        it('can handle reconnection after disconnection', (done) => {
-            const newPublishedMessages = []
-            client.connection.socket.once('close', () => {
-                // should reconnect
-                client.once('connected', async () => {
-                    setTimeout(async () => {
-                        // clear messsages
-                        messages = []
-                        const message = {
-                            msg: uid('newmessage'),
-                        }
-                        newPublishedMessages.push(message)
-                        await client.publish(stream, message)
-                        setTimeout(() => {
-                            expect(messages).toEqual(newPublishedMessages)
-                            done()
-                        }, 3000)
-                    }, 3000)
-                })
-            })
+        it('can handle reconnection after unintentional disconnection', async () => {
+            const onClose = Defer()
+            client.connection.socket.once('close', onClose.resolve)
             client.connection.socket.close()
+            await onClose
+            // should reconnect and get new messages
+            const prevMessages = messages
+            const newMessages = await publishTestMessages(3)
+            await wait(6000)
+            console.log({
+                prevMessages,
+                newMessages,
+                messages,
+            })
+            await waitForCondition(() => messages.length === MAX_MESSAGES + 3, 6000)
+            expect(messages).toEqual([...prevMessages, ...newMessages])
         }, 110000)
     })
 })
