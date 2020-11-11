@@ -3,6 +3,7 @@ import { wait } from 'streamr-test-utils'
 import Debug from 'debug'
 
 import Connection from '../../src/Connection'
+import { Defer } from '../../src/utils'
 
 /* eslint-disable require-atomic-updates */
 
@@ -171,101 +172,110 @@ describe('Connection', () => {
         })
 
         describe('connect/disconnect inside event handlers', () => {
-            it('can handle connect on connecting event', async (done) => {
-                s.once('connecting', async () => {
+            it('can handle connect on connecting event', async () => {
+                const done = Defer()
+                s.once('connecting', done.wrap(async () => {
                     await s.connect()
                     expect(s.getState()).toBe('connected')
                     expect(onConnected).toHaveBeenCalledTimes(1)
                     expect(onConnecting).toHaveBeenCalledTimes(1)
-                    done()
-                })
+                }))
                 await s.connect()
                 expect(s.getState()).toBe('connected')
+                await done
             })
 
-            it('can handle disconnect on connecting event', async (done) => {
+            it('can handle disconnect on connecting event', async () => {
                 expectErrors = 1
-                s.once('connecting', async () => {
+                const done = Defer()
+                s.once('connecting', done.wrap(async () => {
                     await s.disconnect()
                     expect(s.getState()).toBe('disconnected')
                     expect(onDone).toHaveBeenCalledTimes(1)
-                    done()
-                })
+                }))
+
                 await expect(async () => {
                     await s.connect()
                 }).rejects.toThrow()
                 expect(s.getState()).toBe('disconnected')
+                await done
             })
 
-            it('can handle disconnect on connected event', async (done) => {
+            it('can handle disconnect on connected event', async () => {
                 expectErrors = 1
-                s.once('connected', async () => {
+                const done = Defer()
+                s.once('connected', done.wrap(async () => {
                     await s.disconnect()
                     expect(s.getState()).toBe('disconnected')
                     expect(onDone).toHaveBeenCalledTimes(1)
-                    done()
-                })
+                }))
 
                 await expect(async () => {
                     await s.connect()
                 }).rejects.toThrow()
                 expect(s.getState()).not.toBe('connected')
+                await done
             })
 
-            it('can handle disconnect on connected event, repeated', async (done) => {
+            it('can handle disconnect on connected event, repeated', async () => {
                 expectErrors = 3
-                s.once('connected', async () => {
+                const done = Defer()
+                s.once('connected', done.wrapError(async () => {
                     await expect(async () => {
                         await s.disconnect()
                     }).rejects.toThrow()
-                })
-                s.once('disconnected', async () => {
-                    s.once('connected', async () => {
+                }))
+
+                s.once('disconnected', done.wrapError(async () => {
+                    s.once('connected', done.wrap(async () => {
                         await s.disconnect()
                         expect(onDone).toHaveBeenCalledTimes(1)
-                        done()
-                    })
+                    }))
 
                     await expect(async () => {
                         await s.connect()
                     }).rejects.toThrow()
-                })
+                }))
+
                 await expect(async () => {
                     await s.connect()
                 }).rejects.toThrow()
+                await done
             })
 
-            it('can handle connect on disconnecting event', async (done) => {
+            it('can handle connect on disconnecting event', async () => {
                 expectErrors = 1
-                s.once('disconnecting', async () => {
+                const done = Defer()
+                s.once('disconnecting', done.wrap(async () => {
                     await s.connect()
                     expect(s.getState()).toBe('connected')
-                    done()
-                })
+                }))
                 await s.connect()
                 await expect(async () => {
                     await s.disconnect()
                 }).rejects.toThrow()
                 expect(onDone).toHaveBeenCalledTimes(0)
                 expect(s.getState()).not.toBe('disconnected')
+                await done
             })
 
-            it('can handle connect on disconnected event', async (done) => {
+            it('can handle connect on disconnected event', async () => {
                 expectErrors = 1
                 await s.connect()
+                const done = Defer()
 
-                s.once('disconnected', async () => {
+                s.once('disconnected', done.wrap(async () => {
                     await s.connect()
                     s.debug('connect done')
                     expect(s.getState()).toBe('connected')
                     expect(onDone).toHaveBeenCalledTimes(0)
-                    done()
-                })
+                }))
 
                 await expect(async () => {
                     await s.disconnect()
                 }).rejects.toThrow()
                 expect(s.getState()).not.toBe('connected')
+                await done
             })
         })
 
@@ -379,21 +389,22 @@ describe('Connection', () => {
             expect(onDone).toHaveBeenCalledTimes(0)
         })
 
-        it('emits error but does not disconnect if connect event handler fails', async (done) => {
+        it('emits error but does not disconnect if connect event handler fails', async () => {
             expectErrors = 1
             const error = new Error('expected error')
+            const done = Defer()
             s.once('connected', () => {
-                throw error
+                throw error // expected
             })
-            s.once('error', async (err) => {
+            s.once('error', done.wrap(async (err) => {
                 expect(err).toBe(error)
                 await wait()
                 expect(s.getState()).toBe('connected')
-                done()
-            })
+            }))
             await s.connect()
             expect(s.getState()).toBe('connected')
             expect(onDone).toHaveBeenCalledTimes(0)
+            await done
         })
     })
 
@@ -495,21 +506,21 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
         })
 
-        it('errors if reconnect fails', async (done) => {
+        it('errors if reconnect fails', async () => {
             expectErrors = 1
             await s.connect()
             s.options.url = 'badurl'
-            s.once('error', async (err) => {
-                expect(err).toBeTruthy()
-                expect(onConnected).toHaveBeenCalledTimes(1)
-                expect(s.getState()).toBe('disconnected')
-                expect(onDone).toHaveBeenCalledTimes(1)
-                done()
-            })
+            const done = Defer()
+            s.once('error', done.resolve)
             s.socket.close()
+            const err = await done
+            expect(err).toBeTruthy()
+            expect(onConnected).toHaveBeenCalledTimes(1)
+            expect(s.getState()).toBe('disconnected')
+            expect(onDone).toHaveBeenCalledTimes(1)
         })
 
-        it('retries multiple times when disconnected', async (done) => {
+        it('retries multiple times when disconnected', async () => {
             s.options.maxRetries = 3
             /* eslint-disable no-underscore-dangle */
             await s.connect()
@@ -524,48 +535,48 @@ describe('Connection', () => {
                     s.options.url = goodUrl
                 }
             })
-            s.once('connected', () => {
+            const done = Defer()
+            s.once('connected', done.wrap(() => {
                 expect(s.getState()).toBe('connected')
                 expect(retryCount).toEqual(3)
-                done()
-            })
+            }))
             s.socket.close()
+            await done
             /* eslint-enable no-underscore-dangle */
         }, 3000)
 
-        it('fails if exceed max retries', async (done) => {
+        it('fails if exceed max retries', async () => {
             expectErrors = 1
             await s.connect()
+            const done = Defer()
             s.options.maxRetries = 2
             s.options.url = 'badurl'
-            s.once('error', (err) => {
-                expect(err).toBeTruthy()
-                // wait a moment for late errors
-                setTimeout(() => {
-                    expect(onDone).toHaveBeenCalledTimes(1)
-                    done()
-                }, 100)
-            })
+            s.once('error', done.resolve)
             s.socket.close()
+            const err = await done
+            expect(err).toBeTruthy()
+            // wait a moment for late errors
+            await wait(100)
+            expect(onDone).toHaveBeenCalledTimes(1)
+            await done
         })
 
-        it('resets max retries on manual connect after failure', async (done) => {
+        it('resets max retries on manual connect after failure', async () => {
             expectErrors = 1
             await s.connect()
             const goodUrl = s.options.url
             s.options.maxRetries = 2
             s.options.url = 'badurl'
-            s.once('error', async (err) => {
-                expect(err).toBeTruthy()
-                s.options.url = goodUrl
-                await s.connect()
-                setTimeout(() => {
-                    expect(s.isReconnecting()).toBeFalsy()
-                    expect(s.getState()).toBe('connected')
-                    done()
-                })
-            })
+            const done = Defer()
+            s.once('error', done.resolve)
             s.socket.close()
+            const err = await done
+            expect(err).toBeTruthy()
+            s.options.url = goodUrl
+            await s.connect()
+            await wait()
+            expect(s.isReconnecting()).toBeFalsy()
+            expect(s.getState()).toBe('connected')
         })
 
         it('can try reconnect after error', async () => {
@@ -591,63 +602,60 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
         })
 
-        it('stops reconnecting if disconnected while reconnecting', async (done) => {
+        it('stops reconnecting if disconnected while reconnecting', async () => {
             await s.connect()
             const goodUrl = s.options.url
             s.options.url = 'badurl'
+            const done = Defer()
             // once disconnected due to error, actually close
-            s.once('disconnected', async () => {
-                // i.e. would reconnect if not closing
-                s.options.url = goodUrl
-                await s.disconnect()
-                // wait a moment
-                setTimeout(() => {
-                    // ensure is disconnected, not reconnecting
-                    expect(s.getState()).toBe('disconnected')
-                    expect(s.isReconnecting()).toBeFalsy()
-                    expect(onDone).toHaveBeenCalledTimes(1)
-                    done()
-                }, 10)
-            })
+            s.once('disconnected', done.resolve)
             // trigger reconnecting cycle
             s.socket.close()
+            await done
+            // i.e. would reconnect if not closing
+            s.options.url = goodUrl
+            await s.disconnect()
+
+            // wait a moment
+            await wait(10)
+            // ensure is disconnected, not reconnecting
+            expect(s.getState()).toBe('disconnected')
+            expect(s.isReconnecting()).toBeFalsy()
+            expect(onDone).toHaveBeenCalledTimes(1)
         })
 
-        it('stops reconnecting if disconnected while reconnecting, after some delay', (done) => {
-            s.connect().then(() => {
-                const goodUrl = s.options.url
-                s.options.url = 'badurl'
-                // once disconnected due to error, actually close
-                s.once('disconnected', async () => {
-                    // wait a moment
-                    setTimeout(async () => {
-                        // i.e. would reconnect if not closing
-                        s.options.url = goodUrl
-                        await s.disconnect()
-                        setTimeout(async () => {
-                            // ensure is disconnected, not reconnecting
-                            expect(s.getState()).toBe('disconnected')
-                            expect(s.isReconnecting()).toBeFalsy()
-                            expect(onDone).toHaveBeenCalledTimes(1)
-                            done()
-                        }, 20)
-                    }, 10)
-                })
-                // trigger reconnecting cycle
-                s.socket.close()
-            })
+        it('stops reconnecting if disconnected while reconnecting, after some delay', async () => {
+            await s.connect()
+            const goodUrl = s.options.url
+            s.options.url = 'badurl'
+            const done = Defer()
+            // once disconnected due to error, actually close
+            s.once('disconnected', done.resolve)
+            // trigger reconnecting cycle
+            s.socket.close()
+            await done
+            // wait a moment
+            await wait(10)
+            // i.e. would reconnect if not closing
+            s.options.url = goodUrl
+            await s.disconnect()
+            await wait(20)
+            // ensure is disconnected, not reconnecting
+            expect(s.getState()).toBe('disconnected')
+            expect(s.isReconnecting()).toBeFalsy()
+            expect(onDone).toHaveBeenCalledTimes(1)
         })
     })
 
     describe('send', () => {
-        it('can send and receive messages', async (done) => {
+        it('can send and receive messages', async () => {
             await s.connect()
-            s.once('message', ({ data } = {}) => {
-                expect(data).toEqual('test')
-                done()
-            })
+            const done = Defer()
+            s.once('message', done.resolve)
 
             await s.send('test')
+            const { data } = await done
+            expect(data).toEqual('test')
         })
 
         it('fails if not autoconnecting or manually connected', async () => {
@@ -656,36 +664,34 @@ describe('Connection', () => {
             }).rejects.toThrow('connection')
         })
 
-        it('waits for connection if sending while connecting', async (done) => {
-            s.once('message', ({ data } = {}) => {
-                expect(data).toEqual('test')
-                done()
-            })
+        it('waits for connection if sending while connecting', async () => {
+            const done = Defer()
+            s.once('message', done.resolve)
 
             s.connect() // no await
             await s.send('test')
+            const { data } = await done
+            expect(data).toEqual('test')
         })
 
-        it('creates connection and waits if autoconnect true', async (done) => {
+        it('creates connection and waits if autoconnect true', async () => {
             s.enableAutoConnect()
-            s.once('message', ({ data } = {}) => {
-                expect(data).toEqual('test')
-                done()
-            })
+            const done = Defer()
+            s.once('message', done.resolve)
             // no connect
             await s.send('test')
+            const { data } = await done
+            expect(data).toEqual('test')
         })
 
-        it('waits for reconnecting if sending while reconnecting', async (done) => {
+        it('waits for reconnecting if sending while reconnecting', async () => {
             await s.connect()
-
-            s.once('message', ({ data } = {}) => {
-                expect(data).toEqual('test')
-                done()
-            })
-
-            s.socket.close()
+            const done = Defer()
+            s.once('message', done.resolve)
+            s.socket.close() // will trigger reconnect
             await s.send('test')
+            const { data } = await done
+            expect(data).toEqual('test')
         })
 
         it('fails send if reconnect fails', async () => {
@@ -713,8 +719,9 @@ describe('Connection', () => {
             s.on('message', ({ data } = {}) => {
                 received.push(data)
             })
+            const nextMessage = Defer()
+            s.once('message', nextMessage.resolve)
 
-            const nextMessage = new Promise((resolve) => s.once('message', resolve))
             await s.send('test') // ok
             await nextMessage
             expect(received).toEqual(['test'])
