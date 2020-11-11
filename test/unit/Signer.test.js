@@ -9,7 +9,7 @@ we are testing the Signer which is internal, we use private keys with the '0x' p
  */
 describe('Signer', () => {
     describe('construction', () => {
-        it('should sign when constructed with private key', async () => {
+        it('should sign when constructed with private key', () => {
             const signer = new Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             })
@@ -36,14 +36,14 @@ describe('Signer', () => {
             const signer = Signer.createSigner({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             }, 'auto')
-            expect(signer instanceof Signer).toBeTruthy()
+            expect(signer).toBeInstanceOf(Signer)
         })
 
         it('Should return a Signer when "always" option is set with private key', () => {
             const signer = Signer.createSigner({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             }, 'always')
-            expect(signer instanceof Signer).toBeTruthy()
+            expect(signer).toBeInstanceOf(Signer)
         })
 
         it('Should throw when "always" option is set with no private key or provider', () => {

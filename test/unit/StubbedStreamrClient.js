@@ -1,5 +1,3 @@
-import sinon from 'sinon'
-
 import StreamrClient from '../../src/'
 import Stream from '../../src/rest/domain/Stream'
 
