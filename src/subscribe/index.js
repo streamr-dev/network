@@ -1,7 +1,5 @@
 import Emitter from 'events'
 
-import { ControlLayer } from 'streamr-client-protocol'
-
 import { allSettledValues, AggregatedError, pUpDownSteps } from '../utils'
 import { pipeline } from '../utils/iterators'
 
@@ -17,18 +15,6 @@ import {
 } from './pipeline'
 
 export { validateOptions }
-
-function emitterMixin(obj, emitter = new Emitter()) {
-    return Object.assign(obj, {
-        once: emitter.once.bind(emitter),
-        emit: emitter.emit.bind(emitter),
-        on: emitter.on.bind(emitter),
-        off: emitter.off.bind(emitter),
-        removeListener: emitter.removeListener.bind(emitter),
-        addListener: emitter.addListener.bind(emitter),
-        removeAllListeners: emitter.removeAllListeners.bind(emitter),
-    })
-}
 
 class Subscription extends Emitter {
     constructor(client, opts, onFinally = () => {}) {

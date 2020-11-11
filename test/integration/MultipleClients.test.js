@@ -23,8 +23,14 @@ describe('PubSub with multiple clients', () => {
     let mainClient
     let otherClient
     let privateKey
+    let errors = []
+
+    const getOnError = (errs) => jest.fn((err) => {
+        errs.push(err)
+    })
 
     beforeEach(async () => {
+        errors = []
         privateKey = fakePrivateKey()
 
         mainClient = createClient({
@@ -32,7 +38,7 @@ describe('PubSub with multiple clients', () => {
                 privateKey
             }
         })
-        mainClient.once('error', throwError)
+        mainClient.on('error', getOnError(errors))
         stream = await mainClient.createStream({
             name: uid('stream')
         })
@@ -51,20 +57,21 @@ describe('PubSub with multiple clients', () => {
             await otherClient.disconnect()
         }
 
+        expect(errors).toEqual([])
+
         const openSockets = Connection.getOpen()
         if (openSockets !== 0) {
             throw new Error(`sockets not closed: ${openSockets}`)
         }
     })
 
-    test('can get messages published from other client', async (done) => {
+    test('can get messages published from other client', async () => {
         otherClient = createClient({
             auth: {
                 privateKey
             }
         })
-        otherClient.once('error', done)
-        mainClient.once('error', done)
+        otherClient.on('error', getOnError(errors))
         await otherClient.connect()
         await mainClient.connect()
 
@@ -92,8 +99,5 @@ describe('PubSub with multiple clients', () => {
         // messages should arrive on both clients?
         expect(receivedMessagesMain).toEqual([message])
         expect(receivedMessagesOther).toEqual([message])
-        otherClient.removeListener('error', done)
-        mainClient.removeListener('error', done)
-        done()
     }, 30000)
 })

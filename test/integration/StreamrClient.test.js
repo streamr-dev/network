@@ -471,9 +471,8 @@ describe('StreamrClient', () => {
                 const msgs = await sub.collect()
 
                 await wait(2000)
-                await client.pause() // simulates a disconnection at the websocket level, not on the client level.
-                await client.connect()
-                await client.disconnect()
+                await client.connection.socket.close()
+                await client.connection.nextConnection()
 
                 // check whole list of calls after reconnect and disconnect
                 expect(connectionEventSpy.mock.calls[0]).toEqual([new ResendLastRequest({
@@ -487,6 +486,7 @@ describe('StreamrClient', () => {
 
                 // key exchange stream subscription should not have been sent yet
                 expect(connectionEventSpy.mock.calls.length).toEqual(1)
+                await client.disconnect()
             }, 5000)
 
             it('does not try to reconnect', async () => {

@@ -21,9 +21,8 @@ describe('LoginEndpoints', () => {
         client = createClient()
     })
 
-    afterAll(async (done) => {
+    afterAll(async () => {
         await client.disconnect()
-        done()
     })
 
     describe('Challenge generation', () => {

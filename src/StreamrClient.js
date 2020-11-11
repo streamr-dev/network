@@ -6,7 +6,6 @@ import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
 import { getVersionString } from './utils'
-import { iteratorFinally } from './utils/iterators'
 import Connection from './Connection'
 import Session from './Session'
 import Publisher from './publish'
@@ -15,19 +14,6 @@ import Subscriber from './subscribe'
 const { ControlMessage } = ControlLayer
 
 const { StreamMessage } = MessageLayer
-
-function emitterMixin(obj) {
-    const emitter = new EventEmitter()
-    return Object.assign(obj, {
-        once: emitter.once.bind(emitter),
-        emit: emitter.emit.bind(emitter),
-        on: emitter.on.bind(emitter),
-        off: emitter.off.bind(emitter),
-        removeListener: emitter.removeListener.bind(emitter),
-        addListener: emitter.addListener.bind(emitter),
-        removeAllListeners: emitter.removeAllListeners.bind(emitter),
-    })
-}
 
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
@@ -267,16 +253,16 @@ export default class StreamrClient extends EventEmitter {
         await this.subscriber.unsubscribe(opts)
     }
 
-    async resend(opts, fn) {
+    async resend(opts, onMessage) {
         const task = this.subscriber.resend(opts)
-        if (!fn) {
+        if (typeof onMessage !== 'function') {
             return task
         }
 
         Promise.resolve(task).then(async (sub) => {
             sub.emit('resending')
             for await (const msg of sub) {
-                await fn(msg.getParsedContent(), msg)
+                await onMessage(msg.getParsedContent(), msg)
             }
 
             sub.emit('resent')
