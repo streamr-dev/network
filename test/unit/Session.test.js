@@ -1,8 +1,9 @@
 import sinon from 'sinon'
 
 import StreamrClient from '../../src'
-import config from '../integration/config'
+import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
+import config from '../integration/config'
 
 describe('Session', () => {
     let session
@@ -55,27 +56,26 @@ describe('Session', () => {
             expect(sessionToken).toBe(undefined)
         })
 
-        it('login function should throw if only session token provided', async (done) => {
+        it('login function should throw if only session token provided', async () => {
             clientSessionToken.onError = () => {}
-            await clientSessionToken.session.loginFunction().catch((err) => {
-                expect(err.toString()).toEqual(
-                    'Error: Need either "privateKey", "provider", "apiKey", "username"+"password" or "sessionToken" to login.'
-                )
-                done()
-            })
+            await expect(async () => (
+                clientSessionToken.session.loginFunction()
+            )).rejects.toThrow(
+                'Need either "privateKey", "provider", "apiKey", "username"+"password" or "sessionToken" to login.'
+            )
         })
 
-        it('login function should throw if no authentication', async (done) => {
+        it('login function should throw if no authentication', async () => {
             const clientNone = createClient({
                 auth: {},
             })
             clientNone.onError = () => {}
-            await clientNone.session.loginFunction().catch((err) => {
-                expect(err.toString()).toEqual(
-                    'Error: Need either "privateKey", "provider", "apiKey", "username"+"password" or "sessionToken" to login.'
-                )
-                done()
-            })
+
+            await expect(async () => (
+                clientSessionToken.session.loginFunction()
+            )).rejects.toThrow(
+                'Need either "privateKey", "provider", "apiKey", "username"+"password" or "sessionToken" to login.'
+            )
         })
     })
 
@@ -122,34 +122,30 @@ describe('Session', () => {
                 session = new Session()
                 session.options.unauthenticated = false
                 msg = 'Error: Need either "privateKey", "provider", "apiKey" or "username"+"password" to login.'
-                session.loginFunction = sinon.stub().rejects(msg)
+                session.loginFunction = sinon.stub().rejects(new Error(msg))
                 clientSessionToken.onError = () => {}
             })
 
-            it('should fail both requests with one call to loginFunction', async (done) => {
+            it('should fail simultaneous requests with one call to loginFunction', async () => {
                 await Promise.all([
-                    session.getSessionToken().catch((err) => {
-                        expect(err.toString()).toEqual(msg)
-                    }),
-                    session.getSessionToken().catch((err) => {
-                        expect(err.toString()).toEqual(msg)
-                        expect(session.loginFunction.calledOnce).toBeTruthy()
-                        done()
-                    })
+                    expect(async () => (
+                        session.getSessionToken()
+                    )).rejects.toThrow(msg),
+                    expect(async () => (
+                        session.getSessionToken()
+                    )).rejects.toThrow(msg)
                 ])
+                expect(session.loginFunction.calledOnce).toBeTruthy()
             })
 
-            it('should fail both requests with two calls to loginFunction', async (done) => {
-                const p1 = session.getSessionToken()
-                await p1.catch(async (err) => {
-                    expect(err.toString()).toEqual(msg)
-                    const p2 = session.getSessionToken()
-                    await p2.catch((err2) => {
-                        expect(err2.toString()).toEqual(msg)
-                        expect(session.loginFunction.calledTwice).toBeTruthy()
-                        done()
-                    })
-                })
+            it('should fail both requests with two calls to loginFunction', async () => {
+                await expect(async () => (
+                    session.getSessionToken()
+                )).rejects.toThrow(msg)
+                await expect(async () => (
+                    session.getSessionToken()
+                )).rejects.toThrow(msg)
+                expect(session.loginFunction.calledTwice).toBeTruthy()
             })
         })
     })
@@ -170,38 +166,38 @@ describe('Session', () => {
             expect(clientSessionToken.logoutEndpoint.calledTwice).toBeTruthy()
         })
 
-        it('should throw if already logging out', async (done) => {
+        it('should throw if already logging out', async () => {
             await session.getSessionToken()
             session.logout()
             clientSessionToken.onError = () => {}
-            await session.logout().catch((err) => {
-                expect(err.toString()).toBe('Error: Already logging out!')
-                done()
-            })
+            await expect(async () => (
+                session.logout()
+            )).rejects.toThrow('Already logging out!')
         })
 
-        it('should throw if already logged out', async (done) => {
+        it('should throw if already logged out', async () => {
             await session.getSessionToken()
+            clientSessionToken.onError = () => {}
             await session.logout()
-            await session.logout().catch((err) => {
-                expect(err.toString()).toBe('Error: Already logged out!')
-                done()
-            })
+            await expect(async () => (
+                session.logout()
+            )).rejects.toThrow('Already logged out!')
         })
 
-        it('can logout while logging in', async (done) => {
-            session.once('logging in', async () => {
+        it('can logout while logging in', async () => {
+            const done = Defer()
+            session.once('logging in', done.wrap(async () => {
                 await session.logout()
-                done()
-            })
+            }))
             await session.getSessionToken()
+            await done
         })
 
-        it('can login while logging out', async (done) => {
-            session.once('logging out', async () => {
+        it('can login while logging out', async () => {
+            const done = Defer()
+            session.once('logging out', done.wrap(async () => {
                 await session.getSessionToken()
-                done()
-            })
+            }))
             await session.getSessionToken()
             await session.logout()
         })
