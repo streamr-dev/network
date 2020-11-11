@@ -480,13 +480,19 @@ describe('Connection', () => {
     })
 
     describe('reconnecting', () => {
-        it('reconnects if unexpectedly disconnected', async (done) => {
+        it('reconnects if unexpectedly disconnected', async () => {
             await s.connect()
-            s.once('connected', () => {
-                expect(s.getState()).toBe('connected')
-                done()
-            })
             s.socket.close()
+            await s.nextConnection()
+            expect(s.getState()).toBe('connected')
+        })
+
+        it('reconnects if unexpectedly disconnected and autoConnect is on', async () => {
+            await s.connect()
+            s.enableAutoConnect()
+            s.socket.close()
+            await s.nextConnection()
+            expect(s.getState()).toBe('connected')
         })
 
         it('errors if reconnect fails', async (done) => {

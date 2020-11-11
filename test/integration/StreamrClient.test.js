@@ -282,15 +282,14 @@ describe('StreamrClient', () => {
                 await done
             })
 
-            it('clear _reconnectTimeout when disconnecting client', async () => {
+            it('does not reconnect after purposeful disconnect', async () => {
                 client = createClient()
                 await client.connect()
                 const done = Defer()
 
-                client.once('disconnected', async () => {
+                client.once('disconnected', done.wrap(async () => {
                     await client.disconnect()
-                    done.resolve()
-                })
+                }))
 
                 client.connection.socket.close()
                 await done
@@ -300,7 +299,7 @@ describe('StreamrClient', () => {
         })
 
         describe('connect during disconnect', () => {
-            it('can reconnect after disconnect', async () => {
+            it('can connect after disconnect', async () => {
                 const done = Defer()
                 expectErrors = 3
                 client = createClient()
@@ -362,21 +361,34 @@ describe('StreamrClient', () => {
                     await client.disconnect()
                 }).rejects.toThrow()
                 await done
-            }, 5000)
+            })
+
+            it('can reconnect on unexpected close', async () => {
+                client = createClient()
+                await client.connect()
+                client.enableAutoConnect()
+
+                client.connection.socket.close()
+                expect(client.isConnected()).not.toBeTruthy()
+                await client.connection.nextConnection()
+                expect(client.isConnected()).toBeTruthy()
+            })
 
             it('will resolve original disconnect', async () => {
+                const done = Defer()
                 expectErrors = 1
                 client = createClient()
 
                 await client.connect()
 
-                client.connection.once('disconnecting', async () => {
+                client.connection.once('disconnecting', done.wrap(async () => {
                     await client.connect()
-                })
+                }))
                 await expect(async () => {
                     await client.disconnect()
                 }).rejects.toThrow()
-            }, 5000)
+                await done
+            })
 
             it('has connection state transitions in correct order', async () => {
                 expectErrors = 1

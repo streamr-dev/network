@@ -115,6 +115,7 @@ export default class Connection extends EventEmitter {
         super()
         this.options = options
         this.options.autoConnect = !!this.options.autoConnect
+        this.options.autoDisconnect = !!this.options.autoDisconnect
         this.wantsState = STATE.ANY
         this.retryCount = 1
         this._isReconnecting = false
@@ -282,7 +283,7 @@ export default class Connection extends EventEmitter {
                 const { socket } = this // capture so we can ignore if not current
                 socket.addEventListener('close', async () => {
                     // reconnect on unexpected failure
-                    if ((this.socket && socket !== this.socket) || this.wantsState !== STATE.CONNECTED) {
+                    if ((this.socket && socket !== this.socket) || this.wantsState === STATE.DISCONNECTED) {
                         return
                     }
 
