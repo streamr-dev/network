@@ -44,10 +44,17 @@ class Subscription extends Emitter {
         this.stream = this.pipeline.stream
     }
 
-    async collect() {
+    async collect(n) {
         const msgs = []
         for await (const msg of this) {
+            if (n === 0) {
+                break
+            }
+
             msgs.push(msg.getParsedContent())
+            if (msgs.length === n) {
+                break
+            }
         }
 
         return msgs
