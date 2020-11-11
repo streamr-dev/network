@@ -175,6 +175,24 @@ describeRepeats('StreamrClient Stream', () => {
             )).rejects.toThrow('connect')
             expect(M.count(stream.id)).toBe(0)
         })
+
+        it('errors if iterating twice', async () => {
+            const sub = await M.subscribe(stream)
+            const c1 = sub.collect()
+
+            await expect(async () => (
+                sub.collect()
+            )).rejects.toThrow('iterate')
+
+            const [, m] = await Promise.all([
+                sub.cancel(),
+                c1,
+            ])
+
+            expect(m).toEqual([])
+
+            expect(M.count(stream.id)).toBe(0)
+        })
     })
 
     describe('ending a subscription', () => {

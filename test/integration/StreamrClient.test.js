@@ -20,6 +20,8 @@ const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest } = ControlLayer
 
 console.log = Debug('Streamr::CONSOLE   ')
 
+const MAX_MESSAGES = 5
+
 describe('StreamrClient', () => {
     let expectErrors = 0 // check no errors by default
     let errors = []
@@ -898,6 +900,19 @@ describe('StreamrClient', () => {
                 await done
                 // All good, unsubscribe
                 await client.unsubscribe(sub)
+            })
+
+            it('client.subscribe with onMessage & collect', async () => {
+                const onMessageMsgs = []
+                const sub = await client.subscribe({
+                    stream: stream.id,
+                }, async (msg) => {
+                    onMessageMsgs.push(msg)
+                })
+
+                const published = await publishTestMessages(MAX_MESSAGES)
+                await expect(async () => sub.collect(1)).rejects.toThrow('iterate')
+                expect(onMessageMsgs).toEqual(published)
             })
 
             it('publish and subscribe a sequence of messages', async () => {

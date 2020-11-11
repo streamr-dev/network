@@ -47,6 +47,11 @@ class Subscription extends Emitter {
     }
 
     [Symbol.asyncIterator]() {
+        if (this.iterated) {
+            throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
+        }
+
+        this.iterated = true
         return this.pipeline
     }
 
