@@ -6,7 +6,7 @@ import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
+import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
 import StreamrClient from '../../src'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -22,7 +22,7 @@ console.log = Debug('Streamr::CONSOLE   ')
 
 const MAX_MESSAGES = 5
 
-describe('StreamrClient', () => {
+describeRepeats('StreamrClient', () => {
     let expectErrors = 0 // check no errors by default
     let errors = []
 
@@ -641,7 +641,7 @@ describe('StreamrClient', () => {
         let publishTestMessages
 
         // These tests will take time, especially on Travis
-        const TIMEOUT = 5 * 1000
+        const TIMEOUT = 15 * 1000
 
         const attachSubListeners = (sub) => {
             const onSubscribed = jest.fn()
@@ -650,13 +650,10 @@ describe('StreamrClient', () => {
             sub.on('resent', onResent)
             const onUnsubscribed = jest.fn()
             sub.on('unsubscribed', onUnsubscribed)
-            const onMessage = jest.fn()
-            sub.on('message', onMessage)
             return {
                 onSubscribed,
                 onUnsubscribed,
                 onResent,
-                onMessage,
             }
         }
 
@@ -873,7 +870,6 @@ describe('StreamrClient', () => {
                     expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
                     await wait(TIMEOUT * 0.2)
                     expect(events.onResent).toHaveBeenCalledTimes(0)
-                    expect(events.onMessage).toHaveBeenCalledTimes(0)
                     expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
                 }, TIMEOUT)
@@ -951,7 +947,7 @@ describe('StreamrClient', () => {
                         client.disconnect(),
                     ])
                 }
-            })
+            }, 20000)
 
             it('publish and subscribe a sequence of messages', async () => {
                 client.enableAutoConnect()
