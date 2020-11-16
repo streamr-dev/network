@@ -242,6 +242,25 @@ export class AggregatedError extends Error {
         }
     }
 
+    static from(err, newErr, msg) {
+        switch (true) {
+            case !err: {
+                if (msg) {
+                    // copy message
+                    newErr.message = msg // eslint-disable-line no-param-reassign
+                }
+
+                return newErr
+            }
+            case typeof err.extend === 'function': {
+                return err.extend(newErr, msg || newErr.message)
+            }
+            default: {
+                return new AggregatedError([err, newErr], msg || newErr.message)
+            }
+        }
+    }
+
     extend(err, message = '') {
         if (err === this || this.errors.has(err)) {
             return this
@@ -266,29 +285,95 @@ export async function allSettledValues(items, errorMessage = '') {
     return result.map(({ value }) => value)
 }
 
-export function pUpDownSteps(sequence = [], checkFn) {
-    const onDownSteps = []
+export function pUpDownSteps(sequence = [], _checkFn) {
+    let error
+
     const nextSteps = sequence.slice().reverse()
     const prevSteps = []
+    const onDownSteps = []
     const queue = pLimit(1)
+    let onIdle
+
+    let isDone = false
+    let didStart = false
+
+    function onError(err) {
+        // eslint-disable-next-line require-atomic-updates
+        error = AggregatedError.from(error, err)
+    }
+
+    const checkFn = async (...args) => {
+        try {
+            return await _checkFn(...args)
+        } catch (err) {
+            onError(err, 'in check')
+        }
+        return false
+    }
+
+    let shouldUp
     async function next(...args) {
-        if (await checkFn()) {
+        shouldUp = !error && await checkFn()
+        if (!error && shouldUp) {
             if (nextSteps.length) {
+                didStart = true
+                isDone = false
                 const stepFn = nextSteps.pop()
-                const onDownStep = await stepFn()
                 prevSteps.push(stepFn)
-                onDownSteps.push(onDownStep)
+                const onDownStep = await stepFn().catch(onError)
+                onDownSteps.push(onDownStep || (async () => {}))
                 return next(...args)
             }
         } else if (onDownSteps.length) {
+            didStart = true
             const stepFn = onDownSteps.pop()
-            await stepFn()
+            await stepFn().catch(onError)
             nextSteps.push(prevSteps.pop())
             return next(...args)
+        } else if (error) {
+            const err = error
+            // eslint-disable-next-line require-atomic-updates
+            error = undefined
+            isDone = true
+            throw err
         }
+
+        isDone = true
 
         return Promise.resolve()
     }
 
-    return (...args) => queue(() => next(...args))
+    const queuedNext = async (...args) => {
+        try {
+            await queue(() => next(...args))
+        } finally {
+            if (didStart && isDone && !queue.activeCount && !queue.pendingCount) {
+                isDone = false
+                if (onIdle) {
+                    const prevOnIdle = onIdle
+                    onIdle = undefined
+                    prevOnIdle.resolve(shouldUp)
+                    await prevOnIdle
+                }
+            }
+        }
+    }
+
+    return Object.assign(queuedNext, {
+        async onIdle() {
+            if (!onIdle) {
+                onIdle = Defer()
+            }
+
+            return onIdle
+        },
+        getError() {
+            return error
+        },
+        clearError() {
+            const err = error
+            error = undefined
+            return err
+        }
+    })
 }
