@@ -33,7 +33,9 @@ async function OpenWebSocket(url, ...args) {
     return new Promise((resolve, reject) => {
         try {
             if (!url) {
-                throw new ConnectionError('URL is not defined!')
+                const err = new ConnectionError('URL is not defined!')
+                reject(err)
+                throw err
             }
             const socket = process.browser ? new WebSocket(url) : new WebSocket(url, ...args)
             socket.id = uniqueId('socket')
@@ -101,7 +103,7 @@ const DEFAULT_MAX_RETRIES = 10
  */
 
 const STATE = {
-    ANY: 'ANY',
+    AUTO: 'AUTO',
     CONNECTED: 'CONNECTED',
     DISCONNECTED: 'DISCONNECTED',
 }
@@ -116,8 +118,8 @@ export default class Connection extends EventEmitter {
         this.options = options
         this.options.autoConnect = !!this.options.autoConnect
         this.options.autoDisconnect = !!this.options.autoDisconnect
-        this.wantsState = STATE.ANY
-        this.retryCount = 1
+        this.wantsState = STATE.AUTO
+        this.retryCount = 0
         this._isReconnecting = false
         const id = uniqueId('Connection')
         /* istanbul ignore next */
@@ -161,12 +163,12 @@ export default class Connection extends EventEmitter {
 
     emitTransition(event, ...args) {
         const previousConnectionState = this.wantsState
-        if (previousConnectionState === STATE.ANY) {
+        if (previousConnectionState === STATE.AUTO) {
             return this.emit(event, ...args)
         }
 
         const result = this.emit(event, ...args)
-        if (this.wantsState === STATE.ANY) {
+        if (this.wantsState === STATE.AUTO) {
             return result
         }
 
@@ -207,7 +209,7 @@ export default class Connection extends EventEmitter {
         autoDisconnect = !!autoDisconnect // eslint-disable-line no-param-reassign
         this.options.autoDisconnect = autoDisconnect
         if (autoDisconnect) {
-            this.wantsState = STATE.ANY
+            this.wantsState = STATE.AUTO
         }
     }
 
@@ -216,7 +218,7 @@ export default class Connection extends EventEmitter {
         this.options.autoConnect = autoConnect
         if (autoConnect) {
             this.didDisableAutoConnect = false
-            this.wantsState = STATE.ANY
+            this.wantsState = STATE.AUTO
         }
     }
 
@@ -229,6 +231,10 @@ export default class Connection extends EventEmitter {
         }
 
         const initialConnectTask = this._connectOnce()
+            .then(() => {
+                if (this.isConnected()) { return this.socket }
+                throw new ConnectionError('disconnected while connecting')
+            })
             .catch((err) => {
                 if (this.initialConnectTask === initialConnectTask) {
                     this.initialConnectTask = undefined
@@ -236,7 +242,7 @@ export default class Connection extends EventEmitter {
                 this.debug('error while opening', err)
 
                 // reconnect on initial connection failure
-                if (this.wantsState === STATE.DISCONNECTED) {
+                if (!this.isConnectionValid()) {
                     throw err
                 }
 
@@ -264,7 +270,7 @@ export default class Connection extends EventEmitter {
         }
 
         const connectTask = (async () => {
-            if (this.wantsState === STATE.DISCONNECTED) {
+            if (!this.isConnectionValid()) {
                 throw new ConnectionError('disconnected before connected')
             }
 
@@ -279,23 +285,9 @@ export default class Connection extends EventEmitter {
                 debug('closed')
             }
 
-            return this.__connect().then((value) => {
-                const { socket } = this // capture so we can ignore if not current
-                socket.addEventListener('close', async () => {
-                    // reconnect on unexpected failure
-                    if ((this.socket && socket !== this.socket) || this.wantsState === STATE.DISCONNECTED) {
-                        return
-                    }
+            return this.__connect().then((socket) => {
 
-                    debug('unexpected close')
-                    // eslint-disable-next-line promise/no-nesting
-                    await this.reconnect().catch((err) => {
-                        this.debug('failed reconnect after connected')
-                        this.checkDone()
-                        this.emit('error', new ConnectionError(err))
-                    })
-                })
-                return value
+                return socket
             })
         })().finally(() => {
             if (this.connectTask === connectTask) {
@@ -308,6 +300,7 @@ export default class Connection extends EventEmitter {
     }
 
     async __connect() {
+        let cleanup
         this.debug = this._debug.extend(uniqueId('socket'))
         const { debug } = this
         await true // wait a microtask
@@ -331,37 +324,52 @@ export default class Connection extends EventEmitter {
             throw new ConnectionError('disconnected before connected')
         }
 
-        this.socket = socket
-
-        socket.addEventListener('message', (messageEvent, ...args) => {
-            if (this.socket !== socket) { return }
+        const onMessage = (messageEvent, ...args) => {
             this.emit('message', messageEvent, ...args)
-        })
+        }
 
-        socket.addEventListener('close', () => {
+        const onClose = async () => {
+            cleanup()
             debug('closed')
 
-            if (this.socket !== socket) {
-                if (this.debug === debug) {
-                    this.debug = this._debug
-                }
-                return
-            }
-
             this.socket = undefined
-            this.emit('disconnected')
 
             if (this.debug === debug) {
                 this.debug = this._debug
             }
-        })
 
-        socket.addEventListener('error', (err) => {
-            if (this.socket !== socket) { return }
+            this.emit('disconnected')
+
+            if (!this.isConnectionValid()) { return }
+
+            debug('unexpected close')
+            // eslint-disable-next-line promise/no-nesting
+            await this.reconnect().catch((err) => {
+                this.debug('failed reconnect after connected')
+                this.checkDone()
+                this.emit('error', new ConnectionError(err))
+            })
+        }
+
+        const onError = (err) => {
+            cleanup()
             this.emit('error', new ConnectionError(err))
-        })
+        }
+
+        cleanup = () => {
+            socket.removeEventListener('message', onMessage)
+            socket.removeEventListener('close', onClose)
+            socket.removeEventListener('error', onError)
+        }
+
+        this.socket = socket
+
+        socket.addEventListener('message', onMessage)
+        socket.addEventListener('close', onClose)
+        socket.addEventListener('error', onError)
 
         this.emitTransition('connected')
+        return socket
     }
 
     async nextConnection() {
@@ -389,14 +397,23 @@ export default class Connection extends EventEmitter {
     }
 
     isConnectionValid() {
-        return !!(
-            this.wantsState !== STATE.DISCONNECTED
-            && (
-                this.wantsState === STATE.CONNECTED
-                || this.options.autoConnect
-                || this.isConnected()
-            )
-        )
+        switch (this.wantsState) {
+            case STATE.DISCONNECTED: {
+                return false
+            }
+            case STATE.CONNECTED: {
+                return true
+            }
+            case STATE.AUTO: {
+                if (this.options.autoConnect) {
+                    return !!(this.connectionHandles.size) && !this._couldAutoDisconnect()
+                }
+                return false
+            }
+            default: {
+                throw new Error(`unknown state wanted: ${this.wantsState}`)
+            }
+        }
     }
 
     async maybeConnect() {
@@ -694,18 +711,25 @@ export default class Connection extends EventEmitter {
     }
 
     async send(msg) {
-        this.debug('send()')
-        if (!this.isConnected()) {
-            // shortcut await if connected
-            const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
-            await this.needsConnection(`sending ${data.slice(0, 1024)}...`)
+        this.sendID = this.sendID + 1 || 1
+        const handle = `send${this.sendID}`
+        await this.addHandle(handle)
+        try {
+            this.debug('send()')
+            if (!this.isConnected()) {
+                // shortcut await if connected
+                const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
+                await this.needsConnection(`sending ${data.slice(0, 1024)}...`)
+            }
+            return this._send(msg)
+        } finally {
+            await this.removeHandle(handle)
         }
-        this.debug('>> %o', msg)
-        return this._send(msg)
     }
 
     async _send(msg) {
         return new Promise((resolve, reject) => {
+            this.debug('>> %o', msg)
             // promisify send
             const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
             this.socket.send(data, (err) => {

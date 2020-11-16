@@ -9,6 +9,8 @@ import { Defer } from '../../src/utils'
 
 const debug = Debug('StreamrClient').extend('test')
 
+console.log = Debug('Streamr::CONSOLE   ')
+
 describe('Connection', () => {
     let s
     let onConnected
@@ -21,6 +23,7 @@ describe('Connection', () => {
     let onMessage
     let wss
     let port
+    let errors
 
     let expectErrors = 0 // check no errors by default
     beforeAll((done) => {
@@ -58,7 +61,13 @@ describe('Connection', () => {
         s.on('disconnecting', onDisconnecting)
         onReconnecting = jest.fn()
         s.on('reconnecting', onReconnecting)
-        onError = jest.fn()
+
+        errors = []
+        const currentErrors = errors
+        onError = jest.fn((err) => {
+            currentErrors.push(err)
+        })
+
         s.on('error', onError)
         onMessage = jest.fn()
         s.on('message', onMessage)
@@ -70,7 +79,7 @@ describe('Connection', () => {
         await wait()
         // ensure no unexpected errors
         try {
-            expect(onError).toHaveBeenCalledTimes(expectErrors)
+            expect(errors).toHaveLength(expectErrors)
         } catch (err) {
             // print errors
             debug('onError calls:', onError.mock.calls)
@@ -89,17 +98,15 @@ describe('Connection', () => {
 
     describe('basics', () => {
         it('can connect & disconnect', async () => {
-            const connectTask = s.connect()
-            expect(s.getState()).toBe('connecting')
-            await connectTask
+            await s.connect()
             expect(s.getState()).toBe('connected')
-            const disconnectTask = s.disconnect()
-            expect(s.getState()).toBe('disconnecting')
-            await disconnectTask
+            await s.disconnect()
             expect(s.getState()).toBe('disconnected')
             // check events
             expect(onConnected).toHaveBeenCalledTimes(1)
             expect(onDisconnected).toHaveBeenCalledTimes(1)
+            expect(onConnecting).toHaveBeenCalledTimes(1)
+            expect(onDisconnecting).toHaveBeenCalledTimes(1)
         })
 
         it('can connect after already connected', async () => {
@@ -119,6 +126,19 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
             expect(onConnected).toHaveBeenCalledTimes(1)
             expect(onConnecting).toHaveBeenCalledTimes(1)
+        })
+
+        it('can connect and disconnect in same tick', async () => {
+            expectErrors = 1
+            const connectTask = s.connect()
+            const disconnectTask = s.disconnect()
+            await expect(() => connectTask).rejects.toThrow()
+            await disconnectTask
+            expect(s.getState()).toBe('disconnected')
+            expect(onConnected).toHaveBeenCalledTimes(0)
+            expect(onConnecting).toHaveBeenCalledTimes(1)
+            expect(onDisconnected).toHaveBeenCalledTimes(0)
+            expect(onDisconnecting).toHaveBeenCalledTimes(0)
         })
 
         it('fires all events once if connected twice in same tick', async () => {
@@ -220,6 +240,8 @@ describe('Connection', () => {
             it('can handle disconnect on connected event, repeated', async () => {
                 expectErrors = 3
                 const done = Defer()
+                // connect -> disconnect in connected
+                // disconnect
                 s.once('connected', done.wrapError(async () => {
                     await expect(async () => {
                         await s.disconnect()
@@ -253,29 +275,32 @@ describe('Connection', () => {
                 await s.connect()
                 await expect(async () => {
                     await s.disconnect()
-                }).rejects.toThrow()
+                }).rejects.toThrow('connect called in disconnecting handler')
                 expect(onDone).toHaveBeenCalledTimes(0)
                 expect(s.getState()).not.toBe('disconnected')
                 await done
             })
 
             it('can handle connect on disconnected event', async () => {
-                expectErrors = 1
-                await s.connect()
                 const done = Defer()
-
-                s.once('disconnected', done.wrap(async () => {
+                expectErrors = 1
+                try {
                     await s.connect()
+
+                    s.once('disconnected', done.wrap(async () => {
+                        await s.connect()
+                    }))
+
+                    await expect(async () => {
+                        await s.disconnect()
+                    }).rejects.toThrow()
+                    expect(s.getState()).not.toBe('connected')
+                } finally {
+                    await done
                     s.debug('connect done')
                     expect(s.getState()).toBe('connected')
                     expect(onDone).toHaveBeenCalledTimes(0)
-                }))
-
-                await expect(async () => {
-                    await s.disconnect()
-                }).rejects.toThrow()
-                expect(s.getState()).not.toBe('connected')
-                await done
+                }
             })
         })
 
@@ -287,7 +312,6 @@ describe('Connection', () => {
             })
             onConnected = jest.fn()
             s.on('connected', onConnected)
-            onError = jest.fn()
             s.on('error', onError)
             await expect(async () => {
                 await s.connect()
@@ -303,7 +327,6 @@ describe('Connection', () => {
             })
             onConnected = jest.fn()
             s.on('connected', onConnected)
-            onError = jest.fn()
             s.on('error', onError)
             s.on('done', onDone)
             await expect(async () => {
@@ -322,7 +345,6 @@ describe('Connection', () => {
             onConnected = jest.fn()
             s.on('connected', onConnected)
             s.on('done', onDone)
-            onError = jest.fn()
             s.on('error', onError)
             await expect(async () => {
                 await s.connect()
@@ -421,19 +443,32 @@ describe('Connection', () => {
             expect(s.isConnectionValid()).not.toBeTruthy()
         })
 
+        it('handles parallel calls', async () => {
+            s.enableAutoConnect()
+            await Promise.all([
+                s.addHandle(1),
+                s.removeHandle(1),
+            ])
+            expect(s.isConnectionValid()).not.toBeTruthy()
+        })
+
         it('works with autoConnect', async () => {
             s.enableAutoConnect()
+            expect(s.isConnectionValid()).not.toBeTruthy()
+            await s.addHandle(1)
             expect(s.isConnectionValid()).toBeTruthy()
+            await s.removeHandle(1)
+            expect(s.isConnectionValid()).not.toBeTruthy()
         })
 
         it('works with autoDisconnect', async () => {
             s.enableAutoConnect()
             s.enableAutoDisconnect()
-            expect(s.isConnectionValid()).toBeTruthy()
+            expect(s.isConnectionValid()).not.toBeTruthy()
             await s.addHandle(1)
             expect(s.isConnectionValid()).toBeTruthy()
             await s.removeHandle(1)
-            expect(s.isConnectionValid()).toBeTruthy()
+            expect(s.isConnectionValid()).not.toBeTruthy()
             const onDisconnect = s.disconnect()
             expect(s.isConnectionValid()).not.toBeTruthy()
             await onDisconnect
@@ -498,12 +533,25 @@ describe('Connection', () => {
             expect(s.getState()).toBe('connected')
         })
 
+        it('reconnects if unexpectedly disconnected while connecting', async () => {
+            const connectTask = s.connect()
+            s.once('connected', async () => {
+                s.socket.close()
+            })
+            await connectTask
+            expect(s.getState()).toBe('connected')
+            await s.needsConnection()
+            expect(s.getState()).toBe('connected')
+        })
+
         it('reconnects if unexpectedly disconnected and autoConnect is on', async () => {
             await s.connect()
             s.enableAutoConnect()
+            s.addHandle(1)
             s.socket.close()
             await s.nextConnection()
             expect(s.getState()).toBe('connected')
+            s.removeHandle(1)
         })
 
         it('errors if reconnect fails', async () => {
@@ -521,12 +569,13 @@ describe('Connection', () => {
         })
 
         it('retries multiple times when disconnected', async () => {
-            s.options.maxRetries = 3
+            s.options.maxRetries = 4
             /* eslint-disable no-underscore-dangle */
             await s.connect()
             const goodUrl = s.options.url
             let retryCount = 0
             s.options.url = 'badurl'
+            const done = Defer()
             s.on('reconnecting', () => {
                 retryCount += 1
                 // fail first 3 tries
@@ -535,13 +584,13 @@ describe('Connection', () => {
                     s.options.url = goodUrl
                 }
             })
-            const done = Defer()
-            s.once('connected', done.wrap(() => {
-                expect(s.getState()).toBe('connected')
-                expect(retryCount).toEqual(3)
-            }))
+            s.once('connected', () => {
+                done.resolve()
+            })
             s.socket.close()
             await done
+            expect(s.getState()).toBe('connected')
+            expect(retryCount).toEqual(3)
             /* eslint-enable no-underscore-dangle */
         }, 3000)
 
@@ -777,11 +826,12 @@ describe('Connection', () => {
             expect(s.getState()).toBe('disconnected')
             // should not try reconnect
             await wait(1000)
+            console.log('OK')
             expect(s.getState()).toBe('disconnected')
             // auto disconnect should not affect auto-connect
             expect(s.options.autoConnect).toBeTruthy()
             await s.send('test') // ok
-            expect(s.getState()).toBe('connected')
+            expect(s.getState()).toBe('disconnected')
         })
 
         it('auto-disconnects when all handles removed after enabling', async () => {
