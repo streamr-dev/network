@@ -285,14 +285,13 @@ export async function allSettledValues(items, errorMessage = '') {
     return result.map(({ value }) => value)
 }
 
-export function pUpDownSteps(sequence = [], _checkFn) {
+export function pUpDownSteps(sequence = [], _checkFn, onDone = () => {}) {
     let error
 
     const nextSteps = sequence.slice().reverse()
     const prevSteps = []
     const onDownSteps = []
     const queue = pLimit(1)
-    let onIdle
 
     let isDone = false
     let didStart = false
@@ -320,14 +319,23 @@ export function pUpDownSteps(sequence = [], _checkFn) {
                 isDone = false
                 const stepFn = nextSteps.pop()
                 prevSteps.push(stepFn)
-                const onDownStep = await stepFn().catch(onError)
-                onDownSteps.push(onDownStep || (async () => {}))
+                let onDownStep
+                try {
+                    onDownStep = await stepFn()
+                } catch (err) {
+                    onError(err)
+                }
+                onDownSteps.push(onDownStep || (() => {}))
                 return next(...args)
             }
         } else if (onDownSteps.length) {
             didStart = true
             const stepFn = onDownSteps.pop()
-            await stepFn().catch(onError)
+            try {
+                await stepFn()
+            } catch (err) {
+                onError(err)
+            }
             nextSteps.push(prevSteps.pop())
             return next(...args)
         } else if (error) {
@@ -349,24 +357,12 @@ export function pUpDownSteps(sequence = [], _checkFn) {
         } finally {
             if (didStart && isDone && !queue.activeCount && !queue.pendingCount) {
                 isDone = false
-                if (onIdle) {
-                    const prevOnIdle = onIdle
-                    onIdle = undefined
-                    prevOnIdle.resolve(shouldUp)
-                    await prevOnIdle
-                }
+                await onDone(shouldUp)
             }
         }
     }
 
     return Object.assign(queuedNext, {
-        async onIdle() {
-            if (!onIdle) {
-                onIdle = Defer()
-            }
-
-            return onIdle
-        },
         getError() {
             return error
         },

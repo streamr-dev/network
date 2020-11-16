@@ -129,14 +129,8 @@ describe('utils', () => {
                 currentEmitter.emit('next', 'down end', ...args)
             }
 
-            onIdle = (n) => {
-                if (emitter !== currentEmitter) { return }
-                // eslint-disable-next-line promise/catch-or-return
-                n.onIdle().then((isUp) => {
-                    // eslint-disable-next-line promise/always-return
-                    currentEmitter.emit('next', 'done', isUp ? 'up' : 'down')
-                    onIdle(n)
-                })
+            onIdle = (isUp) => {
+                currentEmitter.emit('next', 'done', isUp ? 'up' : 'down')
             }
         })
 
@@ -147,8 +141,7 @@ describe('utils', () => {
                     await up()
                     return () => down()
                 }
-            ], () => shouldUp)
-            onIdle(next)
+            ], () => shouldUp, onIdle)
 
             await Promise.all([
                 next(),
@@ -180,12 +173,9 @@ describe('utils', () => {
                     shouldUp = false
                     return () => down()
                 }
-            ], () => shouldUp)
-            onIdle(next)
+            ], () => shouldUp, onIdle)
 
-            console.log('next >>')
             await next()
-            console.log('next <<')
             expect(order).toEqual([
                 'up start',
                 'up end',
@@ -206,8 +196,7 @@ describe('utils', () => {
                     await up('b')
                     throw err
                 },
-            ], () => true)
-            onIdle(next)
+            ], () => true, onIdle)
 
             await expect(async () => {
                 await next()
@@ -242,8 +231,7 @@ describe('utils', () => {
                     throw err
                 }
                 return true
-            })
-            onIdle(next)
+            }, onIdle)
 
             await expect(async () => {
                 await next()
@@ -290,8 +278,7 @@ describe('utils', () => {
                         await down('c') // this should throw due to on('next' above
                     }
                 },
-            ], () => shouldUp)
-            onIdle(next)
+            ], () => shouldUp, onIdle)
 
             await next()
             shouldUp = false
@@ -338,8 +325,7 @@ describe('utils', () => {
                         await down('b')
                     }
                 },
-            ], () => shouldUp)
-            onIdle(next)
+            ], () => shouldUp, onIdle)
 
             await next()
             shouldUp = false
@@ -367,7 +353,7 @@ describe('utils', () => {
                     await up()
                     return () => down()
                 }
-            ], () => shouldUp)
+            ], () => shouldUp, onIdle)
 
             await next()
 
@@ -382,8 +368,7 @@ describe('utils', () => {
                     shouldUp = false
                     return () => down()
                 }
-            ], () => shouldUp)
-            onIdle(next)
+            ], () => shouldUp, onIdle)
 
             await next()
 
@@ -404,8 +389,7 @@ describe('utils', () => {
                     await up()
                     return () => down()
                 }
-            ], () => shouldUp)
-            onIdle(next)
+            ], () => shouldUp, onIdle)
             const done = Defer()
             emitter.on('next', async (name) => {
                 if (name === 'up start') {
@@ -447,8 +431,7 @@ describe('utils', () => {
                         await up('c')
                         return () => down('c')
                     },
-                ], () => shouldUp)
-                onIdle(next)
+                ], () => shouldUp, onIdle)
             })
 
             it('plays all up steps in order, then down steps in order', async () => {
