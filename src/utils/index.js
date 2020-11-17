@@ -285,7 +285,7 @@ export async function allSettledValues(items, errorMessage = '') {
     return result.map(({ value }) => value)
 }
 
-export function pUpDownSteps(sequence = [], _checkFn, onDone = () => {}) {
+export function pUpDownSteps(sequence = [], _checkFn, { onDone, onChange } = {}) {
     let error
 
     const nextSteps = sequence.slice().reverse()
@@ -310,13 +310,25 @@ export function pUpDownSteps(sequence = [], _checkFn, onDone = () => {}) {
         return false
     }
 
-    let shouldUp
+    let shouldUp = false
+    let prevShouldUp = false
     async function next(...args) {
-        shouldUp = !error && await checkFn()
-        if (!error && shouldUp) {
+        shouldUp = !!(!error && await checkFn())
+        const didChange = prevShouldUp !== shouldUp
+        prevShouldUp = shouldUp
+        if (didChange && typeof onChange === 'function') {
+            try {
+                await onChange(shouldUp)
+            } catch (err) {
+                onError(err)
+            }
+            return next(...args)
+        }
+
+        if (shouldUp) {
             if (nextSteps.length) {
-                didStart = true
                 isDone = false
+                didStart = true
                 const stepFn = nextSteps.pop()
                 prevSteps.push(stepFn)
                 let onDownStep
@@ -329,6 +341,7 @@ export function pUpDownSteps(sequence = [], _checkFn, onDone = () => {}) {
                 return next(...args)
             }
         } else if (onDownSteps.length) {
+            isDone = false
             didStart = true
             const stepFn = onDownSteps.pop()
             try {
@@ -356,8 +369,10 @@ export function pUpDownSteps(sequence = [], _checkFn, onDone = () => {}) {
             await queue(() => next(...args))
         } finally {
             if (didStart && isDone && !queue.activeCount && !queue.pendingCount) {
-                isDone = false
-                await onDone(shouldUp)
+                didStart = false
+                if (typeof onDone === 'function') {
+                    await onDone(shouldUp)
+                }
             }
         }
     }

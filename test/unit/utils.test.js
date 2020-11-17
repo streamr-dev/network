@@ -101,7 +101,9 @@ describe('utils', () => {
         let up
         let down
         let emitter
-        let onIdle
+        let onDone
+        let onChange
+        // const log = debug.extend('pUpDownSteps')
 
         beforeEach(() => {
             if (emitter) {
@@ -113,7 +115,9 @@ describe('utils', () => {
             emitter = new Emitter()
 
             emitter.on('next', (name, v = '') => {
-                currentOrder.push(`${name} ${v}`.trim())
+                const msg = `${name} ${v}`.trim()
+                // log(msg)
+                currentOrder.push(msg)
             })
 
             const currentEmitter = emitter
@@ -129,8 +133,12 @@ describe('utils', () => {
                 currentEmitter.emit('next', 'down end', ...args)
             }
 
-            onIdle = (isUp) => {
+            onDone = (isUp) => {
                 currentEmitter.emit('next', 'done', isUp ? 'up' : 'down')
+            }
+
+            onChange = (isUp) => {
+                currentEmitter.emit('next', 'change', isUp ? 'up' : 'down')
             }
         })
 
@@ -141,12 +149,16 @@ describe('utils', () => {
                     await up()
                     return () => down()
                 }
-            ], () => shouldUp, onIdle)
+            ], () => shouldUp, {
+                onDone, onChange
+            })
 
             await Promise.all([
                 next(),
                 next()
             ])
+
+            await next()
 
             shouldUp = false
 
@@ -155,10 +167,14 @@ describe('utils', () => {
                 next()
             ])
 
+            await next()
+
             expect(order).toEqual([
+                'change up',
                 'up start',
                 'up end',
                 'done up',
+                'change down',
                 'down start',
                 'down end',
                 'done down'
@@ -173,12 +189,16 @@ describe('utils', () => {
                     shouldUp = false
                     return () => down()
                 }
-            ], () => shouldUp, onIdle)
+            ], () => shouldUp, {
+                onDone, onChange
+            })
 
             await next()
             expect(order).toEqual([
+                'change up',
                 'up start',
                 'up end',
+                'change down',
                 'down start',
                 'down end',
                 'done down'
@@ -196,17 +216,21 @@ describe('utils', () => {
                     await up('b')
                     throw err
                 },
-            ], () => true, onIdle)
+            ], () => true, {
+                onDone, onChange
+            })
 
             await expect(async () => {
                 await next()
             }).rejects.toThrow(err)
 
             expect(order).toEqual([
+                'change up',
                 'up start a',
                 'up end a',
                 'up start b',
                 'up end b',
+                'change down',
                 'down start a',
                 'down end a',
                 'done down'
@@ -231,17 +255,21 @@ describe('utils', () => {
                     throw err
                 }
                 return true
-            }, onIdle)
+            }, {
+                onDone, onChange
+            })
 
             await expect(async () => {
                 await next()
             }).rejects.toThrow(err)
 
             expect(order).toEqual([
+                'change up',
                 'up start a',
                 'up end a',
                 'up start b',
                 'up end b',
+                'change down',
                 'down start b', // down should run
                 'down end b',
                 'down start a',
@@ -278,7 +306,9 @@ describe('utils', () => {
                         await down('c') // this should throw due to on('next' above
                     }
                 },
-            ], () => shouldUp, onIdle)
+            ], () => shouldUp, {
+                onDone, onChange
+            })
 
             await next()
             shouldUp = false
@@ -287,6 +317,7 @@ describe('utils', () => {
             }).rejects.toThrow(err)
 
             expect(order).toEqual([
+                'change up',
                 'up start a',
                 'up end a',
                 'up start b',
@@ -294,6 +325,7 @@ describe('utils', () => {
                 'up start c',
                 'up end c',
                 'done up',
+                'change down',
                 'down start c', // down should run (will error)
                 'down start b',
                 'down end b',
@@ -325,7 +357,9 @@ describe('utils', () => {
                         await down('b')
                     }
                 },
-            ], () => shouldUp, onIdle)
+            ], () => shouldUp, {
+                onDone, onChange
+            })
 
             await next()
             shouldUp = false
@@ -334,11 +368,13 @@ describe('utils', () => {
             }).rejects.toThrow(err)
 
             expect(order).toEqual([
+                'change up',
                 'up start a',
                 'up end a',
                 'up start b',
                 'up end b',
                 'done up',
+                'change down',
                 'down start b', // down should run (will error)
                 'down end b',
                 'down start a', // down for other steps should continue
@@ -353,7 +389,9 @@ describe('utils', () => {
                     await up()
                     return () => down()
                 }
-            ], () => shouldUp, onIdle)
+            ], () => shouldUp, {
+                onDone, onChange
+            })
 
             await next()
 
@@ -368,16 +406,110 @@ describe('utils', () => {
                     shouldUp = false
                     return () => down()
                 }
-            ], () => shouldUp, onIdle)
+            ], () => shouldUp, {
+                onDone, onChange
+            })
 
             await next()
 
             expect(order).toEqual([
+                'change up',
                 'up start',
                 'up end',
+                'change down',
                 'down start',
                 'down end',
                 'done down',
+            ])
+        })
+
+        it('cancels up if onChange errors', async () => {
+            const err = new Error('expected')
+            const next = pUpDownSteps([
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ], () => true, {
+                onDone,
+                onChange: () => {
+                    throw err
+                }
+            })
+
+            await expect(async () => next()).rejects.toThrow(err)
+
+            expect(order).toEqual([])
+        })
+
+        it('continues down if onChange errors', async () => {
+            let shouldUp = true
+            const err = new Error('expected')
+            const next = pUpDownSteps([
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ], () => shouldUp, {
+                onDone,
+                onChange: (goingUp) => {
+                    onChange(goingUp)
+                    if (!goingUp) {
+                        throw err
+                    }
+                }
+            })
+
+            await next()
+
+            shouldUp = false
+
+            await expect(async () => next()).rejects.toThrow(err)
+
+            expect(order).toEqual([
+                'change up',
+                'up start',
+                'up end',
+                'done up',
+                'change down',
+                'down start',
+                'down end',
+                'done down',
+            ])
+        })
+
+        it('can change status in onChange', async () => {
+            let shouldUp = true
+            let once = false
+            const next = pUpDownSteps([
+                async () => {
+                    await up()
+                    return () => down()
+                }
+            ], () => shouldUp, {
+                onDone,
+                onChange: (goingUp) => {
+                    onChange(goingUp)
+                    if (!goingUp && !once) {
+                        once = true
+                        shouldUp = true
+                    }
+                }
+            })
+
+            await next()
+
+            shouldUp = false
+
+            await next()
+
+            expect(order).toEqual([
+                'change up',
+                'up start',
+                'up end',
+                'done up',
+                'change down',
+                'change up',
             ])
         })
 
@@ -389,7 +521,9 @@ describe('utils', () => {
                     await up()
                     return () => down()
                 }
-            ], () => shouldUp, onIdle)
+            ], () => shouldUp, {
+                onDone, onChange
+            })
             const done = Defer()
             emitter.on('next', async (name) => {
                 if (name === 'up start') {
@@ -404,8 +538,10 @@ describe('utils', () => {
             ])
 
             expect(order).toEqual([
+                'change up',
                 'up start',
                 'up end',
+                'change down',
                 'down start',
                 'down end',
                 'done down',
@@ -431,13 +567,16 @@ describe('utils', () => {
                         await up('c')
                         return () => down('c')
                     },
-                ], () => shouldUp, onIdle)
+                ], () => shouldUp, {
+                    onDone, onChange
+                })
             })
 
             it('plays all up steps in order, then down steps in order', async () => {
                 shouldUp = true
                 await next()
                 const afterUp = [
+                    'change up',
                     'up start a',
                     'up end a',
                     'up start b',
@@ -452,6 +591,7 @@ describe('utils', () => {
                 await next()
                 expect(order).toEqual([
                     ...afterUp,
+                    'change down',
                     'down start c',
                     'down end c',
                     'down start b',
@@ -478,8 +618,10 @@ describe('utils', () => {
                 ])
 
                 expect(order).toEqual([
+                    'change up',
                     'up start a',
                     'up end a',
+                    'change down',
                     'down start a',
                     'down end a',
                     'done down',
@@ -502,10 +644,12 @@ describe('utils', () => {
                 ])
 
                 expect(order).toEqual([
+                    'change up',
                     'up start a',
                     'up end a',
                     'up start b',
                     'up end b',
+                    'change down',
                     'down start b',
                     'down end b',
                     'down start a',
