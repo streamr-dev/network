@@ -569,6 +569,92 @@ describeRepeats('Connection', () => {
         })
     })
 
+    describe('needsConnection', () => {
+        it('connects if autoConnect/autoDisconnect is on', async () => {
+            s.enableAutoConnect()
+            s.enableAutoDisconnect()
+            const t = s.addHandle(1)
+            await s.needsConnection()
+            await t
+            expect(s.getState()).toBe('connected')
+        })
+
+        it('errors if intentionally disconnected', async () => {
+            await s.disconnect()
+            await expect(() => (
+                s.needsConnection()
+            )).rejects.toThrow('Needs connection')
+            expect(s.getState()).toBe('disconnected')
+        })
+
+        it('errors if autoConnect/autoDisconnect & no handles', async () => {
+            s.enableAutoConnect()
+            s.enableAutoDisconnect()
+            await expect(() => (
+                s.needsConnection()
+            )).rejects.toThrow('Needs connection')
+            expect(s.getState()).toBe('disconnected')
+        })
+
+        it('ok if connected', async () => {
+            await s.connect()
+            await s.needsConnection()
+            expect(s.getState()).toBe('connected')
+        })
+
+        it('ok if connecting', async () => {
+            await s.disconnect()
+            const done = Defer()
+            s.on('connecting', done.wrap(async () => {
+                await s.needsConnection()
+                expect(s.getState()).toBe('connected')
+            }))
+
+            await Promise.all([
+                s.connect(),
+                done
+            ])
+
+            expect(s.getState()).toBe('connected')
+        })
+
+        it('ok if unintentionally disconnected', async () => {
+            await s.disconnect()
+            const done = Defer()
+            s.once('connected', done.wrap(async () => {
+                s.socket.close()
+                await s.needsConnection()
+                expect(s.getState()).toBe('connected')
+            }))
+
+            await Promise.all([
+                s.connect(),
+                done
+            ])
+
+            expect(s.getState()).toBe('connected')
+        })
+
+        it('ok if unintentionally disconnected + autoConnect/autoDisconnect is on', async () => {
+            await s.disconnect()
+            s.enableAutoConnect()
+            s.enableAutoDisconnect()
+            const done = Defer()
+            s.once('connected', done.wrap(async () => {
+                s.socket.close()
+                await s.needsConnection()
+                expect(s.getState()).toBe('connected')
+            }))
+
+            await Promise.all([
+                s.addHandle(1),
+                done
+            ])
+
+            expect(s.getState()).toBe('connected')
+        })
+    })
+
     describe('reconnecting', () => {
         it('reconnects if unexpectedly disconnected', async () => {
             await s.connect()
@@ -584,13 +670,24 @@ describeRepeats('Connection', () => {
             expect(s.getState()).toBe('connected')
         })
 
-        it('reconnects if unexpectedly disconnected while connecting', async () => {
+        it('reconnects if unexpectedly disconnected on connected', async () => {
             const connectTask = s.connect()
             s.once('connected', async () => {
                 s.socket.close()
             })
             await connectTask
             expect(s.getState()).toBe('connected')
+            await s.needsConnection()
+            expect(s.getState()).toBe('connected')
+        })
+
+        it('reconnects if unexpectedly disconnected on connected and autoConnect/autoDisconnect is on', async () => {
+            s.enableAutoConnect()
+            s.enableAutoDisconnect()
+            s.once('connected', async () => {
+                s.socket.close()
+            })
+            await s.addHandle(1)
             await s.needsConnection()
             expect(s.getState()).toBe('connected')
         })

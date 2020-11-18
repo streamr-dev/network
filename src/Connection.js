@@ -430,17 +430,19 @@ export default class Connection extends EventEmitter {
     async needsConnection(msg) {
         await this.maybeConnect()
         if (!this.isConnected()) {
-            const { autoConnect } = this.options
-            let autoConnectMsg = `autoConnect is ${autoConnect}.`
-            if (this.didDisableAutoConnect) {
-                autoConnectMsg += ' Disabled automatically after explicit call to connect/disconnect().'
+            const { autoConnect, autoDisconnect } = this.options
+            let autoConnectMsg = `autoConnect: ${!!autoConnect} & autoDisconnect: ${!!autoDisconnect} with ${this.connectionHandles.size} handles.`
+            if (!autoConnect && this.didDisableAutoConnect) {
+                autoConnectMsg += '\nautoConnect disabled automatically after explicit call to connect/disconnect().'
             }
             // note we can't just let socket.send fail,
             // have to do this check ourselves because the error appears
             // to be uncatchable in the browser
-            throw new ConnectionError(
-                `needs connection but connection ${this.getState()}, wants state is ${this.wantsState} and ${autoConnectMsg}.\n${msg}`
-            )
+            throw new ConnectionError([
+                `Needs connection but – connection: ${this.getState()} & wants: ${this.wantsState}`,
+                autoConnectMsg,
+                msg
+            ].join('\n'))
         }
     }
 
