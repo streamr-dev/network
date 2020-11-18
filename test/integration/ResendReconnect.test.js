@@ -76,11 +76,6 @@ describe('resend/reconnect', () => {
             const prevMessages = messages
             const newMessages = await publishTestMessages(3)
             await wait(6000)
-            console.log({
-                prevMessages,
-                newMessages,
-                messages,
-            })
             await waitForCondition(() => messages.length === MAX_MESSAGES + 3, 6000)
             expect(messages).toEqual([...prevMessages, ...newMessages])
         }, 110000)

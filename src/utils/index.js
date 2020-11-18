@@ -132,11 +132,20 @@ export function Defer(executor = () => {}) {
         return async (...args) => Promise.resolve(fn(...args)).catch(reject)
     }
 
+    function handleErrBack(err) {
+        if (err) {
+            reject(err)
+        } else {
+            resolve()
+        }
+    }
+
     return Object.assign(p, {
         resolve,
         reject,
         wrap,
-        wrapError
+        wrapError,
+        handleErrBack
     })
 }
 
@@ -312,6 +321,7 @@ export function pUpDownSteps(sequence = [], _checkFn, { onDone, onChange } = {})
 
     let shouldUp = false
     let prevShouldUp = false
+    const innerQueue = pLimit(1)
     async function next(...args) {
         shouldUp = !!(!error && await checkFn())
         const didChange = prevShouldUp !== shouldUp
@@ -329,11 +339,11 @@ export function pUpDownSteps(sequence = [], _checkFn, { onDone, onChange } = {})
             if (nextSteps.length) {
                 isDone = false
                 didStart = true
+                let onDownStep
                 const stepFn = nextSteps.pop()
                 prevSteps.push(stepFn)
-                let onDownStep
                 try {
-                    onDownStep = await stepFn()
+                    onDownStep = await stepFn(...args)
                 } catch (err) {
                     onError(err)
                 }
@@ -364,20 +374,55 @@ export function pUpDownSteps(sequence = [], _checkFn, { onDone, onChange } = {})
         return Promise.resolve()
     }
 
+    function isActive() {
+        return !(
+            didStart
+            && isDone
+            && !queue.activeCount
+            && !queue.pendingCount
+        )
+    }
+
+    const nextDone = async (...args) => {
+        await innerQueue(() => next(...args))
+    }
+
+    let currentStep
     const queuedNext = async (...args) => {
+        let stepErr
         try {
-            await queue(() => next(...args))
+            currentStep = queue(() => nextDone(...args))
+            await currentStep
+        } catch (err) {
+            stepErr = err
+            throw err
         } finally {
-            if (didStart && isDone && !queue.activeCount && !queue.pendingCount) {
+            if (!isActive()) {
                 didStart = false
                 if (typeof onDone === 'function') {
-                    await onDone(shouldUp)
+                    const err = stepErr
+                    stepErr = undefined
+                    await onDone(shouldUp, err)
                 }
             }
         }
     }
 
     return Object.assign(queuedNext, {
+        next: nextDone,
+        isActive,
+        getCurrentStep() {
+            return currentStep
+        },
+        get activeCount() {
+            return queue.activeCount
+        },
+        get pendingCount() {
+            return queue.pendingCount
+        },
+        setError(err) {
+            error = AggregatedError.from(error, err)
+        },
         getError() {
             return error
         },

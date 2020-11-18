@@ -181,13 +181,12 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.nextConnection()
     }
 
-    pause() {
-        return this.connection.disconnect()
-    }
-
     disconnect() {
         this.publisher.stop()
-        return this.connection.disconnect()
+        return Promise.all([
+            this.subscriber.subscriptions.removeAll(),
+            this.connection.disconnect()
+        ])
     }
 
     getSubscriptions(...args) {

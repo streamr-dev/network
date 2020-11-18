@@ -87,14 +87,14 @@ function messageStream(connection, { streamId, streamPartition, isUnicast, type 
     return msgStream
 }
 
-function OrderMessages(client, options = {}) {
+export function OrderMessages(client, options = {}) {
     const { gapFillTimeout, retryResendAfter } = client.options
     const { streamId, streamPartition } = validateOptions(options)
 
     const outStream = new PushQueue()
 
     let done = false
-
+    const resendStreams = new Set()
     const orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
         if (!outStream.isWritable() || done) {
             return
@@ -105,18 +105,26 @@ function OrderMessages(client, options = {}) {
         } else {
             outStream.push(orderedMessage)
         }
-    }, (from, to, publisherId, msgChainId) => async () => {
+    }, async (from, to, publisherId, msgChainId) => {
         if (done) { return }
         // eslint-disable-next-line no-use-before-define
-        const resendIt = await getResendStream(client, {
+        const resendStream = await getResendStream(client, {
             streamId, streamPartition, from, to, publisherId, msgChainId,
-        }).subscribe()
+        })
 
-        if (done) { return }
-
-        for await (const { streamMessage } of resendIt) {
+        try {
             if (done) { return }
-            orderingUtil.add(streamMessage)
+            resendStreams.add(resendStream)
+            await resendStream.subscribe()
+            if (done) { return }
+
+            for await (const streamMessage of resendStream) {
+                if (done) { return }
+                orderingUtil.add(streamMessage)
+            }
+        } finally {
+            resendStreams.delete(resendStream)
+            await resendStream.cancel()
         }
     }, gapFillTimeout, retryResendAfter)
 
@@ -138,6 +146,8 @@ function OrderMessages(client, options = {}) {
     ], async (err) => {
         done = true
         orderingUtil.clearGaps()
+        resendStreams.forEach((s) => s.cancel())
+        resendStreams.clear()
         await outStream.cancel(err)
         orderingUtil.clearGaps()
     }), {
@@ -245,7 +255,7 @@ export function getResendStream(client, opts = {}, onFinally = () => {}) {
 
     return Object.assign(msgStream, {
         async subscribe() {
-            connection.addHandle(requestId)
+            await connection.addHandle(requestId)
             // wait for resend complete message or resend request done
             await Promise.race([
                 resend(client, {

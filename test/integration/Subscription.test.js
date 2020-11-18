@@ -88,16 +88,26 @@ describe('Subscription', () => {
         it('fires events in correct order 1', async () => {
             const subscriptionEvents = await createMonitoredSubscription()
             await waitForEvent(subscription, 'resent')
-            await client.unsubscribe(subscription)
+            await client.unsubscribe(stream)
             expect(subscriptionEvents).toEqual([
                 'resent',
+                'unsubscribed',
+            ])
+        })
+
+        it('fires events in correct order 2', async () => {
+            const subscriptionEvents = await createMonitoredSubscription({
+                resend: undefined,
+            })
+            await client.unsubscribe(stream)
+            expect(subscriptionEvents).toEqual([
                 'unsubscribed',
             ])
         })
     })
 
     describe('resending/no_resend events', () => {
-        it('fires events in correct order 2', async () => {
+        it('fires events in correct order 1', async () => {
             const subscriptionEvents = await createMonitoredSubscription()
             await waitForEvent(subscription, 'resent')
             expect(subscriptionEvents).toEqual([
@@ -107,7 +117,7 @@ describe('Subscription', () => {
     })
 
     describe('resending/resent events', () => {
-        it('fires events in correct order 3', async () => {
+        it('fires events in correct order 1', async () => {
             const message1 = await publishMessage()
             const message2 = await publishMessage()
             await wait(5000) // wait for messages to (probably) land in storage

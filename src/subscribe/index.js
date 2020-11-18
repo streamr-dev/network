@@ -1,6 +1,6 @@
 import Emitter from 'events'
 
-import { allSettledValues, AggregatedError, pUpDownSteps } from '../utils'
+import { allSettledValues, AggregatedError, pUpDownSteps, Defer, uuid } from '../utils'
 import { pipeline } from '../utils/iterators'
 
 import {
@@ -19,15 +19,31 @@ export { validateOptions }
 class Subscription extends Emitter {
     constructor(client, opts, onFinally = () => {}) {
         super()
+        this._onDone = Defer()
         this.client = client
         this.options = validateOptions(opts)
         this.key = this.options.key
+        this.id = uuid(`Subscription.${this.key}`)
+        this._onFinally = onFinally
+        this.onPipelineEnd = this.onPipelineEnd.bind(this)
         this.validate = opts.validate || Validator(client, this.options)
         this.pipeline = opts.pipeline || MessagePipeline(client, {
             ...this.options,
             validate: this.validate,
-        }, onFinally)
+        }, this.onPipelineEnd)
         this.stream = this.pipeline.stream
+    }
+
+    async onPipelineEnd(err) {
+        try {
+            await this._onFinally(err)
+        } finally {
+            this._onDone.handleErrBack(err)
+        }
+    }
+
+    async onDone() {
+        return this._onDone
     }
 
     async collect(n) {
@@ -100,11 +116,19 @@ class SubscriptionSession extends Emitter {
         let needsReset = false
 
         const onDisconnected = async () => {
-            if (!connection.isConnectionValid() || !this.count()) { return }
-            needsReset = true
-            await this.step()
-            needsReset = false
-            await this.step()
+            try {
+                if (!connection.isConnectionValid()) {
+                    await this.step()
+                    return
+                }
+
+                needsReset = true
+                await this.step()
+                needsReset = false
+                await this.step()
+            } catch (err) {
+                this.emit(err)
+            }
         }
 
         let deleted = new Set()
@@ -112,9 +136,11 @@ class SubscriptionSession extends Emitter {
             () => {
                 needsReset = false
                 connection.on('disconnected', onDisconnected)
+                connection.on('disconnecting', onDisconnected)
                 this.emit('subscribing')
                 return async () => {
                     connection.off('disconnected', onDisconnected)
+                    connection.off('disconnecting', onDisconnected)
                     if (needsReset) { return }
                     try {
                         this.emit('unsubscribed')
@@ -122,6 +148,9 @@ class SubscriptionSession extends Emitter {
                         deleted.forEach((s) => {
                             this.deletedSubscriptions.delete(s)
                         })
+                    }
+                    if (!connection.isConnectionValid()) {
+                        await this.removeAll()
                     }
                 }
             },
@@ -134,6 +163,9 @@ class SubscriptionSession extends Emitter {
                 }
             },
             async () => {
+                await connection.needsConnection(`Subscribe ${key}`)
+            },
+            async () => {
                 await subscribe(this.client, this.options)
                 this.emit('subscribed')
                 return async () => {
@@ -143,7 +175,9 @@ class SubscriptionSession extends Emitter {
                 }
             }
         ], () => (
-            !needsReset && this.count()
+            connection.isConnectionValid()
+            && !needsReset
+            && this.count()
         ))
     }
 
@@ -171,15 +205,35 @@ class SubscriptionSession extends Emitter {
 
     async add(sub) {
         this.subscriptions.add(sub)
-        await this.step()
+        const { connection } = this.client
+        await connection.addHandle(`adding${sub.id}`)
+        try {
+            await connection.needsConnection(`Subscribe ${sub.id}`)
+            await this.step()
+        } finally {
+            await connection.removeHandle(`adding${sub.id}`)
+        }
     }
 
     async remove(sub) {
+        this.subscriptions.delete(sub)
+
+        if (this.deletedSubscriptions.has(sub)) {
+            return
+        }
+
         const cancelTask = sub.cancel()
         this.subscriptions.delete(sub)
         this.deletedSubscriptions.add(sub)
         await this.step()
         await cancelTask
+    }
+
+    async removeAll() {
+        const subs = this._getSubs()
+        return Promise.all([...subs].map((sub) => (
+            this.remove(sub)
+        )))
     }
 
     count() {
@@ -215,7 +269,7 @@ class Subscriptions {
         })
 
         sub.count = () => {
-            return this.count(options)
+            return this.count(sub.options)
         }
 
         this.subSessions.set(key, subSession)
@@ -226,7 +280,6 @@ class Subscriptions {
             await this.remove(sub)
             throw err
         }
-
         return sub
     }
 
@@ -328,8 +381,12 @@ export default class Subscriber {
     }
 
     async resend(opts) {
-        const resendStream = getResendStream(this.client, opts)
-        const sub = new Subscription(this.client, {
+        let sub
+        const resendStream = getResendStream(this.client, opts, async (err) => {
+            await sub.onPipelineEnd(err)
+        })
+
+        sub = new Subscription(this.client, {
             pipeline: resendStream,
             ...opts,
         }, () => {
@@ -349,32 +406,41 @@ export default class Subscriber {
             ...options
         })
 
+        let resendSubscribeSub
         // end both on end
         async function end(optionalErr) {
             await Promise.all([
-                sub.cancel(optionalErr),
                 resendSub.cancel(optionalErr),
+                sub.cancel(optionalErr),
             ])
         }
 
-        let resendSubscribeSub
+        const onUnsubscribed = (...args) => resendSubscribeSub.emit('unsubscribed', ...args)
+        sub.once('unsubscribed', onUnsubscribed)
 
         const it = pipeline([
             async function* ResendSubIterator() {
-                await resendSub.subscribe()
                 // iterate over resend
                 yield* resendSubscribeSub.resend
                 resendSubscribeSub.emit('resent')
                 // then iterate over realtime subscription
                 yield* resendSubscribeSub.realtime
             },
-        ], end)
+        ], async (err) => {
+            try {
+                await end(err)
+            } finally {
+                await resendSubscribeSub.onPipelineEnd(err)
+            }
+        })
 
         resendSubscribeSub = new Subscription(this.client, {
             pipeline: it,
             validate: sub.validate.bind(sub),
             ...options
         }, end)
+
+        await resendSub.subscribe()
 
         // attach additional utility functions
         return Object.assign(resendSubscribeSub, {

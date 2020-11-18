@@ -573,7 +573,9 @@ describe('Iterator Utils', () => {
                 } finally {
                     shouldRunFinally()
                 }
-            }()), onFinally, { timeout: WAIT * 2 })
+            }()), onFinally, {
+                timeout: WAIT * 2
+            })
 
             const received = []
             for await (const msg of itr) {

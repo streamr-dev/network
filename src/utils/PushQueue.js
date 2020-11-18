@@ -1,4 +1,4 @@
-import { CancelableGenerator } from './iterators'
+import { CancelableGenerator } from './iterators' // eslint-disable-line import/no-cycle
 
 export class AbortError extends Error {
     constructor(msg = '', ...args) {

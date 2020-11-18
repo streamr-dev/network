@@ -12,7 +12,7 @@ describeRepeats('Connection State', () => {
     let onError = jest.fn()
     let client
     let stream
-    let M
+    let subscriber
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -33,11 +33,9 @@ describeRepeats('Connection State', () => {
     async function setupClient(opts) {
         // eslint-disable-next-line require-atomic-updates
         client = createClient(opts)
-        M = client.messageStream
+        subscriber = client.subscriber
         client.debug('connecting before test >>')
         await client.session.getSessionToken()
-        await Promise.all([
-        ])
         stream = await client.createStream({
             name: uid('stream')
         })
@@ -53,7 +51,7 @@ describeRepeats('Connection State', () => {
     })
 
     afterEach(() => {
-        expect(M.count(stream.id)).toBe(0)
+        expect(subscriber.count(stream.id)).toBe(0)
         expect(client.getSubscriptions(stream.id)).toEqual([])
     })
 
@@ -100,9 +98,9 @@ describeRepeats('Connection State', () => {
         })
 
         it('connects on subscribe, disconnects on end', async () => {
-            const sub = await M.subscribe(stream.id)
+            const sub = await subscriber.subscribe(stream.id)
             expect(client.connection.getState()).toBe('connected')
-            expect(M.count(stream.id)).toBe(1)
+            expect(subscriber.count(stream.id)).toBe(1)
 
             const published = await publishTestMessages()
 
@@ -119,12 +117,12 @@ describeRepeats('Connection State', () => {
 
         it('connects on subscribe, disconnects on end with two subs', async () => {
             const [sub1, sub2] = await Promise.all([
-                M.subscribe(stream.id),
-                M.subscribe(stream.id),
+                subscriber.subscribe(stream.id),
+                subscriber.subscribe(stream.id),
             ])
 
             expect(client.connection.getState()).toBe('connected')
-            expect(M.count(stream.id)).toBe(2)
+            expect(subscriber.count(stream.id)).toBe(2)
 
             const published = await publishTestMessages()
 
@@ -164,14 +162,14 @@ describeRepeats('Connection State', () => {
         it('should error subscribe if client disconnected', async () => {
             await client.disconnect()
             await expect(async () => {
-                await M.subscribe(stream.id)
+                await subscriber.subscribe(stream.id)
             }).rejects.toThrow()
-            expect(M.count(stream.id)).toBe(0)
+            expect(subscriber.count(stream.id)).toBe(0)
             expect(client.getSubscriptions(stream.id)).toEqual([])
         })
 
         it('should reconnect subscriptions when connection disconnected before subscribed & reconnected', async () => {
-            const subTask = M.subscribe(stream.id)
+            const subTask = subscriber.subscribe(stream.id)
             await true
             client.connection.socket.close()
             const published = await publishTestMessages(2)
@@ -186,12 +184,12 @@ describeRepeats('Connection State', () => {
                 }
                 break
             }
-            expect(M.count(stream.id)).toBe(0)
+            expect(subscriber.count(stream.id)).toBe(0)
             expect(client.getSubscriptions(stream.id)).toEqual([])
         })
 
-        it('should re-subscribe when subscribed then reconnected', async () => {
-            const sub = await M.subscribe(stream.id)
+        it('should re-subscribe when subscribed then reconnected + fill gaps', async () => {
+            const sub = await subscriber.subscribe(stream.id)
             subs.push(sub)
             const published = await publishTestMessages(2)
             const received = []
@@ -200,6 +198,7 @@ describeRepeats('Connection State', () => {
                 if (received.length === 2) {
                     expect(received).toEqual(published)
                     client.connection.socket.close()
+                    // this will cause a gap fill
                     published.push(...(await publishTestMessages(2)))
                 }
 
@@ -208,12 +207,12 @@ describeRepeats('Connection State', () => {
                     break
                 }
             }
-            expect(M.count(stream.id)).toBe(0)
+            expect(subscriber.count(stream.id)).toBe(0)
             expect(client.getSubscriptions(stream.id)).toEqual([])
-        })
+        }, 30000)
 
         it('should end when subscribed then disconnected', async () => {
-            const sub = await M.subscribe(stream.id)
+            const sub = await subscriber.subscribe(stream.id)
             subs.push(sub)
             const published = await publishTestMessages(2)
             const received = []
@@ -226,19 +225,19 @@ describeRepeats('Connection State', () => {
                 }
             }
             expect(received).toEqual(published.slice(0, 1))
-            expect(M.count(stream.id)).toBe(0)
+            expect(subscriber.count(stream.id)).toBe(0)
             expect(client.getSubscriptions(stream.id)).toEqual([])
         })
 
         it('should end when subscribed then disconnected then connected', async () => {
-            const sub = await M.subscribe(stream.id)
+            const sub = await subscriber.subscribe(stream.id)
             expect(client.getSubscriptions(stream.id)).toHaveLength(1)
             subs.push(sub)
 
             await publishTestMessages(2)
             const received = []
             await client.disconnect()
-            expect(M.count(stream.id)).toBe(0)
+            expect(subscriber.count(stream.id)).toBe(0)
             expect(client.getSubscriptions(stream.id)).toHaveLength(0)
             for await (const msg of sub) {
                 received.push(msg.getParsedContent())
@@ -246,11 +245,11 @@ describeRepeats('Connection State', () => {
             expect(received).toEqual([])
             client.connect() // no await, should be ok
             await wait(1000)
-            const sub2 = await M.subscribe(stream.id)
+            const sub2 = await subscriber.subscribe(stream.id)
             subs.push(sub)
             const published2 = await publishTestMessages(2)
             const received2 = []
-            expect(M.count(stream.id)).toBe(1)
+            expect(subscriber.count(stream.id)).toBe(1)
             expect(client.getSubscriptions(stream.id)).toHaveLength(1)
             for await (const msg of sub2) {
                 received2.push(msg.getParsedContent())
@@ -259,16 +258,16 @@ describeRepeats('Connection State', () => {
                 }
             }
             expect(received2).toEqual(published2.slice(0, 1))
-            expect(M.count(stream.id)).toBe(0)
+            expect(subscriber.count(stream.id)).toBe(0)
             expect(client.getSubscriptions(stream.id)).toEqual([])
         })
 
         it('should just end subs when disconnected', async () => {
             await client.connect()
-            const sub = await M.subscribe(stream.id)
+            const sub = await subscriber.subscribe(stream.id)
             subs.push(sub)
             await client.disconnect()
-            expect(M.count(stream.id)).toBe(0)
+            expect(subscriber.count(stream.id)).toBe(0)
         })
     })
 })

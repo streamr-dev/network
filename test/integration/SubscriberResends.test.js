@@ -1,11 +1,14 @@
 import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
+import Debug from 'debug'
 
 import { Msg, uid, collect, describeRepeats, fakePrivateKey, getWaitForStorage, getPublishTestMessages } from '../utils'
 import StreamrClient from '../../src'
 import Connection from '../../src/Connection'
 
 import config from './config'
+
+console.log = Debug('Streamr::   CONSOLE   ')
 
 const { ControlMessage } = ControlLayer
 
@@ -194,6 +197,7 @@ describeRepeats('resends', () => {
 
         it('closes connection with autoDisconnect', async () => {
             client.connection.enableAutoDisconnect()
+            client.connection.enableAutoConnect()
             const sub = await subscriber.resend({
                 streamId: stream.id,
                 last: published.length,
@@ -205,9 +209,9 @@ describeRepeats('resends', () => {
             }
 
             expect(client.connection.getState()).toBe('disconnected')
-            expect(received).toHaveLength(published.length)
             expect(subscriber.count(stream.id)).toBe(0)
             expect(sub.stream.isReadable()).toBe(false)
+            expect(received).toHaveLength(published.length)
         })
 
         describe('resendSubscribe', () => {

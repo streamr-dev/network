@@ -16,8 +16,6 @@ const createClient = (opts = {}) => new StreamrClient({
     ...opts,
 })
 
-const throwError = (error) => { throw error }
-
 describe('PubSub with multiple clients', () => {
     let stream
     let mainClient

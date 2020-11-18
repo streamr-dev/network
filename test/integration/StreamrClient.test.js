@@ -18,8 +18,6 @@ const WebSocket = require('ws')
 const { StreamMessage } = MessageLayer
 const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest } = ControlLayer
 
-console.log = Debug('Streamr::CONSOLE   ')
-
 const MAX_MESSAGES = 5
 
 describeRepeats('StreamrClient', () => {
@@ -126,7 +124,6 @@ describeRepeats('StreamrClient', () => {
     describe('Connection', () => {
         describe('bad config.url', () => {
             it('emits error without autoconnect', async () => {
-                expectErrors = 1
                 client = createClient({
                     url: 'asdasd',
                     autoConnect: false,
@@ -139,7 +136,6 @@ describeRepeats('StreamrClient', () => {
             })
 
             it('rejects on connect without autoconnect', async () => {
-                expectErrors = 1
                 client = createClient({
                     url: 'asdasd',
                     autoConnect: false,
@@ -231,7 +227,6 @@ describeRepeats('StreamrClient', () => {
             })
 
             it('connects if disconnecting', async () => {
-                expectErrors = 1
                 const done = Defer()
                 client = createClient()
                 client.connection.once('disconnecting', done.wrap(async () => {
@@ -272,7 +267,6 @@ describeRepeats('StreamrClient', () => {
 
             it('disconnects if connecting', async () => {
                 const done = Defer()
-                expectErrors = 1
                 client = createClient()
                 client.connection.once('connecting', done.wrap(async () => {
                     await client.disconnect()
@@ -303,7 +297,6 @@ describeRepeats('StreamrClient', () => {
         describe('connect during disconnect', () => {
             it('can connect after disconnect', async () => {
                 const done = Defer()
-                expectErrors = 3
                 client = createClient()
                 client.once('connected', done.wrapError(async () => {
                     await expect(async () => {
@@ -327,7 +320,6 @@ describeRepeats('StreamrClient', () => {
             })
 
             it('can disconnect before connected', async () => {
-                expectErrors = 1
                 client = createClient()
 
                 const t = expect(async () => {
@@ -338,18 +330,15 @@ describeRepeats('StreamrClient', () => {
             })
 
             it('can disconnect before connected', async () => {
-                expectErrors = 1
                 client = createClient()
                 const t = expect(async () => {
                     await client.connect()
                 }).rejects.toThrow()
                 await client.disconnect()
                 await t
-                expect(client.onError).toHaveBeenCalledTimes(1)
             })
 
             it('can connect', async () => {
-                expectErrors = 1
                 client = createClient()
                 const done = Defer()
                 await client.connect()
@@ -368,7 +357,6 @@ describeRepeats('StreamrClient', () => {
             it('can reconnect on unexpected close', async () => {
                 client = createClient()
                 await client.connect()
-                client.enableAutoConnect()
 
                 client.connection.socket.close()
                 expect(client.isConnected()).not.toBeTruthy()
@@ -378,7 +366,6 @@ describeRepeats('StreamrClient', () => {
 
             it('will resolve original disconnect', async () => {
                 const done = Defer()
-                expectErrors = 1
                 client = createClient()
 
                 await client.connect()
@@ -393,7 +380,6 @@ describeRepeats('StreamrClient', () => {
             })
 
             it('has connection state transitions in correct order', async () => {
-                expectErrors = 1
                 client = createClient()
                 const done = Defer()
                 const connectionEventSpy = jest.spyOn(client.connection, 'emit')
@@ -407,7 +393,6 @@ describeRepeats('StreamrClient', () => {
                         'connecting',
                         'connected',
                         'disconnecting',
-                        'error',
                     ])
                     expect(client.isConnected()).toBeTruthy()
                 }))
@@ -492,7 +477,6 @@ describeRepeats('StreamrClient', () => {
             }, 5000)
 
             it('does not try to reconnect', async () => {
-                expectErrors = 1
                 client = createClient()
                 await client.connect()
 
@@ -543,7 +527,6 @@ describeRepeats('StreamrClient', () => {
                 })
 
                 it('errors if disconnected autoconnect set', async () => {
-                    expectErrors = 0 // publish error doesn't cause error events
                     client = createClient({
                         autoConnect: true,
                         autoDisconnect: true,
