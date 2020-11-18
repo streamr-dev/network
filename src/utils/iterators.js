@@ -354,7 +354,7 @@ export function pipeline(iterables = [], onFinally, opts) {
             nextIterable = typeof next === 'function' ? next(prev) : next
             let nextStream
 
-            if (nextIterable[isPipeline]) {
+            if (prev && nextIterable[isPipeline]) {
                 nextIterable.setFirstSource(prev)
             }
 

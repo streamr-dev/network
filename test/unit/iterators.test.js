@@ -1307,6 +1307,49 @@ describe('Iterator Utils', () => {
             expect(onInputStreamClose).toHaveBeenCalledTimes(1)
         })
 
+        it('works with nested pipeline in first position', async () => {
+            const onFinallyInnerAfter = jest.fn()
+            const onFinallyInner = jest.fn(async () => {
+                await wait(WAIT)
+                onFinallyInnerAfter()
+            })
+
+            const receivedStep1 = []
+            const onFirstStreamClose = jest.fn()
+
+            const firstStream = PushQueue.from(generate(), {
+                onEnd: onFirstStreamClose,
+            })
+            firstStream.id = 'firststream'
+            const p1 = pipeline([
+                firstStream
+            ], onFinallyInner)
+
+            const p = pipeline([
+                p1,
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                    }
+                },
+            ], onFinally)
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+            }
+
+            expect(onFinallyInner).toHaveBeenCalledTimes(1)
+            expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
+
+            expect(received).toEqual(expected)
+            expect(receivedStep1).toEqual(expected)
+
+            // all streams were closed
+            expect(onFirstStreamClose).toHaveBeenCalledTimes(1)
+        })
+
         it('works with nested pipelines that throw', async () => {
             const onFinallyInnerAfter = jest.fn()
             const onFinallyInner = jest.fn(async () => {
