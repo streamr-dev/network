@@ -1,17 +1,12 @@
 import { wait } from 'streamr-test-utils'
-import { ControlLayer } from 'streamr-client-protocol'
-import Debug from 'debug'
 
 import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '../utils'
 import StreamrClient from '../../src'
-import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
 
-const { ControlMessage } = ControlLayer
 const MAX_MESSAGES = 10
-console.log = Debug('Streamr::   CONSOLE   ')
 
 describeRepeats('GapFill', () => {
     let expectErrors = 0 // check no errors by default

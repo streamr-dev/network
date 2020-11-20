@@ -1,4 +1,3 @@
-import Debug from 'debug'
 import { wait } from 'streamr-test-utils'
 import AbortController from 'node-abort-controller'
 
@@ -8,7 +7,6 @@ const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 const WAIT = 20
 const MAX_ITEMS = 3
 
-console.log = Debug('Streamr::   CONSOLE   ')
 async function* generate(items = expected) {
     await wait(WAIT * 0.1)
     for await (const item of items) {

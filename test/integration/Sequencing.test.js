@@ -163,7 +163,7 @@ describe('Sequencing', () => {
         expect(msgsReceieved).toEqual(msgsPublished)
     }, 10000)
 
-    it('should sequence in order even if publish requests backdated', async () => {
+    it.skip('should sequence in order even if publish requests backdated', async () => {
         const ts = Date.now()
         const msgsPublished = []
         const msgsReceieved = []
@@ -228,7 +228,7 @@ describe('Sequencing', () => {
         ])
     }, 10000)
 
-    it('should sequence in order even if publish requests backdated in sequence', async () => {
+    it.skip('should sequence in order even if publish requests backdated in sequence', async () => {
         const ts = Date.now()
         const msgsPublished = []
         const msgsReceieved = []

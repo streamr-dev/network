@@ -10,8 +10,6 @@ import { uuid, pUpDownSteps, Defer, getEndpointUrl } from '../../src/utils'
 
 const debug = Debug('StreamrClient::test::utils')
 
-console.log = Debug('Streamr::CONSOLE   ')
-
 describe('utils', () => {
     let session
     let expressApp

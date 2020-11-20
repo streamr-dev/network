@@ -41,7 +41,6 @@ describe('resend/reconnect', () => {
         })
 
         publishedMessages = await publishTestMessages(MAX_MESSAGES)
-        client.enableAutoConnect()
     }, 10 * 1000)
 
     afterEach(async () => {
@@ -49,6 +48,7 @@ describe('resend/reconnect', () => {
     })
 
     describe('reconnect with resend', () => {
+        let shouldDisconnect = false
         let sub
         let messages = []
         beforeEach(async () => {
@@ -61,24 +61,59 @@ describe('resend/reconnect', () => {
                 },
             }, (message) => {
                 messages.push(message)
+                if (shouldDisconnect) {
+                    client.connection.socket.close()
+                }
             })
+
             sub.once('resent', done.resolve)
             await done
             expect(messages).toEqual(publishedMessages.slice(-MAX_MESSAGES))
         }, 15000)
 
-        it('can handle reconnection after unintentional disconnection', async () => {
+        it('can handle mixed resend/subscribe', async () => {
+            const prevMessages = messages.slice()
+            const newMessages = await publishTestMessages(3)
+            expect(messages).toEqual([...prevMessages, ...newMessages])
+        }, 10000)
+
+        it('can handle reconnection after unintentional disconnection 1', async () => {
             const onClose = Defer()
+
             client.connection.socket.once('close', onClose.resolve)
             client.connection.socket.close()
             await onClose
             // should reconnect and get new messages
-            const prevMessages = messages
+            const prevMessages = messages.slice()
             const newMessages = await publishTestMessages(3)
             await wait(6000)
-            await waitForCondition(() => messages.length === MAX_MESSAGES + 3, 6000)
             expect(messages).toEqual([...prevMessages, ...newMessages])
-        }, 110000)
+        }, 11000)
+
+        it('can handle reconnection after unintentional disconnection 2', async () => {
+            // should reconnect and get new messages
+            const prevMessages = messages.slice()
+            const newMessages = await publishTestMessages(3, {
+                waitForLast: false,
+            })
+            const onClose = Defer()
+
+            client.connection.socket.once('close', onClose.resolve)
+            client.connection.socket.close()
+            await client.connection.nextConnection()
+
+            await wait(6000)
+            expect(messages).toEqual([...prevMessages, ...newMessages])
+        }, 11000)
+
+        it('can handle reconnection after unintentional disconnection 3', async () => {
+            shouldDisconnect = true
+            const prevMessages = messages.slice()
+            const newMessages = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: false,
+            })
+            await waitForCondition(() => messages.length === MAX_MESSAGES * 2, 10000)
+            expect(messages).toEqual([...prevMessages, ...newMessages])
+        }, 21000)
     })
 })
-

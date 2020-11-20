@@ -1,6 +1,6 @@
 import Emitter from 'events'
 
-import { allSettledValues, AggregatedError, pUpDownSteps, Defer, uuid, counterId } from '../utils'
+import { allSettledValues, AggregatedError, pUpDownSteps, Defer, counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
 
 import {

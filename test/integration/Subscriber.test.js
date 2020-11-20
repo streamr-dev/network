@@ -1,16 +1,12 @@
 import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
-import Debug from 'debug'
 
 import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages, collect } from '../utils'
 import StreamrClient from '../../src'
 import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
-import MessageStream from '../../src/subscribe'
 
 import config from './config'
-
-console.log = Debug('Streamr::   CONSOLE   ')
 
 const { ControlMessage } = ControlLayer
 

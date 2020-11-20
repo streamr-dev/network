@@ -1,5 +1,4 @@
 import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
-import Debug from 'debug'
 
 import { uid, describeRepeats, fakePrivateKey, getPublishTestMessages } from '../utils'
 import StreamrClient from '../../src'

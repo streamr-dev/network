@@ -1,7 +1,6 @@
 import fs from 'fs'
 import path from 'path'
 
-import Debug from 'debug'
 import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { wait, waitForEvent } from 'streamr-test-utils'
@@ -16,7 +15,7 @@ import config from './config'
 const WebSocket = require('ws')
 
 const { StreamMessage } = MessageLayer
-const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest } = ControlLayer
+const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest, ControlMessage } = ControlLayer
 
 const MAX_MESSAGES = 5
 
@@ -894,22 +893,22 @@ describeRepeats('StreamrClient', () => {
                 expect(onMessageMsgs).toEqual(published)
             })
 
-            it('should resubscribe on unexpected disconnection', async () => {
+            it.only('should resubscribe on unexpected disconnection', async () => {
+                await client.connect()
                 const otherClient = createClient({
                     auth: client.options.auth,
                 })
+
                 try {
                     await otherClient.connect()
                     await otherClient.session.getSessionToken()
+
                     const done = Defer()
 
                     const msgs = []
+
                     await otherClient.subscribe(stream, (msg) => {
                         msgs.push(msg)
-                        if (msgs.length === 1) {
-                            // disconnect
-                            otherClient.connection.socket.close()
-                        }
 
                         if (msgs.length === MAX_MESSAGES) {
                             // should eventually get here
@@ -917,13 +916,27 @@ describeRepeats('StreamrClient', () => {
                         }
                     })
 
+                    otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, () => {
+                        // disconnect after every message
+                        otherClient.connection.socket.close()
+                    })
+
+                    const onConnected = jest.fn()
+                    const onDisconnected = jest.fn()
+                    otherClient.connection.on('connected', onConnected)
+                    otherClient.connection.on('disconnected', onDisconnected)
+
                     const published = await publishTestMessages(MAX_MESSAGES, {
-                        wait: 500,
+                        delay: 250,
                     })
 
                     await done
 
                     expect(msgs).toEqual(published)
+
+                    // check disconnect/connect actually happened
+                    expect(onConnected).toHaveBeenCalledTimes(3)
+                    expect(onDisconnected).toHaveBeenCalledTimes(3)
                 } finally {
                     await Promise.all([
                         otherClient.disconnect(),
@@ -958,6 +971,22 @@ describeRepeats('StreamrClient', () => {
 
                 await done
                 expect(received).toEqual(published)
+            })
+
+            test('publish disconnects after each message with autoDisconnect', async () => {
+                const onConnected = jest.fn()
+                const onDisconnected = jest.fn()
+                client.on('disconnected', onDisconnected)
+                client.on('connected', onConnected)
+
+                client.enableAutoConnect()
+                client.enableAutoDisconnect()
+                const published = await publishTestMessages(5, {
+                    delay: 250,
+                })
+
+                expect(onConnected).toHaveBeenCalledTimes(published.length - 1)
+                expect(onDisconnected).toHaveBeenCalledTimes(published.length)
             })
 
             it('client.subscribe with resend from', async () => {

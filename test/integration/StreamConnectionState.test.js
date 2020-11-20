@@ -1,10 +1,15 @@
 import { wait } from 'streamr-test-utils'
+import { ControlLayer } from 'streamr-client-protocol'
 
 import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '../utils'
 import StreamrClient from '../../src'
+import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
+
+const { ControlMessage } = ControlLayer
+const MAX_MESSAGES = 5
 
 describeRepeats('Connection State', () => {
     let expectErrors = 0 // check no errors by default
@@ -37,6 +42,7 @@ describeRepeats('Connection State', () => {
         client.debug('connecting before test >>')
         await client.session.getSessionToken()
         stream = await client.createStream({
+            requireSignedData: true,
             name: uid('stream')
         })
 
@@ -51,7 +57,9 @@ describeRepeats('Connection State', () => {
     })
 
     afterEach(() => {
+        if (!subscriber) { return }
         expect(subscriber.count(stream.id)).toBe(0)
+        if (!client) { return }
         expect(client.getSubscriptions(stream.id)).toEqual([])
     })
 
@@ -148,6 +156,126 @@ describeRepeats('Connection State', () => {
 
             expect(received2).toEqual(received1)
         })
+
+        it('should resubscribe on unexpected disconnection', async () => {
+            const otherClient = createClient({
+                auth: client.options.auth,
+            })
+
+            const onConnected = jest.fn()
+            const onDisconnected = jest.fn()
+            const onConnectedOther = jest.fn()
+            const onDisconnectedOther = jest.fn()
+            otherClient.connection.on('connected', onConnectedOther)
+            otherClient.connection.on('disconnected', onDisconnectedOther)
+            client.connection.on('connected', onConnected)
+            client.connection.on('disconnected', onDisconnected)
+
+            try {
+                await client.connect()
+                await otherClient.connect()
+                await otherClient.session.getSessionToken()
+
+                const done = Defer()
+
+                const msgs = []
+
+                await otherClient.subscribe(stream, (msg) => {
+                    msgs.push(msg)
+                    if (msgs.length === MAX_MESSAGES) {
+                        // should eventually get here
+                        done.resolve()
+                    }
+                })
+
+                otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, async () => {
+                    if (otherClient.connection.socket) {
+                        // disconnect after every message
+                        otherClient.connection.socket.close()
+                    }
+                })
+
+                const published = await publishTestMessages(MAX_MESSAGES, {
+                    delay: 250,
+                    waitForStorage: true,
+                })
+
+                await done
+
+                expect(msgs).toEqual(published)
+
+                // check disconnect/connect actually happened
+                expect(onConnected).toHaveBeenCalledTimes(1)
+                expect(onDisconnected).toHaveBeenCalledTimes(0)
+                expect(onConnectedOther).toHaveBeenCalledTimes(published.length - 1)
+                expect(onDisconnectedOther).toHaveBeenCalledTimes(3)
+            } finally {
+                await Promise.all([
+                    otherClient.disconnect(),
+                    client.disconnect(),
+                ])
+            }
+        }, 30000)
+
+        it('should receive messages if publisher disconnects after each message', async () => {
+            const otherClient = createClient({
+                auth: client.options.auth,
+            })
+
+            client.enableAutoConnect()
+            client.enableAutoDisconnect()
+
+            const onConnected = jest.fn()
+            const onDisconnected = jest.fn()
+            const onConnectedOther = jest.fn()
+            const onDisconnectedOther = jest.fn()
+            otherClient.connection.on('connected', onConnectedOther)
+            otherClient.connection.on('disconnected', onDisconnectedOther)
+            client.connection.on('connected', onConnected)
+            client.connection.on('disconnected', onDisconnected)
+
+            try {
+                await otherClient.connect()
+                await otherClient.session.getSessionToken()
+
+                const done = Defer()
+
+                const msgs = []
+
+                await otherClient.subscribe({
+                    stream,
+                    resend: {
+                        last: 5
+                    }
+                }, (msg) => {
+                    msgs.push(msg)
+                    if (msgs.length === MAX_MESSAGES) {
+                        // should eventually get here
+                        done.resolve()
+                    }
+                })
+
+                const published = await publishTestMessages(MAX_MESSAGES, {
+                    delay: 250,
+                    waitForStorage: true,
+                })
+
+                await done
+
+                expect(msgs).toEqual(published)
+
+                // check disconnect/connect actually happened
+                expect(onConnected).toHaveBeenCalledTimes(published.length)
+                expect(onDisconnected).toHaveBeenCalledTimes(published.length)
+                expect(onConnectedOther).toHaveBeenCalledTimes(1)
+                expect(onDisconnectedOther).toHaveBeenCalledTimes(0)
+            } finally {
+                await Promise.all([
+                    otherClient.disconnect(),
+                    client.disconnect(),
+                ])
+            }
+        }, 15000)
     })
 
     describe('autoConnect disabled', () => {

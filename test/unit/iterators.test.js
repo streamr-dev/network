@@ -1,11 +1,9 @@
 import { wait } from 'streamr-test-utils'
-import Debug from 'debug'
 
 import { iteratorFinally, CancelableGenerator, pipeline } from '../../src/utils/iterators'
 import { Defer } from '../../src/utils'
 import PushQueue from '../../src/utils/PushQueue'
 
-console.log = Debug('Streamr::   CONSOLE   ')
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 const WAIT = 20
 
