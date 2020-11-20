@@ -2,7 +2,7 @@ import { inspect } from 'util'
 
 import { ControlLayer, MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
-import { CacheAsyncFn, pOrderedResolve, uuid } from '../utils'
+import { CacheAsyncFn, pOrderedResolve, counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
 import PushQueue from '../utils/PushQueue'
 
@@ -51,7 +51,7 @@ function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
  * Write messages into a Stream.
  */
 
-function messageStream(connection, { streamId, streamPartition, isUnicast, type }) {
+export function messageStream(connection, { streamId, streamPartition, isUnicast, type }, onFinally = () => {}) {
     if (!type) {
         // eslint-disable-next-line no-param-reassign
         type = isUnicast ? ControlMessage.TYPES.UnicastMessage : ControlMessage.TYPES.BroadcastMessage
@@ -71,9 +71,10 @@ function messageStream(connection, { streamId, streamPartition, isUnicast, type 
 
     // stream acts as buffer
     msgStream = new PushQueue([], {
-        onEnd() {
+        async onEnd(...args) {
             // remove onMessage handler & clean up
             connection.off(type, onMessage)
+            await onFinally(...args)
         }
     })
 
@@ -108,23 +109,23 @@ export function OrderMessages(client, options = {}) {
     }, async (from, to, publisherId, msgChainId) => {
         if (done) { return }
         // eslint-disable-next-line no-use-before-define
-        const resendStream = await getResendStream(client, {
+        const resendMessageStream = await resendStream(client, {
             streamId, streamPartition, from, to, publisherId, msgChainId,
         })
 
         try {
             if (done) { return }
-            resendStreams.add(resendStream)
-            await resendStream.subscribe()
+            resendStreams.add(resendMessageStream)
+            await resendMessageStream.subscribe()
             if (done) { return }
 
-            for await (const streamMessage of resendStream) {
+            for await (const { streamMessage } of resendMessageStream) {
                 if (done) { return }
                 orderingUtil.add(streamMessage)
             }
         } finally {
-            resendStreams.delete(resendStream)
-            await resendStream.cancel()
+            resendStreams.delete(resendMessageStream)
+            await resendMessageStream.cancel()
         }
     }, gapFillTimeout, retryResendAfter)
 
@@ -191,16 +192,17 @@ export function Validator(client, opts) {
 
 export function MessagePipeline(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
+    const { key, afterSteps = [] } = options
+    const id = counterId('MessagePipeline') + key
     /* eslint-disable object-curly-newline */
     const {
         validate = Validator(client, options),
-        stream = messageStream(client.connection, options),
+        msgStream = messageStream(client.connection, options),
         orderingUtil = OrderMessages(client, options)
     } = options
     /* eslint-enable object-curly-newline */
-
     const p = pipeline([
-        stream,
+        msgStream,
         async function* Validate(src) {
             for await (const { streamMessage } of src) {
                 try {
@@ -215,22 +217,26 @@ export function MessagePipeline(client, opts = {}, onFinally = () => {}) {
             }
         },
         orderingUtil,
+        ...afterSteps
     ], async (err, ...args) => {
-        await stream.cancel()
+        await msgStream.cancel()
         return onFinally(err, ...args)
     })
 
     return Object.assign(p, {
-        stream,
+        id,
+        msgStream,
+        orderingUtil,
+        validate,
         collect: collect.bind(null, p),
-        end: stream.end,
+        end: msgStream.end,
     })
 }
 
 export function getResendStream(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
     const { connection } = client
-    const requestId = uuid(`${options.key}-resend`)
+    const requestId = counterId(`${options.key}-resend`)
 
     const msgStream = MessagePipeline(client, {
         ...options,
@@ -246,13 +252,61 @@ export function getResendStream(client, opts = {}, onFinally = () => {}) {
     // wait for resend complete message(s)
     const onResendDone = waitForResponse({ // eslint-disable-line promise/catch-or-return
         requestId,
-        connection: client.connection,
+        connection,
         types: [
             ControlMessage.TYPES.ResendResponseResent,
             ControlMessage.TYPES.ResendResponseNoResend,
         ],
     }).then(() => msgStream.end(), (err) => msgStream.cancel(err))
 
+    return Object.assign(msgStream, {
+        async subscribe() {
+            await connection.addHandle(requestId)
+            // wait for resend complete message or resend request done
+            await Promise.race([
+                resend(client, {
+                    requestId,
+                    ...options,
+                }),
+                onResendDone
+            ])
+            return this
+        },
+        async unsubscribe() {
+            return this.cancel()
+        }
+    })
+}
+
+export function resendStream(client, opts = {}, onFinally = () => {}) {
+    const options = validateOptions(opts)
+    const { connection } = client
+    const requestId = counterId(`${options.key}-resend`)
+    const msgStream = messageStream(client.connection, {
+        ...options,
+        isUnicast: true,
+    }, async (...args) => {
+        try {
+            await connection.removeHandle(requestId)
+        } finally {
+            await onFinally(...args)
+        }
+    })
+
+    const onResendDone = waitForResponse({ // eslint-disable-line promise/catch-or-return
+        requestId,
+        connection: client.connection,
+        types: [
+            ControlMessage.TYPES.ResendResponseResent,
+            ControlMessage.TYPES.ResendResponseNoResend,
+        ],
+    }).then(() => (
+        msgStream.end()
+    ), (err) => (
+        msgStream.cancel(err)
+    ))
+
+    // wait for resend complete message or resend request done
     return Object.assign(msgStream, {
         async subscribe() {
             await connection.addHandle(requestId)

@@ -1,6 +1,6 @@
 import Emitter from 'events'
 
-import { allSettledValues, AggregatedError, pUpDownSteps, Defer, uuid } from '../utils'
+import { allSettledValues, AggregatedError, pUpDownSteps, Defer, uuid, counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
 
 import {
@@ -12,6 +12,8 @@ import {
     MessagePipeline,
     Validator,
     getResendStream,
+    messageStream,
+    resendStream
 } from './pipeline'
 
 export { validateOptions }
@@ -23,7 +25,7 @@ class Subscription extends Emitter {
         this.client = client
         this.options = validateOptions(opts)
         this.key = this.options.key
-        this.id = uuid(`Subscription.${this.key}`)
+        this.id = counterId(`Subscription.${this.key}`)
         this._onFinally = onFinally
         this.onPipelineEnd = this.onPipelineEnd.bind(this)
         this.validate = opts.validate || Validator(client, this.options)
@@ -31,7 +33,7 @@ class Subscription extends Emitter {
             ...this.options,
             validate: this.validate,
         }, this.onPipelineEnd)
-        this.stream = this.pipeline.stream
+        this.msgStream = this.pipeline.msgStream
     }
 
     async onPipelineEnd(err) {
@@ -124,8 +126,10 @@ class SubscriptionSession extends Emitter {
 
                 needsReset = true
                 await this.step()
-                needsReset = false
-                await this.step()
+                if (connection.isConnectionValid()) {
+                    needsReset = false
+                    await this.step()
+                }
             } catch (err) {
                 this.emit(err)
             }
@@ -135,10 +139,12 @@ class SubscriptionSession extends Emitter {
         this.step = pUpDownSteps([
             () => {
                 needsReset = false
+                connection.on('done', onDisconnected)
                 connection.on('disconnected', onDisconnected)
                 connection.on('disconnecting', onDisconnected)
                 this.emit('subscribing')
                 return async () => {
+                    connection.off('done', onDisconnected)
                     connection.off('disconnected', onDisconnected)
                     connection.off('disconnecting', onDisconnected)
                     if (needsReset) { return }
@@ -380,75 +386,95 @@ export default class Subscriber {
         return this.subscriptions.add(...args)
     }
 
-    async resend(opts) {
+    resend(opts, fn = () => {}) {
         let sub
-        const resendStream = getResendStream(this.client, opts, async (err) => {
+        const resendMsgStream = getResendStream(this.client, opts, async (err) => {
             await sub.onPipelineEnd(err)
         })
 
         sub = new Subscription(this.client, {
-            pipeline: resendStream,
+            pipeline: resendMsgStream,
             ...opts,
-        }, () => {
+        }, async (...args) => {
             sub.emit('resent')
+            await fn(...args)
         })
-        resendStream.subscribe().catch(() => {})
+        resendMsgStream.subscribe().catch(() => {})
         return sub
     }
 
-    async resendSubscribe(options) {
-        // create realtime subscription
-        const sub = await this.subscribe(options)
-        const emitter = sub
-        // create resend
-        const resendSub = getResendStream(this.client, {
-            emitter,
-            ...options
-        })
+    async resendSubscribe(opts, onMessage) {
+        // This works by passing a custom message stream to a subscription
+        // the custom message stream iterates resends, then iterates realtime
+        const options = validateOptions(opts)
 
-        let resendSubscribeSub
-        // end both on end
+        const resendMessageStream = resendStream(this.client, options)
+        const realtimeMessageStream = messageStream(this.client.connection, options)
+
+        // cancel both streams on end
         async function end(optionalErr) {
             await Promise.all([
-                resendSub.cancel(optionalErr),
-                sub.cancel(optionalErr),
+                resendMessageStream.cancel(optionalErr),
+                realtimeMessageStream.cancel(optionalErr),
             ])
         }
 
-        const onUnsubscribed = (...args) => resendSubscribeSub.emit('unsubscribed', ...args)
-        sub.once('unsubscribed', onUnsubscribed)
+        let resendSubscribeSub
 
+        let resentCount
         const it = pipeline([
-            async function* ResendSubIterator() {
-                // iterate over resend
-                yield* resendSubscribeSub.resend
-                resendSubscribeSub.emit('resent')
-                // then iterate over realtime subscription
+            async function* HandleResends() {
+                await resendMessageStream.subscribe()
+                // Inconvience here
+                // emitting the resent event is a bit tricky in this setup because the subscription
+                // doesn't know anything about the source of the messages
+                // can't emit resent immediately after resent stream end since
+                // the message is not yet through the message pipeline
+                //
+                // Solution is to count number of resent messages
+                // and emit resent once subscription has seen that many messages
+                let count = 0
+                for await (const msg of resendSubscribeSub.resend) {
+                    count += 1
+                    yield msg
+                }
+
+                resentCount = count
+                if (resentCount === 0) {
+                    // no resent
+                    resendSubscribeSub.emit('resent')
+                }
+            },
+            async function* ResendThenRealtime(src) {
+                yield* src
                 yield* resendSubscribeSub.realtime
             },
-        ], async (err) => {
-            try {
-                await end(err)
-            } finally {
-                await resendSubscribeSub.onPipelineEnd(err)
-            }
-        })
+        ], end)
 
-        resendSubscribeSub = new Subscription(this.client, {
-            pipeline: it,
-            validate: sub.validate.bind(sub),
-            ...options
-        }, end)
-
-        await resendSub.subscribe()
+        let msgCount = 0
+        resendSubscribeSub = await this.subscribe({
+            ...options,
+            afterSteps: [
+                async function* detectEndOfResend(src) {
+                    for await (const msg of src) {
+                        try {
+                            msgCount += 1
+                            yield msg
+                        } finally {
+                            if (resentCount && msgCount === resentCount) {
+                                resendSubscribeSub.emit('resent')
+                            }
+                        }
+                    }
+                },
+            ],
+            msgStream: it,
+        }, onMessage)
 
         // attach additional utility functions
         return Object.assign(resendSubscribeSub, {
-            get isActive() {
-                return sub.isActive
-            },
-            realtime: sub,
-            resend: resendSub,
+            realtime: realtimeMessageStream,
+            resend: resendMessageStream,
         })
     }
 }

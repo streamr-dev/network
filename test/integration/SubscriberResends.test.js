@@ -5,6 +5,7 @@ import Debug from 'debug'
 import { Msg, uid, collect, describeRepeats, fakePrivateKey, getWaitForStorage, getPublishTestMessages } from '../utils'
 import StreamrClient from '../../src'
 import Connection from '../../src/Connection'
+import { Defer } from '../../src/utils'
 
 import config from './config'
 
@@ -116,8 +117,12 @@ describeRepeats('resends', () => {
                 last: 5,
             })
 
+            const onResent = jest.fn()
+            sub.on('resent', onResent)
+
             const receivedMsgs = await sub.collect()
             expect(receivedMsgs).toHaveLength(0)
+            expect(onResent).toHaveBeenCalledTimes(1)
             expect(subscriber.count(emptyStream.id)).toBe(0)
         })
 
@@ -131,6 +136,9 @@ describeRepeats('resends', () => {
                 last: 5,
             })
 
+            const onResent = jest.fn()
+            sub.on('resent', onResent)
+
             expect(subscriber.count(emptyStream.id)).toBe(1)
             const msg = Msg()
             // eslint-disable-next-line no-await-in-loop
@@ -143,6 +151,8 @@ describeRepeats('resends', () => {
                     sub.cancel()
                 }, 250)
             }
+
+            expect(onResent).toHaveBeenCalledTimes(1)
             expect(received).toEqual([msg])
             expect(subscriber.count(emptyStream.id)).toBe(0)
         })
@@ -161,10 +171,14 @@ describeRepeats('resends', () => {
                 last: published.length,
             })
 
+            const onResent = jest.fn()
+            sub.on('resent', onResent)
+
             const receivedMsgs = await sub.collect()
             expect(receivedMsgs).toHaveLength(published.length)
             expect(receivedMsgs).toEqual(published)
             expect(subscriber.count(stream.id)).toBe(0)
+            expect(onResent).toHaveBeenCalledTimes(1)
         })
 
         it('requests resend number', async () => {
@@ -173,10 +187,14 @@ describeRepeats('resends', () => {
                 last: 2,
             })
 
+            const onResent = jest.fn()
+            sub.on('resent', onResent)
+
             const receivedMsgs = await sub.collect()
             expect(receivedMsgs).toHaveLength(2)
             expect(receivedMsgs).toEqual(published.slice(-2))
             expect(subscriber.count(stream.id)).toBe(0)
+            expect(onResent).toHaveBeenCalledTimes(1)
         })
 
         it('closes stream', async () => {
@@ -185,6 +203,9 @@ describeRepeats('resends', () => {
                 last: published.length,
             })
 
+            const onResent = jest.fn()
+            sub.on('resent', onResent)
+
             const received = []
             for await (const m of sub) {
                 received.push(m)
@@ -192,7 +213,8 @@ describeRepeats('resends', () => {
 
             expect(received).toHaveLength(published.length)
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(sub.stream.isReadable()).toBe(false)
+            expect(sub.msgStream.isReadable()).toBe(false)
+            expect(onResent).toHaveBeenCalledTimes(1)
         })
 
         it('closes connection with autoDisconnect', async () => {
@@ -203,6 +225,9 @@ describeRepeats('resends', () => {
                 last: published.length,
             })
 
+            const onResent = jest.fn()
+            sub.on('resent', onResent)
+
             const received = []
             for await (const m of sub) {
                 received.push(m)
@@ -210,8 +235,9 @@ describeRepeats('resends', () => {
 
             expect(client.connection.getState()).toBe('disconnected')
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(sub.stream.isReadable()).toBe(false)
+            expect(sub.msgStream.isReadable()).toBe(false)
             expect(received).toHaveLength(published.length)
+            expect(onResent).toHaveBeenCalledTimes(1)
         })
 
         describe('resendSubscribe', () => {
@@ -221,25 +247,37 @@ describeRepeats('resends', () => {
                     last: published.length,
                 })
 
-                const msg = Msg()
+                const onResent = Defer()
+                const publishedBefore = published.slice()
+                const receivedMsgs = []
+
+                sub.once('resent', onResent.wrap(() => {
+                    expect(receivedMsgs).toEqual(publishedBefore)
+                }))
+
+                const newMessage = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, msg) // should be realtime
-                published.push(msg)
-                const receivedMsgs = await collect(sub, async ({ received }) => {
-                    if (received.length === published.length) {
+                await client.publish(stream.id, newMessage) // should be realtime
+                published.push(newMessage)
+
+                for await (const msg of sub) {
+                    receivedMsgs.push(msg.getParsedContent())
+                    if (receivedMsgs.length === published.length) {
+                        onResent.reject(new Error('resent never called'))
                         await wait()
                         await sub.return()
                     }
-                })
+                }
 
-                const msgs = receivedMsgs
-                expect(msgs).toHaveLength(published.length)
-                expect(msgs).toEqual(published)
+                await onResent
+
+                expect(receivedMsgs).toHaveLength(published.length)
+                expect(receivedMsgs).toEqual(published)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.isReadable()).toBe(false)
-                expect(sub.realtime.stream.isWritable()).toBe(false)
-                expect(sub.resend.stream.isReadable()).toBe(false)
-                expect(sub.resend.stream.isWritable()).toBe(false)
+                expect(sub.realtime.isReadable()).toBe(false)
+                expect(sub.realtime.isWritable()).toBe(false)
+                expect(sub.resend.isReadable()).toBe(false)
+                expect(sub.resend.isWritable()).toBe(false)
             })
 
             it('sees resends and realtime again', async () => {
@@ -247,6 +285,9 @@ describeRepeats('resends', () => {
                     streamId: stream.id,
                     last: published.length,
                 })
+
+                const onResent = jest.fn()
+                sub.on('resent', onResent)
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
@@ -263,10 +304,44 @@ describeRepeats('resends', () => {
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.isReadable()).toBe(false)
-                expect(sub.realtime.stream.isWritable()).toBe(false)
-                expect(sub.resend.stream.isReadable()).toBe(false)
-                expect(sub.resend.stream.isWritable()).toBe(false)
+                expect(sub.realtime.isReadable()).toBe(false)
+                expect(sub.realtime.isWritable()).toBe(false)
+                expect(sub.resend.isReadable()).toBe(false)
+                expect(sub.resend.isWritable()).toBe(false)
+                expect(onResent).toHaveBeenCalledTimes(1)
+            })
+
+            it('sees resends when no realtime', async () => {
+                const sub = await subscriber.resendSubscribe({
+                    streamId: stream.id,
+                    last: published.length,
+                })
+
+                const onResent = Defer()
+                const publishedBefore = published.slice()
+                const receivedMsgs = []
+
+                sub.once('resent', onResent.wrap(() => {
+                    expect(receivedMsgs).toEqual(publishedBefore)
+                }))
+
+                for await (const msg of sub) {
+                    receivedMsgs.push(msg.getParsedContent())
+                    if (receivedMsgs.length === published.length) {
+                        await wait()
+                        await sub.return()
+                    }
+                }
+
+                await onResent
+
+                expect(receivedMsgs).toHaveLength(published.length)
+                expect(receivedMsgs).toEqual(published)
+                expect(subscriber.count(stream.id)).toBe(0)
+                expect(sub.realtime.isReadable()).toBe(false)
+                expect(sub.realtime.isWritable()).toBe(false)
+                expect(sub.resend.isReadable()).toBe(false)
+                expect(sub.resend.isWritable()).toBe(false)
             })
 
             it('ends resend if unsubscribed', async () => {
@@ -290,10 +365,10 @@ describeRepeats('resends', () => {
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.isReadable()).toBe(false)
-                expect(sub.realtime.stream.isWritable()).toBe(false)
-                expect(sub.resend.stream.isReadable()).toBe(false)
-                expect(sub.resend.stream.isWritable()).toBe(false)
+                expect(sub.realtime.isReadable()).toBe(false)
+                expect(sub.realtime.isWritable()).toBe(false)
+                expect(sub.resend.isReadable()).toBe(false)
+                expect(sub.resend.isWritable()).toBe(false)
             })
 
             it('can return before start', async () => {
@@ -317,8 +392,8 @@ describeRepeats('resends', () => {
 
                 expect(received).toHaveLength(0)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.isReadable()).toBe(false)
-                expect(sub.resend.stream.isWritable()).toBe(false)
+                expect(sub.realtime.isReadable()).toBe(false)
+                expect(sub.resend.isWritable()).toBe(false)
             })
 
             it('can end asynchronously', async () => {
@@ -331,7 +406,6 @@ describeRepeats('resends', () => {
                 // eslint-disable-next-line no-await-in-loop
                 await client.publish(stream.id, message)
                 published.push(message)
-                await wait(500)
 
                 let t
                 let receivedMsgs
@@ -351,8 +425,8 @@ describeRepeats('resends', () => {
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.isReadable()).toBe(false)
-                expect(sub.resend.stream.isWritable()).toBe(false)
+                expect(sub.realtime.isReadable()).toBe(false)
+                expect(sub.resend.isWritable()).toBe(false)
             })
 
             it('can end inside resend', async () => {
@@ -381,8 +455,8 @@ describeRepeats('resends', () => {
                 expect(msgs).toHaveLength(END_AFTER)
                 expect(msgs).toEqual(published.slice(0, END_AFTER))
                 expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.stream.isReadable()).toBe(false)
-                expect(sub.resend.stream.isWritable()).toBe(false)
+                expect(sub.realtime.isReadable()).toBe(false)
+                expect(sub.resend.isWritable()).toBe(false)
             })
         })
     })
