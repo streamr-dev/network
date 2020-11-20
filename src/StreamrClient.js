@@ -15,6 +15,28 @@ const { ControlMessage } = ControlLayer
 
 const { StreamMessage } = MessageLayer
 
+class StreamrConnection extends Connection {
+    constructor(...args) {
+        super(...args)
+        this.on('message', this.onConnectionMessage)
+    }
+
+    onConnectionMessage(messageEvent) {
+        let controlMessage
+        try {
+            controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
+        } catch (err) {
+            this.debug('(%o) << %o', this.getState(), messageEvent && messageEvent.data)
+            this.debug('deserialize error', err)
+            this.emit('error', err)
+            return
+        }
+
+        this.debug('(%o) << %o', this.getState(), controlMessage)
+        this.emit(controlMessage.type, controlMessage)
+    }
+}
+
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
         super()
@@ -83,37 +105,19 @@ export default class StreamrClient extends EventEmitter {
         this._onError = this._onError.bind(this)
         this.onConnectionError = this.onConnectionError.bind(this)
         this.getErrorEmitter = this.getErrorEmitter.bind(this)
-        this.onConnectionMessage = this.onConnectionMessage.bind(this)
 
         this.on('error', this._onError) // attach before creating sub-components incase they fire error events
 
         this.session = new Session(this, this.options.auth)
-        this.connection = connection || new Connection(this.options)
+        this.connection = connection || new StreamrConnection(this.options)
 
         this.connection
-            .on('message', this.onConnectionMessage)
             .on('connected', this.onConnectionConnected)
             .on('disconnected', this.onConnectionDisconnected)
             .on('error', this.onConnectionError)
 
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
-    }
-
-    onConnectionMessage(messageEvent) {
-        if (!this.connection.isConnected()) { return } // ignore messages if not connected
-        let controlMessage
-        try {
-            controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
-        } catch (err) {
-            this.connection.debug('<< %o', messageEvent && messageEvent.data)
-            this.debug('deserialize error', err)
-            this.emit('error', err)
-            return
-        }
-
-        this.connection.debug('<< %o', controlMessage)
-        this.connection.emit(controlMessage.type, controlMessage)
     }
 
     async onConnectionConnected() {
@@ -277,7 +281,7 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.enableAutoConnect(...args)
     }
 
-    enableAutoDisonnect(...args) {
+    enableAutoDisconnect(...args) {
         return this.connection.enableAutoDisconnect(...args)
     }
 
