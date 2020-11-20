@@ -2,10 +2,11 @@ import { inspect } from 'util'
 
 import EventEmitter from 'eventemitter3'
 import Debug from 'debug'
-import uniqueId from 'lodash.uniqueid'
 import WebSocket from 'ws'
 
-import { pUpDownSteps } from './utils'
+import { pUpDownSteps, counterId } from './utils'
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 // add global support for pretty millisecond formatting with %n
 Debug.formatters.n = (v) => Debug.humanize(v)
@@ -42,7 +43,7 @@ async function OpenWebSocket(url, ...args) {
                 throw err
             }
             const socket = process.browser ? new WebSocket(url) : new WebSocket(url, ...args)
-            socket.id = uniqueId('socket')
+            socket.id = counterId('socket')
             socket.binaryType = 'arraybuffer'
             let opened = 0
             socket.onopen = () => {
@@ -174,6 +175,7 @@ function SocketConnector(connection) {
                 startedConnecting = false
                 // remove close listener before closing
                 socket.removeEventListener('close', onClose)
+                await wait(250) // wait a moment before closing
                 await CloseWebSocket(socket)
             }
         },
@@ -262,7 +264,7 @@ export default class Connection extends EventEmitter {
 
     constructor(options) {
         super()
-        const id = uniqueId('Connection')
+        const id = counterId(this.constructor.name)
         /* istanbul ignore next */
         if (options.debug) {
             this._debug = options.debug.extend(id)
@@ -293,7 +295,7 @@ export default class Connection extends EventEmitter {
 
         if (event !== 'message' && typeof event !== 'number') {
             // don't log for messages
-            this.debug('emit', event)
+            this.debug('emit', event, ...args)
         }
 
         // note if event handler is async and it rejects we're kinda hosed
@@ -560,6 +562,7 @@ export default class Connection extends EventEmitter {
             this.options.autoDisconnect
             && this.wantsState !== STATE.CONNECTED
             && this.connectionHandles.size === 0
+            && (this.socket && this.socket.bufferedAmount === 0)
         )
     }
 
