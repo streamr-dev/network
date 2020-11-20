@@ -59,6 +59,8 @@ export function validateOptions(optionsOrStreamId) {
         throw new Error(`streamId must be set! Given: ${inspect(optionsOrStreamId)}`)
     }
 
+    options.streamPartition = options.streamPartition || 0
+
     options.key = SubKey(options)
 
     return options
