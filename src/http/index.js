@@ -10,8 +10,11 @@ const adapterRegistry = require('../adapterRegistry')
 const dataQueryEndpoints = require('./DataQueryEndpoints')
 const dataProduceEndpoints = require('./DataProduceEndpoints')
 const volumeEndpoint = require('./VolumeEndpoint')
+const dataMetadataEndpoint = require('./DataMetadataEndpoints')
 
-adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, { networkNode, publisher, streamFetcher, metricsContext }) => {
+adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, {
+    networkNode, publisher, streamFetcher, metricsContext, cassandraStorage
+}) => {
     const app = express()
 
     // Add CORS headers
@@ -21,6 +24,8 @@ adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, { 
     app.use('/api/v1', dataQueryEndpoints(networkNode, streamFetcher, metricsContext))
     app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher))
     app.use('/api/v1', volumeEndpoint(metricsContext))
+
+    app.use('/api/v1', dataMetadataEndpoint(cassandraStorage))
 
     let httpServer
     if (privateKeyFileName && certFileName) {
