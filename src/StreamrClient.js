@@ -21,14 +21,23 @@ class StreamrConnection extends Connection {
         this.on('message', this.onConnectionMessage)
     }
 
+    // eslint-disable-next-line class-methods-use-this
+    parse(messageEvent) {
+        return ControlLayer.ControlMessage.deserialize(messageEvent.data)
+    }
+
     onConnectionMessage(messageEvent) {
         let controlMessage
         try {
-            controlMessage = ControlLayer.ControlMessage.deserialize(messageEvent.data)
+            controlMessage = this.parse(messageEvent)
         } catch (err) {
             this.debug('(%o) << %o', this.getState(), messageEvent && messageEvent.data)
             this.debug('deserialize error', err)
             this.emit('error', err)
+            return
+        }
+
+        if (!controlMessage) {
             return
         }
 
