@@ -1,13 +1,11 @@
 import { wait } from 'streamr-test-utils'
 
-import { pTimeout } from '../src/utils'
+import { pTimeout, counterId } from '../src/utils'
 import { validateOptions } from '../src/subscribe'
 
 const crypto = require('crypto')
 
-const uniqueId = require('lodash.uniqueid')
-
-export const uid = (prefix) => uniqueId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
+export const uid = (prefix) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
 export function fakePrivateKey() {
     return crypto.randomBytes(32).toString('hex')

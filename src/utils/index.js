@@ -13,6 +13,25 @@ export function uuid(label = '') {
     return uniqueId(`${UUID}${label ? `.${label}` : ''}`) // incrementing + human readable uuid
 }
 
+export const counterId = (() => {
+    const counts = {}
+    let didWarn = false
+    // should not be used for many prefixes
+    return (prefix = 'ID') => {
+        counts[prefix] = counts[prefix] + 1 || 0
+
+        if (!didWarn) {
+            const numTracked = Object.keys(counts).length
+            if (numTracked > 256) {
+                didWarn = true
+                console.warn(`counterId should not be used for a large number of unique prefixes: ${numTracked}`)
+            }
+        }
+
+        return `${prefix}.${counts[prefix]}`
+    }
+})()
+
 export function getVersionString() {
     const isProduction = process.env.NODE_ENV === 'production'
     return `${pkg.version}${!isProduction ? 'dev' : ''}`
