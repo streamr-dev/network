@@ -14,10 +14,10 @@ const content = {
 
 const newGroupKey = new EncryptedGroupKey('groupKeyId', 'encryptedGroupKeyHex')
 
-const msg = (overrides = {}) => {
+const msg = ({ timestamp = 1564046332168, sequenceNumber = 10, ...overrides } = {}) => {
     return new StreamMessage({
-        messageId: new MessageIDStrict('streamId', 0, 1564046332168, 10, 'publisherId', 'msgChainId'),
-        prevMsgRef: new MessageRef(1564046132168, 5),
+        messageId: new MessageIDStrict('streamId', 0, timestamp, sequenceNumber, 'publisherId', 'msgChainId'),
+        prevMsgRef: new MessageRef(timestamp, 5),
         content: JSON.stringify(content),
         messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
         encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
@@ -38,7 +38,7 @@ describe('StreamMessage', () => {
             assert.strictEqual(streamMessage.getSequenceNumber(), 10)
             assert.strictEqual(streamMessage.getPublisherId(), 'publisherId')
             assert.strictEqual(streamMessage.getMsgChainId(), 'msgChainId')
-            assert.deepStrictEqual(streamMessage.prevMsgRef, new MessageRef(1564046132168, 5))
+            assert.deepStrictEqual(streamMessage.prevMsgRef, new MessageRef(1564046332168, 5))
             assert.strictEqual(streamMessage.messageType, StreamMessage.MESSAGE_TYPES.MESSAGE)
             assert.strictEqual(streamMessage.contentType, StreamMessage.CONTENT_TYPES.JSON)
             assert.strictEqual(streamMessage.encryptionType, StreamMessage.ENCRYPTION_TYPES.NONE)
@@ -113,6 +113,70 @@ describe('StreamMessage', () => {
             assert.throws(() => msg({
                 newGroupKey: 'foo', // invalid
             }), ValidationError)
+        })
+
+        describe('prevMsgRef validation', () => {
+            it('Throws with identical id + prevMsgRef', () => {
+                const ts = Date.now()
+                assert.throws(() => msg({
+                    timestamp: ts,
+                    sequenceNumber: 0,
+                    prevMsgRef: new MessageRef(ts, 0)
+                }), 'must come before current')
+            })
+            it('Throws with an invalid ts', () => {
+                const ts = Date.now()
+                assert.throws(() => msg({
+                    timestamp: ts,
+                    sequenceNumber: 0,
+                    prevMsgRef: new MessageRef(ts + 1, 0)
+                }), 'must come before current')
+            })
+
+            it('Throws with an invalid sequence', () => {
+                const ts = Date.now()
+                assert.throws(() => msg({
+                    timestamp: ts,
+                    sequenceNumber: 0,
+                    prevMsgRef: new MessageRef(ts, 1)
+                }), 'must come before current')
+            })
+
+            it('Throws with an invalid ts + seq', () => {
+                const ts = Date.now()
+                assert.throws(() => msg({
+                    timestamp: ts,
+                    sequenceNumber: 0,
+                    prevMsgRef: new MessageRef(ts + 1, 1)
+                }), 'must come before current')
+            })
+
+            it('works with valid seq', () => {
+                const ts = Date.now()
+                msg({
+                    timestamp: ts,
+                    sequenceNumber: 1,
+                    prevMsgRef: new MessageRef(ts, 0)
+                })
+            })
+
+            it('works with valid ts', () => {
+                const ts = Date.now()
+                msg({
+                    timestamp: ts,
+                    sequenceNumber: 0,
+                    prevMsgRef: new MessageRef(ts - 1, 0)
+                })
+            })
+
+            it('works with no prevMsgRef', () => {
+                const ts = Date.now()
+                msg({
+                    timestamp: ts,
+                    sequenceNumber: 0,
+                    prevMsgRef: null
+                })
+            })
         })
     })
 
