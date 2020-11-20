@@ -81,7 +81,7 @@ describe('DeleteExpiredCmd', () => {
     const daysArray = [0, 1, 2, 3]
     daysArray.map(async (days) => {
         test(`keep in database ${days} days of data`, async () => {
-            const id = 'sandbox/DeleteExpiredCmd.test.js-' + Date.now()
+            const id = '0xadb88a496199365b69b2a12816b6b6bba27cc4c1/DeleteExpiredCmd.test.js-' + Date.now()
             const stream = await client.createStream({
                 id,
                 name: id,
@@ -109,7 +109,7 @@ describe('DeleteExpiredCmd', () => {
     })
 
     test('max message timestamp of bucket is taken into consideration', async () => {
-        const id = 'sandbox/DeleteExpiredCmd.test.js-' + Date.now()
+        const id = '0xadb88a496199365b69b2a12816b6b6bba27cc4c1/DeleteExpiredCmd.test.js-' + Date.now()
         const stream = await client.createStream({
             id,
             name: id,
