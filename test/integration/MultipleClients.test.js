@@ -48,10 +48,12 @@ describe('PubSub with multiple clients', () => {
         }
 
         if (mainClient) {
+            mainClient.debug('disconnecting after test')
             await mainClient.disconnect()
         }
 
         if (otherClient) {
+            otherClient.debug('disconnecting after test')
             await otherClient.disconnect()
         }
 
@@ -98,4 +100,64 @@ describe('PubSub with multiple clients', () => {
         expect(receivedMessagesMain).toEqual([message])
         expect(receivedMessagesOther).toEqual([message])
     }, 30000)
+
+    test('disconnecting one client does not disconnect the other', async () => {
+        otherClient = createClient({
+            auth: {
+                privateKey
+            }
+        })
+        const onConnectedOther = jest.fn()
+        const onConnectedMain = jest.fn()
+        const onDisconnectedOther = jest.fn()
+        const onDisconnectedMain = jest.fn()
+        otherClient.on('disconnected', onDisconnectedOther)
+        mainClient.on('disconnected', onDisconnectedMain)
+        otherClient.on('connected', onConnectedOther)
+        mainClient.on('connected', onConnectedMain)
+        otherClient.on('error', getOnError(errors))
+
+        await otherClient.connect()
+        await mainClient.connect()
+
+        otherClient.connection.socket.close()
+        expect(mainClient.connection.getState()).toBe('connected')
+        await otherClient.nextConnection()
+        expect(otherClient.connection.getState()).toBe('connected')
+        expect(onDisconnectedMain).toHaveBeenCalledTimes(0)
+        expect(onDisconnectedOther).toHaveBeenCalledTimes(1)
+        expect(onConnectedMain).toHaveBeenCalledTimes(1)
+        expect(onConnectedOther).toHaveBeenCalledTimes(2)
+    })
+
+    test('disconnecting one client does not disconnect the other: with autoConnect', async () => {
+        otherClient = createClient({
+            auth: {
+                privateKey
+            }
+        })
+        const onConnectedOther = jest.fn()
+        const onConnectedMain = jest.fn()
+        const onDisconnectedOther = jest.fn()
+        const onDisconnectedMain = jest.fn()
+        otherClient.on('disconnected', onDisconnectedOther)
+        mainClient.on('disconnected', onDisconnectedMain)
+        otherClient.on('connected', onConnectedOther)
+        mainClient.on('connected', onConnectedMain)
+        otherClient.on('error', getOnError(errors))
+
+        otherClient.enableAutoConnect()
+        mainClient.enableAutoConnect()
+        await otherClient.connection.addHandle(1)
+        await mainClient.connection.addHandle(2)
+
+        otherClient.connection.socket.close()
+        expect(mainClient.connection.getState()).toBe('connected')
+        await otherClient.nextConnection()
+        expect(otherClient.connection.getState()).toBe('connected')
+        expect(onDisconnectedMain).toHaveBeenCalledTimes(0)
+        expect(onDisconnectedOther).toHaveBeenCalledTimes(1)
+        expect(onConnectedMain).toHaveBeenCalledTimes(1)
+        expect(onConnectedOther).toHaveBeenCalledTimes(2)
+    })
 })
