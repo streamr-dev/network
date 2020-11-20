@@ -553,6 +553,28 @@ describe('utils', () => {
         describe('plays undo stack at point of state change', () => {
             let shouldUp
             let next
+            const allUp = [
+                'change up',
+                'up start a',
+                'up end a',
+                'up start b',
+                'up end b',
+                'up start c',
+                'up end c',
+                'done up',
+            ]
+
+            const allDown = [
+                'change down',
+                'down start c',
+                'down end c',
+                'down start b',
+                'down end b',
+                'down start a',
+                'down end a',
+                'done down',
+            ]
+
             beforeEach(() => {
                 shouldUp = false
 
@@ -577,30 +599,13 @@ describe('utils', () => {
             it('plays all up steps in order, then down steps in order', async () => {
                 shouldUp = true
                 await next()
-                const afterUp = [
-                    'change up',
-                    'up start a',
-                    'up end a',
-                    'up start b',
-                    'up end b',
-                    'up start c',
-                    'up end c',
-                    'done up',
-                ]
-                expect(order).toEqual(afterUp)
+                expect(order).toEqual(allUp)
                 shouldUp = false
 
                 await next()
                 expect(order).toEqual([
-                    ...afterUp,
-                    'change down',
-                    'down start c',
-                    'down end c',
-                    'down start b',
-                    'down end b',
-                    'down start a',
-                    'down end a',
-                    'done down',
+                    ...allUp,
+                    ...allDown
                 ])
             })
 
