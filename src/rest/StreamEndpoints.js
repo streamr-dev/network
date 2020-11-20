@@ -1,5 +1,6 @@
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
+import { inspect } from 'util'
 
 import qs from 'qs'
 import debugFactory from 'debug'
@@ -77,7 +78,7 @@ export async function createStream(props) {
         props,
     })
     if (!props || !props.name) {
-        throw new Error('Stream properties must contain a "name" field!')
+        throw new Error(`Stream properties must contain a "name" field! ${inspect(props)}`)
     }
 
     const json = await authFetch(
