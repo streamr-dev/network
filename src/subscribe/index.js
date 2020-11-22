@@ -11,7 +11,6 @@ import {
 import {
     MessagePipeline,
     Validator,
-    getResendStream,
     messageStream,
     resendStream
 } from './pipeline'
@@ -387,19 +386,16 @@ export default class Subscriber {
     }
 
     resend(opts, fn = () => {}) {
-        let sub
-        const resendMsgStream = getResendStream(this.client, opts, async (err) => {
-            await sub.onPipelineEnd(err)
-        })
+        const resendMsgStream = resendStream(this.client, opts)
 
-        sub = new Subscription(this.client, {
-            pipeline: resendMsgStream,
+        const sub = new Subscription(this.client, {
+            msgStream: resendMsgStream,
             ...opts,
         }, async (...args) => {
             sub.emit('resent')
             await fn(...args)
         })
-        resendMsgStream.subscribe().catch(() => {})
+        resendMsgStream.subscribe().catch((err) => sub.cancel(err))
         return sub
     }
 
