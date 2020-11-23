@@ -623,7 +623,7 @@ describeRepeats('StreamrClient', () => {
         let publishTestMessages
 
         // These tests will take time, especially on Travis
-        const TIMEOUT = 15 * 1000
+        const TIMEOUT = 30 * 1000
 
         const attachSubListeners = (sub) => {
             const onSubscribed = jest.fn()
