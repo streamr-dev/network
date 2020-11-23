@@ -163,19 +163,12 @@ describeRepeats('Connection State', () => {
                 auth: client.options.auth,
             })
 
-            const onConnected = jest.fn()
-            const onDisconnected = jest.fn()
-            const onConnectedOther = jest.fn()
-            const onDisconnectedOther = jest.fn()
-            otherClient.connection.on('connected', onConnectedOther)
-            otherClient.connection.on('disconnected', onDisconnectedOther)
-            client.connection.on('connected', onConnected)
-            client.connection.on('disconnected', onDisconnected)
-
             try {
-                await client.connect()
-                await otherClient.connect()
-                await otherClient.session.getSessionToken()
+                await Promise.all([
+                    client.connect(),
+                    otherClient.connect(),
+                    otherClient.session.getSessionToken(),
+                ])
 
                 const done = Defer()
 
@@ -183,40 +176,47 @@ describeRepeats('Connection State', () => {
 
                 await otherClient.subscribe(stream, (msg) => {
                     msgs.push(msg)
+
                     if (msgs.length === MAX_MESSAGES) {
                         // should eventually get here
                         done.resolve()
                     }
                 })
 
-                otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, async () => {
-                    if (otherClient.connection.socket) {
-                        // disconnect after every message
-                        otherClient.connection.socket.close()
-                    }
+                const onConnectionMessage = jest.fn(() => {
+                    // disconnect after every message
+                    otherClient.connection.socket.close()
                 })
+
+                otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
+                otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
+
+                const onConnected = jest.fn()
+                const onDisconnected = jest.fn()
+                otherClient.connection.on('connected', onConnected)
+                otherClient.connection.on('disconnected', onDisconnected)
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
                     delay: 250,
-                    waitForStorage: true,
                 })
 
                 await done
+                // wait for final re-connection after final message
+                await otherClient.connection.nextConnection()
 
                 expect(msgs).toEqual(published)
 
                 // check disconnect/connect actually happened
-                expect(onConnected).toHaveBeenCalledTimes(1)
-                expect(onDisconnected).toHaveBeenCalledTimes(0)
-                expect(onConnectedOther).toHaveBeenCalledTimes(published.length - 1)
-                expect(onDisconnectedOther).toHaveBeenCalledTimes(3)
+                expect(onConnectionMessage).toHaveBeenCalledTimes(published.length)
+                expect(onConnected).toHaveBeenCalledTimes(published.length)
+                expect(onDisconnected).toHaveBeenCalledTimes(published.length)
             } finally {
                 await Promise.all([
                     otherClient.disconnect(),
                     client.disconnect(),
                 ])
             }
-        }, 30000)
+        }, 20000)
 
         it('should receive messages if publisher disconnects after each message', async () => {
             const otherClient = createClient({

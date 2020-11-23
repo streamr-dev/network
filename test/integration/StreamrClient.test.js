@@ -894,15 +894,17 @@ describeRepeats('StreamrClient', () => {
                 expect(onMessageMsgs).toEqual(published)
             })
 
-            it.only('should resubscribe on unexpected disconnection', async () => {
-                await client.connect()
+            it('should resubscribe on unexpected disconnection', async () => {
                 const otherClient = createClient({
                     auth: client.options.auth,
                 })
 
                 try {
-                    await otherClient.connect()
-                    await otherClient.session.getSessionToken()
+                    await Promise.all([
+                        client.connect(),
+                        otherClient.connect(),
+                        otherClient.session.getSessionToken(),
+                    ])
 
                     const done = Defer()
 
@@ -917,10 +919,13 @@ describeRepeats('StreamrClient', () => {
                         }
                     })
 
-                    otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, () => {
+                    const onConnectionMessage = jest.fn(() => {
                         // disconnect after every message
                         otherClient.connection.socket.close()
                     })
+
+                    otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
+                    otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
 
                     const onConnected = jest.fn()
                     const onDisconnected = jest.fn()
@@ -932,12 +937,15 @@ describeRepeats('StreamrClient', () => {
                     })
 
                     await done
+                    // wait for final re-connection after final message
+                    await otherClient.connection.nextConnection()
 
                     expect(msgs).toEqual(published)
 
                     // check disconnect/connect actually happened
-                    expect(onConnected).toHaveBeenCalledTimes(3)
-                    expect(onDisconnected).toHaveBeenCalledTimes(3)
+                    expect(onConnectionMessage).toHaveBeenCalledTimes(published.length)
+                    expect(onConnected).toHaveBeenCalledTimes(published.length)
+                    expect(onDisconnected).toHaveBeenCalledTimes(published.length)
                 } finally {
                     await Promise.all([
                         otherClient.disconnect(),
