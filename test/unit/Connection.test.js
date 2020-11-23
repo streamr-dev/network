@@ -91,6 +91,7 @@ describeRepeats('Connection', () => {
         await s.disconnect()
         const openSockets = Connection.getOpen()
         if (openSockets !== 0) {
+            await Connection.closeOpen()
             throw new Error(`sockets not closed: ${openSockets}`)
         }
     })
@@ -139,6 +140,36 @@ describeRepeats('Connection', () => {
             expect(onDisconnected).toHaveBeenCalledTimes(0)
             expect(onDisconnecting).toHaveBeenCalledTimes(0)
             expect(onDone).toHaveBeenCalledTimes(0)
+        })
+
+        it('tracks open sockets and can close them', async () => {
+            expect(Connection.getOpen()).toEqual(0)
+            await s.connect()
+            expect(Connection.getOpen()).toEqual(1)
+            await s.disconnect()
+            expect(Connection.getOpen()).toEqual(0)
+            await s.connect()
+            expect(Connection.getOpen()).toEqual(1)
+            const s2 = new Connection({
+                url: 'badurl',
+                maxRetries: 2,
+            })
+
+            await expect(async () => (
+                s2.connect()
+            )).rejects.toThrow()
+            expect(Connection.getOpen()).toEqual(1)
+
+            const s3 = new Connection({
+                url: `ws://localhost:${port}/`,
+            })
+            await s3.connect()
+            expect(Connection.getOpen()).toEqual(2)
+            await Connection.closeOpen()
+            expect(Connection.getOpen()).toEqual(0)
+            await wait(1000)
+            expect(Connection.getOpen()).toEqual(0)
+            expect(s.getState()).toEqual('disconnected')
         })
 
         it('fires all events once if connected twice in same tick', async () => {

@@ -32,7 +32,8 @@ class ConnectionError extends Error {
     }
 }
 
-let openSockets = 0
+const openSockets = new Set()
+const FORCE_CLOSED = Symbol('FORCE_CLOSED')
 
 async function OpenWebSocket(url, ...args) {
     return new Promise((resolve, reject) => {
@@ -45,15 +46,13 @@ async function OpenWebSocket(url, ...args) {
             const socket = process.browser ? new WebSocket(url) : new WebSocket(url, ...args)
             socket.id = counterId('socket')
             socket.binaryType = 'arraybuffer'
-            let opened = 0
             socket.onopen = () => {
-                opened = 1
-                openSockets += opened
+                openSockets.add(socket)
                 resolve(socket)
             }
             let error
             socket.onclose = () => {
-                openSockets -= opened
+                openSockets.delete(socket)
                 reject(new ConnectionError(error || 'socket closed'))
             }
             socket.onerror = (event) => {
@@ -171,6 +170,11 @@ function SocketConnector(connection) {
                 perMessageDeflate: false,
             })
             socket.addEventListener('close', onClose)
+            socket.addEventListener('close', () => {
+                if (socket[FORCE_CLOSED]) {
+                    connection.shouldDisconnect()
+                }
+            })
             return async () => { // disconnect
                 startedConnecting = false
                 // remove close listener before closing
@@ -259,7 +263,14 @@ const STATE = {
 
 export default class Connection extends EventEmitter {
     static getOpen() {
-        return openSockets
+        return openSockets.size
+    }
+
+    static async closeOpen() {
+        return Promise.all([...openSockets].map(async (socket) => {
+            socket[FORCE_CLOSED] = true // eslint-disable-line no-param-reassign
+            return CloseWebSocket(socket).catch((err) => console.error(err))
+        }))
     }
 
     constructor(options) {
@@ -485,11 +496,15 @@ export default class Connection extends EventEmitter {
      * Disconnection
      */
 
-    async disconnect() {
+    _setShouldDisconnect() {
         this.didDisableAutoConnect = !!this.options.autoConnect
         this.options.autoConnect = false // reset auto-connect on manual disconnect
         this.options.autoDisconnect = false // reset auto-disconnect on manual disconnect
         this.wantsState = STATE.DISCONNECTED
+    }
+
+    async disconnect() {
+        this._setShouldDisconnect()
 
         await this.step()
         if (this.isConnectionValid()) {

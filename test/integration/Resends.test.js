@@ -63,6 +63,7 @@ describe('StreamrClient resends', () => {
 
             const openSockets = Connection.getOpen()
             if (openSockets !== 0) {
+                await Connection.closeOpen()
                 throw new Error(`sockets not closed: ${openSockets}`)
             }
         })
