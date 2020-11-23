@@ -31,7 +31,7 @@ jobs:
         run: npm run eslint
 
   test:
-    name: Test Unit/Build/Benchmark using Node ${{ matrix.node-version }}
+    name: Test Unit/Build using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -53,11 +53,8 @@ jobs:
       - name: build
         run: npm run build
 
-      - name: benchmarks
-        run: npm run benchmarks
-
   integration:
-    name: Test Integration using Node ${{ matrix.node-version }}
+    name: Test Build/Benchmark/Browser Integration using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -87,6 +84,9 @@ jobs:
 
       - name: test-browser
         run: npm run test-browser
+
+      - name: benchmarks
+        run: npm run benchmarks
 
       - name: test-integration
         run: npm run test-integration
