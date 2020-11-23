@@ -310,8 +310,32 @@ describeRepeats('Connection', () => {
                 expect(onDone).toHaveBeenCalledTimes(0)
                 expect(s.getState()).toBe('connected')
                 await done
+                await wait(2000)
+                expect(s.getState()).toBe('connected')
                 expect(onDone).toHaveBeenCalledTimes(0)
                 expect(onConnected).toHaveBeenCalledTimes(1)
+                expect(onDisconnected).toHaveBeenCalledTimes(0)
+                expect(onDisconnecting).toHaveBeenCalledTimes(1)
+            })
+
+            it('delays disconnection', async () => {
+                await s.connect()
+                const prevSocket = s.socket
+                const t = expect(async () => {
+                    await s.disconnect()
+                }).rejects.toThrow('connected before disconnected')
+                await wait(200)
+                await s.connect()
+                expect(s.getState()).toBe('connected')
+                await t
+                expect(s.getState()).toBe('connected')
+                expect(s.socket).toBe(prevSocket)
+                expect(onDone).toHaveBeenCalledTimes(0)
+                expect(s.getState()).toBe('connected')
+                expect(onDone).toHaveBeenCalledTimes(0)
+                expect(onConnected).toHaveBeenCalledTimes(2)
+                expect(onDisconnected).toHaveBeenCalledTimes(0)
+                expect(onDisconnecting).toHaveBeenCalledTimes(1)
             })
 
             it('can handle connect on disconnected event', async () => {

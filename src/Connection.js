@@ -171,15 +171,15 @@ function SocketConnector(connection) {
             })
             socket.addEventListener('close', onClose)
             socket.addEventListener('close', () => {
+                // if forced closed by Connection.closeOpen, disable reconnect
                 if (socket[FORCE_CLOSED]) {
-                    connection.shouldDisconnect()
+                    connection._setShouldDisconnect() // eslint-disable-line no-underscore-dangle
                 }
             })
             return async () => { // disconnect
                 startedConnecting = false
                 // remove close listener before closing
                 socket.removeEventListener('close', onClose)
-                await wait(250) // wait a moment before closing
                 await CloseWebSocket(socket)
             }
         },
@@ -201,7 +201,8 @@ function SocketConnector(connection) {
                 connection.emit('message', messageEvent, ...args)
             }
             socket.addEventListener('message', onMessage)
-            return () => {
+            return async () => {
+                await wait(250) // wait a moment before closing
                 socket.removeEventListener('message', onMessage)
             }
         }
