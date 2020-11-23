@@ -16,6 +16,7 @@
     "benchmarks": "node test/benchmarks/publish.js",
     "benchmark": "npm run benchmarks",
     "prepack": "npm run build",
+    "prebuild": "npm run eslint",
     "dev": "webpack --progress --colors --watch --mode=development",
     "eslint": "eslint .",
     "test": "jest --detectOpenHandles",
@@ -89,5 +90,9 @@
     "uuid": "^8.3.0",
     "webpack-node-externals": "^2.5.2",
     "ws": "^7.3.1"
+  },
+  "optionalDependencies": {
+    "bufferutil": "^4.0.2",
+    "utf-8-validate": "^5.0.3"
   }
 }

@@ -9,7 +9,6 @@ const client1 = new StreamrClient({
     auth: {
         privateKey: ethers.Wallet.createRandom().privateKey,
     },
-    autoConnect: true,
     ...config.clientOptions
 })
 
@@ -18,7 +17,6 @@ const client2 = new StreamrClient({
         apiKey: 'tester1-api-key'
     },
     publishWithSignature: 'never',
-    autoConnect: true,
     ...config.clientOptions
 })
 
@@ -27,6 +25,8 @@ const msg = {
 }
 
 async function run() {
+    await client1.connect()
+    await client2.connect()
     const stream1 = await client1.getOrCreateStream({
         name: 'node-example-data',
     })
@@ -66,6 +66,8 @@ async function run() {
             client1.disconnect(),
             client2.disconnect(),
         ])
+        // eslint-disable-next-line no-console
+        console.log('Clients disconnected')
     })
 
     suite.run()

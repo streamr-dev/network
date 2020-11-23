@@ -488,7 +488,7 @@ export default class Connection extends EventEmitter {
             throw new ConnectionError([
                 `Needs connection but – connection: ${this.getState()} & wants: ${this.wantsState}`,
                 autoConnectMsg,
-                msg
+                typeof msg === 'function' ? msg() : msg
             ].join('\n'))
         }
     }
@@ -578,7 +578,7 @@ export default class Connection extends EventEmitter {
             this.options.autoDisconnect
             && this.wantsState !== STATE.CONNECTED
             && this.connectionHandles.size === 0
-            && (this.socket && this.socket.bufferedAmount === 0)
+            && (this.socket ? this.socket.bufferedAmount === 0 : true)
         )
     }
 
@@ -614,12 +614,14 @@ export default class Connection extends EventEmitter {
         this.debug('(%s) send()', this.getState())
         await this.addHandle(handle)
         try {
-            if (!this.isConnected()) {
+            if (!this.isConnected() || !this.isConnectionValid()) {
                 // shortcut await if connected
-                const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
-                await this.needsConnection(`sending ${inspect(data)}...`)
+                await this.needsConnection(() => {
+                    const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
+                    return `sending ${inspect(data)}...`
+                })
             }
-            return this._send(msg)
+            return await this._send(msg)
         } finally {
             await this.removeHandle(handle)
         }
@@ -630,18 +632,20 @@ export default class Connection extends EventEmitter {
             this.debug('(%s) >> %o', this.getState(), msg)
             // promisify send
             const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
-            this.socket.send(data, (err) => {
-                /* istanbul ignore next */
-                if (err) {
-                    reject(new ConnectionError(err))
-                    return
-                }
-                resolve(data)
-            })
             // send callback doesn't exist with browser websockets, just resolve
             /* istanbul ignore next */
             if (process.browser) {
+                this.socket.send(data)
                 resolve(data)
+            } else {
+                this.socket.send(data, (err) => {
+                    /* istanbul ignore next */
+                    if (err) {
+                        reject(new ConnectionError(err))
+                        return
+                    }
+                    resolve(data)
+                })
             }
         })
     }
@@ -700,7 +704,6 @@ export default class Connection extends EventEmitter {
 
     isConnecting() {
         if (!this.socket) {
-            if (this.connectTask) { return true }
             return false
         }
         return this.socket.readyState === WebSocket.CONNECTING
