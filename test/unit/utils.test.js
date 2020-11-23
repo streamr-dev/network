@@ -662,6 +662,84 @@ describe('utils', () => {
                     'done down',
                 ])
             })
+
+            it('can interrupt down while going down', async () => {
+                const done = Defer()
+                shouldUp = true
+                emitter.on('next', async (name, v) => {
+                    if (name === 'down end' && v === 'b') {
+                        shouldUp = true
+                        done.resolve()
+                    }
+                })
+                await next()
+                shouldUp = false
+                await next()
+                await done
+                expect(order).toEqual([
+                    ...allUp,
+                    'change down',
+                    'down start c',
+                    'down end c',
+                    'down start b',
+                    'down end b',
+                    'change up',
+                    'up start b',
+                    'up end b',
+                    'up start c',
+                    'up end c',
+                    'done up',
+                ])
+            })
+
+            it('can interrupt down while going down & during change', async () => {
+                const done1 = Defer()
+                const done2 = Defer()
+                const done3 = Defer()
+                shouldUp = true
+                let count = 0
+                emitter.on('next', async (name, v) => {
+                    if (name === 'down end' && v === 'b') {
+                        count += 1
+                        shouldUp = true
+                        done1.resolve()
+                    }
+
+                    if (name === 'change' && v === 'up' && count === 1) {
+                        count += 1
+                        shouldUp = false
+                        done2.resolve()
+                    }
+
+                    if (name === 'change' && v === 'down' && count === 2) {
+                        count += 1
+                        shouldUp = true
+                        done3.resolve()
+                    }
+                })
+                await next()
+                shouldUp = false
+                await next()
+                await done1
+                await done2
+                await done3
+                expect(order).toEqual([
+                    ...allUp,
+                    'change down',
+                    'down start c',
+                    'down end c',
+                    'down start b',
+                    'down end b',
+                    'change up',
+                    'change down',
+                    'change up',
+                    'up start b',
+                    'up end b',
+                    'up start c',
+                    'up end c',
+                    'done up',
+                ])
+            })
         })
     })
 })

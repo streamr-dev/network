@@ -341,8 +341,11 @@ export function pUpDownSteps(sequence = [], _checkFn, { onDone, onChange } = {})
     let shouldUp = false
     let prevShouldUp = false
     const innerQueue = pLimit(1)
+
+    const checkShouldUp = async () => !!(!error && await checkFn())
+
     async function next(...args) {
-        shouldUp = !!(!error && await checkFn())
+        shouldUp = await checkShouldUp()
         const didChange = prevShouldUp !== shouldUp
         prevShouldUp = shouldUp
         if (didChange && typeof onChange === 'function') {
