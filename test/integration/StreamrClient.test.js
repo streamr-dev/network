@@ -933,7 +933,7 @@ describeRepeats('StreamrClient', () => {
                     otherClient.connection.on('disconnected', onDisconnected)
 
                     const published = await publishTestMessages(MAX_MESSAGES, {
-                        delay: 250,
+                        delay: 500,
                     })
 
                     await done
