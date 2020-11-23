@@ -8,12 +8,10 @@ import {
     subscribe,
     unsubscribe,
 } from './api'
-import {
-    MessagePipeline,
-    Validator,
-    messageStream,
-    resendStream
-} from './pipeline'
+import MessagePipeline from './pipeline'
+import Validator from './Validator'
+import messageStream from './messageStream'
+import resendStream from './resendStream'
 
 export { validateOptions }
 
