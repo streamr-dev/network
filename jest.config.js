@@ -18,7 +18,7 @@ module.exports = {
     clearMocks: true,
 
     // Indicates whether the coverage information should be collected while executing the test
-    collectCoverage: true,
+    collectCoverage: false,
 
     // An array of glob patterns indicating a set of files for which coverage information should be collected
     collectCoverageFrom: ['src/**'],
@@ -119,6 +119,7 @@ module.exports = {
 
     // The path to a module that runs some code to configure or set up the testing framework before each test
     // setupTestFrameworkScriptFile: null,
+    setupFilesAfterEnv: ['./jest.setup.js'],
 
     // A list of paths to snapshot serializer modules Jest should use for snapshot testing
     // snapshotSerializers: [],
