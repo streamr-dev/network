@@ -89,7 +89,7 @@ jobs:
         run: npm run benchmarks
 
       - name: test-integration
-        run: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-integration
+        run: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
 
       - name: test-flakey
         continue-on-error: true

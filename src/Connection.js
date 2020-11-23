@@ -567,10 +567,8 @@ export default class Connection extends EventEmitter {
         const hadConnection = this.connectionHandles.has(id)
         this.connectionHandles.delete(id)
         if (hadConnection && this._couldAutoDisconnect()) {
-            return this._autoDisconnect()
+            await this._autoDisconnect()
         }
-
-        return Promise.resolve()
     }
 
     _couldAutoDisconnect() {
