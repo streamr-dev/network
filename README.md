@@ -142,7 +142,9 @@ stream.publish(msg)
 
 ## Authentication options
 
-**Authenticating with an API key has been deprecated. Support for email/password authentication will be dropped in the future with authentication by cryptographic keys/wallets will be the only supported method of authentication.**
+**Authenticating with an API key has been deprecated.** 
+
+**Support for email/password authentication will be dropped in the future and cryptographic keys/wallets will be the only supported method.**
 
 Authenticating with an Ethereum private key by cryptographically signing a challenge. Note the utility function `StreamrClient.generateEthereumAccount()`, which can be used to easily get the address and private key for a newly generated account. Authenticating with Ethereum also automatically creates an associated Streamr user, if it doesn't exist:
 
