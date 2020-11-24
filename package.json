@@ -1,6 +1,6 @@
 {
   "name": "streamr-client-protocol",
-  "version": "6.0.3",
+  "version": "6.0.4-alpha.1",
   "description": "JavaScript classes implementing the Streamr client-to-node protocol",
   "repository": {
     "type": "git",

@@ -128,6 +128,34 @@ describe('OrderedMsgChain', () => {
         util.add(msg1)
         util.add(msg3)
     })
+
+    it('can handle multiple gaps', (done) => {
+        const msgs = []
+        util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
+            msgs.push(msg)
+            if (msgs.length === 5) {
+                assert.deepStrictEqual(msgs, [msg1, msg2, msg3, msg4, msg5])
+                done()
+            }
+        }, (from, to) => {
+            if (to.timestamp === 2) {
+                setTimeout(() => {
+                    util.add(msg2)
+                }, 25)
+            }
+            if (to.timestamp === 4) {
+                util.add(msg4)
+            }
+        }, 100, 100)
+        util.on('error', done)
+
+        util.add(msg1)
+        // missing msg2
+        util.add(msg3)
+        // missing msg4
+        util.add(msg5)
+    })
+
     it('call the gap handler MAX_GAP_REQUESTS times and then throws', (done) => {
         let counter = 0
         util = new OrderedMsgChain('publisherId', 'msgChainId', () => {}, (from, to, publisherId, msgChainId) => {

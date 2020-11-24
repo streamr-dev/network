@@ -38,19 +38,16 @@ export default class OrderedMsgChain extends EventEmitter {
         const msgRef = unorderedStreamMessage.getMessageRef()
         if (this.lastReceivedMsgRef && msgRef.compareTo(this.lastReceivedMsgRef) <= 0) {
             // Prevent double-processing of messages for any reason
-            debug('Already received message: %o, lastReceivedMsgRef: %d. Ignoring message.', msgRef, this.lastReceivedMsgRef)
+            debug('Already received message: %o, lastReceivedMsgRef: %o. Ignoring message.', msgRef, this.lastReceivedMsgRef)
             return
         }
 
         if (this._isNextMessage(unorderedStreamMessage)) {
             this._process(unorderedStreamMessage)
-            this._checkQueue()
         } else {
-            if (!this.firstGap && !this.nextGaps) {
-                this._scheduleGap()
-            }
             this.queue.push(unorderedStreamMessage)
         }
+        this._checkQueue()
     }
 
     markMessageExplicitly(streamMessage) {
@@ -62,6 +59,7 @@ export default class OrderedMsgChain extends EventEmitter {
     }
 
     clearGap() {
+        this.inProgress = false
         clearInterval(this.nextGaps)
         this.nextGaps = undefined
         clearTimeout(this.firstGap)
@@ -82,11 +80,12 @@ export default class OrderedMsgChain extends EventEmitter {
             const msg = this.queue.peek()
             if (msg && this._isNextMessage(msg)) {
                 this.queue.pop()
-                // If the next message is found in the queue, any gap must have been filled, so clear the timer
+                // If the next message is found in the queue, current gap must have been filled, so clear the timer
                 this.clearGap()
                 this._process(msg)
             } else {
-                return
+                this._scheduleGap(msg)
+                break
             }
         }
     }
@@ -97,11 +96,18 @@ export default class OrderedMsgChain extends EventEmitter {
     }
 
     _scheduleGap() {
+        if (this.inProgress) {
+            return
+        }
+
         this.gapRequestCount = 0
+        this.inProgress = true
+        clearTimeout(this.firstGap)
         this.firstGap = setTimeout(() => {
             this._requestGapFill()
+            clearTimeout(this.nextGaps)
             this.nextGaps = setInterval(() => {
-                if (this.firstGap) {
+                if (this.inProgress) {
                     this._requestGapFill()
                 }
             }, this.resendTimeout)
