@@ -4,7 +4,7 @@ import EventEmitter from 'eventemitter3'
 import Debug from 'debug'
 import WebSocket from 'ws'
 
-import { pUpDownSteps, counterId } from './utils'
+import { pUpDownSteps, counterId, pOrderedResolve } from './utils'
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -293,6 +293,7 @@ export default class Connection extends EventEmitter {
         this.retryCount = 0
         this.wantsState = STATE.AUTO // target state or auto
         this.connectionHandles = new Set() // autoConnect when this is not empty, autoDisconnect when empty
+        this.backoffWait = pOrderedResolve(this.backoffWait.bind(this))
         this.step = SocketConnector(this)
     }
 
