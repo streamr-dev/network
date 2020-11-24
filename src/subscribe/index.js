@@ -25,10 +25,13 @@ class Subscription extends Emitter {
         this.id = counterId(`Subscription.${this.key}`)
         this._onFinally = onFinally
         this.onPipelineEnd = this.onPipelineEnd.bind(this)
-        this.validate = opts.validate || Validator(client, this.options)
+        const validate = opts.validate || Validator(client, this.options)
         this.pipeline = opts.pipeline || MessagePipeline(client, {
             ...this.options,
-            validate: this.validate,
+            validate,
+            onError: (err) => {
+                this.emit('error', err)
+            },
         }, this.onPipelineEnd)
         this.msgStream = this.pipeline.msgStream
     }

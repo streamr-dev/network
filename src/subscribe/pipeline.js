@@ -23,7 +23,7 @@ async function collect(src) {
 
 export default function MessagePipeline(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
-    const { key, afterSteps = [] } = options
+    const { key, afterSteps = [], onError = (err) => { throw err } } = options
     const id = counterId('MessagePipeline') + key
     /* eslint-disable object-curly-newline */
     const {
@@ -34,17 +34,37 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
     /* eslint-enable object-curly-newline */
     const p = pipeline([
         msgStream,
-        async function* Validate(src) {
+        async function* getStreamMessage(src) {
             for await (const { streamMessage } of src) {
+                yield streamMessage
+            }
+        },
+        async function* Validate(src) {
+            for await (const streamMessage of src) {
                 try {
-                    yield await validate(streamMessage)
+                    await validate(streamMessage)
                 } catch (err) {
                     if (err instanceof ValidationError) {
                         orderingUtil.markMessageExplicitly(streamMessage)
+                        await onError(err)
                         // eslint-disable-next-line no-continue
-                        continue
+                    } else {
+                        throw err
                     }
                 }
+
+                yield streamMessage
+            }
+        },
+        async function* Parse(src) {
+            for await (const streamMessage of src) {
+                try {
+                    streamMessage.getParsedContent()
+                } catch (err) {
+                    orderingUtil.markMessageExplicitly(streamMessage)
+                    await onError(err)
+                }
+                yield streamMessage
             }
         },
         orderingUtil,
