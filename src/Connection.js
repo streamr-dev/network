@@ -4,7 +4,7 @@ import EventEmitter from 'eventemitter3'
 import Debug from 'debug'
 import WebSocket from 'ws'
 
-import { pUpDownSteps, counterId, pOrderedResolve } from './utils'
+import { pUpDownSteps, counterId, pLimitFn, pOne } from './utils'
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -35,7 +35,7 @@ class ConnectionError extends Error {
 const openSockets = new Set()
 const FORCE_CLOSED = Symbol('FORCE_CLOSED')
 
-async function OpenWebSocket(url, ...args) {
+async function OpenWebSocket(url, opts, ...args) {
     return new Promise((resolve, reject) => {
         try {
             if (!url) {
@@ -43,22 +43,32 @@ async function OpenWebSocket(url, ...args) {
                 reject(err)
                 throw err
             }
-            const socket = process.browser ? new WebSocket(url) : new WebSocket(url, ...args)
-            socket.id = counterId('socket')
-            socket.binaryType = 'arraybuffer'
-            socket.onopen = () => {
-                openSockets.add(socket)
-                resolve(socket)
-            }
+
+            const socket = process.browser ? new WebSocket(url) : new WebSocket(url, opts, ...args)
             let error
-            socket.onclose = () => {
-                openSockets.delete(socket)
-                reject(new ConnectionError(error || 'socket closed'))
+            Object.assign(socket, {
+                id: counterId('ws'),
+                binaryType: 'arraybuffer',
+                onopen() {
+                    openSockets.add(socket)
+                    resolve(socket)
+                },
+                onclose() {
+                    openSockets.delete(socket)
+                    reject(new ConnectionError(error || 'socket closed'))
+                },
+                onerror(event) {
+                    error = new ConnectionError(event.error || event)
+                },
+            })
+
+            // attach debug
+            if (opts && opts.debug) {
+                socket.debug = opts.debug.extend(socket.id)
+                socket.debug.color = opts.debug.color // use existing colour
+            } else {
+                socket.debug = Debug('StreamrClient::ws').extend(socket.id)
             }
-            socket.onerror = (event) => {
-                error = new ConnectionError(event.error || event)
-            }
-            return
         } catch (err) {
             reject(err)
         }
@@ -97,6 +107,13 @@ async function CloseWebSocket(socket) {
     })
 }
 
+const STATE = {
+    AUTO: 'AUTO',
+    CONNECTED: 'CONNECTED',
+    DISCONNECTED: 'DISCONNECTED',
+}
+
+/* eslint-disable no-underscore-dangle, no-param-reassign */
 function SocketConnector(connection) {
     let next
     let socket
@@ -142,7 +159,7 @@ function SocketConnector(connection) {
             }
             return () => {
                 // increase retries on connection end
-                connection.retryCount += 1 // eslint-disable-line no-param-reassign
+                connection.retryCount += 1
                 if (connection.hasRetries()) {
                     // throw away error if going to retry (otherwise will throw)
                     next.clearError()
@@ -168,12 +185,13 @@ function SocketConnector(connection) {
             startedConnecting = true
             socket = await OpenWebSocket(connection.options.url, {
                 perMessageDeflate: false,
+                debug: connection._debug,
             })
             socket.addEventListener('close', onClose)
             socket.addEventListener('close', () => {
                 // if forced closed by Connection.closeOpen, disable reconnect
                 if (socket[FORCE_CLOSED]) {
-                    connection._setShouldDisconnect() // eslint-disable-line no-underscore-dangle
+                    connection._setShouldDisconnect()
                 }
             })
             return async () => { // disconnect
@@ -185,14 +203,14 @@ function SocketConnector(connection) {
         },
         // set socket
         () => {
-            connection.socket = socket // eslint-disable-line no-param-reassign
+            connection.socket = socket
 
             if (!connection.isConnected()) {
                 didCloseUnexpectedly = true
             }
 
             return () => {
-                connection.socket = undefined // eslint-disable-line no-param-reassign
+                connection.socket = undefined
             }
         },
         // attach message handler
@@ -246,6 +264,7 @@ function SocketConnector(connection) {
 
     return next
 }
+/* eslint-enable no-underscore-dangle, no-param-reassign */
 
 const DEFAULT_MAX_RETRIES = 10
 
@@ -256,12 +275,6 @@ const DEFAULT_MAX_RETRIES = 10
  * waits for pending close/open before continuing
  */
 
-const STATE = {
-    AUTO: 'AUTO',
-    CONNECTED: 'CONNECTED',
-    DISCONNECTED: 'DISCONNECTED',
-}
-
 export default class Connection extends EventEmitter {
     static getOpen() {
         return openSockets.size
@@ -270,11 +283,13 @@ export default class Connection extends EventEmitter {
     static async closeOpen() {
         return Promise.all([...openSockets].map(async (socket) => {
             socket[FORCE_CLOSED] = true // eslint-disable-line no-param-reassign
-            return CloseWebSocket(socket).catch((err) => console.error(err))
+            return CloseWebSocket(socket).catch((err) => {
+                socket.debug(err) // ignore error
+            })
         }))
     }
 
-    constructor(options) {
+    constructor(options = {}) {
         super()
         const id = counterId(this.constructor.name)
         /* istanbul ignore next */
@@ -283,7 +298,6 @@ export default class Connection extends EventEmitter {
         } else {
             this._debug = Debug(`StreamrClient::${id}`)
         }
-        this.debug = this._debug
 
         this.options = options
         this.options.autoConnect = !!this.options.autoConnect
@@ -293,8 +307,19 @@ export default class Connection extends EventEmitter {
         this.retryCount = 0
         this.wantsState = STATE.AUTO // target state or auto
         this.connectionHandles = new Set() // autoConnect when this is not empty, autoDisconnect when empty
-        this.backoffWait = pOrderedResolve(this.backoffWait.bind(this))
+        this.backoffWait = pLimitFn(this.backoffWait.bind(this))
         this.step = SocketConnector(this)
+        this.debug = this.debug.bind(this)
+        this.maybeConnect = pOne(this.maybeConnect.bind(this))
+        this.nextConnection = pOne(this.nextConnection.bind(this))
+        this.nextDisconnection = pOne(this.nextDisconnection.bind(this))
+    }
+
+    debug(...args) {
+        if (this.socket) {
+            return this.socket.debug(...args)
+        }
+        return this._debug(...args)
     }
 
     emit(event, ...args) {
@@ -355,6 +380,7 @@ export default class Connection extends EventEmitter {
      */
 
     async connect() {
+        this.debug('connect()')
         this.wantsState = STATE.CONNECTED
         this.enableAutoConnect(false)
         this.enableAutoDisconnect(false)
@@ -506,6 +532,7 @@ export default class Connection extends EventEmitter {
     }
 
     async disconnect() {
+        this.debug('disconnect()')
         this._setShouldDisconnect()
 
         await this.step()

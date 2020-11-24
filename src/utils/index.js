@@ -455,3 +455,26 @@ export function pUpDownSteps(sequence = [], _checkFn, { onDone, onChange } = {})
         }
     })
 }
+
+export function pLimitFn(fn, limit = 1) {
+    const queue = pLimit(limit)
+    return (...args) => queue(() => fn(...args))
+}
+
+/**
+ * Only allows one outstanding call.
+ * Returns same promise while task is executing.
+ */
+
+export function pOne(fn) {
+    let inProgress
+    return (...args) => {
+        if (!inProgress) {
+            inProgress = Promise.resolve(fn(...args)).finally(() => {
+                inProgress = undefined
+            })
+        }
+
+        return inProgress
+    }
+}
