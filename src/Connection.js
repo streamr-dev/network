@@ -4,7 +4,7 @@ import EventEmitter from 'eventemitter3'
 import Debug from 'debug'
 import WebSocket from 'ws'
 
-import { pUpDownSteps, counterId, pLimitFn, pOne } from './utils'
+import { Scaffold, counterId, pLimitFn, pOne } from './utils'
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -150,7 +150,7 @@ function SocketConnector(connection) {
         return !didCloseUnexpectedly && valid
     }
 
-    next = pUpDownSteps([
+    next = Scaffold([
         // handle retry
         async () => {
             if (connection.retryCount > 0) {

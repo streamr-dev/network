@@ -1,6 +1,6 @@
 import Emitter from 'events'
 
-import { allSettledValues, AggregatedError, pUpDownSteps, Defer, counterId } from '../utils'
+import { allSettledValues, AggregatedError, Scaffold, Defer, counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
 
 import {
@@ -133,7 +133,7 @@ class SubscriptionSession extends Emitter {
         }
 
         let deleted = new Set()
-        this.step = pUpDownSteps([
+        this.step = Scaffold([
             () => {
                 needsReset = false
                 connection.on('done', onDisconnected)

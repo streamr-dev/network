@@ -7,6 +7,11 @@ import mem from 'mem'
 
 import pkg from '../../package.json'
 
+import AggregatedError from './AggregatedError'
+import Scaffold from './Scaffold'
+
+export { AggregatedError, Scaffold }
+
 const UUID = uuidv4()
 
 export function uuid(label = '') {
@@ -260,44 +265,6 @@ pTimeout.ignoreError = (err) => {
     throw err
 }
 
-export class AggregatedError extends Error {
-    // specifically not using AggregateError name as this has slightly different API
-    constructor(errors = [], errorMessage = '') {
-        super(errorMessage)
-        this.errors = new Set(errors)
-        if (Error.captureStackTrace) {
-            Error.captureStackTrace(this, this.constructor)
-        }
-    }
-
-    static from(err, newErr, msg) {
-        switch (true) {
-            case !err: {
-                if (msg) {
-                    // copy message
-                    newErr.message = msg // eslint-disable-line no-param-reassign
-                }
-
-                return newErr
-            }
-            case typeof err.extend === 'function': {
-                return err.extend(newErr, msg || newErr.message)
-            }
-            default: {
-                return new AggregatedError([err, newErr], msg || newErr.message)
-            }
-        }
-    }
-
-    extend(err, message = '') {
-        if (err === this || this.errors.has(err)) {
-            return this
-        }
-
-        return new AggregatedError([err, ...this.errors], [message, this.message || ''].join('\n'))
-    }
-}
-
 /**
  * Convert allSettled results into a thrown Aggregate error if necessary.
  */
@@ -311,149 +278,6 @@ export async function allSettledValues(items, errorMessage = '') {
     }
 
     return result.map(({ value }) => value)
-}
-
-export function pUpDownSteps(sequence = [], _checkFn, { onDone, onChange } = {}) {
-    let error
-
-    const nextSteps = sequence.slice().reverse()
-    const prevSteps = []
-    const onDownSteps = []
-    const queue = pLimit(1)
-
-    let isDone = false
-    let didStart = false
-
-    function onError(err) {
-        // eslint-disable-next-line require-atomic-updates
-        error = AggregatedError.from(error, err)
-    }
-
-    const checkFn = async (...args) => {
-        try {
-            return await _checkFn(...args)
-        } catch (err) {
-            onError(err, 'in check')
-        }
-        return false
-    }
-
-    let shouldUp = false
-    let prevShouldUp = false
-    const innerQueue = pLimit(1)
-
-    const checkShouldUp = async () => !!(!error && await checkFn())
-
-    async function next(...args) {
-        shouldUp = await checkShouldUp()
-        const didChange = prevShouldUp !== shouldUp
-        prevShouldUp = shouldUp
-        if (didChange && typeof onChange === 'function') {
-            try {
-                await onChange(shouldUp)
-            } catch (err) {
-                onError(err)
-            }
-            return next(...args)
-        }
-
-        if (shouldUp) {
-            if (nextSteps.length) {
-                isDone = false
-                didStart = true
-                let onDownStep
-                const stepFn = nextSteps.pop()
-                prevSteps.push(stepFn)
-                try {
-                    onDownStep = await stepFn(...args)
-                } catch (err) {
-                    onError(err)
-                }
-                onDownSteps.push(onDownStep || (() => {}))
-                return next(...args)
-            }
-        } else if (onDownSteps.length) {
-            isDone = false
-            didStart = true
-            const stepFn = onDownSteps.pop()
-            try {
-                await stepFn()
-            } catch (err) {
-                onError(err)
-            }
-            nextSteps.push(prevSteps.pop())
-            return next(...args)
-        } else if (error) {
-            const err = error
-            // eslint-disable-next-line require-atomic-updates
-            error = undefined
-            isDone = true
-            throw err
-        }
-
-        isDone = true
-
-        return Promise.resolve()
-    }
-
-    function isActive() {
-        return !(
-            didStart
-            && isDone
-            && !queue.activeCount
-            && !queue.pendingCount
-        )
-    }
-
-    const nextDone = async (...args) => {
-        await innerQueue(() => next(...args))
-    }
-
-    let currentStep
-    const queuedNext = async (...args) => {
-        let stepErr
-        try {
-            currentStep = queue(() => nextDone(...args))
-            await currentStep
-        } catch (err) {
-            stepErr = err
-            throw err
-        } finally {
-            if (!isActive()) {
-                didStart = false
-                if (typeof onDone === 'function') {
-                    const err = stepErr
-                    stepErr = undefined
-                    await onDone(shouldUp, err)
-                }
-            }
-        }
-    }
-
-    return Object.assign(queuedNext, {
-        next: nextDone,
-        isActive,
-        getCurrentStep() {
-            return currentStep
-        },
-        get activeCount() {
-            return queue.activeCount
-        },
-        get pendingCount() {
-            return queue.pendingCount
-        },
-        setError(err) {
-            error = AggregatedError.from(error, err)
-        },
-        getError() {
-            return error
-        },
-        clearError() {
-            const err = error
-            error = undefined
-            return err
-        }
-    })
 }
 
 export function pLimitFn(fn, limit = 1) {
