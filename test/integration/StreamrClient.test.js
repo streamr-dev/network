@@ -933,7 +933,7 @@ describeRepeats('StreamrClient', () => {
                     otherClient.connection.on('disconnected', onDisconnected)
 
                     const published = await publishTestMessages(MAX_MESSAGES, {
-                        delay: 500,
+                        delay: 250,
                     })
 
                     await done
@@ -957,8 +957,6 @@ describeRepeats('StreamrClient', () => {
             it('publish and subscribe a sequence of messages', async () => {
                 client.enableAutoConnect()
                 const done = Defer()
-                const nbMessages = 3
-                const intervalMs = 100
                 const received = []
                 const sub = await client.subscribe({
                     stream: stream.id,
@@ -968,14 +966,14 @@ describeRepeats('StreamrClient', () => {
                     expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                     expect(streamMessage.getPublisherId()).toBeTruthy()
                     expect(streamMessage.signature).toBeTruthy()
-                    if (received.length === nbMessages) {
+                    if (received.length === MAX_MESSAGES) {
                         done.resolve(client.unsubscribe(sub))
                     }
                 }))
 
                 // Publish after subscribed
-                const published = await publishTestMessages(nbMessages, {
-                    wait: intervalMs,
+                const published = await publishTestMessages(MAX_MESSAGES, {
+                    wait: 100,
                 })
 
                 await done
@@ -1000,12 +998,11 @@ describeRepeats('StreamrClient', () => {
 
             it('client.subscribe with resend from', async () => {
                 const done = Defer()
-                // Publish message
-                const msg = Msg()
-                await client.publish(stream.id, msg)
+                const published = await publishTestMessages(MAX_MESSAGES, {
+                    waitForLast: true,
+                })
 
-                // Check that we're not subscribed yet
-                expect(client.getSubscriptions()[stream.id]).toBe(undefined)
+                const received = []
 
                 const sub = await client.subscribe({
                     stream: stream.id,
@@ -1014,17 +1011,20 @@ describeRepeats('StreamrClient', () => {
                             timestamp: 0,
                         },
                     },
-                }, done.wrap(async (parsedContent, streamMessage) => {
-                    // Check message content
-                    expect(parsedContent).toEqual(msg)
+                }, done.wrapError(async (parsedContent, streamMessage) => {
+                    received.push(parsedContent)
 
                     // Check signature stuff
                     expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                     expect(streamMessage.getPublisherId()).toBeTruthy()
                     expect(streamMessage.signature).toBeTruthy()
+                    if (received.length === published.length) {
+                        done.resolve()
+                    }
                 }))
 
                 await done
+                expect(received).toEqual(published)
                 // All good, unsubscribe
                 await client.unsubscribe(sub)
                 expect(client.getSubscriptions(stream.id)).toHaveLength(0)
@@ -1032,56 +1032,66 @@ describeRepeats('StreamrClient', () => {
 
             it('client.subscribe with resend last', async () => {
                 const done = Defer()
-                // Publish message
-                const msg = Msg()
-                await client.publish(stream.id, msg)
+                const published = await publishTestMessages(MAX_MESSAGES, {
+                    waitForLast: true,
+                })
 
-                // Check that we're not subscribed yet
-                expect(client.getSubscriptions()[stream.id]).toBe(undefined)
+                const received = []
 
                 const sub = await client.subscribe({
                     stream: stream.id,
                     resend: {
-                        last: 1
+                        last: 2
                     },
-                }, done.wrap(async (parsedContent, streamMessage) => {
-                    // Check message content
-                    expect(parsedContent).toEqual(msg)
-
+                }, done.wrapError(async (parsedContent, streamMessage) => {
+                    received.push(parsedContent)
                     // Check signature stuff
                     expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                     expect(streamMessage.getPublisherId()).toBeTruthy()
                     expect(streamMessage.signature).toBeTruthy()
+                    if (received.length === 2) {
+                        done.resolve()
+                    }
                 }))
 
                 await done
                 // All good, unsubscribe
                 await client.unsubscribe(sub)
+                expect(received).toEqual(published.slice(-2))
                 expect(client.getSubscriptions(stream.id)).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe (realtime with resend)', async () => {
-                const msg = Msg()
                 const done = Defer()
+                const published = await publishTestMessages(MAX_MESSAGES, {
+                    waitForLast: true,
+                })
+
+                const received = []
+
                 const sub = await client.subscribe({
                     stream: stream.id,
                     resend: {
-                        last: 1,
+                        last: 2
                     },
-                }, done.wrap(async (parsedContent, streamMessage) => {
-                    expect(parsedContent).toEqual(msg)
-
+                }, done.wrapError(async (parsedContent, streamMessage) => {
+                    received.push(parsedContent)
                     // Check signature stuff
                     expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
                     expect(streamMessage.getPublisherId()).toBeTruthy()
                     expect(streamMessage.signature).toBeTruthy()
+                    if (received.length === 3) {
+                        done.resolve()
+                    }
                 }))
 
-                // Publish after subscribed
-                await stream.publish(msg)
+                const [msg] = await publishTestMessages(1)
+
                 await done
                 // All good, unsubscribe
                 await client.unsubscribe(sub)
+                expect(received).toEqual([...published.slice(-2), msg])
+                expect(client.getSubscriptions(stream.id)).toHaveLength(0)
             }, TIMEOUT)
         })
 
