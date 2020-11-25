@@ -272,12 +272,10 @@ export default class StreamrClient extends EventEmitter {
         }
 
         Promise.resolve(task).then(async (sub) => {
-            sub.emit('resending')
             for await (const msg of sub) {
                 await onMessage(msg.getParsedContent(), msg)
             }
 
-            sub.emit('resent')
             return sub
         }).catch((err) => {
             this.emit('error', err)

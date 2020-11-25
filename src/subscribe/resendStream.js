@@ -31,22 +31,32 @@ export default function resendStream(client, opts = {}, onFinally = () => {}) {
         ],
     }).then(() => (
         msgStream.end()
-    ), (err) => (
-        msgStream.cancel(err)
-    ))
+    ), async (err) => {
+        await msgStream.cancel(err)
+        throw err
+    })
 
     // wait for resend complete message or resend request done
     return Object.assign(msgStream, {
         async subscribe() {
             await connection.addHandle(requestId)
             // wait for resend complete message or resend request done
+            let error
             await Promise.race([
                 resend(client, {
                     requestId,
                     ...options,
+                }).catch((err) => {
+                    error = err
                 }),
-                onResendDone
+                onResendDone.catch((err) => {
+                    error = err
+                })
             ])
+            if (error) {
+                await msgStream.cancel(error)
+                throw error
+            }
             return this
         },
         async unsubscribe() {

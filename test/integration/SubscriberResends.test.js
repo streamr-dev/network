@@ -64,14 +64,7 @@ describeRepeats('resends', () => {
             stream,
             timeout: WAIT_FOR_STORAGE_TIMEOUT,
         })
-
-        published = await publishTestMessages(MAX_MESSAGES)
     })
-
-    beforeAll(async () => {
-        const lastMessage = published[published.length - 1]
-        await waitForStorage(lastMessage)
-    }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
     beforeEach(async () => {
         await client.connect()
@@ -104,6 +97,27 @@ describeRepeats('resends', () => {
 
     describe('no data', () => {
         let emptyStream
+
+        it('throws error if bad stream id', async () => {
+            await expect(async () => {
+                await subscriber.resend({
+                    streamId: 'badstream',
+                    last: 5,
+                })
+            }).rejects.toThrow('badstream')
+        })
+
+        it('throws error if no resend config', async () => {
+            emptyStream = await client.createStream({
+                name: uid('stream')
+            })
+            await expect(async () => {
+                await subscriber.resend({
+                    streamId: emptyStream.id,
+                    resend: {},
+                })
+            }).rejects.toThrow('without resend options')
+        })
 
         it('handles nothing to resend', async () => {
             emptyStream = await client.createStream({
@@ -157,7 +171,15 @@ describeRepeats('resends', () => {
     })
 
     describe('with resend data', () => {
+        beforeAll(async () => {
+            await client.connect()
+            published = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: true,
+            })
+        }, WAIT_FOR_STORAGE_TIMEOUT * 2)
+
         beforeEach(async () => {
+            await client.connect()
             // ensure last message is in storage
             const lastMessage = published[published.length - 1]
             await waitForStorage(lastMessage)

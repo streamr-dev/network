@@ -386,7 +386,7 @@ export default class Subscriber {
         return this.subscriptions.add(...args)
     }
 
-    resend(opts, fn = () => {}) {
+    async resend(opts) {
         const resendMsgStream = resendStream(this.client, opts)
 
         const sub = new Subscription(this.client, {
@@ -394,9 +394,10 @@ export default class Subscriber {
             ...opts,
         }, async (...args) => {
             sub.emit('resent')
-            await fn(...args)
+            await sub.cancel(...args)
         })
-        resendMsgStream.subscribe().catch((err) => sub.cancel(err))
+
+        await resendMsgStream.subscribe()
         return sub
     }
 
