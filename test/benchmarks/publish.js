@@ -32,13 +32,15 @@ const Msg = () => {
 
 async function run() {
     await client1.connect()
+    await client1.session.getSessionToken()
     await client2.connect()
-    const stream1 = await client1.getOrCreateStream({
-        name: 'node-example-data',
+    await client2.session.getSessionToken()
+    const stream1 = await client1.createStream({
+        name: `node-example-data1.${process.pid}`,
     })
 
     const stream2 = await client2.getOrCreateStream({
-        name: 'node-example-data',
+        name: `node-example-data2.${process.pid}`,
     })
 
     const suite = new Benchmark.Suite()
