@@ -288,7 +288,7 @@ const isPipeline = Symbol('isPipeline')
 
 const getIsStream = (item) => typeof item.pipe === 'function'
 
-export function pipeline(iterables = [], onFinally, opts) {
+export function pipeline(iterables = [], onFinally = () => {}, opts = {}) {
     const cancelFns = new Set()
     let cancelled = false
     let error
