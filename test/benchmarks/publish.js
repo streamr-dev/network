@@ -1,27 +1,33 @@
 const { Benchmark } = require('benchmark')
 const { ethers } = require('ethers')
+/* eslint-disable no-console */
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist/streamr-client.nodejs.js')
 const config = require('../integration/config')
 
 const client1 = new StreamrClient({
+    ...config.clientOptions,
     auth: {
         privateKey: ethers.Wallet.createRandom().privateKey,
     },
-    ...config.clientOptions
+    publishWithSignature: 'always',
 })
 
 const client2 = new StreamrClient({
+    ...config.clientOptions,
     auth: {
         apiKey: 'tester1-api-key'
     },
     publishWithSignature: 'never',
-    ...config.clientOptions
 })
 
-const msg = {
-    msg: 'test'
+let count = 100000
+const Msg = () => {
+    count += 1
+    return {
+        msg: `test${count}`
+    }
 }
 
 async function run() {
@@ -40,7 +46,7 @@ async function run() {
         defer: true,
         fn(deferred) {
             // eslint-disable-next-line promise/catch-or-return
-            stream1.publish(msg).then(() => deferred.resolve(), () => deferred.resolve())
+            stream1.publish(Msg()).then(() => deferred.resolve(), () => deferred.resolve())
         }
     })
 
@@ -48,25 +54,21 @@ async function run() {
         defer: true,
         fn(deferred) {
             // eslint-disable-next-line promise/catch-or-return
-            stream2.publish(msg).then(() => deferred.resolve(), () => deferred.resolve())
+            stream2.publish(Msg()).then(() => deferred.resolve(), () => deferred.resolve())
         }
     })
 
     suite.on('cycle', (event) => {
-        // eslint-disable-next-line no-console
         console.log(String(event.target))
     })
 
     suite.on('complete', async function onComplete() {
-        // eslint-disable-next-line no-console
         console.log('Fastest is ' + this.filter('fastest').map('name'))
-        // eslint-disable-next-line no-console
         console.log('Disconnecting clients')
         await Promise.all([
             client1.disconnect(),
             client2.disconnect(),
         ])
-        // eslint-disable-next-line no-console
         console.log('Clients disconnected')
     })
 
