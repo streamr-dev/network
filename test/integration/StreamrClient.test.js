@@ -37,6 +37,8 @@ describeRepeats('StreamrClient', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
+            disconnectDelay: 1,
+            publishAutoDisconnectDelay: 50,
             maxRetries: 2,
             ...config.clientOptions,
             ...opts,
@@ -980,20 +982,25 @@ describeRepeats('StreamrClient', () => {
                 expect(received).toEqual(published)
             })
 
-            test('publish disconnects after each message with autoDisconnect', async () => {
+            test('publish does not disconnect after each message with autoDisconnect', async () => {
+                await client.disconnect()
                 const onConnected = jest.fn()
                 const onDisconnected = jest.fn()
                 client.on('disconnected', onDisconnected)
                 client.on('connected', onConnected)
 
+                client.options.publishAutoDisconnectDelay = 1000 // eslint-disable-line require-atomic-updates
+
                 client.enableAutoConnect()
                 client.enableAutoDisconnect()
-                const published = await publishTestMessages(5, {
-                    delay: 250,
+                await publishTestMessages(3, {
+                    delay: 150,
                 })
 
-                expect(onConnected).toHaveBeenCalledTimes(published.length - 1)
-                expect(onDisconnected).toHaveBeenCalledTimes(published.length)
+                await wait(client.options.publishAutoDisconnectDelay * 1.5)
+
+                expect(onConnected).toHaveBeenCalledTimes(1)
+                expect(onDisconnected).toHaveBeenCalledTimes(1)
             })
 
             it('client.subscribe with resend from', async () => {

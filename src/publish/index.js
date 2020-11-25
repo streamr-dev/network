@@ -271,10 +271,14 @@ export class MessageCreationUtil {
     }
 }
 
+const PUBLISH_HANDLE = Symbol('publish')
+
 export default class Publisher {
     constructor(client) {
         this.client = client
         this.debug = client.debug.extend('Publisher')
+
+        this.onConnectionDone = this.onConnectionDone.bind(this)
 
         this.signer = Signer.createSigner({
             ...client.options.auth,
@@ -316,6 +320,7 @@ export default class Publisher {
                 partitionKey
             }),
             this.client.session.getSessionToken(), // fetch in parallel
+            this.setupPublishHandle(),
         ])
 
         if (this.signer) {
@@ -342,6 +347,41 @@ export default class Publisher {
         }
 
         return request
+    }
+
+    /**
+     * Add handle to keep connection open while publishing.
+     * Refreshes handle timeout on each call.
+     * Only remove publish handle after inactivity of options.publishAutoDisconnectDelay ms.
+     */
+
+    async setupPublishHandle() {
+        try {
+            clearTimeout(this._publishHandleTimeout)
+            this.client.connection.removeListener('done', this.onConnectionDone)
+            this.client.connection.addListener('done', this.onConnectionDone)
+            await this.client.connection.addHandle(PUBLISH_HANDLE)
+        } finally {
+            const { publishAutoDisconnectDelay = 5000 } = this.client.options
+            clearTimeout(this._publishHandleTimeout)
+            this._publishHandleTimeout = setTimeout(async () => {
+                try {
+                    this.client.connection.removeListener('done', this.onConnectionDone)
+                    await this.client.connection.removeHandle(PUBLISH_HANDLE)
+                } catch (err) {
+                    this.client.emit('error', err)
+                }
+            }, publishAutoDisconnectDelay || 0)
+        }
+    }
+
+    /**
+     * Clean up handle on connection done
+     */
+
+    onConnectionDone() {
+        this.client.connection.connectionHandles.delete(PUBLISH_HANDLE)
+        clearTimeout(this._publishHandleTimeout)
     }
 
     async getPublisherId() {
