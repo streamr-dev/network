@@ -13,6 +13,7 @@ describe('metrics', () => {
         expect(rep).toEqual({
             peerId: 'peerId',
             startTime: 100,
+            currentTime: 100,
             metrics: {}
         })
     })
@@ -26,6 +27,7 @@ describe('metrics', () => {
         expect(rep).toEqual({
             peerId: 'peerId',
             startTime: 100,
+            currentTime: 100,
             metrics: {
                 metricOne: {},
                 metricTwo: {},
@@ -52,6 +54,7 @@ describe('metrics', () => {
         expect(rep).toEqual({
             peerId: 'peerId',
             startTime: 100,
+            currentTime: 100,
             metrics: {
                 metricOne: {
                     a: 666,

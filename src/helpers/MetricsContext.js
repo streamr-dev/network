@@ -87,6 +87,7 @@ class MetricsContext {
         return {
             peerId: this.peerId,
             startTime: this.startTime,
+            currentTime: Date.now(),
             metrics: Object.fromEntries(entries),
         }
     }
