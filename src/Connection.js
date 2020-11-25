@@ -220,8 +220,13 @@ function SocketConnector(connection) {
             }
             socket.addEventListener('message', onMessage)
             return async () => {
-                await wait(250) // wait a moment before closing
                 socket.removeEventListener('message', onMessage)
+            }
+        },
+        () => {
+            return async () => {
+                const { disconnectDelay = 250 } = connection.options
+                await wait(disconnectDelay || 0) // wait a moment before closing
             }
         }
     ], shouldConnectCheck, {
@@ -396,10 +401,20 @@ export default class Connection extends EventEmitter {
     }
 
     enableAutoDisconnect(autoDisconnect = true) {
+        let delay
+        if (typeof autoDisconnect === 'number') {
+            delay = autoDisconnect
+            autoDisconnect = true // eslint-disable-line no-param-reassign
+        }
         autoDisconnect = !!autoDisconnect // eslint-disable-line no-param-reassign
         this.options.autoDisconnect = autoDisconnect
+
         if (autoDisconnect) {
             this.wantsState = STATE.AUTO
+        }
+
+        if (delay != null) {
+            this.options.disconnectDelay = delay
         }
     }
 
@@ -583,6 +598,14 @@ export default class Connection extends EventEmitter {
      */
 
     async addHandle(id) {
+        if (
+            this.connectionHandles.has(id)
+            && this.isConnected()
+            && this.isConnectionValid()
+        ) {
+            return // shortcut if already connected with this handle
+        }
+
         this.connectionHandles.add(id)
         await this.maybeConnect()
     }
@@ -595,43 +618,17 @@ export default class Connection extends EventEmitter {
         const hadConnection = this.connectionHandles.has(id)
         this.connectionHandles.delete(id)
         if (hadConnection && this._couldAutoDisconnect()) {
-            await this._autoDisconnect()
+            await this.step()
         }
     }
 
-    _couldAutoDisconnect() {
+    _couldAutoDisconnect(minSize = 0) {
         return !!(
             this.options.autoDisconnect
             && this.wantsState !== STATE.CONNECTED
-            && this.connectionHandles.size === 0
+            && this.connectionHandles.size === minSize
             && (this.socket ? this.socket.bufferedAmount === 0 : true)
         )
-    }
-
-    async _autoDisconnect() {
-        if (this.autoDisconnectTask) {
-            return this.autoDisconnectTask
-        }
-
-        this.autoDisconnectTask = (async () => {
-            try {
-                await this.step()
-                if (this._couldAutoDisconnect()) {
-                    this.debug('auto-disconnecting')
-                    await CloseWebSocket(this.socket)
-                }
-            } catch (err) {
-                if (err instanceof ConnectionError) {
-                    // ignore ConnectionErrors because not user-initiated
-                    return
-                }
-                throw err
-            } finally {
-                this.autoDisconnectTask = undefined
-            }
-        })()
-
-        return this.autoDisconnectTask
     }
 
     async send(msg) {

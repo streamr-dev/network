@@ -45,7 +45,8 @@ describeRepeats('Connection', () => {
     beforeEach(() => {
         s = new Connection({
             url: `ws://localhost:${port}/`,
-            maxRetries: 2
+            maxRetries: 2,
+            disconnectDelay: 1,
         })
 
         onConnected = jest.fn()
@@ -153,6 +154,7 @@ describeRepeats('Connection', () => {
             const s2 = new Connection({
                 url: 'badurl',
                 maxRetries: 2,
+                disconnectDelay: 1,
             })
 
             await expect(async () => (
@@ -162,12 +164,13 @@ describeRepeats('Connection', () => {
 
             const s3 = new Connection({
                 url: `ws://localhost:${port}/`,
+                disconnectDelay: 1,
             })
             await s3.connect()
             expect(Connection.getOpen()).toEqual(2)
             await Connection.closeOpen()
             expect(Connection.getOpen()).toEqual(0)
-            await wait(1000)
+            await wait(250)
             expect(Connection.getOpen()).toEqual(0)
             expect(s.getState()).toEqual('disconnected')
         })
@@ -310,7 +313,7 @@ describeRepeats('Connection', () => {
                 expect(onDone).toHaveBeenCalledTimes(0)
                 expect(s.getState()).toBe('connected')
                 await done
-                await wait(2000)
+                await wait(250)
                 expect(s.getState()).toBe('connected')
                 expect(onDone).toHaveBeenCalledTimes(0)
                 expect(onConnected).toHaveBeenCalledTimes(1)
@@ -320,11 +323,14 @@ describeRepeats('Connection', () => {
 
             it('delays disconnection', async () => {
                 await s.connect()
+                const DELAY = 150
+                s.options.disconnectDelay = DELAY
                 const prevSocket = s.socket
                 const t = expect(async () => {
                     await s.disconnect()
                 }).rejects.toThrow('connected before disconnected')
-                await wait(200)
+                await wait(DELAY / 2)
+                expect(onDisconnected).toHaveBeenCalledTimes(0)
                 await s.connect()
                 expect(s.getState()).toBe('connected')
                 await t
@@ -363,6 +369,7 @@ describeRepeats('Connection', () => {
             s = new Connection({
                 url: undefined,
                 maxRetries: 2,
+                disconnectDelay: 1,
             })
             s.on('connected', onConnected)
             s.on('error', onError)
@@ -376,6 +383,7 @@ describeRepeats('Connection', () => {
             s = new Connection({
                 url: 'badurl',
                 maxRetries: 2,
+                disconnectDelay: 1,
             })
             s.on('connected', onConnected)
             s.on('error', onError)
@@ -391,6 +399,7 @@ describeRepeats('Connection', () => {
             s = new Connection({
                 url: 'wss://streamr.network/nope',
                 maxRetries: 2,
+                disconnectDelay: 1,
             })
             s.on('connected', onConnected)
             s.on('done', onDone)
@@ -823,7 +832,7 @@ describeRepeats('Connection', () => {
             const err = await done
             expect(err).toBeTruthy()
             // wait a moment for late errors
-            await wait(100)
+            await wait(10)
             expect(onDone).toHaveBeenCalledTimes(1)
             await done
         })
@@ -998,7 +1007,7 @@ describeRepeats('Connection', () => {
             await expect(async () => {
                 await s.send('test2')
             }).rejects.toThrow('connection')
-            await wait(100)
+            await wait(10)
             expect(received).toEqual(['test'])
         })
 
@@ -1044,8 +1053,10 @@ describeRepeats('Connection', () => {
             // can remove multiple of same handle (noop)
             await s.removeHandle(1)
             expect(s.getState()).toBe('disconnected')
+            expect(onDone).toHaveBeenCalledTimes(2)
             // should not try reconnect
-            await wait(1000)
+            await wait(150)
+            expect(onDone).toHaveBeenCalledTimes(2)
             expect(s.getState()).toBe('disconnected')
             // auto disconnect should not affect auto-connect
             expect(s.options.autoConnect).toBeTruthy()
@@ -1227,4 +1238,3 @@ describeRepeats('Connection', () => {
         })
     })
 })
-
