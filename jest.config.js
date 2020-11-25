@@ -160,7 +160,12 @@ module.exports = {
     // timers: "real",
 
     // A map from regular expressions to paths to transformers
-    // transform: null,
+    transform: {
+        '\\.js$': ['babel-jest', {
+            configFile: './jest.babel.config.js',
+            babelrc: false,
+        }]
+    },
 
     // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
     // transformIgnorePatterns: [
