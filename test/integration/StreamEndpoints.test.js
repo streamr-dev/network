@@ -45,6 +45,21 @@ describe('StreamEndpoints', () => {
             assert.strictEqual(createdStream.name, name)
             assert.strictEqual(createdStream.requireSignedData, true)
         })
+
+        it('can create and get a stream with slashes in name', async () => {
+            const slashName = 'x/y'
+            const stream = await client.createStream({
+                name: slashName,
+                requireSignedData: true,
+                requireEncryptedData: false,
+            })
+            const gotStream = await client.getStream(stream.id)
+            createdStream = stream
+            assert(createdStream.id)
+            assert.strictEqual(createdStream.name, slashName)
+            assert.strictEqual(gotStream.name, slashName)
+            assert.strictEqual(createdStream.requireSignedData, true)
+        })
     })
 
     describe('getStream', () => {

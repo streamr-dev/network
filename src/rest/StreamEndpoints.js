@@ -1,6 +1,5 @@
 import { Agent as HttpAgent } from 'http'
 import { Agent as HttpsAgent } from 'https'
-import { inspect } from 'util'
 
 import qs from 'qs'
 import debugFactory from 'debug'
@@ -77,9 +76,6 @@ export async function createStream(props) {
     this.debug('createStream %o', {
         props,
     })
-    if (!props || !props.name) {
-        throw new Error(`Stream properties must contain a "name" field! ${inspect(props)}`)
-    }
 
     const json = await authFetch(
         `${this.options.restUrl}/streams`,
@@ -192,7 +188,7 @@ export async function getStreamLast(streamObjectOrId) {
         count,
     }
 
-    const url = `${this.options.restUrl}/streams/${streamId}/data/partitions/${streamPartition}/last?${qs.stringify(query)}`
+    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'data', 'partitions', streamPartition, 'last') + `?${qs.stringify(query)}`
     const json = await authFetch(url, this.session)
     return json
 }
@@ -210,7 +206,7 @@ export async function publishHttp(streamObjectOrId, data, requestOptions = {}, k
 
     // Send data to the stream
     return authFetch(
-        `${this.options.restUrl}/streams/${streamId}/data`,
+        getEndpointUrl(this.options.restUrl, 'streams', streamId, 'data'),
         this.session,
         {
             ...requestOptions,
