@@ -2,9 +2,9 @@ import { Utils } from 'streamr-client-protocol'
 
 import { pipeline } from '../utils/iterators'
 import PushQueue from '../utils/PushQueue'
+import { validateOptions } from '../stream/utils'
 
 import resendStream from './resendStream'
-import { validateOptions } from './api'
 
 const { OrderingUtil } = Utils
 

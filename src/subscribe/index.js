@@ -2,18 +2,13 @@ import Emitter from 'events'
 
 import { allSettledValues, AggregatedError, Scaffold, Defer, counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
+import { validateOptions } from '../stream/utils'
 
-import {
-    validateOptions,
-    subscribe,
-    unsubscribe,
-} from './api'
+import { subscribe, unsubscribe } from './api'
 import MessagePipeline from './pipeline'
 import Validator from './Validator'
 import messageStream from './messageStream'
 import resendStream from './resendStream'
-
-export { validateOptions }
 
 class Subscription extends Emitter {
     constructor(client, opts, onFinally = () => {}) {

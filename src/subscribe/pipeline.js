@@ -2,8 +2,8 @@ import { Errors } from 'streamr-client-protocol'
 
 import { counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
+import { validateOptions } from '../stream/utils'
 
-import { validateOptions } from './api'
 import Validator from './Validator'
 import messageStream from './messageStream'
 import OrderMessages from './OrderMessages'

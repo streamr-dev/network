@@ -3,8 +3,7 @@ import { inspect } from 'util'
 import { MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
 import { CacheAsyncFn, pOrderedResolve } from '../utils'
-
-import { validateOptions } from './api'
+import { validateOptions } from '../stream/utils'
 
 const { StreamMessageValidator } = Utils
 const { ValidationError } = Errors

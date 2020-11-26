@@ -5,7 +5,7 @@ import { inspect } from 'util'
 import qs from 'qs'
 import debugFactory from 'debug'
 
-import { validateOptions } from '../subscribe'
+import { validateOptions } from '../stream/utils'
 import { getEndpointUrl } from '../utils'
 
 import Stream from './domain/Stream'

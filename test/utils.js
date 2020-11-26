@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 
 import { pTimeout, counterId } from '../src/utils'
-import { validateOptions } from '../src/subscribe'
+import { validateOptions } from '../src/stream/utils'
 
 const crypto = require('crypto')
 

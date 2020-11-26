@@ -1,8 +1,9 @@
 import { ControlLayer } from 'streamr-client-protocol'
 
 import { counterId } from '../utils'
+import { validateOptions, waitForResponse } from '../stream/utils'
 
-import { validateOptions, waitForResponse, resend } from './api'
+import { resend } from './api'
 import messageStream from './messageStream'
 
 const { ControlMessage } = ControlLayer
