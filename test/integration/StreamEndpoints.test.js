@@ -4,18 +4,18 @@ import { ethers } from 'ethers'
 import { wait } from 'streamr-test-utils'
 
 import StreamrClient from '../../src'
+import { uid } from '../utils'
 
 import config from './config'
 
 /**
  * These tests should be run in sequential order!
  */
-describe('StreamEndpoints', () => {
-    const name = `StreamEndpoints-integration-${Date.now()}`
 
+function TestStreamEndpoints(getName) {
     let client
-    let createdStream
     let wallet
+    let createdStream
 
     const createClient = (opts = {}) => new StreamrClient({
         autoConnect: false,
@@ -33,32 +33,26 @@ describe('StreamEndpoints', () => {
         })
     })
 
+    beforeAll(async () => {
+        createdStream = await client.createStream({
+            name: getName(),
+            requireSignedData: true,
+            requireEncryptedData: false,
+        })
+    })
+
     describe('createStream', () => {
         it('creates a stream with correct values', async () => {
+            const name = getName()
             const stream = await client.createStream({
                 name,
                 requireSignedData: true,
-                requireEncryptedData: false,
+                requireEncryptedData: true,
             })
-            createdStream = stream
-            assert(createdStream.id)
-            assert.strictEqual(createdStream.name, name)
-            assert.strictEqual(createdStream.requireSignedData, true)
-        })
-
-        it('can create and get a stream with slashes in name', async () => {
-            const slashName = 'x/y'
-            const stream = await client.createStream({
-                name: slashName,
-                requireSignedData: true,
-                requireEncryptedData: false,
-            })
-            const gotStream = await client.getStream(stream.id)
-            createdStream = stream
-            assert(createdStream.id)
-            assert.strictEqual(createdStream.name, slashName)
-            assert.strictEqual(gotStream.name, slashName)
-            assert.strictEqual(createdStream.requireSignedData, true)
+            assert(stream.id)
+            assert.strictEqual(stream.name, name)
+            assert.strictEqual(stream.requireSignedData, true)
+            assert.strictEqual(stream.requireEncryptedData, true)
         })
     })
 
@@ -78,19 +72,15 @@ describe('StreamEndpoints', () => {
 
     describe('getOrCreate', () => {
         it('getOrCreate an existing Stream', async () => {
-            const stream = await client.createStream({
-                name: `StreamEndpoints-integration-${Date.now()}`,
-            })
-
             const existingStream = await client.getOrCreateStream({
-                name: stream.name,
+                name: createdStream.name,
             })
-            assert.strictEqual(existingStream.id, stream.id)
-            assert.strictEqual(existingStream.name, stream.name)
+            assert.strictEqual(existingStream.id, createdStream.id)
+            assert.strictEqual(existingStream.name, createdStream.name)
         })
 
         it('getOrCreate a new Stream by name', async () => {
-            const newName = `StreamEndpoints-integration-${Date.now()}`
+            const newName = uid('stream')
             const newStream = await client.getOrCreateStream({
                 name: newName,
             })
@@ -110,15 +100,11 @@ describe('StreamEndpoints', () => {
 
     describe('listStreams', () => {
         it('filters by given criteria (match)', async () => {
-            const stream = await client.createStream({
-                name: `StreamEndpoints-integration-${Date.now()}`,
-            })
-
             const result = await client.listStreams({
-                name: stream.name,
+                name: createdStream.name,
             })
             assert.strictEqual(result.length, 1)
-            assert.strictEqual(result[0].id, stream.id)
+            assert.strictEqual(result[0].id, createdStream.id)
         })
 
         it('filters by given criteria (no  match)', async () => {
@@ -131,12 +117,6 @@ describe('StreamEndpoints', () => {
 
     describe('getStreamLast', () => {
         it('does not error', async () => {
-            const stream = await client.createStream({
-                name,
-                requireSignedData: true,
-                requireEncryptedData: false,
-            })
-            createdStream = stream
             const result = await client.getStreamLast(createdStream.id)
             expect(result).toEqual([])
         })
@@ -249,5 +229,15 @@ describe('StreamEndpoints', () => {
             await createdStream.delete()
             assert.strictEqual(await client.getStream(createdStream.id), undefined)
         })
+    })
+}
+
+describe('StreamEndpoints', () => {
+    describe('using normal name', () => {
+        TestStreamEndpoints(() => uid('test-stream'))
+    })
+
+    describe('using name with slashes', () => {
+        TestStreamEndpoints(() => uid('test-stream/slashes'))
     })
 })
