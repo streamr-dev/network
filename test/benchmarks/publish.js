@@ -1,77 +1,121 @@
+const { format } = require('util')
+
 const { Benchmark } = require('benchmark')
 const { ethers } = require('ethers')
-/* eslint-disable no-console */
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist/streamr-client.nodejs.js')
 const config = require('../integration/config')
 
-const client1 = new StreamrClient({
-    ...config.clientOptions,
-    auth: {
-        privateKey: ethers.Wallet.createRandom().privateKey,
-    },
-    publishWithSignature: 'always',
-})
+/* eslint-disable no-console */
 
-const client2 = new StreamrClient({
-    ...config.clientOptions,
-    auth: {
-        apiKey: 'tester1-api-key'
-    },
-    publishWithSignature: 'never',
-})
-
-let count = 100000
+let count = 100000 // pedantic: use large initial number so payload size is similar
 const Msg = () => {
     count += 1
     return {
-        msg: `test${count}`
+        msg: `msg${count}`
     }
 }
 
+function createClient(opts) {
+    return new StreamrClient({
+        ...config.clientOptions,
+        ...opts,
+    })
+}
+
+async function setupClientAndStream(opts) {
+    const client = createClient(opts)
+    await client.connect()
+    await client.session.getSessionToken()
+
+    const stream = await client.createStream({
+        name: `test-stream.${process.pid}.${client.id}`,
+    })
+    return [client, stream]
+}
+
+const BATCH_SIZES = [
+    1,
+    4,
+    16,
+    64
+]
+
+const log = (...args) => process.stderr.write(format(...args) + '\n')
+
 async function run() {
-    await client1.connect()
-    await client1.session.getSessionToken()
-    await client2.connect()
-    await client2.session.getSessionToken()
-    const stream1 = await client1.createStream({
-        name: `node-example-data1.${process.pid}`,
+    const [client1, stream1] = await setupClientAndStream({
+        auth: {
+            privateKey: ethers.Wallet.createRandom().privateKey,
+        },
+        publishWithSignature: 'always',
     })
 
-    const stream2 = await client2.getOrCreateStream({
-        name: `node-example-data2.${process.pid}`,
+    const [client2, stream2] = await setupClientAndStream({
+        auth: {
+            apiKey: 'tester1-api-key'
+        },
+        publishWithSignature: 'never',
     })
 
     const suite = new Benchmark.Suite()
-    suite.add('client publishing with signing', {
-        defer: true,
-        fn(deferred) {
-            // eslint-disable-next-line promise/catch-or-return
-            stream1.publish(Msg()).then(() => deferred.resolve(), () => deferred.resolve())
+
+    async function publish(stream, batchSize) {
+        const tasks = []
+        for (let i = 0; i < batchSize; i++) {
+            tasks.push(stream.publish(Msg()))
         }
+        return Promise.all(tasks)
+    }
+
+    BATCH_SIZES.forEach((batchSize) => {
+        suite.add(`client publishing in batches of ${batchSize} with signing`, {
+            defer: true,
+            fn(deferred) {
+                this.BATCH_SIZE = batchSize
+                // eslint-disable-next-line promise/catch-or-return
+                return publish(stream1, batchSize).then(() => deferred.resolve(), () => deferred.resolve())
+            }
+        })
+
+        suite.add(`client publishing in batches of ${batchSize} without signing`, {
+            defer: true,
+            fn(deferred) {
+                this.BATCH_SIZE = batchSize
+                // eslint-disable-next-line promise/catch-or-return
+                return publish(stream2, batchSize).then(() => deferred.resolve(), () => deferred.resolve())
+            }
+        })
     })
 
-    suite.add('client publishing without signing', {
-        defer: true,
-        fn(deferred) {
-            // eslint-disable-next-line promise/catch-or-return
-            stream2.publish(Msg()).then(() => deferred.resolve(), () => deferred.resolve())
+    function toStringBench(bench) {
+        const { error, id, stats } = bench
+        let { hz } = bench
+        hz *= bench.BATCH_SIZE // adjust hz by batch size
+        const size = stats.sample.length
+        const pm = '\xb1'
+        let result = bench.name || (Number.isNaN(id) ? id : '<Test #' + id + '>')
+        if (error) {
+            return result + ' Error'
         }
-    })
+
+        result += ' x ' + Benchmark.formatNumber(hz.toFixed(hz < 100 ? 2 : 0)) + ' ops/sec ' + pm
+            + stats.rme.toFixed(2) + '% (' + size + ' run' + (size === 1 ? '' : 's') + ' sampled)'
+        return result
+    }
 
     suite.on('cycle', (event) => {
-        console.log(String(event.target))
+        log(toStringBench(event.target))
     })
 
-    suite.on('complete', async function onComplete() {
-        console.log('Fastest is ' + this.filter('fastest').map('name'))
-        console.log('Disconnecting clients')
+    suite.on('complete', async () => {
+        log('Disconnecting clients')
         await Promise.all([
             client1.disconnect(),
             client2.disconnect(),
         ])
-        console.log('Clients disconnected')
+        log('Clients disconnected')
     })
 
     suite.run()
