@@ -3,6 +3,7 @@ const { wait, waitForEvent } = require('streamr-test-utils')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { startTracker } = require('../../src/composition')
 const TrackerNode = require('../../src/protocol/TrackerNode')
+const TrackerServer = require('../../src/protocol/TrackerServer')
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
 
 const WAIT_TIME = 200
@@ -45,12 +46,8 @@ describe('tracker: counter filtering', () => {
             waitForEvent(trackerNode2, TrackerNode.events.CONNECTED_TO_TRACKER)
         ])
 
-        // TODO: in the current version of the network, instructions are only sent to one of the
-        //  participants. This means that counters of trackerNode2 will be left at (0, 0) whilst counters of
-        //  trackerNode1 are incremented to be (1, 1). Thus this "reverse order" of sending statuses. This can be
-        //  put back to "normal order" with WebRTC branch.
-        trackerNode2.sendStatus('tracker', formStatus(0, 0, [], []))
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []))
+        trackerNode2.sendStatus('tracker', formStatus(0, 0, [], []))
 
         await waitForEvent(trackerNode1, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
         await waitForEvent(trackerNode1, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
@@ -96,5 +93,19 @@ describe('tracker: counter filtering', () => {
 
         await wait(WAIT_TIME)
         expect(numOfInstructions).toEqual(1)
+    })
+
+    test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
+        const topologyBefore = tracker.getTopology()
+        trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []))
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        expect(tracker.getTopology()).toEqual(topologyBefore)
+    })
+
+    test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
+        const topologyBefore = tracker.getTopology()
+        trackerNode1.sendStatus('tracker', formStatus(1, 0, [], []))
+        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        expect(tracker.getTopology()).toEqual(topologyBefore)
     })
 })

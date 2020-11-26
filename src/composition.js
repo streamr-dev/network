@@ -6,11 +6,15 @@ const TrackerNode = require('./protocol/TrackerNode')
 const NodeToNode = require('./protocol/NodeToNode')
 const { PeerInfo } = require('./connection/PeerInfo')
 const Tracker = require('./logic/Tracker')
+const RtcSignaller = require('./logic/RtcSignaller')
 const NetworkNode = require('./NetworkNode')
 const logger = require('./helpers/logger')('streamr:bin:composition')
 const MetricsContext = require('./helpers/MetricsContext')
 const { trackerHttpEndpoints } = require('./helpers/trackerHttpEndpoints')
 const { startEndpoint } = require('./connection/WsEndpoint')
+const { WebRtcEndpoint } = require('./connection/WebRtcEndpoint')
+
+const STUN_URLS = ['stun:stun.l.google.com:19302'] // TODO: make configurable
 
 function startTracker({
     host,
@@ -62,12 +66,15 @@ function startNetworkNode({
 }) {
     const peerInfo = PeerInfo.newNode(id, name, location)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
+        const trackerNode = new TrackerNode(endpoint)
+        const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
+        const nodeToNode = new NodeToNode(new WebRtcEndpoint(id, STUN_URLS, webRtcSignaller, metricsContext, pingInterval))
         return new NetworkNode({
             peerInfo,
             trackers,
             protocols: {
-                trackerNode: new TrackerNode(endpoint),
-                nodeToNode: new NodeToNode(endpoint)
+                trackerNode,
+                nodeToNode
             },
             metricsContext,
             storages,
@@ -91,12 +98,15 @@ function startStorageNode({
 }) {
     const peerInfo = PeerInfo.newStorage(id, name, location)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
+        const trackerNode = new TrackerNode(endpoint)
+        const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
+        const nodeToNode = new NodeToNode(new WebRtcEndpoint(id, STUN_URLS, webRtcSignaller, metricsContext, pingInterval))
         return new NetworkNode({
             peerInfo,
             trackers,
             protocols: {
-                trackerNode: new TrackerNode(endpoint),
-                nodeToNode: new NodeToNode(endpoint)
+                trackerNode,
+                nodeToNode
             },
             metricsContext,
             storages,

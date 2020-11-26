@@ -5,6 +5,7 @@ const MetricsContext = require('../helpers/MetricsContext')
 const TrackerServer = require('../protocol/TrackerServer')
 const { StreamIdAndPartition } = require('../identifiers')
 
+const { attachRtcSignalling } = require('./rtcSignallingHandlers')
 const InstructionCounter = require('./InstructionCounter')
 const LocationManager = require('./LocationManager')
 const OverlayTopology = require('./OverlayTopology')
@@ -48,6 +49,7 @@ module.exports = class Tracker extends EventEmitter {
         this.protocols.trackerServer.on(TrackerServer.events.STORAGE_NODES_REQUEST, (message, nodeId) => {
             this.findStorageNodes(message, nodeId)
         })
+        attachRtcSignalling(this.protocols.trackerServer)
 
         this.logger = getLogger(`streamr:logic:tracker:${this.peerInfo.peerId}`)
         this.logger.debug('started %s', this.peerInfo.peerId)
@@ -150,9 +152,9 @@ module.exports = class Tracker extends EventEmitter {
         this.logger.debug('update node %s for streams %j', node, Object.keys(allStreams))
     }
 
-    _formAndSendInstructions(node, streamKeys) {
+    _formAndSendInstructions(node, streamKeys, forceGenerate = false) {
         streamKeys.forEach((streamKey) => {
-            const instructions = this.overlayPerStream[streamKey].formInstructions(node)
+            const instructions = this.overlayPerStream[streamKey].formInstructions(node, forceGenerate)
             Object.entries(instructions).forEach(([nodeId, newNeighbors]) => {
                 this.metrics.record('instructionsSent', 1)
                 try {
@@ -176,12 +178,16 @@ module.exports = class Tracker extends EventEmitter {
     }
 
     _leaveAndCheckEmptyOverlay(streamKey, overlayTopology, node) {
-        overlayTopology.leave(node)
+        const neighbors = overlayTopology.leave(node)
         this.instructionCounter.removeNode(node)
 
         if (overlayTopology.isEmpty()) {
             this.instructionCounter.removeStream(streamKey)
             delete this.overlayPerStream[streamKey]
+        } else {
+            neighbors.forEach((neighbor) => {
+                this._formAndSendInstructions(neighbor, [streamKey], true)
+            })
         }
     }
 

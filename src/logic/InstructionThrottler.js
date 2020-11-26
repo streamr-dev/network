@@ -1,3 +1,6 @@
+const { cancelable } = require('cancelable-promise')
+
+const logger = require('../helpers/logger')('streamr:InstructionThrottler')
 const { StreamIdAndPartition } = require('../identifiers')
 /**
  * InstructionThrottler makes sure that
@@ -11,6 +14,7 @@ module.exports = class InstructionThrottler {
         this.handling = false
         this.handleFn = handleFn
         this.queue = {} // streamId => instructionMessage
+        this.ongoingPromise = null
     }
 
     add(instructionMessage, trackerId) {
@@ -31,6 +35,13 @@ module.exports = class InstructionThrottler {
         return !this.handling
     }
 
+    reset() {
+        this.queue = {}
+        if (this.ongoingPromise) {
+            this.ongoingPromise.cancel()
+        }
+    }
+
     async _invokeHandleFnWithLock() {
         const streamIds = Object.keys(this.queue)
         const streamId = streamIds[0]
@@ -39,8 +50,13 @@ module.exports = class InstructionThrottler {
 
         this.handling = true
         try {
-            await this.handleFn(instructionMessage, trackerId)
+            this.ongoingPromise = cancelable(this.handleFn(instructionMessage, trackerId))
+            await this.ongoingPromise
+        } catch (err) {
+            logger.warn('InstructionMessage handling threw error %s', err)
+            logger.warn(err)
         } finally {
+            this.ongoingPromise = null
             if (this._isQueueEmpty()) {
                 this.handling = false
             } else {

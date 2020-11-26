@@ -15,6 +15,14 @@ const FIRST_STREAM_2 = 'stream-12'
 const SECOND_STREAM_2 = 'stream-10'
 const THIRD_STREAM_2 = 'stream-11'
 
+// Leave out WebRTC related events
+const TRACKER_NODE_EVENTS_OF_INTEREST = [
+    TrackerNode.events.CONNECTED_TO_TRACKER,
+    TrackerNode.events.TRACKER_DISCONNECTED,
+    TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED,
+    TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED
+]
+
 describe('multi trackers', () => {
     let trackerOne
     let trackerTwo
@@ -122,15 +130,15 @@ describe('multi trackers', () => {
         nodeOne.subscribe(FIRST_STREAM_2, 0)
         nodeTwo.subscribe(FIRST_STREAM_2, 0)
 
-        let nodeOneEvents = eventsWithArgsToArray(nodeOne.protocols.trackerNode, Object.values(TrackerNode.events))
-        let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.protocols.trackerNode, Object.values(TrackerNode.events))
+        let nodeOneEvents = eventsWithArgsToArray(nodeOne.protocols.trackerNode, TRACKER_NODE_EVENTS_OF_INTEREST)
+        let nodeTwoEvents = eventsWithArgsToArray(nodeTwo.protocols.trackerNode, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
             waitForEvent(nodeTwo, Node.events.NODE_SUBSCRIBED)
         ])
 
-        expect(nodeOneEvents).toHaveLength(0)
+        expect(nodeOneEvents).toHaveLength(1)
         expect(nodeTwoEvents).toHaveLength(1)
         expect(nodeTwoEvents[0][0]).toEqual(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
         expect(nodeTwoEvents[0][2]).toEqual('trackerOne')
@@ -139,15 +147,15 @@ describe('multi trackers', () => {
         nodeOne.subscribe(SECOND_STREAM_2, 0)
         nodeTwo.subscribe(SECOND_STREAM_2, 0)
 
-        nodeOneEvents = eventsWithArgsToArray(nodeOne.protocols.trackerNode, Object.values(TrackerNode.events))
-        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.protocols.trackerNode, Object.values(TrackerNode.events))
+        nodeOneEvents = eventsWithArgsToArray(nodeOne.protocols.trackerNode, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.protocols.trackerNode, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
             waitForEvent(nodeTwo, Node.events.NODE_SUBSCRIBED)
         ])
 
-        expect(nodeOneEvents).toHaveLength(0)
+        expect(nodeOneEvents).toHaveLength(1)
         expect(nodeTwoEvents).toHaveLength(1)
         expect(nodeTwoEvents[0][0]).toEqual(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
         expect(nodeTwoEvents[0][2]).toEqual('trackerTwo')
@@ -156,15 +164,15 @@ describe('multi trackers', () => {
         nodeOne.subscribe(THIRD_STREAM_2, 0)
         nodeTwo.subscribe(THIRD_STREAM_2, 0)
 
-        nodeOneEvents = eventsWithArgsToArray(nodeOne.protocols.trackerNode, Object.values(TrackerNode.events))
-        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.protocols.trackerNode, Object.values(TrackerNode.events))
+        nodeOneEvents = eventsWithArgsToArray(nodeOne.protocols.trackerNode, TRACKER_NODE_EVENTS_OF_INTEREST)
+        nodeTwoEvents = eventsWithArgsToArray(nodeTwo.protocols.trackerNode, TRACKER_NODE_EVENTS_OF_INTEREST)
 
         await Promise.all([
             waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
             waitForEvent(nodeTwo, Node.events.NODE_SUBSCRIBED)
         ])
 
-        expect(nodeOneEvents).toHaveLength(0)
+        expect(nodeOneEvents).toHaveLength(1)
         expect(nodeTwoEvents).toHaveLength(1)
         expect(nodeTwoEvents[0][0]).toEqual(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
         expect(nodeTwoEvents[0][2]).toEqual('trackerThree')
@@ -175,8 +183,9 @@ describe('multi trackers', () => {
             requestId: 'requestId',
             streamId: 'stream-2',
             streamPartition: 0,
-            nodeAddresses: [
-                'ws://127.0.0.1:49004'
+            nodeIds: [
+                'node-address-1',
+                'node-address-2',
             ],
             counter: 0
         })

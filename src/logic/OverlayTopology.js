@@ -30,14 +30,22 @@ class OverlayTopology {
         knownNeighbors.forEach((neighbor) => this.nodes[neighbor].add(nodeId))
         Object.keys(this.nodes)
             .filter((n) => !this.nodes[nodeId].has(n))
-            .forEach((n) => this.nodes[n].delete(nodeId))
+            .forEach((n) => {
+                this.nodes[n].delete(nodeId)
+            })
+        //
     }
 
     leave(nodeId) {
         if (this.nodes[nodeId] != null) {
-            this.nodes[nodeId].forEach((neighbor) => this.nodes[neighbor].delete(nodeId))
+            const neighbors = [...this.nodes[nodeId]]
+            this.nodes[nodeId].forEach((neighbor) => {
+                this.nodes[neighbor].delete(nodeId)
+            })
             delete this.nodes[nodeId]
+            return neighbors
         }
+        return []
     }
 
     isEmpty() {
@@ -52,7 +60,7 @@ class OverlayTopology {
         })) : {}
     }
 
-    formInstructions(nodeId) {
+    formInstructions(nodeId, forceGenerate = false) {
         const updatedNodes = new Set()
 
         const excessNeighbors = -this._numOfMissingNeighbors(nodeId)
@@ -73,6 +81,9 @@ class OverlayTopology {
             if (neighborsToAdd.length > 0) {
                 this.update(nodeId, [...this.nodes[nodeId], ...neighborsToAdd])
                 updatedNodes.add(nodeId)
+                neighborsToAdd.forEach((neighbor) => {
+                    updatedNodes.add(neighbor)
+                })
             }
         }
 
@@ -111,6 +122,10 @@ class OverlayTopology {
                     updatedNodes.add(n2)
                 }
             }
+        }
+
+        if (forceGenerate) {
+            updatedNodes.add(nodeId)
         }
 
         // check invariant: no node should be a neighbor of itself

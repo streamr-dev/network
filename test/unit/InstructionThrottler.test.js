@@ -17,7 +17,7 @@ describe('InstructionThrottler', () => {
             requestId: 'requestId',
             streamId,
             streamPartition: 0,
-            nodeAddresses: [],
+            nodeIds: [],
             counter
         })
     }

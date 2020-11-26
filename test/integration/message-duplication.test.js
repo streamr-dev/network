@@ -60,8 +60,16 @@ describe('duplicate message detection and avoidance', () => {
             }),
         ])
 
-        otherNodes.forEach((node) => node.start())
-        await Promise.all(otherNodes.map((node) => waitForEvent(node.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER)))
+        const allNodesConnnectedToTrackerPromise = Promise.all(otherNodes.map((node) => {
+            return waitForEvent(node.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER)
+        }))
+        // eslint-disable-next-line no-restricted-syntax
+        for (const node of otherNodes) {
+            node.start()
+            // eslint-disable-next-line no-await-in-loop
+            await wait(100) // do some sleep to prevent test from hanging
+        }
+        await allNodesConnnectedToTrackerPromise
 
         // Become subscribers (one-by-one, for well connected graph)
         otherNodes[0].subscribe('stream-id', 0)
@@ -70,7 +78,7 @@ describe('duplicate message detection and avoidance', () => {
         otherNodes[3].subscribe('stream-id', 0)
         otherNodes[4].subscribe('stream-id', 0)
 
-        await wait(1000)
+        await wait(2000)
 
         // Set up 1st test case
         let totalMessages = 0
@@ -97,8 +105,8 @@ describe('duplicate message detection and avoidance', () => {
             },
         }))
 
-        await waitForCondition(() => totalMessages > 9)
-    })
+        await waitForCondition(() => totalMessages > 9, 8000)
+    }, 10000)
 
     afterAll(async () => {
         await contactNode.stop()

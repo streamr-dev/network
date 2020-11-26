@@ -229,7 +229,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                     requestId: 'requestId',
                     streamId: 'streamId',
                     streamPartition: 0,
-                    nodeAddresses: []
+                    nodeIds: []
                 })
             )
             const streamAsArray = await waitForStreamToEnd(responseStream)
@@ -251,21 +251,21 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                     requestId: 'requestId',
                     streamId: 'streamId',
                     streamPartition: 0,
-                    nodeAddresses: [
-                        'ws://storageNode-1',
-                        'ws://storageNode-2',
-                        'ws://storageNode-3',
-                        'ws://storageNode-4'
+                    nodeIds: [
+                        'storageNode-1',
+                        'storageNode-2',
+                        'storageNode-3',
+                        'storageNode-4'
                     ]
-                })
+                }),
+                'tracker'
             )
-
             setImmediate(() => {
                 jest.runAllTimers()
                 expect(nodeToNode.connectToNode).toBeCalledTimes(3)
-                expect(nodeToNode.connectToNode).toBeCalledWith('ws://storageNode-1')
-                expect(nodeToNode.connectToNode).toBeCalledWith('ws://storageNode-2')
-                expect(nodeToNode.connectToNode).toBeCalledWith('ws://storageNode-3')
+                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-1', 'tracker', true, false)
+                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-2', 'tracker', true, false)
+                expect(nodeToNode.connectToNode).toBeCalledWith('storageNode-3', 'tracker', true, false)
                 done()
             })
         })
@@ -280,9 +280,9 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                     requestId: 'requestId',
                     streamId: 'streamId',
                     streamPartition: 0,
-                    nodeAddresses: [
-                        'ws://storageNode-1',
-                        'ws://storageNode-2'
+                    nodeIds: [
+                        'storageNode-1',
+                        'storageNode-2'
                     ]
                 })
             )
@@ -312,7 +312,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                     requestId: 'requestId',
                     streamId: 'streamId',
                     streamPartition: 0,
-                    nodeAddresses: ['ws://storageNode']
+                    nodeIds: ['storageNode']
                 })
             )
             return new Promise((resolve) => setImmediate(resolve))
@@ -368,7 +368,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                         requestId: 'requestId',
                         streamId: 'streamId',
                         streamPartition: 0,
-                        nodeAddresses: ['ws://storageNode']
+                        nodeIds: ['storageNode']
                     })
                 )
                 done()
@@ -454,7 +454,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                         requestId: 'requestId',
                         streamId: 'streamId',
                         streamPartition: 0,
-                        nodeAddresses: ['ws://storageNode']
+                        nodeIds: ['storageNode']
                     })
                 )
 

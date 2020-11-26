@@ -59,20 +59,26 @@ describe('check tracker, nodes and statuses from nodes', () => {
     })
 
     it('if failed to follow tracker instructions, inform tracker about current status', async () => {
-        const trackerInstruction = new TrackerLayer.InstructionMessage({
+        const trackerInstruction1 = new TrackerLayer.InstructionMessage({
             requestId: 'requestId',
             streamId: s1.id,
             streamPartition: s1.partition,
-            nodeAddresses: [
-                `ws://127.0.0.1:${port1}`,
-                `ws://127.0.0.1:${port2}`,
-                'OOPS'
-            ],
+            nodeIds: ['node2', 'unknown'],
             counter: 0
         })
 
-        await node1.onTrackerInstructionReceived('tracker', trackerInstruction)
-        await node2.onTrackerInstructionReceived('tracker', trackerInstruction)
+        const trackerInstruction2 = new TrackerLayer.InstructionMessage({
+            requestId: 'requestId',
+            streamId: s1.id,
+            streamPartition: s1.partition,
+            nodeIds: ['node1', 'unknown'],
+            counter: 0
+        })
+
+        await Promise.race([
+            node1.onTrackerInstructionReceived('tracker', trackerInstruction1),
+            node2.onTrackerInstructionReceived('tracker', trackerInstruction2)
+        ]).catch((e) => {})
 
         await Promise.race([
             waitForEvent(node1, Node.events.NODE_SUBSCRIBED),
@@ -91,11 +97,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             }
         })
 
-        expect([...node1.protocols.nodeToNode.endpoint.getPeers().keys()]).toEqual([
-            `ws://127.0.0.1:${trackerPort}`, `ws://127.0.0.1:${port2}`
-        ])
-        expect([...node2.protocols.nodeToNode.endpoint.getPeers().keys()]).toEqual([
-            `ws://127.0.0.1:${trackerPort}`, `ws://127.0.0.1:${port1}`
-        ])
+        expect(node1.getNeighbors()).toEqual(['node2'])
+        expect(node2.getNeighbors()).toEqual(['node1'])
     })
 })

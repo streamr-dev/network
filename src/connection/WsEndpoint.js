@@ -228,8 +228,8 @@ class WsEndpoint extends EventEmitter {
         return new Promise((resolve, reject) => {
             if (!this.isConnected(recipientAddress)) {
                 this.metrics.record('sendFailed', 1)
-                this.logger.debug('cannot send to %s because not connected', recipientAddress)
-                reject(new Error(`cannot send to ${recipientAddress} because not connected`))
+                this.logger.debug('cannot send to %s [%s] because not connected', recipientId, recipientAddress)
+                reject(new Error(`cannot send to ${recipientId} [${recipientAddress}] because not connected`))
             } else {
                 const ws = this.connections.get(recipientAddress)
                 this._socketSend(ws, message, recipientId, recipientAddress, resolve, reject)
@@ -239,7 +239,7 @@ class WsEndpoint extends EventEmitter {
 
     _socketSend(ws, message, recipientId, recipientAddress, successCallback, errorCallback) {
         const onSuccess = (address, peerId, msg) => {
-            this.logger.debug('sent to %s message "%s"', address, msg)
+            this.logger.debug('sent to %s [%s] message "%s"', recipientId, address, msg)
             this.metrics.record('outSpeed', msg.length)
             this.metrics.record('msgSpeed', 1)
             this.metrics.record('msgOutSpeed', 1)
@@ -263,7 +263,7 @@ class WsEndpoint extends EventEmitter {
             this._evaluateBackPressure(ws)
         } catch (e) {
             this.metrics.record('sendFailed', 1)
-            this.logger.error('sending to %s failed because of %s, readyState is', recipientAddress, e, ws.readyState)
+            this.logger.error('sending to %s [%s] failed because of %s, readyState is', recipientId, recipientAddress, e, ws.readyState)
             terminateWs(ws, this.logger)
         }
     }
@@ -293,14 +293,14 @@ class WsEndpoint extends EventEmitter {
 
         this.metrics.record('close', 1)
         if (!this.isConnected(recipientAddress)) {
-            this.logger.debug('cannot close connection to %s because not connected', recipientAddress)
+            this.logger.debug('cannot close connection to %s [%s] because not connected', recipientId, recipientAddress)
         } else {
             const ws = this.connections.get(recipientAddress)
             try {
-                this.logger.debug('closing connection to %s, reason %s', recipientAddress, reason)
+                this.logger.debug('closing connection to %s [%s], reason %s', recipientId, recipientAddress, reason)
                 closeWs(ws, disconnectionCodes.GRACEFUL_SHUTDOWN, reason, this.logger)
             } catch (e) {
-                this.logger.error('closing connection to %s failed because of %s', recipientAddress, e)
+                this.logger.error('closing connection to %s [%s] failed because of %s', recipientId, recipientAddress, e)
             }
         }
     }

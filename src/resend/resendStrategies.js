@@ -272,9 +272,10 @@ class ForeignResendStrategy {
         this.pendingTrackerResponse = new PendingTrackerResponseBookkeeper(timeout)
         this.pendingResends = {} // storageNode => [...proxiedResend]
 
-        this.trackerNode.on(TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED, async (storageNodesResponse) => {
+        // TODO: STORAGE_NODES_RESPONSE_RECEIVED tracker?
+        this.trackerNode.on(TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED, async (storageNodesResponse, tracker) => {
             const streamId = new StreamIdAndPartition(storageNodesResponse.streamId, storageNodesResponse.streamPartition)
-            const storageNodeAddresses = storageNodesResponse.nodeAddresses
+            const storageNodeIds = storageNodesResponse.nodeIds
 
             const entries = this.pendingTrackerResponse.popEntries(streamId)
             if (entries.length === 0) {
@@ -282,11 +283,11 @@ class ForeignResendStrategy {
             }
 
             let storageNode = null
-            while (storageNode === null && storageNodeAddresses.length > 0) {
-                const address = storageNodeAddresses.shift()
+            while (storageNode === null && storageNodeIds.length > 0) {
+                const nodeId = storageNodeIds.shift()
                 try {
-                    // eslint-disable-next-line require-atomic-updates, no-await-in-loop
-                    storageNode = await this.nodeToNode.connectToNode(address)
+                    // eslint-disable-next-line require-atomic-updates,no-await-in-loop
+                    storageNode = await this.nodeToNode.connectToNode(nodeId, tracker, true, false)
                 } catch (e) {
                     // nop
                 }

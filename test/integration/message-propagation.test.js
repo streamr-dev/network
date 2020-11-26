@@ -1,6 +1,7 @@
 const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
-const { waitForCondition } = require('streamr-test-utils')
+const { waitForCondition, waitForEvent } = require('streamr-test-utils')
 
+const Node = require('../../src/logic/Node')
 const { startTracker, startNetworkNode } = require('../../src/composition')
 
 describe('message propagation in network', () => {
@@ -88,6 +89,11 @@ describe('message propagation in network', () => {
         n2.subscribe('stream-1', 0)
         n3.subscribe('stream-1', 0)
 
+        await Promise.all([
+            waitForEvent(n2, Node.events.NODE_SUBSCRIBED),
+            waitForEvent(n3, Node.events.NODE_SUBSCRIBED)
+        ])
+
         for (let i = 1; i <= 5; ++i) {
             n1.publish(new StreamMessage({
                 messageId: new MessageID('stream-1', 0, i, 0, 'publisherId', 'msgChainId'),
@@ -106,9 +112,9 @@ describe('message propagation in network', () => {
             }))
         }
 
-        await waitForCondition(() => n1Messages.length === 5)
-        await waitForCondition(() => n2Messages.length === 5)
-        await waitForCondition(() => n3Messages.length === 5)
+        await waitForCondition(() => n1Messages.length === 5, 8000)
+        await waitForCondition(() => n2Messages.length === 5, 8000)
+        await waitForCondition(() => n3Messages.length === 5, 8000)
 
         expect(n1Messages).toEqual([
             {

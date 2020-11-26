@@ -1,7 +1,8 @@
-const { wait } = require('streamr-test-utils')
+const { wait, waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
+const Node = require('../../src/logic/Node')
 
 /**
  * This test verifies that tracker receives status messages from nodes with list of inBound and outBound connections
@@ -102,12 +103,16 @@ describe('check status message flow between tracker and two nodes', () => {
     it('tracker should receive rtt values from nodes', async (done) => {
         let receivedTotal = 0
 
+        nodeOne.subscribe(streamId, 0)
+        nodeTwo.subscribe(streamId, 0)
+
         nodeOne.start()
         nodeTwo.start()
 
-        nodeOne.subscribe(streamId, 0)
-        nodeTwo.subscribe(streamId, 0)
-        await wait(100)
+        await Promise.all([
+            waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
+            waitForEvent(nodeTwo, Node.events.NODE_SUBSCRIBED)
+        ])
 
         tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
             if (nodeId === 'node-1') {

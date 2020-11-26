@@ -113,7 +113,7 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.requestId).toMatch(UUID_REGEX)
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
-        expect(msg.nodeAddresses).toEqual(['ws://127.0.0.1:28513'])
+        expect(msg.nodeIds).toEqual(['trackerNode'])
         expect(msg.counter).toEqual(15)
     })
 
@@ -283,6 +283,120 @@ describe('delivery of messages in protocol layer', () => {
         expect(msg.requestId).toMatch('')
         expect(msg.streamId).toEqual('stream')
         expect(msg.streamPartition).toEqual(10)
-        expect(msg.nodeAddresses).toEqual(['ws://127.0.0.1:28513'])
+        expect(msg.nodeIds).toEqual(['trackerNode'])
+    })
+
+    test('sendUnknownPeerRtcError is delivered', async () => {
+        trackerServer.sendUnknownPeerRtcError('trackerNode', 'requestId', 'unknownTargetNode')
+        const [msg, source] = await waitForEvent(trackerNode, TrackerNode.events.RTC_ERROR_RECEIVED)
+
+        expect(msg).toBeInstanceOf(TrackerLayer.ErrorMessage)
+        expect(source).toEqual('trackerServer')
+        expect(msg.errorCode).toEqual(TrackerLayer.ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER)
+        expect(msg.targetNode).toEqual('unknownTargetNode')
+    })
+
+    test('sendRtcOffer is delivered (trackerServer->trackerNode)', async () => {
+        trackerServer.sendRtcOffer('trackerNode', 'requestId', PeerInfo.newNode('originatorNode'), 'description')
+        const [msg, source] = await waitForEvent(trackerNode, TrackerNode.events.RELAY_MESSAGE_RECEIVED)
+
+        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(source).toEqual('trackerServer')
+        expect(msg.requestId).toEqual('requestId')
+        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        expect(msg.targetNode).toEqual('trackerNode')
+        expect(msg.subType).toEqual('rtcOffer')
+        expect(msg.data).toEqual({
+            description: 'description'
+        })
+    })
+
+    test('sendRtcAnswer is delivered (trackerServer->trackerNode)', async () => {
+        trackerServer.sendRtcAnswer('trackerNode', 'requestId', PeerInfo.newNode('originatorNode'), 'description')
+        const [msg, source] = await waitForEvent(trackerNode, TrackerNode.events.RELAY_MESSAGE_RECEIVED)
+
+        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(source).toEqual('trackerServer')
+        expect(msg.requestId).toEqual('requestId')
+        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        expect(msg.targetNode).toEqual('trackerNode')
+        expect(msg.subType).toEqual('rtcAnswer')
+        expect(msg.data).toEqual({
+            description: 'description'
+        })
+    })
+
+    test('sendRtcConnect is delivered (trackerServer->trackerNode)', async () => {
+        trackerServer.sendRtcConnect('trackerNode', 'requestId', PeerInfo.newNode('originatorNode'))
+        const [msg, source] = await waitForEvent(trackerNode, TrackerNode.events.RELAY_MESSAGE_RECEIVED)
+
+        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(source).toEqual('trackerServer')
+        expect(msg.requestId).toEqual('requestId')
+        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        expect(msg.targetNode).toEqual('trackerNode')
+        expect(msg.subType).toEqual('rtcConnect')
+        expect(msg.data).toEqual({})
+    })
+
+    test('sendRemoteCandidate is delivered (trackerServer->trackerNode)', async () => {
+        trackerServer.sendRemoteCandidate('trackerNode', 'requestId', PeerInfo.newNode('originatorNode'), 'candidate', 'mid')
+        const [msg, source] = await waitForEvent(trackerNode, TrackerNode.events.RELAY_MESSAGE_RECEIVED)
+
+        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(source).toEqual('trackerServer')
+        expect(msg.requestId).toEqual('requestId')
+        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        expect(msg.targetNode).toEqual('trackerNode')
+        expect(msg.subType).toEqual('remoteCandidate')
+        expect(msg.data).toEqual({
+            candidate: 'candidate',
+            mid: 'mid'
+        })
+    })
+
+    test('sendLocalCandidate is delivered (trackerNode->trackerServer)', async () => {
+        trackerNode.sendLocalCandidate('trackerServer', 'targetNode', PeerInfo.newNode('originatorNode'), 'candidate', 'mid')
+        const [msg, source] = await waitForEvent(trackerServer, TrackerServer.events.RELAY_MESSAGE_RECEIVED)
+
+        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(source).toEqual('trackerNode')
+        expect(msg.requestId).toMatch(UUID_REGEX)
+        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        expect(msg.targetNode).toEqual('targetNode')
+        expect(msg.subType).toEqual('localCandidate')
+        expect(msg.data).toEqual({
+            candidate: 'candidate',
+            mid: 'mid'
+        })
+    })
+
+    test('sendLocalDescription is delivered (trackerNode->trackerServer)', async () => {
+        trackerNode.sendLocalDescription('trackerServer', 'targetNode', PeerInfo.newNode('originatorNode'), 'offer', 'description')
+        const [msg, source] = await waitForEvent(trackerServer, TrackerServer.events.RELAY_MESSAGE_RECEIVED)
+
+        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(source).toEqual('trackerNode')
+        expect(msg.requestId).toMatch(UUID_REGEX)
+        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        expect(msg.targetNode).toEqual('targetNode')
+        expect(msg.subType).toEqual('localDescription')
+        expect(msg.data).toEqual({
+            type: 'offer',
+            description: 'description'
+        })
+    })
+
+    test('sendRtcConnect is delivered (trackerNode->trackerServer)', async () => {
+        trackerNode.sendRtcConnect('trackerServer', 'targetNode', PeerInfo.newNode('originatorNode'))
+        const [msg, source] = await waitForEvent(trackerServer, TrackerServer.events.RELAY_MESSAGE_RECEIVED)
+
+        expect(msg).toBeInstanceOf(TrackerLayer.RelayMessage)
+        expect(source).toEqual('trackerNode')
+        expect(msg.requestId).toMatch(UUID_REGEX)
+        expect(msg.originator).toEqual(PeerInfo.newNode('originatorNode'))
+        expect(msg.targetNode).toEqual('targetNode')
+        expect(msg.subType).toEqual('rtcConnect')
+        expect(msg.data).toEqual({})
     })
 })

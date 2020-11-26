@@ -1,6 +1,7 @@
 const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
-const { waitForCondition, wait } = require('streamr-test-utils')
+const { waitForCondition, waitForEvent, wait } = require('streamr-test-utils')
 
+const Node = require('../../src/logic/Node')
 const { startNetworkNode, startTracker } = require('../../src/composition')
 
 /**
@@ -47,7 +48,12 @@ describe('optimization: do not propagate to sender', () => {
         n2.subscribe('stream-id', 0)
         n3.subscribe('stream-id', 0)
 
-        await waitForCondition(() => Object.keys(tracker.getTopology()['stream-id::0'] || {}).length === 3)
+        // Wait for fully-connected network
+        await waitForCondition(() => {
+            return n1.getNeighbors().length === 2
+                && n2.getNeighbors().length === 2
+                && n3.getNeighbors().length === 2
+        })
     })
 
     afterAll(async () => {
@@ -59,7 +65,7 @@ describe('optimization: do not propagate to sender', () => {
 
     // In a fully-connected network the number of duplicates should be (n-1)(n-2) instead of (n-1)^2 when not
     // propagating received messages back to their source
-    test('total duplicates == 2 in a fully-connected network of 3 nodes', async () => {
+    test('total duplicates == 2 in a fully-connected network of 3 nodes', async (done) => {
         n1.publish(new StreamMessage({
             messageId: new MessageID('stream-id', 0, 100, 0, 'publisher', 'session'),
             prevMsgRef: new MessageRef(99, 0),
@@ -67,16 +73,23 @@ describe('optimization: do not propagate to sender', () => {
                 hello: 'world'
             },
         }))
-        await wait(250)
 
-        const reportN1 = await n1.metrics.report()
-        const reportN2 = await n2.metrics.report()
-        const reportN3 = await n3.metrics.report()
+        const checkFn = async () => {
+            const reportN1 = await n1.metrics.report()
+            const reportN2 = await n2.metrics.report()
+            const reportN3 = await n3.metrics.report()
 
-        const totalDuplicates = reportN1['onDataReceived:ignoredDuplicate'].total
-            + reportN2['onDataReceived:ignoredDuplicate'].total
-            + reportN3['onDataReceived:ignoredDuplicate'].total
+            const n1Duplicates = reportN1['onDataReceived:ignoredDuplicate'].total
+            const n2Duplicates = reportN2['onDataReceived:ignoredDuplicate'].total
+            const n3Duplicates = reportN3['onDataReceived:ignoredDuplicate'].total
 
-        expect(totalDuplicates).toEqual(2)
+            if (n1Duplicates + n2Duplicates + n3Duplicates > 0) {
+                expect(n1Duplicates + n2Duplicates + n3Duplicates).toEqual(2)
+                done()
+            } else {
+                setTimeout(checkFn, 150)
+            }
+        }
+        setTimeout(checkFn, 150)
     })
 })

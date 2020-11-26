@@ -3,6 +3,7 @@ const { EventEmitter } = require('events')
 const { v4: uuidv4 } = require('uuid')
 const { ControlLayer } = require('streamr-client-protocol')
 
+const getLogger = require('../helpers/logger')
 const { decode } = require('../helpers/MessageEncoder')
 const endpointEvents = require('../connection/WsEndpoint').events
 
@@ -40,10 +41,11 @@ class NodeToNode extends EventEmitter {
         endpoint.on(endpointEvents.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
         endpoint.on(endpointEvents.LOW_BACK_PRESSURE, (peerInfo) => this.onLowBackPressure(peerInfo))
         endpoint.on(endpointEvents.HIGH_BACK_PRESSURE, (peerInfo) => this.onHighBackPressure(peerInfo))
+        this.logger = getLogger(`streamr:NodeToNode:${endpoint.id}`)
     }
 
-    connectToNode(address) {
-        return this.endpoint.connect(address)
+    connectToNode(receiverNodeId, trackerAddress, isOffering, trackerInstructed = true) {
+        return this.endpoint.connect(receiverNodeId, trackerAddress, isOffering, trackerInstructed)
     }
 
     sendData(receiverNodeId, streamMessage) {
@@ -69,12 +71,12 @@ class NodeToNode extends EventEmitter {
         }))
     }
 
-    disconnectFromNode(receiverNodeId, reason) {
-        this.endpoint.close(receiverNodeId, reason)
+    send(receiverNodeId, message) {
+        return this.endpoint.send(receiverNodeId, message.serialize()).then(() => message)
     }
 
-    send(receiverNodeId, message) {
-        return this.endpoint.send(receiverNodeId, message.serialize())
+    disconnectFromNode(receiverNodeId, reason) {
+        this.endpoint.close(receiverNodeId, reason)
     }
 
     getAddress() {
@@ -103,7 +105,7 @@ class NodeToNode extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                console.warn(`NodeToNode: invalid message from ${peerInfo}: ${rawMessage}`)
+                this.logger.warn('NodeToNode: invalid message from %s: %s', peerInfo, rawMessage)
             }
         }
     }

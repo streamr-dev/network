@@ -16,26 +16,40 @@ program
     .option('--nodeName <nodeName>', 'Human readble name for node', undefined)
     .option('--port <port>', 'port', 30302)
     .option('--ip <ip>', 'ip', '127.0.0.1')
-    .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:30300'])
-    .option('--streamId <streamId>', 'streamId to publish', 'default-stream-id')
+    .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:27777'])
+    .option('--streamId <streamId>', 'streamId to publish', 'stream-0')
     .option('--metrics <metrics>', 'log metrics', false)
-    .option('--intervalInMs <intervalInMs>', 'interval to publish in ms', 200)
+    .option('--intervalInMs <intervalInMs>', 'interval to publish in ms', 2000)
+    .option('--noise <noise>', 'bytes to add to messages', 64)
     .description('Run publisher')
     .parse(process.argv)
 
 const publisherId = program.id || `publisher-${program.port}`
 const name = program.nodeName || publisherId
+const noise = parseInt(program.noise, 10)
 
 const messageChainId = `message-chain-id-${program.port}`
 const streamObj = new StreamIdAndPartition(program.streamId, 0)
 const { id: streamId, partition } = streamObj
 
-startNetworkNode(program.ip, program.port, publisherId, [], null, name)
+function generateString(length) {
+    let result = ''
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+    const charactersLength = characters.length
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength))
+    }
+    return result
+}
+
+startNetworkNode({
+    host: program.ip, port: program.port, name: publisherId, id: publisherId, trackers: program.trackers, storage: []
+})
     .then((publisher) => {
         logger.info('started publisher id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
             publisherId, name, program.port, program.ip, program.trackers.join(', '), program.streamId, program.intervalInMs, program.metrics)
 
-        program.trackers.map((trackerAddress) => publisher.addBootstrapTracker(trackerAddress))
+        publisher.start()
 
         let lastTimestamp = null
         let sequenceNumber = 0
@@ -48,7 +62,8 @@ startNetworkNode(program.ip, program.port, publisherId, [], null, name)
                 messageId: new MessageID(streamId, partition, timestamp, sequenceNumber, publisherId, messageChainId),
                 prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
                 content: {
-                    msg
+                    msg,
+                    noise: generateString(noise)
                 },
             })
             publisher.publish(streamMessage)

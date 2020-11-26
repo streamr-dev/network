@@ -9,13 +9,13 @@ const CURRENT_VERSION = require('../package.json').version
 
 program
     .version(CURRENT_VERSION)
-    .option('--nodes <nodes>', 'number of nodes', 100)
+    .option('--nodes <nodes>', 'number of nodes', 10)
     .option('--streams <streams>', 'number of streams', 1)
     .description('Run local network with stream (-s)')
     .parse(process.argv)
 
 const { nodes: numberOfNodes } = program
-const startingPort = 30400
+const startingPort = 30000
 const trackerPort = 27777
 const startingDebugPort = 9200
 const streams = []
@@ -43,20 +43,22 @@ spawn('node', args, {
     stdio: [process.stdin, process.stdout, process.stderr]
 })
 
-for (let i = 0; i < numberOfNodes; i++) {
-    args = [
-        path.resolve('./bin/subscriber.js'),
-        '--streamId=' + streams[Math.floor(Math.random() * streams.length)],
-        '--port=' + (startingPort + i),
-        `--trackers=ws://127.0.0.1:${trackerPort}`
-    ]
+setTimeout(() => {
+    for (let i = 0; i < numberOfNodes; i++) {
+        args = [
+            path.resolve('./bin/subscriber.js'),
+            '--streamId=' + streams[Math.floor(Math.random() * streams.length)],
+            '--port=' + (startingPort + i),
+            `--trackers=ws://127.0.0.1:${trackerPort}`
+        ]
 
-    if (debug) {
-        args.unshift('--inspect-brk=' + (startingDebugPort + i))
+        if (debug) {
+            args.unshift('--inspect-brk=' + (startingDebugPort + i))
+        }
+
+        spawn('node', args, {
+            env: productionEnv,
+            stdio: [process.stdin, process.stdout, process.stderr]
+        })
     }
-
-    spawn('node', args, {
-        env: productionEnv,
-        stdio: [process.stdin, process.stdout, process.stderr]
-    })
-}
+}, 1000)
