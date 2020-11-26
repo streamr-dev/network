@@ -7,6 +7,7 @@ import LRU from 'quick-lru'
 import { ethers } from 'ethers'
 
 import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from '../utils'
+import { validateOptions } from '../stream/utils'
 
 import Signer from './Signer'
 
@@ -277,6 +278,8 @@ export default class Publisher {
     constructor(client) {
         this.client = client
         this.debug = client.debug.extend('Publisher')
+        this.msgQueue = LimitAsyncFnByKey(1)
+        this.sendQueue = LimitAsyncFnByKey(1)
 
         this.onConnectionDone = this.onConnectionDone.bind(this)
 
@@ -294,11 +297,49 @@ export default class Publisher {
         }
     }
 
-    async publish(...args) {
-        // wrap publish in error emitter
-        return this._publish(...args).catch((err) => {
+    async publish(streamObjectOrId, ...args) {
+        return this._publish(streamObjectOrId, ...args).catch((err) => {
+            // wrap in error emitter
             this.onErrorEmit(err)
             throw err
+        })
+    }
+
+    async createStreamMessage(streamObjectOrId, content, timestamp = new Date(), partitionKey = null) {
+        const { key } = validateOptions(streamObjectOrId)
+        const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
+        return this.msgQueue(key, async () => (
+            this.msgCreationUtil.createStreamMessage(streamObjectOrId, {
+                content,
+                timestamp: timestampAsNumber,
+                partitionKey
+            })
+        )).then(async (msg) => {
+            // do this here so can happen in parallel with connection/session
+            if (this.signer) {
+                // optional
+                await this.signer.signStreamMessage(msg)
+            }
+            return msg
+        })
+    }
+
+    async createPublishRequest(streamObjectOrId, content, timestamp = new Date(), partitionKey = null) {
+        const requestId = uuid('pub')
+
+        // get session, connection + generate stream message
+        // important: stream message call must be executed in publish() call order
+        // or sequencing will be broken.
+        const [streamMessage, sessionToken] = await Promise.all([
+            this.createStreamMessage(streamObjectOrId, content, timestamp, partitionKey),
+            this.client.session.getSessionToken(), // fetch in parallel
+            this.setupPublishHandle(),
+        ])
+
+        return new ControlLayer.PublishRequest({
+            streamMessage,
+            requestId,
+            sessionToken,
         })
     }
 
@@ -307,36 +348,18 @@ export default class Publisher {
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
-
-        const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
-        // get session + generate stream message
-        // important: stream message call must be executed in publish() call order
-        // or sequencing will be broken.
-        // i.e. do not put async work before call to createStreamMessage
-        const [streamMessage, sessionToken] = await Promise.all([
-            this.msgCreationUtil.createStreamMessage(streamObjectOrId, {
-                content,
-                timestamp: timestampAsNumber,
-                partitionKey
-            }),
-            this.client.session.getSessionToken(), // fetch in parallel
-            this.setupPublishHandle(),
-        ])
-
-        if (this.signer) {
-            // optional
-            await this.signer.signStreamMessage(streamMessage)
-        }
-
-        const requestId = uuid('pub')
-        const request = new ControlLayer.PublishRequest({
-            streamMessage,
-            requestId,
-            sessionToken,
-        })
-
+        const { key } = validateOptions(streamObjectOrId)
+        let request
         try {
-            await this.client.send(request)
+            // start request task
+            const requestTask = this.createPublishRequest(streamObjectOrId, content, timestamp, partitionKey)
+            await this.sendQueue(key, async () => {
+                // but don't sent until send queue empty & request created
+                request = await requestTask
+                await this.client.send(request)
+                // send calls should probably also fire in-order otherwise new realtime streams
+                // can miss messages that are sent late
+            })
         } catch (err) {
             const streamId = getStreamId(streamObjectOrId)
             throw new FailedToPublishError(
@@ -358,7 +381,6 @@ export default class Publisher {
     async setupPublishHandle() {
         try {
             clearTimeout(this._publishHandleTimeout)
-            this.client.connection.removeListener('done', this.onConnectionDone)
             this.client.connection.addListener('done', this.onConnectionDone)
             await this.client.connection.addHandle(PUBLISH_HANDLE)
         } finally {
@@ -366,7 +388,6 @@ export default class Publisher {
             clearTimeout(this._publishHandleTimeout)
             this._publishHandleTimeout = setTimeout(async () => {
                 try {
-                    this.client.connection.removeListener('done', this.onConnectionDone)
                     await this.client.connection.removeHandle(PUBLISH_HANDLE)
                 } catch (err) {
                     this.client.emit('error', err)
@@ -380,7 +401,6 @@ export default class Publisher {
      */
 
     onConnectionDone() {
-        this.client.connection.connectionHandles.delete(PUBLISH_HANDLE)
         clearTimeout(this._publishHandleTimeout)
     }
 
