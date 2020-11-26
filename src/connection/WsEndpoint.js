@@ -189,6 +189,7 @@ class WsEndpoint extends EventEmitter {
             .addRecordedMetric('webSocketError')
             .addQueriedMetric('connections', () => this.connections.size)
             .addQueriedMetric('pendingConnections', () => this.pendingConnections.size)
+            .addQueriedMetric('rtts', () => this.getRtts())
             .addQueriedMetric('totalWebSocketBuffer', () => {
                 return [...this.connections.values()]
                     .reduce((totalBufferSizeSum, ws) => totalBufferSizeSum + getBufferedAmount(ws), 0)
