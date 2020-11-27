@@ -30,6 +30,7 @@ describeRepeats('resends', () => {
             auth: {
                 privateKey: fakePrivateKey(),
             },
+            publishAutoDisconnectDelay: 10,
             autoConnect: false,
             autoDisconnect: false,
             maxRetries: 2,
@@ -238,8 +239,8 @@ describeRepeats('resends', () => {
         })
 
         it('closes connection with autoDisconnect', async () => {
-            client.connection.enableAutoDisconnect()
             client.connection.enableAutoConnect()
+            client.connection.enableAutoDisconnect(0) // set 0 delay
             const sub = await subscriber.resend({
                 streamId: stream.id,
                 last: published.length,
@@ -252,6 +253,8 @@ describeRepeats('resends', () => {
             for await (const m of sub) {
                 received.push(m)
             }
+
+            await wait(100) // wait for publish delay
 
             expect(client.connection.getState()).toBe('disconnected')
             expect(subscriber.count(stream.id)).toBe(0)

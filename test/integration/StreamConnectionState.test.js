@@ -26,6 +26,7 @@ describeRepeats('Connection State', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
+            publishAutoDisconnectDelay: 10,
             maxRetries: 2,
             ...config.clientOptions,
             ...opts,
@@ -197,7 +198,7 @@ describeRepeats('Connection State', () => {
                 })
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
-                    delay: 500,
+                    delay: 100,
                     waitForStorage: true,
                 })
 

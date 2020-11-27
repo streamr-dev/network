@@ -205,10 +205,6 @@ function SocketConnector(connection) {
         () => {
             connection.socket = socket
 
-            if (!connection.isConnected()) {
-                didCloseUnexpectedly = true
-            }
-
             return () => {
                 connection.socket = undefined
             }
@@ -225,6 +221,8 @@ function SocketConnector(connection) {
         },
         () => {
             return async () => {
+                // don't wait if socket already closed
+                if (connection.isClosed()) { return }
                 const { disconnectDelay = 250 } = connection.options
                 await wait(disconnectDelay || 0) // wait a moment before closing
             }
