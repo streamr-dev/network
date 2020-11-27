@@ -1,5 +1,5 @@
 import StreamrClient from '../../src/'
-import Stream from '../../src/rest/domain/Stream'
+import Stream from '../../src/stream'
 
 export default class StubbedStreamrClient extends StreamrClient {
     getUserInfo() {

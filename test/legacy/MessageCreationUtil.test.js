@@ -4,7 +4,7 @@ import { wait } from 'streamr-test-utils'
 import { MessageLayer } from 'streamr-client-protocol'
 
 import { MessageCreationUtil, StreamPartitioner } from '../../src/Publisher'
-import Stream from '../../src/rest/domain/Stream'
+import Stream from '../../src/stream'
 
 // eslint-disable-next-line import/no-named-as-default-member
 import StubbedStreamrClient from './StubbedStreamrClient'

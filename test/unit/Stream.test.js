@@ -1,4 +1,4 @@
-import Stream from '../../src/rest/domain/Stream'
+import Stream from '../../src/stream'
 
 describe('Stream', () => {
     let stream

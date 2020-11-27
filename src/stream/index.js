@@ -1,5 +1,5 @@
-import { getEndpointUrl } from '../../utils'
-import authFetch from '../authFetch'
+import { getEndpointUrl } from '../utils'
+import authFetch from '../rest/authFetch'
 
 export default class Stream {
     constructor(client, props) {
