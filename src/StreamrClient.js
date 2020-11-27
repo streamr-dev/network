@@ -1,19 +1,14 @@
-import qs from 'qs'
 import EventEmitter from 'eventemitter3'
-import uniqueId from 'lodash.uniqueid'
 import { Wallet } from 'ethers'
-import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
-import { getVersionString } from './utils'
-import Connection from './Connection'
+import { counterId } from './utils'
+import Config from './Config'
 import Session from './Session'
+import Connection from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
-
-const { ControlMessage } = ControlLayer
-
-const { StreamMessage } = MessageLayer
 
 class StreamrConnection extends Connection {
     constructor(...args) {
@@ -49,63 +44,14 @@ class StreamrConnection extends Connection {
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
         super()
-        this.id = uniqueId('StreamrClient')
+        this.id = counterId(this.constructor.name)
         this.debug = Debug(this.id)
-        // Default options
-        this.options = {
+
+        this.options = Config({
+            id: this.id,
             debug: this.debug,
-            // The server to connect to
-            url: 'wss://streamr.network/api/v1/ws',
-            restUrl: 'https://streamr.network/api/v1',
-            // Automatically connect on first subscribe
-            autoConnect: true,
-            // Automatically disconnect on last unsubscribe
-            autoDisconnect: true,
-            orderMessages: true,
-            auth: {},
-            publishWithSignature: 'auto',
-            verifySignatures: 'auto',
-            retryResendAfter: 5000,
-            gapFillTimeout: 5000,
-            maxPublishQueueSize: 10000,
-            streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
-            streamrOperatorAddress: '0xc0aa4dC0763550161a6B59fa430361b5a26df28C',
-            tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
-        }
-
-        Object.assign(this.options, options || {})
-
-        const parts = this.options.url.split('?')
-        if (parts.length === 1) { // there is no query string
-            const controlLayer = `controlLayerVersion=${ControlMessage.LATEST_VERSION}`
-            const messageLayer = `messageLayerVersion=${StreamMessage.LATEST_VERSION}`
-            this.options.url = `${this.options.url}?${controlLayer}&${messageLayer}`
-        } else {
-            const queryObj = qs.parse(parts[1])
-            if (!queryObj.controlLayerVersion) {
-                this.options.url = `${this.options.url}&controlLayerVersion=1`
-            }
-
-            if (!queryObj.messageLayerVersion) {
-                this.options.url = `${this.options.url}&messageLayerVersion=31`
-            }
-        }
-
-        // always add streamrClient version
-        this.options.url = `${this.options.url}&streamrClient=${getVersionString()}`
-
-        // Backwards compatibility for option 'authKey' => 'apiKey'
-        if (this.options.authKey && !this.options.apiKey) {
-            this.options.apiKey = this.options.authKey
-        }
-
-        if (this.options.apiKey) {
-            this.options.auth.apiKey = this.options.apiKey
-        }
-
-        if (this.options.auth.privateKey && !this.options.auth.privateKey.startsWith('0x')) {
-            this.options.auth.privateKey = `0x${this.options.auth.privateKey}`
-        }
+            ...options,
+        })
 
         // bind event handlers
         this.getUserInfo = this.getUserInfo.bind(this)
