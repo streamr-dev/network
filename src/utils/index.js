@@ -1,3 +1,5 @@
+import { inspect } from 'util'
+
 import { v4 as uuidv4 } from 'uuid'
 import uniqueId from 'lodash.uniqueid'
 import LRU from 'quick-lru'
@@ -239,10 +241,14 @@ export class TimeoutError extends Error {
 }
 
 export async function pTimeout(promise, timeout = 0, message = '') {
+    if (typeof timeout !== 'number') {
+        throw new Error(`timeout must be a number, got ${inspect(timeout)}`)
+    }
+
     let timedOut = false
     let t
     return Promise.race([
-        promise.catch((err) => {
+        Promise.resolve(promise).catch((err) => {
             if (timedOut) {
                 // ignore errors after timeout
             }

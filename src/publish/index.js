@@ -7,7 +7,7 @@ import LRU from 'quick-lru'
 import { ethers } from 'ethers'
 
 import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from '../utils'
-import { validateOptions } from '../stream/utils'
+import { validateOptions, waitForRequestResponse } from '../stream/utils'
 
 import Signer from './Signer'
 
@@ -297,9 +297,10 @@ export default class Publisher {
         }
     }
 
-    async publish(streamObjectOrId, ...args) {
-        return this._publish(streamObjectOrId, ...args).catch((err) => {
-            // wrap in error emitter
+    async publish(...args) {
+        this.debug('publish()')
+        // wrap publish in error emitter
+        return this._publish(...args).catch((err) => {
             this.onErrorEmit(err)
             throw err
         })
@@ -348,14 +349,23 @@ export default class Publisher {
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
+
         const { key } = validateOptions(streamObjectOrId)
         let request
+
         try {
             // start request task
             const requestTask = this.createPublishRequest(streamObjectOrId, content, timestamp, partitionKey)
             await this.sendQueue(key, async () => {
                 // but don't sent until send queue empty & request created
                 request = await requestTask
+                // listen for errors for this request for 3s
+                waitForRequestResponse(this.client, request, {
+                    timeout: 3000,
+                }).catch((err) => {
+                    this.onErrorEmit(err)
+                })
+
                 await this.client.send(request)
                 // send calls should probably also fire in-order otherwise new realtime streams
                 // can miss messages that are sent late

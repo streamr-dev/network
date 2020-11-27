@@ -6,6 +6,8 @@ import { inspect } from 'util'
 
 import { ControlLayer } from 'streamr-client-protocol'
 
+import { pTimeout } from '../utils'
+
 export function StreamKey({ streamId, streamPartition = 0 }) {
     if (streamId == null) { throw new Error(`StreamKey: invalid streamId (${typeof streamId}): ${streamId}`) }
 
@@ -81,10 +83,14 @@ const PAIRS = new Map([
  * Wait for matching response types to requestId, or ErrorResponse.
  */
 
-export async function waitForResponse({ connection, types, requestId }) {
+export async function waitForResponse({ connection, types = [], requestId, timeout }) {
+    if (requestId == null) {
+        throw new Error(`requestId required, got: (${typeof requestId}) ${requestId}`)
+    }
+
     await connection.nextConnection()
-    return new Promise((resolve, reject) => {
-        let cleanup
+    let cleanup = () => {}
+    const task = new Promise((resolve, reject) => {
         let onDisconnected
         const onResponse = (res) => {
             if (res.requestId !== requestId) { return }
@@ -113,6 +119,7 @@ export async function waitForResponse({ connection, types, requestId }) {
         types.forEach((type) => {
             connection.on(type, onResponse)
         })
+
         connection.on(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
 
         onDisconnected = () => {
@@ -122,13 +129,24 @@ export async function waitForResponse({ connection, types, requestId }) {
 
         connection.once('disconnected', onDisconnected)
     })
+
+    try {
+        if (!timeout) {
+            return await task
+        }
+
+        return await pTimeout(task, timeout, `Waiting for response to: ${requestId}.`)
+    } finally {
+        cleanup()
+    }
 }
 
-export async function waitForRequestResponse(client, request) {
+export async function waitForRequestResponse(client, request, { timeout } = {}) {
     return waitForResponse({
         connection: client.connection,
         types: PAIRS.get(request.type),
         requestId: request.requestId,
+        timeout,
     })
 }
 
