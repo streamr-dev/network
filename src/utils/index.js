@@ -16,22 +16,41 @@ export { AggregatedError, Scaffold }
 
 const UUID = uuidv4()
 
+/*
+ * Incrementing + human readable uuid
+ */
+
 export function uuid(label = '') {
-    return uniqueId(`${UUID}${label ? `.${label}` : ''}`) // incrementing + human readable uuid
+    return uniqueId(`${UUID}${label ? `.${label}` : ''}`)
 }
 
-export const counterId = (() => {
-    const counts = {}
-    let didWarn = false
-    // should not be used for many prefixes
-    return (prefix = 'ID') => {
-        counts[prefix] = counts[prefix] + 1 || 0
+/**
+ * Generates counter-based ids.
+ * Basically lodash.uniqueid but per-prefix.
+ * Not universally unique.
+ * Generally useful for tracking instances.
+ *
+ * Careful not to use too many prefixes since it needs to hold all prefixes in memory
+ * e.g. don't pass new uuid as a prefix
+ *
+ * counterId('test') => test.0
+ * counterId('test') => test.1
+ */
 
+export const counterId = (() => {
+    const MAX_PREFIXES = 256
+    const counts = {} // possible we could switch this to WeakMap and pass functions or classes.
+    let didWarn = false
+    return (prefix = 'ID') => {
+        // pedantic: wrap around if count grows too large
+        counts[prefix] = (counts[prefix] + 1 || 0) % Number.MAX_SAFE_INTEGER
+
+        // warn once if too many prefixes
         if (!didWarn) {
             const numTracked = Object.keys(counts).length
-            if (numTracked > 256) {
+            if (numTracked > MAX_PREFIXES) {
                 didWarn = true
-                console.warn(`counterId should not be used for a large number of unique prefixes: ${numTracked}`)
+                console.warn(`counterId should not be used for a large number of unique prefixes: ${numTracked} > ${MAX_PREFIXES}`)
             }
         }
 
@@ -219,6 +238,10 @@ export function LimitAsyncFnByKey(limit) {
     return f
 }
 
+/**
+ * Execute functions in parallel, but ensure they resolve in the order they were executed
+ */
+
 export function pOrderedResolve(fn) {
     const queue = pLimit(1)
     return async (...args) => {
@@ -227,6 +250,33 @@ export function pOrderedResolve(fn) {
         // eslint-disable-next-line promise/catch-or-return
         await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
         return done
+    }
+}
+
+/**
+ * Returns a function that executes with limited concurrency.
+ */
+
+export function pLimitFn(fn, limit = 1) {
+    const queue = pLimit(limit)
+    return (...args) => queue(() => fn(...args))
+}
+
+/**
+ * Only allows one outstanding call.
+ * Returns same promise while task is executing.
+ */
+
+export function pOne(fn) {
+    let inProgress
+    return (...args) => {
+        if (!inProgress) {
+            inProgress = Promise.resolve(fn(...args)).finally(() => {
+                inProgress = undefined
+            })
+        }
+
+        return inProgress
     }
 }
 
@@ -240,6 +290,10 @@ export class TimeoutError extends Error {
     }
 }
 
+/**
+ * Takes a promise and a timeout and an optional message for timeout errors.
+ * Returns a promise that rejects when timeout expires, or when promise settles, whichever comes first.
+ */
 export async function pTimeout(promise, timeout = 0, message = '') {
     if (typeof timeout !== 'number') {
         throw new Error(`timeout must be a number, got ${inspect(timeout)}`)
@@ -251,6 +305,7 @@ export async function pTimeout(promise, timeout = 0, message = '') {
         Promise.resolve(promise).catch((err) => {
             if (timedOut) {
                 // ignore errors after timeout
+                return
             }
 
             throw err
@@ -284,27 +339,4 @@ export async function allSettledValues(items, errorMessage = '') {
     }
 
     return result.map(({ value }) => value)
-}
-
-export function pLimitFn(fn, limit = 1) {
-    const queue = pLimit(limit)
-    return (...args) => queue(() => fn(...args))
-}
-
-/**
- * Only allows one outstanding call.
- * Returns same promise while task is executing.
- */
-
-export function pOne(fn) {
-    let inProgress
-    return (...args) => {
-        if (!inProgress) {
-            inProgress = Promise.resolve(fn(...args)).finally(() => {
-                inProgress = undefined
-            })
-        }
-
-        return inProgress
-    }
 }
