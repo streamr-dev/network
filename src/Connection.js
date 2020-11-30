@@ -222,7 +222,7 @@ function SocketConnector(connection) {
         () => {
             return async () => {
                 // don't wait if socket already closed
-                if (connection.isClosed()) { return }
+                if (connection.isDisconnected()) { return }
                 const { disconnectDelay = 250 } = connection.options
                 await wait(disconnectDelay || 0) // wait a moment before closing
             }
