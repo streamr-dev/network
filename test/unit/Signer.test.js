@@ -9,49 +9,51 @@ we are testing the Signer which is internal, we use private keys with the '0x' p
  */
 describe('Signer', () => {
     describe('construction', () => {
-        it('should sign when constructed with private key', () => {
-            const signer = new Signer({
+        it('should sign when constructed with private key', async () => {
+            const signer = Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             })
-            const signature = signer.signData('some-data')
+            const signature = await signer.signData('some-data')
             expect(signature).toBeTruthy()
         })
 
         it('should throw when constructed with nothing', () => {
             expect(() => {
                 // eslint-disable-next-line no-new
-                new Signer({})
+                Signer({}, '')
             }).toThrow()
         })
 
-        it('Should return undefined when "never" option is set', () => {
-            expect(Signer.createSigner({}, 'never')).toBe(undefined)
+        it('Should noop if "never" option is set', async () => {
+            const obj = {}
+            expect(await Signer({}, 'never')(obj)).toBe(obj)
         })
 
-        it('Should return undefined when "auto" option is set with no private key or provider', () => {
-            expect(Signer.createSigner({}, 'auto')).toBe(undefined)
+        it('Should noop when "auto" option is set with no private key or provider', async () => {
+            const obj = {}
+            expect(await Signer({}, 'auto')(obj)).toBe(obj)
         })
 
         it('Should return a Signer when "auto" option is set with private key', () => {
-            const signer = Signer.createSigner({
+            const signer = Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             }, 'auto')
-            expect(signer).toBeInstanceOf(Signer)
+            expect(signer).toBeInstanceOf(Function)
         })
 
         it('Should return a Signer when "always" option is set with private key', () => {
-            const signer = Signer.createSigner({
+            const signer = Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             }, 'always')
-            expect(signer).toBeInstanceOf(Signer)
+            expect(signer).toBeInstanceOf(Function)
         })
 
         it('Should throw when "always" option is set with no private key or provider', () => {
-            expect(() => Signer.createSigner({}, 'always')).toThrow()
+            expect(() => Signer({}, 'always')).toThrow()
         })
 
         it('Should throw when unknown option is set', () => {
-            expect(() => Signer.createSigner({
+            expect(() => Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             }, 'unknown')).toThrow()
         })
@@ -66,7 +68,7 @@ describe('Signer', () => {
         const timestamp = 1529549961116
 
         beforeEach(() => {
-            signer = new Signer({
+            signer = Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             })
         })
@@ -92,7 +94,7 @@ describe('Signer', () => {
                 + streamMessage.getSerializedContent()
 
             const expectedSignature = await signer.signData(payload)
-            await signer.signStreamMessage(streamMessage)
+            await signer(streamMessage)
             expect(streamMessage.signature).toBe(expectedSignature)
             expect(streamMessage.getPublisherId()).toBe(signer.address)
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
@@ -116,7 +118,7 @@ describe('Signer', () => {
             const expectedSignature = await signer.signData(payload.join(''))
             expect(payload.join('')).toEqual(streamMessage.getPayloadToSign())
             expect(expectedSignature).toEqual(await signer.signData(streamMessage.getPayloadToSign()))
-            await signer.signStreamMessage(streamMessage)
+            await signer(streamMessage)
             expect(streamMessage.signature).toBe(expectedSignature)
             expect(streamMessage.getPublisherId()).toBe(signer.address)
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
