@@ -29,4 +29,6 @@ node_modules
 .idea
 *.iml
 .DS_Store
+
 # dist/* we want the dist folder on npm!
+dist/*.html

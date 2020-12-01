@@ -9,6 +9,7 @@ const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const { merge } = require('webpack-merge')
 const nodeExternals = require('webpack-node-externals')
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 
 const pkg = require('./package.json')
 
@@ -16,6 +17,7 @@ const libraryName = pkg.name
 
 module.exports = (env, argv) => {
     const isProduction = argv.mode === 'production' || env.NODE_ENV === 'production'
+    const analyze = !!process.env.BUNDLE_ANALYSIS
 
     const commonConfig = {
         mode: isProduction ? 'production' : 'development',
@@ -30,7 +32,7 @@ module.exports = (env, argv) => {
             umdNamedDefine: true,
         },
         optimization: {
-            minimize: false
+            minimize: false,
         },
         module: {
             rules: [
@@ -124,6 +126,14 @@ module.exports = (env, argv) => {
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
             }
         },
+        plugins: [
+            ...(analyze ? [
+                new BundleAnalyzerPlugin({
+                    analyzerMode: 'static',
+                    openAnalyzer: false,
+                }),
+            ] : [])
+        ]
     })
 
     let clientMinifiedConfig = {}
