@@ -102,7 +102,8 @@ module.exports = class Tracker extends EventEmitter {
     findStorageNodes(storageNodesRequest, source) {
         this.metrics.record('findStorageNodes', 1)
         const streamId = StreamIdAndPartition.fromMessage(storageNodesRequest)
-        this.protocols.trackerServer.sendStorageNodesResponse(source, streamId, [...this.storageNodes])
+        const storageNodeIds = [...this.storageNodes].filter((s) => s !== source)
+        this.protocols.trackerServer.sendStorageNodesResponse(source, streamId, storageNodeIds)
             .catch((e) => {
                 this.logger.error(`Failed to sendStorageNodes to node ${source}, ${streamId} because of ${e}`)
             })
