@@ -48,7 +48,6 @@ const StreamrClient = require('streamr-client')
 const sub = client.subscribe(
     {
         stream: 'streamId',
-        apiKey: 'secret',       // Optional. If not given, uses the apiKey given at client creation time.
         partition: 0,           // Optional, defaults to zero. Use for partitioned streams to select partition.
         // optional resend options here
     },
@@ -219,7 +218,7 @@ The second argument to `client.subscribe(options, callback)` is the callback fun
 
 #### Stream API
 
-All the below functions return a Promise which gets resolved with the result. They can also take an `apiKey` as an extra argument. Otherwise the `apiKey` defined in the `StreamrClient` options is used, if any.
+All the below functions return a Promise which gets resolved with the result.
 
 | Name                                                | Description                                                  |
 | :--------------------------------------------------- | :------------------------------------------------------------ |
@@ -238,7 +237,7 @@ removeListener(eventName, function) | Unbinds the `function` from events called 
 
 ## Stream object
 
-All the below functions return a Promise which gets resolved with the result. They can also take an `apiKey` as an extra argument. Otherwise the `apiKey` defined in the `StreamrClient` options is used, if any.
+All the below functions return a Promise which gets resolved with the result.
 
 | Name                                      | Description                                                  |
 | :----------------------------------------- | :------------------------------------------------------------ |
