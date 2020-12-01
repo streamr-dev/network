@@ -15,7 +15,7 @@
   "scripts": {
     "test": "eslint . && jest",
     "test-unit": "jest test/unit",
-    "test-integration": "jest test/integration",
+    "test-integration": "jest --forceExit test/integration",
     "eslint": "eslint ."
   },
   "author": "Streamr Network AG <contact@streamr.com>",
