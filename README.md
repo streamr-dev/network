@@ -26,6 +26,8 @@ The client is available on [npm](https://www.npmjs.com/package/streamr-client) a
 
 Here are some quick examples. More detailed examples for the browser and node.js can be found [here](https://github.com/streamr-dev/streamr-client/tree/master/examples).
 
+If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+
 #### Creating a StreamrClient instance
 
 ```javascript
@@ -145,7 +147,9 @@ stream.publish(msg)
 
 **Support for email/password authentication will be dropped in the future and cryptographic keys/wallets will be the only supported method.**
 
-Authenticating with an Ethereum private key by cryptographically signing a challenge. Note the utility function `StreamrClient.generateEthereumAccount()`, which can be used to easily get the address and private key for a newly generated account. Authenticating with Ethereum also automatically creates an associated Streamr user, if it doesn't exist:
+If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
+
+Authenticating with Ethereum also automatically creates an associated Streamr user, even if it doesn't already exist. Under the hood, the client will cryptographically sign a challenge to authenticate you as a Streamr user:
 
 ```javascript
 new StreamrClient({
