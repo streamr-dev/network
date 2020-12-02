@@ -14,6 +14,12 @@ The client uses websockets for producing and consuming messages to/from streams.
 
 [![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
 
+## Breaking changes notice
+- Dec 31st 2020: Email/password login will be removed. **Connect your email account to an Ethereum address before the deadline!**
+- Dec 31st 2020: Stream storage becomes opt-in and freely choosable.
+- Dec 31st 2020: Support for API keys will end.
+- Date TBD: Support for unsigned data will be dropped.
+
 [Installation](#installation) · [Usage](#usage) · [Client options](#client-options) · [Authentication options](#authentication-options) · [Message handler callback](#message-handler-callback) · [StreamrClient object](#streamrclient-object) · [Stream object](#stream-object) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#binding-to-events) · [Partitioning](#partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 ## Installation
