@@ -205,7 +205,7 @@ export function Defer(executor = () => {}) {
  * ```
  */
 
-export function LimitAsyncFnByKey(limit) {
+export function LimitAsyncFnByKey(limit = 1) {
     const pending = new Map()
     const queueOnEmptyTasks = new Map()
     const f = async (id, fn) => {
@@ -234,6 +234,7 @@ export function LimitAsyncFnByKey(limit) {
         pending.forEach((p) => p.clearQueue())
         pending.clear()
         queueOnEmptyTasks.forEach((p) => p.resolve())
+        queueOnEmptyTasks.clear()
     }
     return f
 }
