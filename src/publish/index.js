@@ -362,7 +362,9 @@ export default class Publisher {
                 // listen for errors for this request for 3s
                 waitForRequestResponse(this.client, request, {
                     timeout: 3000,
+                    rejectOnTimeout: false,
                 }).catch((err) => {
+                    // TODO: handle resending failed
                     this.onErrorEmit(err)
                 })
 

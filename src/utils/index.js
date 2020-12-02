@@ -293,8 +293,27 @@ export class TimeoutError extends Error {
 /**
  * Takes a promise and a timeout and an optional message for timeout errors.
  * Returns a promise that rejects when timeout expires, or when promise settles, whichever comes first.
+ *
+ * Invoke with positional arguments for timeout & message:
+ * await pTimeout(promise, timeout, message)
+ *
+ * or using an options object for timeout, message & rejectOnTimeout:
+ *
+ * await pTimeout(promise, { timeout, message, rejectOnTimeout })
+ *
+ * message and rejectOnTimeout are optional.
  */
-export async function pTimeout(promise, timeout = 0, message = '') {
+
+export async function pTimeout(promise, ...args) {
+    let opts = {}
+    if (args[0] && typeof args[0] === 'object') {
+        [opts] = args
+    } else {
+        [opts.timeout, opts.message] = args
+    }
+
+    const { timeout = 0, message = '', rejectOnTimeout = true } = opts
+
     if (typeof timeout !== 'number') {
         throw new Error(`timeout must be a number, got ${inspect(timeout)}`)
     }
@@ -313,17 +332,16 @@ export async function pTimeout(promise, timeout = 0, message = '') {
         new Promise((resolve, reject) => {
             t = setTimeout(() => {
                 timedOut = true
-                reject(new TimeoutError(message, timeout))
+                if (rejectOnTimeout) {
+                    reject(new TimeoutError(message, timeout))
+                } else {
+                    resolve()
+                }
             }, timeout)
         })
     ]).finally(() => {
         clearTimeout(t)
     })
-}
-
-pTimeout.ignoreError = (err) => {
-    if (err instanceof TimeoutError) { return }
-    throw err
 }
 
 /**

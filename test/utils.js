@@ -1,3 +1,5 @@
+import { inspect } from 'util'
+
 import { wait } from 'streamr-test-utils'
 
 import { pTimeout, counterId } from '../src/utils'
@@ -128,7 +130,7 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
                 await pTimeout(client.publish({
                     streamId,
                     streamPartition,
-                }, message), timeout, `publish timeout ${streamId}: ${i} ${JSON.stringify(message)}`)
+                }, message), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
             ])
             // eslint-disable-next-line no-await-in-loop, no-loop-func
             await wait(delay) // ensure timestamp increments for reliable resend response in test.

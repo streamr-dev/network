@@ -83,7 +83,13 @@ const PAIRS = new Map([
  * Wait for matching response types to requestId, or ErrorResponse.
  */
 
-export async function waitForResponse({ connection, types = [], requestId, timeout }) {
+export async function waitForResponse({
+    connection,
+    types = [],
+    requestId,
+    timeout,
+    rejectOnTimeout = true,
+}) {
     if (requestId == null) {
         throw new Error(`requestId required, got: (${typeof requestId}) ${requestId}`)
     }
@@ -135,18 +141,21 @@ export async function waitForResponse({ connection, types = [], requestId, timeo
             return await task
         }
 
-        return await pTimeout(task, timeout, `Waiting for response to: ${requestId}.`)
+        return await pTimeout(task, {
+            timeout,
+            message: `Waiting for response to: ${requestId}.`,
+            rejectOnTimeout,
+        })
     } finally {
         cleanup()
     }
 }
 
-export async function waitForRequestResponse(client, request, { timeout } = {}) {
+export async function waitForRequestResponse(client, request, opts = {}) {
     return waitForResponse({
         connection: client.connection,
         types: PAIRS.get(request.type),
         requestId: request.requestId,
-        timeout,
+        ...opts, // e.g. timeout, rejectOnTimeout
     })
 }
-

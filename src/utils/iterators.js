@@ -121,7 +121,11 @@ async function cancelGenerator(gtr, error) {
 }
 
 const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
-    await pTimeout(endGenerator(gtr, error), timeout).catch(pTimeout.ignoreError)
+    await pTimeout(endGenerator(gtr, error), {
+        timeout,
+        rejectOnTimeout: false,
+    })
+
     if (canCancel(gtr)) {
         await cancelGenerator(gtr, error)
     }
