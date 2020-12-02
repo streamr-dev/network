@@ -2,12 +2,11 @@ import { inspect } from 'util'
 import crypto from 'crypto'
 
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import randomstring from 'randomstring'
-import mem from 'mem'
 import { ethers } from 'ethers'
+import mem from 'mem'
 
-import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey } from '../utils'
 import { validateOptions, waitForRequestResponse } from '../stream/utils'
+import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
 
 import Signer from './Signer'
 
@@ -45,7 +44,7 @@ function hash(stringToHash) {
     return crypto.createHash('md5').update(stringToHash).digest()
 }
 
-function MessageChainer({ streamId, streamPartition, publisherId, msgChainId = randomstring.generate(20) } = {}) {
+function MessageChainer({ streamId, streamPartition, publisherId, msgChainId = randomString(20) } = {}) {
     let prevMsgRef = null
 
     /**

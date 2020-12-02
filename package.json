@@ -89,7 +89,6 @@
     "promise-memoize": "^1.2.1",
     "qs": "^6.9.4",
     "quick-lru": "^5.1.1",
-    "randomstring": "^1.1.5",
     "readable-stream": "^3.6.0",
     "streamr-client-protocol": "^7.0.0-alpha.2",
     "uuid": "^8.3.1",

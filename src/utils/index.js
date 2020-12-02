@@ -24,6 +24,11 @@ export function uuid(label = '') {
     return uniqueId(`${UUID}${label ? `.${label}` : ''}`)
 }
 
+export function randomString(length = 20) {
+    // eslint-disable-next-line no-bitwise
+    return [...Array(length)].map(() => (~~(Math.random() * 36)).toString(36)).join('')
+}
+
 /**
  * Generates counter-based ids.
  * Basically lodash.uniqueid but per-prefix.
