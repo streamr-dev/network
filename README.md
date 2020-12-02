@@ -170,18 +170,7 @@ Authenticating with an Ethereum private key contained in an Ethereum (web3) prov
 ```javascript
 new StreamrClient({
     auth: {
-        provider: web3.currentProvider,
-    }
-})
-```
-
-(Authenticating with an username and password, for internal use by the Streamr app):
-
-```javascript
-new StreamrClient({
-    auth: {
-        username: 'my@email.com',
-        password: 'password'
+        provider: window.ethereum,
     }
 })
 ```
