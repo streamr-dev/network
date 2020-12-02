@@ -108,6 +108,9 @@ function StreamPartitioner(cacheOptions) {
 }
 
 async function getUsername(client) {
+    const { options: { auth = {} } = {} } = client
+    if (auth.username) { return auth.username }
+
     const { username, id } = await client.getUserInfo()
     return (
         username
@@ -117,19 +120,23 @@ async function getUsername(client) {
 }
 
 async function getPublisherId(client) {
+    if (client.session.isUnauthenticated()) {
+        throw new Error('Need to be authenticated to getPublisherId.')
+    }
+
     const { options: { auth = {} } = {} } = client
-    if (auth.privateKey !== undefined) {
+    if (auth.privateKey) {
         return ethers.utils.computeAddress(auth.privateKey).toLowerCase()
     }
 
-    if (auth.provider !== undefined) {
+    if (auth.provider) {
         const provider = new ethers.providers.Web3Provider(auth.provider)
         return provider.getSigner().address.toLowerCase()
     }
 
-    const username = auth.username || await getUsername()
+    const username = await getUsername(client)
 
-    if (username !== undefined) {
+    if (username != null) {
         const hexString = ethers.utils.hexlify(Buffer.from(username, 'utf8'))
         return ethers.utils.sha256(hexString)
     }
@@ -209,6 +216,7 @@ function getCreateStreamMessage(client) {
     }
 
     return Object.assign(createStreamMessage, {
+        getCachedPublisherId,
         clear() {
             computeStreamPartition.clear()
             getCachedStream.clear()
@@ -337,7 +345,7 @@ export default class Publisher {
         if (this.client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to getPublisherId.')
         }
-        return this.msgCreationUtil.getPublisherId()
+        return this.createStreamMessage.getCachedPublisherId()
     }
 
     stop() {
