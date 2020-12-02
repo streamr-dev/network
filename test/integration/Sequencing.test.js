@@ -119,20 +119,18 @@ describe('Sequencing', () => {
         const msgsReceieved = []
 
         let calls = 0
-        const { clear } = client.publisher.msgCreationUtil.getPublisherId
-        const getPublisherId = client.publisher.msgCreationUtil.getPublisherId.bind(client.publisher.msgCreationUtil)
-        client.publisher.msgCreationUtil.getPublisherId = async (...args) => {
-            // delay getPublisher call
+        const getStream = client.getStream.bind(client)
+        client.getStream = async (...args) => {
+            // delay getStream call
             calls += 1
             if (calls === 2) {
-                const result = await getPublisherId(...args)
+                const result = await getStream(...args)
                 // delay resolving this call
                 await wait(100)
                 return result
             }
-            return getPublisherId(...args)
+            return getStream(...args)
         }
-        client.publisher.msgCreationUtil.getPublisherId.clear = clear
 
         const nextMsg = () => {
             const msg = Msg()
