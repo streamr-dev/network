@@ -5,8 +5,8 @@ import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
 import mem from 'mem'
 
-import { validateOptions, waitForRequestResponse } from '../stream/utils'
 import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
+import { waitForRequestResponse } from '../stream/utils'
 
 import Signer from './Signer'
 
@@ -143,8 +143,6 @@ async function getPublisherId(client) {
     throw new Error('Need either "privateKey", "provider", "apiKey", "username"+"password" or "sessionToken" to derive the publisher Id.')
 }
 
-const PUBLISH_HANDLE = Symbol('publish')
-
 /*
  * Get function for creating stream messages.
  */
@@ -152,23 +150,29 @@ const PUBLISH_HANDLE = Symbol('publish')
 function getCreateStreamMessage(client) {
     const cacheOptions = client.options.cache
     const computeStreamPartition = StreamPartitioner(cacheOptions)
-    // one chainer per stream+partition
-    const getMsgChainer = mem(MessageChainer, {
+
+    // make cached stream & publisher details
+    const getCachedStream = CacheAsyncFn(client.getStream.bind(client), cacheOptions)
+    const getCachedPublisherId = CacheAsyncFn(getPublisherId.bind(null, client), cacheOptions)
+
+    // one chainer per streamId + streamPartition + publisherId + msgChainId
+    const getMsgChainer = Object.assign(mem(MessageChainer, {
         cacheKey: ({ streamId, streamPartition, publisherId, msgChainId }) => (
+            // undefined msgChainId is fine
             [streamId, streamPartition, publisherId, msgChainId].join('|')
-        )
+        ),
+        ...cacheOptions,
+    }), {
+        clear() {
+            mem.clear(getMsgChainer)
+        }
     })
 
-    getMsgChainer.clear = () => mem.clear(getMsgChainer)
-
+    // message signer
     const signStreamMessage = Signer({
         ...client.options.auth,
         debug: client.debug,
     }, client.options.publishWithSignature)
-
-    // cache stream + publisher details
-    const getCachedStream = CacheAsyncFn(client.getStream.bind(client), cacheOptions)
-    const getCachedPublisherId = CacheAsyncFn(getPublisherId, cacheOptions)
 
     // per-stream queue so messages processed in-order
     const queue = LimitAsyncFnByKey(1)
@@ -226,129 +230,113 @@ function getCreateStreamMessage(client) {
     })
 }
 
-export default class Publisher {
-    constructor(client) {
-        this.client = client
-        this.debug = client.debug.extend('Publisher')
-        this.sendQueue = LimitAsyncFnByKey(1)
-        this.createStreamMessage = getCreateStreamMessage(client)
-        this.onConnectionDone = this.onConnectionDone.bind(this)
-        this.onErrorEmit = this.client.getErrorEmitter(this)
-    }
+/**
+ * Add handle to keep connection open while publishing.
+ * Refreshes handle timeout on each call.
+ * Only remove publish handle after inactivity of options.publishAutoDisconnectDelay ms.
+ */
 
-    async publish(...args) {
-        this.debug('publish()')
-        // wrap publish in error emitter
-        return this._publish(...args).catch((err) => {
-            this.onErrorEmit(err)
-            throw err
+const PUBLISH_HANDLE = Symbol('publish')
+
+async function setupPublishHandle(client) {
+    const onConnectionDone = () => clearTimeout(setupPublishHandle.timeout)
+    try {
+        clearTimeout(setupPublishHandle.timeout)
+        client.connection.addListener('done', onConnectionDone)
+        await client.connection.addHandle(PUBLISH_HANDLE)
+    } finally {
+        const { publishAutoDisconnectDelay = 5000 } = client.options
+        clearTimeout(setupPublishHandle.timeout)
+        setupPublishHandle.timeout = setTimeout(async () => { // eslint-disable-line require-atomic-updates
+            try {
+                await client.connection.removeHandle(PUBLISH_HANDLE)
+            } catch (err) {
+                client.emit('error', err)
+            }
+        }, publishAutoDisconnectDelay || 0)
+    }
+}
+
+export default function Publisher(client) {
+    const debug = client.debug.extend('Publisher')
+    const sendQueue = LimitAsyncFnByKey(1)
+    const createStreamMessage = getCreateStreamMessage(client)
+    const onErrorEmit = client.getErrorEmitter({
+        debug
+    })
+
+    async function listenForErrors(request) {
+        // listen for errors for this request for 3s
+        return waitForRequestResponse(client, request, {
+            timeout: 3000,
+            rejectOnTimeout: false,
         })
     }
 
-    async createPublishRequest(streamObjectOrId, content, timestamp = new Date(), partitionKey) {
-        const requestId = uuid('pub')
+    async function publishMessage(streamObjectOrId, content, timestamp = new Date(), partitionKey = null) {
+        if (client.session.isUnauthenticated()) {
+            throw new Error('Need to be authenticated to publish.')
+        }
 
-        // get session, connection + generate stream message
-        // important: stream message call must be executed in publish() call order
-        // or sequencing will be broken.
-        const [streamMessage, sessionToken] = await Promise.all([
-            this.createStreamMessage(streamObjectOrId, {
+        const streamId = getStreamId(streamObjectOrId)
+
+        // get session, connection + generate stream message in parallel
+        // NOTE: createStreamMessage *must* be executed in publish() call order or sequencing will be broken.
+        // i.e. don't do anything async before calling createStreamMessage
+
+        const asyncDepsTask = Promise.all([ // intentional no await
+            // no async before running createStreamMessage
+            createStreamMessage(streamObjectOrId, {
                 content,
                 timestamp,
                 partitionKey
             }),
-            this.client.session.getSessionToken(), // fetch in parallel
-            this.setupPublishHandle(),
+            client.session.getSessionToken(), // fetch in parallel
+            setupPublishHandle(client),
         ])
 
-        return new ControlLayer.PublishRequest({
-            streamMessage,
-            requestId,
-            sessionToken,
+        // no async before running sendQueue
+        await sendQueue(streamId, async () => {
+            const [streamMessage, sessionToken] = await asyncDepsTask
+            const requestId = uuid('pub')
+            const request = new ControlLayer.PublishRequest({
+                streamMessage,
+                requestId,
+                sessionToken,
+            })
+
+            listenForErrors(request).catch(onErrorEmit) // unchained async
+
+            // send calls should probably also fire in-order otherwise new realtime streams
+            // can miss messages that are sent late
+            await client.send(request)
+            return request
         })
     }
 
-    async _publish(streamObjectOrId, content, timestamp = new Date(), partitionKey = null) {
-        this.debug('publish()')
-        if (this.client.session.isUnauthenticated()) {
-            throw new Error('Need to be authenticated to publish.')
+    return {
+        async publish(streamObjectOrId, content, ...args) {
+            debug('publish()')
+            // wrap publish in error emitter
+            try {
+                return publishMessage(streamObjectOrId, content, ...args)
+            } catch (err) {
+                const streamId = getStreamId(streamObjectOrId)
+                const error = new FailedToPublishError(
+                    streamId,
+                    content,
+                    err
+                )
+                onErrorEmit(error)
+                throw error
+            }
+        },
+        async stop() {
+            sendQueue.clear()
+            createStreamMessage.clear()
+        },
+        async getPublisherId() {
+            return createStreamMessage.getCachedPublisherId()
         }
-
-        const { key } = validateOptions(streamObjectOrId)
-        let request
-
-        try {
-            // start request task
-            const requestTask = this.createPublishRequest(streamObjectOrId, content, timestamp, partitionKey)
-            await this.sendQueue(key, async () => {
-                // but don't sent until send queue empty & request created
-                request = await requestTask
-                // listen for errors for this request for 3s
-                waitForRequestResponse(this.client, request, {
-                    timeout: 3000,
-                    rejectOnTimeout: false,
-                }).catch((err) => {
-                    // TODO: handle resending failed
-                    this.onErrorEmit(err)
-                })
-
-                await this.client.send(request)
-                // send calls should probably also fire in-order otherwise new realtime streams
-                // can miss messages that are sent late
-            })
-        } catch (err) {
-            const streamId = getStreamId(streamObjectOrId)
-            throw new FailedToPublishError(
-                streamId,
-                content,
-                err
-            )
-        }
-
-        return request
-    }
-
-    /**
-     * Add handle to keep connection open while publishing.
-     * Refreshes handle timeout on each call.
-     * Only remove publish handle after inactivity of options.publishAutoDisconnectDelay ms.
-     */
-
-    async setupPublishHandle() {
-        try {
-            clearTimeout(this._publishHandleTimeout)
-            this.client.connection.addListener('done', this.onConnectionDone)
-            await this.client.connection.addHandle(PUBLISH_HANDLE)
-        } finally {
-            const { publishAutoDisconnectDelay = 5000 } = this.client.options
-            clearTimeout(this._publishHandleTimeout)
-            this._publishHandleTimeout = setTimeout(async () => {
-                try {
-                    await this.client.connection.removeHandle(PUBLISH_HANDLE)
-                } catch (err) {
-                    this.client.emit('error', err)
-                }
-            }, publishAutoDisconnectDelay || 0)
-        }
-    }
-
-    /**
-     * Clean up handle on connection done
-     */
-
-    onConnectionDone() {
-        clearTimeout(this._publishHandleTimeout)
-    }
-
-    async getPublisherId() {
-        if (this.client.session.isUnauthenticated()) {
-            throw new Error('Need to be authenticated to getPublisherId.')
-        }
-        return this.createStreamMessage.getCachedPublisherId()
-    }
-
-    stop() {
-        this.sendQueue.clear()
-        this.createStreamMessage.clear()
     }
 }
