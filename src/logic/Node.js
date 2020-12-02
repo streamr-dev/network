@@ -101,7 +101,23 @@ class Node extends EventEmitter {
             this.resendHandler.pauseResendsOfNode(nodeId)
         })
 
+        let avgLatency = -1
+
+        this.on(events.UNSEEN_MESSAGE_RECEIVED, (message) => {
+            const now = new Date().getTime()
+            const currentLatency = now - message.messageId.timestamp
+
+            if (avgLatency < 0) {
+                avgLatency = currentLatency
+            } else {
+                avgLatency = 0.8 * avgLatency + 0.2 * currentLatency
+            }
+
+            this.metrics.record('latency', avgLatency)
+        })
+
         this.perStreamMetrics = new PerStreamMetrics()
+
         this.metrics = this.opts.metricsContext.create('node')
             .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
             .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
@@ -117,6 +133,7 @@ class Node extends EventEmitter {
             .addRecordedMetric('onSubscribeRequest')
             .addRecordedMetric('onUnsubscribeRequest')
             .addRecordedMetric('onNodeDisconnect')
+            .addRecordedMetric('latency')
     }
 
     start() {
