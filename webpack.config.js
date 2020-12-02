@@ -16,7 +16,8 @@ const pkg = require('./package.json')
 const libraryName = pkg.name
 
 module.exports = (env, argv) => {
-    const isProduction = argv.mode === 'production' || env.NODE_ENV === 'production'
+    const isProduction = argv.mode === 'production' || process.env.NODE_ENV === 'production'
+
     const analyze = !!process.env.BUNDLE_ANALYSIS
 
     const commonConfig = {
@@ -41,6 +42,11 @@ module.exports = (env, argv) => {
                     exclude: /(node_modules|bower_components)/,
                     use: {
                         loader: 'babel-loader',
+                        options: {
+                            configFile: path.resolve(__dirname, '.babel.config.js'),
+                            babelrc: false,
+                            cacheDirectory: true,
+                        }
                     }
                 },
                 {
@@ -78,23 +84,9 @@ module.exports = (env, argv) => {
             use: {
                 loader: 'babel-loader',
                 options: {
-                    presets: [
-                        ['@babel/preset-env', {
-                            useBuiltIns: 'usage',
-                            corejs: 3,
-                            bugfixes: true,
-                            targets: {
-                                node: true
-                            },
-                        }]
-                    ],
-                    plugins: [
-                        'add-module-exports',
-                        '@babel/plugin-transform-modules-commonjs',
-                        ['@babel/plugin-proposal-class-properties', {
-                            loose: false
-                        }]
-                    ]
+                    cacheDirectory: true,
+                    configFile: path.resolve(__dirname, '.babel.node.config.js'),
+                    babelrc: false,
                 }
             }
         },

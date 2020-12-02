@@ -1,3 +1,5 @@
+const path = require('path')
+
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
@@ -162,7 +164,7 @@ module.exports = {
     // A map from regular expressions to paths to transformers
     transform: {
         '\\.js$': ['babel-jest', {
-            configFile: './jest.babel.config.js',
+            configFile: path.resolve(__dirname, '.babel.node.config.js'),
             babelrc: false,
         }]
     },

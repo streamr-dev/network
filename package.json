@@ -29,7 +29,8 @@
     "test-flakey": "jest --forceExit test/flakey",
     "test-browser": "node ./test/browser/server.js & node node_modules/nightwatch/bin/nightwatch ./test/browser/browser.js && pkill -f server.js",
     "install-example": "cd examples/webpack && npm ci",
-    "build-example": "cd examples/webpack && npm run build-with-parent"
+    "build-example": "cd examples/webpack && npm run build-with-parent",
+    "clear-cache": "rm -rf node_modules/.cache; rm -rf .cache; rm -rf dist; jest --clearCache;"
   },
   "engines": {
     "node": ">= 12"
