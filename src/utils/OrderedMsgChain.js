@@ -20,6 +20,7 @@ export default class OrderedMsgChain extends EventEmitter {
         propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT, resendTimeout = DEFAULT_RESEND_TIMEOUT,
     ) {
         super()
+        this.markedExplicitly = new WeakSet()
         this.publisherId = publisherId
         this.msgChainId = msgChainId
         this.inOrderHandler = inOrderHandler
@@ -34,9 +35,17 @@ export default class OrderedMsgChain extends EventEmitter {
         /* eslint-enable arrow-body-style */
     }
 
+    isStaleMessage(streamMessage) {
+        const msgRef = streamMessage.getMessageRef()
+        return (
+            this.lastReceivedMsgRef
+            && msgRef.compareTo(this.lastReceivedMsgRef) <= 0
+        )
+    }
+
     add(unorderedStreamMessage) {
-        const msgRef = unorderedStreamMessage.getMessageRef()
-        if (this.lastReceivedMsgRef && msgRef.compareTo(this.lastReceivedMsgRef) <= 0) {
+        if (this.isStaleMessage(unorderedStreamMessage)) {
+            const msgRef = unorderedStreamMessage.getMessageRef()
             // Prevent double-processing of messages for any reason
             debug('Already received message: %o, lastReceivedMsgRef: %o. Ignoring message.', msgRef, this.lastReceivedMsgRef)
             return
@@ -47,22 +56,25 @@ export default class OrderedMsgChain extends EventEmitter {
         } else {
             this.queue.push(unorderedStreamMessage)
         }
+
         this._checkQueue()
     }
 
     markMessageExplicitly(streamMessage) {
-        if (streamMessage) {
-            if (this._isNextMessage(streamMessage)) {
-                this.lastReceivedMsgRef = streamMessage.getMessageRef()
-            }
+        if (!streamMessage || this.isStaleMessage(streamMessage)) {
+            // do nothing if already past/handled this message
+            return
         }
+
+        this.markedExplicitly.add(streamMessage)
+        this.add(streamMessage)
     }
 
     clearGap() {
         this.inProgress = false
+        clearTimeout(this.firstGap)
         clearInterval(this.nextGaps)
         this.nextGaps = undefined
-        clearTimeout(this.firstGap)
         this.firstGap = undefined
     }
 
@@ -92,7 +104,13 @@ export default class OrderedMsgChain extends EventEmitter {
 
     _process(msg) {
         this.lastReceivedMsgRef = msg.getMessageRef()
-        this.inOrderHandler(msg)
+
+        if (this.markedExplicitly.has(msg)) {
+            this.markedExplicitly.delete(msg)
+            this.emit('skip', msg)
+        } else {
+            this.inOrderHandler(msg)
+        }
     }
 
     _scheduleGap() {
@@ -105,16 +123,20 @@ export default class OrderedMsgChain extends EventEmitter {
         clearTimeout(this.firstGap)
         this.firstGap = setTimeout(() => {
             this._requestGapFill()
-            clearTimeout(this.nextGaps)
+            if (!this.inProgress) { return }
+            clearInterval(this.nextGaps)
             this.nextGaps = setInterval(() => {
-                if (this.inProgress) {
-                    this._requestGapFill()
+                if (!this.inProgress) {
+                    clearInterval(this.nextGaps)
+                    return
                 }
+                this._requestGapFill()
             }, this.resendTimeout)
         }, this.propagationTimeout)
     }
 
     _requestGapFill() {
+        if (!this.inProgress) { return }
         const from = new MessageRef(this.lastReceivedMsgRef.timestamp, this.lastReceivedMsgRef.sequenceNumber + 1)
         const to = this.queue.peek().prevMsgRef
         if (this.gapRequestCount < MAX_GAP_REQUESTS) {

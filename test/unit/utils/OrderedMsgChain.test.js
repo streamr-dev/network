@@ -28,9 +28,11 @@ describe('OrderedMsgChain', () => {
     const msg5 = createMsg(5, 0, 4, 0)
     const msg6 = createMsg(6, 0, 5, 0)
     let util
+
     afterEach(() => {
         util.clearGap()
     })
+
     it('handles ordered messages in order', () => {
         const received = []
         util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
@@ -43,6 +45,7 @@ describe('OrderedMsgChain', () => {
         util.add(msg3)
         assert.deepStrictEqual(received, [msg1, msg2, msg3])
     })
+
     it('drops duplicates', () => {
         const received = []
         util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
@@ -56,6 +59,7 @@ describe('OrderedMsgChain', () => {
         util.add(msg1)
         assert.deepStrictEqual(received, [msg1, msg2])
     })
+
     it('calls the gap handler', (done) => {
         const received = []
         util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
@@ -74,6 +78,7 @@ describe('OrderedMsgChain', () => {
         util.add(msg2)
         util.add(msg5)
     })
+
     it('handles unordered messages in order', () => {
         const received = []
         util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
@@ -86,6 +91,7 @@ describe('OrderedMsgChain', () => {
         util.add(msg4)
         assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4, msg5])
     })
+
     it('handles unchained messages in the order in which they arrive if they are newer', () => {
         const m2 = createMsg(4, 0)
         const m3 = createMsg(17, 0)
@@ -100,6 +106,7 @@ describe('OrderedMsgChain', () => {
         util.add(m4)
         assert.deepStrictEqual(received, [msg1, m2, m3])
     })
+
     it('does not call the gap handler (scheduled but resolved before timeout)', () => {
         const received = []
         util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
@@ -114,6 +121,7 @@ describe('OrderedMsgChain', () => {
         util.add(msg2)
         assert.deepStrictEqual(received, [msg1, msg2, msg3, msg4, msg5])
     })
+
     it('does not call the gap handler a second time if explicitly cleared', (done) => {
         let counter = 0
         util = new OrderedMsgChain('publisherId', 'msgChainId', () => {}, () => {
@@ -156,6 +164,116 @@ describe('OrderedMsgChain', () => {
         util.add(msg5)
     })
 
+    it('can force-fill multiple gaps', (done) => {
+        const msgs = []
+        const gapHandler = jest.fn((from, to) => {
+            if (to.timestamp === 2) {
+                setTimeout(() => {
+                    util.markMessageExplicitly(msg2)
+                }, 35)
+            }
+            if (to.timestamp === 4) {
+                setTimeout(() => {
+                    util.markMessageExplicitly(msg4)
+                }, 15)
+            }
+        })
+
+        util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
+            msgs.push(msg)
+            if (msgs[msgs.length - 1].getMessageRef().timestamp === 5) {
+                assert.deepStrictEqual(msgs, [msg1, msg3, msg5]) // msg 2 & 3 will be missing
+                expect(gapHandler).toHaveBeenCalledTimes(2)
+                done()
+            }
+        }, gapHandler, 100, 100)
+
+        util.on('error', done)
+
+        util.add(msg1)
+        // missing msg2
+        util.add(msg3)
+        // missing msg4
+        util.add(msg5)
+    })
+
+    it('can force-fill multiple gaps out of order', (done) => {
+        const msgs = []
+        const gapHandler = jest.fn((from, to) => {
+            if (to.timestamp === 2) {
+                util.markMessageExplicitly(msg4)
+                util.markMessageExplicitly(msg2)
+            }
+        })
+
+        const skipped = []
+        const onSkip = jest.fn((msg) => {
+            skipped.push(msg)
+        })
+
+        util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
+            msgs.push(msg)
+            if (msgs[msgs.length - 1].getMessageRef().timestamp === 5) {
+                assert.deepStrictEqual(msgs, [msg1, msg3, msg5]) // msg 2 & 3 will be missing
+                expect(gapHandler).toHaveBeenCalledTimes(1)
+                expect(onSkip).toHaveBeenCalledTimes(2)
+                expect(skipped).toEqual([msg2, msg4])
+                done()
+            }
+        }, gapHandler, 100, 100)
+
+        util.on('skip', onSkip)
+
+        util.on('error', done)
+
+        util.add(msg1)
+        // missing msg2
+        util.add(msg3)
+        // missing msg4
+        util.add(msg5)
+    })
+
+    it('does not hold onto old markMessageExplicitly messages', (done) => {
+        const msgs = []
+        const gapHandler = jest.fn((from, to) => {
+            if (to.timestamp === 2) {
+                util.markMessageExplicitly(msg2)
+                util.markMessageExplicitly(msg4)
+            }
+        })
+
+        util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
+            msgs.push(msg)
+            if (msgs[msgs.length - 1].getMessageRef().timestamp === 5) {
+                util.markMessageExplicitly(msg2)
+                assert.deepStrictEqual(msgs, [msg1, msg3, msg5]) // msg 2 & 3 will be missing
+                assert.deepStrictEqual([
+                    util.markedExplicitly.has(msg1),
+                    util.markedExplicitly.has(msg2),
+                    util.markedExplicitly.has(msg3),
+                    util.markedExplicitly.has(msg4),
+                    util.markedExplicitly.has(msg5),
+                ], [
+                    false,
+                    false,
+                    false,
+                    false,
+                    false,
+                ])
+                expect(gapHandler).toHaveBeenCalledTimes(1)
+                done()
+            }
+        }, gapHandler, 100, 100)
+
+        util.on('error', done)
+
+        util.add(msg1)
+        // missing msg2
+        util.add(msg3)
+        // missing msg4
+        util.add(msg5)
+    })
+
     it('call the gap handler MAX_GAP_REQUESTS times and then throws', (done) => {
         let counter = 0
         util = new OrderedMsgChain('publisherId', 'msgChainId', () => {}, (from, to, publisherId, msgChainId) => {
@@ -175,6 +293,7 @@ describe('OrderedMsgChain', () => {
         util.add(msg1)
         util.add(msg3)
     })
+
     it('after MAX_GAP_REQUESTS OrderingUtil gives up on filling gap ', (done) => {
         const received = []
         util = new OrderedMsgChain('publisherId', 'msgChainId', (msg) => {
@@ -201,6 +320,7 @@ describe('OrderedMsgChain', () => {
             }
         })
     })
+
     it('handles unordered messages in order (large randomized test)', () => {
         const expected = [msg1]
         let i
