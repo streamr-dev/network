@@ -258,6 +258,10 @@ module.exports = class Connection {
         return this.rtt
     }
 
+    getBufferedAmount() {
+        return this.isOpen() ? this.dataChannel.getBufferedAmount() : 0
+    }
+
     isOpen() {
         return (this.dataChannel || false) && this.dataChannel.isOpen()
     }

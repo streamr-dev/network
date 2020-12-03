@@ -85,10 +85,10 @@ class WebRtcEndpoint extends EventEmitter {
             .addRecordedMetric('sendFailed')
             .addQueriedMetric('connections', () => Object.keys(this.connections).length)
             .addQueriedMetric('pendingConnections', () => {
-                return Object.keys(this.connections).length - Object.keys(this.readyChannels).length
+                return Object.values(this.connections).filter((c) => !c.isOpen()).length
             })
             .addQueriedMetric('totalWebSocketBuffer', () => {
-                return Object.values(this.readyChannels).reduce((total, dc) => total + dc.getBufferedAmount(), 0)
+                return Object.values(this.connections).reduce((total, c) => total + c.getBufferedAmount(), 0)
             })
             .addQueriedMetric('messageQueueSize', () => {
                 return Object.values(this.messageQueue).reduce((total, queue) => total + queue.size(), 0)
