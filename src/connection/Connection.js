@@ -262,6 +262,10 @@ module.exports = class Connection {
         return this.isOpen() ? this.dataChannel.getBufferedAmount() : 0
     }
 
+    getQueueSize() {
+        return this.messageQueue.size()
+    }
+
     isOpen() {
         return (this.dataChannel || false) && this.dataChannel.isOpen()
     }

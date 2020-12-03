@@ -91,7 +91,7 @@ class WebRtcEndpoint extends EventEmitter {
                 return Object.values(this.connections).reduce((total, c) => total + c.getBufferedAmount(), 0)
             })
             .addQueriedMetric('messageQueueSize', () => {
-                return Object.values(this.messageQueue).reduce((total, queue) => total + queue.size(), 0)
+                return Object.values(this.connections).reduce((total, c) => total + c.getQueueSize(), 0)
             })
     }
 
