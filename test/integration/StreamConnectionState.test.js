@@ -26,7 +26,7 @@ describeRepeats('Connection State', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
-            publishAutoDisconnectDelay: 10,
+            publishAutoDisconnectDelay: 250,
             maxRetries: 2,
             ...config.clientOptions,
             ...opts,
@@ -159,7 +159,7 @@ describeRepeats('Connection State', () => {
             expect(received2).toEqual(received1)
         })
 
-        it('should receive messages if publisher disconnects after each message', async () => {
+        it('should receive messages if subscriber disconnects after each message', async () => {
             const otherClient = createClient({
                 auth: client.options.auth,
             })
@@ -183,7 +183,7 @@ describeRepeats('Connection State', () => {
                 const done = Defer()
 
                 const msgs = []
-
+                const sockets = new Set()
                 await otherClient.subscribe({
                     stream,
                     resend: {
@@ -195,10 +195,15 @@ describeRepeats('Connection State', () => {
                         // should eventually get here
                         done.resolve()
                     }
+
+                    // disconnect after every message
+                    if (otherClient.connection.socket) {
+                        sockets.add(otherClient.connection.socket)
+                        otherClient.connection.socket.close()
+                    }
                 })
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
-                    delay: 100,
                     waitForStorage: true,
                 })
 
@@ -207,10 +212,10 @@ describeRepeats('Connection State', () => {
                 expect(msgs).toEqual(published)
 
                 // check disconnect/connect actually happened
-                expect(onConnected).toHaveBeenCalledTimes(published.length)
-                expect(onDisconnected).toHaveBeenCalledTimes(published.length)
-                expect(onConnectedOther).toHaveBeenCalledTimes(1)
-                expect(onDisconnectedOther).toHaveBeenCalledTimes(0)
+                expect(onConnected).toHaveBeenCalledTimes(1)
+                expect(onDisconnected).toHaveBeenCalledTimes(0)
+                expect(onConnectedOther).toHaveBeenCalledTimes(sockets.size + 1)
+                expect(onDisconnectedOther).toHaveBeenCalledTimes(sockets.size)
             } finally {
                 await Promise.all([
                     otherClient.disconnect(),
