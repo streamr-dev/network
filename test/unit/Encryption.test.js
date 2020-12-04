@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { ethers } from 'ethers'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import EncryptionUtil from '../../src/stream/Encryption'
+import EncryptionUtil, { GroupKey } from '../../src/stream/Encryption'
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -34,14 +34,14 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         })
 
         it('aes decryption after encryption equals the initial plaintext', () => {
-            const key = crypto.randomBytes(32)
+            const key = GroupKey.generate()
             const plaintext = 'some random text'
             const ciphertext = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
             expect(EncryptionUtil.decrypt(ciphertext, key).toString('utf8')).toStrictEqual(plaintext)
         })
 
         it('aes encryption preserves size (plus iv)', () => {
-            const key = crypto.randomBytes(32)
+            const key = GroupKey.generate()
             const plaintext = 'some random text'
             const plaintextBuffer = Buffer.from(plaintext, 'utf8')
             const ciphertext = EncryptionUtil.encrypt(plaintextBuffer, key)
@@ -50,7 +50,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         })
 
         it('multiple same encrypt() calls use different ivs and produce different ciphertexts', () => {
-            const key = crypto.randomBytes(32)
+            const key = GroupKey.generate()
             const plaintext = 'some random text'
             const ciphertext1 = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
             const ciphertext2 = EncryptionUtil.encrypt(Buffer.from(plaintext, 'utf8'), key)
@@ -59,7 +59,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         })
 
         it('StreamMessage gets encrypted', () => {
-            const key = crypto.randomBytes(32)
+            const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
                 prevMesssageRef: null,
@@ -77,7 +77,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         })
 
         it('StreamMessage decryption after encryption equals the initial StreamMessage', () => {
-            const key = crypto.randomBytes(32)
+            const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
                 prevMesssageRef: null,
@@ -97,8 +97,8 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         })
 
         it('StreamMessage gets encrypted with new key', () => {
-            const key = crypto.randomBytes(32)
-            const newKey = crypto.randomBytes(32)
+            const key = GroupKey.generate()
+            const newKey = GroupKey.generate()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
                 prevMesssageRef: null,
@@ -116,8 +116,8 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         })
 
         it('StreamMessage decryption after encryption equals the initial StreamMessage (with new key)', () => {
-            const key = crypto.randomBytes(32)
-            const newKey = crypto.randomBytes(32)
+            const key = GroupKey.generate()
+            const newKey = GroupKey.generate()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
                 prevMesssageRef: null,
@@ -205,12 +205,12 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
 
         it('validateGroupKey() throws if key is not a buffer', () => {
             expect(() => {
-                EncryptionUtil.validateGroupKey(ethers.utils.hexlify(crypto.randomBytes(32)))
+                EncryptionUtil.validateGroupKey(ethers.utils.hexlify(GroupKey.generate()))
             }).toThrow()
         })
 
         it('validateGroupKey() does not throw', () => {
-            EncryptionUtil.validateGroupKey(crypto.randomBytes(32))
+            EncryptionUtil.validateGroupKey(GroupKey.generate())
         })
     })
 }

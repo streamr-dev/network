@@ -71,6 +71,8 @@ const { ControlMessage } = ControlLayer
 
 const ResendResponses = [ControlMessage.TYPES.ResendResponseResending, ControlMessage.TYPES.ResendResponseNoResend]
 
+export const STREAM_MESSAGE_TYPES = [ControlMessage.TYPES.UnicastMessage, ControlMessage.TYPES.BroadcastMessage]
+
 const PAIRS = new Map([
     [ControlMessage.TYPES.SubscribeRequest, [ControlMessage.TYPES.SubscribeResponse]],
     [ControlMessage.TYPES.UnsubscribeRequest, [ControlMessage.TYPES.UnsubscribeResponse]],
@@ -79,62 +81,74 @@ const PAIRS = new Map([
     [ControlMessage.TYPES.ResendRangeRequest, ResendResponses],
 ])
 
-/**
- * Wait for matching response types to requestId, or ErrorResponse.
- */
-
-export async function waitForResponse({
+export async function waitForMatchingMessage({
     connection,
-    types = [],
-    requestId,
+    matchFn,
     timeout,
+    types = [],
     rejectOnTimeout = true,
+    timeoutMessage,
+    cancelTask,
 }) {
-    if (requestId == null) {
-        throw new Error(`requestId required, got: (${typeof requestId}) ${requestId}`)
+    if (typeof matchFn !== 'function') {
+        throw new Error(`matchFn required, got: (${typeof matchFn}) ${matchFn}`)
     }
 
     await connection.nextConnection()
     let cleanup = () => {}
-    const task = new Promise((resolve, reject) => {
-        let onDisconnected
-        const onResponse = (res) => {
-            if (res.requestId !== requestId) { return }
-            // clean up err handler
-            cleanup()
-            resolve(res)
-        }
 
-        const onErrorResponse = (res) => {
-            if (res.requestId !== requestId) { return }
-            // clean up success handler
-            cleanup()
-            const error = new Error(res.errorMessage)
-            error.code = res.errorCode
-            reject(error)
-        }
+    const task = Promise.race([
+        new Promise((resolve, reject) => {
+            const tryMatch = (...args) => {
+                try {
+                    return matchFn(...args)
+                } catch (err) {
+                    cleanup()
+                    reject(err)
+                    return false
+                }
+            }
+            let onDisconnected
+            const onResponse = (res) => {
+                if (!tryMatch(res)) { return }
+                // clean up err handler
+                cleanup()
+                resolve(res)
+            }
 
-        cleanup = () => {
-            connection.off('disconnected', onDisconnected)
-            connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
+            const onErrorResponse = (res) => {
+                if (!tryMatch(res)) { return }
+                // clean up success handler
+                cleanup()
+                const error = new Error(res.errorMessage)
+                error.code = res.errorCode
+                reject(error)
+            }
+
+            cleanup = () => {
+                if (cancelTask) { cancelTask.catch(() => {}) } // ignore
+                connection.off('disconnected', onDisconnected)
+                connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
+                types.forEach((type) => {
+                    connection.off(type, onResponse)
+                })
+            }
+
             types.forEach((type) => {
-                connection.off(type, onResponse)
+                connection.on(type, onResponse)
             })
-        }
 
-        types.forEach((type) => {
-            connection.on(type, onResponse)
-        })
+            connection.on(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
 
-        connection.on(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
+            onDisconnected = () => {
+                cleanup()
+                resolve() // noop
+            }
 
-        onDisconnected = () => {
-            cleanup()
-            resolve() // noop
-        }
-
-        connection.once('disconnected', onDisconnected)
-    })
+            connection.once('disconnected', onDisconnected)
+        }),
+        cancelTask,
+    ])
 
     try {
         if (!timeout) {
@@ -143,12 +157,31 @@ export async function waitForResponse({
 
         return await pTimeout(task, {
             timeout,
-            message: `Waiting for response to: ${requestId}.`,
+            message: timeoutMessage,
             rejectOnTimeout,
         })
     } finally {
         cleanup()
     }
+}
+
+/**
+ * Wait for matching response types to requestId, or ErrorResponse.
+ */
+
+export async function waitForResponse({ requestId, timeoutMessage = `Waiting for response to: ${requestId}.`, ...opts }) {
+    if (requestId == null) {
+        throw new Error(`requestId required, got: (${typeof requestId}) ${requestId}`)
+    }
+
+    return waitForMatchingMessage({
+        ...opts,
+        requestId,
+        timeoutMessage,
+        matchFn(res) {
+            return res.requestId !== requestId
+        }
+    })
 }
 
 export async function waitForRequestResponse(client, request, opts = {}) {

@@ -176,6 +176,10 @@ export default class StreamrClient extends EventEmitter {
         return this.publisher.getPublisherId()
     }
 
+    setNextGroupKey(...args) {
+        return this.publisher.setNextGroupKey(...args)
+    }
+
     async subscribe(opts, onMessage) {
         let subTask
         let sub

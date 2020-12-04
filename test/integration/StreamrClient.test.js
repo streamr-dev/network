@@ -860,7 +860,7 @@ describeRepeats('StreamrClient', () => {
                 }, TIMEOUT)
             })
 
-            it('client.subscribe (realtime)', async () => {
+            it.only('client.subscribe (realtime)', async () => {
                 const id = Date.now()
                 const done = Defer()
                 const sub = await client.subscribe({

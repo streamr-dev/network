@@ -6,6 +6,8 @@ import { Crypto } from 'node-webcrypto-ossl'
 import { ethers } from 'ethers'
 import { MessageLayer } from 'streamr-client-protocol'
 
+import { uuid } from '../utils'
+
 class UnableToDecryptError extends Error {
     constructor(streamMessage) {
         super(`Unable to decrypt ${streamMessage.getSerializedContent()}`)
@@ -22,6 +24,50 @@ class InvalidGroupKeyError extends Error {
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
+    }
+}
+
+export class GroupKey {
+    static InvalidGroupKeyError = InvalidGroupKeyError
+
+    static validate(maybeGroupKey) {
+        if (!(maybeGroupKey instanceof this)) {
+            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`)
+        }
+
+        if (maybeGroupKey.data.length !== 32) {
+            throw new InvalidGroupKeyError(`Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`)
+        }
+    }
+
+    constructor(groupKeyId, groupKeyBufferOrHexString) {
+        this.id = groupKeyId
+        if (typeof groupKeyBytesOrHexString === 'string') {
+            this.hex = groupKeyBufferOrHexString
+            this.data = Buffer.from(this.hex, 'hex')
+        } else {
+            this.data = groupKeyBufferOrHexString
+            this.hex = Buffer.from(this.data).toString('hex')
+        }
+
+        this.constructor.validate(this)
+    }
+
+    equals(other) {
+        if (!(other instanceof GroupKey)) {
+            return false
+        }
+
+        return this === other || (this.hex === other.hex && this.id === other.id)
+    }
+
+    toString() {
+        return this.id
+    }
+
+    static generate(id = uuid('GroupKey')) {
+        const keyBytes = crypto.randomBytes(32)
+        return new GroupKey(id, keyBytes)
     }
 }
 
@@ -73,13 +119,7 @@ class EncryptionUtilBase {
     }
 
     static validateGroupKey(groupKey) {
-        if (!(groupKey instanceof Buffer)) {
-            throw new InvalidGroupKeyError(`Group key must be a Buffer: ${groupKey}`)
-        }
-
-        if (groupKey.length !== 32) {
-            throw new InvalidGroupKeyError(`Group key must have a size of 256 bits, not ${groupKey.length * 8}`)
-        }
+        return GroupKey.validate(groupKey)
     }
 
     /*
@@ -98,8 +138,9 @@ class EncryptionUtilBase {
      * Both 'data' and 'groupKey' must be Buffers. Returns a hex string without the '0x' prefix.
      */
     static encrypt(data, groupKey) {
+        GroupKey.validate(groupKey)
         const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
-        const cipher = crypto.createCipheriv('aes-256-ctr', groupKey, iv)
+        const cipher = crypto.createCipheriv('aes-256-ctr', groupKey.data, iv)
         return ethers.utils.hexlify(iv).slice(2) + cipher.update(data, null, 'hex') + cipher.final('hex')
     }
 
@@ -107,8 +148,9 @@ class EncryptionUtilBase {
      * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a Buffer. Returns a Buffer.
      */
     static decrypt(ciphertext, groupKey) {
+        GroupKey.validate(groupKey)
         const iv = ethers.utils.arrayify(`0x${ciphertext.slice(0, 32)}`)
-        const decipher = crypto.createDecipheriv('aes-256-ctr', groupKey, iv)
+        const decipher = crypto.createDecipheriv('aes-256-ctr', groupKey.data, iv)
         return Buffer.concat([decipher.update(ciphertext.slice(32), 'hex', null), decipher.final(null)])
     }
 
@@ -117,23 +159,11 @@ class EncryptionUtilBase {
      */
 
     static encryptStreamMessage(streamMessage, groupKey) {
+        GroupKey.validate(groupKey)
         /* eslint-disable no-param-reassign */
         streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
+        streamMessage.groupKeyId = groupKey.id
         streamMessage.serializedContent = this.encrypt(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey)
-        streamMessage.parsedContent = undefined
-        /* eslint-enable no-param-reassign */
-    }
-
-    /*
-     * Sets the content of 'streamMessage' with the encryption result of a plaintext with 'groupKey'. The
-     * plaintext is the concatenation of 'newGroupKey' and the old serialized content of 'streamMessage'.
-     */
-
-    static encryptStreamMessageAndNewKey(newGroupKey, streamMessage, groupKey) {
-        /* eslint-disable no-param-reassign */
-        streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES
-        const plaintext = Buffer.concat([newGroupKey, Buffer.from(streamMessage.getSerializedContent(), 'utf8')])
-        streamMessage.serializedContent = this.encrypt(plaintext, groupKey)
         streamMessage.parsedContent = undefined
         /* eslint-enable no-param-reassign */
     }
@@ -146,6 +176,7 @@ class EncryptionUtilBase {
      */
 
     static decryptStreamMessage(streamMessage, groupKey) {
+        GroupKey.validate(groupKey)
         if ((streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.AES
             || streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES) && !groupKey) {
             throw new UnableToDecryptError(streamMessage)

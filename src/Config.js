@@ -29,6 +29,7 @@ export default function ClientConfig(opts = {}) {
         streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
         streamrOperatorAddress: '0xc0aa4dC0763550161a6B59fa430361b5a26df28C',
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
+        keyExchange: {},
         ...opts
     }
 
