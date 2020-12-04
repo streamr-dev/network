@@ -21,10 +21,15 @@ async function collect(src) {
     return msgs
 }
 
+/**
+ * Subscription message processing pipeline
+ */
+
 export default function MessagePipeline(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
     const { key, afterSteps = [], onError = (err) => { throw err } } = options
     const id = counterId('MessagePipeline') + key
+
     /* eslint-disable object-curly-newline */
     const {
         validate = Validator(client, options),
@@ -32,13 +37,17 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
         orderingUtil = OrderMessages(client, options)
     } = options
     /* eslint-enable object-curly-newline */
+
     const p = pipeline([
+        // take messages
         msgStream,
+        // unpack stream message
         async function* getStreamMessage(src) {
             for await (const { streamMessage } of src) {
                 yield streamMessage
             }
         },
+        // validate
         async function* Validate(src) {
             for await (const streamMessage of src) {
                 try {
@@ -56,6 +65,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 yield streamMessage
             }
         },
+        // parse content
         async function* Parse(src) {
             for await (const streamMessage of src) {
                 try {
@@ -67,7 +77,9 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 yield streamMessage
             }
         },
+        // order messages
         orderingUtil,
+        // custom pipeline steps
         ...afterSteps
     ], async (err, ...args) => {
         await msgStream.cancel()

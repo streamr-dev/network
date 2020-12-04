@@ -8,6 +8,11 @@ import messageStream from './messageStream'
 
 const { ControlMessage } = ControlLayer
 
+/**
+ * Stream of resent messages.
+ * Sends resend request, handles responses.
+ */
+
 export default function resendStream(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
     const { connection } = client

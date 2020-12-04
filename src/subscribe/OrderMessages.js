@@ -8,19 +8,26 @@ import resendStream from './resendStream'
 
 const { OrderingUtil } = Utils
 
+/**
+ * Wraps OrderingUtil into a pipeline.
+ * Implements gap filling
+ */
+
 export default function OrderMessages(client, options = {}) {
     const { gapFillTimeout, retryResendAfter } = client.options
     const { streamId, streamPartition } = validateOptions(options)
 
-    const outStream = new PushQueue()
+    const outStream = new PushQueue() // output buffer
 
     let done = false
-    const resendStreams = new Set()
+    const resendStreams = new Set() // holds outstanding resends for cleanup
+
     const orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
         if (!outStream.isWritable() || done) {
             return
         }
 
+        // end stream or push into queue.
         if (orderedMessage.isByeMessage()) {
             outStream.end(orderedMessage)
         } else {
@@ -56,14 +63,11 @@ export default function OrderMessages(client, options = {}) {
         async function* WriteToOrderingUtil(src) {
             for await (const msg of src) {
                 orderingUtil.add(msg)
+                // note no yield
+                // orderingUtil writes to outStream itself
             }
         },
-        outStream,
-        async function* WriteToOrderingUtil(src) {
-            for await (const msg of src) {
-                yield msg
-            }
-        },
+        outStream, // consumer gets outStream
     ], async (err) => {
         done = true
         orderingUtil.clearGaps()

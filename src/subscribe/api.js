@@ -13,7 +13,7 @@ const {
 const { MessageRef } = MessageLayer
 
 /**
- * Subscribe
+ * Subscribe Request
  */
 
 export async function subscribe(client, { streamId, streamPartition = 0 }) {
@@ -32,7 +32,7 @@ export async function subscribe(client, { streamId, streamPartition = 0 }) {
 }
 
 /**
- * Unsubscribe
+ * Unsubscribe Request
  */
 
 export async function unsubscribe(client, { streamId, streamPartition = 0 }) { // eslint-disable-line no-underscore-dangle
@@ -72,7 +72,7 @@ export async function unsubscribe(client, { streamId, streamPartition = 0 }) { /
 }
 
 /**
- * Resend
+ * Resend Request
  */
 
 function createResendRequest(resendOptions) {

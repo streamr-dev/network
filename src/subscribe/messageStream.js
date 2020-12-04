@@ -13,9 +13,10 @@ function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
         return true
     }
 }
+
 /**
  * Listen for matching stream messages on connection.
- * Write messages into a Stream.
+ * Returns a PushQueue that will fill with messages.
  */
 
 export default function messageStream(connection, { streamId, streamPartition, isUnicast, type }, onFinally = () => {}) {

@@ -13,14 +13,16 @@ import resendStream from './resendStream'
 class Subscription extends Emitter {
     constructor(client, opts, onFinally = () => {}) {
         super()
-        this._onDone = Defer()
+        this.id = counterId(`Subscription.${this.key}`)
         this.client = client
         this.options = validateOptions(opts)
         this.key = this.options.key
-        this.id = counterId(`Subscription.${this.key}`)
+
+        this._onDone = Defer()
         this._onFinally = onFinally
-        this.onPipelineEnd = this.onPipelineEnd.bind(this)
+
         const validate = opts.validate || Validator(client, this.options)
+        this.onPipelineEnd = this.onPipelineEnd.bind(this)
         this.pipeline = opts.pipeline || MessagePipeline(client, {
             ...this.options,
             validate,
@@ -28,8 +30,13 @@ class Subscription extends Emitter {
                 this.emit('error', err)
             },
         }, this.onPipelineEnd)
+
         this.msgStream = this.pipeline.msgStream
     }
+
+    /**
+     * Expose cleanup
+     */
 
     async onPipelineEnd(err) {
         try {
@@ -42,6 +49,11 @@ class Subscription extends Emitter {
     async onDone() {
         return this._onDone
     }
+
+    /**
+     * Collect all messages into an array.
+     * Returns array when subscription is ended.
+     */
 
     async collect(n) {
         const msgs = []
@@ -60,6 +72,7 @@ class Subscription extends Emitter {
     }
 
     [Symbol.asyncIterator]() {
+        // only iterate sub once
         if (this.iterated) {
             throw new Error('cannot iterate subscription more than once. Cannot iterate if message handler function was passed to subscribe.')
         }
@@ -85,6 +98,11 @@ class Subscription extends Emitter {
     }
 }
 
+/**
+ * Emit event on all supplied emitters.
+ * Aggregates errors rather than throwing on first.
+ */
+
 function multiEmit(emitters, ...args) {
     const errs = []
     emitters.forEach((s) => {
@@ -100,19 +118,30 @@ function multiEmit(emitters, ...args) {
     }
 }
 
+/**
+ * Sends Subscribe/Unsubscribe requests as needed.
+ * Adds connection handles as needed.
+ */
+
 class SubscriptionSession extends Emitter {
     constructor(client, options) {
         super()
         this.client = client
         this.options = validateOptions(options)
-        const { key } = this.options
-        this.subscriptions = new Set()
         this.validate = Validator(client, this.options)
-        this.deletedSubscriptions = new Set()
-        const { connection } = this.client
-        let needsReset = false
 
+        this.subscriptions = new Set() // active subs
+        this.deletedSubscriptions = new Set() // hold so we can clean up
+        this._init()
+    }
+
+    _init() {
+        const { key } = this.options
+        const { connection } = this.client
+
+        let needsReset = false
         const onDisconnected = async () => {
+            // see if we should reset then retry connecting
             try {
                 if (!connection.isConnectionValid()) {
                     await this.step()
@@ -131,18 +160,14 @@ class SubscriptionSession extends Emitter {
         }
 
         let deleted = new Set()
+
         this.step = Scaffold([
             () => {
                 needsReset = false
-                connection.on('done', onDisconnected)
-                connection.on('disconnected', onDisconnected)
-                connection.on('disconnecting', onDisconnected)
-                this.emit('subscribing')
                 return async () => {
-                    connection.off('done', onDisconnected)
-                    connection.off('disconnected', onDisconnected)
-                    connection.off('disconnecting', onDisconnected)
+                    // don't clean up if just resetting
                     if (needsReset) { return }
+
                     try {
                         this.emit('unsubscribed')
                     } finally {
@@ -155,20 +180,37 @@ class SubscriptionSession extends Emitter {
                     }
                 }
             },
+            // add handlers for connection close events
+            () => {
+                connection.on('done', onDisconnected)
+                connection.on('disconnected', onDisconnected)
+                connection.on('disconnecting', onDisconnected)
+                this.emit('subscribing')
+
+                return () => {
+                    connection.off('done', onDisconnected)
+                    connection.off('disconnected', onDisconnected)
+                    connection.off('disconnecting', onDisconnected)
+                }
+            },
+            // open connection
             async () => {
                 await connection.addHandle(key)
                 return async () => {
-                    if (needsReset) { return }
+                    if (needsReset) { return } // don't close connection if just resetting
                     deleted = new Set(this.deletedSubscriptions)
                     await connection.removeHandle(key)
                 }
             },
+            // validate connected
             async () => {
                 await connection.needsConnection(`Subscribe ${key}`)
             },
+            // subscribe
             async () => {
                 await subscribe(this.client, this.options)
                 this.emit('subscribed')
+
                 return async () => {
                     if (needsReset) { return }
                     this.emit('unsubscribing')
@@ -178,6 +220,7 @@ class SubscriptionSession extends Emitter {
         ], () => (
             connection.isConnectionValid()
             && !needsReset
+            // has some active subscription
             && this.count()
         ))
     }
@@ -185,6 +228,11 @@ class SubscriptionSession extends Emitter {
     has(sub) {
         return this.subscriptions.has(sub)
     }
+
+    /**
+     * Emit message on every subscription,
+     * then on self.
+     */
 
     emit(...args) {
         const subs = this._getSubs()
@@ -198,11 +246,16 @@ class SubscriptionSession extends Emitter {
     }
 
     _getSubs() {
+        // all known subs
         return new Set([
             ...this.deletedSubscriptions,
             ...this.subscriptions,
         ])
     }
+
+    /**
+     * Add subscription & appropriate connection handle.
+     */
 
     async add(sub) {
         this.subscriptions.add(sub)
@@ -215,6 +268,10 @@ class SubscriptionSession extends Emitter {
             await connection.removeHandle(`adding${sub.id}`)
         }
     }
+
+    /**
+     * Remove subscription & appropriate connection handle.
+     */
 
     async remove(sub) {
         this.subscriptions.delete(sub)
@@ -230,12 +287,20 @@ class SubscriptionSession extends Emitter {
         await cancelTask
     }
 
+    /**
+     * Remove all subscriptions & subscription connection handles
+     */
+
     async removeAll() {
         const subs = this._getSubs()
         return Promise.all([...subs].map((sub) => (
             this.remove(sub)
         )))
     }
+
+    /**
+     * How many subscriptions
+     */
 
     count() {
         return this.subscriptions.size
@@ -244,8 +309,6 @@ class SubscriptionSession extends Emitter {
 
 /**
  * Keeps track of subscriptions.
- * Sends Subscribe/Unsubscribe requests as needed.
- * Adds connection handles as needed.
  */
 
 class Subscriptions {
@@ -257,7 +320,12 @@ class Subscriptions {
     async add(opts, onFinally = () => {}) {
         const options = validateOptions(opts)
         const { key } = options
+
+        // get/create subscription session
+        // don't add SubscriptionSession to subSessions until after subscription successfully created
         const subSession = this.subSessions.get(key) || new SubscriptionSession(this.client, options)
+
+        // create subscription
         const sub = new Subscription(this.client, {
             ...options,
             validate: subSession.validate,
@@ -270,17 +338,24 @@ class Subscriptions {
         })
 
         sub.count = () => {
+            // sub.count() gives number of subs on same stream+partition
             return this.count(sub.options)
         }
 
-        this.subSessions.set(key, subSession)
+        // sub didn't throw, add subsession
+        if (!this.subSessions.has(key)) { // double-check
+            this.subSessions.set(key, subSession)
+        }
 
+        // add subscription to subSession
         try {
             await subSession.add(sub)
         } catch (err) {
+            // clean up if fail
             await this.remove(sub)
             throw err
         }
+
         return sub
     }
 
@@ -290,8 +365,10 @@ class Subscriptions {
         try {
             cancelTask = sub.cancel()
             const subSession = this.subSessions.get(key)
+
             if (subSession) {
                 await subSession.remove(sub)
+                // remove subSession if no more subscriptions
                 if (!subSession.count()) {
                     this.subSessions.delete(key)
                 }
@@ -301,12 +378,20 @@ class Subscriptions {
         }
     }
 
+    /**
+     * Remove all subscriptions, optionally only those matching options.
+     */
+
     async removeAll(options) {
         const subs = this.get(options)
         return allSettledValues(subs.map((sub) => (
             this.remove(sub)
         )))
     }
+
+    /**
+     * Count all subscriptions.
+     */
 
     countAll() {
         let count = 0
@@ -316,10 +401,18 @@ class Subscriptions {
         return count
     }
 
+    /**
+     * Count all matching subscriptions.
+     */
+
     count(options) {
         if (options === undefined) { return this.countAll() }
         return this.get(options).length
     }
+
+    /**
+     * Get all subscriptions.
+     */
 
     getAll() {
         return [...this.subSessions.values()].reduce((o, s) => {
@@ -328,22 +421,32 @@ class Subscriptions {
         }, [])
     }
 
+    /**
+     * Get subscription session for matching sub options.
+     */
+
     getSubscriptionSession(options) {
         const { key } = validateOptions(options)
         return this.subSessions.get(key)
     }
 
+    /**
+     * Get all subscriptions matching options.
+     */
+
     get(options) {
         if (options === undefined) { return this.getAll() }
+
         const { key } = validateOptions(options)
         const subSession = this.subSessions.get(key)
         if (!subSession) { return [] }
+
         return [...subSession.subscriptions]
     }
 }
 
 /**
- * Top-level interface for creating/destroying subscriptions.
+ * Top-level user-facing interface for creating/destroying subscriptions.
  */
 
 export default class Subscriber {
@@ -364,6 +467,10 @@ export default class Subscriber {
         return this.subscriptions.count(options)
     }
 
+    async subscribe(...args) {
+        return this.subscriptions.add(...args)
+    }
+
     async unsubscribe(options) {
         if (options instanceof Subscription) {
             const sub = options
@@ -375,10 +482,6 @@ export default class Subscriber {
         }
 
         return this.subscriptions.removeAll(options)
-    }
-
-    async subscribe(...args) {
-        return this.subscriptions.add(...args)
     }
 
     async resend(opts) {
