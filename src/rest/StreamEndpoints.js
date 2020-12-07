@@ -40,8 +40,15 @@ export async function getStream(streamId) {
         streamId,
     })
     const url = getEndpointUrl(this.options.restUrl, 'streams', streamId)
-    const json = await authFetch(url, this.session)
-    return json ? new Stream(this, json) : undefined
+    try {
+        const json = await authFetch(url, this.session)
+        return new Stream(this, json)
+    } catch (e) {
+        if (e.response && e.response.status === 404) {
+            return undefined
+        }
+        throw e
+    }
 }
 
 export async function listStreams(query = {}) {
@@ -100,7 +107,7 @@ export async function getOrCreateStream(props) {
 
     // If still nothing, throw
     if (!json) {
-        throw new Error(`Unable to find or create stream: ${props.name}`)
+        throw new Error(`Unable to find or create stream: ${props.name || props.id}`)
     } else {
         return new Stream(this, json)
     }

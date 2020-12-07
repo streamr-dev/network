@@ -47,6 +47,20 @@ describe('StreamEndpoints', () => {
         })
     })
 
+    describe('getStream', () => {
+        it('get an existing Stream', async () => {
+            const stream = await client.createStream()
+            const existingStream = await client.getStream(stream.id)
+            assert.strictEqual(existingStream.id, stream.id)
+        })
+
+        it('get a non-existing Stream', async () => {
+            const id = `${wallet.address}/StreamEndpoints-integration-nonexisting-${Date.now()}`
+            const stream = await client.getStream(id)
+            assert.strictEqual(stream, undefined)
+        })
+    })
+
     describe('getOrCreate', () => {
         it('getOrCreate an existing Stream', async () => {
             const stream = await client.createStream({
@@ -60,13 +74,22 @@ describe('StreamEndpoints', () => {
             assert.strictEqual(existingStream.name, stream.name)
         })
 
-        it('getOrCreate a new Stream', async () => {
+        it('getOrCreate a new Stream by name', async () => {
             const newName = `StreamEndpoints-integration-${Date.now()}`
             const newStream = await client.getOrCreateStream({
                 name: newName,
             })
 
             assert.strictEqual(newStream.name, newName)
+        })
+
+        it('getOrCreate a new Stream by id', async () => {
+            const newId = `${wallet.address}/StreamEndpoints-integration-${Date.now()}`
+            const newStream = await client.getOrCreateStream({
+                id: newId,
+            })
+
+            assert.strictEqual(newStream.id, newId)
         })
     })
 
@@ -196,9 +219,7 @@ describe('StreamEndpoints', () => {
     describe('Stream deletion', () => {
         it('Stream.delete', async () => {
             await createdStream.delete()
-            await assert.rejects(async () => {
-                await client.getStream(createdStream.id)
-            })
+            assert.strictEqual(await client.getStream(createdStream.id), undefined)
         })
     })
 })
