@@ -147,18 +147,24 @@ module.exports = class Connection {
 
     setRemoteDescription(description, type) {
         if (this.connection) {
-            this.connection.setRemoteDescription(description, type)
+            try {
+                this.connection.setRemoteDescription(description, type)
+            } catch (err) {
+                this.close(err)
+            }
         } else {
-            // Prevent node-datachannel crash
             this.logger.warn('attempt to invoke setRemoteDescription, but connection is null')
         }
     }
 
     addRemoteCandidate(candidate, mid) {
         if (this.connection) {
-            this.connection.addRemoteCandidate(candidate, mid)
+            try {
+                this.connection.addRemoteCandidate(candidate, mid)
+            } catch (err) {
+                this.close(err)
+            }
         } else {
-            // Prevent node-datachannel crash
             this.logger.warn('attempt to invoke setRemoteDescription, but connection is null')
         }
     }
@@ -173,10 +179,18 @@ module.exports = class Connection {
 
     close(err = null) {
         if (this.dataChannel) {
-            this.dataChannel.close()
+            try {
+                this.dataChannel.close()
+            } catch (e) {
+                this.logger.warn(e)
+            }
         }
         if (this.connection) {
-            this.connection.close()
+            try {
+                this.connection.close()
+            } catch (e) {
+                this.logger.warn(e)
+            }
         }
         if (this.flushTimeoutRef) {
             clearTimeout(this.flushTimeoutRef)
@@ -228,9 +242,7 @@ module.exports = class Connection {
     pong(attempt = 0) {
         clearTimeout(this.peerPongTimeoutRef)
         try {
-            if (this.isOpen()) {
-                this.dataChannel.sendMessage('pong')
-            }
+            this.dataChannel.sendMessage('pong')
         } catch (e) {
             if (attempt < this.maxPingPongAttempts && this.dataChannel && this.isOpen()) {
                 this.logger.debug('failed to pong connection, error %s, re-attempting', e)
@@ -259,7 +271,11 @@ module.exports = class Connection {
     }
 
     getBufferedAmount() {
-        return this.isOpen() ? this.dataChannel.bufferedAmount() : 0
+        try {
+            return this.dataChannel.bufferedAmount()
+        } catch (err) {
+            return 0
+        }
     }
 
     getQueueSize() {
@@ -267,7 +283,11 @@ module.exports = class Connection {
     }
 
     isOpen() {
-        return (this.dataChannel || false) && this.dataChannel.isOpen()
+        try {
+            return this.dataChannel.isOpen()
+        } catch (err) {
+            return false
+        }
     }
 
     _setupDataChannel(dataChannel) {
@@ -316,14 +336,20 @@ module.exports = class Connection {
     _attemptToFlushMessages() {
         while (this.isOpen() && !this.messageQueue.empty()) {
             const queueItem = this.messageQueue.peek()
-            if (queueItem.getMessage().length > this.dataChannel.maxMessageSize()) {
-                this.messageQueue.pop()
-                console.error(this.selfId, 'Dropping message due to message size', queueItem.getMessage().length, 'exceeding the limit of ', this.dataChannel.maxMessageSize())
-            } else if (queueItem.isFailed()) {
+            if (queueItem.isFailed()) {
                 this.messageQueue.pop()
             } else {
                 try {
-                    if (this.dataChannel.bufferedAmount() < this.bufferHighThreshold && !this.paused) {
+                    if (queueItem.getMessage().length > this.dataChannel.maxMessageSize()) {
+                        this.messageQueue.pop()
+                        console.error(
+                            this.selfId,
+                            'Dropping message due to message size',
+                            queueItem.getMessage().length,
+                            'exceeding the limit of ',
+                            this.dataChannel.maxMessageSize()
+                        )
+                    } else if (this.dataChannel.bufferedAmount() < this.bufferHighThreshold && !this.paused) {
                         this.dataChannel.sendMessage(queueItem.getMessage())
                         this.messageQueue.pop()
                         queueItem.delivered()

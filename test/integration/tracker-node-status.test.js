@@ -103,15 +103,16 @@ describe('check status message flow between tracker and two nodes', () => {
     it('tracker should receive rtt values from nodes', async (done) => {
         let receivedTotal = 0
 
-        nodeOne.subscribe(streamId, 0)
-        nodeTwo.subscribe(streamId, 0)
-
         nodeOne.start()
         nodeTwo.start()
 
+        nodeOne.subscribe(streamId, 0)
+        nodeTwo.subscribe(streamId, 0)
+
         await Promise.all([
             waitForEvent(nodeOne, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(nodeTwo, Node.events.NODE_SUBSCRIBED)
+            waitForEvent(nodeTwo, Node.events.NODE_SUBSCRIBED),
+            wait(2000)
         ])
 
         tracker.protocols.trackerServer.on(TrackerServer.events.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {

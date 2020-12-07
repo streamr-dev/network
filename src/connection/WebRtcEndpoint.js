@@ -142,6 +142,7 @@ class WebRtcEndpoint extends EventEmitter {
         return new Promise((resolve, reject) => {
             this.once(`connected:${connection.getPeerId()}`, resolve)
             this.once(`errored:${connection.getPeerId()}`, reject)
+            this.once(`disconnected:${connection.getPeerId()}`, reject)
         })
     }
 
