@@ -17,7 +17,16 @@ class TrackerRegistry {
         this.records.sort()
     }
 
-    getTracker(streamKey) {
+    getTracker(streamId, partition = 0) {
+        if (typeof streamId !== 'string' || streamId.indexOf('::') >= 0) {
+            throw new Error(`invalid id: ${streamId}`)
+        }
+        if (!Number.isInteger(partition) || partition < 0) {
+            throw new Error(`invalid partition: ${partition}`)
+        }
+
+        const streamKey = `${streamId}::${partition}`
+
         return this.records[hashCode(streamKey) % this.records.length]
     }
 
