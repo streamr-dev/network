@@ -259,7 +259,7 @@ module.exports = class Connection {
     }
 
     getBufferedAmount() {
-        return this.isOpen() ? this.dataChannel.getBufferedAmount() : 0
+        return this.isOpen() ? this.dataChannel.bufferedAmount() : 0
     }
 
     getQueueSize() {
