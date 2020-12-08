@@ -30,7 +30,7 @@ export default class SigningUtil {
 
         const msgHash = hash(payloadBuffer)
         const sigObj = secp256k1.ecdsaSign(msgHash, privateKeyBuffer)
-        const result = Buffer.alloc(sigObj.signature.length + 1, sigObj.signature)
+        const result = Buffer.alloc(sigObj.signature.length + 1, Buffer.from(sigObj.signature))
         result.writeInt8(27 + sigObj.recid, result.length - 1)
         return '0x' + result.toString('hex')
     }
