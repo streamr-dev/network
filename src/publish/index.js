@@ -319,7 +319,7 @@ export default function Publisher(client) {
             debug('publish()')
             // wrap publish in error emitter
             try {
-                return publishMessage(streamObjectOrId, content, ...args)
+                return await publishMessage(streamObjectOrId, content, ...args)
             } catch (err) {
                 const streamId = getStreamId(streamObjectOrId)
                 const error = new FailedToPublishError(
