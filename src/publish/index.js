@@ -296,7 +296,7 @@ export default function Publisher(client) {
         ])
 
         // no async before running sendQueue
-        await sendQueue(streamId, async () => {
+        return sendQueue(streamId, async () => {
             const [streamMessage, sessionToken] = await asyncDepsTask
             const requestId = uuid('pub')
             const request = new ControlLayer.PublishRequest({
