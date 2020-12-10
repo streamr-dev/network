@@ -7,6 +7,7 @@ import debugFactory from 'debug'
 import { getEndpointUrl } from '../utils'
 import { validateOptions } from '../stream/utils'
 import Stream from '../stream'
+import { isKeyExchangeStream } from '../stream/KeyExchange'
 
 import authFetch from './authFetch'
 
@@ -40,6 +41,14 @@ export async function getStream(streamId) {
     this.debug('getStream %o', {
         streamId,
     })
+
+    if (isKeyExchangeStream(streamId)) {
+        return new Stream(this, {
+            id: streamId,
+            partitions: 1,
+        })
+    }
+
     const url = getEndpointUrl(this.options.restUrl, 'streams', streamId)
     try {
         const json = await authFetch(url, this.session)

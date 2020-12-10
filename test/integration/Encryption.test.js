@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { wait } from 'streamr-test-utils'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import { fakePrivateKey, uid } from '../utils'
+import { fakePrivateKey, uid, Msg, getPublishTestMessages } from '../utils'
 import { Defer } from '../../src/utils'
 import StreamrClient from '../../src'
 import { GroupKey } from '../../src/stream/Encryption'
@@ -15,6 +15,7 @@ const TIMEOUT = 30 * 1000
 
 const { StreamMessage } = MessageLayer
 describe('decryption', () => {
+    let publishTestMessages
     let expectErrors = 0 // check no errors by default
     let errors = []
 
@@ -41,6 +42,7 @@ describe('decryption', () => {
         })
         c.onError = jest.fn()
         c.on('error', onError)
+
         return c
     }
 
@@ -84,69 +86,92 @@ describe('decryption', () => {
             name,
             requireEncryptedData: true,
         })
+
+        publishTestMessages = getPublishTestMessages(client, {
+            stream
+        })
     })
 
-    it.only('client.subscribe can decrypt encrypted messages if it knows the group key', async () => {
-        const id = Date.now()
-        const publisherId = await client.getPublisherId()
+    it('client.subscribe can decrypt encrypted messages if it knows the group key', async () => {
         const groupKey = GroupKey.generate()
         const keys = new Map()
+        const msg = Msg()
         keys.set(groupKey.id, groupKey)
         const done = Defer()
         const sub = await client.subscribe({
             stream: stream.id,
             groupKeys: keys,
         }, done.wrap((parsedContent, streamMessage) => {
-            expect(parsedContent.id).toEqual(id)
+            expect(parsedContent).toEqual(msg)
             // Check signature stuff
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
             expect(streamMessage.getPublisherId())
             expect(streamMessage.signature)
         }))
 
-        client.on('error', done.reject)
+        client.once('error', done.reject)
         client.setNextGroupKey(stream.id, groupKey)
         // Publish after subscribed
         await Promise.all([
-            client.publish(stream.id, {
-                id,
-            }, Date.now(), null),
+            client.publish(stream.id, msg),
             done,
         ])
         // All good, unsubscribe
         await client.unsubscribe(sub)
     })
 
-    it('client.subscribe can get the group key and decrypt encrypted messages using an RSA key pair', async (done) => {
-        const id = Date.now()
-        const groupKey = crypto.randomBytes(32)
+    it('client.subscribe can get the group key and decrypt encrypted message using an RSA key pair', async () => {
+        const done = Defer()
+        const msg = Msg()
+        const groupKey = GroupKey.generate()
         // subscribe without knowing the group key to decrypt stream messages
         const sub = await client.subscribe({
             stream: stream.id,
-        }, (parsedContent, streamMessage) => {
-            expect(parsedContent.id).toEqual(id)
+        }, done.wrap((parsedContent, streamMessage) => {
+            expect(parsedContent).toEqual(msg)
 
             // Check signature stuff
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
             expect(streamMessage.getPublisherId())
             expect(streamMessage.signature)
+        }))
+        sub.once('error', done.reject)
 
-            // Now the subscriber knows the group key
-            expect(sub.groupKeys[streamMessage.getPublisherId().toLowerCase()]).toEqual(groupKey)
+        await client.setNextGroupKey(stream.id, groupKey)
 
-            // All good, unsubscribe
-            client.unsubscribe(sub).then(() => done(), done)
-        })
-
-        // Publish after subscribed
-        sub.once('subscribed', () => {
-            client.publish(stream.id, {
-                id,
-            }, Date.now(), null, groupKey)
-        })
+        await Promise.all([
+            client.publish(stream.id, msg),
+            done,
+        ])
+        // All good, unsubscribe
+        await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
 
-    it('client.subscribe with resend last can get the historical keys for previous encrypted messages', (done) => {
+    it('client.subscribe can get the group key and decrypt multiple encrypted messages using an RSA key pair', async () => {
+        const groupKey = GroupKey.generate()
+        // subscribe without knowing the group key to decrypt stream messages
+        const sub = await client.subscribe({
+            stream: stream.id,
+        })
+
+        await client.setNextGroupKey(stream.id, groupKey)
+        const published = await publishTestMessages()
+
+        const received = []
+        for await (const msg of sub) {
+            received.push(msg.getParsedContent())
+            if (received.length === published.length) {
+                return
+            }
+        }
+
+        expect(received).toEqual(published)
+
+        // All good, unsubscribe
+        await client.unsubscribe(sub)
+    }, 2 * TIMEOUT)
+
+    it.skip('client.subscribe with resend last can get the historical keys for previous encrypted messages', (done) => {
         client.once('error', done)
         // Publish encrypted messages with different keys
         const groupKey1 = crypto.randomBytes(32)

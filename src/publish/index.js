@@ -171,7 +171,7 @@ function getCreateStreamMessage(client) {
 
     // one chainer per streamId + streamPartition + publisherId + msgChainId
     const getMsgChainer = Object.assign(mem(MessageChainer, {
-        cacheKey: ({ streamId, streamPartition, publisherId, msgChainId }) => (
+        cacheKey: ([{ streamId, streamPartition, publisherId, msgChainId }]) => (
             // undefined msgChainId is fine
             [streamId, streamPartition, publisherId, msgChainId].join('|')
         ),
@@ -231,7 +231,7 @@ function getCreateStreamMessage(client) {
                 streamId,
             })
 
-            await encrypt(streamMessage)
+            await encrypt(streamMessage, stream)
             // sign, noop if not needed
             await signStreamMessage(streamMessage)
 

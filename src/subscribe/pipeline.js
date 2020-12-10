@@ -36,7 +36,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
         validate = Validator(client, options),
         msgStream = messageStream(client.connection, options),
         orderingUtil = OrderMessages(client, options),
-        decrypt = Decrypt(client, options)
+        decrypt = Decrypt(client, options),
     } = options
     /* eslint-enable object-curly-newline */
 
@@ -90,8 +90,14 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
         // custom pipeline steps
         ...afterSteps
     ], async (err, ...args) => {
-        await msgStream.cancel()
-        return onFinally(err, ...args)
+        await msgStream.cancel(err)
+        try {
+            if (err) {
+                await onError(err)
+            }
+        } finally {
+            await onFinally(err, ...args)
+        }
     })
 
     return Object.assign(p, {

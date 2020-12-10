@@ -513,6 +513,10 @@ export default class Subscriber {
                 resendMessageStream.cancel(optionalErr),
                 realtimeMessageStream.cancel(optionalErr),
             ])
+
+            if (optionalErr) {
+                throw optionalErr
+            }
         }
 
         let resendSubscribeSub

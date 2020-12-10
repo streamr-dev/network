@@ -6,9 +6,15 @@ import Scaffold from '../utils/Scaffold'
 import { waitForMatchingMessage, STREAM_MESSAGE_TYPES } from './utils'
 import EncryptionUtil, { GroupKey } from './Encryption'
 
-const { StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse } = MessageLayer
+const {
+    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse, EncryptedGroupKey
+} = MessageLayer
 
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
+
+export function isKeyExchangeStream(id = '') {
+    return id.startsWith(KEY_EXCHANGE_STREAM_PREFIX)
+}
 
 /*
 class InvalidGroupKeyRequestError extends Error {
@@ -34,7 +40,7 @@ class InvalidGroupKeyResponseError extends Error {
 class InvalidContentTypeError extends Error {
     constructor(...args) {
         super(...args)
-        this.code = 'INVALID_CONTENT_TYPE'
+        this.code = 'INVALID_MESSAGE_TYPE'
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
@@ -43,6 +49,9 @@ class InvalidContentTypeError extends Error {
 */
 
 function getKeyExchangeStreamId(address) {
+    if (isKeyExchangeStream(address)) {
+        return address // prevent ever double-handling
+    }
     return `${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`
 }
 
@@ -114,6 +123,9 @@ function GroupKeyStore({ groupKeys }) {
         rotateGroupKey() {
             return this.setNextGroupKey(GroupKey.generate())
         },
+        add(groupKey) {
+            return storeKey(groupKey)
+        },
         setNextGroupKey(newKey) {
             GroupKey.validate(newKey)
             nextGroupKey = newKey
@@ -156,12 +168,12 @@ async function catchKeyExchangeError(client, streamMessage, fn) {
 function PublisherKeyExhangeSubscription(client, groupKeyStore) {
     async function onKeyExchangeMessage(parsedContent, streamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
-            if (streamMessage.contentType !== StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
+            if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
                 return Promise.resolve()
             }
 
             // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
-            const { requestId, streamId, rsaPublicKey, groupKeyIds } = streamMessage.getParsedContent()
+            const { requestId, streamId, rsaPublicKey, groupKeyIds } = GroupKeyRequest.fromArray(streamMessage.getParsedContent())
 
             const subscriberId = streamMessage.getPublisherId()
 
@@ -171,13 +183,13 @@ function PublisherKeyExhangeSubscription(client, groupKeyStore) {
                     return null // will be filtered out
                 }
 
-                return EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true)
+                return new EncryptedGroupKey(id, EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true))
             }).filter(Boolean)
-
             return client.publish(getKeyExchangeStreamId(subscriberId), new GroupKeyResponse({
                 streamId,
                 requestId,
                 encryptedGroupKeys,
+                encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             }))
         })
     }
@@ -188,34 +200,7 @@ function PublisherKeyExhangeSubscription(client, groupKeyStore) {
 function SubscriberKeyExhangeSubscription(client, groupKeyStore) {
     async function onKeyExchangeMessage(parsedContent, streamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
-            const { contentType } = streamMessage
-            const { CONTENT_TYPES } = StreamMessage
-            if (contentType !== CONTENT_TYPES.GROUP_KEY_RESPONSE && contentType !== CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE) {
-                return
-            }
-
-            // No need to check if parsedContent contains the necessary fields because it was already checked during deserialization
-            const { requestId, streamId, rsaPublicKey, groupKeyIds } = streamMessage.getParsedContent()
-
-            const subscriberId = streamMessage.getPublisherId()
-
-            const encryptedGroupKeys = groupKeyIds.map((id) => {
-                const groupKey = groupKeyStore.get(id)
-                if (!groupKey) {
-                    return null // will be filtered out
-                }
-
-                return EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true)
-            }).filter(Boolean)
-
-            await client.publish(getKeyExchangeStreamId(subscriberId), {
-                content: new GroupKeyResponse({
-                    streamId,
-                    requestId,
-                    encryptedGroupKeys,
-                    encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
-                })
-            })
+            // TODO match key announce
         })
     }
 
@@ -299,6 +284,7 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
         let receivedGroupKeys = []
         let encryptedGroupKeys
         let response
+        const groupKeyIds = [streamMessage.groupKeyId]
         const step = Scaffold([
             async () => {
                 cancelTask = Defer()
@@ -307,31 +293,33 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
                     types: STREAM_MESSAGE_TYPES,
                     cancelTask,
                     matchFn(res) {
-                        return res.streamMessage.messageType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE
+                        const { messageType } = res.streamMessage
+                        return (
+                            messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
+                            || messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
+                        )
                     },
                 })
                 return () => {
                     cancelTask.resolve({})
                 }
             }, async () => {
-                await client.publish(keyExchangeStreamId, {
-                    content: new GroupKeyRequest({
-                        streamId,
-                        requestId,
-                        rsaPublicKey,
-                        groupKeyIds: [streamMessage.groupKeyId],
-                    })
-                })
+                await client.publish(keyExchangeStreamId, new GroupKeyRequest({
+                    streamId,
+                    requestId,
+                    rsaPublicKey,
+                    groupKeyIds,
+                }))
             }, async () => {
                 response = await responseTask
                 return () => {
                     response = undefined
                 }
             }, async () => {
-                if (response && !response.encryptedGroupKeys) { return () => {} }
+                encryptedGroupKeys = GroupKeyResponse.fromArray(response.streamMessage.getParsedContent()).encryptedGroupKeys
 
-                receivedGroupKeys = await Promise.all(encryptedGroupKeys.map((encryptedGroupKeyObj) => (
-                    encryptionUtil.decryptWithPrivateKey(encryptedGroupKeyObj.encryptedGroupKeyHex, true)
+                receivedGroupKeys = await Promise.all(encryptedGroupKeys.map(async (encryptedGroupKeyObj, i) => (
+                    new GroupKey(groupKeyIds[i], await encryptionUtil.decryptWithPrivateKey(encryptedGroupKeyObj.encryptedGroupKeyHex, true))
                 )))
 
                 return () => {
@@ -383,7 +371,7 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
             const receivedGroupKeys = await requestKey(streamMessage)
             if (!enabled) { return undefined }
             receivedGroupKeys.forEach((groupKey) => {
-                groupKeyStore.set(groupKey.id, groupKey)
+                groupKeyStore.add(groupKey)
             })
         }
 
