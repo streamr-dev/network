@@ -1,4 +1,4 @@
-import { LimitAsyncFnByKey } from '../utils'
+import PushQueue from '../utils/PushQueue'
 import EncryptionUtil from '../stream/Encryption'
 import { SubscriberKeyExchange } from '../stream/KeyExchange'
 
@@ -14,21 +14,24 @@ export default function Decrypt(client, options) {
         }
     }
 
-    const queue = LimitAsyncFnByKey(1)
     const requestKey = SubscriberKeyExchange(client, options)
-    async function decrypt(streamMessage) {
-        return queue(streamMessage.getStreamId(), async () => {
+
+    async function* decrypt(src) {
+        yield* PushQueue.transform(src, async (streamMessage) => {
             if (!streamMessage.groupKeyId) { return streamMessage }
             const groupKey = await requestKey(streamMessage)
-            if (!groupKey) { return streamMessage }
 
-            return EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
+            if (!groupKey) {
+                return streamMessage
+            }
+
+            await EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
+            return streamMessage
         })
     }
 
     return Object.assign(decrypt, {
         stop() {
-            queue.clear()
             return requestKey.stop()
         }
     })

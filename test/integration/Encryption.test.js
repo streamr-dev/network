@@ -171,6 +171,32 @@ describe('decryption', () => {
         await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
 
+    it('subscribe with changing group key', async () => {
+        // subscribe without knowing the group key to decrypt stream messages
+        const sub = await client.subscribe({
+            stream: stream.id,
+        })
+
+        const published = await publishTestMessages(5, {
+            async beforeEach() {
+                await client.setNextGroupKey(stream.id, GroupKey.generate())
+            }
+        })
+
+        const received = []
+        for await (const msg of sub) {
+            received.push(msg.getParsedContent())
+            if (received.length === published.length) {
+                return
+            }
+        }
+
+        expect(received).toEqual(published)
+
+        // All good, unsubscribe
+        await client.unsubscribe(sub)
+    }, 2 * TIMEOUT)
+
     it.skip('client.subscribe with resend last can get the historical keys for previous encrypted messages', (done) => {
         client.once('error', done)
         // Publish encrypted messages with different keys

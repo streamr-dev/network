@@ -67,12 +67,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 yield streamMessage
             }
         },
-        async function* DecryptMessage(src) {
-            for await (const streamMessage of src) {
-                await decrypt(streamMessage)
-                yield streamMessage
-            }
-        },
+        decrypt,
         // parse content
         async function* Parse(src) {
             for await (const streamMessage of src) {

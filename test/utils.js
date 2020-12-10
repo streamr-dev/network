@@ -116,6 +116,8 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             timeout = 1500,
             waitForLast = false, // wait for message to hit storage
             waitForLastTimeout,
+            beforeEach = (m) => m,
+            afterEach = () => {}
         } = validateOptions({
             ...defaultOpts,
             ...opts,
@@ -124,14 +126,20 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
         const published = []
         for (let i = 0; i < n; i++) {
             const message = Msg()
+            // eslint-disable-next-line no-await-in-loop, no-loop-func
+            await beforeEach(message)
+            // eslint-disable-next-line no-await-in-loop, no-loop-func
+            const request = await pTimeout(client.publish({
+                streamId,
+                streamPartition,
+            }, message), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
             published.push([
                 message,
-                // eslint-disable-next-line no-await-in-loop, no-loop-func
-                await pTimeout(client.publish({
-                    streamId,
-                    streamPartition,
-                }, message), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
+                request,
             ])
+
+            // eslint-disable-next-line no-await-in-loop, no-loop-func
+            await afterEach(message, request)
             // eslint-disable-next-line no-await-in-loop, no-loop-func
             await wait(delay) // ensure timestamp increments for reliable resend response in test.
         }

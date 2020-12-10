@@ -1,4 +1,5 @@
 import { MessageLayer } from 'streamr-client-protocol'
+import mem from 'mem'
 
 import { uuid, Defer } from '../utils'
 import Scaffold from '../utils/Scaffold'
@@ -70,7 +71,7 @@ function GroupKeyStore({ groupKeys }) {
     function storeKey(groupKey) {
         GroupKey.validate(groupKey)
         if (store.has(groupKey.id)) {
-            const existingKey = store.has(groupKey.id)
+            const existingKey = store.get(groupKey.id)
             if (!existingKey.equals(groupKey)) {
                 throw GroupKey.InvalidGroupKeyError(`Trying to add groupKey but key exists & is not equivalent to new GroupKey: ${groupKey}.`)
             }
@@ -272,19 +273,19 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
 
     let sub
 
-    async function requestKey(streamMessage) {
-        client.debug('requesting key...', streamMessage.groupKeyId)
+    async function requestKeys({ streamId, publisherId, groupKeyIds }) {
+        client.debug('requestKeys', {
+            streamId, publisherId, groupKeyIds,
+        })
+
         const requestId = uuid('GroupKeyRequest')
-        const streamId = streamMessage.getStreamId()
         const rsaPublicKey = encryptionUtil.getPublicKey()
-        const publisherId = streamMessage.getPublisherId().toLowerCase()
         const keyExchangeStreamId = getKeyExchangeStreamId(publisherId)
         let responseTask
         let cancelTask
         let receivedGroupKeys = []
         let encryptedGroupKeys
         let response
-        const groupKeyIds = [streamMessage.groupKeyId]
         const step = Scaffold([
             async () => {
                 cancelTask = Defer()
@@ -334,9 +335,59 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
             }
         })
 
-        requestKey.step = step
+        requestKeys.step = step
         await step()
         return receivedGroupKeys
+    }
+
+    const pending = new Map()
+    const getBuffer = mem(() => [])
+    const timeouts = {}
+
+    async function getKey(streamMessage) {
+        const streamId = streamMessage.getStreamId()
+        const publisherId = streamMessage.getPublisherId()
+        const { groupKeyId } = streamMessage
+        if (!groupKeyId) {
+            return Promise.resolve()
+        }
+
+        if (groupKeyStore.has(groupKeyId)) {
+            return groupKeyStore.get(groupKeyId)
+        }
+
+        if (pending.has(groupKeyId)) {
+            return pending.get(groupKeyId)
+        }
+
+        const key = `${streamId}.${publisherId}`
+        const buffer = getBuffer(key)
+        buffer.push(groupKeyId)
+        pending.set(groupKeyId, Defer())
+        if (!timeouts[key]) {
+            timeouts[key] = setTimeout(async () => {
+                delete timeouts[key]
+                const currentBuffer = getBuffer(key)
+                const groupKeyIds = currentBuffer.slice()
+                currentBuffer.length = 0
+                const receivedGroupKeys = await requestKeys({
+                    streamId,
+                    publisherId,
+                    groupKeyIds,
+                })
+                receivedGroupKeys.forEach((groupKey) => {
+                    groupKeyStore.add(groupKey)
+                })
+                groupKeyIds.forEach((id) => {
+                    if (!pending.has(id)) { return }
+                    const task = pending.get(id)
+                    task.resolve(groupKeyStore.get(id))
+                    pending.delete(id)
+                })
+            }, 1000)
+        }
+
+        return pending.get(groupKeyId)
     }
 
     const next = Scaffold([
@@ -356,8 +407,8 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
     ], () => enabled, {
         async onDone() {
             // clean up requestKey
-            if (requestKey.step) {
-                await requestKey.step()
+            if (requestKeys.step) {
+                await requestKeys.step()
             }
         }
     })
@@ -367,15 +418,7 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
         await next()
         if (!enabled) { return undefined }
 
-        if (!groupKeyStore.has(streamMessage.groupKeyId)) {
-            const receivedGroupKeys = await requestKey(streamMessage)
-            if (!enabled) { return undefined }
-            receivedGroupKeys.forEach((groupKey) => {
-                groupKeyStore.add(groupKey)
-            })
-        }
-
-        return groupKeyStore.get(streamMessage.groupKeyId)
+        return getKey(streamMessage)
     }
 
     return Object.assign(getGroupKey, {
