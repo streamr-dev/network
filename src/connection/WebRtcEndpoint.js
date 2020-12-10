@@ -148,7 +148,7 @@ class WebRtcEndpoint extends EventEmitter {
 
     send(targetPeerId, message) {
         if (!this.connections[targetPeerId]) {
-            throw new WebRtcError(`Not connected to ${targetPeerId}.`)
+            return Promise.reject(new WebRtcError(`Not connected to ${targetPeerId}.`))
         }
         return this.connections[targetPeerId].send(message).then(
             () => {
