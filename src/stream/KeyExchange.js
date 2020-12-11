@@ -197,11 +197,27 @@ function PublisherKeyExhangeSubscription(client, groupKeyStore) {
 
     return subscribeToKeyExchangeStream(client, onKeyExchangeMessage)
 }
+async function getGroupKeysFromResponse(streamMessage, encryptionUtil) {
+    const { encryptedGroupKeys } = GroupKeyResponse.fromArray(streamMessage.getParsedContent())
 
-function SubscriberKeyExhangeSubscription(client, groupKeyStore) {
+    return Promise.all(encryptedGroupKeys.map(async (encryptedGroupKey) => (
+        new GroupKey(encryptedGroupKey.id, await encryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, true))
+    )))
+}
+
+function SubscriberKeyExhangeSubscription(client, groupKeyStore, encryptionUtil) {
     async function onKeyExchangeMessage(parsedContent, streamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
-            // TODO match key announce
+            const { messageType } = streamMessage
+            const { MESSAGE_TYPES } = StreamMessage
+            if (messageType !== MESSAGE_TYPES.GROUP_KEY_ANNOUNCE) {
+                return
+            }
+
+            const groupKeys = await getGroupKeysFromResponse(streamMessage, encryptionUtil)
+            groupKeys.forEach((groupKey) => {
+                groupKeyStore.add(groupKey)
+            })
         })
     }
 
@@ -284,7 +300,6 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
         let responseTask
         let cancelTask
         let receivedGroupKeys = []
-        let encryptedGroupKeys
         let response
         const step = Scaffold([
             async () => {
@@ -317,11 +332,7 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
                     response = undefined
                 }
             }, async () => {
-                encryptedGroupKeys = GroupKeyResponse.fromArray(response.streamMessage.getParsedContent()).encryptedGroupKeys
-
-                receivedGroupKeys = await Promise.all(encryptedGroupKeys.map(async (encryptedGroupKeyObj, i) => (
-                    new GroupKey(groupKeyIds[i], await encryptionUtil.decryptWithPrivateKey(encryptedGroupKeyObj.encryptedGroupKeyHex, true))
-                )))
+                receivedGroupKeys = await getGroupKeysFromResponse(response, encryptionUtil)
 
                 return () => {
                     receivedGroupKeys = []
@@ -393,7 +404,7 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
     const next = Scaffold([
         async () => {
             [sub] = await Promise.all([
-                SubscriberKeyExhangeSubscription(client, groupKeyStore),
+                SubscriberKeyExhangeSubscription(client, groupKeyStore, encryptionUtil),
                 encryptionUtil.onReady(),
             ])
             return async () => {
