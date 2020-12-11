@@ -49,10 +49,16 @@ export const Msg = (opts) => ({
     ...opts,
 })
 
+function defaultMessageMatchFn(msgTarget, msgGot) {
+    return msgGot.value === msgTarget.value
+}
+
 export function getWaitForStorage(client, defaultOpts = {}) {
     /* eslint-disable no-await-in-loop */
     return async (msg, opts = {}) => {
-        const { streamId, streamPartition = 0, interval = 500, timeout = 5000 } = validateOptions({
+        const {
+            streamId, streamPartition = 0, interval = 500, timeout = 5000, messageMatchFn = defaultMessageMatchFn
+        } = validateOptions({
             ...defaultOpts,
             ...opts,
         })
@@ -82,8 +88,8 @@ export function getWaitForStorage(client, defaultOpts = {}) {
                 count: 3,
             })
 
-            for (const { content } of last) {
-                if (content.value === msg.value) {
+            for (const lastMsg of last) {
+                if (messageMatchFn(msg, lastMsg)) {
                     found = true
                     return
                 }
@@ -113,7 +119,7 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             streamId,
             streamPartition = 0,
             delay = 100,
-            timeout = 1500,
+            timeout = 3500,
             waitForLast = false, // wait for message to hit storage
             waitForLastTimeout,
             beforeEach = (m) => m,
@@ -145,11 +151,14 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
         }
 
         if (waitForLast) {
-            const msg = published[published.length - 1][0]
+            const msg = published[published.length - 1][1]
             await getWaitForStorage(client)(msg, {
                 streamId,
                 streamPartition,
                 timeout: waitForLastTimeout,
+                messageMatchFn(m, b) {
+                    return m.streamMessage.signature === b.signature
+                }
             })
         }
 

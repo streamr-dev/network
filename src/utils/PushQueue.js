@@ -82,16 +82,21 @@ export default class PushQueue {
         const buffer = new PushQueue()
         const orderedFn = pOrderedResolve(fn) // push must be run in sequence
         ;(async () => { // eslint-disable-line semi-style
+            const tasks = []
             for await (const value of src) {
                 // run in parallel
-                orderedFn(value).then(() => (
+                const task = orderedFn(value).then(() => (
                     buffer.push(value)
                 )).catch((err) => {
                     buffer.throw(err)
                 })
+                tasks.push(task)
             }
+            await Promise.all(tasks)
             return buffer.end()
-        })().catch((err) => buffer.throw(err)) // no await
+        })().catch((err) => {
+            return buffer.throw(err)
+        }) // no await
 
         return buffer
     }

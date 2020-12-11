@@ -197,42 +197,56 @@ describe('decryption', () => {
         await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
 
-    it.skip('client.subscribe with resend last can get the historical keys for previous encrypted messages', (done) => {
-        client.once('error', done)
+    it('client.resend last can get the historical keys for previous encrypted messages', async () => {
         // Publish encrypted messages with different keys
-        const groupKey1 = crypto.randomBytes(32)
-        const groupKey2 = crypto.randomBytes(32)
-        client.publish(stream.id, {
-            test: 'resent msg 1',
-        }, Date.now(), null, groupKey1)
-        client.publish(stream.id, {
-            test: 'resent msg 2',
-        }, Date.now(), null, groupKey2)
+        const published = await publishTestMessages(5, {
+            waitForLast: true,
+            async beforeEach() {
+                await client.setNextGroupKey(stream.id, GroupKey.generate())
+            }
+        })
 
-        // Add delay: this test needs some time to allow the message to be written to Cassandra
-        let receivedFirst = false
-        setTimeout(() => {
-            // subscribe with resend without knowing the historical keys
-            const sub = client.subscribe({
-                stream: stream.id,
-                resend: {
-                    last: 2,
-                },
-            }, async (parsedContent) => {
-                // Check message content
-                if (!receivedFirst) {
-                    expect(parsedContent.test).toBe('resent msg 1')
-                    receivedFirst = true
-                } else {
-                    expect(parsedContent.test).toBe('resent msg 2')
-                }
+        // resend without knowing the historical keys
+        const sub = await client.resend({
+            stream: stream.id,
+            resend: {
+                last: 2,
+            },
+        })
 
-                client.unsubscribe(sub).then(() => {
-                    expect(client.subscribedStreamPartitions[stream.id + '0']).toBe(undefined)
-                    done()
-                }, done)
-            })
-        }, TIMEOUT * 0.8)
+        const received = await sub.collect()
+
+        expect(received).toEqual(published.slice(-2))
+        await client.unsubscribe(sub)
+    }, 2 * TIMEOUT)
+
+    it('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
+        // Publish encrypted messages with different keys
+        const published = await publishTestMessages(5, {
+            waitForLast: true,
+            async beforeEach() {
+                await client.setNextGroupKey(stream.id, GroupKey.generate())
+            }
+        })
+
+        // subscribe with resend without knowing the historical keys
+        const sub = await client.subscribe({
+            stream: stream.id,
+            resend: {
+                last: 2,
+            },
+        })
+
+        const received = []
+        for await (const msg of sub) {
+            received.push(msg.getParsedContent())
+            if (received.length === 2) {
+                break
+            }
+        }
+
+        expect(received).toEqual(published.slice(-2))
+        await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
 })
 
