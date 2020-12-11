@@ -97,60 +97,62 @@ export async function waitForMatchingMessage({
     await connection.nextConnection()
     let cleanup = () => {}
 
-    const task = Promise.race([
-        new Promise((resolve, reject) => {
-            const tryMatch = (...args) => {
-                try {
-                    return matchFn(...args)
-                } catch (err) {
-                    cleanup()
-                    reject(err)
-                    return false
-                }
-            }
-            let onDisconnected
-            const onResponse = (res) => {
-                if (!tryMatch(res)) { return }
-                // clean up err handler
+    const matchTask = new Promise((resolve, reject) => {
+        const tryMatch = (...args) => {
+            try {
+                return matchFn(...args)
+            } catch (err) {
                 cleanup()
-                resolve(res)
+                reject(err)
+                return false
             }
+        }
+        let onDisconnected
+        const onResponse = (res) => {
+            if (!tryMatch(res)) { return }
+            // clean up err handler
+            cleanup()
+            resolve(res)
+        }
 
-            const onErrorResponse = (res) => {
-                if (!tryMatch(res)) { return }
-                // clean up success handler
-                cleanup()
-                const error = new Error(res.errorMessage)
-                error.code = res.errorCode
-                reject(error)
-            }
+        const onErrorResponse = (res) => {
+            if (!tryMatch(res)) { return }
+            // clean up success handler
+            cleanup()
+            const error = new Error(res.errorMessage)
+            error.code = res.errorCode
+            reject(error)
+        }
 
-            cleanup = () => {
-                if (cancelTask) { cancelTask.catch(() => {}) } // ignore
-                connection.off('disconnected', onDisconnected)
-                connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
-                types.forEach((type) => {
-                    connection.off(type, onResponse)
-                })
-            }
-
+        cleanup = () => {
+            if (cancelTask) { cancelTask.catch(() => {}) } // ignore
+            connection.off('disconnected', onDisconnected)
+            connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
             types.forEach((type) => {
-                connection.on(type, onResponse)
+                connection.off(type, onResponse)
             })
+        }
 
-            connection.on(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
+        types.forEach((type) => {
+            connection.on(type, onResponse)
+        })
 
-            onDisconnected = () => {
-                cleanup()
-                resolve() // noop
-            }
+        connection.on(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
 
-            connection.once('disconnected', onDisconnected)
-        }),
-        cancelTask,
-    ])
+        onDisconnected = () => {
+            cleanup()
+            resolve() // noop
+        }
+
+        connection.once('disconnected', onDisconnected)
+    })
 
     try {
+        const task = cancelTask ? Promise.race([
+            matchTask,
+            cancelTask,
+        ]) : matchTask
+
         if (!timeout) {
             return await task
         }
@@ -179,7 +181,7 @@ export async function waitForResponse({ requestId, timeoutMessage = `Waiting for
         requestId,
         timeoutMessage,
         matchFn(res) {
-            return res.requestId !== requestId
+            return res.requestId === requestId
         }
     })
 }
