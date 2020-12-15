@@ -76,33 +76,4 @@ describe('InstructionThrottler', () => {
             [createInstruction('stream-1', 5), 'tracker-1'],
         ])
     })
-
-    it('max one handlerCb is awaited for at a time', async () => {
-        const events = []
-        handlerCb.mockReset().mockImplementation(() => {
-            events.push('in')
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve(true)
-                    events.push('out')
-                }, 20)
-            })
-        })
-
-        instructionThrottler.add(createInstruction('stream-1', 1), 'tracker-1')
-        instructionThrottler.add(createInstruction('stream-2', 2), 'tracker-1')
-        instructionThrottler.add(createInstruction('stream-3', 3), 'tracker-1')
-        instructionThrottler.add(createInstruction('stream-4', 4), 'tracker-1')
-        instructionThrottler.add(createInstruction('stream-5', 5), 'tracker-1')
-
-        await waitForCondition(() => !instructionThrottler.handling)
-
-        expect(events).toEqual([
-            'in', 'out',
-            'in', 'out',
-            'in', 'out',
-            'in', 'out',
-            'in', 'out',
-        ])
-    })
 })

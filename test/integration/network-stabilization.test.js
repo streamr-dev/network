@@ -52,11 +52,11 @@ describe('check network stabilization', () => {
         await tracker.stop()
     })
 
-    it('network must become stable in less than 10 seconds', async (done) => {
+    it('network must become stable in less than 5 seconds', async (done) => {
         for (let i = 0; i < 10; ++i) {
             const beforeTopology = tracker.getTopology()
             // eslint-disable-next-line no-await-in-loop
-            await wait(800)
+            await wait(400)
             const afterTopology = tracker.getTopology()
             if (areEqual(beforeTopology, afterTopology)) {
                 done()
