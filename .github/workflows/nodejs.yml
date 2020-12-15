@@ -30,7 +30,7 @@ jobs:
           npm run eslint
 
   test:
-    name: Test Unit/Build/Benchmark using Node ${{ matrix.node-version }}
+    name: Build and Test project using node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
 
     strategy:
@@ -46,28 +46,11 @@ jobs:
       - name: npm ci
         run: npm ci
 
-      - name: test-unit
-        run: npm run test-unit
-
       - name: build
         run: npm run build
 
-      - name: benchmarks
-        run: npm run benchmark
-
-  integration:
-    name: Test Integration using Node ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [12.x, 14.x]
-
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
+      - name: test-unit
+        run: npm run test-unit
 
       - name: setup streamr-docker-dev
         run: |
@@ -76,18 +59,12 @@ jobs:
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
 
-      - name: npm ci
-        run: npm ci
-
-      - name: build
-        run: npm run build
-
       - name: test-integration
         run: npm run test-integration
 
   publish:
     needs: [eslint, test, integration]
-    name: Publishing master using Node 12
+    name: Publishing master using Node 14
     runs-on: ubuntu-latest
 
     # run job only for tags and skip for cron
@@ -100,7 +77,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 14
           registry-url: https://registry.npmjs.org/
 
       - name: npm ci
