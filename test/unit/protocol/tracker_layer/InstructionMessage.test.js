@@ -11,16 +11,16 @@ describe('InstructionMessage', () => {
                 requestId: 'requestId',
                 streamId: 'streamId',
                 streamPartition: 0,
-                nodeAddresses: [],
+                nodeIds: [],
                 counter: null
             }), ValidationError)
         })
-        it('throws on null nodeAddresses', () => {
+        it('throws on null nodeIds', () => {
             assert.throws(() => new InstructionMessage({
                 requestId: 'requestId',
                 streamId: 'streamId',
                 streamPartition: 0,
-                nodeAddresses: null,
+                nodeIds: null,
                 counter: 1
             }), ValidationError)
         })
@@ -29,7 +29,7 @@ describe('InstructionMessage', () => {
                 requestId: 'requestId',
                 streamId: 'streamId',
                 streamPartition: null,
-                nodeAddresses: [],
+                nodeIds: [],
                 counter: 1
             }), ValidationError)
         })
@@ -38,7 +38,7 @@ describe('InstructionMessage', () => {
                 requestId: 'requestId',
                 streamId: null,
                 streamPartition: 0,
-                nodeAddresses: [],
+                nodeIds: [],
                 counter: 1
             }), ValidationError)
         })
@@ -47,7 +47,7 @@ describe('InstructionMessage', () => {
                 requestId: null,
                 streamId: 'streamId',
                 streamPartition: 0,
-                nodeAddresses: [],
+                nodeIds: [],
                 counter: 1
             }), ValidationError)
         })
@@ -56,7 +56,7 @@ describe('InstructionMessage', () => {
                 requestId: 'requestId',
                 streamId: 'streamId',
                 streamPartition: 0,
-                nodeAddresses: [],
+                nodeIds: [],
                 counter: 1
             })
             assert(msg instanceof InstructionMessage)
@@ -64,7 +64,7 @@ describe('InstructionMessage', () => {
             assert.strictEqual(msg.requestId, 'requestId')
             assert.strictEqual(msg.streamId, 'streamId')
             assert.strictEqual(msg.streamPartition, 0)
-            assert.deepStrictEqual(msg.nodeAddresses, [])
+            assert.deepStrictEqual(msg.nodeIds, [])
             assert.strictEqual(msg.counter, 1)
         })
     })

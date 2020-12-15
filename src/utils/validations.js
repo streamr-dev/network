@@ -68,3 +68,13 @@ export function validateIsType(varName, varValue, typeName, typeClass, allowNull
     }
 }
 
+export function validateIsOneOf(varName, varValue, validValues, allowNull = false) {
+    if (allowNull && varValue == null) {
+        return
+    }
+    validateIsNotNullOrUndefined(varName, varValue)
+    if (!validValues.includes(varValue)) {
+        throw new ValidationError(`Expected ${varName} to be one of ${JSON.stringify(validValues)} but was (${varValue}).`)
+    }
+}
+

@@ -3,30 +3,41 @@ import assert from 'assert'
 import { TrackerLayer } from '../../../../src'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
-const { InstructionMessage } = TrackerLayer
+const { RelayMessage } = TrackerLayer
 
 const VERSION = 1
 
 // Message definitions
-const message = new InstructionMessage({
-    version: VERSION,
+const message = new RelayMessage({
     requestId: 'requestId',
-    streamId: 'streamId',
-    streamPartition: 10,
-    nodeIds: ['node-1', 'node-2'],
-    counter: 100
+    originator: {
+        peerId: 'peerId',
+        peerName: 'peerName',
+        peerType: 'node'
+    },
+    targetNode: 'targetNode',
+    subType: 'offer',
+    data: {
+        hello: 'world'
+    }
 })
 const serializedMessage = JSON.stringify([
     VERSION,
-    TrackerMessage.TYPES.InstructionMessage,
+    TrackerMessage.TYPES.RelayMessage,
     'requestId',
-    'streamId',
-    10,
-    ['node-1', 'node-2'],
-    100
+    {
+        peerId: 'peerId',
+        peerName: 'peerName',
+        peerType: 'node'
+    },
+    'targetNode',
+    'offer',
+    {
+        hello: 'world'
+    }
 ])
 
-describe('InstructionMessageSerializerV1', () => {
+describe('RelayMessageSerializerV1', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
             assert.deepStrictEqual(TrackerMessage.deserialize(serializedMessage), message)

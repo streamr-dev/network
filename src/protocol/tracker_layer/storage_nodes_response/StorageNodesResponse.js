@@ -7,16 +7,16 @@ import TrackerMessage from '../TrackerMessage'
 
 export default class StorageNodesResponse extends TrackerMessage {
     constructor({
-        version = TrackerMessage.LATEST_VERSION, requestId, streamId, streamPartition, nodeAddresses
+        version = TrackerMessage.LATEST_VERSION, requestId, streamId, streamPartition, nodeIds
     }) {
         super(version, TrackerMessage.TYPES.StorageNodesResponse, requestId)
 
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
-        validateIsArray('nodeAddresses', nodeAddresses)
+        validateIsArray('nodeIds', nodeIds)
 
         this.streamId = streamId
         this.streamPartition = streamPartition
-        this.nodeAddresses = nodeAddresses
+        this.nodeIds = nodeIds
     }
 }

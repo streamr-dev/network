@@ -87,5 +87,7 @@ TrackerMessage.TYPES = {
     StatusMessage: 1,
     InstructionMessage: 2,
     StorageNodesRequest: 3,
-    StorageNodesResponse: 4
+    StorageNodesResponse: 4,
+    RelayMessage: 5,
+    ErrorMessage: 6
 }

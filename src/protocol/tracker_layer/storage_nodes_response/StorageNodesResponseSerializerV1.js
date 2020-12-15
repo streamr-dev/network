@@ -12,7 +12,7 @@ export default class StorageNodesResponseSerializerV1 {
             storageNodesResponse.requestId,
             storageNodesResponse.streamId,
             storageNodesResponse.streamPartition,
-            storageNodesResponse.nodeAddresses
+            storageNodesResponse.nodeIds
         ]
     }
 
@@ -23,11 +23,11 @@ export default class StorageNodesResponseSerializerV1 {
             requestId,
             streamId,
             streamPartition,
-            nodeAddresses
+            nodeIds
         ] = arr
 
         return new StorageNodesResponse({
-            version, requestId, streamId, streamPartition, nodeAddresses
+            version, requestId, streamId, streamPartition, nodeIds
         })
     }
 }

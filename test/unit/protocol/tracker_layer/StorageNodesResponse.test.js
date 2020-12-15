@@ -6,12 +6,12 @@ import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessag
 
 describe('StorageNodesResponse', () => {
     describe('constructor', () => {
-        it('throws on null nodeAddresses', () => {
+        it('throws on null nodeIds', () => {
             assert.throws(() => new StorageNodesResponse({
                 requestId: 'requestId',
                 streamId: 'streamId',
                 streamPartition: 0,
-                nodeAddresses: null
+                nodeIds: null
             }), ValidationError)
         })
         it('throws on null streamPartition', () => {
@@ -19,7 +19,7 @@ describe('StorageNodesResponse', () => {
                 requestId: 'requestId',
                 streamId: 'streamId',
                 streamPartition: null,
-                nodeAddresses: []
+                nodeIds: []
             }), ValidationError)
         })
         it('throws on null streamId', () => {
@@ -27,7 +27,7 @@ describe('StorageNodesResponse', () => {
                 requestId: 'requestId',
                 streamId: null,
                 streamPartition: 0,
-                nodeAddresses: []
+                nodeIds: []
             }), ValidationError)
         })
         it('throws on null requestId', () => {
@@ -35,7 +35,7 @@ describe('StorageNodesResponse', () => {
                 requestId: null,
                 streamId: 'streamId',
                 streamPartition: 0,
-                nodeAddresses: []
+                nodeIds: []
             }), ValidationError)
         })
         it('should create the latest version', () => {
@@ -43,14 +43,14 @@ describe('StorageNodesResponse', () => {
                 requestId: 'requestId',
                 streamId: 'streamId',
                 streamPartition: 0,
-                nodeAddresses: []
+                nodeIds: []
             })
             assert(msg instanceof StorageNodesResponse)
             assert.strictEqual(msg.version, TrackerMessage.LATEST_VERSION)
             assert.strictEqual(msg.requestId, 'requestId')
             assert.strictEqual(msg.streamId, 'streamId')
             assert.strictEqual(msg.streamPartition, 0)
-            assert.deepStrictEqual(msg.nodeAddresses, [])
+            assert.deepStrictEqual(msg.nodeIds, [])
         })
     })
 })

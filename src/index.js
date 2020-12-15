@@ -5,11 +5,15 @@ import './protocol/control_layer/broadcast_message/BroadcastMessageSerializerV2'
 import ErrorResponse from './protocol/control_layer/error_response/ErrorResponse'
 import './protocol/control_layer/error_response/ErrorResponseSerializerV1'
 import './protocol/control_layer/error_response/ErrorResponseSerializerV2'
+import ErrorMessage from './protocol/tracker_layer/error_message/ErrorMessage'
+import './protocol/tracker_layer/error_message/ErrorMessageSerializerV1'
 import InstructionMessage from './protocol/tracker_layer/instruction_message/InstructionMessage'
 import './protocol/tracker_layer/instruction_message/InstructionMessageSerializerV1'
 import PublishRequest from './protocol/control_layer/publish_request/PublishRequest'
 import './protocol/control_layer/publish_request/PublishRequestSerializerV1'
 import './protocol/control_layer/publish_request/PublishRequestSerializerV2'
+import RelayMessage from './protocol/tracker_layer/relay_message/RelayMessage'
+import './protocol/tracker_layer/relay_message/RelayMessageSerializerV1'
 import ResendFromRequest from './protocol/control_layer/resend_request/ResendFromRequest'
 import './protocol/control_layer/resend_request/ResendFromRequestSerializerV1'
 import './protocol/control_layer/resend_request/ResendFromRequestSerializerV2'
@@ -110,6 +114,8 @@ export const MessageLayer = {
 
 export const TrackerLayer = {
     InstructionMessage,
+    ErrorMessage,
+    RelayMessage,
     StatusMessage,
     StorageNodesRequest,
     StorageNodesResponse,

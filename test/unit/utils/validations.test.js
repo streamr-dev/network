@@ -4,7 +4,8 @@ import {
     validateIsNotEmptyString,
     validateIsInteger,
     validateIsNotNegativeInteger,
-    validateIsArray
+    validateIsArray,
+    validateIsOneOf
 } from '../../../src/utils/validations'
 import ValidationError from '../../../src/errors/ValidationError'
 
@@ -318,6 +319,43 @@ describe('validations', () => {
         it('does not throw on array', () => {
             expect(() => {
                 validateIsArray('varName', ['a', 'b', 'c', 'd'])
+            }).not.toThrow()
+        })
+    })
+
+    describe('validateIsOneOf', () => {
+        describe('when allowNull = false (default)', () => {
+            it('throws ValidationError on undefined', () => {
+                expect(() => {
+                    validateIsOneOf('varName', undefined, [])
+                }).toThrow(new ValidationError('Expected varName to not be undefined.'))
+            })
+            it('throws ValidationError on null', () => {
+                expect(() => {
+                    validateIsOneOf('varName', null, [])
+                }).toThrow(new ValidationError('Expected varName to not be null.'))
+            })
+        })
+        describe('when allowNull = true', () => {
+            it('does not throw on undefined', () => {
+                expect(() => {
+                    validateIsOneOf('varName', undefined, [], true)
+                }).not.toThrow()
+            })
+            it('does not throw on null', () => {
+                expect(() => {
+                    validateIsOneOf('varName', null, [], true)
+                }).not.toThrow()
+            })
+        })
+        it('throws ValidationError when value not in list', () => {
+            expect(() => {
+                validateIsOneOf('varName', 'not-in-list', ['a', 'b', 'c'])
+            }).toThrow(new ValidationError('Expected varName to be one of ["a","b","c"] but was (not-in-list).'))
+        })
+        it('does not throw on included value', () => {
+            expect(() => {
+                validateIsOneOf('varName', 'b', ['a', 'b', 'c'])
             }).not.toThrow()
         })
     })

@@ -12,7 +12,7 @@ export default class InstructionMessageSerializerV1 {
             instructionMessage.requestId,
             instructionMessage.streamId,
             instructionMessage.streamPartition,
-            instructionMessage.nodeAddresses,
+            instructionMessage.nodeIds,
             instructionMessage.counter
         ]
     }
@@ -24,12 +24,12 @@ export default class InstructionMessageSerializerV1 {
             requestId,
             streamId,
             streamPartition,
-            nodeAddresses,
+            nodeIds,
             counter
         ] = arr
 
         return new InstructionMessage({
-            version, requestId, streamId, streamPartition, nodeAddresses, counter
+            version, requestId, streamId, streamPartition, nodeIds, counter
         })
     }
 }

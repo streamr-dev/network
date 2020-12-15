@@ -3,30 +3,26 @@ import assert from 'assert'
 import { TrackerLayer } from '../../../../src'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
 
-const { InstructionMessage } = TrackerLayer
+const { ErrorMessage } = TrackerLayer
 
 const VERSION = 1
 
 // Message definitions
-const message = new InstructionMessage({
+const message = new ErrorMessage({
     version: VERSION,
     requestId: 'requestId',
-    streamId: 'streamId',
-    streamPartition: 10,
-    nodeIds: ['node-1', 'node-2'],
-    counter: 100
+    errorCode: ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+    targetNode: 'targetNode'
 })
 const serializedMessage = JSON.stringify([
     VERSION,
-    TrackerMessage.TYPES.InstructionMessage,
+    TrackerMessage.TYPES.ErrorMessage,
     'requestId',
-    'streamId',
-    10,
-    ['node-1', 'node-2'],
-    100
+    ErrorMessage.ERROR_CODES.RTC_UNKNOWN_PEER,
+    'targetNode'
 ])
 
-describe('InstructionMessageSerializerV1', () => {
+describe('ErrorMessageSerializerV1', () => {
     describe('deserialize', () => {
         it('correctly parses messages', () => {
             assert.deepStrictEqual(TrackerMessage.deserialize(serializedMessage), message)

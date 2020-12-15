@@ -7,18 +7,18 @@ import TrackerMessage from '../TrackerMessage'
 
 export default class InstructionMessage extends TrackerMessage {
     constructor({
-        version = TrackerMessage.LATEST_VERSION, requestId, streamId, streamPartition, nodeAddresses, counter
+        version = TrackerMessage.LATEST_VERSION, requestId, streamId, streamPartition, nodeIds, counter
     }) {
         super(version, TrackerMessage.TYPES.InstructionMessage, requestId)
 
         validateIsNotEmptyString('streamId', streamId)
         validateIsNotNegativeInteger('streamPartition', streamPartition)
-        validateIsArray('nodeAddresses', nodeAddresses)
+        validateIsArray('nodeIds', nodeIds)
         validateIsNotNegativeInteger('counter', counter)
 
         this.streamId = streamId
         this.streamPartition = streamPartition
-        this.nodeAddresses = nodeAddresses
+        this.nodeIds = nodeIds
         this.counter = counter
     }
 }

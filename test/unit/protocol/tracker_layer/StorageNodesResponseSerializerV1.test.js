@@ -13,7 +13,7 @@ const message = new StorageNodesResponse({
     requestId: 'requestId',
     streamId: 'streamId',
     streamPartition: 10,
-    nodeAddresses: ['ws://address-1', 'ws://address-2']
+    nodeIds: ['node-1', 'node-2']
 })
 const serializedMessage = JSON.stringify([
     VERSION,
@@ -21,7 +21,7 @@ const serializedMessage = JSON.stringify([
     'requestId',
     'streamId',
     10,
-    ['ws://address-1', 'ws://address-2']
+    ['node-1', 'node-2']
 ])
 
 describe('StorageNodesResponseSerializerV1', () => {
