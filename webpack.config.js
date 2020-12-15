@@ -17,17 +17,11 @@ const libraryName = pkg.name
 const commonConfig = {
     mode: isProduction ? 'production' : 'development',
     entry: path.join(__dirname, 'src', 'index.js'),
-    devtool: isProduction ? 'nosources-source-map' : 'source-map',
     optimization: {
         minimize: false
     },
     output: {
         path: path.join(__dirname, 'dist'),
-        library: {
-            root: 'Protocol',
-            amd: libraryName,
-        },
-        libraryTarget: 'umd',
         umdNamedDefine: true,
     },
     module: {
@@ -53,6 +47,7 @@ const commonConfig = {
 
 const serverConfig = merge({}, commonConfig, {
     target: 'node',
+    devtool: 'source-map',
     externals: [nodeExternals()],
     output: {
         libraryTarget: 'commonjs2',
@@ -62,6 +57,7 @@ const serverConfig = merge({}, commonConfig, {
 
 const clientConfig = merge({}, commonConfig, {
     target: 'web',
+    devtool: 'source-map',
     output: {
         libraryTarget: 'umd2',
         filename: libraryName + '.web.js',
@@ -72,13 +68,12 @@ let clientMinifiedConfig = {}
 
 if (isProduction) {
     clientMinifiedConfig = merge({}, clientConfig, {
+        devtool: 'nosources-source-map',
         optimization: {
             minimize: true,
             minimizer: [
                 new TerserPlugin({
-                    cache: true,
                     parallel: true,
-                    sourceMap: true,
                     terserOptions: {
                         output: {
                             comments: false,
