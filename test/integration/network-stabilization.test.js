@@ -3,6 +3,7 @@ const assert = require('assert')
 const { wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
+const { getTopology } = require('../../src/logic/TopologyFactory')
 
 function areEqual(a, b) {
     try {
@@ -54,10 +55,10 @@ describe('check network stabilization', () => {
 
     it('network must become stable in less than 5 seconds', async (done) => {
         for (let i = 0; i < 10; ++i) {
-            const beforeTopology = tracker.getTopology()
+            const beforeTopology = getTopology(tracker.getOverlayPerStream())
             // eslint-disable-next-line no-await-in-loop
             await wait(400)
-            const afterTopology = tracker.getTopology()
+            const afterTopology = getTopology(tracker.getOverlayPerStream())
             if (areEqual(beforeTopology, afterTopology)) {
                 done()
                 return

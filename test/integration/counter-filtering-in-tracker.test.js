@@ -5,6 +5,7 @@ const { startTracker } = require('../../src/composition')
 const TrackerNode = require('../../src/protocol/TrackerNode')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
+const { getTopology } = require('../../src/logic/TopologyFactory')
 
 const WAIT_TIME = 200
 
@@ -96,16 +97,16 @@ describe('tracker: counter filtering', () => {
     })
 
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
-        const topologyBefore = tracker.getTopology()
+        const topologyBefore = getTopology(tracker.getOverlayPerStream())
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []))
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        expect(tracker.getTopology()).toEqual(topologyBefore)
+        expect(getTopology(tracker.getOverlayPerStream())).toEqual(topologyBefore)
     })
 
     test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
-        const topologyBefore = tracker.getTopology()
+        const topologyBefore = getTopology(tracker.getOverlayPerStream())
         trackerNode1.sendStatus('tracker', formStatus(1, 0, [], []))
         await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
-        expect(tracker.getTopology()).toEqual(topologyBefore)
+        expect(getTopology(tracker.getOverlayPerStream())).toEqual(topologyBefore)
     })
 })

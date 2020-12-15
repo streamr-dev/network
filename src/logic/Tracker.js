@@ -192,31 +192,6 @@ module.exports = class Tracker extends EventEmitter {
         }
     }
 
-    getTopology(streamId = null, partition = null) {
-        const topology = {}
-
-        let streamKeys = []
-
-        if (streamId && partition === null) {
-            streamKeys = Object.keys(this.overlayPerStream).filter((streamKey) => streamKey.includes(streamId))
-        } else {
-            let askedStreamKey = null
-            if (streamId && Number.isSafeInteger(partition) && partition >= 0) {
-                askedStreamKey = new StreamIdAndPartition(streamId, Number.parseInt(partition, 10))
-            }
-
-            streamKeys = askedStreamKey
-                ? Object.keys(this.overlayPerStream).filter((streamKey) => streamKey === askedStreamKey.toString())
-                : Object.keys(this.overlayPerStream)
-        }
-
-        streamKeys.forEach((streamKey) => {
-            topology[streamKey] = this.overlayPerStream[streamKey].state()
-        })
-
-        return topology
-    }
-
     getStreams() {
         return Object.keys(this.overlayPerStream)
     }
@@ -231,5 +206,9 @@ module.exports = class Tracker extends EventEmitter {
 
     getStorageNodes() {
         return [...this.storageNodes.keys()]
+    }
+
+    getOverlayPerStream() {
+        return this.overlayPerStream
     }
 }

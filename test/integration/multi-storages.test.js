@@ -3,6 +3,7 @@ const { waitForEvent, waitForCondition } = require('streamr-test-utils')
 const { startStorageNode, startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
+const { getTopology } = require('../../src/logic/TopologyFactory')
 
 describe('multiple storage nodes', () => {
     let tracker
@@ -66,9 +67,9 @@ describe('multiple storage nodes', () => {
         node.subscribe('stream-1', 0)
         node.subscribe('stream-2', 0)
 
-        await waitForCondition(() => Object.keys(tracker.getTopology()).length === 2)
+        await waitForCondition(() => Object.keys(getTopology(tracker.getOverlayPerStream())).length === 2)
 
-        expect(tracker.getTopology()).toEqual({
+        expect(getTopology(tracker.getOverlayPerStream())).toEqual({
             'stream-1::0': {
                 node: ['storageOne', 'storageTwo'],
                 storageOne: ['node', 'storageTwo'],
@@ -89,7 +90,7 @@ describe('multiple storage nodes', () => {
         node.subscribe('stream-2', 0)
         node.subscribe('stream-3', 0)
 
-        await waitForCondition(() => Object.keys(tracker.getTopology()).length === 3)
+        await waitForCondition(() => Object.keys(getTopology(tracker.getOverlayPerStream())).length === 3)
         storageThree.start()
 
         await Promise.all([
@@ -97,13 +98,13 @@ describe('multiple storage nodes', () => {
             waitForEvent(storageThree, Node.events.NODE_SUBSCRIBED)
         ])
 
-        expect(tracker.getTopology()['stream-1::0'].storageThree).toEqual([
+        expect(getTopology(tracker.getOverlayPerStream())['stream-1::0'].storageThree).toEqual([
             'node', 'storageOne', 'storageTwo'
         ])
-        expect(tracker.getTopology()['stream-2::0'].storageThree).toEqual([
+        expect(getTopology(tracker.getOverlayPerStream())['stream-2::0'].storageThree).toEqual([
             'node', 'storageOne', 'storageTwo'
         ])
-        expect(tracker.getTopology()['stream-3::0'].storageThree).toEqual([
+        expect(getTopology(tracker.getOverlayPerStream())['stream-3::0'].storageThree).toEqual([
             'node', 'storageOne', 'storageTwo'
         ])
     })

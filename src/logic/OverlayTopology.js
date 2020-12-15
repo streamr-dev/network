@@ -17,6 +17,10 @@ class OverlayTopology {
         this.pickRandomElement = pickRandomElementFunction || pickRandomElement
     }
 
+    getNodes() {
+        return this.nodes
+    }
+
     hasNode(nodeId) {
         return nodeId in this.nodes
     }

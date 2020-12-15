@@ -1,3 +1,7 @@
+const _ = require('lodash')
+
+const { getTopology, getTopologyUnion } = require('../logic/TopologyFactory')
+
 const extraLogger = require('./logger')('streamr:tracker:http-endpoints')
 
 const writeCorsHeaders = (res, req) => {
@@ -15,10 +19,24 @@ const respondWithError = (res, req, errorMessage) => {
 }
 
 const trackerHttpEndpoints = (wss, tracker, metricsContext) => {
+    wss.cachedJsonGet = (endpoint, maxAge, jsonFactory) => { // eslint-disable-line no-param-reassign
+        let cache
+        return wss.get(endpoint, (res, req) => {
+            extraLogger.debug('request to ' + endpoint)
+            writeCorsHeaders(res, req)
+            if ((cache === undefined) || (Date.now() > (cache.timestamp + maxAge))) {
+                cache = {
+                    json: jsonFactory(),
+                    timestamp: Date.now()
+                }
+            }
+            res.end(JSON.stringify(cache.json))
+        })
+    }
     wss.get('/topology/', (res, req) => {
         extraLogger.debug('request to /topology/')
         writeCorsHeaders(res, req)
-        res.end(JSON.stringify(tracker.getTopology()))
+        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream())))
     }).get('/topology/:streamId/', (res, req) => {
         const streamId = decodeURIComponent(req.getParameter(0)).trim()
         if (streamId.length === 0) {
@@ -29,7 +47,7 @@ const trackerHttpEndpoints = (wss, tracker, metricsContext) => {
 
         extraLogger.debug(`request to /topology/${streamId}/`)
         writeCorsHeaders(res, req)
-        res.end(JSON.stringify(tracker.getTopology(streamId, null)))
+        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), streamId, null)))
     }).get('/topology/:streamId/:partition/', (res, req) => {
         const streamId = decodeURIComponent(req.getParameter(0)).trim()
         if (streamId.length === 0) {
@@ -47,7 +65,10 @@ const trackerHttpEndpoints = (wss, tracker, metricsContext) => {
 
         extraLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
         writeCorsHeaders(res, req)
-        res.end(JSON.stringify(tracker.getTopology(streamId, askedPartition)))
+        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), streamId, askedPartition)))
+    }).cachedJsonGet('/topology-union/', 15 * 1000, () => {
+        const topologyUnion = getTopologyUnion(tracker.getOverlayPerStream())
+        return _.mapValues(topologyUnion, (targetNodes) => Array.from(targetNodes))
     }).get('/location/', (res, req) => {
         extraLogger.debug('request to /location/')
         writeCorsHeaders(res, req)

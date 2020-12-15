@@ -5,6 +5,7 @@ const { startNetworkNode, startTracker } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
 const Node = require('../../src/logic/Node')
 const { StreamIdAndPartition } = require('../../src/identifiers')
+const { getTopology } = require('../../src/logic/TopologyFactory')
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker
@@ -90,7 +91,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
             waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
         ])
 
-        expect(tracker.getTopology()).toEqual({
+        expect(getTopology(tracker.getOverlayPerStream())).toEqual({
             'stream-1::0': {
                 node1: ['node2'],
                 node2: ['node1'],
