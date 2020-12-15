@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
-import { counterId } from './utils'
+import { counterId, uuid } from './utils'
 import Config from './Config'
 import Session from './Session'
 import Connection from './Connection'
@@ -41,10 +41,13 @@ class StreamrConnection extends Connection {
     }
 }
 
+// use process id in node uid
+const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
         super()
-        this.id = counterId(this.constructor.name)
+        this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
 
         this.options = Config({
