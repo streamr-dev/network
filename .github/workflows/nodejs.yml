@@ -14,16 +14,6 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
-  eslint:
-    name: Run eslint using Node 12
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
-
   test:
     name: Eslint, Build and Test project using node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
