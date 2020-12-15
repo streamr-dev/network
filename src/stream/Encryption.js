@@ -31,8 +31,24 @@ export class GroupKey {
     static InvalidGroupKeyError = InvalidGroupKeyError
 
     static validate(maybeGroupKey) {
+        if (!maybeGroupKey) {
+            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`)
+        }
+
         if (!(maybeGroupKey instanceof this)) {
             throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`)
+        }
+
+        if (!maybeGroupKey.id || typeof maybeGroupKey.id !== 'string') {
+            throw new InvalidGroupKeyError(`${this.name} id must be a string: ${util.inspect(maybeGroupKey.id)}`)
+        }
+
+        if (!maybeGroupKey.data || !Buffer.isBuffer(maybeGroupKey.data)) {
+            throw new InvalidGroupKeyError(`${this.name} data must be a buffer: ${util.inspect(maybeGroupKey.data)}`)
+        }
+
+        if (!maybeGroupKey.hex || typeof maybeGroupKey.hex !== 'string') {
+            throw new InvalidGroupKeyError(`${this.name} hex must be a string: ${util.inspect(maybeGroupKey.hex)}`)
         }
 
         if (maybeGroupKey.data.length !== 32) {
@@ -42,6 +58,14 @@ export class GroupKey {
 
     constructor(groupKeyId, groupKeyBufferOrHexString) {
         this.id = groupKeyId
+        if (!groupKeyId) {
+            throw new InvalidGroupKeyError(`groupKeyId must not be falsey ${util.inspect(groupKeyId)}`)
+        }
+
+        if (!groupKeyBufferOrHexString) {
+            throw new InvalidGroupKeyError(`groupKeyBufferOrHexString must not be falsey ${util.inspect(groupKeyBufferOrHexString)}`)
+        }
+
         if (typeof groupKeyBytesOrHexString === 'string') {
             this.hex = groupKeyBufferOrHexString
             this.data = Buffer.from(this.hex, 'hex')

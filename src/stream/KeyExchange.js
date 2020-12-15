@@ -73,7 +73,9 @@ function GroupKeyStore({ groupKeys }) {
         if (store.has(groupKey.id)) {
             const existingKey = store.get(groupKey.id)
             if (!existingKey.equals(groupKey)) {
-                throw GroupKey.InvalidGroupKeyError(`Trying to add groupKey but key exists & is not equivalent to new GroupKey: ${groupKey}.`)
+                throw new GroupKey.InvalidGroupKeyError(
+                    `Trying to add groupKey ${groupKey.id} but key exists & is not equivalent to new GroupKey: ${groupKey}.`
+                )
             }
 
             store.delete(groupKey.id) // sort key at end by deleting existing entry before re-adding
