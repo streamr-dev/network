@@ -209,7 +209,7 @@ class Node extends EventEmitter {
         const { nodeIds, counter } = instructionMessage
 
         // Check that tracker matches expected tracker
-        const expectedTrackerId = this._getTrackerId(streamId.key())
+        const expectedTrackerId = this._getTrackerId(streamId)
         if (trackerId !== expectedTrackerId) {
             this.metrics.record('unexpectedTrackerInstructions', 1)
             this.logger.warn(`Got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
@@ -364,7 +364,9 @@ class Node extends EventEmitter {
 
     _getStatus(tracker) {
         return {
-            streams: this.streams.getStreamsWithConnections((streamKey) => this._getTrackerId(streamKey) === tracker),
+            streams: this.streams.getStreamsWithConnections((streamKey) => {
+                return this._getTrackerId(StreamIdAndPartition.fromKey(streamKey)) === tracker
+            }),
             started: this.started,
             rtts: this.protocols.nodeToNode.getRtts(),
             location: this.peerInfo.location
@@ -372,7 +374,7 @@ class Node extends EventEmitter {
     }
 
     _sendStreamStatus(streamId) {
-        const trackerId = this._getTrackerId(streamId.key())
+        const trackerId = this._getTrackerId(streamId)
 
         if (trackerId) {
             clearTimeout(this.sendStatusTimeout.get(trackerId))
@@ -408,8 +410,8 @@ class Node extends EventEmitter {
         return node
     }
 
-    _getTrackerId(streamKey) {
-        const address = this.trackerRegistry.getTracker(streamKey)
+    _getTrackerId(streamIdAndPartition) {
+        const address = this.trackerRegistry.getTracker(streamIdAndPartition.id, streamIdAndPartition.partition)
         return this.trackerBook[address] || null
     }
 

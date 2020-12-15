@@ -341,7 +341,7 @@ class ForeignResendStrategy {
 
     _requestStorageNodes(request, responseStream) {
         const streamIdAndPartition = new StreamIdAndPartition(request.streamId, request.streamPartition)
-        const tracker = this.getTracker(streamIdAndPartition.key())
+        const tracker = this.getTracker(streamIdAndPartition)
         if (tracker == null) {
             responseStream.push(null)
         } else {
