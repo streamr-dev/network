@@ -118,10 +118,10 @@ class Node extends EventEmitter {
 
         this.perStreamMetrics = new PerStreamMetrics()
 
+        //.addQueriedMetric('perStream', () => this.perStreamMetrics.report()) NET-122
         this.metrics = this.opts.metricsContext.create('node')
             .addQueriedMetric('messageBufferSize', () => this.messageBuffer.size())
             .addQueriedMetric('seenButNotPropagatedSetSize', () => this.seenButNotPropagatedSet.size())
-            .addQueriedMetric('perStream', () => this.perStreamMetrics.report())
             .addRecordedMetric('resendRequests')
             .addRecordedMetric('unexpectedTrackerInstructions')
             .addRecordedMetric('trackerInstructions')
