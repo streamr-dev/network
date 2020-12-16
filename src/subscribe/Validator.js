@@ -33,17 +33,18 @@ export default function Validator(client, opts) {
     const options = validateOptions(opts)
     const cacheOptions = client.options.cache
     const getStream = CacheAsyncFn(client.getStream.bind(client), cacheOptions)
-    const isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), cacheOptions)
-    const isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), cacheOptions)
+    const isPublisher = async (publisherId, _streamId) => (
+        client.isStreamPublisher(_streamId, publisherId)
+    )
+
+    const isSubscriber = async (ethAddress, _streamId) => (
+        client.isStreamSubscriber(_streamId, ethAddress)
+    )
 
     const validator = new StreamMessageValidator({
         getStream,
-        isPublisher: CacheAsyncFn(async (publisherId, _streamId) => (
-            isStreamPublisher(_streamId, publisherId)
-        ), cacheOptions),
-        isSubscriber: CacheAsyncFn(async (ethAddress, _streamId) => (
-            isStreamSubscriber(_streamId, ethAddress)
-        ), cacheOptions)
+        isPublisher,
+        isSubscriber,
     })
 
     const validate = pOrderedResolve(async (msg) => {
