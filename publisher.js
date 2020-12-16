@@ -6,7 +6,7 @@ const streamId = process.argv[3]
 const publishFunctionName = process.argv[4]
 const interval = parseInt(process.argv[5])
 const maxMessages = parseInt(process.argv[6])
-const groupKey = process.argv ? JSON.parse(process.argv[7]) : undefined
+const groupKey = process.argv[7] ? JSON.parse(process.argv[7]) : undefined
 
 const options = {
     restUrl: "http://localhost/api/v1",
