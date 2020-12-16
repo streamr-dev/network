@@ -7,7 +7,7 @@ import { validateOptions } from '../stream/utils'
 
 const { StreamMessageValidator } = Utils
 const { ValidationError } = Errors
-const { StreamMessage } = MessageLayer
+const { StreamMessage, GroupKeyErrorResponse } = MessageLayer
 
 const EMPTY_MESSAGE = {
     serialize() {}
@@ -46,8 +46,14 @@ export default function Validator(client, opts) {
         ), cacheOptions)
     })
 
-    // return validation function that resolves in call order
-    return pOrderedResolve(async (msg) => {
+    const validate = pOrderedResolve(async (msg) => {
+        if (msg.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+            const res = GroupKeyErrorResponse.fromArray(msg.getParsedContent())
+            const err = new ValidationError(`GroupKeyErrorResponse: ${res.errorMessage}`, msg)
+            err.code = res.errorCode
+            throw err
+        }
+
         // Check special cases controlled by the verifySignatures policy
         if (client.options.verifySignatures === 'never' && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return msg // no validation required
@@ -60,5 +66,15 @@ export default function Validator(client, opts) {
         // In all other cases validate using the validator
         await validator.validate(msg) // will throw with appropriate validation failure
         return msg
+    })
+
+    // return validation function that resolves in call order
+    return Object.assign(validate, {
+        clear(key) {
+            if (!key) {
+                validate.clear()
+            }
+            getStream.clear(key)
+        }
     })
 }
