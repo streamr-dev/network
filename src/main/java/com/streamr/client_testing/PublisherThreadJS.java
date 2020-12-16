@@ -81,6 +81,8 @@ public class PublisherThreadJS extends PublisherThread {
                 }
             });
 
+            errorLoggingThread.start();
+
             String s;
             while (!Thread.currentThread().isInterrupted() && (s = stdInput.readLine()) != null) {
                 handleLine(s);
@@ -113,7 +115,7 @@ public class PublisherThreadJS extends PublisherThread {
         } else if (s.startsWith("Done: ")) {
             log.debug(getPublisherId() + " " + s);
         } else {
-            log.warn(getPublisherId() + " " + s);
+            log.debug(getPublisherId() + " " + s);
         }
     }
 

@@ -25,6 +25,7 @@ public class SubscriberJS extends Subscriber {
     private final String command;
     private BiConsumer<Address, String> onReceived = null;
     private final Thread thread;
+    private Thread errorLoggingThread;
 
     public SubscriberJS(StreamrClientJS subscriber, Stream stream, ResendOption resendOption) {
         this.subscriber = subscriber;
@@ -59,6 +60,20 @@ public class SubscriberJS extends Subscriber {
                     InputStreamReader(p.getErrorStream()));
 
             String s;
+
+            errorLoggingThread = new Thread(() -> {
+                try {
+                    String err;
+                    while ((err = stdError.readLine()) != null) {
+                        log.error(getSubscriberId() + " " + err);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
+
+            errorLoggingThread.start();
+
             while (!Thread.currentThread().isInterrupted() && (s = stdInput.readLine()) != null) {
                 if (s.startsWith("Received: ")) { // only content, for message validation
                     if (onReceived != null) {
@@ -68,19 +83,10 @@ public class SubscriberJS extends Subscriber {
                 } else if (s.startsWith("whole message received: ")) { // whole stream message, for logging
                     String msg = s.split("whole message received: ")[1];
                     log.debug("JS subscriber {} received: {}", getSubscriberId(), msg);
-                } else {
-                    log.warn(getSubscriberId() + " " + s);
                 }
+                log.debug(getSubscriberId() + " " + s);
             }
-            try {
-                while (!Thread.currentThread().isInterrupted() && stdError.ready() && (s = stdError.readLine()) != null) {
-                    if (!s.equals("Failed to decrypt. Requested the correct decryption key(s) and going to try again.")) {
-                        log.warn("JS subscriber printed unexpected output: {}", s);
-                    }
-                }
-            } catch (IOException e) {
 
-            }
             if (Thread.currentThread().isInterrupted()) {
                 stdInput.close();
                 stdError.close();
