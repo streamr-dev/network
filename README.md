@@ -49,11 +49,6 @@ Run an example network of 100 nodes (locally):
 
     npm run network
 
-### Examples
-
-Check the [examples folder](./examples) for more interesting examples of using
-the network node in different settings.
-
 ## Develop
 
 Install dependencies:
