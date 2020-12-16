@@ -9,8 +9,8 @@ import { MessageLayer } from 'streamr-client-protocol'
 import { uuid } from '../utils'
 
 class UnableToDecryptError extends Error {
-    constructor(streamMessage) {
-        super(`Unable to decrypt ${streamMessage.getSerializedContent()}`)
+    constructor(message = '', streamMessage) {
+        super(`Unable to decrypt. ${message} ${util.inspect(streamMessage)}`)
         this.streamMessage = streamMessage
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
@@ -19,8 +19,9 @@ class UnableToDecryptError extends Error {
 }
 
 class InvalidGroupKeyError extends Error {
-    constructor(...args) {
-        super(...args)
+    constructor(message, groupKey) {
+        super(message)
+        this.groupKey = groupKey
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
@@ -200,35 +201,25 @@ class EncryptionUtilBase {
      */
 
     static decryptStreamMessage(streamMessage, groupKey) {
-        GroupKey.validate(groupKey)
-        if ((streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.AES
-            || streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES) && !groupKey) {
-            throw new UnableToDecryptError(streamMessage)
+        if ((streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES)) {
+            return null
         }
-        /* eslint-disable no-param-reassign */
 
-        if (streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.AES) {
+        try {
+            GroupKey.validate(groupKey)
+        } catch (err) {
+            throw new UnableToDecryptError(`${err.message}`, streamMessage)
+        }
+
+        /* eslint-disable no-param-reassign */
+        try {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
             const serializedContent = this.decrypt(streamMessage.getSerializedContent(), groupKey).toString()
-            try {
-                streamMessage.parsedContent = JSON.parse(serializedContent)
-                streamMessage.serializedContent = serializedContent
-            } catch (err) {
-                streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-                throw new UnableToDecryptError(streamMessage)
-            }
-        } else if (streamMessage.encryptionType === StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES) {
-            streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NONE
-            const plaintext = this.decrypt(streamMessage.getSerializedContent(), groupKey)
-            const serializedContent = plaintext.slice(32).toString()
-            try {
-                streamMessage.parsedContent = JSON.parse(serializedContent)
-                streamMessage.serializedContent = serializedContent
-            } catch (err) {
-                streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES
-                throw new UnableToDecryptError(streamMessage)
-            }
-            return plaintext.slice(0, 32)
+            streamMessage.parsedContent = JSON.parse(serializedContent)
+            streamMessage.serializedContent = serializedContent
+        } catch (err) {
+            streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
+            throw new UnableToDecryptError(err.message, streamMessage)
         }
         return null
         /* eslint-enable no-param-reassign */

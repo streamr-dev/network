@@ -1,6 +1,10 @@
+import { MessageLayer } from 'streamr-client-protocol'
+
 import PushQueue from '../utils/PushQueue'
 import EncryptionUtil from '../stream/Encryption'
 import { SubscriberKeyExchange } from '../stream/KeyExchange'
+
+const { StreamMessage } = MessageLayer
 
 export default function Decrypt(client, options) {
     if (!client.options.keyExchange) {
@@ -18,13 +22,15 @@ export default function Decrypt(client, options) {
 
     async function* decrypt(src) {
         yield* PushQueue.transform(src, async (streamMessage) => {
-            if (!streamMessage.groupKeyId) { return streamMessage }
-            const groupKey = await requestKey(streamMessage)
-
-            if (!groupKey) {
+            if (!streamMessage.groupKeyId) {
                 return streamMessage
             }
 
+            if (streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES) {
+                return streamMessage
+            }
+
+            const groupKey = await requestKey(streamMessage)
             await EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
             return streamMessage
         })
