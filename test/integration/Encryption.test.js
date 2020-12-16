@@ -147,6 +147,50 @@ describe('decryption', () => {
         await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
 
+    it('allows other users to get group key', async () => {
+        let otherClient
+        let sub
+        try {
+            otherClient = createClient({
+                autoConnect: true,
+                autoDisconnect: true,
+            })
+            const otherUser = await otherClient.getUserInfo()
+            await stream.grantPermission('stream_get', otherUser.username)
+            await stream.grantPermission('stream_subscribe', otherUser.username)
+
+            const done = Defer()
+            const msg = Msg()
+            const groupKey = GroupKey.generate()
+            // subscribe without knowing the group key to decrypt stream messages
+            sub = await otherClient.subscribe({
+                stream: stream.id,
+            }, done.wrap((parsedContent, streamMessage) => {
+                expect(parsedContent).toEqual(msg)
+
+                // Check signature stuff
+                expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+                expect(streamMessage.getPublisherId())
+                expect(streamMessage.signature)
+            }))
+            sub.once('error', done.reject)
+
+            await client.setNextGroupKey(stream.id, groupKey)
+
+            await Promise.all([
+                client.publish(stream.id, msg),
+                done,
+            ])
+        } finally {
+            if (otherClient) {
+                if (sub) {
+                    await otherClient.unsubscribe(sub)
+                }
+                await otherClient.disconnect()
+                await otherClient.logout()
+            }
+        }
+    }, 2 * TIMEOUT)
     it('client.subscribe can get the group key and decrypt multiple encrypted messages using an RSA key pair', async () => {
         const groupKey = GroupKey.generate()
         // subscribe without knowing the group key to decrypt stream messages

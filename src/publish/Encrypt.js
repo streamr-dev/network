@@ -10,16 +10,16 @@ export default function Encrypt(client) {
 
     async function encrypt(streamMessage, stream) {
         if (
-            streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE
-            || (
-                !publisherKeyExchange.hasAnyGroupKey()
-                && !stream.requireEncryptedData
-            )
+            !publisherKeyExchange.hasAnyGroupKey()
+            && !stream.requireEncryptedData
         ) {
             // not needed
             return
         }
 
+        if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE) {
+            return
+        }
         const groupKey = await publisherKeyExchange.useGroupKey()
         await EncryptionUtil.encryptStreamMessage(streamMessage, groupKey)
     }
