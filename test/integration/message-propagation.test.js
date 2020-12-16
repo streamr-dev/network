@@ -1,7 +1,7 @@
 const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
 const { waitForCondition, waitForEvent } = require('streamr-test-utils')
 
-const Node = require('../../src/logic/Node')
+const { Event: NodeEvent } = require('../../src/logic/Node')
 const { startTracker, startNetworkNode } = require('../../src/composition')
 
 describe('message propagation in network', () => {
@@ -90,8 +90,8 @@ describe('message propagation in network', () => {
         n3.subscribe('stream-1', 0)
 
         await Promise.all([
-            waitForEvent(n2, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(n3, Node.events.NODE_SUBSCRIBED)
+            waitForEvent(n2, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(n3, NodeEvent.NODE_SUBSCRIBED)
         ])
 
         for (let i = 1; i <= 5; ++i) {

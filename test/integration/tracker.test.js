@@ -1,8 +1,8 @@
 const { waitForEvent, waitForCondition } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const Node = require('../../src/logic/Node')
-const TrackerServer = require('../../src/protocol/TrackerServer')
+const { Node, Event: NodeEvent } = require('../../src/logic/Node')
+const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
 const { getTopology } = require('../../src/logic/TopologyFactory')
 
 describe('check tracker, nodes and statuses from nodes', () => {
@@ -44,7 +44,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
 
     it('should be able to start two nodes, receive statuses, subscribe to streams', async () => {
         subscriberOne.start()
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream())).toEqual({
             'stream-1::0': {
                 subscriberOne: [],
@@ -55,7 +55,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         subscriberTwo.start()
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream())).toEqual({
             'stream-1::0': {
                 subscriberOne: ['subscriberTwo'],
@@ -73,14 +73,14 @@ describe('check tracker, nodes and statuses from nodes', () => {
         subscriberTwo.start()
 
         await Promise.all([
-            waitForEvent(subscriberOne, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(subscriberTwo, Node.events.NODE_SUBSCRIBED)
+            waitForEvent(subscriberOne, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(subscriberTwo, NodeEvent.NODE_SUBSCRIBED)
         ])
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
 
         subscriberOne.unsubscribe('stream-2', 2)
-        await waitForEvent(subscriberTwo, Node.events.NODE_UNSUBSCRIBED)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(subscriberTwo, NodeEvent.NODE_UNSUBSCRIBED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream())).toEqual({
             'stream-1::0': {
                 subscriberOne: ['subscriberTwo'],
@@ -92,8 +92,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         subscriberOne.unsubscribe('stream-1', 0)
-        await waitForEvent(subscriberTwo, Node.events.NODE_UNSUBSCRIBED)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(subscriberTwo, NodeEvent.NODE_UNSUBSCRIBED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream())).toEqual({
             'stream-1::0': {
                 subscriberTwo: [],
@@ -112,7 +112,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         subscriberTwo.unsubscribe('stream-2', 2)
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream())).toEqual({})
     }, 10 * 1000)
 })

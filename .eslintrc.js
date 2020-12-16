@@ -13,6 +13,7 @@ module.exports = {
             code: 150
         }],
         'max-classes-per-file': DISABLED,
-        'promise/always-return': WARN
+        'promise/always-return': WARN,
+        'import/no-unresolved': DISABLED
     }
 }

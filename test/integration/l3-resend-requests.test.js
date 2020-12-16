@@ -3,7 +3,7 @@ const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForEvent, waitForStreamToEnd } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
-const Node = require('../../src/logic/Node')
+const { Event: NodeEvent } = require('../../src/logic/Node')
 
 const { ControlMessage } = ControlLayer
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -111,10 +111,10 @@ describe('resend requests are fulfilled at L3', () => {
         contactNode.start()
 
         await Promise.all([
-            waitForEvent(contactNode, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(neighborOne, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(neighborTwo, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(storageNode, Node.events.NODE_SUBSCRIBED)
+            waitForEvent(contactNode, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(neighborOne, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(neighborTwo, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(storageNode, NodeEvent.NODE_SUBSCRIBED)
         ])
     })
 

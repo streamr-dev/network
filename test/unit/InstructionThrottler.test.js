@@ -1,7 +1,7 @@
 const { waitForCondition } = require('streamr-test-utils')
 const { TrackerLayer } = require('streamr-client-protocol')
 
-const InstructionThrottler = require('../../src/logic/InstructionThrottler')
+const { InstructionThrottler } = require('../../src/logic/InstructionThrottler')
 
 describe('InstructionThrottler', () => {
     let handlerCb

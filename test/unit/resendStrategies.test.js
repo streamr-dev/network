@@ -6,8 +6,8 @@ const { waitForStreamToEnd } = require('streamr-test-utils')
 
 const { LocalResendStrategy, ForeignResendStrategy } = require('../../src/resend/resendStrategies')
 const { StreamIdAndPartition } = require('../../src/identifiers')
-const NodeToNode = require('../../src/protocol/NodeToNode')
-const TrackerNode = require('../../src/protocol/TrackerNode')
+const { Event: NodeToNodeEvent } = require('../../src/protocol/NodeToNode')
+const { Event: TrackerNodeEvent } = require('../../src/protocol/TrackerNode')
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 const { ResendLastRequest, ResendFromRequest, ResendRangeRequest } = ControlLayer
@@ -224,7 +224,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
 
         test('if tracker responds with zero storage nodes, returns empty stream', async () => {
             trackerNode.emit(
-                TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED,
+                TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED,
                 new TrackerLayer.StorageNodesResponse({
                     requestId: 'requestId',
                     streamId: 'streamId',
@@ -246,7 +246,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                 .mockReturnValueOnce(Promise.resolve())
 
             trackerNode.emit(
-                TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED,
+                TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED,
                 new TrackerLayer.StorageNodesResponse({
                     requestId: 'requestId',
                     streamId: 'streamId',
@@ -275,7 +275,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                 .mockReturnValue(Promise.reject())
 
             trackerNode.emit(
-                TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED,
+                TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED,
                 new TrackerLayer.StorageNodesResponse({
                     requestId: 'requestId',
                     streamId: 'streamId',
@@ -307,7 +307,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
 
         const emitTrackerResponse = () => {
             trackerNode.emit(
-                TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED,
+                TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED,
                 new TrackerLayer.StorageNodesResponse({
                     requestId: 'requestId',
                     streamId: 'streamId',
@@ -341,7 +341,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
             nodeToNode.send.mockReturnValue(Promise.resolve())
 
             await emitTrackerResponse()
-            nodeToNode.emit(NodeToNode.events.NODE_DISCONNECTED, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.NODE_DISCONNECTED, 'storageNode')
 
             const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([])
@@ -363,7 +363,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
 
             setImmediate(() => { // wait for this.trackerNode.sendStorageNodesRequest(...)
                 trackerNode.emit(
-                    TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED,
+                    TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED,
                     new TrackerLayer.StorageNodesResponse({
                         requestId: 'requestId',
                         streamId: 'streamId',
@@ -386,7 +386,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
 
         test('if storage node responds with ResendResponseResending, extend timeout', () => {
             jest.advanceTimersByTime(TIMEOUT - 1)
-            nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE, resendResponseResending, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.RESEND_RESPONSE, resendResponseResending, 'storageNode')
             jest.advanceTimersByTime(TIMEOUT - 1)
 
             // eslint-disable-next-line no-underscore-dangle
@@ -396,7 +396,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
         test('if storage node responds with UnicastMessage, extend timeout', () => {
             jest.advanceTimersByTime(TIMEOUT - 1)
             nodeToNode.emit(
-                NodeToNode.events.UNICAST_RECEIVED,
+                NodeToNodeEvent.UNICAST_RECEIVED,
                 new ControlLayer.UnicastMessage({
                     requestId: 'requestId', streamMessage: msg1
                 }),
@@ -409,7 +409,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
         })
 
         test('if storage node responds with ResendResponseNoResend, returned stream is closed', () => {
-            nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE, resendResponseNoResend, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.RESEND_RESPONSE, resendResponseNoResend, 'storageNode')
             // eslint-disable-next-line no-underscore-dangle
             expect(responseStream._readableState.ended).toEqual(true)
         })
@@ -421,14 +421,14 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
             const u4 = createUnicastMessage(21000)
             const u5 = createUnicastMessage(22000)
 
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u1, 'storageNode')
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u2, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.UNICAST_RECEIVED, u1, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.UNICAST_RECEIVED, u2, 'storageNode')
             jest.advanceTimersByTime(TIMEOUT / 10)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u3, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.UNICAST_RECEIVED, u3, 'storageNode')
             jest.advanceTimersByTime(TIMEOUT / 10)
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u4, 'storageNode')
-            nodeToNode.emit(NodeToNode.events.UNICAST_RECEIVED, u5, 'storageNode')
-            nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE, resendResponseResent, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.UNICAST_RECEIVED, u4, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.UNICAST_RECEIVED, u5, 'storageNode')
+            nodeToNode.emit(NodeToNodeEvent.RESEND_RESPONSE, resendResponseResent, 'storageNode')
 
             const streamAsArray = await waitForStreamToEnd(responseStream)
             expect(streamAsArray).toEqual([u1, u2, u3, u4, u5])
@@ -449,7 +449,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
 
             setImmediate(() => {
                 trackerNode.emit(
-                    TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED,
+                    TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED,
                     new TrackerLayer.StorageNodesResponse({
                         requestId: 'requestId',
                         streamId: 'streamId',
@@ -461,7 +461,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
                 // Causes the stream to end. Other ways to end are a) failing to forward request and b) timeout. All of
                 // them have same handling logic so testing only one case here.
                 setImmediate(() => {
-                    nodeToNode.emit(NodeToNode.events.RESEND_RESPONSE, resendResponseResent, 'storageNode')
+                    nodeToNode.emit(NodeToNodeEvent.RESEND_RESPONSE, resendResponseResent, 'storageNode')
                 })
             })
         })
@@ -470,7 +470,7 @@ describe('ForeignResendStrategy#getResendResponseStream', () => {
             isSubscribedTo.mockReturnValue(false)
             await waitForStreamToEnd(responseStream)
             expect(nodeToNode.disconnectFromNode).toBeCalledTimes(1)
-            expect(nodeToNode.disconnectFromNode).toBeCalledWith('storageNode')
+            expect(nodeToNode.disconnectFromNode).toBeCalledWith('storageNode', 'resend done')
         })
 
         test('if (previously) subscribed to storage node, do not disconnect from storage node', async () => {

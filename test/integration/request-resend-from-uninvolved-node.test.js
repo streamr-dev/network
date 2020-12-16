@@ -3,7 +3,7 @@ const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForStreamToEnd, waitForEvent } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
-const Node = require('../../src/logic/Node')
+const { Event: NodeEvent } = require('../../src/logic/Node')
 
 const { ControlMessage } = ControlLayer
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -81,8 +81,8 @@ describe('request resend from uninvolved node', () => {
         storageNode.start()
 
         await Promise.all([
-            waitForEvent(involvedNode, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(storageNode, Node.events.NODE_SUBSCRIBED)
+            waitForEvent(involvedNode, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(storageNode, NodeEvent.NODE_SUBSCRIBED)
         ])
     })
 

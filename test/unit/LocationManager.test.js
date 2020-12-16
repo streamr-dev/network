@@ -1,4 +1,4 @@
-const LocationManager = require('../../src/logic/LocationManager')
+const { LocationManager } = require('../../src/logic/LocationManager')
 
 describe('LocationManager', () => {
     let locationManager

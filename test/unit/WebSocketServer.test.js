@@ -82,8 +82,11 @@ describe('test starting startWebSocketServer', () => {
      * This test replicates weird behaviour I encountered while working on "NET-56: Make production
      * tracker run under SSL". When messages arrive to (pure) ws client from a SSL-enabled uWS server,
      * they arrive as type Buffer and not String... which is different to when SSL is disabled...
+     *
+     * UPDATE: Apparently turning WsEndpoint from JavaScript to TypeScript magically solved this problem.
+     * It no longer occurs. Weird indeed.
      */
-    test('messages over encrypted connections arrive as binary', async (done) => {
+    /* test('messages over encrypted connections arrive as binary', async (done) => {
         const [wss, listenSocket] = await startWebSocketServer(
             '127.0.0.1',
             wssPort,
@@ -114,7 +117,7 @@ describe('test starting startWebSocketServer', () => {
         ws.on('open', () => {
             endpoint.send('clientId', 'Hello, World!')
         })
-    })
+    }) */
 
     /**
      * Related to above test: check that messages indeed arrive as string from non-SSL uWS server.

@@ -1,13 +1,13 @@
 const { waitForCondition, waitForEvent } = require('streamr-test-utils')
 
-const MetricsContext = require('../../src/helpers/MetricsContext')
+const { MetricsContext } = require('../../src/helpers/MetricsContext')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
-const RtcSignaller = require('../../src/logic/RtcSignaller')
+const { RtcSignaller } = require('../../src/logic/RtcSignaller')
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
-const { WebRtcEndpoint, events } = require('../../src/connection/WebRtcEndpoint')
+const { WebRtcEndpoint, Event } = require('../../src/connection/WebRtcEndpoint')
 const { startTracker } = require('../../src/composition')
-const TrackerNode = require('../../src/protocol/TrackerNode')
-const TrackerServer = require('../../src/protocol/TrackerServer')
+const { TrackerNode } = require('../../src/protocol/TrackerNode')
+const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
 
 describe('WebRtcEndpoint', () => {
     let tracker
@@ -29,9 +29,9 @@ describe('WebRtcEndpoint', () => {
         trackerNode2 = new TrackerNode(ep2)
 
         trackerNode1.connectToTracker(tracker.getAddress())
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_CONNECTED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_CONNECTED)
         trackerNode2.connectToTracker(tracker.getAddress())
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_CONNECTED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_CONNECTED)
 
         const peerInfo1 = PeerInfo.newNode('node-1')
         const peerInfo2 = PeerInfo.newNode('node-2')
@@ -54,17 +54,17 @@ describe('WebRtcEndpoint', () => {
         endpoint2.connect('node-1', 'tracker', false)
 
         await Promise.all([
-            waitForEvent(endpoint1, events.PEER_CONNECTED),
-            waitForEvent(endpoint2, events.PEER_CONNECTED)
+            waitForEvent(endpoint1, Event.PEER_CONNECTED),
+            waitForEvent(endpoint2, Event.PEER_CONNECTED)
         ])
 
         let ep1NumOfReceivedMessages = 0
         let ep2NumOfReceivedMessages = 0
 
-        endpoint1.on(events.MESSAGE_RECEIVED, (targetPeerId, message) => {
+        endpoint1.on(Event.MESSAGE_RECEIVED, (targetPeerId, message) => {
             ep1NumOfReceivedMessages += 1
         })
-        endpoint2.on(events.MESSAGE_RECEIVED, (targetPeerId, message) => {
+        endpoint2.on(Event.MESSAGE_RECEIVED, (targetPeerId, message) => {
             ep2NumOfReceivedMessages += 1
         })
 
@@ -92,17 +92,17 @@ describe('WebRtcEndpoint', () => {
         endpoint1.connect('node-2', 'tracker')
 
         await Promise.all([
-            waitForEvent(endpoint1, events.PEER_CONNECTED),
-            waitForEvent(endpoint2, events.PEER_CONNECTED)
+            waitForEvent(endpoint1, Event.PEER_CONNECTED),
+            waitForEvent(endpoint2, Event.PEER_CONNECTED)
         ])
 
         let ep1NumOfReceivedMessages = 0
         let ep2NumOfReceivedMessages = 0
 
-        endpoint1.on(events.MESSAGE_RECEIVED, (targetPeerId, message) => {
+        endpoint1.on(Event.MESSAGE_RECEIVED, (targetPeerId, message) => {
             ep1NumOfReceivedMessages += 1
         })
-        endpoint2.on(events.MESSAGE_RECEIVED, (targetPeerId, message) => {
+        endpoint2.on(Event.MESSAGE_RECEIVED, (targetPeerId, message) => {
             ep2NumOfReceivedMessages += 1
         })
 

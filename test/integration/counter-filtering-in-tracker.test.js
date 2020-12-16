@@ -2,8 +2,8 @@ const { wait, waitForEvent } = require('streamr-test-utils')
 
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { startTracker } = require('../../src/composition')
-const TrackerNode = require('../../src/protocol/TrackerNode')
-const TrackerServer = require('../../src/protocol/TrackerServer')
+const { TrackerNode, Event: TrackerNodeEvent } = require('../../src/protocol/TrackerNode')
+const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
 const { getTopology } = require('../../src/logic/TopologyFactory')
 
@@ -43,15 +43,15 @@ describe('tracker: counter filtering', () => {
         trackerNode2.connectToTracker(tracker.getAddress())
 
         await Promise.all([
-            waitForEvent(trackerNode1, TrackerNode.events.CONNECTED_TO_TRACKER),
-            waitForEvent(trackerNode2, TrackerNode.events.CONNECTED_TO_TRACKER)
+            waitForEvent(trackerNode1, TrackerNodeEvent.CONNECTED_TO_TRACKER),
+            waitForEvent(trackerNode2, TrackerNodeEvent.CONNECTED_TO_TRACKER)
         ])
 
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []))
         trackerNode2.sendStatus('tracker', formStatus(0, 0, [], []))
 
-        await waitForEvent(trackerNode1, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
-        await waitForEvent(trackerNode1, TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED)
+        await waitForEvent(trackerNode1, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED)
+        await waitForEvent(trackerNode1, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED)
     })
 
     afterEach(async () => {
@@ -64,7 +64,7 @@ describe('tracker: counter filtering', () => {
         trackerNode1.sendStatus('tracker', formStatus(1, 666, [], []))
 
         let numOfInstructions = 0
-        trackerNode1.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, () => {
+        trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
 
@@ -76,7 +76,7 @@ describe('tracker: counter filtering', () => {
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []))
 
         let numOfInstructions = 0
-        trackerNode1.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, () => {
+        trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
 
@@ -88,7 +88,7 @@ describe('tracker: counter filtering', () => {
         trackerNode1.sendStatus('tracker', formStatus(1, 0, [], []))
 
         let numOfInstructions = 0
-        trackerNode1.on(TrackerNode.events.TRACKER_INSTRUCTION_RECEIVED, () => {
+        trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
             numOfInstructions += 1
         })
 
@@ -99,14 +99,14 @@ describe('tracker: counter filtering', () => {
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream())
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []))
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream())).toEqual(topologyBefore)
     })
 
     test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream())
         trackerNode1.sendStatus('tracker', formStatus(1, 0, [], []))
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream())).toEqual(topologyBefore)
     })
 })

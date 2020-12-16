@@ -1,6 +1,6 @@
 const { MessageIDStrict } = require('streamr-client-protocol').MessageLayer
 
-const SeenButNotPropagatedSet = require('../../src/helpers/SeenButNotPropagatedSet')
+const { SeenButNotPropagatedSet } = require('../../src/helpers/SeenButNotPropagatedSet')
 
 describe('SeenButNotPropagatedSet', () => {
     it('messageIdToStr', () => {

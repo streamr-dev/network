@@ -3,7 +3,7 @@ const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const { waitForEvent, waitForStreamToEnd } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const TrackerServer = require('../../src/protocol/TrackerServer')
+const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
 
 const { ControlMessage } = ControlLayer
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -65,7 +65,7 @@ describe('resend requests are fulfilled at L1', () => {
         contactNode.start()
         contactNode.subscribe('streamId', 0)
 
-        await waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED)
+        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
     })
 
     afterEach(async () => {

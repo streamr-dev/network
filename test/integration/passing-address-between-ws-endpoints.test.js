@@ -1,6 +1,6 @@
 const { waitForEvent } = require('streamr-test-utils')
 
-const { startEndpoint } = require('../../src/connection/WsEndpoint')
+const { startEndpoint, Event } = require('../../src/connection/WsEndpoint')
 const { events } = require('../../src/connection/WsEndpoint')
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 
@@ -20,7 +20,7 @@ describe('passing address between WsEndpoints', () => {
     it('bound address is passed to other WsEndpoint if advertisedWsUrl not set', async () => {
         wsEndpoint2 = await startEndpoint('127.0.0.1', 31961, PeerInfo.newNode('wsEndpoint2'), null)
         wsEndpoint2.connect('ws://127.0.0.1:31960')
-        await waitForEvent(wsEndpoint1, events.PEER_CONNECTED)
+        await waitForEvent(wsEndpoint1, Event.PEER_CONNECTED)
         const address = wsEndpoint1.resolveAddress('wsEndpoint2')
         expect(address).toEqual('ws://127.0.0.1:31961')
     })
@@ -29,7 +29,7 @@ describe('passing address between WsEndpoints', () => {
         const advertisedWsUrl = 'ws://advertised-ws-url:666'
         wsEndpoint2 = await startEndpoint('127.0.0.1', 31961, PeerInfo.newNode('wsEndpoint2'), advertisedWsUrl)
         wsEndpoint2.connect('ws://127.0.0.1:31960')
-        await waitForEvent(wsEndpoint1, events.PEER_CONNECTED)
+        await waitForEvent(wsEndpoint1, Event.PEER_CONNECTED)
         const address = wsEndpoint1.resolveAddress('wsEndpoint2')
         expect(address).toEqual('ws://advertised-ws-url:666')
     })

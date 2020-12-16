@@ -3,8 +3,8 @@ const { EventEmitter } = require('events')
 const { ErrorMessage, RelayMessage } = require('streamr-client-protocol').TrackerLayer
 
 const { PeerInfo } = require('../../src/connection/PeerInfo')
-const RtcSignaller = require('../../src/logic/RtcSignaller')
-const TrackerNode = require('../../src/protocol/TrackerNode')
+const { RtcSignaller } = require('../../src/logic/RtcSignaller')
+const { Event: TrackerNodeEvent } = require('../../src/protocol/TrackerNode')
 
 describe('RtcSignaller', () => {
     let peerInfo
@@ -39,7 +39,7 @@ describe('RtcSignaller', () => {
         const cbFn = jest.fn()
         rtcSignaller.setConnectListener(cbFn)
         trackerNodeMock.emit(
-            TrackerNode.events.RELAY_MESSAGE_RECEIVED,
+            TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
@@ -60,7 +60,7 @@ describe('RtcSignaller', () => {
         const cbFn = jest.fn()
         rtcSignaller.setOfferListener(cbFn)
         trackerNodeMock.emit(
-            TrackerNode.events.RELAY_MESSAGE_RECEIVED,
+            TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
@@ -83,7 +83,7 @@ describe('RtcSignaller', () => {
         const cbFn = jest.fn()
         rtcSignaller.setAnswerListener(cbFn)
         trackerNodeMock.emit(
-            TrackerNode.events.RELAY_MESSAGE_RECEIVED,
+            TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
@@ -106,7 +106,7 @@ describe('RtcSignaller', () => {
         const cbFn = jest.fn()
         rtcSignaller.setRemoteCandidateListener(cbFn)
         trackerNodeMock.emit(
-            TrackerNode.events.RELAY_MESSAGE_RECEIVED,
+            TrackerNodeEvent.RELAY_MESSAGE_RECEIVED,
             new RelayMessage({
                 requestId: '',
                 originator: PeerInfo.newNode('originator'),
@@ -131,7 +131,7 @@ describe('RtcSignaller', () => {
         const cbFn = jest.fn()
         rtcSignaller.setErrorListener(cbFn)
         trackerNodeMock.emit(
-            TrackerNode.events.RTC_ERROR_RECEIVED,
+            TrackerNodeEvent.RTC_ERROR_RECEIVED,
             new ErrorMessage({
                 requestId: '',
                 targetNode: 'unknownTargetNode',

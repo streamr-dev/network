@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "allowJs": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDirs": ["src"],
+    "strict": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "resolveJsonModule": true
+  },
+  "exclude": [
+    "bin",
+    "dist",
+    "examples",
+    "jest.config.js",
+    "node_modules",
+    "test"
+  ]
+}

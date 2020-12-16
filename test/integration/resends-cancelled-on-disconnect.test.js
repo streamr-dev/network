@@ -5,7 +5,7 @@ const intoStream = require('into-stream')
 const { waitForEvent, wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
-const Node = require('../../src/logic/Node')
+const { Event: NodeEvent } = require('../../src/logic/Node')
 /**
  * This test verifies that a node does not attempt to send a resend response to
  * a node that previously requested a resend but then promptly disconnected.
@@ -116,10 +116,10 @@ describe('resend cancellation on disconnect', () => {
         neighborThree.start()
 
         await Promise.all([
-            waitForEvent(contactNode, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(neighborOne, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(neighborTwo, Node.events.NODE_SUBSCRIBED),
-            waitForEvent(neighborThree, Node.events.NODE_SUBSCRIBED)
+            waitForEvent(contactNode, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(neighborOne, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(neighborTwo, NodeEvent.NODE_SUBSCRIBED),
+            waitForEvent(neighborThree, NodeEvent.NODE_SUBSCRIBED)
         ])
     })
 
@@ -134,9 +134,9 @@ describe('resend cancellation on disconnect', () => {
     test('nodes do not attempt to fulfill a resend request after requesting node disconnects', async () => {
         contactNode.requestResendLast('streamId', 0, 'subId', 10)
         await Promise.race([
-            waitForEvent(neighborOne, Node.events.RESEND_REQUEST_RECEIVED),
-            waitForEvent(neighborTwo, Node.events.RESEND_REQUEST_RECEIVED),
-            waitForEvent(neighborThree, Node.events.RESEND_REQUEST_RECEIVED),
+            waitForEvent(neighborOne, NodeEvent.RESEND_REQUEST_RECEIVED),
+            waitForEvent(neighborTwo, NodeEvent.RESEND_REQUEST_RECEIVED),
+            waitForEvent(neighborThree, NodeEvent.RESEND_REQUEST_RECEIVED),
         ])
         await contactNode.stop()
         return wait(500) // will throw if sending to non-connected address

@@ -2,7 +2,7 @@ const { waitForEvent } = require('streamr-test-utils')
 
 const { PeerInfo } = require('../../src/connection/PeerInfo')
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
-const TrackerNode = require('../../src/protocol/TrackerNode')
+const { TrackerNode, Event: TrackerNodeEvent } = require('../../src/protocol/TrackerNode')
 const { startTracker } = require('../../src/composition')
 const { StreamIdAndPartition } = require('../../src/identifiers')
 
@@ -47,7 +47,7 @@ describe('storage nodes response from tracker does not contain self', () => {
 
     it('storage node response does not contain self', async () => {
         await storageNodeOne.sendStorageNodesRequest('tracker', new StreamIdAndPartition('stream', 0))
-        const [msg] = await waitForEvent(storageNodeOne, TrackerNode.events.STORAGE_NODES_RESPONSE_RECEIVED)
+        const [msg] = await waitForEvent(storageNodeOne, TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED)
         expect(msg.nodeIds).toEqual(['storageNodeTwo', 'storageNodeThree'])
     })
 })

@@ -1,4 +1,4 @@
-const PerStreamMetrics = require('../../src/logic/PerStreamMetrics')
+const { PerStreamMetrics } = require('../../src/logic/PerStreamMetrics')
 
 describe('PerStreamMetrics', () => {
     let perStreamMetrics
@@ -23,16 +23,6 @@ describe('PerStreamMetrics', () => {
                     total: 0
                 },
                 'onDataReceived:ignoredDuplicate': {
-                    last: 0,
-                    rate: 0,
-                    total: 0
-                },
-                onSubscribeRequest: {
-                    last: 0,
-                    rate: 0,
-                    total: 0
-                },
-                onUnsubscribeRequest: {
                     last: 0,
                     rate: 0,
                     total: 0
@@ -64,16 +54,6 @@ describe('PerStreamMetrics', () => {
                     rate: 1,
                     total: 1
                 },
-                onSubscribeRequest: {
-                    last: 0,
-                    rate: 0,
-                    total: 0
-                },
-                onUnsubscribeRequest: {
-                    last: 0,
-                    rate: 0,
-                    total: 0
-                },
                 propagateMessage: {
                     last: 0,
                     rate: 0,
@@ -97,16 +77,6 @@ describe('PerStreamMetrics', () => {
                     total: 1
                 },
                 'onDataReceived:ignoredDuplicate': {
-                    last: 0,
-                    rate: 0,
-                    total: 0
-                },
-                onSubscribeRequest: {
-                    last: 0,
-                    rate: 0,
-                    total: 0
-                },
-                onUnsubscribeRequest: {
                     last: 0,
                     rate: 0,
                     total: 0

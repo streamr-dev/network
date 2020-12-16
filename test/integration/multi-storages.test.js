@@ -1,8 +1,8 @@
 const { waitForEvent, waitForCondition } = require('streamr-test-utils')
 
 const { startStorageNode, startNetworkNode, startTracker } = require('../../src/composition')
-const TrackerServer = require('../../src/protocol/TrackerServer')
-const Node = require('../../src/logic/Node')
+const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
+const { Event: NodeEvent } = require('../../src/logic/Node')
 const { getTopology } = require('../../src/logic/TopologyFactory')
 
 describe('multiple storage nodes', () => {
@@ -94,8 +94,8 @@ describe('multiple storage nodes', () => {
         storageThree.start()
 
         await Promise.all([
-            waitForEvent(tracker.protocols.trackerServer, TrackerServer.events.NODE_STATUS_RECEIVED),
-            waitForEvent(storageThree, Node.events.NODE_SUBSCRIBED)
+            waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED),
+            waitForEvent(storageThree, NodeEvent.NODE_SUBSCRIBED)
         ])
 
         expect(getTopology(tracker.getOverlayPerStream())['stream-1::0'].storageThree).toEqual([

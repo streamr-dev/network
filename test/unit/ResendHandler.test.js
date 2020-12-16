@@ -4,7 +4,7 @@ const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
 const intoStream = require('into-stream')
 const { waitForStreamToEnd } = require('streamr-test-utils')
 
-const ResendHandler = require('../../src/resend/ResendHandler')
+const { ResendHandler } = require('../../src/resend/ResendHandler')
 
 const { StreamMessage, MessageID } = MessageLayer
 

@@ -1,4 +1,12 @@
 .codedeploy
+.eslintignore
+.eslintrc.js
+examples
+.github
 .idea
-.travis.yml
+jest.config.js
 .npmrc
+src
+test
+.travis.yml
+tsconfig.json

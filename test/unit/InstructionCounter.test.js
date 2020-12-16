@@ -1,4 +1,4 @@
-const InstructionCounter = require('../../src/logic/InstructionCounter')
+const { InstructionCounter } = require('../../src/logic/InstructionCounter')
 
 describe('InstructionCounter', () => {
     let instructionCounter

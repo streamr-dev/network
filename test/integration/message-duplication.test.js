@@ -2,7 +2,7 @@ const { StreamMessage, MessageID } = require('streamr-client-protocol').MessageL
 const { waitForCondition, waitForEvent, wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const TrackerNode = require('../../src/protocol/TrackerNode')
+const { Event: TrackerNodeEvent } = require('../../src/protocol/TrackerNode')
 
 /**
  * This test verifies that on receiving a duplicate message, it is not re-emitted to the node's subscribers.
@@ -61,7 +61,7 @@ describe('duplicate message detection and avoidance', () => {
         ])
 
         const allNodesConnnectedToTrackerPromise = Promise.all(otherNodes.map((node) => {
-            return waitForEvent(node.protocols.trackerNode, TrackerNode.events.CONNECTED_TO_TRACKER)
+            return waitForEvent(node.trackerNode, TrackerNodeEvent.CONNECTED_TO_TRACKER)
         }))
         // eslint-disable-next-line no-restricted-syntax
         for (const node of otherNodes) {
