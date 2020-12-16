@@ -6,7 +6,11 @@
     "type": "git",
     "url": "git://github.com/streamr-dev/streamr-client.git"
   },
-  "main": "dist/streamr-client.nodejs.js",
+  "main": "./dist/streamr-client.nodejs.js",
+  "exports": {
+    ".": "./dist/streamr-client.nodejs.js",
+    "./tools": "./dist/streamr-client-tools.nodejs.js"
+  },
   "browser": "dist/streamr-client.web.min.js",
   "directories": {
     "test": "test"
@@ -27,6 +31,7 @@
     "coverage": "jest --coverage",
     "test-integration": "jest --forceExit test/integration",
     "test-flakey": "jest --forceExit test/flakey",
+    "test-stress": "jest --forceExit test/flakey/EnvStressTest.test.js",
     "test-browser": "node ./test/browser/server.js & node node_modules/nightwatch/bin/nightwatch ./test/browser/browser.js && pkill -f server.js",
     "install-example": "cd examples/webpack && npm ci",
     "build-example": "cd examples/webpack && npm run build-with-parent",

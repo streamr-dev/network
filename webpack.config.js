@@ -22,14 +22,14 @@ module.exports = (env, argv) => {
 
     const commonConfig = {
         mode: isProduction ? 'production' : 'development',
-        entry: path.join(__dirname, 'src', 'index.js'),
+        entry: {
+            [libraryName]: path.join(__dirname, 'src', 'index.js'),
+            [`${libraryName}-tools`]: path.join(__dirname, 'src', 'tools.js'),
+        },
         devtool: 'source-map',
         output: {
             path: path.join(__dirname, 'dist'),
-            library: {
-                root: 'StreamrClient',
-                amd: libraryName,
-            },
+            library: ['StreamrClient', 'StreamrClientTools'],
             umdNamedDefine: true,
         },
         optimization: {
@@ -73,7 +73,7 @@ module.exports = (env, argv) => {
         externals: [nodeExternals()],
         output: {
             libraryTarget: 'commonjs2',
-            filename: libraryName + '.nodejs.js',
+            filename: '[name].nodejs.js',
         },
     })
 
@@ -102,7 +102,7 @@ module.exports = (env, argv) => {
         target: 'web',
         output: {
             libraryTarget: 'umd2',
-            filename: libraryName + '.web.js',
+            filename: '[name].web.js',
         },
         node: {
             stream: true,
@@ -150,7 +150,7 @@ module.exports = (env, argv) => {
                 ],
             },
             output: {
-                filename: libraryName + '.web.min.js',
+                filename: '[name].web.min.js',
             },
         })
     }
