@@ -8,6 +8,8 @@ const interval = parseInt(process.argv[5])
 const maxMessages = parseInt(process.argv[6])
 const groupKey = process.argv[7] ? JSON.parse(process.argv[7]) : undefined
 
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
 const options = {
     restUrl: "http://localhost/api/v1",
     url: "ws://localhost/api/v1/ws",
@@ -16,28 +18,22 @@ const options = {
     },
     publisherGroupKeys: {}
 }
+
 if (groupKey) {
     // TODO: update when client implementation is up to date and we know how to pass the GroupKeys there
     options.publisherGroupKeys[streamId] = Buffer.from(groupKey.groupKeyHex, 'hex')
 }
+
 const client = new StreamrClient(options)
+client.on('error', console.error)
 
 let counter = 0
 
 const rotatingPublishFunction = async (msgToPublish) => {
     if (counter % 10 === 0) {
-        const groupKey = crypto.randomBytes(32)
-
-        console.log("Rotating the key. New key: " + ethers.utils.hexlify(groupKey))
-        try {
-            await client.publish(streamId, msgToPublish, Date.now(), null, groupKey)
-            console.log('Published: ', JSON.stringify(msgToPublish))
-        } catch (err) {
-            console.error(err)
-        }
-    } else {
-        await defaultPublishFunction(msgToPublish)
+        await client.setNextGroupKey()
     }
+    await defaultPublishFunction(msgToPublish)
 }
 
 const defaultPublishFunction = async (msgToPublish) => {
@@ -56,9 +52,10 @@ if (publishFunctionName === 'default') {
     publishFunction = rotatingPublishFunction
 }
 
-const publishInterval = setInterval(async () => {
+const publishMessage = async () => {
     counter++
     const msg = {
+        "counter": counter,
         "client-implementation": "Javascript",
         "string-key": Math.random().toString(36).substr(2, 5),
         "integer-key": Math.floor(Math.random() * 100),
@@ -70,11 +67,13 @@ const publishInterval = setInterval(async () => {
 
     if (maxMessages && counter >= maxMessages) {
         console.log(`Done: All ${maxMessages} messages published. Quitting JS publisher.`)
-        clearInterval(publishInterval)
         // Disconnect gracefully so that this process will quit.
         // Don't do it immediately to avoid messing up the last published message in any way.
-        setTimeout(() => {
-            client.disconnect()
-        }, 2000)
+        await wait(2000)
+        await client.disconnect()
+    } else {
+        setTimeout(publishMessage, interval)
     }
-}, interval)
+}
+
+publishMessage()
