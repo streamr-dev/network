@@ -141,7 +141,13 @@ public class StreamTester {
             for (ArrayDeque<String> s: subscribersMsgStacks.get(publisherId).values()) {
                 subStacks.add(new ArrayDeque<>(s));
             }
+
+            if (maxMessages != 0 && pubStack.size() != maxMessages) {
+                log.warn("Expected " + publisherId + " to publish" + maxMessages + " but published" + pubStack.size());
+            }
+
             totalPublished += pubStack.size();
+
             try {
                 totalReceived += checkMsgs(publisherId, pubStack, subStacks);
             } catch (IllegalStateException e) {
