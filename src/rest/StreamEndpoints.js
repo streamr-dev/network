@@ -187,7 +187,7 @@ export async function publishHttp(streamObjectOrId, data, requestOptions = {}, k
 
     // Send data to the stream
     return authFetch(
-        `${this.options.restUrl}/streams/${streamId}/data`,
+        `${this.options.restUrl}/streams/${encodeURIComponent(streamId)}/data`,
         this.session,
         {
             ...requestOptions,
