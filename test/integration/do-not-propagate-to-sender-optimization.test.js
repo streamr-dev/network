@@ -1,7 +1,6 @@
 const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
-const { waitForCondition, waitForEvent, wait } = require('streamr-test-utils')
+const { waitForCondition } = require('streamr-test-utils')
 
-const Node = require('../../src/logic/Node')
 const { startNetworkNode, startTracker } = require('../../src/composition')
 
 /**
@@ -57,10 +56,12 @@ describe('optimization: do not propagate to sender', () => {
     })
 
     afterAll(async () => {
-        await n1.stop()
-        await n2.stop()
-        await n3.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            tracker.stop(),
+            n1.stop(),
+            n2.stop(),
+            n3.stop()
+        ])
     })
 
     // In a fully-connected network the number of duplicates should be (n-1)(n-2) instead of (n-1)^2 when not

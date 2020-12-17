@@ -1,5 +1,8 @@
 import { StreamIdAndPartition, StreamKey } from "../identifiers"
 import { TrackerLayer } from "streamr-client-protocol"
+import getLogger from "../helpers/logger"
+
+const logger = getLogger('streamr:logic:InstructionThrottler')
 
 interface Queue {
     [key: string]: {
@@ -33,7 +36,9 @@ export class InstructionThrottler {
             trackerId
         }
         if (!this.handling) {
-            this.invokeHandleFnWithLock()
+            this.invokeHandleFnWithLock().catch((err) => {
+                logger.warn("Error handling instruction %s", err)
+            })
         }
     }
 
@@ -61,9 +66,13 @@ export class InstructionThrottler {
             if (this.isQueueEmpty()) {
                 this.handling = false
             }
-            this.handleFn(instructionMessage, trackerId)
+            this.handleFn(instructionMessage, trackerId).catch((err) => {
+                logger.warn("Error handling instruction %s", err)
+            })
 
-            this.invokeHandleFnWithLock()
+            this.invokeHandleFnWithLock().catch((err) => {
+                logger.warn("Error handling instruction %s", err)
+            })
         }
     }
 

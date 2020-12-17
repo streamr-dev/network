@@ -52,11 +52,13 @@ describe('message propagation in network', () => {
     })
 
     afterAll(async () => {
-        await n1.stop()
-        await n2.stop()
-        await n3.stop()
-        await n4.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            tracker.stop(),
+            n1.stop(),
+            n2.stop(),
+            n3.stop(),
+            n4.stop()
+        ])
     })
 
     it('messages are delivered to nodes in the network according to stream subscriptions', async () => {

@@ -40,17 +40,16 @@ describe('check network stabilization', () => {
                 trackers: [tracker.getAddress()]
             })
             node.subscribe('stream', 0)
-            node.start()
             nodes.push(node)
         }
+        nodes.forEach((node) => node.start())
     })
 
     afterEach(async () => {
-        for (let i = 0; i < MAX_NODES; i++) {
-            // eslint-disable-next-line no-await-in-loop
-            await nodes[i].stop()
-        }
-        await tracker.stop()
+        await Promise.allSettled([
+            tracker.stop(),
+            ...nodes.map((node) => node.stop())
+        ])
     })
 
     it('network must become stable in less than 10 seconds', async (done) => {

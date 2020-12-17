@@ -42,16 +42,18 @@ describe('WebRtcEndpoint', () => {
     })
 
     afterEach(async () => {
-        await trackerNode1.stop()
-        await trackerNode2.stop()
-        await endpoint1.stop()
-        await endpoint2.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            tracker.stop(),
+            trackerNode1.stop(),
+            trackerNode2.stop(),
+            endpoint1.stop(),
+            endpoint2.stop()
+        ])
     })
 
     it('connection between nodes is established when both nodes invoke connect()', async () => {
-        endpoint1.connect('node-2', 'tracker', true)
-        endpoint2.connect('node-1', 'tracker', false)
+        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
+        endpoint2.connect('node-1', 'tracker', false).catch(() => null)
 
         await Promise.all([
             waitForEvent(endpoint1, Event.PEER_CONNECTED),
@@ -89,7 +91,7 @@ describe('WebRtcEndpoint', () => {
     })
 
     it('connection between nodes is established when only one node invokes connect()', async () => {
-        endpoint1.connect('node-2', 'tracker')
+        endpoint1.connect('node-2', 'tracker').catch(() => null)
 
         await Promise.all([
             waitForEvent(endpoint1, Event.PEER_CONNECTED),

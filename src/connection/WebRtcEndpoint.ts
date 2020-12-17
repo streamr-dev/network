@@ -50,6 +50,7 @@ export class WebRtcEndpoint extends EventEmitter {
     private pingTimeoutRef: NodeJS.Timeout
     private readonly logger: pino.Logger
     private readonly metrics: Metrics
+    private stopped: boolean = false
 
     constructor(
         id: string,
@@ -71,38 +72,42 @@ export class WebRtcEndpoint extends EventEmitter {
 
         rtcSignaller.setOfferListener(async ({ routerId, originatorInfo, description } : OfferOptions) => {
             const { peerId } = originatorInfo
-            this.connect(peerId, routerId)
+            this.connect(peerId, routerId).catch((err) => {
+                this.logger.warn('offerListener connection failed %s', err)
+            })
             const connection = this.connections[peerId]
             if (connection) {
                 connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
-                await connection.setRemoteDescription(description, 'offer' as DescriptionType.Offer)
+                connection.setRemoteDescription(description, 'offer' as DescriptionType.Offer)
             }
         })
 
-        rtcSignaller.setAnswerListener(async ({ originatorInfo, description }: AnswerOptions) => {
+        rtcSignaller.setAnswerListener(({ originatorInfo, description }: AnswerOptions) => {
             const { peerId } = originatorInfo
             const connection = this.connections[peerId]
             if (connection) {
                 connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
-                await connection.setRemoteDescription(description, 'answer' as DescriptionType.Answer)
+                connection.setRemoteDescription(description, 'answer' as DescriptionType.Answer)
             } else {
                 this.logger.warn('Unexpected rtcAnswer from %s: %s', originatorInfo, description)
             }
         })
 
-        rtcSignaller.setRemoteCandidateListener(async ({ originatorInfo, candidate, mid }: RemoteCandidateOptions) => {
+        rtcSignaller.setRemoteCandidateListener(({ originatorInfo, candidate, mid }: RemoteCandidateOptions) => {
             const { peerId } = originatorInfo
             const connection = this.connections[peerId]
             if (connection) {
-                await connection.addRemoteCandidate(candidate, mid)
+                connection.addRemoteCandidate(candidate, mid)
             } else {
                 this.logger.warn('Unexpected remoteCandidate from %s: [%s, %s]', originatorInfo, candidate, mid)
             }
         })
 
-        rtcSignaller.setConnectListener(async ({ originatorInfo, targetNode, routerId }: ConnectOptions) => {
+        rtcSignaller.setConnectListener(async ({ originatorInfo, routerId }: ConnectOptions) => {
             const { peerId } = originatorInfo
-            this.connect(peerId, routerId, false)
+            this.connect(peerId, routerId, false).catch((err) => {
+                this.logger.warn('connectListener connection failed %s', err)
+            })
         })
 
         rtcSignaller.setErrorListener(({ targetNode, errorCode }: ErrorOptions) => {
@@ -137,6 +142,10 @@ export class WebRtcEndpoint extends EventEmitter {
         isOffering = this.id < targetPeerId,
         trackerInstructed = true
     ): Promise<string> {
+        // Prevent new connections from being opened when WebRtcEndpoint has been closed
+        if (this.stopped) {
+            return Promise.reject(new WebRtcError('WebRtcEndpoint has been stopped'))
+        }
         if (this.connections[targetPeerId]) {
             return Promise.resolve(targetPeerId)
         }
@@ -166,7 +175,8 @@ export class WebRtcEndpoint extends EventEmitter {
             },
             onClose: () => {
                 this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo())
-                this.emit(`disconnected:${connection.getPeerId()}`, connection.getPeerInfo())
+                const err = new Error(`disconnected ${connection.getPeerId()}`)
+                this.emit(`disconnected:${connection.getPeerId()}`, err)
                 this.metrics.record('close', 1)
                 delete this.connections[targetPeerId]
             },
@@ -227,6 +237,7 @@ export class WebRtcEndpoint extends EventEmitter {
     }
 
     stop(): void {
+        this.stopped = true
         Object.values(this.connections).forEach((connection) => connection.close())
         clearTimeout(this.pingTimeoutRef)
         this.connections = {}

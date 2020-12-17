@@ -109,9 +109,11 @@ describe('duplicate message detection and avoidance', () => {
     }, 10000)
 
     afterAll(async () => {
-        await contactNode.stop()
-        await Promise.all(otherNodes.map((node) => node.stop()))
-        await tracker.stop()
+        await Promise.allSettled([
+            tracker.stop(),
+            contactNode.stop(),
+            otherNodes.map((node) => node.stop())
+        ])
     })
 
     test('same message is emitted by a node exactly once', () => {
