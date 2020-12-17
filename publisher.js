@@ -27,16 +27,14 @@ if (groupKey) {
 const client = new StreamrClient(options)
 client.on('error', console.error)
 
-let counter = 0
-
-const rotatingPublishFunction = async (msgToPublish) => {
+const rotatingPublishFunction = async (msgToPublish, counter) => {
     if (counter % 10 === 0) {
-        await client.setNextGroupKey()
+        await client.rotateGroupKey(streamId)
     }
-    await defaultPublishFunction(msgToPublish)
+    await defaultPublishFunction(msgToPublish, counter)
 }
 
-const defaultPublishFunction = async (msgToPublish) => {
+const defaultPublishFunction = async (msgToPublish, counter) => {
     try {
         await client.publish(streamId, msgToPublish)
         console.log('Published: ', JSON.stringify(msgToPublish))
@@ -52,8 +50,9 @@ if (publishFunctionName === 'default') {
     publishFunction = rotatingPublishFunction
 }
 
+let Counter = 0
 const publishMessage = async () => {
-    counter++
+    const counter = Counter++
     const msg = {
         "counter": counter,
         "client-implementation": "Javascript",
@@ -63,9 +62,9 @@ const publishMessage = async () => {
         "array-key": [4, -5, 19]
     }
     console.log('Going to publish: ', JSON.stringify(msg))
-    await publishFunction(msg)
+    await publishFunction(msg, counter)
 
-    if (maxMessages && counter >= maxMessages) {
+    if (maxMessages && counter >= maxMessages - 1) {
         console.log(`Done: All ${maxMessages} messages published. Quitting JS publisher.`)
         // Disconnect gracefully so that this process will quit.
         // Don't do it immediately to avoid messing up the last published message in any way.
