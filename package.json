@@ -24,9 +24,6 @@
   },
   "author": "Streamr <contact@streamr.com>",
   "license": "Apache-2.0",
-  "dependencies": {
-    "p-event": "^4.2.0"
-  },
   "devDependencies": {
     "@types/jest": "^26.0.19",
     "@types/node": "^14.14.14",

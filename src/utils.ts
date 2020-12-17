@@ -1,4 +1,3 @@
-import pEvent from "p-event"
 import { Readable } from "stream"
 import { EventEmitter } from "events"
 import { AssertionError } from "assert"
@@ -34,9 +33,16 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
  * within timeout. Otherwise rejected.
  */
 export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000): Promise<unknown[]> => {
-    return pEvent(emitter, event, {
-        timeout,
-        multiArgs: true
+    return new Promise((resolve, reject) => {
+        const eventListenerFn = (...args: unknown[]) => {
+            clearTimeout(timeOut)
+            resolve(args)
+        }
+        const timeOut = setTimeout(() => {
+            emitter.removeListener(event, eventListenerFn)
+            reject(new Error(`Promise timed out after ${timeout} milliseconds`))
+        }, timeout)
+        emitter.once(event, eventListenerFn)
     })
 }
 
