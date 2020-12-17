@@ -23,13 +23,14 @@ export interface TrackerOptions {
     metricsContext?: MetricsContext
 }
 
+// streamKey => overlayTopology, where streamKey = streamId::partition
+export type OverlayPerStream = { [key: string]: OverlayTopology }
+
 export class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode: number
     private readonly trackerServer: TrackerServer
     private readonly peerInfo: PeerInfo
-    private readonly overlayPerStream: {
-        [key: string]: OverlayTopology // streamKey => overlayTopology, where streamKey = streamId::partition
-    }
+    private readonly overlayPerStream: OverlayPerStream
     private readonly overlayConnectionRtts: {
         [key: string]: {
             [key: string]: number
@@ -229,6 +230,10 @@ export class Tracker extends EventEmitter {
         return this.locationManager.getAllNodeLocations()
     }
 
+    getNodes(): ReadonlyArray<string> {
+        return this.trackerServer.getNodeIds()
+    }
+
     getNodeLocation(node: NodeId): Location {
         return this.locationManager.getNodeLocation(node)
     }
@@ -237,7 +242,7 @@ export class Tracker extends EventEmitter {
         return [...this.storageNodes]
     }
 
-    getOverlayPerStream(): Readonly<{ [key: string]: OverlayTopology}> {
+    getOverlayPerStream(): Readonly<OverlayPerStream> {
         return this.overlayPerStream
     }
 }

@@ -5,7 +5,7 @@ const { startNetworkNode, startTracker } = require('../../src/composition')
 const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
 const { Event: NodeEvent } = require('../../src/logic/Node')
 const { StreamIdAndPartition } = require('../../src/identifiers')
-const { getTopology } = require('../../src/logic/TopologyFactory')
+const { getTopology } = require('../../src/logic/trackerSummaryUtils')
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker

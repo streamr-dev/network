@@ -127,6 +127,12 @@ export class TrackerServer extends EventEmitter {
         return this.endpoint.send(receiverNodeId, message.serialize()).then(() => message)
     }
 
+    getNodeIds(): string[] {
+        return this.endpoint.getPeerInfos()
+            .filter((peerInfo) => peerInfo.isNode())
+            .map((peerInfo) => peerInfo.peerId)
+    }
+
     getAddress(): string {
         return this.endpoint.getAddress()
     }

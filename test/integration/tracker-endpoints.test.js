@@ -80,9 +80,11 @@ describe('tracker endpoint', () => {
     })
 
     afterAll(async () => {
-        await nodeOne.stop()
-        await nodeTwo.stop()
-        await tracker.stop()
+        await Promise.allSettled([
+            tracker.stop(),
+            nodeOne.stop(),
+            nodeTwo.stop()
+        ])
     })
 
     it('/topology/', async () => {
@@ -161,8 +163,8 @@ describe('tracker endpoint', () => {
         })
     })
 
-    it('/topology-union/', async () => {
-        const [status, jsonResult] = await getHttp(`http://127.0.0.1:${trackerPort}/topology-union/`)
+    it('/node-connections/', async () => {
+        const [status, jsonResult] = await getHttp(`http://127.0.0.1:${trackerPort}/node-connections/`)
         expect(status).toEqual(200)
         expect(jsonResult).toEqual({
             'node-1': ['node-2'],

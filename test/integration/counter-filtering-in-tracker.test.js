@@ -5,7 +5,7 @@ const { startTracker } = require('../../src/composition')
 const { TrackerNode, Event: TrackerNodeEvent } = require('../../src/protocol/TrackerNode')
 const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
 const { startEndpoint } = require('../../src/connection/WsEndpoint')
-const { getTopology } = require('../../src/logic/TopologyFactory')
+const { getTopology } = require('../../src/logic/trackerSummaryUtils')
 
 const WAIT_TIME = 200
 

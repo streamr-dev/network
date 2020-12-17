@@ -3,7 +3,7 @@ const { waitForEvent, waitForCondition } = require('streamr-test-utils')
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { Node, Event: NodeEvent } = require('../../src/logic/Node')
 const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
-const { getTopology } = require('../../src/logic/TopologyFactory')
+const { getTopology } = require('../../src/logic/trackerSummaryUtils')
 
 describe('check tracker, nodes and statuses from nodes', () => {
     let tracker

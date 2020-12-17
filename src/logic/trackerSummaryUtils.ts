@@ -1,8 +1,9 @@
 import { OverlayTopology, TopologyNodes, TopologyState } from "./OverlayTopology"
 import { StreamIdAndPartition } from "../identifiers"
+import { OverlayPerStream, Tracker } from "./Tracker"
 
 export function getTopology(
-    overlayPerStream: { [key: string]: OverlayTopology},
+    overlayPerStream: OverlayPerStream,
     streamId: string | null = null,
     partition: number | null = null
 ): { [key: string]: TopologyState } {
@@ -30,17 +31,15 @@ export function getTopology(
     return topology
 }
 
-export function getTopologyUnion(overlayPerStream: { [key: string]: OverlayTopology}): Readonly<TopologyNodes> {
-    // merges each source value (a Set object) into the target value with the same key
-    const mergeSetMapInto = (target: TopologyNodes, source: TopologyNodes) => {
-        Object.keys(source).forEach((key) => {
-            const sourceSet = source[key]
-            const targetSet = target[key]
-            const mergedSet = (targetSet !== undefined) ? new Set([...targetSet, ...sourceSet]) : sourceSet
-            target[key] = mergedSet
+export function getNodeConnections(nodes: readonly string[], overlayPerStream: OverlayPerStream): { [key: string]: Set<string> } {
+    const result: { [key: string]: Set<string> } = {}
+    nodes.forEach((node) => {
+        result[node] = new Set<string>()
+    })
+    nodes.forEach((node) => {
+        Object.values(overlayPerStream).forEach((overlayTopology) => {
+            result[node] = new Set([...result[node], ...overlayTopology.getNeighbors(node)])
         })
-        return target
-    }
-    const nodeMaps = Object.values(overlayPerStream).map((topology) => topology.getNodes())
-    return nodeMaps.reduce((accumulator, current) => mergeSetMapInto(accumulator, current), {})
+    })
+    return result
 }

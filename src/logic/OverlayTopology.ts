@@ -39,8 +39,8 @@ export class OverlayTopology {
         this.nodes = {}
     }
 
-    getNodes(): Readonly<TopologyNodes> {
-        return this.nodes
+    getNeighbors(nodeId: string): Set<string> {
+        return this.hasNode(nodeId) ? this.nodes[nodeId] : new Set<string>()
     }
 
     hasNode(nodeId: string): boolean {

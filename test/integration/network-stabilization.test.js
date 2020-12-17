@@ -3,7 +3,7 @@ const assert = require('assert')
 const { wait } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
-const { getTopology } = require('../../src/logic/TopologyFactory')
+const { getTopology } = require('../../src/logic/trackerSummaryUtils')
 
 function areEqual(a, b) {
     try {

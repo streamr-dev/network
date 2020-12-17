@@ -503,6 +503,12 @@ export class WsEndpoint extends EventEmitter {
         return this.connections
     }
 
+    getPeerInfos(): PeerInfo[] {
+        return Array.from(this.connections.keys())
+            .map((address) => this.peerBook.getPeerInfo(address))
+            .filter((x) => x !== null) as PeerInfo[]
+    }
+
     resolveAddress(peerId: string): string | never {
         return this.peerBook.getAddress(peerId)
     }

@@ -72,6 +72,8 @@ describe('overlay creation', () => {
                 'node-3'
             ]
         })
+        expect(topology.getNeighbors('node-1')).toEqual(new Set(['node-2', 'node-3', 'node-4']))
+        expect(topology.getNeighbors('node-4')).toEqual(new Set(['node-1', 'node-2', 'node-3']))
 
         expect(topology.formInstructions('node-1')).toEqual({})
         expect(topology.formInstructions('node-2')).toEqual({})
@@ -294,6 +296,7 @@ describe('overlay creation', () => {
         topology.leave('node-1')
         expect(topology.state()).toEqual({})
         expect(topology.isEmpty()).toBeTruthy()
+        expect(topology.getNeighbors('node-1')).toEqual(new Set([]))
     })
 
     // TODO: remove or write better, since not the best way to test randomness
