@@ -35,7 +35,7 @@
     "@babel/plugin-transform-classes": "^7.12.1",
     "@babel/plugin-transform-modules-commonjs": "^7.12.1",
     "@babel/plugin-transform-runtime": "^7.12.10",
-    "@babel/preset-env": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
     "array-shuffle": "^2.0.0",
     "await-sleep": "0.0.1",
     "babel-eslint": "^10.1.0",
@@ -53,9 +53,9 @@
     "sinon": "^9.2.2",
     "terser-webpack-plugin": "^5.0.3",
     "web3-eth-accounts": "^1.3.0",
-    "webpack": "^5.10.2",
+    "webpack": "^5.10.3",
     "webpack-cli": "^4.2.0",
-    "webpack-merge": "^5.7.0",
+    "webpack-merge": "^5.7.2",
     "webpack-node-externals": "^2.5.2"
   },
   "dependencies": {
