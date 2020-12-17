@@ -49,9 +49,14 @@ The client connection URLs, number of publishers and subscribers on each platfor
 
 Log level is configured in `src/main/resources/log4j2.xml`.
 
-If the number of **subscribers** for each library as specified in the config file is greater than or equal to 3, then 2 of these subscribers will subscribe only after some delay and using a different resend option. For example, if `nbJavaSubscribers=2`, the 2 subscribers will subscribe immediately in real-time. But if `nbJavaSubscribers=5`, 3 of them will subscribe immediately, but 1 will subscribe later with a "resend last option" and 1 other with a "resend from" option.
+### Late Subscribers with Resend
 
-The following example will test locally that 2 Java subscribers and 4 Javascript subscribers (2 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
+If the number of **subscribers** for each library as specified in the config file is greater than or equal to 3, then 2 of these subscribers will subscribe only after some delay and using a different resend option.
+
+For example, if `nbJavaSubscribers=2`, the 2 subscribers will subscribe immediately in real-time. But if `nbJavaSubscribers=5`, 3 of them will subscribe immediately, but 1 will subscribe later with a "resend last option" and 1 other with a "resend from" option.
+
+The following example will test locally that 2 Java subscribers and 4 JavaScript subscribers (2 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
+
 ```
 >> cat config/my-custom-config.conf
 
