@@ -74,7 +74,7 @@ public class PublisherThreadJS extends PublisherThread {
                 try {
                     String err;
                     while ((err = stdError.readLine()) != null) {
-                        log.error(getPublisherId() + " " + err);
+                        log.info(getPublisherId() + " " + err);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

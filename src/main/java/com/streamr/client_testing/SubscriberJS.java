@@ -65,7 +65,7 @@ public class SubscriberJS extends Subscriber {
                 try {
                     String err;
                     while ((err = stdError.readLine()) != null) {
-                        log.error(getSubscriberId() + " " + err);
+                        log.info(getSubscriberId() + " " + err);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
