@@ -16,7 +16,7 @@ to add this npm package as a development dependency.
 ## Use
 
 This section provides an overview of the utilities (functions) that this package offers. To dive deeper, check the
-[code comment](src/utils.js) of a particular function.
+[code comment](src/utils.ts) of a particular function.
 
 ### Control flow utilities
 

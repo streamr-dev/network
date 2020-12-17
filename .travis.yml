@@ -12,8 +12,8 @@ before_install:
 jobs:
   include:
   - stage: Tests
-    name: eslint
-    script: npm run eslint
+    name: test
+    script: npm run test
   - stage: publish
     if: tag IS present
     script: npm publish

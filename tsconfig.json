@@ -14,7 +14,8 @@
   },
   "exclude": [
     "dist",
-    "jest.config.js"
+    "jest.config.js",
+    "test"
   ]
 }
 
