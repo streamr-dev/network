@@ -163,6 +163,7 @@ public class StreamTester {
 
     private void printMsgsReceived() {
         System.out.println("\n");
+        log.debug(subscribersMsgStacks.toString());
         for (Address pub: subscribersMsgStacks.keySet()) {
             ConcurrentHashMap<Address, ArrayDeque<String>> subs = subscribersMsgStacks.get(pub);
             int totalSent = publishersMsgStacks.get(pub).size();
