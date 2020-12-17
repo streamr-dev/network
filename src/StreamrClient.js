@@ -183,6 +183,10 @@ export default class StreamrClient extends EventEmitter {
         return this.publisher.setNextGroupKey(...args)
     }
 
+    rotateGroupKey(...args) {
+        return this.publisher.rotateGroupKey(...args)
+    }
+
     async subscribe(opts, onMessage) {
         let subTask
         let sub

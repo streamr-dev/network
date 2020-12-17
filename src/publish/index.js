@@ -6,7 +6,7 @@ import { ethers } from 'ethers'
 import mem from 'mem'
 
 import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
-import { waitForRequestResponse } from '../stream/utils'
+import { waitForRequestResponse, validateOptions } from '../stream/utils'
 import { GroupKey } from '../stream/Encryption'
 
 import Signer from './Signer'
@@ -161,6 +161,9 @@ function getCreateStreamMessage(client) {
     const getMsgEncryptor = Object.assign(mem(Encrypt, {
         cacheKey: (args) => {
             const [, { streamId }] = args
+            if (typeof streamId !== 'string' || !streamId) {
+                throw new Error('getMsgEncryptor cacheKey: streamId must be defined')
+            }
             return streamId
         },
     }), {
@@ -241,11 +244,17 @@ function getCreateStreamMessage(client) {
 
     return Object.assign(createStreamMessage, {
         getCachedPublisherId,
-        setNextGroupKey(streamId, newKey) {
-            const { setNextGroupKey } = getMsgEncryptor(client, {
+        setNextGroupKey(maybeStreamId, newKey) {
+            const { streamId } = validateOptions(maybeStreamId)
+            return getMsgEncryptor(client, {
+                streamId,
+            }).setNextGroupKey(newKey)
+        },
+        rotateGroupKey(maybeStreamId) {
+            const { streamId } = validateOptions(maybeStreamId)
+            return getMsgEncryptor(client, {
                 streamId
-            })
-            return setNextGroupKey(newKey)
+            }).rotateGroupKey()
         },
         clear() {
             computeStreamPartition.clear()
@@ -370,7 +379,7 @@ export default function Publisher(client) {
             return createStreamMessage.getCachedPublisherId()
         },
         rotateGroupKey(streamId) {
-            return createStreamMessage.setNextGroupKey(streamId, GroupKey.generate())
+            return createStreamMessage.rotateGroupKey(streamId)
         },
         setNextGroupKey(streamId, newKey) {
             return createStreamMessage.setNextGroupKey(streamId, newKey)

@@ -147,6 +147,18 @@ describe('decryption', () => {
         await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
 
+    it('errors if rotating group key for no stream', async () => {
+        expect(async () => (
+            client.rotateGroupKey()
+        )).rejects.toThrow('streamId')
+    })
+
+    it('errors if setting group key for no stream', async () => {
+        expect(async () => (
+            client.setNextGroupKey(undefined, GroupKey.generate())
+        )).rejects.toThrow('streamId')
+    })
+
     it('allows other users to get group key', async () => {
         let otherClient
         let sub
@@ -269,7 +281,7 @@ describe('decryption', () => {
         const published = await publishTestMessages(5, {
             waitForLast: true,
             async beforeEach() {
-                await client.setNextGroupKey(stream.id, GroupKey.generate())
+                await client.rotateGroupKey(stream.id)
             }
         })
 
