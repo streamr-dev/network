@@ -46,6 +46,26 @@ describe('decryption', () => {
         return c
     }
 
+    function checkEncryptionMessages(testClient) {
+        const onSendTest = Defer()
+        testClient.connection.on('_send', onSendTest.wrapError((sendingMsg) => {
+            // check encryption is as expected
+            const { streamMessage } = sendingMsg
+            if (!streamMessage) {
+                return
+            }
+
+            if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
+                expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.AES)
+            } else if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
+                expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.RSA)
+            } else {
+                expect(streamMessage.encryptionType).toEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
+            }
+        }))
+        return onSendTest
+    }
+
     beforeEach(() => {
         errors = []
         expectErrors = 0
@@ -138,11 +158,14 @@ describe('decryption', () => {
         sub.once('error', done.reject)
 
         await client.setNextGroupKey(stream.id, groupKey)
+        const onEncryptionMessageErr = checkEncryptionMessages(client)
 
         await Promise.all([
             client.publish(stream.id, msg),
             done,
         ])
+        onEncryptionMessageErr.resolve() // will be ignored if errored
+        await onEncryptionMessageErr
         // All good, unsubscribe
         await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
@@ -167,13 +190,14 @@ describe('decryption', () => {
                 autoConnect: true,
                 autoDisconnect: true,
             })
+            const onEncryptionMessageErr = checkEncryptionMessages(client)
+            const onEncryptionMessageErr2 = checkEncryptionMessages(otherClient)
             const otherUser = await otherClient.getUserInfo()
             await stream.grantPermission('stream_get', otherUser.username)
             await stream.grantPermission('stream_subscribe', otherUser.username)
 
             const done = Defer()
             const msg = Msg()
-            const groupKey = GroupKey.generate()
             // subscribe without knowing the group key to decrypt stream messages
             sub = await otherClient.subscribe({
                 stream: stream.id,
@@ -187,12 +211,17 @@ describe('decryption', () => {
             }))
             sub.once('error', done.reject)
 
+            const groupKey = GroupKey.generate()
             await client.setNextGroupKey(stream.id, groupKey)
 
             await Promise.all([
                 client.publish(stream.id, msg),
                 done,
             ])
+            onEncryptionMessageErr.resolve() // will be ignored if errored
+            await onEncryptionMessageErr
+            onEncryptionMessageErr2.resolve() // will be ignored if errored
+            await onEncryptionMessageErr2
         } finally {
             if (otherClient) {
                 if (sub) {
@@ -203,13 +232,14 @@ describe('decryption', () => {
             }
         }
     }, 2 * TIMEOUT)
+
     it('client.subscribe can get the group key and decrypt multiple encrypted messages using an RSA key pair', async () => {
-        const groupKey = GroupKey.generate()
         // subscribe without knowing the group key to decrypt stream messages
         const sub = await client.subscribe({
             stream: stream.id,
         })
 
+        const groupKey = GroupKey.generate()
         await client.setNextGroupKey(stream.id, groupKey)
         const published = await publishTestMessages()
 
@@ -235,7 +265,7 @@ describe('decryption', () => {
 
         const published = await publishTestMessages(5, {
             async beforeEach() {
-                await client.setNextGroupKey(stream.id, GroupKey.generate())
+                await client.rotateGroupKey(stream.id)
             }
         })
 
@@ -258,7 +288,7 @@ describe('decryption', () => {
         const published = await publishTestMessages(5, {
             waitForLast: true,
             async beforeEach() {
-                await client.setNextGroupKey(stream.id, GroupKey.generate())
+                await client.rotateGroupKey(stream.id)
             }
         })
 

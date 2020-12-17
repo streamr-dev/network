@@ -19,7 +19,7 @@ export function StreamKey({ streamId, streamPartition = 0 }) {
 
 export function validateOptions(optionsOrStreamId) {
     if (!optionsOrStreamId) {
-        throw new Error('options is required!')
+        throw new Error('streamId is required!')
     }
 
     // Backwards compatibility for giving a streamId as first argument

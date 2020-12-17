@@ -96,7 +96,7 @@ function GroupKeyStore({ groupKeys }) {
             return store.has(id)
         },
         isEmpty() {
-            return nextGroupKey || store.size !== 0
+            return !nextGroupKey && store.size === 0
         },
         useGroupKey() {
             if (nextGroupKey) {
