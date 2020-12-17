@@ -178,10 +178,17 @@ public class StreamTester {
             for (String m: publishersMsgStacks.get(pub)) {
                 System.out.println(m);
             }
-            System.out.println("\nMsgs received from " + pub + " :\n");
+
+            boolean didPrintHeader = false;
+
             for (Address sub: subs.keySet()) {
                 // Only log incorrect reception:
                 if (subs.get(sub).size() != totalSent) {
+                    // log header once
+                    if (!didPrintHeader) {
+                        didPrintHeader = true;
+                        System.out.println("\nMsgs received from " + pub + " :\n");
+                    }
                     System.out.println(sub + " received " + subs.get(sub).size() + " messages out of " + totalSent + ":");
                     for (String m : subs.get(sub)) {
                         System.out.println(m);
