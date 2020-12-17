@@ -137,19 +137,15 @@ public class StreamTester {
         int totalReceived = 0;
         for (Address publisherId: publishersMsgStacks.keySet()) {
             ArrayDeque<String> pubStack = publishersMsgStacks.get(publisherId);
-            ArrayList<ArrayDeque<String>> subStacks = new ArrayList<>();
-            for (ArrayDeque<String> s: subscribersMsgStacks.get(publisherId).values()) {
-                subStacks.add(new ArrayDeque<>(s));
-            }
 
             if (maxMessages != 0 && pubStack.size() != maxMessages) {
-                log.warn("Expected " + publisherId + " to publish" + maxMessages + " but published" + pubStack.size());
+                log.warn("\nExpected {} to publish {} messages but published {}\n", publisherId.toString(), maxMessages, pubStack.size());
             }
 
             totalPublished += pubStack.size();
 
             try {
-                totalReceived += checkMsgs(publisherId, pubStack, subStacks);
+                totalReceived += checkMsgs(publisherId, pubStack);
             } catch (IllegalStateException e) {
                 printMsgsReceived();
                 log.error("\nFAILED test {}. On error: '{}'\n", stream.getName(), e.getMessage());
@@ -189,28 +185,30 @@ public class StreamTester {
         }
     }
 
-    private static int checkMsgs(Address publisherId, ArrayDeque<String> pubStack, ArrayList<ArrayDeque<String>> subStacks) {
+    private int checkMsgs(Address publisherId, ArrayDeque<String> pubStack) {
         int publishedMessagesCount = pubStack.size();
+        ArrayList<ArrayDeque<String>> subStacks = new ArrayList<>();
         // Check that every subscriber received the correct number of messages from this publisher
-        for (Collection<String> subStack : subStacks) {
+        for (Map.Entry<Address, ArrayDeque<String>> entry : subscribersMsgStacks.get(publisherId).entrySet()) {
+            String subId = entry.getKey().toString();
+            ArrayDeque<String> subStack = new ArrayDeque<String>(entry.getValue());
             int size = subStack.size();
             if (size < publishedMessagesCount) {
-                throw new IllegalStateException("Expected to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
+                throw new IllegalStateException("Expected " + subId + "to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
             } else if (size != publishedMessagesCount) {
                 // Receiving ~one message more than counted can happen due to a race condition. Not an error but let's log a warning
-                log.warn("Expected to receive {} messages from {}, but received {}", publishedMessagesCount, publisherId, size);
+                log.warn("Expected {} to receive {} messages from {}, but received {}", subId, publishedMessagesCount, publisherId, size);
                 log.warn("This could happen due to a race condition in publishing vs. stopping the publisher. Probably not an issue, but logging it anyway.");
             }
-        }
-        // Check that every subscriber received the correct content of messages from this publisher
-        for (String publishedMessage : pubStack) {
-            for (Deque<String> subStack : subStacks) {
+            // Check that every subscriber received the correct content of messages from this publisher
+            for (String publishedMessage : pubStack) {
                 String receivedMessage = subStack.pollFirst();
                 if (!publishedMessage.equals(receivedMessage)) {
-                    throw new IllegalStateException("Expected " + publishedMessage + " but received " + receivedMessage);
+                    throw new IllegalStateException("Expected "+ subId + " to get " + publishedMessage + " but received " + receivedMessage);
                 }
             }
         }
+
         return subStacks.size() * pubStack.size(); // total received messages
     }
 
