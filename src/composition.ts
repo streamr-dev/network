@@ -19,7 +19,13 @@ const STUN_URLS = ['stun:stun.l.google.com:19302'] // TODO: make configurable
 
 const logger = getLogger("streamr:bin:composition")
 
-export { Protocol, MetricsContext }
+export {
+    Location,
+    MetricsContext,
+    NetworkNode,
+    Protocol,
+    Tracker
+}
 
 export interface Storage {
     requestLast(
