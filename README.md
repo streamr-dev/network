@@ -36,23 +36,24 @@ The script `streamr-client-testing.sh` takes one required command-line argument:
     - `"stream-encrypted-shared-signed"`
     - `"stream-encrypted-shared-rotating-signed"`
     - `"stream-encrypted-exchanged-rotating-signed"`
-    
+
 The other command line arguments are optional:
-    
+
 - `-c`, `--config`: Test config file. Defaults to `config/default.conf`
 - `-n`, `--number-of-messages`: Number of messages that each publisher publishes in the test. Default 30.
 - `-i`, `--infinite`: Infinitely runs the message production instead of the value given by `-n`
 - `-r`, `--resturl`: REST API url to connect to. Example value in the case of local testing: `"http://localhost/api/v1"`
 - `-w`, `--wsurl`: WebSockets API url to connect to. Example value in the case of local testing: `"ws://localhost/api/v1/ws"`
 
-The logging level, client connection URLs, number of publishers and subscribers on each platform are set in a `.conf` file. The default is `config/default.conf`, and another file can be specifiec with the `--config` option.
+The client connection URLs, number of publishers and subscribers on each platform are set in a `.conf` file. The default is `config/default.conf`, and another file can be specific with the `--config` option.
+
+Log level is configured in `src/main/resources/log4j2.xml`.
 
 If the number of **subscribers** for each library as specified in the config file is greater than or equal to 3, then 2 of these subscribers will subscribe only after some delay and using a different resend option. For example, if `nbJavaSubscribers=2`, the 2 subscribers will subscribe immediately in real-time. But if `nbJavaSubscribers=5`, 3 of them will subscribe immediately, but 1 will subscribe later with a "resend last option" and 1 other with a "resend from" option.
 
 The following example will test locally that 2 Java subscribers and 4 Javascript subscribers (2 of them with resend options) correctly receive messages from 3 Java publishers who sign, encrypt and rotate an initially shared key:
 ```
 >> cat config/my-custom-config.conf
-logLevel=INFO
 
 restUrl=http://localhost/api/v1
 wsUrl=ws://localhost/api/v1/ws
@@ -64,8 +65,6 @@ nbJavascriptSubscribers=4
 
 >> sh streamr-client-testing.sh -s stream-encrypted-shared-rotating-signed -c config/my-custom-config.conf
 ```
-
-The log levels follow [this convention](https://docs.oracle.com/javase/7/docs/api/java/util/logging/Level.html). Level `INFO` will output messages specific to this tool (setup and results) + every message received by every subscriber. Level `FINE` will in addition output every message published by every publisher.
 
 ## Contributing
 
