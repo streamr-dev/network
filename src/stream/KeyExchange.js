@@ -338,9 +338,6 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
 
     async function requestKeys({ streamId, publisherId, groupKeyIds }) {
         let done = false
-        client.debug('requestKeys', {
-            streamId, publisherId, groupKeyIds,
-        })
         const requestId = uuid('GroupKeyRequest')
         const rsaPublicKey = encryptionUtil.getPublicKey()
         const keyExchangeStreamId = getKeyExchangeStreamId(publisherId)
