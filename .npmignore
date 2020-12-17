@@ -1,1 +1,5 @@
 .idea
+src
+.travis.yml
+jest.config.js
+tsconfig.json
