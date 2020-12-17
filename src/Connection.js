@@ -334,8 +334,8 @@ export default class Connection extends EventEmitter {
             return super.emit(event, err, ...rest)
         }
 
-        if (event !== 'message' && typeof event !== 'number') {
-            // don't log for messages
+        if (event !== 'message' && typeof event !== 'number' && !(event.startsWith && event.startsWith('_'))) {
+            // don't log for messages or events starting with _
             this.debug('emit', event, ...args)
         }
 
@@ -655,6 +655,7 @@ export default class Connection extends EventEmitter {
             const data = typeof msg.serialize === 'function' ? msg.serialize() : msg
             // send callback doesn't exist with browser websockets, just resolve
             /* istanbul ignore next */
+            this.emit('_send', msg) // for informational purposes
             if (process.browser) {
                 this.socket.send(data)
                 resolve(data)
