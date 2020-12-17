@@ -202,12 +202,13 @@ public class StreamTester {
 
     private int checkMsgs(Address publisherId, ArrayDeque<String> pubStack) {
         int publishedMessagesCount = pubStack.size();
-        ArrayList<ArrayDeque<String>> subStacks = new ArrayList<>();
+        int total = 0;
         // Check that every subscriber received the correct number of messages from this publisher
         for (Map.Entry<Address, ArrayDeque<String>> entry : subscribersMsgStacks.get(publisherId).entrySet()) {
             String subId = entry.getKey().toString();
             ArrayDeque<String> subStack = new ArrayDeque<String>(entry.getValue());
             int size = subStack.size();
+            total += size;
             if (size < publishedMessagesCount) {
                 throw new IllegalStateException("Expected " + subId + "to receive " + publishedMessagesCount + " messages from " + publisherId + ", but received " + size);
             } else if (size != publishedMessagesCount) {
@@ -219,12 +220,12 @@ public class StreamTester {
             for (String publishedMessage : pubStack) {
                 String receivedMessage = subStack.pollFirst();
                 if (!publishedMessage.equals(receivedMessage)) {
-                    throw new IllegalStateException("Expected "+ subId + " to get " + publishedMessage + " but received " + receivedMessage);
+                    throw new IllegalStateException("Expected "+ subId + " to get message from " + publisherId + ": " + publishedMessage + " but received " + receivedMessage);
                 }
             }
         }
 
-        return subStacks.size() * pubStack.size(); // total received messages
+        return total;
     }
 
     private void addPublisher(StreamrClientWrapper publisher, PublishFunction publishFunction, long interval, int maxMessages) {
