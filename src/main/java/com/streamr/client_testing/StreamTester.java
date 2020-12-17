@@ -157,6 +157,13 @@ public class StreamTester {
             log.error("\nFAILED. Got {} UnableToDecryptException(s)\n", decryptionErrorsCount);
             System.exit(1);
         }
+
+        if (totalReceived == 0) {
+            printMsgsReceived();
+            log.error("\nFAILED. Published {} messages but received {} messages.\n", totalPublished, totalReceived);
+            System.exit(1);
+        }
+
         log.info("\nPASSED. Checked all {} published and {} received messages.\n", totalPublished, totalReceived);
         System.exit(0);
     }
