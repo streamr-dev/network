@@ -7,7 +7,6 @@ import mem from 'mem'
 
 import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
 import { waitForRequestResponse, validateOptions } from '../stream/utils'
-import { GroupKey } from '../stream/Encryption'
 
 import Signer from './Signer'
 import Encrypt from './Encrypt'

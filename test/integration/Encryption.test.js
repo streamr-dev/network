@@ -1,5 +1,3 @@
-import crypto from 'crypto'
-
 import { wait } from 'streamr-test-utils'
 import { MessageLayer } from 'streamr-client-protocol'
 
