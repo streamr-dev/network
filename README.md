@@ -93,7 +93,7 @@ To disable all logs
     NOLOG=true
 
 ### Regenerate self-signed certificate fixture
-To regenerate self signed certificate in `./test/fixtures` run:
+To regenerate self-signed certificate in `./test/fixtures` run:
 
 ```bash
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -nodes -subj "/CN=localhost"
@@ -114,18 +114,13 @@ https://semver.org/. Files package.json and package-lock.json will be automatica
 
 ### API Specification
 
-For production version refer to [API Explorer](https://api-explorer.streamr.com).
+For production version of the Streamr API refer to [API Explorer](https://api-explorer.streamr.com).
 
-### Protocol Specification
-
-Messaging protocol is described in [streamr-specs PROTOCOL.md](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md).
-
-### MQTT special considerations
-- MQTT topic names are mapped to stream names (and *not* stream ids.) This behavior may change in the future.
-- For authentication put API_KEY in password connection field
-- MQTT native clients are able to send plain text, but their payload will be transformed to JSON
+### Special considerations for using MQTT adapter
+- For authentication put API_KEY in the password connection field
+- MQTT clients can send plain text, but their payload will be transformed to a JSON object accordingly:
 `{"mqttPayload":"ORIGINAL_PLAINTEXT_PAYLOAD}`
 
-Error handling:
+#### Error handling
 - If API_KEY is not correct, client will receive "Connection refused, bad user name or password" (returnCode: 4)
 - If stream is not found, client will receive "Connection refused, not authorized" (returnCode: 5)
