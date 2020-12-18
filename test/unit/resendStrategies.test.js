@@ -1,8 +1,7 @@
 const { EventEmitter } = require('events')
 
-const intoStream = require('into-stream')
 const { MessageLayer, ControlLayer, TrackerLayer } = require('streamr-client-protocol')
-const { waitForStreamToEnd } = require('streamr-test-utils')
+const { waitForStreamToEnd, toReadableStream } = require('streamr-test-utils')
 
 const { LocalResendStrategy, ForeignResendStrategy } = require('../../src/resend/resendStrategies')
 const { StreamIdAndPartition } = require('../../src/identifiers')
@@ -86,7 +85,7 @@ describe('LocalResendStrategy#getResendResponseStream', () => {
     })
 
     test('on receiving ResendLastRequest, storage#requestLast is invoked', async () => {
-        storage.requestLast = jest.fn().mockReturnValueOnce(intoStream.object([]))
+        storage.requestLast = jest.fn().mockReturnValueOnce(toReadableStream())
 
         resendStrategy.getResendResponseStream(resendLastRequest)
 
@@ -96,7 +95,7 @@ describe('LocalResendStrategy#getResendResponseStream', () => {
     })
 
     test('on receiving ResendFromRequest, storage#requestFrom is invoked', async () => {
-        storage.requestFrom = jest.fn().mockReturnValueOnce(intoStream.object([]))
+        storage.requestFrom = jest.fn().mockReturnValueOnce(toReadableStream())
 
         resendStrategy.getResendResponseStream(resendFromRequest)
 
@@ -108,7 +107,7 @@ describe('LocalResendStrategy#getResendResponseStream', () => {
     })
 
     test('on receiving ResendRangeRequest, storage#requestRange is invoked', async () => {
-        storage.requestRange = jest.fn().mockReturnValueOnce(intoStream.object([]))
+        storage.requestRange = jest.fn().mockReturnValueOnce(toReadableStream())
 
         resendStrategy.getResendResponseStream(resendRangeRequest)
 
@@ -121,7 +120,7 @@ describe('LocalResendStrategy#getResendResponseStream', () => {
     })
 
     test('data of storage stream are transformed into UnicastMessages for response stream', async () => {
-        storage.requestLast = jest.fn().mockReturnValueOnce(intoStream.object([msg1, msg2]))
+        storage.requestLast = jest.fn().mockReturnValueOnce(toReadableStream(msg1, msg2))
 
         const responseStream = resendStrategy.getResendResponseStream(resendLastRequest)
         const streamAsArray = await waitForStreamToEnd(responseStream)
@@ -136,7 +135,7 @@ describe('LocalResendStrategy#getResendResponseStream', () => {
     })
 
     test('closing response stream also closes (original) the underlying storage stream', (done) => {
-        const storageStream = intoStream.object([])
+        const storageStream = toReadableStream()
         storage.requestRange = jest.fn().mockReturnValueOnce(storageStream)
 
         const responseStream = resendStrategy.getResendResponseStream(resendRangeRequest)

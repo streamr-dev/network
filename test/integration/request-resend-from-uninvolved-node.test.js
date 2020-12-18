@@ -1,6 +1,5 @@
-const intoStream = require('into-stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const { waitForStreamToEnd, waitForEvent } = require('streamr-test-utils')
+const { waitForStreamToEnd, waitForEvent, toReadableStream } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
 const { Event: NodeEvent } = require('../../src/logic/Node')
@@ -38,7 +37,7 @@ describe('request resend from uninvolved node', () => {
             trackers: [tracker.getAddress()],
             storages: [{
                 store: () => {},
-                requestLast: () => intoStream.object([]),
+                requestLast: () => toReadableStream(),
             }]
         })
         involvedNode = await startNetworkNode({
@@ -48,7 +47,7 @@ describe('request resend from uninvolved node', () => {
             trackers: [tracker.getAddress()],
             storages: [{
                 store: () => {},
-                requestLast: () => intoStream.object([]),
+                requestLast: () => toReadableStream(),
             }]
         })
         storageNode = await startStorageNode({
@@ -58,7 +57,7 @@ describe('request resend from uninvolved node', () => {
             trackers: [tracker.getAddress()],
             storages: [{
                 store: () => {},
-                requestLast: () => intoStream.object([
+                requestLast: () => toReadableStream(
                     new StreamMessage({
                         messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
                         prevMsgRef: new MessageRef(666, 50),
@@ -68,8 +67,8 @@ describe('request resend from uninvolved node', () => {
                         messageId: new MessageID('streamId', 0, 800, 0, 'publisherId', 'msgChainId'),
                         prevMsgRef: new MessageRef(756, 0),
                         content: {},
-                    }),
-                ])
+                    })
+                )
             }]
         })
 

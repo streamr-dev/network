@@ -1,8 +1,7 @@
 const { Readable } = require('stream')
 
 const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
-const intoStream = require('into-stream')
-const { waitForEvent, wait } = require('streamr-test-utils')
+const { waitForEvent, wait, toReadableStream } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
 const { Event: NodeEvent } = require('../../src/logic/Node')
@@ -68,9 +67,9 @@ describe('resend cancellation on disconnect', () => {
             trackers: [tracker.getAddress()],
             storages: [{
                 store: () => {},
-                requestLast: () => intoStream.object([]),
-                requestFrom: () => intoStream.object([]),
-                requestRange: () => intoStream.object([]),
+                requestLast: () => toReadableStream(),
+                requestFrom: () => toReadableStream(),
+                requestRange: () => toReadableStream(),
             }]
         })
         neighborOne = await startNetworkNode({
@@ -81,8 +80,8 @@ describe('resend cancellation on disconnect', () => {
             storages: [{
                 store: () => {},
                 requestLast: () => createSlowStream(),
-                requestFrom: () => intoStream.object([]),
-                requestRange: () => intoStream.object([]),
+                requestFrom: () => toReadableStream(),
+                requestRange: () => toReadableStream(),
             }]
         })
         neighborTwo = await startNetworkNode({
@@ -100,8 +99,8 @@ describe('resend cancellation on disconnect', () => {
             storages: [{
                 store: () => {},
                 requestLast: () => createSlowStream(),
-                requestFrom: () => intoStream.object([]),
-                requestRange: () => intoStream.object([]),
+                requestFrom: () => toReadableStream(),
+                requestRange: () => toReadableStream(),
             }]
         })
 

@@ -1,6 +1,5 @@
-const intoStream = require('into-stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const { waitForEvent, waitForStreamToEnd } = require('streamr-test-utils')
+const { waitForEvent, waitForStreamToEnd, toReadableStream } = require('streamr-test-utils')
 
 const { startNetworkNode, startStorageNode, startTracker } = require('../../src/composition')
 const { Event: NodeEvent } = require('../../src/logic/Node')
@@ -42,9 +41,9 @@ describe('resend requests are fulfilled at L3', () => {
             trackers: [tracker.getAddress()],
             storages: [{
                 store: () => {},
-                requestLast: () => intoStream.object([]),
-                requestFrom: () => intoStream.object([]),
-                requestRange: () => intoStream.object([]),
+                requestLast: () => toReadableStream(),
+                requestFrom: () => toReadableStream(),
+                requestRange: () => toReadableStream(),
             }]
         })
         neighborOne = await startNetworkNode({
@@ -54,9 +53,9 @@ describe('resend requests are fulfilled at L3', () => {
             trackers: [tracker.getAddress()],
             storages: [{
                 store: () => {},
-                requestLast: () => intoStream.object([]),
-                requestFrom: () => intoStream.object([]),
-                requestRange: () => intoStream.object([]),
+                requestLast: () => toReadableStream(),
+                requestFrom: () => toReadableStream(),
+                requestRange: () => toReadableStream(),
             }]
         })
         neighborTwo = await startNetworkNode({
@@ -73,7 +72,7 @@ describe('resend requests are fulfilled at L3', () => {
             trackers: [tracker.getAddress()],
             storages: [{
                 store: () => {},
-                requestLast: () => intoStream.object([
+                requestLast: () => toReadableStream(
                     new StreamMessage({
                         messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
                         prevMsgRef: new MessageRef(666, 50),
@@ -89,14 +88,14 @@ describe('resend requests are fulfilled at L3', () => {
                         prevMsgRef: new MessageRef(800, 0),
                         content: {},
                     }),
-                ]),
-                requestFrom: () => intoStream.object([
+                ),
+                requestFrom: () => toReadableStream(
                     new StreamMessage({
                         messageId: new MessageID('streamId', 0, 666, 0, 'publisherId', 'msgChainId'),
                         content: {},
                     }),
-                ]),
-                requestRange: () => intoStream.object([]),
+                ),
+                requestRange: () => toReadableStream(),
             }]
         })
 

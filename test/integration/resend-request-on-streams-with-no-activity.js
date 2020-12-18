@@ -1,6 +1,5 @@
-const intoStream = require('into-stream')
 const { StreamMessage, MessageID, MessageRef } = require('streamr-client-protocol').MessageLayer
-const { waitForEvent, waitForStreamToEnd } = require('streamr-test-utils')
+const { waitForEvent, waitForStreamToEnd, toReadableStream } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker, startStorageNode } = require('../../src/composition')
 const TrackerServer = require('../../src/protocol/TrackerServer')
@@ -21,7 +20,7 @@ describe('resend requests on streams with no activity', () => {
         subscriberTwo = await startNetworkNode('127.0.0.1', 32906, 'subscriberTwo')
         storageNode = await startStorageNode('127.0.0.1', 32907, 'storageNode', [{
             store: () => {},
-            requestLast: () => intoStream.object([
+            requestLast: () => toReadableStream(
                 new StreamMessage({
                     messageId: new MessageID('streamId', 0, 756, 0, 'publisherId', 'msgChainId'),
                     prevMsgRef: new MessageRef(666, 50),
@@ -37,14 +36,14 @@ describe('resend requests on streams with no activity', () => {
                     prevMsgRef: new MessageRef(800, 0),
                     content: {},
                 }),
-            ]),
-            requestFrom: () => intoStream.object([
+            ),
+            requestFrom: () => toReadableStream(
                 new StreamMessage({
                     messageId: new MessageID('streamId', 0, 666, 0, 'publisherId', 'msgChainId'),
                     content: {},
                 }),
-            ]),
-            requestRange: () => intoStream.object([]),
+            ),
+            requestRange: () => toReadableStream(),
         }])
 
         storageNode.addBootstrapTracker(tracker.getAddress())

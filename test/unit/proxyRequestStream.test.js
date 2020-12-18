@@ -1,4 +1,4 @@
-const intoStream = require('into-stream')
+const { toReadableStream } = require('streamr-test-utils')
 const {
     ResendResponseResending,
     ResendResponseNoResend,
@@ -26,7 +26,7 @@ describe('proxyRequestStream', () => {
     })
 
     it('empty requestStream causes only NoResend to be sent', (done) => {
-        const stream = intoStream.object([])
+        const stream = toReadableStream()
         proxyRequestStream(sendFn, request, stream)
         stream.on('end', () => {
             expect(sendFn.mock.calls).toEqual([
@@ -53,14 +53,14 @@ describe('proxyRequestStream', () => {
                 moi: 'maailma'
             },
         })
-        const stream = intoStream.object([
+        const stream = toReadableStream(
             new UnicastMessage({
                 requestId: 'requestId', streamMessage: firstMessage
             }),
             new UnicastMessage({
                 requestId: 'requestId', streamMessage: secondMessage
-            }),
-        ])
+            })
+        )
 
         proxyRequestStream(sendFn, request, stream)
 

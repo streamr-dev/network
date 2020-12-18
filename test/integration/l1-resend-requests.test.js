@@ -1,6 +1,5 @@
-const intoStream = require('into-stream')
 const { MessageLayer, ControlLayer } = require('streamr-client-protocol')
-const { waitForEvent, waitForStreamToEnd } = require('streamr-test-utils')
+const { waitForEvent, waitForStreamToEnd, toReadableStream } = require('streamr-test-utils')
 
 const { startNetworkNode, startTracker } = require('../../src/composition')
 const { Event: TrackerServerEvent } = require('../../src/protocol/TrackerServer')
@@ -37,7 +36,7 @@ describe('resend requests are fulfilled at L1', () => {
             trackers: [tracker.getAddress()],
             storages: [{
                 store: () => {},
-                requestLast: () => intoStream.object([
+                requestLast: () => toReadableStream(
                     new StreamMessage({
                         messageId: new MessageID('streamId', 0, 666, 50, 'publisherId', 'msgChainId'),
                         content: {},
@@ -52,14 +51,14 @@ describe('resend requests are fulfilled at L1', () => {
                         prevMsgRef: new MessageRef(756, 0),
                         content: {},
                     })
-                ]),
-                requestFrom: () => intoStream.object([
+                ),
+                requestFrom: () => toReadableStream(
                     new StreamMessage({
                         messageId: new MessageID('streamId', 0, 666, 50, 'publisherId', 'msgChainId'),
                         content: {},
                     }),
-                ]),
-                requestRange: () => intoStream.object([]),
+                ),
+                requestRange: () => toReadableStream(),
             }]
         })
         contactNode.start()
