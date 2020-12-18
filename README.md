@@ -101,14 +101,14 @@ openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 36500 -no
 
 ## Release
 
-Publishing to NPM is automated via Travis CI. Follow the steps below to publish.
+Publishing to NPM is automated via GitHub Actions. Follow the steps below to publish.
 
 1. `git checkout master && git pull`
 2. Update version with either `npm version patch`, `npm version minor`, or `npm version major`. Use semantic versioning
 https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
 3. `git push --follow-tags`
-4. Wait for Travis CI to run tests
-5. If tests passed, Travis CI will publish the new version to NPM
+4. Wait for GitHub Actions to run tests
+5. If tests passed, GitHub Actions will publish the new version to NPM
 
 ## Misc
 
