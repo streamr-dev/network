@@ -94,6 +94,14 @@ export const getEndpointUrl = (baseUrl, ...pathParts) => {
     return baseUrl + '/' + pathParts.map((part) => encodeURIComponent(part)).join('/')
 }
 
+function clearMatching(cache, matchFn) {
+    for (const key of cache.keys()) {
+        if (matchFn(key)) {
+            cache.delete(key)
+        }
+    }
+}
+
 /* eslint-disable object-curly-newline */
 
 /**
@@ -115,14 +123,18 @@ export function CacheAsyncFn(asyncFn, {
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
 } = {}) {
+    const cache = new LRU({
+        maxSize,
+    })
+
     const cachedFn = pMemoize(asyncFn, {
         maxAge,
         cachePromiseRejection,
-        cache: new LRU({
-            maxSize,
-        })
+        cache,
     })
+
     cachedFn.clear = () => pMemoize.clear(cachedFn)
+    cachedFn.clearMatching = (...args) => clearMatching(cache, ...args)
     return cachedFn
 }
 
@@ -144,13 +156,15 @@ export function CacheFn(fn, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
 } = {}) {
+    const cache = new LRU({
+        maxSize,
+    })
     const cachedFn = mem(fn, {
         maxAge,
-        cache: new LRU({
-            maxSize,
-        })
+        cache,
     })
     cachedFn.clear = () => mem.clear(cachedFn)
+    cachedFn.clearMatching = (...args) => clearMatching(cache, ...args)
     return cachedFn
 }
 
