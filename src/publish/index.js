@@ -151,25 +151,7 @@ async function getPublisherId(client) {
 function getCreateStreamMessage(client) {
     const cacheOptions = client.options.cache
     const computeStreamPartition = StreamPartitioner(cacheOptions)
-
-    // make cached stream & publisher details
-    const getCachedStream = CacheAsyncFn(client.getStream.bind(client), cacheOptions)
-    const getCachedPublisherId = CacheAsyncFn(getPublisherId.bind(null, client), cacheOptions)
-
-    // one MessageEncryptor per stream
-    const getMsgEncryptor = Object.assign(mem(Encrypt, {
-        cacheKey: (args) => {
-            const [, { streamId }] = args
-            if (typeof streamId !== 'string' || !streamId) {
-                throw new Error('getMsgEncryptor cacheKey: streamId must be defined')
-            }
-            return streamId
-        },
-    }), {
-        clear() {
-            mem.clear(getMsgEncryptor)
-        }
-    })
+    const encrypt = Encrypt(client)
 
     // one chainer per streamId + streamPartition + publisherId + msgChainId
     const getMsgChainer = Object.assign(mem(MessageChainer, {
@@ -229,10 +211,6 @@ function getCreateStreamMessage(client) {
                     ...opts
                 })
 
-            const encrypt = getMsgEncryptor(client, {
-                streamId,
-            })
-
             await encrypt(streamMessage, stream)
             // sign, noop if not needed
             await signStreamMessage(streamMessage)
@@ -243,20 +221,13 @@ function getCreateStreamMessage(client) {
 
     return Object.assign(createStreamMessage, {
         setNextGroupKey(maybeStreamId, newKey) {
-            const { streamId } = validateOptions(maybeStreamId)
-            return getMsgEncryptor(client, {
-                streamId,
-            }).setNextGroupKey(newKey)
+            return encrypt.setNextGroupKey(maybeStreamId, newKey)
         },
         rotateGroupKey(maybeStreamId) {
-            const { streamId } = validateOptions(maybeStreamId)
-            return getMsgEncryptor(client, {
-                streamId
-            }).rotateGroupKey()
+            return encrypt.rotateGroupKey(maybeStreamId)
         },
         clear() {
             computeStreamPartition.clear()
-            getMsgEncryptor.clear()
             getMsgChainer.clear()
             queue.clear()
         }

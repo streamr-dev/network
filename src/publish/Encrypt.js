@@ -6,11 +6,10 @@ import { PublisherKeyExhange } from '../stream/KeyExchange'
 const { StreamMessage } = MessageLayer
 
 export default function Encrypt(client) {
-    const publisherKeyExchange = PublisherKeyExhange(client) // old keys
-
+    const publisherKeyExchange = PublisherKeyExhange(client)
     async function encrypt(streamMessage, stream) {
         if (
-            !publisherKeyExchange.hasAnyGroupKey()
+            !publisherKeyExchange.hasAnyGroupKey(stream.id)
             && !stream.requireEncryptedData
         ) {
             // not needed
@@ -20,7 +19,7 @@ export default function Encrypt(client) {
         if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return
         }
-        const groupKey = await publisherKeyExchange.useGroupKey()
+        const groupKey = await publisherKeyExchange.useGroupKey(stream.id)
         await EncryptionUtil.encryptStreamMessage(streamMessage, groupKey)
     }
 

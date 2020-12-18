@@ -4,6 +4,7 @@ import mem from 'mem'
 import { uuid, Defer } from '../utils'
 import Scaffold from '../utils/Scaffold'
 
+import { validateOptions } from './utils'
 import EncryptionUtil, { GroupKey } from './Encryption'
 
 const {
@@ -186,7 +187,7 @@ async function catchKeyExchangeError(client, streamMessage, fn) {
     }
 }
 
-async function PublisherKeyExhangeSubscription(client, groupKeyStore) {
+async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
     async function onKeyExchangeMessage(parsedContent, streamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
             if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
@@ -198,6 +199,7 @@ async function PublisherKeyExhangeSubscription(client, groupKeyStore) {
 
             const subscriberId = streamMessage.getPublisherId()
 
+            const groupKeyStore = getGroupKeyStore(streamId)
             const encryptedGroupKeys = groupKeyIds.map((id) => {
                 const groupKey = groupKeyStore.get(id)
                 if (!groupKey) {
@@ -241,17 +243,21 @@ async function PublisherKeyExhangeSubscription(client, groupKeyStore) {
     return sub
 }
 
-export function PublisherKeyExhange(client, { groupKeys } = {}) {
+export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
     let enabled = true
-    const groupKeyStore = GroupKeyStore({
-        groupKeys,
+    const getGroupKeyStore = mem((streamId) => GroupKeyStore({
+        groupKeys: groupKeys[streamId],
+    }), {
+        cacheKey([maybeStreamId]) {
+            const { streamId } = validateOptions(maybeStreamId)
+            return streamId
+        }
     })
     let sub
     const next = Scaffold([
         async () => {
-            sub = await PublisherKeyExhangeSubscription(client, groupKeyStore)
+            sub = await PublisherKeyExhangeSubscription(client, getGroupKeyStore)
             return async () => {
-                groupKeyStore.clear()
                 if (!sub) { return }
                 const cancelTask = sub.cancel()
                 sub = undefined
@@ -260,32 +266,37 @@ export function PublisherKeyExhange(client, { groupKeys } = {}) {
         }
     ], () => enabled)
 
-    function rotateGroupKey() {
+    function rotateGroupKey(streamId) {
         if (!enabled) { return }
-
+        const groupKeyStore = getGroupKeyStore(streamId)
         groupKeyStore.rotateGroupKey()
     }
 
-    function setNextGroupKey(groupKey) {
+    function setNextGroupKey(streamId, groupKey) {
         if (!enabled) { return }
+        const groupKeyStore = getGroupKeyStore(streamId)
 
         groupKeyStore.setNextGroupKey(groupKey)
     }
 
-    async function useGroupKey() {
+    async function useGroupKey(streamId) {
         await next()
         if (!enabled) { return undefined }
+        const groupKeyStore = getGroupKeyStore(streamId)
 
         return groupKeyStore.useGroupKey()
+    }
+
+    function hasAnyGroupKey(streamId) {
+        const groupKeyStore = getGroupKeyStore(streamId)
+        return !groupKeyStore.isEmpty()
     }
 
     return {
         setNextGroupKey,
         useGroupKey,
-        hasAnyGroupKey() {
-            return !groupKeyStore.isEmpty()
-        },
         rotateGroupKey,
+        hasAnyGroupKey,
         async start() {
             enabled = true
             return next()
@@ -304,7 +315,7 @@ async function getGroupKeysFromStreamMessage(streamMessage, encryptionUtil) {
     )))
 }
 
-async function SubscriberKeyExhangeSubscription(client, groupKeyStore, encryptionUtil) {
+async function SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryptionUtil) {
     let sub
     async function onKeyExchangeMessage(parsedContent, streamMessage) {
         try {
@@ -315,6 +326,7 @@ async function SubscriberKeyExhangeSubscription(client, groupKeyStore, encryptio
             }
 
             const groupKeys = await getGroupKeysFromStreamMessage(streamMessage, encryptionUtil)
+            const groupKeyStore = getGroupKeyStore(streamMessage.getStreamId())
             groupKeys.forEach((groupKey) => {
                 groupKeyStore.add(groupKey)
             })
@@ -327,11 +339,17 @@ async function SubscriberKeyExhangeSubscription(client, groupKeyStore, encryptio
     return sub
 }
 
-export function SubscriberKeyExchange(client, { groupKeys } = {}) {
+export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
     let enabled = true
     const encryptionUtil = new EncryptionUtil(client.options.keyExchange)
-    const groupKeyStore = GroupKeyStore({
-        groupKeys,
+
+    const getGroupKeyStore = mem((streamId) => GroupKeyStore({
+        groupKeys: groupKeys[streamId],
+    }), {
+        cacheKey([maybeStreamId]) {
+            const { streamId } = validateOptions(maybeStreamId)
+            return streamId
+        }
     })
 
     let sub
@@ -414,7 +432,7 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
         if (!groupKeyId) {
             return Promise.resolve()
         }
-
+        const groupKeyStore = getGroupKeyStore(streamId)
         if (groupKeyStore.has(groupKeyId)) {
             return groupKeyStore.get(groupKeyId)
         }
@@ -470,11 +488,11 @@ export function SubscriberKeyExchange(client, { groupKeys } = {}) {
     const next = Scaffold([
         async () => {
             [sub] = await Promise.all([
-                SubscriberKeyExhangeSubscription(client, groupKeyStore, encryptionUtil),
+                SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryptionUtil),
                 encryptionUtil.onReady(),
             ])
             return async () => {
-                groupKeyStore.clear()
+                mem.clear(getGroupKeyStore)
                 if (!sub) { return }
                 const cancelTask = sub.cancel()
                 sub = undefined
