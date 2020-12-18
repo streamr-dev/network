@@ -213,8 +213,6 @@ stream to be closed.
 
 ## Release
 
-## Release
-
 Publishing to NPM is automated via Travis CI. Follow the steps below to publish stable (`latest`) or `beta`.
 
 ### Publishing stable (latest)
