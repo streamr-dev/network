@@ -2,7 +2,7 @@ import { EventEmitter } from "events"
 import getLogger from "../helpers/logger"
 import { Metrics, MetricsContext } from "../helpers/MetricsContext"
 import { TrackerServer, Event as TrackerServerEvent } from "../protocol/TrackerServer"
-import { OverlayTopology, TopologyState } from "./OverlayTopology"
+import { OverlayTopology } from "./OverlayTopology"
 import { InstructionCounter } from "./InstructionCounter"
 import { LocationManager } from "./LocationManager"
 import { attachRtcSignalling } from "./rtcSignallingHandlers"
@@ -13,6 +13,10 @@ import pino from "pino"
 
 type NodeId = string
 type StreamId = string
+
+export enum Event {
+    NODE_CONNECTED = 'streamr:tracker:node-connected'
+}
 
 export interface TrackerOptions {
     maxNeighborsPerNode: number
@@ -25,6 +29,10 @@ export interface TrackerOptions {
 
 // streamKey => overlayTopology, where streamKey = streamId::partition
 export type OverlayPerStream = { [key: string]: OverlayTopology }
+
+export interface Tracker {
+    on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
+}
 
 export class Tracker extends EventEmitter {
     private readonly maxNeighborsPerNode: number
@@ -92,6 +100,7 @@ export class Tracker extends EventEmitter {
         if (isStorage) {
             this.storageNodes.add(node)
         }
+        this.emit(Event.NODE_CONNECTED, node)
     }
 
     onNodeDisconnected(node: NodeId): void {

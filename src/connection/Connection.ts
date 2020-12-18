@@ -16,6 +16,7 @@ class QueueItem<M> {
     private readonly infos: Info[]
     public readonly no: number
     private tries: number
+    private failed: boolean
 
     constructor(message: M, onSuccess: () => void, onError: (err: Error) => void) {
         this.message = message
@@ -24,6 +25,7 @@ class QueueItem<M> {
         this.infos = []
         this.no = QueueItem.nextNumber++
         this.tries = 0
+        this.failed = false
     }
 
     getMessage(): M {
@@ -35,7 +37,7 @@ class QueueItem<M> {
     }
 
     isFailed(): boolean {
-        return this.tries >= QueueItem.MAX_TRIES
+        return this.failed
     }
 
     delivered(): void {
@@ -45,9 +47,17 @@ class QueueItem<M> {
     incrementTries(info: Info): void | never {
         this.tries += 1
         this.infos.push(info)
+        if (this.tries >= QueueItem.MAX_TRIES) {
+            this.failed = true
+        }
         if (this.isFailed()) {
             this.onError(new Error('Failed to deliver message.'))
         }
+    }
+
+    immediateFail(errMsg: string) {
+        this.failed = true
+        this.onError(new Error(errMsg))
     }
 }
 
@@ -399,16 +409,13 @@ export class Connection {
             } else {
                 try {
                     if (queueItem.getMessage().length > this.dataChannel!.maxMessageSize()) {
-                        this.messageQueue.pop()
-                        // TODO: replace with logger
-                        // TODO: Promise attached with message should reject!
-                        console.error(
-                            this.selfId,
-                            'Dropping message due to message size',
-                            queueItem.getMessage().length,
-                            'exceeding the limit of ',
-                            this.dataChannel!.maxMessageSize()
-                        )
+                        const queueItem = this.messageQueue.pop()
+                        const errorMessage = 'Dropping message due to size '
+                            + queueItem.getMessage().length
+                            + ' exceeding the limit of '
+                            + this.dataChannel!.maxMessageSize()
+                        queueItem.immediateFail(errorMessage)
+                        this.logger.warn(errorMessage)
                     } else if (this.dataChannel!.bufferedAmount() < this.bufferHighThreshold && !this.paused) {
                         // TODO: emit LOW_BUFFER_THRESHOLD if paused true (or somewhere else?)
                         this.dataChannel!.sendMessage(queueItem.getMessage())
