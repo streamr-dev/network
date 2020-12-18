@@ -24,13 +24,14 @@ function createClient(opts) {
     })
 }
 
-async function setupClientAndStream(opts) {
-    const client = createClient(opts)
+async function setupClientAndStream(clientOpts, streamOpts) {
+    const client = createClient(clientOpts)
     await client.connect()
     await client.session.getSessionToken()
 
     const stream = await client.createStream({
-        name: `test-stream.${process.pid}.${client.id}`,
+        name: `test-stream.${client.id}`,
+        ...streamOpts,
     })
     return [client, stream]
 }
@@ -54,9 +55,18 @@ async function run() {
 
     const [client2, stream2] = await setupClientAndStream({
         auth: {
-            apiKey: 'tester1-api-key'
+            privateKey: ethers.Wallet.createRandom().privateKey,
         },
         publishWithSignature: 'never',
+    })
+
+    const [client3, stream3] = await setupClientAndStream({
+        auth: {
+            privateKey: ethers.Wallet.createRandom().privateKey,
+        },
+        publishWithSignature: 'always',
+    }, {
+        requiresEncryption: true,
     })
 
     const suite = new Benchmark.Suite()
@@ -87,6 +97,15 @@ async function run() {
                 return publish(stream2, batchSize).then(() => deferred.resolve(), () => deferred.resolve())
             }
         })
+
+        suite.add(`client publishing in batches of ${batchSize} with encryption`, {
+            defer: true,
+            fn(deferred) {
+                this.BATCH_SIZE = batchSize
+                // eslint-disable-next-line promise/catch-or-return
+                return publish(stream3, batchSize).then(() => deferred.resolve(), () => deferred.resolve())
+            }
+        })
     })
 
     function toStringBench(bench) {
@@ -114,6 +133,7 @@ async function run() {
         await Promise.all([
             client1.disconnect(),
             client2.disconnect(),
+            client3.disconnect(),
         ])
         log('Clients disconnected')
     })
