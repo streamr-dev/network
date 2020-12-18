@@ -184,7 +184,9 @@ describe('Connection', () => {
         connectionOne.connect()
         connectionTwo.connect()
 
-        await waitForCondition(() => msgsReceivedByConnectionTwo.length >= 10)
+        await waitForCondition(() => msgsReceivedByConnectionTwo.length >= 10, undefined, undefined, () => {
+            return `expected msgsReceivedByConnectionTwo.length >= 10 but was ${msgsReceivedByConnectionTwo.length}`
+        })
         expect(msgsReceivedByConnectionTwo).toEqual([
             'msg-1', 'msg-2', 'msg-3', 'msg-4', 'msg-5', 'msg-6', 'msg-7', 'msg-8', 'msg-9', 'msg-10'
         ])
