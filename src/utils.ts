@@ -53,11 +53,17 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
  * no side-effects.
  * @param timeout amount of time in milliseconds to wait for
  * @param retryInterval how often, in milliseconds, to re-evaluate condition
+ * @param onTimeoutContext evaluated only on timeout. Used to associate human-friendly textual context to error.
  * @returns {Promise<void>} resolves immediately if
  * conditionFn evaluates to true on a retry attempt within timeout. If timeout
  * is reached with conditionFn never evaluating to true, rejects.
  */
-export const waitForCondition = (conditionFn: () => boolean, timeout = 5000, retryInterval = 100): Promise<void> => {
+export const waitForCondition = (
+    conditionFn: () => boolean,
+    timeout = 5000,
+    retryInterval = 100,
+    onTimeoutContext?: () => string
+): Promise<void> => {
     if (conditionFn()) {
         return Promise.resolve()
     }
@@ -66,6 +72,7 @@ export const waitForCondition = (conditionFn: () => boolean, timeout = 5000, ret
             timeOut: setTimeout(() => {
                 clearInterval(refs.interval)
                 reject(new AssertionError({
+                    actual: onTimeoutContext ? onTimeoutContext() : undefined,
                     message: `waitForCondition: timed out before "${conditionFn.toString()}" became true`,
                 }))
             }, timeout),
