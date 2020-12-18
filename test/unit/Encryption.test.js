@@ -96,46 +96,6 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
         })
 
-        it('StreamMessage gets encrypted with new key', () => {
-            const key = GroupKey.generate()
-            const newKey = GroupKey.generate()
-            const streamMessage = new StreamMessage({
-                messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
-                prevMesssageRef: null,
-                content: {
-                    foo: 'bar',
-                },
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-                signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
-                signature: null,
-            })
-            EncryptionUtil.encryptStreamMessageAndNewKey(newKey, streamMessage, key)
-            expect(streamMessage.getSerializedContent()).not.toStrictEqual('{"foo":"bar"}')
-            expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NEW_KEY_AND_AES)
-        })
-
-        it('StreamMessage decryption after encryption equals the initial StreamMessage (with new key)', () => {
-            const key = GroupKey.generate()
-            const newKey = GroupKey.generate()
-            const streamMessage = new StreamMessage({
-                messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
-                prevMesssageRef: null,
-                content: {
-                    foo: 'bar',
-                },
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
-                signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
-                signature: null,
-            })
-            EncryptionUtil.encryptStreamMessageAndNewKey(newKey, streamMessage, key)
-            const newKeyReceived = EncryptionUtil.decryptStreamMessage(streamMessage, key)
-            expect(newKeyReceived).toStrictEqual(newKey)
-            expect(streamMessage.getSerializedContent()).toStrictEqual('{"foo":"bar"}')
-            expect(streamMessage.encryptionType).toStrictEqual(StreamMessage.ENCRYPTION_TYPES.NONE)
-        })
-
         it('throws if invalid public key passed in the constructor', () => {
             const keys = crypto.generateKeyPairSync('rsa', {
                 modulusLength: 4096,
