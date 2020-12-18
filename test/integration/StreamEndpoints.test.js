@@ -123,13 +123,13 @@ function TestStreamEndpoints(getName) {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
-            expect(publishers).toEqual([client.publisher.signer.address.toLowerCase()])
+            expect(publishers).toEqual([(await client.getPublisherId()).toLowerCase()])
         })
     })
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, client.publisher.signer.address.toLowerCase())
+            const valid = await client.isStreamPublisher(createdStream.id, await client.getPublisherId())
             expect(valid).toBeTruthy()
         })
         it('returns false for invalid publishers', async () => {
@@ -141,13 +141,13 @@ function TestStreamEndpoints(getName) {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of publishers', async () => {
             const subscribers = await client.getStreamSubscribers(createdStream.id)
-            expect(subscribers).toEqual([client.publisher.signer.address.toLowerCase()])
+            expect(subscribers).toEqual([(await client.getPublisherId()).toLowerCase()])
         })
     })
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, client.publisher.signer.address.toLowerCase())
+            const valid = await client.isStreamSubscriber(createdStream.id, (await client.getPublisherId()).toLowerCase())
             expect(valid).toBeTruthy()
         })
         it('returns false for invalid subscribers', async () => {
@@ -222,9 +222,7 @@ function TestStreamEndpoints(getName) {
     describe('Stream deletion', () => {
         it('Stream.delete', async () => {
             await createdStream.delete()
-            await expect(async () => {
-                await client.getStream(createdStream.id)
-            }).rejects.toThrow()
+            expect(await client.getStream(createdStream.id)).toBe(undefined)
         })
     })
 }
