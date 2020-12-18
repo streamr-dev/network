@@ -129,7 +129,11 @@ jobs:
           npm install
           ./gradlew fatjar
           echo "Run streamr-client test"
-          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed -m test
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-unsigned
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-signed
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-signed
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-exchanged-rotating-signed
 
   publish:
     needs: [test, lint, integration, streamr-client-testing-tool]
