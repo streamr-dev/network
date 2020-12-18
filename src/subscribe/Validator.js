@@ -2,7 +2,7 @@ import { inspect } from 'util'
 
 import { MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
-import { CacheAsyncFn, pOrderedResolve } from '../utils'
+import { pOrderedResolve } from '../utils'
 import { validateOptions } from '../stream/utils'
 
 const { StreamMessageValidator } = Utils
@@ -31,20 +31,14 @@ export class SignatureRequiredError extends ValidationError {
 
 export default function Validator(client, opts) {
     const options = validateOptions(opts)
-    const cacheOptions = client.options.cache
-    const getStream = CacheAsyncFn(client.getStream.bind(client), cacheOptions)
-    const isPublisher = async (publisherId, _streamId) => (
-        client.isStreamPublisher(_streamId, publisherId)
-    )
-
-    const isSubscriber = async (ethAddress, _streamId) => (
-        client.isStreamSubscriber(_streamId, ethAddress)
-    )
-
     const validator = new StreamMessageValidator({
-        getStream,
-        isPublisher,
-        isSubscriber,
+        getStream: client.getStream.bind(client),
+        async isPublisher(publisherId, _streamId) {
+            return client.cached.isStreamPublisher(_streamId, publisherId)
+        },
+        async isSubscriber(ethAddress, _streamId) {
+            return client.cached.isStreamSubscriber(_streamId, ethAddress)
+        },
     })
 
     const validate = pOrderedResolve(async (msg) => {
@@ -75,7 +69,6 @@ export default function Validator(client, opts) {
             if (!key) {
                 validate.clear()
             }
-            getStream.clear(key)
         }
     })
 }

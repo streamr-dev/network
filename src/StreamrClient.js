@@ -3,7 +3,7 @@ import { Wallet } from 'ethers'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
-import { counterId, uuid } from './utils'
+import { counterId, uuid, CacheAsyncFn } from './utils'
 import Config from './Config'
 import Session from './Session'
 import Connection from './Connection'
@@ -38,6 +38,45 @@ class StreamrConnection extends Connection {
 
         this.debug('(%o) << %o', this.getState(), controlMessage)
         this.emit(controlMessage.type, controlMessage)
+    }
+}
+
+class StreamrCached {
+    constructor(client) {
+        this.client = client
+        const cacheOptions = client.options.cache
+        this.getStream = CacheAsyncFn(client.getStream.bind(client), {
+            ...cacheOptions,
+            cacheKey([streamId]) {
+                return streamId
+            }
+        })
+        this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
+        this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
+            ...cacheOptions,
+            cacheKey([streamId, ethAddress]) {
+                return `${streamId}|${ethAddress}`
+            }
+        })
+
+        this.isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), {
+            ...cacheOptions,
+            cacheKey([streamId, ethAddress]) {
+                return `${streamId}|${ethAddress}`
+            }
+        })
+
+        this.getPublisherId = CacheAsyncFn(client.getPublisherId.bind(client), cacheOptions)
+    }
+
+    clearStream(streamId) {
+        this.getStream.clear()
+        this.isStreamPublisher.clearMatching((s) => s.startsWith(streamId))
+        this.isStreamSubscriber.clearMatching((s) => s.startsWith(streamId))
+    }
+
+    clearUser() {
+        this.getUserInfo.clear()
     }
 }
 
@@ -76,6 +115,7 @@ export default class StreamrClient extends EventEmitter {
 
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
+        this.cached = new StreamrCached(this)
     }
 
     async onConnectionConnected() {

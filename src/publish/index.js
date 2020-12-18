@@ -111,7 +111,7 @@ async function getUsername(client) {
     const { options: { auth = {} } = {} } = client
     if (auth.username) { return auth.username }
 
-    const { username, id } = await client.getUserInfo()
+    const { username, id } = await client.cached.getUserInfo()
     return (
         username
         // edge case: if auth.apiKey is an anonymous key, userInfo.id is that anonymous key
@@ -205,8 +205,8 @@ function getCreateStreamMessage(client) {
         return queue(streamId, async () => {
             // load cached stream + publisher details
             const [stream, publisherId] = await Promise.all([
-                getCachedStream(streamId),
-                getCachedPublisherId(client),
+                client.cached.getStream(streamId),
+                client.cached.getPublisherId(client),
             ])
 
             // figure out partition
@@ -242,7 +242,6 @@ function getCreateStreamMessage(client) {
     }
 
     return Object.assign(createStreamMessage, {
-        getCachedPublisherId,
         setNextGroupKey(maybeStreamId, newKey) {
             const { streamId } = validateOptions(maybeStreamId)
             return getMsgEncryptor(client, {
@@ -257,9 +256,7 @@ function getCreateStreamMessage(client) {
         },
         clear() {
             computeStreamPartition.clear()
-            getCachedStream.clear()
             getMsgEncryptor.clear()
-            getCachedPublisherId.clear()
             getMsgChainer.clear()
             queue.clear()
         }
@@ -375,7 +372,7 @@ export default function Publisher(client) {
             createStreamMessage.clear()
         },
         async getPublisherId() {
-            return createStreamMessage.getCachedPublisherId()
+            return getPublisherId(client)
         },
         rotateGroupKey(streamId) {
             return createStreamMessage.rotateGroupKey(streamId)
