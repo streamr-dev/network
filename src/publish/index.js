@@ -5,8 +5,8 @@ import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
 import mem from 'mem'
 
-import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
-import { waitForRequestResponse, validateOptions } from '../stream/utils'
+import { uuid, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
+import { waitForRequestResponse } from '../stream/utils'
 
 import Signer from './Signer'
 import Encrypt from './Encrypt'
