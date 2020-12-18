@@ -211,9 +211,11 @@ describeRepeats('Connection State', () => {
 
                 expect(msgs).toEqual(published)
 
+                await wait(1000) // TODO: remove timeout
+
                 // check disconnect/connect actually happened
                 expect(onConnected).toHaveBeenCalledTimes(1)
-                expect(onDisconnected).toHaveBeenCalledTimes(0)
+                expect(onDisconnected).toHaveBeenCalledTimes(1)
                 expect(onConnectedOther).toHaveBeenCalledTimes(sockets.size + 1)
                 expect(onDisconnectedOther).toHaveBeenCalledTimes(sockets.size)
             } finally {
