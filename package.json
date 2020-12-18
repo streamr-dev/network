@@ -1,6 +1,6 @@
 {
   "name": "streamr-test-utils",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "a collection of Node.js utilities for dealing with asynchronous behavior in jest/mocha tests",
   "main": "./dist/utils.js",
   "types": "./dist/utils.d.ts",
