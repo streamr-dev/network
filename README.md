@@ -5,6 +5,7 @@ A collection of Node.js utilities for dealing with asynchronous behavior in jest
 - [Install](#install)
 - [Use](#use)
 - [Best Practices](#best-practices)
+- [Release](#release)
 
 ## Install
 In your Node.js project run
@@ -208,3 +209,18 @@ It would seem like the best order in which to use the control flow utilities is 
 stream to be closed.
     - In some use cases you may only be interested in waiting for the stream to end. You don't have to examine the
     contents of the stream.
+
+
+## Release
+
+## Release
+
+Publishing to NPM is automated via Travis CI. Follow the steps below to publish stable (`latest`) or `beta`.
+
+### Publishing stable (latest)
+1. `git checkout master && git pull`
+2. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
+https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
+3. `git push --follow-tags`
+4. Wait for Travis CI to run tests
+5. If tests passed, Travis CI will publish the new version to NPM
