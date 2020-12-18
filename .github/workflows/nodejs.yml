@@ -115,7 +115,7 @@ jobs:
            git clone https://github.com/streamr-dev/streamr-docker-dev.git
           fi
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start smart-contracts-init nginx engine-and-editor --wait
+          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
           echo "Testing Tool setup"
           git clone https://github.com/streamr-dev/streamr-client-testing.git
           cd ${GITHUB_WORKSPACE}/streamr-client-testing
