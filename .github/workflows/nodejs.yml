@@ -26,14 +26,12 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-    steps:
       - name: npm ci
         run: npm ci
-    - uses: actions/upload-artifact@v2
-      with:
-        name: install-${{ matrix.node-version }}
-        path: ${{ github.workspace }}
-
+      - uses: actions/upload-artifact@v2
+        with:
+          name: install-${{ matrix.node-version }}
+          path: ${{ github.workspace }}
 
   build:
     needs: [install]
@@ -55,6 +53,7 @@ jobs:
       with:
         name: build-${{ matrix.node-version }}
         path: ${{ github.workspace }}
+
   lint:
     needs: [install]
     name: Run linter using Node 14.x
@@ -63,7 +62,6 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '14.x'
-
     steps:
       - uses: actions/setup-node@v1
         with:
@@ -78,7 +76,6 @@ jobs:
     name: Test Unit using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     needs: [lint, install]
-
     strategy:
       matrix:
         node-version: [12.x, 14.x]
@@ -90,7 +87,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: install-${{ matrix.node-version }}
-
       - name: test-unit
         run: npm run test-unit
 
