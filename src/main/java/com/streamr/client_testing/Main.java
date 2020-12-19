@@ -74,6 +74,8 @@ public class Main {
             testCorrectness = false;
         }
 
+        String streamName = cmd.getOptionValue("stream");
+
         Participants participants = new Participants(
                 Integer.parseInt(prop.getProperty("nbJavaPublishers")),
                 Integer.parseInt(prop.getProperty("nbJavaSubscribers")),
@@ -83,8 +85,9 @@ public class Main {
 
         try {
             Streams streams = new Streams(participants, restUrl, wsUrl, minInterval, maxInterval, maxMessages, testCorrectness);
-            streams.runTestBlocking(cmd.getOptionValue("stream"));
+            streams.runTestBlocking(streamName);
         } catch (Exception e) {
+            log.info("Error in {}.", streamName);
             log.fatal(e.getMessage(), e);
             System.exit(1);
         }

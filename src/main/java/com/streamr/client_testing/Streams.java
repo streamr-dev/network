@@ -80,12 +80,13 @@ public class Streams {
             throw new IllegalArgumentException("No test stream with name: " + name);
         }
         activeStreamTester = build(name, streams.get(name));
+        log.info("Starting {}...", name);
         activeStreamTester.start();
     }
 
     private StreamTester build(String name, Consumer<StreamTester> addParticipants) {
         StreamTester streamTester = new StreamTester(name, restApiUrl, websocketApiUrl, minInterval, maxInterval, maxMessages, testCorrectness);
-        log.info("Creating:\n{} Java publishers\n{} Java subscribers\n{} JS publishers\n{} JS subscribers",
+        log.info("Creating {}:\n{} Java publishers\n{} Java subscribers\n{} JS publishers\n{} JS subscribers", name,
                 ps.getNbJavaPublishers(), ps.getNbJavaSubscribers(), ps.getNbJavascriptPublishers(), ps.getNbJavascriptSubscribers());
         addParticipants.accept(streamTester);
         log.info("Created publishers and subscribers for {}", name);
