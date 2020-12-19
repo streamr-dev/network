@@ -18,6 +18,8 @@ jobs:
   build:
     name: Run build using Node 14
     runs-on: ubuntu-latest
+    env:
+        BUNDLE_ANALYSIS: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
