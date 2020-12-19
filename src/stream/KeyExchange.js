@@ -247,7 +247,7 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
 export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
     let enabled = true
     const getGroupKeyStore = mem((streamId) => GroupKeyStore({
-        groupKeys: groupKeys[streamId],
+        groupKeys: groupKeys[streamId] && Object.entries(groupKeys[streamId]),
     }), {
         cacheKey([maybeStreamId]) {
             const { streamId } = validateOptions(maybeStreamId)
@@ -345,7 +345,7 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
     const encryptionUtil = new EncryptionUtil(client.options.keyExchange)
 
     const getGroupKeyStore = mem((streamId) => GroupKeyStore({
-        groupKeys: groupKeys[streamId],
+        groupKeys: groupKeys[streamId] && Object.entries(groupKeys[streamId]),
     }), {
         cacheKey([maybeStreamId]) {
             const { streamId } = validateOptions(maybeStreamId)
