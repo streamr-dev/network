@@ -108,7 +108,7 @@ jobs:
           node-version: '12.x'
       - uses: actions/checkout@v1
       - name: streamr-client tool test
-        continue-on-error: true
+        continue-on-error: false
         run: |
           sudo service mysql stop
           if [ ! -d streamr-docker-dev ]; then # Skip clone on subsequent attemps.
