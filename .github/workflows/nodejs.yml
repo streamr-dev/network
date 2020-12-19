@@ -140,6 +140,7 @@ jobs:
           DEBUG: 'Streamr*'
           DEBUG_COLORS: 'yes'
         run: |
+          cd ${GITHUB_WORKSPACE}/streamr-client-testing
           echo "Run streamr-client test"
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-unsigned
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-signed
