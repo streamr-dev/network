@@ -109,6 +109,9 @@ jobs:
       - uses: actions/checkout@v1
       - name: streamr-client tool test
         continue-on-error: false
+        env:
+          DEBUG: 'Streamr*'
+          DEBUG_COLORS: 'yes'
         run: |
           sudo service mysql stop
           if [ ! -d streamr-docker-dev ]; then # Skip clone on subsequent attemps.
