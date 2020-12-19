@@ -4,27 +4,27 @@ env:
 on:
   push:
     tags:
-      - '*'
+      - "*"
     branches:
       - master
   pull_request:
     branches:
-      - '*'
+      - "*"
   schedule:
     # run every day at 00:00
-    - cron:  '0 0 * * *'
+    - cron: "0 0 * * *"
 
 jobs:
   build:
     name: Run build using Node 14
     runs-on: ubuntu-latest
     env:
-        BUNDLE_ANALYSIS: true
+      BUNDLE_ANALYSIS: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: "14.x"
       - name: npm ci
         run: npm ci
       - name: npm run build
@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: "14.x"
       - name: npm ci
         run: npm ci
       - name: npm run eslint
@@ -102,10 +102,12 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: "14.x"
       - uses: actions/download-artifact@v2
         with:
           name: build
+          path: dist
+      - run: tree -L 2 || ls -la
       - name: npm ci
         run: npm ci
       - uses: actions/checkout@v2
@@ -137,6 +139,7 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: build
+          path: dist
       - name: npm ci
         run: npm ci
       - uses: actions/checkout@v2
@@ -163,10 +166,11 @@ jobs:
       - name: Use Node.js 14
         uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
+          node-version: "14.x"
       - uses: actions/download-artifact@v2
         with:
           name: build
+          path: dist
       - uses: actions/checkout@v2
         with:
           repository: streamr-dev/streamr-docker-dev
@@ -192,8 +196,8 @@ jobs:
           ./gradlew fatjar
       - name: test
         env:
-          DEBUG: 'Streamr*'
-          DEBUG_COLORS: 'yes'
+          DEBUG: "Streamr*"
+          DEBUG_COLORS: "yes"
         run: |
           cd ${GITHUB_WORKSPACE}/streamr-client-testing
           echo "Run streamr-client test"
@@ -202,3 +206,4 @@ jobs:
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-signed
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-exchanged-rotating-signed
+
