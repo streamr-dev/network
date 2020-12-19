@@ -32,7 +32,7 @@ export class SignatureRequiredError extends ValidationError {
 export default function Validator(client, opts) {
     const options = validateOptions(opts)
     const validator = new StreamMessageValidator({
-        getStream: client.getStream.bind(client),
+        getStream: client.cached.getStream.bind(client.cached),
         async isPublisher(publisherId, _streamId) {
             return client.cached.isStreamPublisher(_streamId, publisherId)
         },
