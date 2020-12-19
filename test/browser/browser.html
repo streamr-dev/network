@@ -77,7 +77,8 @@ $('#publish').on('click', async () => {
         }
         await client.publish(stream.id, msg)
     }
-    setTimeout(() => $('#result').html(JSON.stringify(messages)), 1000)
+
+    setTimeout(() => $('#result').html(JSON.stringify(messages)), 3000)
 })
 
 $('#resend').on('click', async () => {
