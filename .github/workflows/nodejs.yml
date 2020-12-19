@@ -19,8 +19,8 @@ jobs:
     name: Run build using Node 14
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: '14.x'
       - name: npm ci
@@ -36,8 +36,8 @@ jobs:
     name: Run linter using Node 14.x
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: '14.x'
       - name: npm ci
@@ -53,8 +53,8 @@ jobs:
         node-version: [12.x, 14.x]
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - name: npm ci
@@ -72,16 +72,19 @@ jobs:
       WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - name: npm ci
         run: npm ci
+      - uses: actions/checkout@v2
+        with:
+          repository: streamr-dev/streamr-docker-dev
+          path: streamr-dev
       - name: setup streamr-dev
         run: |
           sudo service mysql stop
-          git clone https://github.com/streamr-dev/streamr-dev.git
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
       - name: test-integration
@@ -94,8 +97,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: '14.x'
       - uses: actions/download-artifact@v2
@@ -103,10 +106,13 @@ jobs:
           name: build
       - name: npm ci
         run: npm ci
+      - uses: actions/checkout@v2
+        with:
+          repository: streamr-dev/streamr-docker-dev
+          path: streamr-dev
       - name: setup streamr-dev
         run: |
           sudo service mysql stop
-          git clone https://github.com/streamr-dev/streamr-dev.git
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
       - name: test-browser
@@ -122,8 +128,8 @@ jobs:
         node-version: [12.x, 14.x]
 
     steps:
-      - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - uses: actions/download-artifact@v2
@@ -131,10 +137,13 @@ jobs:
           name: build
       - name: npm ci
         run: npm ci
+      - uses: actions/checkout@v2
+        with:
+          repository: streamr-dev/streamr-docker-dev
+          path: streamr-dev
       - name: setup streamr-dev
         run: |
           sudo service mysql stop
-          git clone https://github.com/streamr-dev/streamr-dev.git
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
       - name: benchmarks
@@ -148,30 +157,28 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v2
       - name: Use Node.js 14
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
           node-version: '14.x'
       - uses: actions/download-artifact@v2
         with:
-          name: build-14.x
+          name: build
+      - uses: actions/checkout@v2
+        with:
+          repository: streamr-dev/streamr-docker-dev
+          path: streamr-dev
+      - uses: actions/checkout@v2
+        with:
+          repository: streamr-dev/streamr-client-testing
+          path: streamr-client-testing
       - name: setup
         run: |
           sudo service mysql stop
-          if [ ! -d streamr-dev ]; then # Skip clone on subsequent attemps.
-           git clone https://github.com/streamr-dev/streamr-dev.git
-          fi
-          (cd ${GITHUB_WORKSPACE}/streamr-dev/ && git pull --rebase)
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
-          echo "Testing Tool setup"
-
-          if [ ! -d streamr-client-testing ]; then # Skip clone on subsequent attemps.
-            git clone https://github.com/streamr-dev/streamr-client-testing.git
-          fi
           cd ${GITHUB_WORKSPACE}/streamr-client-testing
-          git pull --rebase
           echo "Setup package.json to use PR JS client"
           sed -i "s/com.streamr:client:1.3.0/com.streamr:client:+/g" build.gradle
           sed -i "s/\"streamr-client\": \"\^3.1.2\"/\"streamr-client\":\"PATH\"/g" package.json
