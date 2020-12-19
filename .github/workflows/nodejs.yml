@@ -180,8 +180,8 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: '14.x'
+      - uses: actions/download-artifact@v2
       - name: setup
-        uses: actions/download-artifact@v2
         with:
           name: build-14.x
         run: |
