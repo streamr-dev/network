@@ -2,6 +2,7 @@ name: Lint, Unit, Integration Tests
 env:
   CI: true
   DEBUG_COLORS: true
+  DEBUG: "Streamr*"
 on:
   push:
     tags:
@@ -196,8 +197,6 @@ jobs:
           npm install
           ./gradlew fatjar
       - name: test
-        env:
-          DEBUG: "Streamr*"
         run: |
           cd ${GITHUB_WORKSPACE}/streamr-client-testing
           echo "Run streamr-client test"
