@@ -1,5 +1,6 @@
 name: Lint, Unit, Integration Tests
-
+env:
+  CI: true
 on:
   push:
     tags:

@@ -12,7 +12,7 @@ const { ControlMessage } = ControlLayer
 
 /* eslint-disable no-await-in-loop */
 
-const WAIT_FOR_STORAGE_TIMEOUT = 6000
+const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 12000 : 6000
 const MAX_MESSAGES = 5
 
 describeRepeats('resends', () => {
