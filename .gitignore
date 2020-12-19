@@ -39,3 +39,4 @@ examples/webpack/dist/*
 
 reports
 tests_outputbenchmarks.txt
+tests_output
