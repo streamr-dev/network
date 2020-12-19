@@ -1,6 +1,7 @@
 name: Lint, Unit, Integration Tests
 env:
   CI: true
+  DEBUG_COLORS: true
 on:
   push:
     tags:
@@ -197,7 +198,6 @@ jobs:
       - name: test
         env:
           DEBUG: "Streamr*"
-          DEBUG_COLORS: "yes"
         run: |
           cd ${GITHUB_WORKSPACE}/streamr-client-testing
           echo "Run streamr-client test"
