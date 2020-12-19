@@ -107,8 +107,7 @@ jobs:
         with:
           node-version: '14.x'
       - uses: actions/checkout@v1
-      - name: streamr-client tool test
-        continue-on-error: false
+      - name: setup
         env:
           DEBUG: 'Streamr*'
           DEBUG_COLORS: 'yes'
@@ -136,6 +135,11 @@ jobs:
           ## npm install is used because package-lock.json could be form a previous client version.
           npm install
           ./gradlew fatjar
+      - name: test
+        env:
+          DEBUG: 'Streamr*'
+          DEBUG_COLORS: 'yes'
+        run: |
           echo "Run streamr-client test"
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-unsigned
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-signed
