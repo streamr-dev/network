@@ -153,6 +153,7 @@ function waitForSubMessage(sub, matchFn) {
     // eslint-disable-next-line promise/catch-or-return
     task.finally(() => {
         sub.off('message', onMessage)
+        sub.off('error', task.reject)
     })
     return task
 }
