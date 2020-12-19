@@ -10,6 +10,10 @@ import Connection from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
 
+/**
+ * Wrap connection message events with message parsing.
+ */
+
 class StreamrConnection extends Connection {
     constructor(...args) {
         super(...args)
