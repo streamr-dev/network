@@ -34,7 +34,7 @@ jobs:
           path: ${{ github.workspace }}
 
   build:
-    needs: [install]
+    needs: install
     name: Run build using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -49,19 +49,15 @@ jobs:
           name: install-${{ matrix.node-version }}
       - name: npm run build
         run: npm run build
-    - uses: actions/upload-artifact@v2
-      with:
-        name: build-${{ matrix.node-version }}
-        path: ${{ github.workspace }}
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build-${{ matrix.node-version }}
+          path: ${{ github.workspace }}
 
   lint:
-    needs: [install]
+    needs: install
     name: Run linter using Node 14.x
     runs-on: ubuntu-latest
-    - name: Use Node.js 14
-      uses: actions/setup-node@v1
-      with:
-        node-version: '14.x'
     steps:
       - uses: actions/setup-node@v1
         with:
