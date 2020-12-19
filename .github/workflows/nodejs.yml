@@ -109,7 +109,6 @@ jobs:
         with:
           name: build
           path: dist
-      - run: tree -L 2 || ls -la
       - name: npm ci
         run: npm ci
       - uses: actions/checkout@v2
@@ -200,9 +199,9 @@ jobs:
         run: |
           cd ${GITHUB_WORKSPACE}/streamr-client-testing
           echo "Run streamr-client test"
-          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-unsigned
-          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-signed
-          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-signed
-          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed
-          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-exchanged-rotating-signed
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-unsigned -n 10
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-cleartext-signed -n 10
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-signed -n 10
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed -n 10
+          java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-exchanged-rotating-signed -n 10
 
