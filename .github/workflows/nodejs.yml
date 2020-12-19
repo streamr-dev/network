@@ -1,4 +1,4 @@
-name: Test, lint & Publish
+name: Lint, Unit, Integration Tests
 
 on:
   push:
@@ -227,37 +227,3 @@ jobs:
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-signed
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-shared-rotating-signed
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-exchanged-rotating-signed
-
-  publish:
-    needs: [test, lint, integration, benchmarks, browser, streamr-client-testing-tool]
-    name: Publishing master using Node 14
-    runs-on: ubuntu-latest
-
-    # run job only for tags and skip for cron
-    if: startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
-    steps:
-      - name: Get the release version
-        id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 14
-          registry-url: https://registry.npmjs.org/
-      - uses: actions/download-artifact@v2
-        with:
-          name: build-14.x
-
-      - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
-        # if tag includes beta keyword
-        if: contains(steps.get_version.outputs.VERSION, 'beta') == true
-        run: npm publish --tag beta
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish latest ${{ steps.get_version.outputs.VERSION }}
-        # if tag doesn't include beta keyword
-        if: contains(steps.get_version.outputs.VERSION, 'beta') == false
-        run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
