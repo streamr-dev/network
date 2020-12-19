@@ -94,7 +94,7 @@ jobs:
       - name: test-integration
         run: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
       - name: test-flakey
-        run: npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
+        run: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
 
   browser:
     name: Test Browser using Node 14.x
@@ -153,7 +153,11 @@ jobs:
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
       - name: benchmarks
-        run: npm run benchmarks
+        run: npm run benchmarks > benchmarks.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: benchmarks
+          path: benchmarks.txt
 
       - name: test-flakey
         continue-on-error: true

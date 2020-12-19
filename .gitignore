@@ -38,4 +38,4 @@ examples/webpack/dist/*
 .idea/dataSources*
 
 reports
-tests_output
+tests_outputbenchmarks.txt
