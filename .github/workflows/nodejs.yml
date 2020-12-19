@@ -14,48 +14,89 @@ on:
     - cron:  '0 0 * * *'
 
 jobs:
-  lint:
-    name: Run linter using Node 12
+  install:
+    name: Install using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x]
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
-
+          node-version: ${{ matrix.node-version }}
+    steps:
       - name: npm ci
         run: npm ci
+    - uses: actions/upload-artifact@v2
+      with:
+        name: install-${{ matrix.node-version }}
+        path: ${{ github.workspace }}
 
+
+  build:
+    needs: [install]
+    name: Run build using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x]
+    steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: install-${{ matrix.node-version }}
+      - name: npm run build
+        run: npm run build
+    - uses: actions/upload-artifact@v2
+      with:
+        name: build-${{ matrix.node-version }}
+        path: ${{ github.workspace }}
+  lint:
+    needs: [install]
+    name: Run linter using Node 14.x
+    runs-on: ubuntu-latest
+    - name: Use Node.js 14
+      uses: actions/setup-node@v1
+      with:
+        node-version: '14.x'
+
+    steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - uses: actions/download-artifact@v2
+        with:
+          name: install-14.x
       - name: npm run eslint
         run: npm run eslint
 
   test:
-    name: Test Unit/Build using Node ${{ matrix.node-version }}
+    name: Test Unit using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    needs: [lint, install]
 
     strategy:
       matrix:
         node-version: [12.x, 14.x]
 
     steps:
-      - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-
-      - name: npm ci
-        run: npm ci
+      - uses: actions/download-artifact@v2
+        with:
+          name: install-${{ matrix.node-version }}
 
       - name: test-unit
         run: npm run test-unit
 
-      - name: build
-        run: npm run build
-
   integration:
-    name: Test Build/Benchmark/Browser Integration using Node ${{ matrix.node-version }}
+    name: Test Integration using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    needs: [test, lint, build]
 
     strategy:
       matrix:
@@ -64,61 +105,100 @@ jobs:
       WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
 
     steps:
-      - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: build-${{ matrix.node-version }}
 
-      - name: setup streamr-docker-dev
+      - name: setup streamr-dev
         run: |
           sudo service mysql stop
-          git clone https://github.com/streamr-dev/streamr-docker-dev.git
+          git clone https://github.com/streamr-dev/streamr-dev.git
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
+          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
+      - name: test-integration
+        run: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
+      - name: test-flakey
+        run: npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
 
-      - name: npm ci
-        run: npm ci
+  browser:
+    name: Test Benchmark/Browser Integration using Node 14.x
+    runs-on: ubuntu-latest
+    needs: [test, lint, build]
 
-      - name: build
-        run: npm run build
+    strategy:
+      matrix:
+        node-version: 14.x
 
+    steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - uses: actions/download-artifact@v2
+        with:
+          name: build-14.x
+
+      - name: setup streamr-dev
+        run: |
+          sudo service mysql stop
+          git clone https://github.com/streamr-dev/streamr-dev.git
+          sudo ifconfig docker0 10.200.10.1/24
+          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
       - name: test-browser
         run: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-browser
 
+  benchmarks:
+    name: Test Benchmark using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    needs: [test, lint, build]
+
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x]
+
+    steps:
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: build-${{ matrix.node-version }}
+
+      - name: setup streamr-dev
+        run: |
+          sudo service mysql stop
+          git clone https://github.com/streamr-dev/streamr-dev.git
+          sudo ifconfig docker0 10.200.10.1/24
+          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
       - name: benchmarks
         run: npm run benchmarks
-
-      - name: test-integration
-        run: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
 
       - name: test-flakey
         continue-on-error: true
         run: npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
-      - name: test-flakey
-        run: npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
-
   streamr-client-testing-tool:
-    needs: [test, lint]
+    needs: [test, lint, build]
     runs-on: ubuntu-latest
     steps:
       - name: Use Node.js 14
         uses: actions/setup-node@v1
         with:
           node-version: '14.x'
-      - uses: actions/checkout@v1
       - name: setup
-        env:
-          DEBUG: 'Streamr*'
-          DEBUG_COLORS: 'yes'
+        uses: actions/download-artifact@v2
+        with:
+          name: build-14.x
         run: |
           sudo service mysql stop
-          if [ ! -d streamr-docker-dev ]; then # Skip clone on subsequent attemps.
-           git clone https://github.com/streamr-dev/streamr-docker-dev.git
+          if [ ! -d streamr-dev ]; then # Skip clone on subsequent attemps.
+           git clone https://github.com/streamr-dev/streamr-dev.git
           fi
-          (cd ${GITHUB_WORKSPACE}/streamr-docker-dev/ && git pull --rebase)
+          (cd ${GITHUB_WORKSPACE}/streamr-dev/ && git pull --rebase)
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
+          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
           echo "Testing Tool setup"
 
           if [ ! -d streamr-client-testing ]; then # Skip clone on subsequent attemps.
@@ -149,8 +229,8 @@ jobs:
           java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s stream-encrypted-exchanged-rotating-signed
 
   publish:
-    needs: [test, lint, integration, streamr-client-testing-tool]
-    name: Publishing master using Node 12
+    needs: [test, lint, integration, benchmarks, browser, streamr-client-testing-tool]
+    name: Publishing master using Node 14
     runs-on: ubuntu-latest
 
     # run job only for tags and skip for cron
@@ -160,17 +240,13 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
-      - uses: actions/checkout@master
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 14
           registry-url: https://registry.npmjs.org/
-
-      - name: npm ci
-        run: npm ci
-
-      - name: build
-        run: npm run build --if-present
+      - uses: actions/download-artifact@v2
+        with:
+          name: build-14.x
 
       - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
         # if tag includes beta keyword
