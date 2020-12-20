@@ -211,7 +211,7 @@ jobs:
         run: |
           echo "Setup package.json to use PR JS client"
           sed -i "s/com.streamr:client:1.3.0/com.streamr:client:+/g" build.gradle
-          sed -i "s/\"streamr-client\": \"\^3.1.2\"/\"streamr-client\":\"PATH\"/g" package.json
+          sed -i "s/\"streamr-client\": \"latest\"/\"streamr-client\":\"PATH\"/g" package.json
           ## fix for escaping / of workspace path
           sed -i "s|"PATH"|"${GITHUB_WORKSPACE}"|g" package.json
           echo "Prepare for test"
