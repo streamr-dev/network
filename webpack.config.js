@@ -10,8 +10,11 @@ const TerserPlugin = require('terser-webpack-plugin')
 const { merge } = require('webpack-merge')
 const nodeExternals = require('webpack-node-externals')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+const GitRevisionPlugin = require('git-revision-webpack-plugin')
 
 const pkg = require('./package.json')
+
+const gitRevisionPlugin = new GitRevisionPlugin()
 
 const libraryName = pkg.name
 
@@ -64,6 +67,12 @@ module.exports = (env, argv) => {
             new webpack.DefinePlugin({
                 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
             }),
+            gitRevisionPlugin,
+            new webpack.DefinePlugin({
+                GIT_VERSION: JSON.stringify(gitRevisionPlugin.version()),
+                GIT_COMMITHASH: JSON.stringify(gitRevisionPlugin.commithash()),
+                GIT_BRANCH: JSON.stringify(gitRevisionPlugin.branch()),
+            })
         ]
     }
 

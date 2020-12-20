@@ -96,11 +96,16 @@ export default class StreamrClient extends EventEmitter {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
-
         this.options = Config({
             id: this.id,
             debug: this.debug,
             ...options,
+        })
+
+        this.debug('new StreamrClient %s: %o', this.id, {
+            GIT_VERSION: process.env.GIT_VERSION,
+            GIT_COMMITHASH: process.env.GIT_COMMITHASH,
+            GIT_BRANCH: process.env.GIT_BRANCH,
         })
 
         // bind event handlers
