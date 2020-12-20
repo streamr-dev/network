@@ -172,6 +172,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         test-name:
           - stream-cleartext-unsigned
