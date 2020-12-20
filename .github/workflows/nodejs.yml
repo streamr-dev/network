@@ -90,17 +90,19 @@ jobs:
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
       - uses: nick-invision/retry@v2
-        id: test-integration
-        max_attempts: 3
-        timeout-minutes: 20
-        retry_on: error
-        command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
+        with:
+          id: test-integration
+          max_attempts: 3
+          timeout-minutes: 20
+          retry_on: error
+          command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
       - uses: nick-invision/retry@v2
-        id: test-flakey
-        timeout-minutes: 20
-        max_attempts: 3
-        retry_on: error
-        command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
+        with:
+          id: test-flakey
+          timeout-minutes: 20
+          max_attempts: 3
+          retry_on: error
+          command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
 
   browser:
     name: Test Browser using Node 14.x
