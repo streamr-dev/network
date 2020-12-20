@@ -45,7 +45,7 @@ export default class SigningUtil {
         }
         const pubKeyWithoutFirstByte = publicKeyBuffer.subarray(1, publicKeyBuffer.length)
         keccak.reset()
-        keccak.update(pubKeyWithoutFirstByte)
+        keccak.update(Buffer.from(pubKeyWithoutFirstByte))
         const hashOfPubKey = keccak.digest('binary')
         return '0x' + hashOfPubKey.subarray(12, hashOfPubKey.length).toString('hex')
     }
