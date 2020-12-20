@@ -93,13 +93,13 @@ jobs:
         with:
           id: test-integration
           max_attempts: 3
-          timeout-minutes: 20
+          timeout_minutes: 20
           retry_on: error
           command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
       - uses: nick-invision/retry@v2
         with:
           id: test-flakey
-          timeout-minutes: 20
+          timeout_minutes: 20
           max_attempts: 3
           retry_on: error
           command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
@@ -221,7 +221,7 @@ jobs:
           ./gradlew fatjar
       - uses: nick-invision/retry@v2
         with:
-          timeout-minutes: 10
+          timeout_minutes: 10
           max_attempts: 3
           retry_on: error
           command: cd streamr-client-testing && java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -n $NUM_MESSAGES
