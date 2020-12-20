@@ -215,6 +215,7 @@ jobs:
           ## fix for escaping / of workspace path
           sed -i "s|"PATH"|"${GITHUB_WORKSPACE}"|g" package.json
           echo "Prepare for test"
+          cat package.json
           ## npm install is used because package-lock.json could be form a previous client version.
           npm install
           ./gradlew fatjar
