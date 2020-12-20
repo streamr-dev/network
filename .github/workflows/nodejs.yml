@@ -93,13 +93,13 @@ jobs:
         with:
           id: test-integration
           max_attempts: 3
-          timeout_minutes: 20
+          timeout_minutes: 40
           retry_on: error
           command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
       - uses: nick-invision/retry@v2
         with:
           id: test-flakey
-          timeout_minutes: 20
+          timeout_minutes: 40
           max_attempts: 3
           retry_on: error
           command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
