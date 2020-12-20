@@ -225,6 +225,6 @@ jobs:
       - uses: nick-invision/retry@v2
         with:
           timeout_minutes: 10
-          max_attempts: 3
+          max_attempts: 5
           retry_on: error
           command: cd streamr-client-testing && java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -n $NUM_MESSAGES
