@@ -92,7 +92,7 @@
     "qs": "^6.9.4",
     "quick-lru": "^5.1.1",
     "readable-stream": "^3.6.0",
-    "streamr-client-protocol": "^7.1.1",
+    "streamr-client-protocol": "^7.1.2",
     "uuid": "^8.3.1",
     "webpack-node-externals": "^2.5.2",
     "ws": "^7.4.0"
