@@ -209,12 +209,21 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
 
                 return new EncryptedGroupKey(id, EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true))
             }).filter(Boolean)
+
+            client.debug('Publisher: Subscriber requested groupKeys: %d. Got: %d. %o', groupKeyIds.length, encryptedGroupKeys.length, {
+                subscriberId,
+                groupKeyIds,
+                responseKeys: encryptedGroupKeys.map(({ groupKeyId }) => groupKeyId),
+            })
+
             const response = new GroupKeyResponse({
                 streamId,
                 requestId,
                 encryptedGroupKeys,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             })
+
+            // hack overriding toStreamMessage method to set correct encryption type
             const toStreamMessage = response.toStreamMessage.bind(response)
             response.toStreamMessage = (...args) => {
                 const msg = toStreamMessage(...args)
