@@ -168,7 +168,7 @@ jobs:
           path: benchmarks.txt
 
   streamr-client-testing-tool:
-    name: client-testing-tool ${{ matrix.test-name }}
+    name: ${{ matrix.test-name }}
     needs: build
     runs-on: ubuntu-latest
     strategy:
