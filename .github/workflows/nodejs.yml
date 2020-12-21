@@ -179,6 +179,13 @@ jobs:
           - stream-encrypted-shared-signed
           - stream-encrypted-shared-rotating-signed
           - stream-encrypted-exchanged-rotating-signed
+        config-name:
+          - default
+          - js-only
+          - java-only
+          - realtime-only
+          - js-realtime-only
+          - java-realtime-only
     env:
         NUM_MESSAGES: 10
         TEST_NAME: ${{ matrix.test-name }}
@@ -226,4 +233,4 @@ jobs:
           timeout_minutes: 10
           max_attempts: 5
           retry_on: error
-          command: cd streamr-client-testing && java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -n $NUM_MESSAGES
+          command: cd streamr-client-testing && java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/${CONFIG_NAME}.conf -n $NUM_MESSAGES
