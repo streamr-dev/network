@@ -93,13 +93,8 @@ jobs:
           sudo service mysql stop
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
-      - uses: nick-invision/retry@v2
-        name: Run Test
-        with:
-          max_attempts: 2
-          timeout_minutes: 60
-          retry_on: error
-          command: npm run test-integration -- --maxWorkers=1
+      - name: Run Test
+          run: npm run test-integration -- --maxWorkers=1
   flakey:
     name: Flakey Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
@@ -130,7 +125,7 @@ jobs:
         name: Run Test
         with:
           max_attempts: 2
-          timeout_minutes: 60
+          timeout_minutes: 15
           retry_on: error
           command: npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
