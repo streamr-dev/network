@@ -167,7 +167,7 @@ jobs:
           path: benchmarks.txt
 
   streamr-client-testing-tool:
-    name: ${{ matrix.test-name }}
+    name: ${{ matrix.config-name }} ${{ matrix.test-name }}
     needs: build
     runs-on: ubuntu-latest
     strategy:
@@ -189,6 +189,7 @@ jobs:
     env:
         NUM_MESSAGES: 10
         TEST_NAME: ${{ matrix.test-name }}
+        CONFIG_NAME: ${{ matrix.config-name }}
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14
@@ -233,4 +234,4 @@ jobs:
           timeout_minutes: 10
           max_attempts: 5
           retry_on: error
-          command: cd streamr-client-testing && java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/${CONFIG_NAME}.conf -n $NUM_MESSAGES
+          command: cd streamr-client-testing && java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
