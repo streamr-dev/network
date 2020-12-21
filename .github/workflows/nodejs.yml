@@ -94,7 +94,7 @@ jobs:
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
       - name: Run Test
-          run: npm run test-integration -- --maxWorkers=1
+        run: npm run test-integration -- --maxWorkers=1
   flakey:
     name: Flakey Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
