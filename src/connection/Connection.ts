@@ -305,8 +305,9 @@ export class Connection {
                 this.logger.debug('failed to ping connection, error %s, re-attempting', e)
                 this.peerPingTimeoutRef = setTimeout(() => this.ping(attempt + 1), this.pingPongTimeout)
             } else {
-                this.logger.warn('failed all ping re-attempts to connection, terminating connection', e)
+                this.logger.warn('failed all ping re-attempts to connection, reattempting connection', e)
                 this.close(new Error('ping attempts failed'))
+                this.connect()
             }
         }
     }
@@ -322,8 +323,9 @@ export class Connection {
                 this.logger.debug('failed to pong connection, error %s, re-attempting', e)
                 this.peerPongTimeoutRef = setTimeout(() => this.pong(attempt + 1), this.pingPongTimeout)
             } else {
-                this.logger.warn('failed all pong re-attempts to connection, terminating connection', e)
+                this.logger.warn('failed all pong re-attempts to connection, reattempting connection', e)
                 this.close(new Error('pong attempts failed'))
+                this.connect()
             }
         }
     }
