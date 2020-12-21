@@ -55,7 +55,6 @@ jobs:
     strategy:
       matrix:
         node-version: [12.x, 14.x]
-
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -68,11 +67,18 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: Test Integration using Node ${{ matrix.node-version }}
+    name: ${{ matrix.node-version }} ${{ test-command }} Integration Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [12.x, 14.x]
+        test-command:
+          - npm run test-integration -- --maxWorkers=1
+          - npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
+    env:
+        TEST_COMMAND: ${{ matrix.test-command }}
+        WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
+
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -90,19 +96,12 @@ jobs:
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
       - uses: nick-invision/retry@v2
+        name: Run Test
         with:
-          id: test-integration
           max_attempts: 3
-          timeout_minutes: 40
+          timeout_minutes: 30
           retry_on: error
-          command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws DEBUG=Streamr* npm run test-integration -- --maxWorkers=1
-      - uses: nick-invision/retry@v2
-        with:
-          id: test-flakey
-          timeout_minutes: 40
-          max_attempts: 3
-          retry_on: error
-          command: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
+          command: $TEST_COMMAND
 
   browser:
     name: Test Browser using Node 14.x
