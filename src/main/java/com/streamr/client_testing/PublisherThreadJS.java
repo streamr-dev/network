@@ -33,7 +33,7 @@ public class PublisherThreadJS extends PublisherThread {
         super(interval);
         this.publisher = publisher;
 
-        command = String.format("node publisher.js %s %s %s %s %s %s",
+        command = String.format("node --enable-source-maps publisher.js %s %s %s %s %s %s",
                 publisher.getPrivateKey(),
                 stream.getId(),
                 publishFunction.getName(),

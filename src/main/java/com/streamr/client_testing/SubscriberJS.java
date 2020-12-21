@@ -30,7 +30,7 @@ public class SubscriberJS extends Subscriber {
     public SubscriberJS(StreamrClientJS subscriber, Stream stream, ResendOption resendOption) {
         this.subscriber = subscriber;
         String groupKeyAsJson = subscriber.getGroupKey() == null ? "" : Utils.groupKeyToJson(subscriber.getGroupKey());
-        command = "node subscriber.js " + subscriber.getPrivateKey() + " "
+        command = "node --enable-source-maps subscriber.js " + subscriber.getPrivateKey() + " "
                 + stream.getId() + " " + resendOptionToJson(resendOption) + " " + groupKeyAsJson;
         thread = new Thread(this::executeNode);
         thread.setName("JS-sub-" + getSubscriberId().toString().substring(0, 6));
