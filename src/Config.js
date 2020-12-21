@@ -21,6 +21,7 @@ export default function ClientConfig(opts = {}) {
         autoDisconnect: true,
         orderMessages: true,
         auth: {},
+        groupKeys: {},
         publishWithSignature: 'auto',
         verifySignatures: 'auto',
         retryResendAfter: 5000,

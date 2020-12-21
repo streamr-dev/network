@@ -28,6 +28,7 @@ class InvalidGroupKeyRequestError extends ValidationError {
         }
     }
 }
+
 /*
 class InvalidGroupKeyResponseError extends Error {
     constructor(...args) {
@@ -135,6 +136,13 @@ function GroupKeyStore({ groupKeys }) {
             nextGroupKey = newKey
         }
     }
+}
+
+function parseGroupKeys(groupKeys = {}) {
+    return new Map(Object.entries(groupKeys || {}).map(([key, value]) => {
+        if (!value || !key) { return null }
+        return [key, GroupKey.from(value)]
+    }).filter(Boolean))
 }
 
 function waitForSubMessage(sub, matchFn) {
@@ -256,7 +264,7 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
 export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
     let enabled = true
     const getGroupKeyStore = mem((streamId) => GroupKeyStore({
-        groupKeys: groupKeys[streamId] && Object.entries(groupKeys[streamId]),
+        groupKeys: parseGroupKeys(groupKeys[streamId])
     }), {
         cacheKey([maybeStreamId]) {
             const { streamId } = validateOptions(maybeStreamId)
@@ -354,7 +362,7 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
     const encryptionUtil = new EncryptionUtil(client.options.keyExchange)
 
     const getGroupKeyStore = mem((streamId) => GroupKeyStore({
-        groupKeys: groupKeys[streamId] && Object.entries(groupKeys[streamId]),
+        groupKeys: parseGroupKeys(groupKeys[streamId])
     }), {
         cacheKey([maybeStreamId]) {
             const { streamId } = validateOptions(maybeStreamId)

@@ -6,7 +6,7 @@ import { SubscriberKeyExchange } from '../stream/KeyExchange'
 
 const { StreamMessage } = MessageLayer
 
-export default function Decrypt(client, options) {
+export default function Decrypt(client, options = {}) {
     if (!client.options.keyExchange) {
         // noop unless message encrypted
         return (streamMessage) => {
@@ -18,7 +18,13 @@ export default function Decrypt(client, options) {
         }
     }
 
-    const requestKey = SubscriberKeyExchange(client, options)
+    const requestKey = SubscriberKeyExchange(client, {
+        ...options,
+        groupKeys: {
+            ...client.options.groupKeys,
+            ...options.groupKeys,
+        }
+    })
 
     async function* decrypt(src) {
         yield* PushQueue.transform(src, async (streamMessage) => {

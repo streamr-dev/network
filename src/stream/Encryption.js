@@ -67,7 +67,7 @@ export class GroupKey {
             throw new InvalidGroupKeyError(`groupKeyBufferOrHexString must not be falsey ${util.inspect(groupKeyBufferOrHexString)}`)
         }
 
-        if (typeof groupKeyBytesOrHexString === 'string') {
+        if (typeof groupKeyBufferOrHexString === 'string') {
             this.hex = groupKeyBufferOrHexString
             this.data = Buffer.from(this.hex, 'hex')
         } else {
@@ -93,6 +93,26 @@ export class GroupKey {
     static generate(id = uuid('GroupKey')) {
         const keyBytes = crypto.randomBytes(32)
         return new GroupKey(id, keyBytes)
+    }
+
+    static from(maybeGroupKey) {
+        if (!maybeGroupKey || typeof maybeGroupKey !== 'object') {
+            throw new InvalidGroupKeyError(`Group key must be object ${util.inspect(maybeGroupKey)}`)
+        }
+
+        if (maybeGroupKey instanceof GroupKey) {
+            return maybeGroupKey
+        }
+
+        try {
+            return new GroupKey(maybeGroupKey.id || maybeGroupKey.groupKeyId, maybeGroupKey.hex || maybeGroupKey.data || maybeGroupKey.groupKeyHex)
+        } catch (err) {
+            if (err instanceof InvalidGroupKeyError) {
+                // wrap err with logging of original object
+                throw new InvalidGroupKeyError(`${err.message}. From: ${util.inspect(maybeGroupKey)}`)
+            }
+            throw err
+        }
     }
 }
 
