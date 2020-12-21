@@ -181,3 +181,4 @@ module.exports = class VolumeLogger {
         clearTimeout(this.timeout)
     }
 }
+
