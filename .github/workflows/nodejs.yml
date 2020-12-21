@@ -70,11 +70,12 @@ jobs:
     name: ${{ matrix.node-version }} ${{ matrix.test-command }} Integration Test
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         node-version: [12.x, 14.x]
         test-command:
           - npm run test-integration -- --maxWorkers=1
-          - npm run test-flakey || echo "::warning::Flakey Tests Failed" && true
+          - 'npm run test-flakey || echo "::warning::Flakey Tests Failed" && true'
     env:
         TEST_COMMAND: ${{ matrix.test-command }}
         WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
