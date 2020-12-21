@@ -55,6 +55,9 @@ module.exports = class VolumeLogger {
         this.meanBatchAge = io.metric({
             name: 'meanBatchAge'
         })
+        this.messageQueueSizeMetric = io.metric({
+            name: 'messageQueueSize'
+        })
 
         if (reportingIntervalSeconds > 0) {
             const reportingIntervalInMs = reportingIntervalSeconds * 1000
@@ -107,16 +110,17 @@ module.exports = class VolumeLogger {
         const brokerConnectionCount = (report.metrics['broker/ws'] ? report.metrics['broker/ws'].connections : 0)
             + (report.metrics['broker/mqtt'] ? report.metrics['broker/mqtt'].connections : 0)
 
-        const networkConnectionCount = report.metrics.WsEndpoint.connections
-        const networkInPerSecond = report.metrics.WsEndpoint.msgInSpeed.rate
-        const networkOutPerSecond = report.metrics.WsEndpoint.msgOutSpeed.rate
-        const networkKbInPerSecond = report.metrics.WsEndpoint.inSpeed.rate / 1000
-        const networkKbOutPerSecond = report.metrics.WsEndpoint.outSpeed.rate / 1000
+        const networkConnectionCount = report.metrics.WebRtcEndpoint.connections
+        const networkInPerSecond = report.metrics.WebRtcEndpoint.msgInSpeed.rate
+        const networkOutPerSecond = report.metrics.WebRtcEndpoint.msgOutSpeed.rate
+        const networkKbInPerSecond = report.metrics.WebRtcEndpoint.inSpeed.rate / 1000
+        const networkKbOutPerSecond = report.metrics.WebRtcEndpoint.outSpeed.rate / 1000
+        const { messageQueueSize } = report.metrics.WebRtcEndpoint
 
         const ongoingResends = report.metrics.resends.numOfOngoingResends
         const resendMeanAge = report.metrics.resends.meanAge
 
-        const totalWebSocketBuffer = report.metrics.WsEndpoint.totalWebSocketBuffer
+        const totalBuffer = report.metrics.WebRtcEndpoint.totalWebSocketBuffer
             + (report.metrics['broker/ws'] ? report.metrics['broker/ws'].totalWebSocketBuffer : 0)
 
         logger.info(
@@ -125,6 +129,7 @@ module.exports = class VolumeLogger {
             + '\tBroker in: %d events/s, %d kb/s\n'
             + '\tBroker out: %d events/s, %d kb/s\n'
             + '\tNetwork connections %d\n'
+            + '\tQueued messages: %d\n'
             + '\tNetwork in: %d events/s, %d kb/s\n'
             + '\tNetwork out: %d events/s, %d kb/s\n'
             + '\tStorage read: %d events/s, %d kb/s\n'
@@ -137,6 +142,7 @@ module.exports = class VolumeLogger {
             formatNumber(outPerSecond),
             formatNumber(kbOutPerSecond),
             networkConnectionCount,
+            messageQueueSize,
             formatNumber(networkInPerSecond),
             formatNumber(networkKbInPerSecond),
             formatNumber(networkOutPerSecond),
@@ -160,9 +166,10 @@ module.exports = class VolumeLogger {
         this.storageReadKbPerSecondMetric.set(storageReadKbPerSecond)
         this.storageWriteKbPerSecondMetric.set(storageWriteKbPerSecond)
         this.brokerConnectionCountMetric.set(brokerConnectionCount)
-        this.totalBufferSizeMetric.set(totalWebSocketBuffer)
+        this.totalBufferSizeMetric.set(totalBuffer)
         this.ongoingResendsMetric.set(ongoingResends)
         this.meanResendAgeMetric.set(resendMeanAge)
+        this.messageQueueSizeMetric.set(messageQueueSize)
         if (report.metrics['broker/cassandra']) {
             this.totalBatchesMetric.set(totalBatches)
             this.meanBatchAge.set(meanBatchAge)
