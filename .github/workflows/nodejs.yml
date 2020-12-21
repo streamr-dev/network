@@ -67,7 +67,7 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.node-version }} ${{ test-command }} Integration Test
+    name: ${{ matrix.node-version }} ${{ matrix.test-command }} Integration Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
