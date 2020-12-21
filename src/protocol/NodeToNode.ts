@@ -2,7 +2,7 @@ import { EventEmitter } from "events"
 import { ControlLayer, MessageLayer } from "streamr-client-protocol"
 import getLogger from "../helpers/logger"
 import { decode } from '../helpers/MessageEncoder'
-import { WebRtcEndpoint, Event as WsEndpointEvent } from '../connection/WebRtcEndpoint'
+import { WebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/WebRtcEndpoint'
 import { PeerInfo } from "../connection/PeerInfo"
 import { ResendRequest, ResendResponse, Rtts } from "../identifiers"
 import pino from "pino"
@@ -46,11 +46,11 @@ export class NodeToNode extends EventEmitter {
     constructor(endpoint: WebRtcEndpoint) {
         super()
         this.endpoint = endpoint
-        endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
-        endpoint.on(WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
-        endpoint.on(WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
-        endpoint.on(WsEndpointEvent.LOW_BACK_PRESSURE, (peerInfo) => this.onLowBackPressure(peerInfo))
-        endpoint.on(WsEndpointEvent.HIGH_BACK_PRESSURE, (peerInfo) => this.onHighBackPressure(peerInfo))
+        endpoint.on(WebRtcEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
+        endpoint.on(WebRtcEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
+        endpoint.on(WebRtcEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
+        endpoint.on(WebRtcEndpointEvent.LOW_BACK_PRESSURE, (peerInfo) => this.onLowBackPressure(peerInfo))
+        endpoint.on(WebRtcEndpointEvent.HIGH_BACK_PRESSURE, (peerInfo) => this.onHighBackPressure(peerInfo))
         this.logger = getLogger(`streamr:NodeToNode:${endpoint.getAddress()}`)
     }
 

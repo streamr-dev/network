@@ -77,7 +77,9 @@ export interface ConstructorOptions {
     onOpen: () => void
     onMessage: (msg: string)  => void
     onClose: (err?: Error) => void
-    onError: (err: Error) => void
+    onError: (err: Error) => void,
+    onBufferLow: () => void,
+    onBufferHigh: () => void
 }
 
 export class Connection {
@@ -97,6 +99,8 @@ export class Connection {
     private readonly onMessage: (msg: string)  => void
     private readonly onClose: (err?: Error) => void
     private readonly onError: (err: Error) => void
+    private readonly onBufferLow: () => void
+    private readonly onBufferHigh: () => void
 
     private readonly messageQueue: Heap<QueueItem<string>>
     private connection: PeerConnection | null
@@ -129,7 +133,9 @@ export class Connection {
         onOpen,
         onMessage,
         onClose,
-        onError
+        onError,
+        onBufferLow,
+        onBufferHigh
     }: ConstructorOptions) {
         this.selfId = selfId
         this.peerInfo = PeerInfo.newUnknown(targetPeerId)
@@ -164,6 +170,8 @@ export class Connection {
         this.onMessage = onMessage
         this.onOpen = onOpen
         this.onError = onError
+        this.onBufferLow = onBufferLow
+        this.onBufferHigh = onBufferHigh
 
         this.logger = getLogger(`streamr:WebRtc:Connection(${this.selfId}-->${this.getPeerId()})`)
     }
@@ -377,6 +385,7 @@ export class Connection {
             if (this.paused) {
                 this.paused = false
                 this.attemptToFlushMessages()
+                this.onBufferLow()
             }
         })
         dataChannel.onMessage((msg) => {
@@ -422,8 +431,10 @@ export class Connection {
                         this.messageQueue.pop()
                         queueItem.delivered()
                     } else {
-                        // TODO: emit HIGH_BUFFER_THRESHOLD if paused not true
-                        this.paused = true
+                        if (!this.paused) {
+                            this.paused = true
+                            this.onBufferHigh()
+                        }
                         return
                     }
                 } catch (e) {
