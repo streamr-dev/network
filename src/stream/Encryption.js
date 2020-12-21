@@ -41,15 +41,15 @@ export class GroupKey {
         }
 
         if (!maybeGroupKey.id || typeof maybeGroupKey.id !== 'string') {
-            throw new InvalidGroupKeyError(`${this.name} id must be a string: ${util.inspect(maybeGroupKey.id)}`)
+            throw new InvalidGroupKeyError(`${this.name} id must be a string: ${util.inspect(maybeGroupKey)}`)
         }
 
         if (!maybeGroupKey.data || !Buffer.isBuffer(maybeGroupKey.data)) {
-            throw new InvalidGroupKeyError(`${this.name} data must be a buffer: ${util.inspect(maybeGroupKey.data)}`)
+            throw new InvalidGroupKeyError(`${this.name} data must be a buffer: ${util.inspect(maybeGroupKey)}`)
         }
 
         if (!maybeGroupKey.hex || typeof maybeGroupKey.hex !== 'string') {
-            throw new InvalidGroupKeyError(`${this.name} hex must be a string: ${util.inspect(maybeGroupKey.hex)}`)
+            throw new InvalidGroupKeyError(`${this.name} hex must be a string: ${util.inspect(maybeGroupKey)}`)
         }
 
         if (maybeGroupKey.data.length !== 32) {
