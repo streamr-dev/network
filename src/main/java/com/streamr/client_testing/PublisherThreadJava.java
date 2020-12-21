@@ -32,9 +32,10 @@ public class PublisherThreadJava extends PublisherThread {
                 counter++;
                 publishFunction.getF().apply(publisher, stream, counter);
                 if (counter > 0 && counter >= maxMessages) {
-                    log.info("Publisher {} done: All {} messages published. Quitting Java publisher.",
+                    log.info("Publisher {} done: All {} messages published.",
                             publisher.getPublisherId(), maxMessages);
-                    stop();
+                    ready = true;
+                    timer.cancel();
                 }
             }
         };

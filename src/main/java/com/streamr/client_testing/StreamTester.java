@@ -31,7 +31,7 @@ public class StreamTester {
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final Random random = new Random();
     private static final int NETWORK_SETUP_DELAY = 5000;
-    private static final int NETWORK_PROPAGATION_DELAY = 2000;
+    private static final int NETWORK_PROPAGATION_DELAY = 10000;
 
     private final StreamrClient creator;
     private final Stream stream;
@@ -107,9 +107,6 @@ public class StreamTester {
 
     public void stop() {
         log.info("Stopping test {}", stream.getName());
-        for (PublisherThread p: publishers) {
-            p.stop();
-        }
         // Give subscribers some time to receive the last messages
         try {
             Thread.sleep(NETWORK_PROPAGATION_DELAY);
@@ -117,6 +114,9 @@ public class StreamTester {
 
         for (Subscriber s: subscribers) {
             s.stop();
+        }
+        for (PublisherThread p: publishers) {
+            p.stop();
         }
     }
 

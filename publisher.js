@@ -20,8 +20,13 @@ const options = {
 }
 
 if (groupKey) {
-    // TODO: update when client implementation is up to date and we know how to pass the GroupKeys there
-    options.publisherGroupKeys[streamId] = Buffer.from(groupKey.groupKeyHex, 'hex')
+    options.groupKeys = {
+        [streamId]: {
+            [groupKey.groupKeyId]: {
+                ...groupKey
+            }
+        }
+    }
 }
 
 const client = new StreamrClient(options)
@@ -68,7 +73,7 @@ const publishMessage = async () => {
         console.log(`Done: All ${maxMessages} messages published. Quitting JS publisher.`)
         // Disconnect gracefully so that this process will quit.
         // Don't do it immediately to avoid messing up the last published message in any way.
-        await wait(2000)
+        await wait(15000)
         await client.disconnect()
     } else {
         setTimeout(publishMessage, interval)
