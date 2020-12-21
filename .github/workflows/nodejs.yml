@@ -18,7 +18,7 @@ on:
 
 jobs:
   build:
-    name: Run build using Node 14
+    name: Run build using Node 14.x
     runs-on: ubuntu-latest
     env:
       BUNDLE_ANALYSIS: true
@@ -67,15 +67,12 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.node-version }} ${{ matrix.test-command }} Integration Test
+    name: Integration Test using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [12.x, 14.x]
-        test-command:
-          - npm run test-integration -- --maxWorkers=1
-          - 'npm run test-flakey || echo "::warning::Flakey Tests Failed" && true'
     env:
         TEST_COMMAND: ${{ matrix.test-command }}
         WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
@@ -102,7 +99,40 @@ jobs:
           max_attempts: 2
           timeout_minutes: 60
           retry_on: error
-          command: $TEST_COMMAND
+          command: npm run test-integration -- --maxWorkers=1
+  flakey:
+    name: Flakey Tests using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [12.x, 14.x]
+    env:
+        WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm ci
+        run: npm ci
+      - uses: actions/checkout@v2
+        with:
+          repository: streamr-dev/streamr-docker-dev
+          path: streamr-dev
+      - name: setup streamr-dev
+        run: |
+          sudo service mysql stop
+          sudo ifconfig docker0 10.200.10.1/24
+          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
+      - uses: nick-invision/retry@v2
+        name: Run Test
+        with:
+          max_attempts: 2
+          timeout_minutes: 60
+          retry_on: error
+          command: npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
   browser:
     name: Test Browser using Node 14.x
