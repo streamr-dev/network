@@ -65,7 +65,7 @@ describeRepeats('resends', () => {
             stream,
             timeout: WAIT_FOR_STORAGE_TIMEOUT,
         })
-    })
+    }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
     beforeEach(async () => {
         await client.connect()
