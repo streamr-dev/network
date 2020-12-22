@@ -1,12 +1,17 @@
 const crypto = require('crypto')
 const { ethers } = require('ethers')
 const StreamrClient = require('streamr-client')
-const privateKey = process.argv[2]
-const streamId = process.argv[3]
-const publishFunctionName = process.argv[4]
-const interval = parseInt(process.argv[5])
-const maxMessages = parseInt(process.argv[6])
-const groupKey = process.argv[7] ? JSON.parse(process.argv[7]) : undefined
+const opts = JSON.parse(process.argv[2])
+
+const {
+    privateKey,
+    streamId,
+    publishFunctionName,
+} = opts
+
+const interval = parseInt(opts.interval)
+const maxMessages = parseInt(opts.maxMessages)
+const groupKey = opts.groupKey ? JSON.parse(opts.groupKey) : null
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -16,7 +21,6 @@ const options = {
     auth: {
         privateKey: privateKey,
     },
-    publisherGroupKeys: {}
 }
 
 if (groupKey) {

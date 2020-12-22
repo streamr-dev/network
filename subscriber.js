@@ -1,8 +1,13 @@
 const StreamrClient = require('streamr-client')
-const privateKey = process.argv[2]
-const streamId = process.argv[3]
-const resendOptions = process.argv[4] === 'real-time' ? undefined : JSON.parse(process.argv[4])
-const groupKey = process.argv[5] ? JSON.parse(process.argv[5]) : undefined
+const opts = JSON.parse(process.argv[2])
+
+const {
+    privateKey,
+    streamId,
+} = opts
+
+const groupKey = opts.groupKey ? JSON.parse(opts.groupKey) : undefined
+const resendOptions = opts.resendOptions === 'real-time' ? undefined : JSON.parse(opts.resendOptions)
 
 const options = {
     restUrl: "http://localhost/api/v1",

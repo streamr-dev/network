@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.function.BiConsumer;
+import com.google.gson.JsonObject;
 
 public class SubscriberJS extends Subscriber {
 
@@ -30,8 +31,16 @@ public class SubscriberJS extends Subscriber {
     public SubscriberJS(StreamrClientJS subscriber, Stream stream, ResendOption resendOption) {
         this.subscriber = subscriber;
         String groupKeyAsJson = subscriber.getGroupKey() == null ? "" : Utils.groupKeyToJson(subscriber.getGroupKey());
-        command = "node --enable-source-maps subscriber.js " + subscriber.getPrivateKey() + " "
-                + stream.getId() + " " + resendOptionToJson(resendOption) + " " + groupKeyAsJson;
+        JsonObject json = new JsonObject();
+        json.addProperty("privateKey", subscriber.getPrivateKey());
+        json.addProperty("streamId", stream.getId());
+        json.addProperty("resendOptions", resendOptionToJson(resendOption));
+        if (subscriber.getGroupKey() != null) {
+            json.addProperty("groupKey", Utils.groupKeyToJson(subscriber.getGroupKey()));
+        }
+
+        command = String.format("node --enable-source-maps subscriber.js %s", json.toString());
+
         thread = new Thread(this::executeNode);
         thread.setName("JS-sub-" + getSubscriberId().toString().substring(0, 6));
     }

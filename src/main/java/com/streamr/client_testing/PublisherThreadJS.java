@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.function.Consumer;
+import com.google.gson.JsonObject;
 
 public class PublisherThreadJS extends PublisherThread {
     private static final Logger log = LogManager.getLogger(PublisherThreadJS.class);
@@ -32,15 +33,18 @@ public class PublisherThreadJS extends PublisherThread {
     public PublisherThreadJS(StreamrClientJS publisher, Stream stream, PublishFunction publishFunction, long interval, int maxMessages) {
         super(interval);
         this.publisher = publisher;
+        JsonObject json = new JsonObject();
+        json.addProperty("privateKey", publisher.getPrivateKey());
+        json.addProperty("streamId", stream.getId());
+        json.addProperty("publishFunctionName", publishFunction.getName());
+        json.addProperty("interval", interval);
+        json.addProperty("maxMessages", maxMessages);
+        json.addProperty("groupKey", publisher.getGroupKey() == null ? "" : Utils.groupKeyToJson(publisher.getGroupKey()));
 
-        command = String.format("node --enable-source-maps publisher.js %s %s %s %s %s %s",
-                publisher.getPrivateKey(),
-                stream.getId(),
-                publishFunction.getName(),
-                interval,
-                maxMessages,
-                publisher.getGroupKey() == null ? "" : Utils.groupKeyToJson(publisher.getGroupKey())
-        );
+        if (publisher.getGroupKey() != null) {
+            json.addProperty("groupKey", Utils.groupKeyToJson(publisher.getGroupKey()));
+        }
+        command = String.format("node --enable-source-maps publisher.js %s", json.toString());
 
         thread = new Thread(this::executeNode);
         thread.setName("JS-pub-" + getPublisherId().toString().substring(0, 6));
