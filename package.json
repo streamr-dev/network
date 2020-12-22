@@ -26,6 +26,8 @@
     "test-unit": "jest test/unit --detectOpenHandles",
     "coverage": "jest --coverage",
     "test-integration": "jest --forceExit test/integration",
+    "test-integration-no-resend": "jest --testPathIgnorePatterns='resend|Resend' --testNamePattern='^((?!(resend|Resend|resent|Resent)).)*$' test/integration",
+    "test-integration-resend": "jest --testNamePattern='(resend|Resend|resent|Resent)' test/integration",
     "test-flakey": "jest --forceExit test/flakey/*",
     "test-browser": "node ./test/browser/server.js & node node_modules/nightwatch/bin/nightwatch ./test/browser/browser.js && pkill -f server.js",
     "install-example": "cd examples/webpack && npm ci",

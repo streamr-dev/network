@@ -67,14 +67,15 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: Integration Test using Node ${{ matrix.node-version }}
+    name: ${{ matrix.test-name }} using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [12.x, 14.x]
+        test-name: ['test-integration-no-resend', 'test-integration-resend']
     env:
-        TEST_COMMAND: ${{ matrix.test-command }}
+        TEST_NAME: ${{ matrix.test-name }}
         WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
 
     steps:
@@ -94,7 +95,8 @@ jobs:
           sudo ifconfig docker0 10.200.10.1/24
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
       - name: Run Test
-        run: npm run test-integration -- --maxWorkers=1
+        run: npm run $TEST_NAME -- --maxWorkers=1
+
   flakey:
     name: Flakey Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest

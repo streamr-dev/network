@@ -725,7 +725,7 @@ describeRepeats('StreamrClient', () => {
                     expect(client.getSubscriptions(stream.id)).toHaveLength(0)
                 })
 
-                it('client.subscribe then unsubscribe after subscribed without resend', async () => {
+                it('client.subscribe then unsubscribe after subscribed', async () => {
                     const sub = await client.subscribe({
                         stream: stream.id,
                     }, () => {})
@@ -739,7 +739,7 @@ describeRepeats('StreamrClient', () => {
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
                 }, TIMEOUT)
 
-                it('client.subscribe then unsubscribe before subscribed without resend', async () => {
+                it('client.subscribe then unsubscribe before subscribed', async () => {
                     client.connection.enableAutoDisconnect(false)
                     const subTask = client.subscribe({
                         stream: stream.id,
@@ -760,7 +760,7 @@ describeRepeats('StreamrClient', () => {
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
                 }, TIMEOUT)
 
-                it('client.subscribe then unsubscribe before subscribed after started subscribing without resend', async () => {
+                it('client.subscribe then unsubscribe before subscribed after started subscribing', async () => {
                     client.connection.enableAutoDisconnect(false)
                     const subTask = client.subscribe({
                         stream: stream.id,
