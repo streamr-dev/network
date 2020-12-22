@@ -66,7 +66,7 @@ describe('DataUnionEndPoints', () => {
         log(`Deployment done for ${dataUnion.address}`)
         await dataUnion.isReady(2000, 200000)
         log(`DataUnion ${dataUnion.address} is ready to roll`)
-        await adminClient.createSecret(dataUnion.address, 'secret', 'DataUnionEndpoints test secret')
+        dataUnion.secret = await adminClient.createSecret(dataUnion.address, 'DataUnionEndpoints test secret')
         await createProduct()
     }, 300000)
 
@@ -136,7 +136,7 @@ describe('DataUnionEndPoints', () => {
                 value: utils.parseEther('1'),
             })
 
-            const res = await memberClient.joinDataUnion(dataUnion.address, 'secret')
+            const res = await memberClient.joinDataUnion(dataUnion.address, dataUnion.secret)
             await memberClient.hasJoined(dataUnion.address)
             expect(res).toMatchObject({
                 state: 'ACCEPTED',

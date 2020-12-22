@@ -191,25 +191,26 @@ export async function dataUnionIsReady(dataUnionContractAddress, pollingInterval
 /**
  * Add a new data union secret
  * @param {EthereumAddress} dataUnionContractAddress
- * @param {String} secret password that can be used to join the data union without manual verification
  * @param {String} name describes the secret
+ * @returns {String} the server-generated secret
  */
-export async function createSecret(dataUnionContractAddress, secret, name = 'Untitled Data Union Secret') {
-    const url = getEndpointUrl(this.options.restUrl, 'communities', dataUnionContractAddress, 'secrets')
-    return authFetch(
+export async function createSecret(dataUnionContractAddress, name = 'Untitled Data Union Secret') {
+    const duAddress = getAddress(dataUnionContractAddress) // throws if bad address
+    const url = getEndpointUrl(this.options.restUrl, 'dataunions', duAddress, 'secrets')
+    const res = await authFetch(
         url,
         this.session,
         {
             method: 'POST',
             body: JSON.stringify({
-                name,
-                secret,
+                name
             }),
             headers: {
                 'Content-Type': 'application/json',
             },
         },
     )
+    return res.secret
 }
 
 // //////////////////////////////////////////////////////////////////
