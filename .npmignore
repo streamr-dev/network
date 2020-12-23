@@ -1,3 +1,12 @@
+/src
+/test
+.github
+tsconfig.json
+/contracts
+.eslintignore
+.eslintrc.js
+jest.config.js
+
 # Logs
 logs
 *.log
