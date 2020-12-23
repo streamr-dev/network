@@ -1,8 +1,10 @@
-import nodeDataChannel, { DataChannel, DescriptionType, PeerConnection } from 'node-datachannel'
+import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
 import getLogger from '../helpers/logger'
 import { PeerInfo } from './PeerInfo'
 import pino from "pino"
 import { MessageQueue } from "./MessageQueue"
+
+nodeDataChannel.initLogger("Error" as LogLevel)
 
 export interface ConstructorOptions {
     selfId: string
