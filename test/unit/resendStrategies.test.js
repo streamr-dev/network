@@ -27,8 +27,7 @@ const resendFromRequest = new ResendFromRequest({
     streamPartition: 0,
     requestId: 'requestId',
     fromMsgRef: new MessageRef(1555555555555, 0),
-    publisherId: 'publisherId',
-    msgChainId: 'msgChainId',
+    publisherId: 'publisherId'
 })
 
 const resendRangeRequest = new ResendRangeRequest({
@@ -102,7 +101,7 @@ describe('LocalResendStrategy#getResendResponseStream', () => {
         expect(storage.requestFrom.mock.calls).toEqual([[
             resendFromRequest.streamId, resendFromRequest.streamPartition,
             resendFromRequest.fromMsgRef.timestamp, resendFromRequest.fromMsgRef.sequenceNumber,
-            resendFromRequest.publisherId, resendFromRequest.msgChainId
+            resendFromRequest.publisherId, null // TODO: msgChainId is not used, remove on NET-143
         ]])
     })
 

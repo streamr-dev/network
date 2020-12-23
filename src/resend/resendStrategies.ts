@@ -39,30 +39,33 @@ export class LocalResendStrategy implements Strategy {
     getResendResponseStream(request: ResendRequest): Readable {
         let sourceStream: Readable
         if (request.type === ControlLayer.ControlMessage.TYPES.ResendLastRequest) {
+            const lastRequest = request as ControlLayer.ResendLastRequest
             sourceStream = this.storage.requestLast(
-                request.streamId,
-                request.streamPartition,
-                request.numberLast
+                lastRequest.streamId,
+                lastRequest.streamPartition,
+                lastRequest.numberLast
             )
         } else if (request.type === ControlLayer.ControlMessage.TYPES.ResendFromRequest) {
+            const fromRequest = request as ControlLayer.ResendFromRequest
             sourceStream = this.storage.requestFrom(
-                request.streamId,
-                request.streamPartition,
-                request.fromMsgRef.timestamp,
-                request.fromMsgRef.sequenceNumber,
-                request.publisherId,
-                request.msgChainId
+                fromRequest.streamId,
+                fromRequest.streamPartition,
+                fromRequest.fromMsgRef.timestamp,
+                fromRequest.fromMsgRef.sequenceNumber,
+                fromRequest.publisherId,
+                null // TODO: msgChainId is not used, remove on NET-143
             )
         } else if (request.type === ControlLayer.ControlMessage.TYPES.ResendRangeRequest) {
+            const rangeRequest = request as ControlLayer.ResendRangeRequest
             sourceStream = this.storage.requestRange(
-                request.streamId,
-                request.streamPartition,
-                request.fromMsgRef.timestamp,
-                request.fromMsgRef.sequenceNumber,
-                request.toMsgRef.timestamp,
-                request.toMsgRef.sequenceNumber,
-                request.publisherId,
-                request.msgChainId
+                rangeRequest.streamId,
+                rangeRequest.streamPartition,
+                rangeRequest.fromMsgRef.timestamp,
+                rangeRequest.fromMsgRef.sequenceNumber,
+                rangeRequest.toMsgRef.timestamp,
+                rangeRequest.toMsgRef.sequenceNumber,
+                rangeRequest.publisherId,
+                rangeRequest.msgChainId
             )
         } else {
             throw new Error(`unknown resend request ${request}`)

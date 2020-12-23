@@ -55,7 +55,7 @@ export class NetworkNode extends Node {
         numberLast: number
     ): ReadableStream {
         const request = new ControlLayer.ResendLastRequest({
-            requestId, streamId, streamPartition, numberLast
+            requestId, streamId, streamPartition, numberLast, sessionToken: null
         })
         return this.requestResend(request, null)
     }
@@ -75,7 +75,7 @@ export class NetworkNode extends Node {
             streamPartition,
             fromMsgRef: new MessageLayer.MessageRef(fromTimestamp, fromSequenceNo),
             publisherId,
-            msgChainId
+            sessionToken: null
         })
         return this.requestResend(request, null)
     }
@@ -97,7 +97,8 @@ export class NetworkNode extends Node {
             fromMsgRef: new MessageLayer.MessageRef(fromTimestamp, fromSequenceNo),
             toMsgRef: new MessageLayer.MessageRef(toTimestamp, toSequenceNo),
             publisherId,
-            msgChainId
+            msgChainId,
+            sessionToken: null
         })
         return this.requestResend(request, null)
     }
