@@ -1,4 +1,4 @@
-const Ajv = require('ajv')
+const Ajv = require('ajv').default
 
 const BROKER_CONFIG_SCHEMA = require('./config.schema.json')
 
