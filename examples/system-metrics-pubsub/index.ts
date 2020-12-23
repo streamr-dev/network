@@ -35,7 +35,7 @@ async function runPublisher(): Promise<NetworkNode> {
     const streamId = 'system-report'
     const streamPartition = 0
     const sessionId = v4()
-    let prevMessageRef: Protocol.MessageLayer.MessageRef | null = null
+    let prevMsgRef: Protocol.MessageLayer.MessageRef | null = null
     let lastCpuUsage = process.cpuUsage()
 
     setInterval(() => {
@@ -53,7 +53,7 @@ async function runPublisher(): Promise<NetworkNode> {
         )
         publisherNode.publish(new Protocol.MessageLayer.StreamMessage({
             messageId,
-            prevMessageRef,
+            prevMsgRef,
             content: {
                 hostname: os.hostname(),
                 type: os.type(),
@@ -71,7 +71,7 @@ async function runPublisher(): Promise<NetworkNode> {
                 },
             }
         }))
-        prevMessageRef = new Protocol.MessageLayer.MessageRef(timestamp, sequenceNo)
+        prevMsgRef = new Protocol.MessageLayer.MessageRef(timestamp, sequenceNo)
         lastCpuUsage = cpuUsage
     }, 2000)
     return publisherNode
