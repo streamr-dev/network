@@ -12,8 +12,8 @@
     "subscriber": "./bin/subscriber.js",
     "tracker": "./bin/tracker.js"
   },
-  "main": "./dist/composition.js",
-  "types": "./dist/composition.d.ts",
+  "main": "dist/composition.js",
+  "types": "dist/composition.d.ts",
   "scripts": {
     "prepare": "tsc",
     "build": "tsc",
