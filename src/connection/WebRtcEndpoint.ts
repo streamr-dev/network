@@ -181,7 +181,6 @@ export class WebRtcEndpoint extends EventEmitter {
                 delete this.connections[targetPeerId]
             },
             onError: (err) => {
-                this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo())
                 this.emit(`errored:${connection.getPeerId()}`, err)
             },
             onBufferLow: () => {

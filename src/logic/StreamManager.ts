@@ -81,11 +81,16 @@ export class StreamManager {
         outboundNodes.delete(node)
     }
 
-    removeNodeFromAllStreams(node: string): void {
-        this.streams.forEach(({ inboundNodes, outboundNodes }) => {
-            inboundNodes.delete(node)
-            outboundNodes.delete(node)
+    removeNodeFromAllStreams(node: string): StreamIdAndPartition[] {
+        const streams: StreamIdAndPartition[] = []
+        this.streams.forEach(({ inboundNodes, outboundNodes }, streamKey) => {
+            const b1 = inboundNodes.delete(node)
+            const b2 = outboundNodes.delete(node)
+            if (b1 || b2) {
+                streams.push(StreamIdAndPartition.fromKey(streamKey))
+            }
         })
+        return streams
     }
 
     removeStream(streamId: StreamIdAndPartition): ReadonlyArray<string> {

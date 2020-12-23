@@ -253,7 +253,6 @@ export class Connection {
             } else {
                 this.logger.warn('failed all ping re-attempts to connection, reattempting connection', e)
                 this.close(new Error('ping attempts failed'))
-                this.connect()
             }
         }
     }
@@ -271,7 +270,6 @@ export class Connection {
             } else {
                 this.logger.warn('failed all pong re-attempts to connection, reattempting connection', e)
                 this.close(new Error('pong attempts failed'))
-                this.connect()
             }
         }
     }
@@ -335,7 +333,7 @@ export class Connection {
         })
         dataChannel.onError((e) => {
             this.logger.warn('dataChannel.onError: %s', e)
-            this.onError(new Error(e))
+            this.close(new Error(e))
         })
         dataChannel.onBufferedAmountLow(() => {
             if (this.paused) {
@@ -401,7 +399,7 @@ export class Connection {
                     })
                     if (queueItem.isFailed()) {
                         const infoText = queueItem.getInfos().map((i) => JSON.stringify(i)).join('\n\t')
-                        this.logger.warn('Failed to send message after %d tries due to\n\t%s',
+                        this.logger.debug('Failed to send message after %d tries due to\n\t%s',
                             MessageQueue.MAX_TRIES,
                             infoText)
                         this.messageQueue.pop()

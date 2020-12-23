@@ -480,8 +480,9 @@ export class Node extends EventEmitter {
     onNodeDisconnected(node: string): void {
         this.metrics.record('onNodeDisconnect', 1)
         this.resendHandler.cancelResendsOfNode(node)
-        this.streams.removeNodeFromAllStreams(node)
+        const streams = this.streams.removeNodeFromAllStreams(node)
         this.logger.debug('removed all subscriptions of node %s', node)
+        streams.forEach((s) => this.sendStreamStatus(s))
         this.emit(Event.NODE_DISCONNECTED, node)
     }
 
