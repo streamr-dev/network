@@ -72,8 +72,8 @@ export const waitForCondition = (
             timeOut: setTimeout(() => {
                 clearInterval(refs.interval)
                 reject(new AssertionError({
-                    actual: onTimeoutContext ? onTimeoutContext() : undefined,
-                    message: `waitForCondition: timed out before "${conditionFn.toString()}" became true`,
+                    message: `waitForCondition: timed out before "${conditionFn.toString()}" became true`
+                        + (onTimeoutContext ? ("\n" + onTimeoutContext()) : "")
                 }))
             }, timeout),
             interval: setInterval(() => {

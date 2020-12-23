@@ -106,7 +106,8 @@ describe(waitForCondition, () => {
     it('can provide contextual information on rejection', (done) => {
         const pollCb = () => false
         waitForCondition(pollCb, 50, 5, () => "a was 5, expected 10").catch((err) => {
-            expect(err.actual).toEqual("a was 5, expected 10")
+            expect(err.message).toEqual("waitForCondition: timed out before \"() => false\" became true" +
+                "\na was 5, expected 10")
             done()
         })
     })
