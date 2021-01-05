@@ -92,7 +92,7 @@ jobs:
         run: |
           sudo service mysql stop
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
+          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait --except data-union-server --except bridge_collected
       - name: Run Test
         run: npm run $TEST_NAME -- --maxWorkers=1
 
@@ -119,7 +119,7 @@ jobs:
         run: |
           sudo service mysql stop
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
+          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait --except data-union-server --except bridge_collected
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -151,7 +151,7 @@ jobs:
         run: |
           sudo service mysql stop
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
+          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait --except data-union-server --except bridge_collected
       - name: test-browser
         timeout-minutes: 2
         run: npm run test-browser
@@ -181,7 +181,7 @@ jobs:
         run: |
           sudo service mysql stop
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
+          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait --except data-union-server --except bridge_collected
       - name: npm ci
         run: npm ci
       - name: benchmarks

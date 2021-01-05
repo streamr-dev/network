@@ -2,7 +2,10 @@ import { inspect } from 'util'
 import crypto from 'crypto'
 
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { ethers } from 'ethers'
+import { hexlify } from '@ethersproject/bytes'
+import { computeAddress } from '@ethersproject/transactions'
+import { Web3Provider } from '@ethersproject/providers'
+import { sha256 } from '@ethersproject/sha2'
 import mem from 'mem'
 
 import { uuid, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
@@ -126,22 +129,23 @@ async function getPublisherId(client) {
 
     const { options: { auth = {} } = {} } = client
     if (auth.privateKey) {
-        return ethers.utils.computeAddress(auth.privateKey).toLowerCase()
+        return computeAddress(auth.privateKey).toLowerCase()
     }
 
     if (auth.provider) {
-        const provider = new ethers.providers.Web3Provider(auth.provider)
-        return provider.getSigner().address.toLowerCase()
+        const provider = new Web3Provider(auth.ethereum)
+        const address = (await provider.getSigner().getAddress()).toLowerCase()
+        return address
     }
 
     const username = await getUsername(client)
 
     if (username != null) {
-        const hexString = ethers.utils.hexlify(Buffer.from(username, 'utf8'))
-        return ethers.utils.sha256(hexString)
+        const hexString = hexlify(Buffer.from(await this.getUsername(), 'utf8'))
+        return sha256(hexString)
     }
 
-    throw new Error('Need either "privateKey", "provider", "apiKey", "username"+"password" or "sessionToken" to derive the publisher Id.')
+    throw new Error('Need either "privateKey", "ethereum", "apiKey", "username"+"password" or "sessionToken" to derive the publisher Id.')
 }
 
 /*

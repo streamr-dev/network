@@ -168,7 +168,7 @@ function waitForSubMessage(sub, matchFn) {
 
 async function subscribeToKeyExchangeStream(client, onKeyExchangeMessage) {
     const { options } = client
-    if ((!options.auth.privateKey && !options.auth.provider) || !options.keyExchange) {
+    if ((!options.auth.privateKey && !options.auth.ethereum) || !options.keyExchange) {
         return Promise.resolve()
     }
 

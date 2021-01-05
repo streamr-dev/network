@@ -123,13 +123,15 @@ function TestStreamEndpoints(getName) {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
-            expect(publishers).toEqual([(await client.getPublisherId()).toLowerCase()])
+            const address = await client.signer.getAddress()
+            expect(publishers).toEqual([address.toLowerCase()])
         })
     })
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, await client.getPublisherId())
+            const address = await client.signer.getAddress()
+            const valid = await client.isStreamPublisher(createdStream.id, address.toLowerCase())
             expect(valid).toBeTruthy()
         })
         it('returns false for invalid publishers', async () => {
@@ -141,13 +143,15 @@ function TestStreamEndpoints(getName) {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of publishers', async () => {
             const subscribers = await client.getStreamSubscribers(createdStream.id)
-            expect(subscribers).toEqual([(await client.getPublisherId()).toLowerCase()])
+            const address = await client.signer.getAddress()
+            expect(subscribers).toEqual([address.toLowerCase()])
         })
     })
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, (await client.getPublisherId()).toLowerCase())
+            const address = await client.signer.getAddress()
+            const valid = await client.isStreamSubscriber(createdStream.id, address.toLowerCase())
             expect(valid).toBeTruthy()
         })
         it('returns false for invalid subscribers', async () => {

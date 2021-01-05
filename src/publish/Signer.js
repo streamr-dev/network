@@ -1,18 +1,19 @@
 import { MessageLayer, Utils } from 'streamr-client-protocol'
-import { ethers } from 'ethers'
+import { computeAddress } from '@ethersproject/transactions'
+import { Web3Provider } from '@ethersproject/providers'
 
 const { StreamMessage } = MessageLayer
 const { SigningUtil } = Utils
 const { SIGNATURE_TYPES } = StreamMessage
 
 export default function Signer(options = {}, publishWithSignature = 'auto') {
-    const { privateKey, provider } = options
+    const { privateKey, ethereum } = options
 
     if (publishWithSignature === 'never') {
         return (v) => v
     }
 
-    if (publishWithSignature === 'auto' && !privateKey && !provider) {
+    if (publishWithSignature === 'auto' && !privateKey && !ethereum) {
         return (v) => v
     }
 
@@ -22,18 +23,25 @@ export default function Signer(options = {}, publishWithSignature = 'auto') {
 
     let address
     let sign
+    let getAddress = async () => {}
     if (privateKey) {
-        address = ethers.utils.computeAddress(privateKey)
+        address = computeAddress(privateKey)
         const key = (typeof privateKey === 'string' && privateKey.startsWith('0x'))
             ? privateKey.slice(2) // strip leading 0x
             : privateKey
+        getAddress = async () => address
         sign = async (d) => {
             return SigningUtil.sign(d, key)
         }
-    } else if (provider) {
-        const web3Provider = new ethers.providers.Web3Provider(provider)
+    } else if (ethereum) {
+        const web3Provider = new Web3Provider(ethereum)
         const signer = web3Provider.getSigner()
-        address = signer.address
+        getAddress = async () => {
+            if (address) { return address }
+            // eslint-disable-next-line require-atomic-updates
+            address = await signer.getAddress()
+            return address
+        }
         sign = async (d) => signer.signMessage(d)
     } else {
         throw new Error('Need either "privateKey" or "provider".')
@@ -63,8 +71,6 @@ export default function Signer(options = {}, publishWithSignature = 'auto') {
     return Object.assign(signStreamMessage, {
         // these mainly for tests
         signData: sign,
-        get address() {
-            return address
-        }
+        getAddress,
     })
 }

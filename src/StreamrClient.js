@@ -1,5 +1,6 @@
 import EventEmitter from 'eventemitter3'
-import { Wallet } from 'ethers'
+import { Wallet } from '@ethersproject/wallet'
+import { getDefaultProvider, providers } from 'ethers'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
@@ -10,6 +11,11 @@ import Session from './Session'
 import Connection from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
+
+const {
+    JsonRpcProvider,
+    Web3Provider
+} = providers
 
 /**
  * Wrap connection message events with message parsing.
@@ -92,7 +98,7 @@ class StreamrCached {
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
 export default class StreamrClient extends EventEmitter {
-    constructor(options, connection) {
+    constructor(options = {}, connection) {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
@@ -164,10 +170,25 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.send(request)
     }
 
+    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
+    getMainnetProvider() {
+        if (this.options.mainnet) {
+            return new JsonRpcProvider(this.options.mainnet)
+        }
+        return getDefaultProvider()
+    }
+
+    /** @returns Ethers.js Provider, a connection to the Streamr EVM sidechain */
+    getSidechainProvider() {
+        if (this.options.sidechain) {
+            return new JsonRpcProvider(this.options.sidechain)
+        }
+        return null
+    }
+
     /**
      * Override to control output
      */
-
     onError(error) { // eslint-disable-line class-methods-use-this
         console.error(error)
     }
