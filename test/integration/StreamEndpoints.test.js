@@ -123,15 +123,15 @@ function TestStreamEndpoints(getName) {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
-            const address = await client.signer.getAddress()
-            expect(publishers).toEqual([address.toLowerCase()])
+            const address = await client.getUserId()
+            expect(publishers).toEqual([address])
         })
     })
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
-            const address = await client.signer.getAddress()
-            const valid = await client.isStreamPublisher(createdStream.id, address.toLowerCase())
+            const address = await client.getUserId()
+            const valid = await client.isStreamPublisher(createdStream.id, address)
             expect(valid).toBeTruthy()
         })
         it('returns false for invalid publishers', async () => {
@@ -143,15 +143,15 @@ function TestStreamEndpoints(getName) {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of publishers', async () => {
             const subscribers = await client.getStreamSubscribers(createdStream.id)
-            const address = await client.signer.getAddress()
-            expect(subscribers).toEqual([address.toLowerCase()])
+            const address = await client.getUserId()
+            expect(subscribers).toEqual([address])
         })
     })
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
-            const address = await client.signer.getAddress()
-            const valid = await client.isStreamSubscriber(createdStream.id, address.toLowerCase())
+            const address = await client.getUserId()
+            const valid = await client.isStreamSubscriber(createdStream.id, address)
             expect(valid).toBeTruthy()
         })
         it('returns false for invalid subscribers', async () => {

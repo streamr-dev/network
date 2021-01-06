@@ -1,6 +1,7 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
 import Signer from '../../src/publish/Signer'
+import { getAddressFromOptions } from '../../src/user'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 /*
@@ -66,11 +67,12 @@ describe('Signer', () => {
             field: 'some-data',
         }
         const timestamp = 1529549961116
+        const options = {
+            privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
+        }
 
         beforeEach(() => {
-            signer = Signer({
-                privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
-            })
+            signer = Signer(options)
         })
 
         it('should return correct signature', async () => {
@@ -81,7 +83,7 @@ describe('Signer', () => {
         })
 
         it('should sign StreamMessageV31 with null previous ref correctly', async () => {
-            const address = await signer.getAddress()
+            const address = await getAddressFromOptions(options)
             const streamMessage = new StreamMessage({
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: null,
@@ -102,7 +104,7 @@ describe('Signer', () => {
         })
 
         it('should sign StreamMessageV31 with non-null previous ref correctly', async () => {
-            const address = await signer.getAddress()
+            const address = await getAddressFromOptions(options)
             const streamMessage = new StreamMessage({
                 version: 31,
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),

@@ -2,10 +2,6 @@ import { inspect } from 'util'
 import crypto from 'crypto'
 
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
-import { hexlify } from '@ethersproject/bytes'
-import { computeAddress } from '@ethersproject/transactions'
-import { Web3Provider } from '@ethersproject/providers'
-import { sha256 } from '@ethersproject/sha2'
 import mem from 'mem'
 
 import { uuid, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
@@ -110,44 +106,6 @@ function StreamPartitioner(cacheOptions) {
     return computeStreamPartition
 }
 
-async function getUsername(client) {
-    const { options: { auth = {} } = {} } = client
-    if (auth.username) { return auth.username }
-
-    const { username, id } = await client.cached.getUserInfo()
-    return (
-        username
-        // edge case: if auth.apiKey is an anonymous key, userInfo.id is that anonymous key
-        || id
-    )
-}
-
-async function getPublisherId(client) {
-    if (client.session.isUnauthenticated()) {
-        throw new Error('Need to be authenticated to getPublisherId.')
-    }
-
-    const { options: { auth = {} } = {} } = client
-    if (auth.privateKey) {
-        return computeAddress(auth.privateKey).toLowerCase()
-    }
-
-    if (auth.provider) {
-        const provider = new Web3Provider(auth.ethereum)
-        const address = (await provider.getSigner().getAddress()).toLowerCase()
-        return address
-    }
-
-    const username = await getUsername(client)
-
-    if (username != null) {
-        const hexString = hexlify(Buffer.from(await this.getUsername(), 'utf8'))
-        return sha256(hexString)
-    }
-
-    throw new Error('Need either "privateKey", "ethereum", "apiKey", "username"+"password" or "sessionToken" to derive the publisher Id.')
-}
-
 /*
  * Get function for creating stream messages.
  */
@@ -192,7 +150,7 @@ function getCreateStreamMessage(client) {
             // load cached stream + publisher details
             const [stream, publisherId] = await Promise.all([
                 client.cached.getStream(streamId),
-                client.cached.getPublisherId(client),
+                client.cached.getUserId(client),
             ])
 
             // figure out partition
@@ -345,9 +303,6 @@ export default function Publisher(client) {
         async stop() {
             sendQueue.clear()
             createStreamMessage.clear()
-        },
-        async getPublisherId() {
-            return getPublisherId(client)
         },
         rotateGroupKey(streamId) {
             return createStreamMessage.rotateGroupKey(streamId)

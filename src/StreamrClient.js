@@ -11,11 +11,9 @@ import Session from './Session'
 import Connection from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
+import { getUserId } from './user'
 
-const {
-    JsonRpcProvider,
-    Web3Provider
-} = providers
+const { JsonRpcProvider } = providers
 
 /**
  * Wrap connection message events with message parsing.
@@ -80,7 +78,7 @@ class StreamrCached {
             }
         })
 
-        this.getPublisherId = CacheAsyncFn(client.getPublisherId.bind(client), cacheOptions)
+        this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
     }
 
     clearStream(streamId) {
@@ -91,6 +89,12 @@ class StreamrCached {
 
     clearUser() {
         this.getUserInfo.clear()
+        this.getUserId.clear()
+    }
+
+    clear() {
+        this.clearUser()
+        this.clearStream()
     }
 }
 
@@ -249,8 +253,8 @@ export default class StreamrClient extends EventEmitter {
         return this.publisher.publish(...args)
     }
 
-    getPublisherId() {
-        return this.publisher.getPublisherId()
+    async getUserId() {
+        return getUserId(this)
     }
 
     setNextGroupKey(...args) {
