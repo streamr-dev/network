@@ -7,7 +7,7 @@ import { wait, waitForEvent } from 'streamr-test-utils'
 
 import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
 import StreamrClient from '../../src'
-import { Defer } from '../../src/utils'
+import { Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
@@ -921,9 +921,16 @@ describeRepeats('StreamrClient', () => {
                         }
                     })
 
+                    const disconnect = pLimitFn(async () => {
+                        if (msgs.length === MAX_MESSAGES) { return }
+                        otherClient.connection.socket.close()
+                        // wait for reconnection before possibly disconnecting again
+                        await otherClient.nextConnection()
+                    })
+
                     const onConnectionMessage = jest.fn(() => {
                         // disconnect after every message
-                        otherClient.connection.socket.close()
+                        disconnect()
                     })
 
                     otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
