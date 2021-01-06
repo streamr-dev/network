@@ -11,9 +11,9 @@ describe('Session', () => {
     let clientSessionToken
 
     const createClient = (opts = {}) => new StreamrClient({
+        ...config.clientOptions,
         autoConnect: false,
         autoDisconnect: false,
-        ...config.clientOptions,
         ...opts,
     })
 

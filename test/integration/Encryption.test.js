@@ -12,6 +12,7 @@ import config from './config'
 const TIMEOUT = 30 * 1000
 
 const { StreamMessage } = MessageLayer
+
 describe('decryption', () => {
     let publishTestMessages
     let expectErrors = 0 // check no errors by default
@@ -27,6 +28,7 @@ describe('decryption', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
+            ...config.clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
@@ -35,7 +37,6 @@ describe('decryption', () => {
             disconnectDelay: 1,
             publishAutoDisconnectDelay: 50,
             maxRetries: 2,
-            ...config.clientOptions,
             ...opts,
         })
         c.onError = jest.fn()
@@ -191,6 +192,7 @@ describe('decryption', () => {
                 autoConnect: true,
                 autoDisconnect: true,
             })
+
             const onEncryptionMessageErr = checkEncryptionMessages(client)
             const onEncryptionMessageErr2 = checkEncryptionMessages(otherClient)
             const otherUser = await otherClient.getUserInfo()

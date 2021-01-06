@@ -16,9 +16,9 @@ function TestStreamEndpoints(getName) {
     let createdStream
 
     const createClient = (opts = {}) => new StreamrClient({
+        ...config.clientOptions,
         autoConnect: false,
         autoDisconnect: false,
-        ...config.clientOptions,
         ...opts,
     })
 

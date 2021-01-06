@@ -7,15 +7,15 @@ import { Defer } from '../../src/utils'
 import config from './config'
 
 const createClient = (opts = {}) => new StreamrClient({
+    ...(config.clientOptions || {
+        url: config.websocketUrl,
+        restUrl: config.restUrl,
+    }),
     auth: {
         privateKey: fakePrivateKey(),
     },
     autoConnect: false,
     autoDisconnect: false,
-    ...(config.clientOptions || {
-        url: config.websocketUrl,
-        restUrl: config.restUrl,
-    }),
     ...opts,
 })
 
