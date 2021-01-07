@@ -1,6 +1,6 @@
 import EventEmitter from 'eventemitter3'
 import { Wallet } from '@ethersproject/wallet'
-import { getDefaultProvider, providers } from 'ethers'
+import { getDefaultProvider, JsonRpcProvider } from '@ethersproject/providers'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
@@ -12,8 +12,6 @@ import Connection from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
 import { getUserId } from './user'
-
-const { JsonRpcProvider } = providers
 
 /**
  * Wrap connection message events with message parsing.
