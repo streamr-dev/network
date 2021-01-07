@@ -443,7 +443,10 @@ async function untilWithdrawIsComplete(client, getWithdrawTxFunc, getBalanceFunc
             const failAddress = await mainnetAmb.failedMessageSender(messageId)
             if (alreadySent || failAddress !== '0x0000000000000000000000000000000000000000') { // zero address means no failed messages
                 log(`WARNING: Mainnet bridge has already processed withdraw messageId=${messageId}`)
-                log('This could happen if payForSignatureTransport=true, but bridge operator also pays for signatures, and got there before your client')
+                log([
+                    'This could happen if payForSignatureTransport=true, but bridge operator also pays for',
+                    'signatures, and got there before your client',
+                ].join(' '))
                 continue
             }
 
