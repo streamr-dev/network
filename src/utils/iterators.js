@@ -130,6 +130,7 @@ const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
         await cancelGenerator(gtr, error)
     }
 }, {
+    cache: new WeakMap(),
     cachePromiseRejection: true,
 })
 
