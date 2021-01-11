@@ -45,24 +45,29 @@ describe('Iterator Utils', () => {
         })
 
         it('runs fn when iterator.return() is called asynchronously', async () => {
-            const received = []
-            const itr = iteratorFinally(generate(), onFinally)
-            const onTimeoutReached = jest.fn()
-            let receievedAtCallTime
-            for await (const msg of itr) {
-                received.push(msg)
-                if (received.length === MAX_ITEMS) {
-                    // eslint-disable-next-line no-loop-func
-                    setTimeout(() => {
-                        onTimeoutReached()
-                        receievedAtCallTime = received
-                        itr.return()
-                    })
+            const done = Defer()
+            try {
+                const received = []
+                const itr = iteratorFinally(generate(), onFinally)
+                const onTimeoutReached = jest.fn()
+                let receievedAtCallTime
+                for await (const msg of itr) {
+                    received.push(msg)
+                    if (received.length === MAX_ITEMS) {
+                        // eslint-disable-next-line no-loop-func
+                        setTimeout(done.wrap(() => {
+                            onTimeoutReached()
+                            receievedAtCallTime = received
+                            itr.return()
+                        }))
+                    }
                 }
-            }
 
-            expect(onTimeoutReached).toHaveBeenCalledTimes(1)
-            expect(received).toEqual(receievedAtCallTime)
+                expect(onTimeoutReached).toHaveBeenCalledTimes(1)
+                expect(received).toEqual(receievedAtCallTime)
+            } finally {
+                await done
+            }
         })
 
         it('runs fn when iterator returns + breaks during iteration', async () => {
@@ -397,27 +402,65 @@ describe('Iterator Utils', () => {
             expect(received).toEqual([])
         })
 
-        it('cancels when iterator.cancel() is called asynchronously', async () => {
-            const received = []
-            const [cancel, itr] = CancelableGenerator(generate(), onFinally, {
-                timeout: WAIT,
-            })
-            let receievedAtCallTime
-            for await (const msg of itr) {
-                received.push(msg)
-                if (received.length === MAX_ITEMS) {
-                    // eslint-disable-next-line no-loop-func
-                    setTimeout(async () => {
-                        receievedAtCallTime = received
-                        await cancel()
-                        expect(onFinally).toHaveBeenCalledTimes(1)
-                        expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-                    })
-                }
-            }
+        it('cancels with error when iterator.cancel(err) is called asynchronously with error', async () => {
+            const done = Defer()
+            try {
+                const err = new Error('expected')
+                const received = []
+                const [cancel, itr] = CancelableGenerator(generate(), onFinally, {
+                    timeout: WAIT,
+                })
+                let receievedAtCallTime
+                await expect(async () => {
+                    for await (const msg of itr) {
+                        received.push(msg)
+                        if (received.length === MAX_ITEMS) {
+                            // eslint-disable-next-line no-loop-func
+                            setTimeout(done.wrap(async () => {
+                                receievedAtCallTime = received
+                                await cancel(err)
+                                expect(onFinally).toHaveBeenCalledTimes(1)
+                                expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+                            }))
+                        }
+                    }
+                }).rejects.toThrow(err)
 
-            expect(received).toEqual(receievedAtCallTime)
-            expect(itr.isCancelled()).toEqual(true)
+                expect(received).toEqual(receievedAtCallTime)
+                expect(itr.isCancelled()).toEqual(true)
+            } catch (err) {
+                done.reject(err)
+            } finally {
+                await done
+            }
+        })
+
+        it('cancels when iterator.cancel() is called asynchronously', async () => {
+            const done = Defer()
+            try {
+                const received = []
+                const [cancel, itr] = CancelableGenerator(generate(), onFinally, {
+                    timeout: WAIT,
+                })
+                let receievedAtCallTime
+                for await (const msg of itr) {
+                    received.push(msg)
+                    if (received.length === MAX_ITEMS) {
+                        // eslint-disable-next-line no-loop-func
+                        setTimeout(done.wrap(async () => {
+                            receievedAtCallTime = received
+                            await cancel()
+                            expect(onFinally).toHaveBeenCalledTimes(1)
+                            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+                        }))
+                    }
+                }
+
+                expect(received).toEqual(receievedAtCallTime)
+                expect(itr.isCancelled()).toEqual(true)
+            } finally {
+                await done
+            }
         })
 
         it('prevents subsequent .next call', async () => {
@@ -465,31 +508,36 @@ describe('Iterator Utils', () => {
         })
 
         it('interrupts outstanding .next call when called asynchronously', async () => {
-            const received = []
-            const triggeredForever = jest.fn()
-            const [cancel, itr] = CancelableGenerator((async function* Gen() {
-                yield* expected
-                yield await new Promise(() => {
-                    triggeredForever()
-                }) // would wait forever
-            }()), onFinally, {
-                timeout: WAIT,
-            })
+            const done = Defer()
+            try {
+                const received = []
+                const triggeredForever = jest.fn()
+                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                    yield* expected
+                    yield await new Promise(() => {
+                        triggeredForever()
+                    }) // would wait forever
+                }()), onFinally, {
+                    timeout: WAIT,
+                })
 
-            for await (const msg of itr) {
-                received.push(msg)
-                if (received.length === expected.length) {
-                    // eslint-disable-next-line no-loop-func
-                    setTimeout(async () => {
-                        await cancel()
-                        expect(onFinally).toHaveBeenCalledTimes(1)
-                        expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-                    })
+                for await (const msg of itr) {
+                    received.push(msg)
+                    if (received.length === expected.length) {
+                        // eslint-disable-next-line no-loop-func
+                        setTimeout(done.wrap(async () => {
+                            await cancel()
+                            expect(onFinally).toHaveBeenCalledTimes(1)
+                            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+                        }))
+                    }
                 }
-            }
 
-            expect(received).toEqual(expected)
-            expect(itr.isCancelled()).toEqual(true)
+                expect(received).toEqual(expected)
+                expect(itr.isCancelled()).toEqual(true)
+            } finally {
+                await done
+            }
         })
 
         it('stops iterator', async () => {
@@ -525,125 +573,145 @@ describe('Iterator Utils', () => {
         })
 
         it('interrupts outstanding .next call with error', async () => {
-            const received = []
-            const [cancel, itr] = CancelableGenerator((async function* Gen() {
-                yield* expected
-                yield await new Promise(() => {}) // would wait forever
-            }()), onFinally, {
-                timeout: WAIT,
-            })
+            const done = Defer()
+            try {
+                const received = []
+                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                    yield* expected
+                    yield await new Promise(() => {}) // would wait forever
+                }()), onFinally, {
+                    timeout: WAIT,
+                })
 
-            const err = new Error('expected')
+                const err = new Error('expected')
 
-            let receievedAtCallTime
-            await expect(async () => {
-                for await (const msg of itr) {
-                    received.push(msg)
-                    if (received.length === MAX_ITEMS) {
-                        // eslint-disable-next-line no-loop-func
-                        setTimeout(async () => {
-                            receievedAtCallTime = received
-                            await cancel(err)
+                let receievedAtCallTime
+                await expect(async () => {
+                    for await (const msg of itr) {
+                        received.push(msg)
+                        if (received.length === MAX_ITEMS) {
+                            // eslint-disable-next-line no-loop-func
+                            setTimeout(done.wrap(async () => {
+                                receievedAtCallTime = received
+                                await cancel(err)
 
-                            expect(onFinally).toHaveBeenCalledTimes(1)
-                            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-                        })
+                                expect(onFinally).toHaveBeenCalledTimes(1)
+                                expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+                            }))
+                        }
                     }
-                }
-            }).rejects.toThrow(err)
+                }).rejects.toThrow(err)
 
-            expect(received).toEqual(receievedAtCallTime)
-            expect(itr.isCancelled()).toEqual(true)
+                expect(received).toEqual(receievedAtCallTime)
+                expect(itr.isCancelled()).toEqual(true)
+            } finally {
+                await done
+            }
         })
 
         it('can handle queued next calls', async () => {
-            const triggeredForever = jest.fn()
-            const [cancel, itr] = CancelableGenerator((async function* Gen() {
-                yield* expected
-                setTimeout(async () => {
-                    await cancel()
+            const done = Defer()
+            try {
+                const triggeredForever = jest.fn()
+                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                    yield* expected
+                    setTimeout(done.wrap(async () => {
+                        await cancel()
 
-                    expect(onFinally).toHaveBeenCalledTimes(1)
-                    expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-                }, WAIT * 2)
-                yield await new Promise(() => {
-                    triggeredForever()
-                }) // would wait forever
-            }()), onFinally, {
-                timeout: WAIT,
-            })
+                        expect(onFinally).toHaveBeenCalledTimes(1)
+                        expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+                    }), WAIT * 2)
+                    yield await new Promise(() => {
+                        triggeredForever()
+                    }) // would wait forever
+                }()), onFinally, {
+                    timeout: WAIT,
+                })
 
-            const tasks = expected.map(async () => itr.next())
-            tasks.push(itr.next()) // one more over the edge (should trigger forever promise)
-            const received = await Promise.all(tasks)
-            expect(received.map(({ value }) => value)).toEqual([...expected, undefined])
-            expect(triggeredForever).toHaveBeenCalledTimes(1)
-            expect(itr.isCancelled()).toEqual(true)
+                const tasks = expected.map(async () => itr.next())
+                tasks.push(itr.next()) // one more over the edge (should trigger forever promise)
+                const received = await Promise.all(tasks)
+                expect(received.map(({ value }) => value)).toEqual([...expected, undefined])
+                expect(triggeredForever).toHaveBeenCalledTimes(1)
+                expect(itr.isCancelled()).toEqual(true)
+            } finally {
+                await done
+            }
         })
 
         it('can handle queued next calls resolving out of order', async () => {
-            const triggeredForever = jest.fn()
-            const [cancel, itr] = CancelableGenerator((async function* Gen() {
-                let i = 0
-                for await (const v of expected) {
-                    i += 1
-                    await wait((expected.length - i - 1) * 2 * WAIT)
-                    yield v
-                }
+            const done = Defer()
+            try {
+                const triggeredForever = jest.fn()
+                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                    let i = 0
+                    for await (const v of expected) {
+                        i += 1
+                        await wait((expected.length - i - 1) * 2 * WAIT)
+                        yield v
+                    }
 
-                setTimeout(async () => {
-                    await cancel()
+                    setTimeout(done.wrap(async () => {
+                        await cancel()
 
-                    expect(onFinally).toHaveBeenCalledTimes(1)
-                    expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-                }, WAIT * 2)
+                        expect(onFinally).toHaveBeenCalledTimes(1)
+                        expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+                    }), WAIT * 2)
 
-                yield await new Promise(() => {
-                    triggeredForever()
-                }) // would wait forever
-            }()), onFinally, {
-                timeout: WAIT,
-            })
+                    yield await new Promise(() => {
+                        triggeredForever()
+                    }) // would wait forever
+                }()), onFinally, {
+                    timeout: WAIT,
+                })
 
-            const tasks = expected.map(async () => itr.next())
-            tasks.push(itr.next()) // one more over the edge (should trigger forever promise)
-            const received = await Promise.all(tasks)
-            expect(received.map(({ value }) => value)).toEqual([...expected, undefined])
-            expect(triggeredForever).toHaveBeenCalledTimes(1)
+                const tasks = expected.map(async () => itr.next())
+                tasks.push(itr.next()) // one more over the edge (should trigger forever promise)
+                const received = await Promise.all(tasks)
+                expect(received.map(({ value }) => value)).toEqual([...expected, undefined])
+                expect(triggeredForever).toHaveBeenCalledTimes(1)
+            } finally {
+                await done
+            }
         })
 
         it('ignores err if cancelled', async () => {
-            const received = []
-            const err = new Error('expected')
-            const d = Defer()
-            const [cancel, itr] = CancelableGenerator((async function* Gen() {
-                yield* expected
-                await wait(WAIT * 2)
-                d.resolve()
-                throw new Error('should not see this')
-            }()), onFinally)
+            const done = Defer()
+            try {
+                const received = []
+                const err = new Error('expected')
+                const d = Defer()
+                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                    yield* expected
+                    await wait(WAIT * 2)
+                    d.resolve()
+                    throw new Error('should not see this')
+                }()), onFinally)
 
-            let receievedAtCallTime
-            await expect(async () => {
-                for await (const msg of itr) {
-                    received.push(msg)
-                    if (received.length === MAX_ITEMS) {
-                        // eslint-disable-next-line no-loop-func
-                        setTimeout(async () => {
-                            receievedAtCallTime = received
-                            await cancel(err)
+                let receievedAtCallTime
+                await expect(async () => {
+                    for await (const msg of itr) {
+                        received.push(msg)
+                        if (received.length === MAX_ITEMS) {
+                            // eslint-disable-next-line no-loop-func
+                            setTimeout(done.wrap(async () => {
+                                receievedAtCallTime = received
+                                await cancel(err)
 
-                            expect(onFinally).toHaveBeenCalledTimes(1)
-                            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-                        })
+                                expect(onFinally).toHaveBeenCalledTimes(1)
+                                expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+                            }))
+                        }
                     }
-                }
-            }).rejects.toThrow(err)
+                }).rejects.toThrow(err)
 
-            await d
-            await wait(WAIT * 2)
+                await d
+                await wait(WAIT * 2)
 
-            expect(received).toEqual(receievedAtCallTime)
+                expect(received).toEqual(receievedAtCallTime)
+            } finally {
+                await done
+            }
         })
 
         describe('nesting', () => {
@@ -712,44 +780,49 @@ describe('Iterator Utils', () => {
             })
 
             it('can cancel nested cancellable iterator in finally, asynchronously', async () => {
-                const waitInner = jest.fn()
-                const [cancelInner, itrInner] = CancelableGenerator((async function* Gen() {
-                    yield* generate()
-                    yield await new Promise(() => {
-                        // should not get here
-                        waitInner()
-                    }) // would wait forever
-                }()), onFinallyInner, {
-                    timeout: WAIT,
-                })
+                const done = Defer()
+                try {
+                    const waitInner = jest.fn()
+                    const [cancelInner, itrInner] = CancelableGenerator((async function* Gen() {
+                        yield* generate()
+                        yield await new Promise(() => {
+                            // should not get here
+                            waitInner()
+                        }) // would wait forever
+                    }()), onFinallyInner, {
+                        timeout: WAIT,
+                    })
 
-                const waitOuter = jest.fn()
-                const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
-                    yield* itrInner
-                    yield await new Promise(() => {
-                        // should not get here
-                        waitOuter()
-                    }) // would wait forever
-                }()), async () => {
-                    await cancelInner()
-                    await onFinally()
-                }, {
-                    timeout: WAIT,
-                })
+                    const waitOuter = jest.fn()
+                    const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
+                        yield* itrInner
+                        yield await new Promise(() => {
+                            // should not get here
+                            waitOuter()
+                        }) // would wait forever
+                    }()), async () => {
+                        await cancelInner()
+                        await onFinally()
+                    }, {
+                        timeout: WAIT,
+                    })
 
-                const received = []
-                for await (const msg of itrOuter) {
-                    received.push(msg)
-                    if (received.length === expected.length) {
-                        setTimeout(() => {
-                            cancelOuter()
-                        })
+                    const received = []
+                    for await (const msg of itrOuter) {
+                        received.push(msg)
+                        if (received.length === expected.length) {
+                            setTimeout(done.wrap(() => {
+                                cancelOuter()
+                            }))
+                        }
                     }
-                }
 
-                expect(waitOuter).toHaveBeenCalledTimes(1)
-                expect(waitInner).toHaveBeenCalledTimes(1)
-                expect(received).toEqual(expected)
+                    expect(waitOuter).toHaveBeenCalledTimes(1)
+                    expect(waitInner).toHaveBeenCalledTimes(1)
+                    expect(received).toEqual(expected)
+                } finally {
+                    await done
+                }
             })
         })
 

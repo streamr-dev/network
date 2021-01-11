@@ -36,6 +36,7 @@ describe('PushQueue', () => {
         expect(q.length).toBe(1)
         q.push(expected[1])
         expect(q.length).toBe(2)
+        const done = Defer()
 
         setTimeout(() => {
             // buffer should have drained by now
@@ -45,6 +46,7 @@ describe('PushQueue', () => {
             setTimeout(() => {
                 q.return(5) // both items above should get through
                 q.push('nope') // this should not
+                done.resolve()
             }, 20)
         }, 10)
 
@@ -57,6 +59,7 @@ describe('PushQueue', () => {
         expect(i).toBe(4)
         // buffer should have drained at end
         expect(q.length).toBe(0)
+        await done
     })
 
     it('supports passing initial values to constructor', async () => {
