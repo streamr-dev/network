@@ -86,6 +86,8 @@ export function iteratorFinally(iterable, onFinally) {
                 // return a generator that simply runs finally script (once)
                 return (async function* generatorRunFinally() { // eslint-disable-line require-yield
                     try {
+                        // NOTE: native generators do not throw if gen.throw(err) called before started
+                        // so we should do the same here
                         if (typeof iterable.return === 'function') {
                             await iterable.return() // runs onFinally for nested iterable
                         }

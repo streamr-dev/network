@@ -18,6 +18,21 @@ async function* generate(items = expected) {
     await wait(WAIT * 0.1)
 }
 
+async function* generateThrow(items = expected, { max = MAX_ITEMS, err = new Error('expected') }) {
+    let index = 0
+    await wait(WAIT * 0.1)
+    for await (const item of items) {
+        index += 1
+        await wait(WAIT * 0.1)
+        if (index > max) {
+            throw err
+        }
+        yield item
+        await wait(WAIT * 0.1)
+    }
+    await wait(WAIT * 0.1)
+}
+
 describe('Iterator Utils', () => {
     describe('compare native generators', () => {
         IteratorTest('baseline', () => generate())
@@ -174,11 +189,27 @@ describe('Iterator Utils', () => {
             await expect(async () => itr.throw(err)).rejects.toThrow(err)
             expect(onFinally).toHaveBeenCalledTimes(1)
             expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-            // doesn't throw, matches native iterators
+            // NOTE: doesn't throw, matches native iterators
             for await (const msg of itr) {
                 received.push(msg)
             }
             expect(received).toEqual([])
+        })
+
+        it('runs fn when inner iterator throws during iteration', async () => {
+            const received = []
+            const err = new Error('expected err')
+            const itr = iteratorFinally(generateThrow(expected, {
+                err,
+            }), onFinally)
+            await expect(async () => {
+                for await (const msg of itr) {
+                    received.push(msg)
+                }
+            }).rejects.toThrow(err)
+            expect(onFinally).toHaveBeenCalledTimes(1)
+            expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
         })
 
         it('errored before start iterator works if onFinally is async', async () => {
