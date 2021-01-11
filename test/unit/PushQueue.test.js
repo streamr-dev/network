@@ -2,6 +2,9 @@ import { wait } from 'streamr-test-utils'
 import AbortController from 'node-abort-controller'
 
 import PushQueue from '../../src/utils/PushQueue'
+import { Defer } from '../../src/utils'
+
+import IteratorTest from './IteratorTest'
 
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 const WAIT = 20
@@ -18,6 +21,14 @@ async function* generate(items = expected) {
 }
 
 describe('PushQueue', () => {
+    IteratorTest('PushQueue works like regular iterator', ({ items }) => (
+        new PushQueue([...items, null])
+    ))
+
+    IteratorTest('PushQueue.from works like regular iterator', ({ items }) => (
+        PushQueue.from(generate([...items, null]))
+    ))
+
     it('supports pre-buffering, async push & return', async () => {
         const q = new PushQueue()
         expect(q.length).toBe(0)
