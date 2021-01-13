@@ -1,6 +1,7 @@
 import EventEmitter from 'eventemitter3'
 import { Wallet } from '@ethersproject/wallet'
-import { getDefaultProvider, JsonRpcProvider } from '@ethersproject/providers'
+import { getDefaultProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
+import { computeAddress } from '@ethersproject/transactions'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
@@ -137,6 +138,52 @@ export default class StreamrClient extends EventEmitter {
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
         this.cached = new StreamrCached(this)
+
+        // TODO: below could also be written "OOP style" into two classes implementing an "interface StreamrEthereum" if porting to TypeScript later
+        // typically: in node.js, privateKey is used; in browser, (window.)ethereum is used
+        if (this.options.auth.privateKey) {
+            if (!this.options.auth.privateKey.startsWith('0x')) {
+                this.options.auth.privateKey = `0x${this.options.auth.privateKey}`
+            }
+            const self = this
+            const key = this.options.auth.privateKey
+            const address = computeAddress(key)
+            this.getAddress = () => address
+            this.getSigner = () => new Wallet(key, self.getMainnetProvider())
+            this.getSidechainSigner = async () => new Wallet(key, self.getSidechainProvider())
+        } else if (this.options.auth.ethereum) {
+            const self = this
+            this.getAddress = () => self.options.auth.ethereum.selectedAddress // null if no addresses connected+selected in Metamask
+            this.getSigner = () => {
+                const metamaskProvider = new Web3Provider(self.options.auth.ethereum)
+                const metamaskSigner = metamaskProvider.getSigner()
+                return metamaskSigner
+            }
+            this.getSidechainSigner = async () => {
+                // chainId is required for checking when using Metamask
+                if (!self.options.sidechain || !self.options.sidechain.chainId) {
+                    throw new Error('Streamr sidechain not configured (with chainId) in the StreamrClient options!')
+                }
+
+                const metamaskProvider = new Web3Provider(self.options.auth.ethereum)
+                const { chainId } = await metamaskProvider.getNetwork()
+                if (chainId !== self.options.sidechain.chainId) {
+                    throw new Error(`Please connect Metamask to Ethereum blockchain with chainId ${self.options.sidechain.chainId}`)
+                }
+                const metamaskSigner = metamaskProvider.getSigner()
+                return metamaskSigner
+            }
+            // TODO: handle events
+            // ethereum.on('accountsChanged', (accounts) => { })
+            // https://docs.metamask.io/guide/ethereum-provider.html#events says:
+            //   "We recommend reloading the page unless you have a very good reason not to"
+            //   Of course we can't and won't do that, but if we need something chain-dependent...
+            // ethereum.on('chainChanged', (chainId) => { window.location.reload() });
+        } else {
+            this.getAddress = () => null
+            this.getSigner = () => { throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.") }
+            this.getSidechainSigner = async () => { throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.") }
+        }
     }
 
     async onConnectionConnected() {
