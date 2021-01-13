@@ -828,8 +828,8 @@ describeRepeats('StreamrClient', () => {
                         expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
 
                         const msg = Msg()
-                        await stream.publish(msg)
-                        await waitForStorage(msg)
+                        const publishReq = await stream.publish(msg)
+                        await waitForStorage(publishReq)
 
                         await unsubTask
                         await subTask
@@ -1196,8 +1196,8 @@ describeRepeats('StreamrClient', () => {
                 const publishedMessage = Msg({
                     content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
                 })
-                await client.publish(stream.id, publishedMessage)
-                await waitForStorage(publishedMessage)
+                const publishReq = await client.publish(stream.id, publishedMessage)
+                await waitForStorage(publishReq)
                 const sub = await client.resend({
                     stream: stream.id,
                     resend: {

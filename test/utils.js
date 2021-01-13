@@ -50,18 +50,26 @@ export const Msg = (opts) => ({
 })
 
 function defaultMessageMatchFn(msgTarget, msgGot) {
-    return msgGot.value === msgTarget.value
+    if (msgTarget.streamMessage.signature) {
+        // compare signatures by default
+        return msgTarget.streamMessage.signature === msgGot.signature
+    }
+    return JSON.stringify(msgGot.content) === JSON.stringify(msgTarget.streamMessage.getParsedContent())
 }
 
 export function getWaitForStorage(client, defaultOpts = {}) {
     /* eslint-disable no-await-in-loop */
-    return async (msg, opts = {}) => {
+    return async (publishRequest, opts = {}) => {
         const {
             streamId, streamPartition = 0, interval = 500, timeout = 5000, messageMatchFn = defaultMessageMatchFn
         } = validateOptions({
             ...defaultOpts,
             ...opts,
         })
+
+        if (!publishRequest && !publishRequest.streamMessage) {
+            throw new Error(`should check against publish request for comparison, got: ${inspect(publishRequest)}`)
+        }
 
         const start = Date.now()
         let last
@@ -74,11 +82,11 @@ export function getWaitForStorage(client, defaultOpts = {}) {
                     timeout,
                     duration
                 }, {
-                    msg,
+                    publishRequest,
                     last: last.map((l) => l.content),
                 })
                 const err = new Error(`timed out after ${duration}ms waiting for message`)
-                err.msg = msg
+                err.publishRequest = publishRequest
                 throw err
             }
 
@@ -89,14 +97,15 @@ export function getWaitForStorage(client, defaultOpts = {}) {
             })
 
             for (const lastMsg of last) {
-                if (messageMatchFn(msg, lastMsg)) {
+                if (messageMatchFn(publishRequest, lastMsg)) {
                     found = true
                     return
                 }
             }
 
             client.debug('message not found, retrying... %o', {
-                msg, last: last.map(({ content }) => content)
+                msg: publishRequest.streamMessage.getParsedContent(),
+                last: last.map(({ content }) => content)
             })
 
             await wait(interval)
