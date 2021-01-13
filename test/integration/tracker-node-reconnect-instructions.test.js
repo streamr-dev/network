@@ -75,10 +75,9 @@ describe('Check tracker instructions to node', () => {
                 streamId,
                 streamPartition: 0,
                 nodeIds: [],
-                counter: 0
+                counter: 3
             }).serialize()
         )
-
         await waitForEvent(nodeOne.trackerNode, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED)
         await waitForEvent(nodeOne, NodeEvent.NODE_DISCONNECTED)
 

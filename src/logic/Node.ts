@@ -75,7 +75,6 @@ export class Node extends EventEmitter {
     private readonly started: string
 
     private readonly logger: pino.Logger
-    private readonly sendStatusTimeout: Map<string, NodeJS.Timeout>
     private readonly disconnectionTimers: { [key: string]: NodeJS.Timeout }
     private readonly streams: StreamManager
     private readonly messageBuffer: MessageBuffer<[MessageLayer.StreamMessage, string | null]>
@@ -113,7 +112,6 @@ export class Node extends EventEmitter {
 
         this.logger = getLogger(`streamr:logic:node:${this.peerInfo.peerId}`)
 
-        this.sendStatusTimeout = new Map()
         this.disconnectionTimers = {}
         this.streams = new StreamManager()
         this.messageBuffer = new MessageBuffer(this.bufferTimeoutInMs, this.bufferMaxSize, (streamId) => {
@@ -391,9 +389,6 @@ export class Node extends EventEmitter {
             this.connectToBoostrapTrackersInterval = null
         }
 
-        const timeouts = [...this.sendStatusTimeout.values()]
-        timeouts.forEach((timeout) => clearTimeout(timeout))
-
         Object.values(this.disconnectionTimers).forEach((timeout) => clearTimeout(timeout))
 
         this.messageBuffer.clear()
@@ -416,18 +411,8 @@ export class Node extends EventEmitter {
 
     private sendStreamStatus(streamId: StreamIdAndPartition): void {
         const trackerId = this.getTrackerId(streamId)
-
         if (trackerId) {
-            const oldTimeoutRef = this.sendStatusTimeout.get(trackerId)
-            if (oldTimeoutRef) {
-                clearTimeout(oldTimeoutRef)
-            }
-
-            const timeout = setTimeout(() => {
-                this.sendStatus(trackerId)
-            }, this.sendStatusToAllTrackersInterval)
-
-            this.sendStatusTimeout.set(trackerId, timeout)
+            this.sendStatus(trackerId)
         }
     }
 

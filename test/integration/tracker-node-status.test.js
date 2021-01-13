@@ -76,32 +76,36 @@ describe('check status message flow between tracker and two nodes', () => {
         nodeTwo.start()
 
         let receivedTotal = 0
+        let nodeOneStatus = null
+        let nodeTwoStatus = null
+
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
             if (nodeId === 'node-1') {
-                // eslint-disable-next-line no-underscore-dangle
-                expect(statusMessage.status).toEqual(nodeOne.getStatus())
+                nodeOneStatus = statusMessage.status
                 receivedTotal += 1
             }
 
             if (nodeId === 'node-2') {
-                // eslint-disable-next-line no-underscore-dangle
-                expect(statusMessage.status).toEqual(nodeTwo.getStatus())
+                nodeTwoStatus = statusMessage.status
                 receivedTotal += 1
             }
 
             if (receivedTotal === 2) {
+                expect(nodeOneStatus).toEqual(nodeOne.getStatus())
+                expect(nodeTwoStatus).toEqual(nodeTwo.getStatus())
                 done()
             }
         })
 
         await wait(100)
-
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
     })
 
     it('tracker should receive rtt values from nodes', async (done) => {
         let receivedTotal = 0
+        let nodeOneStatus = null
+        let nodeTwoStatus = null
 
         nodeOne.start()
         nodeTwo.start()
@@ -117,18 +121,18 @@ describe('check status message flow between tracker and two nodes', () => {
 
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
             if (nodeId === 'node-1') {
-                // eslint-disable-next-line no-underscore-dangle
-                expect(statusMessage.status.rtts['node-2']).toBeGreaterThanOrEqual(0)
+                nodeOneStatus = statusMessage.status
                 receivedTotal += 1
             }
 
             if (nodeId === 'node-2') {
-                // eslint-disable-next-line no-underscore-dangle
-                expect(statusMessage.status.rtts['node-1']).toBeGreaterThanOrEqual(0)
+                nodeTwoStatus = statusMessage.status
                 receivedTotal += 1
             }
 
             if (receivedTotal === 2) {
+                expect(nodeOneStatus.rtts['node-2']).toBeGreaterThanOrEqual(0)
+                expect(nodeTwoStatus.rtts['node-1']).toBeGreaterThanOrEqual(0)
                 done()
             }
         })
@@ -138,6 +142,8 @@ describe('check status message flow between tracker and two nodes', () => {
 
     it('tracker should receive location information from nodes', async (done) => {
         let receivedTotal = 0
+        let nodeOneStatus = null
+        let nodeTwoStatus = null
 
         nodeOne.start()
         nodeTwo.start()
@@ -147,16 +153,18 @@ describe('check status message flow between tracker and two nodes', () => {
 
         tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
             if (nodeId === nodeOne.peerInfo.peerId) {
-                expect(Object.keys(statusMessage.status.location).length).toEqual(4)
+                nodeOneStatus = statusMessage.status
                 expect(tracker.locationManager.nodeLocations['node-1']).toBeUndefined()
             }
 
             if (nodeId === nodeTwo.peerInfo.peerId) {
-                expect(Object.keys(statusMessage.status.location).length).toEqual(4)
+                nodeTwoStatus = statusMessage.status
                 expect(tracker.locationManager.nodeLocations['node-2'].country).toBe('FI')
             }
             receivedTotal += 1
             if (receivedTotal === 2) {
+                expect(Object.keys(nodeOneStatus.location).length).toEqual(4)
+                expect(Object.keys(nodeTwoStatus.location).length).toEqual(4)
                 done()
             }
         })
