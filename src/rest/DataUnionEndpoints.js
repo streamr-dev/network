@@ -935,7 +935,7 @@ export async function getMemberBalance(memberAddress, options) {
  */
 export async function getTokenBalance(address, options) {
     const a = parseAddress(this, address)
-    const tokenAddressMainnet = options.tokenAddress || await getMainnetContractReadOnly(this, options).then((c) => c.token()).catch((e) => null) || this.options.tokenAddress
+    const tokenAddressMainnet = options.tokenAddress || await getMainnetContractReadOnly(this, options).then((c) => c.token()).catch(() => null) || this.options.tokenAddress
     if (!tokenAddressMainnet) { throw new Error('tokenAddress option not found') }
     const provider = this.getMainnetProvider()
     const token = new Contract(tokenAddressMainnet, [{
