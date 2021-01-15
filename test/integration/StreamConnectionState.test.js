@@ -393,7 +393,7 @@ describeRepeats('Connection State', () => {
                 otherClient.connection.on('disconnected', onDisconnected)
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
-                    delay: 500,
+                    delay: 1000,
                 })
 
                 await done
@@ -403,7 +403,7 @@ describeRepeats('Connection State', () => {
                 expect(msgs).toEqual(published)
 
                 // check disconnect/connect actually happened
-                expect(onConnectionMessage).toHaveBeenCalledTimes(published.length)
+                expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
                 expect(onConnected).toHaveBeenCalledTimes(published.length)
                 expect(onDisconnected).toHaveBeenCalledTimes(published.length)
             } finally {

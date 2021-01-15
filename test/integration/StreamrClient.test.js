@@ -942,7 +942,7 @@ describeRepeats('StreamrClient', () => {
                     otherClient.connection.on('disconnected', onDisconnected)
 
                     const published = await publishTestMessages(MAX_MESSAGES, {
-                        delay: 250,
+                        delay: 1000,
                     })
 
                     await done
@@ -952,9 +952,9 @@ describeRepeats('StreamrClient', () => {
                     expect(msgs).toEqual(published)
 
                     // check disconnect/connect actually happened
-                    expect(onConnectionMessage).toHaveBeenCalledTimes(published.length)
-                    expect(onConnected).toHaveBeenCalledTimes(published.length)
-                    expect(onDisconnected).toHaveBeenCalledTimes(published.length)
+                    expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                    expect(onConnected).toHaveBeenCalledTimes(published.length + 1)
+                    expect(onDisconnected).toHaveBeenCalledTimes(published.length + 1)
                 } finally {
                     await Promise.all([
                         otherClient.disconnect(),
