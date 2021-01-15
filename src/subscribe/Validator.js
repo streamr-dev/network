@@ -2,10 +2,10 @@ import { inspect } from 'util'
 
 import { MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
-import { pOrderedResolve } from '../utils'
+import { pOrderedResolve, CacheAsyncFn } from '../utils'
 import { validateOptions } from '../stream/utils'
 
-const { StreamMessageValidator } = Utils
+const { StreamMessageValidator, SigningUtil } = Utils
 const { ValidationError } = Errors
 const { StreamMessage, GroupKeyErrorResponse } = MessageLayer
 
@@ -39,6 +39,11 @@ export default function Validator(client, opts) {
         async isSubscriber(ethAddress, _streamId) {
             return client.cached.isStreamSubscriber(_streamId, ethAddress)
         },
+        verify: CacheAsyncFn(SigningUtil.verify.bind(SigningUtil), {
+            ...client.options.cache,
+            cachePromiseRejection: false,
+            cacheKey: (args) => args.join('|'),
+        })
     })
 
     const validate = pOrderedResolve(async (msg) => {
