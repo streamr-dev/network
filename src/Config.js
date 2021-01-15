@@ -31,7 +31,12 @@ export default function ClientConfig(opts = {}) {
         streamrOperatorAddress: '0xc0aa4dC0763550161a6B59fa430361b5a26df28C',
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
         keyExchange: {},
-        ...opts
+        ...opts,
+        cache: {
+            maxSize: 10000,
+            maxAge: 30 * 60 * 1000, // 30 minutes
+            ...opts.cache,
+        }
     }
 
     const parts = options.url.split('?')
