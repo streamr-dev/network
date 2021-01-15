@@ -65,16 +65,8 @@ export async function loginWithApiKey(apiKey) {
     return getSessionToken(url, props)
 }
 
-export async function loginWithUsernamePassword(username, password) {
-    this.debug('loginWithUsernamePassword', {
-        username,
-    })
-    const url = getEndpointUrl(this.options.restUrl, 'login', 'password')
-    const props = {
-        username,
-        password,
-    }
-    return getSessionToken(url, props)
+export async function loginWithUsernamePassword() {
+    throw new Error('username/password auth is no longer supported. Please create an ethereum identity.')
 }
 
 export async function getUserInfo() {

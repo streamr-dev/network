@@ -66,6 +66,7 @@ export default class StreamrClient extends EventEmitter {
             streamrOperatorAddress: '0xc0aa4dC0763550161a6B59fa430361b5a26df28C',
             tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
         }
+
         this.subscribedStreamPartitions = {}
 
         Object.assign(this.options, options || {})
@@ -100,6 +101,10 @@ export default class StreamrClient extends EventEmitter {
 
         if (this.options.auth.privateKey && !this.options.auth.privateKey.startsWith('0x')) {
             this.options.auth.privateKey = `0x${this.options.auth.privateKey}`
+        }
+
+        if (options.auth && (options.auth.username || options.auth.password)) {
+            throw new Error('username/password auth is no longer supported. Please create an ethereum identity.')
         }
 
         if (this.options.keyExchange) {
