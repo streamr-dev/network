@@ -13,10 +13,12 @@ import resendStream from './resendStream'
 class Subscription extends Emitter {
     constructor(client, opts, onFinally = () => {}) {
         super()
-        this.id = counterId(`Subscription.${this.key}`)
         this.client = client
         this.options = validateOptions(opts)
         this.key = this.options.key
+        this.id = counterId(`Subscription.${this.key}`)
+        this.streamId = this.options.streamId
+        this.streamPartition = this.options.streamPartition
 
         this._onDone = Defer()
         this._onFinally = onFinally
