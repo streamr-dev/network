@@ -122,15 +122,20 @@ export function CacheAsyncFn(asyncFn, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
+    onEviction,
+    ...opts
 } = {}) {
     const cache = new LRU({
         maxSize,
+        maxAge,
+        onEviction,
     })
 
     const cachedFn = pMemoize(asyncFn, {
         maxAge,
         cachePromiseRejection,
         cache,
+        ...opts,
     })
 
     cachedFn.clear = () => pMemoize.clear(cachedFn)
@@ -155,13 +160,18 @@ export function CacheAsyncFn(asyncFn, {
 export function CacheFn(fn, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
+    onEviction,
+    ...opts
 } = {}) {
     const cache = new LRU({
         maxSize,
+        maxAge,
+        onEviction,
     })
     const cachedFn = mem(fn, {
         maxAge,
         cache,
+        ...opts
     })
     cachedFn.clear = () => mem.clear(cachedFn)
     cachedFn.clearMatching = (...args) => clearMatching(cache, ...args)
