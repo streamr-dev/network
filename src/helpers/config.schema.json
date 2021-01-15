@@ -186,7 +186,8 @@
       "required": [
         "intervalInSeconds",
         "sentry",
-        "streamr"
+        "streamr",
+        "perNodeMetrics"
       ],
       "additionalProperties": false,
       "properties": {
@@ -224,6 +225,36 @@
                 "description": "API key for publishing to Stream"
               }
             }
+        },
+        "perNodeMetrics" : {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Specific configuration for the metrics on each node",
+          "required": [
+            "enabled",
+            "wsUrl",
+            "httpUrl"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "enabled" : {
+              "type" : "boolean"
+            },
+            "wsUrl" : {
+              "type" : [
+                "string",
+                "null"
+              ]
+            },
+            "httpUrl": {
+              "type" : [
+                "string",
+                "null"
+              ]
+            }
+          }
         }
       }
     },

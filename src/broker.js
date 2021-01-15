@@ -116,6 +116,7 @@ module.exports = async (config) => {
         streamId = config.reporting.streamr.streamId
         apiKey = config.reporting.streamr.apiKey
         logger.info(`Starting StreamrClient reporting with apiKey: ${apiKey} and streamId: ${streamId}`)
+
         client = new StreamrClient({
             auth: {
                 apiKey
@@ -126,13 +127,42 @@ module.exports = async (config) => {
         logger.info('StreamrClient reporting disabled')
     }
 
-    // Initialize common utilities
-    const volumeLogger = new VolumeLogger(
-        config.reporting.intervalInSeconds,
-        metricsContext,
-        client,
-        streamId
-    )
+    let volumeLogger
+    if (config.reporting.perNodeMetrics && config.reporting.perNodeMetrics.enabled) {
+        // set up stream-specific reporting metrics
+        client = new StreamrClient({
+            auth: {
+                privateKey: config.ethereumPrivateKey
+            },
+            url: config.reporting.perNodeMetrics.wsUrl,
+            restUrl: config.reporting.perNodeMetrics.httpUrl
+            // autoConnect: false
+        })
+
+        const metricsStream = await client.getOrCreateStream({
+            name: brokerAddress,
+            id: brokerAddress + '/streamr/node/metrics/sec'
+        })
+
+        await metricsStream.grantPermission('stream_get', null)
+        await metricsStream.grantPermission('stream_subscribe', null)
+
+        // Initialize common utilities
+        volumeLogger = new VolumeLogger(
+            config.reporting.intervalInSeconds,
+            metricsContext,
+            client,
+            metricsStream.id
+        )
+    } else {
+        volumeLogger = new VolumeLogger(
+            config.reporting.intervalInSeconds,
+            metricsContext,
+            client,
+            streamId
+        )
+    }
+
     // Validator only needs public information, so use unauthenticated client for that
     const unauthenticatedClient = new StreamrClient({
         restUrl: config.streamrUrl + '/api/v1',

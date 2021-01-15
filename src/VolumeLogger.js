@@ -78,7 +78,7 @@ module.exports = class VolumeLogger {
 
         // Report metrics to Streamr stream
         if (this.client instanceof StreamrClient && this.streamId !== undefined) {
-            this.client.publishHttp(this.streamId, report).catch((e) => {
+            this.client.publish(this.streamId, report).catch((e) => {
                 logger.warn(`failed to publish metrics to ${this.streamId} because ${e}`)
             })
         }
@@ -179,6 +179,8 @@ module.exports = class VolumeLogger {
     close() {
         io.destroy()
         clearTimeout(this.timeout)
+        if (this.client) {
+            this.client.ensureDisconnected()
+        }
     }
 }
-
