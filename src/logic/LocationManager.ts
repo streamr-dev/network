@@ -3,7 +3,7 @@ import getLogger from "../helpers/logger"
 import { Location } from "../identifiers"
 import pino from "pino"
 
-function isValidNodeLocation(location: Location) {
+function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)
 }
 
@@ -26,9 +26,9 @@ export class LocationManager {
         return this.nodeLocations[nodeId]
     }
 
-    updateLocation({ nodeId, location, address }: { nodeId: string, location: Location, address: string }): void {
+    updateLocation({ nodeId, location, address }: { nodeId: string, location: Location | null, address: string }): void {
         if (isValidNodeLocation(location)) {
-            this.nodeLocations[nodeId] = location
+            this.nodeLocations[nodeId] = location!
         } else if (!isValidNodeLocation(this.nodeLocations[nodeId])) {
             let geoIpRecord: null | Lookup = null
             if (address) {

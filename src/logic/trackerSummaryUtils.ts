@@ -1,6 +1,6 @@
-import { OverlayTopology, TopologyNodes, TopologyState } from "./OverlayTopology"
+import { TopologyState } from "./OverlayTopology"
 import { StreamIdAndPartition } from "../identifiers"
-import { OverlayPerStream, Tracker } from "./Tracker"
+import { OverlayPerStream } from "./Tracker"
 
 export function getTopology(
     overlayPerStream: OverlayPerStream,
@@ -9,7 +9,7 @@ export function getTopology(
 ): { [key: string]: TopologyState } {
     const topology: { [key: string]: TopologyState } = {}
 
-    let streamKeys = []
+    let streamKeys: string[] = []
 
     if (streamId && partition === null) {
         streamKeys = Object.keys(overlayPerStream).filter((streamKey) => streamKey.includes(streamId))

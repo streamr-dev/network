@@ -535,8 +535,6 @@ export class WsEndpoint extends EventEmitter {
             }
 
             this.logger.debug('<=== %s connecting to me', address)
-            // added 'connection' event for test - duplicate-connections-are-closed.test.js
-            this.emit('connection', ws)
             this.onNewConnection(ws, address, clientPeerInfo, false)
         } catch (e) {
             this.logger.debug('dropped incoming connection because of %s', e)
@@ -618,7 +616,7 @@ export class WsEndpoint extends EventEmitter {
 }
 
 export function startWebSocketServer(
-    host: string,
+    host: string | null,
     port: number,
     privateKeyFileName: string | undefined = undefined,
     certFileName: string | undefined = undefined
@@ -657,7 +655,7 @@ export async function startEndpoint(
     port: number,
     peerInfo: PeerInfo,
     advertisedWsUrl: string | null,
-    metricsContext: MetricsContext,
+    metricsContext?: MetricsContext,
     pingInterval?: number | undefined,
     privateKeyFileName?: string | undefined,
     certFileName?: string | undefined,

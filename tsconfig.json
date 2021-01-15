@@ -6,18 +6,14 @@
     "allowJs": true,
     "declaration": true,
     "outDir": "dist",
-    "rootDirs": ["src"],
+    "rootDirs": ["src", "test"],
     "strict": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
     "resolveJsonModule": true
   },
-  "exclude": [
-    "bin",
-    "dist",
-    "examples",
-    "jest.config.js",
-    "node_modules",
-    "test"
+  "include": [
+    "src/**/*",
+    "test/**/*"
   ]
 }
