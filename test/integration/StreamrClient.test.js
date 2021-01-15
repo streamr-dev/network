@@ -953,8 +953,8 @@ describeRepeats('StreamrClient', () => {
 
                     // check disconnect/connect actually happened
                     expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
-                    expect(onConnected).toHaveBeenCalledTimes(published.length + 1)
-                    expect(onDisconnected).toHaveBeenCalledTimes(published.length + 1)
+                    expect(onConnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                    expect(onDisconnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
                 } finally {
                     await Promise.all([
                         otherClient.disconnect(),

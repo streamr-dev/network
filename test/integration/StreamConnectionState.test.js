@@ -404,8 +404,8 @@ describeRepeats('Connection State', () => {
 
                 // check disconnect/connect actually happened
                 expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
-                expect(onConnected).toHaveBeenCalledTimes(published.length)
-                expect(onDisconnected).toHaveBeenCalledTimes(published.length)
+                expect(onConnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                expect(onDisconnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
             } finally {
                 await Promise.all([
                     otherClient.disconnect(),
