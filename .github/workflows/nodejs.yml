@@ -76,7 +76,6 @@ jobs:
         test-name: ['test-integration-no-resend', 'test-integration-resend']
     env:
         TEST_NAME: ${{ matrix.test-name }}
-        WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
 
     steps:
       - uses: actions/checkout@v2
@@ -104,8 +103,6 @@ jobs:
       fail-fast: false
       matrix:
         node-version: [12.x, 14.x]
-    env:
-        WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
 
     steps:
       - uses: actions/checkout@v2
@@ -157,7 +154,7 @@ jobs:
           ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
       - name: test-browser
         timeout-minutes: 2
-        run: WEBSOCKET_URL=ws://localhost:8890/api/v1/ws npm run test-browser
+        run: npm run test-browser
 
   benchmarks:
     name: Test Benchmark using Node ${{ matrix.node-version }}
