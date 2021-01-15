@@ -347,18 +347,33 @@ describeRepeats('Connection State', () => {
             expect(subscriber.count(stream.id)).toBe(0)
         })
 
-        it('should resubscribe on unexpected disconnection', async () => {
-            const otherClient = createClient({
-                auth: client.options.auth,
-            })
+        describe('resubscribe on unexpected disconnection', () => {
+            let otherClient
 
-            try {
-                await Promise.all([
+            beforeEach(async () => {
+                otherClient = createClient({
+                    auth: client.options.auth,
+                })
+                const tasks = [
                     client.connect(),
+                    client.session.getSessionToken(),
                     otherClient.connect(),
                     otherClient.session.getSessionToken(),
-                ])
+                ]
+                await Promise.allSettled(tasks)
+                await Promise.all(tasks) // throw if there were an error
+            })
 
+            afterEach(async () => {
+                const tasks = [
+                    otherClient.disconnect(),
+                    client.disconnect(),
+                ]
+                await Promise.allSettled(tasks)
+                await Promise.all(tasks) // throw if there were an error
+            })
+
+            it('should work', async () => {
                 const done = Defer()
 
                 const msgs = []
@@ -406,12 +421,7 @@ describeRepeats('Connection State', () => {
                 expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
                 expect(onConnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
                 expect(onDisconnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
-            } finally {
-                await Promise.all([
-                    otherClient.disconnect(),
-                    client.disconnect(),
-                ])
-            }
-        }, 20000)
+            }, 30000)
+        })
     })
 })
