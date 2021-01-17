@@ -6,10 +6,11 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search)
     const streamName = urlParams.get('streamName')
+    const { privateKey } = StreamrClient.generateEthereumAccount()
 
     const client = new StreamrClient({
         auth: {
-            apiKey: 'tester1-api-key'
+            privateKey,
         },
         url: 'ws://localhost/api/v1/ws',
         restUrl: 'http://localhost/api/v1',
