@@ -3,10 +3,13 @@ import { Wallet } from '@ethersproject/wallet'
 import { Web3Provider } from '@ethersproject/providers'
 
 export default class Session extends EventEmitter {
-    constructor(client, options) {
+    constructor(client, options = {}) {
         super()
         this._client = client
-        this.options = options || {}
+        this.options = {
+            ...options
+        }
+
         this.state = Session.State.LOGGED_OUT
 
         // TODO: move loginFunction to StreamrClient constructor where "auth type" is checked

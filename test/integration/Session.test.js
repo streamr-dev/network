@@ -41,6 +41,23 @@ describe('Session', () => {
             }).session.getSessionToken()).resolves.toBeTruthy()
         })
 
+        it('can handle multiple client instances', async () => {
+            expect.assertions(1)
+            const client1 = createClient({
+                auth: {
+                    privateKey: fakePrivateKey(),
+                },
+            })
+            const client2 = createClient({
+                auth: {
+                    privateKey: fakePrivateKey(),
+                },
+            })
+            const token1 = await client1.session.getSessionToken()
+            const token2 = await client2.session.getSessionToken()
+            expect(token1).not.toEqual(token2)
+        })
+
         it('fails if trying to get the token using username and password', async () => {
             expect.assertions(1)
             await expect(() => createClient({
