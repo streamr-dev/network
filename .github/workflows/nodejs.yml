@@ -63,6 +63,8 @@ jobs:
     strategy:
       matrix:
         node-version: [12.x, 14.x]
+    env:
+      WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
 
     steps:
       - uses: actions/checkout@v1
