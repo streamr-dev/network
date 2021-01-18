@@ -21,7 +21,8 @@
     "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit --detectOpenHandles",
     "coverage": "jest --coverage",
-    "test-integration": "jest test/integration",
+    "test-integration": "jest --testPathIgnorePatterns='DataUnion' test/integration",
+    "test-integration-flakey": "jest test/integration/DataUnionEndpoints.test.js",
     "test-browser": "node ./test/browser/server.js & node node_modules/nightwatch/bin/nightwatch ./test/browser/browser.js && pkill -f server.js",
     "install-example": "cd examples/webpack && npm ci",
     "build-example": "cd examples/webpack && npm run build-with-parent"

@@ -91,6 +91,10 @@ jobs:
       - name: test-integration
         run: npm run test-integration
 
+      - name: test-integration-flakey
+        continue-on-error: true
+        run: npm run test-integration-flakey
+
   streamr-client-testing-tool:
     needs: [test, lint]
     runs-on: ubuntu-latest
