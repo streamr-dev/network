@@ -163,7 +163,7 @@ describe('MessageCreationUtil', () => {
                 messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, hashedUsername, msgCreationUtil.msgChainId),
                 prevMesssageRef: prevMsgRef,
                 content: pubMsg,
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.ETH,
                 signature: 'signature',
@@ -378,7 +378,7 @@ describe('MessageCreationUtil', () => {
 
             expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('publisherId')) // sending to publisher's keyexchange stream
             const content = streamMessage.getParsedContent()
-            expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST)
+            expect(streamMessage.messageType).toBe(StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST)
             expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.NONE)
             expect(content.streamId).toBe('streamId')
             expect(content.publicKey).toBe('rsaPublicKey')
@@ -445,7 +445,7 @@ describe('MessageCreationUtil', () => {
 
             expect(streamMessage.getStreamId()).toBe(getKeyExchangeStreamId('subscriberId')) // sending to subscriber's keyexchange stream
             const content = streamMessage.getParsedContent()
-            expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE)
+            expect(streamMessage.messageType).toBe(StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE)
             expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.RSA)
             expect(content.streamId).toBe('streamId')
             expect(content.requestId).toBe(requestId)
@@ -509,7 +509,7 @@ describe('MessageCreationUtil', () => {
             expect(streamMessage.getStreamId()).toBe('keyExchangeStreamId') // sending to subscriber's keyexchange stream
 
             const content = streamMessage.getParsedContent()
-            expect(streamMessage.contentType).toBe(StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE)
+            expect(streamMessage.messageType).toBe(StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE)
             expect(streamMessage.encryptionType).toBe(StreamMessage.ENCRYPTION_TYPES.NONE)
             expect(content.code).toBe('INVALID_GROUP_KEY_REQUEST')
             expect(content.requestId).toBe(requestId)

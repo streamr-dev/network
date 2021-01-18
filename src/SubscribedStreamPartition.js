@@ -62,7 +62,7 @@ export default class SubscribedStreamPartition {
     async verifyStreamMessage(msg) {
         // Check special cases controlled by the verifySignatures policy
         const { options } = this._client
-        if (options.verifySignatures === 'never' && msg.contentType === StreamMessage.CONTENT_TYPES.MESSAGE) {
+        if (options.verifySignatures === 'never' && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return // no validation required
         }
 

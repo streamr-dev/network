@@ -11,7 +11,7 @@ import KeyStorageUtil from './KeyStorageUtil'
 import KeyExchangeUtil from './KeyExchangeUtil'
 import InvalidGroupKeyRequestError from './errors/InvalidGroupKeyRequestError'
 import InvalidGroupKeyResponseError from './errors/InvalidGroupKeyResponseError'
-import InvalidContentTypeError from './errors/InvalidContentTypeError'
+import InvalidMessageTypeError from './errors/InvalidMessageTypeError'
 import { uuid } from './utils'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -128,7 +128,7 @@ export default class MessageCreationUtil {
             messageId,
             prevMsgRef,
             content: data,
-            contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+            messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
         })
 
         if (groupKey && this.keyStorageUtil.hasKey(stream.id) && groupKey !== this.keyStorageUtil.getLatestKey(stream.id).groupKey) {
@@ -174,7 +174,7 @@ export default class MessageCreationUtil {
         const streamMessage = new StreamMessage({
             messageId,
             prevMsgRef,
-            contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST,
+            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST,
             content: data,
         })
         await this._signer.signStreamMessage(streamMessage)
@@ -195,7 +195,7 @@ export default class MessageCreationUtil {
         const streamMessage = new StreamMessage({
             messageId,
             prevMsgRef,
-            contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE,
+            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE,
             encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             content: data,
         })
@@ -218,7 +218,7 @@ export default class MessageCreationUtil {
         const streamMessage = new StreamMessage({
             messageId,
             prevMsgRef,
-            contentType: StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE,
+            messageType: StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE,
             content: data,
         })
 
@@ -256,8 +256,8 @@ export default class MessageCreationUtil {
             return 'INVALID_GROUP_KEY_RESPONSE'
         }
 
-        if (error instanceof InvalidContentTypeError) {
-            return 'INVALID_CONTENT_TYPE'
+        if (error instanceof InvalidMessageTypeError) {
+            return 'INVALID_MESSAGE_TYPE'
         }
         return 'UNEXPECTED_ERROR'
     }

@@ -1,4 +1,4 @@
-export default class InvalidContentTypeError extends Error {
+export default class InvalidMessageTypeError extends Error {
     constructor(message) {
         super(message)
         if (Error.captureStackTrace) {

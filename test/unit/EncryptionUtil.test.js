@@ -68,7 +68,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
                 content: {
                     foo: 'bar',
                 },
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                 signature: null,
@@ -86,7 +86,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
                 content: {
                     foo: 'bar',
                 },
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                 signature: null,
@@ -107,7 +107,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
                 content: {
                     foo: 'bar',
                 },
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                 signature: null,
@@ -126,7 +126,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
                 content: {
                     foo: 'bar',
                 },
-                contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+                messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
                 signature: null,
