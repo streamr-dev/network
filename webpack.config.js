@@ -80,6 +80,7 @@ const clientConfig = merge({}, commonConfig, {
             http: path.resolve(__dirname, './src/shim/http-https.js'),
             https: path.resolve(__dirname, './src/shim/http-https.js'),
             ws: path.resolve(__dirname, './src/shim/ws.js'),
+            buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
             'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
             'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
         }

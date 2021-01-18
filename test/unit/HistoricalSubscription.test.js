@@ -20,7 +20,7 @@ const createMsg = (
         messageId: new MessageIDStrict('streamId', 0, timestamp, sequenceNumber, publisherId, msgChainId),
         prevMsgRef,
         content,
-        contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
+        messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,
         encryptionType,
         signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
         signature: '',

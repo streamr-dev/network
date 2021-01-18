@@ -22,7 +22,7 @@ import EncryptionUtil from './EncryptionUtil'
 import KeyExchangeUtil from './KeyExchangeUtil'
 import KeyStorageUtil from './KeyStorageUtil'
 import ResendUtil from './ResendUtil'
-import InvalidContentTypeError from './errors/InvalidContentTypeError'
+import InvalidMessageTypeError from './errors/InvalidMessageTypeError'
 
 const {
     SubscribeRequest,
@@ -66,6 +66,7 @@ export default class StreamrClient extends EventEmitter {
             streamrOperatorAddress: '0xc0aa4dC0763550161a6B59fa430361b5a26df28C',
             tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
         }
+
         this.subscribedStreamPartitions = {}
 
         Object.assign(this.options, options || {})
@@ -320,7 +321,7 @@ export default class StreamrClient extends EventEmitter {
         const publisherId = await this.getPublisherId()
         const streamId = KeyExchangeUtil.getKeyExchangeStreamId(publisherId)
         this.subscribe(streamId, async (parsedContent, streamMessage) => {
-            if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_REQUEST) {
+            if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
                 if (this.keyExchangeUtil) {
                     try {
                         await this.keyExchangeUtil.handleGroupKeyRequest(streamMessage)
@@ -336,15 +337,15 @@ export default class StreamrClient extends EventEmitter {
                         this.publishStreamMessage(errorMessage)
                     }
                 }
-            } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_RESPONSE_SIMPLE) {
+            } else if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE) {
                 if (this.keyExchangeUtil) {
                     this.keyExchangeUtil.handleGroupKeyResponse(streamMessage)
                 }
-            } else if (streamMessage.contentType === StreamMessage.CONTENT_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+            } else if (streamMessage.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
                 this.debug('WARN: Received error of type %s from %s: %s',
                     streamMessage.getParsedContent().code, streamMessage.getPublisherId(), streamMessage.getParsedContent().message)
             } else {
-                throw new InvalidContentTypeError(`Cannot handle message with content type: ${streamMessage.contentType}`)
+                throw new InvalidMessageTypeError(`Cannot handle message with type: ${streamMessage.messageType}`)
             }
         })
     }

@@ -63,6 +63,8 @@ jobs:
     strategy:
       matrix:
         node-version: [12.x, 14.x]
+    env:
+      WEBSOCKET_URL: ws://localhost:8890/api/v1/ws
 
     steps:
       - uses: actions/checkout@v1
@@ -88,6 +90,10 @@ jobs:
 
       - name: test-integration
         run: npm run test-integration
+
+      - name: test-integration-flakey
+        continue-on-error: true
+        run: npm run test-integration-flakey
 
   streamr-client-testing-tool:
     needs: [test, lint]

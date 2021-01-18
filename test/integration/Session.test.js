@@ -22,7 +22,7 @@ describe('Session', () => {
             }).session.getSessionToken()).resolves.toBeTruthy()
         })
 
-        it('fails when the used api key is ivalid', async () => {
+        it('fails when the used api key is invalid', async () => {
             expect.assertions(1)
             await expect(createClient({
                 auth: {
@@ -42,26 +42,14 @@ describe('Session', () => {
             }).session.getSessionToken()).resolves.toBeTruthy()
         })
 
-        it('gets the token using username and password', async () => {
+        it('fails if trying to get the token using username and password', async () => {
             expect.assertions(1)
-            await expect(createClient({
+            await expect(() => createClient({
                 auth: {
                     username: 'tester2@streamr.com',
                     password: 'tester2',
                 },
-            }).session.getSessionToken()).resolves.toBeTruthy()
-        })
-
-        it('fails when the used username and password is invalid', async () => {
-            expect.assertions(1)
-            await expect(createClient({
-                auth: {
-                    username: 'tester2@streamr.com',
-                    password: 'WRONG',
-                },
-            }).session.getSessionToken()).rejects.toMatchObject({
-                body: expect.stringMatching(/invalid username or password/i),
-            })
+            }).session.getSessionToken()).rejects.toThrow('no longer supported')
         })
 
         it('gets no token (undefined) when the auth object is empty', async () => {
