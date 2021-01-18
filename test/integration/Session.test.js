@@ -42,13 +42,14 @@ describe('Session', () => {
             }).session.getSessionToken()).resolves.toBeTruthy()
         })
 
-        it('fails if trying to get the token using username and password', () => {
-            expect(() => createClient({
+        it('fails if trying to get the token using username and password', async () => {
+            expect.assertions(1)
+            await expect(() => createClient({
                 auth: {
                     username: 'tester2@streamr.com',
                     password: 'tester2',
                 },
-            })).toThrow('no longer supported')
+            }).session.getSessionToken()).rejects.toThrow('no longer supported')
         })
 
         it('gets no token (undefined) when the auth object is empty', async () => {

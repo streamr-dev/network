@@ -103,10 +103,6 @@ export default class StreamrClient extends EventEmitter {
             this.options.auth.privateKey = `0x${this.options.auth.privateKey}`
         }
 
-        if (options.auth && (options.auth.username || options.auth.password)) {
-            throw new Error('username/password auth is no longer supported. Please create an ethereum identity.')
-        }
-
         if (this.options.keyExchange) {
             this.encryptionUtil = new EncryptionUtil(this.options.keyExchange)
             this.keyExchangeUtil = new KeyExchangeUtil(this)

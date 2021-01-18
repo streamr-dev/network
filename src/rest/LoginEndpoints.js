@@ -1,4 +1,5 @@
 import { getEndpointUrl } from '../utils'
+import AuthFetchError from '../errors/AuthFetchError'
 
 import authFetch from './authFetch'
 
@@ -65,8 +66,23 @@ export async function loginWithApiKey(apiKey) {
     return getSessionToken(url, props)
 }
 
-export async function loginWithUsernamePassword() {
-    throw new Error('username/password auth is no longer supported. Please create an ethereum identity.')
+export async function loginWithUsernamePassword(username, password) {
+    const url = getEndpointUrl(this.options.restUrl, 'login', 'password')
+    const props = {
+        username,
+        password,
+    }
+    try {
+        return await getSessionToken(url, props)
+    } catch (err) {
+        if (err && err.response && err.response.status === 404) {
+            // this 404s if running against new backend with username/password support removed
+            // wrap with appropriate error message
+            const message = 'username/password auth is no longer supported. Please create an ethereum identity.'
+            throw new AuthFetchError(message, err.response, err.body)
+        }
+        throw err
+    }
 }
 
 export async function getUserInfo() {
