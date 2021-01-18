@@ -115,6 +115,7 @@ module.exports = (env, argv) => {
         },
         node: {
             stream: true,
+            buffer: true,
         },
         resolve: {
             alias: {
