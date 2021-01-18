@@ -20,6 +20,7 @@ describe('StreamrClient', () => {
             .assert.containsText('#result', '[{"msg":0},{"msg":1},{"msg":2},{"msg":3},{"msg":4},{"msg":5},{"msg":6},{"msg":7},{"msg":8},{"msg":9}]')
             .pause(3000)
             .click('button[id=resend]')
+            .pause(6000)
             .assert.containsText('#result', 'Resend: [{"msg":0},{"msg":1},{"msg":2},{"msg":3},{"msg":4},{"msg":5},{"msg":6},{"msg":7},{"msg":8},{"msg":9}]')
             .click('button[id=disconnect]')
             .assert.containsText('#result', 'disconnected')
