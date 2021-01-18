@@ -6,14 +6,16 @@
 <script>
     const urlParams = new URLSearchParams(window.location.search)
     const streamName = urlParams.get('streamName')
+    const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v1/ws'
+    const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v1'
     const { privateKey } = StreamrClient.generateEthereumAccount()
 
     const client = new StreamrClient({
         auth: {
             privateKey,
         },
-        url: 'ws://localhost/api/v1/ws',
-        restUrl: 'http://localhost/api/v1',
+        url,
+        restUrl,
         autoConnect: false,
         autoDisconnect: false
     })
