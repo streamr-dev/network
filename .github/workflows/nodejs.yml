@@ -67,15 +67,31 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.test-name }} using Node ${{ matrix.node-version }}
+    name: ${{ matrix.test-name }} ${{ websocket-url.name }} using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [12.x, 14.x]
-        test-name: ["test-integration-no-resend", "test-integration-resend", "test-integration-dataunions"]
+        test-name: [
+            "test-integration-no-resend",
+            "test-integration-resend",
+            "test-integration-dataunions",
+        ]
+        websocket-url:
+            - name: "default"
+              url:  ""
+            - name: "storage-node-only"
+              url:  "ws://localhost:8890/api/v1/ws"
+
+        exclude:
+          # no need to test different ws urls for dataunion tests
+          - test-name: "test-integration-dataunions"
+            websocket-url:
+                - name: "storage-node-only"
     env:
-        TEST_NAME: ${{ matrix.test-name }}
+      TEST_NAME: ${{ matrix.test-name }}
+      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
 
     steps:
       - uses: actions/checkout@v2
