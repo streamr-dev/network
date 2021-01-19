@@ -103,6 +103,7 @@ export default class StreamrClient extends EventEmitter {
         })
 
         this.debug('new StreamrClient %s: %o', this.id, {
+            version: process.env.version,
             GIT_VERSION: process.env.GIT_VERSION,
             GIT_COMMITHASH: process.env.GIT_COMMITHASH,
             GIT_BRANCH: process.env.GIT_BRANCH,
