@@ -89,6 +89,7 @@ jobs:
           - test-name: "test-integration-dataunions"
             websocket-url:
                 - name: "storage-node-only"
+                - url:  "ws://localhost:8890/api/v1/ws"
     env:
       TEST_NAME: ${{ matrix.test-name }}
       WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
