@@ -101,15 +101,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: npm ci
         run: npm ci
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-docker-dev
-      - name: setup streamr-docker-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait --except data-union-server
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: Run Test
         run: npm run $TEST_NAME -- --maxWorkers=1
 
@@ -128,15 +123,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: npm ci
         run: npm ci
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-docker-dev
-      - name: setup streamr-docker-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait --except data-union-server
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -160,15 +150,10 @@ jobs:
           path: dist
       - name: npm ci
         run: npm ci
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-docker-dev
-      - name: setup streamr-docker-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait --except data-union-server
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: test-browser
         timeout-minutes: 2
         run: npm run test-browser
@@ -190,15 +175,10 @@ jobs:
         with:
           name: build
           path: dist
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-docker-dev
-      - name: setup streamr-docker-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait --except data-union-server
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: npm ci
         run: npm ci
       - name: benchmarks
@@ -242,15 +222,10 @@ jobs:
         with:
           name: build
           path: dist
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-docker-dev
-      - name: setup streamr-docker-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: npm link
         run: npm ci && npm link
       - uses: actions/checkout@v2
