@@ -67,7 +67,7 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.test-name }} ${{ websocket-url.name }} using Node ${{ matrix.node-version }}
+    name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
