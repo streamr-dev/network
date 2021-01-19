@@ -8,14 +8,18 @@ if (process.env.DEBUG_CONSOLE) {
     console.log = Debug('Streamr::CONSOLE') // eslint-disable-line no-console
 }
 
-console.log(process.env)
 module.exports = async () => {
     if (!process.env.GIT_VERSION) {
         const gitRevisionPlugin = new GitRevisionPlugin()
+        const [GIT_VERSION, GIT_COMMITHASH, GIT_BRANCH] = await Promise.all([
+            gitRevisionPlugin.version(),
+            gitRevisionPlugin.commithash(),
+            gitRevisionPlugin.branch(),
+        ])
         Object.assign(process.env, {
-            GIT_VERSION: await gitRevisionPlugin.version(),
-            GIT_COMMITHASH: await gitRevisionPlugin.commithash(),
-            GIT_BRANCH: await gitRevisionPlugin.branch(),
-        }, process.env)
+            GIT_VERSION,
+            GIT_COMMITHASH,
+            GIT_BRANCH,
+        }, process.env) // don't override whatever is in process.env
     }
 }
