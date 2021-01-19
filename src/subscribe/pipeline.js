@@ -7,6 +7,7 @@ import { validateOptions } from '../stream/utils'
 import Validator from './Validator'
 import messageStream from './messageStream'
 import OrderMessages from './OrderMessages'
+import Decrypt from './Decrypt'
 
 const { ValidationError } = Errors
 
@@ -34,7 +35,8 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
     const {
         validate = Validator(client, options),
         msgStream = messageStream(client.connection, options),
-        orderingUtil = OrderMessages(client, options)
+        orderingUtil = OrderMessages(client, options),
+        decrypt = Decrypt(client, options),
     } = options
     /* eslint-enable object-curly-newline */
 
@@ -65,6 +67,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 yield streamMessage
             }
         },
+        decrypt,
         // parse content
         async function* Parse(src) {
             for await (const streamMessage of src) {
@@ -82,8 +85,14 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
         // custom pipeline steps
         ...afterSteps
     ], async (err, ...args) => {
-        await msgStream.cancel()
-        return onFinally(err, ...args)
+        await msgStream.cancel(err)
+        try {
+            if (err) {
+                await onError(err)
+            }
+        } finally {
+            await onFinally(err, ...args)
+        }
     })
 
     return Object.assign(p, {

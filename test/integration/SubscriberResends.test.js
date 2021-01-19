@@ -12,7 +12,7 @@ const { ControlMessage } = ControlLayer
 
 /* eslint-disable no-await-in-loop */
 
-const WAIT_FOR_STORAGE_TIMEOUT = 6000
+const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 12000 : 6000
 const MAX_MESSAGES = 5
 
 describeRepeats('resends', () => {
@@ -21,6 +21,7 @@ describeRepeats('resends', () => {
     let client
     let stream
     let published
+    let publishedRequests
     let publishTestMessages
     let waitForStorage
     let subscriber
@@ -65,7 +66,7 @@ describeRepeats('resends', () => {
             stream,
             timeout: WAIT_FOR_STORAGE_TIMEOUT,
         })
-    })
+    }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
     beforeEach(async () => {
         await client.connect()
@@ -174,16 +175,18 @@ describeRepeats('resends', () => {
     describe('with resend data', () => {
         beforeAll(async () => {
             await client.connect()
-            published = await publishTestMessages(MAX_MESSAGES, {
+            const results = await publishTestMessages.raw(MAX_MESSAGES, {
                 waitForLast: true,
             })
+            published = results.map(([msg]) => msg)
+            publishedRequests = results.map(([, req]) => req)
         }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
         beforeEach(async () => {
             await client.connect()
             // ensure last message is in storage
-            const lastMessage = published[published.length - 1]
-            await waitForStorage(lastMessage)
+            const lastRequest = publishedRequests[publishedRequests.length - 1]
+            await waitForStorage(lastRequest)
         }, WAIT_FOR_STORAGE_TIMEOUT * 1.2)
 
         it('requests resend', async () => {
@@ -280,8 +283,9 @@ describeRepeats('resends', () => {
 
                 const newMessage = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, newMessage) // should be realtime
+                const req = await client.publish(stream.id, newMessage) // should be realtime
                 published.push(newMessage)
+                publishedRequests.push(req)
 
                 for await (const msg of sub) {
                     receivedMsgs.push(msg.getParsedContent())
@@ -314,8 +318,9 @@ describeRepeats('resends', () => {
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, message) // should be realtime
+                const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
+                publishedRequests.push(req)
                 await wait(500)
                 const receivedMsgs = await collect(sub, async ({ received }) => {
                     if (received.length === published.length) {
@@ -375,8 +380,9 @@ describeRepeats('resends', () => {
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, message) // should be realtime
+                const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
+                publishedRequests.push(req)
                 await wait(500)
                 const receivedMsgs = await collect(sub, async ({ received }) => {
                     if (received.length === published.length) {
@@ -405,8 +411,9 @@ describeRepeats('resends', () => {
 
                 await sub.return()
                 // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, message)
+                const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
+                publishedRequests.push(req)
                 await wait(500)
                 const received = []
                 for await (const m of sub) {
@@ -427,8 +434,9 @@ describeRepeats('resends', () => {
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, message)
+                const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
+                publishedRequests.push(req)
 
                 let t
                 let receivedMsgs
@@ -464,8 +472,9 @@ describeRepeats('resends', () => {
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                await client.publish(stream.id, message)
+                const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
+                publishedRequests.push(req)
                 await wait(500)
                 const END_AFTER = 3
                 const receivedMsgs = await collect(sub, async ({ received }) => {

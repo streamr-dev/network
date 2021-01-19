@@ -49,13 +49,27 @@ export const Msg = (opts) => ({
     ...opts,
 })
 
+function defaultMessageMatchFn(msgTarget, msgGot) {
+    if (msgTarget.streamMessage.signature) {
+        // compare signatures by default
+        return msgTarget.streamMessage.signature === msgGot.signature
+    }
+    return JSON.stringify(msgGot.content) === JSON.stringify(msgTarget.streamMessage.getParsedContent())
+}
+
 export function getWaitForStorage(client, defaultOpts = {}) {
     /* eslint-disable no-await-in-loop */
-    return async (msg, opts = {}) => {
-        const { streamId, streamPartition = 0, interval = 500, timeout = 5000 } = validateOptions({
+    return async (publishRequest, opts = {}) => {
+        const {
+            streamId, streamPartition = 0, interval = 500, timeout = 5000, messageMatchFn = defaultMessageMatchFn
+        } = validateOptions({
             ...defaultOpts,
             ...opts,
         })
+
+        if (!publishRequest && !publishRequest.streamMessage) {
+            throw new Error(`should check against publish request for comparison, got: ${inspect(publishRequest)}`)
+        }
 
         const start = Date.now()
         let last
@@ -68,11 +82,11 @@ export function getWaitForStorage(client, defaultOpts = {}) {
                     timeout,
                     duration
                 }, {
-                    msg,
+                    publishRequest,
                     last: last.map((l) => l.content),
                 })
                 const err = new Error(`timed out after ${duration}ms waiting for message`)
-                err.msg = msg
+                err.publishRequest = publishRequest
                 throw err
             }
 
@@ -82,15 +96,16 @@ export function getWaitForStorage(client, defaultOpts = {}) {
                 count: 3,
             })
 
-            for (const { content } of last) {
-                if (content.value === msg.value) {
+            for (const lastMsg of last) {
+                if (messageMatchFn(publishRequest, lastMsg)) {
                     found = true
                     return
                 }
             }
 
             client.debug('message not found, retrying... %o', {
-                msg, last: last.map(({ content }) => content)
+                msg: publishRequest.streamMessage.getParsedContent(),
+                last: last.map(({ content }) => content)
             })
 
             await wait(interval)
@@ -113,9 +128,11 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             streamId,
             streamPartition = 0,
             delay = 100,
-            timeout = 1500,
+            timeout = 3500,
             waitForLast = false, // wait for message to hit storage
             waitForLastTimeout,
+            beforeEach = (m) => m,
+            afterEach = () => {}
         } = validateOptions({
             ...defaultOpts,
             ...opts,
@@ -124,24 +141,33 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
         const published = []
         for (let i = 0; i < n; i++) {
             const message = Msg()
+            // eslint-disable-next-line no-await-in-loop, no-loop-func
+            await beforeEach(message)
+            // eslint-disable-next-line no-await-in-loop, no-loop-func
+            const request = await pTimeout(client.publish({
+                streamId,
+                streamPartition,
+            }, message), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
             published.push([
                 message,
-                // eslint-disable-next-line no-await-in-loop, no-loop-func
-                await pTimeout(client.publish({
-                    streamId,
-                    streamPartition,
-                }, message), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
+                request,
             ])
+
+            // eslint-disable-next-line no-await-in-loop, no-loop-func
+            await afterEach(message, request)
             // eslint-disable-next-line no-await-in-loop, no-loop-func
             await wait(delay) // ensure timestamp increments for reliable resend response in test.
         }
 
         if (waitForLast) {
-            const msg = published[published.length - 1][0]
+            const msg = published[published.length - 1][1]
             await getWaitForStorage(client)(msg, {
                 streamId,
                 streamPartition,
                 timeout: waitForLastTimeout,
+                messageMatchFn(m, b) {
+                    return m.streamMessage.signature === b.signature
+                }
             })
         }
 

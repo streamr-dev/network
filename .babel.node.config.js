@@ -21,5 +21,8 @@ module.exports = {
             regenerator: false
         }],
         '@babel/plugin-transform-modules-commonjs',
+        ['@babel/plugin-proposal-class-properties', {
+            loose: false
+        }]
     ]
 }

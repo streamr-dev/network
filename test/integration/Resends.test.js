@@ -82,7 +82,7 @@ describe('StreamrClient resends', () => {
                     waitForLast: true,
                     waitForLastTimeout: WAIT_FOR_STORAGE_TIMEOUT,
                 })
-            })
+            }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
             describe('issue resend and subscribe at the same time', () => {
                 it('works with resend -> subscribe', async () => {

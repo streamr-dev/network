@@ -3,7 +3,7 @@ import { ControlLayer } from 'streamr-client-protocol'
 
 import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '../utils'
 import StreamrClient from '../../src'
-import { Defer } from '../../src/utils'
+import { Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
@@ -347,18 +347,33 @@ describeRepeats('Connection State', () => {
             expect(subscriber.count(stream.id)).toBe(0)
         })
 
-        it('should resubscribe on unexpected disconnection', async () => {
-            const otherClient = createClient({
-                auth: client.options.auth,
-            })
+        describe('resubscribe on unexpected disconnection', () => {
+            let otherClient
 
-            try {
-                await Promise.all([
+            beforeEach(async () => {
+                otherClient = createClient({
+                    auth: client.options.auth,
+                })
+                const tasks = [
                     client.connect(),
+                    client.session.getSessionToken(),
                     otherClient.connect(),
                     otherClient.session.getSessionToken(),
-                ])
+                ]
+                await Promise.allSettled(tasks)
+                await Promise.all(tasks) // throw if there were an error
+            })
 
+            afterEach(async () => {
+                const tasks = [
+                    otherClient.disconnect(),
+                    client.disconnect(),
+                ]
+                await Promise.allSettled(tasks)
+                await Promise.all(tasks) // throw if there were an error
+            })
+
+            it('should work', async () => {
                 const done = Defer()
 
                 const msgs = []
@@ -372,9 +387,16 @@ describeRepeats('Connection State', () => {
                     }
                 })
 
+                const disconnect = pLimitFn(async () => {
+                    if (msgs.length === MAX_MESSAGES) { return }
+                    otherClient.connection.socket.close()
+                    // wait for reconnection before possibly disconnecting again
+                    await otherClient.nextConnection()
+                })
+
                 const onConnectionMessage = jest.fn(() => {
                     // disconnect after every message
-                    otherClient.connection.socket.close()
+                    disconnect()
                 })
 
                 otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
@@ -386,7 +408,7 @@ describeRepeats('Connection State', () => {
                 otherClient.connection.on('disconnected', onDisconnected)
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
-                    delay: 500,
+                    delay: 1000,
                 })
 
                 await done
@@ -396,15 +418,10 @@ describeRepeats('Connection State', () => {
                 expect(msgs).toEqual(published)
 
                 // check disconnect/connect actually happened
-                expect(onConnectionMessage).toHaveBeenCalledTimes(published.length)
-                expect(onConnected).toHaveBeenCalledTimes(published.length)
-                expect(onDisconnected).toHaveBeenCalledTimes(published.length)
-            } finally {
-                await Promise.all([
-                    otherClient.disconnect(),
-                    client.disconnect(),
-                ])
-            }
-        }, 20000)
+                expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                expect(onConnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                expect(onDisconnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+            }, 30000)
+        })
     })
 })

@@ -35,6 +35,9 @@ export default function OrderMessages(client, options = {}) {
         }
     }, async (from, to, publisherId, msgChainId) => {
         if (done) { return }
+        client.debug('gap %o', {
+            streamId, streamPartition, publisherId, msgChainId, from, to,
+        })
         // eslint-disable-next-line no-use-before-define
         const resendMessageStream = await resendStream(client, {
             streamId, streamPartition, from, to, publisherId, msgChainId,

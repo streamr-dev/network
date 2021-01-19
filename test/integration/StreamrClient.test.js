@@ -7,7 +7,7 @@ import { wait, waitForEvent } from 'streamr-test-utils'
 
 import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
 import StreamrClient from '../../src'
-import { Defer } from '../../src/utils'
+import { Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
@@ -725,7 +725,7 @@ describeRepeats('StreamrClient', () => {
                     expect(client.getSubscriptions(stream.id)).toHaveLength(0)
                 })
 
-                it('client.subscribe then unsubscribe after subscribed without resend', async () => {
+                it('client.subscribe then unsubscribe after subscribed', async () => {
                     const sub = await client.subscribe({
                         stream: stream.id,
                     }, () => {})
@@ -739,7 +739,7 @@ describeRepeats('StreamrClient', () => {
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
                 }, TIMEOUT)
 
-                it('client.subscribe then unsubscribe before subscribed without resend', async () => {
+                it('client.subscribe then unsubscribe before subscribed', async () => {
                     client.connection.enableAutoDisconnect(false)
                     const subTask = client.subscribe({
                         stream: stream.id,
@@ -760,7 +760,7 @@ describeRepeats('StreamrClient', () => {
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
                 }, TIMEOUT)
 
-                it('client.subscribe then unsubscribe before subscribed after started subscribing without resend', async () => {
+                it('client.subscribe then unsubscribe before subscribed after started subscribing', async () => {
                     client.connection.enableAutoDisconnect(false)
                     const subTask = client.subscribe({
                         stream: stream.id,
@@ -828,8 +828,8 @@ describeRepeats('StreamrClient', () => {
                         expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
 
                         const msg = Msg()
-                        await stream.publish(msg)
-                        await waitForStorage(msg)
+                        const publishReq = await stream.publish(msg)
+                        await waitForStorage(publishReq)
 
                         await unsubTask
                         await subTask
@@ -896,18 +896,33 @@ describeRepeats('StreamrClient', () => {
                 expect(onMessageMsgs).toEqual(published)
             })
 
-            it('should resubscribe on unexpected disconnection', async () => {
-                const otherClient = createClient({
-                    auth: client.options.auth,
-                })
+            describe('resubscribe on unexpected disconnection', () => {
+                let otherClient
 
-                try {
-                    await Promise.all([
+                beforeEach(async () => {
+                    otherClient = createClient({
+                        auth: client.options.auth,
+                    })
+                    const tasks = [
                         client.connect(),
+                        client.session.getSessionToken(),
                         otherClient.connect(),
                         otherClient.session.getSessionToken(),
-                    ])
+                    ]
+                    await Promise.allSettled(tasks)
+                    await Promise.all(tasks) // throw if there were an error
+                })
 
+                afterEach(async () => {
+                    const tasks = [
+                        otherClient.disconnect(),
+                        client.disconnect(),
+                    ]
+                    await Promise.allSettled(tasks)
+                    await Promise.all(tasks) // throw if there were an error
+                })
+
+                it('should work', async () => {
                     const done = Defer()
 
                     const msgs = []
@@ -921,9 +936,16 @@ describeRepeats('StreamrClient', () => {
                         }
                     })
 
+                    const disconnect = pLimitFn(async () => {
+                        if (msgs.length === MAX_MESSAGES) { return }
+                        otherClient.connection.socket.close()
+                        // wait for reconnection before possibly disconnecting again
+                        await otherClient.nextConnection()
+                    })
+
                     const onConnectionMessage = jest.fn(() => {
                         // disconnect after every message
-                        otherClient.connection.socket.close()
+                        disconnect()
                     })
 
                     otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
@@ -935,7 +957,7 @@ describeRepeats('StreamrClient', () => {
                     otherClient.connection.on('disconnected', onDisconnected)
 
                     const published = await publishTestMessages(MAX_MESSAGES, {
-                        delay: 250,
+                        delay: 1000,
                     })
 
                     await done
@@ -945,16 +967,11 @@ describeRepeats('StreamrClient', () => {
                     expect(msgs).toEqual(published)
 
                     // check disconnect/connect actually happened
-                    expect(onConnectionMessage).toHaveBeenCalledTimes(published.length)
-                    expect(onConnected).toHaveBeenCalledTimes(published.length)
-                    expect(onDisconnected).toHaveBeenCalledTimes(published.length)
-                } finally {
-                    await Promise.all([
-                        otherClient.disconnect(),
-                        client.disconnect(),
-                    ])
-                }
-            }, 20000)
+                    expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                    expect(onConnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                    expect(onDisconnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                }, 30000)
+            })
 
             it('publish and subscribe a sequence of messages', async () => {
                 client.enableAutoConnect()
@@ -1189,8 +1206,8 @@ describeRepeats('StreamrClient', () => {
                 const publishedMessage = Msg({
                     content: fs.readFileSync(path.join(__dirname, 'utf8Example.txt'), 'utf8')
                 })
-                await client.publish(stream.id, publishedMessage)
-                await waitForStorage(publishedMessage)
+                const publishReq = await client.publish(stream.id, publishedMessage)
+                await waitForStorage(publishReq)
                 const sub = await client.resend({
                     stream: stream.id,
                     resend: {

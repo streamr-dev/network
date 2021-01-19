@@ -5,14 +5,15 @@ import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { ethers } from 'ethers'
 import mem from 'mem'
 
-import { uuid, CacheAsyncFn, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
+import { uuid, CacheFn, LimitAsyncFnByKey, randomString } from '../utils'
 import { waitForRequestResponse } from '../stream/utils'
 
 import Signer from './Signer'
+import Encrypt from './Encrypt'
 
 export class FailedToPublishError extends Error {
     constructor(streamId, msg, reason) {
-        super(`Failed to publish to stream ${streamId} due to: ${reason}. Message was: ${inspect(msg)}`)
+        super(`Failed to publish to stream ${streamId} due to: ${reason && reason.stack ? reason.stack : reason}. Message was: ${inspect(msg)}`)
         this.streamId = streamId
         this.msg = msg
         this.reason = reason
@@ -110,7 +111,7 @@ async function getUsername(client) {
     const { options: { auth = {} } = {} } = client
     if (auth.username) { return auth.username }
 
-    const { username, id } = await client.getUserInfo()
+    const { username, id } = await client.cached.getUserInfo()
     return (
         username
         // edge case: if auth.apiKey is an anonymous key, userInfo.id is that anonymous key
@@ -150,14 +151,11 @@ async function getPublisherId(client) {
 function getCreateStreamMessage(client) {
     const cacheOptions = client.options.cache
     const computeStreamPartition = StreamPartitioner(cacheOptions)
-
-    // make cached stream & publisher details
-    const getCachedStream = CacheAsyncFn(client.getStream.bind(client), cacheOptions)
-    const getCachedPublisherId = CacheAsyncFn(getPublisherId.bind(null, client), cacheOptions)
+    const encrypt = Encrypt(client)
 
     // one chainer per streamId + streamPartition + publisherId + msgChainId
     const getMsgChainer = Object.assign(mem(MessageChainer, {
-        cacheKey: ({ streamId, streamPartition, publisherId, msgChainId }) => (
+        cacheKey: ([{ streamId, streamPartition, publisherId, msgChainId }]) => (
             // undefined msgChainId is fine
             [streamId, streamPartition, publisherId, msgChainId].join('|')
         ),
@@ -189,8 +187,8 @@ function getCreateStreamMessage(client) {
         return queue(streamId, async () => {
             // load cached stream + publisher details
             const [stream, publisherId] = await Promise.all([
-                getCachedStream(streamId),
-                getCachedPublisherId(client),
+                client.cached.getStream(streamId),
+                client.cached.getPublisherId(client),
             ])
 
             // figure out partition
@@ -204,13 +202,16 @@ function getCreateStreamMessage(client) {
             const timestampAsNumber = timestamp instanceof Date ? timestamp.getTime() : new Date(timestamp).getTime()
             const [messageId, prevMsgRef] = chainMessage(timestampAsNumber)
 
-            const streamMessage = new StreamMessage({
-                messageId,
-                prevMsgRef,
-                content,
-                ...opts
-            })
+            const streamMessage = (content && typeof content.toStreamMessage === 'function')
+                ? content.toStreamMessage(messageId, prevMsgRef)
+                : new StreamMessage({
+                    messageId,
+                    prevMsgRef,
+                    content,
+                    ...opts
+                })
 
+            await encrypt(streamMessage, stream)
             // sign, noop if not needed
             await signStreamMessage(streamMessage)
 
@@ -219,11 +220,14 @@ function getCreateStreamMessage(client) {
     }
 
     return Object.assign(createStreamMessage, {
-        getCachedPublisherId,
+        setNextGroupKey(maybeStreamId, newKey) {
+            return encrypt.setNextGroupKey(maybeStreamId, newKey)
+        },
+        rotateGroupKey(maybeStreamId) {
+            return encrypt.rotateGroupKey(maybeStreamId)
+        },
         clear() {
             computeStreamPartition.clear()
-            getCachedStream.clear()
-            getCachedPublisherId.clear()
             getMsgChainer.clear()
             queue.clear()
         }
@@ -273,7 +277,7 @@ export default function Publisher(client) {
         })
     }
 
-    async function publishMessage(streamObjectOrId, content, timestamp = new Date(), partitionKey = null) {
+    async function publishMessage(streamObjectOrId, { content, timestamp = new Date(), partitionKey = null } = {}) {
         if (client.session.isUnauthenticated()) {
             throw new Error('Need to be authenticated to publish.')
         }
@@ -315,11 +319,14 @@ export default function Publisher(client) {
     }
 
     return {
-        async publish(streamObjectOrId, content, ...args) {
-            debug('publish()')
+        async publish(streamObjectOrId, content, timestamp, partitionKey) {
             // wrap publish in error emitter
             try {
-                return await publishMessage(streamObjectOrId, content, ...args)
+                return await publishMessage(streamObjectOrId, {
+                    content,
+                    timestamp,
+                    partitionKey,
+                })
             } catch (err) {
                 const streamId = getStreamId(streamObjectOrId)
                 const error = new FailedToPublishError(
@@ -336,7 +343,13 @@ export default function Publisher(client) {
             createStreamMessage.clear()
         },
         async getPublisherId() {
-            return createStreamMessage.getCachedPublisherId()
+            return getPublisherId(client)
+        },
+        rotateGroupKey(streamId) {
+            return createStreamMessage.rotateGroupKey(streamId)
+        },
+        setNextGroupKey(streamId, newKey) {
+            return createStreamMessage.setNextGroupKey(streamId, newKey)
         }
     }
 }

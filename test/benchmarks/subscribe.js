@@ -24,13 +24,14 @@ function createClient(opts) {
     })
 }
 
-async function setupClientAndStream(opts) {
-    const client = createClient(opts)
+async function setupClientAndStream(clientOpts, streamOpts) {
+    const client = createClient(clientOpts)
     await client.connect()
     await client.session.getSessionToken()
 
     const stream = await client.createStream({
-        name: `test-stream.${process.pid}.${client.id}`,
+        name: `test-stream.${client.id}`,
+        ...streamOpts,
     })
     return [client, stream]
 }
@@ -40,8 +41,6 @@ const BATCH_SIZES = [
     32,
     512,
     1024,
-    4096,
-    8192,
 ]
 
 const log = (...args) => process.stderr.write(format(...args) + '\n')
@@ -56,9 +55,18 @@ async function run() {
 
     const [client2, stream2] = await setupClientAndStream({
         auth: {
-            apiKey: 'tester1-api-key'
+            privateKey: ethers.Wallet.createRandom().privateKey,
         },
         publishWithSignature: 'never',
+    })
+
+    const [client3, stream3] = await setupClientAndStream({
+        auth: {
+            privateKey: ethers.Wallet.createRandom().privateKey,
+        },
+        publishWithSignature: 'always',
+    }, {
+        requiresEncryption: true,
     })
 
     const suite = new Benchmark.Suite()
@@ -99,6 +107,11 @@ async function run() {
             defer: true,
             fn: test(client2, stream2, batchSize)
         })
+
+        suite.add(`client subscribing in batches of ${batchSize} with encryption`, {
+            defer: true,
+            fn: test(client3, stream3, batchSize)
+        })
     })
 
     function toStringBench(bench) {
@@ -126,6 +139,7 @@ async function run() {
         await Promise.all([
             client1.disconnect(),
             client2.disconnect(),
+            client3.disconnect(),
         ])
         log('Clients disconnected')
     })

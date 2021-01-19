@@ -19,7 +19,7 @@ export function StreamKey({ streamId, streamPartition = 0 }) {
 
 export function validateOptions(optionsOrStreamId) {
     if (!optionsOrStreamId) {
-        throw new Error('options is required!')
+        throw new Error('streamId is required!')
     }
 
     // Backwards compatibility for giving a streamId as first argument
@@ -71,6 +71,8 @@ const { ControlMessage } = ControlLayer
 
 const ResendResponses = [ControlMessage.TYPES.ResendResponseResending, ControlMessage.TYPES.ResendResponseNoResend]
 
+export const STREAM_MESSAGE_TYPES = [ControlMessage.TYPES.UnicastMessage, ControlMessage.TYPES.BroadcastMessage]
+
 const PAIRS = new Map([
     [ControlMessage.TYPES.SubscribeRequest, [ControlMessage.TYPES.SubscribeResponse]],
     [ControlMessage.TYPES.UnsubscribeRequest, [ControlMessage.TYPES.UnsubscribeResponse]],
@@ -79,34 +81,42 @@ const PAIRS = new Map([
     [ControlMessage.TYPES.ResendRangeRequest, ResendResponses],
 ])
 
-/**
- * Wait for matching response types to requestId, or ErrorResponse.
- */
-
-export async function waitForResponse({
+export async function waitForMatchingMessage({
     connection,
-    types = [],
-    requestId,
+    matchFn,
     timeout,
+    types = [],
     rejectOnTimeout = true,
+    timeoutMessage,
+    cancelTask,
 }) {
-    if (requestId == null) {
-        throw new Error(`requestId required, got: (${typeof requestId}) ${requestId}`)
+    if (typeof matchFn !== 'function') {
+        throw new Error(`matchFn required, got: (${typeof matchFn}) ${matchFn}`)
     }
 
     await connection.nextConnection()
     let cleanup = () => {}
-    const task = new Promise((resolve, reject) => {
+
+    const matchTask = new Promise((resolve, reject) => {
+        const tryMatch = (...args) => {
+            try {
+                return matchFn(...args)
+            } catch (err) {
+                cleanup()
+                reject(err)
+                return false
+            }
+        }
         let onDisconnected
         const onResponse = (res) => {
-            if (res.requestId !== requestId) { return }
+            if (!tryMatch(res)) { return }
             // clean up err handler
             cleanup()
             resolve(res)
         }
 
         const onErrorResponse = (res) => {
-            if (res.requestId !== requestId) { return }
+            if (!tryMatch(res)) { return }
             // clean up success handler
             cleanup()
             const error = new Error(res.errorMessage)
@@ -115,6 +125,7 @@ export async function waitForResponse({
         }
 
         cleanup = () => {
+            if (cancelTask) { cancelTask.catch(() => {}) } // ignore
             connection.off('disconnected', onDisconnected)
             connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
             types.forEach((type) => {
@@ -137,18 +148,42 @@ export async function waitForResponse({
     })
 
     try {
+        const task = cancelTask ? Promise.race([
+            matchTask,
+            cancelTask,
+        ]) : matchTask
+
         if (!timeout) {
             return await task
         }
 
         return await pTimeout(task, {
             timeout,
-            message: `Waiting for response to: ${requestId}.`,
+            message: timeoutMessage,
             rejectOnTimeout,
         })
     } finally {
         cleanup()
     }
+}
+
+/**
+ * Wait for matching response types to requestId, or ErrorResponse.
+ */
+
+export async function waitForResponse({ requestId, timeoutMessage = `Waiting for response to: ${requestId}.`, ...opts }) {
+    if (requestId == null) {
+        throw new Error(`requestId required, got: (${typeof requestId}) ${requestId}`)
+    }
+
+    return waitForMatchingMessage({
+        ...opts,
+        requestId,
+        timeoutMessage,
+        matchFn(res) {
+            return res.requestId === requestId
+        }
+    })
 }
 
 export async function waitForRequestResponse(client, request, opts = {}) {

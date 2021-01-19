@@ -94,6 +94,14 @@ export const getEndpointUrl = (baseUrl, ...pathParts) => {
     return baseUrl + '/' + pathParts.map((part) => encodeURIComponent(part)).join('/')
 }
 
+function clearMatching(cache, matchFn) {
+    for (const key of cache.keys()) {
+        if (matchFn(key)) {
+            cache.delete(key)
+        }
+    }
+}
+
 /* eslint-disable object-curly-newline */
 
 /**
@@ -114,15 +122,24 @@ export function CacheAsyncFn(asyncFn, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
+    onEviction,
+    ...opts
 } = {}) {
+    const cache = new LRU({
+        maxSize,
+        maxAge,
+        onEviction,
+    })
+
     const cachedFn = pMemoize(asyncFn, {
         maxAge,
         cachePromiseRejection,
-        cache: new LRU({
-            maxSize,
-        })
+        cache,
+        ...opts,
     })
+
     cachedFn.clear = () => pMemoize.clear(cachedFn)
+    cachedFn.clearMatching = (...args) => clearMatching(cache, ...args)
     return cachedFn
 }
 
@@ -143,14 +160,21 @@ export function CacheAsyncFn(asyncFn, {
 export function CacheFn(fn, {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
+    onEviction,
+    ...opts
 } = {}) {
+    const cache = new LRU({
+        maxSize,
+        maxAge,
+        onEviction,
+    })
     const cachedFn = mem(fn, {
         maxAge,
-        cache: new LRU({
-            maxSize,
-        })
+        cache,
+        ...opts
     })
     cachedFn.clear = () => mem.clear(cachedFn)
+    cachedFn.clearMatching = (...args) => clearMatching(cache, ...args)
     return cachedFn
 }
 
@@ -160,7 +184,7 @@ export function CacheFn(fn, {
  * Deferred promise allowing external control of resolve/reject.
  * Returns a Promise with resolve/reject functions attached.
  * Also has a wrap(fn) method that wraps a function to settle this promise
- * Also has a wrapErrors(fn) method that wraps a function to settle this promise if error
+ * Also has a wrapError(fn) method that wraps a function to settle this promise if error
  * Defer optionally takes executor function ala `new Promise(executor)`
  */
 

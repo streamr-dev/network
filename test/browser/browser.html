@@ -54,7 +54,8 @@ $('#connect').on('click', async () => {
 $('#create').on('click', async () => {
     resetResults()
     stream = await client.createStream({
-        name: streamName
+        name: streamName,
+        requireEncryptedData: true,
     })
     $('#result').html(stream.name)
 })
@@ -77,7 +78,8 @@ $('#publish').on('click', async () => {
         }
         await client.publish(stream.id, msg)
     }
-    setTimeout(() => $('#result').html(JSON.stringify(messages)), 1000)
+
+    setTimeout(() => $('#result').html(JSON.stringify(messages)), 3000)
 })
 
 $('#resend').on('click', async () => {

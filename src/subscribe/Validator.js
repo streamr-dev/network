@@ -2,12 +2,12 @@ import { inspect } from 'util'
 
 import { MessageLayer, Utils, Errors } from 'streamr-client-protocol'
 
-import { CacheAsyncFn, pOrderedResolve } from '../utils'
+import { pOrderedResolve, CacheAsyncFn } from '../utils'
 import { validateOptions } from '../stream/utils'
 
-const { StreamMessageValidator } = Utils
+const { StreamMessageValidator, SigningUtil } = Utils
 const { ValidationError } = Errors
-const { StreamMessage } = MessageLayer
+const { StreamMessage, GroupKeyErrorResponse } = MessageLayer
 
 const EMPTY_MESSAGE = {
     serialize() {}
@@ -31,23 +31,29 @@ export class SignatureRequiredError extends ValidationError {
 
 export default function Validator(client, opts) {
     const options = validateOptions(opts)
-    const cacheOptions = client.options.cache
-    const getStream = CacheAsyncFn(client.getStream.bind(client), cacheOptions)
-    const isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), cacheOptions)
-    const isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), cacheOptions)
-
     const validator = new StreamMessageValidator({
-        getStream,
-        isPublisher: CacheAsyncFn(async (publisherId, _streamId) => (
-            isStreamPublisher(_streamId, publisherId)
-        ), cacheOptions),
-        isSubscriber: CacheAsyncFn(async (ethAddress, _streamId) => (
-            isStreamSubscriber(_streamId, ethAddress)
-        ), cacheOptions)
+        getStream: client.cached.getStream.bind(client.cached),
+        async isPublisher(publisherId, _streamId) {
+            return client.cached.isStreamPublisher(_streamId, publisherId)
+        },
+        async isSubscriber(ethAddress, _streamId) {
+            return client.cached.isStreamSubscriber(_streamId, ethAddress)
+        },
+        verify: CacheAsyncFn(SigningUtil.verify.bind(SigningUtil), {
+            ...client.options.cache,
+            cachePromiseRejection: false,
+            cacheKey: (args) => args.join('|'),
+        })
     })
 
-    // return validation function that resolves in call order
-    return pOrderedResolve(async (msg) => {
+    const validate = pOrderedResolve(async (msg) => {
+        if (msg.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
+            const res = GroupKeyErrorResponse.fromArray(msg.getParsedContent())
+            const err = new ValidationError(`GroupKeyErrorResponse: ${res.errorMessage}`, msg)
+            err.code = res.errorCode
+            throw err
+        }
+
         // Check special cases controlled by the verifySignatures policy
         if (client.options.verifySignatures === 'never' && msg.messageType === StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return msg // no validation required
@@ -60,5 +66,14 @@ export default function Validator(client, opts) {
         // In all other cases validate using the validator
         await validator.validate(msg) // will throw with appropriate validation failure
         return msg
+    })
+
+    // return validation function that resolves in call order
+    return Object.assign(validate, {
+        clear(key) {
+            if (!key) {
+                validate.clear()
+            }
+        }
     })
 }

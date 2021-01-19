@@ -3,12 +3,17 @@ import { Wallet } from 'ethers'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
-import { counterId } from './utils'
+import { counterId, uuid, CacheAsyncFn } from './utils'
+import { validateOptions } from './stream/utils'
 import Config from './Config'
 import Session from './Session'
 import Connection from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
+
+/**
+ * Wrap connection message events with message parsing.
+ */
 
 class StreamrConnection extends Connection {
     constructor(...args) {
@@ -41,16 +46,66 @@ class StreamrConnection extends Connection {
     }
 }
 
+class StreamrCached {
+    constructor(client) {
+        this.client = client
+        const cacheOptions = client.options.cache
+        this.getStream = CacheAsyncFn(client.getStream.bind(client), {
+            ...cacheOptions,
+            cacheKey([maybeStreamId]) {
+                const { streamId } = validateOptions(maybeStreamId)
+                return streamId
+            }
+        })
+        this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
+        this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
+            ...cacheOptions,
+            cacheKey([maybeStreamId, ethAddress]) {
+                const { streamId } = validateOptions(maybeStreamId)
+                return `${streamId}|${ethAddress}`
+            }
+        })
+
+        this.isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), {
+            ...cacheOptions,
+            cacheKey([maybeStreamId, ethAddress]) {
+                const { streamId } = validateOptions(maybeStreamId)
+                return `${streamId}|${ethAddress}`
+            }
+        })
+
+        this.getPublisherId = CacheAsyncFn(client.getPublisherId.bind(client), cacheOptions)
+    }
+
+    clearStream(streamId) {
+        this.getStream.clear()
+        this.isStreamPublisher.clearMatching((s) => s.startsWith(streamId))
+        this.isStreamSubscriber.clearMatching((s) => s.startsWith(streamId))
+    }
+
+    clearUser() {
+        this.getUserInfo.clear()
+    }
+}
+
+// use process id in node uid
+const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
+
 export default class StreamrClient extends EventEmitter {
     constructor(options, connection) {
         super()
-        this.id = counterId(this.constructor.name)
+        this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
-
         this.options = Config({
             id: this.id,
             debug: this.debug,
             ...options,
+        })
+
+        this.debug('new StreamrClient %s: %o', this.id, {
+            GIT_VERSION: process.env.GIT_VERSION,
+            GIT_COMMITHASH: process.env.GIT_COMMITHASH,
+            GIT_BRANCH: process.env.GIT_BRANCH,
         })
 
         // bind event handlers
@@ -73,6 +128,7 @@ export default class StreamrClient extends EventEmitter {
 
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
+        this.cached = new StreamrCached(this)
     }
 
     async onConnectionConnected() {
@@ -174,6 +230,14 @@ export default class StreamrClient extends EventEmitter {
 
     getPublisherId() {
         return this.publisher.getPublisherId()
+    }
+
+    setNextGroupKey(...args) {
+        return this.publisher.setNextGroupKey(...args)
+    }
+
+    rotateGroupKey(...args) {
+        return this.publisher.rotateGroupKey(...args)
     }
 
     async subscribe(opts, onMessage) {

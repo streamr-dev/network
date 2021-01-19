@@ -1,5 +1,7 @@
 import { CancelableGenerator } from './iterators' // eslint-disable-line import/no-cycle
 
+import { pOrderedResolve } from './index'
+
 export class AbortError extends Error {
     constructor(msg = '', ...args) {
         super(`The operation was aborted. ${msg}`, ...args)
@@ -74,6 +76,29 @@ export default class PushQueue {
         const queue = new PushQueue([], opts)
         queue.from(iterable)
         return queue
+    }
+
+    static transform(src, fn) {
+        const buffer = new PushQueue()
+        const orderedFn = pOrderedResolve(fn) // push must be run in sequence
+        ;(async () => { // eslint-disable-line semi-style
+            const tasks = []
+            for await (const value of src) {
+                // run in parallel
+                const task = orderedFn(value).then(() => (
+                    buffer.push(value)
+                )).catch((err) => {
+                    buffer.throw(err)
+                })
+                tasks.push(task)
+            }
+            await Promise.all(tasks)
+            return buffer.end()
+        })().catch((err) => {
+            return buffer.throw(err)
+        }) // no await
+
+        return buffer
     }
 
     async from(iterable) {
