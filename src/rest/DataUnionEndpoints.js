@@ -285,10 +285,10 @@ let cachedSidechainAmb
 async function getSidechainAmb(client, options) {
     if (!cachedSidechainAmb) {
         const getAmbPromise = async () => {
-            const mainnetProvider = client.getMainnetProvider()
+            const mainnetProvider = client.ethereum.getMainnetProvider()
             const factoryMainnetAddress = options.factoryMainnetAddress || client.options.factoryMainnetAddress
             const factoryMainnet = new Contract(factoryMainnetAddress, factoryMainnetABI, mainnetProvider)
-            const sidechainProvider = client.getSidechainProvider()
+            const sidechainProvider = client.ethereum.getSidechainProvider()
             const factorySidechainAddress = await factoryMainnet.data_union_sidechain_factory()
             const factorySidechain = new Contract(factorySidechainAddress, [{
                 name: 'amb',
@@ -307,7 +307,7 @@ async function getSidechainAmb(client, options) {
 }
 
 async function getMainnetAmb(client, options) {
-    const mainnetProvider = client.getMainnetProvider()
+    const mainnetProvider = client.ethereum.getMainnetProvider()
     const factoryMainnetAddress = options.factoryMainnetAddress || client.options.factoryMainnetAddress
     const factoryMainnet = new Contract(factoryMainnetAddress, factoryMainnetABI, mainnetProvider)
     const mainnetAmbAddress = await factoryMainnet.amb()
@@ -368,7 +368,7 @@ async function transportSignatures(client, messageHash, options) {
         }
 
         log('Gas estimation failed: Check if number of signatures is enough')
-        const mainnetProvider = client.getMainnetProvider()
+        const mainnetProvider = client.ethereum.getMainnetProvider()
         const validatorContractAddress = await mainnetAmb.validatorContract()
         const validatorContract = new Contract(validatorContractAddress, [{
             name: 'isValidator',
@@ -403,7 +403,7 @@ async function transportSignatures(client, messageHash, options) {
         throw new Error(`Gas estimation failed: Unknown error while processing message ${message} with ${e.stack}`)
     }
 
-    const signer = client.getSigner()
+    const signer = client.ethereum.getSigner()
     log(`Sending message from signer=${await signer.getAddress()}`)
     const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures)
     const trAMB = await txAMB.wait()
@@ -468,7 +468,7 @@ const mainnetAddressCache = {} // mapping: "name" -> mainnet address
 /** @returns {Promise<EthereumAddress>} Mainnet address for Data Union */
 async function getDataUnionMainnetAddress(client, dataUnionName, deployerAddress, options = {}) {
     if (!mainnetAddressCache[dataUnionName]) {
-        const provider = client.getMainnetProvider()
+        const provider = client.ethereum.getMainnetProvider()
         const factoryMainnetAddress = options.factoryMainnetAddress || client.options.factoryMainnetAddress
         const factoryMainnet = new Contract(factoryMainnetAddress, factoryMainnetABI, provider)
         const addressPromise = factoryMainnet.mainnetAddress(deployerAddress, dataUnionName)
@@ -483,7 +483,7 @@ const sidechainAddressCache = {} // mapping: mainnet address -> sidechain addres
 /** @returns {Promise<EthereumAddress>} Sidechain address for Data Union */
 async function getDataUnionSidechainAddress(client, duMainnetAddress, options = {}) {
     if (!sidechainAddressCache[duMainnetAddress]) {
-        const provider = client.getMainnetProvider()
+        const provider = client.ethereum.getMainnetProvider()
         const factoryMainnetAddress = options.factoryMainnetAddress || client.options.factoryMainnetAddress
         const factoryMainnet = new Contract(factoryMainnetAddress, factoryMainnetABI, provider)
         const addressPromise = factoryMainnet.sidechainAddress(duMainnetAddress)
@@ -496,7 +496,7 @@ async function getDataUnionSidechainAddress(client, duMainnetAddress, options = 
 function getMainnetContractReadOnly(client, options = {}) {
     let dataUnion = options.dataUnion || options.dataUnionAddress || client.options.dataUnion
     if (isAddress(dataUnion)) {
-        const provider = client.getMainnetProvider()
+        const provider = client.ethereum.getMainnetProvider()
         dataUnion = new Contract(dataUnion, dataUnionMainnetABI, provider)
     }
 
@@ -508,12 +508,12 @@ function getMainnetContractReadOnly(client, options = {}) {
 
 function getMainnetContract(client, options = {}) {
     const du = getMainnetContractReadOnly(client, options)
-    const signer = client.getSigner()
+    const signer = client.ethereum.getSigner()
     return du.connect(signer)
 }
 
 async function getSidechainContract(client, options = {}) {
-    const signer = await client.getSidechainSigner()
+    const signer = await client.ethereum.getSidechainSigner()
     const duMainnet = getMainnetContractReadOnly(client, options)
     const duSidechainAddress = await getDataUnionSidechainAddress(client, duMainnet.address, options)
     const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, signer)
@@ -521,7 +521,7 @@ async function getSidechainContract(client, options = {}) {
 }
 
 async function getSidechainContractReadOnly(client, options = {}) {
-    const provider = await client.getSidechainProvider()
+    const provider = await client.ethereum.getSidechainProvider()
     const duMainnet = getMainnetContractReadOnly(client, options)
     const duSidechainAddress = await getDataUnionSidechainAddress(client, duMainnet.address, options)
     const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, provider)
@@ -591,12 +591,12 @@ export async function deployDataUnion(options = {}) {
     if (adminFee < 0 || adminFee > 1) { throw new Error('options.adminFeeFraction must be a number between 0...1, got: ' + adminFee) }
     const adminFeeBN = BigNumber.from((adminFee * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
 
-    const mainnetProvider = this.getMainnetProvider()
-    const mainnetWallet = this.getSigner()
-    const sidechainProvider = this.getSidechainProvider()
+    const mainnetProvider = this.ethererum.getMainnetProvider()
+    const mainnetWallet = this.ethererum.getSigner()
+    const sidechainProvider = this.ethererum.getSidechainProvider()
 
     // parseAddress defaults to authenticated user (also if "owner" is not an address)
-    const ownerAddress = await parseAddress(this, owner)
+    const ownerAddress = parseAddress(this, owner)
 
     let agentAddressList
     if (Array.isArray(joinPartAgents)) {
@@ -937,7 +937,7 @@ export async function getTokenBalance(address, options) {
     const a = parseAddress(this, address)
     const tokenAddressMainnet = options.tokenAddress || await getMainnetContractReadOnly(this, options).then((c) => c.token()).catch(() => null) || this.options.tokenAddress
     if (!tokenAddressMainnet) { throw new Error('tokenAddress option not found') }
-    const provider = this.getMainnetProvider()
+    const provider = this.ethereum.getMainnetProvider()
     const token = new Contract(tokenAddressMainnet, [{
         name: 'balanceOf',
         inputs: [{ type: 'address' }],
@@ -958,7 +958,7 @@ export async function getTokenBalance(address, options) {
  */
 export async function getDataUnionVersion(contractAddress) {
     const a = getAddress(contractAddress) // throws if bad address
-    const provider = this.getMainnetProvider()
+    const provider = this.ethereum.getMainnetProvider()
     const du = new Contract(a, [{
         name: 'version',
         inputs: [],
@@ -999,7 +999,7 @@ export async function withdraw(options = {}) {
  * @returns {Promise<providers.TransactionResponse>} await on call .wait to actually send the tx
  */
 export async function getWithdrawTx(options) {
-    const signer = await this.getSidechainSigner()
+    const signer = await this.ethereum.getSidechainSigner()
     const address = await signer.getAddress()
     const duSidechain = await getSidechainContract(this, options)
 
@@ -1039,7 +1039,7 @@ export async function withdrawTo(recipientAddress, options = {}) {
  * @returns {Promise<providers.TransactionResponse>} await on call .wait to actually send the tx
  */
 export async function getWithdrawTxTo(recipientAddress, options) {
-    const signer = await this.getSidechainSigner()
+    const signer = await this.ethereum.getSidechainSigner()
     const address = await signer.getAddress()
     const duSidechain = await getSidechainContract(this, options)
     const withdrawable = await duSidechain.getWithdrawableEarnings(address)
@@ -1078,7 +1078,7 @@ export async function signWithdrawTo(recipientAddress, options) {
  */
 export async function signWithdrawAmountTo(recipientAddress, amountTokenWei, options) {
     const to = getAddress(recipientAddress) // throws if bad address
-    const signer = this.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
+    const signer = this.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
     const address = await signer.getAddress()
     const duSidechain = await getSidechainContractReadOnly(this, options)
     const memberData = await duSidechain.memberData(address)

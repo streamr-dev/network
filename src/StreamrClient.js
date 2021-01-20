@@ -314,24 +314,6 @@ export default class StreamrClient extends EventEmitter {
         return this.ethereum.getAddress()
     }
 
-    getSigner() {
-        return this.ethereum.getSigner()
-    }
-
-    async getSidechainSigner() {
-        return this.ethereum.getSidechainSigner()
-    }
-
-    /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
-    getMainnetProvider() {
-        return this.ethereum.getMainnetProvider()
-    }
-
-    /** @returns Ethers.js Provider, a connection to the Streamr EVM sidechain */
-    getSidechainProvider() {
-        return this.ethereum.getSidechainProvider()
-    }
-
     static generateEthereumAccount() {
         return StreamrEthereum.generateEthereumAccount()
     }
