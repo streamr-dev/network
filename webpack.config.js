@@ -64,6 +64,7 @@ const commonConfig = {
 }
 
 const serverConfig = merge({}, commonConfig, {
+    name: 'node-lib',
     target: 'node',
     externals: [nodeExternals()],
     output: {
@@ -73,6 +74,7 @@ const serverConfig = merge({}, commonConfig, {
 })
 
 const clientConfig = merge({}, commonConfig, {
+    name: 'browser-lib',
     target: 'web',
     output: {
         libraryTarget: 'umd2',
