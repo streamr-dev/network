@@ -18,7 +18,7 @@ const libraryName = pkg.name
 const commonConfig = {
     mode: isProduction ? 'production' : 'development',
     entry: path.join(__dirname, 'src', 'index.js'),
-    devtool: isProduction ? 'nosources-source-map' : 'source-map',
+    devtool: 'source-map',
     output: {
         path: path.join(__dirname, 'dist'),
         library: {
