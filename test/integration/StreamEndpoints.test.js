@@ -117,13 +117,13 @@ describe('StreamEndpoints', () => {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
-            assert.deepStrictEqual(publishers, [client.signer.address.toLowerCase()])
+            assert.deepStrictEqual(publishers, [(await client.signer.getAddress()).toLowerCase()])
         })
     })
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, client.signer.address.toLowerCase())
+            const valid = await client.isStreamPublisher(createdStream.id, (await client.signer.getAddress()).toLowerCase())
             assert(valid)
         })
         it('returns false for invalid publishers', async () => {
@@ -135,13 +135,13 @@ describe('StreamEndpoints', () => {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of publishers', async () => {
             const subscribers = await client.getStreamSubscribers(createdStream.id)
-            assert.deepStrictEqual(subscribers, [client.signer.address.toLowerCase()])
+            assert.deepStrictEqual(subscribers, [(await client.signer.getAddress()).toLowerCase()])
         })
     })
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, client.signer.address.toLowerCase())
+            const valid = await client.isStreamSubscriber(createdStream.id, (await client.signer.getAddress()).toLowerCase())
             assert(valid)
         })
         it('returns false for invalid subscribers', async () => {

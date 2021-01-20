@@ -147,7 +147,7 @@ describe('SubscribedStreamPartition', () => {
                 }
                 const timestamp = Date.now()
                 const msg = new StreamMessage({
-                    messageId: new MessageIDStrict(streamId, 0, timestamp, 0, signer.address, ''),
+                    messageId: new MessageIDStrict(streamId, 0, timestamp, 0, await signer.getAddress(), ''),
                     prevMesssageRef: null,
                     content: data,
                     messageType: StreamMessage.MESSAGE_TYPES.MESSAGE,

@@ -68,7 +68,7 @@ export default class MessageCreationUtil {
                 this.publisherId = ethers.utils.computeAddress(this.auth.privateKey).toLowerCase()
             } else if (this.auth.provider !== undefined) {
                 const provider = new ethers.providers.Web3Provider(this.auth.provider)
-                this.publisherId = provider.getSigner().address.toLowerCase()
+                this.publisherId = (await provider.getSigner().getAddress()).toLowerCase()
             } else if (this.auth.apiKey !== undefined) {
                 const hexString = ethers.utils.hexlify(Buffer.from(await this.getUsername(), 'utf8'))
                 this.publisherId = ethers.utils.sha256(hexString)

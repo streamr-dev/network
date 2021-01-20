@@ -18,7 +18,7 @@ const libraryName = pkg.name
 const commonConfig = {
     mode: isProduction ? 'production' : 'development',
     entry: path.join(__dirname, 'src', 'index.js'),
-    devtool: isProduction ? 'nosources-source-map' : 'source-map',
+    devtool: 'source-map',
     output: {
         path: path.join(__dirname, 'dist'),
         library: {
@@ -38,9 +38,12 @@ const commonConfig = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env']
+                        configFile: path.resolve(__dirname, '.babelrc'),
+                        babelrc: false,
+                        cacheDirectory: true,
                     }
                 }
+
             },
             {
                 test: /(\.jsx|\.js)$/,
@@ -61,6 +64,7 @@ const commonConfig = {
 }
 
 const serverConfig = merge({}, commonConfig, {
+    name: 'node-lib',
     target: 'node',
     externals: [nodeExternals()],
     output: {
@@ -70,6 +74,7 @@ const serverConfig = merge({}, commonConfig, {
 })
 
 const clientConfig = merge({}, commonConfig, {
+    name: 'browser-lib',
     target: 'web',
     output: {
         libraryTarget: 'umd2',
