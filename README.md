@@ -302,54 +302,94 @@ sub.on('initial_resend_done', () => {
 
 ## Data Unions
 
-This library provides functions for working with Data Unions. All of the below methods return a Promise.
+This library provides functions for working with Data Unions.
+
+TODO: check all this documentation before merging/publishing, probably some of it is out of date (DU1 era)
+
+Data union functions take a third parameter, `options`, which are either overrides to options given in the constructor, or optional arguments to the function.
+
+| Property      | Default               | Description                                                  |
+| :------------ | :-------------------- | :------------------------------------------------------------ |
+| wallet        | given in auth         | ethers.js Wallet object to use to sign and send withdraw transaction |
+| provider      | mainnet               | ethers.js Provider to use if wallet wasn't provided          |
+| confirmations | `1`                   | Number of blocks to wait after the withdraw transaction is mined |
+| gasPrice      | ethers.js supplied    | Probably uses the network estimate
+| dataUnion     | -                     | Address or contract object of the data union that is the target of the operation
+| tokenAddress  | 0x0Cf0Ee637<br>88A0849fE52<br>97F3407f701<br>E122cC023 | Token used by the DU
+| minimumWithdrawTokenWei    | 1000000  | Threshold value set in AMB configs, smallest token amount that can pass over the bridge
+| sidechainTokenAddress      |  TODO    | sidechain token address
+| factoryMainnetAddress      |  TODO    | Data Union factory that creates a new Data Union
+| sidechainAmbAddress        |  TODO    | Arbitrary Message-passing Bridge (AMB), see [Tokenbridge github page](https://github.com/poanetwork/tokenbridge)
+| payForSignatureTransport   | `true`   | Someone must pay for transporting the withdraw tx to mainnet, either us or bridge operator
 
 #### Admin functions
 
-| Name                                                    | Returns     | Description                                                |
-| :------------------------------------------------------- | :----------- | :---------------------------------------------------------- |
-| deployDataUnion()                                       | Transaction | Deploy a new Data Union                                    |
-| createSecret(dataUnionContractAddress, secret[, name])  |             | Create a secret for a Data Union                           |
-| dataUnionIsReady(address)                               |             | Wait until a new Data Union is initialized by its Operator |
-| addMembers(dataUnionContractAddress, memberAddressList) |             | Add members                                                |
-| kick(dataUnionContractAddress, memberAddressList)       |             | Kick members out from Data Union                           |
+| Name                                                      | Returns               | Description                                                |
+| :-------------------------------------------------------- | :-------------------- | :--------------------------------------------------------- |
+| deployDataUnion(options)                                  | Dataunion contract    | Deploy a new Data Union                                    |
+| createSecret(dataUnionContractAddress, secret[, name])    |                       | Create a secret for a Data Union                           |
+| addMembers(memberAddressList, options)                    | Transaction receipt   | Add members                                                |
+| kick(memberAddressList, options)                          | Transaction receipt   | Kick members out from Data Union                           |
+| withdrawMember(memberAddress, options) |||
+| withdrawToSigned(memberAddress, recipientAddress, signature, options) |||
+| setAdminFee(newFeeFraction, options)                      | Transaction receipt   | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
+
+Here's an example how to deploy a data union contract and set the admin fee:
 
 ```javascript
+const client = new StreamrClient({
+    auth: { privateKey },
+})
 const dataUnion = await client.deployDataUnion()
-dataUnion.address           // already available before deployment
-await dataUnion.deployed()  // waits until contract is deployed
-await dataUnion.isReady()   // waits until data union is operated
+await client.setAdminFee(0.3, { dataUnion })
 ```
 
 #### Member functions
 
-| Name                                                         | Returns     | Description                                                  |
-| :------------------------------------------------------------ | :----------- | :------------------------------------------------------------ |
-| joinDataUnion(dataUnionContractAddress[, secret])            | JoinRequest | Join a Data Union                                            |
-| hasJoined(dataUnionContractAddress[, memberAddress])         |             | Wait until member has been accepted                          |
-| validateProof(dataUnionContractAddress, options)             | true/false  | Check that server is giving a proof that allows withdrawing  |
-| withdraw(dataUnionContractAddress, options)                  | Receipt     | Withdraw funds from Data Union                               |
-| withdrawFor(memberAddress, dataUnionContractAddress, options) | Receipt     | Pay for withdraw transaction on behalf of a Data Union member |
-| withdrawTo(recipientAddress, dataUnionContractAddress, options) | Receipt     | Donate/move your earnings to recipientAddress instead of your memberAddress |
+| Name                                                              | Returns       | Description                                                   |
+| :---------------------------------------------------------------- | :------------ | :------------------------------------------------------------ |
+| joinDataUnion(options)                                            | JoinRequest   | Join a Data Union                                             |
+| hasJoined([memberAddress], options)                               |  -            | Wait until member has been accepted                           |
+| withdraw(options)                                                 | Transaction receipt   | Withdraw funds from Data Union                        |
+| withdrawTo(recipientAddress, dataUnionContractAddress, options)   | Transaction receipt   | Donate/move your earnings to recipientAddress instead of your memberAddress   |
+| signWithdrawTo(recipientAddress, options)                         | Signature (string)    | Signature that can be used to withdraw tokens to given recipientAddress       |
+| signWithdrawAmountTo(recipientAddress, amountTokenWei, options)   | Signature (string)    | Signature that can be used to withdraw tokens to given recipientAddress       |
 
-The options object for withdraw functions above may contain following overrides:
+Here's an example how to sign off on a withdraw to (any) recipientAddress:
 
-| Property      | Default   | Description                                                  |
-| :------------- | :--------- | :------------------------------------------------------------ |
-| wallet        | auth      | ethers.js Wallet object to use to sign and send withdraw transaction |
-| provider      | mainnet   | ethers.js Provider to use if wallet wasn't provided          |
-| confirmations | 1         | Number of blocks to wait after the withdraw transaction is mined |
-| gasPrice      | ethers.js | Probably uses the network estimate                           |
+```javascript
+const client = new StreamrClient({
+    auth: { privateKey },
+    dataUnion,
+})
+const signature = await client.signWithdrawTo(recipientAddress)
+```
 
 #### Query functions
 
 These are available for everyone and anyone, to query publicly available info from a Data Union:
 
-| Name                                                      | Returns                           | Description                 |
-| :--------------------------------------------------------- | :--------------------------------- | :--------------------------- |
-| getMemberStats(dataUnionContractAddress[, memberAddress]) | {earnings, proof, ...}            | Get member's stats          |
-| getDataUnionStats(dataUnionContractAddress)               | {memberCount, totalEarnings, ...} | Get Data Union's statistics |
-| getMembers(dataUnionContractAddress)                      | [{address, earnings}, ...]        | Get Data Union's members    |
+| Name                                                      | Returns                                 | Description                 |
+| :-------------------------------------------------------- | :-------------------------------------- | :-------------------------- |
+| getMemberStats(dataUnionContractAddress[, memberAddress]) | {earnings, proof, ...}                  | Get member's stats          |
+| getDataUnionStats(dataUnionContractAddress)               | {activeMemberCount, totalEarnings, ...} | Get Data Union's statistics |
+| ~~getMembers(dataUnionContractAddress)~~                  | | NOT available in DU2 at the moment    |
+| getAdminFee(options)                                      | `Number` between 0.0 and 1.0 (inclusive)| Admin's cut from revenues   |
+| getAdminAddress(options)                                  | Ethereum address | Data union admin's address   |
+| getDataUnionStats(options)                                | Stats object                            | Various metrics from the smart contract |
+| getMemberStats([memberAddress], options)                  | Member stats object                     | Various metrics from the smart contract |
+| getMemberBalance([memberAddress], options)                | `BigNumber` withdrawable DATA tokens in the DU | |
+| getTokenBalance(address, options)                         | `BigNumber`                             | Mainnet DATA token balance |
+| getDataUnionVersion(contractAddress)                      | `0`, `1` or `2`                         | `0` if the contract is not a data union |
+
+Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
+
+```javascript
+const client = new StreamrClient({
+    dataUnion,
+})
+const withdrawableWei = await client.getMemberBalance(memberAddress)
+```
 
 ## Utility functions
 

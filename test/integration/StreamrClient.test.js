@@ -32,6 +32,7 @@ describeRepeats('StreamrClient', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
+            ...config.clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
@@ -40,7 +41,6 @@ describeRepeats('StreamrClient', () => {
             disconnectDelay: 1,
             publishAutoDisconnectDelay: 50,
             maxRetries: 2,
-            ...config.clientOptions,
             ...opts,
         })
         c.onError = jest.fn()
@@ -693,7 +693,7 @@ describeRepeats('StreamrClient', () => {
         })
 
         it('is stream publisher', async () => {
-            const publisherId = await client.getPublisherId()
+            const publisherId = await client.getUserId()
             const res = await client.isStreamPublisher(stream.id, publisherId)
             expect(res).toBe(true)
         })

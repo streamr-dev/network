@@ -21,6 +21,7 @@ describeRepeats('Connection State', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
+            ...config.clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
@@ -28,7 +29,6 @@ describeRepeats('Connection State', () => {
             autoDisconnect: false,
             publishAutoDisconnectDelay: 250,
             maxRetries: 2,
-            ...config.clientOptions,
             ...opts,
         })
         c.onError = jest.fn()

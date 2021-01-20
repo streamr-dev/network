@@ -18,13 +18,13 @@ describeRepeats('GapFill', () => {
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
+            ...config.clientOptions,
             auth: {
                 privateKey: fakePrivateKey(),
             },
             autoConnect: false,
             autoDisconnect: false,
             maxRetries: 2,
-            ...config.clientOptions,
             ...opts,
         })
         c.onError = jest.fn()

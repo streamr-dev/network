@@ -1,15 +1,16 @@
 import EventEmitter from 'eventemitter3'
-import { Wallet } from 'ethers'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
 import { counterId, uuid, CacheAsyncFn } from './utils'
 import { validateOptions } from './stream/utils'
 import Config from './Config'
+import StreamrEthereum from './Ethereum'
 import Session from './Session'
 import Connection from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
+import { getUserId } from './user'
 
 /**
  * Wrap connection message events with message parsing.
@@ -74,7 +75,7 @@ class StreamrCached {
             }
         })
 
-        this.getPublisherId = CacheAsyncFn(client.getPublisherId.bind(client), cacheOptions)
+        this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
     }
 
     clearStream(streamId) {
@@ -85,6 +86,12 @@ class StreamrCached {
 
     clearUser() {
         this.getUserInfo.clear()
+        this.getUserId.clear()
+    }
+
+    clear() {
+        this.clearUser()
+        this.clearStream()
     }
 }
 
@@ -92,7 +99,7 @@ class StreamrCached {
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
 export default class StreamrClient extends EventEmitter {
-    constructor(options, connection) {
+    constructor(options = {}, connection) {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
@@ -130,6 +137,7 @@ export default class StreamrClient extends EventEmitter {
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
         this.cached = new StreamrCached(this)
+        this.ethereum = new StreamrEthereum(this)
     }
 
     async onConnectionConnected() {
@@ -229,8 +237,8 @@ export default class StreamrClient extends EventEmitter {
         return this.publisher.publish(...args)
     }
 
-    getPublisherId() {
-        return this.publisher.getPublisherId()
+    async getUserId() {
+        return getUserId(this)
     }
 
     setNextGroupKey(...args) {
@@ -303,11 +311,11 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.enableAutoDisconnect(...args)
     }
 
+    getAddress() {
+        return this.ethereum.getAddress()
+    }
+
     static generateEthereumAccount() {
-        const wallet = Wallet.createRandom()
-        return {
-            address: wallet.address,
-            privateKey: wallet.privateKey,
-        }
+        return StreamrEthereum.generateEthereumAccount()
     }
 }

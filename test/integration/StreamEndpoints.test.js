@@ -16,9 +16,9 @@ function TestStreamEndpoints(getName) {
     let createdStream
 
     const createClient = (opts = {}) => new StreamrClient({
+        ...config.clientOptions,
         autoConnect: false,
         autoDisconnect: false,
-        ...config.clientOptions,
         ...opts,
     })
 
@@ -123,13 +123,15 @@ function TestStreamEndpoints(getName) {
     describe('getStreamPublishers', () => {
         it('retrieves a list of publishers', async () => {
             const publishers = await client.getStreamPublishers(createdStream.id)
-            expect(publishers).toEqual([(await client.getPublisherId()).toLowerCase()])
+            const address = await client.getUserId()
+            expect(publishers).toEqual([address])
         })
     })
 
     describe('isStreamPublisher', () => {
         it('returns true for valid publishers', async () => {
-            const valid = await client.isStreamPublisher(createdStream.id, await client.getPublisherId())
+            const address = await client.getUserId()
+            const valid = await client.isStreamPublisher(createdStream.id, address)
             expect(valid).toBeTruthy()
         })
         it('returns false for invalid publishers', async () => {
@@ -141,13 +143,15 @@ function TestStreamEndpoints(getName) {
     describe('getStreamSubscribers', () => {
         it('retrieves a list of publishers', async () => {
             const subscribers = await client.getStreamSubscribers(createdStream.id)
-            expect(subscribers).toEqual([(await client.getPublisherId()).toLowerCase()])
+            const address = await client.getUserId()
+            expect(subscribers).toEqual([address])
         })
     })
 
     describe('isStreamSubscriber', () => {
         it('returns true for valid subscribers', async () => {
-            const valid = await client.isStreamSubscriber(createdStream.id, (await client.getPublisherId()).toLowerCase())
+            const address = await client.getUserId()
+            const valid = await client.isStreamSubscriber(createdStream.id, address)
             expect(valid).toBeTruthy()
         })
         it('returns false for invalid subscribers', async () => {

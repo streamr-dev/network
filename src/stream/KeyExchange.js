@@ -168,13 +168,13 @@ function waitForSubMessage(sub, matchFn) {
 
 async function subscribeToKeyExchangeStream(client, onKeyExchangeMessage) {
     const { options } = client
-    if ((!options.auth.privateKey && !options.auth.provider) || !options.keyExchange) {
+    if ((!options.auth.privateKey && !options.auth.ethereum) || !options.keyExchange) {
         return Promise.resolve()
     }
 
     await client.session.getSessionToken() // trigger auth errors if any
     // subscribing to own keyexchange stream
-    const publisherId = await client.getPublisherId()
+    const publisherId = await client.getUserId()
     const streamId = getKeyExchangeStreamId(publisherId)
     return client.subscribe(streamId, onKeyExchangeMessage)
 }

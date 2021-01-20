@@ -1,7 +1,6 @@
 const { format } = require('util')
 
 const { Benchmark } = require('benchmark')
-const { ethers } = require('ethers')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist/streamr-client.nodejs.js')
@@ -46,23 +45,26 @@ const BATCH_SIZES = [
 const log = (...args) => process.stderr.write(format(...args) + '\n')
 
 async function run() {
+    const account1 = StreamrClient.generateEthereumAccount()
     const [client1, stream1] = await setupClientAndStream({
         auth: {
-            privateKey: ethers.Wallet.createRandom().privateKey,
+            privateKey: account1.privateKey,
         },
         publishWithSignature: 'always',
     })
 
+    const account2 = StreamrClient.generateEthereumAccount()
     const [client2, stream2] = await setupClientAndStream({
         auth: {
-            privateKey: ethers.Wallet.createRandom().privateKey,
+            privateKey: account2.privateKey,
         },
         publishWithSignature: 'never',
     })
 
+    const account3 = StreamrClient.generateEthereumAccount()
     const [client3, stream3] = await setupClientAndStream({
         auth: {
-            privateKey: ethers.Wallet.createRandom().privateKey,
+            privateKey: account3.privateKey,
         },
         publishWithSignature: 'always',
     }, {

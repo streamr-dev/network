@@ -6,12 +6,12 @@ import StreamrClient from '../../src'
 import config from './config'
 
 const createClient = (opts = {}) => new StreamrClient({
+    ...config.clientOptions,
     auth: {
         privateKey: fakePrivateKey(),
     },
     autoConnect: false,
     autoDisconnect: false,
-    ...config.clientOptions,
     ...opts,
 })
 

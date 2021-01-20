@@ -67,15 +67,32 @@ jobs:
         run: npm run test-unit
 
   integration:
-    name: ${{ matrix.test-name }} using Node ${{ matrix.node-version }}
+    name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         node-version: [12.x, 14.x]
-        test-name: ['test-integration-no-resend', 'test-integration-resend']
+        test-name: [
+            "test-integration-no-resend",
+            "test-integration-resend",
+            "test-integration-dataunions",
+        ]
+        websocket-url:
+            - name: "default"
+              url:  ""
+            - name: "storage-node-only"
+              url:  "ws://localhost:8890/api/v1/ws"
+
+        exclude:
+          # no need to test different ws urls for dataunion tests
+          - test-name: "test-integration-dataunions"
+            websocket-url:
+                - name: "storage-node-only"
+                - url:  "ws://localhost:8890/api/v1/ws"
     env:
-        TEST_NAME: ${{ matrix.test-name }}
+      TEST_NAME: ${{ matrix.test-name }}
+      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
 
     steps:
       - uses: actions/checkout@v2
@@ -84,15 +101,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: npm ci
         run: npm ci
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-dev
-      - name: setup streamr-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: Run Test
         run: npm run $TEST_NAME -- --maxWorkers=1
 
@@ -111,15 +123,10 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: npm ci
         run: npm ci
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-dev
-      - name: setup streamr-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start --wait
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - uses: nick-invision/retry@v2
         name: Run Test
         with:
@@ -143,15 +150,10 @@ jobs:
           path: dist
       - name: npm ci
         run: npm ci
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-dev
-      - name: setup streamr-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: test-browser
         timeout-minutes: 2
         run: npm run test-browser
@@ -173,15 +175,10 @@ jobs:
         with:
           name: build
           path: dist
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-dev
-      - name: setup streamr-dev
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: npm ci
         run: npm ci
       - name: benchmarks
@@ -212,9 +209,9 @@ jobs:
           - js-realtime-only
           - java-realtime-only
     env:
-        NUM_MESSAGES: 10
-        TEST_NAME: ${{ matrix.test-name }}
-        CONFIG_NAME: ${{ matrix.config-name }}
+      NUM_MESSAGES: 10
+      TEST_NAME: ${{ matrix.test-name }}
+      CONFIG_NAME: ${{ matrix.config-name }}
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14
@@ -225,15 +222,10 @@ jobs:
         with:
           name: build
           path: dist
-      - uses: actions/checkout@v2
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
-          repository: streamr-dev/streamr-docker-dev
-          path: streamr-dev
-      - name: setup-docker
-        run: |
-          sudo service mysql stop
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-dev/streamr-docker-dev/bin.sh start nginx broker-node-storage-1 broker-node-no-storage-1 broker-node-no-storage-2 engine-and-editor tracker-1 --wait
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: npm link
         run: npm ci && npm link
       - uses: actions/checkout@v2
@@ -243,14 +235,7 @@ jobs:
       - name: setup-client-testing
         working-directory: streamr-client-testing
         run: |
-          #echo "Setup package.json to use PR JS client"
-          #sed -i "s/com.streamr:client:1.3.0/com.streamr:client:+/g" build.gradle
-          #sed -i "s/\"streamr-client\": \"latest\"/\"streamr-client\":\"PATH\"/g" package.json
-          ## fix for escaping / of workspace path
-          #sed -i "s|"PATH"|"${GITHUB_WORKSPACE}"|g" package.json
-          #echo "Prepare for test"
-          #cat package.json
-          ## npm install is used because package-lock.json could be form a previous client version.
+          ## npm install is used because package-lock.json could be from a previous client version.
           npm install
           npm link streamr-client
           ./gradlew fatjar

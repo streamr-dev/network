@@ -9,28 +9,47 @@ const { StreamMessage } = MessageLayer
 
 export default function ClientConfig(opts = {}) {
     const { id = counterId('StreamrClient') } = opts
-    // Default options
+
     const options = {
         debug: Debug(id),
-        // The server to connect to
-        url: 'wss://streamr.network/api/v1/ws',
-        restUrl: 'https://streamr.network/api/v1',
-        // Automatically connect on first subscribe
-        autoConnect: true,
-        // Automatically disconnect on last unsubscribe
-        autoDisconnect: true,
+        // Authentication: identity used by this StreamrClient instance
+        auth: {}, // can contain member privateKey or (window.)ethereum
+
+        // Streamr Core options
+        url: 'wss://streamr.network/api/v1/ws', // The server to connect to
+        restUrl: 'https://streamr.network/api/v1', // Core API calls go here
+        streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a', // joinPartAgent when using EE for join part handling
+
+        // P2P Streamr Network options
+        autoConnect: true, // Automatically connect on first subscribe
+        autoDisconnect: true, // Automatically disconnect on last unsubscribe
         orderMessages: true,
-        auth: {},
-        groupKeys: {},
-        publishWithSignature: 'auto',
-        verifySignatures: 'auto',
         retryResendAfter: 5000,
         gapFillTimeout: 5000,
         maxPublishQueueSize: 10000,
-        streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
-        streamrOperatorAddress: '0xc0aa4dC0763550161a6B59fa430361b5a26df28C',
-        tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
+
+        // Encryption options
+        publishWithSignature: 'auto',
+        verifySignatures: 'auto',
+        publisherStoreKeyHistory: true,
+        groupKeys: {}, // {streamId: groupKey}
         keyExchange: {},
+
+        // Ethereum and Data Union related options
+        // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
+        mainnet: null, // Default to ethers.js default provider settings
+        sidechain: {
+            url: null, // TODO: add our default public service sidechain node, also find good PoA params below
+            // timeout:
+            // pollingInterval:
+        },
+        dataUnion: null, // Give a "default target" of all data union endpoint operations (no need to pass argument every time)
+        tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
+        minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
+        sidechainTokenAddress: null, // TODO // sidechain token
+        factoryMainnetAddress: null, // TODO // Data Union factory that creates a new Data Union
+        sidechainAmbAddress: null, // Arbitrary Message-passing Bridge (AMB), see https://github.com/poanetwork/tokenbridge
+        payForSignatureTransport: true, // someone must pay for transporting the withdraw tx to mainnet, either us or bridge operator
         ...opts,
         cache: {
             maxSize: 10000,
