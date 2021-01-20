@@ -1,6 +1,8 @@
 import { MessageLayer, Utils } from 'streamr-client-protocol'
 import { Web3Provider } from '@ethersproject/providers'
 
+import { pLimitFn, sleep } from '../utils'
+
 const { StreamMessage } = MessageLayer
 const { SigningUtil } = Utils
 const { SIGNATURE_TYPES } = StreamMessage
@@ -16,7 +18,13 @@ function getSigningFunction({ privateKey, ethereum } = {}) {
     if (ethereum) {
         const web3Provider = new Web3Provider(ethereum)
         const signer = web3Provider.getSigner()
-        return async (d) => signer.signMessage(d)
+        // sign one at a time & wait a moment before asking for next signature
+        // otherwise metamask extension may not show the prompt window
+        return pLimitFn(async (d) => {
+            const sig = await signer.signMessage(d)
+            await sleep(50)
+            return sig
+        }, 1)
     }
 
     throw new Error('Need either "privateKey" or "ethereum".')
@@ -55,8 +63,9 @@ export default function Signer(options = {}, publishWithSignature = 'auto') {
         // set signature so getting of payload works correctly
         // (publisherId should already be set)
         streamMessage.signatureType = signatureType // eslint-disable-line no-param-reassign
+        const signature = await sign(streamMessage.getPayloadToSign())
         return Object.assign(streamMessage, {
-            signature: await sign(streamMessage.getPayloadToSign()),
+            signature,
         })
     }
 
