@@ -38,9 +38,12 @@ const commonConfig = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['@babel/preset-env']
+                        configFile: path.resolve(__dirname, '.babelrc'),
+                        babelrc: false,
+                        cacheDirectory: true,
                     }
                 }
+
             },
             {
                 test: /(\.jsx|\.js)$/,
