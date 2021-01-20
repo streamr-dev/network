@@ -13,17 +13,18 @@ export default class Signer {
         }
         const { privateKey, provider } = this.options
         if (privateKey) {
-            this.address = ethers.utils.computeAddress(privateKey)
+            const address = ethers.utils.computeAddress(privateKey)
             const key = (typeof privateKey === 'string' && privateKey.startsWith('0x'))
                 ? privateKey.slice(2) // strip leading 0x
                 : privateKey
             this.sign = async (d) => {
                 return SigningUtil.sign(d, key)
             }
+            this.getAddress = async () => address
         } else if (provider) {
             const web3Provider = new ethers.providers.Web3Provider(provider)
             const signer = web3Provider.getSigner()
-            this.address = signer.address
+            this.getAddress = async () => signer.getAddress()
             this.sign = async (d) => signer.signMessage(d)
         } else {
             throw new Error('Need either "privateKey" or "provider".')
@@ -44,7 +45,8 @@ export default class Signer {
         /* eslint-disable no-param-reassign */
         // set signature & publisher so getting of payload works correctly
         streamMessage.signatureType = signatureType
-        streamMessage.messageId.publisherId = this.address // changing the id seems bad
+        // eslint-disable-next-line require-atomic-updates
+        streamMessage.messageId.publisherId = await this.getAddress() // changing the id seems bad
         const payload = streamMessage.getPayloadToSign()
         // eslint-disable-next-line require-atomic-updates
         streamMessage.signature = await this.signData(payload, signatureType)
