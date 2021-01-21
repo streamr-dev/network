@@ -7,7 +7,6 @@
   Streamr JavaScript Client
 </h1>
 
-
 By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams.
 
 The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
@@ -15,12 +14,13 @@ The client uses websockets for producing and consuming messages to/from streams.
 [![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
 
 ## Breaking changes notice
-- Dec 31st 2020: Email/password login will be removed. **Connect your email account to an Ethereum address before the deadline!**
-- Dec 31st 2020: Stream storage becomes opt-in and freely choosable.
-- Dec 31st 2020: Support for API keys will end.
-- Date TBD: Support for unsigned data will be dropped.
 
-[Installation](#installation) · [Usage](#usage) · [Client options](#client-options) · [Authentication options](#authentication-options) · [Message handler callback](#message-handler-callback) · [StreamrClient object](#streamrclient-object) · [Stream object](#stream-object) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#binding-to-events) · [Partitioning](#partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+* Dec 31st 2020: Email/password login will be removed. **Connect your email account to an Ethereum address before the deadline!**
+* Dec 31st 2020: Stream storage becomes opt-in and freely choosable.
+* Dec 31st 2020: Support for API keys will end.
+* Date TBD: Support for unsigned data will be dropped.
+
+[Installation](#installation) · [Usage](#usage) · [Client options](#client-options) · [Authentication options](#authentication-options) · [Message handler callback](#message-handler-callback) · [Connecting](#connecting) · [Stream object](#stream-object) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Partitioning](#partitioning) · [Logging](#logging) · [For Developers](#for-developers)
 
 ## Installation
 
@@ -34,9 +34,9 @@ Here are some quick examples. More detailed examples for the browser and node.js
 
 If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
-#### Creating a StreamrClient instance
+### Creating a StreamrClient instance
 
-```javascript
+```js
 const client = new StreamrClient({
     auth: {
         privateKey: 'your-private-key'
@@ -46,60 +46,52 @@ const client = new StreamrClient({
 
 When using Node.js remember to require the library with:
 
-```javascript
+```js
 const StreamrClient = require('streamr-client')
 ```
 
-#### Subscribing to real-time events in a stream
+### Subscribing to real-time events in a stream
 
-```javascript
-const sub = client.subscribe(
-    {
-        stream: 'streamId',
-        partition: 0,           // Optional, defaults to zero. Use for partitioned streams to select partition.
-        // optional resend options here
-    },
-    (message, metadata) => {
-        // This is the message handler which gets called for every incoming message in the stream.
-        // Do something with the message here!
-    }
-)
+```js
+const sub = await client.subscribe({
+    stream: 'streamId',
+    partition: 0, // Optional, defaults to zero. Use for partitioned streams to select partition.
+    // optional resend options here
+}, (message, metadata) => {
+    // This is the message handler which gets called for every incoming message in the stream.
+    // Do something with the message here!
+})
 ```
 
-#### Resending historical data
+### Resending historical data
 
-```javascript
-const sub = await client.resend(
-    {
-        stream: 'streamId',
-        resend: {
-            last: 5,
-        },
+```js
+const sub = await client.resend({
+    stream: 'streamId',
+    resend: {
+        last: 5,
     },
-    (message) => {
-        // This is the message handler which gets called for every received message in the stream.
-        // Do something with the message here!
-    }
-)
+}, (message) => {
+    // This is the message handler which gets called for every received message in the stream.
+    // Do something with the message here!
+})
 ```
 
 See "Subscription options" for resend options
 
-#### Programmatically creating a stream
+### Programmatically creating a stream
 
-```javascript
-client.getOrCreateStream({
+```js
+const stream = await client.getOrCreateStream({
     name: 'My awesome stream created via the API',
 })
-    .then((stream) => {
-        console.log(`Stream ${stream.id} has been created!`)
-        // Do something with the stream, for example call stream.publish(message)
-    })
+console.log(`Stream ${stream.id} has been created!`)
+// Do something with the stream, for example call stream.publish(message)
 ```
 
-#### Publishing data points to a stream
+### Publishing data points to a stream
 
-```javascript
+```js
 // Here's our example data point
 const msg = {
     temperature: 25.4,
@@ -108,25 +100,25 @@ const msg = {
 }
 
 // Publish using the stream id only
-client.publish('my-stream-id', msg)
+await client.publish('my-stream-id', msg)
 
 // The first argument can also be the stream object
-client.publish(stream, msg)
+await client.publish(stream, msg)
 
 // Publish with a specific timestamp as a Date object (default is now)
-client.publish('my-stream-id', msg, new Date(54365472))
+await client.publish('my-stream-id', msg, new Date(54365472))
 
 // Publish with a specific timestamp in ms
-client.publish('my-stream-id', msg, 54365472)
+await client.publish('my-stream-id', msg, 54365472)
 
 // Publish with a specific timestamp as a ISO8601 string
-client.publish('my-stream-id', msg, '2019-01-01T00:00:00.123Z')
+await client.publish('my-stream-id', msg, '2019-01-01T00:00:00.123Z')
 
 // Publish with a specific partition key (read more about partitioning further down this readme)
-client.publish('my-stream-id', msg, Date.now(), 'my-partition-key')
+await client.publish('my-stream-id', msg, Date.now(), 'my-partition-key')
 
 // For convenience, stream.publish(...) equals client.publish(stream, ...)
-stream.publish(msg)
+await stream.publish(msg)
 ```
 
 ## Client options
@@ -149,16 +141,16 @@ stream.publish(msg)
 
 ## Authentication options
 
-**Authenticating with an API key has been deprecated.** 
+Note: **Authenticating with an API key has been deprecated.**
 
-**Support for email/password authentication will be dropped in the future and cryptographic keys/wallets will be the only supported method.**
+Note: **Support for email/password authentication will be dropped in the future and cryptographic keys/wallets will be the only supported method.**
 
 If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
 Authenticating with Ethereum also automatically creates an associated Streamr user, even if it doesn't already exist. Under the hood, the client will cryptographically sign a challenge to authenticate you as a Streamr user:
 
-```javascript
-new StreamrClient({
+```js
+const client = new StreamrClient({
     auth: {
         privateKey: 'your-private-key'
     }
@@ -167,60 +159,148 @@ new StreamrClient({
 
 Authenticating with an Ethereum private key contained in an Ethereum (web3) provider:
 
-```javascript
-new StreamrClient({
+```js
+const client = new StreamrClient({
     auth: {
-        provider: window.ethereum,
+        ethereum: window.ethereum,
     }
 })
 ```
 
 (Authenticating with a pre-existing session token, for internal use by the Streamr app):
 
-```javascript
-new StreamrClient({
+```js
+const client = new StreamrClient({
     auth: {
         sessionToken: 'session-token'
     }
 })
 ```
 
-## Message handler callback
+## Connecting
+
+By default the client will automatically connect and disconnect as needed, ideally you should not need to manage connection state explicitly.
+Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no
+messages were recently published. This behaviour can be disabled using the `autoConnect` & `autoDisconnect` options when creating a `new
+StreamrClient`. Explicit calls to either `connect()` or `disconnect()` will disable all `autoConnect` & `autoDisconnect` functionality, but they can
+be re-enabled by calling `enableAutoConnect()` or `enableAutoDisconnect()`.
+
+Calls that need a connection, such as `publish` or `subscribe` will fail with an error if you are disconnected and autoConnect is disabled.
+
+| Name                  | Description                                                   |
+| :-------------------- | :------------------------------------------------------------ |
+| connect()                           | Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection. |
+| disconnect()                        | Safely disconnects if not already disconnected, clearing all subscriptions. Returns a Promise.  Resolves immediately if already disconnected. Only rejects if an error occurs during disconnection. |
+| enableAutoConnect(enable = true)    | Enables autoConnect if it wasn't already enabled. Does not connect immediately. Use `enableAutoConnect(false)` to disable autoConnect. |
+| enableAutoDisconnect(enable = true) | Enables autoDisconnect if it wasn't already enabled. Does not disconnect immediately. Use `enableAutoConnect(false)` to disable autoDisconnect.|
+
+```js
+const client = new StreamrClient({
+    auth: {
+        privateKey: 'your-private-key'
+    },
+    autoConnect: false,
+    autoDisconnect: false,
+})
+
+await client.connect()
+```
+
+## Managing subscriptions
+
+| Name                         | Description                                                  |
+| :--------------------------- | :----------------------------------------------------------- |
+| subscribe(options, callback) | Subscribes to a stream. Messages in this stream are passed to the `callback` function. See below for subscription options. Returns a Promise resolving a `Subscription` object. |
+| unsubscribe(Subscription)    | Unsubscribes the given `Subscription`. Returns a promise. |
+| unsubscribeAll(`streamId`)   | Unsubscribes all `Subscriptions` for `streamId`. Returns a promise.            |
+| getSubscriptions(`streamId`) | Returns a list of `Subscriptions` for `streamId`. Returns a promise.            |
+
+### Message handler callback
 
 The second argument to `client.subscribe(options, callback)` is the callback function that will be called for each message as they arrive. Its arguments are as follows:
 
 | Argument      | Description                                                  |
-| :------------- | :------------------------------------------------------------ |
+| :------------- | :---------------------------------------------------------- |
 | payload       | A JS object containing the message payload itself            |
 | streamMessage | The whole [StreamMessage](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/message_layer/StreamMessage.js) object containing various metadata, for example `streamMessage.getTimestamp()` etc. |
 
-## StreamrClient object
+```js
+const sub = await client.subscribe({
+    streamId: 'my-stream-id',
+}, (payload, streamMessage) => {
+    console.log({
+        payload, streamMessage
+    })
+})
 
-#### Connecting
+```
 
-| Name                 | Description                                                  |
-| :-------------------- | :------------------------------------------------------------ |
-| connect()            | Connects to the server, and also subscribes to any streams for which `subscribe()` has been called before calling `connect()`. Returns a Promise. Rejects if already connected or connecting. |
-| disconnect()         | Disconnects from the server, clearing all subscriptions. Returns a Promise.  Rejects if already disconnected or disconnecting. |
-| pause()              | Disconnects from the server without clearing subscriptions.  |
-| ensureConnected()    | Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection. |
-| ensureDisconnected() | Safely disconnects if not disconnected. Returns a promise. Resolves immediately if already disconnected. Only rejects if an error occurs during disconnection. |
+### Subscription Options
 
-#### Managing subscriptions
+Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
 
-| Name                         | Description                                                  |
-| :---------------------------- | :------------------------------------------------------------ |
-| subscribe(options, callback) | Subscribes to a stream. Messages in this stream are passed to the `callback` function. See below for subscription options. Returns a `Subscription` object. |
-| unsubscribe(Subscription)    | Unsubscribes the given `Subscription`.                       |
-| unsubscribeAll(`streamId`)   | Unsubscribes all `Subscriptions` for `streamId`.             |
-| getSubscriptions(`streamId`) | Returns a list of `Subscriptions` for `streamId`.            |
+| Name      | Description                                                  |
+| :-------- | :----------------------------------------------------------- |
+| stream    | Stream id to subscribe to                                    |
+| partition | Partition number to subscribe to. Defaults to partition 0.   |
+| resend    | Object defining the resend options. Below are examples of its contents. |
+| groupKeys | Object defining the group key as a hex string for each publisher id of the stream. |
 
-#### Stream API
+```js
+// Resend N most recent messages
+const sub1 = await client.subscribe({
+    streamId: 'my-stream-id',
+    resend: {
+        last: 10,
+    }
+}, onMessage)
+
+// Resend from a specific message reference up to the newest message
+const sub2 = await client.subscribe({
+    streamId: 'my-stream-id',
+    resend: {
+        from: {
+            timestamp: 12345,
+            sequenceNumber: 0, // optional
+        },
+        publisher: 'publisherId', // optional
+        msgChainId: 'msgChainId', // optional
+    }
+}, onMessage)
+
+// Resend a limited range of messages
+const sub3 = await client.subscribe({
+    streamId: 'my-stream-id',
+    resend: {
+        from: {
+            timestamp: 12345,
+            sequenceNumber: 0, // optional
+        },
+        to: {
+            timestamp: 54321,
+            sequenceNumber: 0, // optional
+        },
+        publisher: 'publisherId', // optional
+        msgChainId: 'msgChainId', // optional
+    }
+}, onMessage)
+```
+
+If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
+
+```js
+const sub = await client.subscribe(options)
+sub.on('resent', () => {
+    console.log('All caught up and received all requested historical messages! Now switching to real time!')
+})
+```
+
+## Stream API
 
 All the below functions return a Promise which gets resolved with the result.
 
 | Name                                                | Description                                                  |
-| :--------------------------------------------------- | :------------------------------------------------------------ |
+| :-------------------------------------------------- | :---------------------------------------------------------- |
 | getStream(streamId)                                 | Fetches a stream object from the API.                        |
 | listStreams(query)                                  | Fetches an array of stream objects from the API. For the query params, consult the [API docs](https://api-explorer.streamr.com). |
 | getStreamByName(name)                               | Fetches a stream which exactly matches the given name.       |
@@ -228,18 +308,12 @@ All the below functions return a Promise which gets resolved with the result.
 | getOrCreateStream(properties)                       | Gets a stream with the id or name given in `properties`, or creates it if one is not found. |
 | publish(streamId, message, timestamp, partitionKey) | Publishes a new message to the given stream.                 |
 
-#### Listening to state changes of the client
-
-on(eventName, function) | Binds a `function` to an event called `eventName`
-once(eventName, function) | Binds a `function` to an event called `eventName`. It gets called once and then removed.
-removeListener(eventName, function) | Unbinds the `function` from events called `eventName`
-
-## Stream object
+### Stream object
 
 All the below functions return a Promise which gets resolved with the result.
 
 | Name                                      | Description                                                  |
-| :----------------------------------------- | :------------------------------------------------------------ |
+| :---------------------------------------- | :----------------------------------------------------------- |
 | update()                                  | Updates the properties of this stream object by sending them to the API. |
 | delete()                                  | Deletes this stream.                                         |
 | getPermissions()                          | Returns the list of permissions for this stream.             |
@@ -248,57 +322,6 @@ All the below functions return a Promise which gets resolved with the result.
 | revokePermission(permissionId)            | Revokes a permission identified by its `id`.                 |
 | detectFields()                            | Updates the stream field config (schema) to match the latest data point in the stream. |
 | publish(message, timestamp, partitionKey) | Publishes a new message to this stream.                      |
-
-## Subscription options
-
-Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.
-
-| Name      | Description                                                  |
-| :--------- | :------------------------------------------------------------ |
-| stream    | Stream id to subscribe to                                    |
-| partition | Partition number to subscribe to. Defaults to partition 0.   |
-| resend    | Object defining the resend options. Below are examples of its contents. |
-| groupKeys | Object defining the group key as a hex string for each publisher id of the stream. |
-
-```javascript
-// Resend N most recent messages
-resend: {
-    last: 10,
-}
-
-// Resend from a specific message reference up to the newest message
-resend: {
-    from: {
-        timestamp: 12345,
-        sequenceNumber: 0, // optional
-    }
-    publisher: 'publisherId', // optional
-    msgChainId: 'msgChainId', // optional
-}
-
-// Resend a limited range of messages
-resend: {
-    from: {
-        timestamp: 12345,
-        sequenceNumber: 0, // optional
-    },
-    to: {
-        timestamp: 54321,
-        sequenceNumber: 0, // optional
-    },
-    publisher: 'publisherId', // optional
-    msgChainId: 'msgChainId', // optional
-}
-```
-
-If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:
-
-```javascript
-const sub = client.subscribe(...)
-sub.on('initial_resend_done', () => {
-    console.log('All caught up and received all requested historical messages! Now switching to real time!')
-})
-```
 
 ## Data Unions
 
@@ -322,12 +345,12 @@ Data union functions take a third parameter, `options`, which are either overrid
 | sidechainAmbAddress        |  TODO    | Arbitrary Message-passing Bridge (AMB), see [Tokenbridge github page](https://github.com/poanetwork/tokenbridge)
 | payForSignatureTransport   | `true`   | Someone must pay for transporting the withdraw tx to mainnet, either us or bridge operator
 
-#### Admin functions
+### Admin Functions
 
 | Name                                                      | Returns               | Description                                                |
 | :-------------------------------------------------------- | :-------------------- | :--------------------------------------------------------- |
 | deployDataUnion(options)                                  | Dataunion contract    | Deploy a new Data Union                                    |
-| createSecret(dataUnionContractAddress, secret[, name])    |                       | Create a secret for a Data Union                           |
+| createSecret(dataUnionContractAddress, secret\[, name])    |                       | Create a secret for a Data Union                           |
 | addMembers(memberAddressList, options)                    | Transaction receipt   | Add members                                                |
 | kick(memberAddressList, options)                          | Transaction receipt   | Kick members out from Data Union                           |
 | withdrawMember(memberAddress, options) |||
@@ -336,20 +359,21 @@ Data union functions take a third parameter, `options`, which are either overrid
 
 Here's an example how to deploy a data union contract and set the admin fee:
 
-```javascript
+```js
 const client = new StreamrClient({
     auth: { privateKey },
 })
+
 const dataUnion = await client.deployDataUnion()
 await client.setAdminFee(0.3, { dataUnion })
 ```
 
-#### Member functions
+### Member functions
 
 | Name                                                              | Returns       | Description                                                   |
 | :---------------------------------------------------------------- | :------------ | :------------------------------------------------------------ |
 | joinDataUnion(options)                                            | JoinRequest   | Join a Data Union                                             |
-| hasJoined([memberAddress], options)                               |  -            | Wait until member has been accepted                           |
+| hasJoined(\[memberAddress], options)                               |  -            | Wait until member has been accepted                           |
 | withdraw(options)                                                 | Transaction receipt   | Withdraw funds from Data Union                        |
 | withdrawTo(recipientAddress, dataUnionContractAddress, options)   | Transaction receipt   | Donate/move your earnings to recipientAddress instead of your memberAddress   |
 | signWithdrawTo(recipientAddress, options)                         | Signature (string)    | Signature that can be used to withdraw tokens to given recipientAddress       |
@@ -357,37 +381,39 @@ await client.setAdminFee(0.3, { dataUnion })
 
 Here's an example how to sign off on a withdraw to (any) recipientAddress:
 
-```javascript
+```js
 const client = new StreamrClient({
     auth: { privateKey },
     dataUnion,
 })
+
 const signature = await client.signWithdrawTo(recipientAddress)
 ```
 
-#### Query functions
+### Query functions
 
 These are available for everyone and anyone, to query publicly available info from a Data Union:
 
 | Name                                                      | Returns                                 | Description                 |
 | :-------------------------------------------------------- | :-------------------------------------- | :-------------------------- |
-| getMemberStats(dataUnionContractAddress[, memberAddress]) | {earnings, proof, ...}                  | Get member's stats          |
+| getMemberStats(dataUnionContractAddress\[, memberAddress]) | {earnings, proof, ...}                  | Get member's stats          |
 | getDataUnionStats(dataUnionContractAddress)               | {activeMemberCount, totalEarnings, ...} | Get Data Union's statistics |
 | ~~getMembers(dataUnionContractAddress)~~                  | | NOT available in DU2 at the moment    |
 | getAdminFee(options)                                      | `Number` between 0.0 and 1.0 (inclusive)| Admin's cut from revenues   |
 | getAdminAddress(options)                                  | Ethereum address | Data union admin's address   |
 | getDataUnionStats(options)                                | Stats object                            | Various metrics from the smart contract |
-| getMemberStats([memberAddress], options)                  | Member stats object                     | Various metrics from the smart contract |
-| getMemberBalance([memberAddress], options)                | `BigNumber` withdrawable DATA tokens in the DU | |
+| getMemberStats(\[memberAddress], options)                  | Member stats object                     | Various metrics from the smart contract |
+| getMemberBalance(\[memberAddress], options)                | `BigNumber` withdrawable DATA tokens in the DU | |
 | getTokenBalance(address, options)                         | `BigNumber`                             | Mainnet DATA token balance |
 | getDataUnionVersion(contractAddress)                      | `0`, `1` or `2`                         | `0` if the contract is not a data union |
 
 Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
 
-```javascript
+```js
 const client = new StreamrClient({
     dataUnion,
 })
+
 const withdrawableWei = await client.getMemberBalance(memberAddress)
 ```
 
@@ -399,59 +425,57 @@ const withdrawableWei = await client.getMemberBalance(memberAddress)
 
 ## Events
 
-#### Binding to events
+The client and the subscriptions can fire events as detailed below.
+You can bind to them using `on`.
 
-The client and the subscriptions can fire events as detailed below. You can bind to them using `on`:
+| Name                                    | Description                                                  |
+| :--------------------------------------- | :------------------------------------------------------------ |
+on(eventName, function) | Binds a `function` to an event called `eventName` |
+once(eventName, function) | Binds a `function` to an event called `eventName`. It gets called once and then removed. |
+removeListener(eventName, function) | Unbinds the `function` from events called `eventName` |
 
-```javascript
-    // The StreamrClient emits various events
-	client.on('connected', () => {
-	    console.log('Yeah, we are connected now!')
-	})
-
-    // So does the Subscription object
-	const sub = client.subscribe(...)
-	sub.on('subscribed', () => {
-	    console.log(`Subscribed to ${sub.streamId}`)
-	})
-```
-
-#### Events on the StreamrClient instance
+### Events on the StreamrClient instance
 
 | Name         | Handler Arguments | Description                                           |
 | :------------ | :----------------- | :----------------------------------------------------- |
 | connected    |                   | Fired when the client has connected (or reconnected). |
 | disconnected |                   | Fired when the client has disconnected (or paused).   |
+| error | Error                 | Fired when the client encounters an error e.g. connection issues |
 
-#### Events on the Subscription object
+```js
+// The StreamrClient emits various events
+client.on('connected', () => {
+    // note no need to wait for this before doing work,
+    // with autoconnect enabled the client will happily establish a connection for you as required.
+    console.log('Yeah, we are connected now!')
+})
+```
+
+### Events on the Subscription object
 
 | Name         | Handler Arguments                                            | Description                                                  |
 | :------------ | :------------------------------------------------------------ | :------------------------------------------------------------ |
-| subscribed   |                                                              | Fired when a subscription request is acknowledged by the server. |
 | unsubscribed |                                                              | Fired when an unsubscription is acknowledged by the server.  |
-| resending    | [ResendResponseResending](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resending/ResendResponseResendingV1.js) | Fired when the subscription starts resending. Followed by the `resent` event to mark completion of the resend after resent messages have been processed by the message handler function. |
-| resent       | [ResendResponseResent](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resent/ResendResponseResentV1.js) | Fired after `resending` when the subscription has finished resending. |
-| no_resend    | [ResendResponseNoResend](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_no_resend/ResendResponseNoResendV1.js) | This will occur instead of the `resending` - `resent` sequence in case there were no messages to resend. |
+| resent       | [ResendResponseResent](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resent/ResendResponseResentV1.js) | Fired after `resending` when the subscription has finished resending and message has been processed |
 | error        | Error object                                                 | Reports errors, for example problems with message content    |
 
 ## Partitioning
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
 
-#### Creating partitioned streams
+### Creating partitioned streams
 
 By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (1-100 is reasonable). An example of creating a partitioned stream using the JS client:
 
-```javascript
-client.createStream({
+```js
+const stream = await client.createStream({
     name: 'My partitioned stream',
     partitions: 10,
-}).then(stream => {
-    console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partitions.`)
 })
+console.log(`Stream created: ${stream.id}. It has ${stream.partitions} partitions.`)
 ```
 
-#### Publishing to partitioned streams
+### Publishing to partitioned streams
 
 In most use cases, a user wants related events (e.g. events from a particular device) to be assigned to the same partition, so that the events retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly.
 
@@ -459,45 +483,39 @@ The library allows the user to choose a *partition key*, which simplifies publis
 
 The partition key can be given as an argument to the `publish` methods, and the library assigns a deterministic partition number automatically:
 
-```javascript
-client.publish('my-stream-id', msg, Date.now(), msg.vehicleId)
+```js
+await client.publish('my-stream-id', msg, Date.now(), msg.vehicleId)
 
 // or, equivalently
-stream.publish(msg, Date.now(), msg.vehicleId)
+await stream.publish(msg, Date.now(), msg.vehicleId)
 ```
 
-#### Subscribing to partitioned streams
+### Subscribing to partitioned streams
 
 By default, the JS client subscribes to the first partition (partition `0`) in a stream. The partition number can be explicitly given in the subscribe call:
 
-```javascript
-client.subscribe(
-    {
-        stream: 'my-stream-id',
-        partition: 4, // defaults to 0
-    },
-    (payload) => {
-        console.log(`Got message ${JSON.stringify(payload)}`)
-    },
-)
+```js
+const sub = await client.subscribe({
+    stream: 'my-stream-id',
+    partition: 4, // defaults to 0
+}, (payload) => {
+    console.log('Got message %o', payload)
+})
 ```
 
 Or, to subscribe to multiple partitions, if the subscriber can handle the volume:
 
-```javascript
+```js
 const handler = (payload, streamMessage) => {
-    console.log(`Got message ${JSON.stringify(payload)} from partition ${streamMessage.getStreamPartition()}`)
+    console.log('Got message %o from partition %d', payload, streamMessage.getStreamPartition())
 }
 
-[2,3,4].forEach(partition => {
-    client.subscribe(
-        {
-            stream: 'my-stream-id',
-            partition: partition,
-        },
-        handler,
-    )
-})
+await Promise.all([2, 3, 4].map(async (partition) => {
+    await client.subscribe({
+        stream: 'my-stream-id',
+        partition,
+    }, handler)
+}))
 ```
 
 ## Logging
@@ -506,25 +524,32 @@ The Streamr JS client library supports [debug](https://github.com/visionmedia/de
 
 In node.js, start your app like this: `DEBUG=StreamrClient* node your-app.js`
 
-In the browser, include `debug.js` and set `localStorage.debug = 'StreamrClient'`
+In the browser, set `localStorage.debug = 'StreamrClient*'`
 
+## For Developers
 
-## Publishing
+Publishing to npm is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
 
-Publishing to NPM is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
+### Publishing `latest`
 
-#### Publishing `latest`:
+1.  Update version with either `npm version [patch|minor|major]`. Use
+    semantic versioning https://semver.org/. Files package.json and
+    package-lock.json will be automatically updated, and an appropriate
+    git commit and tag created.
 
-1. Update version with either `npm version [patch|minor|major]`. Use semantic versioning
-   https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
-2. `git push --follow-tags`
-3. Wait for Github Actions to run tests
-4. If tests passed, Github Actions will publish the new version to NPM
+2.  `git push --follow-tags`
 
-#### Publishing `beta`:
+3.  Wait for Github Actions to run tests
 
-1. Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
-   https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
-2. `git push --follow-tags`
-3. Wait for Github Actions to run tests
-4. If tests passed, Github Actions will publish the new version to NPM
+4.  If tests passed, Github Actions will publish the new version to npm
+
+### Publishing `beta`
+
+1.  Update version with either `npm version [prepatch|preminor|premajor] --preid=beta`. Use semantic versioning
+    https://semver.org/. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.
+
+2.  `git push --follow-tags`
+
+3.  Wait for Github Actions to run tests
+
+4.  If tests passed, Github Actions will publish the new version to npm
