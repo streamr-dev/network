@@ -121,7 +121,7 @@ module.exports = async (config) => {
             auth: {
                 apiKey
             },
-            autoConnect: false
+            autoConnect: true
         })
     } else {
         logger.info('StreamrClient reporting disabled')
