@@ -11,7 +11,7 @@ const resendOptions = opts.resendOptions === 'real-time' ? undefined : JSON.pars
 
 const options = {
     restUrl: "http://localhost/api/v1",
-    url: "ws://localhost/api/v1/ws",
+    url: "ws://localhost:8890/api/v1/ws",
     auth: {
         privateKey: privateKey,
     },
