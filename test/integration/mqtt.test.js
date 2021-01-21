@@ -366,8 +366,8 @@ describe('mqtt: end-to-end', () => {
         await mqttClient1.subscribe(freshStream1.id)
         await mqttClient2.subscribe(freshStream1.id)
 
-        await waitForCondition(() => broker1.getStreams().length === 1)
-        await waitForCondition(() => broker2.getStreams().length === 1)
+        await waitForCondition(() => broker1.getNeighbors().length === 1)
+        await waitForCondition(() => broker2.getNeighbors().length === 1)
 
         // for mqtt partition is always zero
         expect(broker1.getStreams()).toEqual([freshStream1.id + '::0'])

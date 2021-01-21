@@ -210,6 +210,7 @@ module.exports = async (config) => {
     }
 
     return {
+        getNeighbors: () => networkNode.getNeighbors(),
         getStreams: () => networkNode.getStreams(),
         close: () => Promise.all([
             networkNode.stop(),
