@@ -83,7 +83,8 @@ export interface NetworkNodeOptions {
     advertisedWsUrl?: string | null
     metricsContext?: MetricsContext
     pingInterval?: number,
-    disconnectionWaitTime?: number
+    disconnectionWaitTime?: number,
+    newWebrtcConnectionTimeout?: number
 }
 
 export function startTracker({
@@ -148,13 +149,14 @@ function startNode({
    advertisedWsUrl  = null,
    metricsContext = new MetricsContext(id),
    pingInterval,
-   disconnectionWaitTime
+   disconnectionWaitTime,
+   newWebrtcConnectionTimeout
 }: NetworkNodeOptions, peerInfoFn: (id: string, name: string | undefined, location: Location | null | undefined) => PeerInfo): Promise<NetworkNode> {
     const peerInfo = peerInfoFn(id, name, location)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
         const trackerNode = new TrackerNode(endpoint)
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
-        const nodeToNode = new NodeToNode(new WebRtcEndpoint(id, STUN_URLS, webRtcSignaller, metricsContext, pingInterval))
+        const nodeToNode = new NodeToNode(new WebRtcEndpoint(id, STUN_URLS, webRtcSignaller, metricsContext, pingInterval, newWebrtcConnectionTimeout))
         return new NetworkNode({
             peerInfo,
             trackers,
