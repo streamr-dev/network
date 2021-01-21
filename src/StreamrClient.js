@@ -315,6 +315,10 @@ export default class StreamrClient extends EventEmitter {
         return this.ethereum.getAddress()
     }
 
+    async getPublisherId() {
+        return this.getAddress()
+    }
+
     static generateEthereumAccount() {
         return StreamrEthereum.generateEthereumAccount()
     }
