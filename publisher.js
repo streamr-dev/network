@@ -65,6 +65,7 @@ const publishMessage = async () => {
     const msg = {
         "counter": counter,
         "client-implementation": "Javascript",
+        "publisher": client.getAddress(),
         "string-key": Math.random().toString(36).substr(2, 5),
         "integer-key": Math.floor(Math.random() * 100),
         "double-key": Math.random(),

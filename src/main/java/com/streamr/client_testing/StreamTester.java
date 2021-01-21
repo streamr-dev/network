@@ -366,7 +366,7 @@ public class StreamTester {
     public PublishFunction getDefaultPublishFunction() {
         PublishFunction.Function f = (publisher, stream, counter) -> {
             synchronized (this) {
-                HashMap<String, Object> payload = genPayload(counter);
+                HashMap<String, Object> payload = genPayload(counter, publisher);
                 String payloadString = HttpUtils.mapAdapter.toJson(payload);
                 log.trace("{} going to publish {}", publisher.getPublisherId(), payloadString);
                 publisher.publish(stream, payload);
@@ -383,7 +383,7 @@ public class StreamTester {
     public PublishFunction getRotatingPublishFunction(int nbMessagesForSingleKey) {
         PublishFunction.Function f = (publisher, stream, counter) -> {
             synchronized (this) {
-                HashMap<String, Object> payload = genPayload(counter);
+                HashMap<String, Object> payload = genPayload(counter, publisher);
                 String payloadString = HttpUtils.mapAdapter.toJson(payload);
                 log.trace("{} going to publish {}", publisher.getPublisherId(), payloadString);
                 if (counter % nbMessagesForSingleKey == 0) {
@@ -406,7 +406,7 @@ public class StreamTester {
     public PublishFunction getRotatingRevokingPublishFunction(int nbMessagesForSingleKey, int nbMessagesBetweenRevokes) {
         PublishFunction.Function f = (publisher, stream, counter) -> {
                 synchronized (this) {
-                    HashMap<String, Object> payload = genPayload(counter);
+                    HashMap<String, Object> payload = genPayload(counter, publisher);
                     String payloadString = HttpUtils.mapAdapter.toJson(payload);
                     log.trace("{} going to publish {}", publisher.getPublisherId(), payloadString);
                     if (counter % nbMessagesBetweenRevokes == 0) {
@@ -437,10 +437,11 @@ public class StreamTester {
         return Hex.encodeHexString(array);
     }
 
-    private static HashMap<String, Object> genPayload(long counter) {
+    private static HashMap<String, Object> genPayload(long counter, StreamrClient publisher) {
         HashMap<String, Object> payload = new HashMap<>();
         payload.put("counter", counter);
         payload.put("client-implementation", "Java");
+        payload.put("publisher", publisher.getPublisherId());
         payload.put("string-key", RandomStringUtils.randomAlphanumeric(10));
         payload.put("integer-key", secureRandom.nextInt(100));
         payload.put("double-key", secureRandom.nextDouble());
