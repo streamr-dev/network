@@ -1,6 +1,6 @@
 import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
-import { waitForEvent } from 'streamr-test-utils'
+import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { startNetworkNode, startTracker } from '../../src/composition'
@@ -97,6 +97,9 @@ describe('check tracker, nodes and statuses from nodes', () => {
             // @ts-expect-error private variable
             waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         ])
+
+        await waitForCondition(() => node1.getNeighbors().length > 0)
+        await waitForCondition(() => node2.getNeighbors().length > 0)
 
         expect(getTopology(tracker.getOverlayPerStream())).toEqual({
             'stream-1::0': {
