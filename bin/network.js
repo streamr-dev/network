@@ -13,13 +13,13 @@ program
     .description('Run local network with stream (-s)')
     .parse(process.argv)
 
-const { nodes: numberOfNodes } = program
+const { nodes: numberOfNodes } = program.opts()
 const startingPort = 30000
 const trackerPort = 27777
 const startingDebugPort = 9200
 const streams = []
 
-for (let i = 0; i < parseInt(program.streams, 10); i++) {
+for (let i = 0; i < parseInt(program.opts().streams, 10); i++) {
     streams.push(`stream-${i}`)
 }
 

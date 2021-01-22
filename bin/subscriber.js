@@ -22,22 +22,22 @@ program
     .description('Run subscriber')
     .parse(process.argv)
 
-const id = program.id || `subscriber-${program.port}`
-const name = program.nodeName || id
+const id = program.opts().id || `subscriber-${program.opts().port}`
+const name = program.opts().nodeName || id
 
 const metricsContext = new MetricsContext(id)
 startNetworkNode({
-    host: program.ip,
-    port: program.port,
+    host: program.opts().ip,
+    port: program.opts().port,
     name: id,
     id,
-    trackers: program.trackers,
+    trackers: program.opts().trackers,
     metricsContext
 }).then((subscriber) => {
     logger.info('started subscriber id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, metrics: %s',
-        id, name, program.port, program.ip, program.trackers.join(', '), program.streamId, program.metrics)
+        id, name, program.opts().port, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().metrics)
     subscriber.start()
-    subscriber.subscribe(program.streamId, 0)
+    subscriber.subscribe(program.opts().streamId, 0)
 
     let messageNo = 0
     let lastReported = 0
@@ -52,7 +52,7 @@ startNetworkNode({
         lastReported = messageNo
     }, 60 * 1000)
 
-    if (program.metrics) {
+    if (program.opts().metrics) {
         setInterval(async () => {
             logger.info(JSON.stringify(await metricsContext.report(true), null, 3))
         }, 5000)

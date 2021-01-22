@@ -21,25 +21,25 @@ program
     .description('Run tracker with reporting')
     .parse(process.argv)
 
-const id = program.id || `tracker-${program.port}`
-const name = program.trackerName || id
+const id = program.opts().id || `tracker-${program.opts().port}`
+const name = program.opts().trackerName || id
 
 async function main() {
     const metricsContext = new MetricsContext(id)
     try {
         const tracker = await startTracker({
-            host: program.ip,
-            port: Number.parseInt(program.port, 10),
+            host: program.opts().ip,
+            port: Number.parseInt(program.opts().port, 10),
             id,
             name,
-            maxNeighborsPerNode: Number.parseInt(program.maxNeighborsPerNode, 10),
+            maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode, 10),
             metricsContext
         })
 
         const trackerObj = {}
         const fields = ['ip', 'port', 'maxNeighborsPerNode', 'metrics', 'metricsInterval']
         fields.forEach((prop) => {
-            trackerObj[prop] = program[prop]
+            trackerObj[prop] = program.opts()[prop]
         })
 
         logger.info('started tracker: %o', {
@@ -48,14 +48,14 @@ async function main() {
             ...trackerObj
         })
 
-        if (program.metrics) {
+        if (program.opts().metrics) {
             setInterval(async () => {
                 const metrics = await metricsContext.report(true)
                 // output to console
-                if (program.metrics) {
+                if (program.opts().metrics) {
                     logger.info(JSON.stringify(metrics, null, 4))
                 }
-            }, program.metricsInterval)
+            }, program.opts().metricsInterval)
         }
     } catch (err) {
         pino.final(logger).error(err, 'tracker bin catch')

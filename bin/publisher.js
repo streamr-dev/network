@@ -26,12 +26,12 @@ program
     .description('Run publisher')
     .parse(process.argv)
 
-const publisherId = program.id || `publisher-${program.port}`
-const name = program.nodeName || publisherId
-const noise = parseInt(program.noise, 10)
+const publisherId = program.opts().id || `publisher-${program.opts().port}`
+const name = program.opts().nodeName || publisherId
+const noise = parseInt(program.opts().noise, 10)
 
-const messageChainId = `message-chain-id-${program.port}`
-const streamObj = new StreamIdAndPartition(program.streamId, 0)
+const messageChainId = `message-chain-id-${program.opts().port}`
+const streamObj = new StreamIdAndPartition(program.opts().streamId, 0)
 const { id: streamId, partition } = streamObj
 
 function generateString(length) {
@@ -46,16 +46,16 @@ function generateString(length) {
 
 const metricsContext = new MetricsContext(publisherId)
 startNetworkNode({
-    host: program.ip,
-    port: program.port,
+    host: program.opts().ip,
+    port: program.opts().port,
     name: publisherId,
     id: publisherId,
-    trackers: program.trackers,
+    trackers: program.opts().trackers,
     metricsContext
 })
     .then((publisher) => {
         logger.info('started publisher id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
-            publisherId, name, program.port, program.ip, program.trackers.join(', '), program.streamId, program.intervalInMs, program.metrics)
+            publisherId, name, program.opts().port, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().intervalInMs, program.opts().metrics)
 
         publisher.start()
 
@@ -78,9 +78,9 @@ startNetworkNode({
 
             sequenceNumber += 1
             lastTimestamp = timestamp
-        }, program.intervalInMs)
+        }, program.opts().intervalInMs)
 
-        if (program.metrics) {
+        if (program.opts().metrics) {
             setInterval(async () => {
                 logger.info(JSON.stringify(await metricsContext.report(true), null, 3))
             }, 5000)
