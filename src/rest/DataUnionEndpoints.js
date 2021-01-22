@@ -591,9 +591,9 @@ export async function deployDataUnion(options = {}) {
     if (adminFee < 0 || adminFee > 1) { throw new Error('options.adminFeeFraction must be a number between 0...1, got: ' + adminFee) }
     const adminFeeBN = BigNumber.from((adminFee * 1e18).toFixed()) // last 2...3 decimals are going to be gibberish
 
-    const mainnetProvider = this.ethererum.getMainnetProvider()
-    const mainnetWallet = this.ethererum.getSigner()
-    const sidechainProvider = this.ethererum.getSidechainProvider()
+    const mainnetProvider = this.ethereum.getMainnetProvider()
+    const mainnetWallet = this.ethereum.getSigner()
+    const sidechainProvider = this.ethereum.getSidechainProvider()
 
     // parseAddress defaults to authenticated user (also if "owner" is not an address)
     const ownerAddress = parseAddress(this, owner)
