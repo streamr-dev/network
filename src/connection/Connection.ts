@@ -2,7 +2,7 @@ import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection
 import getLogger from '../helpers/logger'
 import { PeerInfo } from './PeerInfo'
 import pino from 'pino'
-import { MessageQueue } from './MessageQueue'
+import { MessageQueue, QueueItem } from './MessageQueue'
 
 nodeDataChannel.initLogger("Error" as LogLevel)
 
@@ -388,36 +388,41 @@ export class Connection {
                 try {
                     // Checking `this.open()` is left out on purpose. We want the message to be discarded if it was not
                     // sent after MAX_TRIES regardless of the reason.
-                    this.dataChannel!.sendMessage(queueItem.getMessage())
-                    sent = true
+                    sent = this.dataChannel!.sendMessage(queueItem.getMessage())
                 } catch (e) {
-                    queueItem.incrementTries({
-                        error: e.toString(),
-                        'connection.iceConnectionState': this.lastGatheringState,
-                        'connection.connectionState': this.lastState,
-                        message: queueItem.getMessage()
-                    })
-                    if (queueItem.isFailed()) {
-                        const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
-                        this.logger.debug('Failed to send message after %d tries due to\n\t%s',
-                            MessageQueue.MAX_TRIES,
-                            infoText)
-                        this.messageQueue.pop()
-                    }
-                    if (this.flushTimeoutRef === null) {
-                        this.flushTimeoutRef = setTimeout(() => {
-                            this.flushTimeoutRef = null
-                            this.attemptToFlushMessages()
-                        }, this.flushRetryTimeout)
-                    }
+                    this.processFailedMessage(queueItem, e)
                     return // method rescheduled by `this.flushTimeoutRef`
                 }
 
                 if (sent) {
                     this.messageQueue.pop()
                     queueItem.delivered()
+                } else {
+                    this.processFailedMessage(queueItem, new Error('sendMessage returned false'))
                 }
             }
+        }
+    }
+
+    private processFailedMessage(queueItem: QueueItem<any>, e: Error): void {
+        queueItem.incrementTries({
+            error: e.toString(),
+            'connection.iceConnectionState': this.lastGatheringState,
+            'connection.connectionState': this.lastState,
+            message: queueItem.getMessage()
+        })
+        if (queueItem.isFailed()) {
+            const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
+            this.logger.debug('Failed to send message after %d tries due to\n\t%s',
+                MessageQueue.MAX_TRIES,
+                infoText)
+            this.messageQueue.pop()
+        }
+        if (this.flushTimeoutRef === null) {
+            this.flushTimeoutRef = setTimeout(() => {
+                this.flushTimeoutRef = null
+                this.attemptToFlushMessages()
+            }, this.flushRetryTimeout)
         }
     }
 }
