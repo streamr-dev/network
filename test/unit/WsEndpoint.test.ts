@@ -1,7 +1,7 @@
-import { startEndpoint, WsEndpoint } from "../../src/connection/WsEndpoint"
-import { PeerInfo } from "../../src/connection/PeerInfo"
-import { MetricsContext } from "../../src/helpers/MetricsContext"
-import { waitForCondition } from "streamr-test-utils"
+import { startEndpoint, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { PeerInfo } from '../../src/connection/PeerInfo'
+import { MetricsContext } from '../../src/helpers/MetricsContext'
+import { waitForCondition } from 'streamr-test-utils'
 
 async function setUpEndpoint(peerId: string, peerType: string, city: string, port: number): Promise<WsEndpoint> {
     const peerInfo = PeerInfo.fromObject({
@@ -11,13 +11,13 @@ async function setUpEndpoint(peerId: string, peerType: string, city: string, por
         location: {
             latitude: null,
             longitude: null,
-            country: "Finland",
+            country: 'Finland',
             city
         }
     })
     const metricsContext = new MetricsContext(peerId)
     const wsEndpoint = await startEndpoint(
-        "127.0.0.1",
+        '127.0.0.1',
         port,
         peerInfo,
         null,
@@ -31,7 +31,7 @@ describe('WsEndpoint with no connections', () => {
     let wsEndpoint: WsEndpoint
 
     beforeAll(async () => {
-        wsEndpoint = await setUpEndpoint("peerId", "tracker", "Espoo", 30465)
+        wsEndpoint = await setUpEndpoint('peerId', 'tracker', 'Espoo', 30465)
     })
 
     afterAll(async () => {
@@ -39,20 +39,20 @@ describe('WsEndpoint with no connections', () => {
     })
 
     it('getAddress() gives websocket address', () => {
-        expect(wsEndpoint.getAddress()).toEqual("ws://127.0.0.1:30465")
+        expect(wsEndpoint.getAddress()).toEqual('ws://127.0.0.1:30465')
     })
 
     it('getPeerInfo() gives peer info of endpoint', () => {
-        expect(wsEndpoint.getPeerInfo()).toEqual(PeerInfo.newTracker("peerId", "peerId", {
+        expect(wsEndpoint.getPeerInfo()).toEqual(PeerInfo.newTracker('peerId', 'peerId', {
             latitude: null,
             longitude: null,
-            country: "Finland",
-            city: "Espoo"
+            country: 'Finland',
+            city: 'Espoo'
         }))
     })
 
     it('isConnected() returns false', () => {
-        expect(wsEndpoint.isConnected("ws://127.0.0.1:30468")).toEqual(false)
+        expect(wsEndpoint.isConnected('ws://127.0.0.1:30468')).toEqual(false)
     })
 
     it('getRtts() is empty', () => {
@@ -69,8 +69,8 @@ describe('WsEndpoint with no connections', () => {
 
     it('resolveAddress throws error', () => {
         expect(() => {
-            wsEndpoint.resolveAddress("otherPeerId")
-        }).toThrowError("Id otherPeerId not found in peer book")
+            wsEndpoint.resolveAddress('otherPeerId')
+        }).toThrowError('Id otherPeerId not found in peer book')
     })
 })
 
@@ -80,9 +80,9 @@ describe('WsEndpoint with connections', () => {
     let thirdWsEndpoint: WsEndpoint
 
     beforeAll(async () => {
-        wsEndpoint = await setUpEndpoint("peerId", "tracker", "Espoo", 30466)
-        otherWsEndpoint = await setUpEndpoint("otherPeerId", "node", "Helsinki", 30467)
-        thirdWsEndpoint = await setUpEndpoint("thirdPeerId", "node", "Helsinki", 30468)
+        wsEndpoint = await setUpEndpoint('peerId', 'tracker', 'Espoo', 30466)
+        otherWsEndpoint = await setUpEndpoint('otherPeerId', 'node', 'Helsinki', 30467)
+        thirdWsEndpoint = await setUpEndpoint('thirdPeerId', 'node', 'Helsinki', 30468)
         await otherWsEndpoint.connect(wsEndpoint.getAddress())
         await thirdWsEndpoint.connect(wsEndpoint.getAddress())
     })
@@ -96,14 +96,14 @@ describe('WsEndpoint with connections', () => {
     })
 
     it('isConnected() is empty', () => {
-        expect(wsEndpoint.isConnected("ws://127.0.0.1:30467")).toEqual(true)
-        expect(wsEndpoint.isConnected("ws://127.0.0.1:30468")).toEqual(true)
+        expect(wsEndpoint.isConnected('ws://127.0.0.1:30467')).toEqual(true)
+        expect(wsEndpoint.isConnected('ws://127.0.0.1:30468')).toEqual(true)
     })
 
     it('getRtts() is empty', async () => {
         await waitForCondition(() => Object.entries(wsEndpoint.getRtts()).length !== 0)
         const rtts = wsEndpoint.getRtts()
-        expect(Object.keys(rtts)).toEqual(["otherPeerId", "thirdPeerId"])
+        expect(Object.keys(rtts)).toEqual(['otherPeerId', 'thirdPeerId'])
         expect(rtts.otherPeerId).toBeGreaterThanOrEqual(0)
         expect(rtts.thirdPeerId).toBeGreaterThanOrEqual(0)
     })
@@ -111,20 +111,20 @@ describe('WsEndpoint with connections', () => {
     it('getPeers() is empty', () => {
         const peers = wsEndpoint.getPeers()
         expect([...peers.keys()]).toEqual([
-            "ws://127.0.0.1:30467",
-            "ws://127.0.0.1:30468"
+            'ws://127.0.0.1:30467',
+            'ws://127.0.0.1:30468'
         ])
     })
 
     it('getPeerInfos() is empty', () => {
         expect(wsEndpoint.getPeerInfos()).toEqual([
-            PeerInfo.newNode("otherPeerId", "otherPeerId", {
+            PeerInfo.newNode('otherPeerId', 'otherPeerId', {
                 latitude: null,
                 longitude: null,
                 country: null,
                 city: null
             }),
-            PeerInfo.newNode("thirdPeerId", "thirdPeerId", {
+            PeerInfo.newNode('thirdPeerId', 'thirdPeerId', {
                 latitude: null,
                 longitude: null,
                 country: null,
@@ -134,6 +134,6 @@ describe('WsEndpoint with connections', () => {
     })
 
     it('resolveAddress throws error', () => {
-        expect(wsEndpoint.resolveAddress("otherPeerId")).toEqual("ws://127.0.0.1:30467")
+        expect(wsEndpoint.resolveAddress('otherPeerId')).toEqual('ws://127.0.0.1:30467')
     })
 })

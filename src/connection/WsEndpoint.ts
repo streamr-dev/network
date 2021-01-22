@@ -1,12 +1,12 @@
-import { EventEmitter } from "events"
-import uWS from "uWebSockets.js"
-import WebSocket from "ws";
-import { PeerBook } from "./PeerBook"
-import {PeerInfo, PeerType} from "./PeerInfo"
-import { Metrics, MetricsContext } from "../helpers/MetricsContext"
-import getLogger from "../helpers/logger"
-import pino from "pino"
-import { Rtts } from "../identifiers"
+import { EventEmitter } from 'events'
+import uWS from 'uWebSockets.js'
+import WebSocket from 'ws'
+import { PeerBook } from './PeerBook'
+import {PeerInfo, PeerType} from './PeerInfo'
+import { Metrics, MetricsContext } from '../helpers/MetricsContext'
+import getLogger from '../helpers/logger'
+import pino from 'pino'
+import { Rtts } from '../identifiers'
 
 const extraLogger = getLogger('streamr:ws-endpoint')
 
@@ -116,7 +116,7 @@ export class WsEndpoint extends EventEmitter {
     private readonly serverHost: string
     private readonly serverPort: number
     private readonly wss: uWS.TemplatedApp
-    private listenSocket: any
+    private listenSocket: uWS.us_listen_socket | null
     private readonly peerInfo: PeerInfo
     private readonly advertisedWsUrl: string | null
 
@@ -131,7 +131,7 @@ export class WsEndpoint extends EventEmitter {
         host: string,
         port: number,
         wss: uWS.TemplatedApp,
-        listenSocket: any,
+        listenSocket: uWS.us_listen_socket,
         peerInfo: PeerInfo,
         advertisedWsUrl: string | null,
         metricsContext = new MetricsContext(peerInfo.peerId),
@@ -173,7 +173,6 @@ export class WsEndpoint extends EventEmitter {
 
                 /* This immediately calls open handler, you must not use res after this call */
                 res.upgrade({
-                        // @ts-ignore TODO: type definition mismatch, update uws?
                     address: req.getQuery('address'),
                     peerId: req.getHeader('streamr-peer-id'),
                     peerType: req.getHeader('streamr-peer-type'),
@@ -187,7 +186,7 @@ export class WsEndpoint extends EventEmitter {
             open: (ws) => {
                 this.onIncomingConnection(ws as UWSConnection)
             },
-            message: (ws, message, isBinary) => {
+            message: (ws, message, _isBinary) => {
                 const connection = this.connections.get(ws.address)
 
                 if (connection) {
@@ -634,7 +633,7 @@ export function startWebSocketServer(
             server = uWS.App()
         }
 
-        const cb = (listenSocket: any): void => {
+        const cb = (listenSocket: uWS.us_listen_socket): void => {
             if (listenSocket) {
                 resolve([server, listenSocket])
             } else {

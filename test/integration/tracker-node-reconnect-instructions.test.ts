@@ -7,7 +7,7 @@ import { startNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as NodeEvent } from '../../src/logic/Node'
 import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
-import { Event, WsEndpoint } from '../../src/connection/WsEndpoint'
+import { Event } from '../../src/connection/WsEndpoint'
 
 /**
  * This test verifies that tracker can send instructions to node and node will connect and disconnect based on the instructions

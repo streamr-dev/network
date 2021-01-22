@@ -1,4 +1,4 @@
-import LRUCache from "lru-cache";
+import LRUCache from 'lru-cache'
 
 const MAX_ELEMENTS = 50000
 const MAX_AGE = 60 * 1000

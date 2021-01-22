@@ -1,7 +1,7 @@
-import { cancelable, CancelablePromiseType } from "cancelable-promise"
-import { StreamIdAndPartition, StreamKey } from "../identifiers"
-import { TrackerLayer } from "streamr-client-protocol"
-import getLogger from "../helpers/logger"
+import { cancelable, CancelablePromiseType } from 'cancelable-promise'
+import { StreamIdAndPartition, StreamKey } from '../identifiers'
+import { TrackerLayer } from 'streamr-client-protocol'
+import getLogger from '../helpers/logger'
 
 const logger = getLogger('streamr:logic:InstructionThrottler')
 
@@ -22,7 +22,7 @@ export class InstructionThrottler {
     private readonly handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>
     private queue: Queue = {} // streamId => instructionMessage
     private instructionCounter: { [key: string]: number } = {} // streamId => counter
-    private handling: boolean = false
+    private handling = false
     private ongoingPromise: CancelablePromiseType<void> | null = null
 
     constructor(handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>) {

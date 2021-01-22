@@ -1,15 +1,15 @@
-import { EventEmitter } from "events"
-import getLogger from "../helpers/logger"
-import { Metrics, MetricsContext } from "../helpers/MetricsContext"
-import { TrackerServer, Event as TrackerServerEvent } from "../protocol/TrackerServer"
-import { OverlayTopology } from "./OverlayTopology"
-import { InstructionCounter } from "./InstructionCounter"
-import { LocationManager } from "./LocationManager"
-import { attachRtcSignalling } from "./rtcSignallingHandlers"
-import { PeerInfo } from "../connection/PeerInfo"
-import { Location, Status, StatusStreams, StreamIdAndPartition, StreamKey } from "../identifiers"
-import { TrackerLayer } from "streamr-client-protocol"
-import pino from "pino"
+import { EventEmitter } from 'events'
+import getLogger from '../helpers/logger'
+import { Metrics, MetricsContext } from '../helpers/MetricsContext'
+import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerServer'
+import { OverlayTopology } from './OverlayTopology'
+import { InstructionCounter } from './InstructionCounter'
+import { LocationManager } from './LocationManager'
+import { attachRtcSignalling } from './rtcSignallingHandlers'
+import { PeerInfo } from '../connection/PeerInfo'
+import { Location, Status, StatusStreams, StreamIdAndPartition, StreamKey } from '../identifiers'
+import { TrackerLayer } from 'streamr-client-protocol'
+import pino from 'pino'
 
 type NodeId = string
 type StreamId = string

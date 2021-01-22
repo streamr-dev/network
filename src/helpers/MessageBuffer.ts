@@ -13,7 +13,7 @@ export class MessageBuffer<M> {
     private readonly maxSize: number
     private readonly onTimeout: (id: string) => void
 
-    constructor(timeoutInMs: number, maxSize = 10000, onTimeout = (id: string) => {}) {
+    constructor(timeoutInMs: number, maxSize = 10000, onTimeout = (_id: string) => {}) {
         this.timeoutInMs = timeoutInMs
         this.maxSize = maxSize
         this.onTimeout = onTimeout

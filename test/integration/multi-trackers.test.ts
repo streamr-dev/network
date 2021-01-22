@@ -6,7 +6,7 @@ import { TrackerLayer } from 'streamr-client-protocol'
 import { startNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerServerEvent } from '../../src/protocol/TrackerServer'
 import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
-import { Node, Event as NodeEvent } from '../../src/logic/Node'
+import { Event as NodeEvent } from '../../src/logic/Node'
 
 // TODO: maybe worth re-designing this in a way that isn't this arbitrary?
 const FIRST_STREAM = 'stream-1' // assigned to trackerOne (arbitrarily by hashing algo)

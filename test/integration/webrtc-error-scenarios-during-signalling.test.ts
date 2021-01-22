@@ -1,11 +1,10 @@
-const { waitForEvent } = require('streamr-test-utils')
+import { waitForEvent } from 'streamr-test-utils'
 
 import { Tracker } from '../../src/logic/Tracker'
 import { NetworkNode } from '../../src/NetworkNode'
-
-const { startNetworkNode, startTracker } = require('../../src/composition')
-const { Event: NodeEvent } = require('../../src/logic/Node')
-const { Event: TrackerNodeEvent } = require('../../src/protocol/TrackerNode')
+import { startNetworkNode, startTracker } from '../../src/composition'
+import { Event as NodeEvent } from '../../src/logic/Node'
+import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
 
 /**
  * Tests for error scenarios during signalling

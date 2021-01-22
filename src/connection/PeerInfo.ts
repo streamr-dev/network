@@ -1,4 +1,4 @@
-import { Location } from "../identifiers"
+import { Location } from '../identifiers'
 
 export enum PeerType {
     Tracker = 'tracker',
@@ -15,23 +15,23 @@ interface ObjectRepresentation {
 }
 
 export class PeerInfo {
-    static newTracker(peerId: string, peerName?: string | null | undefined, location?: Location | null | undefined) {
+    static newTracker(peerId: string, peerName?: string | null | undefined, location?: Location | null | undefined): PeerInfo {
         return new PeerInfo(peerId, PeerType.Tracker, peerName, location)
     }
 
-    static newNode(peerId: string, peerName?: string | null | undefined, location?: Location | null | undefined) {
+    static newNode(peerId: string, peerName?: string | null | undefined, location?: Location | null | undefined): PeerInfo  {
         return new PeerInfo(peerId, PeerType.Node, peerName, location)
     }
 
-    static newStorage(peerId: string, peerName?: string | null | undefined, location?: Location | null | undefined) {
+    static newStorage(peerId: string, peerName?: string | null | undefined, location?: Location | null | undefined): PeerInfo  {
         return new PeerInfo(peerId, PeerType.Storage, peerName, location)
     }
 
-    static newUnknown(peerId: string) {
+    static newUnknown(peerId: string): PeerInfo  {
         return new PeerInfo(peerId, PeerType.Unknown)
     }
 
-    static fromObject({ peerId, peerType, peerName, location }: ObjectRepresentation) {
+    static fromObject({ peerId, peerType, peerName, location }: ObjectRepresentation): PeerInfo  {
         return new PeerInfo(peerId, peerType as PeerType, peerName, location)
     }
 

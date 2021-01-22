@@ -1,6 +1,6 @@
-import { StreamIdAndPartition, StreamKey } from "../identifiers"
-import { DuplicateMessageDetector, NumberPair } from "./DuplicateMessageDetector"
-import { MessageLayer } from "streamr-client-protocol"
+import { StreamIdAndPartition, StreamKey } from '../identifiers'
+import { DuplicateMessageDetector, NumberPair } from './DuplicateMessageDetector'
+import { MessageLayer } from 'streamr-client-protocol'
 
 interface StreamStateRepresentation {
     inboundNodes: Array<string>
@@ -100,7 +100,7 @@ export class StreamManager {
         return [...new Set([...inboundNodes, ...outboundNodes])]
     }
 
-    isSetUp(streamId: StreamIdAndPartition) {
+    isSetUp(streamId: StreamIdAndPartition): boolean {
         return this.streams.has(streamId.key())
     }
 

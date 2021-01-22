@@ -3,7 +3,7 @@ import nodeDataChannel, { DescriptionType } from 'node-datachannel'
 import getLogger from '../helpers/logger'
 import { PeerInfo } from './PeerInfo'
 import { Connection } from './Connection'
-import { Metrics, MetricsContext } from "../helpers/MetricsContext";
+import { Metrics, MetricsContext } from '../helpers/MetricsContext'
 import {
     AnswerOptions,
     ConnectOptions,
@@ -11,9 +11,9 @@ import {
     OfferOptions,
     RemoteCandidateOptions,
     RtcSignaller
-} from "../logic/RtcSignaller"
-import { Rtts } from "../identifiers"
-import pino from "pino"
+} from '../logic/RtcSignaller'
+import { Rtts } from '../identifiers'
+import pino from 'pino'
 
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
@@ -50,7 +50,7 @@ export class WebRtcEndpoint extends EventEmitter {
     private pingTimeoutRef: NodeJS.Timeout
     private readonly logger: pino.Logger
     private readonly metrics: Metrics
-    private stopped: boolean = false
+    private stopped = false
 
     constructor(
         id: string,
@@ -211,6 +211,7 @@ export class WebRtcEndpoint extends EventEmitter {
                 this.metrics.record('outSpeed', message.length)
                 this.metrics.record('msgSpeed', 1)
                 this.metrics.record('msgOutSpeed', 1)
+                return undefined
             })
             .catch((err) => {
                 this.metrics.record('sendFailed', 1)

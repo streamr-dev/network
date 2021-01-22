@@ -8,8 +8,8 @@ export class NumberPair {
     private readonly b
 
     constructor(a: number, b: number) {
-        this.a = a;
-        this.b = b;
+        this.a = a
+        this.b = b
     }
 
     greaterThanOrEqual(otherPair: NumberPair): boolean {

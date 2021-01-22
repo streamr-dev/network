@@ -1,7 +1,7 @@
 import Heap from 'heap'
-import getLogger from "../helpers/logger"
+import getLogger from '../helpers/logger'
 
-type Info = Object
+type ErrorInfo = Record<string, unknown>
 
 const logger = getLogger("streamr:webrtc:MessageQueue")
 
@@ -11,7 +11,7 @@ export class QueueItem<M> {
     private readonly message: M
     private readonly onSuccess: () => void
     private readonly onError: (err: Error) => void
-    private readonly infos: Info[]
+    private readonly errorInfos: ErrorInfo[]
     public readonly no: number
     private tries: number
     private failed: boolean
@@ -20,7 +20,7 @@ export class QueueItem<M> {
         this.message = message
         this.onSuccess = onSuccess
         this.onError = onError
-        this.infos = []
+        this.errorInfos = []
         this.no = QueueItem.nextNumber++
         this.tries = 0
         this.failed = false
@@ -30,8 +30,8 @@ export class QueueItem<M> {
         return this.message
     }
 
-    getInfos(): ReadonlyArray<Info> {
-        return this.infos
+    getErrorInfos(): ReadonlyArray<ErrorInfo> {
+        return this.errorInfos
     }
 
     isFailed(): boolean {
@@ -42,9 +42,9 @@ export class QueueItem<M> {
         this.onSuccess()
     }
 
-    incrementTries(info: Info): void | never {
+    incrementTries(info: ErrorInfo): void | never {
         this.tries += 1
-        this.infos.push(info)
+        this.errorInfos.push(info)
         if (this.tries >= MessageQueue.MAX_TRIES) {
             this.failed = true
         }
@@ -65,7 +65,7 @@ export class MessageQueue<M> {
     private readonly heap: Heap<QueueItem<M>>
     private readonly maxSize: number
 
-    constructor(maxSize: number = 5000) {
+    constructor(maxSize = 5000) {
         this.heap = new Heap<QueueItem<M>>((a, b) => a.no - b.no)
         this.maxSize = maxSize
     }

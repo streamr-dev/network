@@ -1,5 +1,4 @@
 node_modules/**
 examples/**
 coverage/**
-src/**
 dist/**

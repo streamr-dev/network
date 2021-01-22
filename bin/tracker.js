@@ -27,7 +27,7 @@ const name = program.opts().trackerName || id
 async function main() {
     const metricsContext = new MetricsContext(id)
     try {
-        const tracker = await startTracker({
+        await startTracker({
             host: program.opts().ip,
             port: Number.parseInt(program.opts().port, 10),
             id,

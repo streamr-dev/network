@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 const program = require('commander')
-const { MessageLayer } = require('streamr-client-protocol')
 
 const getLogger = require('../dist/helpers/logger').default
 const { version: CURRENT_VERSION } = require('../package.json')
@@ -48,7 +47,7 @@ startNetworkNode({
 
     setInterval(() => {
         const newMessages = messageNo - lastReported
-        console.info('%s received %d (%d)', id, messageNo, newMessages)
+        logger.info('%s received %d (%d)', id, messageNo, newMessages)
         lastReported = messageNo
     }, 60 * 1000)
 

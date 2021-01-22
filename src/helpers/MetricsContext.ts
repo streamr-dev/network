@@ -1,9 +1,9 @@
-import speedometer from 'speedometer';
+import speedometer from 'speedometer'
 
-type QueryFn = () => (Promise<number> | number | Promise<Object> | Object)
+type QueryFn = () => (Promise<number> | number | Promise<Record<string, unknown>> | Record<string, unknown>)
 
 interface IndividualReport {
-    [key: string]: number | Object | {
+    [key: string]: number | Record<string, unknown> | {
         rate: number
         total: number
         last: number

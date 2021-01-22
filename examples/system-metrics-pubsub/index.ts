@@ -1,13 +1,13 @@
-import os from "os"
-import process from "process"
-import { v4 } from "uuid"
+import os from 'os'
+import process from 'process'
+import { v4 } from 'uuid'
 import {
     startTracker,
     startNetworkNode,
     Protocol,
     Tracker,
     NetworkNode
-} from "streamr-network"
+} from 'streamr-network'
 
 /**
  * Run a tracker that assist nodes in peer discovery.

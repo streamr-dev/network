@@ -1,13 +1,13 @@
-import { Transform, Readable } from "stream"
-import { ControlLayer } from "streamr-client-protocol"
-import { NodeToNode } from "../protocol/NodeToNode"
-import { StreamIdAndPartition, ResendRequest } from "../identifiers"
-import { TrackerNode } from "../protocol/TrackerNode"
-import { Event as NodeToNodeEvent } from "../protocol/NodeToNode"
-import { Event as TrackerNodeEvent } from "../protocol/TrackerNode"
-import getLogger from "../helpers/logger"
-import { Strategy } from "./ResendHandler"
-import { Storage } from "../composition"
+import { Transform, Readable } from 'stream'
+import { ControlLayer } from 'streamr-client-protocol'
+import { NodeToNode } from '../protocol/NodeToNode'
+import { StreamIdAndPartition, ResendRequest } from '../identifiers'
+import { TrackerNode } from '../protocol/TrackerNode'
+import { Event as NodeToNodeEvent } from '../protocol/NodeToNode'
+import { Event as TrackerNodeEvent } from '../protocol/TrackerNode'
+import getLogger from '../helpers/logger'
+import { Strategy } from './ResendHandler'
+import { Storage } from '../composition'
 
 const logger = getLogger('streamr:resendStrategies')
 
@@ -345,6 +345,7 @@ export class ForeignResendStrategy implements Strategy {
             while (storageNode === null && storageNodeIds.length > 0) {
                 const nodeId = storageNodeIds.shift()!
                 try {
+                    // eslint-disable-next-line require-atomic-updates
                     storageNode = await this.nodeToNode.connectToNode(nodeId, tracker, true, false)
                 } catch (e) {
                     // nop

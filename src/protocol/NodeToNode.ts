@@ -1,11 +1,11 @@
-import { EventEmitter } from "events"
-import { ControlLayer, MessageLayer } from "streamr-client-protocol"
-import getLogger from "../helpers/logger"
+import { EventEmitter } from 'events'
+import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import getLogger from '../helpers/logger'
 import { decode } from '../helpers/MessageEncoder'
 import { WebRtcEndpoint, Event as WebRtcEndpointEvent } from '../connection/WebRtcEndpoint'
-import { PeerInfo } from "../connection/PeerInfo"
-import { ResendRequest, ResendResponse, Rtts } from "../identifiers"
-import pino from "pino"
+import { PeerInfo } from '../connection/PeerInfo'
+import { ResendRequest, ResendResponse, Rtts } from '../identifiers'
+import pino from 'pino'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node-node:node-connected',

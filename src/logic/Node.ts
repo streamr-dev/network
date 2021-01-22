@@ -1,23 +1,23 @@
-import { EventEmitter } from "events"
-import { MessageLayer, TrackerLayer, Utils } from "streamr-client-protocol"
+import { EventEmitter } from 'events'
+import { MessageLayer, TrackerLayer, Utils } from 'streamr-client-protocol'
 import { NodeToNode, Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { TrackerNode, Event as TrackerNodeEvent } from '../protocol/TrackerNode'
-import { MessageBuffer } from "../helpers/MessageBuffer"
-import { SeenButNotPropagatedSet } from "../helpers/SeenButNotPropagatedSet"
-import { ResendHandler, Strategy } from "../resend/ResendHandler"
-import { ResendRequest, Status, StreamIdAndPartition } from "../identifiers"
-import { DisconnectionReason } from "../connection/WsEndpoint"
-import { proxyRequestStream } from "../resend/proxyRequestStream"
-import { Metrics, MetricsContext } from "../helpers/MetricsContext"
-import { promiseTimeout } from "../helpers/PromiseTools"
-import { PerStreamMetrics } from "./PerStreamMetrics"
-import { StreamManager } from "./StreamManager"
-import { InstructionThrottler } from "./InstructionThrottler"
-import { GapMisMatchError, InvalidNumberingError } from "./DuplicateMessageDetector"
+import { MessageBuffer } from '../helpers/MessageBuffer'
+import { SeenButNotPropagatedSet } from '../helpers/SeenButNotPropagatedSet'
+import { ResendHandler, Strategy } from '../resend/ResendHandler'
+import { ResendRequest, Status, StreamIdAndPartition } from '../identifiers'
+import { DisconnectionReason } from '../connection/WsEndpoint'
+import { proxyRequestStream } from '../resend/proxyRequestStream'
+import { Metrics, MetricsContext } from '../helpers/MetricsContext'
+import { promiseTimeout } from '../helpers/PromiseTools'
+import { PerStreamMetrics } from './PerStreamMetrics'
+import { StreamManager } from './StreamManager'
+import { InstructionThrottler } from './InstructionThrottler'
+import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
 import getLogger from '../helpers/logger'
-import { PeerInfo } from "../connection/PeerInfo"
-import { Readable } from "stream"
-import pino from "pino"
+import { PeerInfo } from '../connection/PeerInfo'
+import { Readable } from 'stream'
+import pino from 'pino'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
@@ -129,7 +129,7 @@ export class Node extends EventEmitter {
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
 
         this.trackerNode.on(TrackerNodeEvent.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
-        this.trackerNode.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))
+        this.trackerNode.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))  // eslint-disable-line max-len
         this.trackerNode.on(TrackerNodeEvent.TRACKER_DISCONNECTED, (trackerId) => this.onTrackerDisconnected(trackerId))
         this.nodeToNode.on(NodeToNodeEvent.NODE_CONNECTED, (nodeId) => this.emit(Event.NODE_CONNECTED, nodeId))
         this.nodeToNode.on(NodeToNodeEvent.DATA_RECEIVED, (broadcastMessage, nodeId) => this.onDataReceived(broadcastMessage.streamMessage, nodeId))
@@ -182,7 +182,7 @@ export class Node extends EventEmitter {
             .addRecordedMetric('latency')
     }
 
-    start() {
+    start(): void {
         this.logger.debug('started %s (%s)', this.peerInfo.peerId, this.peerInfo.peerName)
         this.connectToBootstrapTrackers()
         this.connectToBoostrapTrackersInterval = setInterval(

@@ -1,9 +1,9 @@
-import _ from "lodash"
-import { HttpRequest, HttpResponse, TemplatedApp } from "uWebSockets.js"
-import { MetricsContext } from "./MetricsContext"
-import { getNodeConnections, getTopology } from "../logic/trackerSummaryUtils"
-import getLogger from "./logger"
-import { Tracker } from "../logic/Tracker"
+import _ from 'lodash'
+import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js'
+import { MetricsContext } from './MetricsContext'
+import { getNodeConnections, getTopology } from '../logic/trackerSummaryUtils'
+import getLogger from './logger'
+import { Tracker } from '../logic/Tracker'
 
 const extraLogger = getLogger('streamr:tracker:http-endpoints')
 
@@ -21,10 +21,10 @@ const respondWithError = (res: HttpResponse, req: HttpRequest, errorMessage: str
     }))
 }
 
-const cachedJsonGet = (wss: TemplatedApp, endpoint: string, maxAge: number, jsonFactory: () => Object): TemplatedApp => {
+const cachedJsonGet = (wss: TemplatedApp, endpoint: string, maxAge: number, jsonFactory: () => any): TemplatedApp => {
     let cache: undefined | {
         timestamp: number
-        json: Object
+        json: any
     }
     return wss.get(endpoint, (res, req) => {
         extraLogger.debug('request to ' + endpoint)

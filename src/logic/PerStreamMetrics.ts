@@ -1,4 +1,4 @@
-import speedometer from "speedometer"
+import speedometer from 'speedometer'
 
 interface AllMetrics<M> {
     resends: M

@@ -1,9 +1,9 @@
-import { Node, Event as NodeEvent, NodeOptions } from "./logic/Node"
-import { ForeignResendStrategy, LocalResendStrategy } from "./resend/resendStrategies"
-import { StreamIdAndPartition } from "./identifiers"
-import { ControlLayer, MessageLayer } from "streamr-client-protocol"
+import { Node, Event as NodeEvent, NodeOptions } from './logic/Node'
+import { ForeignResendStrategy, LocalResendStrategy } from './resend/resendStrategies'
+import { StreamIdAndPartition } from './identifiers'
+import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import ReadableStream = NodeJS.ReadableStream
-import { Storage } from "./composition"
+import { Storage } from './composition'
 
 export interface NetworkNodeOptions extends Omit<NodeOptions, "resendStrategies"> {
     storages: Array<Storage>
@@ -36,7 +36,7 @@ export class NetworkNode extends Node {
         this.onDataReceived(streamMessage)
     }
 
-    addMessageListener(cb: (msg: MessageLayer.StreamMessage) => void) {
+    addMessageListener(cb: (msg: MessageLayer.StreamMessage) => void): void {
         this.on(NodeEvent.UNSEEN_MESSAGE_RECEIVED, cb)
     }
 
@@ -67,7 +67,7 @@ export class NetworkNode extends Node {
         fromTimestamp: number,
         fromSequenceNo: number,
         publisherId: string | null,
-        msgChainId: string | null
+        _msgChainId: string | null
     ): ReadableStream {
         const request = new ControlLayer.ResendFromRequest({
             requestId,

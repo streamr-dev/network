@@ -1,4 +1,4 @@
-import { Status, StatusStreams, StreamKey } from "../identifiers"
+import { Status, StatusStreams, StreamKey } from '../identifiers'
 
 interface Counters {
     [key: string]: {

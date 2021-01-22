@@ -1,11 +1,11 @@
-import { MetricsContext, startTracker } from "../../src/composition"
-import { startEndpoint } from "../../src/connection/WsEndpoint"
-import { TrackerNode } from "../../src/protocol/TrackerNode"
-import { Tracker, Event as TrackerEvent } from "../../src/logic/Tracker"
-import { PeerInfo } from "../../src/connection/PeerInfo"
-import { waitForCondition, waitForEvent } from "streamr-test-utils"
-import { Event as EndpointEvent, WebRtcEndpoint } from "../../src/connection/WebRtcEndpoint"
-import { RtcSignaller } from "../../src/logic/RtcSignaller"
+import { MetricsContext, startTracker } from '../../src/composition'
+import { startEndpoint } from '../../src/connection/WsEndpoint'
+import { TrackerNode } from '../../src/protocol/TrackerNode'
+import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
+import { PeerInfo } from '../../src/connection/PeerInfo'
+import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { Event as EndpointEvent, WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
+import { RtcSignaller } from '../../src/logic/RtcSignaller'
 
 describe('WebRtcEndpoint', () => {
     let tracker: Tracker
@@ -61,10 +61,10 @@ describe('WebRtcEndpoint', () => {
         let ep1NumOfReceivedMessages = 0
         let ep2NumOfReceivedMessages = 0
 
-        endpoint1.on(EndpointEvent.MESSAGE_RECEIVED, (targetPeerId, message) => {
+        endpoint1.on(EndpointEvent.MESSAGE_RECEIVED, () => {
             ep1NumOfReceivedMessages += 1
         })
-        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, (targetPeerId, message) => {
+        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
             ep2NumOfReceivedMessages += 1
         })
 
@@ -99,10 +99,10 @@ describe('WebRtcEndpoint', () => {
         let ep1NumOfReceivedMessages = 0
         let ep2NumOfReceivedMessages = 0
 
-        endpoint1.on(EndpointEvent.MESSAGE_RECEIVED, (targetPeerId, message) => {
+        endpoint1.on(EndpointEvent.MESSAGE_RECEIVED, () => {
             ep1NumOfReceivedMessages += 1
         })
-        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, (targetPeerId, message) => {
+        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
             ep2NumOfReceivedMessages += 1
         })
 

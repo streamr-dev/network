@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events'
-import { DescriptionType } from 'node-datachannel'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { PeerInfo } from '../../src/connection/PeerInfo'

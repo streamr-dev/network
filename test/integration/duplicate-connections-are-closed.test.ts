@@ -1,6 +1,6 @@
 import { waitForEvent } from 'streamr-test-utils'
 
-import { startEndpoint, DisconnectionReason, WsEndpoint, Event } from '../../src/connection/WsEndpoint'
+import { startEndpoint, DisconnectionReason, WsEndpoint } from '../../src/connection/WsEndpoint'
 import { PeerInfo } from '../../src/connection/PeerInfo'
 
 describe('duplicate connections are closed', () => {
@@ -18,15 +18,7 @@ describe('duplicate connections are closed', () => {
     })
 
     test('if two endpoints open a connection (socket) to each other concurrently, one of them should be closed', async () => {
-        let connectionsOpened = 0
         const connectionsClosedReasons: string[] = []
-
-        wsEndpoint1.on(Event.PEER_CONNECTED, () => {
-            connectionsOpened += 1
-        })
-        wsEndpoint2.on(Event.PEER_CONNECTED, () => {
-            connectionsOpened += 1
-        })
 
         await Promise.allSettled([
             wsEndpoint1.connect('ws://127.0.0.1:28502'),

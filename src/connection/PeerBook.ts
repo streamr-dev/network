@@ -13,7 +13,7 @@ export class PeerBook {
     private readonly addressToType: { [key: string]: PeerType } = {}
     private readonly addressToName: { [key: string]: string } = {}
 
-    add(peerAddress: string, peerInfo: PeerInfo) {
+    add(peerAddress: string, peerInfo: PeerInfo): void {
         const { peerId, peerType, peerName } = peerInfo
         this.idToAddress[peerId] = peerAddress
         this.addressToId[peerAddress] = peerId

@@ -1,7 +1,7 @@
-import { lookup, Lookup } from "geoip-lite"
-import getLogger from "../helpers/logger"
-import { Location } from "../identifiers"
-import pino from "pino"
+import { lookup, Lookup } from 'geoip-lite'
+import getLogger from '../helpers/logger'
+import { Location } from '../identifiers'
+import pino from 'pino'
 
 function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)

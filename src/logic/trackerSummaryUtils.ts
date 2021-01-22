@@ -1,6 +1,6 @@
-import { TopologyState } from "./OverlayTopology"
-import { StreamIdAndPartition } from "../identifiers"
-import { OverlayPerStream } from "./Tracker"
+import { TopologyState } from './OverlayTopology'
+import { StreamIdAndPartition } from '../identifiers'
+import { OverlayPerStream } from './Tracker'
 
 export function getTopology(
     overlayPerStream: OverlayPerStream,

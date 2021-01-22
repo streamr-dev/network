@@ -18,7 +18,6 @@ export interface TopologyNodes {
     [key: string]: Set<string>
 }
 
-
 export class OverlayTopology {
     private readonly maxNeighborsPerNode: number
     private readonly shuffleArray: (arr: Array<string>) => Array<string>
@@ -98,8 +97,8 @@ export class OverlayTopology {
 
         if (this.numOfMissingNeighbors(nodeId) > 0) {
             const candidates = Object.entries(this.nodes)
-                .filter(([n, neighbors]) => neighbors.size < this.maxNeighborsPerNode) // nodes with open slots
-                .filter(([n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not yet neighbors
+                .filter(([_n, neighbors]) => neighbors.size < this.maxNeighborsPerNode) // nodes with open slots
+                .filter(([_n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not yet neighbors
                 .filter(([n, _]) => n !== nodeId) // remove self
                 .map(([n, _]) => n)
 
@@ -119,8 +118,8 @@ export class OverlayTopology {
         // leave one slot free which could lead to a never-ending chain of disconnects and connects, one node at a time.
         if (this.numOfMissingNeighbors(nodeId) > 1) {
             const candidates = Object.entries(this.nodes)
-                .filter(([n, neighbors]) => neighbors.size >= this.maxNeighborsPerNode) // full nodes
-                .filter(([n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not yet neighbors
+                .filter(([_n, neighbors]) => neighbors.size >= this.maxNeighborsPerNode) // full nodes
+                .filter(([_n, neighbors]) => !neighbors.has(nodeId)) // nodes that are not yet neighbors
                 .filter(([n, _]) => n !== nodeId) // remove self
                 .map(([n, _]) => n)
 

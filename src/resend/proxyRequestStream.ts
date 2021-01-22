@@ -1,6 +1,6 @@
 import { ControlLayer } from 'streamr-client-protocol'
-import { Readable } from "stream"
-import { ResendRequest } from "../identifiers"
+import { Readable } from 'stream'
+import { ResendRequest } from '../identifiers'
 
 export function proxyRequestStream(
     sendFn: (msg: ControlLayer.ControlMessage) => void,

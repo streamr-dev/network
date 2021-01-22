@@ -51,13 +51,10 @@ describe('Connection', () => {
                 connectionTwo.addRemoteCandidate(candidate, mid)
             },
             onOpen: () => {
-
             },
-            onMessage: (msg: string) => {
-
+            onMessage: () => {
             },
             onClose: () => {
-
             },
             onError: (err: Error) => {
                 throw err
@@ -73,13 +70,10 @@ describe('Connection', () => {
                 connectionOne.addRemoteCandidate(candidate, mid)
             },
             onOpen: () => {
-
             },
-            onMessage: (msg: string) => {
-
+            onMessage: () => {
             },
             onClose: () => {
-
             },
             onError: (err: Error) => {
                 throw err

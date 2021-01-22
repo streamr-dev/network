@@ -1,12 +1,12 @@
-import { TrackerServer, Event as TrackerServerEvent } from "../protocol/TrackerServer"
-import getLogger from "../helpers/logger"
+import { TrackerServer, Event as TrackerServerEvent } from '../protocol/TrackerServer'
+import getLogger from '../helpers/logger'
 import { NotFoundInPeerBookError } from '../connection/PeerBook'
-import { LocalCandidateMessage, LocalDescriptionMessage, RelayMessage, RtcConnectMessage } from "../identifiers"
-import { RtcSubTypes } from "./RtcMessage"
+import { LocalCandidateMessage, LocalDescriptionMessage, RelayMessage, RtcConnectMessage } from '../identifiers'
+import { RtcSubTypes } from './RtcMessage'
 
 const logger = getLogger('streamr:rtcSignallingHandlers')
 
-export function attachRtcSignalling(trackerServer: TrackerServer) {
+export function attachRtcSignalling(trackerServer: TrackerServer): void {
     if (!(trackerServer instanceof TrackerServer)) {
         throw new Error('trackerServer not instance of TrackerServer')
     }
@@ -53,7 +53,7 @@ export function attachRtcSignalling(trackerServer: TrackerServer) {
         })
     }
 
-    trackerServer.on(TrackerServerEvent.RELAY_MESSAGE_RECEIVED, (relayMessage: RelayMessage, source: string) => {
+    trackerServer.on(TrackerServerEvent.RELAY_MESSAGE_RECEIVED, (relayMessage: RelayMessage, _source: string) => {
         const {
             subType,
             requestId,

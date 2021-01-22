@@ -1,6 +1,6 @@
-import { MetricsContext, Metrics } from "../helpers/MetricsContext"
-import { Readable } from "stream"
-import { ResendRequest } from "../identifiers"
+import { MetricsContext, Metrics } from '../helpers/MetricsContext'
+import { Readable } from 'stream'
+import { ResendRequest } from '../identifiers'
 
 export interface Strategy {
     getResendResponseStream: (request: ResendRequest, source: string | null) => Readable
@@ -174,6 +174,7 @@ export class ResendHandler {
                     .on('data', requestStream.push.bind(requestStream))
 
                 if (await this.readStreamUntilEndOrError(ctx.responseStream, request)) {
+                    // eslint-disable-next-line require-atomic-updates
                     ctx.stop = true
                 }
             }

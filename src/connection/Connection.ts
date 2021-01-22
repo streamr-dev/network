@@ -1,8 +1,8 @@
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
 import getLogger from '../helpers/logger'
 import { PeerInfo } from './PeerInfo'
-import pino from "pino"
-import { MessageQueue } from "./MessageQueue"
+import pino from 'pino'
+import { MessageQueue } from './MessageQueue'
 
 nodeDataChannel.initLogger("Error" as LogLevel)
 
@@ -193,7 +193,7 @@ export class Connection {
         return this.messageQueue.add(message)
     }
 
-    close(err?: Error) {
+    close(err?: Error): void {
         if (this.dataChannel) {
             try {
                 this.dataChannel.close()
@@ -398,7 +398,7 @@ export class Connection {
                         message: queueItem.getMessage()
                     })
                     if (queueItem.isFailed()) {
-                        const infoText = queueItem.getInfos().map((i) => JSON.stringify(i)).join('\n\t')
+                        const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
                         this.logger.debug('Failed to send message after %d tries due to\n\t%s',
                             MessageQueue.MAX_TRIES,
                             infoText)
