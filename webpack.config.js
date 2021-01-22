@@ -64,15 +64,13 @@ module.exports = (env, argv) => {
             extensions: ['.json', '.js'],
         },
         plugins: [
-            new webpack.EnvironmentPlugin({
-                NODE_ENV: JSON.stringify(process.env.NODE_ENV),
-            }),
             gitRevisionPlugin,
             new webpack.EnvironmentPlugin({
-                version: JSON.stringify(pkg.version),
-                GIT_VERSION: JSON.stringify(gitRevisionPlugin.version()),
-                GIT_COMMITHASH: JSON.stringify(gitRevisionPlugin.commithash()),
-                GIT_BRANCH: JSON.stringify(gitRevisionPlugin.branch()),
+                NODE_ENV: process.env.NODE_ENV,
+                version: pkg.version,
+                GIT_VERSION: gitRevisionPlugin.version(),
+                GIT_COMMITHASH: gitRevisionPlugin.commithash(),
+                GIT_BRANCH: gitRevisionPlugin.branch(),
             })
         ]
     }

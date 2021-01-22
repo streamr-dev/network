@@ -1,6 +1,8 @@
 const Debug = require('debug')
 const GitRevisionPlugin = require('git-revision-webpack-plugin')
 
+const pkg = require('./package.json')
+
 if (process.env.DEBUG_CONSOLE) {
     // Use debug as console log
     // This prevents jest messing with console output
@@ -17,6 +19,7 @@ module.exports = async () => {
             gitRevisionPlugin.branch(),
         ])
         Object.assign(process.env, {
+            version: pkg.version,
             GIT_VERSION,
             GIT_COMMITHASH,
             GIT_BRANCH,
