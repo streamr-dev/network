@@ -5,6 +5,8 @@ import { waitForEvent, waitForStreamToEnd, toReadableStream } from 'streamr-test
 
 import { startNetworkNode, startTracker, startStorageNode } from '../../src/composition'
 import { Event } from '../../src/protocol/TrackerServer'
+import { StreamIdAndPartition } from '../../src/identifiers'
+import { MockStorageConfig } from './MockStorageConfig'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -32,6 +34,8 @@ describe('resend requests on streams with no activity', () => {
             trackers: [tracker.getAddress()],
             id: 'subscriberTwo'
         })
+        const storageConfig = new MockStorageConfig()
+        storageConfig.addStream(new StreamIdAndPartition('streamId', 0))
         storageNode = await startStorageNode({
             host: '127.0.0.1',
             port: 32907,
@@ -63,7 +67,8 @@ describe('resend requests on streams with no activity', () => {
                     }),
                 ),
                 requestRange: () => toReadableStream(),
-            }]
+            }],
+            storageConfig
         })
 
         subscriberOne.start()

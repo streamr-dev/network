@@ -7,6 +7,8 @@ import { waitForEvent, wait, toReadableStream } from 'streamr-test-utils'
 
 import { startNetworkNode, startStorageNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { StreamIdAndPartition } from '../../src/identifiers'
+import { MockStorageConfig } from './MockStorageConfig'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 
@@ -96,6 +98,8 @@ describe('resend cancellation on disconnect', () => {
             trackers: [tracker.getAddress()],
             storages: []
         })
+        const storageConfig = new MockStorageConfig()
+        storageConfig.addStream(new StreamIdAndPartition('streamId', 0))
         neighborThree = await startStorageNode({
             host: '127.0.0.1',
             port: 28654,
@@ -106,7 +110,8 @@ describe('resend cancellation on disconnect', () => {
                 requestLast: () => createSlowStream(),
                 requestFrom: () => toReadableStream(),
                 requestRange: () => toReadableStream(),
-            }]
+            }],
+            storageConfig
         })
 
         contactNode.subscribe('streamId', 0)

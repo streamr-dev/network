@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid'
 import * as Protocol from 'streamr-client-protocol'
 import { MetricsContext } from './helpers/MetricsContext'
-import { Location } from './identifiers'
+import { Location, StreamIdAndPartition } from './identifiers'
 import { PeerInfo } from './connection/PeerInfo'
 import { startEndpoint } from './connection/WsEndpoint'
 import { Tracker } from './logic/Tracker'
@@ -14,6 +14,7 @@ import { WebRtcEndpoint } from './connection/WebRtcEndpoint'
 import { NodeToNode } from './protocol/NodeToNode'
 import { NetworkNode } from './NetworkNode'
 import { Readable } from 'stream'
+import { StorageConfig } from './logic/StorageConfig'
 
 const STUN_URLS = ['stun:stun.l.google.com:19302'] // TODO: make configurable
 
@@ -87,6 +88,10 @@ export interface NetworkNodeOptions {
     newWebrtcConnectionTimeout?: number
 }
 
+export interface StorageNodeOptions extends NetworkNodeOptions {
+    storageConfig: StorageConfig
+}
+
 export function startTracker({
     host,
     port,
@@ -134,8 +139,17 @@ export function startNetworkNode(opts: NetworkNodeOptions): Promise<NetworkNode>
     return startNode(opts, PeerInfo.newNode)
 }
 
-export function startStorageNode(opts: NetworkNodeOptions): Promise<NetworkNode> {
-    return startNode(opts, PeerInfo.newStorage)
+export async function startStorageNode(opts: StorageNodeOptions): Promise<NetworkNode> {
+    const node = await startNode(opts, PeerInfo.newStorage)
+    const storageConfig = opts.storageConfig
+    storageConfig.getStreams().forEach((stream) => {
+        node.subscribe(stream.id, stream.partition)
+    })
+    storageConfig.addChangeListener({
+        onStreamAdded: (stream: StreamIdAndPartition) => node.subscribe(stream.id, stream.partition),
+        onStreamRemoved: (stream: StreamIdAndPartition) => node.unsubscribe(stream.id, stream.partition)
+    })
+    return node
 }
 
 function startNode({

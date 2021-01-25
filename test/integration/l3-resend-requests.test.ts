@@ -5,6 +5,8 @@ import { waitForEvent, waitForStreamToEnd, toReadableStream } from 'streamr-test
 
 import { startNetworkNode, startStorageNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { StreamIdAndPartition } from '../../src/identifiers'
+import { MockStorageConfig } from './MockStorageConfig'
 
 const { ControlMessage } = ControlLayer
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -67,6 +69,8 @@ describe('resend requests are fulfilled at L3', () => {
             trackers: [tracker.getAddress()],
             storages: []
         })
+        const storageConfig = new MockStorageConfig()
+        storageConfig.addStream(new StreamIdAndPartition('streamId', 0))
         storageNode = await startStorageNode({
             host: '127.0.0.1',
             port: 28634,
@@ -98,7 +102,8 @@ describe('resend requests are fulfilled at L3', () => {
                     }),
                 ),
                 requestRange: () => toReadableStream(),
-            }]
+            }],
+            storageConfig
         })
 
         neighborOne.subscribe('streamId', 0)

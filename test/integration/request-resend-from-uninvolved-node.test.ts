@@ -5,6 +5,8 @@ import { waitForStreamToEnd, waitForEvent, toReadableStream } from 'streamr-test
 
 import { startNetworkNode, startStorageNode, startTracker } from '../../src/composition'
 import { Event as NodeEvent } from '../../src/logic/Node'
+import { StreamIdAndPartition } from '../../src/identifiers'
+import { MockStorageConfig } from './MockStorageConfig'
 
 const { ControlMessage } = ControlLayer
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -68,6 +70,8 @@ describe('request resend from uninvolved node', () => {
                 content: {},
             })
         )
+        const storageConfig = new MockStorageConfig()
+        storageConfig.addStream(new StreamIdAndPartition('streamId', 0))
         storageNode = await startStorageNode({
             host: '127.0.0.1',
             port: 28643,
@@ -78,11 +82,11 @@ describe('request resend from uninvolved node', () => {
                 requestLast: mockRequest,
                 requestFrom: mockRequest,
                 requestRange: mockRequest
-            }]
+            }],
+            storageConfig
         })
 
         involvedNode.subscribe('streamId', 0)
-        // storageNode automatically assigned (subscribed) by tracker
 
         uninvolvedNode.start()
         involvedNode.start()

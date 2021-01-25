@@ -125,13 +125,8 @@ export class Tracker extends EventEmitter {
 
         // update topology
         this.createNewOverlayTopologies(streams)
-        this.updateAllStorages()
-        if (!this.storageNodes.has(source)) {
-            this.updateNode(source, filteredStreams, streams)
-            this.formAndSendInstructions(source, Object.keys(streams))
-        } else {
-            this.formAndSendInstructions(source, Object.keys(this.overlayPerStream))
-        }
+        this.updateNode(source, filteredStreams, streams)
+        this.formAndSendInstructions(source, Object.keys(streams))
     }
 
     findStorageNodes(storageNodesRequest: TrackerLayer.StorageNodesRequest, source: NodeId): void {
@@ -158,17 +153,6 @@ export class Tracker extends EventEmitter {
             if (this.overlayPerStream[streamId] == null) {
                 this.overlayPerStream[streamId] = new OverlayTopology(this.maxNeighborsPerNode)
             }
-        })
-    }
-
-    // Ensure each storage node is associated with each stream
-    private updateAllStorages(): void {
-        Object.values(this.overlayPerStream).forEach((overlayTopology) => {
-            this.storageNodes.forEach((storageNode) => {
-                if (!overlayTopology.hasNode(storageNode)) {
-                    overlayTopology.update(storageNode, [])
-                }
-            })
         })
     }
 
