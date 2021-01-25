@@ -16,8 +16,6 @@ import { NetworkNode } from './NetworkNode'
 import { Readable } from 'stream'
 import { StorageConfig } from './logic/StorageConfig'
 
-const STUN_URLS = ['stun:stun.l.google.com:19302'] // TODO: make configurable
-
 const logger = getLogger("streamr:bin:composition")
 
 export {
@@ -85,7 +83,8 @@ export interface NetworkNodeOptions {
     metricsContext?: MetricsContext
     pingInterval?: number,
     disconnectionWaitTime?: number,
-    newWebrtcConnectionTimeout?: number
+    newWebrtcConnectionTimeout?: number,
+    stunUrls?: string[]
 }
 
 export interface StorageNodeOptions extends NetworkNodeOptions {
@@ -164,7 +163,8 @@ function startNode({
     metricsContext = new MetricsContext(id),
     pingInterval,
     disconnectionWaitTime,
-    newWebrtcConnectionTimeout
+    newWebrtcConnectionTimeout,
+    stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions, peerInfoFn: (id: string, name: string | undefined, location: Location | null | undefined) => PeerInfo): Promise<NetworkNode> {
     const peerInfo = peerInfoFn(id, name, location)
     return startEndpoint(host, port, peerInfo, advertisedWsUrl, metricsContext, pingInterval).then((endpoint) => {
@@ -172,7 +172,7 @@ function startNode({
         const webRtcSignaller = new RtcSignaller(peerInfo, trackerNode)
         const nodeToNode = new NodeToNode(new WebRtcEndpoint(
             id, 
-            STUN_URLS, 
+            stunUrls,
             webRtcSignaller, 
             metricsContext, 
             pingInterval, 
