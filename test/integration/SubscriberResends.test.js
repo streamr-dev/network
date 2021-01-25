@@ -383,7 +383,6 @@ describeRepeats('resends', () => {
                 const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
                 publishedRequests.push(req)
-                await wait(500)
                 const receivedMsgs = await collect(sub, async ({ received }) => {
                     if (received.length === published.length) {
                         await sub.return()
@@ -414,7 +413,6 @@ describeRepeats('resends', () => {
                 const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
                 publishedRequests.push(req)
-                await wait(500)
                 const received = []
                 for await (const m of sub) {
                     received.push(m)
@@ -475,7 +473,6 @@ describeRepeats('resends', () => {
                 const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
                 publishedRequests.push(req)
-                await wait(500)
                 const END_AFTER = 3
                 const receivedMsgs = await collect(sub, async ({ received }) => {
                     if (received.length === END_AFTER) {
