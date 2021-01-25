@@ -106,7 +106,7 @@ jobs:
         with:
           services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: Run Test
-        run: npm run $TEST_NAME -- --maxWorkers=1
+        run: npm run $TEST_NAME
 
   flakey:
     name: Flakey Tests using Node ${{ matrix.node-version }}
