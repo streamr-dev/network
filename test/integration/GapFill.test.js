@@ -201,5 +201,35 @@ describeRepeats('GapFill', () => {
             expect(received).toEqual(published)
             expect(client.connection.getState()).toBe('connected')
         }, 15000)
+
+        it('can fill gaps between resend and realtime', async () => {
+            // publish 5 messages into storage
+            const published = await publishTestMessages(5, {
+                waitForLast: true,
+                waitForLastCount: 5,
+            })
+
+            // then simultaneously subscribe with resend & start publishing realtime messages
+            const [sub, publishedLater] = await Promise.all([
+                client.subscribe({
+                    stream,
+                    resend: {
+                        last: 5
+                    }
+                }),
+                publishTestMessages(5)
+            ])
+
+            const received = []
+            for await (const m of sub) {
+                received.push(m.getParsedContent())
+                if (received.length === (published.length + publishedLater.length)) {
+                    break
+                }
+            }
+
+            expect(received).toEqual([...published, ...publishedLater])
+            await sub.unsubscribe()
+        }, 15000)
     })
 })
