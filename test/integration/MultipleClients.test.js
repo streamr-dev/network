@@ -119,6 +119,10 @@ describeRepeats('PubSub with multiple clients', () => {
             await stream.grantPermission('stream_subscribe', pubUser.username)
             await pubClient.session.getSessionToken()
             await pubClient.connect()
+
+            runAfterTest(async () => {
+                await pubClient.disconnect()
+            })
             return pubClient
         }
 
@@ -181,6 +185,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 })
                 const publishTestMessages = getPublishTestMessages(pubClient, {
                     stream,
+                    delay: 500 + Math.random() * 1500,
                     waitForLast: true,
                     waitForLastTimeout: 10000,
                     waitForLastCount: MAX_MESSAGES,
@@ -188,9 +193,7 @@ describeRepeats('PubSub with multiple clients', () => {
                         value: counterId(publisherId),
                     }),
                 })
-                published[publisherId] = await publishTestMessages(MAX_MESSAGES, {
-                    delay: 500 + Math.random() * 1500,
-                })
+                published[publisherId] = await publishTestMessages(MAX_MESSAGES)
             }))
 
             checkMessages(published, receivedMessagesMain)
@@ -261,19 +264,19 @@ describeRepeats('PubSub with multiple clients', () => {
                     waitForLast: true,
                     waitForLastTimeout: 10000,
                     waitForLastCount: MAX_MESSAGES,
+                    delay: 500 + Math.random() * 1500,
                     createMessage: () => ({
                         value: counterId(publisherId),
                     }),
                 })
 
                 published[publisherId] = await publishTestMessages(MAX_MESSAGES, {
-                    delay: 500 + Math.random() * 1500,
                     async afterEach(pubMsg, req) {
                         counter += 1
                         if (counter === 3) {
                             // late subscribe to stream from other client instance
                             await waitForStorage(req) // make sure lastest message has hit storage
-                            await otherClient.subscribe({
+                            const lateSub = await otherClient.subscribe({
                                 stream: stream.id,
                                 resend: {
                                     last: 1000,
@@ -282,6 +285,10 @@ describeRepeats('PubSub with multiple clients', () => {
                                 const msgs = receivedMessagesOther[streamMessage.getPublisherId()] || []
                                 msgs.push(msg)
                                 receivedMessagesOther[streamMessage.getPublisherId()] = msgs
+                            })
+
+                            runAfterTest(async () => {
+                                await lateSub.unsubscribe()
                             })
                         }
                     }

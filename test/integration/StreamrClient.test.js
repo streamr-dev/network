@@ -475,7 +475,7 @@ describeRepeats('StreamrClient', () => {
                 // key exchange stream subscription should not have been sent yet
                 expect(connectionEventSpy.mock.calls.length).toEqual(1)
                 await client.disconnect()
-            }, 5000)
+            }, 10000)
 
             it('does not try to reconnect', async () => {
                 client = createClient()
@@ -499,7 +499,7 @@ describeRepeats('StreamrClient', () => {
                 await wait(2000)
                 expect(onConnecting).toHaveBeenCalledTimes(0)
                 expect(client.isConnected()).toBe(false)
-            }, 6000)
+            }, 10000)
         })
 
         describe('publish/subscribe connection handling', () => {

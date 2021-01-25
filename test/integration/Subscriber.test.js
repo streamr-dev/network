@@ -528,6 +528,27 @@ describeRepeats('StreamrClient Stream', () => {
             expect(M.count(stream.id)).toBe(0)
         })
 
+        it('can subscribe to stream multiple times then unsubscribe one mid-stream', async () => {
+            let sub2ReceivedAtUnsubscribe
+            const [received1, received2] = await Promise.all([
+                collect(sub1, async ({ received, iterator }) => {
+                    if (received.length === published.length) {
+                        await iterator.return()
+                    }
+                }),
+                collect(sub2, async ({ received }) => {
+                    if (received.length === MAX_ITEMS) {
+                        sub2ReceivedAtUnsubscribe = received.slice()
+                        await sub2.unsubscribe()
+                    }
+                }),
+            ])
+            expect(received2).toEqual(published.slice(0, MAX_ITEMS))
+            expect(received1).toEqual(published)
+            expect(sub2ReceivedAtUnsubscribe).toEqual(received2)
+            expect(M.count(stream.id)).toBe(0)
+        })
+
         it('can subscribe to stream multiple times then return mid-stream', async () => {
             const [received1, received2] = await Promise.all([
                 collect(sub1, async ({ received, iterator }) => {

@@ -25,14 +25,14 @@ export function describeRepeats(msg, fn, describeFn = describe) {
 }
 
 describeRepeats.skip = (msg, fn) => {
-    describe.skip(`test repeat ALL of ${TEST_REPEATS}`, fn)
+    describe.skip(`${msg} – test repeat ALL of ${TEST_REPEATS}`, fn)
 }
 
 describeRepeats.only = (msg, fn) => {
     describeRepeats(msg, fn, describe.only)
 }
 
-export async function collect(iterator, fn = () => {}) {
+export async function collect(iterator, fn = async () => {}) {
     const received = []
     for await (const msg of iterator) {
         received.push(msg.getParsedContent())
