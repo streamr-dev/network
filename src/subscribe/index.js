@@ -526,7 +526,6 @@ export default class Subscriber {
         let resentCount
         const it = pipeline([
             async function* HandleResends() {
-                await resendMessageStream.subscribe()
                 // Inconvience here
                 // emitting the resent event is a bit tricky in this setup because the subscription
                 // doesn't know anything about the source of the messages
@@ -554,6 +553,7 @@ export default class Subscriber {
         ], end)
 
         let msgCount = 0
+        await resendMessageStream.subscribe()
         resendSubscribeSub = await this.subscribe({
             ...options,
             afterSteps: [
