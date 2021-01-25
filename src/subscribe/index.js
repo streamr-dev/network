@@ -553,8 +553,8 @@ export default class Subscriber {
         ], end)
 
         let msgCount = 0
-        await resendMessageStream.subscribe()
-        resendSubscribeSub = await this.subscribe({
+        const resendTask = resendMessageStream.subscribe()
+        const realtimeTask = this.subscribe({
             ...options,
             afterSteps: [
                 async function* detectEndOfResend(src) {
@@ -572,6 +572,12 @@ export default class Subscriber {
             ],
             msgStream: it,
         }, onMessage)
+
+        // eslint-disable-next-line semi-style
+        ;[resendSubscribeSub] = await Promise.all([
+            realtimeTask,
+            resendTask,
+        ])
 
         // attach additional utility functions
         return Object.assign(resendSubscribeSub, {
