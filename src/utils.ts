@@ -49,7 +49,7 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
 /**
  * Wait for a condition to become true by re-evaluating every `retryInterval` milliseconds.
  *
- * @param conditionFn condition to be evaluated; should return boolean and have
+ * @param conditionFn condition to be evaluated; should return boolean or Promise<boolean> and have
  * no side-effects.
  * @param timeout amount of time in milliseconds to wait for
  * @param retryInterval how often, in milliseconds, to re-evaluate condition
@@ -58,32 +58,43 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
  * conditionFn evaluates to true on a retry attempt within timeout. If timeout
  * is reached with conditionFn never evaluating to true, rejects.
  */
-export const waitForCondition = (
-    conditionFn: () => boolean,
+export const waitForCondition = async (
+    conditionFn: () => (boolean | Promise<boolean>),
     timeout = 5000,
     retryInterval = 100,
     onTimeoutContext?: () => string
 ): Promise<void> => {
-    if (conditionFn()) {
-        return Promise.resolve()
-    }
     return new Promise((resolve, reject) => {
-        const refs = {
-            timeOut: setTimeout(() => {
-                clearInterval(refs.interval)
+        let poller: NodeJS.Timeout | undefined = undefined
+        const clearPoller = () => {
+            if (poller !== undefined) {
+                clearInterval(poller)
+            }
+        }
+        const maxTime = Date.now() + timeout
+        const poll = async () => {
+            if (Date.now() < maxTime) {
+                let result
+                try {
+                    result = await conditionFn()
+                } catch (err) {
+                    clearPoller()
+                    reject(err)
+                }
+                if (result) {
+                    clearPoller()
+                    resolve()
+                }
+            } else {
+                clearPoller()
                 reject(new AssertionError({
                     message: `waitForCondition: timed out before "${conditionFn.toString()}" became true`
                         + (onTimeoutContext ? ("\n" + onTimeoutContext()) : "")
                 }))
-            }, timeout),
-            interval: setInterval(() => {
-                if (conditionFn()) {
-                    clearTimeout(refs.timeOut)
-                    clearInterval(refs.interval)
-                    resolve()
-                }
-            }, retryInterval)
+            }
         }
+        setImmediate(poll)
+        poller = setInterval(poll, retryInterval)
     })
 }
 

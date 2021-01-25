@@ -74,6 +74,18 @@ test('test', async () => {
 })
 ``` 
 
+Example:
+```js
+test('test', async () => {
+    ...
+    await waitForCondition(async () => {
+        const rows = await sqlQuery("SELECT * FROM streams")
+        return rows.length >= 10
+    })
+    ...
+})
+```
+
 #### wait
 ```
 wait(ms) => Promise
