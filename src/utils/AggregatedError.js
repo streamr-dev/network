@@ -16,6 +16,22 @@ export default class AggregatedError extends Error {
         }
     }
 
+    static fromAllSettled(results = [], errorMessage = '') {
+        const errs = results.map(({ reason }) => reason).filter(Boolean)
+        if (!errs.length) {
+            return undefined
+        }
+
+        return new AggregatedError(errs, errorMessage)
+    }
+
+    static throwAllSettled(results, errorMessage = '') {
+        const err = this.fromAllSettled(results, errorMessage)
+        if (err) {
+            throw err
+        }
+    }
+
     /**
      * Handles 'upgrading' an existing error to an AggregatedError when necesary.
      */

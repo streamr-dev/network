@@ -2,7 +2,7 @@ import { inspect } from 'util'
 
 import { wait } from 'streamr-test-utils'
 
-import { pTimeout, counterId } from '../src/utils'
+import { pTimeout, counterId, AggregatedError } from '../src/utils'
 import { validateOptions } from '../src/stream/utils'
 
 const crypto = require('crypto')
@@ -44,6 +44,19 @@ export async function collect(iterator, fn = () => {}) {
     return received
 }
 
+export function addAfterFn() {
+    const afterFns = []
+    afterEach(async () => {
+        const fns = afterFns.slice()
+        afterFns.length = 0
+        AggregatedError.throwAllSettled(await Promise.allSettled(fns.map((fn) => fn())))
+    })
+
+    return (fn) => {
+        afterFns.push(fn)
+    }
+}
+
 export const Msg = (opts) => ({
     value: uid('msg'),
     ...opts,
@@ -61,7 +74,7 @@ export function getWaitForStorage(client, defaultOpts = {}) {
     /* eslint-disable no-await-in-loop */
     return async (publishRequest, opts = {}) => {
         const {
-            streamId, streamPartition = 0, interval = 500, timeout = 5000, messageMatchFn = defaultMessageMatchFn
+            streamId, streamPartition = 0, interval = 500, timeout = 5000, count = 100, messageMatchFn = defaultMessageMatchFn
         } = validateOptions({
             ...defaultOpts,
             ...opts,
@@ -93,7 +106,7 @@ export function getWaitForStorage(client, defaultOpts = {}) {
             last = await client.getStreamLast({
                 streamId,
                 streamPartition,
-                count: 3,
+                count,
             })
 
             for (const lastMsg of last) {
@@ -130,9 +143,11 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             delay = 100,
             timeout = 3500,
             waitForLast = false, // wait for message to hit storage
+            waitForLastCount,
             waitForLastTimeout,
             beforeEach = (m) => m,
-            afterEach = () => {}
+            afterEach = () => {},
+            createMessage = Msg,
         } = validateOptions({
             ...defaultOpts,
             ...opts,
@@ -140,7 +155,7 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
 
         const published = []
         for (let i = 0; i < n; i++) {
-            const message = Msg()
+            const message = createMessage()
             // eslint-disable-next-line no-await-in-loop, no-loop-func
             await beforeEach(message)
             // eslint-disable-next-line no-await-in-loop, no-loop-func
@@ -165,6 +180,7 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
                 streamId,
                 streamPartition,
                 timeout: waitForLastTimeout,
+                count: waitForLastCount,
                 messageMatchFn(m, b) {
                     return m.streamMessage.signature === b.signature
                 }

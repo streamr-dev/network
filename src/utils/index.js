@@ -44,9 +44,9 @@ export function randomString(length = 20) {
 
 export const counterId = (() => {
     const MAX_PREFIXES = 256
-    const counts = {} // possible we could switch this to WeakMap and pass functions or classes.
+    let counts = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false
-    return (prefix = 'ID') => {
+    const counterIdFn = (prefix = 'ID') => {
         // pedantic: wrap around if count grows too large
         counts[prefix] = (counts[prefix] + 1 || 0) % Number.MAX_SAFE_INTEGER
 
@@ -61,6 +61,23 @@ export const counterId = (() => {
 
         return `${prefix}.${counts[prefix]}`
     }
+
+    /**
+     * Clears counts for prefix or all if no prefix supplied.
+     *
+     * @param {string?} prefix
+     */
+    counterIdFn.clear = (...args) => {
+        // check length to differentiate between clear(undefined) & clear()
+        if (args.length) {
+            const [prefix] = args
+            delete counts[prefix]
+        } else {
+            // clear all
+            counts = {}
+        }
+    }
+    return counterIdFn
 })()
 
 export function getVersionString() {

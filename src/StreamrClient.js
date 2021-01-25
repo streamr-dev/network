@@ -103,6 +103,7 @@ export default class StreamrClient extends EventEmitter {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
+
         this.options = Config({
             id: this.id,
             debug: this.debug,
