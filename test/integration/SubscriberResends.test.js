@@ -277,7 +277,7 @@ describeRepeats('resends', () => {
                 const publishedBefore = published.slice()
                 const receivedMsgs = []
 
-                sub.once('resent', onResent.wrap(() => {
+                sub.on('resent', onResent.wrap(() => {
                     expect(receivedMsgs).toEqual(publishedBefore)
                 }))
 
@@ -290,8 +290,8 @@ describeRepeats('resends', () => {
                 for await (const msg of sub) {
                     receivedMsgs.push(msg.getParsedContent())
                     if (receivedMsgs.length === published.length) {
+                        await wait() // give resent event a chance to fire
                         onResent.reject(new Error('resent never called'))
-                        await wait()
                         await sub.return()
                     }
                 }
@@ -321,13 +321,13 @@ describeRepeats('resends', () => {
                 const req = await client.publish(stream.id, message) // should be realtime
                 published.push(message)
                 publishedRequests.push(req)
-                await wait(500)
                 const receivedMsgs = await collect(sub, async ({ received }) => {
                     if (received.length === published.length) {
                         await sub.return()
                     }
                 })
 
+                await wait() // give resent event a chance to fire
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
