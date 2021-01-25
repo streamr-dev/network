@@ -16,11 +16,11 @@ program
     .action(async (configFile) => {
         const config = JSON.parse(fs.readFileSync(configFile, 'utf8'))
 
-        if (program.streamrUrl) {
-            config.streamrUrl = program.streamrUrl
+        if (program.opts().streamrUrl) {
+            config.streamrUrl = program.opts().streamrUrl
         }
-        if (program.networkId) {
-            config.network.id = program.networkId
+        if (program.opts().networkId) {
+            config.network.id = program.opts().networkId
         }
 
         await startBroker(config, true).catch((err) => {

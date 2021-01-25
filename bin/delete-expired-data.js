@@ -18,14 +18,14 @@ program
     .parse(process.argv)
 
 const deleteExpiredCommand = new DeleteExpiredCmd({
-    cassandraUsername: program.cassandraUsername,
-    cassandraPassword: program.cassandraPassword,
-    cassandraHosts: program.cassandraHosts.split(','),
-    cassandraDatacenter: program.cassandraDatacenter,
-    cassandraKeyspace: program.cassandraKeyspace,
-    streamrBaseUrl: program.streamrBaseUrl,
-    bucketLimit: program.bucketLimit,
-    dryRun: !program.realRun
+    cassandraUsername: program.opts().cassandraUsername,
+    cassandraPassword: program.opts().cassandraPassword,
+    cassandraHosts: program.opts().cassandraHosts.split(','),
+    cassandraDatacenter: program.opts().cassandraDatacenter,
+    cassandraKeyspace: program.opts().cassandraKeyspace,
+    streamrBaseUrl: program.opts().streamrBaseUrl,
+    bucketLimit: program.opts().bucketLimit,
+    dryRun: !program.opts().realRun
 })
 deleteExpiredCommand.run()
     .then(() => {})

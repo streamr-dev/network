@@ -33,13 +33,13 @@ const privateKey = program.args[0]
 const trackerName = program.args[1]
 const wallet = new ethers.Wallet(privateKey)
 const address = wallet ? wallet.address : null
-const id = address || `tracker-${program.port}`
+const id = address || `tracker-${program.opts().port}`
 const name = trackerName || address
 
-if (program.sentryDns) {
-    logger.info('Configuring Sentry with dns: %s', program.sentryDns)
+if (program.opts().sentryDns) {
+    logger.info('Configuring Sentry with dns: %s', program.opts().sentryDns)
     Sentry.init({
-        dsn: program.sentryDns,
+        dsn: program.opts().sentryDns,
         integrations: [
             new Sentry.Integrations.Console({
                 levels: ['error']
@@ -58,14 +58,14 @@ if (program.sentryDns) {
 async function main() {
     try {
         const tracker = await startTracker({
-            host: program.ip,
-            port: Number.parseInt(program.port),
+            host: program.opts().ip,
+            port: Number.parseInt(program.opts().port),
             id,
             name,
-            maxNeighborsPerNode: Number.parseInt(program.maxNeighborsPerNode),
-            attachHttpEndpoints: program.attachHttpEndpoints,
-            privateKeyFileName: program.privateKeyFileName,
-            certFileName: program.certFileName
+            maxNeighborsPerNode: Number.parseInt(program.opts().maxNeighborsPerNode),
+            attachHttpEndpoints: program.opts().attachHttpEndpoints,
+            privateKeyFileName: program.opts().privateKeyFileName,
+            certFileName: program.opts().certFileName
         })
 
         const trackerObj = {}
@@ -73,7 +73,7 @@ async function main() {
             'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName', 'metrics',
             'metricsInterval', 'apiKey', 'streamId', 'sentryDns', 'attachHttpEndpoints']
         fields.forEach((prop) => {
-            trackerObj[prop] = program[prop]
+            trackerObj[prop] = program.opts()[prop]
         })
 
         logger.info('started tracker: %o', {
@@ -82,10 +82,10 @@ async function main() {
             ...trackerObj
         })
 
-        if (program.metrics && program.apiKey && program.streamId) {
+        if (program.opts().metrics && program.opts().apiKey && program.opts().streamId) {
             const client = new StreamrClient({
                 auth: {
-                    apiKey: program.apiKey
+                    apiKey: program.opts().apiKey
                 },
                 autoConnect: false
             })
@@ -94,14 +94,14 @@ async function main() {
 
                 // send metrics to streamr.network
                 if (client) {
-                    client.publishHttp(program.streamId, metrics)
+                    client.publishHttp(program.opts().streamId, metrics)
                 }
 
                 // output to console
-                if (program.metrics) {
+                if (program.opts().metrics) {
                     logger.info(JSON.stringify(metrics, null, 4))
                 }
-            }, program.metricsInterval)
+            }, program.opts().metricsInterval)
         }
     } catch (err) {
         pino.final(logger).error(err, 'tracker bin catch')
