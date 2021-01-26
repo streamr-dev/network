@@ -1,5 +1,3 @@
-import { Errors } from 'streamr-client-protocol'
-
 import { counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
 import { validateOptions } from '../stream/utils'
@@ -8,8 +6,6 @@ import Validator from './Validator'
 import messageStream from './messageStream'
 import OrderMessages from './OrderMessages'
 import Decrypt from './Decrypt'
-
-const { ValidationError } = Errors
 
 export { SignatureRequiredError } from './Validator'
 
@@ -68,7 +64,6 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 try {
                     streamMessage.getParsedContent()
                 } catch (err) {
-                    orderingUtil.markMessageExplicitly(streamMessage)
                     await onError(err)
                 }
                 yield streamMessage
