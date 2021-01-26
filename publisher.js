@@ -17,7 +17,7 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 const options = {
     restUrl: "http://localhost/api/v1",
-    url: "ws://localhost:8890/api/v1/ws",
+    url: "ws://localhost/api/v1/ws",
     auth: {
         privateKey: privateKey,
     },
