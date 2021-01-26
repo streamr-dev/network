@@ -182,10 +182,14 @@ public class Streams {
             for (int i = 0; i < subscribers.length - 2; i++) {
                 streamTester.addSubscriber(subscribers[i], null);
             }
+            // TODO: these really need to wait for some signal that messages arrived in storage rather than wait
+            // an arbitrary amount of time and hope things are in storage. If things are not in storage (yet) then
+            // tests will fail due to missing messages. Arbitrary delay also increases test time by not being able to
+            // immediately proceed even if messages hit storage quickly.
 
-            streamTester.addDelayedSubscriber(subscribers[subscribers.length - 2], new ResendFromOption(new Date(0L)), 2000);
+            streamTester.addDelayedSubscriber(subscribers[subscribers.length - 2], new ResendFromOption(new Date(0L)), 10000);
             // For ResendLastOption, the number of last messages must be greater than what the publishers can publish during delay
-            streamTester.addDelayedSubscriber(subscribers[subscribers.length - 1], new ResendLastOption(1000), 4000);
+            streamTester.addDelayedSubscriber(subscribers[subscribers.length - 1], new ResendLastOption(1000), 12000);
         } else {
             streamTester.addSubscribers(subscribers);
         }
