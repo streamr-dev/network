@@ -47,7 +47,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 yield streamMessage
             }
         },
-        // order messages
+        // order messages (fill gaps)
         orderingUtil,
         // validate
         async function* Validate(src) {
@@ -73,11 +73,13 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 }
             }
         },
+        // re-order messages
+        OrderMessages(client, options),
         // special handling for bye message
         async function* ByeMessageSpecialHandling(src) {
             for await (const orderedMessage of src) {
-                yield orderedMessage
                 try {
+                    yield orderedMessage
                     if (orderedMessage.isByeMessage()) {
                         break
                     }
