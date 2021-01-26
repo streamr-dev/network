@@ -216,11 +216,25 @@ export function Defer(executor = () => {}) {
     })
 
     function wrap(fn) {
-        return async (...args) => Promise.resolve().then(async () => fn(...args)).then(resolve, reject)
+        return async (...args) => {
+            try {
+                return resolve(await fn(...args))
+            } catch (err) {
+                reject(err)
+            }
+            return Promise.resolve()
+        }
     }
 
     function wrapError(fn) {
-        return async (...args) => Promise.resolve().then(async () => fn(...args)).catch(reject)
+        return async (...args) => {
+            try {
+                return await fn(...args)
+            } catch (err) {
+                reject(err)
+            }
+            return Promise.resolve()
+        }
     }
 
     function handleErrBack(err) {
