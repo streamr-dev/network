@@ -229,8 +229,10 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
           services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
+      - name: npm ci
+        run: npm ci
       - name: npm link
-        run: npm ci && npm link
+        run: npm link
       - uses: actions/checkout@v2
         with:
           repository: streamr-dev/streamr-client-testing
