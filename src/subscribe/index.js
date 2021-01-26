@@ -523,54 +523,76 @@ export default class Subscriber {
 
         let resendSubscribeSub
 
-        let resentCount
+        let lastResentMsgId
+        let lastProcessedMsgId
+        const resendDone = Defer()
+        let isResendDone = false
+        let resentEmitted = false
+
+        function messageIDString(msg) {
+            return msg.getMessageID().serialize()
+        }
+
+        function maybeEmitResend() {
+            if (resentEmitted || !isResendDone) { return }
+
+            // need to account for both cases:
+            // resent finished after last message got through pipeline
+            // resent finished before last message got through pipeline
+            if (!lastResentMsgId || lastProcessedMsgId === lastResentMsgId) {
+                lastResentMsgId = undefined
+                resentEmitted = true
+                resendSubscribeSub.emit('resent')
+            }
+        }
+
         const it = pipeline([
             async function* HandleResends() {
-                // Inconvience here
-                // emitting the resent event is a bit tricky in this setup because the subscription
-                // doesn't know anything about the source of the messages
-                // can't emit resent immediately after resent stream end since
-                // the message is not yet through the message pipeline
-                //
-                // Solution is to count number of resent messages
-                // and emit resent once subscription has seen that many messages
-                let count = 0
-                for await (const msg of resendSubscribeSub.resend) {
-                    count += 1
-                    yield msg
-                }
-
-                resentCount = count
-                if (resentCount === 0) {
-                    // no resent
-                    resendSubscribeSub.emit('resent')
+                try {
+                    // Inconvience here
+                    // emitting the resent event is a bit tricky in this setup because the subscription
+                    // doesn't know anything about the source of the messages
+                    // can't emit resent immediately after resent stream end since
+                    // the message is not yet through the message pipeline
+                    let currentMsgId
+                    try {
+                        for await (const msg of resendSubscribeSub.resend) {
+                            currentMsgId = messageIDString(msg.streamMessage)
+                            yield msg
+                        }
+                    } finally {
+                        lastResentMsgId = currentMsgId
+                    }
+                } finally {
+                    isResendDone = true
+                    maybeEmitResend()
+                    resendDone.resolve()
                 }
             },
             async function* ResendThenRealtime(src) {
                 yield* src
+                await resendDone // ensure realtime doesn't start until resend ends
                 yield* resendSubscribeSub.realtime
             },
         ], end)
 
-        let msgCount = 0
         const resendTask = resendMessageStream.subscribe()
         const realtimeTask = this.subscribe({
             ...options,
+            msgStream: it,
             afterSteps: [
                 async function* detectEndOfResend(src) {
                     for await (const msg of src) {
+                        const id = messageIDString(msg)
                         try {
-                            msgCount += 1
                             yield msg
                         } finally {
-                            if (resentCount && msgCount === resentCount) {
-                                resendSubscribeSub.emit('resent')
-                            }
+                            lastProcessedMsgId = id
+                            maybeEmitResend()
                         }
                     }
                 },
             ],
-            msgStream: it,
         }, onMessage)
 
         // eslint-disable-next-line semi-style

@@ -147,6 +147,8 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             waitForLastTimeout,
             beforeEach = (m) => m,
             afterEach = () => {},
+            timestamp,
+            partitionKey,
             createMessage = Msg,
         } = validateOptions({
             ...defaultOpts,
@@ -162,7 +164,7 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             const request = await pTimeout(client.publish({
                 streamId,
                 streamPartition,
-            }, message), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
+            }, message, timestamp, partitionKey), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
             published.push([
                 message,
                 request,

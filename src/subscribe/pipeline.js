@@ -28,7 +28,7 @@ async function collect(src) {
 
 export default function MessagePipeline(client, opts = {}, onFinally = () => {}) {
     const options = validateOptions(opts)
-    const { key, afterSteps = [], onError = (err) => { throw err } } = options
+    const { key, afterSteps = [], beforeSteps = [], onError = (err) => { throw err } } = options
     const id = counterId('MessagePipeline') + key
 
     /* eslint-disable object-curly-newline */
@@ -43,6 +43,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
     const p = pipeline([
         // take messages
         msgStream,
+        ...beforeSteps,
         // unpack stream message
         async function* getStreamMessage(src) {
             for await (const { streamMessage } of src) {

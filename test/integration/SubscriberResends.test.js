@@ -175,6 +175,9 @@ describeRepeats('resends', () => {
     describe('with resend data', () => {
         beforeAll(async () => {
             await client.connect()
+        })
+
+        beforeAll(async () => {
             const results = await publishTestMessages.raw(MAX_MESSAGES, {
                 waitForLast: true,
             })
@@ -286,17 +289,21 @@ describeRepeats('resends', () => {
                 const req = await client.publish(stream.id, newMessage) // should be realtime
                 published.push(newMessage)
                 publishedRequests.push(req)
-
+                let t
                 for await (const msg of sub) {
                     receivedMsgs.push(msg.getParsedContent())
                     if (receivedMsgs.length === published.length) {
-                        await wait() // give resent event a chance to fire
-                        onResent.reject(new Error('resent never called'))
                         await sub.return()
+                        clearTimeout(t)
+                        t = setTimeout(() => {
+                            // await wait() // give resent event a chance to fire
+                            onResent.reject(new Error('resent never called'))
+                        }, 250)
                     }
                 }
 
                 await onResent
+                clearTimeout(t)
 
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(receivedMsgs).toEqual(published)
@@ -327,7 +334,6 @@ describeRepeats('resends', () => {
                     }
                 })
 
-                await wait() // give resent event a chance to fire
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(published.length)
                 expect(msgs).toEqual(published)
@@ -356,7 +362,6 @@ describeRepeats('resends', () => {
                 for await (const msg of sub) {
                     receivedMsgs.push(msg.getParsedContent())
                     if (receivedMsgs.length === published.length) {
-                        await wait()
                         await sub.return()
                     }
                 }
