@@ -8,7 +8,7 @@ import config from './config'
 
 const MAX_MESSAGES = 10
 
-describeRepeats('GapFill', () => {
+describeRepeats('Validation', () => {
     let expectErrors = 0 // check no errors by default
     let publishTestMessages
     let onError = jest.fn()

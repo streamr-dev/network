@@ -36,6 +36,12 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
     } = options
     /* eslint-enable object-curly-newline */
 
+    // re-order messages (ignore gaps)
+    const internalOrderingUtil = OrderMessages(client, {
+        ...options,
+        gapFill: false,
+    })
+
     const p = pipeline([
         // take messages
         msgStream,
@@ -54,10 +60,11 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
             for await (const streamMessage of src) {
                 try {
                     await validate(streamMessage)
-                    yield streamMessage
                 } catch (err) {
+                    internalOrderingUtil.markMessageExplicitly(streamMessage)
                     await onError(err)
                 }
+                yield streamMessage
             }
         },
         // decrypt
@@ -67,22 +74,20 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
             for await (const streamMessage of src) {
                 try {
                     streamMessage.getParsedContent()
-                    yield streamMessage
                 } catch (err) {
+                    internalOrderingUtil.markMessageExplicitly(streamMessage)
                     await onError(err)
                 }
+                yield streamMessage
             }
         },
         // re-order messages (ignore gaps)
-        OrderMessages(client, {
-            ...options,
-            gapFill: false,
-        }),
+        internalOrderingUtil,
         // special handling for bye message
         async function* ByeMessageSpecialHandling(src) {
             for await (const orderedMessage of src) {
+                yield orderedMessage
                 try {
-                    yield orderedMessage
                     if (orderedMessage.isByeMessage()) {
                         break
                     }
