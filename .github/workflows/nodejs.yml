@@ -212,7 +212,7 @@ jobs:
           - js-realtime-only
           - java-realtime-only
     env:
-      NUM_MESSAGES: 10
+      NUM_MESSAGES: 20
       TEST_NAME: ${{ matrix.test-name }}
       CONFIG_NAME: ${{ matrix.config-name }}
     steps:
