@@ -5,7 +5,7 @@ import config from '../integration/config'
 
 const TEST_REPEATS = 6
 const MAX_CONCURRENCY = 24
-const TEST_TIMEOUT = 2000
+const TEST_TIMEOUT = 5000
 const INC_FACTOR = 1.5
 
 /* eslint-disable require-atomic-updates, no-loop-func */
