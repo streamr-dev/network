@@ -27,12 +27,7 @@ export default function OrderMessages(client, options = {}) {
             return
         }
 
-        // end stream or push into queue.
-        if (orderedMessage.isByeMessage()) {
-            outStream.end(orderedMessage)
-        } else {
-            outStream.push(orderedMessage)
-        }
+        outStream.push(orderedMessage)
     }, async (from, to, publisherId, msgChainId) => {
         if (done) { return }
         client.debug('gap %o', {

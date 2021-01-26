@@ -52,8 +52,12 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
         // validate
         async function* Validate(src) {
             for await (const streamMessage of src) {
-                await validate(streamMessage)
-                yield streamMessage
+                try {
+                    await validate(streamMessage)
+                    yield streamMessage
+                } catch (err) {
+                    await onError(err)
+                }
             }
         },
         // decrypt
@@ -63,20 +67,22 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
             for await (const streamMessage of src) {
                 try {
                     streamMessage.getParsedContent()
+                    yield streamMessage
                 } catch (err) {
                     await onError(err)
                 }
-                yield streamMessage
             }
         },
         // special handling for bye message
         async function* ByeMessageSpecialHandling(src) {
             for await (const orderedMessage of src) {
-                if (orderedMessage.isByeMessage()) {
-                    yield orderedMessage
-                    break
-                } else {
-                    yield orderedMessage
+                yield orderedMessage
+                try {
+                    if (orderedMessage.isByeMessage()) {
+                        break
+                    }
+                } catch (err) {
+                    await onError(err)
                 }
             }
         },
