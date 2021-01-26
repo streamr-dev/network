@@ -479,16 +479,17 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
                 })
                 groupKeyIds.forEach((id) => {
                     if (!pending.has(id)) { return }
+                    const groupKey = groupKeyStore.get(id)
                     const task = pending.get(id)
-                    task.resolve(groupKeyStore.get(id))
                     pending.delete(id)
+                    task.resolve(groupKey)
                 })
             } catch (err) {
                 groupKeyIds.forEach((id) => {
                     if (!pending.has(id)) { return }
                     const task = pending.get(id)
-                    task.reject(err)
                     pending.delete(id)
+                    task.reject(err)
                 })
             }
         }

@@ -38,8 +38,9 @@ export default function OrderMessages(client, options = {}) {
         client.debug('gap %o', {
             streamId, streamPartition, publisherId, msgChainId, from, to,
         })
+
         // eslint-disable-next-line no-use-before-define
-        const resendMessageStream = await resendStream(client, {
+        const resendMessageStream = resendStream(client, {
             streamId, streamPartition, from, to, publisherId, msgChainId,
         })
 

@@ -43,6 +43,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
     const p = pipeline([
         // take messages
         msgStream,
+        // custom pipeline steps
         ...beforeSteps,
         // unpack stream message
         async function* getStreamMessage(src) {
@@ -50,24 +51,16 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 yield streamMessage
             }
         },
+        // order messages
+        orderingUtil,
         // validate
         async function* Validate(src) {
             for await (const streamMessage of src) {
-                try {
-                    await validate(streamMessage)
-                } catch (err) {
-                    if (err instanceof ValidationError) {
-                        orderingUtil.markMessageExplicitly(streamMessage)
-                        await onError(err)
-                        // eslint-disable-next-line no-continue
-                    } else {
-                        throw err
-                    }
-                }
-
+                await validate(streamMessage)
                 yield streamMessage
             }
         },
+        // decrypt
         decrypt,
         // parse content
         async function* Parse(src) {
@@ -81,8 +74,17 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 yield streamMessage
             }
         },
-        // order messages
-        orderingUtil,
+        // special handling for bye message
+        async function* ByeMessageSpecialHandling(src) {
+            for await (const orderedMessage of src) {
+                if (orderedMessage.isByeMessage()) {
+                    yield orderedMessage
+                    break
+                } else {
+                    yield orderedMessage
+                }
+            }
+        },
         // custom pipeline steps
         ...afterSteps
     ], async (err, ...args) => {
