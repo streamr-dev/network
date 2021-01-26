@@ -64,8 +64,8 @@ public class Main {
         String restUrl = cmd.getOptionValue("restUrl", prop.getProperty("restUrl"));
         String wsUrl = cmd.getOptionValue("wsUrl", prop.getProperty("wsUrl"));
 
-        int minInterval = 800;
-        int maxInterval = 2000;
+        int minInterval = 1000;
+        int maxInterval = 3000;
         int maxMessages = Integer.parseInt(cmd.getOptionValue("number-of-messages", "30"));
         boolean testCorrectness = true;
 
