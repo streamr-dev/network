@@ -73,8 +73,11 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
                 }
             }
         },
-        // re-order messages
-        OrderMessages(client, options),
+        // re-order messages (ignore gaps)
+        OrderMessages(client, {
+            ...options,
+            gapFill: false,
+        }),
         // special handling for bye message
         async function* ByeMessageSpecialHandling(src) {
             for await (const orderedMessage of src) {

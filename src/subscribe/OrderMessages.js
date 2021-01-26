@@ -14,7 +14,7 @@ const { OrderingUtil } = Utils
  */
 
 export default function OrderMessages(client, options = {}) {
-    const { gapFillTimeout, retryResendAfter } = client.options
+    const { gapFillTimeout, retryResendAfter, gapFill = true } = client.options
     const { streamId, streamPartition } = validateOptions(options)
 
     const outStream = new PushQueue() // output buffer
@@ -29,7 +29,7 @@ export default function OrderMessages(client, options = {}) {
 
         outStream.push(orderedMessage)
     }, async (from, to, publisherId, msgChainId) => {
-        if (done) { return }
+        if (done || !gapFill) { return }
         client.debug('gap %o', {
             streamId, streamPartition, publisherId, msgChainId, from, to,
         })
@@ -61,6 +61,10 @@ export default function OrderMessages(client, options = {}) {
         // eslint-disable-next-line require-yield
         async function* WriteToOrderingUtil(src) {
             for await (const msg of src) {
+                if (!gapFill) {
+                    orderingUtil.markMessageExplicitly(msg)
+                }
+
                 orderingUtil.add(msg)
                 // note no yield
                 // orderingUtil writes to outStream itself
