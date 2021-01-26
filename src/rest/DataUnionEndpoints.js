@@ -930,12 +930,16 @@ export async function getMemberBalance(memberAddress, options) {
 /**
  * Get token balance for given address
  * @param {EthereumAddress} address
- * @param options such as tokenAddress. If not given, then first check if dataUnion was given in StreamrClient constructor, then check if tokenAddress was given in StreamrClient constructor.
+ * @param options such as tokenAddress. If not given, then first check if
+ * dataUnion was given in StreamrClient constructor, then check if tokenAddress
+ * was given in StreamrClient constructor.
  * @returns {Promise<BigNumber>} token balance in "wei" (10^-18 parts)
  */
 export async function getTokenBalance(address, options) {
     const a = parseAddress(this, address)
-    const tokenAddressMainnet = options.tokenAddress || await getMainnetContractReadOnly(this, options).then((c) => c.token()).catch(() => null) || this.options.tokenAddress
+    const tokenAddressMainnet = options.tokenAddress || (
+        await getMainnetContractReadOnly(this, options).then((c) => c.token()).catch(() => null) || this.options.tokenAddress
+    )
     if (!tokenAddressMainnet) { throw new Error('tokenAddress option not found') }
     const provider = this.ethereum.getMainnetProvider()
     const token = new Contract(tokenAddressMainnet, [{
