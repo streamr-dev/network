@@ -55,6 +55,8 @@ jobs:
     strategy:
       matrix:
         node-version: [12.x, 14.x]
+    env:
+      TEST_REPEATS: 5
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -63,7 +65,7 @@ jobs:
       - name: npm ci
         run: npm ci
       - name: test-unit
-        timeout-minutes: 2
+        timeout-minutes: 7
         run: npm run test-unit
 
   integration:
@@ -93,6 +95,7 @@ jobs:
     env:
       TEST_NAME: ${{ matrix.test-name }}
       WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
+      TEST_REPEATS: 5
 
     steps:
       - uses: actions/checkout@v2
