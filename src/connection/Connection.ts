@@ -333,7 +333,6 @@ export class Connection {
         })
         dataChannel.onError((e) => {
             this.logger.warn('dataChannel.onError: %s', e)
-            this.close(new Error(e))
         })
         dataChannel.onBufferedAmountLow(() => {
             if (this.paused) {
