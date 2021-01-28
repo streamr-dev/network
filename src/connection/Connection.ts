@@ -134,6 +134,11 @@ export class Connection {
             this.logger.debug('conn.onStateChange: %s', state)
             if (state === 'disconnected' || state === 'closed') {
                 this.close()
+            } if (state === 'connecting' && !this.connectionTimeoutRef) {
+                this.connectionTimeoutRef = setTimeout(() => {
+                    this.logger.warn('connection timed out')
+                    this.close(new Error('timed out'))
+                }, this.newConnectionTimeout)
             }
         })
         this.connection.onGatheringStateChange((state) => {
@@ -342,7 +347,7 @@ export class Connection {
             }
         })
         dataChannel.onMessage((msg) => {
-            this.logger.debug('dataChannel.onmessage: %s', msg)
+            this.logger.debug('dataChannel.onmessage: %s', this.peerInfo.peerId)
             if (msg === 'ping') {
                 this.pong()
             } else if (msg === 'pong') {
@@ -407,8 +412,7 @@ export class Connection {
         queueItem.incrementTries({
             error: e.toString(),
             'connection.iceConnectionState': this.lastGatheringState,
-            'connection.connectionState': this.lastState,
-            message: queueItem.getMessage()
+            'connection.connectionState': this.lastState
         })
         if (queueItem.isFailed()) {
             const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
