@@ -103,15 +103,26 @@ export default class PushQueue {
 
     async from(iterable, { end = true } = {}) {
         try {
-            for await (const item of iterable) {
-                this.push(item)
-            }
-            if (end) {
-                this.end()
+            // detect sync/async iterable and iterate appropriately
+            if (!iterable[Symbol.asyncIterator]) {
+                // sync iterables push into buffer immediately
+                for (const item of iterable) {
+                    this.push(item)
+                }
+            } else {
+                for await (const item of iterable) {
+                    this.push(item)
+                }
             }
         } catch (err) {
-            await this.throw(err)
+            return this.throw(err)
         }
+
+        if (end) {
+            this.end()
+        }
+
+        return Promise.resolve()
     }
 
     onEnd(...args) {
@@ -128,6 +139,10 @@ export default class PushQueue {
      */
 
     end(v) {
+        if (this.ended) {
+            return
+        }
+
         if (v != null) {
             this.push(v)
         }

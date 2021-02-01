@@ -73,8 +73,9 @@ describe('PushQueue', () => {
     })
 
     describe('from', () => {
-        it('supports iterable', async () => {
+        it('supports sync iterable', async () => {
             const q = PushQueue.from(expected)
+            expect(q.length).toBe(expected.length)
 
             const msgs = []
             // will end when source ends
@@ -94,6 +95,7 @@ describe('PushQueue', () => {
 
         it('supports async iterable', async () => {
             const q = PushQueue.from(generate())
+            expect(q.length).toBe(0) // can't tell length upfront with async iterable
 
             const msgs = []
             // will end when source ends
@@ -111,7 +113,119 @@ describe('PushQueue', () => {
             expect(q.length).toBe(0)
         })
 
+        it('errors if source errors', async () => {
+            expect.assertions(5)
+            const err = new Error('expected')
+            const q = PushQueue.from(async function* GenerateError() {
+                yield* generate()
+                throw err
+            }())
+            expect(q.length).toBe(0) // can't tell length upfront with async iterable
+
+            const msgs = []
+            await expect(async () => {
+                for await (const msg of q) {
+                    msgs.push(msg)
+                }
+            }).rejects.toThrow('expected')
+
+            expect(msgs).toEqual(expected)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+
+            // these should have no effect
+            q.push('c')
+            expect(q.length).toBe(0)
+        })
+
+        it('errors if source errors immediately', async () => {
+            expect.assertions(5)
+            const err = new Error('expected')
+            // eslint-disable-next-line require-yield
+            const q = PushQueue.from(async function* GenerateError() {
+                throw err
+            }())
+
+            expect(q.length).toBe(0)
+
+            const msgs = []
+            await expect(async () => {
+                for await (const msg of q) {
+                    msgs.push(msg)
+                }
+            }).rejects.toThrow('expected')
+
+            expect(msgs).toEqual([])
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+
+            // these should have no effect
+            q.push('c')
+            expect(q.length).toBe(0)
+        })
+
+        it('errors if sync source errors immediately', async () => {
+            expect.assertions(5)
+            const err = new Error('expected')
+            // eslint-disable-next-line require-yield
+            const q = PushQueue.from(function* GenerateError() {
+                throw err
+            }())
+
+            expect(q.length).toBe(0)
+
+            const msgs = []
+            await expect(async () => {
+                for await (const msg of q) {
+                    msgs.push(msg)
+                }
+            }).rejects.toThrow('expected')
+
+            expect(msgs).toEqual([])
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+
+            // these should have no effect
+            q.push('c')
+            expect(q.length).toBe(0)
+        })
+
+        it('can require manually ending', async () => {
+            expect.assertions(6)
+            const q = PushQueue.from(generate(), {
+                end: false,
+            })
+
+            const msgs = []
+            const callEnd = jest.fn(() => {
+                let error
+                try {
+                    expect(q.isWritable()).toEqual(true)
+                    expect(q.isReadable()).toEqual(true)
+                } catch (err) {
+                    error = err
+                }
+                q.end(error)
+            })
+            // will NOT end when source ends
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === expected.length) {
+                    setTimeout(callEnd, 100)
+                }
+            }
+
+            expect(callEnd).toHaveBeenCalledTimes(1)
+            expect(msgs).toEqual(expected)
+            expect(q.isWritable()).toEqual(false)
+            expect(q.isReadable()).toEqual(false)
+        })
+
         it('can be aborted while waiting', async () => {
+            expect.assertions(3)
             const startedWaiting = jest.fn()
             const ac = new AbortController()
             let q
@@ -259,6 +373,23 @@ describe('PushQueue', () => {
             expect(q.length).toBe(0)
         })
 
+        it('ignores end after end', async () => {
+            const q = new PushQueue() // wouldn't end on its own
+            q.push(...expected)
+            q.end()
+            const err = new Error('expected error')
+            q.end(err)
+
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+            }
+
+            expect(msgs).toEqual(expected)
+
+            expect(q.length).toBe(0)
+        })
+
         it('works with pending next', async () => {
             const q = new PushQueue()
             q.push(expected[0]) // preload first item
@@ -272,6 +403,25 @@ describe('PushQueue', () => {
             const msgs = await msgsTask
             for await (const msg of q) {
                 msgs.push(msg) // gets rest of messages
+            }
+
+            expect(msgs).toEqual(expected)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+
+            // buffer should have drained at end
+            expect(q.length).toBe(0)
+        })
+
+        it('works with end in loop', async () => {
+            const q = new PushQueue(expected)
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg) // gets rest of messages
+                if (msgs.length === 2) {
+                    q.end()
+                }
             }
 
             expect(msgs).toEqual(expected)
@@ -354,6 +504,24 @@ describe('PushQueue', () => {
                 }
             }
             expect(msgs).toEqual(expected.slice(0, 1))
+            expect(onEnd).toHaveBeenCalledTimes(1)
+        })
+
+        it('fires only after all items consumed and source is closed', async () => {
+            const onEnd = jest.fn()
+            const q = PushQueue.from(expected, {
+                onEnd,
+            })
+
+            expect(q.length).toBe(expected.length)
+            expect(onEnd).toHaveBeenCalledTimes(0)
+            const msgs = []
+            for await (const msg of q) {
+                msgs.push(msg)
+                await wait(0)
+                expect(onEnd).toHaveBeenCalledTimes(0)
+            }
+            expect(msgs).toEqual(expected)
             expect(onEnd).toHaveBeenCalledTimes(1)
         })
     })
