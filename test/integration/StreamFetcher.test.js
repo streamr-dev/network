@@ -36,10 +36,6 @@ describe('StreamFetcher', () => {
             requestHandlers.stream(req, res)
         })
 
-        expressApp.post('/api/v1/streams/:id/fields', (req, res) => {
-            requestHandlers.fields(req, res)
-        })
-
         server = expressApp.listen(6194, () => {
             console.info('Server for StreamFetcher.test.js started on port 6194\n')
             done()
@@ -81,22 +77,6 @@ describe('StreamFetcher', () => {
                         && req.get('Authorization') !== 'Bearer session-token') {
                     res.sendStatus(403)
                 } else {
-                    res.status(200).send(streamJson)
-                }
-            },
-            fields(req, res) {
-                numOfRequests += 1
-                if (broken) {
-                    res.sendStatus(500)
-                } else if (req.params.id !== streamId) {
-                    res.sendStatus(404)
-                } else if (req.get('Authorization') !== 'token key'
-                        && req.get('Authorization') !== 'Bearer session-token') {
-                    res.sendStatus(403)
-                } else {
-                    /* eslint-disable prefer-destructuring */
-                    streamJson.config.fields = req.body
-                    /* eslint-enable prefer-destructuring */
                     res.status(200).send(streamJson)
                 }
             },
@@ -413,45 +393,5 @@ describe('StreamFetcher', () => {
         })
 
         // TODO: write cache tests
-    })
-
-    describe('setFields', () => {
-        const fields = [{
-            name: 'field1',
-            type: 'type1',
-        }]
-
-        it('returns Promise', async () => {
-            const promise = streamFetcher.setFields(streamId, fields, undefined, 'session-token')
-            assert(promise instanceof Promise)
-            await promise
-        })
-
-        it('rejects with 404 if stream does not exist', (done) => {
-            streamFetcher.setFields('nonExistingStream', fields, undefined, 'session-token').catch((err) => {
-                assert(err instanceof HttpError)
-                assert.equal(err.code, 404)
-                done()
-            })
-        })
-
-        it('rejects with 403 if key does not grant access to stream', (done) => {
-            streamFetcher.setFields(streamId, fields, 'nonExistingKey', undefined).catch((err) => {
-                assert(err instanceof HttpError)
-                assert.equal(err.code, 403)
-                done()
-            })
-        })
-
-        it('sets field with valid streamId and sessionToken', async () => {
-            await streamFetcher.setFields(streamId, fields, undefined, 'session-token')
-            assert.deepStrictEqual(streamJson.config.fields, fields)
-        })
-
-        it('escapes any forward slashes ("/") in streamId', async () => {
-            streamId = 'sandbox/stream/aaa'
-            await streamFetcher.setFields('sandbox/stream/aaa', fields, undefined, 'session-token')
-            expect(numOfRequests).toEqual(1) // would not land at handlers if "/" not escaped
-        })
     })
 })

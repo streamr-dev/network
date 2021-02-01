@@ -134,21 +134,4 @@ module.exports = class StreamFetcher {
         )
         throw new HttpError(403, 'GET', url)
     }
-
-    async setFields(streamId, fields, apiKey, sessionToken) {
-        const url = `${this.streamResourceUrl}/${encodeURIComponent(streamId)}/fields`
-        const headers = formHeaders(apiKey, sessionToken)
-        headers['Content-Type'] = 'application/json'
-
-        const response = await fetchWithErrorLogging(url, {
-            method: 'POST',
-            body: JSON.stringify(fields),
-            headers,
-        })
-
-        if (response.status !== 200) {
-            return handleNon2xxResponse('setFields', response, streamId, apiKey, sessionToken, 'POST', url)
-        }
-        return response.json()
-    }
 }

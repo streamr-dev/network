@@ -12,7 +12,6 @@ const FailedToPublishError = require('../errors/FailedToPublishError')
 const StreamStateManager = require('../StreamStateManager')
 
 const Connection = require('./Connection')
-const FieldDetector = require('./FieldDetector')
 
 module.exports = class WebsocketServer extends EventEmitter {
     constructor(
@@ -51,7 +50,6 @@ module.exports = class WebsocketServer extends EventEmitter {
             }
         )
         this.pingInterval = pingInterval
-        this.fieldDetector = new FieldDetector(streamFetcher)
         this.subscriptionManager = subscriptionManager
         this.metrics = metricsContext.create('broker/ws')
             .addRecordedMetric('outBytes')
@@ -334,14 +332,6 @@ module.exports = class WebsocketServer extends EventEmitter {
             }
 
             await this.publisher.validateAndPublish(streamMessage)
-
-            // TODO later: should be moved to client, as this is an authenticated call
-            if (!Utils.StreamMessageValidator.isKeyExchangeStream(request.streamMessage.getStreamId())) {
-                this.fieldDetector.detectAndSetFields(streamMessage, request.apiKey, request.sessionToken)
-                    .catch((err) => {
-                        logger.error(`detectAndSetFields request failed: ${err}`)
-                    })
-            }
         } catch (err) {
             let errorMessage
             let errorCode
