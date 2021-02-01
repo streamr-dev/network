@@ -72,9 +72,9 @@ export default class PushQueue {
         this.iterator = this.iterate()
     }
 
-    static from(iterable, opts) {
+    static from(iterable, { end, ...opts } = {}) {
         const queue = new PushQueue([], opts)
-        queue.from(iterable)
+        queue.from(iterable, { end })
         return queue
     }
 
@@ -101,12 +101,14 @@ export default class PushQueue {
         return buffer
     }
 
-    async from(iterable) {
+    async from(iterable, { end = true } = {}) {
         try {
             for await (const item of iterable) {
                 this.push(item)
             }
-            this.end()
+            if (end) {
+                this.end()
+            }
         } catch (err) {
             await this.throw(err)
         }

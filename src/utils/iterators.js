@@ -292,7 +292,7 @@ const isPipeline = Symbol('isPipeline')
 
 const getIsStream = (item) => typeof item.pipe === 'function'
 
-export function pipeline(iterables = [], onFinally = () => {}, opts = {}) {
+export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } = {}) {
     const cancelFns = new Set()
     let cancelled = false
     let error
@@ -371,7 +371,7 @@ export function pipeline(iterables = [], onFinally = () => {}, opts = {}) {
             }
 
             if (prev && nextStream) {
-                prev = getIsStream(prev) ? prev : PushQueue.from(prev)
+                prev = getIsStream(prev) ? prev : PushQueue.from(prev, { end })
 
                 prev.id = prev.id || 'inter-' + nextStream.id
                 prev.pipe(nextStream)
