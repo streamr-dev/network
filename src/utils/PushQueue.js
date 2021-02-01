@@ -79,8 +79,8 @@ export default class PushQueue {
         return queue
     }
 
-    static transform(src, fn) {
-        const buffer = new PushQueue()
+    static transform(src, fn, opts = {}) {
+        const buffer = new PushQueue([], opts)
         const orderedFn = pOrderedResolve(fn) // push must be run in sequence
         ;(async () => { // eslint-disable-line semi-style
             const tasks = []
@@ -94,8 +94,8 @@ export default class PushQueue {
                 tasks.push(task)
             }
             await Promise.all(tasks)
-            if (src.autoEnd) {
-                await buffer.end()
+            if (buffer.autoEnd) {
+                buffer.end()
             }
         })().catch((err) => {
             return buffer.throw(err)
