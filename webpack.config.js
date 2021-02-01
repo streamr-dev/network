@@ -125,7 +125,7 @@ module.exports = (env, argv) => {
                 buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
                 'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
-                'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/src'),
+                'streamr-client-protocol': path.resolve(__dirname, 'node_modules/streamr-client-protocol/dist/src'),
             }
         },
         plugins: [
