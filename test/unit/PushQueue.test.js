@@ -193,10 +193,42 @@ describe('PushQueue', () => {
             expect(q.length).toBe(0)
         })
 
-        it('can require manually ending', async () => {
+        it('can require manually ending with instance.from end: false', async () => {
+            expect.assertions(6)
+            const q = new PushQueue()
+            q.from(generate(), {
+                end: false,
+            })
+
+            const msgs = []
+            const callEnd = jest.fn(() => {
+                let error
+                try {
+                    expect(q.isWritable()).toEqual(true)
+                    expect(q.isReadable()).toEqual(true)
+                } catch (err) {
+                    error = err
+                }
+                q.end(error)
+            })
+            // will NOT end when source ends
+            for await (const msg of q) {
+                msgs.push(msg)
+                if (msgs.length === expected.length) {
+                    setTimeout(callEnd, 100)
+                }
+            }
+
+            expect(callEnd).toHaveBeenCalledTimes(1)
+            expect(msgs).toEqual(expected)
+            expect(q.isWritable()).toEqual(false)
+            expect(q.isReadable()).toEqual(false)
+        })
+
+        it('can require manually ending with autoEnd: false', async () => {
             expect.assertions(6)
             const q = PushQueue.from(generate(), {
-                end: false,
+                autoEnd: false,
             })
 
             const msgs = []

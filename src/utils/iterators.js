@@ -1,7 +1,5 @@
 import pMemoize from 'p-memoize'
 
-import PushQueue from './PushQueue' // eslint-disable-line import/no-cycle
-
 import { Defer, pTimeout, allSettledValues, AggregatedError } from './index'
 
 /**
@@ -290,7 +288,7 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
 
 const isPipeline = Symbol('isPipeline')
 
-const getIsStream = (item) => typeof item.pipe === 'function'
+const getIsStream = (item) => typeof item.from === 'function'
 
 export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } = {}) {
     const cancelFns = new Set()
@@ -356,7 +354,6 @@ export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } 
             prev = index === 0 ? firstSrc : _prev
             // take first "prev" from outer iterator, if one exists
             nextIterable = typeof next === 'function' ? next(prev) : next
-            let nextStream
 
             if (prev && nextIterable[isPipeline]) {
                 nextIterable.setFirstSource(prev)
@@ -366,15 +363,9 @@ export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } 
                 cancelFns.add(nextIterable)
             }
 
-            if (nextIterable && getIsStream(nextIterable)) {
-                nextStream = nextIterable
-            }
-
-            if (prev && nextStream) {
-                prev = getIsStream(prev) ? prev : PushQueue.from(prev, { end })
-
-                prev.id = prev.id || 'inter-' + nextStream.id
-                prev.pipe(nextStream)
+            if (prev && nextIterable && getIsStream(nextIterable)) {
+                prev.id = prev.id || 'inter-' + nextIterable.id
+                nextIterable.from(prev, { end })
             }
 
             yield* nextIterable
