@@ -62,7 +62,7 @@ describe('latency metrics', () => {
         }))
     })
 
-    it('should send a bunch of messages to Node1 and collect latency', async (done) => {
+    it('should send a bunch of messages to Node1 and collect latency',(done) => {
         let receivedMessages = 0
 
         node1.addMessageListener(async () => {

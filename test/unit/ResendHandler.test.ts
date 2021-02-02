@@ -300,7 +300,7 @@ describe('ResendHandler', () => {
             })
         })
 
-        test('receiving a message prolongs the timeout', async (done) => {
+        test('receiving a message prolongs the timeout', (done) => {
             getResendResponseStreamFn = () => {
                 const rs = new Readable({
                     objectMode: true,

@@ -70,7 +70,7 @@ describe('optimization: do not propagate to sender', () => {
 
     // In a fully-connected network the number of duplicates should be (n-1)(n-2) instead of (n-1)^2 when not
     // propagating received messages back to their source
-    test('total duplicates == 2 in a fully-connected network of 3 nodes', async (done) => {
+    test('total duplicates == 2 in a fully-connected network of 3 nodes', async () => {
         n1.publish(new StreamMessage({
             messageId: new MessageID('stream-id', 0, 100, 0, 'publisher', 'session'),
             prevMsgRef: new MessageRef(99, 0),
@@ -79,7 +79,11 @@ describe('optimization: do not propagate to sender', () => {
             },
         }))
 
-        const checkFn = async () => {
+        let n1Duplicates = 0
+        let n2Duplicates = 0
+        let n3Duplicates = 0
+
+        await waitForCondition(async () => {
             // @ts-expect-error private variable
             const reportN1 = await n1.metrics.report()
             // @ts-expect-error private variable
@@ -87,17 +91,13 @@ describe('optimization: do not propagate to sender', () => {
             // @ts-expect-error private variable
             const reportN3 = await n3.metrics.report()
 
-            const n1Duplicates = (reportN1['onDataReceived:ignoredDuplicate'] as any).total
-            const n2Duplicates = (reportN2['onDataReceived:ignoredDuplicate'] as any).total
-            const n3Duplicates = (reportN3['onDataReceived:ignoredDuplicate'] as any).total
+            n1Duplicates = (reportN1['onDataReceived:ignoredDuplicate'] as any).total
+            n2Duplicates = (reportN2['onDataReceived:ignoredDuplicate'] as any).total
+            n3Duplicates = (reportN3['onDataReceived:ignoredDuplicate'] as any).total
 
-            if (n1Duplicates + n2Duplicates + n3Duplicates > 0) {
-                expect(n1Duplicates + n2Duplicates + n3Duplicates).toEqual(2)
-                done()
-            } else {
-                setTimeout(checkFn, 150)
-            }
-        }
-        setTimeout(checkFn, 150)
+            return n1Duplicates + n2Duplicates + n3Duplicates > 0
+        })
+
+        expect(n1Duplicates + n2Duplicates + n3Duplicates).toEqual(2)
     })
 })

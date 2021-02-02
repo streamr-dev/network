@@ -53,7 +53,7 @@ describe('check status message flow between tracker and two nodes', () => {
         await tracker.stop()
     })
 
-    it('tracker should receive status message from node', async (done) => {
+    it('tracker should receive status message from node', (done) => {
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-1')
@@ -65,7 +65,7 @@ describe('check status message flow between tracker and two nodes', () => {
         nodeOne.start()
     })
 
-    it('tracker should receive status from second node', async (done) => {
+    it('tracker should receive status from second node', (done) => {
         // @ts-expect-error private field
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-2')
@@ -76,7 +76,7 @@ describe('check status message flow between tracker and two nodes', () => {
         nodeTwo.start()
     })
 
-    it('tracker should receive from both nodes new statuses', async (done) => {
+    it('tracker should receive from both nodes new statuses', (done) => {
         nodeOne.start()
         nodeTwo.start()
 
@@ -105,51 +105,54 @@ describe('check status message flow between tracker and two nodes', () => {
             }
         })
 
-        await wait(100)
-        nodeOne.subscribe(streamId, 0)
-        nodeTwo.subscribe(streamId, 0)
+        setTimeout(() => {
+            nodeOne.subscribe(streamId, 0)
+            nodeTwo.subscribe(streamId, 0)
+        }, 100)
     })
 
-    it('tracker should receive rtt values from nodes', async (done) => {
-        let receivedTotal = 0
-        let nodeOneStatus: any = null
-        let nodeTwoStatus: any = null
+    it('tracker should receive rtt values from nodes', () => {
+        return new Promise(async (resolve) => {
+            let receivedTotal = 0
+            let nodeOneStatus: any = null
+            let nodeTwoStatus: any = null
 
-        nodeOne.start()
-        nodeTwo.start()
+            nodeOne.start()
+            nodeTwo.start()
 
-        nodeOne.subscribe(streamId, 0)
-        nodeTwo.subscribe(streamId, 0)
+            nodeOne.subscribe(streamId, 0)
+            nodeTwo.subscribe(streamId, 0)
 
-        await Promise.all([
-            waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
-            waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED),
-            wait(2000)
-        ])
+            await Promise.all([
+                waitForEvent(nodeOne, NodeEvent.NODE_SUBSCRIBED),
+                waitForEvent(nodeTwo, NodeEvent.NODE_SUBSCRIBED),
+                wait(2000)
+            ])
 
-        // @ts-expect-error private field
-        tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
-            if (nodeId === 'node-1') {
-                nodeOneStatus = statusMessage.status
-                receivedTotal += 1
-            }
+            // @ts-expect-error private field
+            tracker.trackerServer.on(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, nodeId) => {
+                if (nodeId === 'node-1') {
+                    nodeOneStatus = statusMessage.status
+                    receivedTotal += 1
+                }
 
-            if (nodeId === 'node-2') {
-                nodeTwoStatus = statusMessage.status
-                receivedTotal += 1
-            }
+                if (nodeId === 'node-2') {
+                    nodeTwoStatus = statusMessage.status
+                    receivedTotal += 1
+                }
 
-            if (receivedTotal === 2) {
-                expect(nodeOneStatus.rtts['node-2']).toBeGreaterThanOrEqual(0)
-                expect(nodeTwoStatus.rtts['node-1']).toBeGreaterThanOrEqual(0)
-                done()
-            }
+                if (receivedTotal === 2) {
+                    expect(nodeOneStatus.rtts['node-2']).toBeGreaterThanOrEqual(0)
+                    expect(nodeTwoStatus.rtts['node-1']).toBeGreaterThanOrEqual(0)
+                    resolve(true)
+                }
+            })
+            nodeOne.subscribe(streamId2, 0)
+            nodeTwo.subscribe(streamId2, 0)
         })
-        nodeOne.subscribe(streamId2, 0)
-        nodeTwo.subscribe(streamId2, 0)
     })
 
-    it('tracker should receive location information from nodes', async (done) => {
+    it('tracker should receive location information from nodes', (done) => {
         let receivedTotal = 0
         let nodeOneStatus: any = null
         let nodeTwoStatus: any = null

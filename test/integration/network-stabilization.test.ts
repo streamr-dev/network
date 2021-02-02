@@ -54,17 +54,19 @@ describe('check network stabilization', () => {
         ])
     })
 
-    it('network must become stable in less than 10 seconds', async (done) => {
-        for (let i = 0; i < 10; ++i) {
-            const beforeTopology = getTopology(tracker.getOverlayPerStream())
-            // eslint-disable-next-line no-await-in-loop
-            await wait(800)
-            const afterTopology = getTopology(tracker.getOverlayPerStream())
-            if (areEqual(beforeTopology, afterTopology)) {
-                done()
-                return
+    it('network must become stable in less than 10 seconds',  () => {
+        return new Promise(async (resolve, reject) => {
+            for (let i = 0; i < 10; ++i) {
+                const beforeTopology = getTopology(tracker.getOverlayPerStream())
+                // eslint-disable-next-line no-await-in-loop
+                await wait(800)
+                const afterTopology = getTopology(tracker.getOverlayPerStream())
+                if (areEqual(beforeTopology, afterTopology)) {
+                    resolve(true)
+                    return
+                }
             }
-        }
-        done('did not stabilize')
+            reject(new Error('did not stabilize'))
+        })
     }, 11000)
 })

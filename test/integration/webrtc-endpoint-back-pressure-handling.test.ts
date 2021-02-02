@@ -66,21 +66,21 @@ describe('WebRtcEndpoint: back pressure handling', () => {
         return wait(0) // Relinquish control to allow for setImmediate(() => this.attemptToFlushMessages())
     }
 
-    it('emits HIGH_BACK_PRESSURE on high back pressure', async (done) => {
+    it('emits HIGH_BACK_PRESSURE on high back pressure', (done) => {
         ep1.once(Event.HIGH_BACK_PRESSURE, (peerInfo) => {
             expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
             done()
         })
-        await inflictHighBackPressure()
+        inflictHighBackPressure()
     })
 
-    it('emits LOW_BACK_PRESSURE after high back pressure', async (done) => {
+    it('emits LOW_BACK_PRESSURE after high back pressure',  (done) => {
         ep1.once(Event.HIGH_BACK_PRESSURE, () => {
             ep1.once(Event.LOW_BACK_PRESSURE, (peerInfo) => {
                 expect(peerInfo).toEqual(PeerInfo.newNode('ep2'))
                 done()
             })
         })
-        await inflictHighBackPressure()
+        inflictHighBackPressure()
     })
 })

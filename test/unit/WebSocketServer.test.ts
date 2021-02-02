@@ -28,54 +28,56 @@ describe('test starting startWebSocketServer', () => {
             .toEqual('Text and data can only be passed by String, ArrayBuffer or TypedArray.')
     })
 
-    test('receives unencrypted connections', async (done) => {
-        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort)
-
-        const peerInfo = PeerInfo.newTracker('id', 'name')
-        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
-        const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
-            undefined, {
-                headers: {
-                    'streamr-peer-id': 'peerId',
-                    'streamr-peer-type': 'node',
-                }
+    test('receives unencrypted connections', (done) => {
+        startWebSocketServer('127.0.0.1', wssPort).then(([wss, listenSocket]) => {
+            const peerInfo = PeerInfo.newTracker('id', 'name')
+            const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
+            const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
+                undefined, {
+                    headers: {
+                        'streamr-peer-id': 'peerId',
+                        'streamr-peer-type': 'node',
+                    }
+                })
+            ws.on('open', async () => {
+                ws.close()
+                await endpoint.stop()
+                done()
             })
-        ws.on('open', async () => {
-            ws.close()
-            await endpoint.stop()
-            done()
-        })
-        ws.on('error', (err) => {
-            done(err)
-        })
+            ws.on('error', (err) => {
+                done(err)
+            })
+        }).catch((err) => done(err))
+
     })
 
-    test('receives encrypted connections', async (done) => {
-        const [wss, listenSocket] = await startWebSocketServer(
+    test('receives encrypted connections', (done) => {
+        startWebSocketServer(
             '127.0.0.1',
             wssPort,
             'test/fixtures/key.pem',
             'test/fixtures/cert.pem'
-        )
-
-        const peerInfo = PeerInfo.newTracker('id', 'name')
-        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, undefined)
-        const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
-            undefined, {
-                rejectUnauthorized: false, // needed to accept self-signed certificate
-                headers: {
-                    'streamr-peer-id': 'peerId',
-                    'streamr-peer-type': 'node',
-                }
+        ).then(([wss, listenSocket]) => {
+            const peerInfo = PeerInfo.newTracker('id', 'name')
+            const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null, undefined)
+            const ws = new WebSocket(`wss://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
+                undefined, {
+                    rejectUnauthorized: false, // needed to accept self-signed certificate
+                    headers: {
+                        'streamr-peer-id': 'peerId',
+                        'streamr-peer-type': 'node',
+                    }
+                })
+            ws.on('open', async () => {
+                ws.close()
+                await endpoint.stop()
+                done()
             })
-        ws.on('open', async () => {
-            ws.close()
-            await endpoint.stop()
-            done()
-        })
-        ws.on('error', (err) => {
-            done(err)
-        })
+            ws.on('error', (err) => {
+                done(err)
+            })
+        }).catch((err) => done(err))
+
     })
 
     /**
@@ -122,30 +124,30 @@ describe('test starting startWebSocketServer', () => {
     /**
      * Related to above test: check that messages indeed arrive as string from non-SSL uWS server.
      */
-    test('messages over unencrypted connections arrive as string', async (done) => {
-        const [wss, listenSocket] = await startWebSocketServer('127.0.0.1', wssPort)
-
-        const peerInfo = PeerInfo.newTracker('serverId', 'name')
-        const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
-        const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
-            undefined, {
-                headers: {
-                    'streamr-peer-id': 'clientId',
-                    'streamr-peer-type': 'node',
-                }
+    test('messages over unencrypted connections arrive as string', (done) => {
+        startWebSocketServer('127.0.0.1', wssPort).then(([wss, listenSocket]) => {
+            const peerInfo = PeerInfo.newTracker('serverId', 'name')
+            const endpoint = new WsEndpoint('127.0.0.1', wssPort, wss, listenSocket, peerInfo, null)
+            const ws = new WebSocket(`ws://127.0.0.1:${wssPort}/ws?address=127.0.0.1`,
+                undefined, {
+                    headers: {
+                        'streamr-peer-id': 'clientId',
+                        'streamr-peer-type': 'node',
+                    }
+                })
+            ws.on('message', async (msg) => {
+                expect(typeof msg).toEqual('string')
+                expect(msg).toEqual('Hello, World!')
+                ws.close()
+                await endpoint.stop()
+                done()
             })
-        ws.on('message', async (msg) => {
-            expect(typeof msg).toEqual('string')
-            expect(msg).toEqual('Hello, World!')
-            ws.close()
-            await endpoint.stop()
-            done()
-        })
-        ws.on('error', (err) => {
-            done(err)
-        })
-        ws.on('open', () => {
-            endpoint.send('clientId', 'Hello, World!')
-        })
+            ws.on('error', (err) => {
+                done(err)
+            })
+            ws.on('open', () => {
+                endpoint.send('clientId', 'Hello, World!')
+            })
+        }).catch((err) => done(err))
     })
 })
