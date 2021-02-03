@@ -80,7 +80,7 @@ describe('BatchManager', () => {
         expect(Object.values(batchManager.pendingBatches)[0].streamMessages).toHaveLength(10)
     })
 
-    test('pendingBatches are inserted', async (done) => {
+    test('pendingBatches are inserted', (done) => {
         const msg = buildMsg(streamId, 0, 1000, 0, 'publisher1')
         batchManager.store(bucketId, msg)
 

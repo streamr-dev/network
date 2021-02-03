@@ -1,6 +1,4 @@
 const { startTracker } = require('streamr-network')
-const fetch = require('node-fetch')
-const { wait, waitForCondition } = require('streamr-test-utils')
 
 const { startBroker, createClient } = require('../utils')
 

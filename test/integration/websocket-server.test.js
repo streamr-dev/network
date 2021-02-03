@@ -14,23 +14,27 @@ describe('websocket server', () => {
         await broker.close()
     })
 
-    it('receives unencrypted connections', async (done) => {
-        broker = await startBroker({
+    it('receives unencrypted connections', (done) => {
+        startBroker({
             name: 'broker',
             privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
             networkPort: 12345,
             trackerPort: 666,
             wsPort: 12346
+        }).then((newBroker) => {
+            broker = newBroker
+            ws = new WebSocket(getWsUrl(12346))
+            ws.on('open', () => {
+                done()
+            })
+            ws.on('error', (err) => {
+                done(err)
+            })
         })
-        ws = new WebSocket(getWsUrl(12346))
-        ws.on('open', async () => {
-            done()
-        })
-        ws.on('error', (err) => done(err))
     })
 
-    it('receives encrypted connections', async (done) => {
-        broker = await startBroker({
+    it('receives encrypted connections', (done) => {
+        startBroker({
             name: 'broker',
             privateKey: '0xf3b269f5d8066bcf23a384937c0cd693cfbb8ff90a1055d4e47047150f5482c4',
             networkPort: 12345,
@@ -38,14 +42,18 @@ describe('websocket server', () => {
             wsPort: 12346,
             privateKeyFileName: 'test/fixtures/key.pem',
             certFileName: 'test/fixtures/cert.pem'
+        }).then((newBroker) => {
+            broker = newBroker
+            ws = new WebSocket(getWsUrl(12346, true), {
+                rejectUnauthorized: false // needed to accept self-signed certificate
+            })
+            ws.on('open', () => {
+                done()
+            })
+            ws.on('error', (err) => {
+                done(err)
+            })
         })
-        ws = new WebSocket(getWsUrl(12346, true), {
-            rejectUnauthorized: false // needed to accept self-signed certificate
-        })
-        ws.on('open', async () => {
-            done()
-        })
-        ws.on('error', (err) => done(err))
     })
 
     describe('rejections', () => {

@@ -100,7 +100,7 @@ describe('ping-pong test between broker and clients', () => {
         })
     })
 
-    it('websocketServer closes connections, which are not replying with pong', async (done) => {
+    it('websocketServer closes connections, which are not replying with pong', (done) => {
         let pings = 0
 
         client1.connection.socket.pong = () => {
@@ -117,27 +117,27 @@ describe('ping-pong test between broker and clients', () => {
 
         // eslint-disable-next-line no-underscore-dangle
         websocketServer._pingConnections()
-        await waitForCondition(() => pings === 2)
+        waitForCondition(() => pings === 2).then(() => {
+            const connections = [...websocketServer.connections.values()]
+            expect(connections.length).toEqual(3)
+            connections.forEach((connection, index) => {
+                // first client
+                if (index === 0) {
+                    expect(connection.respondedPong)
+                        .toBeFalsy()
+                } else {
+                    expect(connection.respondedPong)
+                        .toBeTruthy()
+                }
+            })
 
-        const connections = [...websocketServer.connections.values()]
-        expect(connections.length).toEqual(3)
-        connections.forEach((connection, index) => {
-            // first client
-            if (index === 0) {
-                expect(connection.respondedPong)
-                    .toBeFalsy()
-            } else {
-                expect(connection.respondedPong)
-                    .toBeTruthy()
-            }
+            client1.on('disconnected', () => {
+                // TODO replace with () => done, after fixing stopping of JS client
+                client1.on('connected', done)
+            })
+
+            // eslint-disable-next-line no-underscore-dangle
+            websocketServer._pingConnections()
         })
-
-        client1.on('disconnected', () => {
-            // TODO replace with () => done, after fixing stopping of JS client
-            client1.on('connected', done)
-        })
-
-        // eslint-disable-next-line no-underscore-dangle
-        websocketServer._pingConnections()
     })
 })

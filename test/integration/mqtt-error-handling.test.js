@@ -52,70 +52,75 @@ describe('MQTT error handling', () => {
         await tracker.stop()
     })
 
-    test('sending unrecognized packets causes client to be dropped without server crashing', async (done) => {
-        await setUpBroker(false)
-        socket = new net.Socket()
+    test('sending unrecognized packets causes client to be dropped without server crashing', (done) => {
+        setUpBroker(false).then(() => {
+            socket = new net.Socket()
 
-        socket.connect(mqttPort, '127.0.0.1', () => {
-            for (let i = 0; i < 100; ++i) {
-                socket.write('nonsensepackage\r\n')
-            }
-        })
-
-        socket.on('close', (hadError) => {
-            // Make sure we didn't close with error
-            expect(hadError).toEqual(false)
-
-            // Ensure that server is indeed still up
-            newSocket = new net.Socket()
-            newSocket.on('error', (err) => {
-                done(err)
+            socket.connect(mqttPort, '127.0.0.1', () => {
+                for (let i = 0; i < 100; ++i) {
+                    socket.write('nonsensepackage\r\n')
+                }
             })
-            newSocket.connect(mqttPort, '127.0.0.1', () => {
+
+            socket.on('close', (hadError) => {
+                // Make sure we didn't close with error
+                expect(hadError).toEqual(false)
+
+                // Ensure that server is indeed still up
+                newSocket = new net.Socket()
+                newSocket.on('error', (err) => {
+                    done(err)
+                })
+                newSocket.connect(mqttPort, '127.0.0.1', () => {
+                    done()
+                })
+            })
+        })
+    })
+
+    it('test no password given', (done) => {
+        setUpBroker(false).then(() => {
+            mqttClient = createMqttClient(mqttPort, 'localhost', null)
+            mqttClient.on('error', (err) => {
+                expect(err.message).toEqual('Connection refused: Bad username or password')
+                mqttClient.end(true)
                 done()
             })
         })
     })
 
-    it('test no password given', async (done) => {
-        await setUpBroker(false)
-        mqttClient = createMqttClient(mqttPort, 'localhost', null)
-        mqttClient.on('error', (err) => {
-            expect(err.message).toEqual('Connection refused: Bad username or password')
-            mqttClient.end(true)
-            done()
+    it('test not valid api key', (done) => {
+        setUpBroker(false).then(() => {
+            mqttClient = createMqttClient(mqttPort, 'localhost', 'NOT_VALID_KEY')
+            mqttClient.on('error', (err) => {
+                expect(err.message).toEqual('Connection refused: Bad username or password')
+                mqttClient.end(true)
+                done()
+            })
         })
     })
 
-    it('test not valid api key', async (done) => {
-        await setUpBroker(false)
-        mqttClient = createMqttClient(mqttPort, 'localhost', 'NOT_VALID_KEY')
-        mqttClient.on('error', (err) => {
-            expect(err.message).toEqual('Connection refused: Bad username or password')
-            mqttClient.end(true)
-            done()
+    it('test streamFetcher service unavailable', (done) => {
+        setUpBroker(true).then(() => {
+            mqttClient = createMqttClient(mqttPort)
+            mqttClient.on('error', (err) => {
+                expect(err.message).toEqual('Connection refused: Server unavailable')
+                mqttClient.end(true)
+                done()
+            })
         })
     })
 
-    it('test streamFetcher service unavailable', async (done) => {
-        await setUpBroker(true)
-        mqttClient = createMqttClient(mqttPort)
-        mqttClient.on('error', (err) => {
-            expect(err.message).toEqual('Connection refused: Server unavailable')
-            mqttClient.end(true)
-            done()
-        })
-    })
-
-    it('test valid api key without permissions to stream', async (done) => {
-        await setUpBroker(false)
-        mqttClient = createMqttClient(mqttPort)
-        mqttClient.on('error', (err) => {
-            expect(err.message).toEqual('Connection refused: Not authorized')
-            done()
-        })
-        mqttClient.publish('NOT_VALID_STREAM', 'key: 1', {
-            qos: 1
+    it('test valid api key without permissions to stream', (done) => {
+        setUpBroker(false).then(() => {
+            mqttClient = createMqttClient(mqttPort)
+            mqttClient.on('error', (err) => {
+                expect(err.message).toEqual('Connection refused: Not authorized')
+                done()
+            })
+            mqttClient.publish('NOT_VALID_STREAM', 'key: 1', {
+                qos: 1
+            })
         })
     })
 })
