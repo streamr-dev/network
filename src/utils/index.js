@@ -11,8 +11,9 @@ import pkg from '../../package.json'
 
 import AggregatedError from './AggregatedError'
 import Scaffold from './Scaffold'
+import FieldDetector from './FieldDetector'
 
-export { AggregatedError, Scaffold }
+export { AggregatedError, Scaffold, FieldDetector }
 
 const UUID = uuidv4()
 

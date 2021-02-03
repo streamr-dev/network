@@ -1,4 +1,4 @@
-import { getEndpointUrl } from '../utils'
+import { getEndpointUrl, FieldDetector } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import StorageNode from './StorageNode'
@@ -125,10 +125,24 @@ export default class Stream {
     }
 
     async detectFields() {
-        return authFetch(
-            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'detectFields'),
-            this._client.session,
-        )
+        // Get last message of the stream to be used for field detecting
+        const sub = await this._client.resend({
+            stream: this.id,
+            resend: {
+                last: 1,
+            },
+        })
+        const receivedMsgs = await sub.collect()
+
+        if (receivedMsgs.length > 0) {
+            const lastMessage = receivedMsgs[0]
+            const fd = new FieldDetector(lastMessage)
+            const fields = fd.detect()
+
+            // Save field config back to the stream
+            this.config.fields = fields
+            await this.update()
+        }
     }
 
     async addToStorageNode(address: string) {
