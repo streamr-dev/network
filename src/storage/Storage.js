@@ -152,6 +152,16 @@ class Storage extends EventEmitter {
             }
         })
 
+        // Temporary counter for debugging purposes
+        let counter = 0
+        resultStream
+            .on('data', () => {
+                counter += 1
+            })
+            .on('end', () => {
+                logger.info('Storage finished resendLast for stream %s with a total of %d sent messages', streamId, counter)
+            })
+
         return resultStream
     }
 
