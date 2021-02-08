@@ -202,6 +202,41 @@ describeRepeats('GapFill', () => {
             expect(client.connection.getState()).toBe('connected')
         }, 15000)
 
+        it('can fill gaps in resends', async () => {
+            const { parse } = client.connection
+            let count = 0
+            client.connection.parse = (...args) => {
+                const msg = parse.call(client.connection, ...args)
+                if (!msg.streamMessage) {
+                    return msg
+                }
+
+                count += 1
+                if (count === 3 || count === 4 || count === 7) {
+                    return null
+                }
+
+                return msg
+            }
+
+            const published = await publishTestMessages(MAX_MESSAGES, {
+                timestamp: 111111,
+                waitForLast: true,
+            })
+
+            const sub = await client.resend({
+                stream,
+                last: MAX_MESSAGES,
+            })
+            const received = []
+            for await (const m of sub) {
+                received.push(m.getParsedContent())
+                // should not need to explicitly end
+            }
+            expect(received).toEqual(published)
+            expect(client.connection.getState()).toBe('connected')
+        }, 60000)
+
         it('can fill gaps between resend and realtime', async () => {
             // publish 5 messages into storage
             const published = await publishTestMessages(5, {

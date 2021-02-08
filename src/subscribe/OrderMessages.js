@@ -1,6 +1,7 @@
 import { Utils } from 'streamr-client-protocol'
 
 import { pipeline } from '../utils/iterators'
+import { Defer } from '../utils'
 import PushQueue from '../utils/PushQueue'
 import { validateOptions } from '../stream/utils'
 
@@ -17,9 +18,20 @@ export default function OrderMessages(client, options = {}) {
     const { gapFillTimeout, retryResendAfter, gapFill = true } = client.options
     const { streamId, streamPartition } = validateOptions(options)
 
-    const outStream = new PushQueue() // output buffer
+    // output buffer
+    const outStream = new PushQueue([], {
+        // we can end when:
+        // input has closed (i.e. all messages sent)
+        // AND
+        // no gaps are pending
+        // AND
+        // gaps have been filled or failed
+        autoEnd: false,
+    })
 
     let done = false
+    const inputDone = Defer()
+    const allHandled = Defer()
     const resendStreams = new Set() // holds outstanding resends for cleanup
 
     const orderingUtil = new OrderingUtil(streamId, streamPartition, (orderedMessage) => {
@@ -71,6 +83,17 @@ export default function OrderMessages(client, options = {}) {
             }
         },
         outStream, // consumer gets outStream
+        async function* IsDone(src) {
+            for await (const msg of src) {
+                if (!gapFill) {
+                    orderingUtil.markMessageExplicitly(msg)
+                }
+
+                orderingUtil.add(msg)
+                // note no yield
+                // orderingUtil writes to outStream itself
+            }
+        },
     ], async (err) => {
         done = true
         orderingUtil.clearGaps()
@@ -78,6 +101,8 @@ export default function OrderMessages(client, options = {}) {
         resendStreams.clear()
         await outStream.cancel(err)
         orderingUtil.clearGaps()
+    }, {
+        end: false,
     }), {
         markMessageExplicitly,
     })
