@@ -95,6 +95,7 @@ describe('ping-pong test between broker and clients', () => {
         expect(pings).toEqual(3)
 
         expect(websocketServer.connections.size).toEqual(3)
+        await waitForCondition(() => connections.every((connection) => (connection.respondedPong === true)))
         connections.forEach((connection) => {
             expect(connection.respondedPong).toBeTruthy()
         })
@@ -103,9 +104,7 @@ describe('ping-pong test between broker and clients', () => {
     it('websocketServer closes connections, which are not replying with pong', (done) => {
         let pings = 0
 
-        client1.connection.socket.pong = () => {
-            // don't send back pong
-        }
+        client1.connection.socket.pong = jest.fn() // don't send back pong
 
         client2.connection.socket.on('ping', () => {
             pings += 1
@@ -117,9 +116,13 @@ describe('ping-pong test between broker and clients', () => {
 
         // eslint-disable-next-line no-underscore-dangle
         websocketServer._pingConnections()
-        waitForCondition(() => pings === 2).then(() => {
+        waitForCondition(() => pings === 2).then(async () => {
             const connections = [...websocketServer.connections.values()]
             expect(connections.length).toEqual(3)
+            await waitForCondition(() => {
+                const respondedPongCount = connections.filter((connection) => (connection.respondedPong === true)).length
+                return ((client1.connection.socket.pong.mock.calls.length === 1) && (respondedPongCount === 2))
+            })
             connections.forEach((connection, index) => {
                 // first client
                 if (index === 0) {
