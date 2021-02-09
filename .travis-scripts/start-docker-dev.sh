@@ -15,4 +15,5 @@ if [ "$1" == "production" ]; then
 fi
 sudo ifconfig docker0 10.200.10.1/24
 
-"$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh" start smart-contracts-init nginx engine-and-editor --wait
+sudo "$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh" start smart-contracts-init nginx engine-and-editor --wait
+"$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh" ps
