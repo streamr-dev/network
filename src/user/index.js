@@ -42,7 +42,7 @@ export async function getUserId(client) {
     const username = await getUsername(client)
 
     if (username != null) {
-        const hexString = hexlify(Buffer.from(await this.getUsername(), 'utf8'))
+        const hexString = hexlify(Buffer.from(username, 'utf8'))
         return sha256(hexString)
     }
 
