@@ -76,7 +76,7 @@ export async function createStream(props) {
         props,
     })
     const json = await authFetch(
-        `${this.options.restUrl}/streams`,
+        getEndpointUrl(this.options.restUrl, 'streams'),
         this.session,
         {
             method: 'POST',
@@ -187,7 +187,7 @@ export async function publishHttp(streamObjectOrId, data, requestOptions = {}, k
 
     // Send data to the stream
     return authFetch(
-        `${this.options.restUrl}/streams/${encodeURIComponent(streamId)}/data`,
+        getEndpointUrl(this.options.restUrl, 'streams', streamId, 'data'),
         this.session,
         {
             ...requestOptions,
