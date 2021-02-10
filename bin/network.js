@@ -46,7 +46,7 @@ setTimeout(() => {
     for (let i = 0; i < parseInt(numberOfNodes, 10); i++) {
         args = [
             path.resolve('./bin/subscriber.js'),
-            '--streamId=' + streams[Math.floor(Math.random() * streams.length)],
+            '--streamIds=' + streams,
             '--port=' + (startingPort + i),
             `--trackers=ws://127.0.0.1:${trackerPort}`
         ]

@@ -22,11 +22,16 @@ export class InstructionThrottler {
     private readonly handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>
     private queue: Queue = {} // streamId => instructionMessage
     private instructionCounter: { [key: string]: number } = {} // streamId => counter
-    private handling = false
-    private ongoingPromise: CancelablePromiseType<void> | null = null
+    private ongoingPromises: {
+        [key: string]: {
+            promise: CancelablePromiseType<void> | null
+            handling: boolean
+        }
+    }
 
     constructor(handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>) {
         this.handleFn = handleFn
+        this.ongoingPromises = {}
     }
 
     add(instructionMessage: TrackerLayer.InstructionMessage, trackerId: string): void {
@@ -37,8 +42,15 @@ export class InstructionThrottler {
                 instructionMessage,
                 trackerId
             }
-            if (!this.handling) {
-                this.invokeHandleFnWithLock().catch((err) => {
+
+            if (!this.ongoingPromises[streamId]) {
+                this.ongoingPromises[streamId] = {
+                    promise: null,
+                    handling: false
+                }
+            }
+            if (!this.ongoingPromises[streamId].handling) {
+                this.invokeHandleFnWithLock(streamId).catch((err) => {
                     logger.warn("Error handling instruction %s", err)
                 })
             }
@@ -48,40 +60,46 @@ export class InstructionThrottler {
     removeStreamId(streamId: StreamKey): void {
         delete this.queue[streamId]
         delete this.instructionCounter[streamId]
+        if (this.ongoingPromises[streamId]) {
+            this.ongoingPromises[streamId].promise!.cancel()
+        }
+        delete this.ongoingPromises[streamId]
     }
 
     isIdle(): boolean {
-        return !this.handling
+        return !Object.values(this.ongoingPromises).some((p) => p.handling)
     }
 
     reset(): void {
         this.queue = {}
         this.instructionCounter = {}
-        if (this.ongoingPromise) {
-            this.ongoingPromise.cancel()
-        }
+        Object.keys(this.ongoingPromises).forEach((streamId) => {
+            if (this.ongoingPromises[streamId]) {
+                this.ongoingPromises[streamId].promise!.cancel()
+            }
+            delete this.ongoingPromises[streamId]
+        })
+        this.ongoingPromises = {}
     }
 
-    private async invokeHandleFnWithLock(): Promise<void> {
-        const streamIds = Object.keys(this.queue)
-        const streamId: StreamKey = streamIds[0]
+    private async invokeHandleFnWithLock(streamId: string): Promise<void> {
+        if (!this.queue[streamId]) {
+            this.ongoingPromises[streamId].handling = false
+            return
+        }
+        this.ongoingPromises[streamId].handling = true
+
         const { instructionMessage, trackerId } = this.queue[streamId]
         delete this.queue[streamId]
 
-        this.handling = true
         try {
-            this.ongoingPromise = cancelable(this.handleFn(instructionMessage, trackerId))
-            await this.ongoingPromise
+            this.ongoingPromises[streamId].promise = cancelable(this.handleFn(instructionMessage, trackerId))
+            await this.ongoingPromises[streamId].promise
         } catch (err) {
             logger.warn('InstructionMessage handling threw error %s', err)
             logger.warn(err)
         } finally {
-            this.ongoingPromise = null
-            if (this.isQueueEmpty()) {
-                this.handling = false
-            } else {
-                this.invokeHandleFnWithLock()
-            }
+            this.invokeHandleFnWithLock(streamId)
         }
     }
 

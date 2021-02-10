@@ -16,7 +16,7 @@ program
     .option('--port <port>', 'port', '30304')
     .option('--ip <ip>', 'ip', '127.0.0.1')
     .option('--trackers <trackers>', 'trackers', (value) => value.split(','), ['ws://127.0.0.1:27777'])
-    .option('--streamId <streamId>', 'streamId to publish', 'stream-0')
+    .option('--streamIds <streamIds>', 'streamId to publish', (value) => value.split(','), ['stream-0'])
     .option('--metrics <metrics>', 'log metrics', false)
     .description('Run subscriber')
     .parse(process.argv)
@@ -36,7 +36,7 @@ startNetworkNode({
     logger.info('started subscriber id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, metrics: %s',
         id, name, program.opts().port, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().metrics)
     subscriber.start()
-    subscriber.subscribe(program.opts().streamId, 0)
+    program.opts().streamIds.forEach((stream) => subscriber.subscribe(stream, 0))
 
     let messageNo = 0
     let lastReported = 0
@@ -56,6 +56,7 @@ startNetworkNode({
             logger.info(JSON.stringify(await metricsContext.report(true), null, 3))
         }, 5000)
     }
+
     return true
 }).catch((err) => {
     throw err
