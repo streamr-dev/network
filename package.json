@@ -49,7 +49,7 @@
     "@babel/plugin-proposal-class-properties": "^7.12.1",
     "@babel/plugin-transform-classes": "^7.12.1",
     "@babel/plugin-transform-modules-commonjs": "^7.12.1",
-    "@babel/plugin-transform-runtime": "^7.12.10",
+    "@babel/plugin-transform-runtime": "^7.12.15",
     "@babel/preset-env": "^7.12.11",
     "@babel/preset-typescript": "^7.12.13",
     "@types/debug": "^4.1.5",
@@ -87,7 +87,8 @@
   },
   "#IMPORTANT": "babel-runtime must be in dependencies, not devDependencies",
   "dependencies": {
-    "@babel/runtime": "^7.12.5",
+    "@babel/runtime": "^7.12.13",
+    "@babel/runtime-corejs3": "^7.12.13",
     "@ethersproject/address": "^5.0.9",
     "@ethersproject/bignumber": "^5.0.13",
     "@ethersproject/bytes": "^5.0.9",
