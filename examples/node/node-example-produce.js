@@ -3,9 +3,7 @@ const StreamrClient = require('streamr-client')
 // Create the client and supply either an API key or an Ethereum private key to authenticate
 const client = new StreamrClient({
     auth: {
-        apiKey: 'YOUR-API-KEY',
-        // Or to cryptographically authenticate with Ethereum and enable data signing:
-        // privateKey: 'ETHEREUM-PRIVATE-KEY',
+        privateKey: 'ETHEREUM-PRIVATE-KEY',
     },
 })
 

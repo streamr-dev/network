@@ -28,6 +28,8 @@ The client is available on [npm](https://www.npmjs.com/package/streamr-client) a
 
 `npm install streamr-client`
 
+Node v14 or higher is recommended if you intend to use the client in a Node environment. For example, inside a script.
+
 ## Usage
 
 Here are some quick examples. More detailed examples for the browser and node.js can be found [here](https://github.com/streamr-dev/streamr-client/tree/master/examples).
