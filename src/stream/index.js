@@ -1,6 +1,8 @@
 import { getEndpointUrl } from '../utils'
 import authFetch from '../rest/authFetch'
 
+import StorageNode from './StorageNode'
+
 export default class Stream {
     constructor(client, props) {
         this._client = client
@@ -107,6 +109,37 @@ export default class Stream {
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'detectFields'),
             this._client.session,
         )
+    }
+
+    async addToStorageNode(address) {
+        return authFetch(
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
+            this._client.session,
+            {
+                method: 'POST',
+                body: JSON.stringify({
+                    address
+                })
+            },
+        )
+    }
+
+    async removeFromStorageNode(address) {
+        return authFetch(
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes', address),
+            this._client.session,
+            {
+                method: 'DELETE'
+            },
+        )
+    }
+
+    async getStorageNodes() {
+        const json = await authFetch(
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
+            this._client.session,
+        )
+        return json.map((item) => new StorageNode(item.storageNodeAddress))
     }
 
     async publish(...theArgs) {

@@ -7,6 +7,7 @@ import debugFactory from 'debug'
 import { getEndpointUrl } from '../utils'
 import { validateOptions } from '../stream/utils'
 import Stream from '../stream'
+import StreamPart from '../stream/StreamPart'
 import { isKeyExchangeStream } from '../stream/KeyExchange'
 
 import authFetch from './authFetch'
@@ -200,6 +201,15 @@ export async function getStreamLast(streamObjectOrId) {
     const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'data', 'partitions', streamPartition, 'last') + `?${qs.stringify(query)}`
     const json = await authFetch(url, this.session)
     return json
+}
+
+export async function getStreamPartsByStorageNode(address) {
+    const json = await authFetch(getEndpointUrl(this.options.restUrl, 'storageNodes', address, 'streams'), this.session)
+    let result = []
+    json.forEach((stream) => {
+        result = result.concat(StreamPart.fromStream(stream))
+    })
+    return result
 }
 
 export async function publishHttp(streamObjectOrId, data, requestOptions = {}, keepAlive = true) {
