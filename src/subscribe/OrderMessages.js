@@ -34,7 +34,7 @@ export default function OrderMessages(client, options = {}) {
         outStream.push(orderedMessage)
     }, async (from, to, publisherId, msgChainId) => {
         if (done || !gapFill) { return }
-        debug('%d gap %o', {
+        debug('gap %o', {
             streamId, streamPartition, publisherId, msgChainId, from, to,
         })
 

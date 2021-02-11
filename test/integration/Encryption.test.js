@@ -483,5 +483,66 @@ describe('decryption', () => {
         expect(received).toEqual(published.slice(-2))
         await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
+
+    it('fails gracefully if cannot decrypt', async () => {
+        const MAX_MESSAGES = 10
+        const groupKey = GroupKey.generate()
+        const keys = {
+            [stream.id]: {
+                [groupKey.id]: groupKey,
+            }
+        }
+
+        await client.setNextGroupKey(stream.id, groupKey)
+
+        const BAD_INDEX = 6
+        let count = 0
+        const { parse } = client.connection
+        client.connection.parse = (...args) => {
+            const msg = parse.call(client.connection, ...args)
+            if (!msg.streamMessage) {
+                return msg
+            }
+
+            if (count === BAD_INDEX) {
+                msg.streamMessage.groupKeyId = 'badgroupkey'
+            }
+
+            count += 1
+            return msg
+        }
+
+        const sub = await client.subscribe({
+            stream: stream.id,
+            groupKeys: keys,
+        })
+
+        const onSubError = jest.fn((err) => {
+            expect(err).toBeInstanceOf(Error)
+            expect(err.message).toMatch('decrypt')
+        })
+
+        sub.on('error', onSubError)
+
+        // Publish after subscribed
+        const published = await publishTestMessages(MAX_MESSAGES, {
+            timestamp: 1111111,
+        })
+
+        const received = []
+        for await (const m of sub) {
+            received.push(m.getParsedContent())
+            if (received.length === published.length - 1) {
+                break
+            }
+        }
+
+        expect(received).toEqual([
+            ...published.slice(0, BAD_INDEX),
+            ...published.slice(BAD_INDEX + 1, MAX_MESSAGES)
+        ])
+
+        expect(onSubError).toHaveBeenCalledTimes(1)
+    })
 })
 
