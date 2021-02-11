@@ -87,10 +87,9 @@ export const waitForCondition = async (
                 }
             } else {
                 clearPoller()
-                reject(new AssertionError({
-                    message: `waitForCondition: timed out before "${conditionFn.toString()}" became true`
-                        + (onTimeoutContext ? ("\n" + onTimeoutContext()) : "")
-                }))
+                reject(new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`
+                    + (onTimeoutContext ? ("\n" + onTimeoutContext()) : "")
+                ))
             }
         }
         setImmediate(poll)
