@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.1.1] - 2021-02-11
 ### Changed
 - Bump dependency streamr-client to 5.0.0-beta.6
 - Bump dependency commander to ^6.1.0
@@ -47,7 +48,8 @@ ordering and gap filling.
 - Bump dependency commander to ^4.0.1.
 - Re-organize README.md and a few touches to Developing section paragraphs.
 
-[Unreleased]: https://github.com/streamr-dev/cli-tools/compare/v4.1.0...HEAD
+[Unreleased]: https://github.com/streamr-dev/cli-tools/compare/v4.1.1...HEAD
+[4.1.1]: https://github.com/streamr-dev/cli-tools/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/streamr-dev/cli-tools/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/streamr-dev/cli-tools/compare/v3.1.1...v4.0.0
 [3.1.1]: https://github.com/streamr-dev/cli-tools/compare/v3.1.0...v3.1.1
