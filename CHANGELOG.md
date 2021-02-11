@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
-- Bump dependency streamr-client to ^4.1.2
+- Bump dependency streamr-client to 5.0.0-beta.6
 - Bump dependency commander to ^6.1.0
 
 ## [4.1.0] - 2020-10-12
