@@ -319,7 +319,7 @@ class Subscriptions {
         this.subSessions = new Map()
     }
 
-    async add(opts, onFinally = () => {}) {
+    async add(opts, onFinally = async () => {}) {
         const options = validateOptions(opts)
         const { key } = options
 
