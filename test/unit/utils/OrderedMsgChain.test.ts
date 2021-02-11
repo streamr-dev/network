@@ -200,7 +200,7 @@ describe('OrderedMsgChain', () => {
 
     it('can force-fill multiple gaps out of order', (done) => {
         const msgs: StreamMessage[] = []
-        const gapHandler = jest.fn((from, to) => {
+        const gapHandler = jest.fn((_from, to) => {
             if (to.timestamp === 2) {
                 util.markMessageExplicitly(msg4)
                 util.markMessageExplicitly(msg2)
@@ -236,7 +236,7 @@ describe('OrderedMsgChain', () => {
 
     it('does not hold onto old markMessageExplicitly messages', (done) => {
         const msgs: StreamMessage[] = []
-        const gapHandler = jest.fn((from, to) => {
+        const gapHandler = jest.fn((_from, to) => {
             if (to.timestamp === 2) {
                 util.markMessageExplicitly(msg2)
                 util.markMessageExplicitly(msg4)
@@ -324,8 +324,7 @@ describe('OrderedMsgChain', () => {
 
     it('handles unordered messages in order (large randomized test)', () => {
         const expected = [msg1]
-        let i
-        for (i = 2; i <= 1000; i++) {
+        for (let i = 2; i <= 1000; i++) {
             expected.push(createMsg(i, 0, i - 1, 0))
         }
         const shuffled = shuffle(expected)

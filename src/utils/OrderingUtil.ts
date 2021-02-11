@@ -6,8 +6,8 @@ class OrderingUtil extends MsgChainEmitter {
     streamPartition: number
     inOrderHandler: MessageHandler
     gapHandler: GapHandler
-    propagationTimeout: number
-    resendTimeout: number
+    propagationTimeout?: number
+    resendTimeout?: number
     maxGapRequests?: number
     orderedChains: { [key: string]: OrderedMsgChain}
 
@@ -16,8 +16,8 @@ class OrderingUtil extends MsgChainEmitter {
         streamPartition: number,
         inOrderHandler: MessageHandler,
         gapHandler: GapHandler,
-        propagationTimeout: number,
-        resendTimeout: number,
+        propagationTimeout?: number,
+        resendTimeout?: number,
         maxGapRequests?: number
     ) {
         super()
