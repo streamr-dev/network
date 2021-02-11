@@ -9,7 +9,10 @@
   "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "scripts": {
-    "build": "tsc --build --clean && tsc --build",
+    "build": "tsc -p tsconfig-build.json",
+    "prebuild": "npm run clean",
+    "clean": "rm -rf ./dist/* || true",
+    "watch": "tsc --watch",
     "benchmark": "jest test/benchmarks --detectOpenHandles",
     "prepare": "npm run build",
     "eslint": "eslint '{src,test}/**/*.ts'",
