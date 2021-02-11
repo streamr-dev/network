@@ -83,17 +83,6 @@ export default function OrderMessages(client, options = {}) {
             }
         },
         outStream, // consumer gets outStream
-        async function* IsDone(src) {
-            for await (const msg of src) {
-                if (!gapFill) {
-                    orderingUtil.markMessageExplicitly(msg)
-                }
-
-                orderingUtil.add(msg)
-                // note no yield
-                // orderingUtil writes to outStream itself
-            }
-        },
     ], async (err) => {
         done = true
         orderingUtil.clearGaps()

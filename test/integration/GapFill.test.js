@@ -123,7 +123,9 @@ describeRepeats('GapFill', () => {
 
             expect(subscriber.count(stream.id)).toBe(1)
 
-            const published = await publishTestMessages(MAX_MESSAGES)
+            const published = await publishTestMessages(MAX_MESSAGES, {
+                timestamp: 111111,
+            })
 
             const received = []
             for await (const m of sub) {
@@ -202,7 +204,7 @@ describeRepeats('GapFill', () => {
             expect(client.connection.getState()).toBe('connected')
         }, 15000)
 
-        it('can fill gaps in resends', async () => {
+        it.skip('can fill gaps in resends', async () => {
             const { parse } = client.connection
             let count = 0
             client.connection.parse = (...args) => {
