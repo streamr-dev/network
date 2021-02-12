@@ -29,7 +29,7 @@
     "test-unit": "jest test/unit --detectOpenHandles",
     "coverage": "jest --coverage",
     "test-integration": "jest --forceExit test/integration",
-    "test-integration-no-resend": "jest --testTimeout=10000 --testPathIgnorePatterns='resend|Resend' --testNamePattern='^((?!(resend|Resend|resent|Resent)).)*$' test/integration/*.test.js",
+    "test-integration-no-resend": "jest --testTimeout=10000 --testPathIgnorePatterns='resend|Resend' --testNamePattern='^((?!(resend|Resend|resent|Resent|gap|Gap)).)*$' test/integration/*.test.js",
     "test-integration-resend": "jest --testTimeout=15000 --testNamePattern='(resend|Resend|resent|Resent)' test/integration/*.test.js",
     "test-integration-dataunions": "jest --testTimeout=15000 --runInBand test/integration/DataUnionEndpoints",
     "test-flakey": "jest --forceExit test/flakey/*",
