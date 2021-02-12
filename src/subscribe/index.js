@@ -107,17 +107,17 @@ export class Subscription extends Emitter {
  */
 
 function multiEmit(emitters, ...args) {
-    const errs = []
+    let error
     emitters.forEach((s) => {
         try {
             s.emit(...args)
         } catch (err) {
-            errs.push(err)
+            AggregatedError.from(error, err, `Error emitting event: ${args[0]}`)
         }
     })
 
-    if (errs.length) {
-        throw new AggregatedError(errs, `Error emitting event: ${args[0]}`)
+    if (error) {
+        throw error
     }
 }
 
