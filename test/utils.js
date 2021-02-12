@@ -137,6 +137,8 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
     }
 
     const publishTestMessagesRaw = async (n = 4, opts = {}) => {
+        const id = uid('test')
+        let msgCount = 0
         const {
             streamId,
             streamPartition = 0,
@@ -149,47 +151,76 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             afterEach = () => {},
             timestamp,
             partitionKey,
-            createMessage = Msg,
+            createMessage = () => {
+                msgCount += 1
+                return {
+                    test: id,
+                    value: `${msgCount} of ${n}`
+                }
+            },
         } = validateOptions({
             ...defaultOpts,
             ...opts,
         })
 
-        const published = []
-        for (let i = 0; i < n; i++) {
-            const message = createMessage()
-            // eslint-disable-next-line no-await-in-loop, no-loop-func
-            await beforeEach(message)
-            // eslint-disable-next-line no-await-in-loop, no-loop-func
-            const request = await pTimeout(client.publish({
-                streamId,
-                streamPartition,
-            }, message, timestamp, partitionKey), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
-            published.push([
-                message,
-                request,
-            ])
-
-            // eslint-disable-next-line no-await-in-loop, no-loop-func
-            await afterEach(message, request)
-            // eslint-disable-next-line no-await-in-loop, no-loop-func
-            await wait(delay) // ensure timestamp increments for reliable resend response in test.
+        let connectionDone = false
+        function checkDone() {
+            if (connectionDone) {
+                throw new Error('Connection done before finished publishing')
+            }
         }
-
-        if (waitForLast) {
-            const msg = published[published.length - 1][1]
-            await getWaitForStorage(client)(msg, {
-                streamId,
-                streamPartition,
-                timeout: waitForLastTimeout,
-                count: waitForLastCount,
-                messageMatchFn(m, b) {
-                    return m.streamMessage.signature === b.signature
-                }
-            })
+        const onDone = () => {
+            connectionDone = true
         }
+        try {
+            client.connection.once('done', onDone)
 
-        return published
+            const published = []
+            for (let i = 0; i < n; i++) {
+                checkDone()
+                const message = createMessage()
+                // eslint-disable-next-line no-await-in-loop, no-loop-func
+                await beforeEach(message)
+                checkDone()
+                // eslint-disable-next-line no-await-in-loop, no-loop-func
+                const request = await pTimeout(client.publish({
+                    streamId,
+                    streamPartition,
+                }, message, timestamp, partitionKey), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
+                checkDone()
+                published.push([
+                    message,
+                    request,
+                ])
+
+                // eslint-disable-next-line no-await-in-loop, no-loop-func
+                await afterEach(message, request)
+                checkDone()
+                // eslint-disable-next-line no-await-in-loop, no-loop-func
+                await wait(delay) // ensure timestamp increments for reliable resend response in test.
+                checkDone()
+            }
+
+            checkDone()
+
+            if (waitForLast) {
+                const msg = published[published.length - 1][1]
+                await getWaitForStorage(client)(msg, {
+                    streamId,
+                    streamPartition,
+                    timeout: waitForLastTimeout,
+                    count: waitForLastCount,
+                    messageMatchFn(m, b) {
+                        checkDone()
+                        return m.streamMessage.signature === b.signature
+                    }
+                })
+            }
+
+            return published
+        } finally {
+            client.connection.off('done', onDone)
+        }
     }
 
     const publishTestMessages = async (...args) => {
