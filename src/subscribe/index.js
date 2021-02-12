@@ -21,6 +21,7 @@ export class Subscription extends Emitter {
         this.streamPartition = this.options.streamPartition
 
         this._onDone = Defer()
+        this._onDone.catch(() => {}) // prevent unhandledrejection
         this._onFinally = onFinally
 
         const validate = opts.validate || Validator(client, this.options)
@@ -157,7 +158,7 @@ class SubscriptionSession extends Emitter {
                     await this.step()
                 }
             } catch (err) {
-                this.emit(err)
+                this.emit('error', err)
             }
         }
 

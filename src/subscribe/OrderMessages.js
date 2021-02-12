@@ -8,11 +8,13 @@ import resendStream from './resendStream'
 
 const { OrderingUtil } = Utils
 
+let ID = 0
+
 /**
  * Wraps OrderingUtil into a pipeline.
  * Implements gap filling
  */
-let ID = 0
+
 export default function OrderMessages(client, options = {}) {
     const { gapFillTimeout, retryResendAfter } = client.options
     const { streamId, streamPartition, gapFill = true } = validateOptions(options)
@@ -70,6 +72,7 @@ export default function OrderMessages(client, options = {}) {
         // no gaps are pending
         // AND
         // gaps have been filled or failed
+        // NOTE ordering util cannot have gaps if queue is empty
         if (inputClosed && orderingUtil.isEmpty()) {
             outStream.end()
         }
@@ -79,8 +82,9 @@ export default function OrderMessages(client, options = {}) {
         maybeClose()
     })
 
-    orderingUtil.on('error', (err) => {
-        outStream.push(err)
+    orderingUtil.on('error', () => {
+        // TODO: handle gapfill errors without closing stream or logging
+        maybeClose() // probably noop
     })
 
     return Object.assign(pipeline([

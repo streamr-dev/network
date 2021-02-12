@@ -13,7 +13,7 @@ const { ControlMessage } = ControlLayer
  * Sends resend request, handles responses.
  */
 
-export default function resendStream(client, opts = {}, onFinally = () => {}) {
+export default function resendStream(client, opts = {}, onFinally = async () => {}) {
     const options = validateOptions(opts)
     const { connection } = client
     const requestId = counterId(`${options.key}-resend`)

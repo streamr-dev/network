@@ -279,13 +279,16 @@ export default class PushQueue {
                     continue // eslint-disable-line no-continue
                 }
 
-                const value = await new Promise((resolve, reject) => {
+                const deferred = new Promise((resolve, reject) => {
                     // wait for next push
                     this.nextQueue.push({
                         resolve,
                         reject,
                     })
                 })
+
+                deferred.catch(() => {}) // prevent unhandledrejection
+                const value = await deferred
 
                 // ignore value if finished
                 if (this.finished) {

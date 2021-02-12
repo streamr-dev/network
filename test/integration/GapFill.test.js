@@ -97,8 +97,8 @@ describeRepeats('GapFill', () => {
     describe('filling gaps', () => {
         beforeEach(async () => {
             await setupClient({
-                gapFillTimeout: 1000,
-                retryResendAfter: 1000,
+                gapFillTimeout: 200,
+                retryResendAfter: 200,
             })
             await client.connect()
         })
