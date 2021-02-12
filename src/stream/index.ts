@@ -1,4 +1,4 @@
-import { getEndpointUrl, FieldDetector } from '../utils'
+import { getEndpointUrl } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import StorageNode from './StorageNode'
@@ -136,8 +136,22 @@ export default class Stream {
 
         if (receivedMsgs.length > 0) {
             const lastMessage = receivedMsgs[0]
-            const fd = new FieldDetector(lastMessage)
-            const fields = fd.detect()
+            const fields = []
+
+            Object.keys(lastMessage).forEach((key) => {
+                let type
+                if (Array.isArray(lastMessage[key])) {
+                    type = 'list'
+                } else if ((typeof lastMessage[key]) === 'object') {
+                    type = 'map'
+                } else {
+                    type = typeof lastMessage[key]
+                }
+                fields.push({
+                    name: key,
+                    type,
+                })
+            })
 
             // Save field config back to the stream
             this.config.fields = fields
