@@ -12,8 +12,8 @@ export interface ConstructorOptions {
     routerId: string
     isOffering: boolean
     stunUrls: string[]
-    bufferHighThreshold?: number
-    bufferLowThreshold?: number
+    bufferThresholdLow?: number
+    bufferThresholdHigh?: number
     newConnectionTimeout?: number
     maxPingPongAttempts?: number
     pingPongTimeout?: number
@@ -34,8 +34,8 @@ export class Connection {
     private readonly routerId: string
     private readonly isOffering: boolean
     private readonly stunUrls: string[]
-    private readonly bufferHighThreshold: number
-    private readonly bufferLowThreshold: number
+    private readonly bufferThresholdHigh: number
+    private readonly bufferThresholdLow: number
     private readonly newConnectionTimeout: number
     private readonly maxPingPongAttempts: number
     private readonly pingPongTimeout: number
@@ -70,8 +70,8 @@ export class Connection {
         routerId,
         isOffering,
         stunUrls,
-        bufferHighThreshold = 2 ** 18,
-        bufferLowThreshold = 2 ** 16,
+        bufferThresholdHigh = 2 ** 18,
+        bufferThresholdLow = 2 ** 16,
         newConnectionTimeout = 5000,
         maxPingPongAttempts = 5,
         pingPongTimeout = 2000,
@@ -90,8 +90,8 @@ export class Connection {
         this.routerId = routerId
         this.isOffering = isOffering
         this.stunUrls = stunUrls
-        this.bufferHighThreshold = bufferHighThreshold
-        this.bufferLowThreshold = bufferLowThreshold
+        this.bufferThresholdHigh = bufferThresholdHigh
+        this.bufferThresholdLow = bufferThresholdLow
         this.newConnectionTimeout = newConnectionTimeout
         this.maxPingPongAttempts = maxPingPongAttempts
         this.pingPongTimeout = pingPongTimeout
@@ -325,7 +325,7 @@ export class Connection {
 
     private setupDataChannel(dataChannel: DataChannel): void {
         this.paused = false
-        dataChannel.setBufferedAmountLowThreshold(this.bufferLowThreshold)
+        dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         if (this.isOffering) {
             dataChannel.onOpen(() => {
                 this.logger.debug('dataChannel.onOpen')
@@ -381,7 +381,7 @@ export class Connection {
                 queueItem.immediateFail(errorMessage)
                 this.logger.warn(errorMessage)
                 this.messageQueue.pop()
-            } else if (this.paused || this.getBufferedAmount() >= this.bufferHighThreshold) {
+            } else if (this.paused || this.getBufferedAmount() >= this.bufferThresholdHigh) {
                 if (!this.paused) {
                     this.paused = true
                     this.onBufferHigh()

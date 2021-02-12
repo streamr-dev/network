@@ -84,6 +84,8 @@ export interface NetworkNodeOptions {
     pingInterval?: number,
     disconnectionWaitTime?: number,
     newWebrtcConnectionTimeout?: number,
+    webrtcDatachannelBufferThresholdLow?: number,
+    webrtcDatachannelBufferThresholdHigh?: number,
     stunUrls?: string[]
 }
 
@@ -164,6 +166,8 @@ function startNode({
     pingInterval,
     disconnectionWaitTime,
     newWebrtcConnectionTimeout,
+    webrtcDatachannelBufferThresholdLow,
+    webrtcDatachannelBufferThresholdHigh,
     stunUrls = ['stun:stun.l.google.com:19302']
 }: NetworkNodeOptions, peerInfoFn: (id: string, name: string | undefined, location: Location | null | undefined) => PeerInfo): Promise<NetworkNode> {
     const peerInfo = peerInfoFn(id, name, location)
@@ -176,7 +180,9 @@ function startNode({
             webRtcSignaller, 
             metricsContext, 
             pingInterval, 
-            newWebrtcConnectionTimeout
+            newWebrtcConnectionTimeout,
+            webrtcDatachannelBufferThresholdLow,
+            webrtcDatachannelBufferThresholdHigh
         ))
         return new NetworkNode({
             peerInfo,

@@ -51,6 +51,8 @@ export class WebRtcEndpoint extends EventEmitter {
     private readonly logger: pino.Logger
     private readonly metrics: Metrics
     private stopped = false
+    private readonly bufferThresholdLow: number
+    private readonly bufferThresholdHigh: number
 
     constructor(
         id: string,
@@ -58,7 +60,9 @@ export class WebRtcEndpoint extends EventEmitter {
         rtcSignaller: RtcSignaller,
         metricsContext: MetricsContext,
         pingIntervalInMs = 5 * 1000,
-        newConnectionTimeout = 5000
+        newConnectionTimeout = 5000,
+        webrtcDatachannelBufferThresholdLow = 2 ** 16,
+        webrtcDatachannelBufferThresholdHigh = 2 ** 18
     ) {
         super()
         this.id = id
@@ -69,6 +73,8 @@ export class WebRtcEndpoint extends EventEmitter {
         this.pingIntervalInMs = pingIntervalInMs
         this.pingTimeoutRef = setTimeout(() => this.pingConnections(), this.pingIntervalInMs)
         this.logger = getLogger(`streamr:WebRtcEndpoint:${id}`)
+        this.bufferThresholdLow = webrtcDatachannelBufferThresholdLow
+        this.bufferThresholdHigh = webrtcDatachannelBufferThresholdHigh
 
         rtcSignaller.setOfferListener(async ({ routerId, originatorInfo, description } : OfferOptions) => {
             const { peerId } = originatorInfo
@@ -156,6 +162,8 @@ export class WebRtcEndpoint extends EventEmitter {
             isOffering,
             stunUrls: this.stunUrls,
             newConnectionTimeout: this.newConnectionTimeout,
+            bufferThresholdHigh: this.bufferThresholdHigh,
+            bufferThresholdLow: this.bufferThresholdLow,
             onLocalDescription: (type, description) => {
                 this.rtcSignaller.onLocalDescription(routerId, connection.getPeerId(), type, description)
             },
