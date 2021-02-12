@@ -3,6 +3,7 @@ import Emitter from 'events'
 import { allSettledValues, AggregatedError, Scaffold, Defer, counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
 import { validateOptions } from '../stream/utils'
+import { ConnectionError } from '../Connection'
 
 import { subscribe, unsubscribe } from './api'
 import MessagePipeline from './pipeline'
@@ -163,6 +164,14 @@ class SubscriptionSession extends Emitter {
         }
 
         let deleted = new Set()
+        const check = () => {
+            return (
+                connection.isConnectionValid()
+                && !needsReset
+                // has some active subscription
+                && this.count()
+            )
+        }
 
         this.step = Scaffold([
             () => {
@@ -220,12 +229,16 @@ class SubscriptionSession extends Emitter {
                     await unsubscribe(this.client, this.options)
                 }
             }
-        ], () => (
-            connection.isConnectionValid()
-            && !needsReset
-            // has some active subscription
-            && this.count()
-        ))
+        ], check, {
+            onError(err) {
+                if (err instanceof ConnectionError && !check()) {
+                    // ignore error if state changed
+                    needsReset = true
+                    return
+                }
+                throw err
+            }
+        })
     }
 
     has(sub) {
