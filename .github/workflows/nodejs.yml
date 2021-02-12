@@ -32,7 +32,7 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/streamr-dev/streamr-docker-dev.git
           sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start engine-and-editor cassandra nginx --except tracker-1 --except tracker-2 --except tracker-3 --except broker-node-storage-1 --except broker-node-no-storage-1 --except broker-node-no-storage-2 --wait
+          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start engine-and-editor cassandra nginx --wait
       - run: npm run test-integration
         env:
           CI: true

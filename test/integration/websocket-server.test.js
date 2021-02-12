@@ -1,7 +1,7 @@
 const WebSocket = require('ws')
 const { waitForCondition } = require('streamr-test-utils')
 
-const { startBroker, getWsUrl } = require('../utils')
+const { startBroker, getWsUrlWithControlAndMessageLayerVersions } = require('../utils')
 
 describe('websocket server', () => {
     let ws
@@ -23,7 +23,7 @@ describe('websocket server', () => {
             wsPort: 12346
         }).then((newBroker) => {
             broker = newBroker
-            ws = new WebSocket(getWsUrl(12346))
+            ws = new WebSocket(getWsUrlWithControlAndMessageLayerVersions(12346, false, 2, 31))
             ws.on('open', () => {
                 done()
             })
@@ -44,7 +44,7 @@ describe('websocket server', () => {
             certFileName: 'test/fixtures/cert.pem'
         }).then((newBroker) => {
             broker = newBroker
-            ws = new WebSocket(getWsUrl(12346, true), {
+            ws = new WebSocket(getWsUrlWithControlAndMessageLayerVersions(12346, true, 2, 31), {
                 rejectUnauthorized: false // needed to accept self-signed certificate
             })
             ws.on('open', () => {
@@ -89,11 +89,11 @@ describe('websocket server', () => {
         })
 
         it('rejects connections with unsupported ControlLayer version', async () => {
-            await testRejection(getWsUrl(12346, false, 666, 31))
+            await testRejection(getWsUrlWithControlAndMessageLayerVersions(12346, false, 666, 31))
         })
 
         it('rejects connections with unsupported MessageLayer version', async () => {
-            await testRejection(getWsUrl(12346, false, 1, 666))
+            await testRejection(getWsUrlWithControlAndMessageLayerVersions(12346, false, 1, 666))
         })
     })
 })

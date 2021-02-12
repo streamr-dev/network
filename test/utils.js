@@ -91,7 +91,11 @@ function startBroker(...args) {
     return createBroker(formConfig(...args))
 }
 
-function getWsUrl(port, ssl = false, controlLayerVersion = 1, messageLayerVersion = 31) {
+function getWsUrl(port, ssl = false) {
+    return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws`
+}
+
+function getWsUrlWithControlAndMessageLayerVersions(port, ssl = false, controlLayerVersion = 2, messageLayerVersion = 32) {
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`
 }
 
@@ -118,4 +122,5 @@ module.exports = {
     createClient,
     createMqttClient,
     getWsUrl,
+    getWsUrlWithControlAndMessageLayerVersions
 }
