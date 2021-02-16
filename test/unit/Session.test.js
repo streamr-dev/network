@@ -1,6 +1,6 @@
 import sinon from 'sinon'
 
-import StreamrClient from '../../src'
+import StreamrClient from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
 import config from '../integration/config'

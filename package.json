@@ -8,7 +8,7 @@
   },
   "main": "dist/streamr-client.nodejs.js",
   "browser": "dist/streamr-client.web.min.js",
-  "types": "dist/types/src/index.d.ts",
+  "types": "dist/types/src/StreamrClient.d.ts",
   "directories": {
     "example": "examples",
     "test": "test"

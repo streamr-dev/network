@@ -12,6 +12,7 @@ import { isKeyExchangeStream } from '../stream/KeyExchange'
 
 import authFetch from './authFetch'
 import { Todo } from '../types'
+import StreamrClient from '../StreamrClient'
 
 const debug = debugFactory('StreamrClient')
 
@@ -37,203 +38,209 @@ function getKeepAliveAgentForUrl(url: string) {
     throw new Error(`Unknown protocol in URL: ${url}`)
 }
 
-// These function are mixed in to StreamrClient.prototype.
-// In the below functions, 'this' is intended to be the StreamrClient
-export async function getStream(streamId: Todo) {
-    this.debug('getStream %o', {
-        streamId,
-    })
+export class StreamEndpoints {
 
-    if (isKeyExchangeStream(streamId)) {
-        return new Stream(this, {
-            id: streamId,
-            partitions: 1,
+    client: StreamrClient
+
+    constructor(client: StreamrClient) {
+        this.client = client
+    }
+
+    async getStream(streamId: Todo) {
+        this.client.debug('getStream %o', {
+            streamId,
         })
-    }
 
-    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId)
-    try {
-        const json = await authFetch(url, this.session)
-        return new Stream(this, json)
-    } catch (e) {
-        if (e.response && e.response.status === 404) {
-            return undefined
+        if (isKeyExchangeStream(streamId)) {
+            return new Stream(this.client, {
+                id: streamId,
+                partitions: 1,
+            })
         }
-        throw e
-    }
-}
 
-export async function listStreams(query: Todo = {}) {
-    this.debug('listStreams %o', {
-        query,
-    })
-    const url = getEndpointUrl(this.options.restUrl, 'streams') + '?' + qs.stringify(query)
-    const json = await authFetch(url, this.session)
-    return json ? json.map((stream) => new Stream(this, stream)) : []
-}
-
-export async function getStreamByName(name: string) {
-    this.debug('getStreamByName %o', {
-        name,
-    })
-    const json = await this.listStreams({
-        name,
-        public: false,
-    })
-    return json[0] ? new Stream(this, json[0]) : undefined
-}
-
-export async function createStream(props: Todo) {
-    this.debug('createStream %o', {
-        props,
-    })
-
-    const json = await authFetch(
-        getEndpointUrl(this.options.restUrl, 'streams'),
-        this.session,
-        {
-            method: 'POST',
-            body: JSON.stringify(props),
-        },
-    )
-    return json ? new Stream(this, json) : undefined
-}
-
-export async function getOrCreateStream(props: Todo) {
-    this.debug('getOrCreateStream %o', {
-        props,
-    })
-    let json
-
-    // Try looking up the stream by id or name, whichever is defined
-    if (props.id) {
-        json = await this.getStream(props.id)
-    } else if (props.name) {
-        json = await this.getStreamByName(props.name)
-    }
-
-    // If not found, try creating the stream
-    if (!json) {
-        json = await this.createStream(props)
-        debug('Created stream: %s (%s)', props.name, json.id)
-    }
-
-    // If still nothing, throw
-    if (!json) {
-        throw new Error(`Unable to find or create stream: ${props.name || props.id}`)
-    } else {
-        return new Stream(this, json)
-    }
-}
-
-export async function getStreamPublishers(streamId: Todo) {
-    this.debug('getStreamPublishers %o', {
-        streamId,
-    })
-    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'publishers')
-    const json = await authFetch(url, this.session)
-    return json.addresses.map((a: string) => a.toLowerCase())
-}
-
-export async function isStreamPublisher(streamId: Todo, ethAddress: Todo) {
-    this.debug('isStreamPublisher %o', {
-        streamId,
-        ethAddress,
-    })
-    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'publisher', ethAddress)
-    try {
-        await authFetch(url, this.session)
-        return true
-    } catch (e) {
-        this.debug(e)
-        if (e.response && e.response.status === 404) {
-            return false
+        const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId)
+        try {
+            const json = await authFetch(url, this.client.session)
+            return new Stream(this.client, json)
+        } catch (e) {
+            if (e.response && e.response.status === 404) {
+                return undefined
+            }
+            throw e
         }
-        throw e
     }
-}
 
-export async function getStreamSubscribers(streamId: Todo) {
-    this.debug('getStreamSubscribers %o', {
-        streamId,
-    })
-    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'subscribers')
-    const json = await authFetch(url, this.session)
-    return json.addresses.map((a: Todo) => a.toLowerCase())
-}
+    async listStreams(query: Todo = {}) {
+        this.client.debug('listStreams %o', {
+            query,
+        })
+        const url = getEndpointUrl(this.client.options.restUrl, 'streams') + '?' + qs.stringify(query)
+        const json = await authFetch(url, this.client.session)
+        return json ? json.map((stream: any) => new Stream(this.client, stream)) : []
+    }
 
-export async function isStreamSubscriber(streamId: Todo, ethAddress: Todo) {
-    this.debug('isStreamSubscriber %o', {
-        streamId,
-        ethAddress,
-    })
-    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'subscriber', ethAddress)
-    try {
-        await authFetch(url, this.session)
-        return true
-    } catch (e) {
-        if (e.response && e.response.status === 404) {
-            return false
+    async getStreamByName(name: string) {
+        this.client.debug('getStreamByName %o', {
+            name,
+        })
+        const json = await this.listStreams({
+            name,
+            public: false,
+        })
+        return json[0] ? new Stream(this.client, json[0]) : undefined
+    }
+
+    async createStream(props: Todo) {
+        this.client.debug('createStream %o', {
+            props,
+        })
+
+        const json = await authFetch(
+            getEndpointUrl(this.client.options.restUrl, 'streams'),
+            this.client.session,
+            {
+                method: 'POST',
+                body: JSON.stringify(props),
+            },
+        )
+        return json ? new Stream(this.client, json) : undefined
+    }
+
+    async getOrCreateStream(props: Todo) {
+        this.client.debug('getOrCreateStream %o', {
+            props,
+        })
+        let json: any
+
+        // Try looking up the stream by id or name, whichever is defined
+        if (props.id) {
+            json = await this.getStream(props.id)
+        } else if (props.name) {
+            json = await this.getStreamByName(props.name)
         }
-        throw e
-    }
-}
 
-export async function getStreamValidationInfo(streamId: Todo) {
-    this.debug('getStreamValidationInfo %o', {
-        streamId,
-    })
-    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'validation')
-    const json = await authFetch(url, this.session)
-    return json
-}
+        // If not found, try creating the stream
+        if (!json) {
+            json = await this.createStream(props)
+            debug('Created stream: %s (%s)', props.name, json.id)
+        }
 
-export async function getStreamLast(streamObjectOrId: Todo) {
-    const { streamId, streamPartition = 0, count = 1 } = validateOptions(streamObjectOrId)
-    this.debug('getStreamLast %o', {
-        streamId,
-        streamPartition,
-        count,
-    })
-    const query = {
-        count,
+        // If still nothing, throw
+        if (!json) {
+            throw new Error(`Unable to find or create stream: ${props.name || props.id}`)
+        } else {
+            return new Stream(this.client, json)
+        }
     }
 
-    const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'data', 'partitions', streamPartition, 'last') + `?${qs.stringify(query)}`
-    const json = await authFetch(url, this.session)
-    return json
-}
-
-export async function getStreamPartsByStorageNode(address: Todo) {
-    const json = await authFetch(getEndpointUrl(this.options.restUrl, 'storageNodes', address, 'streams'), this.session)
-    let result: Todo = []
-    json.forEach((stream: Todo) => {
-        result = result.concat(StreamPart.fromStream(stream))
-    })
-    return result
-}
-
-export async function publishHttp(streamObjectOrId: Todo, data: Todo, requestOptions: Todo = {}, keepAlive: Todo = true) {
-    let streamId
-    if (streamObjectOrId instanceof Stream) {
-        // @ts-expect-error
-        streamId = streamObjectOrId.id
-    } else {
-        streamId = streamObjectOrId
+    async getStreamPublishers(streamId: Todo) {
+        this.client.debug('getStreamPublishers %o', {
+            streamId,
+        })
+        const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'publishers')
+        const json = await authFetch(url, this.client.session)
+        return json.addresses.map((a: string) => a.toLowerCase())
     }
-    this.debug('publishHttp %o', {
-        streamId, data,
-    })
 
-    // Send data to the stream
-    return authFetch(
-        getEndpointUrl(this.options.restUrl, 'streams', streamId, 'data'),
-        this.session,
-        {
-            ...requestOptions,
-            method: 'POST',
-            body: JSON.stringify(data),
-            agent: keepAlive ? getKeepAliveAgentForUrl(this.options.restUrl) : undefined,
-        },
-    )
+    async isStreamPublisher(streamId: Todo, ethAddress: Todo) {
+        this.client.debug('isStreamPublisher %o', {
+            streamId,
+            ethAddress,
+        })
+        const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'publisher', ethAddress)
+        try {
+            await authFetch(url, this.client.session)
+            return true
+        } catch (e) {
+            this.client.debug(e)
+            if (e.response && e.response.status === 404) {
+                return false
+            }
+            throw e
+        }
+    }
+
+    async getStreamSubscribers(streamId: Todo) {
+        this.client.debug('getStreamSubscribers %o', {
+            streamId,
+        })
+        const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'subscribers')
+        const json = await authFetch(url, this.client.session)
+        return json.addresses.map((a: Todo) => a.toLowerCase())
+    }
+
+    async isStreamSubscriber(streamId: Todo, ethAddress: Todo) {
+        this.client.debug('isStreamSubscriber %o', {
+            streamId,
+            ethAddress,
+        })
+        const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'subscriber', ethAddress)
+        try {
+            await authFetch(url, this.client.session)
+            return true
+        } catch (e) {
+            if (e.response && e.response.status === 404) {
+                return false
+            }
+            throw e
+        }
+    }
+
+    async getStreamValidationInfo(streamId: Todo) {
+        this.client.debug('getStreamValidationInfo %o', {
+            streamId,
+        })
+        const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'validation')
+        const json = await authFetch(url, this.client.session)
+        return json
+    }
+
+    async getStreamLast(streamObjectOrId: Todo) {
+        const { streamId, streamPartition = 0, count = 1 } = validateOptions(streamObjectOrId)
+        this.client.debug('getStreamLast %o', {
+            streamId,
+            streamPartition,
+            count,
+        })
+        const query = {
+            count,
+        }
+
+        const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'data', 'partitions', streamPartition, 'last') + `?${qs.stringify(query)}`
+        const json = await authFetch(url, this.client.session)
+        return json
+    }
+
+    async getStreamPartsByStorageNode(address: Todo) {
+        const json = await authFetch(getEndpointUrl(this.client.options.restUrl, 'storageNodes', address, 'streams'), this.client.session)
+        let result: Todo = []
+        json.forEach((stream: Todo) => {
+            result = result.concat(StreamPart.fromStream(stream))
+        })
+        return result
+    }
+
+    async publishHttp(streamObjectOrId: Todo, data: Todo, requestOptions: Todo = {}, keepAlive: Todo = true) {
+        let streamId
+        if (streamObjectOrId instanceof Stream) {
+            streamId = streamObjectOrId.id
+        } else {
+            streamId = streamObjectOrId
+        }
+        this.client.debug('publishHttp %o', {
+            streamId, data,
+        })
+
+        // Send data to the stream
+        return authFetch(
+            getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'data'),
+            this.client.session,
+            {
+                ...requestOptions,
+                method: 'POST',
+                body: JSON.stringify(data),
+                agent: keepAlive ? getKeepAliveAgentForUrl(this.client.options.restUrl) : undefined,
+            },
+        )
+    }
 }

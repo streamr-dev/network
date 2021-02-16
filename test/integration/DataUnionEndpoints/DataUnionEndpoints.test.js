@@ -5,7 +5,7 @@ import debug from 'debug'
 
 import { getEndpointUrl } from '../../../src/utils'
 import authFetch from '../../../src/rest/authFetch'
-import StreamrClient from '../../../src'
+import StreamrClient from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import config from '../config'
 

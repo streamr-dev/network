@@ -3,7 +3,7 @@ import { MessageLayer } from 'streamr-client-protocol'
 
 import { fakePrivateKey, uid, Msg, getPublishTestMessages } from '../utils'
 import { Defer } from '../../src/utils'
-import StreamrClient from '../../src'
+import StreamrClient from '../../src/StreamrClient'
 import { GroupKey } from '../../src/stream/Encryption'
 import Connection from '../../src/Connection'
 

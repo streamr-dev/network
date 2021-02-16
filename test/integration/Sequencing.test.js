@@ -1,7 +1,7 @@
 import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { uid, fakePrivateKey, getWaitForStorage } from '../utils'
-import StreamrClient from '../../src'
+import StreamrClient from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
 import config from './config'

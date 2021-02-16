@@ -3,7 +3,7 @@ import { formatEther, parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
 
 import { getEndpointUrl, until } from '../../../src/utils'
-import StreamrClient from '../../../src'
+import StreamrClient from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import config from '../config'

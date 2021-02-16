@@ -13,6 +13,9 @@ import Publisher from './publish'
 import Subscriber from './subscribe'
 import { getUserId } from './user'
 import { Todo } from './types'
+import { StreamEndpoints } from './rest/StreamEndpoints'
+import { LoginEndpoints } from './rest/LoginEndpoints'
+import { DataUnionEndpoints } from './rest/DataUnionEndpoints'
 
 /**
  * Wrap connection message events with message parsing.
@@ -61,7 +64,6 @@ class StreamrCached {
     constructor(client: StreamrClient) {
         this.client = client
         const cacheOptions = client.options.cache
-        // @ts-expect-error
         this.getStream = CacheAsyncFn(client.getStream.bind(client), {
             ...cacheOptions,
             cacheKey([maybeStreamId]: Todo) {
@@ -70,7 +72,6 @@ class StreamrCached {
             }
         })
         this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
-        // @ts-expect-error
         this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
             ...cacheOptions,
             cacheKey([maybeStreamId, ethAddress]: Todo) {
@@ -79,7 +80,6 @@ class StreamrCached {
             }
         })
 
-        // @ts-expect-error
         this.isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), {
             ...cacheOptions,
             cacheKey([maybeStreamId, ethAddress]: Todo) {
@@ -117,13 +117,15 @@ export default class StreamrClient extends EventEmitter {
     id: string
     debug: Debug.Debugger
     options: Todo
-    getUserInfo: Todo
     session: Session
     connection: StreamrConnection
     publisher: Todo
     subscriber: Subscriber
     cached: StreamrCached
     ethereum: StreamrEthereum
+    streamEndpoints: StreamEndpoints
+    loginEndpoints: LoginEndpoints
+    dataUnionEndpoints: DataUnionEndpoints
 
     constructor(options: Todo = {}, connection?: StreamrConnection) {
         super()
@@ -144,7 +146,6 @@ export default class StreamrClient extends EventEmitter {
         })
 
         // bind event handlers
-        this.getUserInfo = this.getUserInfo.bind(this)
         this.onConnectionConnected = this.onConnectionConnected.bind(this)
         this.onConnectionDisconnected = this.onConnectionDisconnected.bind(this)
         this._onError = this._onError.bind(this)
@@ -166,6 +167,10 @@ export default class StreamrClient extends EventEmitter {
         this.subscriber = new Subscriber(this)
         this.cached = new StreamrCached(this)
         this.ethereum = new StreamrEthereum(this)
+
+        this.streamEndpoints = new StreamEndpoints(this)
+        this.loginEndpoints = new LoginEndpoints(this)
+        this.dataUnionEndpoints = new DataUnionEndpoints(this)
     }
 
     async onConnectionConnected() {
@@ -351,5 +356,199 @@ export default class StreamrClient extends EventEmitter {
 
     static generateEthereumAccount() {
         return StreamrEthereum.generateEthereumAccount()
+    }
+
+    // TODO many of these methods that use streamEndpoints/loginEndpoints/dataUnionEndpoints are private: remove those
+
+    async getStream(streamId: Todo) {
+        return this.streamEndpoints.getStream(streamId)
+    }
+
+    async listStreams(query: Todo = {}) {
+        return this.streamEndpoints.listStreams(query)
+    }
+
+    async getStreamByName(name: string) {
+        return this.streamEndpoints.getStreamByName(name)
+    }
+
+    async createStream(props: Todo) {
+        return this.streamEndpoints.createStream(props)
+    }
+
+    async getOrCreateStream(props: Todo) {
+        return this.streamEndpoints.getOrCreateStream(props)
+    }
+
+    async getStreamPublishers(streamId: Todo) {
+        return this.streamEndpoints.getStreamPublishers(streamId)
+    }
+
+    async isStreamPublisher(streamId: Todo, ethAddress: Todo) {
+        return this.streamEndpoints.isStreamPublisher(streamId, ethAddress)
+    }
+
+    async getStreamSubscribers(streamId: Todo) {
+        return this.streamEndpoints.getStreamSubscribers(streamId)
+    }
+
+    async isStreamSubscriber(streamId: Todo, ethAddress: Todo) {
+        return this.streamEndpoints.isStreamSubscriber(streamId, ethAddress)
+    }
+
+    async getStreamValidationInfo(streamId: Todo) {
+        return this.streamEndpoints.getStreamValidationInfo(streamId)
+    }
+
+    async getStreamLast(streamObjectOrId: Todo) {
+        return this.streamEndpoints.getStreamLast(streamObjectOrId)
+    }
+
+    async getStreamPartsByStorageNode(address: Todo) {
+        return this.streamEndpoints.getStreamPartsByStorageNode(address)
+    }
+
+    async publishHttp(streamObjectOrId: Todo, data: Todo, requestOptions: Todo = {}, keepAlive: Todo = true) {
+        return this.streamEndpoints.publishHttp(streamObjectOrId, data, requestOptions, keepAlive)
+    }
+
+    async getChallenge(address: Todo) {
+        return this.loginEndpoints.getChallenge(address)
+    }
+
+    async sendChallengeResponse(challenge: Todo, signature: Todo, address: Todo) {
+        return this.loginEndpoints.sendChallengeResponse(challenge, signature, address)
+    }
+
+    async loginWithChallengeResponse(signingFunction: Todo, address: Todo) {
+        return this.loginEndpoints.loginWithChallengeResponse(signingFunction, address)
+    }
+
+    async loginWithApiKey(apiKey: Todo) {
+        return this.loginEndpoints.loginWithApiKey(apiKey)
+    }
+
+    async loginWithUsernamePassword(username: Todo, password: Todo) {
+        return this.loginEndpoints.loginWithUsernamePassword(username, password)
+    }
+
+    async getUserInfo() {
+        return this.loginEndpoints.getUserInfo()
+    }
+
+    async logoutEndpoint() {
+        return this.loginEndpoints.logoutEndpoint()
+    }
+
+    async calculateDataUnionMainnetAddress(dataUnionName: Todo, deployerAddress: Todo, options: Todo) {
+        return this.dataUnionEndpoints.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress, options)
+    }
+
+    async calculateDataUnionSidechainAddress(duMainnetAddress: Todo, options: Todo) {
+        return this.dataUnionEndpoints.calculateDataUnionSidechainAddress(duMainnetAddress, options)
+    }
+
+    async deployDataUnion(options: Todo = {}) {
+        return this.dataUnionEndpoints.deployDataUnion(options)
+    }
+
+    async getDataUnionContract(options: Todo = {}) {
+        return this.dataUnionEndpoints.getDataUnionContract(options)
+    }
+
+    async createSecret(dataUnionMainnetAddress: Todo, name: string = 'Untitled Data Union Secret') {
+        return this.dataUnionEndpoints.createSecret(dataUnionMainnetAddress, name)
+    }
+
+    async kick(memberAddressList: Todo, options: Todo = {}) {
+        return this.dataUnionEndpoints.kick(memberAddressList, options)
+    }
+
+    async addMembers(memberAddressList: Todo, options: Todo = {}) {
+        return this.dataUnionEndpoints.addMembers(memberAddressList, options)
+    }
+
+    async withdrawMember(memberAddress: Todo, options: Todo) {
+        return this.dataUnionEndpoints.withdrawMember(memberAddress, options)
+    }
+
+    async getWithdrawMemberTx(memberAddress: Todo, options: Todo) {
+        return this.dataUnionEndpoints.getWithdrawMemberTx(memberAddress, options)
+    }
+
+    async withdrawToSigned(memberAddress: Todo, recipientAddress: Todo, signature: Todo, options: Todo) {
+        return this.dataUnionEndpoints.withdrawToSigned(memberAddress, recipientAddress, signature, options)
+    }
+
+    async getWithdrawToSignedTx(memberAddress: Todo, recipientAddress: Todo, signature: Todo, options: Todo) {
+        return this.dataUnionEndpoints.getWithdrawToSignedTx(memberAddress, recipientAddress, signature, options)
+    }
+
+    async setAdminFee(newFeeFraction: Todo, options: Todo) {
+        return this.dataUnionEndpoints.setAdminFee(newFeeFraction, options)
+    }
+
+    async getAdminFee(options: Todo) {
+        return this.dataUnionEndpoints.getAdminFee(options)
+    }
+
+    async getAdminAddress(options: Todo) {
+        return this.dataUnionEndpoints.getAdminAddress(options)
+    }
+
+    async joinDataUnion(options: Todo = {}) {
+        return this.dataUnionEndpoints.joinDataUnion(options)
+    }
+
+    async hasJoined(memberAddress: Todo, options: Todo = {}) {
+        return this.dataUnionEndpoints.hasJoined(memberAddress, options)
+    }
+
+    async getMembers(options: Todo) {
+        return this.dataUnionEndpoints.getMembers(options)
+    }
+
+    async getDataUnionStats(options: Todo) {
+        return this.dataUnionEndpoints.getDataUnionStats(options)
+    }
+
+    async getMemberStats(memberAddress: Todo, options: Todo) {
+        return this.dataUnionEndpoints.getMemberStats(memberAddress, options)
+    }
+
+    async getMemberBalance(memberAddress: Todo, options: Todo) {
+        return this.dataUnionEndpoints.getMemberBalance(memberAddress, options)
+    }
+
+    async getTokenBalance(address: Todo, options: Todo) {
+        return this.dataUnionEndpoints.getTokenBalance(address, options)
+    }
+
+    async getDataUnionVersion(contractAddress: Todo) {
+        return this.dataUnionEndpoints.getDataUnionVersion(contractAddress)
+    }
+
+    async withdraw(options: Todo = {}) {
+        return this.dataUnionEndpoints.withdraw(options)
+    }
+
+    async getWithdrawTx(options: Todo) {
+        return this.dataUnionEndpoints.getWithdrawTx(options)
+    }
+
+    async withdrawTo(recipientAddress: Todo, options = {}) {
+        return this.dataUnionEndpoints.withdrawTo(recipientAddress, options)
+    }
+
+    async getWithdrawTxTo(recipientAddress: Todo, options: Todo) {
+        return this.dataUnionEndpoints.getWithdrawTxTo(recipientAddress, options)
+    }
+
+    async signWithdrawTo(recipientAddress: Todo, options: Todo) {
+        return this.dataUnionEndpoints.signWithdrawTo(recipientAddress, options)
+    }
+
+    async signWithdrawAmountTo(recipientAddress: Todo, amountTokenWei: Todo, options: Todo) {
+        return this.dataUnionEndpoints.signWithdrawAmountTo(recipientAddress, amountTokenWei, options)
     }
 }
