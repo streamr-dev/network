@@ -31,7 +31,7 @@
     "test-integration": "jest --forceExit test/integration",
     "test-integration-no-resend": "jest --testTimeout=10000 --testPathIgnorePatterns='resend|Resend' --testNamePattern='^((?!(resend|Resend|resent|Resent)).)*$' test/integration/*.test.js",
     "test-integration-resend": "jest --testTimeout=15000 --testNamePattern='(resend|Resend|resent|Resent)' test/integration/*.test.js",
-    "test-integration-dataunions": "jest --testTimeout=15000 test/integration/DataUnionEndpoints",
+    "test-integration-dataunions": "jest --testTimeout=15000 --runInBand test/integration/DataUnionEndpoints",
     "test-flakey": "jest --forceExit test/flakey/*",
     "test-browser": "node ./test/browser/server.js & node node_modules/nightwatch/bin/nightwatch ./test/browser/browser.js && pkill -f server.js",
     "install-example": "cd examples/webpack && npm ci",
