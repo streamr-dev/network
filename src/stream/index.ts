@@ -5,6 +5,17 @@ import StorageNode from './StorageNode'
 import StreamrClient from '../StreamrClient'
 import { Todo } from '../types'
 
+export enum StreamOperation {
+    STREAM_GET = 'stream_get',
+    STREAM_EDIT = 'stream_edit',
+    STREAM_DELETE = 'stream_delete',
+    STREAM_PUBLISH = 'stream_publish',
+    STREAM_SUBSCRIBE = 'stream_subscribe',
+    STREAM_SHARE = 'stream_share'
+}
+
+export type StreamProperties = Todo
+
 export default class Stream {
 
     // TODO add field definitions for all fields
@@ -12,7 +23,7 @@ export default class Stream {
     id: string
     _client: StreamrClient
 
-    constructor(client: StreamrClient, props: Todo) {
+    constructor(client: StreamrClient, props: StreamProperties) {
         this._client = client
         Object.assign(this, props)
     }
@@ -64,13 +75,13 @@ export default class Stream {
         )
     }
 
-    async hasPermission(operation: Todo, userId: Todo) {
+    async hasPermission(operation: StreamOperation, userId: string|undefined) {
         // eth addresses may be in checksumcase, but userId from server has no case
 
         const userIdCaseInsensitive = typeof userId === 'string' ? userId.toLowerCase() : undefined // if not string then undefined
         const permissions = await this.getPermissions()
 
-        return permissions.find((p: Todo) => {
+        return permissions.find((p: any) => {
             if (p.operation !== operation) { return false }
 
             if (userIdCaseInsensitive === undefined) {
@@ -80,8 +91,8 @@ export default class Stream {
         })
     }
 
-    async grantPermission(operation: Todo, userId: Todo) {
-        const permissionObject: Todo = {
+    async grantPermission(operation: StreamOperation, userId: string|undefined) {
+        const permissionObject: any = {
             operation,
         }
 
@@ -103,7 +114,7 @@ export default class Stream {
         )
     }
 
-    async revokePermission(permissionId: Todo) {
+    async revokePermission(permissionId: number) {
         return authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions', permissionId),
             this._client.session,
@@ -120,7 +131,7 @@ export default class Stream {
         )
     }
 
-    async addToStorageNode(address: Todo) {
+    async addToStorageNode(address: string) {
         return authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
             this._client.session,
@@ -133,7 +144,7 @@ export default class Stream {
         )
     }
 
-    async removeFromStorageNode(address: Todo) {
+    async removeFromStorageNode(address: string) {
         return authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes', address),
             this._client.session,
@@ -148,7 +159,7 @@ export default class Stream {
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
             this._client.session,
         )
-        return json.map((item: Todo) => new StorageNode(item.storageNodeAddress))
+        return json.map((item: any) => new StorageNode(item.storageNodeAddress))
     }
 
     async publish(...theArgs: Todo) {

@@ -13,26 +13,78 @@ import Publisher from './publish'
 import Subscriber from './subscribe'
 import { getUserId } from './user'
 import { Todo } from './types'
-import { StreamEndpoints } from './rest/StreamEndpoints'
+import { StreamEndpoints, StreamListQuery } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
-import { DataUnionEndpoints } from './rest/DataUnionEndpoints'
+import { DataUnionEndpoints, DataUnionOptions } from './rest/DataUnionEndpoints'
+import { BigNumber } from '@ethersproject/bignumber'
+import Stream, { StreamProperties } from './stream'
+import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
+
+export interface StreamrClientOptions {
+    id?: string
+    debug?: Debug.Debugger,
+    auth?: {
+        privateKey?: string
+        ethereum?: ExternalProvider|JsonRpcFetchFunc,
+        apiKey?: string
+        username?: string
+        password?: string
+    }
+    url?: string
+    restUrl?: string
+    streamrNodeAddress?: string
+    autoConnect?: boolean
+    autoDisconnect?: boolean
+    orderMessages?: boolean,
+    retryResendAfter?: number,
+    gapFillTimeout?: number,
+    maxPublishQueueSize?: number,
+    publishWithSignature?: Todo,
+    verifySignatures?: Todo,
+    publisherStoreKeyHistory?: boolean,
+    groupKeys?: Todo
+    keyExchange?: Todo
+    mainnet?: Todo
+    sidechain?: {
+        url?: string
+    },
+    dataUnion?: string
+    tokenAddress?: string,
+    minimumWithdrawTokenWei?: BigNumber|number|string,
+    sidechainTokenAddress?: string
+    factoryMainnetAddress?: string
+    sidechainAmbAddress?: string
+    payForSignatureTransport?: boolean
+    cache?: {
+        maxSize?: number,
+        maxAge?: number
+    }
+}
+
+// TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
+export type OnMessageCallback = (message: any, metadata: any) => void
+
+interface MessageEvent {
+    data: any
+}
 
 /**
  * Wrap connection message events with message parsing.
  */
 
 class StreamrConnection extends Connection {
-    constructor(...args: Todo) {
+    // TODO define args type when we convert Connection class to TypeScript
+    constructor(...args: any) {
         super(...args)
         this.on('message', this.onConnectionMessage)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    parse(messageEvent: Todo) {
+    parse(messageEvent: MessageEvent) {
         return ControlLayer.ControlMessage.deserialize(messageEvent.data)
     }
 
-    onConnectionMessage(messageEvent: Todo) {
+    onConnectionMessage(messageEvent: MessageEvent) {
         let controlMessage
         try {
             controlMessage = this.parse(messageEvent)
@@ -54,19 +106,20 @@ class StreamrConnection extends Connection {
 
 class StreamrCached {
 
-    client: Todo
-    getStream: Todo
-    getUserInfo: Todo
-    isStreamPublisher: Todo
-    isStreamSubscriber: Todo
-    getUserId: Todo
+    client: StreamrClient
+    // TODO change all "any" types in this class to valid types when CacheAsyncFn is converted to TypeScript
+    getStream: any
+    getUserInfo: any
+    isStreamPublisher: any
+    isStreamSubscriber: any
+    getUserId: any
 
     constructor(client: StreamrClient) {
         this.client = client
-        const cacheOptions = client.options.cache
+        const cacheOptions: Todo = client.options.cache
         this.getStream = CacheAsyncFn(client.getStream.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId]: Todo) {
+            cacheKey([maybeStreamId]: any) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return streamId
             }
@@ -74,7 +127,7 @@ class StreamrCached {
         this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
         this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]: Todo) {
+            cacheKey([maybeStreamId, ethAddress]: any) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return `${streamId}|${ethAddress}`
             }
@@ -82,7 +135,7 @@ class StreamrCached {
 
         this.isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]: Todo) {
+            cacheKey([maybeStreamId, ethAddress]: any) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return `${streamId}|${ethAddress}`
             }
@@ -91,10 +144,10 @@ class StreamrCached {
         this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
     }
 
-    clearStream(streamId: Todo) {
+    clearStream(streamId: string) {
         this.getStream.clear()
-        this.isStreamPublisher.clearMatching((s: Todo) => s.startsWith(streamId))
-        this.isStreamSubscriber.clearMatching((s: Todo) => s.startsWith(streamId))
+        this.isStreamPublisher.clearMatching((s: string) => s.startsWith(streamId))
+        this.isStreamSubscriber.clearMatching((s: string) => s.startsWith(streamId))
     }
 
     clearUser() {
@@ -116,7 +169,7 @@ export default class StreamrClient extends EventEmitter {
 
     id: string
     debug: Debug.Debugger
-    options: Todo
+    options: StreamrClientOptions
     session: Session
     connection: StreamrConnection
     publisher: Todo
@@ -127,7 +180,7 @@ export default class StreamrClient extends EventEmitter {
     loginEndpoints: LoginEndpoints
     dataUnionEndpoints: DataUnionEndpoints
 
-    constructor(options: Todo = {}, connection?: StreamrConnection) {
+    constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
@@ -284,7 +337,7 @@ export default class StreamrClient extends EventEmitter {
         return this.publisher.rotateGroupKey(...args)
     }
 
-    async subscribe(opts: Todo, onMessage: Todo) {
+    async subscribe(opts: Todo, onMessage: OnMessageCallback) {
         let subTask: Todo
         let sub: Todo
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
@@ -319,7 +372,7 @@ export default class StreamrClient extends EventEmitter {
         await this.subscriber.unsubscribe(opts)
     }
 
-    async resend(opts: Todo, onMessage: Todo) {
+    async resend(opts: Todo, onMessage: OnMessageCallback) {
         const task = this.subscriber.resend(opts)
         if (typeof onMessage !== 'function') {
             return task
@@ -360,11 +413,11 @@ export default class StreamrClient extends EventEmitter {
 
     // TODO many of these methods that use streamEndpoints/loginEndpoints/dataUnionEndpoints are private: remove those
 
-    async getStream(streamId: Todo) {
+    async getStream(streamId: string) {
         return this.streamEndpoints.getStream(streamId)
     }
 
-    async listStreams(query: Todo = {}) {
+    async listStreams(query: StreamListQuery = {}) {
         return this.streamEndpoints.listStreams(query)
     }
 
@@ -372,46 +425,46 @@ export default class StreamrClient extends EventEmitter {
         return this.streamEndpoints.getStreamByName(name)
     }
 
-    async createStream(props: Todo) {
+    async createStream(props: StreamProperties) {
         return this.streamEndpoints.createStream(props)
     }
 
-    async getOrCreateStream(props: Todo) {
+    async getOrCreateStream(props: { id?: string, name?: string }) {
         return this.streamEndpoints.getOrCreateStream(props)
     }
 
-    async getStreamPublishers(streamId: Todo) {
+    async getStreamPublishers(streamId: string) {
         return this.streamEndpoints.getStreamPublishers(streamId)
     }
 
-    async isStreamPublisher(streamId: Todo, ethAddress: Todo) {
+    async isStreamPublisher(streamId: string, ethAddress: string) {
         return this.streamEndpoints.isStreamPublisher(streamId, ethAddress)
     }
 
-    async getStreamSubscribers(streamId: Todo) {
+    async getStreamSubscribers(streamId: string) {
         return this.streamEndpoints.getStreamSubscribers(streamId)
     }
 
-    async isStreamSubscriber(streamId: Todo, ethAddress: Todo) {
+    async isStreamSubscriber(streamId: string, ethAddress: string) {
         return this.streamEndpoints.isStreamSubscriber(streamId, ethAddress)
     }
 
-    async getStreamValidationInfo(streamId: Todo) {
+    async getStreamValidationInfo(streamId: string) {
         return this.streamEndpoints.getStreamValidationInfo(streamId)
     }
 
-    async getStreamLast(streamObjectOrId: Todo) {
+    async getStreamLast(streamObjectOrId: Stream|string) {
         return this.streamEndpoints.getStreamLast(streamObjectOrId)
     }
 
-    async getStreamPartsByStorageNode(address: Todo) {
+    async getStreamPartsByStorageNode(address: string) {
         return this.streamEndpoints.getStreamPartsByStorageNode(address)
     }
 
-    async publishHttp(streamObjectOrId: Todo, data: Todo, requestOptions: Todo = {}, keepAlive: Todo = true) {
+    async publishHttp(streamObjectOrId: Stream|string, data: Todo, requestOptions: Todo = {}, keepAlive: boolean = true) {
         return this.streamEndpoints.publishHttp(streamObjectOrId, data, requestOptions, keepAlive)
     }
-
+    
     async getChallenge(address: Todo) {
         return this.loginEndpoints.getChallenge(address)
     }
@@ -440,115 +493,115 @@ export default class StreamrClient extends EventEmitter {
         return this.loginEndpoints.logoutEndpoint()
     }
 
-    async calculateDataUnionMainnetAddress(dataUnionName: Todo, deployerAddress: Todo, options: Todo) {
+    async calculateDataUnionMainnetAddress(dataUnionName: string, deployerAddress: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress, options)
     }
 
-    async calculateDataUnionSidechainAddress(duMainnetAddress: Todo, options: Todo) {
+    async calculateDataUnionSidechainAddress(duMainnetAddress: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.calculateDataUnionSidechainAddress(duMainnetAddress, options)
     }
 
-    async deployDataUnion(options: Todo = {}) {
+    async deployDataUnion(options: DataUnionOptions = {}) {
         return this.dataUnionEndpoints.deployDataUnion(options)
     }
 
-    async getDataUnionContract(options: Todo = {}) {
+    async getDataUnionContract(options: DataUnionOptions = {}) {
         return this.dataUnionEndpoints.getDataUnionContract(options)
     }
 
-    async createSecret(dataUnionMainnetAddress: Todo, name: string = 'Untitled Data Union Secret') {
+    async createSecret(dataUnionMainnetAddress: string, name: string = 'Untitled Data Union Secret') {
         return this.dataUnionEndpoints.createSecret(dataUnionMainnetAddress, name)
     }
 
-    async kick(memberAddressList: Todo, options: Todo = {}) {
+    async kick(memberAddressList: string[], options: DataUnionOptions = {}) {
         return this.dataUnionEndpoints.kick(memberAddressList, options)
     }
 
-    async addMembers(memberAddressList: Todo, options: Todo = {}) {
+    async addMembers(memberAddressList: string[], options: DataUnionOptions = {}) {
         return this.dataUnionEndpoints.addMembers(memberAddressList, options)
     }
 
-    async withdrawMember(memberAddress: Todo, options: Todo) {
+    async withdrawMember(memberAddress: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.withdrawMember(memberAddress, options)
     }
 
-    async getWithdrawMemberTx(memberAddress: Todo, options: Todo) {
+    async getWithdrawMemberTx(memberAddress: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.getWithdrawMemberTx(memberAddress, options)
     }
 
-    async withdrawToSigned(memberAddress: Todo, recipientAddress: Todo, signature: Todo, options: Todo) {
+    async withdrawToSigned(memberAddress: string, recipientAddress: string, signature: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.withdrawToSigned(memberAddress, recipientAddress, signature, options)
     }
 
-    async getWithdrawToSignedTx(memberAddress: Todo, recipientAddress: Todo, signature: Todo, options: Todo) {
+    async getWithdrawToSignedTx(memberAddress: string, recipientAddress: string, signature: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.getWithdrawToSignedTx(memberAddress, recipientAddress, signature, options)
     }
 
-    async setAdminFee(newFeeFraction: Todo, options: Todo) {
+    async setAdminFee(newFeeFraction: number, options: DataUnionOptions) {
         return this.dataUnionEndpoints.setAdminFee(newFeeFraction, options)
     }
 
-    async getAdminFee(options: Todo) {
+    async getAdminFee(options: DataUnionOptions) {
         return this.dataUnionEndpoints.getAdminFee(options)
     }
 
-    async getAdminAddress(options: Todo) {
+    async getAdminAddress(options: DataUnionOptions) {
         return this.dataUnionEndpoints.getAdminAddress(options)
     }
 
-    async joinDataUnion(options: Todo = {}) {
+    async joinDataUnion(options: DataUnionOptions = {}) {
         return this.dataUnionEndpoints.joinDataUnion(options)
     }
 
-    async hasJoined(memberAddress: Todo, options: Todo = {}) {
+    async hasJoined(memberAddress: string, options: DataUnionOptions = {}) {
         return this.dataUnionEndpoints.hasJoined(memberAddress, options)
     }
 
-    async getMembers(options: Todo) {
+    async getMembers(options: DataUnionOptions) {
         return this.dataUnionEndpoints.getMembers(options)
     }
 
-    async getDataUnionStats(options: Todo) {
+    async getDataUnionStats(options: DataUnionOptions) {
         return this.dataUnionEndpoints.getDataUnionStats(options)
     }
 
-    async getMemberStats(memberAddress: Todo, options: Todo) {
+    async getMemberStats(memberAddress: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.getMemberStats(memberAddress, options)
     }
 
-    async getMemberBalance(memberAddress: Todo, options: Todo) {
+    async getMemberBalance(memberAddress: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.getMemberBalance(memberAddress, options)
     }
 
-    async getTokenBalance(address: Todo, options: Todo) {
+    async getTokenBalance(address: string|null|undefined, options: DataUnionOptions) {
         return this.dataUnionEndpoints.getTokenBalance(address, options)
     }
 
-    async getDataUnionVersion(contractAddress: Todo) {
+    async getDataUnionVersion(contractAddress: string) {
         return this.dataUnionEndpoints.getDataUnionVersion(contractAddress)
     }
 
-    async withdraw(options: Todo = {}) {
+    async withdraw(options: DataUnionOptions = {}) {
         return this.dataUnionEndpoints.withdraw(options)
     }
 
-    async getWithdrawTx(options: Todo) {
+    async getWithdrawTx(options: DataUnionOptions) {
         return this.dataUnionEndpoints.getWithdrawTx(options)
     }
 
-    async withdrawTo(recipientAddress: Todo, options = {}) {
+    async withdrawTo(recipientAddress: string, options: DataUnionOptions = {}) {
         return this.dataUnionEndpoints.withdrawTo(recipientAddress, options)
     }
 
-    async getWithdrawTxTo(recipientAddress: Todo, options: Todo) {
+    async getWithdrawTxTo(recipientAddress: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.getWithdrawTxTo(recipientAddress, options)
     }
 
-    async signWithdrawTo(recipientAddress: Todo, options: Todo) {
+    async signWithdrawTo(recipientAddress: string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.signWithdrawTo(recipientAddress, options)
     }
 
-    async signWithdrawAmountTo(recipientAddress: Todo, amountTokenWei: Todo, options: Todo) {
+    async signWithdrawAmountTo(recipientAddress: string, amountTokenWei: BigNumber|number|string, options: DataUnionOptions) {
         return this.dataUnionEndpoints.signWithdrawAmountTo(recipientAddress, amountTokenWei, options)
     }
 }

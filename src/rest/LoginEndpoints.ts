@@ -1,10 +1,9 @@
 import StreamrClient from '../StreamrClient'
-import { Todo } from '../types'
 import { getEndpointUrl } from '../utils'
 
 import authFetch, { AuthFetchError } from './authFetch'
 
-async function getSessionToken(url: Todo, props: Todo) {
+async function getSessionToken(url: string, props: any) {
     return authFetch(
         url,
         undefined,
@@ -26,7 +25,7 @@ export class LoginEndpoints {
         this.client = client
     }
 
-    async getChallenge(address: Todo) {
+    async getChallenge(address: string) {
         this.client.debug('getChallenge %o', {
             address,
         })
@@ -40,7 +39,7 @@ export class LoginEndpoints {
         )
     }
 
-    async sendChallengeResponse(challenge: Todo, signature: Todo, address: Todo) {
+    async sendChallengeResponse(challenge: string, signature: string, address: string) {
         this.client.debug('sendChallengeResponse %o', {
             challenge,
             signature,
@@ -55,7 +54,7 @@ export class LoginEndpoints {
         return getSessionToken(url, props)
     }
 
-    async loginWithChallengeResponse(signingFunction: Todo, address: Todo) {
+    async loginWithChallengeResponse(signingFunction: (challenge: string) => Promise<string>, address: string) {
         this.client.debug('loginWithChallengeResponse %o', {
             address,
         })
@@ -64,7 +63,7 @@ export class LoginEndpoints {
         return this.sendChallengeResponse(challenge, signature, address)
     }
 
-    async loginWithApiKey(apiKey: Todo) {
+    async loginWithApiKey(apiKey: string) {
         this.client.debug('loginWithApiKey %o', {
             apiKey,
         })
@@ -75,7 +74,7 @@ export class LoginEndpoints {
         return getSessionToken(url, props)
     }
 
-    async loginWithUsernamePassword(username: Todo, password: Todo) {
+    async loginWithUsernamePassword(username: string, password: string) {
         this.client.debug('loginWithUsernamePassword %o', {
             username,
         })

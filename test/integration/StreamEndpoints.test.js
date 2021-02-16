@@ -230,7 +230,7 @@ function TestStreamEndpoints(getName) {
         })
     })
 
-    describe.only('Storage node assignment', () => {
+    describe('Storage node assignment', () => {
         it('add', async () => {
             const storageNodeAddress = ethers.Wallet.createRandom().address
             const stream = await client.createStream()

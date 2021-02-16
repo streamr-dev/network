@@ -6,7 +6,7 @@ import debugFactory from 'debug'
 
 import { getEndpointUrl } from '../utils'
 import { validateOptions } from '../stream/utils'
-import Stream from '../stream'
+import Stream, { StreamOperation, StreamProperties } from '../stream'
 import StreamPart from '../stream/StreamPart'
 import { isKeyExchangeStream } from '../stream/KeyExchange'
 
@@ -15,6 +15,20 @@ import { Todo } from '../types'
 import StreamrClient from '../StreamrClient'
 
 const debug = debugFactory('StreamrClient')
+
+export interface StreamListQuery {
+    name?: string
+    uiChannel?: boolean
+    noConfig?: boolean
+    search?: string
+    sortBy?: string
+    order?: 'asc'|'desc'
+    max?: number
+    offset?: number
+    grantedAccess?: boolean
+    publicAccess?: boolean
+    operation?: StreamOperation
+}
 
 const agentSettings = {
     keepAlive: true,
@@ -46,7 +60,7 @@ export class StreamEndpoints {
         this.client = client
     }
 
-    async getStream(streamId: Todo) {
+    async getStream(streamId: string) {
         this.client.debug('getStream %o', {
             streamId,
         })
@@ -70,7 +84,7 @@ export class StreamEndpoints {
         }
     }
 
-    async listStreams(query: Todo = {}) {
+    async listStreams(query: StreamListQuery = {}) {
         this.client.debug('listStreams %o', {
             query,
         })
@@ -85,12 +99,13 @@ export class StreamEndpoints {
         })
         const json = await this.listStreams({
             name,
+            // @ts-expect-error
             public: false,
         })
         return json[0] ? new Stream(this.client, json[0]) : undefined
     }
 
-    async createStream(props: Todo) {
+    async createStream(props: StreamProperties) {
         this.client.debug('createStream %o', {
             props,
         })
@@ -106,7 +121,7 @@ export class StreamEndpoints {
         return json ? new Stream(this.client, json) : undefined
     }
 
-    async getOrCreateStream(props: Todo) {
+    async getOrCreateStream(props: { id?: string, name?: string }) {
         this.client.debug('getOrCreateStream %o', {
             props,
         })
@@ -133,7 +148,7 @@ export class StreamEndpoints {
         }
     }
 
-    async getStreamPublishers(streamId: Todo) {
+    async getStreamPublishers(streamId: string) {
         this.client.debug('getStreamPublishers %o', {
             streamId,
         })
@@ -142,7 +157,7 @@ export class StreamEndpoints {
         return json.addresses.map((a: string) => a.toLowerCase())
     }
 
-    async isStreamPublisher(streamId: Todo, ethAddress: Todo) {
+    async isStreamPublisher(streamId: string, ethAddress: string) {
         this.client.debug('isStreamPublisher %o', {
             streamId,
             ethAddress,
@@ -160,16 +175,16 @@ export class StreamEndpoints {
         }
     }
 
-    async getStreamSubscribers(streamId: Todo) {
+    async getStreamSubscribers(streamId: string) {
         this.client.debug('getStreamSubscribers %o', {
             streamId,
         })
         const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'subscribers')
         const json = await authFetch(url, this.client.session)
-        return json.addresses.map((a: Todo) => a.toLowerCase())
+        return json.addresses.map((a: string) => a.toLowerCase())
     }
 
-    async isStreamSubscriber(streamId: Todo, ethAddress: Todo) {
+    async isStreamSubscriber(streamId: string, ethAddress: string) {
         this.client.debug('isStreamSubscriber %o', {
             streamId,
             ethAddress,
@@ -186,7 +201,7 @@ export class StreamEndpoints {
         }
     }
 
-    async getStreamValidationInfo(streamId: Todo) {
+    async getStreamValidationInfo(streamId: string) {
         this.client.debug('getStreamValidationInfo %o', {
             streamId,
         })
@@ -195,7 +210,7 @@ export class StreamEndpoints {
         return json
     }
 
-    async getStreamLast(streamObjectOrId: Todo) {
+    async getStreamLast(streamObjectOrId: Stream|string) {
         const { streamId, streamPartition = 0, count = 1 } = validateOptions(streamObjectOrId)
         this.client.debug('getStreamLast %o', {
             streamId,
@@ -211,16 +226,16 @@ export class StreamEndpoints {
         return json
     }
 
-    async getStreamPartsByStorageNode(address: Todo) {
+    async getStreamPartsByStorageNode(address: string) {
         const json = await authFetch(getEndpointUrl(this.client.options.restUrl, 'storageNodes', address, 'streams'), this.client.session)
-        let result: Todo = []
-        json.forEach((stream: Todo) => {
+        let result: StreamPart[] = []
+        json.forEach((stream: { id: string, partitions: number }) => {
             result = result.concat(StreamPart.fromStream(stream))
         })
         return result
     }
 
-    async publishHttp(streamObjectOrId: Todo, data: Todo, requestOptions: Todo = {}, keepAlive: Todo = true) {
+    async publishHttp(streamObjectOrId: Stream|string, data: Todo, requestOptions: Todo = {}, keepAlive: boolean = true) {
         let streamId
         if (streamObjectOrId instanceof Stream) {
             streamId = streamObjectOrId.id
@@ -239,7 +254,7 @@ export class StreamEndpoints {
                 ...requestOptions,
                 method: 'POST',
                 body: JSON.stringify(data),
-                agent: keepAlive ? getKeepAliveAgentForUrl(this.client.options.restUrl) : undefined,
+                agent: keepAlive ? getKeepAliveAgentForUrl(this.client.options.restUrl!) : undefined,
             },
         )
     }
