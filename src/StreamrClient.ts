@@ -464,33 +464,9 @@ export default class StreamrClient extends EventEmitter {
     async publishHttp(streamObjectOrId: Stream|string, data: Todo, requestOptions: Todo = {}, keepAlive: boolean = true) {
         return this.streamEndpoints.publishHttp(streamObjectOrId, data, requestOptions, keepAlive)
     }
-    
-    async getChallenge(address: Todo) {
-        return this.loginEndpoints.getChallenge(address)
-    }
-
-    async sendChallengeResponse(challenge: Todo, signature: Todo, address: Todo) {
-        return this.loginEndpoints.sendChallengeResponse(challenge, signature, address)
-    }
-
-    async loginWithChallengeResponse(signingFunction: Todo, address: Todo) {
-        return this.loginEndpoints.loginWithChallengeResponse(signingFunction, address)
-    }
-
-    async loginWithApiKey(apiKey: Todo) {
-        return this.loginEndpoints.loginWithApiKey(apiKey)
-    }
-
-    async loginWithUsernamePassword(username: Todo, password: Todo) {
-        return this.loginEndpoints.loginWithUsernamePassword(username, password)
-    }
 
     async getUserInfo() {
         return this.loginEndpoints.getUserInfo()
-    }
-
-    async logoutEndpoint() {
-        return this.loginEndpoints.logoutEndpoint()
     }
 
     async calculateDataUnionMainnetAddress(dataUnionName: string, deployerAddress: string, options: DataUnionOptions) {
