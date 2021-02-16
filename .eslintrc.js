@@ -1,5 +1,8 @@
 module.exports = {
-    parser: 'babel-eslint',
+    parser: '@typescript-eslint/parser',
+    plugins: [
+        '@typescript-eslint'
+    ],
     extends: [
         'streamr-nodejs'
     ],
@@ -35,7 +38,11 @@ module.exports = {
         'lines-between-class-members': 'off',
         'padded-blocks': 'off',
         'no-use-before-define': 'off',
-        'import/order': 'off'
+        'import/order': 'off',
+        'no-shadow': 'off',
+        '@typescript-eslint/no-shadow': 'error',
+        'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': ['error']
     },
     settings: {
         'import/resolver': {
