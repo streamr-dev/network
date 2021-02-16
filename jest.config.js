@@ -163,7 +163,7 @@ module.exports = {
 
     // A map from regular expressions to paths to transformers
     transform: {
-        '\\.js$': ['babel-jest', {
+        '\\.(js|ts)$': ['babel-jest', {
             configFile: path.resolve(__dirname, '.babel.node.config.js'),
             babelrc: false,
         }]
