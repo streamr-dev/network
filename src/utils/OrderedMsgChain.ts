@@ -201,7 +201,7 @@ class OrderedMsgChain extends MsgChainEmitter {
         if (this.isStaleMessage(unorderedStreamMessage)) {
             const msgRef = unorderedStreamMessage.getMessageRef()
             // Prevent double-processing of messages for any reason
-            this.debug('Already received message: %o, lastOrderedMsgRef: %o. Ignoring message.', msgRef, this.lastOrderedMsgRef)
+            this.debug('Ignoring message: %o. Message was already enqueued or we already processed a newer message: %o.', msgRef, this.lastOrderedMsgRef)
             return
         }
 
@@ -354,12 +354,6 @@ class OrderedMsgChain extends MsgChainEmitter {
                 to,
             })
             this.gapRequestCount += 1
-            if (from.compareTo(to) > 0) {
-                setTimeout(() => {
-                    process.exit(1)
-                }, 0)
-                return
-            }
             try {
                 this.gapHandler(from, to, this.publisherId, this.msgChainId)
             } catch (err) {
