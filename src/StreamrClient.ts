@@ -1,4 +1,5 @@
 import EventEmitter from 'eventemitter3'
+// @ts-expect-error
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
@@ -11,23 +12,24 @@ import Connection from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
 import { getUserId } from './user'
+import { Todo } from './types'
 
 /**
  * Wrap connection message events with message parsing.
  */
 
 class StreamrConnection extends Connection {
-    constructor(...args) {
+    constructor(...args: Todo) {
         super(...args)
         this.on('message', this.onConnectionMessage)
     }
 
     // eslint-disable-next-line class-methods-use-this
-    parse(messageEvent) {
+    parse(messageEvent: Todo) {
         return ControlLayer.ControlMessage.deserialize(messageEvent.data)
     }
 
-    onConnectionMessage(messageEvent) {
+    onConnectionMessage(messageEvent: Todo) {
         let controlMessage
         try {
             controlMessage = this.parse(messageEvent)
@@ -48,28 +50,39 @@ class StreamrConnection extends Connection {
 }
 
 class StreamrCached {
-    constructor(client) {
+
+    client: Todo
+    getStream: Todo
+    getUserInfo: Todo
+    isStreamPublisher: Todo
+    isStreamSubscriber: Todo
+    getUserId: Todo
+
+    constructor(client: StreamrClient) {
         this.client = client
         const cacheOptions = client.options.cache
+        // @ts-expect-error
         this.getStream = CacheAsyncFn(client.getStream.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId]) {
+            cacheKey([maybeStreamId]: Todo) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return streamId
             }
         })
         this.getUserInfo = CacheAsyncFn(client.getUserInfo.bind(client), cacheOptions)
+        // @ts-expect-error
         this.isStreamPublisher = CacheAsyncFn(client.isStreamPublisher.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]) {
+            cacheKey([maybeStreamId, ethAddress]: Todo) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return `${streamId}|${ethAddress}`
             }
         })
 
+        // @ts-expect-error
         this.isStreamSubscriber = CacheAsyncFn(client.isStreamSubscriber.bind(client), {
             ...cacheOptions,
-            cacheKey([maybeStreamId, ethAddress]) {
+            cacheKey([maybeStreamId, ethAddress]: Todo) {
                 const { streamId } = validateOptions(maybeStreamId)
                 return `${streamId}|${ethAddress}`
             }
@@ -78,10 +91,10 @@ class StreamrCached {
         this.getUserId = CacheAsyncFn(client.getUserId.bind(client), cacheOptions)
     }
 
-    clearStream(streamId) {
+    clearStream(streamId: Todo) {
         this.getStream.clear()
-        this.isStreamPublisher.clearMatching((s) => s.startsWith(streamId))
-        this.isStreamSubscriber.clearMatching((s) => s.startsWith(streamId))
+        this.isStreamPublisher.clearMatching((s: Todo) => s.startsWith(streamId))
+        this.isStreamSubscriber.clearMatching((s: Todo) => s.startsWith(streamId))
     }
 
     clearUser() {
@@ -91,6 +104,7 @@ class StreamrCached {
 
     clear() {
         this.clearUser()
+        // @ts-expect-error
         this.clearStream()
     }
 }
@@ -99,7 +113,19 @@ class StreamrCached {
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
 export default class StreamrClient extends EventEmitter {
-    constructor(options = {}, connection) {
+
+    id: string
+    debug: Debug.Debugger
+    options: Todo
+    getUserInfo: Todo
+    session: Session
+    connection: StreamrConnection
+    publisher: Todo
+    subscriber: Subscriber
+    cached: StreamrCached
+    ethereum: StreamrEthereum
+
+    constructor(options: Todo = {}, connection?: StreamrConnection) {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
@@ -135,6 +161,7 @@ export default class StreamrClient extends EventEmitter {
             .on('disconnected', this.onConnectionDisconnected)
             .on('error', this.onConnectionError)
 
+        // @ts-expect-error
         this.publisher = new Publisher(this)
         this.subscriber = new Subscriber(this)
         this.cached = new StreamrCached(this)
@@ -151,12 +178,12 @@ export default class StreamrClient extends EventEmitter {
         this.emit('disconnected')
     }
 
-    onConnectionError(err) {
+    onConnectionError(err: Todo) {
         this.emit('error', new Connection.ConnectionError(err))
     }
 
-    getErrorEmitter(source) {
-        return (err) => {
+    getErrorEmitter(source: Todo) {
+        return (err: Todo) => {
             if (!(err instanceof Connection.ConnectionError || err.reason instanceof Connection.ConnectionError)) {
                 // emit non-connection errors
                 this.emit('error', err)
@@ -166,11 +193,12 @@ export default class StreamrClient extends EventEmitter {
         }
     }
 
-    _onError(err, ...args) {
+    _onError(err: Todo, ...args: Todo) {
+        // @ts-expect-error
         this.onError(err, ...args)
     }
 
-    async send(request) {
+    async send(request: Todo) {
         return this.connection.send(request)
     }
 
@@ -178,7 +206,7 @@ export default class StreamrClient extends EventEmitter {
      * Override to control output
      */
 
-    onError(error) { // eslint-disable-line class-methods-use-this
+    onError(error: Todo) { // eslint-disable-line class-methods-use-this
         console.error(error)
     }
 
@@ -214,11 +242,12 @@ export default class StreamrClient extends EventEmitter {
         ])
     }
 
-    getSubscriptions(...args) {
+    getSubscriptions(...args: Todo) {
         return this.subscriber.getAll(...args)
     }
 
-    getSubscription(...args) {
+    getSubscription(...args: Todo) {
+        // @ts-expect-error
         return this.subscriber.get(...args)
     }
 
@@ -234,7 +263,7 @@ export default class StreamrClient extends EventEmitter {
         return this.session.logout()
     }
 
-    async publish(...args) {
+    async publish(...args: Todo) {
         return this.publisher.publish(...args)
     }
 
@@ -242,17 +271,17 @@ export default class StreamrClient extends EventEmitter {
         return getUserId(this)
     }
 
-    setNextGroupKey(...args) {
+    setNextGroupKey(...args: Todo) {
         return this.publisher.setNextGroupKey(...args)
     }
 
-    rotateGroupKey(...args) {
+    rotateGroupKey(...args: Todo) {
         return this.publisher.rotateGroupKey(...args)
     }
 
-    async subscribe(opts, onMessage) {
-        let subTask
-        let sub
+    async subscribe(opts: Todo, onMessage: Todo) {
+        let subTask: Todo
+        let sub: Todo
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
         const onEnd = () => {
             if (sub && typeof onMessage === 'function') {
@@ -281,11 +310,11 @@ export default class StreamrClient extends EventEmitter {
         return subTask
     }
 
-    async unsubscribe(opts) {
+    async unsubscribe(opts: Todo) {
         await this.subscriber.unsubscribe(opts)
     }
 
-    async resend(opts, onMessage) {
+    async resend(opts: Todo, onMessage: Todo) {
         const task = this.subscriber.resend(opts)
         if (typeof onMessage !== 'function') {
             return task
@@ -304,11 +333,11 @@ export default class StreamrClient extends EventEmitter {
         return task
     }
 
-    enableAutoConnect(...args) {
+    enableAutoConnect(...args: Todo) {
         return this.connection.enableAutoConnect(...args)
     }
 
-    enableAutoDisconnect(...args) {
+    enableAutoDisconnect(...args: Todo) {
         return this.connection.enableAutoDisconnect(...args)
     }
 

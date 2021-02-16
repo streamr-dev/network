@@ -1,8 +1,9 @@
+import { Todo } from '../types'
 import { getEndpointUrl } from '../utils'
 
 import authFetch, { AuthFetchError } from './authFetch'
 
-async function getSessionToken(url, props) {
+async function getSessionToken(url: Todo, props: Todo) {
     return authFetch(
         url,
         undefined,
@@ -16,7 +17,7 @@ async function getSessionToken(url, props) {
     )
 }
 
-export async function getChallenge(address) {
+export async function getChallenge(address: Todo) {
     this.debug('getChallenge %o', {
         address,
     })
@@ -30,7 +31,7 @@ export async function getChallenge(address) {
     )
 }
 
-export async function sendChallengeResponse(challenge, signature, address) {
+export async function sendChallengeResponse(challenge: Todo, signature: Todo, address: Todo) {
     this.debug('sendChallengeResponse %o', {
         challenge,
         signature,
@@ -45,7 +46,7 @@ export async function sendChallengeResponse(challenge, signature, address) {
     return getSessionToken(url, props)
 }
 
-export async function loginWithChallengeResponse(signingFunction, address) {
+export async function loginWithChallengeResponse(signingFunction: Todo, address: Todo) {
     this.debug('loginWithChallengeResponse %o', {
         address,
     })
@@ -54,7 +55,7 @@ export async function loginWithChallengeResponse(signingFunction, address) {
     return this.sendChallengeResponse(challenge, signature, address)
 }
 
-export async function loginWithApiKey(apiKey) {
+export async function loginWithApiKey(apiKey: Todo) {
     this.debug('loginWithApiKey %o', {
         apiKey,
     })
@@ -65,7 +66,7 @@ export async function loginWithApiKey(apiKey) {
     return getSessionToken(url, props)
 }
 
-export async function loginWithUsernamePassword(username, password) {
+export async function loginWithUsernamePassword(username: Todo, password: Todo) {
     this.debug('loginWithUsernamePassword %o', {
         username,
     })

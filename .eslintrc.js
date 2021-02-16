@@ -31,7 +31,11 @@ module.exports = {
         'no-restricted-syntax': [
             'error', 'ForInStatement', 'LabeledStatement', 'WithStatement'
         ],
-        'import/extensions': ['error', 'never', { json: 'always' }]
+        'import/extensions': ['error', 'never', { json: 'always' }],
+        'lines-between-class-members': 'off',
+        'padded-blocks': 'off',
+        'no-use-before-define': 'off',
+        'import/order': 'off'
     },
     settings: {
         'import/resolver': {

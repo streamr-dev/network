@@ -11,6 +11,7 @@ import StreamPart from '../stream/StreamPart'
 import { isKeyExchangeStream } from '../stream/KeyExchange'
 
 import authFetch from './authFetch'
+import { Todo } from '../types'
 
 const debug = debugFactory('StreamrClient')
 
@@ -24,7 +25,7 @@ const agentByProtocol = {
     https: new HttpsAgent(agentSettings),
 }
 
-function getKeepAliveAgentForUrl(url) {
+function getKeepAliveAgentForUrl(url: string) {
     if (url.startsWith('https')) {
         return agentByProtocol.https
     }
@@ -38,7 +39,7 @@ function getKeepAliveAgentForUrl(url) {
 
 // These function are mixed in to StreamrClient.prototype.
 // In the below functions, 'this' is intended to be the StreamrClient
-export async function getStream(streamId) {
+export async function getStream(streamId: Todo) {
     this.debug('getStream %o', {
         streamId,
     })
@@ -62,7 +63,7 @@ export async function getStream(streamId) {
     }
 }
 
-export async function listStreams(query = {}) {
+export async function listStreams(query: Todo = {}) {
     this.debug('listStreams %o', {
         query,
     })
@@ -71,7 +72,7 @@ export async function listStreams(query = {}) {
     return json ? json.map((stream) => new Stream(this, stream)) : []
 }
 
-export async function getStreamByName(name) {
+export async function getStreamByName(name: string) {
     this.debug('getStreamByName %o', {
         name,
     })
@@ -82,7 +83,7 @@ export async function getStreamByName(name) {
     return json[0] ? new Stream(this, json[0]) : undefined
 }
 
-export async function createStream(props) {
+export async function createStream(props: Todo) {
     this.debug('createStream %o', {
         props,
     })
@@ -98,7 +99,7 @@ export async function createStream(props) {
     return json ? new Stream(this, json) : undefined
 }
 
-export async function getOrCreateStream(props) {
+export async function getOrCreateStream(props: Todo) {
     this.debug('getOrCreateStream %o', {
         props,
     })
@@ -125,16 +126,16 @@ export async function getOrCreateStream(props) {
     }
 }
 
-export async function getStreamPublishers(streamId) {
+export async function getStreamPublishers(streamId: Todo) {
     this.debug('getStreamPublishers %o', {
         streamId,
     })
     const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'publishers')
     const json = await authFetch(url, this.session)
-    return json.addresses.map((a) => a.toLowerCase())
+    return json.addresses.map((a: string) => a.toLowerCase())
 }
 
-export async function isStreamPublisher(streamId, ethAddress) {
+export async function isStreamPublisher(streamId: Todo, ethAddress: Todo) {
     this.debug('isStreamPublisher %o', {
         streamId,
         ethAddress,
@@ -152,16 +153,16 @@ export async function isStreamPublisher(streamId, ethAddress) {
     }
 }
 
-export async function getStreamSubscribers(streamId) {
+export async function getStreamSubscribers(streamId: Todo) {
     this.debug('getStreamSubscribers %o', {
         streamId,
     })
     const url = getEndpointUrl(this.options.restUrl, 'streams', streamId, 'subscribers')
     const json = await authFetch(url, this.session)
-    return json.addresses.map((a) => a.toLowerCase())
+    return json.addresses.map((a: Todo) => a.toLowerCase())
 }
 
-export async function isStreamSubscriber(streamId, ethAddress) {
+export async function isStreamSubscriber(streamId: Todo, ethAddress: Todo) {
     this.debug('isStreamSubscriber %o', {
         streamId,
         ethAddress,
@@ -178,7 +179,7 @@ export async function isStreamSubscriber(streamId, ethAddress) {
     }
 }
 
-export async function getStreamValidationInfo(streamId) {
+export async function getStreamValidationInfo(streamId: Todo) {
     this.debug('getStreamValidationInfo %o', {
         streamId,
     })
@@ -187,7 +188,7 @@ export async function getStreamValidationInfo(streamId) {
     return json
 }
 
-export async function getStreamLast(streamObjectOrId) {
+export async function getStreamLast(streamObjectOrId: Todo) {
     const { streamId, streamPartition = 0, count = 1 } = validateOptions(streamObjectOrId)
     this.debug('getStreamLast %o', {
         streamId,
@@ -203,18 +204,19 @@ export async function getStreamLast(streamObjectOrId) {
     return json
 }
 
-export async function getStreamPartsByStorageNode(address) {
+export async function getStreamPartsByStorageNode(address: Todo) {
     const json = await authFetch(getEndpointUrl(this.options.restUrl, 'storageNodes', address, 'streams'), this.session)
-    let result = []
-    json.forEach((stream) => {
+    let result: Todo = []
+    json.forEach((stream: Todo) => {
         result = result.concat(StreamPart.fromStream(stream))
     })
     return result
 }
 
-export async function publishHttp(streamObjectOrId, data, requestOptions = {}, keepAlive = true) {
+export async function publishHttp(streamObjectOrId: Todo, data: Todo, requestOptions: Todo = {}, keepAlive: Todo = true) {
     let streamId
     if (streamObjectOrId instanceof Stream) {
+        // @ts-expect-error
         streamId = streamObjectOrId.id
     } else {
         streamId = streamObjectOrId

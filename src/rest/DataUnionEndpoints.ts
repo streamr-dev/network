@@ -17,6 +17,7 @@ import { Contract } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { verifyMessage } from '@ethersproject/wallet'
 import debug from 'debug'
+import { Todo } from '../types'
 
 import { until, getEndpointUrl } from '../utils'
 
@@ -259,7 +260,7 @@ const sidechainAmbABI = [{
 
 /** @typedef {String} EthereumAddress */
 
-function throwIfBadAddress(address, variableDescription) {
+function throwIfBadAddress(address: Todo, variableDescription: Todo) {
     try {
         return getAddress(address)
     } catch (e) {
@@ -273,7 +274,7 @@ function throwIfBadAddress(address, variableDescription) {
  * @param {EthereumAddress} inputAddress from user (NOT case sensitive)
  * @returns {EthereumAddress} with checksum case
  */
-function parseAddress(client, inputAddress) {
+function parseAddress(client: Todo, inputAddress: Todo) {
     if (isAddress(inputAddress)) {
         return getAddress(inputAddress)
     }
@@ -281,8 +282,8 @@ function parseAddress(client, inputAddress) {
 }
 
 // Find the Asyncronous Message-passing Bridge sidechain ("home") contract
-let cachedSidechainAmb
-async function getSidechainAmb(client, options) {
+let cachedSidechainAmb: Todo
+async function getSidechainAmb(client: Todo, options: Todo) {
     if (!cachedSidechainAmb) {
         const getAmbPromise = async () => {
             const mainnetProvider = client.ethereum.getMainnetProvider()
@@ -306,7 +307,7 @@ async function getSidechainAmb(client, options) {
     return cachedSidechainAmb
 }
 
-async function getMainnetAmb(client, options) {
+async function getMainnetAmb(client: Todo, options: Todo) {
     const mainnetProvider = client.ethereum.getMainnetProvider()
     const factoryMainnetAddress = options.factoryMainnetAddress || client.options.factoryMainnetAddress
     const factoryMainnet = new Contract(factoryMainnetAddress, factoryMainnetABI, mainnetProvider)
@@ -314,7 +315,7 @@ async function getMainnetAmb(client, options) {
     return new Contract(mainnetAmbAddress, mainnetAmbABI, mainnetProvider)
 }
 
-async function requiredSignaturesHaveBeenCollected(client, messageHash, options = {}) {
+async function requiredSignaturesHaveBeenCollected(client: Todo, messageHash: Todo, options: Todo = {}) {
     const sidechainAmb = await getSidechainAmb(client, options)
     const requiredSignatureCount = await sidechainAmb.requiredSignatures()
 
@@ -329,7 +330,7 @@ async function requiredSignaturesHaveBeenCollected(client, messageHash, options 
 }
 
 // move signatures from sidechain to mainnet
-async function transportSignatures(client, messageHash, options) {
+async function transportSignatures(client: Todo, messageHash: Todo, options: Todo) {
     const sidechainAmb = await getSidechainAmb(client, options)
     const message = await sidechainAmb.message(messageHash)
     const messageId = '0x' + message.substr(2, 64)
@@ -339,8 +340,8 @@ async function transportSignatures(client, messageHash, options) {
     log(`${collectedSignatureCount} signatures reported, getting them from the sidechain AMB...`)
     const signatures = await Promise.all(Array(collectedSignatureCount).fill(0).map(async (_, i) => sidechainAmb.signature(messageHash, i)))
 
-    const [vArray, rArray, sArray] = [[], [], []]
-    signatures.forEach((signature, i) => {
+    const [vArray, rArray, sArray]: Todo = [[], [], []]
+    signatures.forEach((signature: string, i) => {
         log(`  Signature ${i}: ${signature} (len=${signature.length}=${signature.length / 2 - 1} bytes)`)
         rArray.push(signature.substr(2, 64))
         sArray.push(signature.substr(66, 64))
@@ -355,6 +356,7 @@ async function transportSignatures(client, messageHash, options) {
     let gasLimit
     try {
         // magic number suggested by https://github.com/poanetwork/tokenbridge/blob/master/oracle/src/utils/constants.js
+        // @ts-expect-error
         gasLimit = await mainnetAmb.estimateGas.executeSignatures(message, packedSignatures) + 200000
         log(`Calculated gas limit: ${gasLimit.toString()}`)
     } catch (e) {
@@ -412,7 +414,7 @@ async function transportSignatures(client, messageHash, options) {
 
 // template for withdraw functions
 // client could be replaced with AMB (mainnet and sidechain)
-async function untilWithdrawIsComplete(client, getWithdrawTxFunc, getBalanceFunc, options = {}) {
+async function untilWithdrawIsComplete(client: Todo, getWithdrawTxFunc: Todo, getBalanceFunc: Todo, options: Todo = {}) {
     const {
         pollingIntervalMs = 1000,
         retryTimeoutMs = 60000,
@@ -424,7 +426,7 @@ async function untilWithdrawIsComplete(client, getWithdrawTxFunc, getBalanceFunc
     if (options.payForSignatureTransport) {
         log(`Got receipt, filtering UserRequestForSignature from ${tr.events.length} events...`)
         // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData);
-        const sigEventArgsArray = tr.events.filter((e) => e.event === 'UserRequestForSignature').map((e) => e.args)
+        const sigEventArgsArray = tr.events.filter((e: Todo) => e.event === 'UserRequestForSignature').map((e: Todo) => e.args)
         if (sigEventArgsArray.length < 1) {
             throw new Error("No UserRequestForSignature events emitted from withdraw transaction, can't transport withdraw to mainnet")
         }
@@ -464,9 +466,9 @@ async function untilWithdrawIsComplete(client, getWithdrawTxFunc, getBalanceFunc
 
 // TODO: calculate addresses in JS instead of asking over RPC, see data-union-solidity/contracts/CloneLib.sol
 // key the cache with name only, since PROBABLY one StreamrClient will ever use only one private key
-const mainnetAddressCache = {} // mapping: "name" -> mainnet address
+const mainnetAddressCache: Todo = {} // mapping: "name" -> mainnet address
 /** @returns {Promise<EthereumAddress>} Mainnet address for Data Union */
-async function getDataUnionMainnetAddress(client, dataUnionName, deployerAddress, options = {}) {
+async function getDataUnionMainnetAddress(client: Todo, dataUnionName: Todo, deployerAddress: Todo, options: Todo = {}) {
     if (!mainnetAddressCache[dataUnionName]) {
         const provider = client.ethereum.getMainnetProvider()
         const factoryMainnetAddress = options.factoryMainnetAddress || client.options.factoryMainnetAddress
@@ -479,9 +481,9 @@ async function getDataUnionMainnetAddress(client, dataUnionName, deployerAddress
 }
 
 // TODO: calculate addresses in JS
-const sidechainAddressCache = {} // mapping: mainnet address -> sidechain address
+const sidechainAddressCache: Todo = {} // mapping: mainnet address -> sidechain address
 /** @returns {Promise<EthereumAddress>} Sidechain address for Data Union */
-async function getDataUnionSidechainAddress(client, duMainnetAddress, options = {}) {
+async function getDataUnionSidechainAddress(client: Todo, duMainnetAddress: Todo, options: Todo = {}) {
     if (!sidechainAddressCache[duMainnetAddress]) {
         const provider = client.ethereum.getMainnetProvider()
         const factoryMainnetAddress = options.factoryMainnetAddress || client.options.factoryMainnetAddress
@@ -493,7 +495,7 @@ async function getDataUnionSidechainAddress(client, duMainnetAddress, options = 
     return sidechainAddressCache[duMainnetAddress]
 }
 
-function getMainnetContractReadOnly(client, options = {}) {
+function getMainnetContractReadOnly(client: Todo, options: Todo = {}) {
     let dataUnion = options.dataUnion || options.dataUnionAddress || client.options.dataUnion
     if (isAddress(dataUnion)) {
         const provider = client.ethereum.getMainnetProvider()
@@ -506,13 +508,13 @@ function getMainnetContractReadOnly(client, options = {}) {
     return dataUnion
 }
 
-function getMainnetContract(client, options = {}) {
+function getMainnetContract(client: Todo, options: Todo = {}) {
     const du = getMainnetContractReadOnly(client, options)
     const signer = client.ethereum.getSigner()
     return du.connect(signer)
 }
 
-async function getSidechainContract(client, options = {}) {
+async function getSidechainContract(client: Todo, options: Todo = {}) {
     const signer = await client.ethereum.getSidechainSigner()
     const duMainnet = getMainnetContractReadOnly(client, options)
     const duSidechainAddress = await getDataUnionSidechainAddress(client, duMainnet.address, options)
@@ -520,7 +522,7 @@ async function getSidechainContract(client, options = {}) {
     return duSidechain
 }
 
-async function getSidechainContractReadOnly(client, options = {}) {
+async function getSidechainContractReadOnly(client: Todo, options: Todo = {}) {
     const provider = await client.ethereum.getSidechainProvider()
     const duMainnet = getMainnetContractReadOnly(client, options)
     const duSidechainAddress = await getDataUnionSidechainAddress(client, duMainnet.address, options)
@@ -532,12 +534,12 @@ async function getSidechainContractReadOnly(client, options = {}) {
 //          admin: DEPLOY AND SETUP DATA UNION
 // //////////////////////////////////////////////////////////////////
 
-export async function calculateDataUnionMainnetAddress(dataUnionName, deployerAddress, options) {
+export async function calculateDataUnionMainnetAddress(dataUnionName: Todo, deployerAddress: Todo, options: Todo) {
     const address = getAddress(deployerAddress) // throws if bad address
     return getDataUnionMainnetAddress(this, dataUnionName, address, options)
 }
 
-export async function calculateDataUnionSidechainAddress(duMainnetAddress, options) {
+export async function calculateDataUnionSidechainAddress(duMainnetAddress: Todo, options: Todo) {
     const address = getAddress(duMainnetAddress) // throws if bad address
     return getDataUnionSidechainAddress(this, address, options)
 }
@@ -572,7 +574,7 @@ export async function calculateDataUnionSidechainAddress(duMainnetAddress, optio
  * @param {DeployOptions} options such as adminFee (default: 0)
  * @return {Promise<Contract>} that resolves when the new DU is deployed over the bridge to side-chain
  */
-export async function deployDataUnion(options = {}) {
+export async function deployDataUnion(options: Todo = {}) {
     const {
         owner,
         joinPartAgents,
@@ -643,13 +645,16 @@ export async function deployDataUnion(options = {}) {
     )
 
     const dataUnion = new Contract(duMainnetAddress, dataUnionMainnetABI, mainnetWallet)
+    // @ts-expect-error
     dataUnion.deployTxReceipt = tr
+    // @ts-expect-error
     dataUnion.sidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, sidechainProvider)
     return dataUnion
 }
 
-export async function getDataUnionContract(options = {}) {
+export async function getDataUnionContract(options: Todo = {}) {
     const ret = getMainnetContract(this, options)
+    // @ts-expect-error
     ret.sidechain = await getSidechainContract(this, options)
     return ret
 }
@@ -660,7 +665,7 @@ export async function getDataUnionContract(options = {}) {
  * @param {String} name describes the secret
  * @returns {String} the server-generated secret
  */
-export async function createSecret(dataUnionMainnetAddress, name = 'Untitled Data Union Secret') {
+export async function createSecret(dataUnionMainnetAddress: Todo, name: string = 'Untitled Data Union Secret') {
     const duAddress = getAddress(dataUnionMainnetAddress) // throws if bad address
     const url = getEndpointUrl(this.options.restUrl, 'dataunions', duAddress, 'secrets')
     const res = await authFetch(
@@ -688,7 +693,7 @@ export async function createSecret(dataUnionMainnetAddress, name = 'Untitled Dat
  * @param {List<EthereumAddress>} memberAddressList to kick
  * @returns {Promise<TransactionReceipt>} partMembers sidechain transaction
  */
-export async function kick(memberAddressList, options = {}) {
+export async function kick(memberAddressList: Todo, options: Todo = {}) {
     const members = memberAddressList.map(getAddress) // throws if there are bad addresses
     const duSidechain = await getSidechainContract(this, options)
     const tx = await duSidechain.partMembers(members)
@@ -701,7 +706,7 @@ export async function kick(memberAddressList, options = {}) {
  * @param {List<EthereumAddress>} memberAddressList to add
  * @returns {Promise<TransactionReceipt>} addMembers sidechain transaction
  */
-export async function addMembers(memberAddressList, options = {}) {
+export async function addMembers(memberAddressList: Todo, options: Todo = {}) {
     const members = memberAddressList.map(getAddress) // throws if there are bad addresses
     const duSidechain = await getSidechainContract(this, options)
     const tx = await duSidechain.addMembers(members)
@@ -716,7 +721,7 @@ export async function addMembers(memberAddressList, options = {}) {
  * @param {EthereumOptions} options (including e.g. `dataUnion` Contract object or address)
  * @returns {Promise<providers.TransactionReceipt>} get receipt once withdraw transaction is confirmed
  */
-export async function withdrawMember(memberAddress, options) {
+export async function withdrawMember(memberAddress: Todo, options: Todo) {
     const address = getAddress(memberAddress) // throws if bad address
     const tr = await untilWithdrawIsComplete(
         this,
@@ -734,7 +739,7 @@ export async function withdrawMember(memberAddress, options) {
  * @param {EthereumOptions} options
  * @returns {Promise<providers.TransactionResponse>} await on call .wait to actually send the tx
  */
-export async function getWithdrawMemberTx(memberAddress, options) {
+export async function getWithdrawMemberTx(memberAddress: Todo, options: Todo) {
     const a = getAddress(memberAddress) // throws if bad address
     const duSidechain = await getSidechainContract(this, options)
     return duSidechain.withdrawAll(a, true) // sendToMainnet=true
@@ -749,7 +754,7 @@ export async function getWithdrawMemberTx(memberAddress, options) {
  * @param {EthereumOptions} options
  * @returns {Promise<providers.TransactionReceipt>} get receipt once withdraw transaction is confirmed
  */
-export async function withdrawToSigned(memberAddress, recipientAddress, signature, options) {
+export async function withdrawToSigned(memberAddress: Todo, recipientAddress: Todo, signature: Todo, options: Todo) {
     const from = getAddress(memberAddress) // throws if bad address
     const to = getAddress(recipientAddress)
     const tr = await untilWithdrawIsComplete(
@@ -770,7 +775,7 @@ export async function withdrawToSigned(memberAddress, recipientAddress, signatur
  * @param {EthereumOptions} options
  * @returns {Promise<providers.TransactionResponse>} await on call .wait to actually send the tx
  */
-export async function getWithdrawToSignedTx(memberAddress, recipientAddress, signature, options) {
+export async function getWithdrawToSignedTx(memberAddress: Todo, recipientAddress: Todo, signature: Todo, options: Todo) {
     const duSidechain = await getSidechainContract(this, options)
     return duSidechain.withdrawAllToSigned(memberAddress, recipientAddress, true, signature) // sendToMainnet=true
 }
@@ -780,7 +785,7 @@ export async function getWithdrawToSignedTx(memberAddress, recipientAddress, sig
  * @param {number} newFeeFraction between 0.0 and 1.0
  * @param {EthereumOptions} options
  */
-export async function setAdminFee(newFeeFraction, options) {
+export async function setAdminFee(newFeeFraction: Todo, options: Todo) {
     if (newFeeFraction < 0 || newFeeFraction > 1) {
         throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
     }
@@ -794,13 +799,13 @@ export async function setAdminFee(newFeeFraction, options) {
  * Get data union admin fee fraction that admin gets from each revenue event
  * @returns {number} between 0.0 and 1.0
  */
-export async function getAdminFee(options) {
+export async function getAdminFee(options: Todo) {
     const duMainnet = getMainnetContractReadOnly(this, options)
     const adminFeeBN = await duMainnet.adminFeeFraction()
     return +adminFeeBN.toString() / 1e18
 }
 
-export async function getAdminAddress(options) {
+export async function getAdminAddress(options: Todo) {
     const duMainnet = getMainnetContractReadOnly(this, options)
     return duMainnet.owner()
 }
@@ -818,7 +823,7 @@ export async function getAdminAddress(options) {
  * @property {String} member Ethereum mainnet address of the joining member. If not given, use StreamrClient authentication key
  * @property {String} secret if given, and correct, join the data union immediately
  */
-export async function joinDataUnion(options = {}) {
+export async function joinDataUnion(options: Todo = {}) {
     const {
         member,
         secret,
@@ -828,6 +833,7 @@ export async function joinDataUnion(options = {}) {
     const body = {
         memberAddress: parseAddress(this, member)
     }
+    // @ts-expect-error
     if (secret) { body.secret = secret }
 
     const url = getEndpointUrl(this.options.restUrl, 'dataunions', dataUnion.address, 'joinRequests')
@@ -851,7 +857,7 @@ export async function joinDataUnion(options = {}) {
  * @param {Number} retryTimeoutMs (optional, default: 60000) give up
  * @return {Promise} resolves when member is in the data union (or fails with HTTP error)
  */
-export async function hasJoined(memberAddress, options = {}) {
+export async function hasJoined(memberAddress: Todo, options: Todo = {}) {
     const {
         pollingIntervalMs = 1000,
         retryTimeoutMs = 60000,
@@ -864,14 +870,14 @@ export async function hasJoined(memberAddress, options = {}) {
 }
 
 // TODO: this needs more thought: probably something like getEvents from sidechain? Heavy on RPC?
-export async function getMembers(options) {
+export async function getMembers(options: Todo) {
     const duSidechain = await getSidechainContractReadOnly(this, options)
     throw new Error(`Not implemented for side-chain data union (at ${duSidechain.address})`)
     // event MemberJoined(address indexed);
     // event MemberParted(address indexed);
 }
 
-export async function getDataUnionStats(options) {
+export async function getDataUnionStats(options: Todo) {
     const duSidechain = await getSidechainContractReadOnly(this, options)
     const [
         totalEarnings,
@@ -897,7 +903,7 @@ export async function getDataUnionStats(options) {
  * @param {EthereumAddress} dataUnion to query
  * @param {EthereumAddress} memberAddress (optional) if not supplied, get the stats of currently logged in StreamrClient (if auth: privateKey)
  */
-export async function getMemberStats(memberAddress, options) {
+export async function getMemberStats(memberAddress: Todo, options: Todo) {
     const address = parseAddress(this, memberAddress)
     // TODO: use duSidechain.getMemberStats(address) once it's implemented, to ensure atomic read
     //        (so that memberData is from same block as getEarnings, otherwise withdrawable will be foobar)
@@ -921,7 +927,7 @@ export async function getMemberStats(memberAddress, options) {
  * @param memberAddress whose balance is returned
  * @return {Promise<BigNumber>}
  */
-export async function getMemberBalance(memberAddress, options) {
+export async function getMemberBalance(memberAddress: Todo, options: Todo) {
     const address = parseAddress(this, memberAddress)
     const duSidechain = await getSidechainContractReadOnly(this, options)
     return duSidechain.getWithdrawableEarnings(address)
@@ -935,10 +941,10 @@ export async function getMemberBalance(memberAddress, options) {
  * was given in StreamrClient constructor.
  * @returns {Promise<BigNumber>} token balance in "wei" (10^-18 parts)
  */
-export async function getTokenBalance(address, options) {
+export async function getTokenBalance(address: Todo, options: Todo) {
     const a = parseAddress(this, address)
     const tokenAddressMainnet = options.tokenAddress || (
-        await getMainnetContractReadOnly(this, options).then((c) => c.token()).catch(() => null) || this.options.tokenAddress
+        await getMainnetContractReadOnly(this, options).then((c: Todo) => c.token()).catch(() => null) || this.options.tokenAddress
     )
     if (!tokenAddressMainnet) { throw new Error('tokenAddress option not found') }
     const provider = this.ethereum.getMainnetProvider()
@@ -960,7 +966,7 @@ export async function getTokenBalance(address, options) {
  * @param {EthereumAddress} contractAddress
  * @returns {number} 1 for old, 2 for current, zero for "not a data union"
  */
-export async function getDataUnionVersion(contractAddress) {
+export async function getDataUnionVersion(contractAddress: Todo) {
     const a = getAddress(contractAddress) // throws if bad address
     const provider = this.ethereum.getMainnetProvider()
     const du = new Contract(a, [{
@@ -987,7 +993,7 @@ export async function getDataUnionVersion(contractAddress) {
  * @param {EthereumOptions} options (including e.g. `dataUnion` Contract object or address)
  * @returns {Promise<providers.TransactionReceipt>} get receipt once withdraw is complete (tokens are seen in mainnet)
  */
-export async function withdraw(options = {}) {
+export async function withdraw(options: Todo = {}) {
     const tr = await untilWithdrawIsComplete(
         this,
         this.getWithdrawTx.bind(this),
@@ -1002,7 +1008,7 @@ export async function withdraw(options = {}) {
  * @param {EthereumOptions} options (including e.g. `dataUnion` Contract object or address)
  * @returns {Promise<providers.TransactionResponse>} await on call .wait to actually send the tx
  */
-export async function getWithdrawTx(options) {
+export async function getWithdrawTx(options: Todo) {
     const signer = await this.ethereum.getSidechainSigner()
     const address = await signer.getAddress()
     const duSidechain = await getSidechainContract(this, options)
@@ -1025,7 +1031,7 @@ export async function getWithdrawTx(options) {
  * @param {EthereumOptions} options (including e.g. `dataUnion` Contract object or address)
  * @returns {Promise<providers.TransactionReceipt>} get receipt once withdraw is complete (tokens are seen in mainnet)
  */
-export async function withdrawTo(recipientAddress, options = {}) {
+export async function withdrawTo(recipientAddress: Todo, options = {}) {
     const to = getAddress(recipientAddress) // throws if bad address
     const tr = await untilWithdrawIsComplete(
         this,
@@ -1042,7 +1048,7 @@ export async function withdrawTo(recipientAddress, options = {}) {
  * @param {EthereumOptions} options (including e.g. `dataUnion` Contract object or address)
  * @returns {Promise<providers.TransactionResponse>} await on call .wait to actually send the tx
  */
-export async function getWithdrawTxTo(recipientAddress, options) {
+export async function getWithdrawTxTo(recipientAddress: Todo, options: Todo) {
     const signer = await this.ethereum.getSidechainSigner()
     const address = await signer.getAddress()
     const duSidechain = await getSidechainContract(this, options)
@@ -1067,7 +1073,7 @@ export async function getWithdrawTxTo(recipientAddress, options) {
  * @param {EthereumOptions} options (including e.g. `dataUnion` Contract object or address)
  * @returns {string} signature authorizing withdrawing all earnings to given recipientAddress
  */
-export async function signWithdrawTo(recipientAddress, options) {
+export async function signWithdrawTo(recipientAddress: Todo, options: Todo) {
     return this.signWithdrawAmountTo(recipientAddress, BigNumber.from(0), options)
 }
 
@@ -1080,7 +1086,7 @@ export async function signWithdrawTo(recipientAddress, options) {
  * @param {EthereumOptions} options (including e.g. `dataUnion` Contract object or address)
  * @returns {string} signature authorizing withdrawing all earnings to given recipientAddress
  */
-export async function signWithdrawAmountTo(recipientAddress, amountTokenWei, options) {
+export async function signWithdrawAmountTo(recipientAddress: Todo, amountTokenWei: Todo, options: Todo) {
     const to = getAddress(recipientAddress) // throws if bad address
     const signer = this.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
     const address = await signer.getAddress()
