@@ -419,7 +419,7 @@ async function transportSignatures(client: StreamrClient, messageHash: Todo, opt
 
 // template for withdraw functions
 // client could be replaced with AMB (mainnet and sidechain)
-async function untilWithdrawIsComplete(client: StreamrClient, getWithdrawTxFunc: Todo, getBalanceFunc: Todo, options: Todo = {}) {
+async function untilWithdrawIsComplete(client: StreamrClient, getWithdrawTxFunc: (options: Todo) => Todo, getBalanceFunc: (options: Todo) => Todo, options: Todo = {}) {
     const {
         pollingIntervalMs = 1000,
         retryTimeoutMs = 60000,
@@ -744,8 +744,8 @@ export class DataUnionEndpoints {
         const address = getAddress(memberAddress) // throws if bad address
         const tr = await untilWithdrawIsComplete(
             this.client,
-            this.getWithdrawMemberTx.bind(this, address),
-            this.getTokenBalance.bind(this, address),
+            (opts) => this.getWithdrawMemberTx(address, opts),
+            (opts) => this.getTokenBalance(address, opts),
             { ...this.client.options, ...options }
         )
         return tr
@@ -778,8 +778,8 @@ export class DataUnionEndpoints {
         const to = getAddress(recipientAddress)
         const tr = await untilWithdrawIsComplete(
             this.client,
-            this.getWithdrawToSignedTx.bind(this, from, to, signature),
-            this.getTokenBalance.bind(this, to),
+            (opts) => this.getWithdrawToSignedTx(from, to, signature, opts),
+            (opts) => this.getTokenBalance(to, opts),
             { ...this.client.options, ...options }
         )
         return tr
@@ -1015,8 +1015,8 @@ export class DataUnionEndpoints {
     async withdraw(options: Todo = {}) {
         const tr = await untilWithdrawIsComplete(
             this.client,
-            this.getWithdrawTx.bind(this),
-            this.getTokenBalance.bind(this, null), // null means this StreamrClient's auth credentials
+            (opts) => this.getWithdrawTx(opts),
+            (opts) => this.getTokenBalance(null, opts), // null means this StreamrClient's auth credentials
             { ...this.client.options, ...options }
         )
         return tr
@@ -1055,8 +1055,8 @@ export class DataUnionEndpoints {
         const to = getAddress(recipientAddress) // throws if bad address
         const tr = await untilWithdrawIsComplete(
             this.client,
-            this.getWithdrawTxTo.bind(this, to),
-            this.getTokenBalance.bind(this, to),
+            (opts) => this.getWithdrawTxTo(to, opts),
+            (opts) => this.getTokenBalance(to, opts),
             { ...this.client.options, ...options }
         )
         return tr
