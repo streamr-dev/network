@@ -61,7 +61,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         // order messages (fill gaps)
         orderingUtil,
         // validate
-        async function* Validate(src) {
+        async function* ValidateMessages(src) {
             for await (const streamMessage of src) {
                 try {
                     await validate(streamMessage)
@@ -73,14 +73,14 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
             }
         },
         // decrypt
-        async function* Parse(src) {
+        async function* DecryptMessages(src) {
             yield* decrypt(src, async (err, streamMessage) => {
                 ignoreMessages.add(streamMessage)
                 await onError(err)
             })
         },
         // parse content
-        async function* Parse(src) {
+        async function* ParseMessages(src) {
             for await (const streamMessage of src) {
                 try {
                     streamMessage.getParsedContent()
