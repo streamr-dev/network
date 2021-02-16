@@ -72,168 +72,192 @@ describeRepeats('PubSub with multiple clients', () => {
         }
     })
 
-    test('can get messages published from other client', async () => {
-        otherClient = createClient({
-            auth: {
-                privateKey
+    describe('can get messages published from other client', () => {
+        test('it works', async () => {
+            otherClient = createClient({
+                auth: {
+                    privateKey
+                }
+            })
+            otherClient.on('error', getOnError(errors))
+            await otherClient.connect()
+            await mainClient.connect()
+
+            const receivedMessagesOther = []
+            const receivedMessagesMain = []
+            // subscribe to stream from other client instance
+            await otherClient.subscribe({
+                stream: stream.id,
+            }, (msg) => {
+                receivedMessagesOther.push(msg)
+            })
+            // subscribe to stream from main client instance
+            await mainClient.subscribe({
+                stream: stream.id,
+            }, (msg) => {
+                receivedMessagesMain.push(msg)
+            })
+            const message = {
+                msg: uid('message'),
             }
+            await wait(5000)
+            // publish message on main client
+            await mainClient.publish(stream, message)
+            await wait(5000)
+            // messages should arrive on both clients?
+            expect(receivedMessagesMain).toEqual([message])
+            expect(receivedMessagesOther).toEqual([message])
+        }, 30000)
+
+        describe('subscriber disconnects after each message', () => {
+            test('single subscriber', async () => {
+                const maxMessages = MAX_MESSAGES + Math.floor(Math.random() * MAX_MESSAGES * 0.25)
+                otherClient = createClient({
+                    auth: {
+                        privateKey
+                    }
+                })
+                otherClient.on('error', getOnError(errors))
+                await otherClient.connect()
+                await mainClient.connect()
+
+                const receivedMessagesOther = []
+                const msgs = receivedMessagesOther
+                const otherDone = Defer()
+                // subscribe to stream from other client instance
+                await otherClient.subscribe({
+                    stream: stream.id,
+                }, (msg) => {
+                    otherClient.debug('other', msg.value)
+                    receivedMessagesOther.push(msg)
+
+                    if (receivedMessagesOther.length === maxMessages) {
+                        otherDone.resolve()
+                    }
+                })
+                let disconnecting = false
+                const disconnect = async () => {
+                    if (msgs.length === maxMessages) { return }
+
+                    if (disconnecting) { return }
+                    disconnecting = true
+                    otherClient.debug('disconnecting...', msgs.length)
+                    otherClient.connection.socket.close()
+                    // wait for reconnection before possibly disconnecting again
+                    try {
+                        await otherClient.nextConnection()
+                        otherClient.debug('reconnected...', msgs.length)
+                    } finally {
+                        // eslint-disable-next-line require-atomic-updates
+                        disconnecting = false
+                    }
+                }
+
+                const onConnectionMessage = jest.fn(() => {
+                    // disconnect after every message
+                    disconnect()
+                })
+
+                otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
+                otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
+                let t = 0
+                const publishTestMessages = getPublishTestMessages(mainClient, {
+                    stream,
+                    delay: 600,
+                    timestamp: () => {
+                        t += 1
+                        return t
+                    },
+                    waitForLast: true,
+                    waitForLastTimeout: 10000,
+                    waitForLastCount: maxMessages,
+                })
+
+                const published = await publishTestMessages(maxMessages)
+                await otherDone
+
+                expect(receivedMessagesOther).toEqual(published)
+            }, 30000)
+
+            test('publisher also subscriber', async () => {
+                const maxMessages = MAX_MESSAGES + Math.floor(Math.random() * MAX_MESSAGES * 0.25)
+                otherClient = createClient({
+                    auth: {
+                        privateKey
+                    }
+                })
+                otherClient.on('error', getOnError(errors))
+                await otherClient.connect()
+                await mainClient.connect()
+
+                const receivedMessagesOther = []
+                const msgs = receivedMessagesOther
+                const receivedMessagesMain = []
+                const mainDone = Defer()
+                const otherDone = Defer()
+                // subscribe to stream from other client instance
+                await otherClient.subscribe({
+                    stream: stream.id,
+                }, (msg) => {
+                    otherClient.debug('other', msg.value)
+                    receivedMessagesOther.push(msg)
+
+                    if (receivedMessagesOther.length === maxMessages) {
+                        otherDone.resolve()
+                    }
+                })
+
+                const disconnect = pLimitFn(async () => {
+                    if (msgs.length === maxMessages) { return }
+                    otherClient.debug('disconnecting...', msgs.length)
+                    otherClient.connection.socket.close()
+                    // wait for reconnection before possibly disconnecting again
+                    await otherClient.nextConnection()
+                    otherClient.debug('reconnected...', msgs.length)
+                })
+
+                const onConnectionMessage = jest.fn(() => {
+                    // disconnect after every message
+                    disconnect()
+                })
+
+                otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
+                otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
+                // subscribe to stream from main client instance
+                await mainClient.subscribe({
+                    stream: stream.id,
+                }, (msg) => {
+                    mainClient.debug('main', msg.value)
+                    receivedMessagesMain.push(msg)
+                    if (receivedMessagesMain.length === maxMessages) {
+                        mainDone.resolve()
+                    }
+                })
+
+                let t = 0
+
+                const publishTestMessages = getPublishTestMessages(mainClient, {
+                    stream,
+                    delay: 600,
+                    waitForLast: true,
+                    waitForLastTimeout: 10000,
+                    waitForLastCount: maxMessages,
+                    timestamp: () => {
+                        t += 1
+                        return t
+                    },
+                })
+                const published = await publishTestMessages(maxMessages)
+
+                await otherDone
+                await mainDone
+
+                // messages should arrive on both clients?
+                expect(receivedMessagesMain).toEqual(published)
+                expect(receivedMessagesOther).toEqual(published)
+            }, 30000)
         })
-        otherClient.on('error', getOnError(errors))
-        await otherClient.connect()
-        await mainClient.connect()
-
-        const receivedMessagesOther = []
-        const receivedMessagesMain = []
-        // subscribe to stream from other client instance
-        await otherClient.subscribe({
-            stream: stream.id,
-        }, (msg) => {
-            receivedMessagesOther.push(msg)
-        })
-        // subscribe to stream from main client instance
-        await mainClient.subscribe({
-            stream: stream.id,
-        }, (msg) => {
-            receivedMessagesMain.push(msg)
-        })
-        const message = {
-            msg: uid('message'),
-        }
-        await wait(5000)
-        // publish message on main client
-        await mainClient.publish(stream, message)
-        await wait(5000)
-        // messages should arrive on both clients?
-        expect(receivedMessagesMain).toEqual([message])
-        expect(receivedMessagesOther).toEqual([message])
-    }, 30000)
-
-    test('can get messages published from other client if subscriber disconnects', async () => {
-        otherClient = createClient({
-            auth: {
-                privateKey
-            }
-        })
-        otherClient.on('error', getOnError(errors))
-        await otherClient.connect()
-        await mainClient.connect()
-
-        const receivedMessagesOther = []
-        const msgs = receivedMessagesOther
-        const otherDone = Defer()
-        // subscribe to stream from other client instance
-        await otherClient.subscribe({
-            stream: stream.id,
-        }, (msg) => {
-            otherClient.debug('other', msg.value)
-            receivedMessagesOther.push(msg)
-
-            if (receivedMessagesOther.length === MAX_MESSAGES) {
-                otherDone.resolve()
-            }
-        })
-
-        const disconnect = pLimitFn(async () => {
-            if (msgs.length === MAX_MESSAGES) { return }
-            otherClient.debug('disconnecting...', msgs.length)
-            otherClient.connection.socket.close()
-            // wait for reconnection before possibly disconnecting again
-            await otherClient.nextConnection()
-            otherClient.debug('reconnected...', msgs.length)
-        })
-
-        const onConnectionMessage = jest.fn(() => {
-            // disconnect after every message
-            disconnect()
-        })
-
-        otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
-        otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
-
-        const publishTestMessages = getPublishTestMessages(mainClient, {
-            stream,
-            delay: 600,
-            waitForLast: true,
-            waitForLastTimeout: 10000,
-            waitForLastCount: MAX_MESSAGES,
-        })
-
-        const published = await publishTestMessages(MAX_MESSAGES)
-        await otherDone
-
-        expect(receivedMessagesOther).toEqual(published)
-    }, 30000)
-
-    test('can get messages published from other client if subscriber disconnects & publisher is also subscribed', async () => {
-        otherClient = createClient({
-            auth: {
-                privateKey
-            }
-        })
-        otherClient.on('error', getOnError(errors))
-        await otherClient.connect()
-        await mainClient.connect()
-
-        const receivedMessagesOther = []
-        const msgs = receivedMessagesOther
-        const receivedMessagesMain = []
-        const mainDone = Defer()
-        const otherDone = Defer()
-        // subscribe to stream from other client instance
-        await otherClient.subscribe({
-            stream: stream.id,
-        }, (msg) => {
-            otherClient.debug('other', msg.value)
-            receivedMessagesOther.push(msg)
-
-            if (receivedMessagesOther.length === MAX_MESSAGES) {
-                otherDone.resolve()
-            }
-        })
-
-        const disconnect = pLimitFn(async () => {
-            if (msgs.length === MAX_MESSAGES) { return }
-            otherClient.debug('disconnecting...', msgs.length)
-            otherClient.connection.socket.close()
-            // wait for reconnection before possibly disconnecting again
-            await otherClient.nextConnection()
-            otherClient.debug('reconnected...', msgs.length)
-        })
-
-        const onConnectionMessage = jest.fn(() => {
-            // disconnect after every message
-            disconnect()
-        })
-
-        otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
-        otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
-        // subscribe to stream from main client instance
-        await mainClient.subscribe({
-            stream: stream.id,
-        }, (msg) => {
-            mainClient.debug('main', msg.value)
-            receivedMessagesMain.push(msg)
-            if (receivedMessagesMain.length === MAX_MESSAGES) {
-                mainDone.resolve()
-            }
-        })
-
-        const publishTestMessages = getPublishTestMessages(mainClient, {
-            stream,
-            delay: 600,
-            waitForLast: true,
-            waitForLastTimeout: 10000,
-            waitForLastCount: MAX_MESSAGES,
-        })
-        const published = await publishTestMessages(MAX_MESSAGES)
-
-        await otherDone
-        await mainDone
-
-        // messages should arrive on both clients?
-        expect(receivedMessagesMain).toEqual(published)
-        expect(receivedMessagesOther).toEqual(published)
-    }, 30000)
+    })
 
     describe('multiple publishers', () => {
         async function createPublisher() {
