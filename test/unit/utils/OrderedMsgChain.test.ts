@@ -543,7 +543,7 @@ describe('OrderedMsgChain', () => {
             }, 100)
         }, () => {
             next()
-        }, 10, 10, NUM_CHUNKS + 1) // could gapfill up to NUM_CHUNKS + 1 times for messages
+        }, 10, 10, NUM_CHUNKS * 2)
 
         util.on('drain', () => {
             next()
