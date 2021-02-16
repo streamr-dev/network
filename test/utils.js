@@ -182,10 +182,12 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
                 const message = createMessage()
                 await beforeEach(message)
                 checkDone()
-                const request = await pTimeout(client.publish({
-                    streamId,
-                    streamPartition,
-                }, message, typeof timestamp === 'function' ? timestamp() : timestamp, partitionKey), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
+                const request = await pTimeout(client.publish(
+                    { streamId, streamPartition },
+                    message,
+                    typeof timestamp === 'function' ? timestamp() : timestamp,
+                    partitionKey
+                ), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
                 checkDone()
                 published.push([
                     message,

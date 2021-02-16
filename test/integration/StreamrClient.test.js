@@ -7,7 +7,7 @@ import { wait, waitForEvent } from 'streamr-test-utils'
 
 import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
 import StreamrClient from '../../src/StreamrClient'
-import { Defer, pLimitFn, pTimeout } from '../../src/utils'
+import { Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
