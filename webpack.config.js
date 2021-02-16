@@ -25,7 +25,7 @@ module.exports = (env, argv) => {
 
     const commonConfig = {
         mode: isProduction ? 'production' : 'development',
-        entry: path.join(__dirname, 'src', 'index.js'),
+        entry: path.join(__dirname, 'src', 'index.ts'),
         devtool: 'source-map',
         output: {
             path: path.join(__dirname, 'dist'),
@@ -41,7 +41,7 @@ module.exports = (env, argv) => {
         module: {
             rules: [
                 {
-                    test: /(\.jsx|\.js)$/,
+                    test: /(\.jsx|\.js|\.ts)$/,
                     exclude: /(node_modules|bower_components)/,
                     use: {
                         loader: 'babel-loader',
@@ -53,7 +53,7 @@ module.exports = (env, argv) => {
                     }
                 },
                 {
-                    test: /(\.jsx|\.js)$/,
+                    test: /(\.jsx|\.js|\.ts)$/,
                     loader: 'eslint-loader',
                     exclude: /(node_modules|streamr-client-protocol|dist)/, // excluding streamr-client-protocol makes build work when 'npm link'ed
                 },
@@ -61,7 +61,7 @@ module.exports = (env, argv) => {
         },
         resolve: {
             modules: [path.resolve('./node_modules'), path.resolve('./src')],
-            extensions: ['.json', '.js'],
+            extensions: ['.json', '.js', '.ts'],
         },
         plugins: [
             gitRevisionPlugin,
@@ -87,7 +87,7 @@ module.exports = (env, argv) => {
 
     serverConfig.module.rules = [
         {
-            test: /(\.jsx|\.js)$/,
+            test: /(\.jsx|\.js|\.ts)$/,
             exclude: /(node_modules|bower_components)/,
             use: {
                 loader: 'babel-loader',
@@ -99,7 +99,7 @@ module.exports = (env, argv) => {
             }
         },
         {
-            test: /(\.jsx|\.js)$/,
+            test: /(\.jsx|\.js|\.ts)$/,
             loader: 'eslint-loader',
             exclude: /(node_modules|streamr-client-protocol|dist)/, // excluding streamr-client-protocol makes build work when 'npm link'ed
         },

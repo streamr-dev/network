@@ -31,5 +31,13 @@ module.exports = {
         'no-restricted-syntax': [
             'error', 'ForInStatement', 'LabeledStatement', 'WithStatement'
         ],
+        'import/extensions': ['error', 'never', { json: 'always' }]
+    },
+    settings: {
+        'import/resolver': {
+            node: {
+                extensions: ['.js', '.ts']
+            }
+        }
     }
 }

@@ -7,7 +7,7 @@ import * as DataUnionEndpoints from './rest/DataUnionEndpoints'
 Object.assign(StreamrClient.prototype, {
     ...StreamEndpoints,
     ...LoginEndpoints,
-    ...DataUnionEndpoints,
+    ...DataUnionEndpoints
 })
 
 export default StreamrClient

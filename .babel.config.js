@@ -18,7 +18,8 @@ module.exports = {
                 ]
             },
             exclude: ['transform-regenerator', '@babel/plugin-transform-regenerator']
-        }]
+        }],
+        ['@babel/preset-typescript']
     ],
     plugins: [
          "add-module-exports",

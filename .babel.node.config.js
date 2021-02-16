@@ -10,7 +10,8 @@ module.exports = {
             targets: {
                 node: true
             }
-        }]
+        }],
+        ['@babel/preset-typescript']
     ],
     plugins: [
         'add-module-exports',
