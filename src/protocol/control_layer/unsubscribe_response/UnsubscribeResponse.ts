@@ -7,7 +7,7 @@ export interface Options extends ControlMessageOptions {
 }
 
 export default class UnsubscribeResponse extends ControlMessage {
-    
+
     streamId: string
     streamPartition: number
 

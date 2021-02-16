@@ -72,8 +72,8 @@ export default class StreamMessage {
     messageId: MessageID
     prevMsgRef: MessageRef | null
     content: any
-    messageType: StreamMessageType 
-    contentType: ContentType 
+    messageType: StreamMessageType
+    contentType: ContentType
     encryptionType: EncryptionType
     groupKeyId: string | null
     newGroupKey: EncryptedGroupKey | null

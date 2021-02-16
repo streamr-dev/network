@@ -22,7 +22,7 @@ export default class ErrorResponse extends ControlMessage {
 
     errorMessage: string
     errorCode: ErrorCode
-    
+
     constructor({ version = ControlMessage.LATEST_VERSION, requestId, errorMessage, errorCode }: Options) {
         super(version, ControlMessage.TYPES.ErrorResponse, requestId)
 

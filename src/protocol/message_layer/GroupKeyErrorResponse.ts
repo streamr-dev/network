@@ -22,7 +22,7 @@ export default class GroupKeyErrorResponse extends GroupKeyMessage {
     errorCode: ErrorCode
     errorMessage: string
     groupKeyIds: string[]
-    
+
     constructor({ requestId, streamId, errorCode, errorMessage, groupKeyIds }: Options) {
         super(streamId, StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE)
 

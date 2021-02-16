@@ -42,7 +42,7 @@ describe('ResendFromRequest', () => {
                 streamId: 'streamId',
                 streamPartition: 0,
                 fromMsgRef: new MessageRef(132846894, 0),
-                publisherId: null, 
+                publisherId: null,
                 sessionToken: null
             })
             assert(msg instanceof ResendFromRequest)

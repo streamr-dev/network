@@ -24,7 +24,7 @@ const createMsg = (
 const msg = createMsg()
 
 describe('OrderingUtil', () => {
-    let util: OrderingUtil 
+    let util: OrderingUtil
     afterEach(() => {
         util.clearGaps()
     })

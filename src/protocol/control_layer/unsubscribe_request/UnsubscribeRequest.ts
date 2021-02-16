@@ -10,7 +10,7 @@ export default class UnsubscribeRequest extends ControlMessage {
 
     streamId: string
     streamPartition: number
-    
+
     constructor({ version = ControlMessage.LATEST_VERSION, requestId, streamId, streamPartition }: Options) {
         super(version, ControlMessage.TYPES.UnsubscribeRequest, requestId)
 

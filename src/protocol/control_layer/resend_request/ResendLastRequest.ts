@@ -10,7 +10,7 @@ export interface Options extends ControlMessageOptions {
 
 export default class ResendLastRequest extends ControlMessage {
 
-    streamId: string 
+    streamId: string
     streamPartition: number
     numberLast: number
     sessionToken: string | null
