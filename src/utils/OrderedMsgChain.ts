@@ -52,7 +52,6 @@ class StreamMessageSet {
  * Ordered queue of StreamMessages.
  * Deduplicated by serialized msgRef.
  */
-
 class MsgChainQueue {
 
     /**
@@ -123,6 +122,30 @@ class MsgChainQueue {
     }
 }
 
+export type MessageHandler = (msg: StreamMessage) => void
+export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => void
+
+/**
+ * Strict types for EventEmitter interface.
+ */
+interface Events {
+    /**
+     * Message was marked and is being skipped.
+     * Does not fire if maxGapRequests = 0
+     */
+    skip: MessageHandler;
+    /**
+     * Queue was drained after something was in it.
+     */
+    drain: (numMesssages: number) => void;
+    /**
+     * Probably a GapFillFailedError.
+     */
+    error: (error: Error) => void;
+}
+
+export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
+
 // The time it takes to propagate messages in the network. If we detect a gap, we first wait this amount of time because the missing
 // messages might still be propagated.
 const DEFAULT_PROPAGATION_TIMEOUT = 5000
@@ -131,19 +154,10 @@ const DEFAULT_PROPAGATION_TIMEOUT = 5000
 const DEFAULT_RESEND_TIMEOUT = 5000
 const MAX_GAP_REQUESTS = 10
 
-export type MessageHandler = (msg: StreamMessage) => void
-export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => void
-
-interface Events {
-    skip: MessageHandler;
-    drain: (numMesssages: number) => void;
-    error: (error: Error) => void;
-}
-
-export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
-
 let ID = 0
+
 class OrderedMsgChain extends MsgChainEmitter {
+    id: number
     queue = new MsgChainQueue()
     lastOrderedMsgRef: MessageRef | null = null
     inProgress: boolean = false
@@ -166,7 +180,8 @@ class OrderedMsgChain extends MsgChainEmitter {
     ) {
         super()
         ID += 1
-        this.debug = Debug(`StreamrClient::OrderedMsgChain::${ID}::${msgChainId}`)
+        this.id = ID
+        this.debug = Debug(`StreamrClient::OrderedMsgChain::${this.id}::${msgChainId}`)
         this.publisherId = publisherId
         this.msgChainId = msgChainId
         this.inOrderHandler = inOrderHandler
@@ -181,6 +196,9 @@ class OrderedMsgChain extends MsgChainEmitter {
         }
     }
 
+    /**
+     * Messages are stale if they are already enqueued or last ordered message is newer.
+     */
     isStaleMessage(streamMessage: StreamMessage) {
         const msgRef = streamMessage.getMessageRef()
         return (
@@ -193,10 +211,9 @@ class OrderedMsgChain extends MsgChainEmitter {
         )
     }
 
-    isGapHandlingEnabled() {
-        return this.maxGapRequests > 0
-    }
-
+    /**
+     * Add message to queue.
+     */
     add(unorderedStreamMessage: StreamMessage) {
         if (this.isStaleMessage(unorderedStreamMessage)) {
             const msgRef = unorderedStreamMessage.getMessageRef()
@@ -214,6 +231,20 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.checkQueue()
     }
 
+    /**
+     * Mark a message to have it be treated as the next message & not trigger gap fill
+     */
+    markMessageExplicitly(streamMessage: StreamMessage) {
+        // only add if not stale
+        if (this.markMessage(streamMessage)) {
+            this.add(streamMessage)
+        }
+    }
+
+    /**
+     * Adds message to set of marked messages.
+     * Does nothing and returns false if message is stale.
+     */
     private markMessage(streamMessage: StreamMessage) {
         if (!streamMessage || this.isStaleMessage(streamMessage)) {
             // do nothing if already past/handled this message
@@ -229,14 +260,8 @@ class OrderedMsgChain extends MsgChainEmitter {
     }
 
     /**
-     * Mark a message to have it be treated as the next message & not trigger gap fill
+     * Cancel any outstanding gap fill request.
      */
-    markMessageExplicitly(streamMessage: StreamMessage) {
-        if (this.markMessage(streamMessage)) {
-            this.add(streamMessage)
-        }
-    }
-
     clearGap() {
         if (this.inProgress) {
             this.debug('clearGap')
@@ -248,14 +273,29 @@ class OrderedMsgChain extends MsgChainEmitter {
         this.firstGap = null
     }
 
+    isGapHandlingEnabled() {
+        return this.maxGapRequests > 0
+    }
+
+
+    /**
+     * True if queue is empty.
+     */
     isEmpty() {
         return this.queue.isEmpty()
     }
 
+    /**
+     * Number of enqueued messages.
+     */
     size() {
         return this.queue.size()
     }
 
+    /**
+     * True if the next queued message is the next message in the queue.
+     * Always true for first message and messages without a prevMsgRef.
+     */
     private hasNextMessageQueued() {
         const streamMessage = this.queue.peek()
         if (!streamMessage) { return false }
@@ -274,6 +314,9 @@ class OrderedMsgChain extends MsgChainEmitter {
         }
     }
 
+    /**
+     * Keep popping messages until we hit a gap or run out of messages.
+     */
     private checkQueue() {
         let processedMessages = 0
         while (this.hasNextMessageQueued()) {
@@ -296,6 +339,9 @@ class OrderedMsgChain extends MsgChainEmitter {
         }
     }
 
+    /**
+     * Remove next message from queue and run it through inOrderHandler if valid.
+     */
     private pop() {
         const msg = this.queue.pop()
         if (!msg) { return }
@@ -320,6 +366,9 @@ class OrderedMsgChain extends MsgChainEmitter {
         return msg
     }
 
+    /**
+     * Schedule a requestGapFill call.
+     */
     private scheduleGap() {
         if (this.inProgress) { return }
         this.gapRequestCount = 0
@@ -340,6 +389,10 @@ class OrderedMsgChain extends MsgChainEmitter {
         }, this.propagationTimeout)
     }
 
+    /**
+     * Call gapHandler until run out of gapRequests.
+     * Failure emits an error and sets up to continue processing enqueued messages after the gap.
+     */
     private requestGapFill() {
         if (!this.inProgress || this.isEmpty()) { return }
         const msg = this.queue.peek()
@@ -366,11 +419,11 @@ class OrderedMsgChain extends MsgChainEmitter {
                     to,
                 })
                 this.debugStatus()
-                this.debug('lastOrderedMsgRef A2', this.markedExplicitly.has(msg), this.lastOrderedMsgRef)
+                // skip gap, allow queue processing to continue
                 this.lastOrderedMsgRef = msg.getPreviousMessageRef()
-                this.debug('lastOrderedMsgRef B2', this.markedExplicitly.has(msg), this.lastOrderedMsgRef)
                 this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
                 this.clearGap()
+                // keep processing
                 this.checkQueue()
             }
         }
