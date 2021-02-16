@@ -176,30 +176,28 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             client.connection.once('done', onDone)
 
             const published = []
+            /* eslint-disable no-await-in-loop, no-loop-func */
             for (let i = 0; i < n; i++) {
                 checkDone()
                 const message = createMessage()
-                // eslint-disable-next-line no-await-in-loop, no-loop-func
                 await beforeEach(message)
                 checkDone()
-                // eslint-disable-next-line no-await-in-loop, no-loop-func
                 const request = await pTimeout(client.publish({
                     streamId,
                     streamPartition,
-                }, message, timestamp, partitionKey), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
+                }, message, typeof timestamp === 'function' ? timestamp() : timestamp, partitionKey), timeout, `publish timeout ${streamId}: ${i} ${inspect(message)}`)
                 checkDone()
                 published.push([
                     message,
                     request,
                 ])
 
-                // eslint-disable-next-line no-await-in-loop, no-loop-func
                 await afterEach(message, request)
                 checkDone()
-                // eslint-disable-next-line no-await-in-loop, no-loop-func
                 await wait(delay) // ensure timestamp increments for reliable resend response in test.
                 checkDone()
             }
+            /* eslint-enable no-await-in-loop, no-loop-func */
 
             checkDone()
 
