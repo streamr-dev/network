@@ -16,11 +16,39 @@ export enum StreamOperation {
 
 export type StreamProperties = Todo
 
-export default class Stream {
+const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
+type Field = {
+    name: string;
+    type: typeof VALID_FIELD_TYPES[number];
+}
+
+function getFieldType(value: any): (Field['type'] | undefined) {
+    const type = typeof value
+    switch (true) {
+        case Array.isArray(value): {
+            return 'list'
+        }
+        case type === 'object': {
+            return 'map'
+        }
+        case (VALID_FIELD_TYPES as ReadonlyArray<string>).includes(type): {
+            // see https://github.com/microsoft/TypeScript/issues/36275
+            return type as Field['type']
+        }
+        default: {
+            return undefined
+        }
+    }
+}
+
+export default class Stream {
     // TODO add field definitions for all fields
     // @ts-expect-error
     id: string
+    config: {
+        fields: Field[];
+    } = { fields: [] }
     _client: StreamrClient
 
     constructor(client: StreamrClient, props: StreamProperties) {
@@ -132,31 +160,24 @@ export default class Stream {
                 last: 1,
             },
         })
+
         const receivedMsgs = await sub.collect()
 
-        if (receivedMsgs.length > 0) {
-            const lastMessage = receivedMsgs[0]
-            const fields = []
+        if (!receivedMsgs.length) { return }
 
-            Object.keys(lastMessage).forEach((key) => {
-                let type
-                if (Array.isArray(lastMessage[key])) {
-                    type = 'list'
-                } else if ((typeof lastMessage[key]) === 'object') {
-                    type = 'map'
-                } else {
-                    type = typeof lastMessage[key]
-                }
-                fields.push({
-                    name: key,
-                    type,
-                })
-            })
+        const [lastMessage] = receivedMsgs
 
-            // Save field config back to the stream
-            this.config.fields = fields
-            await this.update()
-        }
+        const fields = Object.entries(lastMessage).map(([name, value]) => {
+            const type = getFieldType(value)
+            return !!type && {
+                name,
+                type,
+            }
+        }).filter(Boolean) as Field[] // see https://github.com/microsoft/TypeScript/issues/30621
+
+        // Save field config back to the stream
+        this.config.fields = fields
+        await this.update()
     }
 
     async addToStorageNode(address: string) {
