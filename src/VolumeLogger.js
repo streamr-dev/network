@@ -8,10 +8,10 @@ function formatNumber(n) {
 }
 
 module.exports = class VolumeLogger {
-    constructor(reportingIntervalSeconds = 60, metricsContext, client = undefined, streamId = undefined) {
+    constructor(reportingIntervalSeconds = 60, metricsContext, client = undefined, streamIds = undefined) {
         this.metricsContext = metricsContext
         this.client = client
-        this.streamId = streamId
+        this.streamIds = streamIds
 
         this.brokerConnectionCountMetric = io.metric({
             name: 'brokerConnectionCountMetric'
@@ -60,6 +60,7 @@ module.exports = class VolumeLogger {
         })
 
         if (reportingIntervalSeconds > 0) {
+            logger.info('starting legacy metrics reporting interval')
             const reportingIntervalInMs = reportingIntervalSeconds * 1000
             const reportFn = async () => {
                 try {
@@ -77,9 +78,9 @@ module.exports = class VolumeLogger {
         const report = await this.metricsContext.report(true)
 
         // Report metrics to Streamr stream
-        if (this.client instanceof StreamrClient && this.streamId !== undefined) {
-            this.client.publish(this.streamId, report).catch((e) => {
-                logger.warn(`failed to publish metrics to ${this.streamId} because ${e}`)
+        if (this.client instanceof StreamrClient && this.streamIds !== undefined && this.streamIds.metricsStreamId !== undefined) {
+            this.client.publish(this.streamIds.metricsStreamId, report).catch((e) => {
+                logger.warn(`failed to publish metrics to ${this.streamIds.metricsStreamId} because ${e}`)
             })
         }
 

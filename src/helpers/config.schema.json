@@ -211,8 +211,7 @@
             ],
             "description": "Report metrics to Streamr stream",
             "required": [
-              "streamId",
-              "apiKey"
+              "streamId"
             ],
             "additionalProperties": false,
             "properties": {

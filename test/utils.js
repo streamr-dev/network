@@ -75,7 +75,7 @@ function formConfig({
         reporting: reporting || {
             sentry: null,
             streamr: null,
-            intervalInSeconds: 10,
+            intervalInSeconds: 0,
             perNodeMetrics: {
                 enabled: false,
                 wsUrl: null,
