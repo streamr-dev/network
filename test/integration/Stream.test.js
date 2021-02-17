@@ -1,4 +1,4 @@
-import StreamrClient from '../../src'
+import StreamrClient from '../../src/StreamrClient'
 import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
 
 import config from './config'
@@ -51,7 +51,7 @@ describe('Stream', () => {
 
             expect(stream.config.fields).toEqual([])
             await stream.detectFields()
-            expect(stream.config.fields).toEqual([
+            const expectedFields = [
                 {
                     name: 'number',
                     type: 'number',
@@ -72,7 +72,11 @@ describe('Stream', () => {
                     name: 'string',
                     type: 'string',
                 },
-            ])
+            ]
+
+            expect(stream.config.fields).toEqual(expectedFields)
+            const loadedStream = await client.getStream(stream.id)
+            expect(loadedStream.config.fields).toEqual(expectedFields)
         })
 
         it('skips unsupported types', async () => {
@@ -82,6 +86,7 @@ describe('Stream', () => {
                 func: () => null,
                 nonexistent: undefined,
                 symbol: Symbol('test'),
+                // TODO: bigint: 10n,
             }
             const publishTestMessages = getPublishTestMessages(client, {
                 streamId: stream.id,
@@ -92,7 +97,7 @@ describe('Stream', () => {
 
             expect(stream.config.fields).toEqual([])
             await stream.detectFields()
-            expect(stream.config.fields).toEqual([
+            const expectedFields = [
                 {
                     name: 'null',
                     type: 'map',
@@ -101,7 +106,12 @@ describe('Stream', () => {
                     name: 'empty',
                     type: 'map',
                 },
-            ])
+            ]
+
+            expect(stream.config.fields).toEqual(expectedFields)
+
+            const loadedStream = await client.getStream(stream.id)
+            expect(loadedStream.config.fields).toEqual(expectedFields)
         })
     })
 })
