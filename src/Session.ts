@@ -44,15 +44,23 @@ export default class Session extends EventEmitter {
         // TODO: move loginFunction to StreamrClient constructor where "auth type" is checked
         if (typeof this.options.privateKey !== 'undefined') {
             const wallet = new Wallet(this.options.privateKey)
-            this.loginFunction = async () => this._client.loginEndpoints.loginWithChallengeResponse((d: string) => wallet.signMessage(d), wallet.address)
+            this.loginFunction = async () => (
+                this._client.loginEndpoints.loginWithChallengeResponse((d: string) => wallet.signMessage(d), wallet.address)
+            )
         } else if (typeof this.options.ethereum !== 'undefined') {
             const provider = new Web3Provider(this.options.ethereum)
             const signer = provider.getSigner()
-            this.loginFunction = async () => this._client.loginEndpoints.loginWithChallengeResponse((d: string) => signer.signMessage(d), await signer.getAddress())
+            this.loginFunction = async () => (
+                this._client.loginEndpoints.loginWithChallengeResponse((d: string) => signer.signMessage(d), await signer.getAddress())
+            )
         } else if (typeof this.options.apiKey !== 'undefined') {
-            this.loginFunction = async () => this._client.loginEndpoints.loginWithApiKey(this.options.apiKey!)
+            this.loginFunction = async () => (
+                this._client.loginEndpoints.loginWithApiKey(this.options.apiKey!)
+            )
         } else if (typeof this.options.username !== 'undefined' && typeof this.options.password !== 'undefined') {
-            this.loginFunction = async () => this._client.loginEndpoints.loginWithUsernamePassword(this.options.username!, this.options.password!)
+            this.loginFunction = async () => (
+                this._client.loginEndpoints.loginWithUsernamePassword(this.options.username!, this.options.password!)
+            )
         } else {
             if (!this.options.sessionToken) {
                 this.options.unauthenticated = true

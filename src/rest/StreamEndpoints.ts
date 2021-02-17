@@ -217,11 +217,12 @@ export class StreamEndpoints {
             streamPartition,
             count,
         })
-        const query = {
-            count,
-        }
 
-        const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'data', 'partitions', streamPartition, 'last') + `?${qs.stringify(query)}`
+        const url = (
+            getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'data', 'partitions', streamPartition, 'last')
+            + `?${qs.stringify({ count })}`
+        )
+
         const json = await authFetch(url, this.client.session)
         return json
     }

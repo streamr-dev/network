@@ -433,7 +433,12 @@ async function transportSignatures(client: StreamrClient, messageHash: Todo, opt
 
 // template for withdraw functions
 // client could be replaced with AMB (mainnet and sidechain)
-async function untilWithdrawIsComplete(client: StreamrClient, getWithdrawTxFunc: (options: DataUnionOptions) => Todo, getBalanceFunc: (options: DataUnionOptions) => Todo, options: DataUnionOptions = {}) {
+async function untilWithdrawIsComplete(
+    client: StreamrClient,
+    getWithdrawTxFunc: (options: DataUnionOptions) => Todo,
+    getBalanceFunc: (options: DataUnionOptions) => Todo,
+    options: DataUnionOptions = {}
+) {
     const {
         pollingIntervalMs = 1000,
         retryTimeoutMs = 60000,
