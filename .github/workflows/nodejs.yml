@@ -157,9 +157,14 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
         with:
           services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
-      - name: test-browser
-        timeout-minutes: 2
-        run: npm run test-browser
+
+      - uses: nick-invision/retry@v2
+        name: Run Test
+        with:
+          max_attempts: 3
+          timeout_minutes: 3
+          retry_on: error
+          command: npm run test-browser
 
   benchmarks:
     name: Test Benchmark using Node ${{ matrix.node-version }}

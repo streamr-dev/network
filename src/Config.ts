@@ -1,16 +1,18 @@
 import qs from 'qs'
+// @ts-expect-error
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
 import { getVersionString, counterId } from './utils'
+import { StreamrClientOptions } from './StreamrClient'
 
 const { ControlMessage } = ControlLayer
 const { StreamMessage } = MessageLayer
 
-export default function ClientConfig(opts = {}) {
+export default function ClientConfig(opts: StreamrClientOptions = {}) {
     const { id = counterId('StreamrClient') } = opts
 
-    const options = {
+    const options: StreamrClientOptions = {
         debug: Debug(id),
         // Authentication: identity used by this StreamrClient instance
         auth: {}, // can contain member privateKey or (window.)ethereum
@@ -39,15 +41,20 @@ export default function ClientConfig(opts = {}) {
         // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
         mainnet: null, // Default to ethers.js default provider settings
         sidechain: {
+            // @ts-expect-error
             url: null, // TODO: add our default public service sidechain node, also find good PoA params below
             // timeout:
             // pollingInterval:
         },
+        // @ts-expect-error
         dataUnion: null, // Give a "default target" of all data union endpoint operations (no need to pass argument every time)
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
         minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
+        // @ts-expect-error
         sidechainTokenAddress: null, // TODO // sidechain token
+        // @ts-expect-error
         factoryMainnetAddress: null, // TODO // Data Union factory that creates a new Data Union
+        // @ts-expect-error
         sidechainAmbAddress: null, // Arbitrary Message-passing Bridge (AMB), see https://github.com/poanetwork/tokenbridge
         payForSignatureTransport: true, // someone must pay for transporting the withdraw tx to mainnet, either us or bridge operator
         ...opts,
@@ -58,7 +65,7 @@ export default function ClientConfig(opts = {}) {
         }
     }
 
-    const parts = options.url.split('?')
+    const parts = options.url!.split('?')
     if (parts.length === 1) { // there is no query string
         const controlLayer = `controlLayerVersion=${ControlMessage.LATEST_VERSION}`
         const messageLayer = `messageLayerVersion=${StreamMessage.LATEST_VERSION}`
@@ -78,16 +85,20 @@ export default function ClientConfig(opts = {}) {
     options.url = `${options.url}&streamrClient=${getVersionString()}`
 
     // Backwards compatibility for option 'authKey' => 'apiKey'
+    // @ts-expect-error
     if (options.authKey && !options.apiKey) {
+        // @ts-expect-error
         options.apiKey = options.authKey
     }
 
+    // @ts-expect-error
     if (options.apiKey) {
+        // @ts-expect-error
         options.auth.apiKey = options.apiKey
     }
 
-    if (options.auth.privateKey && !options.auth.privateKey.startsWith('0x')) {
-        options.auth.privateKey = `0x${options.auth.privateKey}`
+    if (options.auth!.privateKey && !options.auth!.privateKey.startsWith('0x')) {
+        options.auth!.privateKey = `0x${options.auth!.privateKey}`
     }
 
     return options

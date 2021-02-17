@@ -1,7 +1,7 @@
 import { providers, Wallet } from 'ethers'
 import debug from 'debug'
 
-import StreamrClient from '../../../src'
+import StreamrClient from '../../../src/StreamrClient'
 import config from '../config'
 
 const log = debug('StreamrClient::DataUnionEndpoints::integration-test-calculate')

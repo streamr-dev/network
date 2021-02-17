@@ -10,7 +10,7 @@ import Validator from './Validator'
 import messageStream from './messageStream'
 import resendStream from './resendStream'
 
-class Subscription extends Emitter {
+export class Subscription extends Emitter {
     constructor(client, opts, onFinally = () => {}) {
         super()
         this.client = client

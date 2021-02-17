@@ -1,7 +1,7 @@
 import { wait, waitForEvent } from 'streamr-test-utils'
 
 import { uid, fakePrivateKey } from '../utils'
-import StreamrClient from '../../src'
+import StreamrClient from '../../src/StreamrClient'
 
 import config from './config'
 

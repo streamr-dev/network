@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 
 import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, addAfterFn } from '../utils'
-import StreamrClient from '../../src'
+import StreamrClient from '../../src/StreamrClient'
 import { counterId } from '../../src/utils'
 import Connection from '../../src/Connection'
 
