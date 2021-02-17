@@ -176,30 +176,6 @@ function TestStreamEndpoints(getName) {
         })
     })
 
-    describe.skip('Stream configuration', () => {
-        it('Stream.detectFields', async () => {
-            await client.connect()
-            await client.publish(createdStream.id, {
-                foo: 'bar',
-                count: 0,
-            })
-            // Need time to propagate to storage
-            await wait(10000)
-            const stream = await createdStream.detectFields()
-            expect(stream.config.fields).toEqual([
-                {
-                    name: 'foo',
-                    type: 'string',
-                },
-                {
-                    name: 'count',
-                    type: 'number',
-                },
-            ])
-            await client.disconnect()
-        }, 15000)
-    })
-
     describe('Stream permissions', () => {
         it('Stream.getPermissions', async () => {
             const permissions = await createdStream.getPermissions()
