@@ -1,5 +1,4 @@
 import qs from 'qs'
-// @ts-expect-error
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
