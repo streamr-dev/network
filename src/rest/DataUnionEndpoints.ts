@@ -594,7 +594,7 @@ export class DataUnionEndpoints {
      * This triggers DataUnionSidechain contract creation in sidechain, over the bridge (AMB)
      * @return that resolves when the new DU is deployed over the bridge to side-chain
      */
-    async deployDataUnion(options: DataUnionDeployOptions = {}): Promise<Contract> {
+    async deployDataUnionContract(options: DataUnionDeployOptions = {}): Promise<Contract> {
         const {
             owner,
             joinPartAgents,
