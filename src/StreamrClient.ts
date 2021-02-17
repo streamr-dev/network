@@ -4,7 +4,7 @@ import Debug from 'debug'
 
 import { counterId, uuid, CacheAsyncFn } from './utils'
 import { validateOptions } from './stream/utils'
-import Config from './Config'
+import Config, { StreamrClientOptions } from './Config'
 import StreamrEthereum from './Ethereum'
 import Session from './Session'
 import Connection, { ConnectionError } from './Connection'
@@ -21,51 +21,18 @@ import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
 import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
 import { getAddress } from '@ethersproject/address'
 
-export interface StreamrClientOptions {
-    id?: string
-    debug?: Debug.Debugger,
-    auth?: {
-        privateKey?: string
-        ethereum?: ExternalProvider|JsonRpcFetchFunc,
-        apiKey?: string
-        username?: string
-        password?: string
-    }
-    url?: string
-    restUrl?: string
-    streamrNodeAddress?: string
-    autoConnect?: boolean
-    autoDisconnect?: boolean
-    orderMessages?: boolean,
-    retryResendAfter?: number,
-    gapFillTimeout?: number,
-    maxPublishQueueSize?: number,
-    publishWithSignature?: Todo,
-    verifySignatures?: Todo,
-    publisherStoreKeyHistory?: boolean,
-    groupKeys?: Todo
-    keyExchange?: Todo
-    mainnet?: Todo
-    sidechain?: {
-        url?: string
-    },
-    tokenAddress: string,
-    minimumWithdrawTokenWei?: BigNumber|number|string,
-    factoryMainnetAddress: string
-    factorySidechainAddress: string
-    payForSignatureTransport?: boolean
-    cache?: {
-        maxSize?: number,
-        maxAge?: number
-    }
-}
+type Function = (...args: any[]) => any // Utility Type: generic function
+type Promisify<F extends Function> = (...args: Parameters<F>) => Promise<ReturnType<F>> // Utility Type: make a function async
+type MaybeAsync<F extends Function> = F | Promisify<F> // Utility Type: make a function maybe async
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
-export type OnMessageCallback = (message: any, metadata: any) => void
+export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
 
 interface MessageEvent {
     data: any
 }
+
+export { StreamrClientOptions }
 
 /**
  * Wrap connection message events with message parsing.

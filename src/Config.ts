@@ -1,9 +1,53 @@
 import qs from 'qs'
-import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
+import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
+import { BigNumber } from '@ethersproject/bignumber'
 
 import { getVersionString, counterId } from './utils'
-import { StreamrClientOptions } from './StreamrClient'
+import { Todo } from './types'
+
+export interface StreamrClientOptions {
+    id?: string
+    debug?: Debug.Debugger,
+    auth?: {
+        privateKey?: string
+        ethereum?: ExternalProvider|JsonRpcFetchFunc,
+        apiKey?: string
+        username?: string
+        password?: string
+    }
+    url?: string
+    restUrl?: string
+    streamrNodeAddress?: string
+    autoConnect?: boolean
+    autoDisconnect?: boolean
+    orderMessages?: boolean,
+    retryResendAfter?: number,
+    gapFillTimeout?: number,
+    maxGapRequests?: number,
+    maxPublishQueueSize?: number,
+    publishWithSignature?: Todo,
+    verifySignatures?: Todo,
+    publisherStoreKeyHistory?: boolean,
+    groupKeys?: Todo
+    keyExchange?: Todo
+    mainnet?: Todo
+    sidechain?: {
+        url?: string
+    },
+    dataUnion?: string
+    tokenAddress?: string,
+    minimumWithdrawTokenWei?: BigNumber|number|string,
+    sidechainTokenAddress?: string
+    factoryMainnetAddress?: string
+    sidechainAmbAddress?: string
+    payForSignatureTransport?: boolean
+    cache?: {
+        maxSize?: number,
+        maxAge?: number
+    }
+}
 
 const { ControlMessage } = ControlLayer
 const { StreamMessage } = MessageLayer
