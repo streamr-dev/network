@@ -16,6 +16,7 @@
   "scripts": {
     "build": "rm -rf dist; NODE_ENV=production webpack --mode=production --progress && npm run build:types",
     "build:types": "tsc --emitDeclarationOnly",
+    "check-types": "tsc --noEmit --project ./tsconfig.json",
     "benchmarks": "node test/benchmarks/publish.js && node test/benchmarks/subscribe.js",
     "prebuild-benchmark": "npm run build -- --config-name=node-lib",
     "build-benchmark": "npm run benchmarks",
@@ -117,6 +118,7 @@
     "quick-lru": "^5.1.1",
     "readable-stream": "^3.6.0",
     "streamr-client-protocol": "^8.0.0-beta.2",
+    "ts-toolbelt": "^9.3.12",
     "typescript": "^4.1.4",
     "uuid": "^8.3.2",
     "webpack-node-externals": "^2.5.2",

@@ -11,15 +11,11 @@ import Connection, { ConnectionError } from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
 import { getUserId } from './user'
-import { Todo } from './types'
+import { Todo, MaybeAsync } from './types'
 import { StreamEndpoints } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
 import { DataUnionEndpoints } from './rest/DataUnionEndpoints'
 import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
-
-type Function = (...args: any[]) => any // Utility Type: generic function
-type Promisify<F extends Function> = (...args: Parameters<F>) => Promise<ReturnType<F>> // Utility Type: make a function async
-type MaybeAsync<F extends Function> = F | Promisify<F> // Utility Type: make a function maybe async
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
 export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
