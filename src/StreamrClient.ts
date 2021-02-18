@@ -337,7 +337,7 @@ export default class StreamrClient extends EventEmitter {
         return this.publisher.rotateGroupKey(...args)
     }
 
-    async subscribe(opts: Todo, onMessage: OnMessageCallback) {
+    async subscribe(opts: Todo, onMessage?: OnMessageCallback) {
         let subTask: Todo
         let sub: Todo
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
@@ -372,7 +372,7 @@ export default class StreamrClient extends EventEmitter {
         await this.subscriber.unsubscribe(opts)
     }
 
-    async resend(opts: Todo, onMessage: OnMessageCallback) {
+    async resend(opts: Todo, onMessage?: OnMessageCallback) {
         const task = this.subscriber.resend(opts)
         if (typeof onMessage !== 'function') {
             return task
