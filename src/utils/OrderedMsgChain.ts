@@ -137,7 +137,7 @@ interface Events {
     /**
      * Queue was drained after something was in it.
      */
-    drain: (numMesssages: number) => void;
+    drain: (numMessages: number) => void;
     /**
      * Probably a GapFillFailedError.
      */
@@ -162,7 +162,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     lastOrderedMsgRef: MessageRef | null = null
     inProgress: boolean = false
     gapRequestCount: number = 0
-    maxGapRequests: number = MAX_GAP_REQUESTS
+    maxGapRequests: number
     publisherId: string
     msgChainId: string
     inOrderHandler: MessageHandler
