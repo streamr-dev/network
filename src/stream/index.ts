@@ -144,7 +144,7 @@ export default class Stream {
 
     async revokePermission(permissionId: number) {
         return authFetch(
-            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions', permissionId),
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions', String(permissionId)),
             this._client.session,
             {
                 method: 'DELETE',

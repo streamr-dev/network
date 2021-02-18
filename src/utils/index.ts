@@ -1,4 +1,5 @@
 import { inspect } from 'util'
+import EventEmitter from 'events'
 
 import { v4 as uuidv4 } from 'uuid'
 import uniqueId from 'lodash.uniqueid'
@@ -6,8 +7,10 @@ import LRU from 'quick-lru'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import mem from 'mem'
+import { L, F } from 'ts-toolbelt'
 
 import pkg from '../../package.json'
+import { MaybeAsync } from '../types'
 
 import AggregatedError from './AggregatedError'
 import Scaffold from './Scaffold'
@@ -44,7 +47,7 @@ export function randomString(length = 20) {
 
 export const counterId = (() => {
     const MAX_PREFIXES = 256
-    let counts = {} // possible we could switch this to WeakMap and pass functions or classes.
+    let counts: { [prefix: string]: number } = {} // possible we could switch this to WeakMap and pass functions or classes.
     let didWarn = false
     const counterIdFn = (prefix = 'ID') => {
         // pedantic: wrap around if count grows too large
@@ -67,7 +70,7 @@ export const counterId = (() => {
      *
      * @param {string?} prefix
      */
-    counterIdFn.clear = (...args) => {
+    counterIdFn.clear = (...args: [string] | []) => {
         // check length to differentiate between clear(undefined) & clear()
         if (args.length) {
             const [prefix] = args
@@ -90,10 +93,10 @@ export function getVersionString() {
  * Rejects if an 'error' event is received before resolving.
  */
 
-export function waitFor(emitter, event) {
+export function waitFor(emitter: EventEmitter, event: Parameters<EventEmitter['on']>[0]) {
     return new Promise((resolve, reject) => {
-        let onError
-        const onEvent = (value) => {
+        let onError: (error: Error) => void
+        const onEvent = (value: any) => {
             emitter.off('error', onError)
             resolve(value)
         }
@@ -107,11 +110,16 @@ export function waitFor(emitter, event) {
     })
 }
 
-export const getEndpointUrl = (baseUrl, ...pathParts) => {
+export const getEndpointUrl = (baseUrl: string, ...pathParts: string[]) => {
     return baseUrl + '/' + pathParts.map((part) => encodeURIComponent(part)).join('/')
 }
 
-function clearMatching(cache, matchFn) {
+type Collection<K, V> = {
+    keys: Map<K, V>['keys']
+    delete: Map<K, V>['delete']
+}
+
+function clearMatching(cache: Collection<unknown, unknown>, matchFn: (key: unknown) => boolean) {
     for (const key of cache.keys()) {
         if (matchFn(key)) {
             cache.delete(key)
@@ -135,28 +143,29 @@ function clearMatching(cache, matchFn) {
  * ```
  */
 
-export function CacheAsyncFn(asyncFn, {
+export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
-    onEviction,
+    onEviction = () => {},
     ...opts
 } = {}) {
-    const cache = new LRU({
+    const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
         maxSize,
         maxAge,
         onEviction,
     })
 
-    const cachedFn = pMemoize(asyncFn, {
+    const cachedFn = Object.assign(pMemoize(asyncFn, {
         maxAge,
         cachePromiseRejection,
         cache,
         ...opts,
+    }), {
+        clear: () => pMemoize.clear(cachedFn),
+        clearMatching: (...args: L.Tail<Parameters<typeof clearMatching>>) => clearMatching(cache, ...args),
     })
 
-    cachedFn.clear = () => pMemoize.clear(cachedFn)
-    cachedFn.clearMatching = (...args) => clearMatching(cache, ...args)
     return cachedFn
 }
 
@@ -174,24 +183,27 @@ export function CacheAsyncFn(asyncFn, {
  * ```
  */
 
-export function CacheFn(fn, {
+export function CacheFn(fn: Parameters<typeof mem>[0], {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
-    onEviction,
+    onEviction = () => {},
     ...opts
 } = {}) {
-    const cache = new LRU({
+    const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
         maxSize,
         maxAge,
         onEviction,
     })
-    const cachedFn = mem(fn, {
+
+    const cachedFn = Object.assign(mem(fn, {
         maxAge,
         cache,
-        ...opts
+        ...opts,
+    }), {
+        clear: () => mem.clear(cachedFn),
+        clearMatching: (...args: L.Tail<Parameters<typeof clearMatching>>) => clearMatching(cache, ...args),
     })
-    cachedFn.clear = () => mem.clear(cachedFn)
-    cachedFn.clearMatching = (...args) => clearMatching(cache, ...args)
+
     return cachedFn
 }
 
@@ -204,10 +216,12 @@ export function CacheFn(fn, {
  * Also has a wrapError(fn) method that wraps a function to settle this promise if error
  * Defer optionally takes executor function ala `new Promise(executor)`
  */
+type PromiseResolve = L.Compulsory<Parameters<Promise<any>['then']>>[0]
+type PromiseReject = L.Compulsory<Parameters<Promise<any>['then']>>[1]
 
-export function Defer(executor = () => {}) {
-    let resolve
-    let reject
+export function Defer(executor: (...args: Parameters<Promise<any>['then']>) => void = () => {}) {
+    let resolve: PromiseResolve = () => {}
+    let reject: PromiseReject = () => {}
     // eslint-disable-next-line promise/param-names
     const p = new Promise((_resolve, _reject) => {
         resolve = _resolve
@@ -215,8 +229,8 @@ export function Defer(executor = () => {}) {
         executor(resolve, reject)
     })
 
-    function wrap(fn) {
-        return async (...args) => {
+    function wrap(fn: F.Function) {
+        return async (...args: unknown[]) => {
             try {
                 return resolve(await fn(...args))
             } catch (err) {
@@ -226,8 +240,8 @@ export function Defer(executor = () => {}) {
         }
     }
 
-    function wrapError(fn) {
-        return async (...args) => {
+    function wrapError(fn: F.Function) {
+        return async (...args: unknown[]) => {
             try {
                 return await fn(...args)
             } catch (err) {
@@ -237,11 +251,11 @@ export function Defer(executor = () => {}) {
         }
     }
 
-    function handleErrBack(err) {
+    function handleErrBack(err: Error) {
         if (err) {
             reject(err)
         } else {
-            resolve()
+            resolve(undefined)
         }
     }
 
@@ -265,10 +279,10 @@ export function Defer(executor = () => {}) {
  * ```
  */
 
-export function LimitAsyncFnByKey(limit = 1) {
+export function LimitAsyncFnByKey<KeyType>(limit = 1) {
     const pending = new Map()
     const queueOnEmptyTasks = new Map()
-    const f = async (id, fn) => {
+    const f = async (id: KeyType, fn: () => Promise<any>) => {
         const limitFn = pending.get(id) || pending.set(id, pLimit(limit)).get(id)
         const onQueueEmpty = queueOnEmptyTasks.get(id) || queueOnEmptyTasks.set(id, Defer()).get(id)
         try {
@@ -285,7 +299,7 @@ export function LimitAsyncFnByKey(limit = 1) {
         }
     }
 
-    f.getOnQueueEmpty = async (id) => {
+    f.getOnQueueEmpty = async (id: KeyType) => {
         return queueOnEmptyTasks.get(id) || pending.set(id, Defer()).get(id)
     }
 
@@ -303,9 +317,9 @@ export function LimitAsyncFnByKey(limit = 1) {
  * Execute functions in parallel, but ensure they resolve in the order they were executed
  */
 
-export function pOrderedResolve(fn) {
+export function pOrderedResolve(fn: F.Function) {
     const queue = pLimit(1)
-    return async (...args) => {
+    return async (...args: Parameters<typeof fn>) => {
         const d = Defer()
         const done = queue(() => d)
         // eslint-disable-next-line promise/catch-or-return
@@ -318,9 +332,9 @@ export function pOrderedResolve(fn) {
  * Returns a function that executes with limited concurrency.
  */
 
-export function pLimitFn(fn, limit = 1) {
+export function pLimitFn(fn: F.Function, limit = 1) {
     const queue = pLimit(limit)
-    return (...args) => queue(() => fn(...args))
+    return (...args: unknown[]) => queue(() => fn(...args))
 }
 
 /**
@@ -328,9 +342,9 @@ export function pLimitFn(fn, limit = 1) {
  * Returns same promise while task is executing.
  */
 
-export function pOne(fn) {
-    let inProgress
-    return (...args) => {
+export function pOne(fn: F.Function) {
+    let inProgress: Promise<unknown> | undefined
+    return (...args: Parameters<typeof fn>) => {
         if (!inProgress) {
             inProgress = Promise.resolve(fn(...args)).finally(() => {
                 inProgress = undefined
@@ -342,8 +356,9 @@ export function pOne(fn) {
 }
 
 export class TimeoutError extends Error {
-    constructor(msg = '', timeout = 0, ...args) {
-        super(`The operation timed out. ${timeout}ms. ${msg}`, ...args)
+    timeout: number
+    constructor(msg = '', timeout = 0) {
+        super(`The operation timed out. ${timeout}ms. ${msg}`)
         this.timeout = timeout
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
@@ -365,8 +380,16 @@ export class TimeoutError extends Error {
  * message and rejectOnTimeout are optional.
  */
 
-export async function pTimeout(promise, ...args) {
-    let opts = {}
+type pTimeoutOpts = {
+    timeout?: number,
+    message?: string,
+    rejectOnTimeout?: boolean,
+}
+
+type pTimeoutArgs = [timeout?: number, message?: string] | [pTimeoutOpts]
+
+export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs) {
+    let opts: pTimeoutOpts = {}
     if (args[0] && typeof args[0] === 'object') {
         [opts] = args
     } else {
@@ -380,7 +403,7 @@ export async function pTimeout(promise, ...args) {
     }
 
     let timedOut = false
-    let t
+    let t: ReturnType<typeof setTimeout>
     return Promise.race([
         Promise.resolve(promise).catch((err) => {
             if (timedOut) {
@@ -396,7 +419,7 @@ export async function pTimeout(promise, ...args) {
                 if (rejectOnTimeout) {
                     reject(new TimeoutError(message, timeout))
                 } else {
-                    resolve()
+                    resolve(undefined)
                 }
             }, timeout)
         })
@@ -409,18 +432,20 @@ export async function pTimeout(promise, ...args) {
  * Convert allSettled results into a thrown Aggregate error if necessary.
  */
 
-export async function allSettledValues(items, errorMessage = '') {
+export async function allSettledValues(items: Parameters<typeof Promise['allSettled']>, errorMessage = '') {
     const result = await Promise.allSettled(items)
-
-    const errs = result.filter(({ status }) => status === 'rejected').map(({ reason }) => reason)
+    const errs = result
+        .filter(({ status }) => status === 'rejected')
+        .map((v) => (v as PromiseRejectedResult).reason)
     if (errs.length) {
         throw new AggregatedError(errs, errorMessage)
     }
 
-    return result.map(({ value }) => value)
+    return result
+        .map((v) => (v as PromiseFulfilledResult<unknown>).value)
 }
 
-export async function sleep(ms) {
+export async function sleep(ms: number = 0) {
     return new Promise((resolve) => {
         setTimeout(resolve, ms)
     })
@@ -432,7 +457,7 @@ export async function sleep(ms) {
  * @param {number} [timeOutMs=10000] stop waiting after that many milliseconds, -1 for disable
  * @param {number} [pollingIntervalMs=100] check condition between so many milliseconds
  */
-export async function until(condition, timeOutMs = 10000, pollingIntervalMs = 100) {
+export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100) {
     let timeout = false
     if (timeOutMs > 0) {
         setTimeout(() => { timeout = true }, timeOutMs)
