@@ -111,6 +111,20 @@ module.exports = (env, argv) => {
         output: {
             libraryTarget: 'umd2',
             filename: libraryName + '.web.js',
+            // NOTE:
+            // exporting the class directly
+            // `export default class StreamrClient {}`
+            // becomes:
+            // `window.StreamrClient === StreamrClient`
+            // which is correct, but if we define the class and export separately,
+            // which is required if we do interface StreamrClient extends …:
+            // `class StreamrClient {}; export default StreamrClient;`
+            // becomes:
+            // `window.StreamrClient = { default: StreamrClient, … }`
+            // which is wrong for browser builds.
+            // see: https://github.com/webpack/webpack/issues/706#issuecomment-438007763
+            libraryExport: 'default', // This fixes the above.
+            library: 'StreamrClient',
         },
         node: {
             stream: true,
