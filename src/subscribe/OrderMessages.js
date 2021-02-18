@@ -16,7 +16,7 @@ let ID = 0
  */
 
 export default function OrderMessages(client, options = {}) {
-    const { gapFillTimeout, retryResendAfter } = client.options
+    const { gapFillTimeout, retryResendAfter, maxGapRequests } = client.options
     const { streamId, streamPartition, gapFill = true } = validateOptions(options)
     const debug = client.debug.extend(`OrderMessages::${ID}`)
     ID += 1
@@ -59,7 +59,7 @@ export default function OrderMessages(client, options = {}) {
             resendStreams.delete(resendMessageStream)
             await resendMessageStream.cancel()
         }
-    }, gapFillTimeout, retryResendAfter, gapFill ? 5 : 0)
+    }, gapFillTimeout, retryResendAfter, gapFill ? maxGapRequests : 0)
 
     const markMessageExplicitly = orderingUtil.markMessageExplicitly.bind(orderingUtil)
 
