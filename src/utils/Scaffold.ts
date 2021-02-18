@@ -1,5 +1,6 @@
 import pLimit from 'p-limit'
 
+import { MaybeAsync } from '../types'
 import AggregatedError from './AggregatedError'
 
 /**
@@ -12,20 +13,45 @@ import AggregatedError from './AggregatedError'
  * onError fires when something errors. Rethrow in onError to keep error, don't rethrow to suppress.
  * returns a function which should be called whenever something changes that could affect the check.
  */
+type Step = StepUp | MaybeAsync<() => void> // possibly no StepDown
+type StepUp = MaybeAsync<() => StepDown>
+type StepDown = MaybeAsync<() => void>
 
-export default function Scaffold(sequence = [], _checkFn, { onError, onDone, onChange } = {}) {
-    let error
+type ScaffoldOptions = {
+ onError?: (error: Error) => void
+ onDone?: MaybeAsync<(shouldUp: boolean, error?: Error) => void>
+ onChange?: MaybeAsync<(shouldUp: boolean) => void>
+}
+
+const noop = () => {}
+
+export default function Scaffold(
+    sequence: Step[] = [],
+    _checkFn: () => Promise<boolean>,
+    { onError, onDone, onChange }: ScaffoldOptions = {}
+) {
+    let error: Error | undefined
     // ignore error if check fails
 
-    const nextSteps = sequence.slice().reverse()
-    const prevSteps = []
-    const onDownSteps = []
+    const nextSteps: StepUp[] = sequence.slice().reverse().map((fn) => (
+        async () => {
+            const downFn = await fn()
+            return (
+                typeof downFn === 'function'
+                    ? downFn
+                    : noop
+            )
+        }
+    ))
+
+    const prevSteps: StepUp[] = []
+    const onDownSteps: StepDown[] = []
     const queue = pLimit(1)
 
     let isDone = false
     let didStart = false
 
-    function collectErrors(err) {
+    function collectErrors(err: Error) {
         try {
             if (typeof onError === 'function') {
                 onError(err) // give option to suppress error
@@ -37,11 +63,12 @@ export default function Scaffold(sequence = [], _checkFn, { onError, onDone, onC
         }
     }
 
-    const checkFn = async (...args) => {
+    const checkShouldUp = async () => {
+        if (error) { return false }
         try {
-            return await _checkFn(...args)
+            return await _checkFn()
         } catch (err) {
-            collectErrors(err, 'in check')
+            collectErrors(err)
         }
         return false
     }
@@ -50,9 +77,7 @@ export default function Scaffold(sequence = [], _checkFn, { onError, onDone, onC
     let prevShouldUp = false
     const innerQueue = pLimit(1)
 
-    const checkShouldUp = async () => !!(!error && await checkFn())
-
-    async function next(...args) {
+    async function next(): Promise<void> {
         shouldUp = await checkShouldUp()
         const didChange = prevShouldUp !== shouldUp
         prevShouldUp = shouldUp
@@ -62,7 +87,7 @@ export default function Scaffold(sequence = [], _checkFn, { onError, onDone, onC
             } catch (err) {
                 collectErrors(err)
             }
-            return next(...args)
+            return next()
         }
 
         if (shouldUp) {
@@ -70,27 +95,27 @@ export default function Scaffold(sequence = [], _checkFn, { onError, onDone, onC
                 isDone = false
                 didStart = true
                 let onDownStep
-                const stepFn = nextSteps.pop()
+                const stepFn = nextSteps.pop() as StepUp
                 prevSteps.push(stepFn)
                 try {
-                    onDownStep = await stepFn(...args)
+                    onDownStep = await stepFn()
                 } catch (err) {
                     collectErrors(err)
                 }
                 onDownSteps.push(onDownStep || (() => {}))
-                return next(...args)
+                return next()
             }
         } else if (onDownSteps.length) {
             isDone = false
             didStart = true
-            const stepFn = onDownSteps.pop()
+            const stepFn = onDownSteps.pop() as StepDown // exists because checked onDownSteps.length
             try {
                 await stepFn()
             } catch (err) {
                 collectErrors(err)
             }
-            nextSteps.push(prevSteps.pop())
-            return next(...args)
+            nextSteps.push(prevSteps.pop() as StepUp)
+            return next()
         } else if (error) {
             const err = error
             // eslint-disable-next-line require-atomic-updates
@@ -113,15 +138,15 @@ export default function Scaffold(sequence = [], _checkFn, { onError, onDone, onC
         )
     }
 
-    const nextDone = async (...args) => {
-        await innerQueue(() => next(...args))
+    const nextDone = async () => {
+        await innerQueue(() => next())
     }
 
-    let currentStep
-    const queuedNext = async (...args) => {
+    let currentStep: Promise<void>
+    const queuedNext = async () => {
         let stepErr
         try {
-            currentStep = queue(() => nextDone(...args))
+            currentStep = queue(() => nextDone())
             await currentStep
         } catch (err) {
             stepErr = err
@@ -150,7 +175,7 @@ export default function Scaffold(sequence = [], _checkFn, { onError, onDone, onC
         get pendingCount() {
             return queue.pendingCount
         },
-        setError(err) {
+        setError(err: Error) {
             error = AggregatedError.from(error, err)
         },
         getError() {
