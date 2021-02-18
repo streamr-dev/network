@@ -23,7 +23,7 @@
     "benchmark": "npm run benchmarks",
     "prepack": "npm run build",
     "prebuild": "npm run eslint -- --cache",
-    "dev": "webpack --progress --colors --watch --mode=development",
+    "watch": "webpack --progress --watch --mode=development",
     "eslint": "eslint --cache-location=node_modules/.cache/.eslintcache/ '*/**/*.{js,ts}'",
     "test": "jest --detectOpenHandles",
     "test-unit": "jest test/unit --detectOpenHandles",
