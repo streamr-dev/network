@@ -28,11 +28,6 @@ module.exports = (env, argv) => {
         entry: path.join(__dirname, 'src', 'StreamrClient.ts'),
         devtool: 'source-map',
         output: {
-            path: path.join(__dirname, 'dist'),
-            library: {
-                root: 'StreamrClient',
-                amd: libraryName,
-            },
             umdNamedDefine: true,
         },
         optimization: {
@@ -126,16 +121,14 @@ module.exports = (env, argv) => {
             libraryExport: 'default', // This fixes the above.
             library: 'StreamrClient',
         },
-        node: {
-            stream: true,
-            buffer: true,
-        },
         resolve: {
             alias: {
                 stream: 'readable-stream',
+                util: 'util',
                 http: path.resolve(__dirname, './src/shim/http-https.js'),
                 https: path.resolve(__dirname, './src/shim/http-https.js'),
                 ws: path.resolve(__dirname, './src/shim/ws.js'),
+                crypto: path.resolve(__dirname, 'node_modules', 'crypto-browserify'),
                 buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
                 'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
@@ -143,6 +136,10 @@ module.exports = (env, argv) => {
             }
         },
         plugins: [
+            new webpack.ProvidePlugin({
+                process: 'process/browser',
+                Buffer: ['buffer', 'Buffer'],
+            }),
             ...(analyze ? [
                 new BundleAnalyzerPlugin({
                     analyzerMode: 'static',
@@ -153,7 +150,7 @@ module.exports = (env, argv) => {
         ]
     })
 
-    let clientMinifiedConfig = {}
+    let clientMinifiedConfig
 
     if (isProduction) {
         clientMinifiedConfig = merge({}, clientConfig, {
@@ -180,5 +177,5 @@ module.exports = (env, argv) => {
         })
     }
 
-    return [serverConfig, clientConfig, clientMinifiedConfig]
+    return [serverConfig, clientConfig, clientMinifiedConfig].filter(Boolean)
 }
