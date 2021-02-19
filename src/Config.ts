@@ -147,7 +147,7 @@ export default function ClientConfig(opts: Partial<StreamrClientOptions> = {}) {
 
     if ('privateKey' in options.auth) {
         const { privateKey } = options.auth
-        if (typeof privateKey === 'string' && privateKey.startsWith('0x')) {
+        if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
             options.auth.privateKey = `0x${options.auth!.privateKey}`
         }
     }
