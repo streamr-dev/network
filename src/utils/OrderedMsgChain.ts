@@ -15,6 +15,8 @@ function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
 
 type MsgRefId = string
 
+type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']>}
+
 /**
  * Set of StreamMessages, unique by serialized msgRef i.e. timestamp + sequence number.
  */
@@ -160,7 +162,7 @@ class OrderedMsgChain extends MsgChainEmitter {
     id: number
     queue = new MsgChainQueue()
     lastOrderedMsgRef: MessageRef | null = null
-    inProgress: boolean = false
+    hasPendingGap: boolean = false
     gapRequestCount: number = 0
     maxGapRequests: number
     publisherId: string
@@ -263,10 +265,10 @@ class OrderedMsgChain extends MsgChainEmitter {
      * Cancel any outstanding gap fill request.
      */
     clearGap() {
-        if (this.inProgress) {
+        if (this.hasPendingGap) {
             this.debug('clearGap')
         }
-        this.inProgress = false
+        this.hasPendingGap = false
         clearTimeout(this.firstGap!)
         clearInterval(this.nextGaps!)
         this.nextGaps = null
@@ -293,10 +295,10 @@ class OrderedMsgChain extends MsgChainEmitter {
     }
 
     /**
-     * True if the next queued message is the next message in the queue.
-     * Always true for first message and messages without a prevMsgRef.
+     * True if the next queued message is the next message in the chain.
+     * Always true for first message and unchained messages i.e. messages without a prevMsgRef.
      */
-    private hasNextMessageQueued() {
+    private hasNextMessageInChain() {
         const streamMessage = this.queue.peek()
         if (!streamMessage) { return false }
         const { prevMsgRef } = streamMessage
@@ -319,7 +321,7 @@ class OrderedMsgChain extends MsgChainEmitter {
      */
     private checkQueue() {
         let processedMessages = 0
-        while (this.hasNextMessageQueued()) {
+        while (this.hasNextMessageInChain()) {
             processedMessages += 1
             this.pop()
         }
@@ -331,7 +333,8 @@ class OrderedMsgChain extends MsgChainEmitter {
             return
         }
 
-        // emit drain if queue empty & had more than one queued message
+        // emit drain after clearing a block. If only a single item was in the
+        // queue, the queue was never blocked, so it doesn't need to 'drain'.
         if (processedMessages > 1) {
             this.debug('queue drained', processedMessages, this.lastOrderedMsgRef)
             this.clearGap()
@@ -345,8 +348,6 @@ class OrderedMsgChain extends MsgChainEmitter {
     private pop() {
         const msg = this.queue.pop()
         if (!msg) { return }
-        // gaps don't make sense while we are still able to pop items
-        this.clearGap()
         this.lastOrderedMsgRef = msg.getMessageRef()
         try {
             if (this.markedExplicitly.has(msg)) {
@@ -370,17 +371,17 @@ class OrderedMsgChain extends MsgChainEmitter {
      * Schedule a requestGapFill call.
      */
     private scheduleGap() {
-        if (this.inProgress) { return }
+        if (this.hasPendingGap) { return }
         this.gapRequestCount = 0
-        this.inProgress = true
+        this.hasPendingGap = true
         clearTimeout(this.firstGap!)
         this.debug('scheduleGap in %dms', this.propagationTimeout)
         this.firstGap = setTimeout(() => {
             this.requestGapFill()
-            if (!this.inProgress) { return }
+            if (!this.hasPendingGap) { return }
             clearInterval(this.nextGaps!)
             this.nextGaps = setInterval(() => {
-                if (!this.inProgress) {
+                if (!this.hasPendingGap) {
                     clearInterval(this.nextGaps!)
                     return
                 }
@@ -394,11 +395,18 @@ class OrderedMsgChain extends MsgChainEmitter {
      * Failure emits an error and sets up to continue processing enqueued messages after the gap.
      */
     private requestGapFill() {
-        if (!this.inProgress || this.isEmpty()) { return }
-        const msg = this.queue.peek()
+        if (!this.hasPendingGap || this.isEmpty()) { return }
+        const msg = this.queue.peek() as ChainedMessage
         const { lastOrderedMsgRef } = this
         if (!msg || !lastOrderedMsgRef) { return }
-        const to = msg.prevMsgRef!
+        // Note: msg will always have a prevMsgRef at this point. First message
+        // & unchained messages won't trigger gapfill i.e. Only chained
+        // messages (messages with a prevMsgRef) can block queue processing.
+        // Unchained messages arriving after queue is blocked will get
+        // processed immediately if they sort earlier than the blocking message
+        // or they will get queued behind the chained message and will be
+        // processed unconditionally as soon as the queue is unblocked.
+        const to = msg.prevMsgRef
         const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
         const { gapRequestCount, maxGapRequests } = this
         if (gapRequestCount! < maxGapRequests) {
@@ -435,7 +443,7 @@ class OrderedMsgChain extends MsgChainEmitter {
             maxGapRequests: this.maxGapRequests,
             size: this.queue.size(),
             isEmpty: this.isEmpty(),
-            inProgress: this.inProgress,
+            hasPendingGap: this.hasPendingGap,
             markedExplicitly: this.markedExplicitly.size()
         })
     }
