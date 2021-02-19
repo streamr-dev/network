@@ -159,11 +159,9 @@ module.exports = (env, argv) => {
                 minimize: true,
                 minimizer: [
                     new TerserPlugin({
-                        cache: true,
                         parallel: true,
-                        sourceMap: true,
                         terserOptions: {
-                            ecma: 2015,
+                            ecma: 2018,
                             output: {
                                 comments: false,
                             },
