@@ -400,3 +400,5 @@ class StreamrClient extends EventEmitter {
 }
 
 export default StreamrClient
+
+module.exports = StreamrClient

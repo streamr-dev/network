@@ -8,7 +8,6 @@ const path = require('path')
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const { merge } = require('webpack-merge')
-const nodeExternals = require('webpack-node-externals')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const GitRevisionPlugin = require('git-revision-webpack-plugin')
 
@@ -69,36 +68,6 @@ module.exports = (env, argv) => {
             })
         ]
     }
-
-    const serverConfig = merge({}, commonConfig, {
-        name: 'node-lib',
-        target: 'node',
-        externals: [nodeExternals()],
-        output: {
-            libraryTarget: 'commonjs2',
-            filename: libraryName + '.nodejs.js',
-        },
-    })
-
-    serverConfig.module.rules = [
-        {
-            test: /(\.jsx|\.js|\.ts)$/,
-            exclude: /(node_modules|bower_components)/,
-            use: {
-                loader: 'babel-loader',
-                options: {
-                    cacheDirectory: true,
-                    configFile: path.resolve(__dirname, '.babel.node.config.js'),
-                    babelrc: false,
-                }
-            }
-        },
-        {
-            test: /(\.jsx|\.js|\.ts)$/,
-            loader: 'eslint-loader',
-            exclude: /(node_modules|streamr-client-protocol|dist)/, // excluding streamr-client-protocol makes build work when 'npm link'ed
-        },
-    ]
 
     const clientConfig = merge({}, commonConfig, {
         name: 'browser-lib',
@@ -175,5 +144,5 @@ module.exports = (env, argv) => {
         })
     }
 
-    return [serverConfig, clientConfig, clientMinifiedConfig].filter(Boolean)
+    return [clientConfig, clientMinifiedConfig].filter(Boolean)
 }

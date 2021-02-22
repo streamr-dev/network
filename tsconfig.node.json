@@ -1,0 +1,31 @@
+{
+    "extends": "@tsconfig/node14/tsconfig.json",
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": true,
+        "declarationDir": "dist/types",
+        "outDir": "dist/node",
+        "lib": [
+            "ES5",
+            "ES2015",
+            "ES2016",
+            "ES2017",
+            "ES2018",
+            "ES2019",
+            "ES2020",
+            "ESNext",
+            "DOM"
+        ],
+        "strict": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true
+    },
+    "globals": {
+        "ts-jest": {}
+    },
+    "include": [
+        "src/**/*",
+        // quick-lru is esm, need to transpile :/
+        "node_modules/quick-lru/index.js"
+    ]
+}
