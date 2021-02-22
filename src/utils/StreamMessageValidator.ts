@@ -38,7 +38,7 @@ export default class StreamMessageValidator {
     isPublisher: (address: string, streamId: string) => Promise<boolean>
     isSubscriber: (address: string, streamId: string) => Promise<boolean>
     verify: (address: string, payload: string, signature: string) => Promise<boolean>
-    
+
     /**
      * @param getStream async function(streamId): returns the metadata required for stream validation for streamId.
      *        The included fields should be at least: { partitions, requireSignedData, requireEncryptedData }
@@ -113,7 +113,7 @@ export default class StreamMessageValidator {
      * @param verifyFn function(address, payload, signature): return true if the address and payload match the signature
      */
     static async assertSignatureIsValid(
-        streamMessage: StreamMessage, 
+        streamMessage: StreamMessage,
         verifyFn: (address: string, payload: string, signature: string) => Promise<boolean>
     ) {
         const payload = streamMessage.getPayloadToSign()

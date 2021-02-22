@@ -1,5 +1,5 @@
 export default class UnsupportedVersionError extends Error {
-    
+
     version: number
 
     constructor(version: number, message: string) {

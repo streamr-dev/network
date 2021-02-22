@@ -1,13 +1,153 @@
-import debugFactory from 'debug'
+import { EventEmitter } from 'events'
+
+import Debug from 'debug'
 import Heap from 'heap'
-import EventEmitter from 'eventemitter3'
+import StrictEventEmitter from 'strict-event-emitter-types';
 
 import GapFillFailedError from '../errors/GapFillFailedError'
 import MessageRef from '../protocol/message_layer/MessageRef'
 
 import StreamMessage from '../protocol/message_layer/StreamMessage'
 
-const debug = debugFactory('StreamrClient::OrderedMsgChain')
+function toMsgRefId(streamMessage: StreamMessage): MsgRefId {
+    return streamMessage.getMessageRef().serialize()
+}
+
+type MsgRefId = string
+
+type ChainedMessage = StreamMessage & { prevMsgRef: NonNullable<StreamMessage['prevMsgRef']>}
+
+/**
+ * Set of StreamMessages, unique by serialized msgRef i.e. timestamp + sequence number.
+ */
+class StreamMessageSet {
+    msgMap = new Map<MsgRefId, StreamMessage>()
+
+    has(streamMessage: StreamMessage) {
+        return this.msgMap.has(toMsgRefId(streamMessage))
+    }
+
+    /**
+     * Get StreamMessage associated with this msgRef
+     */
+    get(msgRef: MessageRef) {
+        return this.msgMap.get(msgRef.serialize())
+    }
+
+    delete(streamMessage: StreamMessage) {
+        return this.msgMap.delete(toMsgRefId(streamMessage))
+    }
+
+    add(streamMessage: StreamMessage) {
+        if (!this.has(streamMessage)) {
+            return this.msgMap.set(toMsgRefId(streamMessage), streamMessage)
+        }
+        return this
+    }
+
+    size() {
+        return this.msgMap.size
+    }
+}
+
+/**
+ * Ordered queue of StreamMessages.
+ * Deduplicated by serialized msgRef.
+ */
+class MsgChainQueue {
+
+    /**
+     * Ordered message refs
+     */
+    private queue = new Heap<MessageRef>((msg1: MessageRef, msg2: MessageRef) => {
+        return msg1.compareTo(msg2)
+    })
+
+    /**
+     * Mapping from msgRef to message.
+     */
+    private pendingMsgs = new StreamMessageSet()
+
+    /**
+     * Peek at next message in-order.
+     */
+    peek() {
+        if (this.isEmpty()) { return }
+        const ref = this.queue.peek()
+        return this.pendingMsgs.get(ref)
+    }
+
+    /**
+     * True if queue already has a message with this message ref.
+     */
+    has(streamMessage: StreamMessage) {
+        // prevent duplicates
+        return this.pendingMsgs.has(streamMessage)
+    }
+
+    /**
+     * Push new item into the queue.
+     * Ignores duplicates.
+     */
+    push(streamMessage: StreamMessage) {
+        // prevent duplicates
+        if (this.has(streamMessage)) { return }
+        this.pendingMsgs.add(streamMessage)
+        const msgRef = streamMessage.getMessageRef()
+        this.queue.push(msgRef)
+    }
+
+    /**
+     * Remove next item from queue and return it.
+     */
+    pop() {
+        if (this.isEmpty()) { return }
+        const streamMessage = this.peek()
+        if (!streamMessage) { return }
+        this.queue.pop()
+        this.pendingMsgs.delete(streamMessage)
+        return streamMessage
+    }
+
+    /**
+     * True if there are no items in the queue.
+     */
+    isEmpty() {
+        return this.queue.empty()
+    }
+
+    /**
+     * Number of items in queue.
+     */
+    size() {
+        return this.queue.size()
+    }
+}
+
+export type MessageHandler = (msg: StreamMessage) => void
+export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => void
+
+/**
+ * Strict types for EventEmitter interface.
+ */
+interface Events {
+    /**
+     * Message was marked and is being skipped.
+     * Does not fire if maxGapRequests = 0
+     */
+    skip: MessageHandler;
+    /**
+     * Queue was drained after something was in it.
+     */
+    drain: (numMessages: number) => void;
+    /**
+     * Probably a GapFillFailedError.
+     */
+    error: (error: Error) => void;
+}
+
+export const MsgChainEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
+
 // The time it takes to propagate messages in the network. If we detect a gap, we first wait this amount of time because the missing
 // messages might still be propagated.
 const DEFAULT_PROPAGATION_TIMEOUT = 5000
@@ -16,139 +156,232 @@ const DEFAULT_PROPAGATION_TIMEOUT = 5000
 const DEFAULT_RESEND_TIMEOUT = 5000
 const MAX_GAP_REQUESTS = 10
 
-export type InOrderHandler = (msg: StreamMessage) => void
-export type GapHandler = (from: MessageRef, to: MessageRef, publisherId: string, msgChainId: string) => void
+let ID = 0
 
-export default class OrderedMsgChain extends EventEmitter {
-
-    static MAX_GAP_REQUESTS = MAX_GAP_REQUESTS
-
-    markedExplicitly: WeakSet<StreamMessage>
+class OrderedMsgChain extends MsgChainEmitter {
+    id: number
+    queue = new MsgChainQueue()
+    lastOrderedMsgRef: MessageRef | null = null
+    hasPendingGap: boolean = false
+    gapRequestCount: number = 0
+    maxGapRequests: number
     publisherId: string
     msgChainId: string
-    inOrderHandler: InOrderHandler
+    inOrderHandler: MessageHandler
     gapHandler: GapHandler
-    lastReceivedMsgRef: MessageRef | null
     propagationTimeout: number
     resendTimeout: number
-    queue: Heap<StreamMessage>
-    inProgress: boolean = false
     nextGaps: ReturnType<typeof setTimeout> | null = null
     firstGap: ReturnType<typeof setTimeout> | null = null
-    gapRequestCount: number = 0 
+    markedExplicitly = new StreamMessageSet()
+    debug: ReturnType<typeof Debug>
 
     constructor(
-        publisherId: string, msgChainId: string, inOrderHandler: InOrderHandler, gapHandler: GapHandler,
-        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT, resendTimeout = DEFAULT_RESEND_TIMEOUT,
+        publisherId: string, msgChainId: string, inOrderHandler: MessageHandler, gapHandler: GapHandler,
+        propagationTimeout = DEFAULT_PROPAGATION_TIMEOUT, resendTimeout = DEFAULT_RESEND_TIMEOUT, maxGapRequests = MAX_GAP_REQUESTS
     ) {
         super()
-        this.markedExplicitly = new WeakSet()
+        ID += 1
+        this.id = ID
+        this.debug = Debug(`StreamrClient::OrderedMsgChain::${this.id}::${msgChainId}`)
         this.publisherId = publisherId
         this.msgChainId = msgChainId
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
-        this.lastReceivedMsgRef = null
+        this.lastOrderedMsgRef = null
         this.propagationTimeout = propagationTimeout
         this.resendTimeout = resendTimeout
-        /* eslint-disable arrow-body-style */
-        this.queue = new Heap((msg1: StreamMessage, msg2: StreamMessage) => {
-            return msg1.getMessageRef().compareTo(msg2.getMessageRef())
-        })
-        /* eslint-enable arrow-body-style */
+        this.maxGapRequests = maxGapRequests
+
+        if (!this.isGapHandlingEnabled()) {
+            this.debug('Gap handling disabled for this %s.', this.constructor.name)
+        }
     }
 
+    /**
+     * Messages are stale if they are already enqueued or last ordered message is newer.
+     */
     isStaleMessage(streamMessage: StreamMessage) {
         const msgRef = streamMessage.getMessageRef()
         return (
-            this.lastReceivedMsgRef
-            && msgRef.compareTo(this.lastReceivedMsgRef) <= 0
+            // already enqueued
+            this.queue.has(streamMessage) || (
+                this.lastOrderedMsgRef
+                // or older/equal to last ordered msgRef
+                && msgRef.compareTo(this.lastOrderedMsgRef) <= 0
+            )
         )
     }
 
+    /**
+     * Add message to queue.
+     */
     add(unorderedStreamMessage: StreamMessage) {
         if (this.isStaleMessage(unorderedStreamMessage)) {
             const msgRef = unorderedStreamMessage.getMessageRef()
             // Prevent double-processing of messages for any reason
-            debug('Already received message: %o, lastReceivedMsgRef: %o. Ignoring message.', msgRef, this.lastReceivedMsgRef)
+            this.debug('Ignoring message: %o. Message was already enqueued or we already processed a newer message: %o.', msgRef, this.lastOrderedMsgRef)
             return
         }
 
-        if (this.isNextMessage(unorderedStreamMessage)) {
-            this.process(unorderedStreamMessage)
-        } else {
-            this.queue.push(unorderedStreamMessage)
+        // gap handling disabled
+        if (!this.isGapHandlingEnabled()) {
+            this.markMessage(unorderedStreamMessage)
         }
 
+        this.queue.push(unorderedStreamMessage)
         this.checkQueue()
     }
 
+    /**
+     * Mark a message to have it be treated as the next message & not trigger gap fill
+     */
     markMessageExplicitly(streamMessage: StreamMessage) {
+        // only add if not stale
+        if (this.markMessage(streamMessage)) {
+            this.add(streamMessage)
+        }
+    }
+
+    /**
+     * Adds message to set of marked messages.
+     * Does nothing and returns false if message is stale.
+     */
+    private markMessage(streamMessage: StreamMessage) {
         if (!streamMessage || this.isStaleMessage(streamMessage)) {
             // do nothing if already past/handled this message
-            return
+            return false
+        }
+
+        if (this.isGapHandlingEnabled()) {
+            this.debug('marking message', streamMessage.getMessageRef())
         }
 
         this.markedExplicitly.add(streamMessage)
-        this.add(streamMessage)
+        return true
     }
 
+    /**
+     * Cancel any outstanding gap fill request.
+     */
     clearGap() {
-        this.inProgress = false
+        if (this.hasPendingGap) {
+            this.debug('clearGap')
+        }
+        this.hasPendingGap = false
         clearTimeout(this.firstGap!)
         clearInterval(this.nextGaps!)
         this.nextGaps = null
         this.firstGap = null
     }
 
-    private isNextMessage(unorderedStreamMessage: StreamMessage) {
-        const isFirstMessage = this.lastReceivedMsgRef === null
-        return isFirstMessage
-            // is chained and next
-            || (unorderedStreamMessage.prevMsgRef !== null && unorderedStreamMessage.prevMsgRef!.compareTo(this.lastReceivedMsgRef!) === 0)
-            // is unchained and newer
-            || (unorderedStreamMessage.prevMsgRef === null && unorderedStreamMessage.getMessageRef().compareTo(this.lastReceivedMsgRef!) > 0)
+    isGapHandlingEnabled() {
+        return this.maxGapRequests > 0
     }
 
-    private checkQueue() {
-        while (!this.queue.empty()) {
-            const msg = this.queue.peek()
-            if (msg && this.isNextMessage(msg)) {
-                this.queue.pop()
-                // If the next message is found in the queue, current gap must have been filled, so clear the timer
-                this.clearGap()
-                this.process(msg)
-            } else {
-                this.scheduleGap()
-                break
-            }
-        }
+
+    /**
+     * True if queue is empty.
+     */
+    isEmpty() {
+        return this.queue.isEmpty()
     }
 
-    private process(msg: StreamMessage) {
-        this.lastReceivedMsgRef = msg.getMessageRef()
+    /**
+     * Number of enqueued messages.
+     */
+    size() {
+        return this.queue.size()
+    }
 
-        if (this.markedExplicitly.has(msg)) {
-            this.markedExplicitly.delete(msg)
-            this.emit('skip', msg)
+    /**
+     * True if the next queued message is the next message in the chain.
+     * Always true for first message and unchained messages i.e. messages without a prevMsgRef.
+     */
+    private hasNextMessageInChain() {
+        const streamMessage = this.queue.peek()
+        if (!streamMessage) { return false }
+        const { prevMsgRef } = streamMessage
+        // is first message
+        if (this.lastOrderedMsgRef === null) { return true }
+        if (prevMsgRef !== null) {
+            // if has prev, message is chained: ensure prev points at last ordered message
+            return prevMsgRef.compareTo(this.lastOrderedMsgRef) === 0
         } else {
-            this.inOrderHandler(msg)
+            // without prev, message is unchained.
+            // only first message in chain should have no prev
+            // This assumes it's the next message if it's newer
+            // and relies on queue pre-sorting messages
+            return streamMessage.getMessageRef().compareTo(this.lastOrderedMsgRef) > 0
         }
     }
 
-    private scheduleGap() {
-        if (this.inProgress) {
+    /**
+     * Keep popping messages until we hit a gap or run out of messages.
+     */
+    private checkQueue() {
+        let processedMessages = 0
+        while (this.hasNextMessageInChain()) {
+            processedMessages += 1
+            this.pop()
+        }
+
+
+        // if queue not empty then we have a gap
+        if (!this.queue.isEmpty()) {
+            this.scheduleGap()
             return
         }
 
+        // emit drain after clearing a block. If only a single item was in the
+        // queue, the queue was never blocked, so it doesn't need to 'drain'.
+        if (processedMessages > 1) {
+            this.debug('queue drained', processedMessages, this.lastOrderedMsgRef)
+            this.clearGap()
+            this.emit('drain', processedMessages)
+        }
+    }
+
+    /**
+     * Remove next message from queue and run it through inOrderHandler if valid.
+     */
+    private pop() {
+        const msg = this.queue.pop()
+        if (!msg) { return }
+        this.lastOrderedMsgRef = msg.getMessageRef()
+        try {
+            if (this.markedExplicitly.has(msg)) {
+                this.markedExplicitly.delete(msg)
+
+                if (this.isGapHandlingEnabled()) {
+                    this.debug('skipping message', msg.getMessageRef())
+                    this.emit('skip', msg)
+                    return msg
+                }
+            }
+
+            this.inOrderHandler(msg)
+        } catch (err) {
+            this.emit('error', err)
+        }
+        return msg
+    }
+
+    /**
+     * Schedule a requestGapFill call.
+     */
+    private scheduleGap() {
+        if (this.hasPendingGap) { return }
         this.gapRequestCount = 0
-        this.inProgress = true
+        this.hasPendingGap = true
         clearTimeout(this.firstGap!)
+        this.debug('scheduleGap in %dms', this.propagationTimeout)
         this.firstGap = setTimeout(() => {
             this.requestGapFill()
-            if (!this.inProgress) { return }
+            if (!this.hasPendingGap) { return }
             clearInterval(this.nextGaps!)
             this.nextGaps = setInterval(() => {
-                if (!this.inProgress) {
+                if (!this.hasPendingGap) {
                     clearInterval(this.nextGaps!)
                     return
                 }
@@ -157,18 +390,63 @@ export default class OrderedMsgChain extends EventEmitter {
         }, this.propagationTimeout)
     }
 
+    /**
+     * Call gapHandler until run out of gapRequests.
+     * Failure emits an error and sets up to continue processing enqueued messages after the gap.
+     */
     private requestGapFill() {
-        if (!this.inProgress) { return }
-        const from = new MessageRef(this.lastReceivedMsgRef!.timestamp, this.lastReceivedMsgRef!.sequenceNumber + 1)
-        const to = this.queue.peek().prevMsgRef!
-        if (this.gapRequestCount! < MAX_GAP_REQUESTS) {
-            this.gapRequestCount! += 1
-            this.gapHandler(from, to, this.publisherId, this.msgChainId)
+        if (!this.hasPendingGap || this.isEmpty()) { return }
+        const msg = this.queue.peek() as ChainedMessage
+        const { lastOrderedMsgRef } = this
+        if (!msg || !lastOrderedMsgRef) { return }
+        // Note: msg will always have a prevMsgRef at this point. First message
+        // & unchained messages won't trigger gapfill i.e. Only chained
+        // messages (messages with a prevMsgRef) can block queue processing.
+        // Unchained messages arriving after queue is blocked will get
+        // processed immediately if they sort earlier than the blocking message
+        // or they will get queued behind the chained message and will be
+        // processed unconditionally as soon as the queue is unblocked.
+        const to = msg.prevMsgRef
+        const from = new MessageRef(lastOrderedMsgRef.timestamp, lastOrderedMsgRef.sequenceNumber + 1)
+        const { gapRequestCount, maxGapRequests } = this
+        if (gapRequestCount! < maxGapRequests) {
+            this.debug('requestGapFill %d of %d: %o', gapRequestCount + 1, maxGapRequests, {
+                from,
+                to,
+            })
+            this.gapRequestCount += 1
+            try {
+                this.gapHandler(from, to, this.publisherId, this.msgChainId)
+            } catch (err) {
+                this.emit('error', err)
+            }
         } else {
-            this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, MAX_GAP_REQUESTS))
-            this.clearGap()
-            this.lastReceivedMsgRef = null
-            this.checkQueue()
+            if (!this.isEmpty()) {
+                this.debug('requestGapFill failed after %d attempts: %o', maxGapRequests, {
+                    from,
+                    to,
+                })
+                this.debugStatus()
+                // skip gap, allow queue processing to continue
+                this.lastOrderedMsgRef = msg.getPreviousMessageRef()
+                this.emit('error', new GapFillFailedError(from, to, this.publisherId, this.msgChainId, maxGapRequests))
+                this.clearGap()
+                // keep processing
+                this.checkQueue()
+            }
         }
     }
+
+    debugStatus() {
+        this.debug('Up to %o: %o', this.lastOrderedMsgRef, {
+            gapRequestCount: this.gapRequestCount,
+            maxGapRequests: this.maxGapRequests,
+            size: this.queue.size(),
+            isEmpty: this.isEmpty(),
+            hasPendingGap: this.hasPendingGap,
+            markedExplicitly: this.markedExplicitly.size()
+        })
+    }
 }
+
+export default OrderedMsgChain;

@@ -1,8 +1,7 @@
 import assert from 'assert'
 
 import sinon from 'sinon'
-// @ts-ignore
-import sleep from 'await-sleep'
+import { wait } from 'streamr-test-utils'
 
 import CachingStreamMessageValidator from '../../../src/utils/CachingStreamMessageValidator'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
@@ -99,7 +98,7 @@ describe('CachingStreamMessageValidator', () => {
         await validator.validate(msg)
         assert.strictEqual((isPublisher as any).callCount, 1)
 
-        await sleep(cacheTimeoutMillis * 3)
+        await wait(cacheTimeoutMillis * 3)
 
         // Results should have been expired
         await validator.validate(msg)
@@ -128,7 +127,7 @@ describe('CachingStreamMessageValidator', () => {
         await assert.rejects(validator.validate(msg))
         assert.strictEqual((isPublisher as any).callCount, 1)
 
-        await sleep(cacheErrorsTimeoutMillis * 3)
+        await wait(cacheErrorsTimeoutMillis * 3)
 
         // Error results should have been expired
         await assert.rejects(validator.validate(msg))

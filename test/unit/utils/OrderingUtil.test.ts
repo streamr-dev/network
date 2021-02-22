@@ -24,7 +24,7 @@ const createMsg = (
 const msg = createMsg()
 
 describe('OrderingUtil', () => {
-    let util: OrderingUtil 
+    let util: OrderingUtil
     afterEach(() => {
         util.clearGaps()
     })
@@ -33,7 +33,6 @@ describe('OrderingUtil', () => {
             assert.deepStrictEqual(streamMessage.serialize(), msg.serialize())
             done()
         }
-        // @ts-ignore TODO
         util = new OrderingUtil('streamId', 0, handler, () => {})
         util.add(msg)
     })
@@ -76,21 +75,19 @@ describe('OrderingUtil', () => {
         const expected1 = [msg1Pub1]
         const expected2 = [msg1Pub2]
         const expected3 = [msg1Pub3]
-        let i
-        for (i = 2; i <= 100000; i++) {
+        for (let i = 2; i <= 100000; i++) {
             expected1.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId1'))
         }
-        for (i = 2; i <= 100000; i++) {
+        for (let i = 2; i <= 100000; i++) {
             expected2.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId2'))
         }
-        for (i = 2; i <= 100000; i++) {
+        for (let i = 2; i <= 100000; i++) {
             expected3.push(createMsg(i, 0, i - 1, 0, {}, 'publisherId3'))
         }
         const shuffled = shuffle(expected1.concat(expected2).concat(expected3))
         const received1: StreamMessage[] = []
         const received2: StreamMessage[] = []
         const received3: StreamMessage[] = []
-        // @ts-ignore TODO
         util = new OrderingUtil('streamId', 0, (m) => {
             if (m.getPublisherId() === 'publisherId1') {
                 received1.push(m)

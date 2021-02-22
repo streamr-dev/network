@@ -8,7 +8,7 @@
     "allowJs": true,
     "declaration": true,
     "outDir": "dist",
-    "rootDirs": ["src"],
+    "rootDirs": ["src", "test"],
     "strict": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
@@ -18,7 +18,6 @@
     "dist",
     "jest.config.js",
     "node_modules",
-    "test",
     "coverage"
   ]
 }

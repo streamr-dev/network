@@ -4,7 +4,7 @@ import StreamMessageValidator, { Options as StreamMessageValidatorOptions } from
 import SigningUtil from './SigningUtil'
 
 export interface Options extends StreamMessageValidatorOptions {
-    cacheTimeoutMillis?: number, 
+    cacheTimeoutMillis?: number,
     cacheErrorsTimeoutMillis?: number
 }
 /**

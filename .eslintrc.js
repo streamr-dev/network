@@ -19,6 +19,7 @@ module.exports = {
         'no-underscore-dangle': ['error', {
             allowAfterThis: true
         }],
+        'no-trailing-spaces': ['warn'],
         // TODO remove some of these later?
         '@typescript-eslint/ban-ts-comment': DISABLED,
         '@typescript-eslint/no-empty-function': DISABLED,

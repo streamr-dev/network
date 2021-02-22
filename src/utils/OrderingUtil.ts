@@ -1,30 +1,33 @@
 import StreamMessage from '../protocol/message_layer/StreamMessage'
-import OrderedMsgChain, { GapHandler, InOrderHandler } from './OrderedMsgChain'
+import OrderedMsgChain, { GapHandler, MessageHandler, MsgChainEmitter } from './OrderedMsgChain'
 
-export default class OrderingUtil {
-
+class OrderingUtil extends MsgChainEmitter {
     streamId: string
     streamPartition: number
-    inOrderHandler: InOrderHandler
+    inOrderHandler: MessageHandler
     gapHandler: GapHandler
-    propagationTimeout: number
-    resendTimeout: number
+    propagationTimeout?: number
+    resendTimeout?: number
+    maxGapRequests?: number
     orderedChains: { [key: string]: OrderedMsgChain}
 
     constructor(
-        streamId: string, 
-        streamPartition: number, 
-        inOrderHandler: InOrderHandler, 
-        gapHandler: GapHandler, 
-        propagationTimeout: number, 
-        resendTimeout: number
+        streamId: string,
+        streamPartition: number,
+        inOrderHandler: MessageHandler,
+        gapHandler: GapHandler,
+        propagationTimeout?: number,
+        resendTimeout?: number,
+        maxGapRequests?: number
     ) {
+        super()
         this.streamId = streamId
         this.streamPartition = streamPartition
         this.inOrderHandler = inOrderHandler
         this.gapHandler = gapHandler
         this.propagationTimeout = propagationTimeout
         this.resendTimeout = resendTimeout
+        this.maxGapRequests = maxGapRequests
         this.orderedChains = {}
     }
 
@@ -36,10 +39,15 @@ export default class OrderingUtil {
     private getChain(publisherId: string, msgChainId: string) {
         const key = publisherId + msgChainId
         if (!this.orderedChains[key]) {
-            this.orderedChains[key] = new OrderedMsgChain(
+            const chain = new OrderedMsgChain(
                 publisherId, msgChainId, this.inOrderHandler, this.gapHandler,
-                this.propagationTimeout, this.resendTimeout,
+                this.propagationTimeout, this.resendTimeout, this.maxGapRequests
             )
+            chain.on('error', (...args) => this.emit('error', ...args))
+            chain.on('skip', (...args) => this.emit('skip', ...args))
+            chain.on('drain', (...args) => this.emit('drain', ...args))
+            this.orderedChains[key] = chain
+
         }
         return this.orderedChains[key]
     }
@@ -49,9 +57,17 @@ export default class OrderingUtil {
         chain.markMessageExplicitly(streamMessage)
     }
 
+    isEmpty() {
+        return Object.values(this.orderedChains).every((chain) => (
+            chain.isEmpty()
+        ))
+    }
+
     clearGaps() {
-        Object.keys(this.orderedChains).forEach((key) => {
-            this.orderedChains[key].clearGap()
+        Object.values(this.orderedChains).forEach((chain) => {
+            chain.clearGap()
         })
     }
 }
+
+export default OrderingUtil

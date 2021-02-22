@@ -14,7 +14,7 @@ export interface Options extends TrackerMessageOptions {
 }
 
 export default class ErrorMessage extends TrackerMessage {
-    
+
     static ERROR_CODES = ErrorCode // TODO can we remove this and use the enum object directly?
 
     errorCode: ErrorCode

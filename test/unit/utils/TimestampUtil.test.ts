@@ -1,7 +1,6 @@
 import { parse }  from '../../../src/utils/TimestampUtil'
 
 describe('TimestampUtil', () => {
-
     it('parse epoch from number', () => {
         expect(parse(1234567890123)).toBe(1234567890123)
     })
@@ -17,4 +16,4 @@ describe('TimestampUtil', () => {
     it('invalid data', () => {
         expect(() => parse({} as any)).toThrow()
     })
-});
+})
