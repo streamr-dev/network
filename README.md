@@ -36,7 +36,7 @@ streamr subscribe 7wa7APtlTq6EC5iTCBy6dw
 To subscribe to a private stream and authenticate with an Ethereum private key:
 
 ```
-streamr subscribe streamId --privateKey <key>
+streamr subscribe streamId --private-key <key>
 ```
 
 Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment. Alternatively, you can give `--ws-url <url>` and `--http-url <url>` to connect to any custom network.
@@ -47,7 +47,7 @@ Used to publish events to a stream from stdin line-by-line. Each line should be 
 
 Example of use:
 ```
-streamr publish <streamId> --privateKey <key>
+streamr publish <streamId> --private-key <key>
 ```
 
 Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
@@ -58,25 +58,25 @@ Generate random JSON objects to stdout line-by-line.
 
 Useful for generating test data to be published to a stream with `publish`, e.g.:
 ```
-streamr generate | streamr publish <streamId> --privateKey <key>
+streamr generate | streamr publish <streamId> --private-key <key>
 ```
 
 ### list
 Fetch a list of streams that are accessible to the user authenticated by the private key
 ```
-streamr list --privateKey <key>
+streamr list --private-key <key>
 ```
 
 ### show
 Show detailed information about a specific stream
 ```
-streamr show <streamId> --privateKey <key>
+streamr show <streamId> --private-key <key>
 ```
 
 ### create
 Create a new stream
 ```
-streamr create <name> --privateKey <key>
+streamr create <name> --private-key <key>
 ```
 
 ### resend
@@ -90,12 +90,12 @@ streamr resend last 10 7wa7APtlTq6EC5iTCBy6dw
 
 To fetch data starting from a particular date-time
 ```
-streamr resend from 2019-05-10T17:00:00 <streamId> --privateKey <key>
+streamr resend from 2019-05-10T17:00:00 <streamId> --private-key <key>
 ```
 
 To fetch data between two date-times
 ```
-streamr resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 <streamId> --privateKey <key>
+streamr resend range 2019-05-10T17:00:00 2019-05-11T21:00:00 <streamId> --private-key <key>
 ```
 
 Flag `--dev` or `--stg` can be enabled for the command to operate on pre-defined development or staging environment.
@@ -118,14 +118,14 @@ streamr subscribe 7wa7APtlTq6EC5iTCBy6dw | ruby calculate-average-speed.rb
 If your program produces JSON objects to stdout (line-by-line), you can
 redirect it to command `publish` to publish the JSON objects to a stream.
 ```
-python printSensorReadingsAsJson.py | streamr publish <streamId> --privateKey <key>
+python printSensorReadingsAsJson.py | streamr publish <streamId> --private-key <key>
 ```
 
 #### Transforming streams
 You can also subscribe to a stream, apply a transformation, and then pipe the
 transformed output into another stream.
 ```
-streamr subscribe <sourceStream> | ./calculateMovingAverages | streamr publish <destinationStream> --privateKey <key>
+streamr subscribe <sourceStream> | ./calculateMovingAverages | streamr publish <destinationStream> --private-key <key>
 ```
 
 Same rules apply here as before. Your program should accept line-by-line JSON
@@ -136,12 +136,12 @@ If you have a working stream in production that you'd also like to use in your
 development environment, you can combine the `subscribe` and `publish` commands to effectively copy
 the real-time events.
 ```
-streamr subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr publish --dev <streamId> --privateKey <key>
+streamr subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr publish --dev <streamId> --private-key <key>
 ```
 
 And the same for staging environment:
 ```
-streamr subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr publish --stg <streamId> --privateKey <key>
+streamr subscribe 7wa7APtlTq6EC5iTCBy6dw | streamr publish --stg <streamId> --private-key <key>
 ```
 
 ## Develop
