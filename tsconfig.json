@@ -22,6 +22,9 @@
     "resolveJsonModule": true,
     "moduleResolution": "node"
   },
+   "globals": {
+      "ts-jest": {}
+   },
   "include": ["src/**/*", "contracts/*"],
   "exclude": ["node_modules", "dist"]
 }

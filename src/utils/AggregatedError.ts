@@ -7,10 +7,20 @@
  * See: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/AggregateError
  */
 
+function joinMessages(msgs: (string | undefined)[]): string {
+    return msgs.filter(Boolean).join('\n')
+}
+
 export default class AggregatedError extends Error {
     errors: Set<Error>
+    ownMessage?: string
     constructor(errors: Error[] = [], errorMessage = '') {
-        super(errorMessage)
+        const message = joinMessages([
+            errorMessage,
+            ...errors.map((err) => err.message)
+        ])
+        super(message)
+        this.ownMessage = errorMessage
         this.errors = new Set(errors)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
@@ -26,7 +36,7 @@ export default class AggregatedError extends Error {
             return undefined
         }
 
-        return new AggregatedError(errs, errorMessage)
+        return new this(errs, errorMessage)
     }
 
     /**
@@ -43,38 +53,41 @@ export default class AggregatedError extends Error {
      * Handles 'upgrading' an existing error to an AggregatedError when necesary.
      */
     static from(oldErr?: Error | AggregatedError, newErr?: Error, msg?: string) {
-        if (newErr && msg) {
-            // copy message
-            newErr.message = `${msg}: ${newErr.message}` // eslint-disable-line no-param-reassign
-        }
-
         if (!newErr) {
+            if (oldErr && msg) {
+                // copy message
+                oldErr.message = joinMessages([oldErr.message, msg]) // eslint-disable-line no-param-reassign
+            }
             return oldErr
         }
 
         // When no oldErr, just return newErr
         if (!oldErr) {
+            if (newErr && msg) {
+                // copy message
+                newErr.message = joinMessages([newErr.message, msg]) // eslint-disable-line no-param-reassign
+            }
             return newErr
         }
 
         // When oldErr is an AggregatedError, extend it
         if (oldErr instanceof AggregatedError) {
-            return oldErr.extend(newErr, msg || newErr.message)
+            return oldErr.extend(newErr, msg, this)
         }
 
         // Otherwise create new AggregatedError from oldErr and newErr
-        return new AggregatedError([oldErr, newErr], msg || newErr.message)
+        return new this([oldErr]).extend(newErr, msg)
     }
 
     /**
      * Create a new error that adds err to list of errors
      */
 
-    extend(err: Error, message = ''): AggregatedError {
+    extend(err: Error, message = '', baseClass = this.constructor): AggregatedError {
         if (err === this || this.errors.has(err)) {
             return this
         }
-
-        return new AggregatedError([err, ...this.errors], [message, this.message || ''].join('\n'))
+        const errors = [err, ...this.errors]
+        return new (<typeof AggregatedError> baseClass)(errors, joinMessages([message, this.ownMessage]))
     }
 }
