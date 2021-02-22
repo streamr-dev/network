@@ -39,7 +39,6 @@ module.exports = {
         'padded-blocks': 'off',
         'no-use-before-define': 'off',
         'import/order': 'off',
-        'no-undef': 'off',
         'no-shadow': 'off',
         '@typescript-eslint/no-shadow': 'error',
         'no-unused-vars': 'off',
