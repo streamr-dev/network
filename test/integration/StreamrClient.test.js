@@ -17,7 +17,7 @@ const WebSocket = require('ws')
 const { StreamMessage } = MessageLayer
 const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest, ControlMessage } = ControlLayer
 
-const MAX_MESSAGES = 5
+const MAX_MESSAGES = 20
 
 describeRepeats('StreamrClient', () => {
     let expectErrors = 0 // check no errors by default
@@ -38,8 +38,8 @@ describeRepeats('StreamrClient', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
-            disconnectDelay: 1,
-            publishAutoDisconnectDelay: 50,
+            // disconnectDelay: 500,
+            // publishAutoDisconnectDelay: 250,
             maxRetries: 2,
             ...opts,
         })
@@ -914,6 +914,7 @@ describeRepeats('StreamrClient', () => {
                 })
 
                 afterEach(async () => {
+                    otherClient.debug('disconnecting after test')
                     const tasks = [
                         otherClient.disconnect(),
                         client.disconnect(),
@@ -924,12 +925,12 @@ describeRepeats('StreamrClient', () => {
 
                 it('should work', async () => {
                     const done = Defer()
-
                     const msgs = []
 
                     await otherClient.subscribe(stream, (msg) => {
                         msgs.push(msg)
 
+                        otherClient.debug('got msg %d of %d', msgs.length, MAX_MESSAGES)
                         if (msgs.length === MAX_MESSAGES) {
                             // should eventually get here
                             done.resolve()
@@ -938,9 +939,11 @@ describeRepeats('StreamrClient', () => {
 
                     const disconnect = pLimitFn(async () => {
                         if (msgs.length === MAX_MESSAGES) { return }
+                        otherClient.debug('disconnecting...', msgs.length)
                         otherClient.connection.socket.close()
                         // wait for reconnection before possibly disconnecting again
                         await otherClient.nextConnection()
+                        otherClient.debug('reconnected...', msgs.length)
                     })
 
                     const onConnectionMessage = jest.fn(() => {
@@ -955,11 +958,9 @@ describeRepeats('StreamrClient', () => {
                     const onDisconnected = jest.fn()
                     otherClient.connection.on('connected', onConnected)
                     otherClient.connection.on('disconnected', onDisconnected)
-
                     const published = await publishTestMessages(MAX_MESSAGES, {
-                        delay: 1000,
+                        delay: 600,
                     })
-
                     await done
                     // wait for final re-connection after final message
                     await otherClient.connection.nextConnection()

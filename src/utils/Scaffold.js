@@ -9,11 +9,13 @@ import AggregatedError from './AggregatedError'
  * If/when check fails (or there's an error) cleanup functions will be executed in order.
  * onChange fires when up/down direction changes.
  * onDone fires when no more up/down steps to execute.
+ * onError fires when something errors. Rethrow in onError to keep error, don't rethrow to suppress.
  * returns a function which should be called whenever something changes that could affect the check.
  */
 
-export default function Scaffold(sequence = [], _checkFn, { onDone, onChange } = {}) {
+export default function Scaffold(sequence = [], _checkFn, { onError, onDone, onChange } = {}) {
     let error
+    // ignore error if check fails
 
     const nextSteps = sequence.slice().reverse()
     const prevSteps = []
@@ -23,16 +25,23 @@ export default function Scaffold(sequence = [], _checkFn, { onDone, onChange } =
     let isDone = false
     let didStart = false
 
-    function onError(err) {
-        // eslint-disable-next-line require-atomic-updates
-        error = AggregatedError.from(error, err)
+    function collectErrors(err) {
+        try {
+            if (typeof onError === 'function') {
+                onError(err) // give option to suppress error
+            } else {
+                throw err // rethrow
+            }
+        } catch (newErr) {
+            error = AggregatedError.from(error, newErr)
+        }
     }
 
     const checkFn = async (...args) => {
         try {
             return await _checkFn(...args)
         } catch (err) {
-            onError(err, 'in check')
+            collectErrors(err, 'in check')
         }
         return false
     }
@@ -51,7 +60,7 @@ export default function Scaffold(sequence = [], _checkFn, { onDone, onChange } =
             try {
                 await onChange(shouldUp)
             } catch (err) {
-                onError(err)
+                collectErrors(err)
             }
             return next(...args)
         }
@@ -66,7 +75,7 @@ export default function Scaffold(sequence = [], _checkFn, { onDone, onChange } =
                 try {
                     onDownStep = await stepFn(...args)
                 } catch (err) {
-                    onError(err)
+                    collectErrors(err)
                 }
                 onDownSteps.push(onDownStep || (() => {}))
                 return next(...args)
@@ -78,7 +87,7 @@ export default function Scaffold(sequence = [], _checkFn, { onDone, onChange } =
             try {
                 await stepFn()
             } catch (err) {
-                onError(err)
+                collectErrors(err)
             }
             nextSteps.push(prevSteps.pop())
             return next(...args)

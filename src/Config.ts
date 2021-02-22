@@ -1,5 +1,4 @@
 import qs from 'qs'
-// @ts-expect-error
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
 
@@ -28,6 +27,7 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
         orderMessages: true,
         retryResendAfter: 5000,
         gapFillTimeout: 5000,
+        maxGapRequests: 5,
         maxPublishQueueSize: 10000,
 
         // Encryption options

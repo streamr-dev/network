@@ -291,6 +291,93 @@ describe('Scaffold', () => {
         ])
     })
 
+    it('does not error if onError suppresses', async () => {
+        expect.assertions(2)
+        const shouldUp = true
+
+        const err = new Error('expected')
+        const onErrorNoop = jest.fn()
+        const next = Scaffold([
+            async () => {
+                await up('a')
+                return () => down('a') // this should throw due to on('next' above
+            },
+            async () => {
+                await up('b')
+                return async () => {
+                    await down('b')
+                }
+            },
+            async () => {
+                throw err
+            }
+        ], () => shouldUp, {
+            onDone,
+            onChange,
+            onError: onErrorNoop,
+        })
+
+        await next()
+
+        expect(order).toEqual([
+            'change up',
+            'up start a',
+            'up end a',
+            'up start b',
+            'up end b',
+            'done up',
+        ])
+        expect(onErrorNoop).toHaveBeenCalledWith(err)
+    })
+
+    it('does not error if onError rethrows', async () => {
+        expect.assertions(3)
+        const shouldUp = true
+
+        const err = new Error('expected')
+        const onErrorRethrow = jest.fn((error) => {
+            throw error
+        })
+        const next = Scaffold([
+            async () => {
+                await up('a')
+                return () => down('a') // this should throw due to on('next' above
+            },
+            async () => {
+                await up('b')
+                return async () => {
+                    await down('b')
+                }
+            },
+            async () => {
+                throw err
+            }
+        ], () => shouldUp, {
+            onDone,
+            onChange,
+            onError: onErrorRethrow,
+        })
+
+        await expect(async () => {
+            await next()
+        }).rejects.toThrow(err)
+
+        expect(order).toEqual([
+            'change up',
+            'up start a',
+            'up end a',
+            'up start b',
+            'up end b',
+            'change down',
+            'down start b',
+            'down end b',
+            'down start a',
+            'down end a',
+            'done down',
+        ])
+        expect(onErrorRethrow).toHaveBeenCalledWith(err)
+    })
+
     it('does nothing if check fails', async () => {
         const shouldUp = false
         const next = Scaffold([

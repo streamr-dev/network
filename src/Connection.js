@@ -11,7 +11,7 @@ const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 // add global support for pretty millisecond formatting with %n
 Debug.formatters.n = (v) => Debug.humanize(v)
 
-class ConnectionError extends Error {
+export class ConnectionError extends Error {
     constructor(err, ...args) {
         if (err instanceof ConnectionError) {
             return err

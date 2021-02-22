@@ -8,16 +8,23 @@ import resendStream from './resendStream'
 
 const { OrderingUtil } = Utils
 
+let ID = 0
+
 /**
  * Wraps OrderingUtil into a pipeline.
  * Implements gap filling
  */
 
 export default function OrderMessages(client, options = {}) {
-    const { gapFillTimeout, retryResendAfter, gapFill = true } = client.options
-    const { streamId, streamPartition } = validateOptions(options)
+    const { gapFillTimeout, retryResendAfter, maxGapRequests } = client.options
+    const { streamId, streamPartition, gapFill = true } = validateOptions(options)
+    const debug = client.debug.extend(`OrderMessages::${ID}`)
+    ID += 1
 
-    const outStream = new PushQueue() // output buffer
+    // output buffer
+    const outStream = new PushQueue([], {
+        autoEnd: false,
+    })
 
     let done = false
     const resendStreams = new Set() // holds outstanding resends for cleanup
@@ -26,11 +33,10 @@ export default function OrderMessages(client, options = {}) {
         if (!outStream.isWritable() || done) {
             return
         }
-
         outStream.push(orderedMessage)
     }, async (from, to, publisherId, msgChainId) => {
         if (done || !gapFill) { return }
-        client.debug('gap %o', {
+        debug('gap %o', {
             streamId, streamPartition, publisherId, msgChainId, from, to,
         })
 
@@ -53,22 +59,44 @@ export default function OrderMessages(client, options = {}) {
             resendStreams.delete(resendMessageStream)
             await resendMessageStream.cancel()
         }
-    }, gapFillTimeout, retryResendAfter)
+    }, gapFillTimeout, retryResendAfter, gapFill ? maxGapRequests : 0)
 
     const markMessageExplicitly = orderingUtil.markMessageExplicitly.bind(orderingUtil)
+
+    let inputClosed = false
+
+    function maybeClose() {
+        // we can close when:
+        // input has closed (i.e. all messages sent)
+        // AND
+        // no gaps are pending
+        // AND
+        // gaps have been filled or failed
+        // NOTE ordering util cannot have gaps if queue is empty
+        if (inputClosed && orderingUtil.isEmpty()) {
+            outStream.end()
+        }
+    }
+
+    orderingUtil.on('drain', () => {
+        maybeClose()
+    })
+
+    orderingUtil.on('error', () => {
+        // TODO: handle gapfill errors without closing stream or logging
+        maybeClose() // probably noop
+    })
 
     return Object.assign(pipeline([
         // eslint-disable-next-line require-yield
         async function* WriteToOrderingUtil(src) {
             for await (const msg of src) {
-                if (!gapFill) {
-                    orderingUtil.markMessageExplicitly(msg)
-                }
-
                 orderingUtil.add(msg)
                 // note no yield
                 // orderingUtil writes to outStream itself
             }
+            inputClosed = true
+            maybeClose()
         },
         outStream, // consumer gets outStream
     ], async (err) => {

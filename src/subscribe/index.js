@@ -3,6 +3,7 @@ import Emitter from 'events'
 import { allSettledValues, AggregatedError, Scaffold, Defer, counterId } from '../utils'
 import { pipeline } from '../utils/iterators'
 import { validateOptions } from '../stream/utils'
+import { ConnectionError } from '../Connection'
 
 import { subscribe, unsubscribe } from './api'
 import MessagePipeline from './pipeline'
@@ -21,6 +22,7 @@ export class Subscription extends Emitter {
         this.streamPartition = this.options.streamPartition
 
         this._onDone = Defer()
+        this._onDone.catch(() => {}) // prevent unhandledrejection
         this._onFinally = onFinally
 
         const validate = opts.validate || Validator(client, this.options)
@@ -106,17 +108,17 @@ export class Subscription extends Emitter {
  */
 
 function multiEmit(emitters, ...args) {
-    const errs = []
+    let error
     emitters.forEach((s) => {
         try {
             s.emit(...args)
         } catch (err) {
-            errs.push(err)
+            AggregatedError.from(error, err, `Error emitting event: ${args[0]}`)
         }
     })
 
-    if (errs.length) {
-        throw new AggregatedError(errs, `Error emitting event: ${args[0]}`)
+    if (error) {
+        throw error
     }
 }
 
@@ -157,11 +159,19 @@ class SubscriptionSession extends Emitter {
                     await this.step()
                 }
             } catch (err) {
-                this.emit(err)
+                this.emit('error', err)
             }
         }
 
         let deleted = new Set()
+        const check = () => {
+            return (
+                connection.isConnectionValid()
+                && !needsReset
+                // has some active subscription
+                && this.count()
+            )
+        }
 
         this.step = Scaffold([
             () => {
@@ -219,12 +229,16 @@ class SubscriptionSession extends Emitter {
                     await unsubscribe(this.client, this.options)
                 }
             }
-        ], () => (
-            connection.isConnectionValid()
-            && !needsReset
-            // has some active subscription
-            && this.count()
-        ))
+        ], check, {
+            onError(err) {
+                if (err instanceof ConnectionError && !check()) {
+                    // ignore error if state changed
+                    needsReset = true
+                    return
+                }
+                throw err
+            }
+        })
     }
 
     has(sub) {
@@ -319,7 +333,7 @@ class Subscriptions {
         this.subSessions = new Map()
     }
 
-    async add(opts, onFinally = () => {}) {
+    async add(opts, onFinally = async () => {}) {
         const options = validateOptions(opts)
         const { key } = options
 

@@ -37,14 +37,13 @@ export default class AggregatedError extends Error {
      */
 
     static from(oldErr, newErr, msg) {
+        if (newErr && msg) {
+            // copy message
+            newErr.message = `${msg}: ${newErr.message}` // eslint-disable-line no-param-reassign
+        }
         switch (true) {
             // When no oldErr, just return newErr
             case !oldErr: {
-                if (msg) {
-                    // copy message
-                    newErr.message = msg // eslint-disable-line no-param-reassign
-                }
-
                 return newErr
             }
             // When oldErr is an AggregatedError, extend it

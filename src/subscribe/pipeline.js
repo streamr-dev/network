@@ -22,7 +22,7 @@ async function collect(src) {
  * Subscription message processing pipeline
  */
 
-export default function MessagePipeline(client, opts = {}, onFinally = () => {}) {
+export default function MessagePipeline(client, opts = {}, onFinally = async () => {}) {
     const options = validateOptions(opts)
     const { key, afterSteps = [], beforeSteps = [], onError = (err) => { throw err } } = options
     const id = counterId('MessagePipeline') + key
@@ -42,6 +42,11 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
         gapFill: false,
     })
 
+    // collect messages that fail validation/parsing, do not push out of pipeline
+    // NOTE: we let failed messages be processed and only removed at end so they don't
+    // end up acting as gaps that we repeatedly try to fill.
+    const ignoreMessages = new WeakSet()
+
     const p = pipeline([
         // take messages
         msgStream,
@@ -56,26 +61,31 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
         // order messages (fill gaps)
         orderingUtil,
         // validate
-        async function* Validate(src) {
+        async function* ValidateMessages(src) {
             for await (const streamMessage of src) {
                 try {
                     await validate(streamMessage)
                 } catch (err) {
-                    internalOrderingUtil.markMessageExplicitly(streamMessage)
+                    ignoreMessages.add(streamMessage)
                     await onError(err)
                 }
                 yield streamMessage
             }
         },
         // decrypt
-        decrypt,
+        async function* DecryptMessages(src) {
+            yield* decrypt(src, async (err, streamMessage) => {
+                ignoreMessages.add(streamMessage)
+                await onError(err)
+            })
+        },
         // parse content
-        async function* Parse(src) {
+        async function* ParseMessages(src) {
             for await (const streamMessage of src) {
                 try {
                     streamMessage.getParsedContent()
                 } catch (err) {
-                    internalOrderingUtil.markMessageExplicitly(streamMessage)
+                    ignoreMessages.add(streamMessage)
                     await onError(err)
                 }
                 yield streamMessage
@@ -83,6 +93,15 @@ export default function MessagePipeline(client, opts = {}, onFinally = () => {})
         },
         // re-order messages (ignore gaps)
         internalOrderingUtil,
+        // ignore any failed messages
+        async function* IgnoreMessages(src) {
+            for await (const streamMessage of src) {
+                if (ignoreMessages.has(streamMessage)) {
+                    continue
+                }
+                yield streamMessage
+            }
+        },
         // special handling for bye message
         async function* ByeMessageSpecialHandling(src) {
             for await (const orderedMessage of src) {

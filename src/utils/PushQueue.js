@@ -42,7 +42,8 @@ export class AbortError extends Error {
  */
 
 export default class PushQueue {
-    constructor(items = [], { signal, onEnd, timeout = 0 } = {}) {
+    constructor(items = [], { signal, onEnd, timeout = 0, autoEnd = true } = {}) {
+        this.autoEnd = autoEnd
         this.buffer = [...items]
         this.finished = false
         this.error = null // queued error
@@ -72,14 +73,14 @@ export default class PushQueue {
         this.iterator = this.iterate()
     }
 
-    static from(iterable, opts) {
+    static from(iterable, opts = {}) {
         const queue = new PushQueue([], opts)
         queue.from(iterable)
         return queue
     }
 
-    static transform(src, fn) {
-        const buffer = new PushQueue()
+    static transform(src, fn, opts = {}) {
+        const buffer = new PushQueue([], opts)
         const orderedFn = pOrderedResolve(fn) // push must be run in sequence
         ;(async () => { // eslint-disable-line semi-style
             const tasks = []
@@ -93,7 +94,9 @@ export default class PushQueue {
                 tasks.push(task)
             }
             await Promise.all(tasks)
-            return buffer.end()
+            if (buffer.autoEnd) {
+                buffer.end()
+            }
         })().catch((err) => {
             return buffer.throw(err)
         }) // no await
@@ -101,15 +104,28 @@ export default class PushQueue {
         return buffer
     }
 
-    async from(iterable) {
+    async from(iterable, { end = this.autoEnd } = {}) {
         try {
-            for await (const item of iterable) {
-                this.push(item)
+            // detect sync/async iterable and iterate appropriately
+            if (!iterable[Symbol.asyncIterator]) {
+                // sync iterables push into buffer immediately
+                for (const item of iterable) {
+                    this.push(item)
+                }
+            } else {
+                for await (const item of iterable) {
+                    this.push(item)
+                }
             }
-            this.end()
         } catch (err) {
-            await this.throw(err)
+            return this.throw(err)
         }
+
+        if (end) {
+            this.end()
+        }
+
+        return Promise.resolve()
     }
 
     onEnd(...args) {
@@ -126,6 +142,10 @@ export default class PushQueue {
      */
 
     end(v) {
+        if (this.ended) {
+            return
+        }
+
         if (v != null) {
             this.push(v)
         }
@@ -259,13 +279,16 @@ export default class PushQueue {
                     continue // eslint-disable-line no-continue
                 }
 
-                const value = await new Promise((resolve, reject) => {
+                const deferred = new Promise((resolve, reject) => {
                     // wait for next push
                     this.nextQueue.push({
                         resolve,
                         reject,
                     })
                 })
+
+                deferred.catch(() => {}) // prevent unhandledrejection
+                const value = await deferred
 
                 // ignore value if finished
                 if (this.finished) {
@@ -292,8 +315,8 @@ export default class PushQueue {
         })
     }
 
-    pipe(next) {
-        return next.from(this)
+    pipe(next, opts) {
+        return next.from(this, opts)
     }
 
     async cancel(...args) {

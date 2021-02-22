@@ -127,7 +127,9 @@ describeRepeats('Validation', () => {
                 return msg
             }
 
-            const published = await publishTestMessages(MAX_MESSAGES)
+            const published = await publishTestMessages(MAX_MESSAGES, {
+                timestamp: 111111,
+            })
 
             const received = []
             for await (const m of sub) {
@@ -136,11 +138,13 @@ describeRepeats('Validation', () => {
                     break
                 }
             }
-
-            expect(received).toEqual([
+            const expectedMessages = [
+                // remove bad message
                 ...published.slice(0, BAD_INDEX),
                 ...published.slice(BAD_INDEX + 1, MAX_MESSAGES)
-            ])
+            ]
+
+            expect(received).toEqual(expectedMessages)
             expect(client.connection.getState()).toBe('connected')
             expect(onSubError).toHaveBeenCalledTimes(1)
         }, 10000)
@@ -184,6 +188,7 @@ describeRepeats('Validation', () => {
 
             const published = await publishTestMessages(MAX_MESSAGES, {
                 stream,
+                timestamp: 1111111,
             })
 
             const received = []

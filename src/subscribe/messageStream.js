@@ -19,7 +19,7 @@ function getIsMatchingStreamMessage({ streamId, streamPartition = 0 }) {
  * Returns a PushQueue that will fill with messages.
  */
 
-export default function messageStream(connection, { streamId, streamPartition, isUnicast, type }, onFinally = () => {}) {
+export default function messageStream(connection, { streamId, streamPartition, isUnicast, type }, onFinally = async () => {}) {
     if (!type) {
         // eslint-disable-next-line no-param-reassign
         type = isUnicast ? ControlMessage.TYPES.UnicastMessage : ControlMessage.TYPES.BroadcastMessage

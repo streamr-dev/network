@@ -1247,6 +1247,177 @@ describe('Iterator Utils', () => {
             expect(onInputStreamClose).toHaveBeenCalledTimes(1)
         })
 
+        it('can have delayed yields', async () => {
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const onThroughStreamClose = jest.fn()
+            const throughStream = PushQueue.from(generate(), {
+                onEnd: onThroughStreamClose,
+            })
+
+            const p = pipeline([
+                throughStream,
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        yield msg
+                    }
+                    await wait(10)
+                    for (const msg of receivedStep1) {
+                        yield msg * 2
+                    }
+                },
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        receivedStep2.push(msg)
+                        yield msg
+                    }
+                },
+            ], onFinally, {
+                timeout: WAIT,
+            })
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+                expect(onFinally).toHaveBeenCalledTimes(0)
+            }
+
+            expect(received).toEqual([...expected, ...expected.map((v) => v * 2)])
+            expect(receivedStep1).toEqual(expected)
+
+            // all streams were closed
+            expect(onThroughStreamClose).toHaveBeenCalledTimes(1)
+        })
+
+        it('does not end internal non-autoEnd streams automatically', async () => {
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const receivedStep3 = []
+            const onThroughStreamClose = jest.fn()
+            const afterLoop1 = jest.fn()
+            const throughStream = new PushQueue([], {
+                autoEnd: false,
+                onEnd: onThroughStreamClose,
+            })
+
+            const p = pipeline([
+                generate(),
+                // eslint-disable-next-line require-yield
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        setTimeout(() => {
+                            throughStream.push(msg)
+                        }, 100)
+                    }
+                    afterLoop1()
+                },
+                throughStream,
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        expect(afterLoop1).toHaveBeenCalledTimes(1)
+                        receivedStep2.push(msg)
+                        yield msg
+                        if (receivedStep2.length === expected.length) {
+                            // this should end pipeline
+                            break
+                        }
+                    }
+                },
+                async function* Step3(s) {
+                    for await (const msg of s) {
+                        receivedStep3.push(msg)
+                        yield msg
+                        // should close automatically
+                    }
+                },
+            ], onFinally, {
+                timeout: WAIT,
+            })
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+                expect(onFinally).toHaveBeenCalledTimes(0)
+            }
+            expect(received).toEqual(expected)
+            expect(receivedStep1).toEqual(expected)
+            expect(receivedStep2).toEqual(expected)
+            expect(receivedStep3).toEqual(expected)
+
+            // all streams were closed
+            expect(onThroughStreamClose).toHaveBeenCalledTimes(1)
+            expect(afterLoop1).toHaveBeenCalledTimes(1)
+        })
+
+        it('does not end internal streams automatically if going through non-autoEnd: false PushQueue', async () => {
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const receivedStep3 = []
+            const onThroughStreamClose = jest.fn()
+            const onThroughStream2Close = jest.fn()
+            const afterLoop1 = jest.fn()
+            const throughStream = new PushQueue([], {
+                autoEnd: false,
+                onEnd: onThroughStreamClose,
+            })
+            const throughStream2 = new PushQueue([], {
+                autoEnd: true,
+                onEnd: onThroughStream2Close,
+            })
+
+            const p = pipeline([
+                generate(),
+                // eslint-disable-next-line require-yield
+                async function* Step1(s) {
+                    for await (const msg of s) {
+                        receivedStep1.push(msg)
+                        setTimeout(() => {
+                            throughStream.push(msg)
+                        }, 100)
+                    }
+                    afterLoop1()
+                },
+                throughStream,
+                async function* Step2(s) {
+                    for await (const msg of s) {
+                        expect(afterLoop1).toHaveBeenCalledTimes(1)
+                        receivedStep2.push(msg)
+                        yield msg
+                        if (receivedStep2.length === expected.length) {
+                            // end pipeline
+                            break
+                        }
+                    }
+                },
+                throughStream2,
+                async function* Step3(s) {
+                    for await (const msg of s) {
+                        receivedStep3.push(msg)
+                        yield msg
+                        // should close automatically
+                    }
+                },
+            ], onFinally, {
+                timeout: WAIT,
+            })
+
+            const received = []
+            for await (const msg of p) {
+                received.push(msg)
+                expect(onFinally).toHaveBeenCalledTimes(0)
+            }
+            expect(received).toEqual(expected)
+            expect(receivedStep1).toEqual(expected)
+            expect(receivedStep2).toEqual(expected)
+            expect(receivedStep3).toEqual(expected)
+
+            // all streams were closed
+            expect(onThroughStreamClose).toHaveBeenCalledTimes(1)
+            expect(onThroughStream2Close).toHaveBeenCalledTimes(1)
+        })
+
         it('works with nested pipelines', async () => {
             const onFinallyInnerAfter = jest.fn()
             const onFinallyInner = jest.fn(async () => {

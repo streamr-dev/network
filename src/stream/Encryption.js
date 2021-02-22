@@ -8,7 +8,7 @@ import { MessageLayer } from 'streamr-client-protocol'
 
 import { uuid } from '../utils'
 
-class UnableToDecryptError extends Error {
+export class UnableToDecryptError extends Error {
     constructor(message = '', streamMessage) {
         super(`Unable to decrypt. ${message} ${util.inspect(streamMessage)}`)
         this.streamMessage = streamMessage
