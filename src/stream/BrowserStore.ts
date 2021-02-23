@@ -3,20 +3,20 @@ import type { PersistentStorage } from './PersistentStore'
 export default class BrowserStorage implements PersistentStorage {
     id: string
     constructor(id: string) {
-        this.id = `BrowserStorage:${id}`
+        this.id = id
     }
 
     private getData() {
-        return JSON.parse(window.localStorage.getItem(this.id) || '{}') || {}
+        return JSON.parse(window.localStorage.get(this.id) || {}) || {}
     }
 
     private setData(value: any) {
-        return window.localStorage.setItem(this.id, JSON.stringify(value))
+        return window.localStorage.set(this.id, JSON.stringify(value))
     }
 
     private mergeData(value: any) {
         const data = this.getData()
-        return window.localStorage.setItem(this.id, JSON.stringify({
+        return window.localStorage.set(this.id, JSON.stringify({
             ...data,
             ...value
         }))
@@ -47,21 +47,15 @@ export default class BrowserStorage implements PersistentStorage {
     }
 
     set(key: string, value: any) {
-        this.mergeData({
+        return this.mergeData({
             [key]: value,
         })
-        return this
     }
 
     delete(key: string) {
-        if (!this.has(key)) {
-            return false
-        }
-
         const data = this.getData()
         delete data[key]
-        this.setData(data)
-        return true
+        return this.setData(data)
     }
 
     clear() {
