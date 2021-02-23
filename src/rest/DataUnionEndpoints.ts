@@ -498,6 +498,9 @@ async function fetchDataUnionMainnetAddress(
 
 function getDataUnionMainnetAddress(client: StreamrClient, dataUnionName: string, deployerAddress: EthereumAddress) {
     const { factoryMainnetAddress } = client.options
+    if (!factoryMainnetAddress) {
+        throw new Error('StreamrClient has no factoryMainnetAddress configuration.')
+    }
     // NOTE! this must be updated when DU sidechain smartcontract changes: keccak256(CloneLib.cloneBytecode(data_union_mainnet_template));
     const codeHash = '0x50a78bac973bdccfc8415d7d9cfd62898b8f7cf6e9b3a15e7d75c0cb820529eb'
     const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
@@ -521,6 +524,9 @@ async function fetchDataUnionSidechainAddress(client: StreamrClient, duMainnetAd
 
 function getDataUnionSidechainAddress(client: StreamrClient, mainnetAddress: EthereumAddress) {
     const { factorySidechainAddress } = client.options
+    if (!factorySidechainAddress) {
+        throw new Error('StreamrClient has no factorySidechainAddress configuration.')
+    }
     // NOTE! this must be updated when DU sidechain smartcontract changes: keccak256(CloneLib.cloneBytecode(data_union_sidechain_template))
     const codeHash = '0x040cf686e25c97f74a23a4bf01c29dd77e260c4b694f5611017ce9713f58de83'
     return getCreate2Address(factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
@@ -941,9 +947,14 @@ export class DataUnionEndpoints {
      * Get token balance in "wei" (10^-18 parts) for given address
      */
     async getTokenBalance(address: string): Promise<BigNumber> {
-        const a = getAddress(address)
+        const { tokenAddress } = this.client.options
+        if (!tokenAddress) {
+            throw new Error('StreamrClient has no tokenAddress configuration.')
+        }
+        const addr = getAddress(address)
         const provider = this.client.ethereum.getMainnetProvider()
-        const token = new Contract(this.client.options.tokenAddress, [{
+
+        const token = new Contract(tokenAddress, [{
             name: 'balanceOf',
             inputs: [{ type: 'address' }],
             outputs: [{ type: 'uint256' }],
@@ -952,7 +963,7 @@ export class DataUnionEndpoints {
             stateMutability: 'view',
             type: 'function'
         }], provider)
-        return token.balanceOf(a)
+        return token.balanceOf(addr)
     }
 
     /**
