@@ -59,7 +59,9 @@ async function fetchTrackers(contractAddress: string, jsonRpcProvider: string | 
     }
 
     const result = await contract.getNodes()
-    return result.map((tracker: any) => tracker.url)
+    // The field is tracker.metadata in newer contracts and tracker.url in old contracts.
+    // It's safe to clean up tracker.url when no such contract is used anymore.
+    return result.map((tracker: any) => tracker.metadata || tracker.url)
 }
 
 export function createTrackerRegistry<T extends TrackerInfo>(servers: T[]) {
