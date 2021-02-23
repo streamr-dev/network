@@ -15,7 +15,7 @@ const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
 
 describe('DataUnion deployment', () => {
 
-    let adminClient
+    let adminClient: StreamrClient
 
     beforeAll(async () => {
         log(`Connecting to Ethereum networks, config = ${JSON.stringify(config)}`)

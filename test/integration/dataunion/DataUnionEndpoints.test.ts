@@ -26,12 +26,12 @@ describe('DataUnionEndPoints', () => {
     const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
 
     afterAll(async () => {
-        await providerMainnet.removeAllListeners()
-        await providerSidechain.removeAllListeners()
+        providerMainnet.removeAllListeners()
+        providerSidechain.removeAllListeners()
         await adminClient.ensureDisconnected()
     })
 
-    const streamrClientCleanupList = []
+    const streamrClientCleanupList: StreamrClient[] = []
     afterAll(async () => Promise.all(streamrClientCleanupList.map((c) => c.ensureDisconnected())))
 
     beforeAll(async () => {
@@ -51,7 +51,7 @@ describe('DataUnionEndPoints', () => {
 
     // fresh dataUnion for each test case, created NOT in parallel to avoid nonce troubles
     const adminMutex = new Mutex()
-    async function deployDataUnionSync(testName) {
+    async function deployDataUnionSync(testName: string) {
         let dataUnion: DataUnion
         await adminMutex.runExclusive(async () => {
             const dataUnionName = testName + Date.now()
@@ -74,7 +74,7 @@ describe('DataUnionEndPoints', () => {
                 }
             )
         })
-        return dataUnion
+        return dataUnion!
     }
 
     describe('Admin', () => {
