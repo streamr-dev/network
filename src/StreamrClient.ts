@@ -14,10 +14,12 @@ import { getUserId } from './user'
 import { Todo } from './types'
 import { StreamEndpoints, StreamListQuery } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
-import { DataUnionEndpoints, DataUnionOptions } from './rest/DataUnionEndpoints'
+import { DataUnionEndpoints } from './rest/DataUnionEndpoints'
 import { BigNumber } from '@ethersproject/bignumber'
 import Stream, { StreamProperties } from './stream'
 import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
+import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
+import { getAddress } from '@ethersproject/address'
 
 export interface StreamrClientOptions {
     id?: string
@@ -47,12 +49,10 @@ export interface StreamrClientOptions {
     sidechain?: {
         url?: string
     },
-    dataUnion?: string
-    tokenAddress?: string,
+    tokenAddress: string,
     minimumWithdrawTokenWei?: BigNumber|number|string,
-    sidechainTokenAddress?: string
-    factoryMainnetAddress?: string
-    sidechainAmbAddress?: string
+    factoryMainnetAddress: string
+    factorySidechainAddress: string
     payForSignatureTransport?: boolean
     cache?: {
         maxSize?: number,
@@ -179,7 +179,7 @@ export default class StreamrClient extends EventEmitter {
     loginEndpoints: LoginEndpoints
     dataUnionEndpoints: DataUnionEndpoints
 
-    constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
+    constructor(options: Partial<StreamrClientOptions> = {}, connection?: StreamrConnection) {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
@@ -398,8 +398,13 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.enableAutoDisconnect(...args)
     }
 
-    getAddress() {
-        return this.ethereum.getAddress()
+    getAddress(): string {
+        const address = this.ethereum.getAddress()
+        if (address) {
+            return getAddress(address)
+        } else {
+            throw new Error('StreamrClient is not authenticated with private key')
+        }
     }
 
     async getPublisherId() {
@@ -468,115 +473,21 @@ export default class StreamrClient extends EventEmitter {
         return this.loginEndpoints.getUserInfo()
     }
 
-    async calculateDataUnionMainnetAddress(dataUnionName: string, deployerAddress: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress, options)
+    async getTokenBalance(address: string) {
+        return this.dataUnionEndpoints.getTokenBalance(address)
     }
 
-    async calculateDataUnionSidechainAddress(duMainnetAddress: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.calculateDataUnionSidechainAddress(duMainnetAddress, options)
+    getDataUnion(contractAddress: string) {
+        return new DataUnion(contractAddress, undefined, this.dataUnionEndpoints)
     }
 
-    async deployDataUnion(options: DataUnionOptions = {}) {
-        return this.dataUnionEndpoints.deployDataUnion(options)
+    async deployDataUnion(options?: DataUnionDeployOptions) {
+        const contract = await this.dataUnionEndpoints.deployDataUnion(options)
+        return new DataUnion(contract.address, contract.sidechain.address, this.dataUnionEndpoints)
     }
 
-    async getDataUnionContract(options: DataUnionOptions = {}) {
-        return this.dataUnionEndpoints.getDataUnionContract(options)
-    }
-
-    async createSecret(dataUnionMainnetAddress: string, name: string = 'Untitled Data Union Secret') {
-        return this.dataUnionEndpoints.createSecret(dataUnionMainnetAddress, name)
-    }
-
-    async kick(memberAddressList: string[], options: DataUnionOptions = {}) {
-        return this.dataUnionEndpoints.kick(memberAddressList, options)
-    }
-
-    async addMembers(memberAddressList: string[], options: DataUnionOptions = {}) {
-        return this.dataUnionEndpoints.addMembers(memberAddressList, options)
-    }
-
-    async withdrawMember(memberAddress: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.withdrawMember(memberAddress, options)
-    }
-
-    async getWithdrawMemberTx(memberAddress: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getWithdrawMemberTx(memberAddress, options)
-    }
-
-    async withdrawToSigned(memberAddress: string, recipientAddress: string, signature: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.withdrawToSigned(memberAddress, recipientAddress, signature, options)
-    }
-
-    async getWithdrawToSignedTx(memberAddress: string, recipientAddress: string, signature: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getWithdrawToSignedTx(memberAddress, recipientAddress, signature, options)
-    }
-
-    async setAdminFee(newFeeFraction: number, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.setAdminFee(newFeeFraction, options)
-    }
-
-    async getAdminFee(options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getAdminFee(options)
-    }
-
-    async getAdminAddress(options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getAdminAddress(options)
-    }
-
-    async joinDataUnion(options: DataUnionOptions = {}) {
-        return this.dataUnionEndpoints.joinDataUnion(options)
-    }
-
-    async hasJoined(memberAddress: string, options: DataUnionOptions = {}) {
-        return this.dataUnionEndpoints.hasJoined(memberAddress, options)
-    }
-
-    async getMembers(options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getMembers(options)
-    }
-
-    async getDataUnionStats(options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getDataUnionStats(options)
-    }
-
-    async getMemberStats(memberAddress: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getMemberStats(memberAddress, options)
-    }
-
-    async getMemberBalance(memberAddress: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getMemberBalance(memberAddress, options)
-    }
-
-    async getTokenBalance(address: string|null|undefined, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getTokenBalance(address, options)
-    }
-
-    async getDataUnionVersion(contractAddress: string) {
-        return this.dataUnionEndpoints.getDataUnionVersion(contractAddress)
-    }
-
-    async withdraw(options: DataUnionOptions = {}) {
-        return this.dataUnionEndpoints.withdraw(options)
-    }
-
-    async getWithdrawTx(options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getWithdrawTx(options)
-    }
-
-    async withdrawTo(recipientAddress: string, options: DataUnionOptions = {}) {
-        return this.dataUnionEndpoints.withdrawTo(recipientAddress, options)
-    }
-
-    async getWithdrawTxTo(recipientAddress: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.getWithdrawTxTo(recipientAddress, options)
-    }
-
-    async signWithdrawTo(recipientAddress: string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.signWithdrawTo(recipientAddress, options)
-    }
-
-    async signWithdrawAmountTo(recipientAddress: string, amountTokenWei: BigNumber|number|string, options: DataUnionOptions) {
-        return this.dataUnionEndpoints.signWithdrawAmountTo(recipientAddress, amountTokenWei, options)
+    _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}) {
+        const contractAddress = this.dataUnionEndpoints.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress)
+        return this.getDataUnion(contractAddress)
     }
 }

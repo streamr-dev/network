@@ -8,7 +8,7 @@ import { StreamrClientOptions } from './StreamrClient'
 const { ControlMessage } = ControlLayer
 const { StreamMessage } = MessageLayer
 
-export default function ClientConfig(opts: StreamrClientOptions = {}) {
+export default function ClientConfig(opts: Partial<StreamrClientOptions> = {}) {
     const { id = counterId('StreamrClient') } = opts
 
     const options: StreamrClientOptions = {
@@ -46,16 +46,10 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
             // timeout:
             // pollingInterval:
         },
-        // @ts-expect-error
-        dataUnion: null, // Give a "default target" of all data union endpoint operations (no need to pass argument every time)
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
         minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
-        // @ts-expect-error
-        sidechainTokenAddress: null, // TODO // sidechain token
-        // @ts-expect-error
-        factoryMainnetAddress: null, // TODO // Data Union factory that creates a new Data Union
-        // @ts-expect-error
-        sidechainAmbAddress: null, // Arbitrary Message-passing Bridge (AMB), see https://github.com/poanetwork/tokenbridge
+        factoryMainnetAddress: 'TODO', // TODO define this value when we know it // Data Union factory that creates a new Data Union
+        factorySidechainAddress: 'TODO', // TODO define this value when we know it
         payForSignatureTransport: true, // someone must pay for transporting the withdraw tx to mainnet, either us or bridge operator
         ...opts,
         cache: {
