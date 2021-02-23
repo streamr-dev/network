@@ -19,12 +19,13 @@ export { AggregatedError, Scaffold }
 
 const UUID = uuidv4()
 
+export const SEPARATOR = ':'
 /*
  * Incrementing + human readable uuid
  */
 
 export function uuid(label = '') {
-    return uniqueId(`${UUID}${label ? `.${label}` : ''}`)
+    return uniqueId(`${UUID}${label ? `${SEPARATOR}${label}` : ''}`)
 }
 
 export function randomString(length = 20) {
@@ -62,7 +63,7 @@ export const counterId = (() => {
             }
         }
 
-        return `${prefix}.${counts[prefix]}`
+        return `${prefix}${SEPARATOR}${counts[prefix]}`
     }
 
     /**
