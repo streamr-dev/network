@@ -6,6 +6,7 @@ import Scaffold from '../utils/Scaffold'
 
 import { validateOptions } from './utils'
 import EncryptionUtil, { GroupKey } from './Encryption'
+import PersistentStore from './PersistentStore'
 
 const {
     StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse, EncryptedGroupKey
@@ -58,8 +59,12 @@ export function getKeyExchangeStreamId(address) {
     return `${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`
 }
 
-function GroupKeyStore({ groupKeys = new Map() }) {
-    const store = new Map()
+function GroupKeyStore({ id, groupKeys = new Map() }) {
+    if (!id) {
+        throw new Error('GroupKeyStore missing id')
+    }
+
+    const store = new PersistentStore(id)
     groupKeys.forEach((value, key) => {
         store.set(key, value)
     })
@@ -298,7 +303,9 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
 
 export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
     let enabled = true
+    const clientId = client.getPublisherId()
     const getGroupKeyStore = mem((streamId) => GroupKeyStore({
+        id: `${clientId}:${streamId}`,
         groupKeys: parseGroupKeys(groupKeys[streamId])
     }), {
         cacheKey([maybeStreamId]) {
@@ -404,8 +411,9 @@ async function SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryp
 export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
     let enabled = true
     const encryptionUtil = new EncryptionUtil(client.options.keyExchange)
-
+    const clientId = client.getPublisherId()
     const getGroupKeyStore = mem((streamId) => GroupKeyStore({
+        id: clientId,
         groupKeys: parseGroupKeys(groupKeys[streamId])
     }), {
         cacheKey([maybeStreamId]) {
