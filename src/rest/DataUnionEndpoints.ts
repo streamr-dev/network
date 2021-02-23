@@ -535,9 +535,9 @@ function getMainnetContractReadOnly(contractAddress: EthereumAddress, client: St
     if (isAddress(contractAddress)) {
         const provider = client.ethereum.getMainnetProvider()
         return new Contract(contractAddress, dataUnionMainnetABI, provider)
-    } else {
-        throw new Error(`${contractAddress} was not a good Ethereum address`)
     }
+    throw new Error(`${contractAddress} was not a good Ethereum address`)
+
 }
 
 function getMainnetContract(contractAddress: EthereumAddress, client: StreamrClient) {

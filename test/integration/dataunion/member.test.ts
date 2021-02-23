@@ -25,7 +25,7 @@ const joinMember = async (memberWallet: Wallet, secret: string|undefined, dataUn
         }
     } as any)
     await memberClient.ensureConnected()
-    return await memberClient.getDataUnion(dataUnionAddress).join(secret)
+    return memberClient.getDataUnion(dataUnionAddress).join(secret)
 }
 
 describe('DataUnion member', () => {

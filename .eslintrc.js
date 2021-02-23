@@ -6,6 +6,16 @@ module.exports = {
     extends: [
         'streamr-nodejs'
     ],
+    parserOptions: {
+        ecmaVersion: 2020,
+        ecmaFeatures: {
+            modules: true
+        }
+    },
+    env: {
+        browser: true,
+        es6: true
+    },
     rules: {
         'max-len': ['warn', {
             code: 150
