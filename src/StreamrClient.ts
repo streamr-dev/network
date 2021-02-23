@@ -217,9 +217,9 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
             .on('disconnected', this.onConnectionDisconnected)
             .on('error', this.onConnectionError)
 
+        this.ethereum = new StreamrEthereum(this)
         this.publisher = Publisher(this)
         this.subscriber = new Subscriber(this)
-        this.ethereum = new StreamrEthereum(this)
 
         Plugin(this, new StreamEndpoints(this))
         Plugin(this, new LoginEndpoints(this))
