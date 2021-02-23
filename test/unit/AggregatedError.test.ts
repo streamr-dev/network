@@ -91,7 +91,7 @@ describe('AggregatedError', () => {
             const subError = new Error('subError1')
             const customMessage = 'customMessage'
             const err = AggregatedError.from(undefined, subError, customMessage)
-            expect(err.message).toContain(customMessage)
+            expect(err && err.message).toContain(customMessage)
             expect(subError).toBe(err)
         })
 
