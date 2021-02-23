@@ -25,6 +25,7 @@
     },
     "include": [
         "src/**/*",
+        "contracts/**/*",
         // quick-lru is esm, need to transpile :/
         "node_modules/quick-lru/index.js"
     ]
