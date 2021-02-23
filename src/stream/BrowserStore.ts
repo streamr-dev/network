@@ -3,20 +3,20 @@ import type { PersistentStorage } from './PersistentStore'
 export default class BrowserStorage implements PersistentStorage {
     id: string
     constructor(id: string) {
-        this.id = id
+        this.id = `BrowserStorage:${id}`
     }
 
     private getData() {
-        return JSON.parse(window.localStorage.get(this.id) || {}) || {}
+        return JSON.parse(window.localStorage.getItem(this.id) || '{}') || {}
     }
 
     private setData(value: any) {
-        return window.localStorage.set(this.id, JSON.stringify(value))
+        return window.localStorage.setItem(this.id, JSON.stringify(value))
     }
 
     private mergeData(value: any) {
         const data = this.getData()
-        return window.localStorage.set(this.id, JSON.stringify({
+        return window.localStorage.setItem(this.id, JSON.stringify({
             ...data,
             ...value
         }))
