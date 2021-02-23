@@ -41,7 +41,7 @@ export type StreamrClientOptions = {
     minimumWithdrawTokenWei?: BigNumber|number|string,
     sidechainTokenAddress?: string
     factoryMainnetAddress?: string
-    sidechainAmbAddress?: string
+    factorySidechainAddress?: string
     payForSignatureTransport?: boolean
     cache?: {
         maxSize?: number,
@@ -94,7 +94,7 @@ export default function ClientConfig(opts: Partial<StreamrClientOptions> = {}) {
         minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
         sidechainTokenAddress: undefined, // TODO // sidechain token
         factoryMainnetAddress: undefined, // TODO // Data Union factory that creates a new Data Union
-        sidechainAmbAddress: undefined, // Arbitrary Message-passing Bridge (AMB), see https://github.com/poanetwork/tokenbridge
+        factorySidechainAddress: undefined,
         payForSignatureTransport: true, // someone must pay for transporting the withdraw tx to mainnet, either us or bridge operator
         cache: {
             maxSize: 10000,
