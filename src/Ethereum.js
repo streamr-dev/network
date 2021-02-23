@@ -62,6 +62,7 @@ export default class StreamrEthereum {
             // _getAddress is assigned in constructor
             throw new Error('StreamrClient is not authenticated with private key')
         }
+
         return this._getAddress()
     }
 
@@ -70,6 +71,7 @@ export default class StreamrEthereum {
             // _getSigner is assigned in constructor
             throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
         }
+
         return this._getSigner()
     }
 
@@ -78,22 +80,25 @@ export default class StreamrEthereum {
             // _getSidechainSigner is assigned in constructor
             throw new Error("StreamrClient not authenticated! Can't send transactions or sign messages.")
         }
+
         return this._getSidechainSigner()
     }
 
     /** @returns Ethers.js Provider, a connection to the Ethereum network (mainnet) */
     getMainnetProvider() {
-        if (this.client.options.mainnet) {
-            return new JsonRpcProvider(this.client.options.mainnet)
+        if (!this.client.options.mainnet) {
+            return getDefaultProvider()
         }
-        return getDefaultProvider()
+
+        return new JsonRpcProvider(this.client.options.mainnet)
     }
 
     /** @returns Ethers.js Provider, a connection to the Streamr EVM sidechain */
     getSidechainProvider() {
-        if (this.client.options.sidechain) {
-            return new JsonRpcProvider(this.client.options.sidechain)
+        if (!this.client.options.sidechain) {
+            throw new Error('StreamrClient has no sidechain configuration.')
         }
-        return null
+
+        return new JsonRpcProvider(this.client.options.sidechain)
     }
 }
