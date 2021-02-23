@@ -14,7 +14,7 @@
     "test": "test"
   },
   "scripts": {
-    "build": "rm -rf dist; NODE_ENV=production webpack --mode=production --progress && npm run build:types",
+    "build": "rm -rf dist; NODE_ENV=production webpack --mode=production --progress && npm run build-node && npm run build:types",
     "build-node": "tsc --incremental --project ./tsconfig.node.json",
     "watch-node": "tsc --incremental --watch --project ./tsconfig.node.json",
     "build:types": "tsc --incremental --emitDeclarationOnly",
