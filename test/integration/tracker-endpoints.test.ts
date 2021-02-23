@@ -170,8 +170,8 @@ describe('tracker endpoint', () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/node-connections/`)
         expect(status).toEqual(200)
         expect(jsonResult).toEqual({
-            'node-1': ['node-2'],
-            'node-2': ['node-1']
+            'node-1': [{neighborId: 'node-2', rtt: null}],
+            'node-2': [{neighborId: 'node-1', rtt: null}]
         })
     })
 

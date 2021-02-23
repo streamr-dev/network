@@ -48,7 +48,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         subscriberOne.start()
         // @ts-expect-error private field
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual({
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1::0': {
                 subscriberOne: [],
             },
@@ -60,14 +60,14 @@ describe('check tracker, nodes and statuses from nodes', () => {
         subscriberTwo.start()
         // @ts-expect-error private field
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual({
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1::0': {
-                subscriberOne: ['subscriberTwo'],
-                subscriberTwo: ['subscriberOne']
+                subscriberOne: [{neighborId: 'subscriberTwo', rtt: null}],
+                subscriberTwo: [{neighborId: 'subscriberOne', rtt: null}]
             },
             'stream-2::2': {
-                subscriberOne: ['subscriberTwo'],
-                subscriberTwo: ['subscriberOne']
+                subscriberOne: [{neighborId: 'subscriberTwo', rtt: null}],
+                subscriberTwo: [{neighborId: 'subscriberOne', rtt: null}]
             }
         })
     })
@@ -87,10 +87,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
         await waitForEvent(subscriberTwo, NodeEvent.NODE_UNSUBSCRIBED)
         // @ts-expect-error private field
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual({
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1::0': {
-                subscriberOne: ['subscriberTwo'],
-                subscriberTwo: ['subscriberOne'],
+                subscriberOne: [{neighborId: 'subscriberTwo', rtt: null}],
+                subscriberTwo: [{neighborId: 'subscriberOne', rtt: null}],
             },
             'stream-2::2': {
                 subscriberTwo: []
@@ -101,7 +101,7 @@ describe('check tracker, nodes and statuses from nodes', () => {
         await waitForEvent(subscriberTwo, NodeEvent.NODE_UNSUBSCRIBED)
         // @ts-expect-error private field
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual({
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1::0': {
                 subscriberTwo: [],
             },
@@ -111,8 +111,8 @@ describe('check tracker, nodes and statuses from nodes', () => {
         })
 
         subscriberTwo.unsubscribe('stream-1', 0)
-        await waitForCondition(() => getTopology(tracker.getOverlayPerStream())['stream-1::0'] == null)
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual({
+        await waitForCondition(() => getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())['stream-1::0'] == null)
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-2::2': {
                 subscriberTwo: []
             }
@@ -121,6 +121,6 @@ describe('check tracker, nodes and statuses from nodes', () => {
         subscriberTwo.unsubscribe('stream-2', 2)
         // @ts-expect-error private field
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual({})
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({})
     }, 10 * 1000)
 })

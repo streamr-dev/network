@@ -1,7 +1,6 @@
-import _ from 'lodash'
 import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js'
 import { MetricsContext } from './MetricsContext'
-import { getNodeConnections, getTopology } from '../logic/trackerSummaryUtils'
+import { addRttsToNodeConnections, getNodeConnections, getTopology } from '../logic/trackerSummaryUtils'
 import getLogger from './logger'
 import { Tracker } from '../logic/Tracker'
 
@@ -43,7 +42,7 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
     wss.get('/topology/', (res, req) => {
         extraLogger.debug('request to /topology/')
         writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream())))
+        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())))
     })
     wss.get('/topology/:streamId/', (res, req) => {
         const streamId = decodeURIComponent(req.getParameter(0)).trim()
@@ -55,7 +54,7 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
 
         extraLogger.debug(`request to /topology/${streamId}/`)
         writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), streamId, null)))
+        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, null)))
     })
     wss.get('/topology/:streamId/:partition/', (res, req) => {
         const streamId = decodeURIComponent(req.getParameter(0)).trim()
@@ -74,11 +73,13 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
 
         extraLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
         writeCorsHeaders(res, req)
-        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), streamId, askedPartition)))
+        res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, askedPartition)))
     })
     cachedJsonGet(wss,'/node-connections/', 15 * 1000, () => {
         const topologyUnion = getNodeConnections(tracker.getNodes(), tracker.getOverlayPerStream())
-        return _.mapValues(topologyUnion, (targetNodes) => Array.from(targetNodes))
+        return Object.assign({}, ...Object.entries(topologyUnion).map(([nodeId, neighbors]) => {
+            return addRttsToNodeConnections(nodeId, Array.from(neighbors), tracker.getOverlayConnectionRtts())
+        }))
     })
     wss.get('/location/', (res, req) => {
         extraLogger.debug('request to /location/')

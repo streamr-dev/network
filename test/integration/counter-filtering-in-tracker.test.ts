@@ -98,18 +98,18 @@ describe('tracker: counter filtering', () => {
     })
 
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
-        const topologyBefore = getTopology(tracker.getOverlayPerStream())
+        const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
         trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []) as Status)
         // @ts-expect-error trackerServer is private
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual(topologyBefore)
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
     })
 
     test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
-        const topologyBefore = getTopology(tracker.getOverlayPerStream())
+        const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
         trackerNode1.sendStatus('tracker', formStatus(1, 0, [], []) as Status)
         // @ts-expect-error trackerServer is private
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual(topologyBefore)
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
     })
 })

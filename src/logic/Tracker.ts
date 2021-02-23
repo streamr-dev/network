@@ -30,6 +30,9 @@ export interface TrackerOptions {
 // streamKey => overlayTopology, where streamKey = streamId::partition
 export type OverlayPerStream = { [key: string]: OverlayTopology }
 
+// nodeId => connected nodeId => rtt
+export type OverlayConnectionRtts = { [key: string]: { [key: string]: number } }
+
 export interface Tracker {
     on(event: Event.NODE_CONNECTED, listener: (nodeId: NodeId) => void): this
 }
@@ -39,11 +42,7 @@ export class Tracker extends EventEmitter {
     private readonly trackerServer: TrackerServer
     private readonly peerInfo: PeerInfo
     private readonly overlayPerStream: OverlayPerStream
-    private readonly overlayConnectionRtts: {
-        [key: string]: {
-            [key: string]: number
-        }
-    }
+    private readonly overlayConnectionRtts: OverlayConnectionRtts
     private readonly locationManager: LocationManager
     private readonly instructionCounter: InstructionCounter
     private readonly storageNodes: Set<NodeId>
@@ -66,7 +65,7 @@ export class Tracker extends EventEmitter {
         this.peerInfo = opts.peerInfo
 
         this.overlayPerStream = {}
-        this.overlayConnectionRtts = {} // nodeId => connected nodeId => rtt
+        this.overlayConnectionRtts = {}
         this.locationManager = new LocationManager()
         this.instructionCounter = new InstructionCounter()
         this.storageNodes = new Set()
@@ -229,6 +228,10 @@ export class Tracker extends EventEmitter {
 
     getNodeLocation(node: NodeId): Location {
         return this.locationManager.getNodeLocation(node)
+    }
+
+    getOverlayConnectionRtts(): { [key: string]: { [key: string]: number } } {
+        return this.overlayConnectionRtts
     }
 
     getStorageNodes(): ReadonlyArray<NodeId> {

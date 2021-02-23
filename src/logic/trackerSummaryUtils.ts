@@ -1,13 +1,15 @@
-import { TopologyState } from './OverlayTopology'
 import { StreamIdAndPartition } from '../identifiers'
-import { OverlayPerStream } from './Tracker'
+import { OverlayPerStream, OverlayConnectionRtts } from './Tracker'
+
+type OverLayWithRtts = { [key: string]: { [key: string]: { neighborId: string, rtt: number | null }[] } }
 
 export function getTopology(
     overlayPerStream: OverlayPerStream,
+    connectionRtts: OverlayConnectionRtts,
     streamId: string | null = null,
     partition: number | null = null
-): { [key: string]: TopologyState } {
-    const topology: { [key: string]: TopologyState } = {}
+): OverLayWithRtts {
+    const topology: OverLayWithRtts = {}
 
     let streamKeys: string[] = []
 
@@ -25,7 +27,10 @@ export function getTopology(
     }
 
     streamKeys.forEach((streamKey) => {
-        topology[streamKey] = overlayPerStream[streamKey].state()
+        const streamOverlay = overlayPerStream[streamKey].state()
+        topology[streamKey] = Object.assign({}, ...Object.entries(streamOverlay).map(([nodeId, neighbors]) => {
+            return addRttsToNodeConnections(nodeId, neighbors, connectionRtts)
+        }))
     })
 
     return topology
@@ -42,4 +47,23 @@ export function getNodeConnections(nodes: readonly string[], overlayPerStream: O
         })
     })
     return result
+}
+
+export function addRttsToNodeConnections(nodeId: string, neighbors: Array<string>, connectionRtts: OverlayConnectionRtts): { [key: string]: { neighborId: string, rtt: number | null }[] } {
+    return {
+        [nodeId]: neighbors.map((neighborId) => {
+            return {
+                neighborId,
+                rtt: getNodeToNodeConnectionRtts(nodeId, neighborId, connectionRtts[nodeId], connectionRtts[neighborId])
+            }
+        })
+    }
+}
+
+function getNodeToNodeConnectionRtts(nodeOne: string, nodeTwo: string, nodeOneRtts: { [key: string]: number }, nodeTwoRtts: { [key: string]: number }): number | null {
+    try {
+        return nodeOneRtts[nodeTwo] || nodeTwoRtts[nodeOne] || null
+    } catch (err) {
+        return null
+    }
 }

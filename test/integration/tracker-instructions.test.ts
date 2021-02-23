@@ -101,10 +101,10 @@ describe('check tracker, nodes and statuses from nodes', () => {
         await waitForCondition(() => node1.getNeighbors().length > 0)
         await waitForCondition(() => node2.getNeighbors().length > 0)
 
-        expect(getTopology(tracker.getOverlayPerStream())).toEqual({
+        expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual({
             'stream-1::0': {
-                node1: ['node2'],
-                node2: ['node1'],
+                node1: [{neighborId: 'node2', rtt: null}],
+                node2: [{neighborId: 'node1', rtt: null}],
             }
         })
 
