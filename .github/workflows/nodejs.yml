@@ -48,6 +48,8 @@ jobs:
         run: npm ci
       - name: npm run eslint
         run: npm run eslint
+      - name: test-types
+        run: npm run test-types
 
   test:
     name: Test Unit using Node ${{ matrix.node-version }}
