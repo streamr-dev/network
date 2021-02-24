@@ -6,6 +6,16 @@ module.exports = {
     extends: [
         'streamr-nodejs'
     ],
+    parserOptions: {
+        ecmaVersion: 2020,
+        ecmaFeatures: {
+            modules: true
+        }
+    },
+    env: {
+        browser: true,
+        es6: true
+    },
     rules: {
         'max-len': ['warn', {
             code: 150
@@ -43,8 +53,6 @@ module.exports = {
         '@typescript-eslint/no-shadow': 'error',
         'no-unused-vars': 'off',
         '@typescript-eslint/no-unused-vars': ['error'],
-        'no-else-return': 'off',
-        'no-return-await': 'off'
     },
     settings: {
         'import/resolver': {

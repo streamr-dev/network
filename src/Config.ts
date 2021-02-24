@@ -1,17 +1,64 @@
 import qs from 'qs'
-import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
-
+import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
+import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
+import { BigNumber } from '@ethersproject/bignumber'
+import { O } from 'ts-toolbelt'
 import { getVersionString, counterId } from './utils'
-import { StreamrClientOptions } from './StreamrClient'
+import { Todo } from './types'
 
+export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
+
+export type StreamrClientOptions = {
+    id?: string
+    debug?: Debug.Debugger,
+    auth?: {
+        privateKey?: string
+        ethereum?: EthereumConfig
+        apiKey?: string
+        username?: string
+        password?: string
+    }
+    url?: string
+    restUrl?: string
+    streamrNodeAddress?: string
+    autoConnect?: boolean
+    autoDisconnect?: boolean
+    orderMessages?: boolean,
+    retryResendAfter?: number,
+    gapFillTimeout?: number,
+    maxGapRequests?: number,
+    maxPublishQueueSize?: number,
+    publishWithSignature?: Todo,
+    verifySignatures?: Todo,
+    publisherStoreKeyHistory?: boolean,
+    groupKeys?: Todo
+    keyExchange?: Todo
+    mainnet?: Todo
+    sidechain?: {
+        url?: string
+    },
+    dataUnion?: string
+    tokenAddress?: string,
+    minimumWithdrawTokenWei?: BigNumber|number|string,
+    sidechainTokenAddress?: string
+    factoryMainnetAddress?: string
+    factorySidechainAddress?: string
+    payForSignatureTransport?: boolean
+    cache?: {
+        maxSize?: number,
+        maxAge?: number
+    }
+}
+
+export type StreamrClientConfig = O.Compulsory<StreamrClientOptions, 'url' | 'restUrl'>
 const { ControlMessage } = ControlLayer
 const { StreamMessage } = MessageLayer
 
 export default function ClientConfig(opts: Partial<StreamrClientOptions> = {}) {
     const { id = counterId('StreamrClient') } = opts
 
-    const options: StreamrClientOptions = {
+    const defaults = {
         debug: Debug(id),
         // Authentication: identity used by this StreamrClient instance
         auth: {}, // can contain member privateKey or (window.)ethereum
@@ -39,23 +86,30 @@ export default function ClientConfig(opts: Partial<StreamrClientOptions> = {}) {
 
         // Ethereum and Data Union related options
         // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-        mainnet: null, // Default to ethers.js default provider settings
+        mainnet: undefined, // Default to ethers.js default provider settings
         sidechain: {
-            // @ts-expect-error
-            url: null, // TODO: add our default public service sidechain node, also find good PoA params below
+            url: undefined, // TODO: add our default public service sidechain node, also find good PoA params below
             // timeout:
             // pollingInterval:
         },
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
         minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
-        factoryMainnetAddress: 'TODO', // TODO define this value when we know it // Data Union factory that creates a new Data Union
-        factorySidechainAddress: 'TODO', // TODO define this value when we know it
+        sidechainTokenAddress: undefined, // TODO // sidechain token
+        factoryMainnetAddress: undefined, // TODO // Data Union factory that creates a new Data Union
+        factorySidechainAddress: undefined,
         payForSignatureTransport: true, // someone must pay for transporting the withdraw tx to mainnet, either us or bridge operator
-        ...opts,
         cache: {
             maxSize: 10000,
             maxAge: 30 * 60 * 1000, // 30 minutes
+        }
+    }
+
+    const options: StreamrClientConfig = {
+        ...defaults,
+        ...opts,
+        cache: {
             ...opts.cache,
+            ...defaults.cache,
         }
     }
 
@@ -91,8 +145,13 @@ export default function ClientConfig(opts: Partial<StreamrClientOptions> = {}) {
         options.auth.apiKey = options.apiKey
     }
 
-    if (options.auth!.privateKey && !options.auth!.privateKey.startsWith('0x')) {
-        options.auth!.privateKey = `0x${options.auth!.privateKey}`
+    options.auth = options.auth || {}
+
+    if ('privateKey' in options.auth) {
+        const { privateKey } = options.auth
+        if (typeof privateKey === 'string' && !privateKey.startsWith('0x')) {
+            options.auth.privateKey = `0x${options.auth!.privateKey}`
+        }
     }
 
     return options

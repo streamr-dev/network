@@ -76,7 +76,9 @@ module.exports = {
     // moduleNameMapper: {},
 
     // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
-    // modulePathIgnorePatterns: [],
+    modulePathIgnorePatterns: [
+        '<rootDir>/dist',
+    ],
 
     // Activates notifications for test results
     // notify: false,
@@ -85,7 +87,7 @@ module.exports = {
     // notifyMode: "always",
 
     // A preset that is used as a base for Jest's configuration
-    // preset: null,
+    preset: 'ts-jest',
 
     // Run tests from one or more projects
     // projects: null,
@@ -170,9 +172,9 @@ module.exports = {
     },
 
     // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-    // transformIgnorePatterns: [
-    //   "/node_modules/"
-    // ],
+    transformIgnorePatterns: [
+        '/node_modules/(?!quick-lru)', // quick-lru is esm
+    ],
 
     // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
     // unmockedModulePathPatterns: undefined,

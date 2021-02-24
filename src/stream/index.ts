@@ -50,6 +50,8 @@ export default class Stream {
         fields: Field[];
     } = { fields: [] }
     _client: StreamrClient
+    requireEncryptedData?: boolean
+    requireSignedData?: boolean
 
     constructor(client: StreamrClient, props: StreamProperties) {
         this._client = client
@@ -144,7 +146,7 @@ export default class Stream {
 
     async revokePermission(permissionId: number) {
         return authFetch(
-            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions', permissionId),
+            getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'permissions', String(permissionId)),
             this._client.session,
             {
                 method: 'DELETE',

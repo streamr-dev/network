@@ -4,68 +4,27 @@ import Debug from 'debug'
 
 import { counterId, uuid, CacheAsyncFn } from './utils'
 import { validateOptions } from './stream/utils'
-import Config from './Config'
+import Config, { StreamrClientOptions, StreamrClientConfig } from './Config'
 import StreamrEthereum from './Ethereum'
 import Session from './Session'
 import Connection, { ConnectionError } from './Connection'
 import Publisher from './publish'
 import Subscriber from './subscribe'
 import { getUserId } from './user'
-import { Todo } from './types'
-import { StreamEndpoints, StreamListQuery } from './rest/StreamEndpoints'
+import { Todo, MaybeAsync } from './types'
+import { StreamEndpoints } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
 import { DataUnionEndpoints } from './rest/DataUnionEndpoints'
-import { BigNumber } from '@ethersproject/bignumber'
-import Stream, { StreamProperties } from './stream'
-import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
 import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
-import { getAddress } from '@ethersproject/address'
-
-export interface StreamrClientOptions {
-    id?: string
-    debug?: Debug.Debugger,
-    auth?: {
-        privateKey?: string
-        ethereum?: ExternalProvider|JsonRpcFetchFunc,
-        apiKey?: string
-        username?: string
-        password?: string
-    }
-    url?: string
-    restUrl?: string
-    streamrNodeAddress?: string
-    autoConnect?: boolean
-    autoDisconnect?: boolean
-    orderMessages?: boolean,
-    retryResendAfter?: number,
-    gapFillTimeout?: number,
-    maxPublishQueueSize?: number,
-    publishWithSignature?: Todo,
-    verifySignatures?: Todo,
-    publisherStoreKeyHistory?: boolean,
-    groupKeys?: Todo
-    keyExchange?: Todo
-    mainnet?: Todo
-    sidechain?: {
-        url?: string
-    },
-    tokenAddress: string,
-    minimumWithdrawTokenWei?: BigNumber|number|string,
-    factoryMainnetAddress: string
-    factorySidechainAddress: string
-    payForSignatureTransport?: boolean
-    cache?: {
-        maxSize?: number,
-        maxAge?: number
-    }
-}
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
-export type OnMessageCallback = (message: any, metadata: any) => void
+export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
 
 interface MessageEvent {
     data: any
 }
+
+export { StreamrClientOptions }
 
 /**
  * Wrap connection message events with message parsing.
@@ -164,11 +123,27 @@ class StreamrCached {
 // use process id in node uid
 const uid = process.pid != null ? process.pid : `${uuid().slice(-4)}${uuid().slice(0, 4)}`
 
-export default class StreamrClient extends EventEmitter {
+/**
+ * Take prototype functions from srcInstance and attach them to targetInstance while keeping them bound to srcInstance.
+ */
+function Plugin(targetInstance: any, srcInstance: any) {
+    Object.getOwnPropertyNames(srcInstance.constructor.prototype).forEach((name) => {
+        const value = srcInstance.constructor.prototype[name]
+        if (typeof value !== 'function') { return }
+        // eslint-disable-next-line no-param-reassign
+        targetInstance[name] = srcInstance[name].bind(srcInstance)
+    })
+    return srcInstance
+}
 
+// these are mixed in via Plugin function above
+interface StreamrClient extends StreamEndpoints, LoginEndpoints, DataUnionEndpoints {}
+
+// eslint-disable-next-line no-redeclare
+class StreamrClient extends EventEmitter {
     id: string
     debug: Debug.Debugger
-    options: StreamrClientOptions
+    options: StreamrClientConfig
     session: Session
     connection: StreamrConnection
     publisher: Todo
@@ -214,15 +189,14 @@ export default class StreamrClient extends EventEmitter {
             .on('disconnected', this.onConnectionDisconnected)
             .on('error', this.onConnectionError)
 
-        // @ts-expect-error
-        this.publisher = new Publisher(this)
+        this.publisher = Publisher(this)
         this.subscriber = new Subscriber(this)
-        this.cached = new StreamrCached(this)
         this.ethereum = new StreamrEthereum(this)
 
-        this.streamEndpoints = new StreamEndpoints(this)
-        this.loginEndpoints = new LoginEndpoints(this)
-        this.dataUnionEndpoints = new DataUnionEndpoints(this)
+        this.streamEndpoints = Plugin(this, new StreamEndpoints(this))
+        this.loginEndpoints = Plugin(this, new LoginEndpoints(this))
+        this.dataUnionEndpoints = Plugin(this, new DataUnionEndpoints(this))
+        this.cached = new StreamrCached(this)
     }
 
     async onConnectionConnected() {
@@ -398,83 +372,12 @@ export default class StreamrClient extends EventEmitter {
         return this.connection.enableAutoDisconnect(...args)
     }
 
-    getAddress(): string {
-        const address = this.ethereum.getAddress()
-        if (address) {
-            return getAddress(address)
-        } else {
-            throw new Error('StreamrClient is not authenticated with private key')
-        }
+    getAddress() {
+        return this.ethereum.getAddress()
     }
 
     async getPublisherId() {
         return this.getAddress()
-    }
-
-    static generateEthereumAccount() {
-        return StreamrEthereum.generateEthereumAccount()
-    }
-
-    // TODO many of these methods that use streamEndpoints/loginEndpoints/dataUnionEndpoints are private: remove those
-
-    async getStream(streamId: string) {
-        return this.streamEndpoints.getStream(streamId)
-    }
-
-    async listStreams(query: StreamListQuery = {}) {
-        return this.streamEndpoints.listStreams(query)
-    }
-
-    async getStreamByName(name: string) {
-        return this.streamEndpoints.getStreamByName(name)
-    }
-
-    async createStream(props: StreamProperties) {
-        return this.streamEndpoints.createStream(props)
-    }
-
-    async getOrCreateStream(props: { id?: string, name?: string }) {
-        return this.streamEndpoints.getOrCreateStream(props)
-    }
-
-    async getStreamPublishers(streamId: string) {
-        return this.streamEndpoints.getStreamPublishers(streamId)
-    }
-
-    async isStreamPublisher(streamId: string, ethAddress: string) {
-        return this.streamEndpoints.isStreamPublisher(streamId, ethAddress)
-    }
-
-    async getStreamSubscribers(streamId: string) {
-        return this.streamEndpoints.getStreamSubscribers(streamId)
-    }
-
-    async isStreamSubscriber(streamId: string, ethAddress: string) {
-        return this.streamEndpoints.isStreamSubscriber(streamId, ethAddress)
-    }
-
-    async getStreamValidationInfo(streamId: string) {
-        return this.streamEndpoints.getStreamValidationInfo(streamId)
-    }
-
-    async getStreamLast(streamObjectOrId: Stream|string) {
-        return this.streamEndpoints.getStreamLast(streamObjectOrId)
-    }
-
-    async getStreamPartsByStorageNode(address: string) {
-        return this.streamEndpoints.getStreamPartsByStorageNode(address)
-    }
-
-    async publishHttp(streamObjectOrId: Stream|string, data: Todo, requestOptions: Todo = {}, keepAlive: boolean = true) {
-        return this.streamEndpoints.publishHttp(streamObjectOrId, data, requestOptions, keepAlive)
-    }
-
-    async getUserInfo() {
-        return this.loginEndpoints.getUserInfo()
-    }
-
-    async getTokenBalance(address: string) {
-        return this.dataUnionEndpoints.getTokenBalance(address)
     }
 
     getDataUnion(contractAddress: string) {
@@ -482,7 +385,7 @@ export default class StreamrClient extends EventEmitter {
     }
 
     async deployDataUnion(options?: DataUnionDeployOptions) {
-        const contract = await this.dataUnionEndpoints.deployDataUnion(options)
+        const contract = await this.dataUnionEndpoints.deployDataUnionContract(options)
         return new DataUnion(contract.address, contract.sidechain.address, this.dataUnionEndpoints)
     }
 
@@ -490,4 +393,12 @@ export default class StreamrClient extends EventEmitter {
         const contractAddress = this.dataUnionEndpoints.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress)
         return this.getDataUnion(contractAddress)
     }
+
+    static generateEthereumAccount() {
+        return StreamrEthereum.generateEthereumAccount()
+    }
 }
+
+export default StreamrClient
+
+module.exports = StreamrClient

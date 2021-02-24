@@ -8,7 +8,6 @@ const path = require('path')
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
 const { merge } = require('webpack-merge')
-const nodeExternals = require('webpack-node-externals')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const GitRevisionPlugin = require('git-revision-webpack-plugin')
 
@@ -28,11 +27,6 @@ module.exports = (env, argv) => {
         entry: path.join(__dirname, 'src', 'StreamrClient.ts'),
         devtool: 'source-map',
         output: {
-            path: path.join(__dirname, 'dist'),
-            library: {
-                root: 'StreamrClient',
-                amd: libraryName,
-            },
             umdNamedDefine: true,
         },
         optimization: {
@@ -75,53 +69,22 @@ module.exports = (env, argv) => {
         ]
     }
 
-    const serverConfig = merge({}, commonConfig, {
-        name: 'node-lib',
-        target: 'node',
-        externals: [nodeExternals()],
-        output: {
-            libraryTarget: 'commonjs2',
-            filename: libraryName + '.nodejs.js',
-        },
-    })
-
-    serverConfig.module.rules = [
-        {
-            test: /(\.jsx|\.js|\.ts)$/,
-            exclude: /(node_modules|bower_components)/,
-            use: {
-                loader: 'babel-loader',
-                options: {
-                    cacheDirectory: true,
-                    configFile: path.resolve(__dirname, '.babel.node.config.js'),
-                    babelrc: false,
-                }
-            }
-        },
-        {
-            test: /(\.jsx|\.js|\.ts)$/,
-            loader: 'eslint-loader',
-            exclude: /(node_modules|streamr-client-protocol|dist)/, // excluding streamr-client-protocol makes build work when 'npm link'ed
-        },
-    ]
-
     const clientConfig = merge({}, commonConfig, {
         name: 'browser-lib',
         target: 'web',
         output: {
             libraryTarget: 'umd2',
             filename: libraryName + '.web.js',
-        },
-        node: {
-            stream: true,
-            buffer: true,
+            library: 'StreamrClient',
         },
         resolve: {
             alias: {
                 stream: 'readable-stream',
+                util: 'util',
                 http: path.resolve(__dirname, './src/shim/http-https.js'),
                 https: path.resolve(__dirname, './src/shim/http-https.js'),
                 ws: path.resolve(__dirname, './src/shim/ws.js'),
+                crypto: path.resolve(__dirname, 'node_modules', 'crypto-browserify'),
                 buffer: path.resolve(__dirname, 'node_modules', 'buffer'),
                 'node-fetch': path.resolve(__dirname, './src/shim/node-fetch.js'),
                 'node-webcrypto-ossl': path.resolve(__dirname, 'src/shim/crypto.js'),
@@ -129,6 +92,10 @@ module.exports = (env, argv) => {
             }
         },
         plugins: [
+            new webpack.ProvidePlugin({
+                process: 'process/browser',
+                Buffer: ['buffer', 'Buffer'],
+            }),
             ...(analyze ? [
                 new BundleAnalyzerPlugin({
                     analyzerMode: 'static',
@@ -139,7 +106,7 @@ module.exports = (env, argv) => {
         ]
     })
 
-    let clientMinifiedConfig = {}
+    let clientMinifiedConfig
 
     if (isProduction) {
         clientMinifiedConfig = merge({}, clientConfig, {
@@ -148,11 +115,9 @@ module.exports = (env, argv) => {
                 minimize: true,
                 minimizer: [
                     new TerserPlugin({
-                        cache: true,
                         parallel: true,
-                        sourceMap: true,
                         terserOptions: {
-                            ecma: 2015,
+                            ecma: 2018,
                             output: {
                                 comments: false,
                             },
@@ -166,5 +131,5 @@ module.exports = (env, argv) => {
         })
     }
 
-    return [serverConfig, clientConfig, clientMinifiedConfig]
+    return [clientConfig, clientMinifiedConfig].filter(Boolean)
 }

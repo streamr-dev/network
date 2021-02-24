@@ -1,17 +1,21 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
 import EncryptionUtil from '../stream/Encryption'
+import type Stream from '../stream'
+import type StreamrClient from '../StreamrClient'
 import { PublisherKeyExhange } from '../stream/KeyExchange'
 
 const { StreamMessage } = MessageLayer
 
-export default function Encrypt(client) {
+type PublisherKeyExhangeAPI = ReturnType<typeof PublisherKeyExhange>
+
+export default function Encrypt(client: StreamrClient) {
     const publisherKeyExchange = PublisherKeyExhange(client, {
         groupKeys: {
             ...client.options.groupKeys,
         }
     })
-    async function encrypt(streamMessage, stream) {
+    async function encrypt(streamMessage: MessageLayer.StreamMessage, stream: Stream) {
         if (
             !publisherKeyExchange.hasAnyGroupKey(stream.id)
             && !stream.requireEncryptedData
@@ -28,14 +32,14 @@ export default function Encrypt(client) {
     }
 
     return Object.assign(encrypt, {
-        setNextGroupKey(...args) {
+        setNextGroupKey(...args: Parameters<PublisherKeyExhangeAPI['setNextGroupKey']>) {
             return publisherKeyExchange.setNextGroupKey(...args)
         },
-        rotateGroupKey(...args) {
+        rotateGroupKey(...args: Parameters<PublisherKeyExhangeAPI['rotateGroupKey']>) {
             return publisherKeyExchange.rotateGroupKey(...args)
         },
-        stop(...args) {
-            return publisherKeyExchange.stop(...args)
+        stop() {
+            return publisherKeyExchange.stop()
         }
     })
 }

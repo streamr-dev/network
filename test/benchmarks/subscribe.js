@@ -3,7 +3,7 @@ const { format } = require('util')
 const { Benchmark } = require('benchmark')
 
 // eslint-disable-next-line import/no-unresolved
-const StreamrClient = require('../../dist/streamr-client.nodejs.js')
+const StreamrClient = require('../..')
 const config = require('../integration/config')
 
 /* eslint-disable no-console */

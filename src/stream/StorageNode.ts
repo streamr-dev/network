@@ -1,5 +1,6 @@
 export default class StorageNode {
-    constructor(address) {
+    _address: string
+    constructor(address: string) {
         this._address = address
     }
 

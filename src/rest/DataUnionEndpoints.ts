@@ -305,10 +305,8 @@ async function getSidechainAmb(client: StreamrClient) {
                 outputs: [{ type: 'address' }],
                 stateMutability: 'view',
                 type: 'function'
-            // @ts-expect-error
             }], sidechainProvider)
             const sidechainAmbAddress = await factorySidechain.amb()
-            // @ts-expect-error
             return new Contract(sidechainAmbAddress, sidechainAmbABI, sidechainProvider)
         }
         cachedSidechainAmb = getAmbPromise()
@@ -366,8 +364,7 @@ async function transportSignatures(client: StreamrClient, messageHash: string) {
     let gasLimit
     try {
         // magic number suggested by https://github.com/poanetwork/tokenbridge/blob/master/oracle/src/utils/constants.js
-        // @ts-expect-error
-        gasLimit = await mainnetAmb.estimateGas.executeSignatures(message, packedSignatures) + 200000
+        gasLimit = BigNumber.from(await mainnetAmb.estimateGas.executeSignatures(message, packedSignatures)).add(200000)
         log(`Calculated gas limit: ${gasLimit.toString()}`)
     } catch (e) {
         // Failure modes from https://github.com/poanetwork/tokenbridge/blob/master/oracle/src/events/processAMBCollectedSignatures/estimateGas.js
@@ -416,9 +413,7 @@ async function transportSignatures(client: StreamrClient, messageHash: string) {
     }
 
     const signer = client.ethereum.getSigner()
-    // @ts-expect-error
     log(`Sending message from signer=${await signer.getAddress()}`)
-    // @ts-expect-error
     const txAMB = await mainnetAmb.connect(signer).executeSignatures(message, packedSignatures)
     const trAMB = await txAMB.wait()
     return trAMB
@@ -503,6 +498,9 @@ async function fetchDataUnionMainnetAddress(
 
 function getDataUnionMainnetAddress(client: StreamrClient, dataUnionName: string, deployerAddress: EthereumAddress) {
     const { factoryMainnetAddress } = client.options
+    if (!factoryMainnetAddress) {
+        throw new Error('StreamrClient has no factoryMainnetAddress configuration.')
+    }
     // NOTE! this must be updated when DU sidechain smartcontract changes: keccak256(CloneLib.cloneBytecode(data_union_mainnet_template));
     const codeHash = '0x50a78bac973bdccfc8415d7d9cfd62898b8f7cf6e9b3a15e7d75c0cb820529eb'
     const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
@@ -526,6 +524,9 @@ async function fetchDataUnionSidechainAddress(client: StreamrClient, duMainnetAd
 
 function getDataUnionSidechainAddress(client: StreamrClient, mainnetAddress: EthereumAddress) {
     const { factorySidechainAddress } = client.options
+    if (!factorySidechainAddress) {
+        throw new Error('StreamrClient has no factorySidechainAddress configuration.')
+    }
     // NOTE! this must be updated when DU sidechain smartcontract changes: keccak256(CloneLib.cloneBytecode(data_union_sidechain_template))
     const codeHash = '0x040cf686e25c97f74a23a4bf01c29dd77e260c4b694f5611017ce9713f58de83'
     return getCreate2Address(factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
@@ -535,15 +536,14 @@ function getMainnetContractReadOnly(contractAddress: EthereumAddress, client: St
     if (isAddress(contractAddress)) {
         const provider = client.ethereum.getMainnetProvider()
         return new Contract(contractAddress, dataUnionMainnetABI, provider)
-    } else {
-        throw new Error(`${contractAddress} was not a good Ethereum address`)
     }
+    throw new Error(`${contractAddress} was not a good Ethereum address`)
+
 }
 
 function getMainnetContract(contractAddress: EthereumAddress, client: StreamrClient) {
     const du = getMainnetContractReadOnly(contractAddress, client)
     const signer = client.ethereum.getSigner()
-    // @ts-expect-error
     return du.connect(signer)
 }
 
@@ -551,7 +551,6 @@ async function getSidechainContract(contractAddress: EthereumAddress, client: St
     const signer = await client.ethereum.getSidechainSigner()
     const duMainnet = getMainnetContractReadOnly(contractAddress, client)
     const duSidechainAddress = getDataUnionSidechainAddress(client, duMainnet.address)
-    // @ts-expect-error
     const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, signer)
     return duSidechain
 }
@@ -560,7 +559,6 @@ async function getSidechainContractReadOnly(contractAddress: EthereumAddress, cl
     const provider = client.ethereum.getSidechainProvider()
     const duMainnet = getMainnetContractReadOnly(contractAddress, client)
     const duSidechainAddress = getDataUnionSidechainAddress(client, duMainnet.address)
-    // @ts-expect-error
     const duSidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, provider)
     return duSidechain
 }
@@ -594,7 +592,7 @@ export class DataUnionEndpoints {
      * This triggers DataUnionSidechain contract creation in sidechain, over the bridge (AMB)
      * @return that resolves when the new DU is deployed over the bridge to side-chain
      */
-    async deployDataUnion(options: DataUnionDeployOptions = {}): Promise<Contract> {
+    async deployDataUnionContract(options: DataUnionDeployOptions = {}): Promise<Contract> {
         const {
             owner,
             joinPartAgents,
@@ -634,8 +632,7 @@ export class DataUnionEndpoints {
         }
 
         const deployerAddress = this.client.getAddress()
-        // @ts-expect-error
-        const duMainnetAddress = await fetchDataUnionMainnetAddress(this.client, duName, deployerAddress, options)
+        const duMainnetAddress = await fetchDataUnionMainnetAddress(this.client, duName, deployerAddress)
         const duSidechainAddress = await fetchDataUnionSidechainAddress(this.client, duMainnetAddress)
 
         if (await mainnetProvider.getCode(duMainnetAddress) !== '0x') {
@@ -651,7 +648,6 @@ export class DataUnionEndpoints {
         }
 
         // function deployNewDataUnion(address owner, uint256 adminFeeFraction, address[] agents, string duName)
-        // @ts-expect-error
         const factoryMainnet = new Contract(factoryMainnetAddress!, factoryMainnetABI, mainnetWallet)
         const ethersOptions: any = {}
         if (gasPrice) {
@@ -668,13 +664,11 @@ export class DataUnionEndpoints {
 
         log(`Data Union "${duName}" (mainnet: ${duMainnetAddress}, sidechain: ${duSidechainAddress}) deployed to mainnet, waiting for side-chain...`)
         await until(
-            // @ts-expect-error
             async () => await sidechainProvider.getCode(duSidechainAddress) !== '0x',
             sidechainRetryTimeoutMs,
             sidechainPollingIntervalMs
         )
 
-        // @ts-expect-error
         const dataUnion = new Contract(duMainnetAddress, dataUnionMainnetABI, mainnetWallet)
         // @ts-expect-error
         dataUnion.deployTxReceipt = tr
@@ -953,9 +947,14 @@ export class DataUnionEndpoints {
      * Get token balance in "wei" (10^-18 parts) for given address
      */
     async getTokenBalance(address: string): Promise<BigNumber> {
-        const a = getAddress(address)
+        const { tokenAddress } = this.client.options
+        if (!tokenAddress) {
+            throw new Error('StreamrClient has no tokenAddress configuration.')
+        }
+        const addr = getAddress(address)
         const provider = this.client.ethereum.getMainnetProvider()
-        const token = new Contract(this.client.options.tokenAddress, [{
+
+        const token = new Contract(tokenAddress, [{
             name: 'balanceOf',
             inputs: [{ type: 'address' }],
             outputs: [{ type: 'uint256' }],
@@ -964,7 +963,7 @@ export class DataUnionEndpoints {
             stateMutability: 'view',
             type: 'function'
         }], provider)
-        return token.balanceOf(a)
+        return token.balanceOf(addr)
     }
 
     /**
@@ -1015,7 +1014,6 @@ export class DataUnionEndpoints {
      */
     async getWithdrawAllTx(contractAddress: EthereumAddress): Promise<TransactionResponse> {
         const signer = await this.client.ethereum.getSidechainSigner()
-        // @ts-expect-error
         const address = await signer.getAddress()
         const duSidechain = await getSidechainContract(contractAddress, this.client)
 
@@ -1057,7 +1055,6 @@ export class DataUnionEndpoints {
      */
     async getWithdrawAllToTx(recipientAddress: EthereumAddress, contractAddress: EthereumAddress): Promise<TransactionResponse> {
         const signer = await this.client.ethereum.getSidechainSigner()
-        // @ts-expect-error
         const address = await signer.getAddress()
         const duSidechain = await getSidechainContract(contractAddress, this.client)
         const withdrawable = await duSidechain.getWithdrawableEarnings(address)
@@ -1099,7 +1096,6 @@ export class DataUnionEndpoints {
     ): Promise<string> {
         const to = getAddress(recipientAddress) // throws if bad address
         const signer = this.client.ethereum.getSigner() // it shouldn't matter if it's mainnet or sidechain signer since key should be the same
-        // @ts-expect-error
         const address = await signer.getAddress()
         const duSidechain = await getSidechainContractReadOnly(contractAddress, this.client)
         const memberData = await duSidechain.memberData(address)
@@ -1107,7 +1103,6 @@ export class DataUnionEndpoints {
         const withdrawn = memberData[3]
         // @ts-expect-error
         const message = to + hexZeroPad(amountTokenWei, 32).slice(2) + duSidechain.address.slice(2) + hexZeroPad(withdrawn, 32).slice(2)
-        // @ts-expect-error
         const signature = await signer.signMessage(arrayify(message))
         return signature
     }
