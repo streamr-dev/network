@@ -47,15 +47,21 @@ export default class BrowserStorage implements PersistentStorage {
     }
 
     set(key: string, value: any) {
-        return this.mergeData({
+        this.mergeData({
             [key]: value,
         })
+        return this
     }
 
     delete(key: string) {
+        if (!this.has(key)) {
+            return false
+        }
+
         const data = this.getData()
         delete data[key]
-        return this.setData(data)
+        this.setData(data)
+        return true
     }
 
     clear() {
