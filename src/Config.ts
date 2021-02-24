@@ -7,12 +7,14 @@ import { O } from 'ts-toolbelt'
 import { getVersionString, counterId } from './utils'
 import { Todo } from './types'
 
+export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
+
 export type StreamrClientOptions = {
     id?: string
     debug?: Debug.Debugger,
     auth?: {
         privateKey?: string
-        ethereum?: ExternalProvider|JsonRpcFetchFunc,
+        ethereum?: EthereumConfig
         apiKey?: string
         username?: string
         password?: string

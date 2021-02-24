@@ -2,17 +2,32 @@ import { MessageLayer, Utils } from 'streamr-client-protocol'
 import { Web3Provider } from '@ethersproject/providers'
 
 import { pLimitFn, sleep } from '../utils'
+import type { EthereumConfig } from '../Config'
 
 const { StreamMessage } = MessageLayer
 const { SigningUtil } = Utils
 const { SIGNATURE_TYPES } = StreamMessage
 
-function getSigningFunction({ privateKey, ethereum } = {}) {
+type AuthOption = {
+    ethereum: undefined
+    privateKey: string | Uint8Array
+} | {
+    privateKey: undefined
+    ethereum: EthereumConfig
+} | {
+    ethereum: undefined
+    privateKey: undefined
+}
+
+function getSigningFunction({
+    privateKey,
+    ethereum,
+}: AuthOption) {
     if (privateKey) {
         const key = (typeof privateKey === 'string' && privateKey.startsWith('0x'))
             ? privateKey.slice(2) // strip leading 0x
             : privateKey
-        return async (d) => SigningUtil.sign(d, key)
+        return async (d: string) => SigningUtil.sign(d, key.toString())
     }
 
     if (ethereum) {
@@ -30,15 +45,16 @@ function getSigningFunction({ privateKey, ethereum } = {}) {
     throw new Error('Need either "privateKey" or "ethereum".')
 }
 
-export default function Signer(options = {}, publishWithSignature = 'auto') {
+export default function Signer(options: AuthOption, publishWithSignature = 'auto') {
     const { privateKey, ethereum } = options
+    const noSignStreamMessage = (streamMessage: MessageLayer.StreamMessage) => streamMessage
 
     if (publishWithSignature === 'never') {
-        return (v) => v
+        return noSignStreamMessage
     }
 
     if (publishWithSignature === 'auto' && !privateKey && !ethereum) {
-        return (v) => v
+        return noSignStreamMessage
     }
 
     if (publishWithSignature !== 'auto' && publishWithSignature !== 'always') {
@@ -47,7 +63,10 @@ export default function Signer(options = {}, publishWithSignature = 'auto') {
 
     const sign = getSigningFunction(options)
 
-    async function signStreamMessage(streamMessage, signatureType = SIGNATURE_TYPES.ETH) {
+    async function signStreamMessage(
+        streamMessage: MessageLayer.StreamMessage,
+        signatureType: MessageLayer.StreamMessage['signatureType'] = SIGNATURE_TYPES.ETH
+    ) {
         if (!streamMessage) {
             throw new Error('streamMessage required as part of the data to sign.')
         }
