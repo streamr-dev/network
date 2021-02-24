@@ -50,6 +50,8 @@ export default class Stream {
         fields: Field[];
     } = { fields: [] }
     _client: StreamrClient
+    requireEncryptedData?: boolean
+    requireSignedData?: boolean
 
     constructor(client: StreamrClient, props: StreamProperties) {
         this._client = client
