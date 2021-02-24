@@ -34,12 +34,10 @@ client.connect().then(() => {
     if (resendOptions) {
         subOptions.resend = resendOptions
     }
-    return client.getPublisherId().then((publisherId) => {
-        return client.subscribe(subOptions, (content, streamMessage) => {
-            // to be logged in test mode
-            console.log(`whole message received: ${streamMessage.serialize()}`)
-            // to be added by SubscriberJS to the message queue for verification in test mode
-            console.log(`Received: ${streamMessage.getPublisherId()}###${streamMessage.getSerializedContent()}`)
-        })
+    return client.subscribe(subOptions, (_, streamMessage) => {
+        // to be logged in test mode
+        console.log(`whole message received: ${streamMessage.serialize()}`)
+        // to be added by SubscriberJS to the message queue for verification in test mode
+        console.log(`Received: ${streamMessage.getPublisherId()}###${streamMessage.getSerializedContent()}`)
     })
 })

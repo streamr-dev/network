@@ -43,7 +43,7 @@ const rotatingPublishFunction = async (msgToPublish, counter) => {
     await defaultPublishFunction(msgToPublish, counter)
 }
 
-const defaultPublishFunction = async (msgToPublish, counter) => {
+const defaultPublishFunction = async (msgToPublish, _counter) => {
     try {
         await client.publish(streamId, msgToPublish)
         console.log('Published: ', JSON.stringify(msgToPublish))
