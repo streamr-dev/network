@@ -616,4 +616,83 @@ describe('decryption', () => {
 
         expect(onSubError).toHaveBeenCalledTimes(1)
     })
+
+    describe('revoking permissions', () => {
+        let client2
+        beforeEach(async () => {
+            client2 = createClient()
+            await client2.connect()
+            await client2.session.getSessionToken()
+        })
+
+        afterEach(async () => {
+            await client2.disconnect()
+        })
+
+        it('fails gracefully if permission revoked', async () => {
+            const MAX_MESSAGES = 10
+            await client.rotateGroupKey(stream.id)
+
+            const p1 = await stream.grantPermission('stream_get', client2.getPublisherId())
+            const p2 = await stream.grantPermission('stream_subscribe', client2.getPublisherId())
+
+            const sub = await client2.subscribe({
+                stream: stream.id,
+            })
+
+            const errs = []
+            const onSubError = jest.fn((err) => {
+                errs.push(err)
+                throw err
+            })
+
+            sub.on('error', onSubError)
+
+            const received = []
+            // Publish after subscribed
+            let count = 0
+            const REVOKE_AFTER = 6
+            const gotMessages = Defer()
+            // do publish in background otherwise permission is revoked before subscriber starts processing
+            const publishTask = publishTestMessages(MAX_MESSAGES, {
+                timestamp: 1111111,
+                async afterEach() {
+                    count += 1
+                    if (count === REVOKE_AFTER) {
+                        await gotMessages
+                        await stream.revokePermission(p1.id)
+                        await stream.revokePermission(p2.id)
+                        await client.rekey(stream.id)
+                    }
+                }
+            })
+
+            let t
+            await expect(async () => {
+                for await (const m of sub) {
+                    received.push(m.getParsedContent())
+                    if (received.length === REVOKE_AFTER) {
+                        gotMessages.resolve()
+                        clearTimeout(t)
+                        t = setTimeout(() => {
+                            sub.cancel()
+                        }, 2000)
+                    }
+
+                    if (received.length === MAX_MESSAGES) {
+                        clearTimeout(t)
+                        break
+                    }
+                }
+            }).rejects.toThrow('decrypt')
+            clearTimeout(t)
+            const published = await publishTask
+
+            expect(received).toEqual([
+                ...published.slice(0, REVOKE_AFTER),
+            ])
+
+            expect(onSubError).toHaveBeenCalledTimes(MAX_MESSAGES - REVOKE_AFTER + 1) // + 1 for final err
+        })
+    })
 })

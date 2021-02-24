@@ -159,6 +159,12 @@ function GroupKeyStore({ groupKeys = new Map() }) {
             GroupKey.validate(newKey)
             nextGroupKeys.unshift(newKey)
             nextGroupKeys.length = Math.min(nextGroupKeys.length, 2)
+        },
+        rekey() {
+            const newKey = GroupKey.generate()
+            storeKey(newKey)
+            currentGroupKeyId = newKey.id
+            nextGroupKeys.length = 0
         }
     }
 }
@@ -235,7 +241,8 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
             const subscriberId = streamMessage.getPublisherId()
 
             const groupKeyStore = getGroupKeyStore(streamId)
-            const encryptedGroupKeys = groupKeyIds.map((id) => {
+            const isSubscriber = await client.isStreamSubscriber(streamId, subscriberId)
+            const encryptedGroupKeys = !isSubscriber ? [] : groupKeyIds.map((id) => {
                 const groupKey = groupKeyStore.get(id)
                 if (!groupKey) {
                     return null // will be filtered out
@@ -336,9 +343,17 @@ export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
         return !groupKeyStore.isEmpty()
     }
 
+    async function rekey(streamId) {
+        if (!enabled) { return }
+        const groupKeyStore = getGroupKeyStore(streamId)
+        groupKeyStore.rekey()
+        await next()
+    }
+
     return {
         setNextGroupKey,
         useGroupKey,
+        rekey,
         rotateGroupKey,
         hasAnyGroupKey,
         async start() {

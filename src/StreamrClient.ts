@@ -348,6 +348,10 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return this.publisher.rotateGroupKey(...args)
     }
 
+    rekey(...args: Todo) {
+        return this.publisher.rekey(...args)
+    }
+
     /**
      * @category Important
      */
