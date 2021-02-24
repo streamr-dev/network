@@ -180,6 +180,70 @@ describe('decryption', () => {
         await client.unsubscribe(sub)
     }, 2 * TIMEOUT)
 
+    it('changing group key injects group key into next stream message', async () => {
+        const done = Defer()
+        const msgs = [Msg(), Msg(), Msg()]
+        const received = []
+        // subscribe without knowing the group key to decrypt stream messages
+        const sub = await client.subscribe({
+            stream: stream.id,
+        }, done.wrapError((_parsedContent, streamMessage) => {
+            // Check signature stuff
+            received.push(streamMessage)
+            if (received.length === msgs.length) {
+                done.resolve()
+            }
+        }))
+
+        sub.once('error', done.reject)
+
+        const onEncryptionMessageErr = checkEncryptionMessages(client)
+        // id | groupKeyId | newGroupKey (encrypted by groupKeyId)
+        // msg1 gk2 -
+        // msg2 gk2 gk3
+        // msg3 gk3 -
+        const groupKey1 = GroupKey.generate()
+        const groupKey2 = GroupKey.generate()
+        await client.setNextGroupKey(stream.id, groupKey1)
+        await client.publish(stream.id, msgs[0])
+        await client.setNextGroupKey(stream.id, groupKey2)
+        await client.publish(stream.id, msgs[1])
+        await client.publish(stream.id, msgs[2])
+        await done
+        expect(received.map((m) => m.getParsedContent())).toEqual(msgs)
+        received.forEach((streamMessage, index) => {
+            expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
+            expect(streamMessage.getPublisherId())
+            expect(streamMessage.signature)
+            switch (index) {
+                case 0: {
+                    expect(streamMessage.newGroupKey).toEqual(null)
+                    expect(streamMessage.groupKeyId).toEqual(groupKey1.id)
+                    break
+                }
+                case 1: {
+                    expect(streamMessage.newGroupKey).toEqual(groupKey2)
+                    expect(streamMessage.groupKeyId).toEqual(groupKey1.id)
+                    break
+                }
+                case 2: {
+                    expect(streamMessage.newGroupKey).toEqual(null)
+                    expect(streamMessage.groupKeyId).toEqual(groupKey2.id)
+                    break
+                }
+                default: {
+                    throw new Error(`should not get here: ${index}`)
+                }
+
+            }
+        })
+
+        onEncryptionMessageErr.resolve() // will be ignored if errored
+        await onEncryptionMessageErr
+        // All good, unsubscribe
+        await client.unsubscribe(sub)
+    }, 2 * TIMEOUT)
+
     it('errors if rotating group key for no stream', async () => {
         expect(async () => (
             client.rotateGroupKey()
