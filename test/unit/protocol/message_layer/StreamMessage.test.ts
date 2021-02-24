@@ -2,13 +2,11 @@ import assert from 'assert'
 
 import sinon from 'sinon'
 
-import { MessageLayer } from '../../../../src/index'
+import { MessageRef, MessageIDStrict, EncryptedGroupKey } from '../../../../src/index'
 import ValidationError from '../../../../src/errors/ValidationError'
 import UnsupportedVersionError from '../../../../src/errors/UnsupportedVersionError'
 import { Serializer } from '../../../../src/Serializer'
 import StreamMessage from '../../../../src/protocol/message_layer/StreamMessage'
-
-const { MessageRef, MessageIDStrict, EncryptedGroupKey } = MessageLayer
 
 const content = {
     hello: 'world',

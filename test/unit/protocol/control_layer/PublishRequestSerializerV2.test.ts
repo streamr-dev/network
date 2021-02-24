@@ -1,9 +1,6 @@
 import assert from 'assert'
 
-import { ControlLayer, MessageLayer } from '../../../../src/index'
-
-const { StreamMessage } = MessageLayer
-const { PublishRequest, ControlMessage } = ControlLayer
+import { StreamMessage, PublishRequest, ControlMessage } from '../../../../src/index'
 
 const streamMessage = StreamMessage.deserialize([30, ['streamId', 0, 1529549961116, 0, 'address', 'msg-chain-id'],
     [1529549961000, 0], StreamMessage.MESSAGE_TYPES.MESSAGE, '{"valid": "json"}', StreamMessage.SIGNATURE_TYPES.ETH, 'signature'])

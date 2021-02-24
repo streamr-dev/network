@@ -2,12 +2,10 @@ import assert from 'assert'
 
 import shuffle from 'array-shuffle'
 
-import { MessageLayer } from '../../../src'
+import { MessageID } from '../../../src'
 import OrderingUtil from '../../../src/utils/OrderingUtil'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
 import MessageRef from '../../../src/protocol/message_layer/MessageRef'
-
-const { MessageID } = MessageLayer
 
 const createMsg = (
     timestamp = 1, sequenceNumber = 0, prevTimestamp: number | null = null,

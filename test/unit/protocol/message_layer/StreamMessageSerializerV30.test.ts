@@ -1,8 +1,6 @@
 import assert from 'assert'
 
-import { MessageLayer } from '../../../../src/index'
-
-const { StreamMessage, MessageRef, MessageID } = MessageLayer
+import { StreamMessage, MessageRef, MessageID } from '../../../../src/index'
 
 const VERSION = 30
 

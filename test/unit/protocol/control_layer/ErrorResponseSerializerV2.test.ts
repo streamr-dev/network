@@ -1,8 +1,6 @@
 import assert from 'assert'
 
-import { ControlLayer } from '../../../../src/index'
-
-const { ErrorResponse, ControlMessage } = ControlLayer
+import { ErrorResponse, ControlMessage } from '../../../../src/index'
 
 const VERSION = 2
 

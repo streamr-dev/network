@@ -1,10 +1,8 @@
 import assert from 'assert'
 
-import { ControlLayer } from '../../../../src/index'
+import { ErrorResponse, ControlMessage } from '../../../../src/index'
 import { PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 } from '../../../../src/protocol/control_layer/ControlMessage'
 import { ErrorCode } from '../../../../src/protocol/control_layer/error_response/ErrorResponse'
-
-const { ErrorResponse, ControlMessage } = ControlLayer
 
 const VERSION = 1
 

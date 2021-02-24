@@ -1,10 +1,7 @@
 import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
-import { ControlLayer, MessageLayer } from '../../../../src/index'
-
-const { StreamMessage, MessageID } = MessageLayer
-const { PublishRequest, ControlMessage } = ControlLayer
+import { StreamMessage, MessageID, PublishRequest, ControlMessage } from '../../../../src/index'
 
 describe('PublishRequest', () => {
     const streamMessage = new StreamMessage({

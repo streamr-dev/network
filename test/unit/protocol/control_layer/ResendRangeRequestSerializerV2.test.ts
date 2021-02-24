@@ -1,9 +1,6 @@
 import assert from 'assert'
 
-import { ControlLayer, MessageLayer } from '../../../../src/index'
-
-const { MessageRef } = MessageLayer
-const { ResendRangeRequest, ControlMessage } = ControlLayer
+import { MessageRef, ResendRangeRequest, ControlMessage } from '../../../../src/index'
 
 const VERSION = 2
 

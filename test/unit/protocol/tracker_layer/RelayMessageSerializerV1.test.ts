@@ -1,9 +1,7 @@
 import assert from 'assert'
 
-import { TrackerLayer } from '../../../../src'
+import { RelayMessage } from '../../../../src'
 import TrackerMessage from '../../../../src/protocol/tracker_layer/TrackerMessage'
-
-const { RelayMessage } = TrackerLayer
 
 const VERSION = 1
 

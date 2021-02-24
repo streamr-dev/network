@@ -1,9 +1,7 @@
 import assert from 'assert'
 
-import { ControlLayer } from '../../../../src/index'
+import { SubscribeRequest, ControlMessage } from '../../../../src/index'
 import { PLACEHOLDER_REQUEST_ID_PROTOCOL_V1 } from '../../../../src/protocol/control_layer/ControlMessage'
-
-const { SubscribeRequest, ControlMessage } = ControlLayer
 
 const VERSION = 1
 

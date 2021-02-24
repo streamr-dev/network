@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import sinon from 'sinon'
 
-import { Utils } from '../../../src'
+import { StreamMessageValidator, SigningUtil } from '../../../src'
 import StreamMessage from '../../../src/protocol/message_layer/StreamMessage'
 import MessageID from '../../../src/protocol/message_layer/MessageID'
 import GroupKeyRequest from '../../../src/protocol/message_layer/GroupKeyRequest'
@@ -12,8 +12,6 @@ import GroupKeyErrorResponse, { ErrorCode } from '../../../src/protocol/message_
 import EncryptedGroupKey from '../../../src/protocol/message_layer/EncryptedGroupKey'
 import ValidationError from '../../../src/errors/ValidationError'
 import { StreamMetadata } from '../../../src/utils/StreamMessageValidator'
-
-const { StreamMessageValidator, SigningUtil } = Utils
 
 describe('StreamMessageValidator', () => {
     let getStream: (streamId: string) => Promise<StreamMetadata>

@@ -1,9 +1,7 @@
 import assert from 'assert'
 
 import MessageRef from '../../../../src/protocol/message_layer/MessageRef'
-import { ControlLayer } from '../../../../src/index'
-
-const { ResendFromRequest, ControlMessage } = ControlLayer
+import { ResendFromRequest, ControlMessage } from '../../../../src/index'
 
 const VERSION = 1
 

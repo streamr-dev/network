@@ -1,4 +1,4 @@
-export function parse(millisOrString: number|string) {
+export default function parse(millisOrString: number|string) {
     if (typeof millisOrString === 'number') {
         return millisOrString
     }
@@ -11,3 +11,5 @@ export function parse(millisOrString: number|string) {
 
     throw new Error(`Invalid timestamp: ${millisOrString}`)
 }
+
+export { parse }
