@@ -40,7 +40,7 @@
     "heap": "^0.2.6",
     "lodash": "^4.17.20",
     "lru-cache": "^6.0.0",
-    "node-datachannel": "0.0.21",
+    "node-datachannel": "0.0.24",
     "pino": "^6.11.0",
     "pino-pretty": "^4.3.0",
     "speedometer": "^1.1.0",
