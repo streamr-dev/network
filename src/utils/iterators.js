@@ -290,7 +290,13 @@ const isPipeline = Symbol('isPipeline')
 
 const getIsStream = (item) => typeof item.from === 'function'
 
-export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } = {}) {
+async function defaultOnFinally(err) {
+    if (err) {
+        throw err
+    }
+}
+
+export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ...opts } = {}) {
     const cancelFns = new Set()
     let cancelled = false
     let error

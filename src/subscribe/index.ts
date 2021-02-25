@@ -39,7 +39,7 @@ export class Subscription extends Emitter {
     /** @internal */
     iterated?: Todo
 
-    constructor(client: StreamrClient, opts: Todo, onFinally = () => {}) {
+    constructor(client: StreamrClient, opts: Todo, onFinally = async () => {}) {
         super()
         this.client = client
         this.options = validateOptions(opts)
@@ -366,6 +366,12 @@ class SubscriptionSession extends Emitter {
 /**
  * Keeps track of subscriptions.
  */
+
+async function defaultOnFinally(err) {
+    if (err) {
+        throw err
+    }
+}
 
 class Subscriptions {
 
