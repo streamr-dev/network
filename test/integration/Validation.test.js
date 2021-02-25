@@ -105,10 +105,12 @@ describeRepeats('Validation', () => {
 
         it('subscribe fails gracefully when signature bad', async () => {
             const sub = await client.subscribe(stream.id)
+
+            const errs = []
             const onSubError = jest.fn((err) => {
-                expect(err).toBeInstanceOf(Error)
-                expect(err.message).toMatch('signature')
+                errs.push(err)
             })
+
             sub.on('error', onSubError)
             const { parse } = client.connection
             let count = 0
@@ -131,13 +133,27 @@ describeRepeats('Validation', () => {
                 timestamp: 111111,
             })
 
+            let t
             const received = []
             for await (const m of sub) {
                 received.push(m.getParsedContent())
                 if (received.length === published.length - 1) {
+                    clearTimeout(t)
+                    // give it a chance to fail
+                    t = setTimeout(() => {
+                        sub.cancel()
+                    }, 500)
+                }
+
+                if (received.length === published.length) {
+                    // failed
+                    clearTimeout(t)
                     break
                 }
             }
+
+            clearTimeout(t)
+
             const expectedMessages = [
                 // remove bad message
                 ...published.slice(0, BAD_INDEX),
@@ -147,6 +163,11 @@ describeRepeats('Validation', () => {
             expect(received).toEqual(expectedMessages)
             expect(client.connection.getState()).toBe('connected')
             expect(onSubError).toHaveBeenCalledTimes(1)
+            expect(errs).toHaveLength(1)
+            errs.forEach((err) => {
+                expect(err).toBeInstanceOf(Error)
+                expect(err.message).toMatch('signature')
+            })
         }, 10000)
     })
 
