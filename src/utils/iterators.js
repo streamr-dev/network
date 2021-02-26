@@ -315,7 +315,7 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
         try {
             // eslint-disable-next-line promise/no-promise-in-callback
             await allSettledValues([...cancelFns].map(async ({ isCancelled, cancel }) => (
-                isCancelled ? cancel(err) : undefined
+                !isCancelled() ? cancel(err) : undefined
             )))
         } finally {
             cancelFns.clear()

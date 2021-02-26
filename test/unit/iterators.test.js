@@ -2100,8 +2100,8 @@ describe('Iterator Utils', () => {
             expect(receivedStep1).toEqual(expected.slice(0, MAX_ITEMS))
             expect(receivedStep2).toEqual(expected.slice(0, MAX_ITEMS))
             // all streams were closed
-            expect(onFirstStreamClose).toHaveBeenCalledTimes(1)
             expect(onInputStreamClose).toHaveBeenCalledTimes(1)
+            expect(onFirstStreamClose).toHaveBeenCalledTimes(1)
 
             expect(onFinallyInner).toHaveBeenCalledTimes(1)
             expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
