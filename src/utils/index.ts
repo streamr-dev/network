@@ -1,4 +1,4 @@
-import * as TimestampUtil from "./TimestampUtil"
+import TimestampUtil from "./TimestampUtil"
 import OrderingUtil from "./OrderingUtil"
 import StreamMessageValidator from "./StreamMessageValidator"
 import CachingStreamMessageValidator from "./CachingStreamMessageValidator"

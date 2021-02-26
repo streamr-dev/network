@@ -1,10 +1,7 @@
 import assert from 'assert'
 
 import ValidationError from '../../../../src/errors/ValidationError'
-import { ControlLayer, MessageLayer } from '../../../../src/index'
-
-const { StreamMessage, MessageID } = MessageLayer
-const { UnicastMessage, ControlMessage } = ControlLayer
+import { StreamMessage, MessageID,  UnicastMessage, ControlMessage } from '../../../../src/index'
 
 describe('UnicastMessage', () => {
     describe('constructor', () => {

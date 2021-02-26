@@ -1,8 +1,6 @@
 import assert from 'assert'
 
-import { ControlLayer } from '../../../../src/index'
-
-const { ResendLastRequest, ControlMessage } = ControlLayer
+import { ResendLastRequest, ControlMessage } from '../../../../src/index'
 
 const VERSION = 1
 

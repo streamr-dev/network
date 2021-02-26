@@ -1,11 +1,7 @@
 import assert from 'assert'
 
-import { MessageLayer } from '../../../../src/index'
+import { StreamMessage, MessageID, MessageRef, GroupKeyMessage, GroupKeyAnnounce } from '../../../../src/index'
 import EncryptedGroupKey from '../../../../src/protocol/message_layer/EncryptedGroupKey'
-
-const {
-    StreamMessage, MessageID, MessageRef, GroupKeyMessage, GroupKeyAnnounce
-} = MessageLayer
 
 // Message definitions
 const message = new GroupKeyAnnounce({

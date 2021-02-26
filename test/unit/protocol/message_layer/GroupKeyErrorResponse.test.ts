@@ -1,11 +1,10 @@
 import assert from 'assert'
 
-import { MessageLayer } from '../../../../src/index'
-import { ErrorCode } from '../../../../src/protocol/message_layer/GroupKeyErrorResponse'
-
-const {
+import {
     StreamMessage, MessageID, MessageRef, GroupKeyMessage, GroupKeyErrorResponse
-} = MessageLayer
+} from '../../../../src/index'
+
+import { ErrorCode } from '../../../../src/protocol/message_layer/GroupKeyErrorResponse'
 
 // Message definitions
 const message = new GroupKeyErrorResponse({
