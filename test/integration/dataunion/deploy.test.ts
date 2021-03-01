@@ -3,17 +3,16 @@ import debug from 'debug'
 
 import StreamrClient from '../../../src/StreamrClient'
 import config from '../config'
+import { createMockAddress } from '../../utils'
 
-const log = debug('StreamrClient::DataUnionEndpoints::integration-test-deploy')
+const log = debug('StreamrClient::DataUnion::integration-test-deploy')
 
 // @ts-expect-error
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
 // @ts-expect-error
 const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
 
-const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
-
-describe('DataUnion deployment', () => {
+describe('DataUnion deploy', () => {
 
     let adminClient: StreamrClient
 
@@ -24,8 +23,12 @@ describe('DataUnion deployment', () => {
         const network2 = await providerSidechain.getNetwork()
         log('Connected to sidechain network: ', JSON.stringify(network2))
         adminClient = new StreamrClient(config.clientOptions as any)
-        await adminClient.ensureConnected()
     }, 60000)
+
+    afterAll(() => {
+        providerMainnet.removeAllListeners()
+        providerSidechain.removeAllListeners()
+    })
 
     describe('owner', () => {
 

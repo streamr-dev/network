@@ -21,7 +21,7 @@ export class AuthFetchError extends Error {
     }
 }
 
-const debug = Debug('StreamrClient:utils:authfetch')
+const debug = Debug('StreamrClient:utils:authfetch') // TODO: could use the debug instance from the client? (e.g. client.debug.extend('authFetch'))
 
 let ID = 0
 

@@ -63,12 +63,8 @@ async function OpenWebSocket(url, opts, ...args) {
             })
 
             // attach debug
-            if (opts && opts.debug) {
-                socket.debug = opts.debug.extend(socket.id)
-                socket.debug.color = opts.debug.color // use existing colour
-            } else {
-                socket.debug = Debug('StreamrClient::ws').extend(socket.id)
-            }
+            socket.debug = opts.debug.extend(socket.id)
+            socket.debug.color = opts.debug.color // use existing colour
         } catch (err) {
             reject(err)
         }
@@ -292,15 +288,9 @@ export default class Connection extends EventEmitter {
         }))
     }
 
-    constructor(options = {}) {
+    constructor(options = {}, client) {
         super()
-        const id = counterId(this.constructor.name)
-        /* istanbul ignore next */
-        if (options.debug) {
-            this._debug = options.debug.extend(id)
-        } else {
-            this._debug = Debug(`StreamrClient::${id}`)
-        }
+        this._debug = client.debug.extend(counterId(this.constructor.name))
 
         this.options = options
         this.options.autoConnect = !!this.options.autoConnect

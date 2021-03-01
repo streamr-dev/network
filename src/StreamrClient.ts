@@ -4,7 +4,7 @@ import Debug from 'debug'
 
 import { counterId, uuid, CacheAsyncFn } from './utils'
 import { validateOptions } from './stream/utils'
-import Config, { StreamrClientOptions, StreamrClientConfig } from './Config'
+import Config, { StreamrClientOptions } from './Config'
 import StreamrEthereum from './Ethereum'
 import Session from './Session'
 import Connection, { ConnectionError } from './Connection'
@@ -14,8 +14,10 @@ import { getUserId } from './user'
 import { Todo, MaybeAsync } from './types'
 import { StreamEndpoints } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
-import { DataUnionEndpoints } from './rest/DataUnionEndpoints'
 import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
+import { BigNumber } from '@ethersproject/bignumber'
+import { getAddress } from '@ethersproject/address'
+import { Contract } from '@ethersproject/contracts'
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
 export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
@@ -32,8 +34,8 @@ export { StreamrClientOptions }
 
 class StreamrConnection extends Connection {
     // TODO define args type when we convert Connection class to TypeScript
-    constructor(...args: any) {
-        super(...args)
+    constructor(options: Todo, client: StreamrClient) {
+        super(options, client)
         this.on('message', this.onConnectionMessage)
     }
 
@@ -137,13 +139,13 @@ function Plugin(targetInstance: any, srcInstance: any) {
 }
 
 // these are mixed in via Plugin function above
-interface StreamrClient extends StreamEndpoints, LoginEndpoints, DataUnionEndpoints {}
+interface StreamrClient extends StreamEndpoints, LoginEndpoints {}
 
 // eslint-disable-next-line no-redeclare
 class StreamrClient extends EventEmitter {
     id: string
     debug: Debug.Debugger
-    options: StreamrClientConfig
+    options: StreamrClientOptions
     session: Session
     connection: StreamrConnection
     publisher: Todo
@@ -152,18 +154,13 @@ class StreamrClient extends EventEmitter {
     ethereum: StreamrEthereum
     streamEndpoints: StreamEndpoints
     loginEndpoints: LoginEndpoints
-    dataUnionEndpoints: DataUnionEndpoints
 
     constructor(options: Partial<StreamrClientOptions> = {}, connection?: StreamrConnection) {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
 
-        this.options = Config({
-            id: this.id,
-            debug: this.debug,
-            ...options,
-        })
+        this.options = Config(options)
 
         this.debug('new StreamrClient %s: %o', this.id, {
             version: process.env.version,
@@ -182,7 +179,7 @@ class StreamrClient extends EventEmitter {
         this.on('error', this._onError) // attach before creating sub-components incase they fire error events
 
         this.session = new Session(this, this.options.auth)
-        this.connection = connection || new StreamrConnection(this.options)
+        this.connection = connection || new StreamrConnection(this.options, this)
 
         this.connection
             .on('connected', this.onConnectionConnected)
@@ -195,7 +192,6 @@ class StreamrClient extends EventEmitter {
 
         this.streamEndpoints = Plugin(this, new StreamEndpoints(this))
         this.loginEndpoints = Plugin(this, new LoginEndpoints(this))
-        this.dataUnionEndpoints = Plugin(this, new DataUnionEndpoints(this))
         this.cached = new StreamrCached(this)
     }
 
@@ -380,18 +376,42 @@ class StreamrClient extends EventEmitter {
         return this.getAddress()
     }
 
+    /**
+     * Get token balance in "wei" (10^-18 parts) for given address
+     */
+    async getTokenBalance(address: string): Promise<BigNumber> {
+        const { tokenAddress } = this.options
+        if (!tokenAddress) {
+            throw new Error('StreamrClient has no tokenAddress configuration.')
+        }
+        const addr = getAddress(address)
+        const provider = this.ethereum.getMainnetProvider()
+
+        const token = new Contract(tokenAddress, [{
+            name: 'balanceOf',
+            inputs: [{ type: 'address' }],
+            outputs: [{ type: 'uint256' }],
+            constant: true,
+            payable: false,
+            stateMutability: 'view',
+            type: 'function'
+        }], provider)
+        return token.balanceOf(addr)
+    }
+
     getDataUnion(contractAddress: string) {
-        return new DataUnion(contractAddress, undefined, this.dataUnionEndpoints)
+        return DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
     }
 
     async deployDataUnion(options?: DataUnionDeployOptions) {
-        const contract = await this.dataUnionEndpoints.deployDataUnionContract(options)
-        return new DataUnion(contract.address, contract.sidechain.address, this.dataUnionEndpoints)
+        return DataUnion._deploy(options, this) // eslint-disable-line no-underscore-dangle
     }
 
     _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}) {
-        const contractAddress = this.dataUnionEndpoints.calculateDataUnionMainnetAddress(dataUnionName, deployerAddress)
-        return this.getDataUnion(contractAddress)
+        return DataUnion._fromName({ // eslint-disable-line no-underscore-dangle
+            dataUnionName,
+            deployerAddress
+        }, this)
     }
 
     static generateEthereumAccount() {

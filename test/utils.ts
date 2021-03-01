@@ -1,21 +1,22 @@
 import { inspect } from 'util'
-
 import { wait } from 'streamr-test-utils'
-
+import { providers, Wallet } from 'ethers'
 import { pTimeout, counterId, AggregatedError } from '../src/utils'
 import { validateOptions } from '../src/stream/utils'
+import StreamrClient from '../src/StreamrClient'
 
 const crypto = require('crypto')
+const config = require('./integration/config')
 
-export const uid = (prefix) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
+export const uid = (prefix?: string) => counterId(`p${process.pid}${prefix ? '-' + prefix : ''}`)
 
 export function fakePrivateKey() {
     return crypto.randomBytes(32).toString('hex')
 }
 
-const TEST_REPEATS = parseInt(process.env.TEST_REPEATS, 10) || 1
+const TEST_REPEATS = (process.env.TEST_REPEATS) ? parseInt(process.env.TEST_REPEATS, 10) : 1
 
-export function describeRepeats(msg, fn, describeFn = describe) {
+export function describeRepeats(msg: any, fn: any, describeFn = describe) {
     for (let k = 0; k < TEST_REPEATS; k++) {
         // eslint-disable-next-line no-loop-func
         describe(msg, () => {
@@ -24,16 +25,16 @@ export function describeRepeats(msg, fn, describeFn = describe) {
     }
 }
 
-describeRepeats.skip = (msg, fn) => {
+describeRepeats.skip = (msg: any, fn: any) => {
     describe.skip(`${msg} – test repeat ALL of ${TEST_REPEATS}`, fn)
 }
 
-describeRepeats.only = (msg, fn) => {
+describeRepeats.only = (msg: any, fn: any) => {
     describeRepeats(msg, fn, describe.only)
 }
 
-export async function collect(iterator, fn = async () => {}) {
-    const received = []
+export async function collect(iterator: any, fn: (item: any) => void = async () => {}) {
+    const received: any[] = []
     for await (const msg of iterator) {
         received.push(msg.getParsedContent())
         await fn({
@@ -45,24 +46,25 @@ export async function collect(iterator, fn = async () => {}) {
 }
 
 export function addAfterFn() {
-    const afterFns = []
+    const afterFns: any[] = []
     afterEach(async () => {
         const fns = afterFns.slice()
         afterFns.length = 0
+        // @ts-expect-error
         AggregatedError.throwAllSettled(await Promise.allSettled(fns.map((fn) => fn())))
     })
 
-    return (fn) => {
+    return (fn: any) => {
         afterFns.push(fn)
     }
 }
 
-export const Msg = (opts) => ({
+export const Msg = (opts: any) => ({
     value: uid('msg'),
     ...opts,
 })
 
-function defaultMessageMatchFn(msgTarget, msgGot) {
+function defaultMessageMatchFn(msgTarget: any, msgGot: any) {
     if (msgTarget.streamMessage.signature) {
         // compare signatures by default
         return msgTarget.streamMessage.signature === msgGot.signature
@@ -70,9 +72,9 @@ function defaultMessageMatchFn(msgTarget, msgGot) {
     return JSON.stringify(msgGot.content) === JSON.stringify(msgTarget.streamMessage.getParsedContent())
 }
 
-export function getWaitForStorage(client, defaultOpts = {}) {
+export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     /* eslint-disable no-await-in-loop */
-    return async (publishRequest, opts = {}) => {
+    return async (publishRequest: any, opts = {}) => {
         const {
             streamId, streamPartition = 0, interval = 500, timeout = 5000, count = 100, messageMatchFn = defaultMessageMatchFn
         } = validateOptions({
@@ -96,14 +98,15 @@ export function getWaitForStorage(client, defaultOpts = {}) {
                     duration
                 }, {
                     publishRequest,
-                    last: last.map((l) => l.content),
+                    last: last.map((l: any) => l.content),
                 })
-                const err = new Error(`timed out after ${duration}ms waiting for message`)
+                const err: any = new Error(`timed out after ${duration}ms waiting for message`)
                 err.publishRequest = publishRequest
                 throw err
             }
 
             last = await client.getStreamLast({
+                // @ts-expect-error
                 streamId,
                 streamPartition,
                 count,
@@ -118,7 +121,7 @@ export function getWaitForStorage(client, defaultOpts = {}) {
 
             client.debug('message not found, retrying... %o', {
                 msg: publishRequest.streamMessage.getParsedContent(),
-                last: last.map(({ content }) => content)
+                last: last.map(({ content }: any) => content)
             })
 
             await wait(interval)
@@ -127,7 +130,7 @@ export function getWaitForStorage(client, defaultOpts = {}) {
     /* eslint-enable no-await-in-loop */
 }
 
-export function getPublishTestMessages(client, defaultOpts = {}) {
+export function getPublishTestMessages(client: StreamrClient, defaultOpts = {}) {
     // second argument could also be streamId
     if (typeof defaultOpts === 'string') {
         // eslint-disable-next-line no-param-reassign
@@ -147,7 +150,7 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
             waitForLast = false, // wait for message to hit storage
             waitForLastCount,
             waitForLastTimeout,
-            beforeEach = (m) => m,
+            beforeEach = (m: any) => m,
             afterEach = () => {},
             timestamp,
             partitionKey,
@@ -210,7 +213,7 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
                     streamPartition,
                     timeout: waitForLastTimeout,
                     count: waitForLastCount,
-                    messageMatchFn(m, b) {
+                    messageMatchFn(m: any, b: any) {
                         checkDone()
                         return m.streamMessage.signature === b.signature
                     }
@@ -223,11 +226,27 @@ export function getPublishTestMessages(client, defaultOpts = {}) {
         }
     }
 
-    const publishTestMessages = async (...args) => {
+    const publishTestMessages = async (...args: any[]) => {
         const published = await publishTestMessagesRaw(...args)
         return published.map(([msg]) => msg)
     }
 
     publishTestMessages.raw = publishTestMessagesRaw
     return publishTestMessages
+}
+
+export const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
+
+export const createClient = (providerSidechain: providers.JsonRpcProvider) => {
+    const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
+    return new StreamrClient({
+        ...config.clientOptions,
+        auth: {
+            privateKey: wallet.privateKey
+        }
+    })
+}
+
+export const expectInvalidAddress = (operation: () => Promise<any>) => {
+    return expect(() => operation()).rejects.toThrow('invalid address')
 }

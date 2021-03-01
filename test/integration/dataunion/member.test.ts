@@ -4,18 +4,16 @@ import debug from 'debug'
 import StreamrClient from '../../../src/StreamrClient'
 import config from '../config'
 import { DataUnion, JoinRequestState } from '../../../src/dataunion/DataUnion'
-import { fakePrivateKey } from '../../utils'
+import { createMockAddress, expectInvalidAddress, fakePrivateKey } from '../../utils'
 import authFetch from '../../../src/rest/authFetch'
 import { getEndpointUrl } from '../../../src/utils'
 
-const log = debug('StreamrClient::DataUnionEndpoints::integration-test-member')
+const log = debug('StreamrClient::DataUnion::integration-test-member')
 
 // @ts-expect-error
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
 // @ts-expect-error
 const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
-
-const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
 
 const joinMember = async (memberWallet: Wallet, secret: string|undefined, dataUnionAddress: string) => {
     const memberClient = new StreamrClient({
@@ -24,7 +22,6 @@ const joinMember = async (memberWallet: Wallet, secret: string|undefined, dataUn
             privateKey: memberWallet.privateKey,
         }
     } as any)
-    await memberClient.ensureConnected()
     return memberClient.getDataUnion(dataUnionAddress).join(secret)
 }
 
@@ -40,7 +37,6 @@ describe('DataUnion member', () => {
         const network2 = await providerSidechain.getNetwork()
         log('Connected to sidechain network: ', JSON.stringify(network2))
         const adminClient = new StreamrClient(config.clientOptions as any)
-        await adminClient.ensureConnected()
         dataUnion = await adminClient.deployDataUnion()
         // product is needed for join requests to analyze the DU version
         const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
@@ -58,6 +54,11 @@ describe('DataUnion member', () => {
         )
         secret = await dataUnion.createSecret()
     }, 60000)
+
+    afterAll(() => {
+        providerMainnet.removeAllListeners()
+        providerSidechain.removeAllListeners()
+    })
 
     it('random user is not a member', async () => {
         const userAddress = createMockAddress()
@@ -99,4 +100,11 @@ describe('DataUnion member', () => {
         expect(isMember).toBe(false)
     }, 60000)
 
+    it('invalid address', () => {
+        return Promise.all([
+            expectInvalidAddress(() => dataUnion.addMembers(['invalid-address'])),
+            expectInvalidAddress(() => dataUnion.removeMembers(['invalid-address'])),
+            expectInvalidAddress(() => dataUnion.isMember('invalid-address'))
+        ])
+    })
 })

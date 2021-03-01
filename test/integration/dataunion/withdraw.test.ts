@@ -9,9 +9,10 @@ import * as Token from '../../../contracts/TestToken.json'
 import * as DataUnionSidechain from '../../../contracts/DataUnionSidechain.json'
 import config from '../config'
 import authFetch from '../../../src/rest/authFetch'
+import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
+import { MemberStatus } from '../../../src/dataunion/DataUnion'
 
-const log = debug('StreamrClient::DataUnionEndpoints::integration-test-withdraw')
-// const { log } = console
+const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
 // @ts-expect-error
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
@@ -45,10 +46,9 @@ const testWithdraw = async (
     await tx1.wait()
 
     const adminClient = new StreamrClient(config.clientOptions as any)
-    await adminClient.ensureConnected()
 
     const dataUnion = await adminClient.deployDataUnion()
-    const secret = await dataUnion.createSecret('DataUnionEndpoints test secret')
+    const secret = await dataUnion.createSecret('test secret')
     log(`DataUnion ${dataUnion.getAddress()} is ready to roll`)
     // dataUnion = await adminClient.getDataUnionContract({dataUnion: "0xd778CfA9BB1d5F36E42526B2BAFD07B74b4066c0"})
 
@@ -69,7 +69,6 @@ const testWithdraw = async (
             privateKey: memberWallet.privateKey
         }
     } as any)
-    await memberClient.ensureConnected()
 
     // product is needed for join requests to analyze the DU version
     const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
@@ -142,23 +141,22 @@ const testWithdraw = async (
     const balanceAfter = await getBalanceAfter(memberWallet, adminTokenMainnet)
     const balanceIncrease = balanceAfter.sub(balanceBefore)
 
-    await providerMainnet.removeAllListeners()
-    await providerSidechain.removeAllListeners()
-    await memberClient.ensureDisconnected()
-    await adminClient.ensureDisconnected()
-
     expect(stats).toMatchObject({
-        status: 'active',
-        earningsBeforeLastJoin: '0',
-        lmeAtJoin: '0',
-        totalEarnings: '1000000000000000000',
-        withdrawableEarnings: '1000000000000000000',
+        status: MemberStatus.ACTIVE,
+        earningsBeforeLastJoin: BigNumber.from(0),
+        totalEarnings: BigNumber.from('1000000000000000000'),
+        withdrawableEarnings: BigNumber.from('1000000000000000000')
     })
     expect(withdrawTr.logs[0].address).toBe(config.clientOptions.tokenAddressSidechain)
     expect(balanceIncrease.toString()).toBe(amount.toString())
 }
 
 describe('DataUnion withdraw', () => {
+
+    afterAll(() => {
+        providerMainnet.removeAllListeners()
+        providerSidechain.removeAllListeners()
+    })
 
     describe('Member', () => {
 
@@ -208,4 +206,16 @@ describe('DataUnion withdraw', () => {
         }, 300000)
     })
 
+    it('Validate address', async () => {
+        const client = createClient(providerSidechain)
+        const dataUnion = client.getDataUnion(createMockAddress())
+        return Promise.all([
+            expectInvalidAddress(() => dataUnion.getWithdrawableEarnings('invalid-address')),
+            expectInvalidAddress(() => dataUnion.withdrawAllTo('invalid-address')),
+            expectInvalidAddress(() => dataUnion.signWithdrawAllTo('invalid-address')),
+            expectInvalidAddress(() => dataUnion.signWithdrawAmountTo('invalid-address', '123')),
+            expectInvalidAddress(() => dataUnion.withdrawAllToMember('invalid-address')),
+            expectInvalidAddress(() => dataUnion.withdrawAllToSigned('invalid-address', 'invalid-address', 'mock-signature'))
+        ])
+    })
 })
