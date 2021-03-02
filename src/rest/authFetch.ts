@@ -2,6 +2,7 @@ import fetch, { Response } from 'node-fetch'
 import Debug from 'debug'
 
 import { getVersionString } from '../utils'
+import { ErrorCode, parseErrorCode } from './ErrorCode'
 import Session from '../Session'
 
 export const DEFAULT_HEADERS = {
@@ -9,15 +10,17 @@ export const DEFAULT_HEADERS = {
 }
 
 export class AuthFetchError extends Error {
-    response: Response
+    response?: Response
     body?: any
+    errorCode?: ErrorCode
 
-    constructor(message: string, response: Response, body?: any) {
+    constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
         // add leading space if there is a body set
         const bodyMessage = body ? ` ${(typeof body === 'string' ? body : JSON.stringify(body).slice(0, 1024))}...` : ''
         super(message + bodyMessage)
         this.response = response
         this.body = body
+        this.errorCode = errorCode
 
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
@@ -75,6 +78,6 @@ export default async function authFetch<T extends object>(url: string, session?:
         return authFetch<T>(url, session, options, true)
     } else {
         debug('%d %s – failed', id, url)
-        throw new AuthFetchError(`Request ${id} to ${url} returned with error code ${response.status}.`, response, body)
+        throw new AuthFetchError(`Request ${id} to ${url} returned with error code ${response.status}.`, response, body, parseErrorCode(body))
     }
 }

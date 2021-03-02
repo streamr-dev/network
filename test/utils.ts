@@ -237,7 +237,7 @@ export function getPublishTestMessages(client: StreamrClient, defaultOpts = {}) 
 
 export const createMockAddress = () => '0x000000000000000000000000000' + Date.now()
 
-export const createClient = (providerSidechain: providers.JsonRpcProvider) => {
+export const createClient = (providerSidechain?: providers.JsonRpcProvider) => {
     const wallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
     return new StreamrClient({
         ...config.clientOptions,

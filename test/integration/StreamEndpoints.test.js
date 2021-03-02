@@ -51,6 +51,10 @@ function TestStreamEndpoints(getName) {
             expect(stream.requireSignedData).toBe(true)
             expect(stream.requireEncryptedData).toBe(true)
         })
+
+        it('invalid id', () => {
+            return expect(() => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow()
+        })
     })
 
     describe('getStream', () => {
@@ -62,15 +66,35 @@ function TestStreamEndpoints(getName) {
 
         it('get a non-existing Stream', async () => {
             const id = `${wallet.address}/StreamEndpoints-integration-nonexisting-${Date.now()}`
-            const stream = await client.getStream(id)
-            expect(stream).toBe(undefined)
+            return expect(() => client.getStream(id)).rejects.toThrow()
+        })
+    })
+
+    describe('getStreamByName', () => {
+        it('get an existing Stream', async () => {
+            const stream = await client.createStream()
+            const existingStream = await client.getStreamByName(stream.name)
+            expect(existingStream.id).toEqual(stream.id)
+        })
+
+        it('get a non-existing Stream', async () => {
+            const name = `${wallet.address}/StreamEndpoints-integration-nonexisting-${Date.now()}`
+            return expect(() => client.getStreamByName(name)).rejects.toThrow()
         })
     })
 
     describe('getOrCreate', () => {
-        it('getOrCreate an existing Stream', async () => {
+        it('getOrCreate an existing Stream by name', async () => {
             const existingStream = await client.getOrCreateStream({
                 name: createdStream.name,
+            })
+            expect(existingStream.id).toBe(createdStream.id)
+            expect(existingStream.name).toBe(createdStream.name)
+        })
+
+        it('getOrCreate an existing Stream by id', async () => {
+            const existingStream = await client.getOrCreateStream({
+                id: createdStream.id,
             })
             expect(existingStream.id).toBe(createdStream.id)
             expect(existingStream.name).toBe(createdStream.name)
@@ -81,7 +105,6 @@ function TestStreamEndpoints(getName) {
             const newStream = await client.getOrCreateStream({
                 name: newName,
             })
-
             expect(newStream.name).toEqual(newName)
         })
 
@@ -90,7 +113,6 @@ function TestStreamEndpoints(getName) {
             const newStream = await client.getOrCreateStream({
                 id: newId,
             })
-
             expect(newStream.id).toEqual(newId)
         })
     })
@@ -201,7 +223,7 @@ function TestStreamEndpoints(getName) {
     describe('Stream deletion', () => {
         it('Stream.delete', async () => {
             await createdStream.delete()
-            expect(await client.getStream(createdStream.id)).toBe(undefined)
+            return expect(() => client.getStream(createdStream.id)).rejects.toThrow()
         })
     })
 

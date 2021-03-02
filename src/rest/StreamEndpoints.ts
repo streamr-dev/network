@@ -10,9 +10,10 @@ import Stream, { StreamOperation, StreamProperties } from '../stream'
 import StreamPart from '../stream/StreamPart'
 import { isKeyExchangeStream } from '../stream/KeyExchange'
 
-import authFetch from './authFetch'
+import authFetch, { AuthFetchError } from './authFetch'
 import { Todo } from '../types'
 import StreamrClient from '../StreamrClient'
+import { ErrorCode } from './ErrorCode'
 // TODO change this import when streamr-client-protocol exports StreamMessage type or the enums types directly
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
 
@@ -97,18 +98,11 @@ export class StreamEndpoints {
         }
 
         const url = getEndpointUrl(this.client.options.restUrl, 'streams', streamId)
-        try {
-            const json = await authFetch<StreamProperties>(url, this.client.session)
-            return new Stream(this.client, json)
-        } catch (e) {
-            if (e.response && e.response.status === 404) {
-                return undefined
-            }
-            throw e
-        }
+        const json = await authFetch<StreamProperties>(url, this.client.session)
+        return new Stream(this.client, json)
     }
 
-    async listStreams(query: StreamListQuery = {}) {
+    async listStreams(query: StreamListQuery = {}): Promise<Stream[]> {
         this.client.debug('listStreams %o', {
             query,
         })
@@ -126,10 +120,10 @@ export class StreamEndpoints {
             // @ts-expect-error
             public: false,
         })
-        return json[0] ? new Stream(this.client, json[0]) : undefined
+        return json[0] ? new Stream(this.client, json[0]) : Promise.reject(new AuthFetchError('', undefined, undefined, ErrorCode.NOT_FOUND))
     }
 
-    async createStream(props: StreamProperties) {
+    async createStream(props?: StreamProperties) {
         this.client.debug('createStream %o', {
             props,
         })
@@ -142,34 +136,31 @@ export class StreamEndpoints {
                 body: JSON.stringify(props),
             },
         )
-        return json ? new Stream(this.client, json) : undefined
+        return new Stream(this.client, json)
     }
 
     async getOrCreateStream(props: { id?: string, name?: string }) {
         this.client.debug('getOrCreateStream %o', {
             props,
         })
-        let json: any
-
         // Try looking up the stream by id or name, whichever is defined
-        if (props.id) {
-            json = await this.getStream(props.id)
-        } else if (props.name) {
-            json = await this.getStreamByName(props.name)
+        try {
+            if (props.id) {
+                const stream = await this.getStream(props.id)
+                return stream
+            }
+            const stream = await this.getStreamByName(props.name!)
+            return stream
+        } catch (err) {
+            const isNotFoundError = (err instanceof AuthFetchError) && (err.errorCode === ErrorCode.NOT_FOUND)
+            if (!isNotFoundError) {
+                throw err
+            }
         }
 
-        // If not found, try creating the stream
-        if (!json) {
-            json = await this.createStream(props)
-            debug('Created stream: %s (%s)', props.name, json.id)
-        }
-
-        // If still nothing, throw
-        if (!json) {
-            throw new Error(`Unable to find or create stream: ${props.name || props.id}`)
-        } else {
-            return new Stream(this.client, json)
-        }
+        const stream = await this.createStream(props)
+        debug('Created stream: %s (%s)', props.name, stream.id)
+        return stream
     }
 
     async getStreamPublishers(streamId: string) {
