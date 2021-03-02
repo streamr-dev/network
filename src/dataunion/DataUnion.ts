@@ -6,7 +6,7 @@ import { TransactionReceipt, TransactionResponse } from '@ethersproject/provider
 import debug from 'debug'
 import { Contracts } from './Contracts'
 import StreamrClient from '../StreamrClient'
-import { EthereumAddress, Todo } from '../types'
+import { EthereumAddress } from '../types'
 import { until, getEndpointUrl } from '../utils'
 import authFetch from '../rest/authFetch'
 
@@ -296,7 +296,7 @@ export class DataUnion {
         return +adminFeeBN.toString() / 1e18
     }
 
-    async getAdminAddress(): Promise<Todo> {
+    async getAdminAddress(): Promise<EthereumAddress> {
         const duMainnet = this.getContracts().getMainnetContractReadOnly(this.contractAddress)
         return duMainnet.owner()
     }
@@ -446,7 +446,7 @@ export class DataUnion {
     /**
      * Admin: set admin fee (between 0.0 and 1.0) for the data union
      */
-    async setAdminFee(newFeeFraction: number): Promise<Todo> {
+    async setAdminFee(newFeeFraction: number): Promise<TransactionReceipt> {
         if (newFeeFraction < 0 || newFeeFraction > 1) {
             throw new Error('newFeeFraction argument must be a number between 0...1, got: ' + newFeeFraction)
         }
@@ -539,7 +539,7 @@ export class DataUnion {
     // template for withdraw functions
     // client could be replaced with AMB (mainnet and sidechain)
     private async _executeWithdraw(
-        getWithdrawTxFunc: () => Promise<Todo & { events: any[] }>,
+        getWithdrawTxFunc: () => Promise<TransactionResponse>,
         recipientAddress: EthereumAddress,
         options: DataUnionWithdrawOptions = {}
     ): Promise<TransactionReceipt> {

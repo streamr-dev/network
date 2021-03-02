@@ -1,6 +1,6 @@
 import { getCreate2Address, isAddress } from '@ethersproject/address'
 import { arrayify, hexZeroPad } from '@ethersproject/bytes'
-import { Contract } from '@ethersproject/contracts'
+import { Contract, ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
 import { verifyMessage } from '@ethersproject/wallet'
@@ -218,14 +218,14 @@ export class Contracts {
         return trAMB
     }
 
-    async payForSignatureTransport(tr: { events: any[] }, options: { pollingIntervalMs?: number, retryTimeoutMs?: number } = {}) {
+    async payForSignatureTransport(tr: ContractReceipt, options: { pollingIntervalMs?: number, retryTimeoutMs?: number } = {}) {
         const {
             pollingIntervalMs = 1000,
             retryTimeoutMs = 60000,
         } = options
-        log(`Got receipt, filtering UserRequestForSignature from ${tr.events.length} events...`)
+        log(`Got receipt, filtering UserRequestForSignature from ${tr.events!.length} events...`)
         // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData);
-        const sigEventArgsArray = tr.events.filter((e: Todo) => e.event === 'UserRequestForSignature').map((e: Todo) => e.args)
+        const sigEventArgsArray = tr.events!.filter((e: Todo) => e.event === 'UserRequestForSignature').map((e: Todo) => e.args)
         if (sigEventArgsArray.length < 1) {
             throw new Error("No UserRequestForSignature events emitted from withdraw transaction, can't transport withdraw to mainnet")
         }
@@ -309,7 +309,7 @@ export class Contracts {
             duName,
             ethersOptions
         )
-        const tr = await tx.wait(confirmations)
+        await tx.wait(confirmations)
 
         log(`Data Union "${duName}" (mainnet: ${duMainnetAddress}, sidechain: ${duSidechainAddress}) deployed to mainnet, waiting for side-chain...`)
         await until(
@@ -319,8 +319,6 @@ export class Contracts {
         )
 
         const dataUnion = new Contract(duMainnetAddress, dataUnionMainnetABI, mainnetWallet)
-        // @ts-expect-error
-        dataUnion.deployTxReceipt = tr
         // @ts-expect-error
         dataUnion.sidechain = new Contract(duSidechainAddress, dataUnionSidechainABI, sidechainProvider)
         return dataUnion
