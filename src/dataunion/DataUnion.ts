@@ -92,7 +92,7 @@ export class DataUnion {
     /**
      * Send a joinRequest, or get into data union instantly with a data union secret
      */
-    async join(secret?: string): Promise<Todo> {
+    async join(secret?: string): Promise<JoinResponse> {
         const memberAddress = this.client.getAddress() as string
         const body: any = {
             memberAddress
@@ -100,7 +100,7 @@ export class DataUnion {
         if (secret) { body.secret = secret }
 
         const url = getEndpointUrl(this.client.options.restUrl, 'dataunions', this.contractAddress, 'joinRequests')
-        const response = await authFetch(
+        const response = await authFetch<JoinResponse>(
             url,
             this.client.session,
             {
@@ -330,7 +330,7 @@ export class DataUnion {
      */
     async createSecret(name: string = 'Untitled Data Union Secret'): Promise<string> {
         const url = getEndpointUrl(this.client.options.restUrl, 'dataunions', this.contractAddress, 'secrets')
-        const res = await authFetch(
+        const res = await authFetch<{secret: string}>(
             url,
             this.client.session,
             {

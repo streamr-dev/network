@@ -87,7 +87,7 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
         }
 
         const start = Date.now()
-        let last
+        let last: any
         // eslint-disable-next-line no-constant-condition
         let found = false
         while (!found) {
@@ -98,7 +98,7 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
                     duration
                 }, {
                     publishRequest,
-                    last: last.map((l: any) => l.content),
+                    last: last!.map((l: any) => l.content),
                 })
                 const err: any = new Error(`timed out after ${duration}ms waiting for message`)
                 err.publishRequest = publishRequest

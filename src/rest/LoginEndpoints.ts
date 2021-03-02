@@ -3,8 +3,16 @@ import { getEndpointUrl } from '../utils'
 
 import authFetch, { AuthFetchError } from './authFetch'
 
+export interface UserDetails {
+    name: string
+    username: string
+    imageUrlSmall?: string
+    imageUrlLarge?: string
+    lastLogin?: string
+}
+
 async function getSessionToken(url: string, props: any) {
-    return authFetch(
+    return authFetch<{ token: string }>(
         url,
         undefined,
         {
@@ -30,7 +38,7 @@ export class LoginEndpoints {
             address,
         })
         const url = getEndpointUrl(this.client.options.restUrl, 'login', 'challenge', address)
-        return authFetch(
+        return authFetch<{ challenge: string }>(
             url,
             undefined,
             {
@@ -39,7 +47,7 @@ export class LoginEndpoints {
         )
     }
 
-    async sendChallengeResponse(challenge: string, signature: string, address: string) {
+    async sendChallengeResponse(challenge: { challenge: string }, signature: string, address: string) {
         this.client.debug('sendChallengeResponse %o', {
             challenge,
             signature,
@@ -98,12 +106,12 @@ export class LoginEndpoints {
 
     async getUserInfo() {
         this.client.debug('getUserInfo')
-        return authFetch(`${this.client.options.restUrl}/users/me`, this.client.session)
+        return authFetch<UserDetails>(`${this.client.options.restUrl}/users/me`, this.client.session)
     }
 
-    async logoutEndpoint() {
+    async logoutEndpoint(): Promise<void> {
         this.client.debug('logoutEndpoint')
-        return authFetch(`${this.client.options.restUrl}/logout`, this.client.session, {
+        await authFetch(`${this.client.options.restUrl}/logout`, this.client.session, {
             method: 'POST',
         })
     }
