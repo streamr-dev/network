@@ -10,10 +10,9 @@ import Stream, { StreamOperation, StreamProperties } from '../stream'
 import StreamPart from '../stream/StreamPart'
 import { isKeyExchangeStream } from '../stream/KeyExchange'
 
-import authFetch, { AuthFetchError } from './authFetch'
+import authFetch, { ErrorCode, NotFoundError } from './authFetch'
 import { Todo } from '../types'
 import StreamrClient from '../StreamrClient'
-import { ErrorCode } from './ErrorCode'
 // TODO change this import when streamr-client-protocol exports StreamMessage type or the enums types directly
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
 
@@ -120,7 +119,7 @@ export class StreamEndpoints {
             // @ts-expect-error
             public: false,
         })
-        return json[0] ? new Stream(this.client, json[0]) : Promise.reject(new AuthFetchError('', undefined, undefined, ErrorCode.NOT_FOUND))
+        return json[0] ? new Stream(this.client, json[0]) : Promise.reject(new NotFoundError('Stream: name=' + name))
     }
 
     async createStream(props?: StreamProperties) {
@@ -139,7 +138,7 @@ export class StreamEndpoints {
         return new Stream(this.client, json)
     }
 
-    async getOrCreateStream(props: { id?: string, name?: string }) {
+    async getOrCreateStream(props: { id: string, name?: never } | { id?: never, name: string }) {
         this.client.debug('getOrCreateStream %o', {
             props,
         })
@@ -151,9 +150,8 @@ export class StreamEndpoints {
             }
             const stream = await this.getStreamByName(props.name!)
             return stream
-        } catch (err) {
-            const isNotFoundError = (err instanceof AuthFetchError) && (err.errorCode === ErrorCode.NOT_FOUND)
-            if (!isNotFoundError) {
+        } catch (err: any) {
+            if (err.errorCode !== ErrorCode.NOT_FOUND) {
                 throw err
             }
         }

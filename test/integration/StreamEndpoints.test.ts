@@ -1,4 +1,6 @@
-import { ethers } from 'ethers'
+import { ethers, Wallet } from 'ethers'
+import { NotFoundError, ValidationError } from '../../src/rest/authFetch'
+import Stream, { StreamOperation } from '../../src/stream'
 
 import StreamrClient from '../../src/StreamrClient'
 import { uid } from '../utils'
@@ -9,17 +11,17 @@ import config from './config'
  * These tests should be run in sequential order!
  */
 
-function TestStreamEndpoints(getName) {
-    let client
-    let wallet
-    let createdStream
+function TestStreamEndpoints(getName: () => string) {
+    let client: StreamrClient
+    let wallet: Wallet
+    let createdStream: Stream
 
     const createClient = (opts = {}) => new StreamrClient({
         ...config.clientOptions,
         autoConnect: false,
         autoDisconnect: false,
         ...opts,
-    })
+    } as any)
 
     beforeAll(() => {
         wallet = ethers.Wallet.createRandom()
@@ -53,7 +55,7 @@ function TestStreamEndpoints(getName) {
         })
 
         it('invalid id', () => {
-            return expect(() => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow()
+            return expect(() => client.createStream({ id: 'invalid.eth/foobar' })).rejects.toThrow(ValidationError)
         })
     })
 
@@ -66,7 +68,7 @@ function TestStreamEndpoints(getName) {
 
         it('get a non-existing Stream', async () => {
             const id = `${wallet.address}/StreamEndpoints-integration-nonexisting-${Date.now()}`
-            return expect(() => client.getStream(id)).rejects.toThrow()
+            return expect(() => client.getStream(id)).rejects.toThrow(NotFoundError)
         })
     })
 
@@ -79,7 +81,7 @@ function TestStreamEndpoints(getName) {
 
         it('get a non-existing Stream', async () => {
             const name = `${wallet.address}/StreamEndpoints-integration-nonexisting-${Date.now()}`
-            return expect(() => client.getStreamByName(name)).rejects.toThrow()
+            return expect(() => client.getStreamByName(name)).rejects.toThrow(NotFoundError)
         })
     })
 
@@ -205,25 +207,25 @@ function TestStreamEndpoints(getName) {
         })
 
         it('Stream.hasPermission', async () => {
-            expect(await createdStream.hasPermission('stream_share', wallet.address)).toBeTruthy()
+            expect(await createdStream.hasPermission(StreamOperation.STREAM_SHARE, wallet.address)).toBeTruthy()
         })
 
         it('Stream.grantPermission', async () => {
-            await createdStream.grantPermission('stream_subscribe', null) // public read
-            expect(await createdStream.hasPermission('stream_subscribe', null)).toBeTruthy()
+            await createdStream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, undefined) // public read
+            expect(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)).toBeTruthy()
         })
 
         it('Stream.revokePermission', async () => {
-            const publicRead = await createdStream.hasPermission('stream_subscribe', null)
-            await createdStream.revokePermission(publicRead.id)
-            expect(!(await createdStream.hasPermission('stream_subscribe', null))).toBeTruthy()
+            const publicRead = await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined)
+            await createdStream.revokePermission(publicRead!.id)
+            expect(!(await createdStream.hasPermission(StreamOperation.STREAM_SUBSCRIBE, undefined))).toBeTruthy()
         })
     })
 
     describe('Stream deletion', () => {
         it('Stream.delete', async () => {
             await createdStream.delete()
-            return expect(() => client.getStream(createdStream.id)).rejects.toThrow()
+            return expect(() => client.getStream(createdStream.id)).rejects.toThrow(NotFoundError)
         })
     })
 

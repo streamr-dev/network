@@ -2,8 +2,13 @@ import fetch, { Response } from 'node-fetch'
 import Debug from 'debug'
 
 import { getVersionString } from '../utils'
-import { ErrorCode, parseErrorCode } from './ErrorCode'
 import Session from '../Session'
+
+export enum ErrorCode {
+    NOT_FOUND = 'NOT_FOUND',
+    VALIDATION_ERROR = 'VALIDATION_ERROR',
+    UNKNOWN = 'UNKNOWN'
+}
 
 export const DEFAULT_HEADERS = {
     'Streamr-Client': `streamr-client-javascript/${getVersionString()}`,
@@ -12,20 +17,49 @@ export const DEFAULT_HEADERS = {
 export class AuthFetchError extends Error {
     response?: Response
     body?: any
-    errorCode?: ErrorCode
+    errorCode: ErrorCode
 
     constructor(message: string, response?: Response, body?: any, errorCode?: ErrorCode) {
+        const typePrefix = errorCode ? errorCode + ': ' : ''
         // add leading space if there is a body set
         const bodyMessage = body ? ` ${(typeof body === 'string' ? body : JSON.stringify(body).slice(0, 1024))}...` : ''
-        super(message + bodyMessage)
+        super(typePrefix + message + bodyMessage)
         this.response = response
         this.body = body
-        this.errorCode = errorCode
+        this.errorCode = errorCode || ErrorCode.UNKNOWN
 
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
     }
+}
+
+export class ValidationError extends AuthFetchError {
+    constructor(message: string, response?: Response, body?: any) {
+        super(message, response, body, ErrorCode.VALIDATION_ERROR)
+    }
+}
+
+export class NotFoundError extends AuthFetchError {
+    constructor(message: string, response?: Response, body?: any) {
+        super(message, response, body, ErrorCode.NOT_FOUND)
+    }
+}
+
+const ERROR_TYPES = new Map<ErrorCode, typeof AuthFetchError>()
+ERROR_TYPES.set(ErrorCode.VALIDATION_ERROR, ValidationError)
+ERROR_TYPES.set(ErrorCode.NOT_FOUND, NotFoundError)
+ERROR_TYPES.set(ErrorCode.UNKNOWN, AuthFetchError)
+
+const parseErrorCode = (body: string) => {
+    let json
+    try {
+        json = JSON.parse(body)
+    } catch (err) {
+        return ErrorCode.UNKNOWN
+    }
+    const { code } = json
+    return code in ErrorCode ? code : ErrorCode.UNKNOWN
 }
 
 const debug = Debug('StreamrClient:utils:authfetch') // TODO: could use the debug instance from the client? (e.g. client.debug.extend('authFetch'))
@@ -78,6 +112,8 @@ export default async function authFetch<T extends object>(url: string, session?:
         return authFetch<T>(url, session, options, true)
     } else {
         debug('%d %s – failed', id, url)
-        throw new AuthFetchError(`Request ${id} to ${url} returned with error code ${response.status}.`, response, body, parseErrorCode(body))
+        const errorCode = parseErrorCode(body)
+        const ErrorClass = ERROR_TYPES.get(errorCode)!
+        throw new ErrorClass(`Request ${id} to ${url} returned with error code ${response.status}.`, response, body, errorCode)
     }
 }

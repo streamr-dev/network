@@ -6,6 +6,7 @@ import StreamrClient from '../StreamrClient'
 import { Todo } from '../types'
 
 interface StreamPermisionBase {
+    id: number
     operation: StreamOperation
 }
 
@@ -72,6 +73,8 @@ export default class Stream {
     // TODO add field definitions for all fields
     // @ts-expect-error
     id: string
+    // @ts-expect-error
+    name: string
     config: {
         fields: Field[];
     } = { fields: [] }
