@@ -49,7 +49,8 @@ export default function Validator(client, opts) {
     const validate = pOrderedResolve(async (msg) => {
         if (msg.messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE) {
             const res = GroupKeyErrorResponse.fromArray(msg.getParsedContent())
-            const err = new ValidationError(`GroupKeyErrorResponse: ${res.errorMessage}`, msg)
+            const err = new ValidationError(`${client.id} GroupKeyErrorResponse: ${res.errorMessage}`, msg)
+            err.streamMessage = msg
             err.code = res.errorCode
             throw err
         }
@@ -64,7 +65,14 @@ export default function Validator(client, opts) {
         }
 
         // In all other cases validate using the validator
-        await validator.validate(msg) // will throw with appropriate validation failure
+        // will throw with appropriate validation failure
+        await validator.validate(msg).catch((err) => {
+            if (!err.streamMessage) {
+                err.streamMessage = msg // eslint-disable-line no-param-reassign
+            }
+            throw err
+        })
+
         return msg
     })
 

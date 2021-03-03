@@ -17,12 +17,14 @@ export function iteratorFinally(iterable, onFinally) {
     let started = false
     let ended = false
     let error
-
+    let onFinallyTask
     // ensure finally only runs once
-    const onFinallyOnce = pMemoize(onFinally, {
-        cachePromiseRejection: true, // don't run again if failed
-        cacheKey: () => true // always same key
-    })
+    const onFinallyOnce = (err) => {
+        if (!onFinallyTask) {
+            onFinallyTask = Promise.resolve().then(() => onFinally(err))
+        }
+        return onFinallyTask
+    }
 
     // wraps return/throw to call onFinally even if generator was never started
     const handleFinally = (originalFn) => async (...args) => {

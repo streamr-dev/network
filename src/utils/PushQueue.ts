@@ -169,7 +169,7 @@ export default class PushQueue<T> {
         }
 
         if (end) {
-            this.end()
+            await this.end()
         }
 
         return Promise.resolve()
@@ -223,6 +223,9 @@ export default class PushQueue<T> {
     }
 
     async throw(err: Error) {
+        if (this.finished || this.ended) {
+            return
+        }
         this.finished = true
         const p = this.nextQueue.shift()
         if (p) {

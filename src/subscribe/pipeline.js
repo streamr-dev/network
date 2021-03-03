@@ -24,7 +24,28 @@ async function collect(src) {
 
 export default function MessagePipeline(client, opts = {}, onFinally = async () => {}) {
     const options = validateOptions(opts)
-    const { key, afterSteps = [], beforeSteps = [], onError = (err) => { throw err } } = options
+    const { key, afterSteps = [], beforeSteps = [] } = options
+    const seenErrors = new WeakSet()
+    const onErrorFn = options.onError ? options.onError : (error) => { throw error }
+    const onError = async (id, err) => {
+        // throw err
+        // await onErrorFn(err).catch(() => {})
+        // return
+        // throw err
+        // try {
+        if (seenErrors.has(err)) {
+            return
+            // throw err
+        }
+        console.log('onError', client.id, id, err.message.slice(0, 180))
+        console.log(onErrorFn.toString())
+        seenErrors.add(err)
+            await onErrorFn(err)
+        // } catch (errr) {
+            // console.log('onErrorFn throws', errr)
+        // }
+    }
+
     const id = counterId('MessagePipeline') + key
 
     /* eslint-disable object-curly-newline */
@@ -64,20 +85,25 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         async function* ValidateMessages(src) {
             for await (const streamMessage of src) {
                 try {
+                    client.debug('validate >', streamMessage)
                     await validate(streamMessage)
                 } catch (err) {
                     ignoreMessages.add(streamMessage)
-                    await onError(err)
+                    await onError('validate', err)
                 }
                 yield streamMessage
             }
         },
         // decrypt
         async function* DecryptMessages(src) {
-            yield* decrypt(src, async (err, streamMessage) => {
-                ignoreMessages.add(streamMessage)
-                await onError(err)
-            })
+            try {
+                yield* decrypt(src, async (err, streamMessage) => {
+                    ignoreMessages.add(streamMessage)
+                    await onError('decrypt', err)
+                })
+            } catch (err) {
+                await onError('validate', err)
+            }
         },
         // parse content
         async function* ParseMessages(src) {
@@ -86,7 +112,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
                     streamMessage.getParsedContent()
                 } catch (err) {
                     ignoreMessages.add(streamMessage)
-                    await onError(err)
+                    await onError('parse', err)
                 }
                 yield streamMessage
             }
@@ -111,17 +137,18 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
                         break
                     }
                 } catch (err) {
-                    await onError(err)
+                    await onError('isBye', err)
                 }
             }
         },
         // custom pipeline steps
         ...afterSteps
     ], async (err, ...args) => {
+        console.log('pipeline ended with ', err && err.message)
         await msgStream.cancel(err)
         try {
             if (err) {
-                await onError(err)
+                await onError('in finally', err)
             }
         } finally {
             await onFinally(err, ...args)

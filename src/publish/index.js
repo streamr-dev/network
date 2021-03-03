@@ -122,6 +122,7 @@ function getCreateStreamMessage(client) {
             [streamId, streamPartition, publisherId, msgChainId].join('|')
         ),
         ...cacheOptions,
+        maxAge: undefined
     }), {
         clear() {
             mem.clear(getMsgChainer)

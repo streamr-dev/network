@@ -11,20 +11,42 @@ function joinMessages(msgs: (string | undefined)[]): string {
     return msgs.filter(Boolean).join('\n')
 }
 
+function getStacks(err: Error | AggregatedError) {
+    if (err instanceof AggregatedError) {
+        return [
+            err.ownStack,
+            ...[...err.errors].map(({ stack }) => stack)
+        ]
+    }
+
+    return [err.stack]
+}
+
+function joinStackTraces(errs: Error[]): string {
+    return errs.flatMap((err) => getStacks(err)).filter(Boolean).join('\n')
+}
+
 export default class AggregatedError extends Error {
     errors: Set<Error>
-    ownMessage?: string
+    ownMessage: string
+    ownStack?: string
     constructor(errors: Error[] = [], errorMessage = '') {
         const message = joinMessages([
             errorMessage,
             ...errors.map((err) => err.message)
         ])
         super(message)
+        errors.forEach((err) => {
+            Object.assign(this, err)
+        })
+        this.message = message
         this.ownMessage = errorMessage
         this.errors = new Set(errors)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
+        this.ownStack = this.stack
+        this.stack = joinStackTraces(errors)
     }
 
     /**
