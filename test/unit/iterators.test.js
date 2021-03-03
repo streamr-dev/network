@@ -75,6 +75,76 @@ function IteratorTest(name, fn) {
             expect(received).toEqual(expected.slice(0, MAX_ITEMS))
         })
 
+        it('can .throw() mid-iteration', async () => {
+            const received = []
+            const err = new Error('expected err')
+            await expect(async () => {
+                const it = fn()
+                for await (const msg of it) {
+                    received.push(msg)
+                    if (received.length === MAX_ITEMS) {
+                        await it.throw(err)
+                    }
+                }
+            }).rejects.toThrow(err)
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+        })
+
+        it('can .throw() mid-iteration and run delayed finally block', async () => {
+            const received = []
+            const err = new Error('expected err')
+            const onFinally = jest.fn()
+            const onFinallyDelayed = jest.fn(async () => {
+                await wait(100)
+                return onFinally()
+            })
+
+            await expect(async () => {
+                const it = fn()
+                try {
+                    for await (const msg of it) {
+                        received.push(msg)
+                        if (received.length === MAX_ITEMS) {
+                            await it.throw(err)
+                        }
+                    }
+                } finally {
+                    await onFinallyDelayed()
+                }
+            }).rejects.toThrow(err)
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(onFinallyDelayed).toHaveBeenCalledTimes(1)
+            expect(onFinally).toHaveBeenCalledTimes(1)
+        })
+
+        it('can throw in delayed finally block', async () => {
+            const received = []
+            const err = new Error('expected err')
+            const onFinally = jest.fn()
+            const onFinallyDelayed = jest.fn(async () => {
+                await wait(50)
+                await onFinally()
+                throw err
+            })
+
+            await expect(async () => {
+                const it = fn()
+                try {
+                    for await (const msg of it) {
+                        received.push(msg)
+                        if (received.length === MAX_ITEMS) {
+                            break
+                        }
+                    }
+                } finally {
+                    await onFinallyDelayed()
+                }
+            }).rejects.toThrow(err)
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(onFinallyDelayed).toHaveBeenCalledTimes(1)
+            expect(onFinally).toHaveBeenCalledTimes(1)
+        })
+
         it('throws parent mid-iteration', async () => {
             const received = []
             const err = new Error('expected err')
@@ -893,18 +963,31 @@ describe('Iterator Utils', () => {
     describe('pipeline', () => {
         let onFinally
         let onFinallyAfter
+        let errors = []
+        let expectErrors = []
 
         beforeEach(() => {
-            onFinallyAfter = jest.fn()
-            onFinally = jest.fn(async () => {
+            errors = []
+            expectErrors = []
+            const errorsLocal = errors
+            onFinallyAfter = jest.fn((err) => {
+                if (errorsLocal !== errors) { return } // cross-contaminated test
+
+                if (err) {
+                    errors.push(err)
+                }
+            })
+
+            onFinally = jest.fn(async (err) => {
                 await wait(WAIT)
-                onFinallyAfter()
+                onFinallyAfter(err)
             })
         })
 
         afterEach(() => {
             expect(onFinally).toHaveBeenCalledTimes(1)
             expect(onFinallyAfter).toHaveBeenCalledTimes(1)
+            expect(errors).toEqual(expectErrors)
         })
 
         describe('baseline', () => {
@@ -1061,6 +1144,7 @@ describe('Iterator Utils', () => {
             const afterStep1 = jest.fn()
             const afterStep2 = jest.fn()
             const err = new Error('expected')
+            expectErrors = [err]
 
             const p = pipeline([
                 generate(),
@@ -1103,6 +1187,125 @@ describe('Iterator Utils', () => {
             expect(afterStep2).toHaveBeenCalledTimes(1)
         })
 
+        it('feeds items from one to next, stops & errors all when middle .throws()', async () => {
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const afterStep1 = jest.fn()
+            const afterStep2 = jest.fn()
+            const catchStep1 = jest.fn()
+            const catchStep2 = jest.fn()
+            const err = new Error('expected')
+            expectErrors = [err]
+
+            const p = pipeline([
+                generate(),
+                async function* Step1(s) {
+                    try {
+                        for await (const msg of s) {
+                            receivedStep1.push(msg)
+                            yield msg * 2
+                            if (receivedStep1.length === MAX_ITEMS) {
+                                await s.throw(err)
+                            }
+                        }
+                    } catch (error) {
+                        catchStep1(error)
+                        throw error
+                    } finally {
+                        afterStep1()
+                    }
+                },
+                async function* Step2(s) {
+                    try {
+                        for await (const msg of s) {
+                            receivedStep2.push(msg)
+                            yield msg * 10
+                        }
+                    } catch (error) {
+                        catchStep2(error)
+                        throw error
+                    } finally {
+                        afterStep2()
+                    }
+                }
+            ], onFinally)
+
+            const received = []
+            await expect(async () => {
+                for await (const msg of p) {
+                    received.push(msg)
+                }
+            }).rejects.toThrow(err)
+
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS).map((v) => v * 20))
+            expect(receivedStep2).toEqual(expected.slice(0, MAX_ITEMS).map((v) => v * 2))
+            expect(receivedStep1).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(afterStep1).toHaveBeenCalledTimes(1)
+            expect(afterStep2).toHaveBeenCalledTimes(1)
+            expect(catchStep1).toHaveBeenCalledTimes(1)
+            expect(catchStep2).toHaveBeenCalledTimes(1)
+        })
+
+        it('feeds items from one to next, stops all when end .throws()', async () => {
+            const receivedStep1 = []
+            const receivedStep2 = []
+            const afterStep1 = jest.fn()
+            const afterStep2 = jest.fn(async () => {
+                throw new Error('oops')
+            })
+            const catchStep1 = jest.fn()
+            const catchStep2 = jest.fn()
+            const err = new Error('expected')
+            expectErrors = [err]
+
+            const p = pipeline([
+                generate(),
+                async function* Step1(s) {
+                    try {
+                        for await (const msg of s) {
+                            receivedStep1.push(msg)
+                            yield msg * 2
+                        }
+                    } catch (error) {
+                        catchStep1(error)
+                        throw error
+                    } finally {
+                        afterStep1()
+                    }
+                },
+                async function* Step2(s) {
+                    try {
+                        for await (const msg of s) {
+                            receivedStep2.push(msg)
+                            yield msg * 10
+                            if (receivedStep2.length === MAX_ITEMS) {
+                                await s.throw(err)
+                            }
+                        }
+                    } catch (error) {
+                        catchStep2(error)
+                        throw error
+                    } finally {
+                        await afterStep2()
+                    }
+                }
+            ], onFinally)
+
+            const received = []
+            await expect(async () => {
+                for await (const msg of p) {
+                    received.push(msg)
+                }
+            }).rejects.toThrow(err)
+
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS).map((v) => v * 20))
+            expect(receivedStep2).toEqual(expected.slice(0, MAX_ITEMS).map((v) => v * 2))
+            expect(receivedStep1).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(afterStep1).toHaveBeenCalledTimes(1)
+            expect(afterStep2).toHaveBeenCalledTimes(1)
+            expect(catchStep1).toHaveBeenCalledTimes(1)
+            expect(catchStep2).toHaveBeenCalledTimes(1)
+        })
         it('handles errors before', async () => {
             const err = new Error('expected')
 
