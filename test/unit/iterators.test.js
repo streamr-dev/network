@@ -288,6 +288,51 @@ describe('Iterator Utils', () => {
             expect(received).toEqual([])
         })
 
+        it('errored before start iterator works if onFinally is async', async () => {
+            const received = []
+            const errs = []
+            const onFinallyDelayed = jest.fn(async (err) => {
+                errs.push(err)
+                await wait(100)
+                return onFinally(err)
+            })
+            const itr = iteratorFinally(generate(), onFinallyDelayed)
+            const err = new Error('expected err 1')
+            await expect(async () => {
+                await itr.throw(err)
+            }).rejects.toThrow(err)
+            for await (const msg of itr) {
+                received.push(msg)
+            }
+            expect(received).toEqual([])
+            expect(onFinallyDelayed).toHaveBeenCalledTimes(1)
+            expect(errs).toEqual([err])
+        })
+
+        it('errored iterator works if onFinally is async', async () => {
+            const received = []
+            const errs = []
+            const onFinallyDelayed = jest.fn(async (err) => {
+                errs.push(err)
+                await wait(100)
+                return onFinally(err)
+            })
+            const itr = iteratorFinally(generate(), onFinallyDelayed)
+            const err = new Error('expected err 2')
+            await expect(async () => {
+                for await (const msg of itr) {
+                    received.push(msg)
+                    if (received.length === MAX_ITEMS) {
+                        await itr.throw(err)
+                    }
+                }
+            }).rejects.toThrow(err)
+
+            expect(received).toEqual(expected.slice(0, MAX_ITEMS))
+            expect(onFinallyDelayed).toHaveBeenCalledTimes(1)
+            expect(errs).toEqual([err])
+        })
+
         describe('nesting', () => {
             let onFinallyInnerAfter
             let onFinallyInner
