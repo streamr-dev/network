@@ -24,28 +24,7 @@ async function collect(src) {
 
 export default function MessagePipeline(client, opts = {}, onFinally = async () => {}) {
     const options = validateOptions(opts)
-    const { key, afterSteps = [], beforeSteps = [] } = options
-    const seenErrors = new WeakSet()
-    const onErrorFn = options.onError ? options.onError : (error) => { throw error }
-    const onError = async (id, err) => {
-        // throw err
-        // await onErrorFn(err).catch(() => {})
-        // return
-        // throw err
-        // try {
-        if (seenErrors.has(err)) {
-            return
-            // throw err
-        }
-        console.log('onError', client.id, id, err.message.slice(0, 180))
-        console.log(onErrorFn.toString())
-        seenErrors.add(err)
-            await onErrorFn(err)
-        // } catch (errr) {
-            // console.log('onErrorFn throws', errr)
-        // }
-    }
-
+    const { key, afterSteps = [], beforeSteps = [], onError = (err) => { throw err } } = options
     const id = counterId('MessagePipeline') + key
 
     /* eslint-disable object-curly-newline */
@@ -112,7 +91,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
                     streamMessage.getParsedContent()
                 } catch (err) {
                     ignoreMessages.add(streamMessage)
-                    await onError('parse', err)
+                    await onError(err)
                 }
                 yield streamMessage
             }
@@ -137,7 +116,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
                         break
                     }
                 } catch (err) {
-                    await onError('isBye', err)
+                    await onError(err)
                 }
             }
         },
@@ -147,7 +126,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         // await msgStream.cancel(err)
         try {
             if (err) {
-                await onError('in finally', err)
+                await onError(err)
             }
         } finally {
             await onFinally(err, ...args)

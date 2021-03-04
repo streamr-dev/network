@@ -44,7 +44,10 @@ export class Subscription extends Emitter {
         this.client = client
         this.options = validateOptions(opts)
         this.key = this.options.key
-        this.id = counterId(`Subscription.${this.key}`)
+        this.id = counterId(`Subscription.${this.options.id || ''}${this.key}`)
+        const { stack } = new Error(`Subscription ${this.id} Created`)
+        // stack for debugging
+        this.stack = stack
         this.streamId = this.options.streamId
         this.streamPartition = this.options.streamPartition
 
@@ -57,8 +60,16 @@ export class Subscription extends Emitter {
         this.pipeline = opts.pipeline || MessagePipeline(client, {
             ...this.options,
             validate,
-            onError: (err: Todo) => {
-                this.emit('error', err)
+            onError: (err: Error) => {
+                try {
+                    if (this.listenerCount('error')) {
+                        this.emit('error', err)
+                    } else {
+                        throw err
+                    }
+                } catch (errr) {
+                    this.cancel(errr)
+                }
             },
         // @ts-expect-error
         }, this.onPipelineEnd)

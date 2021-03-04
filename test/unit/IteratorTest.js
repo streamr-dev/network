@@ -152,7 +152,7 @@ export default function IteratorTest(name, fn) {
             expect(received.map(({ value }) => value)).toEqual(expected)
             await itr.return()
         })
- 
+
         it('can queue delayed next calls', async () => {
             const itr = fn({
                 items: expected, max: MAX_ITEMS

@@ -511,10 +511,10 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
 
     const next = Scaffold([
         async () => {
-            [sub] = await Promise.all([
-                SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryptionUtil),
-                encryptionUtil.onReady(),
-            ])
+            return encryptionUtil.onReady()
+        },
+        async () => {
+            sub = await SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryptionUtil)
             return async () => {
                 mem.clear(getGroupKeyStore)
                 if (!sub) { return }

@@ -148,8 +148,7 @@ export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
-    onEviction = (...args: any[]) => {
-        console.log('onEviction', args)
+    onEviction = () => {
     },
     ...opts
 } = {}) {

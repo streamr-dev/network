@@ -21,6 +21,7 @@ export function iteratorFinally(iterable, onFinally) {
     // ensure finally only runs once
     const onFinallyOnce = (err) => {
         if (!onFinallyTask) {
+            // eslint-disable-next-line promise/no-promise-in-callback
             onFinallyTask = Promise.resolve().then(async () => onFinally(err))
         }
         return onFinallyTask

@@ -50,6 +50,9 @@ export default function Encrypt(client: StreamrClient) {
         rotateGroupKey(...args: Parameters<PublisherKeyExhangeAPI['rotateGroupKey']>) {
             return getPublisherKeyExchange().rotateGroupKey(...args)
         },
+        start() {
+            return getPublisherKeyExchange().start()
+        },
         stop() {
             if (!publisherKeyExchange) { return Promise.resolve() }
             return getPublisherKeyExchange().stop()

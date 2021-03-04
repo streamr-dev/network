@@ -11,6 +11,7 @@ import config from './config'
 const { ControlMessage } = ControlLayer
 
 const MAX_ITEMS = 2
+const NUM_MESSAGES = 10
 
 describeRepeats('StreamrClient Stream', () => {
     let expectErrors = 0 // check no errors by default
@@ -191,8 +192,8 @@ describeRepeats('StreamrClient Stream', () => {
             expect(M.count(stream.id)).toBe(0)
         })
 
-        describe.only('subscription error handling', () => {
-            it('works', async () => {
+        describe('subscription error handling', () => {
+            it('works when error thrown inline', async () => {
                 const err = new Error('expected')
 
                 const sub = await M.subscribe({
@@ -201,21 +202,21 @@ describeRepeats('StreamrClient Stream', () => {
                         async function* ThrowError(s) {
                             let count = 0
                             for await (const msg of s) {
-                                yield msg
-                                count += 1
                                 if (count === MAX_ITEMS) {
                                     throw err
                                 }
+                                count += 1
+                                yield msg
                             }
-
                         }
                     ]
-
                 })
 
                 expect(M.count(stream.id)).toBe(1)
 
-                const published = await publishTestMessages()
+                const published = await publishTestMessages(NUM_MESSAGES, {
+                    timestamp: 111111,
+                })
 
                 const received = []
                 await expect(async () => {
@@ -224,6 +225,104 @@ describeRepeats('StreamrClient Stream', () => {
                     }
                 }).rejects.toThrow(err)
                 expect(received).toEqual(published.slice(0, MAX_ITEMS))
+            })
+
+            describe('error is bad groupkey', () => {
+                let sub
+                const BAD_GROUP_KEY_ID = 'BAD_GROUP_KEY_ID'
+
+                beforeEach(async () => {
+                    await client.publisher.startKeyExchange()
+                    sub = await M.subscribe({
+                        ...stream,
+                        beforeSteps: [
+                            async function* ThrowError(s) {
+                                let count = 0
+                                for await (const msg of s) {
+                                    if (count === MAX_ITEMS) {
+                                        msg.streamMessage.encryptionType = 2
+                                        msg.streamMessage.groupKeyId = BAD_GROUP_KEY_ID
+                                    }
+                                    count += 1
+                                    yield msg
+                                }
+                            }
+                        ]
+                    })
+
+                    expect(M.count(stream.id)).toBe(1)
+                })
+
+                it('throws subscription loop when encountering bad message', async () => {
+                    const published = await publishTestMessages(NUM_MESSAGES, {
+                        timestamp: 111111,
+                    })
+
+                    const received = []
+                    await expect(async () => {
+                        for await (const m of sub) {
+                            received.push(m.getParsedContent())
+                        }
+                    }).rejects.toThrow(BAD_GROUP_KEY_ID)
+                    expect(received).toEqual(published.slice(0, MAX_ITEMS))
+                })
+
+                it('will skip bad message if error handler attached', async () => {
+                    const published = await publishTestMessages(NUM_MESSAGES, {
+                        timestamp: 111111,
+                    })
+
+                    const onSubscriptionError = jest.fn()
+                    sub.on('error', onSubscriptionError)
+
+                    const received = []
+                    let t
+                    for await (const m of sub) {
+                        received.push(m.getParsedContent())
+                        if (received.length === published.length - 1) {
+                            // eslint-disable-next-line no-loop-func
+                            t = setTimeout(() => {
+                                // give it a moment to incorrectly get messages
+                                sub.cancel()
+                            }, 100)
+                        }
+
+                        if (received.length === published.length) {
+                            break
+                        }
+                    }
+                    clearTimeout(t)
+                    expect(received).toEqual([
+                        ...published.slice(0, MAX_ITEMS),
+                        ...published.slice(MAX_ITEMS + 1)
+                    ])
+                    expect(onSubscriptionError).toHaveBeenCalledTimes(1)
+                })
+
+                it('will not skip bad message if error handler attached & throws', async () => {
+                    expect(M.count(stream.id)).toBe(1)
+
+                    const published = await publishTestMessages(NUM_MESSAGES, {
+                        timestamp: 111111,
+                    })
+
+                    const received = []
+                    const onSubscriptionError = jest.fn((err) => {
+                        throw err
+                    })
+
+                    sub.on('error', onSubscriptionError)
+                    await expect(async () => {
+                        for await (const m of sub) {
+                            received.push(m.getParsedContent())
+                            if (received.length === published.length) {
+                                break
+                            }
+                        }
+                    }).rejects.toThrow(BAD_GROUP_KEY_ID)
+                    expect(received).toEqual(published.slice(0, MAX_ITEMS))
+                    expect(onSubscriptionError).toHaveBeenCalledTimes(1)
+                })
             })
         })
     })
