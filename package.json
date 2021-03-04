@@ -34,13 +34,14 @@
   "author": "Streamr Network AG <contact@streamr.network>",
   "license": "STREAMR NETWORK OPEN SOURCE LICENSE",
   "dependencies": {
+    "bufferutil": "^4.0.1",
     "cancelable-promise": "^3.2.3",
     "commander": "7.0.0",
     "geoip-lite": "^1.4.2",
     "heap": "^0.2.6",
     "lodash": "^4.17.20",
     "lru-cache": "^6.0.0",
-    "node-datachannel": "0.0.24",
+    "node-datachannel": "0.0.25",
     "pino": "^6.11.0",
     "pino-pretty": "^4.3.0",
     "speedometer": "^1.1.0",
@@ -48,10 +49,9 @@
     "strip-ansi": "^6.0.0",
     "tmp": "^0.2.1",
     "uWebSockets.js": "github:uNetworking/uWebSockets.js#v18.14.0",
+    "utf-8-validate": "^5.0.2",
     "uuid": "^8.3.2",
-    "ws": "^7.4.2",
-    "bufferutil": "^4.0.1",
-    "utf-8-validate": "^5.0.2"
+    "ws": "^7.4.2"
   },
   "devDependencies": {
     "@types/geoip-lite": "^1.4.1",

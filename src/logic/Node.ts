@@ -136,8 +136,7 @@ export class Node extends EventEmitter {
         this.nodeToNode.on(NodeToNodeEvent.NODE_DISCONNECTED, (nodeId) => this.onNodeDisconnected(nodeId))
         this.nodeToNode.on(NodeToNodeEvent.RESEND_REQUEST, (request, source) => this.requestResend(request, source))
         this.on(Event.NODE_SUBSCRIBED, (nodeId, streamId) => {
-            // timeout needed to get around bug in WebRTC library
-            this.handleBufferedMessagesTimeoutRef = setTimeout(() => this.handleBufferedMessages(streamId), 20)
+            this.handleBufferedMessages(streamId)
             this.sendStreamStatus(streamId)
         })
         this.nodeToNode.on(NodeToNodeEvent.LOW_BACK_PRESSURE, (nodeId) => {
