@@ -50,7 +50,9 @@ export class Subscription extends Emitter {
         this.client = client
         this.options = validateOptions(opts)
         this.key = this.options.key
-        this.id = counterId(`Subscription.${this.options.id || ''}${this.key}`)
+        this.id = counterId(`Subscription:${this.options.id || ''}${this.key}`)
+        this.debug = client.debug.extend(this.id)
+        this.debug('create')
         this.streamId = this.options.streamId
         this.streamPartition = this.options.streamPartition
 
@@ -75,14 +77,20 @@ export class Subscription extends Emitter {
         if (event !== 'error') {
             return super.emit(event, ...args)
         }
+        const [error] = args
 
+        if (!this.listenerCount('error')) {
+            this.debug('emitting error but no error listeners, cancelling subscription', error)
+            this.cancel(error)
+            return false
+        }
         try {
-            if (this.listenerCount('error')) {
-                // debugger
-                return super.emit('error', ...args)
-            }
-            throw args[0]
+            this.debug('emit error', error)
+            return super.emit('error', ...args)
         } catch (err) {
+            if (err !== error) {
+                this.debug('error emitting error!', err)
+            }
             this.cancel(err)
             return false
         }
@@ -94,6 +102,7 @@ export class Subscription extends Emitter {
      */
 
     async onPipelineEnd(err?: Error) {
+        this.debug('onPipelineEnd', err)
         let error = err
         try {
             await this._onFinally(error)
@@ -205,6 +214,9 @@ class SubscriptionSession extends Emitter {
 
         this.subscriptions = new Set() // active subs
         this.deletedSubscriptions = new Set() // hold so we can clean up
+        this.id = counterId(`SubscriptionSession:${this.options.id || ''}${this.options.key}`)
+        this.debug = this.client.debug.extend(this.id)
+        this.debug('create')
         this._init()
     }
 
@@ -322,6 +334,12 @@ class SubscriptionSession extends Emitter {
 
     emit(...args: Todo[]) {
         const subs = this._getSubs()
+        if (args[0] === 'error') {
+            this.debug(args[0], args[1])
+        } else {
+            this.debug(args[0])
+        }
+
         try {
             multiEmit(subs, ...args)
         } catch (error) {
@@ -345,6 +363,7 @@ class SubscriptionSession extends Emitter {
 
     async add(sub: Todo) {
         this.subscriptions.add(sub)
+        this.debug('add', sub && sub.id)
         const { connection } = this.client
         await connection.addHandle(`adding${sub.id}`)
         try {
@@ -366,11 +385,18 @@ class SubscriptionSession extends Emitter {
             return
         }
 
+        if (this.subscriptions.has(sub)) {
+            this.debug('remove', sub && sub.id)
+        }
+
         const cancelTask = sub.cancel()
-        this.subscriptions.delete(sub)
-        this.deletedSubscriptions.add(sub)
-        await this.step()
-        await cancelTask
+        try {
+            this.subscriptions.delete(sub)
+            this.deletedSubscriptions.add(sub)
+            await this.step()
+        } finally {
+            await cancelTask
+        }
     }
 
     /**

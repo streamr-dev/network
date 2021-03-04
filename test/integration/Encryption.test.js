@@ -619,17 +619,172 @@ describe('decryption', () => {
 
     describe('revoking permissions', () => {
         let client2
+
         beforeEach(async () => {
-            client2 = createClient()
+            client2 = createClient({ id: 'subscriber' })
             await client2.connect()
             await client2.session.getSessionToken()
+            client2.debug('new SUBSCRIBER')
         })
 
         afterEach(async () => {
             await client2.disconnect()
         })
 
-        it('fails gracefully if permission revoked', async () => {
+        it('fails gracefully if permission revoked with low cache maxAge', async () => {
+            await client.disconnect()
+            await setupClient({
+                id: 'publisher',
+                cache: {
+                    maxAge: 1,
+                }
+            })
+
+            const MAX_MESSAGES = 6
+            await client.rotateGroupKey(stream.id)
+
+            const p1 = await stream.grantPermission('stream_get', client2.getPublisherId())
+            const p2 = await stream.grantPermission('stream_subscribe', client2.getPublisherId())
+
+            const sub = await client2.subscribe({
+                stream: stream.id,
+            })
+
+            const errs = []
+            const onSubError = jest.fn((err) => {
+                errs.push(err)
+                throw err
+            })
+
+            sub.on('error', onSubError)
+
+            const received = []
+            // Publish after subscribed
+            let count = 0
+            const REVOKE_AFTER = 3
+            const gotMessages = Defer()
+            // do publish in background otherwise permission is revoked before subscriber starts processing
+            const publishTask = publishTestMessages(MAX_MESSAGES, {
+                timestamp: 1111111,
+                async afterEach() {
+                    count += 1
+                    if (count === REVOKE_AFTER) {
+                        await gotMessages
+                        await stream.revokePermission(p1.id)
+                        await stream.revokePermission(p2.id)
+                        await client.rekey(stream.id)
+                    }
+                }
+            })
+            let t
+            await expect(async () => {
+                for await (const m of sub) {
+                    received.push(m.getParsedContent())
+                    if (received.length === REVOKE_AFTER) {
+                        gotMessages.resolve()
+                        clearTimeout(t)
+                        t = setTimeout(() => {
+                            sub.cancel()
+                        }, 10000)
+                    }
+
+                    if (received.length === MAX_MESSAGES) {
+                        clearTimeout(t)
+                        break
+                    }
+                }
+            }).rejects.toThrow('not a subscriber')
+            clearTimeout(t)
+            const published = await publishTask
+
+            expect(received).toEqual([
+                ...published.slice(0, REVOKE_AFTER),
+            ])
+
+            expect(onSubError).toHaveBeenCalledTimes(1)
+        })
+
+        it('fails gracefully if permission revoked with low cache maxAge fail first message', async () => {
+            await client.disconnect()
+            await setupClient({
+                id: 'publisher',
+                cache: {
+                    maxAge: 1,
+                }
+            })
+            const MAX_MESSAGES = 3
+            await client.rotateGroupKey(stream.id)
+
+            const p1 = await stream.grantPermission('stream_get', client2.getPublisherId())
+            const p2 = await stream.grantPermission('stream_subscribe', client2.getPublisherId())
+
+            const sub = await client2.subscribe({
+                stream: stream.id,
+            })
+            sub.debug('sub', sub.id)
+
+            const errs = []
+            const onSubError = jest.fn((err) => {
+                errs.push(err)
+                throw err
+            })
+
+            sub.on('error', onSubError)
+
+            const received = []
+            // Publish after subscribed
+            let count = 0
+            const REVOKE_AFTER = 1
+            const gotMessages = Defer()
+            // do publish in background otherwise permission is revoked before subscriber starts processing
+            const publishTask = publishTestMessages(MAX_MESSAGES, {
+                timestamp: 1111111,
+                async afterEach() {
+                    count += 1
+                    if (count === REVOKE_AFTER) {
+                        await gotMessages
+                        await stream.revokePermission(p1.id)
+                        await stream.revokePermission(p2.id)
+                        await client.rekey(stream.id)
+                    }
+                }
+            })
+            let t
+            await expect(async () => {
+                for await (const m of sub) {
+                    received.push(m.getParsedContent())
+                    if (received.length === REVOKE_AFTER) {
+                        gotMessages.resolve()
+                        clearTimeout(t)
+                        t = setTimeout(() => {
+                            sub.cancel()
+                        }, 10000)
+                    }
+
+                    if (received.length === MAX_MESSAGES) {
+                        clearTimeout(t)
+                        break
+                    }
+                }
+            }).rejects.toThrow('not a subscriber')
+            clearTimeout(t)
+            const published = await publishTask
+
+            expect(received).toEqual([
+                ...published.slice(0, REVOKE_AFTER),
+            ])
+
+            expect(onSubError).toHaveBeenCalledTimes(1)
+        })
+
+        it('fails gracefully if permission revoked with high cache maxAge', async () => {
+            await client.disconnect()
+            await setupClient({
+                cache: {
+                    maxAge: 99999999,
+                }
+            })
+
             const MAX_MESSAGES = 10
             await client.rotateGroupKey(stream.id)
 
@@ -692,7 +847,7 @@ describe('decryption', () => {
                 ...published.slice(0, REVOKE_AFTER),
             ])
 
-            expect(onSubError).toHaveBeenCalledTimes(MAX_MESSAGES - REVOKE_AFTER + 1) // + 1 for final err
+            expect(onSubError).toHaveBeenCalledTimes(1)
         })
     })
 })

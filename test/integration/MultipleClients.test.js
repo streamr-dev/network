@@ -639,8 +639,6 @@ describeRepeats('PubSub with multiple clients', () => {
             }
         }
 
-        const MAX_MESSAGES = 10
-
         try {
             await mainClient.session.getSessionToken()
             await mainClient.connect()
@@ -681,7 +679,7 @@ describeRepeats('PubSub with multiple clients', () => {
             let counter = 0
             /* eslint-enable no-await-in-loop */
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = await pubClient.getPublisherId()
+                const publisherId = pubClient.getPublisherId()
                 const publishTestMessages = getPublishTestMessages(pubClient, {
                     stream,
                     waitForLast: true,
@@ -699,12 +697,12 @@ describeRepeats('PubSub with multiple clients', () => {
                                 resend: {
                                     last: 1000,
                                 }
-                            }, (msg, streamMessage) => {
+                            }, async (msg, streamMessage) => {
                                 const msgs = receivedMessagesOther[streamMessage.getPublisherId()] || []
                                 msgs.push(msg)
                                 receivedMessagesOther[streamMessage.getPublisherId()] = msgs
                                 if (msgs.length === MAX_MESSAGES) {
-                                    return otherSub.end()
+                                    await otherSub.end()
                                 }
                             })
                         }

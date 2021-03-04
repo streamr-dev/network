@@ -189,6 +189,9 @@ function getCreateStreamMessage(client) {
         rotateGroupKey(maybeStreamId) {
             return encrypt.rotateGroupKey(maybeStreamId)
         },
+        startKeyExchange() {
+            return encrypt.start()
+        },
         rekey(maybeStreamId) {
             return encrypt.rekey(maybeStreamId)
         },
