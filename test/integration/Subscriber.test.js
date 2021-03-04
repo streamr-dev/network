@@ -11,9 +11,9 @@ import config from './config'
 const { ControlMessage } = ControlLayer
 
 const MAX_ITEMS = 2
-const NUM_MESSAGES = 10
+const NUM_MESSAGES = 6
 
-describeRepeats('StreamrClient Stream', () => {
+describeRepeats('Subscriber', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
     let client

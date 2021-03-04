@@ -24,7 +24,7 @@ async function collect(src) {
 
 export default function MessagePipeline(client, opts = {}, onFinally = async () => {}) {
     const options = validateOptions(opts)
-    const { key, afterSteps = [], beforeSteps = [], onError = (err) => { throw err } } = options
+    const { key, afterSteps = [], beforeSteps = [] } = options
     const id = counterId('MessagePipeline') + key
 
     /* eslint-disable object-curly-newline */
@@ -35,6 +35,16 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         decrypt = Decrypt(client, options),
     } = options
     /* eslint-enable object-curly-newline */
+
+    const seenErrors = new WeakSet()
+    const onErrorFn = options.onError ? options.onError : (error) => { throw error }
+    const onError = async (err) => {
+        if (seenErrors.has(err)) {
+            return
+        }
+        seenErrors.add(err)
+        await onErrorFn(err)
+    }
 
     // re-order messages (ignore gaps)
     const internalOrderingUtil = OrderMessages(client, {
@@ -64,11 +74,10 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         async function* ValidateMessages(src) {
             for await (const streamMessage of src) {
                 try {
-                    client.debug('validate >', streamMessage)
                     await validate(streamMessage)
                 } catch (err) {
                     ignoreMessages.add(streamMessage)
-                    await onError('validate', err)
+                    await onError(err)
                 }
                 yield streamMessage
             }
@@ -78,10 +87,10 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
             try {
                 yield* decrypt(src, async (err, streamMessage) => {
                     ignoreMessages.add(streamMessage)
-                    await onError('decrypt', err)
+                    await onError(err)
                 })
             } catch (err) {
-                await onError('validate', err)
+                await onError(err)
             }
         },
         // parse content
