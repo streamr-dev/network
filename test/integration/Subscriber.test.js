@@ -190,6 +190,42 @@ describeRepeats('StreamrClient Stream', () => {
 
             expect(M.count(stream.id)).toBe(0)
         })
+
+        describe.only('subscription error handling', () => {
+            it('works', async () => {
+                const err = new Error('expected')
+
+                const sub = await M.subscribe({
+                    ...stream,
+                    afterSteps: [
+                        async function* ThrowError(s) {
+                            let count = 0
+                            for await (const msg of s) {
+                                yield msg
+                                count += 1
+                                if (count === MAX_ITEMS) {
+                                    throw err
+                                }
+                            }
+
+                        }
+                    ]
+
+                })
+
+                expect(M.count(stream.id)).toBe(1)
+
+                const published = await publishTestMessages()
+
+                const received = []
+                await expect(async () => {
+                    for await (const m of sub) {
+                        received.push(m.getParsedContent())
+                    }
+                }).rejects.toThrow(err)
+                expect(received).toEqual(published.slice(0, MAX_ITEMS))
+            })
+        })
     })
 
     describe('ending a subscription', () => {

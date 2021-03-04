@@ -70,11 +70,15 @@ export class Subscription extends Emitter {
      * Expose cleanup
      * @internal
      */
-    async onPipelineEnd(err: Todo) {
+
+    async onPipelineEnd(err?: Error) {
+        let error = err
         try {
-            await this._onFinally(err)
+            await this._onFinally(error)
+        } catch (onFinallyError) {
+            error = AggregatedError.from(error, onFinallyError)
         } finally {
-            this._onDone.handleErrBack(err)
+            this._onDone.handleErrBack(error)
         }
     }
 

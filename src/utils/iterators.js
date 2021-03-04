@@ -21,7 +21,7 @@ export function iteratorFinally(iterable, onFinally) {
     // ensure finally only runs once
     const onFinallyOnce = (err) => {
         if (!onFinallyTask) {
-            onFinallyTask = Promise.resolve().then(() => onFinally(err))
+            onFinallyTask = Promise.resolve().then(async () => onFinally(err))
         }
         return onFinallyTask
     }

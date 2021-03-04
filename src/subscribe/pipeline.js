@@ -144,8 +144,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         // custom pipeline steps
         ...afterSteps
     ], async (err, ...args) => {
-        console.log('pipeline ended with ', err && err.message)
-        await msgStream.cancel(err)
+        // await msgStream.cancel(err)
         try {
             if (err) {
                 await onError('in finally', err)

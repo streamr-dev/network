@@ -93,8 +93,8 @@ describe('decryption', () => {
         }
     })
 
-    beforeEach(async () => {
-        client = createClient()
+    async function setupClient(opts) {
+        client = createClient(opts)
         await Promise.all([
             client.session.getSessionToken(),
             client.connect(),
@@ -109,6 +109,10 @@ describe('decryption', () => {
         publishTestMessages = getPublishTestMessages(client, {
             stream
         })
+    }
+
+    beforeEach(async () => {
+        await setupClient()
     })
 
     it('client.subscribe can decrypt encrypted messages if it knows the group key', async () => {
