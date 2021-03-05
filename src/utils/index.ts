@@ -406,7 +406,17 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
     }
 
     let timedOut = false
-    let t: ReturnType<typeof setTimeout>
+    const p = Defer()
+    const t = setTimeout(() => {
+        timedOut = true
+        if (rejectOnTimeout) {
+            p.reject(new TimeoutError(message, timeout))
+        } else {
+            p.resolve(undefined)
+        }
+    }, timeout)
+    p.catch(() => {})
+
     return Promise.race([
         Promise.resolve(promise).catch((err) => {
             if (timedOut) {
@@ -416,18 +426,10 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
 
             throw err
         }),
-        new Promise((resolve, reject) => {
-            t = setTimeout(() => {
-                timedOut = true
-                if (rejectOnTimeout) {
-                    reject(new TimeoutError(message, timeout))
-                } else {
-                    resolve(undefined)
-                }
-            }, timeout)
-        })
+        p
     ]).finally(() => {
         clearTimeout(t)
+        p.resolve(undefined)
     })
 }
 

@@ -61,20 +61,29 @@ export class Subscription extends Emitter {
             ...this.options,
             validate,
             onError: (err: Error) => {
-                try {
-                    if (this.listenerCount('error')) {
-                        this.emit('error', err)
-                    } else {
-                        throw err
-                    }
-                } catch (errr) {
-                    this.cancel(errr)
-                }
+                this.emit('error', err)
             },
         // @ts-expect-error
         }, this.onPipelineEnd)
 
         this.msgStream = this.pipeline.msgStream
+    }
+
+    emit(event, ...args) {
+        if (event !== 'error') {
+            return super.emit(event, ...args)
+        }
+
+        try {
+            if (this.listenerCount('error')) {
+                // debugger
+                return super.emit('error', ...args)
+            }
+            throw args[0]
+        } catch (err) {
+            this.cancel(err)
+            return false
+        }
     }
 
     /**

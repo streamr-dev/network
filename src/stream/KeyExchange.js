@@ -181,7 +181,11 @@ async function subscribeToKeyExchangeStream(client, onKeyExchangeMessage) {
     // subscribing to own keyexchange stream
     const publisherId = await client.getUserId()
     const streamId = getKeyExchangeStreamId(publisherId)
-    return client.subscribe(streamId, onKeyExchangeMessage)
+    const sub = await client.subscribe(streamId, onKeyExchangeMessage)
+    sub.on('error', () => {
+
+    })
+    return sub
 }
 
 async function catchKeyExchangeError(client, streamMessage, fn) {
