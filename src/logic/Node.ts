@@ -18,6 +18,7 @@ import getLogger from '../helpers/logger'
 import { PeerInfo } from '../connection/PeerInfo'
 import { Readable } from 'stream'
 import pino from 'pino'
+import { InstructionRetryManager } from "./InstructionRetryManager"
 
 export enum Event {
     NODE_CONNECTED = 'streamr:node:node-connected',
@@ -46,6 +47,7 @@ export interface NodeOptions {
     bufferMaxSize?: number
     disconnectionWaitTime?: number
     nodeConnectTimeout?: number
+    instructionRetryInterval?: number
 }
 
 const MIN_NUM_OF_OUTBOUND_NODES_FOR_PROPAGATION = 1
@@ -72,6 +74,7 @@ export class Node extends EventEmitter {
     private readonly bufferMaxSize: number
     private readonly disconnectionWaitTime: number
     private readonly nodeConnectTimeout: number
+    private readonly instructionRetryInterval: number
     private readonly started: string
 
     private readonly logger: pino.Logger
@@ -83,6 +86,7 @@ export class Node extends EventEmitter {
     private readonly trackerRegistry: Utils.TrackerRegistry<string>
     private readonly trackerBook: { [key: string]: string } // address => id
     private readonly instructionThrottler: InstructionThrottler
+    private readonly instructionRetryManager: InstructionRetryManager
     private readonly perStreamMetrics: PerStreamMetrics
     private readonly metrics: Metrics
     private connectToBoostrapTrackersInterval?: NodeJS.Timeout | null
@@ -108,6 +112,7 @@ export class Node extends EventEmitter {
         this.bufferMaxSize = opts.bufferMaxSize || 10000
         this.disconnectionWaitTime = opts.disconnectionWaitTime || 30 * 1000
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 2000
+        this.instructionRetryInterval = opts.instructionRetryInterval || 30000
         this.started = new Date().toLocaleString()
         const metricsContext = opts.metricsContext || new MetricsContext('')
 
@@ -127,6 +132,7 @@ export class Node extends EventEmitter {
         this.trackerRegistry = Utils.createTrackerRegistry(opts.trackers)
         this.trackerBook = {}
         this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
+        this.instructionRetryManager = new InstructionRetryManager(this.handleTrackerInstruction.bind(this), this.instructionRetryInterval)
 
         this.trackerNode.on(TrackerNodeEvent.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
         this.trackerNode.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))  // eslint-disable-line max-len
@@ -208,6 +214,7 @@ export class Node extends EventEmitter {
         this.logger.debug('unsubscribeFromStream: remove %s from streams', streamId)
         this.streams.removeStream(streamId)
         this.instructionThrottler.removeStreamId(streamId.key())
+        this.instructionRetryManager.removeStreamId(streamId.key())
         this.sendStreamStatus(streamId)
     }
 
@@ -252,6 +259,8 @@ export class Node extends EventEmitter {
     async handleTrackerInstruction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: string): Promise<void> {
         const streamId = StreamIdAndPartition.fromMessage(instructionMessage)
         const { nodeIds, counter } = instructionMessage
+
+        this.instructionRetryManager.add(instructionMessage, trackerId)
 
         // Check that tracker matches expected tracker
         const expectedTrackerId = this.getTrackerId(streamId)
@@ -384,6 +393,7 @@ export class Node extends EventEmitter {
         this.logger.debug('stopping')
         this.resendHandler.stop()
         this.instructionThrottler.reset()
+        this.instructionRetryManager.reset()
 
         if (this.connectToBoostrapTrackersInterval) {
             clearInterval(this.connectToBoostrapTrackersInterval)
