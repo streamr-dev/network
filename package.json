@@ -11,8 +11,9 @@
     "url": "git+https://github.com/streamr-dev/streamr-client-testing.git"
   },
   "keywords": [],
+  "type": "module",
   "engines": {
-    "node": ">= 10"
+    "node": ">= 14"
   },
   "author": "",
   "license": "ISC",

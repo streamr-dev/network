@@ -1,6 +1,4 @@
-const crypto = require('crypto')
-const { ethers } = require('ethers')
-const StreamrClient = require('streamr-client')
+import { StreamrClient } from 'streamr-client'
 const opts = JSON.parse(process.argv[2])
 
 const {
