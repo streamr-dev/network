@@ -28,11 +28,10 @@ jobs:
       - run: npm run eslint
       - run: npm run build --if-present
       - run: npm run test-unit
-      - name: streamr-docker-dev
-        run: |
-          git clone --depth 1 https://github.com/streamr-dev/streamr-docker-dev.git
-          sudo ifconfig docker0 10.200.10.1/24
-          ${GITHUB_WORKSPACE}/streamr-docker-dev/streamr-docker-dev/bin.sh start engine-and-editor cassandra nginx --wait
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "engine-and-editor cassandra nginx"
       - run: npm run test-integration
         env:
           CI: true
