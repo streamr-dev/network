@@ -64,22 +64,31 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         ...beforeSteps,
         // unpack stream message
         async function* getStreamMessage(src) {
-            for await (const { streamMessage } of src) {
-                yield streamMessage
+            try {
+                for await (const { streamMessage } of src) {
+                    yield streamMessage
+                }
+            } catch (err) {
+                await onError(err)
             }
         },
         // order messages (fill gaps)
         orderingUtil,
         // validate
         async function* ValidateMessages(src) {
-            for await (const streamMessage of src) {
-                try {
-                    await validate(streamMessage)
-                } catch (err) {
-                    ignoreMessages.add(streamMessage)
-                    await onError(err)
+            try {
+                for await (const streamMessage of src) {
+                    client.debug('loop')
+                    try {
+                        await validate(streamMessage)
+                    } catch (err) {
+                        ignoreMessages.add(streamMessage)
+                        await onError(err)
+                    }
+                    yield streamMessage
                 }
-                yield streamMessage
+            } catch (err) {
+                await onError(err)
             }
         },
         // decrypt
@@ -95,38 +104,50 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         },
         // parse content
         async function* ParseMessages(src) {
-            for await (const streamMessage of src) {
-                try {
-                    streamMessage.getParsedContent()
-                } catch (err) {
-                    ignoreMessages.add(streamMessage)
-                    await onError(err)
+            try {
+                for await (const streamMessage of src) {
+                    try {
+                        streamMessage.getParsedContent()
+                    } catch (err) {
+                        ignoreMessages.add(streamMessage)
+                        await onError(err)
+                    }
+                    yield streamMessage
                 }
-                yield streamMessage
+            } catch (err) {
+                await onError(err)
             }
         },
         // re-order messages (ignore gaps)
         internalOrderingUtil,
         // ignore any failed messages
         async function* IgnoreMessages(src) {
-            for await (const streamMessage of src) {
-                if (ignoreMessages.has(streamMessage)) {
-                    continue
+            try {
+                for await (const streamMessage of src) {
+                    if (ignoreMessages.has(streamMessage)) {
+                        continue
+                    }
+                    yield streamMessage
                 }
-                yield streamMessage
+            } catch (err) {
+                await onError(err)
             }
         },
         // special handling for bye message
         async function* ByeMessageSpecialHandling(src) {
-            for await (const orderedMessage of src) {
-                yield orderedMessage
-                try {
-                    if (orderedMessage.isByeMessage()) {
-                        break
+            try {
+                for await (const orderedMessage of src) {
+                    yield orderedMessage
+                    try {
+                        if (orderedMessage.isByeMessage()) {
+                            break
+                        }
+                    } catch (err) {
+                        await onError(err)
                     }
-                } catch (err) {
-                    await onError(err)
                 }
+            } catch (err) {
+                await onError(err)
             }
         },
         // custom pipeline steps

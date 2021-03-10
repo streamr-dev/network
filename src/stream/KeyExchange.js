@@ -51,7 +51,7 @@ class InvalidContentTypeError extends Error {
 }
 */
 
-function getKeyExchangeStreamId(address) {
+export function getKeyExchangeStreamId(address) {
     if (isKeyExchangeStream(address)) {
         return address // prevent ever double-handling
     }
@@ -163,11 +163,10 @@ function waitForSubMessage(sub, matchFn) {
     }
     sub.on('message', onMessage)
     sub.once('error', task.reject)
-    // eslint-disable-next-line promise/catch-or-return
     task.finally(() => {
         sub.off('message', onMessage)
         sub.off('error', task.reject)
-    })
+    }).catch(() => {}) // prevent unhandled rejection
     return task
 }
 
@@ -363,6 +362,7 @@ async function SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryp
     }
 
     sub = await subscribeToKeyExchangeStream(client, onKeyExchangeMessage)
+    sub.on('error', () => {})
     return sub
 }
 
@@ -410,7 +410,7 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
 
                 cancelTask.then(responseTask.resolve).catch(responseTask.reject)
                 return () => {
-                    cancelTask.resolve({})
+                    cancelTask.resolve()
                 }
             }, async () => {
                 const msg = new GroupKeyRequest({
@@ -426,16 +426,17 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
                     response = undefined
                 }
             }, async () => {
-                receivedGroupKeys = await getGroupKeysFromStreamMessage(response, encryptionUtil)
+                receivedGroupKeys = response ? await getGroupKeysFromStreamMessage(response, encryptionUtil) : []
 
                 return () => {
                     receivedGroupKeys = []
                 }
             },
         ], () => enabled && !done, {
+            id: `requestKeys.${requestId}`,
             onChange(isGoingUp) {
                 if (!isGoingUp && cancelTask) {
-                    cancelTask.resolve({})
+                    cancelTask.resolve()
                 }
             }
         })
@@ -528,6 +529,7 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
             }
         }
     ], () => enabled, {
+        id: `SubscriberKeyExhangeSubscription.${client.id}`,
         async onDone() {
             // clean up requestKey
             if (requestKeys.step) {
