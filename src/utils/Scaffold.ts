@@ -21,6 +21,7 @@ type ScaffoldOptions = {
  onError?: (error: Error) => void
  onDone?: MaybeAsync<(shouldUp: boolean, error?: Error) => void>
  onChange?: MaybeAsync<(shouldUp: boolean) => void>
+ id?: string,
 }
 
 const noop = () => {}
@@ -28,7 +29,7 @@ const noop = () => {}
 export default function Scaffold(
     sequence: Step[] = [],
     _checkFn: () => Promise<boolean>,
-    { onError, onDone, onChange }: ScaffoldOptions = {}
+    { id = '', onError, onDone, onChange }: ScaffoldOptions = {}
 ) {
     let error: Error | undefined
     // ignore error if check fails
@@ -59,7 +60,7 @@ export default function Scaffold(
                 throw err // rethrow
             }
         } catch (newErr) {
-            error = AggregatedError.from(error, newErr)
+            error = AggregatedError.from(error, newErr, `ScaffoldError:${id}`)
         }
     }
 
@@ -103,7 +104,8 @@ export default function Scaffold(
                     collectErrors(err)
                 }
                 onDownSteps.push(onDownStep || (() => {}))
-                return next()
+                // eslint-disable-next-line no-return-await
+                return await next() // return await gives us a better stack trace
             }
         } else if (onDownSteps.length) {
             isDone = false
@@ -115,7 +117,8 @@ export default function Scaffold(
                 collectErrors(err)
             }
             nextSteps.push(prevSteps.pop() as StepUp)
-            return next()
+            // eslint-disable-next-line no-return-await
+            return await next() // return await gives us a better stack trace
         } else if (error) {
             const err = error
             // eslint-disable-next-line require-atomic-updates
