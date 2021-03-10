@@ -123,8 +123,8 @@ module.exports = async (config) => {
             auth: {
                 privateKey: config.ethereumPrivateKey,
             },
-            url: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.wsUrl || null) : null,
-            restUrl: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.httpUrl || null) : null
+            url: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.wsUrl || undefined) : undefined,
+            restUrl: config.reporting.perNodeMetrics ? (config.reporting.perNodeMetrics.httpUrl || undefined) : undefined
         })
 
         const createMetricsStream = async (path) => {
