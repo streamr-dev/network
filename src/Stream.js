@@ -1,5 +1,7 @@
 const { Utils } = require('streamr-network').Protocol
 
+const logger = require('./helpers/logger')('streamr:Stream')
+
 module.exports = class Stream {
     constructor(id, partition, name, msgHandler, gapHandler) {
         this.id = id
@@ -9,6 +11,10 @@ module.exports = class Stream {
         this.connections = []
         this.orderingUtil = new Utils.OrderingUtil(id, partition, msgHandler, (...args) => {
             gapHandler(id, partition, ...args)
+        })
+        this.orderingUtil.on('error', (err) => {
+            // attach error handler in attempt to avoid uncaught exceptions
+            logger.warn(err)
         })
     }
 
