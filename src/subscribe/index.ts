@@ -196,6 +196,8 @@ class SubscriptionSession extends Emitter {
         this.client = client
         this.options = validateOptions(options)
         this.validate = Validator(client, this.options)
+        this._subscribe = this.options.subscribe || subscribe
+        this._unsubscribe = this.options.unsubscribe || unsubscribe
 
         this.subscriptions = new Set() // active subs
         this.deletedSubscriptions = new Set() // hold so we can clean up
@@ -283,13 +285,13 @@ class SubscriptionSession extends Emitter {
             },
             // subscribe
             async () => {
-                await subscribe(this.client, this.options)
+                await this._subscribe(this.client, this.options)
                 this.emit('subscribed')
 
                 return async () => {
                     if (needsReset) { return }
                     this.emit('unsubscribing')
-                    await unsubscribe(this.client, this.options)
+                    await this._unsubscribe(this.client, this.options)
                 }
             }
         // @ts-expect-error
