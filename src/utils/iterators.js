@@ -282,10 +282,7 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
         isDone: () => finalCalled,
     })
 
-    return [
-        cancelFn,
-        cancelableGenerator
-    ]
+    return cancelableGenerator
 }
 
 /**
@@ -362,7 +359,7 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
         let prev
         let nextIterable
 
-        const [, it] = CancelableGenerator((async function* Gen() {
+        const it = CancelableGenerator((async function* Gen() {
             prev = index === 0 ? firstSrc : _prev
             // take first "prev" from outer iterator, if one exists
             nextIterable = typeof next === 'function' ? next(prev) : next

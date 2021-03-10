@@ -386,17 +386,16 @@ describe('Iterator Utils', () => {
         })
 
         IteratorTest('CancelableGenerator', () => {
-            const [, itr] = CancelableGenerator(generate(), onFinally)
-            return itr
+            return CancelableGenerator(generate(), onFinally)
         })
 
         it('can cancel during iteration', async () => {
-            const [cancel, itr] = CancelableGenerator(generate(), onFinally)
+            const itr = CancelableGenerator(generate(), onFinally)
             const received = []
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === MAX_ITEMS) {
-                    cancel()
+                    itr.cancel()
                 }
             }
 
@@ -405,9 +404,9 @@ describe('Iterator Utils', () => {
         })
 
         it('can cancel before iteration', async () => {
-            const [cancel, itr] = CancelableGenerator(generate(), onFinally)
+            const itr = CancelableGenerator(generate(), onFinally)
             const received = []
-            cancel()
+            itr.cancel()
             expect(itr.isCancelled()).toEqual(true)
             for await (const msg of itr) {
                 received.push(msg)
@@ -418,12 +417,12 @@ describe('Iterator Utils', () => {
         })
 
         it('can cancel with error before iteration', async () => {
-            const [cancel, itr] = CancelableGenerator(generate(), () => {
+            const itr = CancelableGenerator(generate(), () => {
                 return onFinally()
             })
             const received = []
             const err = new Error('expected')
-            cancel(err)
+            itr.cancel(err)
             await expect(async () => {
                 for await (const msg of itr) {
                     received.push(msg)
@@ -438,7 +437,7 @@ describe('Iterator Utils', () => {
             try {
                 const err = new Error('expected')
                 const received = []
-                const [cancel, itr] = CancelableGenerator(generate(), onFinally, {
+                const itr = CancelableGenerator(generate(), onFinally, {
                     timeout: WAIT,
                 })
                 let receievedAtCallTime
@@ -449,7 +448,7 @@ describe('Iterator Utils', () => {
                             // eslint-disable-next-line no-loop-func
                             setTimeout(done.wrap(async () => {
                                 receievedAtCallTime = received
-                                await cancel(err)
+                                await itr.cancel(err)
                                 expect(onFinally).toHaveBeenCalledTimes(1)
                                 expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                             }))
@@ -470,7 +469,7 @@ describe('Iterator Utils', () => {
             const done = Defer()
             try {
                 const received = []
-                const [cancel, itr] = CancelableGenerator(generate(), onFinally, {
+                const itr = CancelableGenerator(generate(), onFinally, {
                     timeout: WAIT,
                 })
                 let receievedAtCallTime
@@ -480,7 +479,7 @@ describe('Iterator Utils', () => {
                         // eslint-disable-next-line no-loop-func
                         setTimeout(done.wrap(async () => {
                             receievedAtCallTime = received
-                            await cancel()
+                            await itr.cancel()
                             expect(onFinally).toHaveBeenCalledTimes(1)
                             expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                         }))
@@ -497,7 +496,7 @@ describe('Iterator Utils', () => {
         it('prevents subsequent .next call', async () => {
             const received = []
             const triggeredForever = jest.fn()
-            const [cancel, itr] = CancelableGenerator((async function* Gen() {
+            const itr = CancelableGenerator((async function* Gen() {
                 yield* expected
                 yield await new Promise(() => {
                     triggeredForever() // should not get here
@@ -507,7 +506,7 @@ describe('Iterator Utils', () => {
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === expected.length) {
-                    await cancel()
+                    await itr.cancel()
                     expect(onFinally).toHaveBeenCalledTimes(1)
                     expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                 }
@@ -521,11 +520,11 @@ describe('Iterator Utils', () => {
         it('interrupts outstanding .next call', async () => {
             const received = []
             const triggeredForever = jest.fn()
-            const [cancel, itr] = CancelableGenerator((async function* Gen() {
+            const itr = CancelableGenerator((async function* Gen() {
                 yield* expected
                 yield await new Promise(() => {
                     triggeredForever()
-                    cancel()
+                    itr.cancel()
                 }) // would wait forever
             }()), onFinally)
 
@@ -543,7 +542,7 @@ describe('Iterator Utils', () => {
             try {
                 const received = []
                 const triggeredForever = jest.fn()
-                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                const itr = CancelableGenerator((async function* Gen() {
                     yield* expected
                     yield await new Promise(() => {
                         triggeredForever()
@@ -557,7 +556,7 @@ describe('Iterator Utils', () => {
                     if (received.length === expected.length) {
                         // eslint-disable-next-line no-loop-func
                         setTimeout(done.wrap(async () => {
-                            await cancel()
+                            await itr.cancel()
                             expect(onFinally).toHaveBeenCalledTimes(1)
                             expect(onFinallyAfter).toHaveBeenCalledTimes(1)
                         }))
@@ -573,7 +572,7 @@ describe('Iterator Utils', () => {
 
         it('stops iterator', async () => {
             const shouldRunFinally = jest.fn()
-            const [cancel, itr] = CancelableGenerator((async function* Gen() {
+            const itr = CancelableGenerator((async function* Gen() {
                 try {
                     yield 1
                     await wait(WAIT)
@@ -591,7 +590,7 @@ describe('Iterator Utils', () => {
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === 2) {
-                    cancel()
+                    itr.cancel()
                     expect(itr.isCancelled()).toEqual(true)
                 }
             }
@@ -607,7 +606,7 @@ describe('Iterator Utils', () => {
             const done = Defer()
             try {
                 const received = []
-                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                const itr = CancelableGenerator((async function* Gen() {
                     yield* expected
                     yield await new Promise(() => {}) // would wait forever
                 }()), onFinally, {
@@ -624,7 +623,7 @@ describe('Iterator Utils', () => {
                             // eslint-disable-next-line no-loop-func
                             setTimeout(done.wrap(async () => {
                                 receievedAtCallTime = received
-                                await cancel(err)
+                                await itr.cancel(err)
 
                                 expect(onFinally).toHaveBeenCalledTimes(1)
                                 expect(onFinallyAfter).toHaveBeenCalledTimes(1)
@@ -644,10 +643,10 @@ describe('Iterator Utils', () => {
             const done = Defer()
             try {
                 const triggeredForever = jest.fn()
-                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                const itr = CancelableGenerator((async function* Gen() {
                     yield* expected
                     setTimeout(done.wrap(async () => {
-                        await cancel()
+                        await itr.cancel()
 
                         expect(onFinally).toHaveBeenCalledTimes(1)
                         expect(onFinallyAfter).toHaveBeenCalledTimes(1)
@@ -674,7 +673,7 @@ describe('Iterator Utils', () => {
             const done = Defer()
             try {
                 const triggeredForever = jest.fn()
-                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                const itr = CancelableGenerator((async function* Gen() {
                     let i = 0
                     for await (const v of expected) {
                         i += 1
@@ -683,7 +682,7 @@ describe('Iterator Utils', () => {
                     }
 
                     setTimeout(done.wrap(async () => {
-                        await cancel()
+                        await itr.cancel()
 
                         expect(onFinally).toHaveBeenCalledTimes(1)
                         expect(onFinallyAfter).toHaveBeenCalledTimes(1)
@@ -712,7 +711,7 @@ describe('Iterator Utils', () => {
                 const received = []
                 const err = new Error('expected')
                 const d = Defer()
-                const [cancel, itr] = CancelableGenerator((async function* Gen() {
+                const itr = CancelableGenerator((async function* Gen() {
                     yield* expected
                     await wait(WAIT * 2)
                     d.resolve()
@@ -727,7 +726,7 @@ describe('Iterator Utils', () => {
                             // eslint-disable-next-line no-loop-func
                             setTimeout(done.wrap(async () => {
                                 receievedAtCallTime = received
-                                await cancel(err)
+                                await itr.cancel(err)
 
                                 expect(onFinally).toHaveBeenCalledTimes(1)
                                 expect(onFinallyAfter).toHaveBeenCalledTimes(1)
@@ -764,14 +763,14 @@ describe('Iterator Utils', () => {
             })
 
             IteratorTest('CancelableGenerator nested', () => {
-                const [, itrInner] = CancelableGenerator(generate(), onFinallyInner)
-                const [, itrOuter] = CancelableGenerator(itrInner, onFinally)
+                const itrInner = CancelableGenerator(generate(), onFinallyInner)
+                const itrOuter = CancelableGenerator(itrInner, onFinally)
                 return itrOuter
             })
 
             it('can cancel nested cancellable iterator in finally', async () => {
                 const waitInner = jest.fn()
-                const [cancelInner, itrInner] = CancelableGenerator((async function* Gen() {
+                const itrInner = CancelableGenerator((async function* Gen() {
                     yield* generate()
                     yield await new Promise(() => {
                         // should not get here
@@ -782,14 +781,14 @@ describe('Iterator Utils', () => {
                 })
 
                 const waitOuter = jest.fn()
-                const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
+                const itrOuter = CancelableGenerator((async function* Gen() {
                     yield* itrInner
                     yield await new Promise(() => {
                         // should not get here
                         waitOuter()
                     }) // would wait forever
                 }()), async () => {
-                    await cancelInner()
+                    await itrInner.cancel()
                     expect(onFinallyInner).toHaveBeenCalledTimes(1)
                     expect(onFinallyInnerAfter).toHaveBeenCalledTimes(1)
                     await onFinally()
@@ -801,7 +800,7 @@ describe('Iterator Utils', () => {
                 for await (const msg of itrOuter) {
                     received.push(msg)
                     if (received.length === expected.length) {
-                        await cancelOuter()
+                        await itrOuter.cancel()
                     }
                 }
 
@@ -814,7 +813,7 @@ describe('Iterator Utils', () => {
                 const done = Defer()
                 try {
                     const waitInner = jest.fn()
-                    const [cancelInner, itrInner] = CancelableGenerator((async function* Gen() {
+                    const itrInner = CancelableGenerator((async function* Gen() {
                         yield* generate()
                         yield await new Promise(() => {
                             // should not get here
@@ -825,14 +824,14 @@ describe('Iterator Utils', () => {
                     })
 
                     const waitOuter = jest.fn()
-                    const [cancelOuter, itrOuter] = CancelableGenerator((async function* Gen() {
+                    const itrOuter = CancelableGenerator((async function* Gen() {
                         yield* itrInner
                         yield await new Promise(() => {
                             // should not get here
                             waitOuter()
                         }) // would wait forever
                     }()), async () => {
-                        await cancelInner()
+                        await itrInner.cancel()
                         await onFinally()
                     }, {
                         timeout: WAIT,
@@ -843,7 +842,7 @@ describe('Iterator Utils', () => {
                         received.push(msg)
                         if (received.length === expected.length) {
                             setTimeout(done.wrap(() => {
-                                cancelOuter()
+                                itrOuter.cancel()
                             }))
                         }
                     }
@@ -858,15 +857,15 @@ describe('Iterator Utils', () => {
         })
 
         it('can cancel in parallel and wait correctly for both', async () => {
-            const [cancel, itr] = CancelableGenerator(generate(), onFinally)
+            const itr = CancelableGenerator(generate(), onFinally)
             const ranTests = jest.fn()
 
             const received = []
             for await (const msg of itr) {
                 received.push(msg)
                 if (received.length === MAX_ITEMS) {
-                    const t1 = cancel()
-                    const t2 = cancel()
+                    const t1 = itr.cancel()
+                    const t2 = itr.cancel()
                     await Promise.race([t1, t2])
                     expect(onFinally).toHaveBeenCalledTimes(1)
                     expect(onFinallyAfter).toHaveBeenCalledTimes(1)
@@ -886,11 +885,9 @@ describe('Iterator Utils', () => {
         let onFinally
         let onFinallyAfter
         let errors = []
-        let expectErrors = []
 
         beforeEach(() => {
             errors = []
-            expectErrors = []
             const errorsLocal = errors
             onFinallyAfter = jest.fn((err) => {
                 if (errorsLocal !== errors) { return } // cross-contaminated test
@@ -909,7 +906,6 @@ describe('Iterator Utils', () => {
         afterEach(() => {
             expect(onFinally).toHaveBeenCalledTimes(1)
             expect(onFinallyAfter).toHaveBeenCalledTimes(1)
-            expect(errors).toEqual(expectErrors)
         })
 
         describe('baseline', () => {
@@ -1066,7 +1062,6 @@ describe('Iterator Utils', () => {
             const afterStep1 = jest.fn()
             const afterStep2 = jest.fn()
             const err = new Error('expected')
-            expectErrors = [err]
 
             const p = pipeline([
                 generate(),
@@ -1117,7 +1112,6 @@ describe('Iterator Utils', () => {
             const catchStep1 = jest.fn()
             const catchStep2 = jest.fn()
             const err = new Error('expected')
-            expectErrors = [err]
 
             const p = pipeline([
                 generate(),
@@ -1178,7 +1172,6 @@ describe('Iterator Utils', () => {
             const catchStep1 = jest.fn()
             const catchStep2 = jest.fn()
             const err = new Error('expected')
-            expectErrors = [err]
 
             const p = pipeline([
                 generate(),
