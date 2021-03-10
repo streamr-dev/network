@@ -330,23 +330,19 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
             return
         }
 
-        try {
-            if (cancelled) {
-                await onCancelDone
-                return
-            }
-
-            if (error) {
-                // eslint-disable-next-line promise/no-promise-in-callback
-                pipelineValue.throw(error).catch(() => {}) // ignore err
-            } else {
-                pipelineValue.return()
-            }
-            await cancelAll(err)
+        if (cancelled) {
             await onCancelDone
-        } finally {
-            await true
+            return
         }
+
+        if (error) {
+            // eslint-disable-next-line promise/no-promise-in-callback
+            pipelineValue.throw(error).catch(() => {}) // ignore err
+        } else {
+            pipelineValue.return()
+        }
+        await cancelAll(err)
+        await onCancelDone
     }
 
     let firstSrc

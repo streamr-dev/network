@@ -419,6 +419,7 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
 
     return Promise.race([
         Promise.resolve(promise).catch((err) => {
+            clearTimeout(t)
             if (timedOut) {
                 // ignore errors after timeout
                 return
