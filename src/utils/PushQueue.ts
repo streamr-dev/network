@@ -223,9 +223,10 @@ export default class PushQueue<T> {
     }
 
     async throw(err: Error) {
-        if (this.finished || this.ended) {
+        if (this.finished) {
             return
         }
+
         this.finished = true
         const p = this.nextQueue.shift()
         if (p) {
