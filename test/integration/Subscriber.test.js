@@ -271,8 +271,6 @@ describeRepeats('Subscriber', () => {
                 expect(received).toEqual(published.slice(0, MAX_ITEMS))
             })
 
-
-
             describe('error is bad groupkey', () => {
                 let sub
                 const BAD_GROUP_KEY_ID = 'BAD_GROUP_KEY_ID'
