@@ -430,6 +430,13 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     }
 
     /**
+     * True if authenticated with private key/ethereum provider
+     */
+    canEncrypt() {
+        return this.ethereum.canEncrypt()
+    }
+
+    /**
      * Get token balance in "wei" (10^-18 parts) for given address
      */
     async getTokenBalance(address: EthereumAddress): Promise<BigNumber> {

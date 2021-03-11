@@ -61,6 +61,10 @@ export default class StreamrEthereum {
         }
     }
 
+    canEncrypt() {
+        return !!(this._getAddress && this._getSigner)
+    }
+
     async getAddress() {
         if (!this._getAddress) {
             // _getAddress is assigned in constructor
