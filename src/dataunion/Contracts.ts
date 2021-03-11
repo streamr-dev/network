@@ -14,6 +14,12 @@ import { StreamrClient } from '../StreamrClient'
 
 const log = debug('StreamrClient::DataUnion')
 
+function validateAddress(name: string, address: EthereumAddress) {
+    if (!isAddress(address)) {
+        throw new Error(`${name} is ${address ? 'not a valid Ethereum address' : 'missing'}`)
+    }
+}
+
 export class Contracts {
 
     ethereum: StreamrEthereum
@@ -41,13 +47,8 @@ export class Contracts {
     }
 
     getDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress) {
-        if (!isAddress(this.factoryMainnetAddress)) {
-            throw new Error('StreamrClient factoryMainnetAddress configuration is ' + (this.factoryMainnetAddress ? 'not a valid Ethereum address' : 'missing'))
-        }
-
-        if (!isAddress(this.templateMainnetAddress)) {
-            throw new Error('StreamrClient templateMainnetAddress configuration is ' + (this.templateMainnetAddress ? 'not a valid Ethereum address' : 'missing'))
-        }
+        validateAddress('StreamrClient factoryMainnetAddress', this.factoryMainnetAddress)
+        validateAddress('StreamrClient templateMainnetAddress', this.templateMainnetAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
         const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateMainnetAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
         const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
@@ -61,24 +62,18 @@ export class Contracts {
     }
 
     getDataUnionSidechainAddress(mainnetAddress: EthereumAddress) {
-        if (!isAddress(this.factorySidechainAddress)) {
-            throw new Error('StreamrClient factorySidechainAddress configuration is ' + (this.factorySidechainAddress ? 'not a valid Ethereum address' : 'missing'))
-        }
-
-        if (!isAddress(this.templateSidechainAddress)) {
-            throw new Error('StreamrClient templateSidechainAddress configuration is ' + (this.templateSidechainAddress ? 'not a valid Ethereum address' : 'missing'))
-        }
+        validateAddress('StreamrClient factorySidechainAddress', this.factorySidechainAddress)
+        validateAddress('StreamrClient templateSidechainAddress', this.templateSidechainAddress)
         // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
-        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateSidechainAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
+        const code = `0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateSidechainAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`
+        const codeHash = keccak256(code)
         return getCreate2Address(this.factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
     }
 
     getMainnetContractReadOnly(contractAddress: EthereumAddress) {
-        if (isAddress(contractAddress)) {
-            const provider = this.ethereum.getMainnetProvider()
-            return new Contract(contractAddress, dataUnionMainnetABI, provider)
-        }
-        throw new Error(`${contractAddress} was not a good Ethereum address`)
+        validateAddress('contractAddress', contractAddress)
+        const provider = this.ethereum.getMainnetProvider()
+        return new Contract(contractAddress, dataUnionMainnetABI, provider)
     }
 
     getMainnetContract(contractAddress: EthereumAddress) {
@@ -298,12 +293,12 @@ export class Contracts {
             throw new Error(`Mainnet data union "${duName}" contract ${duMainnetAddress} already exists!`)
         }
 
-        if (!isAddress(this.factoryMainnetAddress)) {
-            throw new Error('StreamrClient has invalid factoryMainnetAddress configuration.')
-        }
+        validateAddress('StreamrClient factoryMainnetAddress', this.factoryMainnetAddress)
 
         if (await mainnetProvider.getCode(this.factoryMainnetAddress) === '0x') {
-            throw new Error(`Data union factory contract not found at ${this.factoryMainnetAddress}, check StreamrClient.options.dataUnion.factoryMainnetAddress!`)
+            throw new Error(
+                `Data union factory contract not found at ${this.factoryMainnetAddress}, check StreamrClient.options.dataUnion.factoryMainnetAddress!`
+            )
         }
 
         const factoryMainnet = new Contract(this.factoryMainnetAddress!, factoryMainnetABI, mainnetWallet)

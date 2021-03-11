@@ -56,7 +56,12 @@ describe('DataUnion stats', () => {
     }, 150000)
 
     it('member stats', async () => {
-        const memberStats = await Promise.all(activeMemberAddressList.concat([inactiveMember]).map((m) => queryClient.getDataUnion(dataUnion.getAddress()).getMemberStats(m)))
+        const memberStats = await Promise.all(
+            activeMemberAddressList
+                .concat([inactiveMember])
+                .map((m) => queryClient.getDataUnion(dataUnion.getAddress()).getMemberStats(m))
+        )
+
         const ZERO = BigNumber.from(0)
         expect(memberStats).toMatchObject([{
             status: MemberStatus.ACTIVE,

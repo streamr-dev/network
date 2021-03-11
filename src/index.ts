@@ -13,7 +13,10 @@ export * from './dataunion/DataUnion'
 export * from './rest/authFetch'
 export * from './types'
 
-// TODO should export these to support StreamMessageAsObject: export { StreamMessageType, ContentType, EncryptionType, SignatureType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
+// TODO should export these to support StreamMessageAsObject:
+// export {
+//   StreamMessageType, ContentType, EncryptionType, SignatureType
+// } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
 export { BigNumber } from '@ethersproject/bignumber'
 export { ConnectionInfo } from '@ethersproject/web'
 export { Contract } from '@ethersproject/contracts'
