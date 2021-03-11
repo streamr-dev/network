@@ -58,14 +58,17 @@ function getKeyExchangeStreamId(address) {
     return `${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`
 }
 
-function GroupKeyStore({ groupKeys }) {
-    const store = new Map(groupKeys)
+function GroupKeyStore({ groupKeys = new Map() }) {
+    const store = new Map()
+    groupKeys.forEach((value, key) => {
+        store.set(key, value)
+    })
 
     let currentGroupKeyId // current key id if any
     let nextGroupKey // key to use next, disappears if not actually used.
 
     store.forEach((groupKey) => {
-        GroupKey.validate(groupKey)
+        GroupKey.validate(GroupKey.from(groupKey))
         // use last init key as current
         currentGroupKeyId = groupKey.id
     })
@@ -73,7 +76,7 @@ function GroupKeyStore({ groupKeys }) {
     function storeKey(groupKey) {
         GroupKey.validate(groupKey)
         if (store.has(groupKey.id)) {
-            const existingKey = store.get(groupKey.id)
+            const existingKey = GroupKey.from(store.get(groupKey.id))
             if (!existingKey.equals(groupKey)) {
                 throw new GroupKey.InvalidGroupKeyError(
                     `Trying to add groupKey ${groupKey.id} but key exists & is not equivalent to new GroupKey: ${groupKey}.`
@@ -90,12 +93,12 @@ function GroupKeyStore({ groupKeys }) {
     }
 
     return {
-        has(id) {
-            if (currentGroupKeyId === id) { return true }
+        has(groupKeyId) {
+            if (currentGroupKeyId === groupKeyId) { return true }
 
-            if (nextGroupKey && nextGroupKey.id === id) { return true }
+            if (nextGroupKey && nextGroupKey.id === groupKeyId) { return true }
 
-            return store.has(id)
+            return store.has(groupKeyId)
         },
         isEmpty() {
             return !nextGroupKey && store.size === 0
@@ -115,10 +118,12 @@ function GroupKeyStore({ groupKeys }) {
                 return this.useGroupKey()
             }
 
-            return store.get(currentGroupKeyId)
+            return this.get(currentGroupKeyId)
         },
-        get(id) {
-            return store.get(id)
+        get(groupKeyId) {
+            const groupKey = store.get(groupKeyId)
+            if (!groupKey) { return undefined }
+            return GroupKey.from(groupKey)
         },
         clear() {
             currentGroupKeyId = undefined
@@ -197,7 +202,7 @@ async function catchKeyExchangeError(client, streamMessage, fn) {
 }
 
 async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
-    async function onKeyExchangeMessage(parsedContent, streamMessage) {
+    async function onKeyExchangeMessage(_parsedContent, streamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
             if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
                 return Promise.resolve()

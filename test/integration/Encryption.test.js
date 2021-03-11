@@ -545,4 +545,3 @@ describe('decryption', () => {
         expect(onSubError).toHaveBeenCalledTimes(1)
     })
 })
-
