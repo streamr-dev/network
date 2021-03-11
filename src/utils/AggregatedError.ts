@@ -46,7 +46,7 @@ export default class AggregatedError extends Error {
             Error.captureStackTrace(this, this.constructor)
         }
         this.ownStack = this.stack
-        this.stack = joinStackTraces(errors)
+        this.stack = joinStackTraces([this, ...errors])
     }
 
     /**
