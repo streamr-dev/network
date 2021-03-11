@@ -54,7 +54,7 @@ module.exports = (env, argv) => {
             ],
         },
         resolve: {
-            modules: [path.resolve('./node_modules'), path.resolve('./src')],
+            modules: [path.resolve('./node_modules'), path.resolve('./vendor'), path.resolve('./src')],
             extensions: ['.json', '.js', '.ts'],
         },
         plugins: [
@@ -76,6 +76,19 @@ module.exports = (env, argv) => {
             libraryTarget: 'umd2',
             filename: libraryName + '.web.js',
             library: 'StreamrClient',
+            // NOTE:
+            // exporting the class directly
+            // `export default class StreamrClient {}`
+            // becomes:
+            // `window.StreamrClient === StreamrClient`
+            // which is correct, but if we define the class and export separately,
+            // which is required if we do interface StreamrClient extends …:
+            // `class StreamrClient {}; export default StreamrClient;`
+            // becomes:
+            // `window.StreamrClient = { default: StreamrClient, … }`
+            // which is wrong for browser builds.
+            // see: https://github.com/webpack/webpack/issues/706#issuecomment-438007763
+            libraryExport: 'StreamrClient', // This fixes the above.
         },
         resolve: {
             alias: {

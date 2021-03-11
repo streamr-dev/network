@@ -1,5 +1,5 @@
 import { pTimeout } from '../../src/utils'
-import StreamrClient from '../../src/StreamrClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { fakePrivateKey, uid } from '../utils'
 import config from '../integration/config'
 

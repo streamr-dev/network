@@ -2,7 +2,7 @@ import { getEndpointUrl } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import StorageNode from './StorageNode'
-import StreamrClient from '../StreamrClient'
+import { StreamrClient } from '../StreamrClient'
 import { Todo } from '../types'
 
 interface StreamPermisionBase {
@@ -45,7 +45,7 @@ export interface StreamProperties {
 
 const VALID_FIELD_TYPES = ['number', 'string', 'boolean', 'list', 'map'] as const
 
-type Field = {
+export type Field = {
     name: string;
     type: typeof VALID_FIELD_TYPES[number];
 }
@@ -69,7 +69,7 @@ function getFieldType(value: any): (Field['type'] | undefined) {
     }
 }
 
-export default class Stream {
+export class Stream {
     // TODO add field definitions for all fields
     // @ts-expect-error
     id: string

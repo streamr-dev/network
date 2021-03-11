@@ -4,13 +4,13 @@ import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getVersionString } from './utils'
 import { ConnectionInfo } from '@ethersproject/web'
-import { Todo } from './types'
+import { EthereumAddress, Todo } from './types'
 
 export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
 
-export type StreamrClientOptions = {
+export type StrictStreamrClientOptions = {
     auth: {
-        privateKey?: string
+        privateKey?: EthereumAddress
         ethereum?: EthereumConfig
         apiKey?: string
         username?: string
@@ -18,7 +18,7 @@ export type StreamrClientOptions = {
     }
     url: string
     restUrl: string
-    streamrNodeAddress: string
+    streamrNodeAddress: EthereumAddress
     autoConnect: boolean
     autoDisconnect: boolean
     orderMessages: boolean
@@ -33,23 +33,29 @@ export type StreamrClientOptions = {
     keyExchange: Todo
     mainnet?: ConnectionInfo|string
     sidechain?: ConnectionInfo|string
-    dataUnion?: string
-    tokenAddress: string,
-    minimumWithdrawTokenWei?: BigNumber|number|string
-    factoryMainnetAddress: string
-    factorySidechainAddress: string
-    payForSignatureTransport: boolean
+    tokenAddress: EthereumAddress,
+    dataUnion: {
+        minimumWithdrawTokenWei: BigNumber|number|string
+        freeWithdraw: boolean
+        factoryMainnetAddress: EthereumAddress
+        factorySidechainAddress: EthereumAddress
+        templateMainnetAddress: EthereumAddress
+        templateSidechainAddress: EthereumAddress
+    },
     cache: {
         maxSize: number,
         maxAge: number
     }
 }
 
+export type StreamrClientOptions = Partial<Omit<StrictStreamrClientOptions, 'dataUnion'> & { dataUnion: Partial<StrictStreamrClientOptions['dataUnion']>}>
+
 const { ControlMessage } = ControlLayer
 const { StreamMessage } = MessageLayer
 
-export default function ClientConfig(opts: Partial<StreamrClientOptions> = {}) {
-    const defaults: StreamrClientOptions = {
+/** @internal */
+export default function ClientConfig(opts: StreamrClientOptions = {}) {
+    const defaults: StrictStreamrClientOptions = {
         // Authentication: identity used by this StreamrClient instance
         auth: {}, // can contain member privateKey or (window.)ethereum
 
@@ -77,21 +83,29 @@ export default function ClientConfig(opts: Partial<StreamrClientOptions> = {}) {
         // Ethereum and Data Union related options
         // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
         mainnet: undefined, // Default to ethers.js default provider settings
-        sidechain: undefined, // TODO: add our default public service sidechain node, also find good PoA params below
+        sidechain: 'https://rpc.xdaichain.com/',
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
-        minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
-        factoryMainnetAddress: 'TODO', // TODO // Data Union factory that creates a new Data Union
-        factorySidechainAddress: 'TODO',
-        payForSignatureTransport: true, // someone must pay for transporting the withdraw tx to mainnet, either us or bridge operator
+        dataUnion: {
+            minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
+            freeWithdraw: false, // if someone else pays for the gas when transporting the withdraw tx to mainnet; otherwise the client does the transport as self-service and pays the mainnet gas costs
+            factoryMainnetAddress: '0x7d55f9981d4E10A193314E001b96f72FCc901e40',
+            factorySidechainAddress: '0x1b55587Beea0b5Bc96Bb2ADa56bD692870522e9f',
+            templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',
+            templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
+        },
         cache: {
             maxSize: 10000,
             maxAge: 30 * 60 * 1000, // 30 minutes
         }
     }
 
-    const options: StreamrClientOptions = {
+    const options: StrictStreamrClientOptions = {
         ...defaults,
         ...opts,
+        dataUnion: {
+            ...defaults.dataUnion,
+            ...opts.dataUnion
+        },
         cache: {
             ...opts.cache,
             ...defaults.cache,

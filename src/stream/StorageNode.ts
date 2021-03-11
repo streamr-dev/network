@@ -1,6 +1,8 @@
+import { EthereumAddress } from '../types'
+
 export default class StorageNode {
-    _address: string
-    constructor(address: string) {
+    _address: EthereumAddress
+    constructor(address: EthereumAddress) {
         this._address = address
     }
 

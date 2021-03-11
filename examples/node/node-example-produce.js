@@ -1,4 +1,4 @@
-const StreamrClient = require('streamr-client')
+import { StreamrClient } from 'streamr-client';
 
 // Create the client and supply either an API key or an Ethereum private key to authenticate
 const client = new StreamrClient({

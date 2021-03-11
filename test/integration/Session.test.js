@@ -1,4 +1,4 @@
-import StreamrClient from '../../src/StreamrClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { fakePrivateKey } from '../utils'
 
 import config from './config'

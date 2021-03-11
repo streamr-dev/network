@@ -48,8 +48,6 @@ jobs:
         run: npm ci
       - name: npm run eslint
         run: npm run eslint
-      - name: test-types
-        run: npm run test-types
 
   test:
     name: Test Unit using Node ${{ matrix.node-version }}
@@ -107,7 +105,7 @@ jobs:
       - name: npm ci
         run: npm ci
       - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: Run Test
@@ -129,7 +127,7 @@ jobs:
       - name: npm ci
         run: npm ci
       - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - uses: nick-invision/retry@v2
@@ -139,6 +137,26 @@ jobs:
           timeout_minutes: 15
           retry_on: error
           command: npm run test-flakey || echo "::warning::Flakey Tests Failed"
+
+  test-exports:
+    name: Test Exports using Node 14.x
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: dist
+      - name: npm ci
+        run: npm ci
+      - name: test-types
+        run: npm run test-types
+      - name: npm run test-exports
+        run: npm run test-exports
 
   browser:
     name: Test Browser using Node 14.x
@@ -156,7 +174,7 @@ jobs:
       - name: npm ci
         run: npm ci
       - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
 
@@ -186,7 +204,7 @@ jobs:
           name: build
           path: dist
       - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: npm ci
@@ -233,17 +251,20 @@ jobs:
           name: build
           path: dist
       - name: Start Streamr Docker Stack
-        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.2
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
       - name: npm ci
         run: npm ci
       - name: npm link
-        run: npm link
+        run: cd dist && npm link
       - uses: actions/checkout@v2
         with:
           repository: streamr-dev/streamr-client-testing
           path: streamr-client-testing
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '8'
       - name: setup-client-testing
         working-directory: streamr-client-testing
         run: |

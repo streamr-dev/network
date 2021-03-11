@@ -66,6 +66,7 @@ const debug = Debug('StreamrClient:utils:authfetch') // TODO: could use the debu
 
 let ID = 0
 
+/** @internal */
 export default async function authFetch<T extends object>(url: string, session?: Session, opts?: any, requireNewToken = false): Promise<T> {
     ID += 1
     const timeStart = Date.now()

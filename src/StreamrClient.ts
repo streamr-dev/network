@@ -4,14 +4,14 @@ import Debug from 'debug'
 
 import { counterId, uuid, CacheAsyncFn } from './utils'
 import { validateOptions } from './stream/utils'
-import Config, { StreamrClientOptions } from './Config'
+import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
 import StreamrEthereum from './Ethereum'
 import Session from './Session'
 import Connection, { ConnectionError } from './Connection'
 import Publisher from './publish'
-import Subscriber from './subscribe'
+import { Subscriber } from './subscribe'
 import { getUserId } from './user'
-import { Todo, MaybeAsync } from './types'
+import { Todo, MaybeAsync, EthereumAddress } from './types'
 import { StreamEndpoints } from './rest/StreamEndpoints'
 import { LoginEndpoints } from './rest/LoginEndpoints'
 import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
@@ -25,8 +25,6 @@ export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void
 interface MessageEvent {
     data: any
 }
-
-export { StreamrClientOptions }
 
 /**
  * Wrap connection message events with message parsing.
@@ -139,13 +137,14 @@ function Plugin(targetInstance: any, srcInstance: any) {
 }
 
 // these are mixed in via Plugin function above
-interface StreamrClient extends StreamEndpoints, LoginEndpoints {}
+export interface StreamrClient extends StreamEndpoints, LoginEndpoints {}
 
 // eslint-disable-next-line no-redeclare
-class StreamrClient extends EventEmitter {
+export class StreamrClient extends EventEmitter {
     id: string
     debug: Debug.Debugger
-    options: StreamrClientOptions
+    options: StrictStreamrClientOptions
+    /** @internal */
     session: Session
     connection: StreamrConnection
     publisher: Todo
@@ -155,7 +154,7 @@ class StreamrClient extends EventEmitter {
     streamEndpoints: StreamEndpoints
     loginEndpoints: LoginEndpoints
 
-    constructor(options: Partial<StreamrClientOptions> = {}, connection?: StreamrConnection) {
+    constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
         this.debug = Debug(this.id)
@@ -379,7 +378,7 @@ class StreamrClient extends EventEmitter {
     /**
      * Get token balance in "wei" (10^-18 parts) for given address
      */
-    async getTokenBalance(address: string): Promise<BigNumber> {
+    async getTokenBalance(address: EthereumAddress): Promise<BigNumber> {
         const { tokenAddress } = this.options
         if (!tokenAddress) {
             throw new Error('StreamrClient has no tokenAddress configuration.')
@@ -399,7 +398,7 @@ class StreamrClient extends EventEmitter {
         return token.balanceOf(addr)
     }
 
-    getDataUnion(contractAddress: string) {
+    getDataUnion(contractAddress: EthereumAddress) {
         return DataUnion._fromContractAddress(contractAddress, this) // eslint-disable-line no-underscore-dangle
     }
 
@@ -407,7 +406,7 @@ class StreamrClient extends EventEmitter {
         return DataUnion._deploy(options, this) // eslint-disable-line no-underscore-dangle
     }
 
-    _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}) {
+    _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: EthereumAddress}) {
         return DataUnion._fromName({ // eslint-disable-line no-underscore-dangle
             dataUnionName,
             deployerAddress
@@ -418,7 +417,3 @@ class StreamrClient extends EventEmitter {
         return StreamrEthereum.generateEthereumAccount()
     }
 }
-
-export default StreamrClient
-
-module.exports = StreamrClient

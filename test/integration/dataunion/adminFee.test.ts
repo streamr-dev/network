@@ -2,7 +2,7 @@ import { Contract, providers, Wallet } from 'ethers'
 import { parseEther, formatEther } from 'ethers/lib/utils'
 import debug from 'debug'
 
-import StreamrClient from '../../../src/StreamrClient'
+import { StreamrClient } from '../../../src/StreamrClient'
 import * as Token from '../../../contracts/TestToken.json'
 import config from '../config'
 

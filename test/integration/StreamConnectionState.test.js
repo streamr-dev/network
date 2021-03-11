@@ -2,7 +2,7 @@ import { wait } from 'streamr-test-utils'
 import { ControlLayer } from 'streamr-client-protocol'
 
 import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '../utils'
-import StreamrClient from '../../src/StreamrClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
 

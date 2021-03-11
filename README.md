@@ -43,10 +43,10 @@ const client = new StreamrClient({
 })
 ```
 
-When using Node.js remember to require the library with:
+When using Node.js remember to import the library with:
 
 ```js
-const StreamrClient = require('streamr-client')
+import { StreamrClient } from 'streamr-client';
 ```
 
 ### Subscribing to real-time events in a stream
@@ -329,11 +329,15 @@ This library provides functions for working with Data Unions. To get a DataUnion
 TODO: All `options`-parameters should be documented (see TypeScript interfaces for the definitions)
 
 These DataUnion-specific options are used from `StreamrClient` options:
-| Property                 | Default                                                | Description                                                                                                      |
-| :----------------------- | :----------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
-| tokenAddress             | 0x0Cf0Ee637<br>88A0849fE52<br>97F3407f701<br>E122cC023 | Token used by the DU                                                                                             |
-| factoryMainnetAddress    | TODO                                                   | Data Union factory that creates a new Data Union                                                                 |
-| minimumWithdrawTokenWei  | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge                          |
+| Property                            | Default                                                | Description                                                                                                      |
+| :---------------------------------- | :----------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
+| tokenAddress                        | 0x0Cf0Ee637<br>88A0849fE52<br>97F3407f701<br>E122cC023 | Token used by the DU                                                                                             |
+| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge                          |
+| dataUnion.freeWithdraw              | false                                                  | true = someone else pays for the gas when transporting the withdraw tx to mainnet; false = client does the transport as self-service and pays the mainnet gas costs |
+| dataUnion.factoryMainnetAddress     | TODO                                                   | Data Union factory that creates a new Data Union                                                                 |
+| dataUnion.factorySidechainAddress   | TODO                                                   |                                                                                                                  |
+| dataUnion.templateMainnetAddress    | TODO                                                   |                                                                                                                  |
+| dataUnion.templateSidechainAddress  | TODO                                                   |                                                                                                                  |
 
 
 ### Admin Functions

@@ -1,7 +1,7 @@
 import { providers } from 'ethers'
 import debug from 'debug'
 
-import StreamrClient from '../../../src/StreamrClient'
+import { StreamrClient } from '../../../src/StreamrClient'
 import config from '../config'
 import { DataUnion, MemberStatus } from '../../../src/dataunion/DataUnion'
 import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'

@@ -9,8 +9,12 @@ module.exports = {
         streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
         tokenAddress: process.env.TOKEN_ADDRESS || '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
         tokenAddressSidechain: process.env.TOKEN_ADDRESS_SIDECHAIN || '0x73Be21733CC5D08e1a14Ea9a399fb27DB3BEf8fF',
-        factoryMainnetAddress: process.env.DU_FACTORY_MAINNET || '0x5E959e5d5F3813bE5c6CeA996a286F734cc9593b',
-        factorySidechainAddress: process.env.DU_FACTORY_SIDECHAIN || '0x4081B7e107E59af8E82756F96C751174590989FE',
+        dataUnion: {
+            factoryMainnetAddress: process.env.DU_FACTORY_MAINNET || '0x4bbcBeFBEC587f6C4AF9AF9B48847caEa1Fe81dA',
+            factorySidechainAddress: process.env.DU_FACTORY_SIDECHAIN || '0x4A4c4759eb3b7ABee079f832850cD3D0dC48D927',
+            templateMainnetAddress: process.env.DU_TEMPLATE_MAINNET || '0x7bFBAe10AE5b5eF45e2aC396E0E605F6658eF3Bc',
+            templateSidechainAddress: process.env.DU_TEMPLATE_SIDECHAIN || '0x36afc8c9283CC866b8EB6a61C6e6862a83cd6ee8',
+        },
         sidechain: {
             url: process.env.SIDECHAIN_URL || 'http://10.200.10.1:8546',
             timeout: process.env.TEST_TIMEOUT,

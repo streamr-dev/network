@@ -1,7 +1,7 @@
 import { wait, waitForCondition } from 'streamr-test-utils'
 
 import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
-import StreamrClient from '../../src/StreamrClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
 import config from './config'

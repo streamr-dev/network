@@ -1,4 +1,4 @@
-import Stream from '../../src/stream'
+import { Stream } from '../../src/stream'
 
 describe('Stream', () => {
     let stream

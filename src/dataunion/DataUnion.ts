@@ -5,7 +5,7 @@ import { Contract } from '@ethersproject/contracts'
 import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
 import debug from 'debug'
 import { Contracts } from './Contracts'
-import StreamrClient from '../StreamrClient'
+import { StreamrClient } from '../StreamrClient'
 import { EthereumAddress } from '../types'
 import { until, getEndpointUrl } from '../utils'
 import authFetch from '../rest/authFetch'
@@ -35,7 +35,7 @@ export interface JoinResponse {
 export interface DataUnionWithdrawOptions {
     pollingIntervalMs?: number
     retryTimeoutMs?: number
-    payForSignatureTransport?: boolean
+    freeWithdraw?: boolean
 }
 
 export interface DataUnionMemberListModificationOptions {
@@ -153,9 +153,9 @@ export class DataUnion {
             throw new Error(`${address} has nothing to withdraw in (sidechain) data union ${duSidechain.address}`)
         }
 
-        if (this.client.options.minimumWithdrawTokenWei && withdrawable.lt(this.client.options.minimumWithdrawTokenWei)) {
+        if (this.client.options.dataUnion.minimumWithdrawTokenWei && withdrawable.lt(this.client.options.dataUnion.minimumWithdrawTokenWei)) {
             throw new Error(`${address} has only ${withdrawable} to withdraw in `
-                + `(sidechain) data union ${duSidechain.address} (min: ${this.client.options.minimumWithdrawTokenWei})`)
+                + `(sidechain) data union ${duSidechain.address} (min: ${this.client.options.dataUnion.minimumWithdrawTokenWei})`)
         }
         return duSidechain.withdrawAll(address, true) // sendToMainnet=true
     }
@@ -546,14 +546,14 @@ export class DataUnion {
         const {
             pollingIntervalMs = 1000,
             retryTimeoutMs = 60000,
-            payForSignatureTransport = this.client.options.payForSignatureTransport
+            freeWithdraw = this.client.options.dataUnion.freeWithdraw
         }: any = options
         const getBalanceFunc = () => this.client.getTokenBalance(recipientAddress)
         const balanceBefore = await getBalanceFunc()
         const tx = await getWithdrawTxFunc()
         const tr = await tx.wait()
-        if (payForSignatureTransport) {
-            await this.getContracts().payForSignatureTransport(tr, options)
+        if (!freeWithdraw) {
+            await this.getContracts().transportSignaturesForTransaction(tr, options)
         }
         log(`Waiting for balance ${balanceBefore.toString()} to change`)
         await until(async () => !(await getBalanceFunc()).eq(balanceBefore), retryTimeoutMs, pollingIntervalMs)

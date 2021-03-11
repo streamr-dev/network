@@ -246,6 +246,7 @@ class EncryptionUtilBase {
     }
 }
 
+/** @internal */
 export default class EncryptionUtil extends EncryptionUtilBase {
     /**
      * Creates a new instance + waits for ready.

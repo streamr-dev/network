@@ -464,8 +464,7 @@ class Subscriptions {
 /**
  * Top-level user-facing interface for creating/destroying subscriptions.
  */
-
-export default class Subscriber {
+export class Subscriber {
     constructor(client) {
         this.client = client
         this.subscriptions = new Subscriptions(client)

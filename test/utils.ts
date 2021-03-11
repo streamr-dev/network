@@ -3,7 +3,7 @@ import { wait } from 'streamr-test-utils'
 import { providers, Wallet } from 'ethers'
 import { pTimeout, counterId, AggregatedError } from '../src/utils'
 import { validateOptions } from '../src/stream/utils'
-import StreamrClient from '../src/StreamrClient'
+import { StreamrClient } from '../src/StreamrClient'
 
 const crypto = require('crypto')
 const config = require('./integration/config')

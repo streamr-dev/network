@@ -3,13 +3,13 @@ import EventEmitter from 'events'
 
 import { v4 as uuidv4 } from 'uuid'
 import uniqueId from 'lodash.uniqueid'
-import LRU from 'quick-lru'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import mem from 'mem'
 import { L, F } from 'ts-toolbelt'
 
 import pkg from '../../package.json'
+import LRU from '../../vendor/quick-lru'
 import { MaybeAsync } from '../types'
 
 import AggregatedError from './AggregatedError'

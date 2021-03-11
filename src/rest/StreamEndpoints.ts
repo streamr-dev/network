@@ -6,13 +6,13 @@ import debugFactory from 'debug'
 
 import { getEndpointUrl } from '../utils'
 import { validateOptions } from '../stream/utils'
-import Stream, { StreamOperation, StreamProperties } from '../stream'
+import { Stream, StreamOperation, StreamProperties } from '../stream'
 import StreamPart from '../stream/StreamPart'
 import { isKeyExchangeStream } from '../stream/KeyExchange'
 
 import authFetch, { ErrorCode, NotFoundError } from './authFetch'
-import { Todo } from '../types'
-import StreamrClient from '../StreamrClient'
+import { EthereumAddress, Todo } from '../types'
+import { StreamrClient } from '../StreamrClient'
 // TODO change this import when streamr-client-protocol exports StreamMessage type or the enums types directly
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
 
@@ -76,6 +76,7 @@ function getKeepAliveAgentForUrl(url: string) {
     throw new Error(`Unknown protocol in URL: ${url}`)
 }
 
+/** TODO the class should be annotated with at-internal, but adding the annotation hides the methods */
 export class StreamEndpoints {
 
     client: StreamrClient
@@ -122,7 +123,7 @@ export class StreamEndpoints {
         return json[0] ? new Stream(this.client, json[0]) : Promise.reject(new NotFoundError('Stream: name=' + name))
     }
 
-    async createStream(props?: StreamProperties) {
+    async createStream(props?: Partial<StreamProperties>) {
         this.client.debug('createStream %o', {
             props,
         })
@@ -236,11 +237,11 @@ export class StreamEndpoints {
             + `?${qs.stringify({ count })}`
         )
 
-        const json = await authFetch<Todo>(url, this.client.session)
+        const json = await authFetch<StreamMessageAsObject>(url, this.client.session)
         return json
     }
 
-    async getStreamPartsByStorageNode(address: string) {
+    async getStreamPartsByStorageNode(address: EthereumAddress) {
         type ItemType = { id: string, partitions: number}
         const json = await authFetch<ItemType[]>(getEndpointUrl(this.client.options.restUrl, 'storageNodes', address, 'streams'), this.client.session)
         let result: StreamPart[] = []

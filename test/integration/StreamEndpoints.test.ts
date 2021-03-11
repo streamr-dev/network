@@ -1,8 +1,8 @@
 import { ethers, Wallet } from 'ethers'
 import { NotFoundError, ValidationError } from '../../src/rest/authFetch'
-import Stream, { StreamOperation } from '../../src/stream'
+import { Stream, StreamOperation } from '../../src/stream'
 
-import StreamrClient from '../../src/StreamrClient'
+import { StreamrClient } from '../../src/StreamrClient'
 import { uid } from '../utils'
 
 import config from './config'

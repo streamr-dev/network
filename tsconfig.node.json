@@ -4,7 +4,7 @@
         "allowJs": true,
         "declaration": true,
         "declarationDir": "dist/types",
-        "outDir": "dist/node",
+        "outDir": "dist",
         "lib": [
             "ES5",
             "ES2015",
@@ -18,15 +18,15 @@
         ],
         "strict": true,
         "moduleResolution": "node",
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "module": "commonjs"
     },
     "globals": {
         "ts-jest": {}
     },
     "include": [
         "src/**/*",
-        "contracts/**/*",
-        // quick-lru is esm, need to transpile :/
-        "node_modules/quick-lru/index.js"
+        "vendor/**/*",
+        "contracts/**/*"
     ]
 }

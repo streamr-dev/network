@@ -24,7 +24,7 @@ module.exports = {
     plugins: [
          "add-module-exports",
         ['@babel/plugin-transform-runtime', {
-            corejs: false,
+            corejs: 3,
             helpers: true,
             regenerator: false
         }],

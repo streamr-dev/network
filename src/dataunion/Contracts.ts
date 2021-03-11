@@ -10,21 +10,25 @@ import { dataUnionMainnetABI, dataUnionSidechainABI, factoryMainnetABI, mainnetA
 import { until } from '../utils'
 import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
-import StreamrClient from '../StreamrClient'
+import { StreamrClient } from '../StreamrClient'
 
 const log = debug('StreamrClient::DataUnion')
 
 export class Contracts {
 
     ethereum: StreamrEthereum
-    factoryMainnetAddress: string
-    factorySidechainAddress: string
+    factoryMainnetAddress: EthereumAddress
+    factorySidechainAddress: EthereumAddress
+    templateMainnetAddress: EthereumAddress
+    templateSidechainAddress: EthereumAddress
     cachedSidechainAmb?: Todo
 
     constructor(client: StreamrClient) {
         this.ethereum = client.ethereum
-        this.factoryMainnetAddress = client.options.factoryMainnetAddress
-        this.factorySidechainAddress = client.options.factorySidechainAddress
+        this.factoryMainnetAddress = client.options.dataUnion.factoryMainnetAddress
+        this.factorySidechainAddress = client.options.dataUnion.factorySidechainAddress
+        this.templateMainnetAddress = client.options.dataUnion.templateMainnetAddress
+        this.templateSidechainAddress = client.options.dataUnion.templateSidechainAddress
     }
 
     async fetchDataUnionMainnetAddress(
@@ -37,11 +41,15 @@ export class Contracts {
     }
 
     getDataUnionMainnetAddress(dataUnionName: string, deployerAddress: EthereumAddress) {
-        if (!this.factoryMainnetAddress) {
-            throw new Error('StreamrClient has no factoryMainnetAddress configuration.')
+        if (!isAddress(this.factoryMainnetAddress)) {
+            throw new Error('StreamrClient factoryMainnetAddress configuration is ' + (this.factoryMainnetAddress ? 'not a valid Ethereum address' : 'missing'))
         }
-        // NOTE! this must be updated when DU sidechain smartcontract changes: keccak256(CloneLib.cloneBytecode(data_union_mainnet_template));
-        const codeHash = '0x50a78bac973bdccfc8415d7d9cfd62898b8f7cf6e9b3a15e7d75c0cb820529eb'
+
+        if (!isAddress(this.templateMainnetAddress)) {
+            throw new Error('StreamrClient templateMainnetAddress configuration is ' + (this.templateMainnetAddress ? 'not a valid Ethereum address' : 'missing'))
+        }
+        // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
+        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateMainnetAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
         const salt = keccak256(defaultAbiCoder.encode(['string', 'address'], [dataUnionName, deployerAddress]))
         return getCreate2Address(this.factoryMainnetAddress, salt, codeHash)
     }
@@ -53,11 +61,15 @@ export class Contracts {
     }
 
     getDataUnionSidechainAddress(mainnetAddress: EthereumAddress) {
-        if (!this.factorySidechainAddress) {
-            throw new Error('StreamrClient has no factorySidechainAddress configuration.')
+        if (!isAddress(this.factorySidechainAddress)) {
+            throw new Error('StreamrClient factorySidechainAddress configuration is ' + (this.factorySidechainAddress ? 'not a valid Ethereum address' : 'missing'))
         }
-        // NOTE! this must be updated when DU sidechain smartcontract changes: keccak256(CloneLib.cloneBytecode(data_union_sidechain_template))
-        const codeHash = '0x040cf686e25c97f74a23a4bf01c29dd77e260c4b694f5611017ce9713f58de83'
+
+        if (!isAddress(this.templateSidechainAddress)) {
+            throw new Error('StreamrClient templateSidechainAddress configuration is ' + (this.templateSidechainAddress ? 'not a valid Ethereum address' : 'missing'))
+        }
+        // This magic hex comes from https://github.com/streamr-dev/data-union-solidity/blob/master/contracts/CloneLib.sol#L19
+        const codeHash = keccak256(`0x3d602d80600a3d3981f3363d3d373d3d3d363d73${this.templateSidechainAddress.slice(2)}5af43d82803e903d91602b57fd5bf3`)
         return getCreate2Address(this.factorySidechainAddress, hexZeroPad(mainnetAddress, 32), codeHash)
     }
 
@@ -95,11 +107,8 @@ export class Contracts {
     async getSidechainAmb() {
         if (!this.cachedSidechainAmb) {
             const getAmbPromise = async () => {
-                const mainnetProvider = this.ethereum.getMainnetProvider()
-                const factoryMainnet = new Contract(this.factoryMainnetAddress, factoryMainnetABI, mainnetProvider)
                 const sidechainProvider = this.ethereum.getSidechainProvider()
-                const factorySidechainAddress = await factoryMainnet.data_union_sidechain_factory() // TODO use getDataUnionSidechainAddress()
-                const factorySidechain = new Contract(factorySidechainAddress, [{
+                const factorySidechain = new Contract(this.factorySidechainAddress, [{
                     name: 'amb',
                     inputs: [],
                     outputs: [{ type: 'address' }],
@@ -137,7 +146,7 @@ export class Contracts {
     }
 
     // move signatures from sidechain to mainnet
-    async transportSignatures(messageHash: string) {
+    async transportSignaturesForMessage(messageHash: string) {
         const sidechainAmb = await this.getSidechainAmb()
         const message = await sidechainAmb.message(messageHash)
         const messageId = '0x' + message.substr(2, 64)
@@ -171,7 +180,7 @@ export class Contracts {
             const alreadyProcessed = await mainnetAmb.relayedMessages(messageId)
             if (alreadyProcessed) {
                 log(`WARNING: Tried to transport signatures but they have already been transported (Message ${messageId} has already been processed)`)
-                log('This could happen if payForSignatureTransport=true, but bridge operator also pays for signatures, and got there before your client')
+                log('This could happen if freeWithdraw=false (attempt self-service), but bridge actually paid before your client')
                 return null
             }
 
@@ -218,7 +227,7 @@ export class Contracts {
         return trAMB
     }
 
-    async payForSignatureTransport(tr: ContractReceipt, options: { pollingIntervalMs?: number, retryTimeoutMs?: number } = {}) {
+    async transportSignaturesForTransaction(tr: ContractReceipt, options: { pollingIntervalMs?: number, retryTimeoutMs?: number } = {}) {
         const {
             pollingIntervalMs = 1000,
             retryTimeoutMs = 60000,
@@ -229,6 +238,7 @@ export class Contracts {
         if (sigEventArgsArray.length < 1) {
             throw new Error("No UserRequestForSignature events emitted from withdraw transaction, can't transport withdraw to mainnet")
         }
+
         /* eslint-disable no-await-in-loop */
         // eslint-disable-next-line no-restricted-syntax
         for (const eventArgs of sigEventArgsArray) {
@@ -242,17 +252,16 @@ export class Contracts {
             const mainnetAmb = await this.getMainnetAmb()
             const alreadySent = await mainnetAmb.messageCallStatus(messageId)
             const failAddress = await mainnetAmb.failedMessageSender(messageId)
-            if (alreadySent || failAddress !== '0x0000000000000000000000000000000000000000') { // zero address means no failed messages
+
+            // zero address means no failed messages
+            if (alreadySent || failAddress !== '0x0000000000000000000000000000000000000000') {
                 log(`WARNING: Mainnet bridge has already processed withdraw messageId=${messageId}`)
-                log([
-                    'This could happen if payForSignatureTransport=true, but bridge operator also pays for',
-                    'signatures, and got there before your client',
-                ].join(' '))
+                log('This could happen if freeWithdraw=false (attempt self-service), but bridge actually paid before your client')
                 continue
             }
 
             log(`Transporting signatures for hash=${messageHash}`)
-            await this.transportSignatures(messageHash)
+            await this.transportSignaturesForMessage(messageHash)
         }
         /* eslint-enable no-await-in-loop */
     }
@@ -294,7 +303,7 @@ export class Contracts {
         }
 
         if (await mainnetProvider.getCode(this.factoryMainnetAddress) === '0x') {
-            throw new Error(`Data union factory contract not found at ${this.factoryMainnetAddress}, check StreamrClient.options.factoryMainnetAddress!`)
+            throw new Error(`Data union factory contract not found at ${this.factoryMainnetAddress}, check StreamrClient.options.dataUnion.factoryMainnetAddress!`)
         }
 
         const factoryMainnet = new Contract(this.factoryMainnetAddress!, factoryMainnetABI, mainnetWallet)

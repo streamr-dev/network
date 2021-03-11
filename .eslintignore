@@ -6,3 +6,5 @@ test/legacy/**
 src/shim/**
 test/unit/StubbedStreamrClient.js
 streamr-docker-dev/**
+vendor/**
+test/exports/**
