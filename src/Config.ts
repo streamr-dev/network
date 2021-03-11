@@ -20,6 +20,8 @@ export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
  * @category Important
  */
 export type StrictStreamrClientOptions = {
+  /** Custom human-readable debug id for client. Used in logging. Unique id will be generated regardless. */
+    id?: string,
     /**
     * Authentication: identity used by this StreamrClient instance.
     * Can contain member privateKey or (window.)ethereum
