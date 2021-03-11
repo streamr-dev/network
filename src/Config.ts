@@ -11,7 +11,7 @@ export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
 
 export type StrictStreamrClientOptions = {
     auth: {
-        privateKey?: string|BytesLike
+        privateKey?: BytesLike
         ethereum?: EthereumConfig
         apiKey?: string
         username?: string

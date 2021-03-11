@@ -1,7 +1,7 @@
 import { arrayify, BytesLike } from '@ethersproject/bytes'
 import { StreamrClient } from '../../src/StreamrClient'
 
-const createClient = (privateKey: string|BytesLike) => {
+const createClient = (privateKey: BytesLike) => {
     return new StreamrClient({
         auth: {
             privateKey

@@ -12,7 +12,7 @@ enum State {
 }
 
 export interface SessionOptions {
-    privateKey?: string|BytesLike
+    privateKey?: BytesLike
     ethereum?: ExternalProvider|JsonRpcFetchFunc
     apiKey?: string
     username?: string
