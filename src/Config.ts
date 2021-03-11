@@ -5,12 +5,13 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { getVersionString } from './utils'
 import { ConnectionInfo } from '@ethersproject/web'
 import { EthereumAddress, Todo } from './types'
+import { BytesLike } from '@ethersproject/bytes'
 
 export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
 
 export type StrictStreamrClientOptions = {
     auth: {
-        privateKey?: EthereumAddress
+        privateKey?: string|BytesLike
         ethereum?: EthereumConfig
         apiKey?: string
         username?: string

@@ -20,6 +20,7 @@ export * from './types'
 export { BigNumber } from '@ethersproject/bignumber'
 export { ConnectionInfo } from '@ethersproject/web'
 export { Contract } from '@ethersproject/contracts'
+export { BytesLike, Bytes } from '@ethersproject/bytes'
 export { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
 
 export default StreamrClient
