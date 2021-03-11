@@ -20,8 +20,8 @@ export default class StreamrEthereum {
             const key = auth.privateKey
             const address = getAddress(computeAddress(key))
             this._getAddress = async () => address
-            this.getSigner = () => new Wallet(key, this.getMainnetProvider())
-            this.getSidechainSigner = async () => new Wallet(key, this.getSidechainProvider())
+            this._getSigner = () => new Wallet(key, this.getMainnetProvider())
+            this._getSidechainSigner = async () => new Wallet(key, this.getSidechainProvider())
         } else if (auth.ethereum) {
             this._getAddress = async () => {
                 try {
