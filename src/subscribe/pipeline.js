@@ -78,7 +78,6 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         async function* ValidateMessages(src) {
             try {
                 for await (const streamMessage of src) {
-                    client.debug('loop')
                     try {
                         await validate(streamMessage)
                     } catch (err) {

@@ -469,7 +469,6 @@ class Subscriptions {
             }
         } finally {
             await cancelTask // only wait for cancel at end
-            await sub.onDone()
         }
     }
 
