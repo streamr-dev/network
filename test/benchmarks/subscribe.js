@@ -1,5 +1,4 @@
 const { format } = require('util')
-
 const { Benchmark } = require('benchmark')
 
 // eslint-disable-next-line import/no-unresolved

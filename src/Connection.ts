@@ -314,7 +314,9 @@ export default class Connection extends EventEmitter {
 
     constructor(options = {}, debug?: Debug.Debugger) {
         super()
-        this._debug = (debug !== undefined) ? debug.extend(counterId(this.constructor.name)) : Debug(`StreamrClient::${counterId(this.constructor.name)}`)
+        this._debug = debug !== undefined
+            ? debug.extend(counterId(this.constructor.name))
+            : Debug(`StreamrClient::${counterId(this.constructor.name)}`)
 
         this.options = options
         this.options.autoConnect = !!this.options.autoConnect

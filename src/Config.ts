@@ -48,7 +48,9 @@ export type StrictStreamrClientOptions = {
     }
 }
 
-export type StreamrClientOptions = Partial<Omit<StrictStreamrClientOptions, 'dataUnion'> & { dataUnion: Partial<StrictStreamrClientOptions['dataUnion']>}>
+export type StreamrClientOptions = Partial<Omit<StrictStreamrClientOptions, 'dataUnion'> & {
+    dataUnion: Partial<StrictStreamrClientOptions['dataUnion']>
+}>
 
 const { ControlMessage } = ControlLayer
 const { StreamMessage } = MessageLayer
@@ -87,7 +89,9 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
         dataUnion: {
             minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
-            freeWithdraw: false, // if someone else pays for the gas when transporting the withdraw tx to mainnet; otherwise the client does the transport as self-service and pays the mainnet gas costs
+            // if someone else pays for the gas when transporting the withdraw tx to mainnet;
+            // otherwise the client does the transport as self-service and pays the mainnet gas costs
+            freeWithdraw: false,
             factoryMainnetAddress: '0x7d55f9981d4E10A193314E001b96f72FCc901e40',
             factorySidechainAddress: '0x1b55587Beea0b5Bc96Bb2ADa56bD692870522e9f',
             templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',

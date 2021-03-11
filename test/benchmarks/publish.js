@@ -1,12 +1,9 @@
 const { format } = require('util')
-
 const { Benchmark } = require('benchmark')
 
 // eslint-disable-next-line import/no-unresolved
 const StreamrClient = require('../../dist')
 const config = require('../integration/config')
-
-console.log('StreamrClient', { StreamrClient })
 
 /* eslint-disable no-console */
 
