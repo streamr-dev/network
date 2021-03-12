@@ -154,6 +154,8 @@ const testWithdraw = async (
 
 describe('DataUnion withdraw', () => {
 
+    let balanceClient = createClient()
+
     afterAll(() => {
         providerMainnet.removeAllListeners()
         providerSidechain.removeAllListeners()
@@ -162,12 +164,11 @@ describe('DataUnion withdraw', () => {
     for (const sendToMainnet of [true, false]) {
 
         const getTokenBalance = async (wallet: Wallet) => {
-            return sendToMainnet
-                ? tokenMainnet.balanceOf(wallet.address)
-                : tokenSidechain.balanceOf(wallet.address)
+            return sendToMainnet ? balanceClient.getTokenBalance(wallet.address) : balanceClient.getSidechainTokenBalance(wallet.address)
         }
 
         describe('Withdrawing to ' + (sendToMainnet ? 'mainnet' : 'sidechain'), () => {
+
             describe('Member', () => {
 
                 it('by member itself', () => {
@@ -190,6 +191,7 @@ describe('DataUnion withdraw', () => {
             })
 
             describe('Admin', () => {
+
                 it('non-signed', async () => {
                     const getBalance = async (memberWallet: Wallet) => getTokenBalance(memberWallet)
                     const withdraw = (dataUnionAddress: string, _: StreamrClient, memberWallet: Wallet, adminClient: StreamrClient) => (
