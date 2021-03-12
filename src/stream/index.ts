@@ -70,17 +70,21 @@ function getFieldType(value: any): (Field['type'] | undefined) {
 }
 
 export class Stream {
-    // TODO add field definitions for all fields
     // @ts-expect-error
     id: string
     // @ts-expect-error
     name: string
+    description?: string
     config: {
         fields: Field[];
     } = { fields: [] }
+    partitions?: number
+    /** @internal */
     _client: StreamrClient
     requireEncryptedData?: boolean
     requireSignedData?: boolean
+    storageDays?: number
+    inactivityThresholdHours?: number
 
     constructor(client: StreamrClient, props: StreamProperties) {
         this._client = client
@@ -99,6 +103,7 @@ export class Stream {
         return json ? new Stream(this._client, json) : undefined
     }
 
+    /** @internal */
     toObject() {
         const result = {}
         Object.keys(this).forEach((key) => {

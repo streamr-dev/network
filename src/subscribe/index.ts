@@ -10,9 +10,33 @@ import MessagePipeline from './pipeline'
 import Validator from './Validator'
 import messageStream from './messageStream'
 import resendStream from './resendStream'
+import { Todo } from '../types'
+import StreamrClient from '..'
 
 export class Subscription extends Emitter {
-    constructor(client, opts, onFinally = () => {}) {
+
+    streamId: string
+    streamPartition: number
+    /** @internal */
+    client: StreamrClient
+    /** @internal */
+    options: Todo
+    /** @internal */
+    key: Todo
+    /** @internal */
+    id: Todo
+    /** @internal */
+    _onDone: Todo
+    /** @internal */
+    _onFinally: Todo
+    /** @internal */
+    pipeline: Todo
+    /** @internal */
+    msgStream: Todo
+    /** @internal */
+    iterated?: Todo
+
+    constructor(client: StreamrClient, opts: Todo, onFinally = () => {}) {
         super()
         this.client = client
         this.options = validateOptions(opts)
@@ -30,9 +54,10 @@ export class Subscription extends Emitter {
         this.pipeline = opts.pipeline || MessagePipeline(client, {
             ...this.options,
             validate,
-            onError: (err) => {
+            onError: (err: Todo) => {
                 this.emit('error', err)
             },
+        // @ts-expect-error
         }, this.onPipelineEnd)
 
         this.msgStream = this.pipeline.msgStream
@@ -40,9 +65,9 @@ export class Subscription extends Emitter {
 
     /**
      * Expose cleanup
+     * @internal
      */
-
-    async onPipelineEnd(err) {
+    async onPipelineEnd(err: Todo) {
         try {
             await this._onFinally(err)
         } finally {
@@ -50,6 +75,7 @@ export class Subscription extends Emitter {
         }
     }
 
+    /** @internal */
     async onDone() {
         return this._onDone
     }
@@ -58,8 +84,7 @@ export class Subscription extends Emitter {
      * Collect all messages into an array.
      * Returns array when subscription is ended.
      */
-
-    async collect(n) {
+    async collect(n?: Todo) {
         const msgs = []
         for await (const msg of this) {
             if (n === 0) {
@@ -75,6 +100,7 @@ export class Subscription extends Emitter {
         return msgs
     }
 
+    /** @internal */
     [Symbol.asyncIterator]() {
         // only iterate sub once
         if (this.iterated) {
@@ -85,19 +111,22 @@ export class Subscription extends Emitter {
         return this.pipeline
     }
 
-    async cancel(...args) {
+    /** @internal */
+    async cancel(...args: Todo[]) {
         return this.pipeline.cancel(...args)
     }
 
-    async return(...args) {
+    /** @internal */
+    async return(...args: Todo[]) {
         return this.pipeline.return(...args)
     }
 
-    async throw(...args) {
+    /** @internal */
+    async throw(...args: Todo[]) {
         return this.pipeline.throw(...args)
     }
 
-    async unsubscribe(...args) {
+    async unsubscribe(...args: Todo[]) {
         return this.cancel(...args)
     }
 }
@@ -107,9 +136,9 @@ export class Subscription extends Emitter {
  * Aggregates errors rather than throwing on first.
  */
 
-function multiEmit(emitters, ...args) {
-    let error
-    emitters.forEach((s) => {
+function multiEmit(emitters: Todo, ...args: Todo[]) {
+    let error: Todo
+    emitters.forEach((s: Todo) => {
         try {
             s.emit(...args)
         } catch (err) {
@@ -128,7 +157,15 @@ function multiEmit(emitters, ...args) {
  */
 
 class SubscriptionSession extends Emitter {
-    constructor(client, options) {
+
+    client: StreamrClient
+    options: Todo
+    validate: Todo
+    subscriptions: Set<Todo>
+    deletedSubscriptions: Set<Todo>
+    step?: Todo
+
+    constructor(client: StreamrClient, options: Todo) {
         super()
         this.client = client
         this.options = validateOptions(options)
@@ -229,6 +266,7 @@ class SubscriptionSession extends Emitter {
                     await unsubscribe(this.client, this.options)
                 }
             }
+        // @ts-expect-error
         ], check, {
             onError(err) {
                 if (err instanceof ConnectionError && !check()) {
@@ -241,7 +279,7 @@ class SubscriptionSession extends Emitter {
         })
     }
 
-    has(sub) {
+    has(sub: Todo) {
         return this.subscriptions.has(sub)
     }
 
@@ -250,14 +288,14 @@ class SubscriptionSession extends Emitter {
      * then on self.
      */
 
-    emit(...args) {
+    emit(...args: Todo[]) {
         const subs = this._getSubs()
         try {
             multiEmit(subs, ...args)
         } catch (error) {
             return super.emit('error', error)
         }
-
+        // @ts-expect-error
         return super.emit(...args)
     }
 
@@ -273,7 +311,7 @@ class SubscriptionSession extends Emitter {
      * Add subscription & appropriate connection handle.
      */
 
-    async add(sub) {
+    async add(sub: Todo) {
         this.subscriptions.add(sub)
         const { connection } = this.client
         await connection.addHandle(`adding${sub.id}`)
@@ -289,7 +327,7 @@ class SubscriptionSession extends Emitter {
      * Remove subscription & appropriate connection handle.
      */
 
-    async remove(sub) {
+    async remove(sub: Todo) {
         this.subscriptions.delete(sub)
 
         if (this.deletedSubscriptions.has(sub)) {
@@ -328,12 +366,16 @@ class SubscriptionSession extends Emitter {
  */
 
 class Subscriptions {
-    constructor(client) {
+
+    client: StreamrClient
+    subSessions: Map<Todo, Todo>
+
+    constructor(client: StreamrClient) {
         this.client = client
         this.subSessions = new Map()
     }
 
-    async add(opts, onFinally = async () => {}) {
+    async add(opts: Todo, onFinally: Todo = async () => {}) {
         const options = validateOptions(opts)
         const { key } = options
 
@@ -345,7 +387,8 @@ class Subscriptions {
         const sub = new Subscription(this.client, {
             ...options,
             validate: subSession.validate,
-        }, async (err) => {
+        // @ts-expect-error
+        }, async (err: Todo) => {
             try {
                 await this.remove(sub)
             } finally {
@@ -353,6 +396,7 @@ class Subscriptions {
             }
         })
 
+        // @ts-expect-error
         sub.count = () => {
             // sub.count() gives number of subs on same stream+partition
             return this.count(sub.options)
@@ -375,7 +419,7 @@ class Subscriptions {
         return sub
     }
 
-    async remove(sub) {
+    async remove(sub: Todo) {
         const { key } = sub
         let cancelTask
         try {
@@ -397,10 +441,9 @@ class Subscriptions {
     /**
      * Remove all subscriptions, optionally only those matching options.
      */
-
-    async removeAll(options) {
+    async removeAll(options?: Todo) {
         const subs = this.get(options)
-        return allSettledValues(subs.map((sub) => (
+        return allSettledValues(subs.map((sub: Todo) => (
             this.remove(sub)
         )))
     }
@@ -421,7 +464,7 @@ class Subscriptions {
      * Count all matching subscriptions.
      */
 
-    count(options) {
+    count(options: Todo) {
         if (options === undefined) { return this.countAll() }
         return this.get(options).length
     }
@@ -441,7 +484,7 @@ class Subscriptions {
      * Get subscription session for matching sub options.
      */
 
-    getSubscriptionSession(options) {
+    getSubscriptionSession(options: Todo) {
         const { key } = validateOptions(options)
         return this.subSessions.get(key)
     }
@@ -450,7 +493,7 @@ class Subscriptions {
      * Get all subscriptions matching options.
      */
 
-    get(options) {
+    get(options: Todo) {
         if (options === undefined) { return this.getAll() }
 
         const { key } = validateOptions(options)
@@ -465,28 +508,35 @@ class Subscriptions {
  * Top-level user-facing interface for creating/destroying subscriptions.
  */
 export class Subscriber {
-    constructor(client) {
+
+    client: StreamrClient
+    subscriptions: Subscriptions
+
+    constructor(client: StreamrClient) {
         this.client = client
         this.subscriptions = new Subscriptions(client)
     }
 
-    getSubscriptionSession(...args) {
+    getSubscriptionSession(...args: Todo[]) {
+        // @ts-expect-error
         return this.subscriptions.getSubscriptionSession(...args)
     }
 
-    getAll(...args) {
+    getAll(...args: Todo[]) {
+        // @ts-expect-error
         return this.subscriptions.getAll(...args)
     }
 
-    count(options) {
+    count(options: Todo[]) {
         return this.subscriptions.count(options)
     }
 
-    async subscribe(...args) {
+    async subscribe(...args: Todo[]) {
+        // @ts-expect-error
         return this.subscriptions.add(...args)
     }
 
-    async unsubscribe(options) {
+    async unsubscribe(options: Todo): Promise<Todo> {
         if (options instanceof Subscription) {
             const sub = options
             return sub.cancel()
@@ -499,7 +549,7 @@ export class Subscriber {
         return this.subscriptions.removeAll(options)
     }
 
-    async resend(opts) {
+    async resend(opts: Todo) {
         const resendMsgStream = resendStream(this.client, opts)
 
         const sub = new Subscription(this.client, {
@@ -514,7 +564,7 @@ export class Subscriber {
         return sub
     }
 
-    async resendSubscribe(opts, onMessage) {
+    async resendSubscribe(opts: Todo, onMessage: Todo) {
         // This works by passing a custom message stream to a subscription
         // the custom message stream iterates resends, then iterates realtime
         const options = validateOptions(opts)
@@ -523,7 +573,7 @@ export class Subscriber {
         const realtimeMessageStream = messageStream(this.client.connection, options)
 
         // cancel both streams on end
-        async function end(optionalErr) {
+        async function end(optionalErr: Todo) {
             await Promise.all([
                 resendMessageStream.cancel(optionalErr),
                 realtimeMessageStream.cancel(optionalErr),
@@ -534,15 +584,15 @@ export class Subscriber {
             }
         }
 
-        let resendSubscribeSub
+        let resendSubscribeSub: Todo
 
-        let lastResentMsgId
-        let lastProcessedMsgId
+        let lastResentMsgId: Todo
+        let lastProcessedMsgId: Todo
         const resendDone = Defer()
         let isResendDone = false
         let resentEmitted = false
 
-        function messageIDString(msg) {
+        function messageIDString(msg: Todo) {
             return msg.getMessageID().serialize()
         }
 
@@ -579,14 +629,16 @@ export class Subscriber {
                 } finally {
                     isResendDone = true
                     maybeEmitResend()
+                    // @ts-expect-error
                     resendDone.resolve()
                 }
             },
-            async function* ResendThenRealtime(src) {
+            async function* ResendThenRealtime(src: Todo) {
                 yield* src
                 await resendDone // ensure realtime doesn't start until resend ends
                 yield* resendSubscribeSub.realtime
             },
+        // @ts-expect-error
         ], end)
 
         const resendTask = resendMessageStream.subscribe()
@@ -594,7 +646,7 @@ export class Subscriber {
             ...options,
             msgStream: it,
             afterSteps: [
-                async function* detectEndOfResend(src) {
+                async function* detectEndOfResend(src: Todo) {
                     for await (const msg of src) {
                         const id = messageIDString(msg)
                         try {

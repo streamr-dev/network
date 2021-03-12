@@ -47,21 +47,21 @@ export default class Session extends EventEmitter {
         if (typeof this.options.privateKey !== 'undefined') {
             const wallet = new Wallet(this.options.privateKey)
             this.loginFunction = async () => (
-                this._client.loginEndpoints.loginWithChallengeResponse((d: string) => wallet.signMessage(d), wallet.address)
+                this._client.loginWithChallengeResponse((d: string) => wallet.signMessage(d), wallet.address)
             )
         } else if (typeof this.options.ethereum !== 'undefined') {
             const provider = new Web3Provider(this.options.ethereum)
             const signer = provider.getSigner()
             this.loginFunction = async () => (
-                this._client.loginEndpoints.loginWithChallengeResponse((d: string) => signer.signMessage(d), await signer.getAddress())
+                this._client.loginWithChallengeResponse((d: string) => signer.signMessage(d), await signer.getAddress())
             )
         } else if (typeof this.options.apiKey !== 'undefined') {
             this.loginFunction = async () => (
-                this._client.loginEndpoints.loginWithApiKey(this.options.apiKey!)
+                this._client.loginWithApiKey(this.options.apiKey!)
             )
         } else if (typeof this.options.username !== 'undefined' && typeof this.options.password !== 'undefined') {
             this.loginFunction = async () => (
-                this._client.loginEndpoints.loginWithUsernamePassword(this.options.username!, this.options.password!)
+                this._client.loginWithUsernamePassword(this.options.username!, this.options.password!)
             )
         } else {
             if (!this.options.sessionToken) {
@@ -128,7 +128,7 @@ export default class Session extends EventEmitter {
         }
 
         this.updateState(State.LOGGING_OUT)
-        await this._client.loginEndpoints.logoutEndpoint()
+        await this._client.logoutEndpoint()
         this.options.sessionToken = undefined
         this.updateState(State.LOGGED_OUT)
     }

@@ -9,7 +9,7 @@ import StreamrEthereum from './Ethereum'
 import Session from './Session'
 import Connection, { ConnectionError } from './Connection'
 import Publisher from './publish'
-import { Subscriber } from './subscribe'
+import { Subscriber, Subscription } from './subscribe'
 import { getUserId } from './user'
 import { Todo, MaybeAsync, EthereumAddress } from './types'
 import { StreamEndpoints } from './rest/StreamEndpoints'
@@ -141,18 +141,24 @@ export interface StreamrClient extends StreamEndpoints, LoginEndpoints {}
 
 // eslint-disable-next-line no-redeclare
 export class StreamrClient extends EventEmitter {
+    /** @internal */
     id: string
+    /** @internal */
     debug: Debug.Debugger
+    /** @internal */
     options: StrictStreamrClientOptions
     /** @internal */
     session: Session
+    /** @internal */
     connection: StreamrConnection
+    /** @internal */
     publisher: Todo
+    /** @internal */
     subscriber: Subscriber
+    /** @internal */
     cached: StreamrCached
+    /** @internal */
     ethereum: StreamrEthereum
-    streamEndpoints: StreamEndpoints
-    loginEndpoints: LoginEndpoints
 
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
@@ -189,25 +195,29 @@ export class StreamrClient extends EventEmitter {
         this.subscriber = new Subscriber(this)
         this.ethereum = new StreamrEthereum(this)
 
-        this.streamEndpoints = Plugin(this, new StreamEndpoints(this))
-        this.loginEndpoints = Plugin(this, new LoginEndpoints(this))
+        Plugin(this, new StreamEndpoints(this))
+        Plugin(this, new LoginEndpoints(this))
         this.cached = new StreamrCached(this)
     }
 
+    /** @internal */
     async onConnectionConnected() {
         this.debug('Connected!')
         this.emit('connected')
     }
 
+    /** @internal */
     async onConnectionDisconnected() {
         this.debug('Disconnected.')
         this.emit('disconnected')
     }
 
+    /** @internal */
     onConnectionError(err: Todo) {
         this.emit('error', new ConnectionError(err))
     }
 
+    /** @internal */
     getErrorEmitter(source: Todo) {
         return (err: Todo) => {
             if (!(err instanceof ConnectionError || err.reason instanceof ConnectionError)) {
@@ -219,19 +229,20 @@ export class StreamrClient extends EventEmitter {
         }
     }
 
+    /** @internal */
     _onError(err: Todo, ...args: Todo) {
         // @ts-expect-error
         this.onError(err, ...args)
     }
 
+    /** @internal */
     async send(request: Todo) {
         return this.connection.send(request)
     }
 
     /**
      * Override to control output
-     */
-
+     * @internal */
     onError(error: Todo) { // eslint-disable-line class-methods-use-this
         console.error(error)
     }
@@ -256,6 +267,7 @@ export class StreamrClient extends EventEmitter {
         return this.connection.connect()
     }
 
+    /** @internal */
     async nextConnection() {
         return this.connection.nextConnection()
     }
@@ -297,10 +309,12 @@ export class StreamrClient extends EventEmitter {
         return getUserId(this)
     }
 
+    /** @internal */
     setNextGroupKey(...args: Todo) {
         return this.publisher.setNextGroupKey(...args)
     }
 
+    /** @internal */
     rotateGroupKey(...args: Todo) {
         return this.publisher.rotateGroupKey(...args)
     }
@@ -340,7 +354,7 @@ export class StreamrClient extends EventEmitter {
         await this.subscriber.unsubscribe(opts)
     }
 
-    async resend(opts: Todo, onMessage?: OnMessageCallback) {
+    async resend(opts: Todo, onMessage?: OnMessageCallback): Promise<Subscription> {
         const task = this.subscriber.resend(opts)
         if (typeof onMessage !== 'function') {
             return task
@@ -367,11 +381,11 @@ export class StreamrClient extends EventEmitter {
         return this.connection.enableAutoDisconnect(...args)
     }
 
-    getAddress() {
+    getAddress(): EthereumAddress {
         return this.ethereum.getAddress()
     }
 
-    async getPublisherId() {
+    async getPublisherId(): Promise<EthereumAddress> {
         return this.getAddress()
     }
 
@@ -406,6 +420,7 @@ export class StreamrClient extends EventEmitter {
         return DataUnion._deploy(options, this) // eslint-disable-line no-underscore-dangle
     }
 
+    /** @internal */
     _getDataUnionFromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: EthereumAddress}) {
         return DataUnion._fromName({ // eslint-disable-line no-underscore-dangle
             dataUnionName,

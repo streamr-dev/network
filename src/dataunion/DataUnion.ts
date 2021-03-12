@@ -68,10 +68,11 @@ const log = debug('StreamrClient::DataUnion')
 
 export class DataUnion {
 
-    contractAddress: EthereumAddress
-    sidechainAddress: EthereumAddress
-    client: StreamrClient
+    private contractAddress: EthereumAddress
+    private sidechainAddress: EthereumAddress
+    private client: StreamrClient
 
+    /** @internal */
     constructor(contractAddress: EthereumAddress, sidechainAddress: EthereumAddress, client: StreamrClient) {
         // validate and convert to checksum case
         this.contractAddress = getAddress(contractAddress)
@@ -460,6 +461,7 @@ export class DataUnion {
      * Create a new DataUnionMainnet contract to mainnet with DataUnionFactoryMainnet
      * This triggers DataUnionSidechain contract creation in sidechain, over the bridge (AMB)
      * @return that resolves when the new DU is deployed over the bridge to side-chain
+     * @internal
      */
     static async _deploy(options: DataUnionDeployOptions = {}, client: StreamrClient): Promise<DataUnion> {
         const deployerAddress = client.getAddress()
@@ -513,18 +515,21 @@ export class DataUnion {
 
     // Internal functions
 
+    /** @internal */
     static _fromContractAddress(contractAddress: string, client: StreamrClient) {
         const contracts = new Contracts(client)
         const sidechainAddress = contracts.getDataUnionSidechainAddress(getAddress(contractAddress)) // throws if bad address
         return new DataUnion(contractAddress, sidechainAddress, client)
     }
 
+    /** @internal */
     static _fromName({ dataUnionName, deployerAddress }: { dataUnionName: string, deployerAddress: string}, client: StreamrClient) {
         const contracts = new Contracts(client)
         const contractAddress = contracts.getDataUnionMainnetAddress(dataUnionName, getAddress(deployerAddress)) // throws if bad address
         return DataUnion._fromContractAddress(contractAddress, client) // eslint-disable-line no-underscore-dangle
     }
 
+    /** @internal */
     async _getContract() {
         const ret = this.getContracts().getMainnetContract(this.contractAddress)
         // @ts-expect-error

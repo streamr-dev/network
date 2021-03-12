@@ -79,6 +79,7 @@ function getKeepAliveAgentForUrl(url: string) {
 /** TODO the class should be annotated with at-internal, but adding the annotation hides the methods */
 export class StreamEndpoints {
 
+    /** @internal */
     client: StreamrClient
 
     constructor(client: StreamrClient) {
@@ -171,7 +172,7 @@ export class StreamEndpoints {
         return json.addresses.map((a: string) => a.toLowerCase())
     }
 
-    async isStreamPublisher(streamId: string, ethAddress: string) {
+    async isStreamPublisher(streamId: string, ethAddress: EthereumAddress) {
         this.client.debug('isStreamPublisher %o', {
             streamId,
             ethAddress,
@@ -198,7 +199,7 @@ export class StreamEndpoints {
         return json.addresses.map((a: string) => a.toLowerCase())
     }
 
-    async isStreamSubscriber(streamId: string, ethAddress: string) {
+    async isStreamSubscriber(streamId: string, ethAddress: EthereumAddress) {
         this.client.debug('isStreamSubscriber %o', {
             streamId,
             ethAddress,

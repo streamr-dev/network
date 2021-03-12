@@ -23,9 +23,7 @@ describe('Session', () => {
                 sessionToken: 'session-token',
             },
         })
-        clientSessionToken.loginEndpoints = {
-            logoutEndpoint: sinon.stub().resolves()
-        }
+        clientSessionToken.logoutEndpoint = sinon.stub().resolves()
 
         session = new Session(clientSessionToken)
         session.options.unauthenticated = false
@@ -162,7 +160,7 @@ describe('Session', () => {
         it('should call the logout endpoint', async () => {
             await session.getSessionToken()
             await session.logout()
-            expect(clientSessionToken.loginEndpoints.logoutEndpoint.calledOnce).toBeTruthy()
+            expect(clientSessionToken.logoutEndpoint.calledOnce).toBeTruthy()
         })
 
         it('should call the logout endpoint again', async () => {
@@ -171,7 +169,7 @@ describe('Session', () => {
             await session.logout()
             await session.getSessionToken()
             await session.logout()
-            expect(clientSessionToken.loginEndpoints.logoutEndpoint.calledTwice).toBeTruthy()
+            expect(clientSessionToken.logoutEndpoint.calledTwice).toBeTruthy()
         })
 
         it('should throw if already logging out', async () => {

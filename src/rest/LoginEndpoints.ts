@@ -28,12 +28,14 @@ async function getSessionToken(url: string, props: any) {
 /** TODO the class should be annotated with at-internal, but adding the annotation hides the methods */
 export class LoginEndpoints {
 
+    /** @internal */
     client: StreamrClient
 
     constructor(client: StreamrClient) {
         this.client = client
     }
 
+    /** @internal */
     async getChallenge(address: string) {
         this.client.debug('getChallenge %o', {
             address,
@@ -48,6 +50,7 @@ export class LoginEndpoints {
         )
     }
 
+    /** @internal */
     async sendChallengeResponse(challenge: { challenge: string }, signature: string, address: string) {
         this.client.debug('sendChallengeResponse %o', {
             challenge,
@@ -63,6 +66,7 @@ export class LoginEndpoints {
         return getSessionToken(url, props)
     }
 
+    /** @internal */
     async loginWithChallengeResponse(signingFunction: (challenge: string) => Promise<string>, address: string) {
         this.client.debug('loginWithChallengeResponse %o', {
             address,
@@ -72,6 +76,7 @@ export class LoginEndpoints {
         return this.sendChallengeResponse(challenge, signature, address)
     }
 
+    /** @internal */
     async loginWithApiKey(apiKey: string) {
         this.client.debug('loginWithApiKey %o', {
             apiKey,
@@ -83,6 +88,7 @@ export class LoginEndpoints {
         return getSessionToken(url, props)
     }
 
+    /** @internal */
     async loginWithUsernamePassword(username: string, password: string) {
         this.client.debug('loginWithUsernamePassword %o', {
             username,
@@ -110,6 +116,7 @@ export class LoginEndpoints {
         return authFetch<UserDetails>(`${this.client.options.restUrl}/users/me`, this.client.session)
     }
 
+    /** @internal */
     async logoutEndpoint(): Promise<void> {
         this.client.debug('logoutEndpoint')
         await authFetch(`${this.client.options.restUrl}/logout`, this.client.session, {
