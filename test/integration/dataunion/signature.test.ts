@@ -52,7 +52,7 @@ describe('DataUnion signature', () => {
         // eslint-disable-next-line no-underscore-dangle
         const contract = await dataUnion._getContract()
         const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
-        const tokenSidechain = new Contract(config.clientOptions.tokenAddressSidechain, Token.abi, adminWalletSidechain)
+        const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
         const signature = await memberClient.getDataUnion(dataUnion.getAddress()).signWithdrawAllTo(member2Wallet.address)
         const signature2 = await memberClient

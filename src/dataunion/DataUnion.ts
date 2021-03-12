@@ -555,7 +555,9 @@ export class DataUnion {
             retryTimeoutMs = 60000,
             freeWithdraw = this.client.options.dataUnion.freeWithdraw
         }: any = options
-        const getBalanceFunc = () => this.client.getTokenBalance(recipientAddress)
+        const getBalanceFunc = options?.sendToMainnet
+            ? () => this.client.getTokenBalance(recipientAddress)
+            : () => this.client.getSidechainTokenBalance(recipientAddress)
         const balanceBefore = await getBalanceFunc()
         const tx = await getWithdrawTxFunc()
         const tr = await tx.wait()
