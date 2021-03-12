@@ -3,6 +3,7 @@ const fs = require('fs')
 const pkg = Object.assign({}, require('./package.json'))
 
 delete pkg.scripts
+delete pkg.private
 
 try {
     fs.mkdirSync('./dist/')
