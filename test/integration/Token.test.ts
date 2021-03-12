@@ -7,7 +7,7 @@ import config from './config'
 import { BigNumber, providers } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import { EthereumAddress } from '../../src/types'
-import {  until } from '../../src/utils'
+import { until } from '../../src/utils'
 import debug from 'debug'
 
 // @ts-expect-error
@@ -24,32 +24,32 @@ const log = debug('StreamrClient::TokenTest')
 const sendTokensToSidechain = async (receiverAddress: EthereumAddress, amount: BigNumber) => {
     const relayTokensAbi = [
         {
-            "inputs": [
-            {
-                "internalType": "address",
-                "name": "token",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "_receiver",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_value",
-                "type": "uint256"
-            },
-            {
-                "internalType": "bytes",
-                "name": "_data",
-                "type": "bytes"
-            }
+            inputs: [
+                {
+                    internalType: 'address',
+                    name: 'token',
+                    type: 'address'
+                },
+                {
+                    internalType: 'address',
+                    name: '_receiver',
+                    type: 'address'
+                },
+                {
+                    internalType: 'uint256',
+                    name: '_value',
+                    type: 'uint256'
+                },
+                {
+                    internalType: 'bytes',
+                    name: '_data',
+                    type: 'bytes'
+                }
             ],
-            "name": "relayTokensAndCall",
-            "outputs": [],
-            "stateMutability": "nonpayable",
-            "type": "function"
+            name: 'relayTokensAndCall',
+            outputs: [],
+            stateMutability: 'nonpayable',
+            type: 'function'
         }
     ]
     const tokenMediator = new Contract(config.tokenMediator, relayTokensAbi, tokenAdminMainnetWallet)

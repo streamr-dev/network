@@ -11,7 +11,6 @@ import config from '../config'
 import authFetch from '../../../src/rest/authFetch'
 import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { MemberStatus } from '../../../src/dataunion/DataUnion'
-import { EthereumAddress } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
@@ -154,7 +153,7 @@ const testWithdraw = async (
 
 describe('DataUnion withdraw', () => {
 
-    let balanceClient = createClient()
+    const balanceClient = createClient()
 
     afterAll(() => {
         providerMainnet.removeAllListeners()
