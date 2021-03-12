@@ -1,6 +1,4 @@
-import sinon from 'sinon'
-
-import Stream from '../../src/rest/domain/Stream'
+import { Stream } from '../../src/stream'
 
 describe('Stream', () => {
     let stream
@@ -8,7 +6,7 @@ describe('Stream', () => {
 
     beforeEach(() => {
         clientMock = {
-            publish: sinon.stub(),
+            publish: jest.fn()
         }
         stream = new Stream(clientMock, {
             id: 'stream-id'
@@ -25,7 +23,7 @@ describe('Stream', () => {
 
             stream.publish(msg, ts, pk)
 
-            sinon.assert.calledWith(clientMock.publish, stream.id, msg, ts, pk)
+            expect(clientMock.publish).toHaveBeenCalledWith(stream.id, msg, ts, pk)
         })
     })
 })

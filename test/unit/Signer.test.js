@@ -1,6 +1,7 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
-import Signer from '../../src/Signer'
+import Signer from '../../src/publish/Signer'
+import { getAddressFromOptions } from '../../src/user'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
 /*
@@ -10,48 +11,50 @@ we are testing the Signer which is internal, we use private keys with the '0x' p
 describe('Signer', () => {
     describe('construction', () => {
         it('should sign when constructed with private key', async () => {
-            const signer = new Signer({
+            const signer = Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             })
-            const signature = signer.signData('some-data')
+            const signature = await signer.signData('some-data')
             expect(signature).toBeTruthy()
         })
 
         it('should throw when constructed with nothing', () => {
             expect(() => {
                 // eslint-disable-next-line no-new
-                new Signer({})
+                Signer({}, '')
             }).toThrow()
         })
 
-        it('Should return undefined when "never" option is set', () => {
-            expect(Signer.createSigner({}, 'never')).toBe(undefined)
+        it('Should noop if "never" option is set', async () => {
+            const obj = {}
+            expect(await Signer({}, 'never')(obj)).toBe(obj)
         })
 
-        it('Should return undefined when "auto" option is set with no private key or provider', () => {
-            expect(Signer.createSigner({}, 'auto')).toBe(undefined)
+        it('Should noop when "auto" option is set with no private key or provider', async () => {
+            const obj = {}
+            expect(await Signer({}, 'auto')(obj)).toBe(obj)
         })
 
         it('Should return a Signer when "auto" option is set with private key', () => {
-            const signer = Signer.createSigner({
+            const signer = Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             }, 'auto')
-            expect(signer instanceof Signer).toBeTruthy()
+            expect(signer).toBeInstanceOf(Function)
         })
 
         it('Should return a Signer when "always" option is set with private key', () => {
-            const signer = Signer.createSigner({
+            const signer = Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             }, 'always')
-            expect(signer instanceof Signer).toBeTruthy()
+            expect(signer).toBeInstanceOf(Function)
         })
 
         it('Should throw when "always" option is set with no private key or provider', () => {
-            expect(() => Signer.createSigner({}, 'always')).toThrow()
+            expect(() => Signer({}, 'always')).toThrow()
         })
 
         it('Should throw when unknown option is set', () => {
-            expect(() => Signer.createSigner({
+            expect(() => Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             }, 'unknown')).toThrow()
         })
@@ -64,11 +67,12 @@ describe('Signer', () => {
             field: 'some-data',
         }
         const timestamp = 1529549961116
+        const options = {
+            privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
+        }
 
         beforeEach(() => {
-            signer = new Signer({
-                privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
-            })
+            signer = Signer(options)
         })
 
         it('should return correct signature', async () => {
@@ -79,8 +83,9 @@ describe('Signer', () => {
         })
 
         it('should sign StreamMessageV31 with null previous ref correctly', async () => {
+            const address = await getAddressFromOptions(options)
             const streamMessage = new StreamMessage({
-                messageId: new MessageID(streamId, 0, timestamp, 0, await signer.getAddress(), 'chain-id'),
+                messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: null,
                 content: data,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
@@ -88,20 +93,21 @@ describe('Signer', () => {
                 signature: null
             })
             const payload = streamMessage.getStreamId() + streamMessage.getStreamPartition() + streamMessage.getTimestamp()
-                + streamMessage.messageId.sequenceNumber + (await signer.getAddress()).toLowerCase() + streamMessage.messageId.msgChainId
+                + streamMessage.messageId.sequenceNumber + address.toLowerCase() + streamMessage.messageId.msgChainId
                 + streamMessage.getSerializedContent()
 
             const expectedSignature = await signer.signData(payload)
-            await signer.signStreamMessage(streamMessage)
+            await signer(streamMessage)
             expect(streamMessage.signature).toBe(expectedSignature)
-            expect(streamMessage.getPublisherId()).toBe(await signer.getAddress())
+            expect(streamMessage.getPublisherId()).toBe(address)
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
         })
 
         it('should sign StreamMessageV31 with non-null previous ref correctly', async () => {
+            const address = await getAddressFromOptions(options)
             const streamMessage = new StreamMessage({
                 version: 31,
-                messageId: new MessageID(streamId, 0, timestamp, 0, await signer.getAddress(), 'chain-id'),
+                messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: new MessageRef(timestamp - 10, 0),
                 content: data,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
@@ -110,15 +116,15 @@ describe('Signer', () => {
             })
             const payload = [
                 streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp(),
-                streamMessage.messageId.sequenceNumber, (await signer.getAddress()).toLowerCase(), streamMessage.messageId.msgChainId,
+                streamMessage.messageId.sequenceNumber, address.toLowerCase(), streamMessage.messageId.msgChainId,
                 streamMessage.prevMsgRef.timestamp, streamMessage.prevMsgRef.sequenceNumber, streamMessage.getSerializedContent()
             ]
             const expectedSignature = await signer.signData(payload.join(''))
             expect(payload.join('')).toEqual(streamMessage.getPayloadToSign())
             expect(expectedSignature).toEqual(await signer.signData(streamMessage.getPayloadToSign()))
-            await signer.signStreamMessage(streamMessage)
+            await signer(streamMessage)
             expect(streamMessage.signature).toBe(expectedSignature)
-            expect(streamMessage.getPublisherId()).toBe(await signer.getAddress())
+            expect(streamMessage.getPublisherId()).toBe(address)
             expect(streamMessage.signatureType).toBe(StreamMessage.SIGNATURE_TYPES.ETH)
         })
     })

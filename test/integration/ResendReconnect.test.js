@@ -1,22 +1,21 @@
-import { ethers } from 'ethers'
+import { wait, waitForCondition } from 'streamr-test-utils'
 
-import { uid } from '../utils'
-import StreamrClient from '../../src'
+import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
+import { StreamrClient } from '../../src/StreamrClient'
+import { Defer } from '../../src/utils'
 
 import config from './config'
 
-const { wait } = require('streamr-test-utils')
-
 const createClient = (opts = {}) => new StreamrClient({
-    auth: {
-        privateKey: ethers.Wallet.createRandom().privateKey,
-    },
-    autoConnect: false,
-    autoDisconnect: false,
     ...(config.clientOptions || {
         url: config.websocketUrl,
         restUrl: config.restUrl,
     }),
+    auth: {
+        privateKey: fakePrivateKey(),
+    },
+    autoConnect: false,
+    autoDisconnect: false,
     ...opts,
 })
 
@@ -26,73 +25,95 @@ describe('resend/reconnect', () => {
     let client
     let stream
     let publishedMessages
+    let publishTestMessages
 
     beforeEach(async () => {
         client = createClient()
-        await client.ensureConnected()
-
-        publishedMessages = []
+        await client.connect()
 
         stream = await client.createStream({
             name: uid('resends')
         })
 
-        for (let i = 0; i < MAX_MESSAGES; i++) {
-            const message = {
-                msg: uid('message'),
-            }
+        publishTestMessages = getPublishTestMessages(client, {
+            streamId: stream.id,
+            waitForLast: true,
+        })
 
-            // eslint-disable-next-line no-await-in-loop
-            await client.publish(stream.id, message)
-            publishedMessages.push(message)
-        }
-
-        await wait(5000) // wait for messages to (hopefully) land in storage
+        publishedMessages = await publishTestMessages(MAX_MESSAGES)
     }, 10 * 1000)
 
     afterEach(async () => {
-        await client.ensureDisconnected()
+        await client.disconnect()
     })
 
-    describe('reconnect after resend', () => {
+    describe('reconnect with resend', () => {
+        let shouldDisconnect = false
         let sub
         let messages = []
-        beforeEach((done) => {
-            sub = client.subscribe({
+        beforeEach(async () => {
+            const done = Defer()
+            messages = []
+            sub = await client.subscribe({
                 stream: stream.id,
                 resend: {
                     last: MAX_MESSAGES,
                 },
             }, (message) => {
                 messages.push(message)
+                if (shouldDisconnect) {
+                    client.connection.socket.close()
+                }
             })
-            sub.once('resent', () => {
-                done()
-            })
+
+            sub.once('resent', done.resolve)
+            await done
+            expect(messages).toEqual(publishedMessages.slice(-MAX_MESSAGES))
         }, 15000)
 
-        it('can handle reconnection after disconnection', (done) => {
-            const newPublishedMessages = []
-            client.connection.socket.once('close', () => {
-                // should reconnect
-                client.once('connected', async () => {
-                    setTimeout(async () => {
-                        // clear messsages
-                        messages = []
-                        const message = {
-                            msg: uid('newmessage'),
-                        }
-                        newPublishedMessages.push(message)
-                        await client.publish(stream, message)
-                        setTimeout(() => {
-                            expect(messages).toEqual(newPublishedMessages)
-                            done()
-                        }, 3000)
-                    }, 3000)
-                })
-            })
+        it('can handle mixed resend/subscribe', async () => {
+            const prevMessages = messages.slice()
+            const newMessages = await publishTestMessages(3)
+            expect(messages).toEqual([...prevMessages, ...newMessages])
+        }, 10000)
+
+        it('can handle reconnection after unintentional disconnection 1', async () => {
+            const onClose = Defer()
+
+            client.connection.socket.once('close', onClose.resolve)
             client.connection.socket.close()
-        }, 110000)
+            await onClose
+            // should reconnect and get new messages
+            const prevMessages = messages.slice()
+            const newMessages = await publishTestMessages(3)
+            await wait(6000)
+            expect(messages).toEqual([...prevMessages, ...newMessages])
+        }, 11000)
+
+        it('can handle reconnection after unintentional disconnection 2', async () => {
+            // should reconnect and get new messages
+            const prevMessages = messages.slice()
+            const newMessages = await publishTestMessages(3, {
+                waitForLast: false,
+            })
+            const onClose = Defer()
+
+            client.connection.socket.once('close', onClose.resolve)
+            client.connection.socket.close()
+            await client.connection.nextConnection()
+
+            await wait(6000)
+            expect(messages).toEqual([...prevMessages, ...newMessages])
+        }, 11000)
+
+        it('can handle reconnection after unintentional disconnection 3', async () => {
+            shouldDisconnect = true
+            const prevMessages = messages.slice()
+            const newMessages = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: false,
+            })
+            await waitForCondition(() => messages.length === MAX_MESSAGES * 2, 10000)
+            expect(messages).toEqual([...prevMessages, ...newMessages])
+        }, 21000)
     })
 })
-

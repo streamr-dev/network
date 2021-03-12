@@ -2,7 +2,7 @@ import assert from 'assert'
 
 import { ethers } from 'ethers'
 
-import StreamrClient from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
 
 import config from './config'
 
@@ -10,10 +10,10 @@ describe('LoginEndpoints', () => {
     let client
 
     const createClient = (opts = {}) => new StreamrClient({
+        ...config.clientOptions,
         apiKey: 'tester1-api-key',
         autoConnect: false,
         autoDisconnect: false,
-        ...config.clientOptions,
         ...opts,
     })
 
@@ -21,80 +21,63 @@ describe('LoginEndpoints', () => {
         client = createClient()
     })
 
-    afterAll(async (done) => {
-        await client.ensureDisconnected()
-        done()
+    afterAll(async () => {
+        await client.disconnect()
     })
 
     describe('Challenge generation', () => {
-        it('should retrieve a challenge', () => client.getChallenge('some-address')
-            .then((challenge) => {
-                assert(challenge)
-                assert(challenge.id)
-                assert(challenge.challenge)
-                assert(challenge.expires)
-            }))
+        it('should retrieve a challenge', async () => {
+            const challenge = await client.getChallenge('some-address')
+            assert(challenge)
+            assert(challenge.id)
+            assert(challenge.challenge)
+            assert(challenge.expires)
+        })
     })
-
-    async function assertThrowsAsync(fn, regExp) {
-        let f = () => {}
-        try {
-            await fn()
-        } catch (e) {
-            f = () => {
-                throw e
-            }
-        } finally {
-            assert.throws(f, regExp)
-        }
-    }
 
     describe('Challenge response', () => {
         it('should fail to get a session token', async () => {
-            await assertThrowsAsync(async () => client.sendChallengeResponse(
-                {
+            await expect(async () => {
+                await client.sendChallengeResponse({
                     id: 'some-id',
                     challenge: 'some-challenge',
-                },
-                'some-sig',
-                'some-address',
-            ), /Error/)
+                }, 'some-sig', 'some-address')
+            }).rejects.toThrow()
         })
-        it('should get a session token', () => {
+
+        it('should get a session token', async () => {
             const wallet = ethers.Wallet.createRandom()
-            return client.getChallenge(wallet.address)
-                .then(async (challenge) => {
-                    assert(challenge.challenge)
-                    const signature = await wallet.signMessage(challenge.challenge)
-                    return client.sendChallengeResponse(challenge, signature, wallet.address)
-                        .then((sessionToken) => {
-                            assert(sessionToken)
-                            assert(sessionToken.token)
-                            assert(sessionToken.expires)
-                        })
-                })
+            const challenge = await client.getChallenge(wallet.address)
+            assert(challenge.challenge)
+            const signature = await wallet.signMessage(challenge.challenge)
+            const sessionToken = await client.sendChallengeResponse(challenge, signature, wallet.address)
+            assert(sessionToken)
+            assert(sessionToken.token)
+            assert(sessionToken.expires)
         })
-        it('should get a session token with combined function', () => {
+
+        it('should get a session token with combined function', async () => {
             const wallet = ethers.Wallet.createRandom()
-            return client.loginWithChallengeResponse((d) => wallet.signMessage(d), wallet.address)
-                .then((sessionToken) => {
-                    assert(sessionToken)
-                    assert(sessionToken.token)
-                    assert(sessionToken.expires)
-                })
+            const sessionToken = await client.loginWithChallengeResponse((d) => wallet.signMessage(d), wallet.address)
+            assert(sessionToken)
+            assert(sessionToken.token)
+            assert(sessionToken.expires)
         })
     })
 
     describe('API key login', () => {
         it('should fail to get a session token', async () => {
-            await assertThrowsAsync(async () => client.loginWithApiKey('apikey'), /Error/)
+            await expect(async () => {
+                await client.loginWithApiKey('apikey')
+            }).rejects.toThrow()
         })
-        it('should get a session token', () => client.loginWithApiKey('tester1-api-key')
-            .then((sessionToken) => {
-                assert(sessionToken)
-                assert(sessionToken.token)
-                assert(sessionToken.expires)
-            }))
+
+        it('should get a session token', async () => {
+            const sessionToken = await client.loginWithApiKey('tester1-api-key')
+            assert(sessionToken)
+            assert(sessionToken.token)
+            assert(sessionToken.expires)
+        })
     })
 
     describe('Username/password login', () => {
@@ -106,10 +89,11 @@ describe('LoginEndpoints', () => {
     })
 
     describe('UserInfo', () => {
-        it('should get user info', () => client.getUserInfo().then((userInfo) => {
+        it('should get user info', async () => {
+            const userInfo = await client.getUserInfo()
             assert(userInfo.name)
             assert(userInfo.username)
-        }))
+        })
     })
 
     describe('logout', () => {

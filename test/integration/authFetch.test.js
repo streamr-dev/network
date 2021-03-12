@@ -1,9 +1,9 @@
 jest.mock('node-fetch')
 
-import { ethers } from 'ethers'
 import fetch from 'node-fetch'
 
-import StreamrClient from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
+import { fakePrivateKey } from '../utils'
 
 import config from './config'
 
@@ -27,7 +27,7 @@ describe('authFetch', () => {
         fetch.mockImplementation(realFetch)
         client = new StreamrClient({
             auth: {
-                privateKey: ethers.Wallet.createRandom().privateKey,
+                privateKey: fakePrivateKey()
             },
             autoConnect: false,
             autoDisconnect: false,

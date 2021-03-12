@@ -38,4 +38,8 @@ examples/webpack/dist/*
 .idea/dataSources*
 
 reports
+tests_outputbenchmarks.txt
 tests_output
+test/exports/dist
+test/exports/package-lock.json
+vendor

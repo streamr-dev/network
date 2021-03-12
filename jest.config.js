@@ -1,3 +1,5 @@
+const path = require('path')
+
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
@@ -18,7 +20,7 @@ module.exports = {
     clearMocks: true,
 
     // Indicates whether the coverage information should be collected while executing the test
-    collectCoverage: true,
+    collectCoverage: false,
 
     // An array of glob patterns indicating a set of files for which coverage information should be collected
     collectCoverageFrom: ['src/**'],
@@ -49,7 +51,7 @@ module.exports = {
     // forceCoverageMatch: [],
 
     // A path to a module which exports an async function that is triggered once before all test suites
-    // globalSetup: null,
+    globalSetup: './jest.setup.js',
 
     // A path to a module which exports an async function that is triggered once after all test suites
     // globalTeardown: null,
@@ -58,10 +60,10 @@ module.exports = {
     // globals: {},
 
     // An array of directory names to be searched recursively up from the requiring module's location
-    // moduleDirectories: [
-    //   "node_modules"
-    // ],
-
+    moduleDirectories: [
+        'node_modules',
+        path.resolve('./node_modules'), // makes npm link work.
+    ],
     // An array of file extensions your modules use
     // moduleFileExtensions: [
     //   "js",
@@ -74,7 +76,9 @@ module.exports = {
     // moduleNameMapper: {},
 
     // An array of regexp pattern strings, matched against all module paths before considered 'visible' to the module loader
-    // modulePathIgnorePatterns: [],
+    modulePathIgnorePatterns: [
+        '<rootDir>/dist',
+    ],
 
     // Activates notifications for test results
     // notify: false,
@@ -83,7 +87,7 @@ module.exports = {
     // notifyMode: "always",
 
     // A preset that is used as a base for Jest's configuration
-    // preset: null,
+    preset: 'ts-jest',
 
     // Run tests from one or more projects
     // projects: null,
@@ -112,13 +116,14 @@ module.exports = {
     // ],
 
     // Allows you to use a custom runner instead of Jest's default test runner
-    // runner: "jest-runner",
+    testRunner: 'jest-circus/runner',
 
     // The paths to modules that run some code to configure or set up the testing environment before each test
     // setupFiles: [],
 
     // The path to a module that runs some code to configure or set up the testing framework before each test
     // setupTestFrameworkScriptFile: null,
+    // setupFilesAfterEnv: [],
 
     // A list of paths to snapshot serializer modules Jest should use for snapshot testing
     // snapshotSerializers: [],
@@ -150,7 +155,7 @@ module.exports = {
     // testResultsProcessor: null,
 
     // This option allows use of a custom test runner
-    // testRunner: "jasmine2",
+    // testRunner: 'jest-circus/runner',
 
     // This option sets the URL for the jsdom environment. It is reflected in properties such as location.href
     // testURL: "about:blank",
@@ -159,12 +164,17 @@ module.exports = {
     // timers: "real",
 
     // A map from regular expressions to paths to transformers
-    // transform: null,
+    transform: {
+        '\\.(js|ts)$': ['babel-jest', {
+            configFile: path.resolve(__dirname, '.babel.node.config.js'),
+            babelrc: false,
+        }]
+    },
 
     // An array of regexp pattern strings that are matched against all source file paths, matched files will skip transformation
-    // transformIgnorePatterns: [
-    //   "/node_modules/"
-    // ],
+    transformIgnorePatterns: [
+        '/node_modules/(?!quick-lru)', // quick-lru is esm
+    ],
 
     // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
     // unmockedModulePathPatterns: undefined,

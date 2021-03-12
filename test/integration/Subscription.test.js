@@ -1,22 +1,19 @@
-import { ethers } from 'ethers'
-import { wait } from 'streamr-test-utils'
+import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { uid } from '../utils'
-import StreamrClient from '../../src'
+import { uid, fakePrivateKey } from '../utils'
+import { StreamrClient } from '../../src/StreamrClient'
 
 import config from './config'
 
 const createClient = (opts = {}) => new StreamrClient({
+    ...config.clientOptions,
     auth: {
-        privateKey: ethers.Wallet.createRandom().privateKey,
+        privateKey: fakePrivateKey(),
     },
     autoConnect: false,
     autoDisconnect: false,
-    ...config.clientOptions,
     ...opts,
 })
-
-const throwError = (error) => { throw error }
 
 const RESEND_ALL = {
     from: {
@@ -28,31 +25,11 @@ describe('Subscription', () => {
     let stream
     let client
     let subscription
+    let errors = []
+    let expectedErrors = 0
 
-    async function setup() {
-        client = createClient()
-        client.on('error', throwError)
-        stream = await client.createStream({
-            name: uid('stream')
-        })
-    }
-
-    async function teardown() {
-        if (subscription) {
-            await client.unsubscribe(subscription)
-            subscription = undefined
-        }
-
-        if (stream) {
-            await stream.delete()
-            stream = undefined
-        }
-
-        if (client && client.isConnected()) {
-            await client.disconnect()
-            client.off('error', throwError)
-            client = undefined
-        }
+    function onError(err) {
+        errors.push(err)
     }
 
     /**
@@ -60,10 +37,10 @@ describe('Subscription', () => {
      * Needs to create subscription at same time in order to track message events.
      */
 
-    function createMonitoredSubscription(opts = {}) {
+    async function createMonitoredSubscription(opts = {}) {
         if (!client) { throw new Error('No client') }
         const events = []
-        subscription = client.subscribe({
+        subscription = await client.subscribe({
             stream: stream.id,
             resend: RESEND_ALL,
             ...opts,
@@ -71,9 +48,7 @@ describe('Subscription', () => {
             events.push(message)
         })
         subscription.on('subscribed', () => events.push('subscribed'))
-        subscription.on('resending', () => events.push('resending'))
         subscription.on('resent', () => events.push('resent'))
-        subscription.on('no_resend', () => events.push('no_resend'))
         subscription.on('unsubscribed', () => events.push('unsubscribed'))
         subscription.on('error', () => events.push('error'))
         return events
@@ -88,69 +63,72 @@ describe('Subscription', () => {
     }
 
     beforeEach(async () => {
-        await teardown()
-        await setup()
+        errors = []
+        expectedErrors = 0
+        client = createClient()
+        client.on('error', onError)
+        stream = await client.createStream({
+            name: uid('stream')
+        })
+        await client.connect()
     })
 
     afterEach(async () => {
-        await teardown()
+        expect(errors).toHaveLength(expectedErrors)
+    })
+
+    afterEach(async () => {
+        if (!client) { return }
+        client.off('error', onError)
+        client.debug('disconnecting after test')
+        await client.disconnect()
     })
 
     describe('subscribe/unsubscribe events', () => {
-        it('fires events in correct order', async (done) => {
-            const subscriptionEvents = createMonitoredSubscription()
-            subscription.on('subscribed', async () => {
-                subscription.on('unsubscribed', () => {
-                    expect(subscriptionEvents).toEqual([
-                        'subscribed',
-                        'unsubscribed',
-                    ])
-                    done()
-                })
-                await client.unsubscribe(subscription)
-            })
+        it('fires events in correct order 1', async () => {
+            const subscriptionEvents = await createMonitoredSubscription()
+            await waitForEvent(subscription, 'resent')
+            await client.unsubscribe(stream)
+            expect(subscriptionEvents).toEqual([
+                'resent',
+                'unsubscribed',
+            ])
+        })
 
-            await client.connect()
+        it('fires events in correct order 2', async () => {
+            const subscriptionEvents = await createMonitoredSubscription({
+                resend: undefined,
+            })
+            await client.unsubscribe(stream)
+            expect(subscriptionEvents).toEqual([
+                'unsubscribed',
+            ])
         })
     })
 
     describe('resending/no_resend events', () => {
-        it('fires events in correct order', async (done) => {
-            const subscriptionEvents = createMonitoredSubscription()
-            subscription.on('no_resend', async () => {
-                await wait(0)
-                expect(subscriptionEvents).toEqual([
-                    'subscribed',
-                    'no_resend',
-                ])
-                done()
-            })
-
-            await client.connect()
+        it('fires events in correct order 1', async () => {
+            const subscriptionEvents = await createMonitoredSubscription()
+            await waitForEvent(subscription, 'resent')
+            expect(subscriptionEvents).toEqual([
+                'resent',
+            ])
         })
     })
 
     describe('resending/resent events', () => {
-        it('fires events in correct order', async (done) => {
-            await client.connect()
+        it('fires events in correct order 1', async () => {
             const message1 = await publishMessage()
             const message2 = await publishMessage()
             await wait(5000) // wait for messages to (probably) land in storage
-            const subscriptionEvents = createMonitoredSubscription()
-            subscription.on('resent', async () => {
-                await wait(500) // wait in case messages appear after resent event
-                expect(subscriptionEvents).toEqual([
-                    'subscribed',
-                    'resending',
-                    message1,
-                    message2,
-                    'resent',
-                ])
-                done()
-            })
-            subscription.on('no_resend', () => {
-                done('error: got no_resend, expected: resent')
-            })
+            const subscriptionEvents = await createMonitoredSubscription()
+            await waitForEvent(subscription, 'resent')
+            await wait(500) // wait in case messages appear after resent event
+            expect(subscriptionEvents).toEqual([
+                message1,
+                message2,
+                'resent',
+            ])
         }, 20 * 1000)
     })
 })
