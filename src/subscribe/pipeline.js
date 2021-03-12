@@ -64,89 +64,65 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         ...beforeSteps,
         // unpack stream message
         async function* getStreamMessage(src) {
-            try {
-                for await (const { streamMessage } of src) {
-                    yield streamMessage
-                }
-            } catch (err) {
-                await onError(err)
+            for await (const { streamMessage } of src) {
+                yield streamMessage
             }
         },
         // order messages (fill gaps)
         orderingUtil,
         // validate
         async function* ValidateMessages(src) {
-            try {
-                for await (const streamMessage of src) {
-                    try {
-                        await validate(streamMessage)
-                    } catch (err) {
-                        ignoreMessages.add(streamMessage)
-                        await onError(err)
-                    }
-                    yield streamMessage
+            for await (const streamMessage of src) {
+                try {
+                    await validate(streamMessage)
+                } catch (err) {
+                    ignoreMessages.add(streamMessage)
+                    await onError(err)
                 }
-            } catch (err) {
-                await onError(err)
+                yield streamMessage
             }
         },
         // decrypt
         async function* DecryptMessages(src) {
-            try {
-                yield* decrypt(src, async (err, streamMessage) => {
-                    ignoreMessages.add(streamMessage)
-                    await onError(err)
-                })
-            } catch (err) {
+            yield* decrypt(src, async (err, streamMessage) => {
+                ignoreMessages.add(streamMessage)
                 await onError(err)
-            }
+            })
         },
         // parse content
         async function* ParseMessages(src) {
-            try {
-                for await (const streamMessage of src) {
-                    try {
-                        streamMessage.getParsedContent()
-                    } catch (err) {
-                        ignoreMessages.add(streamMessage)
-                        await onError(err)
-                    }
-                    yield streamMessage
+            for await (const streamMessage of src) {
+                try {
+                    streamMessage.getParsedContent()
+                } catch (err) {
+                    ignoreMessages.add(streamMessage)
+                    await onError(err)
                 }
-            } catch (err) {
-                await onError(err)
+                yield streamMessage
             }
         },
         // re-order messages (ignore gaps)
         internalOrderingUtil,
         // ignore any failed messages
         async function* IgnoreMessages(src) {
-            try {
-                for await (const streamMessage of src) {
-                    if (ignoreMessages.has(streamMessage)) {
-                        continue
-                    }
-                    yield streamMessage
+            for await (const streamMessage of src) {
+                if (ignoreMessages.has(streamMessage)) {
+                    continue
                 }
-            } catch (err) {
-                await onError(err)
+                yield streamMessage
             }
         },
         // special handling for bye message
         async function* ByeMessageSpecialHandling(src) {
-            try {
-                for await (const orderedMessage of src) {
-                    yield orderedMessage
-                    try {
-                        if (orderedMessage.isByeMessage()) {
-                            break
-                        }
-                    } catch (err) {
-                        await onError(err)
+            for await (const orderedMessage of src) {
+                yield orderedMessage
+                try {
+                    if (orderedMessage.isByeMessage()) {
+                        break
                     }
+                } catch (err) {
+                    await onError(err)
                 }
-            } catch (err) {
-                await onError(err)
             }
         },
         // custom pipeline steps
