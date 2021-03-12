@@ -390,7 +390,7 @@ export class DataUnion {
     ): Promise<TransactionReceipt> {
         const address = getAddress(memberAddress) // throws if bad address
         return this._executeWithdraw(
-            () => this.getWithdrawAllToMemberTx(address),
+            () => this.getWithdrawAllToMemberTx(address, options?.sendToMainnet),
             address,
             options
         )
@@ -423,7 +423,7 @@ export class DataUnion {
         const from = getAddress(memberAddress) // throws if bad address
         const to = getAddress(recipientAddress)
         return this._executeWithdraw(
-            () => this.getWithdrawAllToSignedTx(from, to, signature, options.sendToMainnet),
+            () => this.getWithdrawAllToSignedTx(from, to, signature, options?.sendToMainnet),
             to,
             options
         )
