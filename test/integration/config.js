@@ -26,5 +26,6 @@ module.exports = {
         autoConnect: false,
         autoDisconnect: false,
     },
+    tokenMediator: '0xedD2aa644a6843F2e5133Fe3d6BD3F4080d97D9F',
     tokenAdminPrivateKey: '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0',
 }
