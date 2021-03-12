@@ -33,7 +33,7 @@ export type StrictStreamrClientOptions = {
     groupKeys: Todo
     keyExchange: Todo
     mainnet?: ConnectionInfo|string
-    sidechain?: ConnectionInfo|string
+    sidechain: ConnectionInfo & { chainId?: number }
     tokenAddress: EthereumAddress,
     dataUnion: {
         minimumWithdrawTokenWei: BigNumber|number|string
@@ -86,7 +86,10 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
         // Ethereum and Data Union related options
         // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
         mainnet: undefined, // Default to ethers.js default provider settings
-        sidechain: 'https://rpc.xdaichain.com/',
+        sidechain: {
+            url: 'https://rpc.xdaichain.com/',
+            chainId: 100
+        },
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
         dataUnion: {
             minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
@@ -106,7 +109,7 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
 
     const options: StrictStreamrClientOptions = {
         ...defaults,
-        ...opts,
+        ...opts, // sidechain is not merged with the defaults
         dataUnion: {
             ...defaults.dataUnion,
             ...opts.dataUnion

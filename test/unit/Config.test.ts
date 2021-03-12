@@ -11,13 +11,13 @@ const createClient = (privateKey: BytesLike) => {
 
 describe('Config', () => {
     describe('private key', () => {
-        it('string', () => {
+        it('string', async () => {
             const client = createClient('0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF')
-            expect(client.getAddress()).toBe('0xFCAd0B19bB29D4674531d6f115237E16AfCE377c')
+            expect(await client.getAddress()).toBe('0xFCAd0B19bB29D4674531d6f115237E16AfCE377c')
         })
-        it('byteslike', () => {
+        it('byteslike', async () => {
             const client = createClient(arrayify('0x0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF'))
-            expect(client.getAddress()).toBe('0xFCAd0B19bB29D4674531d6f115237E16AfCE377c')
+            expect(await client.getAddress()).toBe('0xFCAd0B19bB29D4674531d6f115237E16AfCE377c')
         })
     })
 })

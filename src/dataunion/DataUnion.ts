@@ -94,7 +94,7 @@ export class DataUnion {
      * Send a joinRequest, or get into data union instantly with a data union secret
      */
     async join(secret?: string): Promise<JoinResponse> {
-        const memberAddress = this.client.getAddress() as string
+        const memberAddress = await this.client.getAddress()
         const body: any = {
             memberAddress
         }
@@ -132,7 +132,7 @@ export class DataUnion {
      * @returns receipt once withdraw is complete (tokens are seen in mainnet)
      */
     async withdrawAll(options?: DataUnionWithdrawOptions): Promise<TransactionReceipt> {
-        const recipientAddress = this.client.getAddress()
+        const recipientAddress = await this.client.getAddress()
         return this._executeWithdraw(
             () => this.getWithdrawAllTx(),
             recipientAddress,
@@ -464,7 +464,7 @@ export class DataUnion {
      * @internal
      */
     static async _deploy(options: DataUnionDeployOptions = {}, client: StreamrClient): Promise<DataUnion> {
-        const deployerAddress = client.getAddress()
+        const deployerAddress = await client.getAddress()
         const {
             owner,
             joinPartAgents,

@@ -19,15 +19,18 @@ export default class StreamrEthereum {
         if (auth.privateKey) {
             const key = auth.privateKey
             const address = getAddress(computeAddress(key))
-            this._getAddress = () => address
+            this._getAddress = async () => address
             this.getSigner = () => new Wallet(key, this.getMainnetProvider())
             this.getSidechainSigner = async () => new Wallet(key, this.getSidechainProvider())
         } else if (auth.ethereum) {
-            this._getAddress = () => {
-                if (auth.ethereum.selectedAddress) {
+            this._getAddress = async () => {
+                try {
+                    const accounts = await auth.ethereum.request({ method: 'eth_requestAccounts' })
+                    const account = getAddress(accounts[0]) // convert to checksum case
+                    return account
+                } catch {
                     throw new Error('no addresses connected+selected in Metamask')
                 }
-                return getAddress(auth.ethereum.selectedAddress)
             }
             this._getSigner = () => {
                 const metamaskProvider = new Web3Provider(auth.ethereum)
@@ -35,7 +38,6 @@ export default class StreamrEthereum {
                 return metamaskSigner
             }
             this._getSidechainSigner = async () => {
-                // chainId is required for checking when using Metamask
                 if (!options.sidechain || !options.sidechain.chainId) {
                     throw new Error('Streamr sidechain not configured (with chainId) in the StreamrClient options!')
                 }
@@ -43,7 +45,9 @@ export default class StreamrEthereum {
                 const metamaskProvider = new Web3Provider(auth.ethereum)
                 const { chainId } = await metamaskProvider.getNetwork()
                 if (chainId !== options.sidechain.chainId) {
-                    throw new Error(`Please connect Metamask to Ethereum blockchain with chainId ${options.sidechain.chainId}`)
+                    throw new Error(
+                        `Please connect Metamask to Ethereum blockchain with chainId ${options.sidechain.chainId}: current chainId is ${chainId}`
+                    )
                 }
                 const metamaskSigner = metamaskProvider.getSigner()
                 return metamaskSigner
@@ -57,7 +61,7 @@ export default class StreamrEthereum {
         }
     }
 
-    getAddress() {
+    async getAddress() {
         if (!this._getAddress) {
             // _getAddress is assigned in constructor
             throw new Error('StreamrClient is not authenticated with private key')

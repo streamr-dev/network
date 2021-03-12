@@ -41,7 +41,7 @@ describe('DataUnion admin fee', () => {
         const dataUnion = await adminClient.deployDataUnion()
         const oldFee = await dataUnion.getAdminFee()
         log(`DU owner: ${await dataUnion.getAdminAddress()}`)
-        log(`Sending tx from ${adminClient.getAddress()}`)
+        log(`Sending tx from ${await adminClient.getAddress()}`)
         const tr = await dataUnion.setAdminFee(0.1)
         log(`Transaction receipt: ${JSON.stringify(tr)}`)
         const newFee = await dataUnion.getAdminFee()
