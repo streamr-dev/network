@@ -28,7 +28,7 @@
     "bootstrap-dist": "npm run vendor && npm run copy-package && npm run fix-esm",
     "fix-esm": "mkdir -p dist/src/; cp -Rf src/index-esm.mjs dist/src/index-esm.mjs",
     "vendor": "mkdir -p vendor/quick-lru; cp -n node_modules/quick-lru/index.d.ts vendor/quick-lru; cp -n node_modules/quick-lru/index.js vendor/quick-lru; true",
-    "copy-package": "mkdir -p dist/; node copy-package.js; cp -f package-lock.json dist; true",
+    "copy-package": "mkdir -p dist/; node copy-package.js; cp -f package-lock.json dist; cp -f README.md dist; cp -f LICENSE dist; cp -f readme-header-img.png dist; true",
     "build:types": "tsc --incremental --emitDeclarationOnly --stripInternal",
     "benchmarks": "node test/benchmarks/publish.js && node test/benchmarks/subscribe.js",
     "prebuild-benchmark": "npm run build -- --config-name=node-lib",
