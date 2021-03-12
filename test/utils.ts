@@ -76,6 +76,7 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     /* eslint-disable no-await-in-loop */
     return async (publishRequest: any, opts = {}) => {
         const {
+            // @ts-expect-error
             streamId, streamPartition = 0, interval = 500, timeout = 5000, count = 100, messageMatchFn = defaultMessageMatchFn
         } = validateOptions({
             ...defaultOpts,
@@ -145,15 +146,25 @@ export function getPublishTestMessages(client: StreamrClient, defaultOpts = {}) 
         const {
             streamId,
             streamPartition = 0,
+            // @ts-expect-error
             delay = 100,
+            // @ts-expect-error
             timeout = 3500,
+            // @ts-expect-error
             waitForLast = false, // wait for message to hit storage
+            // @ts-expect-error
             waitForLastCount,
+            // @ts-expect-error
             waitForLastTimeout,
+            // @ts-expect-error
             beforeEach = (m: any) => m,
+            // @ts-expect-error
             afterEach = () => {},
+            // @ts-expect-error
             timestamp,
+            // @ts-expect-error
             partitionKey,
+            // @ts-expect-error
             createMessage = () => {
                 msgCount += 1
                 return {

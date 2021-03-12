@@ -7,8 +7,11 @@ import { inspect } from 'util'
 import { ControlLayer } from 'streamr-client-protocol'
 
 import { pTimeout } from '../utils'
+import { Todo } from '../types'
+import { StreamrClient } from '../StreamrClient'
+import { StreamPartDefinition, ValidatedStreamPartDefinition } from '.'
 
-export function StreamKey({ streamId, streamPartition = 0 }) {
+export function StreamKey({ streamId, streamPartition = 0 }: Todo) {
     if (streamId == null) { throw new Error(`StreamKey: invalid streamId (${typeof streamId}): ${streamId}`) }
 
     if (!Number.isInteger(streamPartition) || streamPartition < 0) {
@@ -17,13 +20,13 @@ export function StreamKey({ streamId, streamPartition = 0 }) {
     return `${streamId}::${streamPartition}`
 }
 
-export function validateOptions(optionsOrStreamId) {
+export function validateOptions(optionsOrStreamId: StreamPartDefinition): ValidatedStreamPartDefinition {
     if (!optionsOrStreamId) {
         throw new Error('streamId is required!')
     }
 
     // Backwards compatibility for giving a streamId as first argument
-    let options = {}
+    let options: Todo = {}
     if (typeof optionsOrStreamId === 'string') {
         options = {
             streamId: optionsOrStreamId,
@@ -42,7 +45,7 @@ export function validateOptions(optionsOrStreamId) {
             options.streamId = optionsOrStreamId.id
         }
 
-        if (optionsOrStreamId.partition == null && optionsOrStreamId.streamPartition == null) {
+        if (optionsOrStreamId.partition != null && optionsOrStreamId.streamPartition == null) {
             options.streamPartition = optionsOrStreamId.partition
         }
 
@@ -89,7 +92,7 @@ export async function waitForMatchingMessage({
     rejectOnTimeout = true,
     timeoutMessage,
     cancelTask,
-}) {
+}: Todo) {
     if (typeof matchFn !== 'function') {
         throw new Error(`matchFn required, got: (${typeof matchFn}) ${matchFn}`)
     }
@@ -98,7 +101,7 @@ export async function waitForMatchingMessage({
     let cleanup = () => {}
 
     const matchTask = new Promise((resolve, reject) => {
-        const tryMatch = (...args) => {
+        const tryMatch = (...args: Todo[]) => {
             try {
                 return matchFn(...args)
             } catch (err) {
@@ -107,19 +110,20 @@ export async function waitForMatchingMessage({
                 return false
             }
         }
-        let onDisconnected
-        const onResponse = (res) => {
+        let onDisconnected: Todo
+        const onResponse = (res: Todo) => {
             if (!tryMatch(res)) { return }
             // clean up err handler
             cleanup()
             resolve(res)
         }
 
-        const onErrorResponse = (res) => {
+        const onErrorResponse = (res: Todo) => {
             if (!tryMatch(res)) { return }
             // clean up success handler
             cleanup()
             const error = new Error(res.errorMessage)
+            // @ts-expect-error
             error.code = res.errorCode
             reject(error)
         }
@@ -128,12 +132,12 @@ export async function waitForMatchingMessage({
             if (cancelTask) { cancelTask.catch(() => {}) } // ignore
             connection.off('disconnected', onDisconnected)
             connection.off(ControlMessage.TYPES.ErrorResponse, onErrorResponse)
-            types.forEach((type) => {
+            types.forEach((type: Todo) => {
                 connection.off(type, onResponse)
             })
         }
 
-        types.forEach((type) => {
+        types.forEach((type: Todo) => {
             connection.on(type, onResponse)
         })
 
@@ -141,6 +145,7 @@ export async function waitForMatchingMessage({
 
         onDisconnected = () => {
             cleanup()
+            // @ts-expect-error
             resolve() // noop
         }
 
@@ -171,7 +176,7 @@ export async function waitForMatchingMessage({
  * Wait for matching response types to requestId, or ErrorResponse.
  */
 
-export async function waitForResponse({ requestId, timeoutMessage = `Waiting for response to: ${requestId}.`, ...opts }) {
+export async function waitForResponse({ requestId, timeoutMessage = `Waiting for response to: ${requestId}.`, ...opts }: Todo) {
     if (requestId == null) {
         throw new Error(`requestId required, got: (${typeof requestId}) ${requestId}`)
     }
@@ -180,13 +185,13 @@ export async function waitForResponse({ requestId, timeoutMessage = `Waiting for
         ...opts,
         requestId,
         timeoutMessage,
-        matchFn(res) {
+        matchFn(res: Todo) {
             return res.requestId === requestId
         }
     })
 }
 
-export async function waitForRequestResponse(client, request, opts = {}) {
+export async function waitForRequestResponse(client: StreamrClient, request: Todo, opts: Todo = {}) {
     return waitForResponse({
         connection: client.connection,
         types: PAIRS.get(request.type),

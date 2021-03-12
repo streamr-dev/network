@@ -11,7 +11,7 @@ import StreamPart from '../stream/StreamPart'
 import { isKeyExchangeStream } from '../stream/KeyExchange'
 
 import authFetch, { ErrorCode, NotFoundError } from './authFetch'
-import { EthereumAddress, Todo } from '../types'
+import { EthereumAddress } from '../types'
 import { StreamrClient } from '../StreamrClient'
 // TODO change this import when streamr-client-protocol exports StreamMessage type or the enums types directly
 import { ContentType, EncryptionType, SignatureType, StreamMessageType } from 'streamr-client-protocol/dist/src/protocol/message_layer/StreamMessage'
@@ -226,6 +226,7 @@ export class StreamEndpoints {
     }
 
     async getStreamLast(streamObjectOrId: Stream|string): Promise<StreamMessageAsObject> {
+        // @ts-expect-error
         const { streamId, streamPartition = 0, count = 1 } = validateOptions(streamObjectOrId)
         this.client.debug('getStreamLast %o', {
             streamId,
@@ -234,6 +235,7 @@ export class StreamEndpoints {
         })
 
         const url = (
+            // @ts-expect-error
             getEndpointUrl(this.client.options.restUrl, 'streams', streamId, 'data', 'partitions', streamPartition, 'last')
             + `?${qs.stringify({ count })}`
         )
@@ -252,7 +254,7 @@ export class StreamEndpoints {
         return result
     }
 
-    async publishHttp(streamObjectOrId: Stream|string, data: Todo, requestOptions: Todo = {}, keepAlive: boolean = true) {
+    async publishHttp(streamObjectOrId: Stream|string, data: any, requestOptions: any = {}, keepAlive: boolean = true) {
         let streamId
         if (streamObjectOrId instanceof Stream) {
             streamId = streamObjectOrId.id

@@ -13,6 +13,16 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 // @ts-expect-error
 Debug.formatters.n = (v) => Debug.humanize(v)
 
+export interface ConnectionOptions {
+    url?: string,
+    autoConnect?: boolean
+    autoDisconnect?: boolean
+    disconnectDelay?: number
+    maxRetries?: number
+    retryBackoffFactor?: number
+    maxRetryWait?: number
+}
+
 export class ConnectionError extends Error {
     reason?: Todo
 
@@ -120,7 +130,7 @@ const STATE = {
 }
 
 /* eslint-disable no-underscore-dangle, no-param-reassign */
-function SocketConnector(connection: Todo) {
+function SocketConnector(connection: Connection) {
     let next: Todo
     let socket: Todo
     let startedConnecting = false
@@ -189,7 +199,7 @@ function SocketConnector(connection: Todo) {
         // connect
         async () => {
             startedConnecting = true
-            socket = await OpenWebSocket(connection.options.url, {
+            socket = await OpenWebSocket(connection.options.url!, {
                 perMessageDeflate: false,
                 debug: connection._debug,
             })
@@ -287,7 +297,7 @@ const DEFAULT_MAX_RETRIES = 10
 export default class Connection extends EventEmitter {
 
     _debug: Todo
-    options: Todo
+    options: ConnectionOptions
     retryCount: Todo
     wantsState: Todo
     connectionHandles: Todo
@@ -312,7 +322,7 @@ export default class Connection extends EventEmitter {
         }))
     }
 
-    constructor(options = {}, debug?: Debug.Debugger) {
+    constructor(options: ConnectionOptions = {}, debug?: Debug.Debugger) {
         super()
         this._debug = debug !== undefined
             ? debug.extend(counterId(this.constructor.name))

@@ -3,7 +3,11 @@ import authFetch from '../rest/authFetch'
 
 import StorageNode from './StorageNode'
 import { StreamrClient } from '../StreamrClient'
-import { Todo } from '../types'
+
+// TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
+export type StreamPartDefinition = string | { streamId?: string, streamPartition?: number, id?: string, partition?: number, stream?: Stream }
+
+export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
 
 interface StreamPermisionBase {
     id: number
@@ -247,7 +251,7 @@ export class Stream {
         return json.map((item: any) => new StorageNode(item.storageNodeAddress))
     }
 
-    async publish(...theArgs: Todo) {
-        return this._client.publish(this.id, ...theArgs)
+    async publish(content: object, timestamp?: number|string|Date, partitionKey?: string) {
+        return this._client.publish(this.id, content, timestamp, partitionKey)
     }
 }

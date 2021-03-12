@@ -7,7 +7,7 @@ import { validateOptions } from './stream/utils'
 import Config, { StreamrClientOptions, StrictStreamrClientOptions } from './Config'
 import StreamrEthereum from './Ethereum'
 import Session from './Session'
-import Connection, { ConnectionError } from './Connection'
+import Connection, { ConnectionError, ConnectionOptions } from './Connection'
 import Publisher from './publish'
 import { Subscriber, Subscription } from './subscribe'
 import { getUserId } from './user'
@@ -18,9 +18,20 @@ import { DataUnion, DataUnionDeployOptions } from './dataunion/DataUnion'
 import { BigNumber } from '@ethersproject/bignumber'
 import { getAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
+import { StreamPartDefinition } from './stream'
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
 export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
+
+export type ResendOptions = {
+    from?: { timestamp: number, sequenceNumber?: number }
+    to?: { timestamp: number, sequenceNumber?: number }
+    last?: number
+}
+
+export type SubscribeOptions = {
+    resend?: ResendOptions
+} & ResendOptions
 
 interface MessageEvent {
     data: any
@@ -29,10 +40,9 @@ interface MessageEvent {
 /**
  * Wrap connection message events with message parsing.
  */
-
 class StreamrConnection extends Connection {
     // TODO define args type when we convert Connection class to TypeScript
-    constructor(options: Todo, debug?: Debug.Debugger) {
+    constructor(options: ConnectionOptions, debug?: Debug.Debugger) {
         super(options, debug)
         this.on('message', this.onConnectionMessage)
     }
@@ -160,6 +170,7 @@ export class StreamrClient extends EventEmitter {
     /** @internal */
     ethereum: StreamrEthereum
 
+    // TODO annotate connection parameter as internal parameter if possible?
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
         this.id = counterId(`${this.constructor.name}:${uid}`)
@@ -280,13 +291,13 @@ export class StreamrClient extends EventEmitter {
         ])
     }
 
-    getSubscriptions(...args: Todo) {
-        return this.subscriber.getAll(...args)
+    getSubscriptions(): Subscription[] {
+        return this.subscriber.getAll()
     }
 
-    getSubscription(...args: Todo) {
+    getSubscription(definition: StreamPartDefinition) {
         // @ts-expect-error
-        return this.subscriber.get(...args)
+        return this.subscriber.get(definition)
     }
 
     async ensureConnected() {
@@ -301,8 +312,8 @@ export class StreamrClient extends EventEmitter {
         return this.session.logout()
     }
 
-    async publish(...args: Todo) {
-        return this.publisher.publish(...args)
+    async publish(streamObjectOrId: StreamPartDefinition, content: object, timestamp?: number|string|Date, partitionKey?: string) {
+        return this.publisher.publish(streamObjectOrId, content, timestamp, partitionKey)
     }
 
     async getUserId() {
@@ -319,7 +330,7 @@ export class StreamrClient extends EventEmitter {
         return this.publisher.rotateGroupKey(...args)
     }
 
-    async subscribe(opts: Todo, onMessage?: OnMessageCallback) {
+    async subscribe(opts: SubscribeOptions & StreamPartDefinition, onMessage?: OnMessageCallback) {
         let subTask: Todo
         let sub: Todo
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
@@ -350,10 +361,11 @@ export class StreamrClient extends EventEmitter {
         return subTask
     }
 
-    async unsubscribe(opts: Todo) {
-        await this.subscriber.unsubscribe(opts)
+    async unsubscribe(subscription: Subscription) {
+        await this.subscriber.unsubscribe(subscription)
     }
 
+    /** @internal */
     async resend(opts: Todo, onMessage?: OnMessageCallback): Promise<Subscription> {
         const task = this.subscriber.resend(opts)
         if (typeof onMessage !== 'function') {
@@ -373,12 +385,12 @@ export class StreamrClient extends EventEmitter {
         return task
     }
 
-    enableAutoConnect(...args: Todo) {
-        return this.connection.enableAutoConnect(...args)
+    enableAutoConnect(autoConnect?: boolean) {
+        return this.connection.enableAutoConnect(autoConnect)
     }
 
-    enableAutoDisconnect(...args: Todo) {
-        return this.connection.enableAutoDisconnect(...args)
+    enableAutoDisconnect(autoDisconnect?: boolean) {
+        return this.connection.enableAutoDisconnect(autoDisconnect)
     }
 
     async getAddress(): Promise<EthereumAddress> {
