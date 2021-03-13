@@ -9,6 +9,7 @@ import { parseEther } from 'ethers/lib/utils'
 import { EthereumAddress } from '../../src/types'
 import { until } from '../../src/utils'
 import debug from 'debug'
+import StreamrClient from '../../src'
 
 // @ts-expect-error
 const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
@@ -65,7 +66,7 @@ const sendTokensToSidechain = async (receiverAddress: EthereumAddress, amount: B
 
 describe('Token', () => {
 
-    let client
+    let client: StreamrClient
 
     beforeAll(async () => {
         client = createClient()
