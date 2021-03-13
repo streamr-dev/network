@@ -86,6 +86,9 @@ export class StreamEndpoints {
         this.client = client
     }
 
+    /**
+     * @category Important
+     */
     async getStream(streamId: string) {
         this.client.debug('getStream %o', {
             streamId,
@@ -103,6 +106,9 @@ export class StreamEndpoints {
         return new Stream(this.client, json)
     }
 
+    /**
+     * @category Important
+     */
     async listStreams(query: StreamListQuery = {}): Promise<Stream[]> {
         this.client.debug('listStreams %o', {
             query,
@@ -124,6 +130,9 @@ export class StreamEndpoints {
         return json[0] ? new Stream(this.client, json[0]) : Promise.reject(new NotFoundError('Stream: name=' + name))
     }
 
+    /**
+     * @category Important
+     */
     async createStream(props?: Partial<StreamProperties>) {
         this.client.debug('createStream %o', {
             props,
@@ -140,6 +149,9 @@ export class StreamEndpoints {
         return new Stream(this.client, json)
     }
 
+    /**
+     * @category Important
+     */
     async getOrCreateStream(props: { id: string, name?: never } | { id?: never, name: string }) {
         this.client.debug('getOrCreateStream %o', {
             props,
