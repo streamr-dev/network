@@ -24,7 +24,7 @@ const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, pr
 const tokenAdminWallet = new Wallet(config.tokenAdminPrivateKey, providerMainnet)
 const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, tokenAdminWallet)
 
-const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, tokenAdminWallet)
+const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
 const testWithdraw = async (
     getBalance: (memberWallet: Wallet) => Promise<BigNumber>,
