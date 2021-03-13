@@ -191,7 +191,7 @@ export class DataUnion {
         if (withdrawable.eq(0)) {
             throw new Error(`${address} has nothing to withdraw in (sidechain) data union ${duSidechain.address}`)
         }
-        return duSidechain.withdrawAllTo(recipientAddress, sendToMainnet) // sendToMainnet=true
+        return duSidechain.withdrawAllTo(recipientAddress, sendToMainnet)
     }
 
     /**
@@ -404,7 +404,7 @@ export class DataUnion {
     private async getWithdrawAllToMemberTx(memberAddress: EthereumAddress, sendToMainnet: boolean = true): Promise<TransactionResponse> {
         const a = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return duSidechain.withdrawAll(a, sendToMainnet) // sendToMainnet=true
+        return duSidechain.withdrawAll(a, sendToMainnet)
     }
 
     /**
@@ -443,7 +443,7 @@ export class DataUnion {
         sendToMainnet: boolean = true,
     ): Promise<TransactionResponse> {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return duSidechain.withdrawAllToSigned(memberAddress, recipientAddress, sendToMainnet, signature) // sendToMainnet=true
+        return duSidechain.withdrawAllToSigned(memberAddress, recipientAddress, sendToMainnet, signature)
     }
 
     /**
@@ -553,15 +553,16 @@ export class DataUnion {
         const {
             pollingIntervalMs = 1000,
             retryTimeoutMs = 60000,
-            freeWithdraw = this.client.options.dataUnion.freeWithdraw
-        }: any = options
-        const getBalanceFunc = options?.sendToMainnet
+            freeWithdraw = this.client.options.dataUnion.freeWithdraw,
+            sendToMainnet = true,
+        } = options
+        const getBalanceFunc = sendToMainnet
             ? () => this.client.getTokenBalance(recipientAddress)
             : () => this.client.getSidechainTokenBalance(recipientAddress)
         const balanceBefore = await getBalanceFunc()
         const tx = await getWithdrawTxFunc()
         const tr = await tx.wait()
-        if (!freeWithdraw) {
+        if (!freeWithdraw && sendToMainnet) {
             await this.getContracts().transportSignaturesForTransaction(tr, options)
         }
         log(`Waiting for balance ${balanceBefore.toString()} to change`)
