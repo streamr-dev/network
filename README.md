@@ -326,18 +326,16 @@ All the below functions return a Promise which gets resolved with the result.
 
 This library provides functions for working with Data Unions. To get a DataUnion instance, call `client.getDataUnion(address)`. To deploy a new DataUnion, call `deployDataUnion(options)`
 
-See `/docs` folder in this repo for DU `options` parameters.
+See `/docs` folder in this repo for Data Union `options` parameters. These docs can be rebuilt locally via:
+```
+npm run docs
+```
 
 These DataUnion-specific options are used from `StreamrClient` options:
 | Property                            | Default                                                | Description                                                                                                      |
 | :---------------------------------- | :----------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
-| tokenAddress                        | 0x0Cf0Ee63788A0849f<br>E5297F3407f701E122cC023 | Token used by the DU                                                                                             |
 | dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge                          |
 | dataUnion.freeWithdraw              | false                                                  | true = someone else pays for the gas when transporting the withdraw tx to mainnet; false = client does the transport as self-service and pays the mainnet gas costs |
-| dataUnion.factoryMainnetAddress     | 0x7d55f9981d4E10A19<br>3314E001b96f72FCc901e40                                                   | Data Union factory that creates a new Data Union                                                                 |
-| dataUnion.factorySidechainAddress   | 0x1b55587Beea0b5Bc9<br>6Bb2ADa56bD692870522e9f                                                   |                                                                                                                  |
-| dataUnion.templateMainnetAddress    | 0x5FE790E3751dd775C<br>b92e9086Acd34a2adeB8C7b                                                   |                                                                                                                  |
-| dataUnion.templateSidechainAddress  | 0xf1E9d6E254BeA3f01<br>29018AcA1A50AEcb7D528be                                                   |                                                                                                                  |
 
 
 ### Admin Functions
