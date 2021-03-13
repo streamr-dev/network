@@ -1,0 +1,951 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>streamr-client</title>
+	<meta name="description" content="Documentation for streamr-client">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+	<script async src="assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">streamr-client</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<h1>streamr-client</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<p align="center">
+					<a href="https://streamr.network">
+						<img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/streamr-client-javascript/master/readme-header-img.png" width="1320" />
+					</a>
+				</p>
+				<h1 align="left">
+					Streamr JavaScript Client
+				</h1>
+				<p>By using this client, you can easily interact with the <a href="https://streamr.network">Streamr</a> API from JavaScript-based environments, such as browsers and <a href="https://nodejs.org">node.js</a>. You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams.</p>
+				<p>The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.</p>
+				<p><a href="https://travis-ci.com/streamr-dev/streamr-client-javascript"><img src="https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master" alt="Build Status"></a></p>
+				<a href="#breaking-changes-notice" id="breaking-changes-notice" style="color: inherit; text-decoration: none;">
+					<h2>Breaking changes notice</h2>
+				</a>
+				<ul>
+					<li>Date TBD: Support for unsigned data will be dropped.</li>
+				</ul>
+				<p><a href="#installation">Installation</a> · <a href="#usage">Usage</a> · <a href="#client-options">Client options</a> · <a href="#authentication-options">Authentication options</a> · <a href="#message-handler-callback">Message handler callback</a> · <a href="#streamrclient-object">StreamrClient object</a> · <a href="#stream-object">Stream object</a> · <a href="#subscription-options">Subscription options</a> · <a href="#data-unions">Data Unions</a> · <a href="#utility-functions">Utility functions</a> · <a href="#binding-to-events">Events</a> · <a href="#partitioning">Partitioning</a> · <a href="#logging">Logging</a> · <a href="#publishing-latest">NPM Publishing</a></p>
+				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+					<h2>Installation</h2>
+				</a>
+				<p>The client is available on <a href="https://www.npmjs.com/package/streamr-client">npm</a> and can be installed simply by:</p>
+				<p><code>npm install streamr-client</code></p>
+				<p>Node v14 or higher is recommended if you intend to use the client in a Node environment. For example, inside a script.</p>
+				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+					<h2>Usage</h2>
+				</a>
+				<p>Here are some quick examples. More detailed examples for the browser and node.js can be found <a href="https://github.com/streamr-dev/streamr-client/tree/master/examples">here</a>.</p>
+				<p>If you don&#39;t have an Ethereum account you can use the utility function <code>StreamrClient.generateEthereumAccount()</code>, which returns the address and private key of a fresh Ethereum account.</p>
+				<a href="#creating-a-streamrclient-instance" id="creating-a-streamrclient-instance" style="color: inherit; text-decoration: none;">
+					<h3>Creating a StreamrClient instance</h3>
+				</a>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">StreamrClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">auth:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">privateKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;your-private-key&#039;</span>
+<span style="color: #000000">    }</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<p>When using Node.js remember to import the library with:</p>
+				<pre><code class="language-js"><span style="color: #AF00DB">import</span><span style="color: #000000"> { </span><span style="color: #001080">StreamrClient</span><span style="color: #000000"> } </span><span style="color: #AF00DB">from</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;streamr-client&#039;</span><span style="color: #000000">;</span>
+</code></pre>
+				<a href="#subscribing-to-real-time-events-in-a-stream" id="subscribing-to-real-time-events-in-a-stream" style="color: inherit; text-decoration: none;">
+					<h3>Subscribing to real-time events in a stream</h3>
+				</a>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sub</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">subscribe</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">stream:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;streamId&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">partition:</span><span style="color: #000000"> </span><span style="color: #098658">0</span><span style="color: #000000">, </span><span style="color: #008000">// Optional, defaults to zero. Use for partitioned streams to select partition.</span>
+<span style="color: #000000">    </span><span style="color: #008000">// optional resend options here</span>
+<span style="color: #000000">}, (</span><span style="color: #001080">message</span><span style="color: #000000">, </span><span style="color: #001080">metadata</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #008000">// This is the message handler which gets called for every incoming message in the stream.</span>
+<span style="color: #000000">    </span><span style="color: #008000">// Do something with the message here!</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<a href="#resending-historical-data" id="resending-historical-data" style="color: inherit; text-decoration: none;">
+					<h3>Resending historical data</h3>
+				</a>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sub</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">resend</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">stream:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;streamId&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">resend:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">last:</span><span style="color: #000000"> </span><span style="color: #098658">5</span><span style="color: #000000">,</span>
+<span style="color: #000000">    },</span>
+<span style="color: #000000">}, (</span><span style="color: #001080">message</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #008000">// This is the message handler which gets called for every received message in the stream.</span>
+<span style="color: #000000">    </span><span style="color: #008000">// Do something with the message here!</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<p>See &quot;Subscription options&quot; for resend options</p>
+				<a href="#programmatically-creating-a-stream" id="programmatically-creating-a-stream" style="color: inherit; text-decoration: none;">
+					<h3>Programmatically creating a stream</h3>
+				</a>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">stream</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">getOrCreateStream</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;My awesome stream created via the API&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">})</span>
+<span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #A31515">`Stream </span><span style="color: #0000FF">${</span><span style="color: #001080">stream</span><span style="color: #000000FF">.</span><span style="color: #001080">id</span><span style="color: #0000FF">}</span><span style="color: #A31515"> has been created!`</span><span style="color: #000000">)</span>
+<span style="color: #008000">// Do something with the stream, for example call stream.publish(message)</span>
+</code></pre>
+				<a href="#publishing-data-points-to-a-stream" id="publishing-data-points-to-a-stream" style="color: inherit; text-decoration: none;">
+					<h3>Publishing data points to a stream</h3>
+				</a>
+				<pre><code class="language-js"><span style="color: #008000">// Here&#039;s our example data point</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">msg</span><span style="color: #000000"> = {</span>
+<span style="color: #000000">    </span><span style="color: #001080">temperature:</span><span style="color: #000000"> </span><span style="color: #098658">25.4</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">humidity:</span><span style="color: #000000"> </span><span style="color: #098658">10</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">happy:</span><span style="color: #000000"> </span><span style="color: #0000FF">true</span>
+<span style="color: #000000">}</span>
+
+<span style="color: #008000">// Publish using the stream id only</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">, </span><span style="color: #001080">msg</span><span style="color: #000000">)</span>
+
+<span style="color: #008000">// The first argument can also be the stream object</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #001080">stream</span><span style="color: #000000">, </span><span style="color: #001080">msg</span><span style="color: #000000">)</span>
+
+<span style="color: #008000">// Publish with a specific timestamp as a Date object (default is now)</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">, </span><span style="color: #001080">msg</span><span style="color: #000000">, </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #267F99">Date</span><span style="color: #000000">(</span><span style="color: #098658">54365472</span><span style="color: #000000">))</span>
+
+<span style="color: #008000">// Publish with a specific timestamp in ms</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">, </span><span style="color: #001080">msg</span><span style="color: #000000">, </span><span style="color: #098658">54365472</span><span style="color: #000000">)</span>
+
+<span style="color: #008000">// Publish with a specific timestamp as a ISO8601 string</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">, </span><span style="color: #001080">msg</span><span style="color: #000000">, </span><span style="color: #A31515">&#039;2019-01-01T00:00:00.123Z&#039;</span><span style="color: #000000">)</span>
+
+<span style="color: #008000">// Publish with a specific partition key (read more about partitioning further down this readme)</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">, </span><span style="color: #001080">msg</span><span style="color: #000000">, </span><span style="color: #267F99">Date</span><span style="color: #000000">.</span><span style="color: #795E26">now</span><span style="color: #000000">(), </span><span style="color: #A31515">&#039;my-partition-key&#039;</span><span style="color: #000000">)</span>
+
+<span style="color: #008000">// For convenience, stream.publish(...) equals client.publish(stream, ...)</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">stream</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #001080">msg</span><span style="color: #000000">)</span>
+</code></pre>
+				<a href="#client-options" id="client-options" style="color: inherit; text-decoration: none;">
+					<h2>Client options</h2>
+				</a>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Option</th>
+							<th align="left">Default value</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">url</td>
+							<td align="left">wss://streamr.network/api/v1/ws</td>
+							<td align="left">Address of the Streamr websocket endpoint to connect to.</td>
+						</tr>
+						<tr>
+							<td align="left">restUrl</td>
+							<td align="left"><a href="https://streamr.network/api/v1">https://streamr.network/api/v1</a></td>
+							<td align="left">Base URL of the Streamr REST API.</td>
+						</tr>
+						<tr>
+							<td align="left">auth</td>
+							<td align="left">{}</td>
+							<td align="left">Object that can contain different information to authenticate. More details below.</td>
+						</tr>
+						<tr>
+							<td align="left">publishWithSignature</td>
+							<td align="left">&#39;auto&#39;</td>
+							<td align="left">Determines if data points published to streams are signed or not. Possible values are: &#39;auto&#39;, &#39;always&#39; and &#39;never&#39;. Signing requires <code>auth.privateKey</code> or <code>auth.ethereum</code>.  &#39;auto&#39; will sign only if one of them is set. &#39;always&#39; will throw an exception if none of them is set.</td>
+						</tr>
+						<tr>
+							<td align="left">verifySignatures</td>
+							<td align="left">&#39;auto&#39;</td>
+							<td align="left">Determines under which conditions signed and unsigned data points are accepted or rejected. &#39;always&#39; accepts only signed and verified data points. &#39;never&#39; accepts all data points. &#39;auto&#39; verifies all signed data points before accepting them and accepts unsigned data points only for streams not supposed to contain signed data.</td>
+						</tr>
+						<tr>
+							<td align="left">autoConnect</td>
+							<td align="left">true</td>
+							<td align="left">If set to <code>true</code>, the client connects automatically on the first call to <code>subscribe()</code>. Otherwise an explicit call to <code>connect()</code> is required.</td>
+						</tr>
+						<tr>
+							<td align="left">autoDisconnect</td>
+							<td align="left">true</td>
+							<td align="left">If set to <code>true</code>, the client automatically disconnects when the last stream is unsubscribed. Otherwise the connection is left open and can be disconnected explicitly by calling <code>disconnect()</code>.</td>
+						</tr>
+						<tr>
+							<td align="left">orderMessages</td>
+							<td align="left">true</td>
+							<td align="left">If set to <code>true</code>, the subscriber handles messages in the correct order, requests missing messages and drops duplicates. Otherwise, the subscriber processes messages as they arrive without any check.</td>
+						</tr>
+						<tr>
+							<td align="left">maxPublishQueueSize</td>
+							<td align="left">10000</td>
+							<td align="left">Only in effect when <code>autoConnect = true</code>. Controls the maximum number of messages to retain in internal queue when client has disconnected and is reconnecting to Streamr.</td>
+						</tr>
+						<tr>
+							<td align="left">publisherGroupKeys</td>
+							<td align="left">{}</td>
+							<td align="left">Object defining the group key as a hex string used to encrypt for each stream id.</td>
+						</tr>
+						<tr>
+							<td align="left">publisherStoreKeyHistory</td>
+							<td align="left">true</td>
+							<td align="left">If <code>true</code>, the client will locally store every key used to encrypt messages at some point. If set to <code>false</code>, the client will not be able to answer subscribers asking for historical keys during resend requests.</td>
+						</tr>
+						<tr>
+							<td align="left">subscriberGroupKeys</td>
+							<td align="left">{}</td>
+							<td align="left">Object defining, for each stream id, an object containing the group key used to decrypt for each publisher id. Not needed if <code>keyExchange</code> is defined.</td>
+						</tr>
+						<tr>
+							<td align="left">keyExchange</td>
+							<td align="left">{}</td>
+							<td align="left">Defines RSA key pair to use for group key exchange. Can define <code>publicKey</code> and <code>privateKey</code> fields as strings in the PEM format, or stay empty to generate a key pair automatically. Can be set to <code>null</code> if no key exchange is required.</td>
+						</tr>
+				</tbody></table>
+				<a href="#authentication-options" id="authentication-options" style="color: inherit; text-decoration: none;">
+					<h2>Authentication options</h2>
+				</a>
+				<p>Note: <strong>Authenticating with an API key has been deprecated.</strong></p>
+				<p>Note: <strong>Support for email/password authentication will be dropped in the future and cryptographic keys/wallets will be the only supported method.</strong></p>
+				<p>If you don&#39;t have an Ethereum account you can use the utility function <code>StreamrClient.generateEthereumAccount()</code>, which returns the address and private key of a fresh Ethereum account.</p>
+				<p>Authenticating with Ethereum also automatically creates an associated Streamr user, even if it doesn&#39;t already exist. Under the hood, the client will cryptographically sign a challenge to authenticate you as a Streamr user:</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">StreamrClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">auth:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">privateKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;your-private-key&#039;</span>
+<span style="color: #000000">    }</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<p>Authenticating with an Ethereum private key contained in an Ethereum (web3) provider:</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">StreamrClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">auth:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">ethereum:</span><span style="color: #000000"> </span><span style="color: #001080">window</span><span style="color: #000000">.</span><span style="color: #001080">ethereum</span><span style="color: #000000">,</span>
+<span style="color: #000000">    }</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<p>(Authenticating with a pre-existing session token, for internal use by the Streamr app):</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">StreamrClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">auth:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">sessionToken:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;session-token&#039;</span>
+<span style="color: #000000">    }</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<a href="#connecting" id="connecting" style="color: inherit; text-decoration: none;">
+					<h2>Connecting</h2>
+				</a>
+				<p>By default the client will automatically connect and disconnect as needed, ideally you should not need to manage connection state explicitly.
+					Specifically, it will automatically connect when you publish or subscribe, and automatically disconnect once all subscriptions are removed and no
+					messages were recently published. This behaviour can be disabled using the <code>autoConnect</code> &amp; <code>autoDisconnect</code> options when creating a <code>new StreamrClient</code>. Explicit calls to either <code>connect()</code> or <code>disconnect()</code> will disable all <code>autoConnect</code> &amp; <code>autoDisconnect</code> functionality, but they can
+				be re-enabled by calling <code>enableAutoConnect()</code> or <code>enableAutoDisconnect()</code>.</p>
+				<p>Calls that need a connection, such as <code>publish</code> or <code>subscribe</code> will fail with an error if you are disconnected and autoConnect is disabled.</p>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">connect()</td>
+							<td align="left">Safely connects if not connected. Returns a promise. Resolves immediately if already connected. Only rejects if an error occurs during connection.</td>
+						</tr>
+						<tr>
+							<td align="left">disconnect()</td>
+							<td align="left">Safely disconnects if not already disconnected, clearing all subscriptions. Returns a Promise.  Resolves immediately if already disconnected. Only rejects if an error occurs during disconnection.</td>
+						</tr>
+						<tr>
+							<td align="left">enableAutoConnect(enable = true)</td>
+							<td align="left">Enables autoConnect if it wasn&#39;t already enabled. Does not connect immediately. Use <code>enableAutoConnect(false)</code> to disable autoConnect.</td>
+						</tr>
+						<tr>
+							<td align="left">enableAutoDisconnect(enable = true)</td>
+							<td align="left">Enables autoDisconnect if it wasn&#39;t already enabled. Does not disconnect immediately. Use <code>enableAutoConnect(false)</code> to disable autoDisconnect.</td>
+						</tr>
+				</tbody></table>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">StreamrClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">auth:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">privateKey:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;your-private-key&#039;</span>
+<span style="color: #000000">    },</span>
+<span style="color: #000000">    </span><span style="color: #001080">autoConnect:</span><span style="color: #000000"> </span><span style="color: #0000FF">false</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">autoDisconnect:</span><span style="color: #000000"> </span><span style="color: #0000FF">false</span><span style="color: #000000">,</span>
+<span style="color: #000000">})</span>
+
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">connect</span><span style="color: #000000">()</span>
+</code></pre>
+				<a href="#managing-subscriptions" id="managing-subscriptions" style="color: inherit; text-decoration: none;">
+					<h2>Managing subscriptions</h2>
+				</a>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">subscribe(options, callback)</td>
+							<td align="left">Subscribes to a stream. Messages in this stream are passed to the <code>callback</code> function. See below for subscription options. Returns a Promise resolving a <code>Subscription</code> object.</td>
+						</tr>
+						<tr>
+							<td align="left">unsubscribe(Subscription)</td>
+							<td align="left">Unsubscribes the given <code>Subscription</code>. Returns a promise.</td>
+						</tr>
+						<tr>
+							<td align="left">unsubscribeAll(<code>streamId</code>)</td>
+							<td align="left">Unsubscribes all <code>Subscriptions</code> for <code>streamId</code>. Returns a promise.</td>
+						</tr>
+						<tr>
+							<td align="left">getSubscriptions(<code>streamId</code>)</td>
+							<td align="left">Returns a list of <code>Subscriptions</code> for <code>streamId</code>. Returns a promise.</td>
+						</tr>
+				</tbody></table>
+				<a href="#message-handler-callback" id="message-handler-callback" style="color: inherit; text-decoration: none;">
+					<h3>Message handler callback</h3>
+				</a>
+				<p>The second argument to <code>client.subscribe(options, callback)</code> is the callback function that will be called for each message as they arrive. Its arguments are as follows:</p>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Argument</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">payload</td>
+							<td align="left">A JS object containing the message payload itself</td>
+						</tr>
+						<tr>
+							<td align="left">streamMessage</td>
+							<td align="left">The whole <a href="https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/message_layer/StreamMessage.js">StreamMessage</a> object containing various metadata, for example <code>streamMessage.getTimestamp()</code> etc.</td>
+						</tr>
+				</tbody></table>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sub</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">subscribe</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">streamId:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">}, (</span><span style="color: #001080">payload</span><span style="color: #000000">, </span><span style="color: #001080">streamMessage</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">({</span>
+<span style="color: #000000">        </span><span style="color: #001080">payload</span><span style="color: #000000">, </span><span style="color: #001080">streamMessage</span>
+<span style="color: #000000">    })</span>
+<span style="color: #000000">})</span>
+
+</code></pre>
+				<a href="#subscription-options" id="subscription-options" style="color: inherit; text-decoration: none;">
+					<h3>Subscription Options</h3>
+				</a>
+				<p>Note that only one of the resend options can be used for a particular subscription. The default functionality is to resend nothing, only subscribe to messages from the subscription moment onwards.</p>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">stream</td>
+							<td align="left">Stream id to subscribe to</td>
+						</tr>
+						<tr>
+							<td align="left">partition</td>
+							<td align="left">Partition number to subscribe to. Defaults to partition 0.</td>
+						</tr>
+						<tr>
+							<td align="left">resend</td>
+							<td align="left">Object defining the resend options. Below are examples of its contents.</td>
+						</tr>
+						<tr>
+							<td align="left">groupKeys</td>
+							<td align="left">Object defining the group key as a hex string for each publisher id of the stream.</td>
+						</tr>
+				</tbody></table>
+				<pre><code class="language-js"><span style="color: #008000">// Resend N most recent messages</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sub1</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">subscribe</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">streamId:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">resend:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">last:</span><span style="color: #000000"> </span><span style="color: #098658">10</span><span style="color: #000000">,</span>
+<span style="color: #000000">    }</span>
+<span style="color: #000000">}, </span><span style="color: #001080">onMessage</span><span style="color: #000000">)</span>
+
+<span style="color: #008000">// Resend from a specific message reference up to the newest message</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sub2</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">subscribe</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">streamId:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">resend:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">from:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">            </span><span style="color: #001080">timestamp:</span><span style="color: #000000"> </span><span style="color: #098658">12345</span><span style="color: #000000">,</span>
+<span style="color: #000000">            </span><span style="color: #001080">sequenceNumber:</span><span style="color: #000000"> </span><span style="color: #098658">0</span><span style="color: #000000">, </span><span style="color: #008000">// optional</span>
+<span style="color: #000000">        },</span>
+<span style="color: #000000">        </span><span style="color: #001080">publisher:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;publisherId&#039;</span><span style="color: #000000">, </span><span style="color: #008000">// optional</span>
+<span style="color: #000000">        </span><span style="color: #001080">msgChainId:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;msgChainId&#039;</span><span style="color: #000000">, </span><span style="color: #008000">// optional</span>
+<span style="color: #000000">    }</span>
+<span style="color: #000000">}, </span><span style="color: #001080">onMessage</span><span style="color: #000000">)</span>
+
+<span style="color: #008000">// Resend a limited range of messages</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sub3</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">subscribe</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">streamId:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">resend:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">        </span><span style="color: #001080">from:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">            </span><span style="color: #001080">timestamp:</span><span style="color: #000000"> </span><span style="color: #098658">12345</span><span style="color: #000000">,</span>
+<span style="color: #000000">            </span><span style="color: #001080">sequenceNumber:</span><span style="color: #000000"> </span><span style="color: #098658">0</span><span style="color: #000000">, </span><span style="color: #008000">// optional</span>
+<span style="color: #000000">        },</span>
+<span style="color: #000000">        </span><span style="color: #001080">to:</span><span style="color: #000000"> {</span>
+<span style="color: #000000">            </span><span style="color: #001080">timestamp:</span><span style="color: #000000"> </span><span style="color: #098658">54321</span><span style="color: #000000">,</span>
+<span style="color: #000000">            </span><span style="color: #001080">sequenceNumber:</span><span style="color: #000000"> </span><span style="color: #098658">0</span><span style="color: #000000">, </span><span style="color: #008000">// optional</span>
+<span style="color: #000000">        },</span>
+<span style="color: #000000">        </span><span style="color: #001080">publisher:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;publisherId&#039;</span><span style="color: #000000">, </span><span style="color: #008000">// optional</span>
+<span style="color: #000000">        </span><span style="color: #001080">msgChainId:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;msgChainId&#039;</span><span style="color: #000000">, </span><span style="color: #008000">// optional</span>
+<span style="color: #000000">    }</span>
+<span style="color: #000000">}, </span><span style="color: #001080">onMessage</span><span style="color: #000000">)</span>
+</code></pre>
+				<p>If you choose one of the above resend options when subscribing, you can listen on the completion of this resend by doing the following:</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sub</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">subscribe</span><span style="color: #000000">(</span><span style="color: #001080">options</span><span style="color: #000000">)</span>
+<span style="color: #001080">sub</span><span style="color: #000000">.</span><span style="color: #795E26">on</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;resent&#039;</span><span style="color: #000000">, () </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;All caught up and received all requested historical messages! Now switching to real time!&#039;</span><span style="color: #000000">)</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<a href="#stream-api" id="stream-api" style="color: inherit; text-decoration: none;">
+					<h2>Stream API</h2>
+				</a>
+				<p>All the below functions return a Promise which gets resolved with the result.</p>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">getStream(streamId)</td>
+							<td align="left">Fetches a stream object from the API.</td>
+						</tr>
+						<tr>
+							<td align="left">listStreams(query)</td>
+							<td align="left">Fetches an array of stream objects from the API. For the query params, consult the <a href="https://api-explorer.streamr.com">API docs</a>.</td>
+						</tr>
+						<tr>
+							<td align="left">getStreamByName(name)</td>
+							<td align="left">Fetches a stream which exactly matches the given name.</td>
+						</tr>
+						<tr>
+							<td align="left">createStream([properties])</td>
+							<td align="left">Creates a stream with the given properties. For more information on the stream properties, consult the <a href="https://api-explorer.streamr.com">API docs</a>.</td>
+						</tr>
+						<tr>
+							<td align="left">getOrCreateStream(properties)</td>
+							<td align="left">Gets a stream with the id or name given in <code>properties</code>, or creates it if one is not found.</td>
+						</tr>
+						<tr>
+							<td align="left">publish(streamId, message, timestamp, partitionKey)</td>
+							<td align="left">Publishes a new message to the given stream.</td>
+						</tr>
+				</tbody></table>
+				<a href="#stream-object" id="stream-object" style="color: inherit; text-decoration: none;">
+					<h3>Stream object</h3>
+				</a>
+				<p>All the below functions return a Promise which gets resolved with the result.</p>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">update()</td>
+							<td align="left">Updates the properties of this stream object by sending them to the API.</td>
+						</tr>
+						<tr>
+							<td align="left">delete()</td>
+							<td align="left">Deletes this stream.</td>
+						</tr>
+						<tr>
+							<td align="left">getPermissions()</td>
+							<td align="left">Returns the list of permissions for this stream.</td>
+						</tr>
+						<tr>
+							<td align="left">hasPermission(operation, user)</td>
+							<td align="left">Returns a permission object, or null if no such permission was found. Valid <code>operation</code> values for streams are: stream_get, stream_edit, stream_delete, stream_publish, stream_subscribe, and stream_share. <code>user</code> is the username of a user, or null for public permissions.</td>
+						</tr>
+						<tr>
+							<td align="left">grantPermission(operation, user)</td>
+							<td align="left">Grants the permission to do <code>operation</code> to <code>user</code>, which are defined as above.</td>
+						</tr>
+						<tr>
+							<td align="left">revokePermission(permissionId)</td>
+							<td align="left">Revokes a permission identified by its <code>id</code>.</td>
+						</tr>
+						<tr>
+							<td align="left">detectFields()</td>
+							<td align="left">Updates the stream field config (schema) to match the latest data point in the stream.</td>
+						</tr>
+						<tr>
+							<td align="left">publish(message, timestamp, partitionKey)</td>
+							<td align="left">Publishes a new message to this stream.</td>
+						</tr>
+				</tbody></table>
+				<a href="#data-unions" id="data-unions" style="color: inherit; text-decoration: none;">
+					<h2>Data Unions</h2>
+				</a>
+				<p>This library provides functions for working with Data Unions. To get a DataUnion instance, call <code>client.getDataUnion(address)</code>. To deploy a new DataUnion, call <code>deployDataUnion(options)</code></p>
+				<p>See <code>/docs</code> folder in this repo for DU <code>options</code> parameters.</p>
+				<p>These DataUnion-specific options are used from <code>StreamrClient</code> options:
+					| Property                            | Default                                                | Description                                                                                                      |
+					| :---------------------------------- | :----------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
+					| tokenAddress                        | 0x0Cf0Ee63788A0849f<br>E5297F3407f701E122cC023 | Token used by the DU (Mainnet DATA token)                                                                                             |
+					| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge                          |
+					| dataUnion.freeWithdraw              | false                                                  | true = someone else pays for the gas when transporting the withdraw tx to mainnet; false = client does the transport as self-service and pays the mainnet gas costs |
+					| dataUnion.factoryMainnetAddress     | 0x7d55f9981d4E10A19<br>3314E001b96f72FCc901e40                                                   | Data Union factory that creates a new Data Union on mainnet                                                                 |
+					| dataUnion.factorySidechainAddress   | 0x1b55587Beea0b5Bc9<br>6Bb2ADa56bD692870522e9f                                                   | Data Union factory that creates a new Data Union on the sidechain                                                                                                                 |
+					| dataUnion.templateMainnetAddress    | 0x5FE790E3751dd775C<br>b92e9086Acd34a2adeB8C7b                                                   | A gas optimization contract for the mainnet factory constructor                                                                                                                 |
+				| dataUnion.templateSidechainAddress  | 0xf1E9d6E254BeA3f01<br>29018AcA1A50AEcb7D528be                                                   | A gas optimization contract for the sidechain factory constructor                                                                                                                 |</p>
+				<a href="#admin-functions" id="admin-functions" style="color: inherit; text-decoration: none;">
+					<h3>Admin Functions</h3>
+				</a>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Returns</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">createSecret([name])</td>
+							<td align="left">string</td>
+							<td align="left">Create a secret for a Data Union</td>
+						</tr>
+						<tr>
+							<td align="left">addMembers(memberAddressList, [options])</td>
+							<td align="left">Transaction receipt</td>
+							<td align="left">Add members</td>
+						</tr>
+						<tr>
+							<td align="left">removeMembers(memberAddressList, [options])</td>
+							<td align="left">Transaction receipt</td>
+							<td align="left">Remove members from Data Union</td>
+						</tr>
+						<tr>
+							<td align="left">withdrawAllToMember(memberAddress, [options])</td>
+							<td align="left"></td>
+							<td align="left"></td>
+						</tr>
+						<tr>
+							<td align="left">withdrawAllToSigned(memberAddress, recipientAddress, signature, [options])</td>
+							<td align="left"></td>
+							<td align="left"></td>
+						</tr>
+						<tr>
+							<td align="left">setAdminFee(newFeeFraction)</td>
+							<td align="left">Transaction receipt</td>
+							<td align="left"><code>newFeeFraction</code> is a <code>Number</code> between 0.0 and 1.0 (inclusive)</td>
+						</tr>
+				</tbody></table>
+				<p>Here&#39;s an example how to deploy a data union contract and set the admin fee:</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">StreamrClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">auth:</span><span style="color: #000000"> { </span><span style="color: #001080">privateKey</span><span style="color: #000000"> },</span>
+<span style="color: #000000">})</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">dataUnion</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">deployDataUnion</span><span style="color: #000000">()</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">setAdminFee</span><span style="color: #000000">(</span><span style="color: #098658">0.3</span><span style="color: #000000">, { </span><span style="color: #001080">dataUnion</span><span style="color: #000000"> })</span>
+</code></pre>
+				<a href="#member-functions" id="member-functions" style="color: inherit; text-decoration: none;">
+					<h3>Member functions</h3>
+				</a>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Returns</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">join([secret])</td>
+							<td align="left">JoinRequest</td>
+							<td align="left">Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)</td>
+						</tr>
+						<tr>
+							<td align="left">isMember(memberAddress)</td>
+							<td align="left">boolean</td>
+							<td align="left"></td>
+						</tr>
+						<tr>
+							<td align="left">withdrawAll([options])</td>
+							<td align="left">Transaction receipt</td>
+							<td align="left">Withdraw funds from Data Union</td>
+						</tr>
+						<tr>
+							<td align="left">withdrawAllTo(recipientAddress, [options])</td>
+							<td align="left">Transaction receipt</td>
+							<td align="left">Donate/move your earnings to recipientAddress instead of your memberAddress</td>
+						</tr>
+						<tr>
+							<td align="left">signWithdrawAllTo(recipientAddress)</td>
+							<td align="left">Signature (string)</td>
+							<td align="left">Signature that can be used to withdraw tokens to given recipientAddress</td>
+						</tr>
+						<tr>
+							<td align="left">signWithdrawAmountTo(recipientAddress, amountTokenWei)</td>
+							<td align="left">Signature (string)</td>
+							<td align="left">Signature that can be used to withdraw tokens to given recipientAddress</td>
+						</tr>
+				</tbody></table>
+				<p>Here&#39;s an example how to sign off on a withdraw to (any) recipientAddress:</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">StreamrClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">auth:</span><span style="color: #000000"> { </span><span style="color: #001080">privateKey</span><span style="color: #000000"> },</span>
+<span style="color: #000000">    </span><span style="color: #001080">dataUnion</span><span style="color: #000000">,</span>
+<span style="color: #000000">})</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">signature</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">signWithdrawAllTo</span><span style="color: #000000">(</span><span style="color: #001080">recipientAddress</span><span style="color: #000000">)</span>
+</code></pre>
+				<a href="#query-functions" id="query-functions" style="color: inherit; text-decoration: none;">
+					<h3>Query functions</h3>
+				</a>
+				<p>These are available for everyone and anyone, to query publicly available info from a Data Union:</p>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Returns</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">getStats()</td>
+							<td align="left">{activeMemberCount, totalEarnings, ...}</td>
+							<td align="left">Get Data Union&#39;s statistics</td>
+						</tr>
+						<tr>
+							<td align="left">getMemberStats(memberAddress)</td>
+							<td align="left">{earnings, proof, ...}</td>
+							<td align="left">Get member&#39;s stats</td>
+						</tr>
+						<tr>
+							<td align="left">getWithdrawableEarnings(memberAddress)</td>
+							<td align="left"><code>BigNumber</code> withdrawable DATA tokens in the DU</td>
+							<td align="left"></td>
+						</tr>
+						<tr>
+							<td align="left">getAdminFee()</td>
+							<td align="left"><code>Number</code> between 0.0 and 1.0 (inclusive)</td>
+							<td align="left">Admin&#39;s cut from revenues</td>
+						</tr>
+						<tr>
+							<td align="left">getAdminAddress()</td>
+							<td align="left">Ethereum address</td>
+							<td align="left">Data union admin&#39;s address</td>
+						</tr>
+						<tr>
+							<td align="left">getVersion()</td>
+							<td align="left"><code>0</code>, <code>1</code> or <code>2</code></td>
+							<td align="left"><code>0</code> if the contract is not a data union</td>
+						</tr>
+				</tbody></table>
+				<p>Here&#39;s an example how to get a member&#39;s withdrawable token balance (in &quot;wei&quot;, where 1 DATA = 10^18 wei)</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">StreamrClient</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">dataUnion</span><span style="color: #000000">,</span>
+<span style="color: #000000">})</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">withdrawableWei</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">getMemberBalance</span><span style="color: #000000">(</span><span style="color: #001080">memberAddress</span><span style="color: #000000">)</span>
+</code></pre>
+				<a href="#utility-functions" id="utility-functions" style="color: inherit; text-decoration: none;">
+					<h2>Utility functions</h2>
+				</a>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">StreamrClient.generateEthereumAccount()</td>
+							<td align="left">Generates a random Ethereum private key and returns an object with fields <code>address</code> and privateKey. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.</td>
+						</tr>
+						<tr>
+							<td align="left">getTokenBalance(address)</td>
+							<td align="left"><code>BigNumber</code></td>
+						</tr>
+				</tbody></table>
+				<a href="#events" id="events" style="color: inherit; text-decoration: none;">
+					<h2>Events</h2>
+				</a>
+				<p>The client and the subscriptions can fire events as detailed below.
+				You can bind to them using <code>on</code>.</p>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">on(eventName, function)</td>
+							<td align="left">Binds a <code>function</code> to an event called <code>eventName</code></td>
+						</tr>
+						<tr>
+							<td align="left">once(eventName, function)</td>
+							<td align="left">Binds a <code>function</code> to an event called <code>eventName</code>. It gets called once and then removed.</td>
+						</tr>
+						<tr>
+							<td align="left">removeListener(eventName, function)</td>
+							<td align="left">Unbinds the <code>function</code> from events called <code>eventName</code></td>
+						</tr>
+				</tbody></table>
+				<a href="#events-on-the-streamrclient-instance" id="events-on-the-streamrclient-instance" style="color: inherit; text-decoration: none;">
+					<h3>Events on the StreamrClient instance</h3>
+				</a>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Handler Arguments</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">connected</td>
+							<td align="left"></td>
+							<td align="left">Fired when the client has connected (or reconnected).</td>
+						</tr>
+						<tr>
+							<td align="left">disconnected</td>
+							<td align="left"></td>
+							<td align="left">Fired when the client has disconnected (or paused).</td>
+						</tr>
+						<tr>
+							<td align="left">error</td>
+							<td align="left">Error</td>
+							<td align="left">Fired when the client encounters an error e.g. connection issues</td>
+						</tr>
+				</tbody></table>
+				<pre><code class="language-js"><span style="color: #008000">// The StreamrClient emits various events</span>
+<span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">on</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;connected&#039;</span><span style="color: #000000">, () </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #008000">// note no need to wait for this before doing work,</span>
+<span style="color: #000000">    </span><span style="color: #008000">// with autoconnect enabled the client will happily establish a connection for you as required.</span>
+<span style="color: #000000">    </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;Yeah, we are connected now!&#039;</span><span style="color: #000000">)</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<a href="#events-on-the-subscription-object" id="events-on-the-subscription-object" style="color: inherit; text-decoration: none;">
+					<h3>Events on the Subscription object</h3>
+				</a>
+				<table>
+					<thead>
+						<tr>
+							<th align="left">Name</th>
+							<th align="left">Handler Arguments</th>
+							<th align="left">Description</th>
+						</tr>
+					</thead>
+					<tbody><tr>
+							<td align="left">unsubscribed</td>
+							<td align="left"></td>
+							<td align="left">Fired when an unsubscription is acknowledged by the server.</td>
+						</tr>
+						<tr>
+							<td align="left">resent</td>
+							<td align="left"><a href="https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resent/ResendResponseResentV1.js">ResendResponseResent</a></td>
+							<td align="left">Fired after <code>resending</code> when the subscription has finished resending and message has been processed</td>
+						</tr>
+						<tr>
+							<td align="left">error</td>
+							<td align="left">Error object</td>
+							<td align="left">Reports errors, for example problems with message content</td>
+						</tr>
+				</tbody></table>
+				<a href="#partitioning" id="partitioning" style="color: inherit; text-decoration: none;">
+					<h2>Partitioning</h2>
+				</a>
+				<p>Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see <a href="https://streamr.network/docs/streams#partitioning">the docs</a>.</p>
+				<a href="#creating-partitioned-streams" id="creating-partitioned-streams" style="color: inherit; text-decoration: none;">
+					<h3>Creating partitioned streams</h3>
+				</a>
+				<p>By default, streams only have 1 partition when they are created. The partition count can be set to any positive number (1-100 is reasonable). An example of creating a partitioned stream using the JS client:</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">stream</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">createStream</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">name:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;My partitioned stream&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">partitions:</span><span style="color: #000000"> </span><span style="color: #098658">10</span><span style="color: #000000">,</span>
+<span style="color: #000000">})</span>
+<span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #A31515">`Stream created: </span><span style="color: #0000FF">${</span><span style="color: #001080">stream</span><span style="color: #000000FF">.</span><span style="color: #001080">id</span><span style="color: #0000FF">}</span><span style="color: #A31515">. It has </span><span style="color: #0000FF">${</span><span style="color: #001080">stream</span><span style="color: #000000FF">.</span><span style="color: #001080">partitions</span><span style="color: #0000FF">}</span><span style="color: #A31515"> partitions.`</span><span style="color: #000000">)</span>
+</code></pre>
+				<a href="#publishing-to-partitioned-streams" id="publishing-to-partitioned-streams" style="color: inherit; text-decoration: none;">
+					<h3>Publishing to partitioned streams</h3>
+				</a>
+				<p>In most use cases, a user wants related events (e.g. events from a particular device) to be assigned to the same partition, so that the events retain a deterministic order and reach the same subscriber(s) to allow them to compute stateful aggregates correctly.</p>
+				<p>The library allows the user to choose a <em>partition key</em>, which simplifies publishing to partitioned streams by not requiring the user to assign a partition number explicitly. The same partition key always maps to the same partition. In an IoT use case, the device id can be used as partition key; in user interaction data it could be the user id, and so on.</p>
+				<p>The partition key can be given as an argument to the <code>publish</code> methods, and the library assigns a deterministic partition number automatically:</p>
+				<pre><code class="language-js"><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">, </span><span style="color: #001080">msg</span><span style="color: #000000">, </span><span style="color: #267F99">Date</span><span style="color: #000000">.</span><span style="color: #795E26">now</span><span style="color: #000000">(), </span><span style="color: #001080">msg</span><span style="color: #000000">.</span><span style="color: #001080">vehicleId</span><span style="color: #000000">)</span>
+
+<span style="color: #008000">// or, equivalently</span>
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">stream</span><span style="color: #000000">.</span><span style="color: #795E26">publish</span><span style="color: #000000">(</span><span style="color: #001080">msg</span><span style="color: #000000">, </span><span style="color: #267F99">Date</span><span style="color: #000000">.</span><span style="color: #795E26">now</span><span style="color: #000000">(), </span><span style="color: #001080">msg</span><span style="color: #000000">.</span><span style="color: #001080">vehicleId</span><span style="color: #000000">)</span>
+</code></pre>
+				<a href="#subscribing-to-partitioned-streams" id="subscribing-to-partitioned-streams" style="color: inherit; text-decoration: none;">
+					<h3>Subscribing to partitioned streams</h3>
+				</a>
+				<p>By default, the JS client subscribes to the first partition (partition <code>0</code>) in a stream. The partition number can be explicitly given in the subscribe call:</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sub</span><span style="color: #000000"> = </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">subscribe</span><span style="color: #000000">({</span>
+<span style="color: #000000">    </span><span style="color: #001080">stream:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">    </span><span style="color: #001080">partition:</span><span style="color: #000000"> </span><span style="color: #098658">4</span><span style="color: #000000">, </span><span style="color: #008000">// defaults to 0</span>
+<span style="color: #000000">}, (</span><span style="color: #001080">payload</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;Got message %o&#039;</span><span style="color: #000000">, </span><span style="color: #001080">payload</span><span style="color: #000000">)</span>
+<span style="color: #000000">})</span>
+</code></pre>
+				<p>Or, to subscribe to multiple partitions, if the subscriber can handle the volume:</p>
+				<pre><code class="language-js"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #795E26">handler</span><span style="color: #000000"> = (</span><span style="color: #001080">payload</span><span style="color: #000000">, </span><span style="color: #001080">streamMessage</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #001080">console</span><span style="color: #000000">.</span><span style="color: #795E26">log</span><span style="color: #000000">(</span><span style="color: #A31515">&#039;Got message %o from partition %d&#039;</span><span style="color: #000000">, </span><span style="color: #001080">payload</span><span style="color: #000000">, </span><span style="color: #001080">streamMessage</span><span style="color: #000000">.</span><span style="color: #795E26">getStreamPartition</span><span style="color: #000000">())</span>
+<span style="color: #000000">}</span>
+
+<span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #267F99">Promise</span><span style="color: #000000">.</span><span style="color: #795E26">all</span><span style="color: #000000">([</span><span style="color: #098658">2</span><span style="color: #000000">, </span><span style="color: #098658">3</span><span style="color: #000000">, </span><span style="color: #098658">4</span><span style="color: #000000">].</span><span style="color: #795E26">map</span><span style="color: #000000">(</span><span style="color: #0000FF">async</span><span style="color: #000000"> (</span><span style="color: #001080">partition</span><span style="color: #000000">) </span><span style="color: #0000FF">=&gt;</span><span style="color: #000000"> {</span>
+<span style="color: #000000">    </span><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">subscribe</span><span style="color: #000000">({</span>
+<span style="color: #000000">        </span><span style="color: #001080">stream:</span><span style="color: #000000"> </span><span style="color: #A31515">&#039;my-stream-id&#039;</span><span style="color: #000000">,</span>
+<span style="color: #000000">        </span><span style="color: #001080">partition</span><span style="color: #000000">,</span>
+<span style="color: #000000">    }, </span><span style="color: #001080">handler</span><span style="color: #000000">)</span>
+<span style="color: #000000">}))</span>
+</code></pre>
+				<a href="#logging" id="logging" style="color: inherit; text-decoration: none;">
+					<h2>Logging</h2>
+				</a>
+				<p>The Streamr JS client library supports <a href="https://github.com/visionmedia/debug">debug</a> for logging.</p>
+				<p>In node.js, start your app like this: <code>DEBUG=StreamrClient* node your-app.js</code></p>
+				<p>In the browser, set <code>localStorage.debug = &#39;StreamrClient*&#39;</code></p>
+				<a href="#for-developers" id="for-developers" style="color: inherit; text-decoration: none;">
+					<h2>For Developers</h2>
+				</a>
+				<p>Publishing to npm is automated via Github Actions. Follow the steps below to publish <code>latest</code> or <code>beta</code>.</p>
+				<a href="#publishing-latest" id="publishing-latest" style="color: inherit; text-decoration: none;">
+					<h3>Publishing <code>latest</code></h3>
+				</a>
+				<ol>
+					<li><p>Update version with either <code>npm version [patch|minor|major]</code>. Use
+							semantic versioning <a href="https://semver.org/">https://semver.org/</a>. Files package.json and
+							package-lock.json will be automatically updated, and an appropriate
+						git commit and tag created.</p>
+					</li>
+					<li><p> <code>git push --follow-tags</code></p>
+					</li>
+					<li><p> Wait for Github Actions to run tests</p>
+					</li>
+					<li><p> If tests passed, Github Actions will publish the new version to npm</p>
+					</li>
+				</ol>
+				<a href="#publishing-beta" id="publishing-beta" style="color: inherit; text-decoration: none;">
+					<h3>Publishing <code>beta</code></h3>
+				</a>
+				<ol>
+					<li><p>Update version with either <code>npm version [prepatch|preminor|premajor] --preid=beta</code>. Use semantic versioning
+						<a href="https://semver.org/">https://semver.org/</a>. Files package.json and package-lock.json will be automatically updated, and an appropriate git commit and tag created.</p>
+					</li>
+					<li><p> <code>git push --follow-tags</code></p>
+					</li>
+					<li><p> Wait for Github Actions to run tests</p>
+					</li>
+					<li><p> If tests passed, Github Actions will publish the new version to npm</p>
+					</li>
+				</ol>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="modules.html">Exports</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="enums/joinrequeststate.html" class="tsd-kind-icon">Join<wbr>Request<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-enum">
+						<a href="enums/memberstatus.html" class="tsd-kind-icon">Member<wbr>Status</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/dataunion.html" class="tsd-kind-icon">Data<wbr>Union</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/datauniondeployoptions.html" class="tsd-kind-icon">Data<wbr>Union<wbr>Deploy<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/dataunionmemberlistmodificationoptions.html" class="tsd-kind-icon">Data<wbr>Union<wbr>Member<wbr>List<wbr>Modification<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/dataunionstats.html" class="tsd-kind-icon">Data<wbr>Union<wbr>Stats</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/dataunionwithdrawoptions.html" class="tsd-kind-icon">Data<wbr>Union<wbr>Withdraw<wbr>Options</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/joinresponse.html" class="tsd-kind-icon">Join<wbr>Response</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/memberstats.html" class="tsd-kind-icon">Member<wbr>Stats</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><span class="tsd-kind-icon">Private method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><span class="tsd-kind-icon">Static method</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>
