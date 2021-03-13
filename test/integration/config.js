@@ -8,7 +8,7 @@ module.exports = {
         restUrl: process.env.REST_URL || 'http://localhost/api/v1',
         streamrNodeAddress: '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
         tokenAddress: process.env.TOKEN_ADDRESS || '0xbAA81A0179015bE47Ad439566374F2Bae098686F',
-        tokenAddressSidechain: process.env.TOKEN_ADDRESS_SIDECHAIN || '0x73Be21733CC5D08e1a14Ea9a399fb27DB3BEf8fF',
+        tokenSidechainAddress: process.env.TOKEN_ADDRESS_SIDECHAIN || '0x73Be21733CC5D08e1a14Ea9a399fb27DB3BEf8fF',
         dataUnion: {
             factoryMainnetAddress: process.env.DU_FACTORY_MAINNET || '0x4bbcBeFBEC587f6C4AF9AF9B48847caEa1Fe81dA',
             factorySidechainAddress: process.env.DU_FACTORY_SIDECHAIN || '0x4A4c4759eb3b7ABee079f832850cD3D0dC48D927',
@@ -26,5 +26,6 @@ module.exports = {
         autoConnect: false,
         autoDisconnect: false,
     },
+    tokenMediator: '0xedD2aa644a6843F2e5133Fe3d6BD3F4080d97D9F',
     tokenAdminPrivateKey: '0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0',
 }

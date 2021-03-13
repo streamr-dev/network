@@ -35,6 +35,7 @@ export type StrictStreamrClientOptions = {
     mainnet?: ConnectionInfo|string
     sidechain: ConnectionInfo & { chainId?: number }
     tokenAddress: EthereumAddress,
+    tokenSidechainAddress: EthereumAddress,
     dataUnion: {
         minimumWithdrawTokenWei: BigNumber|number|string
         freeWithdraw: boolean
@@ -91,6 +92,7 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
             chainId: 100
         },
         tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
+        tokenSidechainAddress: '0xE4a2620edE1058D61BEe5F45F6414314fdf10548',
         dataUnion: {
             minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
             // if someone else pays for the gas when transporting the withdraw tx to mainnet;

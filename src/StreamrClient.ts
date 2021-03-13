@@ -37,6 +37,16 @@ interface MessageEvent {
     data: any
 }
 
+const balanceOfAbi = [{
+    name: 'balanceOf',
+    inputs: [{ type: 'address' }],
+    outputs: [{ type: 'uint256' }],
+    constant: true,
+    payable: false,
+    stateMutability: 'view',
+    type: 'function'
+}]
+
 /**
  * Wrap connection message events with message parsing.
  */
@@ -412,15 +422,22 @@ export class StreamrClient extends EventEmitter {
         const addr = getAddress(address)
         const provider = this.ethereum.getMainnetProvider()
 
-        const token = new Contract(tokenAddress, [{
-            name: 'balanceOf',
-            inputs: [{ type: 'address' }],
-            outputs: [{ type: 'uint256' }],
-            constant: true,
-            payable: false,
-            stateMutability: 'view',
-            type: 'function'
-        }], provider)
+        const token = new Contract(tokenAddress, balanceOfAbi, provider)
+        return token.balanceOf(addr)
+    }
+
+    /**
+     * Get token balance in "wei" (10^-18 parts) for given address in sidechain
+     */
+    async getSidechainTokenBalance(address: EthereumAddress): Promise<BigNumber> {
+        const { tokenSidechainAddress } = this.options
+        if (!tokenSidechainAddress) {
+            throw new Error('StreamrClient has no sidechainTokenAddress configuration.')
+        }
+        const addr = getAddress(address)
+        const provider = this.ethereum.getSidechainProvider()
+
+        const token = new Contract(tokenSidechainAddress, balanceOfAbi, provider)
         return token.balanceOf(addr)
     }
 

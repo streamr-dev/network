@@ -36,6 +36,7 @@ export interface DataUnionWithdrawOptions {
     pollingIntervalMs?: number
     retryTimeoutMs?: number
     freeWithdraw?: boolean
+    sendToMainnet?: boolean
 }
 
 export interface DataUnionMemberListModificationOptions {
@@ -134,7 +135,7 @@ export class DataUnion {
     async withdrawAll(options?: DataUnionWithdrawOptions): Promise<TransactionReceipt> {
         const recipientAddress = await this.client.getAddress()
         return this._executeWithdraw(
-            () => this.getWithdrawAllTx(),
+            () => this.getWithdrawAllTx(options?.sendToMainnet),
             recipientAddress,
             options
         )
@@ -144,7 +145,7 @@ export class DataUnion {
      * Get the tx promise for withdrawing all your earnings
      * @returns await on call .wait to actually send the tx
      */
-    private async getWithdrawAllTx(): Promise<TransactionResponse> {
+    private async getWithdrawAllTx(sendToMainnet: boolean = true): Promise<TransactionResponse> {
         const signer = await this.client.ethereum.getSidechainSigner()
         const address = await signer.getAddress()
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
@@ -158,7 +159,7 @@ export class DataUnion {
             throw new Error(`${address} has only ${withdrawable} to withdraw in `
                 + `(sidechain) data union ${duSidechain.address} (min: ${this.client.options.dataUnion.minimumWithdrawTokenWei})`)
         }
-        return duSidechain.withdrawAll(address, true) // sendToMainnet=true
+        return duSidechain.withdrawAll(address, sendToMainnet)
     }
 
     /**
@@ -171,7 +172,7 @@ export class DataUnion {
     ): Promise<TransactionReceipt> {
         const to = getAddress(recipientAddress) // throws if bad address
         return this._executeWithdraw(
-            () => this.getWithdrawAllToTx(to),
+            () => this.getWithdrawAllToTx(to, options?.sendToMainnet),
             to,
             options
         )
@@ -182,7 +183,7 @@ export class DataUnion {
      * @param recipientAddress - the address to receive the tokens
      * @returns await on call .wait to actually send the tx
      */
-    private async getWithdrawAllToTx(recipientAddress: EthereumAddress): Promise<TransactionResponse> {
+    private async getWithdrawAllToTx(recipientAddress: EthereumAddress, sendToMainnet: boolean = true): Promise<TransactionResponse> {
         const signer = await this.client.ethereum.getSidechainSigner()
         const address = await signer.getAddress()
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
@@ -190,7 +191,7 @@ export class DataUnion {
         if (withdrawable.eq(0)) {
             throw new Error(`${address} has nothing to withdraw in (sidechain) data union ${duSidechain.address}`)
         }
-        return duSidechain.withdrawAllTo(recipientAddress, true) // sendToMainnet=true
+        return duSidechain.withdrawAllTo(recipientAddress, sendToMainnet)
     }
 
     /**
@@ -389,7 +390,7 @@ export class DataUnion {
     ): Promise<TransactionReceipt> {
         const address = getAddress(memberAddress) // throws if bad address
         return this._executeWithdraw(
-            () => this.getWithdrawAllToMemberTx(address),
+            () => this.getWithdrawAllToMemberTx(address, options?.sendToMainnet),
             address,
             options
         )
@@ -400,10 +401,10 @@ export class DataUnion {
      * @param memberAddress - the other member who gets their tokens out of the Data Union
      * @returns await on call .wait to actually send the tx
      */
-    private async getWithdrawAllToMemberTx(memberAddress: EthereumAddress): Promise<TransactionResponse> {
+    private async getWithdrawAllToMemberTx(memberAddress: EthereumAddress, sendToMainnet: boolean = true): Promise<TransactionResponse> {
         const a = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return duSidechain.withdrawAll(a, true) // sendToMainnet=true
+        return duSidechain.withdrawAll(a, sendToMainnet)
     }
 
     /**
@@ -422,7 +423,7 @@ export class DataUnion {
         const from = getAddress(memberAddress) // throws if bad address
         const to = getAddress(recipientAddress)
         return this._executeWithdraw(
-            () => this.getWithdrawAllToSignedTx(from, to, signature),
+            () => this.getWithdrawAllToSignedTx(from, to, signature, options?.sendToMainnet),
             to,
             options
         )
@@ -439,9 +440,10 @@ export class DataUnion {
         memberAddress: EthereumAddress,
         recipientAddress: EthereumAddress,
         signature: string,
+        sendToMainnet: boolean = true,
     ): Promise<TransactionResponse> {
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return duSidechain.withdrawAllToSigned(memberAddress, recipientAddress, true, signature) // sendToMainnet=true
+        return duSidechain.withdrawAllToSigned(memberAddress, recipientAddress, sendToMainnet, signature)
     }
 
     /**
@@ -551,13 +553,16 @@ export class DataUnion {
         const {
             pollingIntervalMs = 1000,
             retryTimeoutMs = 60000,
-            freeWithdraw = this.client.options.dataUnion.freeWithdraw
-        }: any = options
-        const getBalanceFunc = () => this.client.getTokenBalance(recipientAddress)
+            freeWithdraw = this.client.options.dataUnion.freeWithdraw,
+            sendToMainnet = true,
+        } = options
+        const getBalanceFunc = sendToMainnet
+            ? () => this.client.getTokenBalance(recipientAddress)
+            : () => this.client.getSidechainTokenBalance(recipientAddress)
         const balanceBefore = await getBalanceFunc()
         const tx = await getWithdrawTxFunc()
         const tr = await tx.wait()
-        if (!freeWithdraw) {
+        if (!freeWithdraw && sendToMainnet) {
             await this.getContracts().transportSignaturesForTransaction(tr, options)
         }
         log(`Waiting for balance ${balanceBefore.toString()} to change`)
