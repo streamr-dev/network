@@ -12,7 +12,8 @@ By using this client, you can easily interact with the [Streamr](https://streamr
 The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
 
 [![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
-[![API Docs](https://streamr-dev.github.io/streamr-client-javascript/)
+
+[API Docs](https://streamr-dev.github.io/streamr-client-javascript/)
 
 ### Breaking changes notice
 
@@ -37,7 +38,7 @@ Node v14 or higher is recommended if you intend to use the client in a Node envi
 
 Here are some quick examples. More detailed examples for the browser and node.js can be found [here](https://github.com/streamr-dev/streamr-client/tree/master/examples).
 
-Please see the [![API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
+Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
 
 If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
@@ -132,7 +133,7 @@ await stream.publish(msg)
 
 # Docs
 
-Please see the [![API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for auto-generated documentation.
+Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for auto-generated documentation.
 
 ## Client options
 
