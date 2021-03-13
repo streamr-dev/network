@@ -12,12 +12,18 @@ By using this client, you can easily interact with the [Streamr](https://streamr
 The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
 
 [![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
+[![API Docs](https://streamr-dev.github.io/streamr-client-javascript/)
 
-## Breaking changes notice
+### Breaking changes notice
 
 * Date TBD: Support for unsigned data will be dropped.
 
+----
+
+## TOC
+
 [Installation](#installation) · [Usage](#usage) · [Client options](#client-options) · [Authentication options](#authentication-options) · [Message handler callback](#message-handler-callback) · [StreamrClient object](#streamrclient-object) · [Stream object](#stream-object) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#binding-to-events) · [Partitioning](#partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+
 
 ## Installation
 
@@ -30,6 +36,8 @@ Node v14 or higher is recommended if you intend to use the client in a Node envi
 ## Usage
 
 Here are some quick examples. More detailed examples for the browser and node.js can be found [here](https://github.com/streamr-dev/streamr-client/tree/master/examples).
+
+Please see the [![API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
 
 If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
@@ -119,6 +127,12 @@ await client.publish('my-stream-id', msg, Date.now(), 'my-partition-key')
 // For convenience, stream.publish(...) equals client.publish(stream, ...)
 await stream.publish(msg)
 ```
+
+----
+
+# Docs
+
+Please see the [![API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for auto-generated documentation.
 
 ## Client options
 
