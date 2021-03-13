@@ -51,7 +51,8 @@
     "test-browser": "node ./test/browser/server.js & node node_modules/nightwatch/bin/nightwatch ./test/browser/browser.js && pkill -f server.js",
     "install-example": "cd examples/webpack && npm ci",
     "build-example": "cd examples/webpack && npm run build-with-parent",
-    "clear-cache": "rm -rf node_modules/.cache; rm -rf .cache; rm -rf dist; rm -rf vendor; jest --clearCache;"
+    "clear-cache": "rm -rf node_modules/.cache; rm -rf .cache; rm -rf dist; rm -rf vendor; jest --clearCache;",
+    "docs": "typedoc src/dataunion/DataUnion.ts"
   },
   "engines": {
     "node": ">= 12"
@@ -108,6 +109,7 @@
     "terser-webpack-plugin": "^5.1.1",
     "ts-jest": "^26.5.1",
     "ts-loader": "^8.0.17",
+    "typedoc": "^0.20.30",
     "typescript": "^4.2.3",
     "util": "^0.12.3",
     "webpack": "^5.23.0",

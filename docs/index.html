@@ -523,17 +523,17 @@
 					<h2>Data Unions</h2>
 				</a>
 				<p>This library provides functions for working with Data Unions. To get a DataUnion instance, call <code>client.getDataUnion(address)</code>. To deploy a new DataUnion, call <code>deployDataUnion(options)</code></p>
-				<p>TODO: All <code>options</code>-parameters should be documented (see TypeScript interfaces for the definitions)</p>
+				<p>See <code>/docs</code> folder in this repo for DU <code>options</code> parameters.</p>
 				<p>These DataUnion-specific options are used from <code>StreamrClient</code> options:
 					| Property                            | Default                                                | Description                                                                                                      |
 					| :---------------------------------- | :----------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
-					| tokenAddress                        | 0x0Cf0Ee637<br>88A0849fE52<br>97F3407f701<br>E122cC023 | Token used by the DU                                                                                             |
+					| tokenAddress                        | 0x0Cf0Ee63788A0849f<br>E5297F3407f701E122cC023 | Token used by the DU (Mainnet DATA token)                                                                                             |
 					| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge                          |
 					| dataUnion.freeWithdraw              | false                                                  | true = someone else pays for the gas when transporting the withdraw tx to mainnet; false = client does the transport as self-service and pays the mainnet gas costs |
-					| dataUnion.factoryMainnetAddress     | TODO                                                   | Data Union factory that creates a new Data Union                                                                 |
-					| dataUnion.factorySidechainAddress   | TODO                                                   |                                                                                                                  |
-					| dataUnion.templateMainnetAddress    | TODO                                                   |                                                                                                                  |
-				| dataUnion.templateSidechainAddress  | TODO                                                   |                                                                                                                  |</p>
+					| dataUnion.factoryMainnetAddress     | 0x7d55f9981d4E10A19<br>3314E001b96f72FCc901e40                                                   | Data Union factory that creates a new Data Union on mainnet                                                                 |
+					| dataUnion.factorySidechainAddress   | 0x1b55587Beea0b5Bc9<br>6Bb2ADa56bD692870522e9f                                                   | Data Union factory that creates a new Data Union on the sidechain                                                                                                                 |
+					| dataUnion.templateMainnetAddress    | 0x5FE790E3751dd775C<br>b92e9086Acd34a2adeB8C7b                                                   | A gas optimization contract for the mainnet factory constructor                                                                                                                 |
+				| dataUnion.templateSidechainAddress  | 0xf1E9d6E254BeA3f01<br>29018AcA1A50AEcb7D528be                                                   | A gas optimization contract for the sidechain factory constructor                                                                                                                 |</p>
 				<a href="#admin-functions" id="admin-functions" style="color: inherit; text-decoration: none;">
 					<h3>Admin Functions</h3>
 				</a>
