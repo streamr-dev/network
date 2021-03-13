@@ -202,7 +202,12 @@ describe('DataUnion withdraw', () => {
                 it('signed', async () => {
                     const member2Wallet = new Wallet(`0x100000000000000000000000000040000000000012300000007${Date.now()}`, providerSidechain)
                     const getBalance = async () => getTokenBalance(member2Wallet)
-                    const withdraw = async (dataUnionAddress: string, memberClient: StreamrClient, memberWallet: Wallet, adminClient: StreamrClient) => {
+                    const withdraw = async (
+                        dataUnionAddress: string,
+                        memberClient: StreamrClient,
+                        memberWallet: Wallet,
+                        adminClient: StreamrClient
+                    ) => {
                         const signature = await memberClient.getDataUnion(dataUnionAddress).signWithdrawAllTo(member2Wallet.address)
                         const withdrawTr = await adminClient
                             .getDataUnion(dataUnionAddress)
