@@ -20,7 +20,7 @@ const tokenAdminSidechainWallet = new Wallet(config.tokenAdminPrivateKey, provid
 const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, tokenAdminMainnetWallet)
 const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, tokenAdminSidechainWallet)
 
-const log = debug('StreamrClient::TokenTest')
+const log = debug('StreamrClient::test::token-balance')
 
 const sendTokensToSidechain = async (receiverAddress: EthereumAddress, amount: BigNumber) => {
     const relayTokensAbi = [
