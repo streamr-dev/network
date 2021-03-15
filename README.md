@@ -13,8 +13,6 @@ The client uses websockets for producing and consuming messages to/from streams.
 
 [![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
 
-[API Docs](https://streamr-dev.github.io/streamr-client-javascript/)
-
 ### Breaking changes notice
 
 * Date TBD: Support for unsigned data will be dropped.
@@ -23,7 +21,7 @@ The client uses websockets for producing and consuming messages to/from streams.
 
 ## TOC
 
-[Installation](#installation) · [Usage](#usage) · [Client options](#client-options) · [Authentication options](#authentication-options) · [Message handler callback](#message-handler-callback) · [StreamrClient object](#streamrclient-object) · [Stream object](#stream-object) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#binding-to-events) · [Partitioning](#partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[Installation](#installation) · [Usage](#usage) · [API Docs](#api-docs) · [Client options](#client-options) · [Authentication options](#authentication-options) · [Message handler callback](#message-handler-callback) · [StreamrClient object](#streamrclient-object) · [Stream object](#stream-object) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#binding-to-events) · [Partitioning](#partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
@@ -35,6 +33,14 @@ npm install streamr-client
 ```
 
 Node v14 or higher is recommended if you intend to use the client in a Node environment. For example, inside a script.
+
+## API Docs
+
+We have automatically generated API documentation available [here](https://streamr-dev.github.io/streamr-client-javascript/). These docs are generated from the repository TypeScript source code. They can also be rebuilt locally via:
+
+```
+npm run docs
+```
 
 ## Usage
 
