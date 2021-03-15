@@ -1,0 +1,135 @@
+# Any tests that can run without building should go in here.
+name: Lint, Unit, Integration Tests
+
+# Be sure to update both workflow files if you edit any env or trigger config
+env:
+  CI: true
+  DEBUG_COLORS: true
+  DEBUG: "Streamr*"
+on:
+  push:
+    tags:
+      - "*"
+    branches:
+      - master
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.editorconfig'
+      - 'typedoc.js'
+  pull_request:
+    branches:
+      - "*"
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.editorconfig'
+      - 'typedoc.js'
+  schedule:
+    # run every day at 00:00
+    - cron: "0 0 * * *"
+# Be sure to update both workflow files if you edit any env or trigger config
+
+jobs:
+  lint:
+    name: Run linter using Node 14.x
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - name: npm ci
+        run: npm ci
+      - name: npm run eslint
+        run: npm run eslint
+
+  test:
+    name: Test Unit using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x]
+    env:
+      TEST_REPEATS: 5
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm ci
+        run: npm ci
+      - name: test-unit
+        timeout-minutes: 7
+        run: npm run test-unit
+
+  integration:
+    name: ${{ matrix.test-name }} ${{ matrix.websocket-url.name }} using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [12.x, 14.x]
+        test-name: [
+            "test-integration-no-resend",
+            "test-integration-resend",
+            "test-integration-dataunions",
+        ]
+        websocket-url:
+            - name: "default"
+              url:  ""
+            - name: "storage-node-only"
+              url:  "ws://localhost:8890/api/v1/ws"
+
+        exclude:
+          # no need to test different ws urls for dataunion tests
+          - test-name: "test-integration-dataunions"
+            websocket-url:
+                - name: "storage-node-only"
+                - url:  "ws://localhost:8890/api/v1/ws"
+    env:
+      TEST_NAME: ${{ matrix.test-name }}
+      WEBSOCKET_URL: ${{ matrix.websocket-url.url}}
+      TEST_REPEATS: 2
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm ci
+        run: npm ci
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
+      - name: Run Test
+        run: npm run $TEST_NAME
+
+  flakey:
+    name: Flakey Tests using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [12.x, 14.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm ci
+        run: npm ci
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
+      - uses: nick-invision/retry@v2
+        name: Run Test
+        with:
+          max_attempts: 2
+          timeout_minutes: 15
+          retry_on: error
+          command: npm run test-flakey || echo "::warning::Flakey Tests Failed"
+
