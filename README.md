@@ -448,7 +448,7 @@ const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 
 ### Withdraw options
 
-The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all take an extra "options" argument. It's an object can contain following members:
+The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all take an extra "options" argument. It's an object that can contain the following parameters:
 
 | Name              | Default               | Description                                                                         |
 | :---------------- | :-------------------- | :---------------------------------------------------------------------------------- |
