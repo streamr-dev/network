@@ -1,3 +1,7 @@
+/**
+ * @see {@link StreamrClient.StreamrClient}
+ * @module StreamrClient
+ */
 import EventEmitter from 'eventemitter3'
 import { ControlLayer } from 'streamr-client-protocol'
 import Debug from 'debug'
@@ -83,7 +87,6 @@ class StreamrConnection extends Connection {
 }
 
 class StreamrCached {
-
     client: StreamrClient
     // TODO change all "any" types in this class to valid types when CacheAsyncFn is converted to TypeScript
     getStream: any
@@ -159,8 +162,10 @@ function Plugin(targetInstance: any, srcInstance: any) {
 // these are mixed in via Plugin function above
 export interface StreamrClient extends StreamEndpoints, LoginEndpoints {}
 
-// eslint-disable-next-line no-redeclare
-export class StreamrClient extends EventEmitter {
+/**
+ * @category Important
+ */
+export class StreamrClient extends EventEmitter { // eslint-disable-line no-redeclare
     /** @internal */
     id: string
     /** @internal */
@@ -263,8 +268,8 @@ export class StreamrClient extends EventEmitter {
 
     /**
      * Override to control output
-     * @internal */
-    onError(error: Todo) { // eslint-disable-line class-methods-use-this
+     */
+    onError(error: Error) { // eslint-disable-line class-methods-use-this
         console.error(error)
     }
 
@@ -284,15 +289,20 @@ export class StreamrClient extends EventEmitter {
         return this.connection.isDisconnected()
     }
 
+    /**
+     * @category Important
+     */
     async connect() {
         return this.connection.connect()
     }
 
-    /** @internal */
     async nextConnection() {
         return this.connection.nextConnection()
     }
 
+    /**
+     * @category Important
+     */
     disconnect() {
         this.publisher.stop()
         return Promise.all([
@@ -301,12 +311,11 @@ export class StreamrClient extends EventEmitter {
         ])
     }
 
-    getSubscriptions(): Subscription[] {
+    getSubscriptions() {
         return this.subscriber.getAll()
     }
 
     getSubscription(definition: StreamPartDefinition) {
-        // @ts-expect-error
         return this.subscriber.get(definition)
     }
 
@@ -322,6 +331,9 @@ export class StreamrClient extends EventEmitter {
         return this.session.logout()
     }
 
+    /**
+     * @category Important
+     */
     async publish(streamObjectOrId: StreamPartDefinition, content: object, timestamp?: number|string|Date, partitionKey?: string) {
         return this.publisher.publish(streamObjectOrId, content, timestamp, partitionKey)
     }
@@ -330,16 +342,17 @@ export class StreamrClient extends EventEmitter {
         return getUserId(this)
     }
 
-    /** @internal */
     setNextGroupKey(...args: Todo) {
         return this.publisher.setNextGroupKey(...args)
     }
 
-    /** @internal */
     rotateGroupKey(...args: Todo) {
         return this.publisher.rotateGroupKey(...args)
     }
 
+    /**
+     * @category Important
+     */
     async subscribe(opts: SubscribeOptions & StreamPartDefinition, onMessage?: OnMessageCallback) {
         let subTask: Todo
         let sub: Todo
@@ -371,11 +384,16 @@ export class StreamrClient extends EventEmitter {
         return subTask
     }
 
+    /**
+     * @category Important
+     */
     async unsubscribe(subscription: Subscription) {
         await this.subscriber.unsubscribe(subscription)
     }
 
-    /** @internal */
+    /**
+     * @category Important
+     */
     async resend(opts: Todo, onMessage?: OnMessageCallback): Promise<Subscription> {
         const task = this.subscriber.resend(opts)
         if (typeof onMessage !== 'function') {
@@ -457,6 +475,9 @@ export class StreamrClient extends EventEmitter {
         }, this)
     }
 
+    /**
+     * @category Important
+     */
     static generateEthereumAccount() {
         return StreamrEthereum.generateEthereumAccount()
     }

@@ -1,3 +1,7 @@
+/**
+ * @module StreamrClientConfig
+ */
+
 import qs from 'qs'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { ExternalProvider, JsonRpcFetchFunc } from '@ethersproject/providers'
@@ -9,7 +13,14 @@ import { BytesLike } from '@ethersproject/bytes'
 
 export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
 
+/**
+ * @category Important
+ */
 export type StrictStreamrClientOptions = {
+    /**
+    * Authentication: identity used by this StreamrClient instance.
+    * Can contain member privateKey or (window.)ethereum
+    */
     auth: {
         privateKey?: BytesLike
         ethereum?: EthereumConfig
@@ -17,11 +28,17 @@ export type StrictStreamrClientOptions = {
         username?: string
         password?: string
     }
+    /** Websocket server to connect to */
     url: string
+    /** Core HTTP API calls go here */
     restUrl: string
+    /** joinPartAgent when using EE for join part handling */
     streamrNodeAddress: EthereumAddress
+    /** Automatically connect on first subscribe */
     autoConnect: boolean
+    /**  Automatically disconnect on last unsubscribe */
     autoDisconnect: boolean
+    /** Attempt to order messages */
     orderMessages: boolean
     retryResendAfter: number
     gapFillTimeout: number
@@ -37,6 +54,11 @@ export type StrictStreamrClientOptions = {
     tokenAddress: EthereumAddress,
     tokenSidechainAddress: EthereumAddress,
     dataUnion: {
+        /**
+         * Threshold value set in AMB configs, smallest token amount to pass over the bridge if
+         * someone else pays for the gas when transporting the withdraw tx to mainnet;
+         * otherwise the client does the transport as self-service and pays the mainnet gas costs
+         */
         minimumWithdrawTokenWei: BigNumber|number|string
         freeWithdraw: boolean
         factoryMainnetAddress: EthereumAddress
@@ -57,69 +79,70 @@ export type StreamrClientOptions = Partial<Omit<StrictStreamrClientOptions, 'dat
 const { ControlMessage } = ControlLayer
 const { StreamMessage } = MessageLayer
 
+/**
+ * @category Important
+ */
+export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
+    auth: {},
+
+    // Streamr Core options
+    url: 'wss://streamr.network/api/v1/ws',
+    restUrl: 'https://streamr.network/api/v1',
+    streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a',
+
+    // P2P Streamr Network options
+    autoConnect: true,
+    autoDisconnect: true,
+    orderMessages: true,
+    retryResendAfter: 5000,
+    gapFillTimeout: 5000,
+    maxGapRequests: 5,
+    maxPublishQueueSize: 10000,
+
+    // Encryption options
+    publishWithSignature: 'auto',
+    verifySignatures: 'auto',
+    publisherStoreKeyHistory: true,
+    groupKeys: {}, // {streamId: groupKey}
+    keyExchange: {},
+
+    // Ethereum and Data Union related options
+    // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
+    mainnet: undefined, // Default to ethers.js default provider settings
+    sidechain: {
+        url: 'https://rpc.xdaichain.com/',
+        chainId: 100
+    },
+    tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
+    tokenSidechainAddress: '0xE4a2620edE1058D61BEe5F45F6414314fdf10548',
+    dataUnion: {
+        minimumWithdrawTokenWei: '1000000',
+        freeWithdraw: false,
+        factoryMainnetAddress: '0x7d55f9981d4E10A193314E001b96f72FCc901e40',
+        factorySidechainAddress: '0x1b55587Beea0b5Bc96Bb2ADa56bD692870522e9f',
+        templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',
+        templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
+    },
+    cache: {
+        maxSize: 10000,
+        maxAge: 30 * 60 * 1000, // 30 minutes
+    }
+}
+
 /** @internal */
 export default function ClientConfig(opts: StreamrClientOptions = {}) {
-    const defaults: StrictStreamrClientOptions = {
-        // Authentication: identity used by this StreamrClient instance
-        auth: {}, // can contain member privateKey or (window.)ethereum
-
-        // Streamr Core options
-        url: 'wss://streamr.network/api/v1/ws', // The server to connect to
-        restUrl: 'https://streamr.network/api/v1', // Core API calls go here
-        streamrNodeAddress: '0xf3E5A65851C3779f468c9EcB32E6f25D9D68601a', // joinPartAgent when using EE for join part handling
-
-        // P2P Streamr Network options
-        autoConnect: true, // Automatically connect on first subscribe
-        autoDisconnect: true, // Automatically disconnect on last unsubscribe
-        orderMessages: true,
-        retryResendAfter: 5000,
-        gapFillTimeout: 5000,
-        maxGapRequests: 5,
-        maxPublishQueueSize: 10000,
-
-        // Encryption options
-        publishWithSignature: 'auto',
-        verifySignatures: 'auto',
-        publisherStoreKeyHistory: true,
-        groupKeys: {}, // {streamId: groupKey}
-        keyExchange: {},
-
-        // Ethereum and Data Union related options
-        // For ethers.js provider params, see https://docs.ethers.io/ethers.js/v5-beta/api-providers.html#provider
-        mainnet: undefined, // Default to ethers.js default provider settings
-        sidechain: {
-            url: 'https://rpc.xdaichain.com/',
-            chainId: 100
-        },
-        tokenAddress: '0x0Cf0Ee63788A0849fE5297F3407f701E122cC023',
-        tokenSidechainAddress: '0xE4a2620edE1058D61BEe5F45F6414314fdf10548',
-        dataUnion: {
-            minimumWithdrawTokenWei: '1000000', // Threshold value set in AMB configs, smallest token amount to pass over the bridge
-            // if someone else pays for the gas when transporting the withdraw tx to mainnet;
-            // otherwise the client does the transport as self-service and pays the mainnet gas costs
-            freeWithdraw: false,
-            factoryMainnetAddress: '0x7d55f9981d4E10A193314E001b96f72FCc901e40',
-            factorySidechainAddress: '0x1b55587Beea0b5Bc96Bb2ADa56bD692870522e9f',
-            templateMainnetAddress: '0x5FE790E3751dd775Cb92e9086Acd34a2adeB8C7b',
-            templateSidechainAddress: '0xf1E9d6E254BeA3f0129018AcA1A50AEcb7D528be',
-        },
-        cache: {
-            maxSize: 10000,
-            maxAge: 30 * 60 * 1000, // 30 minutes
-        }
-    }
-
     const options: StrictStreamrClientOptions = {
-        ...defaults,
-        ...opts, // sidechain is not merged with the defaults
+        ...STREAM_CLIENT_DEFAULTS,
+        ...opts,
         dataUnion: {
-            ...defaults.dataUnion,
+            ...STREAM_CLIENT_DEFAULTS.dataUnion,
             ...opts.dataUnion
         },
         cache: {
             ...opts.cache,
-            ...defaults.cache,
+            ...STREAM_CLIENT_DEFAULTS.cache,
         }
+        // NOTE: sidechain is not merged with the defaults
     }
 
     const parts = options.url!.split('?')

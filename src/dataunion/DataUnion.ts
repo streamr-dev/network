@@ -67,6 +67,9 @@ export interface MemberStats {
 
 const log = debug('StreamrClient::DataUnion')
 
+/**
+ * @category Important
+ */
 export class DataUnion {
 
     private contractAddress: EthereumAddress
