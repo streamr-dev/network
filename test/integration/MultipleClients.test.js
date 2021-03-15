@@ -449,6 +449,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
+
                 const publishTestMessages = getPublishTestMessages(pubClient, {
                     stream,
                     waitForLast: true,
@@ -576,7 +577,7 @@ describeRepeats('PubSub with multiple clients', () => {
             /* eslint-enable no-await-in-loop */
             const published = {}
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = await pubClient.getPublisherId()
+                const publisherId = (await pubClient.getPublisherId()).toLowerCase()
                 const publishTestMessages = getPublishTestMessages(pubClient, {
                     stream,
                     waitForLast: true,
@@ -589,14 +590,6 @@ describeRepeats('PubSub with multiple clients', () => {
                     }
                 })
             }))
-
-            await wait(5000)
-
-            mainClient.debug('%j', {
-                published,
-                receivedMessagesMain,
-                receivedMessagesOther,
-            })
 
             // eslint-disable-next-line no-inner-declarations
             function checkMessages(received) {
@@ -666,7 +659,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 msgs.push(msg)
                 receivedMessagesMain[streamMessage.getPublisherId()] = msgs
                 if (Object.values(receivedMessagesMain).every((m) => m.length === MAX_MESSAGES)) {
-                    mainSub.end()
+                    mainSub.cancel()
                 }
             })
 
@@ -679,7 +672,7 @@ describeRepeats('PubSub with multiple clients', () => {
             let counter = 0
             /* eslint-enable no-await-in-loop */
             await Promise.all(publishers.map(async (pubClient) => {
-                const publisherId = pubClient.getPublisherId()
+                const publisherId = (await pubClient.getPublisherId()).toString()
                 const publishTestMessages = getPublishTestMessages(pubClient, {
                     stream,
                     waitForLast: true,
@@ -702,7 +695,7 @@ describeRepeats('PubSub with multiple clients', () => {
                                 msgs.push(msg)
                                 receivedMessagesOther[streamMessage.getPublisherId()] = msgs
                                 if (msgs.length === MAX_MESSAGES) {
-                                    await otherSub.end()
+                                    await otherSub.cancel()
                                 }
                             })
                         }
@@ -711,12 +704,6 @@ describeRepeats('PubSub with multiple clients', () => {
             }))
 
             await wait(15000)
-
-            mainClient.debug('%j', {
-                published,
-                receivedMessagesMain,
-                receivedMessagesOther,
-            })
 
             checkMessages(receivedMessagesMain)
             checkMessages(receivedMessagesOther)
