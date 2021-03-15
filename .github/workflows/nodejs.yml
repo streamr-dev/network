@@ -9,9 +9,17 @@ on:
       - "*"
     branches:
       - master
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.editorconfig'
   pull_request:
     branches:
       - "*"
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.editorconfig'
   schedule:
     # run every day at 00:00
     - cron: "0 0 * * *"
