@@ -359,7 +359,7 @@ These DataUnion-specific options are used from `StreamrClient` options:
 | :-------------------------------------------------------------------------- | :------------------ | :------------------------------------------------------------- |
 | createSecret(\[name])                                                       | string              | Create a secret for a Data Union                               |
 | addMembers(memberAddressList)                                               | Transaction receipt | Add members                                                    |
-| removeMembers(memberAddressList                                             | Transaction receipt | Remove members from Data Union                                 |
+| removeMembers(memberAddressList)                                            | Transaction receipt | Remove members from Data Union                                 |
 | withdrawAllToMember(memberAddress, \[options])                              |                     |                                                                |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature, \[options]) |                     |                                                                |
 | setAdminFee(newFeeFraction)                                                 | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
