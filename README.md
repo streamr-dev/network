@@ -345,12 +345,12 @@ This library provides functions for working with Data Unions.
 
 To deploy a new DataUnion:
 ```js
-const dataUnion = client.getDataUnion(address)
+const dataUnion = await client.deployDataUnion()
 ```
 
 To get an existing (previously deployed) `DataUnion` instance:
 ```js
-const dataUnion = await client.deployDataUnion()
+const dataUnion = client.getDataUnion(address)
 ```
 
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
