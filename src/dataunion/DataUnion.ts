@@ -491,9 +491,7 @@ export class DataUnion {
         } else {
             // streamrNode needs to be joinPartAgent so that EE join with secret works (and join approvals from Marketplace UI)
             agentAddressList = [ownerAddress]
-            if (client.options.streamrNodeAddress) {
-                agentAddressList.push(getAddress(client.options.streamrNodeAddress))
-            }
+            agentAddressList.push(getAddress(client.options.streamrNodeAddress))
         }
 
         const contract = await new Contracts(client).deployDataUnion({

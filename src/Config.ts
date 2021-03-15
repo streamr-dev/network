@@ -10,6 +10,9 @@ import { getVersionString } from './utils'
 import { ConnectionInfo } from '@ethersproject/web'
 import { EthereumAddress, Todo } from './types'
 import { BytesLike } from '@ethersproject/bytes'
+import { isAddress } from '@ethersproject/address'
+import has from 'lodash.has'
+import get from 'lodash.get'
 
 export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
 
@@ -79,6 +82,17 @@ export type StreamrClientOptions = Partial<Omit<StrictStreamrClientOptions, 'dat
 const { ControlMessage } = ControlLayer
 const { StreamMessage } = MessageLayer
 
+const validateOverridedEthereumAddresses = (opts: any, propertyPaths: string[]) => {
+    for (const propertyPath of propertyPaths) {
+        if (has(opts, propertyPath)) {
+            const value = get(opts, propertyPath)
+            if (!isAddress(value)) {
+                throw new Error(`${propertyPath} is not a valid Ethereum address`)
+            }
+        }
+    }
+}
+
 /**
  * @category Important
  */
@@ -131,6 +145,22 @@ export const STREAM_CLIENT_DEFAULTS: StrictStreamrClientOptions = {
 
 /** @internal */
 export default function ClientConfig(opts: StreamrClientOptions = {}) {
+
+    // validate all Ethereum addresses which are required in StrictStreamrClientOptions: if user
+    // overrides a setting, which has a default value, it must be a non-null valid Ethereum address
+    // TODO could also validate
+    // - other optional Ethereum address (if there will be some)
+    // - other overriden options (e.g. regexp check that "restUrl" is a valid url)
+    validateOverridedEthereumAddresses(opts, [
+        'streamrNodeAddress',
+        'tokenAddress',
+        'tokenSidechainAddress',
+        'dataUnion.factoryMainnetAddress',
+        'dataUnion.factorySidechainAddress',
+        'dataUnion.templateMainnetAddress',
+        'dataUnion.templateSidechainAddress'
+    ])
+
     const options: StrictStreamrClientOptions = {
         ...STREAM_CLIENT_DEFAULTS,
         ...opts,

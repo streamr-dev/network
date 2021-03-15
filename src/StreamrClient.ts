@@ -434,12 +434,8 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
      */
     async getTokenBalance(address: EthereumAddress): Promise<BigNumber> {
         const { tokenAddress } = this.options
-        if (!tokenAddress) {
-            throw new Error('StreamrClient has no tokenAddress configuration.')
-        }
         const addr = getAddress(address)
         const provider = this.ethereum.getMainnetProvider()
-
         const token = new Contract(tokenAddress, balanceOfAbi, provider)
         return token.balanceOf(addr)
     }
@@ -449,12 +445,8 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
      */
     async getSidechainTokenBalance(address: EthereumAddress): Promise<BigNumber> {
         const { tokenSidechainAddress } = this.options
-        if (!tokenSidechainAddress) {
-            throw new Error('StreamrClient has no sidechainTokenAddress configuration.')
-        }
         const addr = getAddress(address)
         const provider = this.ethereum.getSidechainProvider()
-
         const token = new Contract(tokenSidechainAddress, balanceOfAbi, provider)
         return token.balanceOf(addr)
     }
