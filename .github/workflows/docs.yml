@@ -4,17 +4,11 @@ on:
   push:
     branches:
       - master # Set a branch name to trigger deployment
-  # temporary for testing
-  pull_request:
-    branches:
-      - "full-client-docs"
 
 jobs:
   build:
     name: Run build using Node 14.x
     runs-on: ubuntu-latest
-    env:
-      BUNDLE_ANALYSIS: true
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2

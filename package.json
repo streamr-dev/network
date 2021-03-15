@@ -53,7 +53,7 @@
     "install-example": "cd examples/webpack && npm ci",
     "build-example": "cd examples/webpack && npm run build-with-parent",
     "clear-cache": "rm -rf node_modules/.cache; rm -rf .cache; rm -rf dist; rm -rf vendor; jest --clearCache;",
-    "docs": "typedoc --entryPoints src/dataunion/DataUnion.ts src/Config.ts src/StreamrClient.ts --tsconfig tsconfig.node.json --excludeInternal --includeVersion --readme none"
+    "docs": "typedoc --entryPoints src/dataunion/DataUnion.ts src/Config.ts src/StreamrClient.ts --tsconfig tsconfig.node.json --excludeInternal --includeVersion"
   },
   "engines": {
     "node": ">= 12"
