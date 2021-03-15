@@ -39,10 +39,6 @@ export interface DataUnionWithdrawOptions {
     sendToMainnet?: boolean
 }
 
-export interface DataUnionMemberListModificationOptions {
-    confirmations?: number
-}
-
 export interface DataUnionStats {
     activeMemberCount: BigNumber,
     inactiveMemberCount: BigNumber,
@@ -356,14 +352,12 @@ export class DataUnion {
      */
     async addMembers(
         memberAddressList: EthereumAddress[],
-        options: DataUnionMemberListModificationOptions = {}
     ): Promise<TransactionReceipt> {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.addMembers(members)
         // TODO: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
-        const { confirmations = 1 } = options
-        return tx.wait(confirmations)
+        return tx.wait()
     }
 
     /**
@@ -371,14 +365,12 @@ export class DataUnion {
      */
     async removeMembers(
         memberAddressList: EthereumAddress[],
-        options: DataUnionMemberListModificationOptions = {},
     ): Promise<TransactionReceipt> {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.partMembers(members)
         // TODO: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
-        const { confirmations = 1 } = options
-        return tx.wait(confirmations)
+        return tx.wait()
     }
 
     /**
