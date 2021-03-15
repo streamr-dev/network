@@ -2,7 +2,7 @@ import { inspect } from 'util'
 import EventEmitter from 'events'
 
 import { v4 as uuidv4 } from 'uuid'
-import uniqueId from 'lodash.uniqueid'
+import uniqueId from 'lodash/uniqueId'
 import pMemoize from 'p-memoize'
 import pLimit from 'p-limit'
 import mem from 'mem'

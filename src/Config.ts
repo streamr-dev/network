@@ -11,8 +11,8 @@ import { ConnectionInfo } from '@ethersproject/web'
 import { EthereumAddress, Todo } from './types'
 import { BytesLike } from '@ethersproject/bytes'
 import { isAddress } from '@ethersproject/address'
-import has from 'lodash.has'
-import get from 'lodash.get'
+import has from 'lodash/has'
+import get from 'lodash/get'
 
 export type EthereumConfig = ExternalProvider|JsonRpcFetchFunc
 

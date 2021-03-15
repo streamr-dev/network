@@ -22,7 +22,8 @@ module.exports = {
         ['@babel/preset-typescript']
     ],
     plugins: [
-         "add-module-exports",
+        'lodash',
+         'add-module-exports',
         ['@babel/plugin-transform-runtime', {
             corejs: 3,
             helpers: true,

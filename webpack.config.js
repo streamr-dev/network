@@ -7,6 +7,7 @@ const path = require('path')
 
 const webpack = require('webpack')
 const TerserPlugin = require('terser-webpack-plugin')
+const LodashWebpackPlugin = require('lodash-webpack-plugin')
 const { merge } = require('webpack-merge')
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
 const GitRevisionPlugin = require('git-revision-webpack-plugin')
@@ -105,6 +106,7 @@ module.exports = (env, argv) => {
             }
         },
         plugins: [
+            new LodashWebpackPlugin(),
             new webpack.ProvidePlugin({
                 process: 'process/browser',
                 Buffer: ['buffer', 'Buffer'],
