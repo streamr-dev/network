@@ -350,7 +350,7 @@ const dataUnion = await client.deployDataUnion()
 
 To get an existing (previously deployed) `DataUnion` instance:
 ```js
-const dataUnion = client.getDataUnion(address)
+const dataUnion = client.getDataUnion(dataUnionAddress)
 ```
 
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
