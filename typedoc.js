@@ -5,6 +5,7 @@ module.exports = {
         'src/StreamrClient.ts'
     ],
     tsconfig: 'tsconfig.node.json',
+    readme: false,
     excludeInternal: true,
     includeVersion: true,
 }
