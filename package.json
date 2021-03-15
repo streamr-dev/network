@@ -53,7 +53,7 @@
     "install-example": "cd examples/webpack && npm ci",
     "build-example": "cd examples/webpack && npm run build-with-parent",
     "clear-cache": "rm -rf node_modules/.cache; rm -rf .cache; rm -rf dist; rm -rf vendor; jest --clearCache;",
-    "docs": "typedoc src/dataunion/DataUnion.ts"
+    "docs": "typedoc --options typedoc.js"
   },
   "engines": {
     "node": ">= 12"

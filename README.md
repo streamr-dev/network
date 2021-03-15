@@ -30,7 +30,9 @@ The client uses websockets for producing and consuming messages to/from streams.
 
 The client is available on [npm](https://www.npmjs.com/package/streamr-client) and can be installed simply by:
 
-`npm install streamr-client`
+```
+npm install streamr-client
+```
 
 Node v14 or higher is recommended if you intend to use the client in a Node environment. For example, inside a script.
 
@@ -339,62 +341,87 @@ All the below functions return a Promise which gets resolved with the result.
 
 ## Data Unions
 
-This library provides functions for working with Data Unions. To get a DataUnion instance, call `client.getDataUnion(address)`. To deploy a new DataUnion, call `deployDataUnion(options)`
+This library provides functions for working with Data Unions.
 
-See `/docs` folder in this repo for Data Union `options` parameters. These docs can be rebuilt locally via:
-```
-npm run docs
+To deploy a new DataUnion:
+```js
+const dataUnion = await client.deployDataUnion()
 ```
 
-These DataUnion-specific options are used from `StreamrClient` options:
+To get an existing (previously deployed) `DataUnion` instance:
+```js
+const dataUnion = client.getDataUnion(dataUnionAddress)
+```
+
+<!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
+These DataUnion-specific options can be given to `new StreamrClient` options:
+
 | Property                            | Default                                                | Description                                                                                                      |
 | :---------------------------------- | :----------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
 | dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge                          |
-| dataUnion.freeWithdraw              | false                                                  | true = someone else pays for the gas when transporting the withdraw tx to mainnet; false = client does the transport as self-service and pays the mainnet gas costs |
-
+| dataUnion.freeWithdraw              | false                                                  | true = someone else pays for the gas when transporting the withdraw tx to mainnet |
+|                                     |                                                        | false = client does the transport as self-service and pays the mainnet gas costs |
+-->
 
 ### Admin Functions
 
-| Name                                                                        | Returns             | Description                                                    |
-| :-------------------------------------------------------------------------- | :------------------ | :------------------------------------------------------------- |
-| createSecret(\[name])                                                       | string              | Create a secret for a Data Union                               |
-| addMembers(memberAddressList)                                               | Transaction receipt | Add members                                                    |
-| removeMembers(memberAddressList)                                            | Transaction receipt | Remove members from Data Union                                 |
-| withdrawAllToMember(memberAddress, \[options])                              |                     |                                                                |
-| withdrawAllToSigned(memberAddress, recipientAddress, signature, \[options]) |                     |                                                                |
-| setAdminFee(newFeeFraction)                                                 | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
+| Name                              | Returns             | Description                                                    |
+| :-------------------------------- | :------------------ | :------------------------------------------------------------- |
+| createSecret(\[name])             | string              | Create a secret for a Data Union                               |
+| setAdminFee(newFeeFraction)       | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
+| addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
+| removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
+| withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt | Send all withdrawable earnings to the member's address |
+| withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
 
-Here's an example how to deploy a data union contract and set the admin fee:
+Here's how to deploy a Data Union contract and set the admin fee to 30%:
 
 ```js
+import { StreamrClient } from 'streamr-client'
+
 const client = new StreamrClient({
     auth: { privateKey },
 })
 
 const dataUnion = await client.deployDataUnion()
-await client.setAdminFee(0.3, { dataUnion })
+const receipt = await dataUnion.setAdminFee(0.3)
 ```
 
 ### Member functions
 
-| Name                                                            | Returns             | Description                                                                 |
-| :-------------------------------------------------------------- | :------------------ | :-------------------------------------------------------------------------- |
-| join(\[secret])                                                 | JoinRequest         | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
-| isMember(memberAddress)                                         | boolean             |                                                                             |
-| withdrawAll(\[options])                                         | Transaction receipt | Withdraw funds from Data Union                                              |
-| withdrawAllTo(recipientAddress, \[options])                     | Transaction receipt | Donate/move your earnings to recipientAddress instead of your memberAddress |
-| signWithdrawAllTo(recipientAddress)                             | Signature (string)  | Signature that can be used to withdraw tokens to given recipientAddress     |
-| signWithdrawAmountTo(recipientAddress, amountTokenWei)          | Signature (string)  | Signature that can be used to withdraw tokens to given recipientAddress     |
+| Name                                                              | Returns             | Description                                                                 |
+| :---------------------------------------------------------------- | :------------------ | :-------------------------------------------------------------------------- |
+| join(\[secret])                                                   | JoinRequest         | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
+| isMember(memberAddress)                                           | boolean             |                                                                             |
+| withdrawAll(\[[options](#withdraw-options)\])                     | Transaction receipt | Withdraw funds from Data Union                                              |
+| withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\]) | Transaction receipt | Donate/move your earnings to recipientAddress instead of your memberAddress |
+| signWithdrawAllTo(recipientAddress)                               | Signature (string)  | Signature that can be used to withdraw all available tokens to given recipientAddress        |
+| signWithdrawAmountTo(recipientAddress, amountTokenWei)            | Signature (string)  | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
 
-Here's an example how to sign off on a withdraw to (any) recipientAddress:
+Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
 
 ```js
+import { StreamrClient } from 'streamr-client'
+
 const client = new StreamrClient({
     auth: { privateKey },
-    dataUnion,
 })
 
-const signature = await client.signWithdrawAllTo(recipientAddress)
+const dataUnion = client.getDataUnion(dataUnionAddress)
+const signature = await dataUnion.signWithdrawAllTo(recipientAddress)
+```
+
+Later, anyone (e.g. Data Union admin) can send that withdraw transaction to the blockchain (and pay for the gas)
+
+```js
+import { StreamrClient } from 'streamr-client'
+
+const client = new StreamrClient({
+    auth: { privateKey },
+})
+
+const dataUnion = client.getDataUnion(dataUnionAddress)
+const receipt = await dataUnions.withdrawAllToSigned(memberAddress, recipientAddress, signature)
 ```
 
 ### Query functions
@@ -413,19 +440,33 @@ These are available for everyone and anyone, to query publicly available info fr
 Here's an example how to get a member's withdrawable token balance (in "wei", where 1 DATA = 10^18 wei)
 
 ```js
-const client = new StreamrClient({
-    dataUnion,
-})
+import { StreamrClient } from 'streamr-client'
 
-const withdrawableWei = await client.getMemberBalance(memberAddress)
+const dataUnion = new StreamrClient().getDataUnion(dataUnionAddress)
+const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 ```
+
+### Withdraw options
+
+The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all take an extra "options" argument. It's an object that can contain the following parameters:
+
+| Name              | Default               | Description                                                                         |
+| :---------------- | :-------------------- | :---------------------------------------------------------------------------------- |
+| sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address) |
+| pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed               |
+| retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                           |
+
+These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low), but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
 
 ## Utility functions
 
-| Name                                    | Description                                                                                                                                                                                                                                                       |
-| :-------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| StreamrClient.generateEthereumAccount() | Generates a random Ethereum private key and returns an object with fields `address` and privateKey. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document. |
-| getTokenBalance(address)                | `BigNumber`                                     | Mainnet DATA token balance                       |
+| Name                                    | Returns                 |   Description    |
+| :-------------------------------------- | :---------------------- | :--------------- |
+| `*` generateEthereumAccount()           | `{address, privatekey}` | Generates a random Ethereum account  |
+| getTokenBalance(address)                | `BigNumber`             | Mainnet DATA token balance |
+| getSidechainTokenBalance(address)       | `BigNumber`             | Sidechain DATA token balance |
+
+`*` The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
 
 ## Events
 
@@ -533,6 +574,11 @@ In the browser, set `localStorage.debug = 'StreamrClient*'`
 ## For Developers
 
 Publishing to npm is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
+
+For more technical documentation on the Data Unions API, see the [JS Client API Docs](https://streamr-dev.github.io/streamr-client-javascript/). These can also be rebuilt locally via:
+```
+npm run docs
+```
 
 ### Publishing `latest`
 
