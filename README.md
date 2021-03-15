@@ -575,7 +575,7 @@ In the browser, set `localStorage.debug = 'StreamrClient*'`
 
 Publishing to npm is automated via Github Actions. Follow the steps below to publish `latest` or `beta`.
 
-These docs can be rebuilt locally via:
+For more technical documentation on the Data Unions API, see the [JS Client API Docs](https://streamr-dev.github.io/streamr-client-javascript/). These can also be rebuilt locally via:
 ```
 npm run docs
 ```
