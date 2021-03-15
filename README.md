@@ -398,7 +398,7 @@ const receipt = await dataUnion.setAdminFee(0.3, { dataUnion })
 | signWithdrawAllTo(recipientAddress)                               | Signature (string)  | Signature that can be used to withdraw all available tokens to given recipientAddress        |
 | signWithdrawAmountTo(recipientAddress, amountTokenWei)            | Signature (string)  | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
 
-Here's an example how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
+Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
 
 ```js
 import { StreamrClient } from 'streamr-client'
