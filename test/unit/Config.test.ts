@@ -1,9 +1,9 @@
+import set from 'lodash/set'
 import { arrayify, BytesLike } from '@ethersproject/bytes'
+
 import { StreamrClient } from '../../src/StreamrClient'
-import set from 'lodash.set'
 
 describe('Config', () => {
-
     describe('validate ethereum addresses', () => {
         const createClient = (propertyPaths: string, value: string|undefined|null) => {
             const opts: any = {}
