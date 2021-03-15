@@ -384,7 +384,7 @@ const client = new StreamrClient({
 })
 
 const dataUnion = await client.deployDataUnion()
-const receipt = await dataUnion.setAdminFee(0.3, { dataUnion })
+const receipt = await dataUnion.setAdminFee(0.3)
 ```
 
 ### Member functions
