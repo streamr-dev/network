@@ -365,14 +365,14 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 
 ### Admin Functions
 
-| Name                                                                        | Returns             | Description                                                    |
-| :-------------------------------------------------------------------------- | :------------------ | :------------------------------------------------------------- |
-| createSecret(\[name])                                                       | string              | Create a secret for a Data Union                               |
-| addMembers(memberAddressList, \[options])                                   | Transaction receipt | Add members                                                    |
-| removeMembers(memberAddressList, \[options])                                | Transaction receipt | Remove members from Data Union                                 |
-| withdrawAllToMember(memberAddress, \[options])                              |                     |                                                                |
-| withdrawAllToSigned(memberAddress, recipientAddress, signature, \[options]) |                     |                                                                |
-| setAdminFee(newFeeFraction)                                                 | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
+| Name                              | Returns             | Description                                                    |
+| :-------------------------------- | :------------------ | :------------------------------------------------------------- |
+| createSecret(\[name])             | string              | Create a secret for a Data Union                               |
+| setAdminFee(newFeeFraction)       | Transaction receipt | `newFeeFraction` is a `Number` between 0.0 and 1.0 (inclusive) |
+| addMembers(memberAddressList)     | Transaction receipt | Add members                                                    |
+| removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
+| withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt | Send all withdrawable earnings to the member's address |
+| withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
 
 Here's an example how to deploy a data union contract and set the admin fee:
 
@@ -389,14 +389,14 @@ const receipt = await dataUnion.setAdminFee(0.3, { dataUnion })
 
 ### Member functions
 
-| Name                                                            | Returns             | Description                                                                 |
-| :-------------------------------------------------------------- | :------------------ | :-------------------------------------------------------------------------- |
-| join(\[secret])                                                 | JoinRequest         | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
-| isMember(memberAddress)                                         | boolean             |                                                                             |
-| withdrawAll(\[options])                                         | Transaction receipt | Withdraw funds from Data Union                                              |
-| withdrawAllTo(recipientAddress, \[options])                     | Transaction receipt | Donate/move your earnings to recipientAddress instead of your memberAddress |
-| signWithdrawAllTo(recipientAddress)                             | Signature (string)  | Signature that can be used to withdraw all available tokens to given recipientAddress        |
-| signWithdrawAmountTo(recipientAddress, amountTokenWei)          | Signature (string)  | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
+| Name                                                              | Returns             | Description                                                                 |
+| :---------------------------------------------------------------- | :------------------ | :-------------------------------------------------------------------------- |
+| join(\[secret])                                                   | JoinRequest         | Join the Data Union (if a valid secret is given, the promise waits until the automatic join request has been processed)  |
+| isMember(memberAddress)                                           | boolean             |                                                                             |
+| withdrawAll(\[[options](#withdraw-options)\])                     | Transaction receipt | Withdraw funds from Data Union                                              |
+| withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\]) | Transaction receipt | Donate/move your earnings to recipientAddress instead of your memberAddress |
+| signWithdrawAllTo(recipientAddress)                               | Signature (string)  | Signature that can be used to withdraw all available tokens to given recipientAddress        |
+| signWithdrawAmountTo(recipientAddress, amountTokenWei)            | Signature (string)  | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
 
 Here's an example how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
 
