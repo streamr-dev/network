@@ -1,0 +1,10 @@
+#!/bin/sh
+BRANCH_NAME=$(git branch | grep '*' | sed 's/* //')
+
+if [ $BRANCH_NAME != '(no branch)' ]
+then
+    # don't run hook when rebasing
+    . "$(dirname "$0")/_/husky.sh"
+
+    npx --no-install commitlint --edit
+fi
