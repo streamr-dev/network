@@ -171,7 +171,7 @@ export default function ClientConfig(opts: StreamrClientOptions = {}) {
             ...opts.dataUnion
         },
         cache: {
-      ...STREAM_CLIENT_DEFAULTS.cache,
+            ...STREAM_CLIENT_DEFAULTS.cache,
             ...opts.cache,
         }
         // NOTE: sidechain is not merged with the defaults
