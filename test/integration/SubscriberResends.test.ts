@@ -286,8 +286,7 @@ describeRepeats('resends', () => {
                 client.connection.enableAutoDisconnect(false)
             })
             client.connection.enableAutoConnect()
-            // @ts-expect-error
-            client.connection.enableAutoDisconnect(600) // set 0 delay
+            client.connection.enableAutoDisconnect(0) // set 0 delay
             const sub = await subscriber.resend({
                 streamId: stream.id,
                 last: published.length,
@@ -475,7 +474,6 @@ describeRepeats('resends', () => {
 
             it('can end inside resend', async () => {
                 const unsubscribeEvents: any[] = []
-                // @ts-expect-error
                 client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
                     unsubscribeEvents.push(m)
                 })
