@@ -8,11 +8,11 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = 1.8
 
 repositories {
-    mavenLocal()
+    mavenCentral()
     maven {
         url "https://dl.bintray.com/ethereum/maven/"
     }
-    mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -34,4 +34,7 @@ task fatJar(type: Jar) {
     }
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
+    exclude "META-INF/*.SF"
+    exclude "META-INF/*.DSA"
+    exclude "META-INF/*.RSA"
 }
