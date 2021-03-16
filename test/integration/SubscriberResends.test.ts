@@ -162,12 +162,15 @@ describeRepeats('resends', () => {
             await client.publish(emptyStream.id, msg)
 
             const received = []
+            let t
             for await (const m of sub) {
                 received.push(m.getParsedContent())
-                setTimeout(() => {
+                clearTimeout(t)
+                t = setTimeout(() => {
                     sub.cancel()
                 }, 250)
             }
+            clearTimeout(t)
 
             expect(onResent).toHaveBeenCalledTimes(1)
             expect(received).toEqual([msg])
