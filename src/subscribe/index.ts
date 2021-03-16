@@ -45,9 +45,6 @@ export class Subscription extends Emitter {
         this.options = validateOptions(opts)
         this.key = this.options.key
         this.id = counterId(`Subscription.${this.options.id || ''}${this.key}`)
-        const { stack } = new Error(`Subscription ${this.id} Created`)
-        // stack for debugging
-        this.stack = stack
         this.streamId = this.options.streamId
         this.streamPartition = this.options.streamPartition
 
@@ -63,13 +60,12 @@ export class Subscription extends Emitter {
             onError: (err: Error) => {
                 this.emit('error', err)
             },
-        // @ts-expect-error
         }, this.onPipelineEnd)
 
         this.msgStream = this.pipeline.msgStream
     }
 
-    emit(event, ...args) {
+    emit(event: symbol | string, ...args: any[]) {
         if (event !== 'error') {
             return super.emit(event, ...args)
         }
@@ -190,6 +186,8 @@ class SubscriptionSession extends Emitter {
     subscriptions: Set<Todo>
     deletedSubscriptions: Set<Todo>
     step?: Todo
+    _subscribe
+    _unsubscribe
 
     constructor(client: StreamrClient, options: Todo) {
         super()
@@ -393,14 +391,7 @@ class SubscriptionSession extends Emitter {
  * Keeps track of subscriptions.
  */
 
-async function defaultOnFinally(err) {
-    if (err) {
-        throw err
-    }
-}
-
 class Subscriptions {
-
     client: StreamrClient
     subSessions: Map<Todo, Todo>
 
@@ -678,7 +669,6 @@ export class Subscriber {
                 await resendDone // ensure realtime doesn't start until resend ends
                 yield* resendSubscribeSub.realtime
             },
-        // @ts-expect-error
         ], end)
 
         const resendTask = resendMessageStream.subscribe()
