@@ -29,7 +29,7 @@ npm run docs
 
 ## TOC
 
-[API Docs](#API-docs) · [Installation](#installation) · [Usage](#usage) · [Client options](#client-options) · [Authentication](#authentication) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#streamr-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[API Docs](#API-docs) · [Installation](#installation) · [Usage](#usage) · [Client options](#client-options) · [Authentication](#authentication) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
