@@ -7,29 +7,21 @@
   Streamr JavaScript Client
 </h1>
 
-By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams.
+By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams. The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
 
-The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
+Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
 
-### API Docs
-
-The [API docs](https://streamr-dev.github.io/streamr-client-javascript/) are automatically generated from the TypeScript source code. They can also be rebuilt locally via:
-
-```
-npm run docs
-```
+[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
 
 ### Breaking changes notice
 
 * Date TBD: Support for unsigned data will be dropped.
 
-[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
-
 ----
 
 ## TOC
 
-[API Docs](#API-docs) · [Installation](#installation) · [Usage](#usage) · [Client options](#client-options) · [Authentication](#authentication) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
@@ -138,6 +130,14 @@ await stream.publish(msg)
 ```
 
 ----
+
+## API Docs
+
+The [API docs](https://streamr-dev.github.io/streamr-client-javascript/) are automatically generated from the TypeScript source code. They can also be rebuilt locally via:
+
+```
+npm run docs
+```
 
 ## Client options
 
