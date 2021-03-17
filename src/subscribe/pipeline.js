@@ -22,7 +22,7 @@ async function collect(src) {
  * Subscription message processing pipeline
  */
 
-export default function MessagePipeline(client, opts = {}, onFinally = async () => {}) {
+export default function MessagePipeline(client, opts = {}, onFinally = async (err) => { if (err) { throw err } }) {
     const options = validateOptions(opts)
     const { key, afterSteps = [], beforeSteps = [] } = options
     const id = counterId('MessagePipeline') + key
@@ -128,7 +128,7 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         // custom pipeline steps
         ...afterSteps
     ], async (err, ...args) => {
-        // await msgStream.cancel(err)
+        await msgStream.cancel(err)
         try {
             if (err) {
                 await onError(err)

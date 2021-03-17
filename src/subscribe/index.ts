@@ -10,8 +10,14 @@ import MessagePipeline from './pipeline'
 import Validator from './Validator'
 import messageStream from './messageStream'
 import resendStream from './resendStream'
-import { MaybeAsync, Todo } from '../types'
+import { Todo, MaybeAsync } from '../types'
 import StreamrClient, { StreamPartDefinition, SubscribeOptions } from '..'
+
+async function defaultOnFinally(err?: Error) {
+    if (err) {
+        throw err
+    }
+}
 
 /**
  * @category Important
@@ -39,7 +45,7 @@ export class Subscription extends Emitter {
     /** @internal */
     iterated?: Todo
 
-    constructor(client: StreamrClient, opts: Todo, onFinally = async () => {}) {
+    constructor(client: StreamrClient, opts: Todo, onFinally = defaultOnFinally) {
         super()
         this.client = client
         this.options = validateOptions(opts)
@@ -400,7 +406,7 @@ class Subscriptions {
         this.subSessions = new Map()
     }
 
-    async add(opts: StreamPartDefinition, onFinally: MaybeAsync<(err?: any) => void> = async () => {}) {
+    async add(opts: StreamPartDefinition, onFinally: MaybeAsync<(err?: any) => void> = defaultOnFinally) {
         const options = validateOptions(opts)
         const { key } = options
 
