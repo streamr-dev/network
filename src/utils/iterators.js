@@ -351,12 +351,6 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
         firstSrc = v
     }
 
-    iterables.forEach((nextIterable) => {
-        if (nextIterable.cancel) {
-            cancelFns.add(nextIterable)
-        }
-    })
-
     const last = iterables.reduce((_prev, next, index) => {
         const it = CancelableGenerator((async function* Gen() {
             const prev = index === 0 ? firstSrc : _prev
@@ -386,8 +380,7 @@ export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ..
         return it
     }, undefined)
 
-    pipelineValue = iteratorFinally(last, async (err) => {
-        error = AggregatedError.from(error, err)
+    pipelineValue = iteratorFinally(last, async () => {
         if (!cancelled) {
             await cancelAll(error)
         }
