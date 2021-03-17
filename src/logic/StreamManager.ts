@@ -81,6 +81,25 @@ export class StreamManager {
         outboundNodes.delete(node)
     }
 
+    getStreamState(streamId: StreamIdAndPartition): { [key: string]: StreamStateRepresentation } {
+        const streamState = this.streams.get(streamId.key())
+        const result: { [key: string]: StreamStateRepresentation } = {}
+        if (!streamState) {
+            result[streamId.key()] = {
+                inboundNodes: new Array<string>(),
+                outboundNodes: new Array<string>(),
+                counter: -1 // -1 signals unsubscribe
+            }
+            return result
+        }
+        result[streamId.key()] = {
+            inboundNodes: [...streamState.inboundNodes],
+            outboundNodes: [...streamState.outboundNodes],
+            counter: streamState.counter
+        }
+        return result
+    }
+
     removeNodeFromAllStreams(node: string): StreamIdAndPartition[] {
         const streams: StreamIdAndPartition[] = []
         this.streams.forEach(({ inboundNodes, outboundNodes }, streamKey) => {

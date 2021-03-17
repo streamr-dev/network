@@ -174,7 +174,7 @@ export class Connection {
             try {
                 this.connection.setRemoteDescription(description, type)
             } catch (err) {
-                this.close(err)
+                this.logger.warn(err)
             }
         } else {
             this.logger.warn('attempt to invoke setRemoteDescription, but connection is null')
@@ -186,7 +186,7 @@ export class Connection {
             try {
                 this.connection.addRemoteCandidate(candidate, mid)
             } catch (err) {
-                this.close(err)
+                this.logger.warn(err)
             }
         } else {
             this.logger.warn('attempt to invoke setRemoteDescription, but connection is null')

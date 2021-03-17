@@ -21,7 +21,7 @@ export class InstructionCounter {
         const filteredStreams: StatusStreams = {}
         Object.entries(status.streams).forEach(([streamKey, entry]) => {
             const currentCounter = this.getAndSetIfNecessary(source, streamKey)
-            if (entry.counter >= currentCounter) {
+            if (entry.counter >= currentCounter || entry.counter === -1) {
                 filteredStreams[streamKey] = entry
             }
         })

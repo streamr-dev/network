@@ -86,6 +86,9 @@ export class OverlayTopology {
     }
 
     formInstructions(nodeId: string, forceGenerate = false): Instructions {
+        if (!this.nodes[nodeId]) {
+            return {}
+        }
         const updatedNodes: Set<string> = new Set()
 
         const excessNeighbors = -this.numOfMissingNeighbors(nodeId)

@@ -58,7 +58,7 @@ describe('check status message flow between tracker and two nodes', () => {
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-1')
             // @ts-expect-error private field
-            expect(statusMessage.status).toEqual(nodeOne.getStatus(TRACKER_ID))
+            expect(statusMessage.status).toEqual(nodeOne.getFullStatus(TRACKER_ID))
             done()
         })
 
@@ -70,7 +70,7 @@ describe('check status message flow between tracker and two nodes', () => {
         tracker.trackerServer.once(TrackerServerEvent.NODE_STATUS_RECEIVED, (statusMessage, peerInfo) => {
             expect(peerInfo).toEqual('node-2')
             // @ts-expect-error private field
-            expect(statusMessage.status).toEqual(nodeTwo.getStatus(TRACKER_ID))
+            expect(statusMessage.status).toEqual(nodeTwo.getFullStatus(TRACKER_ID))
             done()
         })
         nodeTwo.start()
@@ -98,9 +98,9 @@ describe('check status message flow between tracker and two nodes', () => {
 
             if (receivedTotal === 2) {
                 // @ts-expect-error private field
-                expect(nodeOneStatus).toEqual(nodeOne.getStatus())
+                expect(nodeOneStatus).toEqual(nodeOne.getFullStatus())
                 // @ts-expect-error private field
-                expect(nodeTwoStatus).toEqual(nodeTwo.getStatus())
+                expect(nodeTwoStatus).toEqual(nodeTwo.getFullStatus())
                 done()
             }
         })

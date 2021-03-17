@@ -27,16 +27,16 @@ describe('Signalling error scenarios', () => {
             port: 35116,
             id: 'node-1',
             trackers: [tracker.getAddress()],
-            disconnectionWaitTime: 200,
-            newWebrtcConnectionTimeout: 2000
+            disconnectionWaitTime: 2000,
+            newWebrtcConnectionTimeout: 4000
         })
         nodeTwo = await startNetworkNode({
             host: '127.0.0.1',
             port: 35117,
             id: 'node-2',
             trackers: [tracker.getAddress()],
-            disconnectionWaitTime: 200,
-            newWebrtcConnectionTimeout: 2000
+            disconnectionWaitTime: 2000,
+            newWebrtcConnectionTimeout: 4000
         })
 
         nodeOne.start()

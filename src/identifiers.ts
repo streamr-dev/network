@@ -63,6 +63,7 @@ export interface Status {
     rtts: Rtts
     location: Location
     started: string
+    singleStream: boolean // indicate whether this is a status update for only a single stream
 }
 
 export type ResendRequest = ControlLayer.ResendLastRequest

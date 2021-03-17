@@ -10,19 +10,20 @@ import { getTopology } from '../../src/logic/trackerSummaryUtils'
 
 const WAIT_TIME = 200
 
-const formStatus = (counter1: number, counter2: number, nodes1: string[], nodes2: string[]): Partial<Status> => ({
+const formStatus = (counter1: number, counter2: number, nodes1: string[], nodes2: string[], singleStream: boolean): Partial<Status> => ({
     streams: {
         'stream-1::0': {
             inboundNodes: nodes1,
             outboundNodes: nodes1,
-            counter: counter1
+            counter: counter1,
         },
         'stream-2::0': {
             inboundNodes: nodes2,
             outboundNodes: nodes2,
             counter: counter2
         }
-    }
+    },
+    singleStream
 })
 
 describe('tracker: counter filtering', () => {
@@ -48,8 +49,8 @@ describe('tracker: counter filtering', () => {
             waitForEvent(trackerNode2, TrackerNodeEvent.CONNECTED_TO_TRACKER)
         ])
 
-        trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []) as Status)
-        trackerNode2.sendStatus('tracker', formStatus(0, 0, [], []) as Status)
+        trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status)
+        trackerNode2.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status)
 
         await waitForEvent(trackerNode1, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED)
         await waitForEvent(trackerNode1, TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED)
@@ -62,7 +63,7 @@ describe('tracker: counter filtering', () => {
     })
 
     test('handles status messages with counters equal or more to current counter(s)', async () => {
-        trackerNode1.sendStatus('tracker', formStatus(1, 666, [], []) as Status)
+        trackerNode1.sendStatus('tracker', formStatus(1, 666, [], [], false) as Status)
 
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
@@ -74,7 +75,7 @@ describe('tracker: counter filtering', () => {
     })
 
     test('ignores status messages with counters less than current counter(s)', async () => {
-        trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []) as Status)
+        trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status)
 
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
@@ -86,7 +87,7 @@ describe('tracker: counter filtering', () => {
     })
 
     test('partly handles status messages with mixed counters compared to current counters', async () => {
-        trackerNode1.sendStatus('tracker', formStatus(1, 0, [], []) as Status)
+        trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
 
         let numOfInstructions = 0
         trackerNode1.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, () => {
@@ -99,7 +100,7 @@ describe('tracker: counter filtering', () => {
 
     test('NET-36: tracker receiving status with old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
-        trackerNode1.sendStatus('tracker', formStatus(0, 0, [], []) as Status)
+        trackerNode1.sendStatus('tracker', formStatus(0, 0, [], [], false) as Status)
         // @ts-expect-error trackerServer is private
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
@@ -107,7 +108,7 @@ describe('tracker: counter filtering', () => {
 
     test('NET-36: tracker receiving status with partial old counter should not affect topology', async () => {
         const topologyBefore = getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())
-        trackerNode1.sendStatus('tracker', formStatus(1, 0, [], []) as Status)
+        trackerNode1.sendStatus('tracker', formStatus(1, 0, [], [], false) as Status)
         // @ts-expect-error trackerServer is private
         await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         expect(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())).toEqual(topologyBefore)
