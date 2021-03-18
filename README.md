@@ -7,11 +7,15 @@
   Streamr JavaScript Client
 </h1>
 
+[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master&style=flat)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
+[![GitHub release](https://img.shields.io/github/release/streamr-dev/streamr-client-javascript.svg?style=flat)](streamr-dev/streamr-client-javascript/releases/)
+[![GitHub stars](https://img.shields.io/github/stars/streamr-dev/streamr-client-javascript.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/streamr-client-javascript/)
+[![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
+
 By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams. The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
 
 Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
 
-[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
 
 ### Breaking changes notice
 
