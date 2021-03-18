@@ -6,6 +6,7 @@ import { Defer, pTimeout } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
+import { Stream } from '../../src/stream'
 
 const MAX_MESSAGES = 10
 const WAIT_FOR_STORAGE_TIMEOUT = 6000
@@ -25,6 +26,7 @@ describe('StreamrClient resends', () => {
                 },
                 autoConnect: false,
                 autoDisconnect: false,
+                // @ts-expect-error
                 maxRetries: 2,
                 ...opts,
             })
@@ -33,10 +35,10 @@ describe('StreamrClient resends', () => {
             return c
         }
 
-        let client
-        let stream
-        let published
-        let publishTestMessages
+        let client: StreamrClient
+        let stream: Stream
+        let published: any[]
+        let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
         beforeEach(async () => {
             client = createClient()
@@ -46,7 +48,7 @@ describe('StreamrClient resends', () => {
         })
 
         afterEach(async () => {
-            await wait()
+            await wait(0)
             // ensure no unexpected errors
             expect(onError).toHaveBeenCalledTimes(expectErrors)
             if (client) {
@@ -86,8 +88,8 @@ describe('StreamrClient resends', () => {
 
             describe('issue resend and subscribe at the same time', () => {
                 it('works with resend -> subscribe', async () => {
-                    const resentMessages = []
-                    const realtimeMessages = []
+                    const resentMessages: any[] = []
+                    const realtimeMessages: any[] = []
 
                     const realtimeMessage = {
                         msg: uid('realtimeMessage'),
@@ -103,7 +105,7 @@ describe('StreamrClient resends', () => {
                     })
 
                     await client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, (message) => {
                         realtimeMessages.push(message)
                     })
@@ -118,15 +120,15 @@ describe('StreamrClient resends', () => {
                 }, 18000)
 
                 it('works with subscribe -> resend', async () => {
-                    const resentMessages = []
-                    const realtimeMessages = []
+                    const resentMessages: any[] = []
+                    const realtimeMessages: any[] = []
 
                     const realtimeMessage = {
                         msg: uid('realtimeMessage'),
                     }
 
                     await client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, (message) => {
                         realtimeMessages.push(message)
                     })
@@ -151,15 +153,15 @@ describe('StreamrClient resends', () => {
                 }, 15000)
 
                 it('works with subscribe+resend -> subscribe', async () => {
-                    const resentMessages = []
-                    const realtimeMessages = []
+                    const resentMessages: any[] = []
+                    const realtimeMessages: any[] = []
 
                     const realtimeMessage = {
                         msg: uid('realtimeMessage'),
                     }
 
                     client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                         resend: {
                             last: MAX_MESSAGES,
                         },
@@ -168,7 +170,7 @@ describe('StreamrClient resends', () => {
                     })
 
                     client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, (message) => {
                         realtimeMessages.push(message)
                     })
@@ -183,22 +185,22 @@ describe('StreamrClient resends', () => {
                 }, 15000)
 
                 it('works with subscribe -> subscribe+resend', async () => {
-                    const resentMessages = []
-                    const realtimeMessages = []
+                    const resentMessages: any[] = []
+                    const realtimeMessages: any[] = []
 
                     const realtimeMessage = {
                         msg: uid('realtimeMessage'),
                     }
 
                     client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, (message) => {
                         realtimeMessages.push(message)
                     })
 
                     // subscribe with resend after realtime subscribe
                     client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                         resend: {
                             last: MAX_MESSAGES,
                         },
@@ -219,7 +221,7 @@ describe('StreamrClient resends', () => {
             describeRepeats('resend repeats', () => {
                 // eslint-disable-next-line no-loop-func
                 test('resend last using resend function', async () => {
-                    const receivedMessages = []
+                    const receivedMessages: any[] = []
 
                     // eslint-disable-next-line no-await-in-loop
                     const sub = await client.resend(
@@ -245,11 +247,11 @@ describe('StreamrClient resends', () => {
 
                 // eslint-disable-next-line no-loop-func
                 test('resend last using subscribe function', async () => {
-                    const receivedMessages = []
+                    const receivedMessages: any[] = []
 
                     // eslint-disable-next-line no-await-in-loop
                     const sub = await client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                         resend: {
                             last: MAX_MESSAGES,
                         },
@@ -263,10 +265,10 @@ describe('StreamrClient resends', () => {
             })
 
             it('resend last using subscribe and publish messages after resend', async () => {
-                const receivedMessages = []
+                const receivedMessages: any[] = []
 
                 await client.subscribe({
-                    stream: stream.id,
+                    streamId: stream.id,
                     resend: {
                         last: MAX_MESSAGES,
                     },
@@ -294,10 +296,10 @@ describe('StreamrClient resends', () => {
             }, 40000)
 
             it('resend last using subscribe and publish realtime messages', async () => {
-                const receivedMessages = []
+                const receivedMessages: any[] = []
 
                 const sub = await client.subscribe({
-                    stream: stream.id,
+                    streamId: stream.id,
                     resend: {
                         last: MAX_MESSAGES,
                     },
@@ -349,7 +351,7 @@ describe('StreamrClient resends', () => {
                 // resend from LONG_RESEND messages
                 await client.connect()
 
-                const receivedMessages = []
+                const receivedMessages: any[] = []
                 const onGotFirstMessage = Defer()
                 const sub = await client.resend({
                     stream: stream.id,
@@ -361,7 +363,7 @@ describe('StreamrClient resends', () => {
                 }, (msg) => {
                     receivedMessages.push(msg)
                     if (receivedMessages.length === 1) {
-                        onGotFirstMessage.resolve()
+                        onGotFirstMessage.resolve(undefined)
                     }
                 })
 
@@ -374,6 +376,7 @@ describe('StreamrClient resends', () => {
                 expect(receivedMessages).toEqual(published)
                 expect(published.length).toBe(LONG_RESEND)
             }, 300000)
+        // @ts-expect-error
         }, 300000)
     })
 })

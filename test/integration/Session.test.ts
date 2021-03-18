@@ -5,10 +5,10 @@ import config from './config'
 
 describe('Session', () => {
     const createClient = (opts = {}) => new StreamrClient({
-        autoConnect: false,
-        autoDisconnect: false,
         ...config.clientOptions,
         ...opts,
+        autoConnect: false,
+        autoDisconnect: false,
     })
 
     describe('Token retrievals', () => {

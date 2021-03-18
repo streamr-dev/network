@@ -4,11 +4,12 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 import Session from '../../src/Session'
 import config from '../integration/config'
+import { Todo } from '../../src/types'
 
 describe('Session', () => {
-    let session
-    let msg
-    let clientSessionToken
+    let session: Session
+    let msg: Todo
+    let clientSessionToken: Todo
 
     const createClient = (opts = {}) => new StreamrClient({
         ...config.clientOptions,
@@ -28,9 +29,11 @@ describe('Session', () => {
         session = new Session(clientSessionToken)
         session.options.unauthenticated = false
         session.loginFunction = sinon.stub()
+        // @ts-expect-error
         session.loginFunction.onCall(0).resolves({
             token: 'session-token1',
         })
+        // @ts-expect-error
         session.loginFunction.onCall(1).resolves({
             token: 'session-token2',
         })
@@ -88,6 +91,7 @@ describe('Session', () => {
     describe('getSessionToken', () => {
         it('should set sessionToken', async () => {
             await session.getSessionToken()
+            // @ts-expect-error
             expect(session.loginFunction.calledOnce).toBeTruthy()
             expect(session.options.sessionToken === 'session-token1').toBeTruthy()
         })
@@ -95,12 +99,14 @@ describe('Session', () => {
         it('should not call loginFunction if token set', async () => {
             session.options.sessionToken = 'session-token1'
             await session.getSessionToken()
+            // @ts-expect-error
             expect(session.loginFunction.notCalled).toBeTruthy()
         })
 
         it('should call loginFunction if new token required', async () => {
             session.options.sessionToken = 'expired-session-token'
             await session.getSessionToken(true)
+            // @ts-expect-error
             expect(session.loginFunction.calledOnce).toBeTruthy()
             expect(session.options.sessionToken === 'session-token1').toBeTruthy()
         })
@@ -112,6 +118,7 @@ describe('Session', () => {
                 const p1 = session.getSessionToken()
                 const p2 = session.getSessionToken()
                 const [sessionToken1, sessionToken2] = await Promise.all([p1, p2])
+                // @ts-expect-error
                 expect(session.loginFunction.calledOnce).toBeTruthy()
                 expect(sessionToken1).toEqual(sessionToken2)
             })
@@ -125,7 +132,7 @@ describe('Session', () => {
 
         describe('loginFunction rejects', () => {
             beforeEach(() => {
-                session = new Session()
+                session = new Session(undefined as any)
                 session.options.unauthenticated = false
                 msg = 'Error: Need either "privateKey", "ethereum", "apiKey" or "username"+"password" to login.'
                 session.loginFunction = sinon.stub().rejects(new Error(msg))
@@ -141,6 +148,7 @@ describe('Session', () => {
                         session.getSessionToken()
                     )).rejects.toThrow(msg)
                 ])
+                // @ts-expect-error
                 expect(session.loginFunction.calledOnce).toBeTruthy()
             })
 
@@ -151,6 +159,7 @@ describe('Session', () => {
                 await expect(async () => (
                     session.getSessionToken()
                 )).rejects.toThrow(msg)
+                // @ts-expect-error
                 expect(session.loginFunction.calledTwice).toBeTruthy()
             })
         })

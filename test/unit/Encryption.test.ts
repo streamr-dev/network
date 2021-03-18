@@ -13,9 +13,11 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
         beforeAll(() => {
             // this is the toggle used in EncryptionUtil to
             // use the webcrypto apis
+            // @ts-expect-error
             process.browser = !!isBrowser
         })
         afterAll(() => {
+            // @ts-expect-error
             process.browser = !isBrowser
         })
 
@@ -62,10 +64,12 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+                // @ts-expect-error
                 prevMesssageRef: null,
                 content: {
                     foo: 'bar',
                 },
+                // @ts-expect-error
                 contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
@@ -80,10 +84,12 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             const key = GroupKey.generate()
             const streamMessage = new StreamMessage({
                 messageId: new MessageID('streamId', 0, 1, 0, 'publisherId', 'msgChainId'),
+                // @ts-expect-error
                 prevMesssageRef: null,
                 content: {
                     foo: 'bar',
                 },
+                // @ts-expect-error
                 contentType: StreamMessage.CONTENT_TYPES.MESSAGE,
                 encryptionType: StreamMessage.ENCRYPTION_TYPES.NONE,
                 signatureType: StreamMessage.SIGNATURE_TYPES.NONE,
@@ -165,7 +171,7 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
 
         it('validateGroupKey() throws if key is not a buffer', () => {
             expect(() => {
-                EncryptionUtil.validateGroupKey(ethers.utils.hexlify(GroupKey.generate()))
+                EncryptionUtil.validateGroupKey(ethers.utils.hexlify(GroupKey.generate() as any))
             }).toThrow()
         })
 

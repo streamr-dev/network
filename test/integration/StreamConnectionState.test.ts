@@ -7,17 +7,20 @@ import { Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
+import { Stream } from '../../src/stream'
+import { Subscriber, Subscription } from '../../src/subscribe'
+import { StreamrClientOptions } from '../../src'
 
 const { ControlMessage } = ControlLayer
 const MAX_MESSAGES = 5
 
 describeRepeats('Connection State', () => {
     let expectErrors = 0 // check no errors by default
-    let publishTestMessages
+    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
     let onError = jest.fn()
-    let client
-    let stream
-    let subscriber
+    let client: StreamrClient
+    let stream: Stream
+    let subscriber: Subscriber
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -27,6 +30,7 @@ describeRepeats('Connection State', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
+            // @ts-expect-error
             publishAutoDisconnectDelay: 250,
             maxRetries: 2,
             ...opts,
@@ -36,7 +40,7 @@ describeRepeats('Connection State', () => {
         return c
     }
 
-    async function setupClient(opts) {
+    async function setupClient(opts: StreamrClientOptions) {
         // eslint-disable-next-line require-atomic-updates
         client = createClient(opts)
         subscriber = client.subscriber
@@ -61,11 +65,11 @@ describeRepeats('Connection State', () => {
         if (!subscriber) { return }
         expect(subscriber.count(stream.id)).toBe(0)
         if (!client) { return }
-        expect(client.getSubscriptions(stream.id)).toEqual([])
+        expect(client.getSubscriptions()).toEqual([])
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
         if (client) {
@@ -74,7 +78,7 @@ describeRepeats('Connection State', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         if (client) {
             client.debug('disconnecting after test >>')
             await client.disconnect()
@@ -88,7 +92,7 @@ describeRepeats('Connection State', () => {
         }
     })
 
-    let subs = []
+    let subs: Subscription[] = []
 
     beforeEach(async () => {
         const existingSubs = subs
@@ -182,7 +186,7 @@ describeRepeats('Connection State', () => {
 
                 const done = Defer()
 
-                const msgs = []
+                const msgs: any[] = []
                 const sockets = new Set()
                 await otherClient.subscribe({
                     stream,
@@ -193,7 +197,7 @@ describeRepeats('Connection State', () => {
                     msgs.push(msg)
                     if (msgs.length === MAX_MESSAGES) {
                         // should eventually get here
-                        done.resolve()
+                        done.resolve(undefined)
                     }
 
                     // disconnect after every message
@@ -242,7 +246,7 @@ describeRepeats('Connection State', () => {
                 await subscriber.subscribe(stream.id)
             }).rejects.toThrow()
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(client.getSubscriptions(stream.id)).toEqual([])
+            expect(client.getSubscriptions()).toEqual([])
         })
 
         it('should reconnect subscriptions when connection disconnected before subscribed & reconnected', async () => {
@@ -251,7 +255,7 @@ describeRepeats('Connection State', () => {
             client.connection.socket.close()
             const published = await publishTestMessages(2)
             const sub = await subTask
-            expect(client.getSubscriptions(stream.id)).toHaveLength(1)
+            expect(client.getSubscriptions()).toHaveLength(1)
             subs.push(sub)
             const received = []
             for await (const msg of sub) {
@@ -262,7 +266,7 @@ describeRepeats('Connection State', () => {
                 break
             }
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(client.getSubscriptions(stream.id)).toEqual([])
+            expect(client.getSubscriptions()).toEqual([])
         })
 
         it('should re-subscribe when subscribed then reconnected + fill gaps', async () => {
@@ -285,7 +289,7 @@ describeRepeats('Connection State', () => {
                 }
             }
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(client.getSubscriptions(stream.id)).toEqual([])
+            expect(client.getSubscriptions()).toEqual([])
         }, 30000)
 
         it('should end when subscribed then disconnected', async () => {
@@ -303,19 +307,19 @@ describeRepeats('Connection State', () => {
             }
             expect(received).toEqual(published.slice(0, 1))
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(client.getSubscriptions(stream.id)).toEqual([])
+            expect(client.getSubscriptions()).toEqual([])
         })
 
         it('should end when subscribed then disconnected then connected', async () => {
             const sub = await subscriber.subscribe(stream.id)
-            expect(client.getSubscriptions(stream.id)).toHaveLength(1)
+            expect(client.getSubscriptions()).toHaveLength(1)
             subs.push(sub)
 
             await publishTestMessages(2)
             const received = []
             await client.disconnect()
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(client.getSubscriptions(stream.id)).toHaveLength(0)
+            expect(client.getSubscriptions()).toHaveLength(0)
             for await (const msg of sub) {
                 received.push(msg.getParsedContent())
             }
@@ -327,7 +331,7 @@ describeRepeats('Connection State', () => {
             const published2 = await publishTestMessages(2)
             const received2 = []
             expect(subscriber.count(stream.id)).toBe(1)
-            expect(client.getSubscriptions(stream.id)).toHaveLength(1)
+            expect(client.getSubscriptions()).toHaveLength(1)
             for await (const msg of sub2) {
                 received2.push(msg.getParsedContent())
                 if (received2.length === 1) {
@@ -336,7 +340,7 @@ describeRepeats('Connection State', () => {
             }
             expect(received2).toEqual(published2.slice(0, 1))
             expect(subscriber.count(stream.id)).toBe(0)
-            expect(client.getSubscriptions(stream.id)).toEqual([])
+            expect(client.getSubscriptions()).toEqual([])
         })
 
         it('should just end subs when disconnected', async () => {
@@ -348,7 +352,7 @@ describeRepeats('Connection State', () => {
         })
 
         describe('resubscribe on unexpected disconnection', () => {
-            let otherClient
+            let otherClient: StreamrClient
 
             beforeEach(async () => {
                 otherClient = createClient({
@@ -360,7 +364,8 @@ describeRepeats('Connection State', () => {
                     otherClient.connect(),
                     otherClient.session.getSessionToken(),
                 ]
-                await Promise.allSettled(tasks)
+                await (Promise as any).allSettled(tasks)
+                // @ts-expect-error
                 await Promise.all(tasks) // throw if there were an error
             })
 
@@ -369,21 +374,21 @@ describeRepeats('Connection State', () => {
                     otherClient.disconnect(),
                     client.disconnect(),
                 ]
-                await Promise.allSettled(tasks)
+                await (Promise as any).allSettled(tasks)
                 await Promise.all(tasks) // throw if there were an error
             })
 
             it('should work', async () => {
                 const done = Defer()
 
-                const msgs = []
+                const msgs: any[] = []
 
                 await otherClient.subscribe(stream, (msg) => {
                     msgs.push(msg)
 
                     if (msgs.length === MAX_MESSAGES) {
                         // should eventually get here
-                        done.resolve()
+                        done.resolve(undefined)
                     }
                 })
 
@@ -399,7 +404,9 @@ describeRepeats('Connection State', () => {
                     disconnect()
                 })
 
+                // @ts-expect-error
                 otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
+                // @ts-expect-error
                 otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
 
                 const onConnected = jest.fn()

@@ -5,12 +5,12 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { Defer } from '../../src/utils'
 
 import config from './config'
+import { Stream } from '../../src/stream'
+import { Subscription } from '../../src'
+import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
 
 const createClient = (opts = {}) => new StreamrClient({
-    ...(config.clientOptions || {
-        url: config.websocketUrl,
-        restUrl: config.restUrl,
-    }),
+    ...config.clientOptions,
     auth: {
         privateKey: fakePrivateKey(),
     },
@@ -22,10 +22,10 @@ const createClient = (opts = {}) => new StreamrClient({
 const MAX_MESSAGES = 3
 
 describe('resend/reconnect', () => {
-    let client
-    let stream
-    let publishedMessages
-    let publishTestMessages
+    let client: StreamrClient
+    let stream: Stream
+    let publishedMessages: [message: any, request: PublishRequest][]
+    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
     beforeEach(async () => {
         client = createClient()
@@ -49,13 +49,13 @@ describe('resend/reconnect', () => {
 
     describe('reconnect with resend', () => {
         let shouldDisconnect = false
-        let sub
-        let messages = []
+        let sub: Subscription
+        let messages: any[] = []
         beforeEach(async () => {
             const done = Defer()
             messages = []
             sub = await client.subscribe({
-                stream: stream.id,
+                streamId: stream.id,
                 resend: {
                     last: MAX_MESSAGES,
                 },

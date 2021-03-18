@@ -9,9 +9,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 
 const log = debug('StreamrClient::DataUnion::integration-test-stats')
 
-// @ts-expect-error
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-// @ts-expect-error
 const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
 
 describe('DataUnion stats', () => {

@@ -9,14 +9,14 @@ const { SigningUtil } = Utils
 const { SIGNATURE_TYPES } = StreamMessage
 
 type AuthOption = {
-    ethereum: undefined
+    ethereum?: never
     privateKey: string | Uint8Array
 } | {
-    privateKey: undefined
+    privateKey?: never
     ethereum: EthereumConfig
 } | {
-    ethereum: undefined
-    privateKey: undefined
+    ethereum?: never
+    privateKey?: never
 }
 
 function getSigningFunction({

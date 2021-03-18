@@ -11,6 +11,8 @@ import { Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
+import { Stream } from '../../src/stream'
+import { Subscription } from '../../src'
 
 const WebSocket = require('ws')
 
@@ -21,14 +23,14 @@ const MAX_MESSAGES = 20
 
 describeRepeats('StreamrClient', () => {
     let expectErrors = 0 // check no errors by default
-    let errors = []
+    let errors: any[] = []
 
-    const getOnError = (errs) => jest.fn((err) => {
+    const getOnError = (errs: any) => jest.fn((err) => {
         errs.push(err)
     })
 
     let onError = jest.fn()
-    let client
+    let client: StreamrClient
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -40,6 +42,7 @@ describeRepeats('StreamrClient', () => {
             autoDisconnect: false,
             // disconnectDelay: 500,
             // publishAutoDisconnectDelay: 250,
+            // @ts-expect-error
             maxRetries: 2,
             ...opts,
         })
@@ -65,10 +68,10 @@ describeRepeats('StreamrClient', () => {
                         const ws = new WebSocket(c.options.url)
                         ws.once('open', () => {
                             c.debug('open', c.options.url)
-                            resolve()
+                            resolve(undefined)
                             ws.close()
                         })
-                        ws.once('error', (err) => {
+                        ws.once('error', (err: any) => {
                             c.debug('err', c.options.url, err)
                             reject(err)
                             ws.terminate()
@@ -101,7 +104,7 @@ describeRepeats('StreamrClient', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         // ensure no unexpected errors
         expect(errors).toHaveLength(expectErrors)
         if (client) {
@@ -110,7 +113,7 @@ describeRepeats('StreamrClient', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         if (client) {
             client.debug('disconnecting after test')
             await client.disconnect()
@@ -307,7 +310,7 @@ describeRepeats('StreamrClient', () => {
                 client.once('disconnected', done.wrapError(async () => {
                     client.once('connected', done.wrapError(async () => {
                         await client.disconnect()
-                        done.resolve()
+                        done.resolve(undefined)
                     }))
 
                     await expect(async () => {
@@ -407,7 +410,7 @@ describeRepeats('StreamrClient', () => {
             it('should not subscribe to unsubscribed streams on reconnect', async () => {
                 client = createClient()
                 await client.connect()
-                const sessionToken = await client.session.getSessionToken()
+                const sessionToken = await client.session.getSessionToken()!
 
                 const stream = await client.createStream({
                     name: uid('stream')
@@ -427,14 +430,15 @@ describeRepeats('StreamrClient', () => {
                 expect(connectionEventSpy.mock.calls[0]).toEqual([new SubscribeRequest({
                     streamId: stream.id,
                     streamPartition: 0,
-                    sessionToken,
+                    sessionToken: sessionToken!,
                     requestId: connectionEventSpy.mock.calls[0][0].requestId,
                 })])
 
                 expect(connectionEventSpy.mock.calls[1]).toEqual([new UnsubscribeRequest({
                     streamId: stream.id,
                     streamPartition: 0,
-                    sessionToken,
+                    // @ts-expect-error
+                    sessionToken: sessionToken!,
                     requestId: connectionEventSpy.mock.calls[1][0].requestId,
                 })])
             })
@@ -442,7 +446,7 @@ describeRepeats('StreamrClient', () => {
             it('should not subscribe after resend() on reconnect', async () => {
                 client = createClient()
                 await client.connect()
-                const sessionToken = await client.session.getSessionToken()
+                const sessionToken = await client.session.getSessionToken()!
 
                 const stream = await client.createStream({
                     name: uid('stream')
@@ -466,7 +470,7 @@ describeRepeats('StreamrClient', () => {
                 expect(connectionEventSpy.mock.calls[0]).toEqual([new ResendLastRequest({
                     streamId: stream.id,
                     streamPartition: 0,
-                    sessionToken,
+                    sessionToken: sessionToken!,
                     numberLast: 10,
                     requestId: connectionEventSpy.mock.calls[0][0].requestId,
                 })])
@@ -542,7 +546,7 @@ describeRepeats('StreamrClient', () => {
                         id1: uid('msg')
                     }
                     const p = client.publish(stream.id, message)
-                    await wait()
+                    await wait(0)
                     await client.disconnect() // start async disconnect after publish started
                     await expect(p).rejects.toThrow()
                     expect(client.isDisconnected()).toBeTruthy()
@@ -565,7 +569,7 @@ describeRepeats('StreamrClient', () => {
                         id1: uid('msg')
                     }
                     const p = client.publish(stream.id, message)
-                    await wait()
+                    await wait(0)
                     await client.disconnect() // start async disconnect after publish started
                     await expect(p).rejects.toThrow()
                     expect(client.isDisconnected()).toBeTruthy()
@@ -587,7 +591,7 @@ describeRepeats('StreamrClient', () => {
                     })
 
                     await client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, () => {})
 
                     await client.disconnect()
@@ -605,7 +609,7 @@ describeRepeats('StreamrClient', () => {
                     })
 
                     await client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                         resend: {
                             from: {
                                 timestamp: 0,
@@ -620,14 +624,14 @@ describeRepeats('StreamrClient', () => {
     })
 
     describe('StreamrClient', () => {
-        let stream
-        let waitForStorage
-        let publishTestMessages
+        let stream: Stream
+        let waitForStorage: (...args: any[]) => Promise<void>
+        let publishTestMessages: ReturnType<typeof getPublishTestMessages>
 
         // These tests will take time, especially on Travis
         const TIMEOUT = 30 * 1000
 
-        const attachSubListeners = (sub) => {
+        const attachSubListeners = (sub: Subscription) => {
             const onSubscribed = jest.fn()
             sub.on('subscribed', onSubscribed)
             const onResent = jest.fn()
@@ -672,13 +676,13 @@ describeRepeats('StreamrClient', () => {
         })
 
         afterEach(async () => {
-            await wait()
+            await wait(0)
             // ensure no unexpected errors
             expect(onError).toHaveBeenCalledTimes(expectErrors)
         })
 
         afterEach(async () => {
-            await wait()
+            await wait(0)
 
             if (client) {
                 client.debug('disconnecting after test')
@@ -722,36 +726,37 @@ describeRepeats('StreamrClient', () => {
 
             describe('subscribe/unsubscribe', () => {
                 beforeEach(() => {
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(0)
+                    expect(client.getSubscriptions()).toHaveLength(0)
                 })
 
                 it('client.subscribe then unsubscribe after subscribed', async () => {
                     const sub = await client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, () => {})
 
                     const events = attachSubListeners(sub)
 
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(1) // has subscription immediately
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(1)
+                    expect(client.getSubscriptions()).toHaveLength(1) // has subscription immediately
+                    expect(client.getSubscriptions()).toHaveLength(1)
                     await client.unsubscribe(sub)
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(0)
+                    expect(client.getSubscriptions()).toHaveLength(0)
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(1)
                 }, TIMEOUT)
 
                 it('client.subscribe then unsubscribe before subscribed', async () => {
                     client.connection.enableAutoDisconnect(false)
                     const subTask = client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, () => {})
 
                     const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
 
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(1)
+                    expect(client.getSubscriptions()).toHaveLength(1)
 
+                    // @ts-expect-error
                     const unsubTask = client.unsubscribe(stream)
 
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
+                    expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                     await unsubTask
                     await subTask
                     await wait(TIMEOUT * 0.2)
@@ -763,13 +768,14 @@ describeRepeats('StreamrClient', () => {
                 it('client.subscribe then unsubscribe before subscribed after started subscribing', async () => {
                     client.connection.enableAutoDisconnect(false)
                     const subTask = client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, () => {})
                     const subSession = client.subscriber.getSubscriptionSession(stream)
                     const events = attachSubListeners(subSession)
                     let unsubTask
                     const startedSubscribing = Defer()
                     subSession.once('subscribing', startedSubscribing.wrap(() => {
+                        // @ts-expect-error
                         unsubTask = client.unsubscribe(stream)
                     }))
 
@@ -778,7 +784,7 @@ describeRepeats('StreamrClient', () => {
                         unsubTask,
                         subTask,
                     ])
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
+                    expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                     await wait(TIMEOUT * 0.2)
                     expect(events.onResent).toHaveBeenCalledTimes(0)
                     expect(events.onSubscribed).toHaveBeenCalledTimes(0)
@@ -789,7 +795,7 @@ describeRepeats('StreamrClient', () => {
                     it('client.subscribe then unsubscribe before subscribed', async () => {
                         client.connection.enableAutoDisconnect(false)
                         const subTask = client.subscribe({
-                            stream: stream.id,
+                            streamId: stream.id,
                             resend: {
                                 from: {
                                     timestamp: 0,
@@ -799,11 +805,12 @@ describeRepeats('StreamrClient', () => {
 
                         const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
 
-                        expect(client.getSubscriptions(stream.id)).toHaveLength(1)
+                        expect(client.getSubscriptions()).toHaveLength(1)
 
+                        // @ts-expect-error
                         const unsubTask = client.unsubscribe(stream)
 
-                        expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
+                        expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                         await unsubTask
                         await subTask
                         await wait(TIMEOUT * 0.2)
@@ -815,7 +822,7 @@ describeRepeats('StreamrClient', () => {
                     it('client.subscribe then unsubscribe ignores messages with resend', async () => {
                         const onMessage = jest.fn()
                         const subTask = client.subscribe({
-                            stream: stream.id,
+                            streamId: stream.id,
                             resend: {
                                 from: {
                                     timestamp: 0,
@@ -824,8 +831,9 @@ describeRepeats('StreamrClient', () => {
                         }, onMessage)
 
                         const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
+                        // @ts-expect-error
                         const unsubTask = client.unsubscribe(stream)
-                        expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
+                        expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
 
                         const msg = Msg()
                         const publishReq = await stream.publish(msg)
@@ -844,15 +852,15 @@ describeRepeats('StreamrClient', () => {
                 it('client.subscribe then unsubscribe ignores messages', async () => {
                     const onMessage = jest.fn()
                     const sub = await client.subscribe({
-                        stream: stream.id,
+                        streamId: stream.id,
                     }, onMessage)
 
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(1)
+                    expect(client.getSubscriptions()).toHaveLength(1)
                     const events = attachSubListeners(sub)
                     const t = client.unsubscribe(sub)
                     await stream.publish(Msg())
                     await t
-                    expect(client.getSubscriptions(stream.id)).toHaveLength(0) // lost subscription immediately
+                    expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
                     await wait(TIMEOUT * 0.2)
                     expect(events.onResent).toHaveBeenCalledTimes(0)
                     expect(events.onSubscribed).toHaveBeenCalledTimes(0)
@@ -864,7 +872,7 @@ describeRepeats('StreamrClient', () => {
                 const id = Date.now()
                 const done = Defer()
                 const sub = await client.subscribe({
-                    stream: stream.id,
+                    streamId: stream.id,
                 }, done.wrap(async (parsedContent, streamMessage) => {
                     expect(parsedContent.id).toBe(id)
 
@@ -884,9 +892,9 @@ describeRepeats('StreamrClient', () => {
             })
 
             it('client.subscribe with onMessage & collect', async () => {
-                const onMessageMsgs = []
+                const onMessageMsgs: any[] = []
                 const sub = await client.subscribe({
-                    stream: stream.id,
+                    streamId: stream.id,
                 }, async (msg) => {
                     onMessageMsgs.push(msg)
                 })
@@ -897,19 +905,19 @@ describeRepeats('StreamrClient', () => {
             })
 
             describe('resubscribe on unexpected disconnection', () => {
-                let otherClient
+                let otherClient: StreamrClient
 
                 beforeEach(async () => {
                     otherClient = createClient({
                         auth: client.options.auth,
                     })
-                    const tasks = [
+                    const tasks: Promise<any>[] = [
                         client.connect(),
                         client.session.getSessionToken(),
                         otherClient.connect(),
                         otherClient.session.getSessionToken(),
                     ]
-                    await Promise.allSettled(tasks)
+                    await (Promise as any).allSettled(tasks)
                     await Promise.all(tasks) // throw if there were an error
                 })
 
@@ -919,13 +927,13 @@ describeRepeats('StreamrClient', () => {
                         otherClient.disconnect(),
                         client.disconnect(),
                     ]
-                    await Promise.allSettled(tasks)
+                    await (Promise as any).allSettled(tasks)
                     await Promise.all(tasks) // throw if there were an error
                 })
 
                 it('should work', async () => {
                     const done = Defer()
-                    const msgs = []
+                    const msgs: any[] = []
 
                     await otherClient.subscribe(stream, (msg) => {
                         msgs.push(msg)
@@ -933,7 +941,7 @@ describeRepeats('StreamrClient', () => {
                         otherClient.debug('got msg %d of %d', msgs.length, MAX_MESSAGES)
                         if (msgs.length === MAX_MESSAGES) {
                             // should eventually get here
-                            done.resolve()
+                            done.resolve(undefined)
                         }
                     })
 
@@ -951,7 +959,9 @@ describeRepeats('StreamrClient', () => {
                         disconnect()
                     })
 
+                    // @ts-expect-error
                     otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
+                    // @ts-expect-error
                     otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
 
                     const onConnected = jest.fn()
@@ -977,9 +987,9 @@ describeRepeats('StreamrClient', () => {
             it('publish and subscribe a sequence of messages', async () => {
                 client.enableAutoConnect()
                 const done = Defer()
-                const received = []
+                const received: any[] = []
                 const sub = await client.subscribe({
-                    stream: stream.id,
+                    streamId: stream.id,
                 }, done.wrapError((parsedContent, streamMessage) => {
                     received.push(parsedContent)
                     // Check signature stuff
@@ -1007,6 +1017,7 @@ describeRepeats('StreamrClient', () => {
                 client.on('disconnected', onDisconnected)
                 client.on('connected', onConnected)
 
+                // @ts-expect-error
                 client.options.publishAutoDisconnectDelay = 1000 // eslint-disable-line require-atomic-updates
 
                 client.enableAutoConnect()
@@ -1015,6 +1026,7 @@ describeRepeats('StreamrClient', () => {
                     delay: 150,
                 })
 
+                // @ts-expect-error
                 await wait(client.options.publishAutoDisconnectDelay * 1.5)
 
                 expect(onConnected).toHaveBeenCalledTimes(1)
@@ -1027,10 +1039,10 @@ describeRepeats('StreamrClient', () => {
                     waitForLast: true,
                 })
 
-                const received = []
+                const received: any[] = []
 
                 const sub = await client.subscribe({
-                    stream: stream.id,
+                    streamId: stream.id,
                     resend: {
                         from: {
                             timestamp: 0,
@@ -1044,7 +1056,7 @@ describeRepeats('StreamrClient', () => {
                     expect(streamMessage.getPublisherId()).toBeTruthy()
                     expect(streamMessage.signature).toBeTruthy()
                     if (received.length === published.length) {
-                        done.resolve()
+                        done.resolve(undefined)
                     }
                 }))
 
@@ -1052,7 +1064,7 @@ describeRepeats('StreamrClient', () => {
                 expect(received).toEqual(published)
                 // All good, unsubscribe
                 await client.unsubscribe(sub)
-                expect(client.getSubscriptions(stream.id)).toHaveLength(0)
+                expect(client.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe with resend last', async () => {
@@ -1061,10 +1073,10 @@ describeRepeats('StreamrClient', () => {
                     waitForLast: true,
                 })
 
-                const received = []
+                const received: any[] = []
 
                 const sub = await client.subscribe({
-                    stream: stream.id,
+                    streamId: stream.id,
                     resend: {
                         last: 2
                     },
@@ -1075,7 +1087,7 @@ describeRepeats('StreamrClient', () => {
                     expect(streamMessage.getPublisherId()).toBeTruthy()
                     expect(streamMessage.signature).toBeTruthy()
                     if (received.length === 2) {
-                        done.resolve()
+                        done.resolve(undefined)
                     }
                 }))
 
@@ -1083,7 +1095,7 @@ describeRepeats('StreamrClient', () => {
                 // All good, unsubscribe
                 await client.unsubscribe(sub)
                 expect(received).toEqual(published.slice(-2))
-                expect(client.getSubscriptions(stream.id)).toHaveLength(0)
+                expect(client.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
 
             it('client.subscribe (realtime with resend)', async () => {
@@ -1092,10 +1104,10 @@ describeRepeats('StreamrClient', () => {
                     waitForLast: true,
                 })
 
-                const received = []
+                const received: any[] = []
 
                 const sub = await client.subscribe({
-                    stream: stream.id,
+                    streamId: stream.id,
                     resend: {
                         last: 2
                     },
@@ -1106,7 +1118,7 @@ describeRepeats('StreamrClient', () => {
                     expect(streamMessage.getPublisherId()).toBeTruthy()
                     expect(streamMessage.signature).toBeTruthy()
                     if (received.length === 3) {
-                        done.resolve()
+                        done.resolve(undefined)
                     }
                 }))
 
@@ -1116,13 +1128,13 @@ describeRepeats('StreamrClient', () => {
                 // All good, unsubscribe
                 await client.unsubscribe(sub)
                 expect(received).toEqual([...published.slice(-2), msg])
-                expect(client.getSubscriptions(stream.id)).toHaveLength(0)
+                expect(client.getSubscriptions()).toHaveLength(0)
             }, TIMEOUT)
         })
 
         describe('resend', () => {
-            let timestamps = []
-            let published = []
+            let timestamps: number[] = []
+            let published: any[] = []
 
             beforeEach(async () => {
                 publishTestMessages = getPublishTestMessages(client, {
@@ -1132,8 +1144,8 @@ describeRepeats('StreamrClient', () => {
                 })
 
                 const publishedRaw = await publishTestMessages.raw(5)
-                timestamps = publishedRaw.map(([, raw]) => raw.streamMessage.getTimestamp())
-                published = publishedRaw.map(([msg]) => msg)
+                timestamps = publishedRaw.map(([, raw]: any) => raw.streamMessage.getTimestamp())
+                published = publishedRaw.map(([msg]: any) => msg)
             })
 
             it('resend last', async () => {
@@ -1177,7 +1189,7 @@ describeRepeats('StreamrClient', () => {
             })
 
             it('works with message handler + resent event', async () => {
-                const messages = []
+                const messages: any[] = []
                 const sub = await client.resend({
                     stream: stream.id,
                     resend: {
@@ -1190,6 +1202,7 @@ describeRepeats('StreamrClient', () => {
                 await waitForEvent(sub, 'resent')
                 expect(messages).toEqual(published.slice(-3))
             })
+        // @ts-expect-error
         }, 10000)
 
         describe('utf-8 encoding', () => {

@@ -11,7 +11,6 @@ import authFetch from '../../../src/rest/authFetch'
 
 const log = debug('StreamrClient::DataUnion::integration-test-signature')
 
-// @ts-expect-error
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
 const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, providerSidechain)
 

@@ -1,6 +1,7 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
 import Signer from '../../src/publish/Signer'
+import { Todo } from '../../src/types'
 import { getAddressFromOptions } from '../../src/user'
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
@@ -14,6 +15,7 @@ describe('Signer', () => {
             const signer = Signer({
                 privateKey: '0x348ce564d427a3311b6536bbcff9390d69395b06ed6c486954e971d960fe8709',
             })
+            // @ts-expect-error
             const signature = await signer.signData('some-data')
             expect(signature).toBeTruthy()
         })
@@ -27,11 +29,13 @@ describe('Signer', () => {
 
         it('Should noop if "never" option is set', async () => {
             const obj = {}
+            // @ts-expect-error
             expect(await Signer({}, 'never')(obj)).toBe(obj)
         })
 
         it('Should noop when "auto" option is set with no private key or provider', async () => {
             const obj = {}
+            // @ts-expect-error
             expect(await Signer({}, 'auto')(obj)).toBe(obj)
         })
 
@@ -61,7 +65,7 @@ describe('Signer', () => {
     })
 
     describe('signing', () => {
-        let signer
+        let signer: Todo
         const streamId = 'streamId'
         const data = {
             field: 'some-data',
@@ -106,6 +110,7 @@ describe('Signer', () => {
         it('should sign StreamMessageV31 with non-null previous ref correctly', async () => {
             const address = await getAddressFromOptions(options)
             const streamMessage = new StreamMessage({
+                // @ts-expect-error
                 version: 31,
                 messageId: new MessageID(streamId, 0, timestamp, 0, address, 'chain-id'),
                 prevMsgRef: new MessageRef(timestamp - 10, 0),
@@ -117,7 +122,7 @@ describe('Signer', () => {
             const payload = [
                 streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp(),
                 streamMessage.messageId.sequenceNumber, address.toLowerCase(), streamMessage.messageId.msgChainId,
-                streamMessage.prevMsgRef.timestamp, streamMessage.prevMsgRef.sequenceNumber, streamMessage.getSerializedContent()
+                streamMessage.prevMsgRef!.timestamp, streamMessage.prevMsgRef!.sequenceNumber, streamMessage.getSerializedContent()
             ]
             const expectedSignature = await signer.signData(payload.join(''))
             expect(payload.join('')).toEqual(streamMessage.getPayloadToSign())

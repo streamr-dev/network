@@ -1,8 +1,9 @@
 import { Stream } from '../../src/stream'
+import { Todo } from '../../src/types'
 
 describe('Stream', () => {
-    let stream
-    let clientMock
+    let stream: Stream
+    let clientMock: Todo
 
     beforeEach(() => {
         clientMock = {

@@ -10,7 +10,7 @@ import MessagePipeline from './pipeline'
 import Validator from './Validator'
 import messageStream from './messageStream'
 import resendStream from './resendStream'
-import { Todo } from '../types'
+import { MaybeAsync, Todo } from '../types'
 import StreamrClient, { StreamPartDefinition, SubscribeOptions } from '..'
 
 /**
@@ -377,7 +377,7 @@ class Subscriptions {
         this.subSessions = new Map()
     }
 
-    async add(opts: StreamPartDefinition, onFinally: Todo = async () => {}) {
+    async add(opts: StreamPartDefinition, onFinally: MaybeAsync<(err?: any) => void> = async () => {}) {
         const options = validateOptions(opts)
         const { key } = options
 
@@ -536,7 +536,7 @@ export class Subscriber {
         return this.subscriptions.count(options)
     }
 
-    async subscribe(opts: StreamPartDefinition, onFinally?: Todo) {
+    async subscribe(opts: StreamPartDefinition, onFinally?: MaybeAsync<(err?: any) => void>) {
         return this.subscriptions.add(opts, onFinally)
     }
 
@@ -571,7 +571,7 @@ export class Subscriber {
         return sub
     }
 
-    async resendSubscribe(opts: SubscribeOptions & StreamPartDefinition, onMessage: Todo) {
+    async resendSubscribe(opts: SubscribeOptions & StreamPartDefinition, onFinally?: MaybeAsync<(err?: any) => void>) {
         // This works by passing a custom message stream to a subscription
         // the custom message stream iterates resends, then iterates realtime
         const options = validateOptions(opts)
@@ -667,7 +667,7 @@ export class Subscriber {
                     }
                 },
             ],
-        }, onMessage)
+        }, onFinally)
 
         // eslint-disable-next-line semi-style
         ;[resendSubscribeSub] = await Promise.all([

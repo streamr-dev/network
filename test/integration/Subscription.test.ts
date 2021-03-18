@@ -4,6 +4,8 @@ import { uid, fakePrivateKey } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import config from './config'
+import { Stream } from '../../src/stream'
+import { Subscription } from '../../src/subscribe'
 
 const createClient = (opts = {}) => new StreamrClient({
     ...config.clientOptions,
@@ -22,13 +24,13 @@ const RESEND_ALL = {
 }
 
 describe('Subscription', () => {
-    let stream
-    let client
-    let subscription
-    let errors = []
+    let stream: Stream
+    let client: StreamrClient
+    let subscription: Subscription
+    let errors: any[] = []
     let expectedErrors = 0
 
-    function onError(err) {
+    function onError(err: any) {
         errors.push(err)
     }
 
@@ -39,9 +41,9 @@ describe('Subscription', () => {
 
     async function createMonitoredSubscription(opts = {}) {
         if (!client) { throw new Error('No client') }
-        const events = []
+        const events: any[] = []
         subscription = await client.subscribe({
-            stream: stream.id,
+            streamId: stream.id,
             resend: RESEND_ALL,
             ...opts,
         }, (message) => {
@@ -88,6 +90,7 @@ describe('Subscription', () => {
         it('fires events in correct order 1', async () => {
             const subscriptionEvents = await createMonitoredSubscription()
             await waitForEvent(subscription, 'resent')
+            // @ts-expect-error
             await client.unsubscribe(stream)
             expect(subscriptionEvents).toEqual([
                 'resent',
@@ -99,6 +102,7 @@ describe('Subscription', () => {
             const subscriptionEvents = await createMonitoredSubscription({
                 resend: undefined,
             })
+            // @ts-expect-error
             await client.unsubscribe(stream)
             expect(subscriptionEvents).toEqual([
                 'unsubscribed',

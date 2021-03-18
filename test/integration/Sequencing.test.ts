@@ -5,14 +5,15 @@ import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 
 import config from './config'
+import { Stream } from '../../src/stream'
 
-const Msg = (opts) => ({
+const Msg = (opts?: any) => ({
     value: uid('msg'),
     ...opts,
 })
 
-function toSeq(requests, ts = Date.now()) {
-    return requests.map((m) => {
+function toSeq(requests: any[], ts = Date.now()) {
+    return requests.map((m: any) => {
         const { prevMsgRef } = m.streamMessage
         return [
             [m.streamMessage.getTimestamp() - ts, m.streamMessage.getSequenceNumber()],
@@ -24,8 +25,8 @@ function toSeq(requests, ts = Date.now()) {
 describe('Sequencing', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
-    let client
-    let stream
+    let client: StreamrClient
+    let stream: Stream
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -35,6 +36,7 @@ describe('Sequencing', () => {
             },
             autoConnect: false,
             autoDisconnect: false,
+            // @ts-expect-error
             maxRetries: 2,
             ...opts,
         })
@@ -55,7 +57,7 @@ describe('Sequencing', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
         if (client) {
@@ -64,7 +66,7 @@ describe('Sequencing', () => {
     })
 
     afterEach(async () => {
-        await wait()
+        await wait(0)
         if (client) {
             client.debug('disconnecting after test')
             await client.disconnect()
@@ -79,8 +81,8 @@ describe('Sequencing', () => {
 
     it('should sequence in order', async () => {
         const ts = Date.now()
-        const msgsPublished = []
-        const msgsReceieved = []
+        const msgsPublished: any[] = []
+        const msgsReceieved: any[] = []
 
         await client.subscribe(stream.id, (m) => msgsReceieved.push(m))
 
@@ -115,8 +117,8 @@ describe('Sequencing', () => {
 
     it('should sequence in order even if some calls delayed', async () => {
         const ts = Date.now()
-        const msgsPublished = []
-        const msgsReceieved = []
+        const msgsPublished: any[] = []
+        const msgsReceieved: any[] = []
 
         let calls = 0
         const getStream = client.getStream.bind(client)
@@ -164,12 +166,12 @@ describe('Sequencing', () => {
 
     it.skip('should sequence in order even if publish requests backdated', async () => {
         const ts = Date.now()
-        const msgsPublished = []
-        const msgsReceieved = []
+        const msgsPublished: any[] = []
+        const msgsReceieved: any[] = []
 
         await client.subscribe(stream.id, (m) => msgsReceieved.push(m))
 
-        const nextMsg = (...args) => {
+        const nextMsg = (...args: any[]) => {
             const msg = Msg(...args)
             msgsPublished.push(msg)
             return msg
@@ -200,7 +202,7 @@ describe('Sequencing', () => {
             timeout: 6000,
         })
         await waitForStorage(lastRequest)
-        const msgsResent = []
+        const msgsResent: any[] = []
         const sub = await client.resend({
             stream: stream.id,
             resend: {
@@ -229,12 +231,12 @@ describe('Sequencing', () => {
 
     it.skip('should sequence in order even if publish requests backdated in sequence', async () => {
         const ts = Date.now()
-        const msgsPublished = []
-        const msgsReceieved = []
+        const msgsPublished: any[] = []
+        const msgsReceieved: any[] = []
 
         await client.subscribe(stream.id, (m) => msgsReceieved.push(m))
 
-        const nextMsg = (...args) => {
+        const nextMsg = (...args: any[]) => {
             const msg = Msg(...args)
             msgsPublished.push(msg)
             return msg
@@ -270,7 +272,7 @@ describe('Sequencing', () => {
         })
         await waitForStorage(lastRequest)
 
-        const msgsResent = []
+        const msgsResent: any[] = []
         const sub = await client.resend({
             stream: stream.id,
             resend: {

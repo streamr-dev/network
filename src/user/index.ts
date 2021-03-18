@@ -2,8 +2,10 @@ import { computeAddress } from '@ethersproject/transactions'
 import { Web3Provider } from '@ethersproject/providers'
 import { hexlify } from '@ethersproject/bytes'
 import { sha256 } from '@ethersproject/sha2'
+import { StreamrClient } from '../StreamrClient'
+import { EthereumConfig } from '../Config'
 
-async function getUsername(client) {
+async function getUsername(client: StreamrClient) {
     const { options: { auth = {} } = {} } = client
     if (auth.username) { return auth.username }
 
@@ -15,7 +17,7 @@ async function getUsername(client) {
     )
 }
 
-export async function getAddressFromOptions({ ethereum, privateKey } = {}) {
+export async function getAddressFromOptions({ ethereum, privateKey }: { ethereum?: EthereumConfig, privateKey?: any} = {}) {
     if (privateKey) {
         return computeAddress(privateKey).toLowerCase()
     }
@@ -29,7 +31,7 @@ export async function getAddressFromOptions({ ethereum, privateKey } = {}) {
     throw new Error('Need either "privateKey" or "ethereum".')
 }
 
-export async function getUserId(client) {
+export async function getUserId(client: StreamrClient) {
     if (client.session.isUnauthenticated()) {
         throw new Error('Need to be authenticated to getUserId.')
     }

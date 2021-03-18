@@ -10,9 +10,7 @@ import { getEndpointUrl } from '../../../src/utils'
 
 const log = debug('StreamrClient::DataUnion::integration-test-member')
 
-// @ts-expect-error
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-// @ts-expect-error
 const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
 
 const joinMember = async (memberWallet: Wallet, secret: string|undefined, dataUnionAddress: string) => {

@@ -1,4 +1,5 @@
 import { StreamrClient } from '../../src/StreamrClient'
+import { Stream } from '../../src/stream'
 import { uid, fakePrivateKey, getPublishTestMessages } from '../utils'
 
 import config from './config'
@@ -14,8 +15,8 @@ const createClient = (opts = {}) => new StreamrClient({
 })
 
 describe('Stream', () => {
-    let client
-    let stream
+    let client: StreamrClient
+    let stream: Stream
 
     beforeEach(async () => {
         client = createClient()

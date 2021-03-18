@@ -11,9 +11,7 @@ import { until } from '../../src/utils'
 import debug from 'debug'
 import StreamrClient from '../../src'
 
-// @ts-expect-error
 const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
-// @ts-expect-error
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
 const tokenAdminMainnetWallet = new Wallet(config.tokenAdminPrivateKey, providerMainnet)
 const tokenAdminSidechainWallet = new Wallet(config.tokenAdminPrivateKey, providerSidechain)

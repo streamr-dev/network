@@ -4,6 +4,7 @@ import { providers, Wallet } from 'ethers'
 import { pTimeout, counterId, AggregatedError } from '../src/utils'
 import { validateOptions } from '../src/stream/utils'
 import { StreamrClient } from '../src/StreamrClient'
+import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
 
 const crypto = require('crypto')
 const config = require('./integration/config')
@@ -59,7 +60,7 @@ export function addAfterFn() {
     }
 }
 
-export const Msg = (opts: any) => ({
+export const Msg = (opts?: any) => ({
     value: uid('msg'),
     ...opts,
 })
@@ -131,7 +132,7 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     /* eslint-enable no-await-in-loop */
 }
 
-export function getPublishTestMessages(client: StreamrClient, defaultOpts = {}) {
+export function getPublishTestMessages(client: StreamrClient, defaultOpts: any = {}) {
     // second argument could also be streamId
     if (typeof defaultOpts === 'string') {
         // eslint-disable-next-line no-param-reassign
@@ -189,7 +190,7 @@ export function getPublishTestMessages(client: StreamrClient, defaultOpts = {}) 
         try {
             client.connection.once('done', onDone)
 
-            const published = []
+            const published: [ message: any, request: PublishRequest ][] = []
             /* eslint-disable no-await-in-loop, no-loop-func */
             for (let i = 0; i < n; i++) {
                 checkDone()
@@ -205,6 +206,7 @@ export function getPublishTestMessages(client: StreamrClient, defaultOpts = {}) 
                 checkDone()
                 published.push([
                     message,
+                    // @ts-expect-error
                     request,
                 ])
 

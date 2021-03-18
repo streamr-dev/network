@@ -1,3 +1,7 @@
+const toNumber = (value) => {
+    return (value !== undefined) ? Number(value) : undefined
+}
+
 module.exports = {
     clientOptions: {
         // ganache 1: 0x4178baBE9E5148c6D5fd431cD72884B07Ad855a0
@@ -17,11 +21,11 @@ module.exports = {
         },
         sidechain: {
             url: process.env.SIDECHAIN_URL || 'http://10.200.10.1:8546',
-            timeout: process.env.TEST_TIMEOUT,
+            timeout: toNumber(process.env.TEST_TIMEOUT),
         },
         mainnet: {
             url: process.env.ETHEREUM_SERVER_URL || 'http://10.200.10.1:8545',
-            timeout: process.env.TEST_TIMEOUT,
+            timeout: toNumber(process.env.TEST_TIMEOUT),
         },
         autoConnect: false,
         autoDisconnect: false,

@@ -14,9 +14,7 @@ import { MemberStatus } from '../../../src/dataunion/DataUnion'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
-// @ts-expect-error
 const providerSidechain = new providers.JsonRpcProvider(config.clientOptions.sidechain)
-// @ts-expect-error
 const providerMainnet = new providers.JsonRpcProvider(config.clientOptions.mainnet)
 const adminWalletMainnet = new Wallet(config.clientOptions.auth.privateKey, providerMainnet)
 const adminWalletSidechain = new Wallet(config.clientOptions.auth.privateKey, providerSidechain)

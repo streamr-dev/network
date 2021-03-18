@@ -7,11 +7,13 @@ import { StreamrClient } from '../../src/StreamrClient'
 import config from './config'
 
 describe('LoginEndpoints', () => {
-    let client
+    let client: StreamrClient
 
     const createClient = (opts = {}) => new StreamrClient({
         ...config.clientOptions,
-        apiKey: 'tester1-api-key',
+        auth: {
+            apiKey: 'tester1-api-key',
+        },
         autoConnect: false,
         autoDisconnect: false,
         ...opts,
@@ -29,8 +31,10 @@ describe('LoginEndpoints', () => {
         it('should retrieve a challenge', async () => {
             const challenge = await client.getChallenge('some-address')
             assert(challenge)
+            // @ts-expect-error
             assert(challenge.id)
             assert(challenge.challenge)
+            // @ts-expect-error
             assert(challenge.expires)
         })
     })
@@ -39,6 +43,7 @@ describe('LoginEndpoints', () => {
         it('should fail to get a session token', async () => {
             await expect(async () => {
                 await client.sendChallengeResponse({
+                    // @ts-expect-error
                     id: 'some-id',
                     challenge: 'some-challenge',
                 }, 'some-sig', 'some-address')
@@ -53,6 +58,7 @@ describe('LoginEndpoints', () => {
             const sessionToken = await client.sendChallengeResponse(challenge, signature, wallet.address)
             assert(sessionToken)
             assert(sessionToken.token)
+            // @ts-expect-error
             assert(sessionToken.expires)
         })
 
@@ -61,6 +67,7 @@ describe('LoginEndpoints', () => {
             const sessionToken = await client.loginWithChallengeResponse((d) => wallet.signMessage(d), wallet.address)
             assert(sessionToken)
             assert(sessionToken.token)
+            // @ts-expect-error
             assert(sessionToken.expires)
         })
     })
@@ -76,6 +83,7 @@ describe('LoginEndpoints', () => {
             const sessionToken = await client.loginWithApiKey('tester1-api-key')
             assert(sessionToken)
             assert(sessionToken.token)
+            // @ts-expect-error
             assert(sessionToken.expires)
         })
     })
