@@ -380,7 +380,7 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
 
-Here's how to deploy a Data Union contract with 30% admin fee and add some members:
+Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
 
 ```js
 import { StreamrClient } from 'streamr-client'
