@@ -349,7 +349,7 @@ All the below functions return a Promise which gets resolved with the result.
 
 This library provides functions for working with Data Unions.
 
-To deploy a new DataUnion:
+To deploy a new DataUnion with default [deployment options](#deployment-options):
 ```js
 const dataUnion = await client.deployDataUnion()
 ```
@@ -380,7 +380,7 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
 
-Here's how to deploy a Data Union contract and set the admin fee to 30%:
+Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
 
 ```js
 import { StreamrClient } from 'streamr-client'
@@ -389,8 +389,14 @@ const client = new StreamrClient({
     auth: { privateKey },
 })
 
-const dataUnion = await client.deployDataUnion()
-const receipt = await dataUnion.setAdminFee(0.3)
+const dataUnion = await client.deployDataUnion({
+    adminFee: 0.3,
+})
+const receipt = await dataUnion.addMembers([
+    "0x1234567890123456789012345678901234567890",
+    "0x1234567890123456789012345678901234567891",
+    "0x1234567890123456789012345678901234567892",
+])
 ```
 
 ### Member functions
@@ -454,7 +460,7 @@ const withdrawableWei = await dataUnion.getWithdrawableEarnings(memberAddress)
 
 ### Withdraw options
 
-The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all take an extra "options" argument. It's an object that can contain the following parameters:
+The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAllToSigned` all can take an extra "options" argument. It's an object that can contain the following parameters:
 
 | Name              | Default               | Description                                                                         |
 | :---------------- | :-------------------- | :---------------------------------------------------------------------------------- |
@@ -464,6 +470,40 @@ The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAl
 
 These withdraw transactions are sent to the sidechain, so gas price shouldn't be manually set (fees will hopefully stay very low), but a little bit of [sidechain native token](https://www.xdaichain.com/for-users/get-xdai-tokens) is nonetheless required.
 
+### Deployment options
+
+`deployDataUnion` can take an options object as the argument. It's an object that can contain the following parameters:
+
+| Name                      | Type      | Default               | Description                                                                           |
+| :------------------------ | :-------- | :-------------------- | :------------------------------------------------------------------------------------ |
+| owner                     | Address   |`*`you                 | Owner / admin of the newly created Data Union                                         |
+| joinPartAgents            | Address[] |`*`you, Streamr Core   | Able to add and remove members to/from the Data Union                                 |
+| dataUnionName             | string    | Generated             | NOT stored anywhere, only used for address derivation                                 |
+| adminFee                  | number    | 0 (no fee)            | Must be between 0...1 (inclusive)                                                     |
+| sidechainPollingIntervalMs| number    | 1000 (1&nbsp;second)  | How often requests are sent to find out if the deployment has completed               |
+| sidechainRetryTimeoutMs   | number    | 60000 (1&nbsp;minute) | When to give up when waiting for the deployment to complete                           |
+| confirmations             | number    | 1                     | Blocks to wait after Data Union mainnet contract deployment to consider it final      |
+| gasPrice                  | BigNumber | network estimate      | Ethereum Mainnet gas price to use when deploying the Data Union mainnet contract      |
+
+`*`you here means the address of the authenticated StreamrClient
+(that corresponds to the `auth.privateKey` given in constructor)
+
+Streamr Core is added as a `joinPartAgent` by default
+so that joining with secret works using the [member function](#member-functions) `join`.
+If you don't plan to use `join` for "self-service joining",
+you can leave out Streamr Core agent by calling `deployDataUnion`
+e.g. with your own address as the sole joinPartAgent:
+```
+const dataUnion = await client.deployDataUnion({
+    joinPartAgents: [yourAddress],
+    adminFee,
+})
+```
+
+`dataUnionName` option exists purely for the purpose of predicting the addresses of Data Unions not yet deployed.
+Data Union deployment uses the [CREATE2 opcode](https://eips.ethereum.org/EIPS/eip-1014) which means
+a Data Union deployed by a particular address with particular "name" will have a predictable address.
+            
 ## Utility functions
 
 | Name                                    | Returns                 |   Description    |
@@ -472,7 +512,10 @@ These withdraw transactions are sent to the sidechain, so gas price shouldn't be
 | getTokenBalance(address)                | `BigNumber`             | Mainnet DATA token balance |
 | getSidechainTokenBalance(address)       | `BigNumber`             | Sidechain DATA token balance |
 
-`*` The static function `StreamrClient.generateEthereumAccount()` generates a new Ethereum private key and returns an object with fields `address` and `privateKey`. Note that this private key can be used to authenticate to the Streamr API by passing it in the authentication options, as described earlier in this document.
+`*` The static function `StreamrClient.generateEthereumAccount()` generates a new
+Ethereum private key and returns an object with fields `address` and `privateKey`.
+Note that this private key can be used to authenticate to the Streamr API
+by passing it in the authentication options, as described earlier in this document.
 
 ## Events
 
