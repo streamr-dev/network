@@ -135,6 +135,14 @@ class GroupKey {
         return this.id
     }
 
+    toArray() {
+        return [this.id, this.hex]
+    }
+
+    serialize() {
+        return JSON.stringify(this.toArray())
+    }
+
     static generate(id = uuid('GroupKey')) {
         const keyBytes = crypto.randomBytes(32)
         return new GroupKey(id, keyBytes)

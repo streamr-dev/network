@@ -418,7 +418,6 @@ class Subscriptions {
         const sub = new Subscription(this.client, {
             ...options,
             validate: subSession.validate,
-        // @ts-expect-error
         }, async (err: Todo) => {
             try {
                 await this.remove(sub)
