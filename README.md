@@ -7,9 +7,9 @@
   Streamr JavaScript Client
 </h1>
 
-By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams.
+By using this client, you can easily interact with the [Streamr](https://streamr.network) API from JavaScript-based environments, such as browsers and [node.js](https://nodejs.org). You can, for example, subscribe to real-time data in streams, produce new data to streams, and create new streams. The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
 
-The client uses websockets for producing and consuming messages to/from streams. It should work in all modern browsers.
+Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for more detailed documentation.
 
 [![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
 
@@ -21,7 +21,7 @@ The client uses websockets for producing and consuming messages to/from streams.
 
 ## TOC
 
-[Installation](#installation) · [Usage](#usage) · [API Docs](#api-docs) · [Client options](#client-options) · [Authentication options](#authentication-options) · [Message handler callback](#message-handler-callback) · [StreamrClient object](#streamrclient-object) · [Stream object](#stream-object) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#binding-to-events) · [Partitioning](#partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
@@ -33,14 +33,6 @@ npm install streamr-client
 ```
 
 Node v14 or higher is recommended if you intend to use the client in a Node environment. For example, inside a script.
-
-## API Docs
-
-We have automatically generated API documentation available [here](https://streamr-dev.github.io/streamr-client-javascript/). These docs are generated from the repository TypeScript source code. They can also be rebuilt locally via:
-
-```
-npm run docs
-```
 
 ## Usage
 
@@ -139,9 +131,13 @@ await stream.publish(msg)
 
 ----
 
-# Docs
+## API Docs
 
-Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for auto-generated documentation.
+The [API docs](https://streamr-dev.github.io/streamr-client-javascript/) are automatically generated from the TypeScript source code. They can also be rebuilt locally via:
+
+```
+npm run docs
+```
 
 ## Client options
 
@@ -163,9 +159,7 @@ Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascrip
 
 ## Authentication options
 
-Note: **Authenticating with an API key has been deprecated.**
-
-Note: **Support for email/password authentication will be dropped in the future and cryptographic keys/wallets will be the only supported method.**
+Note: **Authenticating with an API key has been deprecated. Cryptographic keys/wallets is the only supported authentication method.**
 
 If you don't have an Ethereum account you can use the utility function `StreamrClient.generateEthereumAccount()`, which returns the address and private key of a fresh Ethereum account.
 
@@ -347,7 +341,7 @@ All the below functions return a Promise which gets resolved with the result.
 
 ## Data Unions
 
-This library provides functions for working with Data Unions.
+This library provides functions for working with Data Unions. Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascript/) for auto-generated documentation on each Data Union endpoint.
 
 To deploy a new DataUnion with default [deployment options](#deployment-options):
 ```js
@@ -553,7 +547,7 @@ client.on('connected', () => {
 | resent       | [ResendResponseResent](https://github.com/streamr-dev/streamr-client-protocol-js/blob/master/src/protocol/control_layer/resend_response_resent/ResendResponseResentV1.js) | Fired after `resending` when the subscription has finished resending and message has been processed |
 | error        | Error object                                                                                                                                                              | Reports errors, for example problems with message content                                           |
 
-## Partitioning
+## Stream Partitioning
 
 Partitioning (sharding) enables streams to scale horizontally. This section describes how to use partitioned streams via this library. To learn the basics of partitioning, see [the docs](https://streamr.network/docs/streams#partitioning).
 
