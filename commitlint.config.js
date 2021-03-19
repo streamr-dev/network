@@ -28,6 +28,7 @@ module.exports = {
             'revert', // git revert
             'deps', // Changes that affect external dependencies e.g. refreshing package-lock, updating deps.
             'deploy', // for gh-pages
+            'types', // for changes to types
         ]],
     }
 }
