@@ -184,7 +184,11 @@ jobs:
           npm install
           npm link streamr-client
           ./gradlew fatjar
-      - name: run-client-testing
-        timeout-minutes: 10
+      - uses: nick-invision/retry@v2
+        name: run-client-testing
         working-directory: streamr-client-testing
-        run: java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
+        with:
+          max_attempts: 2
+          timeout_minutes: 3
+          retry_on: error
+          command: java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
