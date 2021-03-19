@@ -474,7 +474,7 @@ describeRepeats('resends', () => {
 
             it('can end inside resend', async () => {
                 const unsubscribeEvents: any[] = []
-                client.connection.on(ControlMessage.TYPES.UnsubscribeResponse, (m) => {
+                client.connection.on(String(ControlMessage.TYPES.UnsubscribeResponse), (m) => {
                     unsubscribeEvents.push(m)
                 })
                 const sub = await subscriber.resendSubscribe({
