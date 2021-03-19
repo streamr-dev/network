@@ -148,8 +148,7 @@ export function CacheAsyncFn(asyncFn: Parameters<typeof pMemoize>[0], {
     maxSize = 10000,
     maxAge = 30 * 60 * 1000, // 30 minutes
     cachePromiseRejection = false,
-    onEviction = () => {
-    },
+    onEviction = () => {},
     ...opts
 } = {}) {
     const cache = new LRU<unknown, { data: unknown, maxAge: number }>({
@@ -230,7 +229,7 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
         reject = _reject
         executor(resolve, reject)
     })
-    p.catch(() => {})
+    p.catch(() => {}) // prevent unhandledrejection
 
     function wrap(fn: F.Function) {
         return async (...args: unknown[]) => {

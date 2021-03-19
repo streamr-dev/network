@@ -181,9 +181,7 @@ async function subscribeToKeyExchangeStream(client, onKeyExchangeMessage) {
     const publisherId = await client.getUserId()
     const streamId = getKeyExchangeStreamId(publisherId)
     const sub = await client.subscribe(streamId, onKeyExchangeMessage)
-    sub.on('error', () => {
-
-    })
+    sub.on('error', () => {}) // errors should not shut down subscription
     return sub
 }
 
@@ -362,7 +360,7 @@ async function SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryp
     }
 
     sub = await subscribeToKeyExchangeStream(client, onKeyExchangeMessage)
-    sub.on('error', () => {})
+    sub.on('error', () => {}) // errors should not shut down subscription
     return sub
 }
 

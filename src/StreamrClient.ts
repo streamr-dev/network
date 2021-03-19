@@ -357,7 +357,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         let subTask: Todo
         let sub: Todo
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
-        const onEnd = (err: Error) => {
+        const onEnd = (err?: Error) => {
             if (sub && typeof onMessage === 'function') {
                 sub.off('message', onMessage)
             }
