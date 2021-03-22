@@ -75,7 +75,7 @@ describe('DataUnion signature', () => {
         expect(isValid3).toBe(true)
     }, 100000)
 
-    it('create signatute', async () => {
+    it('create signature', async () => {
         const client = new StreamrClient({
             auth: {
                 privateKey: '0x1111111111111111111111111111111111111111111111111111111111111111'
