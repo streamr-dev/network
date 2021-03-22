@@ -285,7 +285,7 @@ export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
                 if (!sub) { return }
                 const cancelTask = sub.cancel()
                 sub = undefined
-                await cancelTask()
+                await cancelTask
             }
         }
     ], () => enabled)
