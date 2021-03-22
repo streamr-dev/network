@@ -224,10 +224,6 @@ class EncryptionUtilBase {
         }
     }
 
-    static validateGroupKey(groupKey: any) {
-        return GroupKey.validate(groupKey)
-    }
-
     /*
      * Returns a Buffer or a hex String
      */
