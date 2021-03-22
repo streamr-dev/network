@@ -5,11 +5,11 @@ import { TrackerLayer } from "streamr-client-protocol"
 const logger = getLogger('streamr:logic:InstructionRetryManager')
 
 export class InstructionRetryManager {
-    private readonly handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>
+    private readonly handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string, reattempt: boolean) => Promise<void>
     private readonly intervalInMs: number
     private instructionRetryIntervals: { [key: string]: NodeJS.Timeout }
 
-    constructor(handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>, intervalInMs: number) {
+    constructor(handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string, reattempt: boolean) => Promise<void>, intervalInMs: number) {
         this.handleFn = handleFn
         this.intervalInMs = intervalInMs
         this.instructionRetryIntervals = {}
@@ -27,7 +27,7 @@ export class InstructionRetryManager {
 
     async retryFunction(instructionMessage: TrackerLayer.InstructionMessage, trackerId: string): Promise<void> {
         try {
-            await this.handleFn(instructionMessage, trackerId)
+            await this.handleFn(instructionMessage, trackerId, true)
         } catch (err) {
             logger.warn('Instruction retry threw error', err)
         }
