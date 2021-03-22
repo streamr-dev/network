@@ -235,7 +235,7 @@ export class DataUnion {
     /** @internal */
     async _createWithdrawSignature(amountTokenWei: BigNumber|number|string, to: EthereumAddress, withdrawn: BigNumber, signer: JsonRpcSigner) {
         // @ts-expect-error
-        const message = to + hexZeroPad(amountTokenWei, 32).slice(2) + this.getSidechainAddress().slice(2) + hexZeroPad(withdrawn, 32).slice(2)
+        const message = to + hexZeroPad(BigNumber.from(amountTokenWei), 32).slice(2) + this.getSidechainAddress().slice(2) + hexZeroPad(withdrawn, 32).slice(2)
         const signature = await signer.signMessage(arrayify(message))
         return signature
     }
