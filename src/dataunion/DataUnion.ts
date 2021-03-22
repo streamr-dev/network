@@ -233,8 +233,16 @@ export class DataUnion {
     }
 
     /** @internal */
-    async _createWithdrawSignature(amountTokenWei: BigNumber|number|string, to: EthereumAddress, withdrawn: BigNumber, signer: JsonRpcSigner) {
-        const message = to + hexZeroPad(BigNumber.from(amountTokenWei).toHexString(), 32).slice(2) + this.getSidechainAddress().slice(2) + hexZeroPad(withdrawn.toHexString(), 32).slice(2)
+    async _createWithdrawSignature(
+        amountTokenWei: BigNumber|number|string,
+        to: EthereumAddress,
+        withdrawn: BigNumber,
+        signer: JsonRpcSigner
+    ) {
+        const message = to
+            + hexZeroPad(BigNumber.from(amountTokenWei).toHexString(), 32).slice(2)
+            + this.getSidechainAddress().slice(2)
+            + hexZeroPad(withdrawn.toHexString(), 32).slice(2)
         const signature = await signer.signMessage(arrayify(message))
         return signature
     }
