@@ -477,7 +477,7 @@ describeRepeats('PubSub with multiple clients', () => {
                     addAfter(async () => {
                         await lateSub.unsubscribe()
                     })
-                }
+                        }
 
                 await publishTestMessages(MAX_MESSAGES, {
                     waitForLast: true,
