@@ -23,6 +23,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import { getAddress } from '@ethersproject/address'
 import { Contract } from '@ethersproject/contracts'
 import { StreamPartDefinition } from './stream'
+import type { GroupKey } from './stream/Encryption'
 
 // TODO get metadata type from streamr-protocol-js project (it doesn't export the type definitions yet)
 export type OnMessageCallback = MaybeAsync<(message: any, metadata: any) => void>
@@ -160,7 +161,7 @@ function Plugin(targetInstance: any, srcInstance: any) {
 }
 
 // these are mixed in via Plugin function above
-export interface StreamrClient extends StreamEndpoints, LoginEndpoints {}
+export interface StreamrClient extends StreamEndpoints, LoginEndpoints, ReturnType<typeof Publisher>, Subscriber {}
 
 /**
  * @category Important
@@ -340,16 +341,16 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         return getUserId(this)
     }
 
-    setNextGroupKey(...args: Todo) {
-        return this.publisher.setNextGroupKey(...args)
+    setNextGroupKey(streamId: string, newKey: GroupKey) {
+        return this.publisher.setNextGroupKey(streamId, newKey)
     }
 
-    rotateGroupKey(...args: Todo) {
-        return this.publisher.rotateGroupKey(...args)
+    rotateGroupKey(streamId: string) {
+        return this.publisher.rotateGroupKey(streamId)
     }
 
-    rekey(...args: Todo) {
-        return this.publisher.rekey(...args)
+    rekey(streamId: string) {
+        return this.publisher.rekey(streamId)
     }
 
     /**
