@@ -29,21 +29,25 @@ export class Subscription extends Emitter {
     /** @internal */
     client: StreamrClient
     /** @internal */
-    options: Todo
+    options: ReturnType<typeof validateOptions> & {
+        id?: string
+    }
     /** @internal */
-    key: Todo
+    key
     /** @internal */
-    id: Todo
+    id
     /** @internal */
-    _onDone: Todo
+    _onDone: ReturnType<typeof Defer>
     /** @internal */
-    _onFinally: Todo
+    _onFinally
     /** @internal */
-    pipeline: Todo
+    pipeline
     /** @internal */
-    msgStream: Todo
+    msgStream
     /** @internal */
     iterated?: Todo
+    /** @internal */
+    debug
 
     constructor(client: StreamrClient, opts: Todo, onFinally = defaultOnFinally) {
         super()
@@ -194,11 +198,16 @@ function multiEmit(emitters: Todo, ...args: Todo[]) {
  */
 
 class SubscriptionSession extends Emitter {
-
+    id
+    debug
     client: StreamrClient
-    options: Todo
-    validate: Todo
-    subscriptions: Set<Todo>
+    options: ReturnType<typeof validateOptions> & {
+        id: string
+        subscribe: typeof subscribe
+        unsubscribe: typeof unsubscribe
+    }
+    validate
+    subscriptions: Set<Subscription>
     deletedSubscriptions: Set<Todo>
     step?: Todo
     _subscribe
