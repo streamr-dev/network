@@ -1,5 +1,6 @@
 import crypto from 'crypto'
 import util from 'util'
+import { O } from 'ts-toolbelt'
 
 // this is shimmed out for actual browser build allows us to run tests in node against browser API
 import { Crypto } from 'node-webcrypto-ossl'
@@ -8,8 +9,11 @@ import { MessageLayer } from 'streamr-client-protocol'
 
 import { uuid } from '../utils'
 
+const { StreamMessage, EncryptedGroupKey } = MessageLayer
+
 export class UnableToDecryptError extends Error {
-    constructor(message = '', streamMessage) {
+    streamMessage: MessageLayer.StreamMessage
+    constructor(message = '', streamMessage: MessageLayer.StreamMessage) {
         super(`Unable to decrypt. ${message} ${util.inspect(streamMessage)}`)
         this.streamMessage = streamMessage
         if (Error.captureStackTrace) {
@@ -19,7 +23,8 @@ export class UnableToDecryptError extends Error {
 }
 
 class InvalidGroupKeyError extends Error {
-    constructor(message, groupKey) {
+    groupKey: GroupKey | any
+    constructor(message: string, groupKey?: GroupKey) {
         super(message)
         this.groupKey = groupKey
         if (Error.captureStackTrace) {
@@ -28,36 +33,75 @@ class InvalidGroupKeyError extends Error {
     }
 }
 
-export class GroupKey {
-    static InvalidGroupKeyError = InvalidGroupKeyError
+type GroupKeyObject = {
+    id: string,
+    hex: string,
+    data: Uint8Array,
+}
 
-    static validate(maybeGroupKey) {
-        if (!maybeGroupKey) {
-            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`)
-        }
+type GroupKeyProps = {
+    groupKeyId: string,
+    groupKeyHex: string,
+    groupKeyData: Uint8Array,
+}
 
-        if (!(maybeGroupKey instanceof this)) {
-            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`)
-        }
-
-        if (!maybeGroupKey.id || typeof maybeGroupKey.id !== 'string') {
-            throw new InvalidGroupKeyError(`${this.name} id must be a string: ${util.inspect(maybeGroupKey)}`)
-        }
-
-        if (!maybeGroupKey.data || !Buffer.isBuffer(maybeGroupKey.data)) {
-            throw new InvalidGroupKeyError(`${this.name} data must be a buffer: ${util.inspect(maybeGroupKey)}`)
-        }
-
-        if (!maybeGroupKey.hex || typeof maybeGroupKey.hex !== 'string') {
-            throw new InvalidGroupKeyError(`${this.name} hex must be a string: ${util.inspect(maybeGroupKey)}`)
-        }
-
-        if (maybeGroupKey.data.length !== 32) {
-            throw new InvalidGroupKeyError(`Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`)
+function GroupKeyObjectFromProps(data: GroupKeyProps | GroupKeyObject) {
+    if ('groupKeyId' in data) {
+        return {
+            id: data.groupKeyId,
+            hex: data.groupKeyHex,
+            data: data.groupKeyData,
         }
     }
 
-    constructor(groupKeyId, groupKeyBufferOrHexString) {
+    return data
+}
+
+interface GroupKey extends GroupKeyObject {}
+
+// eslint-disable-next-line no-redeclare
+class GroupKey {
+    static InvalidGroupKeyError = InvalidGroupKeyError
+
+    static validate(maybeGroupKey: GroupKey) {
+        if (!maybeGroupKey) {
+            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+        }
+
+        if (!(maybeGroupKey instanceof this)) {
+            throw new InvalidGroupKeyError(`value must be a ${this.name}: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+        }
+
+        if (!maybeGroupKey.id || typeof maybeGroupKey.id !== 'string') {
+            throw new InvalidGroupKeyError(`${this.name} id must be a string: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+        }
+
+        if (maybeGroupKey.id.includes('---BEGIN')) {
+            throw new InvalidGroupKeyError(
+                `${this.name} public/private key is not a valid group key id: ${util.inspect(maybeGroupKey)}`,
+                maybeGroupKey
+            )
+        }
+
+        if (!maybeGroupKey.data || !Buffer.isBuffer(maybeGroupKey.data)) {
+            throw new InvalidGroupKeyError(`${this.name} data must be a Buffer: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+        }
+
+        if (!maybeGroupKey.hex || typeof maybeGroupKey.hex !== 'string') {
+            throw new InvalidGroupKeyError(`${this.name} hex must be a string: ${util.inspect(maybeGroupKey)}`, maybeGroupKey)
+        }
+
+        if (maybeGroupKey.data.length !== 32) {
+            throw new InvalidGroupKeyError(`Group key must have a size of 256 bits, not ${maybeGroupKey.data.length * 8}`, maybeGroupKey)
+        }
+
+    }
+
+    id: string
+    hex: string
+    data: Uint8Array
+
+    constructor(groupKeyId: string, groupKeyBufferOrHexString: Uint8Array | string) {
         this.id = groupKeyId
         if (!groupKeyId) {
             throw new InvalidGroupKeyError(`groupKeyId must not be falsey ${util.inspect(groupKeyId)}`)
@@ -75,10 +119,11 @@ export class GroupKey {
             this.hex = Buffer.from(this.data).toString('hex')
         }
 
-        this.constructor.validate(this)
+        // eslint-disable-next-line no-extra-semi
+        ;(this.constructor as typeof GroupKey).validate(this)
     }
 
-    equals(other) {
+    equals(other: GroupKey) {
         if (!(other instanceof GroupKey)) {
             return false
         }
@@ -90,12 +135,20 @@ export class GroupKey {
         return this.id
     }
 
+    toArray() {
+        return [this.id, this.hex]
+    }
+
+    serialize() {
+        return JSON.stringify(this.toArray())
+    }
+
     static generate(id = uuid('GroupKey')) {
         const keyBytes = crypto.randomBytes(32)
         return new GroupKey(id, keyBytes)
     }
 
-    static from(maybeGroupKey) {
+    static from(maybeGroupKey: GroupKey | GroupKeyObject | ConstructorParameters<typeof GroupKey>) {
         if (!maybeGroupKey || typeof maybeGroupKey !== 'object') {
             throw new InvalidGroupKeyError(`Group key must be object ${util.inspect(maybeGroupKey)}`)
         }
@@ -105,29 +158,35 @@ export class GroupKey {
         }
 
         try {
-            return new GroupKey(maybeGroupKey.id || maybeGroupKey.groupKeyId, maybeGroupKey.hex || maybeGroupKey.data || maybeGroupKey.groupKeyHex)
+            if (Array.isArray(maybeGroupKey)) {
+                return new GroupKey(maybeGroupKey[0], maybeGroupKey[1])
+            }
+
+            const groupKeyObj = GroupKeyObjectFromProps(maybeGroupKey)
+            return new GroupKey(groupKeyObj.id, groupKeyObj.hex || groupKeyObj.data)
         } catch (err) {
             if (err instanceof InvalidGroupKeyError) {
                 // wrap err with logging of original object
-                throw new InvalidGroupKeyError(`${err.message}. From: ${util.inspect(maybeGroupKey)}`)
+                throw new InvalidGroupKeyError(`${err.stack}. From: ${util.inspect(maybeGroupKey)}`)
             }
             throw err
         }
     }
 }
 
-const { StreamMessage } = MessageLayer
+export { GroupKey }
 
-function ab2str(buf) {
-    return String.fromCharCode.apply(null, new Uint8Array(buf))
+function ab2str(...args: any[]) {
+    // @ts-ignore
+    return String.fromCharCode.apply(null, new Uint8Array(...args))
 }
 
 // shim browser btoa for node
-function btoa(str) {
-    if (global.btoa) { return global.btoa(str) }
+function btoa(str: string | Uint8Array) {
+    if (global.btoa) { return global.btoa(str as string) }
     let buffer
 
-    if (str instanceof Buffer) {
+    if (Buffer.isBuffer(str)) {
         buffer = str
     } else {
         buffer = Buffer.from(str.toString(), 'binary')
@@ -136,7 +195,7 @@ function btoa(str) {
     return buffer.toString('base64')
 }
 
-async function exportCryptoKey(key, { isPrivate = false } = {}) {
+async function exportCryptoKey(key: CryptoKey, { isPrivate = false } = {}) {
     const WebCrypto = new Crypto()
     const keyType = isPrivate ? 'pkcs8' : 'spki'
     const exported = await WebCrypto.subtle.exportKey(keyType, key)
@@ -149,28 +208,26 @@ async function exportCryptoKey(key, { isPrivate = false } = {}) {
 // put all static functions into EncryptionUtilBase, with exception of create,
 // so it's clearer what the static & instance APIs look like
 class EncryptionUtilBase {
-    static validatePublicKey(publicKey) {
-        if (typeof publicKey !== 'string' || !publicKey.startsWith('-----BEGIN PUBLIC KEY-----')
-            || !publicKey.endsWith('-----END PUBLIC KEY-----\n')) {
-            throw new Error('"publicKey" must be a PKCS#8 RSA public key as a string in the PEM format')
+    static validatePublicKey(publicKey: crypto.KeyLike) {
+        const keyString = typeof publicKey === 'string' ? publicKey : publicKey.toString('utf8')
+        if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PUBLIC KEY-----')
+            || !keyString.endsWith('-----END PUBLIC KEY-----\n')) {
+            throw new Error('"publicKey" must be a PKCS#8 RSA public key in the PEM format')
         }
     }
 
-    static validatePrivateKey(privateKey) {
-        if (typeof privateKey !== 'string' || !privateKey.startsWith('-----BEGIN PRIVATE KEY-----')
-            || !privateKey.endsWith('-----END PRIVATE KEY-----\n')) {
-            throw new Error('"privateKey" must be a PKCS#8 RSA public key as a string in the PEM format')
+    static validatePrivateKey(privateKey: crypto.KeyLike) {
+        const keyString = typeof privateKey === 'string' ? privateKey : privateKey.toString('utf8')
+        if (typeof keyString !== 'string' || !keyString.startsWith('-----BEGIN PRIVATE KEY-----')
+            || !keyString.endsWith('-----END PRIVATE KEY-----\n')) {
+            throw new Error('"privateKey" must be a PKCS#8 RSA public key in the PEM format')
         }
-    }
-
-    static validateGroupKey(groupKey) {
-        return GroupKey.validate(groupKey)
     }
 
     /*
      * Returns a Buffer or a hex String
      */
-    static encryptWithPublicKey(plaintextBuffer, publicKey, outputInHex = false) {
+    static encryptWithPublicKey(plaintextBuffer: Uint8Array, publicKey: crypto.KeyLike, outputInHex = false) {
         this.validatePublicKey(publicKey)
         const ciphertextBuffer = crypto.publicEncrypt(publicKey, plaintextBuffer)
         if (outputInHex) {
@@ -182,33 +239,45 @@ class EncryptionUtilBase {
     /*
      * Both 'data' and 'groupKey' must be Buffers. Returns a hex string without the '0x' prefix.
      */
-    static encrypt(data, groupKey) {
+    static encrypt(data: Uint8Array, groupKey: GroupKey) {
         GroupKey.validate(groupKey)
         const iv = crypto.randomBytes(16) // always need a fresh IV when using CTR mode
         const cipher = crypto.createCipheriv('aes-256-ctr', groupKey.data, iv)
-        return hexlify(iv).slice(2) + cipher.update(data, null, 'hex') + cipher.final('hex')
+
+        return hexlify(iv).slice(2) + cipher.update(data, undefined, 'hex') + cipher.final('hex')
     }
 
     /*
-     * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a Buffer. Returns a Buffer.
+     * 'ciphertext' must be a hex string (without '0x' prefix), 'groupKey' must be a GroupKey. Returns a Buffer.
      */
-    static decrypt(ciphertext, groupKey) {
+    static decrypt(ciphertext: string, groupKey: GroupKey) {
         GroupKey.validate(groupKey)
         const iv = arrayify(`0x${ciphertext.slice(0, 32)}`)
         const decipher = crypto.createDecipheriv('aes-256-ctr', groupKey.data, iv)
-        return Buffer.concat([decipher.update(ciphertext.slice(32), 'hex', null), decipher.final(null)])
+        return Buffer.concat([decipher.update(ciphertext.slice(32), 'hex'), decipher.final()])
     }
 
     /*
      * Sets the content of 'streamMessage' with the encryption result of the old content with 'groupKey'.
      */
 
-    static encryptStreamMessage(streamMessage, groupKey) {
+    static encryptStreamMessage(streamMessage: MessageLayer.StreamMessage, groupKey: GroupKey, nextGroupKey?: GroupKey) {
         GroupKey.validate(groupKey)
         /* eslint-disable no-param-reassign */
         streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
         streamMessage.groupKeyId = groupKey.id
+
+        if (nextGroupKey) {
+            GroupKey.validate(nextGroupKey)
+            // @ts-expect-error
+            streamMessage.newGroupKey = nextGroupKey
+        }
+
         streamMessage.serializedContent = this.encrypt(Buffer.from(streamMessage.getSerializedContent(), 'utf8'), groupKey)
+        if (nextGroupKey) {
+            GroupKey.validate(nextGroupKey)
+            streamMessage.newGroupKey = new EncryptedGroupKey(nextGroupKey.id, this.encrypt(nextGroupKey.data, groupKey))
+        }
         streamMessage.parsedContent = undefined
         /* eslint-enable no-param-reassign */
     }
@@ -220,7 +289,7 @@ class EncryptionUtilBase {
      * message content and returns null.
      */
 
-    static decryptStreamMessage(streamMessage, groupKey) {
+    static decryptStreamMessage(streamMessage: MessageLayer.StreamMessage, groupKey: GroupKey) {
         if ((streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES)) {
             return null
         }
@@ -239,12 +308,33 @@ class EncryptionUtilBase {
             streamMessage.serializedContent = serializedContent
         } catch (err) {
             streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
-            throw new UnableToDecryptError(err.message, streamMessage)
+            throw new UnableToDecryptError(err.stack, streamMessage)
+        }
+
+        try {
+            const { newGroupKey } = streamMessage
+            if (newGroupKey) {
+                // newGroupKey should be EncryptedGroupKey | GroupKey, but GroupKey is not defined in protocol
+                // @ts-expect-error
+                streamMessage.newGroupKey = GroupKey.from([
+                    newGroupKey.groupKeyId,
+                    this.decrypt(newGroupKey.encryptedGroupKeyHex, groupKey)
+                ])
+            }
+        } catch (err) {
+            streamMessage.encryptionType = StreamMessage.ENCRYPTION_TYPES.AES
+            throw new UnableToDecryptError('Could not decrypt new group key: ' + err.stack, streamMessage)
         }
         return null
         /* eslint-enable no-param-reassign */
     }
 }
+
+// after EncryptionUtil is ready
+type InitializedEncryptionUtil = O.Overwrite<EncryptionUtil, {
+    privateKey: string,
+    publicKey: string,
+}>
 
 /** @internal */
 export default class EncryptionUtil extends EncryptionUtilBase {
@@ -253,15 +343,22 @@ export default class EncryptionUtil extends EncryptionUtilBase {
      * Convenience.
      */
 
-    static async create(...args) {
+    static async create(...args: ConstructorParameters<typeof EncryptionUtil>) {
         const encryptionUtil = new EncryptionUtil(...args)
         await encryptionUtil.onReady()
         return encryptionUtil
     }
 
-    constructor(options = {}) {
-        super(options)
-        if (options.privateKey && options.publicKey) {
+    privateKey
+    publicKey
+    private _generateKeyPairPromise: Promise<void> | undefined
+
+    constructor(options: {
+        privateKey: string,
+        publicKey: string,
+    } | {} = {}) {
+        super()
+        if ('privateKey' in options && 'publicKey' in options) {
             EncryptionUtil.validatePrivateKey(options.privateKey)
             EncryptionUtil.validatePublicKey(options.publicKey)
             this.privateKey = options.privateKey
@@ -274,17 +371,14 @@ export default class EncryptionUtil extends EncryptionUtilBase {
         return this._generateKeyPair()
     }
 
-    isReady() {
-        return !!this.privateKey
+    isReady(this: EncryptionUtil): this is InitializedEncryptionUtil {
+        return !!(this.privateKey && this.publicKey)
     }
 
     // Returns a Buffer
-    decryptWithPrivateKey(ciphertext, isHexString = false) {
+    decryptWithPrivateKey(ciphertext: string | Uint8Array, isHexString = false) {
         if (!this.isReady()) { throw new Error('EncryptionUtil not ready.') }
-        let ciphertextBuffer = ciphertext
-        if (isHexString) {
-            ciphertextBuffer = arrayify(`0x${ciphertext}`)
-        }
+        const ciphertextBuffer = isHexString ? arrayify(`0x${ciphertext}`) : ciphertext as Uint8Array
         return crypto.privateDecrypt(this.privateKey, ciphertextBuffer)
     }
 
@@ -302,7 +396,7 @@ export default class EncryptionUtil extends EncryptionUtilBase {
     }
 
     async __generateKeyPair() {
-        if (process.browser) { return this._keyPairBrowser() }
+        if (typeof window !== 'undefined') { return this._keyPairBrowser() }
         return this._keyPairServer()
     }
 

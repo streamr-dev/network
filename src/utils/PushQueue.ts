@@ -1,15 +1,39 @@
-import { CancelableGenerator } from './iterators' // eslint-disable-line import/no-cycle
+import { pOrderedResolve, Defer, pTimeout } from './index'
 
-import { pOrderedResolve } from './index'
+async function endGenerator(gtr: AsyncGenerator, error?: Error) {
+    return error
+        ? gtr.throw(error).catch(() => {}) // ignore err
+        : gtr.return(undefined)
+}
+
+type EndGeneratorTimeoutOptions = {
+    timeout?: number
+    error?: Error
+}
+
+async function endGeneratorTimeout(
+    gtr: AsyncGenerator,
+    {
+        timeout = 250,
+        error,
+    }: EndGeneratorTimeoutOptions = {}
+) {
+    return pTimeout(endGenerator(gtr, error), {
+        timeout,
+        rejectOnTimeout: false,
+    })
+}
 
 export class AbortError extends Error {
-    constructor(msg = '', ...args) {
-        super(`The operation was aborted. ${msg}`, ...args)
+    constructor(msg = '') {
+        super(`The operation was aborted. ${msg}`)
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor)
         }
     }
 }
+
+type AnyIterable<T> = Iterable<T> | AsyncIterable<T>
 
 /**
  * Async Iterable PushQueue
@@ -41,26 +65,49 @@ export class AbortError extends Error {
  *
  */
 
-export default class PushQueue {
-    constructor(items = [], { signal, onEnd, timeout = 0, autoEnd = true } = {}) {
+type PushQueueOptions = Partial<{
+    signal: AbortSignal,
+    onEnd: (err?: Error, ...args: any[]) => void
+    timeout: number,
+    autoEnd: boolean,
+}>
+
+export default class PushQueue<T> {
+    autoEnd
+    timeout
+    signal
+    iterator
+    buffer: T[] | [...T[], null]
+    error?: Error// queued error
+    nextQueue: (ReturnType<typeof Defer>)[] = [] // queued promises for next()
+    finished = false
+    pending: number = 0
+    ended = false
+    _onEnd: PushQueueOptions['onEnd']
+    _onEndCalled = false
+    _isCancelled = false
+
+    constructor(items: T[] = [], {
+        signal,
+        onEnd,
+        timeout = 0,
+        autoEnd = true
+    }: PushQueueOptions = {}) {
         this.autoEnd = autoEnd
-        this.buffer = [...items]
-        this.finished = false
-        this.error = null // queued error
-        this.nextQueue = [] // queued promises for next()
-        this.pending = 0
-        this._onEnd = onEnd
         this.timeout = timeout
+        this._onEnd = onEnd
+        this.buffer = [...items]
 
         this[Symbol.asyncIterator] = this[Symbol.asyncIterator].bind(this)
         this.onAbort = this.onAbort.bind(this)
         this.onEnd = this.onEnd.bind(this)
         this.cancel = this.cancel.bind(this)
+        this.isCancelled = this.isCancelled.bind(this)
         this.end = this.end.bind(this)
 
         // abort signal handling
-        this.signal = signal
         if (signal) {
+            this.signal = signal
             if (signal.aborted) {
                 this.onAbort()
             }
@@ -73,14 +120,14 @@ export default class PushQueue {
         this.iterator = this.iterate()
     }
 
-    static from(iterable, opts = {}) {
-        const queue = new PushQueue([], opts)
+    static from<TT>(iterable: AnyIterable<TT>, opts = {}) {
+        const queue = new PushQueue<TT>([], opts)
         queue.from(iterable)
         return queue
     }
 
-    static transform(src, fn, opts = {}) {
-        const buffer = new PushQueue([], opts)
+    static transform<TT, U>(src: AnyIterable<TT>, fn: (value: TT) => U, opts = {}) {
+        const buffer = new PushQueue<TT>([], opts)
         const orderedFn = pOrderedResolve(fn) // push must be run in sequence
         ;(async () => { // eslint-disable-line semi-style
             const tasks = []
@@ -104,16 +151,16 @@ export default class PushQueue {
         return buffer
     }
 
-    async from(iterable, { end = this.autoEnd } = {}) {
+    async from(iterable: Iterable<T> | AsyncIterable<T>, { end = this.autoEnd } = {}) {
         try {
             // detect sync/async iterable and iterate appropriately
-            if (!iterable[Symbol.asyncIterator]) {
-                // sync iterables push into buffer immediately
-                for (const item of iterable) {
+            if ((Symbol.asyncIterator || Symbol.for('Symbol.asyncIterator')) in iterable) {
+                for await (const item of iterable as AsyncIterable<T>) {
                     this.push(item)
                 }
-            } else {
-                for await (const item of iterable) {
+            } else if ((Symbol.iterator || Symbol.for('Symbol.iterator')) in iterable) {
+                // sync iterables push into buffer immediately
+                for (const item of iterable as Iterable<T>) {
                     this.push(item)
                 }
             }
@@ -122,26 +169,26 @@ export default class PushQueue {
         }
 
         if (end) {
-            this.end()
+            await this.end()
         }
 
         return Promise.resolve()
     }
 
-    onEnd(...args) {
+    onEnd(err?: Error, ...args: any[]) {
         if (this._onEndCalled || !this._onEnd) {
             return Promise.resolve()
         }
 
         this._onEndCalled = true
-        return this._onEnd(...args)
+        return this._onEnd(err, ...args)
     }
 
     /**
      * signals no more data should be buffered
      */
 
-    end(v) {
+    end(v?: T | null) {
         if (this.ended) {
             return
         }
@@ -158,7 +205,7 @@ export default class PushQueue {
         return this.throw(new AbortError())
     }
 
-    async next(...args) {
+    async next(...args:[] | [unknown]) {
         return this.iterator.next(...args)
     }
 
@@ -175,7 +222,11 @@ export default class PushQueue {
         await this._cleanup()
     }
 
-    async throw(err) {
+    async throw(err: Error) {
+        if (this.finished) {
+            return
+        }
+
         this.finished = true
         const p = this.nextQueue.shift()
         if (p) {
@@ -185,7 +236,7 @@ export default class PushQueue {
             this.error = err
         }
 
-        return this.return()
+        await this._cleanup()
     }
 
     get length() {
@@ -193,17 +244,22 @@ export default class PushQueue {
         return this.ended && count ? count - 1 : count
     }
 
-    _cleanup() {
+    async _cleanup() {
         this.finished = true
+        const { error } = this
         for (const p of this.nextQueue) {
-            p.resolve()
+            if (error) {
+                p.reject(error)
+            } else {
+                p.resolve(undefined)
+            }
         }
         this.pending = 0
         this.buffer.length = 0
         return this.onEnd(this.error)
     }
 
-    push(...values) {
+    push(...values: (T | null)[]) {
         if (this.finished || this.ended) {
             // do nothing if done
             return
@@ -211,26 +267,29 @@ export default class PushQueue {
 
         // if values contains null, treat null as end
         const nullIndex = values.findIndex((v) => v === null)
+        let validValues = values as T[]
         if (nullIndex !== -1) {
             this.ended = true
             // include null but trim rest
-            values = values.slice(0, nullIndex + 1) // eslint-disable-line no-param-reassign
+            validValues = values.slice(0, nullIndex + 1) as T[]
         }
 
         // resolve pending next calls
-        while (this.nextQueue.length && values.length) {
+        while (this.nextQueue.length && validValues.length) {
             const p = this.nextQueue.shift()
-            p.resolve(values.shift())
+            if (p) {
+                p.resolve(validValues.shift())
+            }
         }
 
         // push any remaining values into buffer
-        if (values.length) {
-            this.buffer.push(...values)
+        if (validValues.length) {
+            this.buffer.push(...validValues)
         }
     }
 
-    iterate() { // eslint-disable-line class-methods-use-this
-        const handleTerminalValues = (value) => {
+    iterate() {
+        const handleTerminalValues = (value: null | Error | any) => {
             // returns final task to perform before returning, or false
             if (value === null) {
                 return this.return()
@@ -243,7 +302,7 @@ export default class PushQueue {
             return false
         }
 
-        const [cancel, itr] = CancelableGenerator(async function* iterate() {
+        return async function* iterate(this: PushQueue<T>) {
             while (true) {
                 /* eslint-disable no-await-in-loop */
                 // feed from buffer first
@@ -265,7 +324,7 @@ export default class PushQueue {
                 // handle queued error
                 if (this.error) {
                     const err = this.error
-                    this.error = null
+                    this.error = undefined
                     throw err
                 }
 
@@ -279,13 +338,8 @@ export default class PushQueue {
                     continue // eslint-disable-line no-continue
                 }
 
-                const deferred = new Promise((resolve, reject) => {
-                    // wait for next push
-                    this.nextQueue.push({
-                        resolve,
-                        reject,
-                    })
-                })
+                const deferred = Defer<T>()
+                this.nextQueue.push(deferred)
 
                 deferred.catch(() => {}) // prevent unhandledrejection
                 const value = await deferred
@@ -304,28 +358,29 @@ export default class PushQueue {
                 yield value
                 /* eslint-enable no-await-in-loop */
             }
-        }.call(this), async (err) => {
-            return this.onEnd(err)
-        }, {
-            timeout: this.timeout,
-        })
-
-        return Object.assign(itr, {
-            cancel,
-        })
+        }.call(this)
     }
 
-    pipe(next, opts) {
+    pipe(next: PushQueue<unknown>, opts: Parameters<PushQueue<unknown>['from']>[1]) {
         return next.from(this, opts)
     }
 
-    async cancel(...args) {
+    async cancel(error?: Error) {
         this.finished = true
-        return this.iterator.cancel(...args)
+        this._isCancelled = true
+        if (error) {
+            this.error = error
+        }
+        await endGeneratorTimeout(this.iterator, {
+            timeout: this.timeout,
+            error,
+        })
+
+        return this.return()
     }
 
-    isCancelled(...args) {
-        return this.iterator.isCancelled(...args)
+    isCancelled() {
+        return this._isCancelled
     }
 
     async* [Symbol.asyncIterator]() {
@@ -336,10 +391,9 @@ export default class PushQueue {
         } finally {
             this.finished = true
             if (this.signal) {
-                this.signal.removeEventListener('abort', this.onAbort, {
-                    once: true,
-                })
+                this.signal.removeEventListener('abort', this.onAbort)
             }
+            await this.onEnd(this.error)
         }
     }
 }

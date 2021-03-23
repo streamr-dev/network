@@ -162,12 +162,15 @@ describeRepeats('resends', () => {
             await client.publish(emptyStream.id, msg)
 
             const received = []
+            let t!: ReturnType<typeof setTimeout>
             for await (const m of sub) {
                 received.push(m.getParsedContent())
-                setTimeout(() => {
+                clearTimeout(t)
+                t = setTimeout(() => {
                     sub.cancel()
                 }, 250)
             }
+            clearTimeout(t)
 
             expect(onResent).toHaveBeenCalledTimes(1)
             expect(received).toEqual([msg])
@@ -293,12 +296,12 @@ describeRepeats('resends', () => {
                 const req = await client.publish(stream.id, newMessage) // should be realtime
                 published.push(newMessage)
                 publishedRequests.push(req)
-                let t: ReturnType<typeof setTimeout>
+                let t!: ReturnType<typeof setTimeout>
                 for await (const msg of sub) {
                     receivedMsgs.push(msg.getParsedContent())
                     if (receivedMsgs.length === published.length) {
                         await sub.return()
-                        clearTimeout(t!)
+                        clearTimeout(t)
                         t = setTimeout(() => {
                             // await wait() // give resent event a chance to fire
                             onResent.reject(new Error('resent never called'))
@@ -307,7 +310,7 @@ describeRepeats('resends', () => {
                 }
 
                 await onResent
-                clearTimeout(t!)
+                clearTimeout(t)
 
                 expect(receivedMsgs).toHaveLength(published.length)
                 expect(receivedMsgs).toEqual(published)
@@ -445,8 +448,8 @@ describeRepeats('resends', () => {
                 published.push(message)
                 publishedRequests.push(req)
 
-                let t
-                let receivedMsgs
+                let t!: ReturnType<typeof setTimeout>
+                let receivedMsgs: any[]
                 try {
                     receivedMsgs = await collect(sub, async ({ received }) => {
                         if (received.length === published.length) {

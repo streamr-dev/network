@@ -19,12 +19,13 @@ export { AggregatedError, Scaffold }
 
 const UUID = uuidv4()
 
+export const SEPARATOR = ':'
 /*
  * Incrementing + human readable uuid
  */
 
 export function uuid(label = '') {
-    return uniqueId(`${UUID}${label ? `.${label}` : ''}`)
+    return uniqueId(`${UUID}${label ? `${SEPARATOR}${label}` : ''}`)
 }
 
 export function randomString(length = 20) {
@@ -62,7 +63,7 @@ export const counterId = (() => {
             }
         }
 
-        return `${prefix}.${counts[prefix]}`
+        return `${prefix}${SEPARATOR}${counts[prefix]}`
     }
 
     /**
@@ -219,7 +220,7 @@ export function CacheFn(fn: Parameters<typeof mem>[0], {
 type PromiseResolve = L.Compulsory<Parameters<Promise<any>['then']>>[0]
 type PromiseReject = L.Compulsory<Parameters<Promise<any>['then']>>[1]
 
-export function Defer(executor: (...args: Parameters<Promise<any>['then']>) => void = () => {}) {
+export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = () => {}) {
     let resolve: PromiseResolve = () => {}
     let reject: PromiseReject = () => {}
     // eslint-disable-next-line promise/param-names
@@ -228,6 +229,7 @@ export function Defer(executor: (...args: Parameters<Promise<any>['then']>) => v
         reject = _reject
         executor(resolve, reject)
     })
+    p.catch(() => {}) // prevent unhandledrejection
 
     function wrap(fn: F.Function) {
         return async (...args: unknown[]) => {
@@ -403,9 +405,20 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
     }
 
     let timedOut = false
-    let t: ReturnType<typeof setTimeout>
+    const p = Defer()
+    const t = setTimeout(() => {
+        timedOut = true
+        if (rejectOnTimeout) {
+            p.reject(new TimeoutError(message, timeout))
+        } else {
+            p.resolve(undefined)
+        }
+    }, timeout)
+    p.catch(() => {})
+
     return Promise.race([
         Promise.resolve(promise).catch((err) => {
+            clearTimeout(t)
             if (timedOut) {
                 // ignore errors after timeout
                 return
@@ -413,18 +426,10 @@ export async function pTimeout(promise: Promise<unknown>, ...args: pTimeoutArgs)
 
             throw err
         }),
-        new Promise((resolve, reject) => {
-            t = setTimeout(() => {
-                timedOut = true
-                if (rejectOnTimeout) {
-                    reject(new TimeoutError(message, timeout))
-                } else {
-                    resolve(undefined)
-                }
-            }, timeout)
-        })
+        p
     ]).finally(() => {
         clearTimeout(t)
+        p.resolve(undefined)
     })
 }
 
@@ -453,9 +458,9 @@ export async function sleep(ms: number = 0) {
 
 /**
  * Wait until a condition is true
- * @param {function(): Promise<boolean>|function(): boolean} condition wait until this callback function returns true
- * @param {number} [timeOutMs=10000] stop waiting after that many milliseconds, -1 for disable
- * @param {number} [pollingIntervalMs=100] check condition between so many milliseconds
+ * @param condition - wait until this callback function returns true
+ * @param timeOutMs - stop waiting after that many milliseconds, -1 for disable
+ * @param pollingIntervalMs - check condition between so many milliseconds
  */
 export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100) {
     let timeout = false

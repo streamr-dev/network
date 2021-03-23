@@ -2,6 +2,9 @@ import { wait } from 'streamr-test-utils'
 import AbortController from 'node-abort-controller'
 
 import PushQueue from '../../src/utils/PushQueue'
+import { Defer } from '../../src/utils'
+
+import IteratorTest from './IteratorTest'
 
 const expected = [1, 2, 3, 4, 5, 6, 7, 8]
 const WAIT = 20
@@ -18,6 +21,14 @@ async function* generate(items = expected) {
 }
 
 describe('PushQueue', () => {
+    IteratorTest('PushQueue works like regular iterator', ({ items }) => (
+        new PushQueue([...items, null])
+    ))
+
+    IteratorTest('PushQueue.from works like regular iterator', ({ items }) => (
+        PushQueue.from(generate([...items, null]))
+    ))
+
     it('supports pre-buffering, async push & return', async () => {
         const q = new PushQueue()
         expect(q.length).toBe(0)
@@ -25,6 +36,7 @@ describe('PushQueue', () => {
         expect(q.length).toBe(1)
         q.push(expected[1])
         expect(q.length).toBe(2)
+        const done = Defer()
 
         setTimeout(() => {
             // buffer should have drained by now
@@ -34,6 +46,7 @@ describe('PushQueue', () => {
             setTimeout(() => {
                 q.return(5) // both items above should get through
                 q.push('nope') // this should not
+                done.resolve()
             }, 20)
         }, 10)
 
@@ -46,6 +59,7 @@ describe('PushQueue', () => {
         expect(i).toBe(4)
         // buffer should have drained at end
         expect(q.length).toBe(0)
+        await done
     })
 
     it('supports passing initial values to constructor', async () => {

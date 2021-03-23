@@ -163,20 +163,24 @@ function TestEncryptionUtil({ isBrowser = false } = {}) {
             })
         })
 
-        it('validateGroupKey() throws if key is the wrong size', () => {
-            expect(() => {
-                EncryptionUtil.validateGroupKey(crypto.randomBytes(16))
-            }).toThrow()
-        })
+        describe('GroupKey.validate', () => {
+            it('throws if key is the wrong size', () => {
+                expect(() => {
+                    GroupKey.validate(GroupKey.from(['test', crypto.randomBytes(16)]))
+                }).toThrow('size')
+            })
 
-        it('validateGroupKey() throws if key is not a buffer', () => {
-            expect(() => {
-                EncryptionUtil.validateGroupKey(ethers.utils.hexlify(GroupKey.generate() as any))
-            }).toThrow()
-        })
+            it('throws if key is not a buffer', () => {
+                expect(() => {
+                    // expected error below is desirable, show typecheks working as intended
+                    // @ts-expect-error
+                    GroupKey.validate(GroupKey.from(['test', Array.from(crypto.randomBytes(32))]))
+                }).toThrow('Buffer')
+            })
 
-        it('validateGroupKey() does not throw', () => {
-            EncryptionUtil.validateGroupKey(GroupKey.generate())
+            it('does not throw with valid values', () => {
+                GroupKey.validate(GroupKey.generate())
+            })
         })
     })
 }

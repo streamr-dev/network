@@ -188,7 +188,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     // TODO annotate connection parameter as internal parameter if possible?
     constructor(options: StreamrClientOptions = {}, connection?: StreamrConnection) {
         super()
-        this.id = counterId(`${this.constructor.name}:${uid}`)
+        this.id = counterId(`${this.constructor.name}:${uid}${options.id || ''}`)
         this.debug = Debug(this.id)
 
         this.options = Config(options)
@@ -217,9 +217,9 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
             .on('disconnected', this.onConnectionDisconnected)
             .on('error', this.onConnectionError)
 
+        this.ethereum = new StreamrEthereum(this)
         this.publisher = Publisher(this)
         this.subscriber = new Subscriber(this)
-        this.ethereum = new StreamrEthereum(this)
 
         Plugin(this, new StreamEndpoints(this))
         Plugin(this, new LoginEndpoints(this))
@@ -357,9 +357,13 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
         let subTask: Todo
         let sub: Todo
         const hasResend = !!(opts.resend || opts.from || opts.to || opts.last)
-        const onEnd = () => {
+        const onEnd = (err?: Error) => {
             if (sub && typeof onMessage === 'function') {
                 sub.off('message', onMessage)
+            }
+
+            if (err) {
+                throw err
             }
         }
 
@@ -427,6 +431,13 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
 
     async getPublisherId(): Promise<EthereumAddress> {
         return this.getAddress()
+    }
+
+    /**
+     * True if authenticated with private key/ethereum provider
+     */
+    canEncrypt() {
+        return this.ethereum.canEncrypt()
     }
 
     /**

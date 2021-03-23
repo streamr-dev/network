@@ -1,6 +1,5 @@
 import { MessageLayer } from 'streamr-client-protocol'
 
-import PushQueue from '../utils/PushQueue'
 import EncryptionUtil, { UnableToDecryptError } from '../stream/Encryption'
 import { SubscriberKeyExchange } from '../stream/KeyExchange'
 
@@ -26,29 +25,33 @@ export default function Decrypt(client, options = {}) {
         }
     })
 
-    async function* decrypt(src, onError = async (err) => { throw err }) {
-        yield* PushQueue.transform(src, async (streamMessage) => {
+    async function* decrypt(src, onError = async () => {}) {
+        for await (const streamMessage of src) {
             if (!streamMessage.groupKeyId) {
-                return streamMessage
+                yield streamMessage
+                continue
             }
 
             if (streamMessage.encryptionType !== StreamMessage.ENCRYPTION_TYPES.AES) {
-                return streamMessage
+                yield streamMessage
+                continue
             }
 
             try {
-                const groupKey = await requestKey(streamMessage)
+                const groupKey = await requestKey(streamMessage).catch((err) => {
+                    throw new UnableToDecryptError(`Could not get GroupKey: ${streamMessage.groupKeyId} – ${err.message}`, streamMessage)
+                })
+
                 if (!groupKey) {
                     throw new UnableToDecryptError(`Group key not found: ${streamMessage.groupKeyId}`, streamMessage)
                 }
                 await EncryptionUtil.decryptStreamMessage(streamMessage, groupKey)
-                return streamMessage
             } catch (err) {
                 await onError(err, streamMessage)
+            } finally {
+                yield streamMessage
             }
-
-            return streamMessage
-        })
+        }
     }
 
     return Object.assign(decrypt, {

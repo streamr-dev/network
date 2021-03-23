@@ -17,12 +17,15 @@ export function iteratorFinally(iterable, onFinally) {
     let started = false
     let ended = false
     let error
-
+    let onFinallyTask
     // ensure finally only runs once
-    const onFinallyOnce = pMemoize(onFinally, {
-        cachePromiseRejection: true, // don't run again if failed
-        cacheKey: () => true // always same key
-    })
+    const onFinallyOnce = (err) => {
+        if (!onFinallyTask) {
+            // eslint-disable-next-line promise/no-promise-in-callback
+            onFinallyTask = Promise.resolve().then(async () => onFinally(err))
+        }
+        return onFinallyTask
+    }
 
     // wraps return/throw to call onFinally even if generator was never started
     const handleFinally = (originalFn) => async (...args) => {
@@ -84,6 +87,8 @@ export function iteratorFinally(iterable, onFinally) {
                 // return a generator that simply runs finally script (once)
                 return (async function* generatorRunFinally() { // eslint-disable-line require-yield
                     try {
+                        // NOTE: native generators do not throw if gen.throw(err) called before started
+                        // so we should do the same here
                         if (typeof iterable.return === 'function') {
                             await iterable.return() // runs onFinally for nested iterable
                         }
@@ -128,6 +133,7 @@ const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
         await cancelGenerator(gtr, error)
     }
 }, {
+    cache: new WeakMap(),
     cachePromiseRejection: true,
 })
 
@@ -276,10 +282,7 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
         isDone: () => finalCalled,
     })
 
-    return [
-        cancelFn,
-        cancelableGenerator
-    ]
+    return cancelableGenerator
 }
 
 /**
@@ -290,7 +293,13 @@ const isPipeline = Symbol('isPipeline')
 
 const getIsStream = (item) => typeof item.from === 'function'
 
-export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } = {}) {
+async function defaultOnFinally(err) {
+    if (err) {
+        throw err
+    }
+}
+
+export function pipeline(iterables = [], onFinally = defaultOnFinally, { end, ...opts } = {}) {
     const cancelFns = new Set()
     let cancelled = false
     let error
@@ -309,7 +318,7 @@ export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } 
         try {
             // eslint-disable-next-line promise/no-promise-in-callback
             await allSettledValues([...cancelFns].map(async ({ isCancelled, cancel }) => (
-                isCancelled ? cancel(err) : undefined
+                !isCancelled() ? cancel(err) : undefined
             )))
         } finally {
             cancelFns.clear()
@@ -321,23 +330,19 @@ export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } 
             return
         }
 
-        try {
-            if (cancelled) {
-                await onCancelDone
-                return
-            }
-
-            if (error) {
-                // eslint-disable-next-line promise/no-promise-in-callback
-                pipelineValue.throw(error).catch(() => {}) // ignore err
-            } else {
-                pipelineValue.return()
-            }
-            await cancelAll(err)
+        if (cancelled) {
             await onCancelDone
-        } finally {
-            await true
+            return
         }
+
+        if (error) {
+            // eslint-disable-next-line promise/no-promise-in-callback
+            pipelineValue.throw(error).catch(() => {}) // ignore err
+        } else {
+            pipelineValue.return()
+        }
+        await cancelAll(err)
+        await onCancelDone
     }
 
     let firstSrc
@@ -347,13 +352,10 @@ export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } 
     }
 
     const last = iterables.reduce((_prev, next, index) => {
-        let prev
-        let nextIterable
-
-        const [, it] = CancelableGenerator((async function* Gen() {
-            prev = index === 0 ? firstSrc : _prev
+        const it = CancelableGenerator((async function* Gen() {
+            const prev = index === 0 ? firstSrc : _prev
             // take first "prev" from outer iterator, if one exists
-            nextIterable = typeof next === 'function' ? next(prev) : next
+            const nextIterable = typeof next === 'function' ? next(prev) : next
 
             if (prev && nextIterable[isPipeline]) {
                 nextIterable.setFirstSource(prev)
@@ -367,7 +369,6 @@ export function pipeline(iterables = [], onFinally = () => {}, { end, ...opts } 
                 prev.id = prev.id || 'inter-' + nextIterable.id
                 nextIterable.from(prev, { end })
             }
-
             yield* nextIterable
         }()), async (err) => {
             if (!error && err && error !== err) {

@@ -10,15 +10,27 @@ const { StreamMessage } = MessageLayer
 type PublisherKeyExhangeAPI = ReturnType<typeof PublisherKeyExhange>
 
 export default function Encrypt(client: StreamrClient) {
-    const publisherKeyExchange = PublisherKeyExhange(client, {
-        groupKeys: {
-            ...client.options.groupKeys,
+    let publisherKeyExchange: ReturnType<typeof PublisherKeyExhange>
+
+    function getPublisherKeyExchange() {
+        if (!publisherKeyExchange) {
+            publisherKeyExchange = PublisherKeyExhange(client, {
+                groupKeys: {
+                    ...client.options.groupKeys,
+                }
+            })
         }
-    })
+        return publisherKeyExchange
+    }
+
     async function encrypt(streamMessage: MessageLayer.StreamMessage, stream: Stream) {
+        if (!client.canEncrypt()) {
+            return
+        }
+
         if (
-            !publisherKeyExchange.hasAnyGroupKey(stream.id)
-            && !stream.requireEncryptedData
+            !stream.requireEncryptedData
+            && !getPublisherKeyExchange().hasAnyGroupKey(stream.id)
         ) {
             // not needed
             return
@@ -27,19 +39,23 @@ export default function Encrypt(client: StreamrClient) {
         if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return
         }
-        const groupKey = await publisherKeyExchange.useGroupKey(stream.id)
+        const groupKey = await getPublisherKeyExchange().useGroupKey(stream.id)
         await EncryptionUtil.encryptStreamMessage(streamMessage, groupKey)
     }
 
     return Object.assign(encrypt, {
         setNextGroupKey(...args: Parameters<PublisherKeyExhangeAPI['setNextGroupKey']>) {
-            return publisherKeyExchange.setNextGroupKey(...args)
+            return getPublisherKeyExchange().setNextGroupKey(...args)
         },
         rotateGroupKey(...args: Parameters<PublisherKeyExhangeAPI['rotateGroupKey']>) {
-            return publisherKeyExchange.rotateGroupKey(...args)
+            return getPublisherKeyExchange().rotateGroupKey(...args)
+        },
+        start() {
+            return getPublisherKeyExchange().start()
         },
         stop() {
-            return publisherKeyExchange.stop()
+            if (!publisherKeyExchange) { return Promise.resolve() }
+            return getPublisherKeyExchange().stop()
         }
     })
 }

@@ -22,9 +22,9 @@ async function collect(src) {
  * Subscription message processing pipeline
  */
 
-export default function MessagePipeline(client, opts = {}, onFinally = async () => {}) {
+export default function MessagePipeline(client, opts = {}, onFinally = async (err) => { if (err) { throw err } }) {
     const options = validateOptions(opts)
-    const { key, afterSteps = [], beforeSteps = [], onError = (err) => { throw err } } = options
+    const { key, afterSteps = [], beforeSteps = [] } = options
     const id = counterId('MessagePipeline') + key
 
     /* eslint-disable object-curly-newline */
@@ -35,6 +35,16 @@ export default function MessagePipeline(client, opts = {}, onFinally = async () 
         decrypt = Decrypt(client, options),
     } = options
     /* eslint-enable object-curly-newline */
+
+    const seenErrors = new WeakSet()
+    const onErrorFn = options.onError ? options.onError : (error) => { throw error }
+    const onError = async (err) => {
+        if (seenErrors.has(err)) {
+            return
+        }
+        seenErrors.add(err)
+        await onErrorFn(err)
+    }
 
     // re-order messages (ignore gaps)
     const internalOrderingUtil = OrderMessages(client, {

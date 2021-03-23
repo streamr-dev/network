@@ -10,8 +10,14 @@ import MessagePipeline from './pipeline'
 import Validator from './Validator'
 import messageStream from './messageStream'
 import resendStream from './resendStream'
-import { MaybeAsync, Todo } from '../types'
+import { Todo, MaybeAsync } from '../types'
 import StreamrClient, { StreamPartDefinition, SubscribeOptions } from '..'
+
+async function defaultOnFinally(err?: Error) {
+    if (err) {
+        throw err
+    }
+}
 
 /**
  * @category Important
@@ -39,12 +45,12 @@ export class Subscription extends Emitter {
     /** @internal */
     iterated?: Todo
 
-    constructor(client: StreamrClient, opts: Todo, onFinally = () => {}) {
+    constructor(client: StreamrClient, opts: Todo, onFinally = defaultOnFinally) {
         super()
         this.client = client
         this.options = validateOptions(opts)
         this.key = this.options.key
-        this.id = counterId(`Subscription.${this.key}`)
+        this.id = counterId(`Subscription.${this.options.id || ''}${this.key}`)
         this.streamId = this.options.streamId
         this.streamPartition = this.options.streamPartition
 
@@ -57,24 +63,44 @@ export class Subscription extends Emitter {
         this.pipeline = opts.pipeline || MessagePipeline(client, {
             ...this.options,
             validate,
-            onError: (err: Todo) => {
+            onError: (err: Error) => {
                 this.emit('error', err)
             },
-        // @ts-expect-error
         }, this.onPipelineEnd)
 
         this.msgStream = this.pipeline.msgStream
+    }
+
+    emit(event: symbol | string, ...args: any[]) {
+        if (event !== 'error') {
+            return super.emit(event, ...args)
+        }
+
+        try {
+            if (this.listenerCount('error')) {
+                // debugger
+                return super.emit('error', ...args)
+            }
+            throw args[0]
+        } catch (err) {
+            this.cancel(err)
+            return false
+        }
     }
 
     /**
      * Expose cleanup
      * @internal
      */
-    async onPipelineEnd(err: Todo) {
+
+    async onPipelineEnd(err?: Error) {
+        let error = err
         try {
-            await this._onFinally(err)
+            await this._onFinally(error)
+        } catch (onFinallyError) {
+            error = AggregatedError.from(error, onFinallyError)
         } finally {
-            this._onDone.handleErrBack(err)
+            this._onDone.handleErrBack(error)
         }
     }
 
@@ -166,12 +192,16 @@ class SubscriptionSession extends Emitter {
     subscriptions: Set<Todo>
     deletedSubscriptions: Set<Todo>
     step?: Todo
+    _subscribe
+    _unsubscribe
 
     constructor(client: StreamrClient, options: Todo) {
         super()
         this.client = client
         this.options = validateOptions(options)
         this.validate = Validator(client, this.options)
+        this._subscribe = this.options.subscribe || subscribe
+        this._unsubscribe = this.options.unsubscribe || unsubscribe
 
         this.subscriptions = new Set() // active subs
         this.deletedSubscriptions = new Set() // hold so we can clean up
@@ -259,13 +289,13 @@ class SubscriptionSession extends Emitter {
             },
             // subscribe
             async () => {
-                await subscribe(this.client, this.options)
+                await this._subscribe(this.client, this.options)
                 this.emit('subscribed')
 
                 return async () => {
                     if (needsReset) { return }
                     this.emit('unsubscribing')
-                    await unsubscribe(this.client, this.options)
+                    await this._unsubscribe(this.client, this.options)
                 }
             }
         // @ts-expect-error
@@ -368,7 +398,6 @@ class SubscriptionSession extends Emitter {
  */
 
 class Subscriptions {
-
     client: StreamrClient
     subSessions: Map<Todo, Todo>
 
@@ -377,7 +406,7 @@ class Subscriptions {
         this.subSessions = new Map()
     }
 
-    async add(opts: StreamPartDefinition, onFinally: MaybeAsync<(err?: any) => void> = async () => {}) {
+    async add(opts: StreamPartDefinition, onFinally: MaybeAsync<(err?: any) => void> = defaultOnFinally) {
         const options = validateOptions(opts)
         const { key } = options
 
@@ -389,7 +418,6 @@ class Subscriptions {
         const sub = new Subscription(this.client, {
             ...options,
             validate: subSession.validate,
-        // @ts-expect-error
         }, async (err: Todo) => {
             try {
                 await this.remove(sub)
@@ -646,7 +674,6 @@ export class Subscriber {
                 await resendDone // ensure realtime doesn't start until resend ends
                 yield* resendSubscribeSub.realtime
             },
-        // @ts-expect-error
         ], end)
 
         const resendTask = resendMessageStream.subscribe()

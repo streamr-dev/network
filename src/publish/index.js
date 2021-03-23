@@ -122,6 +122,7 @@ function getCreateStreamMessage(client) {
             [streamId, streamPartition, publisherId, msgChainId].join('|')
         ),
         ...cacheOptions,
+        maxAge: undefined
     }), {
         clear() {
             mem.clear(getMsgChainer)
@@ -187,6 +188,9 @@ function getCreateStreamMessage(client) {
         },
         rotateGroupKey(maybeStreamId) {
             return encrypt.rotateGroupKey(maybeStreamId)
+        },
+        startKeyExchange() {
+            return encrypt.start()
         },
         clear() {
             computeStreamPartition.clear()
@@ -299,6 +303,9 @@ export default function Publisher(client) {
                 onErrorEmit(error)
                 throw error
             }
+        },
+        async startKeyExchange() {
+            return createStreamMessage.startKeyExchange()
         },
         async stop() {
             sendQueue.clear()
