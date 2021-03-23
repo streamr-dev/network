@@ -5,11 +5,12 @@ import { StreamIdAndPartition, ResendRequest } from '../identifiers'
 import { TrackerNode } from '../protocol/TrackerNode'
 import { Event as NodeToNodeEvent } from '../protocol/NodeToNode'
 import { Event as TrackerNodeEvent } from '../protocol/TrackerNode'
-import getLogger from '../helpers/logger'
+import { Logger } from '../helpers/Logger'
 import { Strategy } from './ResendHandler'
 import { Storage } from '../composition'
 
-const logger = getLogger('streamr:resendStrategies')
+// TODO: move to use peerId-based logger for better traceability
+const staticLogger = new Logger(['resend', 'resendStrategies'])
 
 function toUnicastMessage(request: ResendRequest): Transform {
     return new Transform({
@@ -213,7 +214,7 @@ class ProxiedResend {
         }, () => {
             this.askNextNeighbor()
         }).catch((e) => {
-            logger.error(`Failed to askNextNeighbor: ${neighborId}, error ${e}`)
+            staticLogger.warn('failed to askNextNeighbor %s, reason: %s', neighborId, e)
         })
     }
 
@@ -408,7 +409,7 @@ export class ForeignResendStrategy implements Strategy {
                 () => this.pendingTrackerResponse.addEntry(request, responseStream),
                 () => responseStream.push(null)
             ).catch((e) => {
-                logger.error(`Failed to requestStorageNodes, error: ${e}`)
+                staticLogger.warn('failed to send StorageNodesRequest to tracker %s, reason: %s', tracker, e)
             })
         }
     }

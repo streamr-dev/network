@@ -1,11 +1,12 @@
 import { MessageQueue } from '../../src/connection/MessageQueue'
 import { wait } from 'streamr-test-utils'
+import { Logger } from "../../src/helpers/Logger"
 
 describe(MessageQueue, () => {
     let messageQueue: MessageQueue<string>
 
     beforeEach(() => {
-        messageQueue = new MessageQueue<string>(10)
+        messageQueue = new MessageQueue<string>(new Logger([]), 10)
     })
 
     it('starts out empty', () => {

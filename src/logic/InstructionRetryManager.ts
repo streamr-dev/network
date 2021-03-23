@@ -1,15 +1,21 @@
-import getLogger from '../helpers/logger'
 import { StreamIdAndPartition, StreamKey } from "../identifiers"
 import { TrackerLayer } from "streamr-client-protocol"
+import { Logger } from "../helpers/Logger"
 
-const logger = getLogger('streamr:logic:InstructionRetryManager')
+type HandleFn = (
+    instructionMessage: TrackerLayer.InstructionMessage,
+    trackerId: string,
+    reattempt: boolean
+) => Promise<void>
 
 export class InstructionRetryManager {
-    private readonly handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string, reattempt: boolean) => Promise<void>
+    private readonly logger: Logger
+    private readonly handleFn: HandleFn
     private readonly intervalInMs: number
     private instructionRetryIntervals: { [key: string]: NodeJS.Timeout }
 
-    constructor(handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string, reattempt: boolean) => Promise<void>, intervalInMs: number) {
+    constructor(parentLogger: Logger, handleFn: HandleFn, intervalInMs: number) {
+        this.logger = parentLogger.createChildLogger(['InstructionRetryManager'])
         this.handleFn = handleFn
         this.intervalInMs = intervalInMs
         this.instructionRetryIntervals = {}
@@ -29,7 +35,7 @@ export class InstructionRetryManager {
         try {
             await this.handleFn(instructionMessage, trackerId, true)
         } catch (err) {
-            logger.warn('Instruction retry threw error', err)
+            this.logger.warn('instruction retry threw %s', err)
         }
         this.instructionRetryIntervals[StreamIdAndPartition.fromMessage(instructionMessage).key()] = setTimeout(() =>
             this.retryFunction(instructionMessage, trackerId)
@@ -40,7 +46,7 @@ export class InstructionRetryManager {
         if (streamId in this.instructionRetryIntervals) {
             clearTimeout(this.instructionRetryIntervals[streamId])
             delete this.instructionRetryIntervals[streamId]
-            logger.debug('StreamId', streamId, 'successfully removed from InstructionRetryManager')
+            this.logger.debug('stream %s successfully removed', streamId)
         }
     }
 

@@ -1,7 +1,6 @@
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
-import getLogger from '../helpers/logger'
+import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
-import pino from 'pino'
 import { MessageQueue, QueueItem } from './MessageQueue'
 
 nodeDataChannel.initLogger("Error" as LogLevel)
@@ -48,8 +47,9 @@ export class Connection {
     private readonly onError: (err: Error) => void
     private readonly onBufferLow: () => void
     private readonly onBufferHigh: () => void
-
+    private readonly logger: Logger
     private readonly messageQueue: MessageQueue<string>
+
     private connection: PeerConnection | null
     private dataChannel: DataChannel | null
     private paused: boolean
@@ -62,7 +62,6 @@ export class Connection {
     private rtt: number | null
     private respondedPong: boolean
     private rttStart: number | null
-    private readonly logger: pino.Logger
 
     constructor({
         selfId,
@@ -96,8 +95,9 @@ export class Connection {
         this.maxPingPongAttempts = maxPingPongAttempts
         this.pingPongTimeout = pingPongTimeout
         this.flushRetryTimeout = flushRetryTimeout
+        this.logger = new Logger(['connection', 'Connection', `${this.selfId}-->${this.getPeerId()}`])
 
-        this.messageQueue = new MessageQueue<string>()
+        this.messageQueue = new MessageQueue<string>(this.logger)
         this.connection = null
         this.dataChannel = null
         this.paused = false
@@ -121,8 +121,6 @@ export class Connection {
         this.onError = onError
         this.onBufferLow = onBufferLow
         this.onBufferHigh = onBufferHigh
-
-        this.logger = getLogger(`streamr:WebRtc:Connection(${this.selfId}-->${this.getPeerId()})`)
     }
 
     connect(): void {
@@ -174,10 +172,10 @@ export class Connection {
             try {
                 this.connection.setRemoteDescription(description, type)
             } catch (err) {
-                this.logger.warn(err)
+                this.logger.warn('setRemoteDescription failed, reason: %s', err)
             }
         } else {
-            this.logger.warn('attempt to invoke setRemoteDescription, but connection is null')
+            this.logger.warn('skipped setRemoteDescription, connection is null')
         }
     }
 
@@ -186,10 +184,10 @@ export class Connection {
             try {
                 this.connection.addRemoteCandidate(candidate, mid)
             } catch (err) {
-                this.logger.warn(err)
+                this.logger.warn('addRemoteCandidate failed, reason: %s', err)
             }
         } else {
-            this.logger.warn('attempt to invoke setRemoteDescription, but connection is null')
+            this.logger.warn('skipped addRemoteCandidate, connection is null')
         }
     }
 
@@ -203,14 +201,14 @@ export class Connection {
             try {
                 this.dataChannel.close()
             } catch (e) {
-                this.logger.warn(e)
+                this.logger.warn('dc.close() errored: %s', e)
             }
         }
         if (this.connection) {
             try {
                 this.connection.close()
             } catch (e) {
-                this.logger.warn(e)
+                this.logger.warn('conn.close() errored: %s', e)
             }
         }
         if (this.flushTimeoutRef) {
@@ -328,16 +326,16 @@ export class Connection {
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         if (this.isOffering) {
             dataChannel.onOpen(() => {
-                this.logger.debug('dataChannel.onOpen')
+                this.logger.debug('dc.onOpen')
                 this.openDataChannel(dataChannel)
             })
         }
         dataChannel.onClosed(() => {
-            this.logger.debug('dataChannel.onClosed')
+            this.logger.debug('dc.onClosed')
             this.close()
         })
         dataChannel.onError((e) => {
-            this.logger.warn('dataChannel.onError: %s', e)
+            this.logger.warn('dc.onError: %s', e)
         })
         dataChannel.onBufferedAmountLow(() => {
             if (this.paused) {
@@ -347,7 +345,7 @@ export class Connection {
             }
         })
         dataChannel.onMessage((msg) => {
-            this.logger.debug('dataChannel.onmessage: %s', this.peerInfo.peerId)
+            this.logger.debug('dc.onmessage')
             if (msg === 'ping') {
                 this.pong()
             } else if (msg === 'pong') {
@@ -416,7 +414,7 @@ export class Connection {
         })
         if (queueItem.isFailed()) {
             const infoText = queueItem.getErrorInfos().map((i) => JSON.stringify(i)).join('\n\t')
-            this.logger.debug('Failed to send message after %d tries due to\n\t%s',
+            this.logger.debug('failed to send message after %d tries due to\n\t%s',
                 MessageQueue.MAX_TRIES,
                 infoText)
             this.messageQueue.pop()

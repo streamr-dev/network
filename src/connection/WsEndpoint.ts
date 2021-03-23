@@ -4,11 +4,10 @@ import WebSocket from 'ws'
 import { PeerBook } from './PeerBook'
 import {PeerInfo, PeerType} from './PeerInfo'
 import { Metrics, MetricsContext } from '../helpers/MetricsContext'
-import getLogger from '../helpers/logger'
-import pino from 'pino'
+import { Logger } from '../helpers/Logger'
 import { Rtts } from '../identifiers'
 
-const extraLogger = getLogger('streamr:ws-endpoint')
+const staticLogger = new Logger(['connection', 'WsEndpoint'])
 
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
@@ -67,7 +66,7 @@ function closeWs(
     ws: WsConnection | UWSConnection,
     code: DisconnectionCode,
     reason: DisconnectionReason,
-    logger: pino.Logger
+    logger: Logger
 ): void {
     try {
         if (isWSLibrarySocket(ws)) {
@@ -76,7 +75,7 @@ function closeWs(
             ws.end(code, reason)
         }
     } catch (e) {
-        logger.error(`Failed to close ws, error: ${e}`)
+        logger.error('failed to close ws, reason: %s', e)
     }
 }
 
@@ -84,7 +83,7 @@ function getBufferedAmount(ws: WsConnection | UWSConnection): number {
     return isWSLibrarySocket(ws) ? ws.bufferedAmount : ws.getBufferedAmount()
 }
 
-function terminateWs(ws: WsConnection | UWSConnection, logger: pino.Logger): void {
+function terminateWs(ws: WsConnection | UWSConnection, logger: Logger): void {
     try {
         if (isWSLibrarySocket(ws)) {
             ws.terminate()
@@ -92,7 +91,7 @@ function terminateWs(ws: WsConnection | UWSConnection, logger: pino.Logger): voi
             ws.close()
         }
     } catch (e) {
-        logger.error(`Failed to terminate ws, error: ${e}`)
+        logger.error('failed to terminate ws, reason %s', e)
     }
 }
 
@@ -120,7 +119,7 @@ export class WsEndpoint extends EventEmitter {
     private readonly peerInfo: PeerInfo
     private readonly advertisedWsUrl: string | null
 
-    private readonly logger: pino.Logger
+    private readonly logger: Logger
     private readonly connections: Map<string, WsConnection | UWSConnection>
     private readonly pendingConnections: Map<string, Promise<string>>
     private readonly peerBook: PeerBook
@@ -156,7 +155,7 @@ export class WsEndpoint extends EventEmitter {
         this.peerInfo = peerInfo
         this.advertisedWsUrl = advertisedWsUrl
 
-        this.logger = getLogger(`streamr:connection:ws-endpoint:${peerInfo.peerId}`)
+        this.logger = new Logger(['connection', 'WsEndpoint'], peerInfo)
         this.connections = new Map()
         this.pendingConnections = new Map()
         this.peerBook = new PeerBook()
@@ -211,14 +210,14 @@ export class WsEndpoint extends EventEmitter {
                 const connection = this.connections.get(ws.address)
 
                 if (connection) {
-                    this.logger.debug(`<== received from ${ws.address} "pong" frame`)
+                    this.logger.debug('<== received from %s "pong" frame', ws.address)
                     connection.respondedPong = true
                     connection.rtt = Date.now() - connection.rttStart!
                 }
             }
         })
 
-        this.logger.debug('listening on: %s', this.getAddress())
+        this.logger.debug('listening on %s', this.getAddress())
         this.pingInterval = setInterval(() => this.pingConnections(), pingInterval)
 
         this.metrics = metricsContext.create('WsEndpoint')
@@ -260,9 +259,9 @@ export class WsEndpoint extends EventEmitter {
                 ws.respondedPong = false
                 ws.rttStart = Date.now()
                 ws.ping()
-                this.logger.debug(`pinging ${address}, current rtt ${ws.rtt}`)
+                this.logger.debug('pinging %s (current rtt %s)', address, ws.rtt)
             } catch (e) {
-                this.logger.error(`Failed to ping connection: ${address}, error ${e}, terminating connection`)
+                this.logger.warn(`failed pinging %s, error %s, terminating connection`, address, e)
                 terminateWs(ws, this.logger)
                 this.onClose(
                     address,
@@ -279,7 +278,7 @@ export class WsEndpoint extends EventEmitter {
         return new Promise<string>((resolve, reject) => {
             if (!this.isConnected(recipientAddress)) {
                 this.metrics.record('sendFailed', 1)
-                this.logger.debug('cannot send to %s [%s] because not connected', recipientId, recipientAddress)
+                this.logger.debug('cannot send to %s [%s], not connected', recipientId, recipientAddress)
                 reject(new Error(`cannot send to ${recipientId} [${recipientAddress}] because not connected`))
             } else {
                 const ws = this.connections.get(recipientAddress)!
@@ -321,7 +320,7 @@ export class WsEndpoint extends EventEmitter {
             this.evaluateBackPressure(ws)
         } catch (e) {
             this.metrics.record('sendFailed', 1)
-            this.logger.error('sending to %s [%s] failed because of %s, readyState is',
+            this.logger.warn('sending to %s [%s] failed, reason %s, readyState is %s',
                 recipientId, recipientAddress, e, ws.readyState)
             terminateWs(ws, this.logger)
         }
@@ -341,7 +340,7 @@ export class WsEndpoint extends EventEmitter {
     }
 
     onReceive(peerInfo: PeerInfo, address: string, message: string): void {
-        this.logger.debug('<=== received from %s [%s] message "%s"', peerInfo, address, message)
+        this.logger.debug('<== received from %s [%s] message "%s"', peerInfo, address, message)
         this.emit(Event.MESSAGE_RECEIVED, peerInfo, message)
     }
 
@@ -357,7 +356,7 @@ export class WsEndpoint extends EventEmitter {
                 this.logger.debug('closing connection to %s [%s], reason %s', recipientId, recipientAddress, reason)
                 closeWs(ws, DisconnectionCode.GRACEFUL_SHUTDOWN, reason, this.logger)
             } catch (e) {
-                this.logger.error('closing connection to %s [%s] failed because of %s', recipientId, recipientAddress, e)
+                this.logger.warn('closing connection to %s [%s] failed because of %s', recipientId, recipientAddress, e)
             }
         }
     }
@@ -371,13 +370,14 @@ export class WsEndpoint extends EventEmitter {
                 return Promise.resolve(this.peerBook.getPeerId(peerAddress))
             }
 
-            this.logger.debug(`already connected but readyState is ${ws.readyState}, closing connection`)
+            this.logger.debug('already connected to %s, but readyState is %s, closing connection',
+                peerAddress, ws.readyState)
             this.close(this.peerBook.getPeerId(peerAddress))
         }
 
         if (peerAddress === this.getAddress()) {
             this.metrics.record('open:ownAddress', 1)
-            this.logger.debug('not allowed to connect to own address %s', peerAddress)
+            this.logger.warn('not allowed to connect to own address %s', peerAddress)
             return Promise.reject(new Error('trying to connect to own address'))
         }
 
@@ -459,7 +459,7 @@ export class WsEndpoint extends EventEmitter {
 
                 setTimeout(() => resolve(), 100)
             } catch (e) {
-                this.logger.error(e)
+                this.logger.error('error while shutting down uWS server: %s', e)
                 reject(new Error(`Failed to stop websocket server, because of ${e}`))
             }
         })
@@ -623,13 +623,13 @@ export function startWebSocketServer(
     return new Promise((resolve, reject) => {
         let server: uWS.TemplatedApp
         if (privateKeyFileName && certFileName) {
-            extraLogger.debug(`starting SSL uWS server (host: ${host}, port: ${port}, using ${privateKeyFileName}, ${certFileName}`)
+            staticLogger.debug(`starting SSL uWS server (host: ${host}, port: ${port}, using ${privateKeyFileName}, ${certFileName}`)
             server = uWS.SSLApp({
                 key_file_name: privateKeyFileName,
                 cert_file_name: certFileName,
             })
         } else {
-            extraLogger.debug(`starting non-SSL uWS (host: ${host}, port: ${port}`)
+            staticLogger.debug(`starting non-SSL uWS (host: ${host}, port: ${port}`)
             server = uWS.App()
         }
 

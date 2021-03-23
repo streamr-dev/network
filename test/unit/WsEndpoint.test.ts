@@ -118,13 +118,13 @@ describe('WsEndpoint with connections', () => {
 
     it('getPeerInfos() is empty', () => {
         expect(wsEndpoint.getPeerInfos()).toEqual([
-            PeerInfo.newNode('otherPeerId', 'otherPeerId', {
+            PeerInfo.newNode('otherPeerId', null, {
                 latitude: null,
                 longitude: null,
                 country: null,
                 city: null
             }),
-            PeerInfo.newNode('thirdPeerId', 'thirdPeerId', {
+            PeerInfo.newNode('thirdPeerId', null, {
                 latitude: null,
                 longitude: null,
                 country: null,

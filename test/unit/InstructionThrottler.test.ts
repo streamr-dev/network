@@ -2,6 +2,7 @@ import { waitForCondition } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { InstructionThrottler } from '../../src/logic/InstructionThrottler'
+import { Logger } from "../../src/helpers/Logger"
 
 describe('InstructionThrottler', () => {
     let handlerCb: any
@@ -9,7 +10,7 @@ describe('InstructionThrottler', () => {
 
     beforeEach(() => {
         handlerCb = jest.fn().mockResolvedValue(true)
-        instructionThrottler = new InstructionThrottler(handlerCb)
+        instructionThrottler = new InstructionThrottler(new Logger([]), handlerCb)
     })
 
     function createInstruction(streamId: string, counter: number) {

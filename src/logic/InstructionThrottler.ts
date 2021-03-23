@@ -1,9 +1,7 @@
 import { cancelable, CancelablePromiseType } from 'cancelable-promise'
 import { StreamIdAndPartition, StreamKey } from '../identifiers'
 import { TrackerLayer } from 'streamr-client-protocol'
-import getLogger from '../helpers/logger'
-
-const logger = getLogger('streamr:logic:InstructionThrottler')
+import { Logger } from "../helpers/Logger"
 
 interface Queue {
     [key: string]: {
@@ -12,6 +10,8 @@ interface Queue {
     }
 }
 
+type HandleFn = (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>
+
 /**
  * InstructionThrottler makes sure that
  *  1. no more than one instruction is handled at a time
@@ -19,7 +19,8 @@ interface Queue {
  *     way where only the most latest instruction per streamId is kept in queue.
  */
 export class InstructionThrottler {
-    private readonly handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>
+    private readonly logger: Logger
+    private readonly handleFn: HandleFn
     private queue: Queue = {} // streamId => instructionMessage
     private instructionCounter: { [key: string]: number } = {} // streamId => counter
     private ongoingPromises: {
@@ -29,7 +30,8 @@ export class InstructionThrottler {
         }
     }
 
-    constructor(handleFn: (instructionMessage: TrackerLayer.InstructionMessage, trackerId: string) => Promise<void>) {
+    constructor(parentLogger: Logger, handleFn: HandleFn) {
+        this.logger = parentLogger.createChildLogger(['InstructionThrottler'])
         this.handleFn = handleFn
         this.ongoingPromises = {}
     }
@@ -51,7 +53,7 @@ export class InstructionThrottler {
             }
             if (!this.ongoingPromises[streamId].handling) {
                 this.invokeHandleFnWithLock(streamId).catch((err) => {
-                    logger.warn("Error handling instruction %s", err)
+                    this.logger.warn("error handling instruction, reason: %s", err)
                 })
             }
         }
@@ -96,14 +98,9 @@ export class InstructionThrottler {
             this.ongoingPromises[streamId].promise = cancelable(this.handleFn(instructionMessage, trackerId))
             await this.ongoingPromises[streamId].promise
         } catch (err) {
-            logger.warn('InstructionMessage handling threw error %s', err)
-            logger.warn(err)
+            this.logger.warn('handling InstructionMessage threw, error %j', err)
         } finally {
             this.invokeHandleFnWithLock(streamId)
         }
-    }
-
-    private isQueueEmpty(): boolean {
-        return Object.keys(this.queue).length === 0
     }
 }

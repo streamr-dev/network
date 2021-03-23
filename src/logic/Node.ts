@@ -14,10 +14,9 @@ import { PerStreamMetrics } from './PerStreamMetrics'
 import { StreamManager } from './StreamManager'
 import { InstructionThrottler } from './InstructionThrottler'
 import { GapMisMatchError, InvalidNumberingError } from './DuplicateMessageDetector'
-import getLogger from '../helpers/logger'
+import { Logger } from '../helpers/Logger'
 import { PeerInfo } from '../connection/PeerInfo'
 import { Readable } from 'stream'
-import pino from 'pino'
 import { InstructionRetryManager } from "./InstructionRetryManager"
 
 export enum Event {
@@ -77,7 +76,7 @@ export class Node extends EventEmitter {
     private readonly instructionRetryInterval: number
     private readonly started: string
 
-    private readonly logger: pino.Logger
+    private readonly logger: Logger
     private readonly disconnectionTimers: { [key: string]: NodeJS.Timeout }
     private readonly streams: StreamManager
     private readonly messageBuffer: MessageBuffer<[MessageLayer.StreamMessage, string | null]>
@@ -114,9 +113,9 @@ export class Node extends EventEmitter {
         this.nodeConnectTimeout = opts.nodeConnectTimeout || 2000
         this.instructionRetryInterval = opts.instructionRetryInterval || 60000
         this.started = new Date().toLocaleString()
-        const metricsContext = opts.metricsContext || new MetricsContext('')
+        this.logger = new Logger(['logic', 'Node'], this.peerInfo)
 
-        this.logger = getLogger(`streamr:logic:node:${this.peerInfo.peerId}`)
+        const metricsContext = opts.metricsContext || new MetricsContext('')
 
         this.disconnectionTimers = {}
         this.streams = new StreamManager()
@@ -126,13 +125,17 @@ export class Node extends EventEmitter {
         this.seenButNotPropagatedSet = new SeenButNotPropagatedSet()
         this.resendHandler = new ResendHandler(
             opts.resendStrategies,
-            this.logger.error.bind(this.logger),
+            (errorCtx) => this.logger.warn('resendHandler reported error, %j', errorCtx),
             metricsContext
         )
         this.trackerRegistry = Utils.createTrackerRegistry(opts.trackers)
         this.trackerBook = {}
-        this.instructionThrottler = new InstructionThrottler(this.handleTrackerInstruction.bind(this))
-        this.instructionRetryManager = new InstructionRetryManager(this.handleTrackerInstruction.bind(this), this.instructionRetryInterval)
+        this.instructionThrottler = new InstructionThrottler(this.logger, this.handleTrackerInstruction.bind(this))
+        this.instructionRetryManager = new InstructionRetryManager(
+            this.logger,
+            this.handleTrackerInstruction.bind(this),
+            this.instructionRetryInterval
+        )
 
         this.trackerNode.on(TrackerNodeEvent.CONNECTED_TO_TRACKER, (trackerId) => this.onConnectedToTracker(trackerId))
         this.trackerNode.on(TrackerNodeEvent.TRACKER_INSTRUCTION_RECEIVED, (streamMessage, trackerId) => this.onTrackerInstructionReceived(trackerId, streamMessage))  // eslint-disable-line max-len
@@ -183,7 +186,7 @@ export class Node extends EventEmitter {
     }
 
     start(): void {
-        this.logger.debug('started %s (%s)', this.peerInfo.peerId, this.peerInfo.peerName)
+        this.logger.debug('started')
         this.connectToBootstrapTrackers()
         this.connectToBoostrapTrackersInterval = setInterval(
             this.connectToBootstrapTrackers.bind(this),
@@ -208,7 +211,7 @@ export class Node extends EventEmitter {
     }
 
     unsubscribeFromStream(streamId: StreamIdAndPartition, sendStatus = true): void {
-        this.logger.debug('unsubscribeFromStream: remove %s from streams', streamId)
+        this.logger.debug('remove %s from streams', streamId)
         this.streams.removeStream(streamId)
         this.instructionThrottler.removeStreamId(streamId.key())
         this.instructionRetryManager.removeStreamId(streamId.key())
@@ -240,7 +243,7 @@ export class Node extends EventEmitter {
                     } catch (e) {
                         // TODO: catch specific error
                         const requests = this.resendHandler.cancelResendsOfNode(source)
-                        this.logger.warn('Failed to send resend response to %s,\n\tcancelling resends %j,\n\tError %s',
+                        this.logger.warn('failed to send resend response to %s,\n\tcancelling resends %j,\n\tError %s',
                             source, requests, e)
                     }
                 },
@@ -265,7 +268,7 @@ export class Node extends EventEmitter {
         const expectedTrackerId = this.getTrackerId(streamId)
         if (trackerId !== expectedTrackerId) {
             this.metrics.record('unexpectedTrackerInstructions', 1)
-            this.logger.warn(`Got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
+            this.logger.warn(`got instructions from unexpected tracker. Expected ${expectedTrackerId}, got from ${trackerId}`)
             return
         }
 
@@ -304,7 +307,7 @@ export class Node extends EventEmitter {
             if (res.status === 'fulfilled') {
                 subscribeNodeIds.push(res.value)
             } else {
-                this.logger.debug(`failed to subscribe (or connect) to node ${res.reason}`)
+                this.logger.debug('failed to subscribe (or connect) to node, reason: %s', res.reason)
             }
         })
 
@@ -343,8 +346,8 @@ export class Node extends EventEmitter {
                 return
             }
             if (e instanceof GapMisMatchError) {
-                this.logger.warn(e)
-                this.logger.debug('received from %s data %j with gap mismatch detected', source, streamMessage.messageId)
+                this.logger.warn('received from %s data %j with gap mismatch detected: %j',
+                    source, streamMessage.messageId, e)
                 this.metrics.record('onDataReceived:gapMismatch', 1)
                 return
             }
@@ -377,7 +380,7 @@ export class Node extends EventEmitter {
         if (subscribers.length) {
             subscribers.forEach((subscriber) => {
                 this.nodeToNode.sendData(subscriber, streamMessage).catch((e) => {
-                    this.logger.error(`Failed to propagateMessage ${streamMessage} to subscriber ${subscriber}, because of ${e}`)
+                    this.logger.warn(`failed to propagateMessage ${streamMessage} to subscriber ${subscriber}, because of ${e}`)
                     this.emit(Event.MESSAGE_PROPAGATION_FAILED, streamMessage.getMessageID(), subscriber, e)
                 })
             })
@@ -445,7 +448,8 @@ export class Node extends EventEmitter {
             if (status) {
                 this.sendStatus(trackerId, status)
             } else {
-                this.logger.warn(`Failed to prepare and send Stream Status of ${streamId.key()} to tracker ${trackerId}, stream status not found`)
+                this.logger.warn('failed to prepareAndSendStreamStatus %s to tracker %s, ' +
+                    'reason: stream status not found', streamId, trackerId)
             }
         }
     }
@@ -460,7 +464,7 @@ export class Node extends EventEmitter {
             await this.trackerNode.sendStatus(tracker, status)
             this.logger.debug('sent status %j to tracker %s', status.streams, tracker)
         } catch (e) {
-            this.logger.debug('failed to send status to tracker %s (%s)', tracker, e)
+            this.logger.debug('failed to send status to tracker %s, reason: %s', tracker, e)
         }
     }
 
@@ -494,7 +498,7 @@ export class Node extends EventEmitter {
             this.disconnectionTimers[node] = setTimeout(() => {
                 delete this.disconnectionTimers[node]
                 if (!this.streams.isNodePresent(node)) {
-                    this.logger.debug('no shared streams with node %s, disconnecting', node)
+                    this.logger.info('no shared streams with node %s, disconnecting', node)
                     this.nodeToNode.disconnectFromNode(node, DisconnectionReason.NO_SHARED_STREAMS)
                 }
             }, this.disconnectionWaitTime)
@@ -533,7 +537,7 @@ export class Node extends EventEmitter {
         this.trackerRegistry.getAllTrackers().forEach((address) => {
             this.trackerNode.connectToTracker(address)
                 .catch((err) => {
-                    this.logger.error('Could not connect to tracker %s because %j', address, err.toString())
+                    this.logger.warn('could not connect to tracker %s, reason: %j', address, err.toString())
                 })
         })
     }

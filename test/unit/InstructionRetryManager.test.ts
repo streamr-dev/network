@@ -2,6 +2,7 @@ import { wait } from 'streamr-test-utils'
 import { TrackerLayer } from 'streamr-client-protocol'
 
 import { InstructionRetryManager } from '../../src/logic/InstructionRetryManager'
+import { Logger } from "../../src/helpers/Logger"
 
 describe('InstructionRetryManager', () => {
     let handlerCb: any
@@ -9,7 +10,7 @@ describe('InstructionRetryManager', () => {
 
     beforeEach(() => {
         handlerCb = jest.fn().mockResolvedValue(true)
-        instructionRetryManager = new InstructionRetryManager(handlerCb, 100)
+        instructionRetryManager = new InstructionRetryManager(new Logger([]), handlerCb, 100)
     })
 
     function createInstruction(streamId: string, counter: number) {

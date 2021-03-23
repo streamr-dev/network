@@ -35,13 +35,13 @@ describe('WebRtcEndpoint: back pressure handling', () => {
 
         // Set up WebRTC endpoints
         ep1 = new WebRtcEndpoint(
-            peerInfo1.peerId,
+            peerInfo1,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo1, trackerNode1),
             new MetricsContext('ep1')
         )
         ep2 = new WebRtcEndpoint(
-            peerInfo2.peerId,
+            peerInfo2,
             ['stun:stun.l.google.com:19302'],
             new RtcSignaller(peerInfo2, trackerNode2),
             new MetricsContext('ep')

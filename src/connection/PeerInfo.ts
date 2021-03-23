@@ -37,7 +37,7 @@ export class PeerInfo {
 
     readonly peerId: string
     readonly peerType: PeerType
-    readonly peerName: string
+    readonly peerName: string | null
     readonly location: Location
 
     constructor(
@@ -58,7 +58,7 @@ export class PeerInfo {
 
         this.peerId = peerId
         this.peerType = peerType
-        this.peerName = peerName || peerId
+        this.peerName = peerName ? peerName : null
         this.location = location || {
             latitude: null,
             longitude: null,
@@ -80,6 +80,6 @@ export class PeerInfo {
     }
 
     toString(): string {
-        return `${this.peerName} ${this.peerId} (${this.peerType})`
+        return (this.peerName ? `${this.peerName}` : '') + `<${this.peerId.slice(0, 8)}>`
     }
 }

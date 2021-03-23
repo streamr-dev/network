@@ -1,10 +1,11 @@
 import { LocationManager } from '../../src/logic/LocationManager'
+import { Logger } from "../../src/helpers/Logger"
 
 describe('LocationManager', () => {
     let locationManager: LocationManager
 
     beforeEach(() => {
-        locationManager = new LocationManager()
+        locationManager = new LocationManager(new Logger([]))
     })
 
     describe('#updateLocation', () => {
@@ -52,7 +53,7 @@ describe('LocationManager', () => {
 
         it('passing invalid address causes error to be logged', () => {
             // @ts-expect-error private field
-            locationManager.logger.error = jest.fn()
+            locationManager.logger.warn = jest.fn()
             locationManager.updateLocation({
                 nodeId: 'nodeId',
                 location: null,
@@ -60,7 +61,7 @@ describe('LocationManager', () => {
             })
             expect(locationManager.getNodeLocation('nodeId')).toBeUndefined()
             // @ts-expect-error private field
-            expect(locationManager.logger.error).toHaveBeenCalled()
+            expect(locationManager.logger.warn).toHaveBeenCalled()
         })
 
         it('passing invalid location to already set location does not overwrite', () => {

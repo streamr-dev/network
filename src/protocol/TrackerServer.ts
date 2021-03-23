@@ -1,13 +1,12 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
 import { TrackerLayer } from 'streamr-client-protocol'
-import getLogger from '../helpers/logger'
+import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { WsEndpoint, Event as WsEndpointEvent } from '../connection/WsEndpoint'
 import { StreamIdAndPartition } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
-import pino from 'pino'
 
 export enum Event {
     NODE_CONNECTED = 'streamr:tracker:send-peers',
@@ -32,7 +31,7 @@ export interface TrackerNode {
 
 export class TrackerServer extends EventEmitter {
     private readonly endpoint: WsEndpoint
-    private readonly logger: pino.Logger
+    private readonly logger: Logger
 
     constructor(endpoint: WsEndpoint) {
         super()
@@ -40,7 +39,7 @@ export class TrackerServer extends EventEmitter {
         endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         endpoint.on(WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         endpoint.on(WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
-        this.logger = getLogger(`streamr:TrackerServer:${endpoint.getPeerInfo().peerId}`)
+        this.logger = new Logger(['protocol', 'TrackerServer'], endpoint.getPeerInfo())
     }
 
     sendInstruction(
@@ -177,7 +176,7 @@ export class TrackerServer extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                this.logger.warn('TrackerServer: invalid message from %s: %s', peerInfo, rawMessage)
+                this.logger.warn('invalid message from %s: %s', peerInfo, rawMessage)
             }
         }
     }

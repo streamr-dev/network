@@ -7,10 +7,10 @@ describe('PeerInfo', () => {
     let unknownInfo: PeerInfo
 
     beforeEach(() => {
-        nodeInfo = PeerInfo.newNode('node', 'NetworkNode')
-        storageInfo = PeerInfo.newStorage('storage', 'StorageNode')
-        trackerInfo = PeerInfo.newTracker('tracker')
-        unknownInfo = PeerInfo.newUnknown('unknown')
+        nodeInfo = PeerInfo.newNode('0x21583691f17b9e36a4577520f8db04a19a2f2a0d', 'NetworkNode')
+        storageInfo = PeerInfo.newStorage('0xc72e234c716445b1b54f225ec1b13e082d88d74d', 'StorageNode')
+        trackerInfo = PeerInfo.newTracker('0x4c56dbe52abb0878ee05dc15b86d660e7ef3329e')
+        unknownInfo = PeerInfo.newUnknown('0xeba1386b00de68dcc514ac5d7de7fcb48495c4c7')
     })
 
     it('isNode', () => {
@@ -35,10 +35,10 @@ describe('PeerInfo', () => {
     })
 
     it('toString', () => {
-        expect(nodeInfo.toString()).toEqual('NetworkNode node (node)')
-        expect(storageInfo.toString()).toEqual('StorageNode storage (storage)')
-        expect(trackerInfo.toString()).toEqual('tracker tracker (tracker)')
-        expect(unknownInfo.toString()).toEqual('unknown unknown (unknown)')
+        expect(nodeInfo.toString()).toEqual('NetworkNode<0x215836>')
+        expect(storageInfo.toString()).toEqual('StorageNode<0xc72e23>')
+        expect(trackerInfo.toString()).toEqual('<0x4c56db>')
+        expect(unknownInfo.toString()).toEqual('<0xeba138>')
     })
 
     it('PeerInfo constructor throws if invalid peerType', () => {
@@ -54,9 +54,9 @@ describe('PeerInfo', () => {
         expect(peerInfo.isTracker()).toEqual(true)
     })
 
-    it('use id as name if name not given', () => {
-        const peerInfo = PeerInfo.newNode('nodeId', null)
-        expect(peerInfo.peerName).toEqual('nodeId')
+    it('id is null if not given', () => {
+        const peerInfo = PeerInfo.newNode('nodeId')
+        expect(peerInfo.peerName).toEqual(null)
     })
 
     it('use default location if not given', () => {

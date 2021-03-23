@@ -1,7 +1,6 @@
 import { lookup, Lookup } from 'geoip-lite'
-import getLogger from '../helpers/logger'
+import { Logger } from '../helpers/Logger'
 import { Location } from '../identifiers'
-import pino from 'pino'
 
 function isValidNodeLocation(location: Location | null) {
     return location && (location.country || location.city || location.latitude || location.longitude)
@@ -11,11 +10,11 @@ export class LocationManager {
     private readonly nodeLocations: {
         [key: string]: Location // nodeId => Location
     }
-    private readonly logger: pino.Logger
+    private readonly logger: Logger
 
-    constructor() {
+    constructor(parentLogger: Logger) {
         this.nodeLocations = {}
-        this.logger = getLogger('streamr:logic:tracker:LocationManager')
+        this.logger = parentLogger.createChildLogger(['LocationManager'])
     }
 
     getAllNodeLocations(): Readonly<{[key: string]: Location}> {
@@ -36,7 +35,7 @@ export class LocationManager {
                     const ip = address.split(':')[1].replace('//', '')
                     geoIpRecord = lookup(ip)
                 } catch (e) {
-                    this.logger.error('Could not parse IP from address', nodeId, address)
+                    this.logger.warn('could not parse IP from address %s', address)
                 }
             }
             if (geoIpRecord) {

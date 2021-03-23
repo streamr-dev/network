@@ -1,10 +1,10 @@
 import { HttpRequest, HttpResponse, TemplatedApp } from 'uWebSockets.js'
 import { MetricsContext } from './MetricsContext'
 import { addRttsToNodeConnections, getNodeConnections, getTopology } from '../logic/trackerSummaryUtils'
-import getLogger from './logger'
+import { Logger } from './Logger'
 import { Tracker } from '../logic/Tracker'
 
-const extraLogger = getLogger('streamr:tracker:http-endpoints')
+const staticLogger = new Logger(['helpers', 'trackerHttpEndpoints'])
 
 const writeCorsHeaders = (res: HttpResponse, req: HttpRequest): void => {
     const origin = req.getHeader('origin')
@@ -26,7 +26,7 @@ const cachedJsonGet = (wss: TemplatedApp, endpoint: string, maxAge: number, json
         json: any
     }
     return wss.get(endpoint, (res, req) => {
-        extraLogger.debug('request to ' + endpoint)
+        staticLogger.debug('request to ' + endpoint)
         writeCorsHeaders(res, req)
         if ((cache === undefined) || (Date.now() > (cache.timestamp + maxAge))) {
             cache = {
@@ -40,38 +40,38 @@ const cachedJsonGet = (wss: TemplatedApp, endpoint: string, maxAge: number, json
 
 export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metricsContext: MetricsContext): void {
     wss.get('/topology/', (res, req) => {
-        extraLogger.debug('request to /topology/')
+        staticLogger.debug('request to /topology/')
         writeCorsHeaders(res, req)
         res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts())))
     })
     wss.get('/topology/:streamId/', (res, req) => {
         const streamId = decodeURIComponent(req.getParameter(0)).trim()
         if (streamId.length === 0) {
-            extraLogger.error('422 streamId must be a not empty string')
+            staticLogger.warn('422 streamId must be a not empty string')
             respondWithError(res, req, 'streamId cannot be empty')
             return
         }
 
-        extraLogger.debug(`request to /topology/${streamId}/`)
+        staticLogger.debug(`request to /topology/${streamId}/`)
         writeCorsHeaders(res, req)
         res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, null)))
     })
     wss.get('/topology/:streamId/:partition/', (res, req) => {
         const streamId = decodeURIComponent(req.getParameter(0)).trim()
         if (streamId.length === 0) {
-            extraLogger.error('422 streamId must be a not empty string')
+            staticLogger.warn('422 streamId must be a not empty string')
             respondWithError(res, req, 'streamId cannot be empty')
             return
         }
 
         const askedPartition = Number.parseInt(req.getParameter(1), 10)
         if (!Number.isSafeInteger(askedPartition) || askedPartition < 0) {
-            extraLogger.error(`422 partition must be a positive integer, askedPartition: ${askedPartition}`)
+            staticLogger.warn(`422 partition must be a positive integer, askedPartition: ${askedPartition}`)
             respondWithError(res, req, `partition must be a positive integer (was ${askedPartition})`)
             return
         }
 
-        extraLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
+        staticLogger.debug(`request to /topology/${streamId}/${askedPartition}/`)
         writeCorsHeaders(res, req)
         res.end(JSON.stringify(getTopology(tracker.getOverlayPerStream(), tracker.getOverlayConnectionRtts(), streamId, askedPartition)))
     })
@@ -82,7 +82,7 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
         }))
     })
     wss.get('/location/', (res, req) => {
-        extraLogger.debug('request to /location/')
+        staticLogger.debug('request to /location/')
         writeCorsHeaders(res, req)
         res.end(JSON.stringify(tracker.getAllNodeLocations()))
     })
@@ -90,7 +90,7 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
         const nodeId = req.getParameter(0)
         const location = tracker.getNodeLocation(nodeId)
 
-        extraLogger.debug(`request to /location/${nodeId}/`)
+        staticLogger.debug(`request to /location/${nodeId}/`)
         writeCorsHeaders(res, req)
         res.end(JSON.stringify(location || {}))
     })
@@ -104,7 +104,7 @@ export function trackerHttpEndpoints(wss: TemplatedApp, tracker: Tracker, metric
 
         if (!res.aborted) {
             writeCorsHeaders(res, req)
-            extraLogger.debug('request to /metrics/')
+            staticLogger.debug('request to /metrics/')
             res.end(JSON.stringify(metrics))
         }
     })

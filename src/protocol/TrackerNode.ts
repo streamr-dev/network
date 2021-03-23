@@ -1,13 +1,12 @@
 import { EventEmitter } from 'events'
 import { v4 as uuidv4 } from 'uuid'
 import { TrackerLayer } from 'streamr-client-protocol'
-import getLogger from '../helpers/logger'
+import { Logger } from '../helpers/Logger'
 import { decode } from '../helpers/MessageEncoder'
 import { WsEndpoint, Event as WsEndpointEvent } from '../connection/WsEndpoint'
 import { RelayMessage, Status, StreamIdAndPartition } from '../identifiers'
 import { PeerInfo } from '../connection/PeerInfo'
 import { RtcSubTypes } from '../logic/RtcMessage'
-import pino from 'pino'
 import { DescriptionType } from 'node-datachannel'
 
 export enum Event {
@@ -36,7 +35,7 @@ export interface TrackerNode {
 
 export class TrackerNode extends EventEmitter {
     private readonly endpoint: WsEndpoint
-    private readonly logger: pino.Logger
+    private readonly logger: Logger
 
     constructor(endpoint: WsEndpoint) {
         super()
@@ -44,7 +43,7 @@ export class TrackerNode extends EventEmitter {
         this.endpoint.on(WsEndpointEvent.PEER_CONNECTED, (peerInfo) => this.onPeerConnected(peerInfo))
         this.endpoint.on(WsEndpointEvent.PEER_DISCONNECTED, (peerInfo) => this.onPeerDisconnected(peerInfo))
         this.endpoint.on(WsEndpointEvent.MESSAGE_RECEIVED, (peerInfo, message) => this.onMessageReceived(peerInfo, message))
-        this.logger = getLogger(`streamr:TrackerNode:${endpoint.getPeerInfo().peerId}`)
+        this.logger = new Logger(['protocol', 'TrackerNode'], endpoint.getPeerInfo())
     }
 
     sendStatus(trackerId: string, status: Status): Promise<TrackerLayer.StatusMessage> {
@@ -128,7 +127,7 @@ export class TrackerNode extends EventEmitter {
             if (message != null) {
                 this.emit(eventPerType[message.type], message, peerInfo.peerId)
             } else {
-                this.logger.warn('TrackerNode: invalid message from %s: %s', peerInfo, rawMessage)
+                this.logger.warn('invalid message from %s: %s', peerInfo, rawMessage)
             }
         }
     }

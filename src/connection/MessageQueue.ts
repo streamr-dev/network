@@ -1,9 +1,7 @@
 import Heap from 'heap'
-import getLogger from '../helpers/logger'
+import { Logger } from '../helpers/Logger'
 
 type ErrorInfo = Record<string, unknown>
-
-const logger = getLogger("streamr:webrtc:MessageQueue")
 
 export class QueueItem<M> {
     private static nextNumber = 0
@@ -63,16 +61,18 @@ export class MessageQueue<M> {
     public static readonly MAX_TRIES = 10
 
     private readonly heap: Heap<QueueItem<M>>
+    private readonly logger: Logger
     private readonly maxSize: number
 
-    constructor(maxSize = 5000) {
+    constructor(parentLogger: Logger, maxSize = 5000) {
         this.heap = new Heap<QueueItem<M>>((a, b) => a.no - b.no)
+        this.logger = parentLogger.createChildLogger(['MessageQueue'])
         this.maxSize = maxSize
     }
 
     add(message: M): Promise<void> {
         if (this.size() === this.maxSize) {
-            logger.warn("Queue full. Dropping message.")
+            this.logger.warn("queue is full, dropping message")
             this.pop().immediateFail("Message queue full, dropping message.")
         }
         return new Promise((resolve, reject) => {
