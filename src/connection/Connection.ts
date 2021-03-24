@@ -15,7 +15,7 @@ export interface ConstructorOptions {
     bufferThresholdHigh?: number
     newConnectionTimeout?: number
     maxPingPongAttempts?: number
-    pingPongTimeout?: number
+    pingInterval?: number
     flushRetryTimeout?: number
     onLocalDescription: (type: DescriptionType, description: string) => void
     onLocalCandidate: (candidate: string, mid: string) => void
@@ -37,7 +37,7 @@ export class Connection {
     private readonly bufferThresholdLow: number
     private readonly newConnectionTimeout: number
     private readonly maxPingPongAttempts: number
-    private readonly pingPongTimeout: number
+    private readonly pingInterval: number
     private readonly flushRetryTimeout: number
     private readonly onLocalDescription: (type: DescriptionType, description: string) => void
     private readonly onLocalCandidate: (candidate: string, mid: string) => void
@@ -57,8 +57,8 @@ export class Connection {
     private lastGatheringState: string | null
     private flushTimeoutRef: NodeJS.Timeout | null
     private connectionTimeoutRef: NodeJS.Timeout | null
-    private peerPingTimeoutRef: NodeJS.Timeout | null
-    private peerPongTimeoutRef: NodeJS.Timeout | null
+    private pingTimeoutRef: NodeJS.Timeout | null
+    private pingAttempts = 0
     private rtt: number | null
     private respondedPong: boolean
     private rttStart: number | null
@@ -73,7 +73,7 @@ export class Connection {
         bufferThresholdLow = 2 ** 15,
         newConnectionTimeout = 5000,
         maxPingPongAttempts = 5,
-        pingPongTimeout = 2000,
+        pingInterval = 2 * 1000,
         flushRetryTimeout = 500,
         onLocalDescription,
         onLocalCandidate,
@@ -93,7 +93,7 @@ export class Connection {
         this.bufferThresholdLow = bufferThresholdLow
         this.newConnectionTimeout = newConnectionTimeout
         this.maxPingPongAttempts = maxPingPongAttempts
-        this.pingPongTimeout = pingPongTimeout
+        this.pingInterval = pingInterval
         this.flushRetryTimeout = flushRetryTimeout
         this.logger = new Logger(['connection', 'Connection', `${this.selfId}-->${this.getPeerId()}`])
 
@@ -106,8 +106,7 @@ export class Connection {
 
         this.flushTimeoutRef = null
         this.connectionTimeoutRef = null
-        this.peerPingTimeoutRef = null
-        this.peerPongTimeoutRef = null
+        this.pingTimeoutRef = setTimeout(() => this.ping(), this.pingInterval)
 
         this.rtt = null
         this.respondedPong = true
@@ -217,18 +216,14 @@ export class Connection {
         if (this.connectionTimeoutRef) {
             clearTimeout(this.connectionTimeoutRef)
         }
-        if (this.peerPingTimeoutRef) {
-            clearTimeout(this.peerPingTimeoutRef)
-        }
-        if (this.peerPongTimeoutRef) {
-            clearTimeout(this.peerPongTimeoutRef)
+        if (this.pingTimeoutRef) {
+            clearTimeout(this.pingTimeoutRef)
         }
         this.dataChannel = null
         this.connection = null
         this.flushTimeoutRef = null
         this.connectionTimeoutRef = null
-        this.peerPingTimeoutRef = null
-        this.peerPongTimeoutRef = null
+        this.pingTimeoutRef = null
 
         if (err) {
             this.onError(err)
@@ -236,45 +231,25 @@ export class Connection {
         this.onClose()
     }
 
-    ping(attempt = 0): void | never {
-        if (this.peerPingTimeoutRef !== null) {
-            clearTimeout(this.peerPingTimeoutRef)
-        }
-        try {
-            if (this.isOpen()) {
-                if (!this.respondedPong) {
-                    throw new Error('dataChannel is not active')
-                }
-                this.respondedPong = false
+    ping(): void {
+        if (this.isOpen()) {
+            if (this.pingAttempts >= this.maxPingPongAttempts) {
+                this.logger.warn(`failed to receive any pong after ${this.maxPingPongAttempts} ping attempts, closing connection`)
+                this.close(new Error('pong not received'))
+            } else {
                 this.rttStart = Date.now()
                 this.dataChannel!.sendMessage('ping')
-            }
-        } catch (e) {
-            if (attempt < this.maxPingPongAttempts && this.isOpen()) {
-                this.logger.debug('failed to ping connection, error %s, re-attempting', e)
-                this.peerPingTimeoutRef = setTimeout(() => this.ping(attempt + 1), this.pingPongTimeout)
-            } else {
-                this.logger.warn('failed all ping re-attempts to connection, reattempting connection', e)
-                this.close(new Error('ping attempts failed'))
+                this.pingAttempts += 1
             }
         }
+        if (this.pingTimeoutRef) {
+            clearTimeout(this.pingTimeoutRef)
+        }
+        setTimeout(() => this.ping(), this.pingInterval)
     }
 
-    pong(attempt = 0): void {
-        if (this.peerPongTimeoutRef !== null) {
-            clearTimeout(this.peerPongTimeoutRef)
-        }
-        try {
-            this.dataChannel!.sendMessage('pong')
-        } catch (e) {
-            if (attempt < this.maxPingPongAttempts && this.dataChannel && this.isOpen()) {
-                this.logger.debug('failed to pong connection, error %s, re-attempting', e)
-                this.peerPongTimeoutRef = setTimeout(() => this.pong(attempt + 1), this.pingPongTimeout)
-            } else {
-                this.logger.warn('failed all pong re-attempts to connection, reattempting connection', e)
-                this.close(new Error('pong attempts failed'))
-            }
-        }
+    pong(): void {
+        this.dataChannel!.sendMessage('pong')
     }
 
     setPeerInfo(peerInfo: PeerInfo): void {
@@ -349,7 +324,7 @@ export class Connection {
             if (msg === 'ping') {
                 this.pong()
             } else if (msg === 'pong') {
-                this.respondedPong = true
+                this.pingAttempts = 0
                 this.rtt = Date.now() - this.rttStart!
             } else {
                 this.onMessage(msg.toString()) // TODO: what if we get binary?
