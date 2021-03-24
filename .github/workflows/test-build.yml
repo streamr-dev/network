@@ -186,9 +186,8 @@ jobs:
           ./gradlew fatjar
       - uses: nick-invision/retry@v2
         name: run-client-testing
-        working-directory: streamr-client-testing
         with:
           max_attempts: 2
           timeout_minutes: 3
           retry_on: error
-          command: java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
+          command: cd streamr-client-testing && java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
