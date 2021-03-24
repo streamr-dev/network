@@ -19,10 +19,11 @@
         "strict": true,
         "moduleResolution": "node",
         "resolveJsonModule": true,
-        "module": "commonjs"
-    },
-    "globals": {
-        "ts-jest": {}
+        "module": "commonjs",
+        "types": [
+            "jest",
+            "node"
+        ]
     },
     "include": [
         "src/**/*",

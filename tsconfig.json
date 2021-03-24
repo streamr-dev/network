@@ -20,10 +20,11 @@
         "strict": true,
         "esModuleInterop": true,
         "resolveJsonModule": true,
-        "moduleResolution": "node"
-    },
-    "globals": {
-        "ts-jest": {}
+        "moduleResolution": "node",
+        "types": [
+            "jest",
+            "node"
+        ]
     },
     "include": [
         "src/**/*",
