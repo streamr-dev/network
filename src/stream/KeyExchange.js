@@ -108,7 +108,7 @@ function GroupKeyStore({ groupKeys = new Map() }) {
             const nextGroupKey = nextGroupKeys.pop()
             switch (true) {
                 // First use of group key on this stream, no current key. Make next key current.
-                case (!currentGroupKeyId && nextGroupKey): {
+                case !!(!currentGroupKeyId && nextGroupKey): {
                     storeKey(nextGroupKey)
                     currentGroupKeyId = nextGroupKey.id
                     return [
@@ -117,14 +117,14 @@ function GroupKeyStore({ groupKeys = new Map() }) {
                     ]
                 }
                 // Keep using current key (empty next)
-                case (currentGroupKeyId && !nextGroupKey): {
+                case !!(currentGroupKeyId && !nextGroupKey): {
                     return [
                         this.get(currentGroupKeyId),
                         undefined
                     ]
                 }
                 // Key changed (non-empty next). return current + next. Make next key current.
-                case (currentGroupKeyId && nextGroupKey): {
+                case !!(currentGroupKeyId && nextGroupKey): {
                     storeKey(nextGroupKey)
                     const prevGroupKey = this.get(currentGroupKeyId)
                     currentGroupKeyId = nextGroupKey.id
