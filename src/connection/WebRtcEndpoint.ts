@@ -108,9 +108,10 @@ export class WebRtcEndpoint extends EventEmitter {
             }
         })
 
-        rtcSignaller.setConnectListener(async ({ originatorInfo, routerId }: ConnectOptions) => {
+        rtcSignaller.setConnectListener(async ({ originatorInfo, routerId, force }: ConnectOptions) => {
             const { peerId } = originatorInfo
-            this.connect(peerId, routerId, false).catch((err) => {
+            const isOffering = force ? false : this.peerInfo.peerId < peerId
+            this.connect(peerId, routerId, isOffering).catch((err) => {
                 this.logger.warn('connectListener induced connection failed, reason %s', err)
             })
         })
@@ -145,7 +146,8 @@ export class WebRtcEndpoint extends EventEmitter {
         targetPeerId: string,
         routerId: string,
         isOffering = this.peerInfo.peerId < targetPeerId,
-        trackerInstructed = true
+        trackerInstructed = true,
+        force = false
     ): Promise<string> {
         // Prevent new connections from being opened when WebRtcEndpoint has been closed
         if (this.stopped) {
@@ -154,11 +156,12 @@ export class WebRtcEndpoint extends EventEmitter {
         if (this.connections[targetPeerId]) {
             return Promise.resolve(targetPeerId)
         }
+        const offering = force ? true : isOffering
         const connection = new Connection({
             selfId: this.peerInfo.peerId,
             targetPeerId,
             routerId,
-            isOffering,
+            isOffering: offering,
             stunUrls: this.stunUrls,
             newConnectionTimeout: this.newConnectionTimeout,
             bufferThresholdHigh: this.bufferThresholdHigh,
@@ -199,8 +202,8 @@ export class WebRtcEndpoint extends EventEmitter {
         })
         this.connections[targetPeerId] = connection
         connection.connect()
-        if (!trackerInstructed && isOffering) {
-            this.rtcSignaller.onConnectionNeeded(routerId, connection.getPeerId())
+        if (!trackerInstructed) {
+            this.rtcSignaller.onConnectionNeeded(routerId, connection.getPeerId(), force)
         }
         return new Promise((resolve, reject) => {
             this.once(`connected:${connection.getPeerId()}`, resolve)

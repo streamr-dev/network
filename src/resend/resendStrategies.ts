@@ -347,7 +347,7 @@ export class ForeignResendStrategy implements Strategy {
                 const nodeId = storageNodeIds.shift()!
                 try {
                     // eslint-disable-next-line require-atomic-updates
-                    storageNode = await this.nodeToNode.connectToNode(nodeId, tracker, true, false)
+                    storageNode = await this.nodeToNode.connectToNode(nodeId, tracker, true, false, true)
                 } catch (e) {
                     // nop
                 }

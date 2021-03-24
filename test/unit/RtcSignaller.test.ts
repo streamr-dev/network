@@ -20,8 +20,8 @@ describe('RtcSignaller', () => {
 
     it('invoking onConnectionNeeded delegates to sendRtcConnect on trackerNode', () => {
         trackerNodeMock.sendRtcConnect = jest.fn().mockResolvedValue(true)
-        rtcSignaller.onConnectionNeeded('router', 'targetNode')
-        expect(trackerNodeMock.sendRtcConnect).toHaveBeenCalledWith('router', 'targetNode', peerInfo)
+        rtcSignaller.onConnectionNeeded('router', 'targetNode', false)
+        expect(trackerNodeMock.sendRtcConnect).toHaveBeenCalledWith('router', 'targetNode', peerInfo, false)
     })
 
     it('invoking onLocalCandidate delegates to sendLocalCandidate on trackerNode', () => {

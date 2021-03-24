@@ -99,8 +99,7 @@ export type RemoteCandidateMessage = {
 export type RtcConnectMessage = {
     subType: RtcSubTypes.RTC_CONNECT
     data: {
-        candidate: string
-        mid: string
+        force: boolean
     }
 }
 

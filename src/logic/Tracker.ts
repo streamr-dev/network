@@ -184,7 +184,7 @@ export class Tracker extends EventEmitter {
                 this.overlayPerStream[streamKey].update(node, [...neighbors])
             }
         } else {
-            this.logger.warn('unexpected empty single-stream status received from node %s, contents %j', node, streams)
+            this.logger.debug('unexpected empty single-stream status received from node %s, contents %j', node, streams)
         }
     }
 

@@ -282,7 +282,7 @@ export class Node extends EventEmitter {
 
         const subscribePromises = nodeIds.map(async (nodeId) => {
             if (reattempt) {
-                await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, true, false))
+                await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId, undefined, false))
             } else {
                 await promiseTimeout(this.nodeConnectTimeout, this.nodeToNode.connectToNode(nodeId, trackerId))
             }
