@@ -477,13 +477,11 @@ describeRepeats('PubSub with multiple clients', () => {
                     addAfter(async () => {
                         await lateSub.unsubscribe()
                     })
-                        }
+                }
 
-                await publishTestMessages(MAX_MESSAGES, {
+                published[publisherId] = await publishTestMessages(MAX_MESSAGES, {
                     waitForLast: true,
-                    async afterEach(pubMsg, req) {
-                        published[publisherId] = published[publisherId] || []
-                        published[publisherId].push(pubMsg)
+                    async afterEach(_pubMsg, req) {
                         counter += 1
                         if (counter === 3) {
                             await waitForStorage(req) // make sure lastest message has hit storage
