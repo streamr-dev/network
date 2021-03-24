@@ -106,38 +106,40 @@ function GroupKeyStore({ groupKeys = new Map() }) {
         },
         useGroupKey() {
             const nextGroupKey = nextGroupKeys.pop()
-            // first message
-            if (!currentGroupKeyId && nextGroupKey) {
-                storeKey(nextGroupKey)
-                currentGroupKeyId = nextGroupKey.id
-                return [
-                    this.get(currentGroupKeyId),
-                    undefined,
-                ]
+            switch (true) {
+                // First use of group key on this stream, no current key. Make next key current.
+                case (!currentGroupKeyId && nextGroupKey): {
+                    storeKey(nextGroupKey)
+                    currentGroupKeyId = nextGroupKey.id
+                    return [
+                        this.get(currentGroupKeyId),
+                        undefined,
+                    ]
+                }
+                // Keep using current key (empty next)
+                case (currentGroupKeyId && !nextGroupKey): {
+                    return [
+                        this.get(currentGroupKeyId),
+                        undefined
+                    ]
+                }
+                // Key changed (non-empty next). return current + next. Make next key current.
+                case (currentGroupKeyId && nextGroupKey): {
+                    storeKey(nextGroupKey)
+                    const prevGroupKey = this.get(currentGroupKeyId)
+                    currentGroupKeyId = nextGroupKey.id
+                    // use current key one more time
+                    return [
+                        prevGroupKey,
+                        nextGroupKey,
+                    ]
+                }
+                // Generate & use new key if none already set.
+                default: {
+                    this.rotateGroupKey()
+                    return this.useGroupKey()
+                }
             }
-
-            // key changed
-            if (currentGroupKeyId && nextGroupKey) {
-                storeKey(nextGroupKey)
-                const prevGroupKey = this.get(currentGroupKeyId)
-                currentGroupKeyId = nextGroupKey.id
-                // use current key one more time
-                return [
-                    prevGroupKey,
-                    nextGroupKey,
-                ]
-            }
-
-            // generate & use key if none already set
-            if (!currentGroupKeyId) {
-                this.rotateGroupKey()
-                return this.useGroupKey()
-            }
-
-            return [
-                this.get(currentGroupKeyId),
-                nextGroupKey
-            ]
         },
         get(groupKeyId) {
             const groupKey = store.get(groupKeyId)
