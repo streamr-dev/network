@@ -431,7 +431,7 @@ const client = new StreamrClient({
 })
 
 const dataUnion = client.getDataUnion(dataUnionAddress)
-const receipt = await dataUnions.withdrawAllToSigned(memberAddress, recipientAddress, signature)
+const receipt = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature)
 ```
 
 ### Query functions
