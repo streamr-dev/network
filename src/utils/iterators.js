@@ -217,7 +217,7 @@ export function CancelableGenerator(iterable, onFinally = async () => {}, { time
                         if (v instanceof Error) {
                             p.reject(v)
                         } else {
-                            p.resolve()
+                            p.resolve({ value: undefined, done: true })
                         }
                     }
 
