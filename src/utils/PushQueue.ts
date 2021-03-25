@@ -1,4 +1,4 @@
-import { pOrderedResolve, Defer, pTimeout } from './index'
+import { Defer, pTimeout } from './index'
 
 async function endGenerator(gtr: AsyncGenerator, error?: Error) {
     return error
@@ -160,7 +160,7 @@ export default class PushQueue<T> {
         }
 
         if (end) {
-            await this.end()
+            this.end()
         }
 
         return Promise.resolve()
