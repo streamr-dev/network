@@ -1,5 +1,6 @@
 import { wait } from 'streamr-test-utils'
-import StreamrClient, { Stream } from '../../src'
+import { StreamrClient } from '../../src/StreamrClient'
+import { Stream } from '../../src/stream'
 import { fakePrivateKey } from '../utils'
 import Connection from '../../src/Connection'
 import prettyBytes from 'pretty-bytes'
@@ -98,6 +99,7 @@ describe('LongResend', () => {
             } else {
                 expect(count).toBe(10000)
             }
+            // @ts-expect-error
         }, Math.max(10000, size))
     })
 
@@ -130,5 +132,6 @@ describe('LongResend', () => {
             count,
             memory: logMemory()
         })
+        // @ts-expect-error
     }, 1000000)
 })
