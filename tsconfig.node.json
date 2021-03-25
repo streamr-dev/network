@@ -21,7 +21,6 @@
         "resolveJsonModule": true,
         "module": "commonjs",
         "types": [
-            "jest",
             "node"
         ]
     },
