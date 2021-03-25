@@ -238,16 +238,23 @@ export default class PushQueue<T> {
     async _cleanup() {
         this.finished = true
         const { error } = this
-        for (const p of this.nextQueue) {
+        const queue = this.nextQueue
+        this.error = undefined
+        this.nextQueue = []
+        this.pending = 0
+        this.buffer.length = 0
+        while (queue.length) {
+            const p = queue.shift()
+            if (!p) { continue }
+
             if (error) {
                 p.reject(error)
             } else {
                 p.resolve(undefined)
             }
         }
-        this.pending = 0
-        this.buffer.length = 0
-        return this.onEnd(this.error)
+
+        return this.onEnd(error)
     }
 
     push(...values: (T | null)[]) {
@@ -331,7 +338,6 @@ export default class PushQueue<T> {
 
                 const deferred = Defer<T>()
                 this.nextQueue.push(deferred)
-
                 deferred.catch(() => {}) // prevent unhandledrejection
                 const value = await deferred
 
@@ -380,6 +386,7 @@ export default class PushQueue<T> {
         try {
             yield* this.iterator
         } finally {
+            this._cleanup()
             this.finished = true
             if (this.signal) {
                 this.signal.removeEventListener('abort', this.onAbort)
