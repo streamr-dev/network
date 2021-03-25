@@ -140,10 +140,10 @@ const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
 
 /**
  * Creates a generator that can be cancelled and perform optional final cleanup.
- * const generator = CancelableGenerator(iterable, onFinally)
+ * const [cancal, generator] = CancelableGenerator(iterable, onFinally)
  */
 
-export function CancelableGenerator(iterable, onFinally = async () => {}, { timeout = 250 } = {}) {
+export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 250 } = {}) {
     let cancelled = false
     let finalCalled = false
     let error
@@ -202,18 +202,14 @@ export function CancelableGenerator(iterable, onFinally = async () => {}, { time
         // manually iterate
         iterator = iterable[Symbol.asyncIterator]()
 
-        let onCancel
-
         try {
             yield* {
                 // here is the meat:
                 // each next() races against cancel signal
                 next: async (...args) => {
-                    if (onCancel) {
-                        cancelSignal.off('cancel', onCancel)
-                    }
+                    cancelSignal.removeAllListeners()
                     const p = Defer()
-                    onCancel = (v) => {
+                    const onCancel = (v) => {
                         if (v instanceof Error) {
                             p.reject(v)
                         } else {
@@ -221,27 +217,21 @@ export function CancelableGenerator(iterable, onFinally = async () => {}, { time
                         }
                     }
 
-                    try {
-                        cancelSignal.once('cancel', onCancel)
-                        return await Promise.race([
-                            iterator.next(...args),
-                            p,
-                        ])
-                    } finally {
-                        cancelSignal.off('cancel', onCancel)
-                    }
+                    cancelSignal.once('cancel', onCancel)
+                    return Promise.race([
+                        iterator.next(...args).finally(() => {
+                            cancelSignal.off('cancel', onCancel)
+                        }),
+                        p,
+                    ])
                 },
                 async throw(err) {
-                    if (onCancel) {
-                        cancelSignal.off('cancel', onCancel)
-                    }
+                    cancelSignal.removeAllListeners()
                     await endGeneratorTimeout(iterator, err, timeout)
                     throw err
                 },
                 async return(v) {
-                    if (onCancel) {
-                        cancelSignal.off('cancel', onCancel)
-                    }
+                    cancelSignal.removeAllListeners()
                     await endGeneratorTimeout(iterator, error, timeout)
                     return {
                         value: v,
@@ -253,6 +243,7 @@ export function CancelableGenerator(iterable, onFinally = async () => {}, { time
                 },
             }
         } finally {
+            cancelSignal.removeAllListeners()
             // try end iterator
             if (iterator) {
                 await endGeneratorTimeout(iterator, error, timeout)
