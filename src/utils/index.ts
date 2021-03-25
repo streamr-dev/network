@@ -314,21 +314,26 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
                     // clean up if no more active entries (if not cleared)
                     pending.delete(id)
                 }
-                queueOnEmptyTasks.delete(id)
+
+                if (queueOnEmptyTasks.has(id)) {
+                    queueOnEmptyTasks.get(id).resolve(undefined)
+                    queueOnEmptyTasks.delete(id)
+                }
+
                 onQueueEmpty.resolve()
             }
         }
     }
 
     f.getOnQueueEmpty = async (id: KeyType) => {
-        return queueOnEmptyTasks.get(id) || pending.set(id, Defer()).get(id)
+        return queueOnEmptyTasks.get(id) || queueOnEmptyTasks.set(id, Defer()).get(id)
     }
 
     f.clear = () => {
         // note: does not cancel promises
         pending.forEach((p) => p.clearQueue())
         pending.clear()
-        queueOnEmptyTasks.forEach((p) => p.resolve())
+        queueOnEmptyTasks.forEach((p) => p.resolve(undefined))
         queueOnEmptyTasks.clear()
     }
     return f
