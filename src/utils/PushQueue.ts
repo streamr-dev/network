@@ -127,20 +127,11 @@ export default class PushQueue<T> {
     }
 
     static transform<TT, U>(src: AnyIterable<TT>, fn: (value: TT) => U, opts = {}) {
-        const buffer = new PushQueue<TT>([], opts)
-        const orderedFn = pOrderedResolve(fn) // push must be run in sequence
+        const buffer = new PushQueue<U>([], opts)
         ;(async () => { // eslint-disable-line semi-style
-            const tasks = []
             for await (const value of src) {
-                // run in parallel
-                const task = orderedFn(value).then(() => (
-                    buffer.push(value)
-                )).catch((err) => {
-                    buffer.throw(err)
-                })
-                tasks.push(task)
+                buffer.push(fn(value))
             }
-            await Promise.all(tasks)
             if (buffer.autoEnd) {
                 buffer.end()
             }
