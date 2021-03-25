@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { StreamrClient, Stream } from '../../src'
+import StreamrClient, { Stream } from '../../src'
 import { fakePrivateKey } from '../utils'
 import Connection from '../../src/Connection'
 import prettyBytes from 'pretty-bytes'

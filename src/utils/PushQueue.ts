@@ -226,8 +226,6 @@ export default class PushQueue<T> {
             // for next()
             this.error = err
         }
-
-        await this._cleanup()
     }
 
     get length() {
