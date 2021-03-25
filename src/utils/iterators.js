@@ -140,14 +140,12 @@ const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
 
 /**
  * Creates a generator that can be cancelled and perform optional final cleanup.
- * const [cancal, generator] = CancelableGenerator(iterable, onFinally)
+ * const generator = CancelableGenerator(iterable, onFinally)
  */
 
-export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 250 } = {}) {
-    let started = false
+export function CancelableGenerator(iterable, onFinally = async () => {}, { timeout = 250 } = {}) {
     let cancelled = false
     let finalCalled = false
-    let pendingNextCount = 0
     let error
 
     const cancelSignal = new Emitter()
@@ -201,8 +199,6 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
     }
 
     async function* CancelableGeneratorFn() {
-        started = true
-
         // manually iterate
         iterator = iterable[Symbol.asyncIterator]()
 
