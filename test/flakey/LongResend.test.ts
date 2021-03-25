@@ -1,5 +1,5 @@
 import { wait } from 'streamr-test-utils'
-import { StreamrClient } from '../../src/StreamrClient'
+import { StreamrClient, Stream } from '../../src'
 import { fakePrivateKey } from '../utils'
 import Connection from '../../src/Connection'
 import prettyBytes from 'pretty-bytes'
@@ -20,7 +20,7 @@ function logMemory() {
 
 describe('LongResend', () => {
     let client: StreamrClient
-    let stream
+    let stream: Stream
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
 
@@ -101,11 +101,10 @@ describe('LongResend', () => {
         }, Math.max(10000, size))
     })
 
-    test.only('can get big resend', async () => {
+    test('can get big resend', async () => {
         let count = 0
         const today = 1616527054932
         const yesterday = 1616440654932
-            // 1616527054932 - 10000
         const sub = await client.resend({
             stream: stream.id,
             resend: {
