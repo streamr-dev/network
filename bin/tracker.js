@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const program = require('commander')
 
-const { Logger } = require('../dist/helpers/logger')
+const { Logger } = require('../dist/helpers/Logger')
 const { version: CURRENT_VERSION } = require('../package.json')
 const { startTracker } = require('../dist/composition')
 const { MetricsContext } = require('../dist/helpers/MetricsContext')
