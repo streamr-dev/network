@@ -124,6 +124,7 @@ describe('LongResend', () => {
             if (count % 1000 === 0) {
                 const { rss } = process.memoryUsage()
                 rssValues.push(rss)
+                // eslint-disable-next-line no-console
                 console.info({
                     msg,
                     count,
@@ -144,6 +145,7 @@ describe('LongResend', () => {
         const mean = rssValues.reduce((a, b) => a + b, 0) / rssValues.length
         const median = rssValues[Math.floor(rssValues.length / 2)]
         const variance = Math.sqrt(rssValues.reduce((a, b) => a + ((b - mean) ** 2), 0) / rssValues.length)
+        // eslint-disable-next-line no-console
         console.info('done', {
             max: prettyBytes(max),
             min: prettyBytes(min),
