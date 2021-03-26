@@ -22,7 +22,7 @@ program
 const id = program.opts().id || `TR${program.opts().port}`
 const name = program.opts().trackerName || id
 const peerInfo = PeerInfo.newNode(id, name)
-const logger = new Logger(['bin', 'publisher'], peerInfo)
+const logger = new Logger(['bin', 'tracker'], peerInfo)
 
 async function main() {
     const metricsContext = new MetricsContext(id)
