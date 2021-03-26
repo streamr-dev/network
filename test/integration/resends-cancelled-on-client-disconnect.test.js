@@ -5,7 +5,7 @@ const { waitForCondition } = require('streamr-test-utils')
 const ws = require('uWebSockets.js')
 
 const WebsocketServer = require('../../src/websocket/WebsocketServer')
-const { createClient } = require('../utils')
+const { createClient, STREAMR_DOCKER_DEV_HOST } = require('../utils')
 const StreamFetcher = require('../../src/StreamFetcher')
 const Publisher = require('../../src/Publisher')
 const SubscriptionManager = require('../../src/SubscriptionManager')
@@ -70,7 +70,7 @@ describe('resend cancellation', () => {
             ws.App(),
             wsPort,
             networkNode,
-            new StreamFetcher('http://localhost:8081/streamr-core'),
+            new StreamFetcher(`http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core`),
             new Publisher(networkNode, {}, metricsContext),
             metricsContext,
             new SubscriptionManager(networkNode)

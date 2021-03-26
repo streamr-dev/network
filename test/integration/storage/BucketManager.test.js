@@ -3,8 +3,9 @@ const { waitForCondition } = require('streamr-test-utils')
 const { TimeUuid } = require('cassandra-driver').types
 
 const BucketManager = require('../../../src/storage/BucketManager')
+const { STREAMR_DOCKER_DEV_HOST } = require('../../utils')
 
-const contactPoints = ['127.0.0.1']
+const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 

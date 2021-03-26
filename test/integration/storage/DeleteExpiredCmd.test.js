@@ -2,9 +2,9 @@ const cassandra = require('cassandra-driver')
 const { TimeUuid } = require('cassandra-driver').types
 
 const DeleteExpiredCmd = require('../../../src/storage/DeleteExpiredCmd')
-const { createClient } = require('../../utils')
+const { createClient, STREAMR_DOCKER_DEV_HOST } = require('../../utils')
 
-const contactPoints = ['127.0.0.1']
+const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
@@ -64,10 +64,10 @@ describe('DeleteExpiredCmd', () => {
             orderMessages: false,
         })
         deleteExpiredCmd = new DeleteExpiredCmd({
-            streamrBaseUrl: 'http://localhost:8081/streamr-core',
+            streamrBaseUrl: `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core`,
             cassandraUsername: '',
             cassandraPassword: '',
-            cassandraHosts: ['localhost'],
+            cassandraHosts: [STREAMR_DOCKER_DEV_HOST],
             cassandraDatacenter: 'datacenter1',
             cassandraKeyspace: 'streamr_dev_v2',
             dryRun: false

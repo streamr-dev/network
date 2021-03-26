@@ -9,6 +9,8 @@ const DEFAULT_CLIENT_OPTIONS = {
     }
 }
 
+const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
+
 function formConfig({
     name,
     networkPort,
@@ -20,7 +22,7 @@ function formConfig({
     enableCassandra = false,
     privateKeyFileName = null,
     certFileName = null,
-    streamrUrl = 'http://localhost:8081/streamr-core',
+    streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core`,
     reporting = false
 }) {
     const adapters = []
@@ -66,7 +68,7 @@ function formConfig({
             }
         },
         cassandra: enableCassandra ? {
-            hosts: ['localhost'],
+            hosts: [STREAMR_DOCKER_DEV_HOST],
             datacenter: 'datacenter1',
             username: '',
             password: '',
@@ -102,7 +104,7 @@ function getWsUrlWithControlAndMessageLayerVersions(port, ssl = false, controlLa
 function createClient(wsPort, clientOptions = DEFAULT_CLIENT_OPTIONS) {
     return new StreamrClient({
         url: getWsUrl(wsPort),
-        restUrl: 'http://localhost:8081/streamr-core/api/v1',
+        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core/api/v1`,
         ...clientOptions,
     })
 }
@@ -117,6 +119,7 @@ function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1
 }
 
 module.exports = {
+    STREAMR_DOCKER_DEV_HOST,
     formConfig,
     startBroker,
     createClient,

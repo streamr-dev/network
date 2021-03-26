@@ -1,6 +1,6 @@
 const { startTracker } = require('streamr-network')
 
-const { startBroker, createClient } = require('../utils')
+const { startBroker, createClient, STREAMR_DOCKER_DEV_HOST } = require('../utils')
 
 const httpPort1 = 12741
 const wsPort1 = 12751
@@ -45,7 +45,7 @@ describe('metricsStream', () => {
                 perNodeMetrics: {
                     enabled: true,
                     wsUrl: 'ws://127.0.0.1:' + wsPort1 + '/api/v1/ws',
-                    httpUrl: 'http://localhost/api/v1'
+                    httpUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
                 }
             }
         })

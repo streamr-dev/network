@@ -3,8 +3,9 @@ const toArray = require('stream-to-array')
 const { StreamMessage, MessageIDStrict } = require('streamr-network').Protocol.MessageLayer
 
 const { startCassandraStorage } = require('../../../src/storage/Storage')
+const { STREAMR_DOCKER_DEV_HOST } = require('../../utils')
 
-const contactPoints = ['127.0.0.1']
+const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
