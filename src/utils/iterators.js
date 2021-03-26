@@ -219,9 +219,7 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
 
                     cancelSignal.once('cancel', onCancel)
                     return Promise.race([
-                        iterator.next(...args).finally(() => {
-                            cancelSignal.off('cancel', onCancel)
-                        }),
+                        iterator.next(...args),
                         p,
                     ])
                 },

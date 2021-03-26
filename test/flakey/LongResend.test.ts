@@ -15,7 +15,7 @@ function logMemory() {
         heapTotal: prettyBytes(res.heapTotal),
         heapUsed: prettyBytes(res.heapUsed),
         external: prettyBytes(res.external),
-        arrayBuffers: res.arrayBuffers
+        arrayBuffers: prettyBytes(res.arrayBuffers),
     }
 }
 
@@ -75,7 +75,7 @@ describe('LongResend', () => {
         100,
         1000,
         10000,
-        25000,
+        25000, // will be ignored, max is 10,000
     ]
 
     const MAX_RESEND_SIZE = 10000
@@ -99,39 +99,60 @@ describe('LongResend', () => {
             } else {
                 expect(count).toBe(10000)
             }
-            // @ts-expect-error
         }, Math.max(10000, size))
     })
 
-    test('can get big resend', async () => {
+    test.only('can get big resend', async () => {
         let count = 0
-        const today = 1616527054932
-        const yesterday = 1616440654932
+        const MAX_MESSAGES = 60000 // 60k
+        const end = 1616509054932
+        const start = end - (1 * 60 * 60 * 1000) // 1 hour
+        const rssValues: number[] = []
+        let total = 0
         const sub = await client.resend({
             stream: stream.id,
             resend: {
                 from: {
-                    timestamp: yesterday,
+                    timestamp: start,
                 },
                 to: {
-                    timestamp: today,
+                    timestamp: end,
                 }
             },
-        }, (msg) => {
+        }, (msg, streamMessage) => {
+            total += Buffer.byteLength(streamMessage.serializedContent, 'utf8')
             if (count % 1000 === 0) {
-                console.log({
+                const { rss } = process.memoryUsage()
+                rssValues.push(rss)
+                console.info({
                     msg,
                     count,
-                    memory: logMemory()
+                    memory: logMemory(),
+                    total: prettyBytes(total)
                 })
             }
-            count += 1
+
+            if (count === MAX_MESSAGES) {
+                sub.unsubscribe()
+            } else {
+                count += 1
+            }
         })
         await sub.onDone()
-        console.log('done', {
+        const max = rssValues.reduce((a, b) => Math.max(a, b), 0)
+        const min = rssValues.reduce((a, b) => Math.min(a, b), Infinity)
+        const mean = rssValues.reduce((a, b) => a + b, 0) / rssValues.length
+        const median = rssValues[Math.floor(rssValues.length / 2)]
+        const variance = Math.sqrt(rssValues.reduce((a, b) => a + ((b - mean) ** 2), 0) / rssValues.length)
+        console.info('done', {
+            max: prettyBytes(max),
+            min: prettyBytes(min),
+            mean: prettyBytes(mean),
+            median: prettyBytes(median),
+            variance: prettyBytes(variance),
             count,
-            memory: logMemory()
+            memory: logMemory(),
+            total: prettyBytes(total)
         })
-        // @ts-expect-error
     }, 1000000)
 })
