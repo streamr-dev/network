@@ -131,5 +131,27 @@ jobs:
           max_attempts: 2
           timeout_minutes: 15
           retry_on: error
-          command: DEBUG='' npm run test-flakey || echo "::warning::Flakey Tests Failed"
+          command: npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
+  memory:
+    name:  Memory Tests using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [12.x, 14.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm ci
+        run: npm ci
+      - uses: nick-invision/retry@v2
+        name: Run Test
+        with:
+          max_attempts: 2
+          timeout_minutes: 20
+          retry_on: error
+          command: DEBUG='' npm run test-memory
