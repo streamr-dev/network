@@ -41,14 +41,17 @@ describe('metrics', () => {
             .addQueriedMetric('a', () => 666)
             .addQueriedMetric('b', () => -10)
             .addRecordedMetric('c')
+            .addFixedMetric('d', 0)
 
         context.create('metricTwo')
 
         const metricThree = context.create('metricThree')
             .addRecordedMetric('a')
+            .addFixedMetric('d', -1)
 
         metricThree.record('a', 50)
         metricThree.record('a', 100)
+        metricThree.addFixedMetric('d', 32)
 
         const rep = await context.report()
         expect(rep).toEqual({
@@ -63,7 +66,8 @@ describe('metrics', () => {
                         rate: 0,
                         last: 0,
                         total: 0,
-                    }
+                    },
+                    d: 0
                 },
                 metricTwo: {},
                 metricThree: {
@@ -71,7 +75,8 @@ describe('metrics', () => {
                         rate: 150,
                         last: 150,
                         total: 150
-                    }
+                    },
+                    d: 32
                 }
             }
         })
@@ -129,6 +134,9 @@ describe('metrics', () => {
         expect(() => {
             metrics.addQueriedMetric('metric', (() => {}) as any)
         }).toThrowError('Metric "metricOne.metric" already registered.')
+        expect(() => {
+            metrics.addFixedMetric('metric', 0)
+        }).toThrowError('Metric "metricOne.metric" already registered.')
     })
 
     it('cannot record for non-existing recoded metric', () => {
@@ -136,6 +144,13 @@ describe('metrics', () => {
         expect(() => {
             metrics.record('non-existing-metric', (() => {}) as any)
         }).toThrowError('Not a recorded metric "metricOne.non-existing-metric".')
+    })
+
+    it('cannot set for non-existing recoded metric', () => {
+        const metrics = context.create('metricOne')
+        expect(() => {
+            metrics.set('non-existing-metric', 64)
+        }).toThrowError('Not a fixed metric "metricOne.non-existing-metric".')
     })
 
     it('longer scenario', async () => {
@@ -167,7 +182,9 @@ describe('metrics', () => {
 
         const metricTwo = context.create('metricTwo')
             .addRecordedMetric('a')
+            .addFixedMetric('b')
         metricTwo.record('a', 10)
+        metricTwo.set('b', 50)
 
         const rep2 = await context.report(true)
         expect(rep2.metrics).toEqual({
@@ -185,13 +202,15 @@ describe('metrics', () => {
                     rate: 10,
                     last: 10,
                     total: 10
-                }
+                },
+                b: 50
             }
         })
 
         jest.advanceTimersByTime(1000 * 2)
         metricOne.record('c', 208)
         metricTwo.record('a', 39)
+        metricTwo.set('b', 100)
         jest.advanceTimersByTime(1000)
 
         const rep3 = await context.report()
@@ -210,7 +229,8 @@ describe('metrics', () => {
                     rate: 14,
                     last: 39,
                     total: 49
-                }
+                },
+                b: 100
             }
         })
     })

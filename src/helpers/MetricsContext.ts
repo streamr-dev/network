@@ -31,10 +31,15 @@ export class Metrics {
             total: number
         }
     }
+    private readonly fixedMetrics: {
+        [key: string]: number
+    }
+
     constructor(name: string) {
         this.name = name
         this.queriedMetrics = {}
         this.recordedMetrics = {}
+        this.fixedMetrics = {}
     }
 
     addQueriedMetric(name: string, queryFn: QueryFn): Metrics {
@@ -53,6 +58,12 @@ export class Metrics {
         return this
     }
 
+    addFixedMetric(name: string, initialValue = 0): Metrics {
+        this.verifyUniqueness(name)
+        this.fixedMetrics[name] = initialValue
+        return this
+    }
+
     record(name: string, value: number): Metrics {
         if (!this.recordedMetrics[name]) {
             throw new Error(`Not a recorded metric "${this.name}.${name}".`)
@@ -60,6 +71,14 @@ export class Metrics {
         this.recordedMetrics[name].rate(value)
         this.recordedMetrics[name].total += value
         this.recordedMetrics[name].last += value
+        return this
+    }
+
+    set(name: string, value: number): Metrics {
+        if (this.fixedMetrics[name] === undefined) {
+            throw new Error(`Not a fixed metric "${this.name}.${name}".`)
+        }
+        this.fixedMetrics[name] = value
         return this
     }
 
@@ -74,7 +93,8 @@ export class Metrics {
                 total,
                 last
             }])
-        return Object.fromEntries([...queryResults, ...recordedResults])
+        const fixedResults = Object.entries(this.fixedMetrics)
+        return Object.fromEntries([...queryResults, ...recordedResults, ...fixedResults])
     }
 
     clearLast(): void {
