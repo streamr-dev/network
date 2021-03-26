@@ -8,7 +8,7 @@
 </h1>
 
 [![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master&style=flat)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
-[![GitHub release](https://img.shields.io/github/release/streamr-dev/streamr-client-javascript.svg?style=flat)](streamr-dev/streamr-client-javascript/releases/)
+[![GitHub release](https://img.shields.io/github/release/streamr-dev/streamr-client-javascript.svg?style=flat)](https://github.com/streamr-dev/streamr-client-javascript/releases/)
 [![GitHub stars](https://img.shields.io/github/stars/streamr-dev/streamr-client-javascript.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/streamr-client-javascript/)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
 
@@ -25,7 +25,7 @@ Please see the [API Docs](https://streamr-dev.github.io/streamr-client-javascrip
 
 ## TOC
 
-[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
+[Installation](#installation) · [Usage](#usage) · [API Docs](#API-docs) · [Client options](#client-options) · [Authentication](#authentication-options) · [Managing subscriptions](#managing-subscriptions) · [Stream API](#stream-api) · [Subscription options](#subscription-options) · [Data Unions](#data-unions) · [Utility functions](#utility-functions) · [Events](#events) · [Stream Partitioning](#stream-partitioning) · [Logging](#logging) · [NPM Publishing](#publishing-latest)
 
 
 ## Installation
