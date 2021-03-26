@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 const program = require('commander')
 
-const getLogger = require('../dist/helpers/logger').default
+const { Logger } = require('../dist/helpers/logger')
 const { version: CURRENT_VERSION } = require('../package.json')
 const { startNetworkNode } = require('../dist/composition')
 const { MetricsContext } = require('../dist/helpers/MetricsContext')
 const { Event: NodeEvent } = require('../dist/logic/Node')
-
-const logger = getLogger('streamr:bin:subscriber')
+const { PeerInfo } = require('../dist/connection/PeerInfo')
 
 program
     .version(CURRENT_VERSION)
@@ -21,14 +20,15 @@ program
     .description('Run subscriber')
     .parse(process.argv)
 
-const id = program.opts().id || `subscriber-${program.opts().port}`
+const id = program.opts().id || `SU${program.opts().port}`
 const name = program.opts().nodeName || id
-
+const peerInfo = PeerInfo.newNode(id, name)
+const logger = new Logger(['bin', 'subscriber'], peerInfo)
 const metricsContext = new MetricsContext(id)
 startNetworkNode({
     host: program.opts().ip,
     port: program.opts().port,
-    name: id,
+    name,
     id,
     trackers: program.opts().trackers,
     metricsContext

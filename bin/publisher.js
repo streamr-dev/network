@@ -2,14 +2,13 @@
 const program = require('commander')
 const { MessageLayer } = require('streamr-client-protocol')
 
-const getLogger = require('../dist/helpers/logger').default
+const { Logger } = require('../dist/helpers/logger')
 const { version: CURRENT_VERSION } = require('../package.json')
 const { startNetworkNode } = require('../dist/composition')
 const { MetricsContext } = require('../dist/helpers/MetricsContext')
+const { PeerInfo } = require('../dist/connection/PeerInfo')
 
 const { StreamMessage, MessageID, MessageRef } = MessageLayer
-
-const logger = getLogger('streamr:bin:publisher')
 
 program
     .version(CURRENT_VERSION)
@@ -25,8 +24,11 @@ program
     .description('Run publisher')
     .parse(process.argv)
 
-const publisherId = program.opts().id || `publisher-${program.opts().port}`
-const name = program.opts().nodeName || publisherId
+const id = program.opts().id || `PU${program.opts().port}`
+const name = program.opts().nodeName || id
+const peerInfo = PeerInfo.newNode(id, name)
+const logger = new Logger(['bin', 'publisher'], peerInfo)
+
 const noise = parseInt(program.opts().noise, 10)
 
 const messageChainId = `message-chain-id-${program.opts().port}`
@@ -41,18 +43,18 @@ function generateString(length) {
     return result
 }
 
-const metricsContext = new MetricsContext(publisherId)
+const metricsContext = new MetricsContext(id)
 startNetworkNode({
     host: program.opts().ip,
     port: program.opts().port,
-    name: publisherId,
-    id: publisherId,
+    name,
+    id,
     trackers: program.opts().trackers,
     metricsContext
 })
     .then((publisher) => {
         logger.info('started publisher id: %s, name: %s, port: %d, ip: %s, trackers: %s, streamId: %s, intervalInMs: %d, metrics: %s',
-            publisherId, name, program.opts().port, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().intervalInMs, program.opts().metrics)
+            id, name, program.opts().port, program.opts().ip, program.opts().trackers.join(', '), program.opts().streamId, program.opts().intervalInMs, program.opts().metrics)
 
         publisher.start()
 
@@ -64,7 +66,7 @@ startNetworkNode({
             const msg = 'Hello world, ' + new Date().toLocaleString()
             program.opts().streamIds.forEach((streamId) => {
                 const streamMessage = new StreamMessage({
-                    messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, publisherId, messageChainId),
+                    messageId: new MessageID(streamId, 0, timestamp, sequenceNumber, id, messageChainId),
                     prevMsgRef: lastTimestamp == null ? null : new MessageRef(lastTimestamp, sequenceNumber - 1),
                     content: {
                         msg,
