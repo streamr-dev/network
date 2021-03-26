@@ -102,7 +102,7 @@ describe('LongResend', () => {
         }, Math.max(10000, size))
     })
 
-    test.only('can get big resend', async () => {
+    test('can get big resend', async () => {
         let count = 0
         const MAX_MESSAGES = 60000 // 60k
         const end = 1616509054932
