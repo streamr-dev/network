@@ -223,7 +223,7 @@ describe('no memleaks when processing a high quantity of large messages', () => 
             }, MAX_TEST_TIME * 2)
         })
 
-        test('resend', async () => {
+        test('just resend', async () => {
             const MAX_MEMORY_USAGE = 5e+8 // 500MB
             const MAX_MESSAGES = 60000 // 60k
             const end = 1616509054932

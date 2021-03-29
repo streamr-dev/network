@@ -234,21 +234,22 @@ export default class PushQueue<T> {
     }
 
     async _cleanup() {
+        const { error, nextQueue } = this
         this.finished = true
-        const { error } = this
-        const queue = this.nextQueue
         this.error = undefined
-        this.nextQueue = []
         this.pending = 0
         this.buffer.length = 0
-        while (queue.length) {
-            const p = queue.shift()
+        this.buffer = []
+        this.nextQueue = []
+        const doneValue = { value: undefined, done: true }
+        while (nextQueue.length) {
+            const p = nextQueue.shift()
             if (!p) { continue }
 
             if (error) {
                 p.reject(error)
             } else {
-                p.resolve(undefined)
+                p.resolve(doneValue)
             }
         }
 
