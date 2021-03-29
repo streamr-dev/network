@@ -1,6 +1,12 @@
 name: Eslint, Test and Publish
 
-on: [push]
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'typedoc.js'
+      - '.idea'
 
 jobs:
   test:

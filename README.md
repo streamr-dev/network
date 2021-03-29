@@ -3,11 +3,16 @@
     <img alt="Streamr" src="https://raw.githubusercontent.com/streamr-dev/streamr-client-javascript/master/readme-header-img.png" width="1320" />
   </a>
 </p>
-<h1 align="left">
 
 # streamr-network
 
-An extendable implementation of the server-side
+[![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/network/nodejs/master)](https://github.com/streamr-dev/network/actions)
+[![npm release](https://img.shields.io/npm/v/streamr-network?style=flat)](https://www.npmjs.com/package/streamr-network)
+[![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/network/)
+[![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
+
+
+An extendible implementation of the server-side
 [Streamr Protocol](https://github.com/streamr-dev/streamr-specs/blob/master/PROTOCOL.md) logic written in TypeScript.
 The package mostly acts as a library for other packages wishing to implement a broker node, but additionally
 provides a full tracker executable, and a stripped-down network node executable.
@@ -21,6 +26,8 @@ _streamr-broker_ as it includes useful client-facing features for interacting wi
 The [wiki](https://github.com/streamr-dev/network/wiki) outlines the technical and architectural
 decisions of the project. It provides thorough explanations of some the more involved features.
 A glossary is also included.
+
+[API Documentation](https://streamr-dev.github.io/network/)
 
 ## Table of Contents
 - [Install](#install)
