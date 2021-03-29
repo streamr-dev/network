@@ -4,11 +4,13 @@ import { StreamrClient } from '../../src/StreamrClient'
 import { MessageLayer } from 'streamr-client-protocol'
 import { Stream } from '../../src/stream'
 import { Subscription } from '../../src/subscribe'
-import { fakePrivateKey } from '../utils'
+import { fakePrivateKey, addAfterFn } from '../utils'
 import Connection from '../../src/Connection'
 import prettyBytes from 'pretty-bytes'
 
 const TRAM_DEMO_STREAM = '7wa7APtlTq6EC5iTCBy6dw'
+
+const log = Debug('MessageQuantityTest')
 
 function logMemory() {
     const res = process.memoryUsage()
@@ -26,6 +28,7 @@ describe('no memleaks when processing a high quantity of large messages', () => 
     let stream: Stream
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
+    const afterFn = addAfterFn()
 
     const createClient = (opts = {}) => new StreamrClient({
         autoConnect: false,
@@ -51,8 +54,9 @@ describe('no memleaks when processing a high quantity of large messages', () => 
     })
 
     beforeEach(() => {
-        client.debug('disabling logging for long tests')
+        client.debug('disabling verbose client logging for long tests')
         Debug.disable()
+        Debug.enable('MessageQuantityTest')
     })
 
     afterEach(() => {
@@ -124,18 +128,18 @@ describe('no memleaks when processing a high quantity of large messages', () => 
         let count = 0
         let sub: Subscription
 
-        const onMessage = (maxMessages: number) => (msg: any, streamMessage: MessageLayer.StreamMessage) => {
+        const onMessage = (maxMessages: number, maxMemoryUsage: number) => (msg: any, streamMessage: MessageLayer.StreamMessage) => {
             totalBytes += Buffer.byteLength(streamMessage.serializedContent, 'utf8')
             if (count % 1000 === 0) {
                 const { rss } = process.memoryUsage()
                 rssValues.push(rss)
-                // eslint-disable-next-line no-console
-                console.info({
+                log({
                     msg,
                     count,
                     memory: logMemory(),
                     total: prettyBytes(totalBytes)
                 })
+                expect(rss).toBeLessThan(maxMemoryUsage)
             }
 
             if (count === maxMessages) {
@@ -151,8 +155,7 @@ describe('no memleaks when processing a high quantity of large messages', () => 
             const mean = rssValues.length ? rssValues.reduce((a, b) => a + b, 0) / rssValues.length : 0
             const median = rssValues.length ? rssValues[Math.floor(rssValues.length / 2)] : 0
             const variance = rssValues.length ? Math.sqrt(rssValues.reduce((a, b) => a + ((b - mean) ** 2), 0) / rssValues.length) : 0
-            // eslint-disable-next-line no-console
-            console.info('done', {
+            log('done', {
                 max: prettyBytes(max),
                 min: prettyBytes(min),
                 mean: prettyBytes(mean),
@@ -177,39 +180,46 @@ describe('no memleaks when processing a high quantity of large messages', () => 
             }
         })
 
-        test.only('realtime', async () => {
-            const MAX_MEMORY_USAGE = 2e+8 // 300MB
-            const MAX_MESSAGES = 6000
-            const MAX_TEST_TIME = 60000
-            sub = await client.subscribe({
-                stream: stream.id,
-            }, onMessage(MAX_MESSAGES))
-            const t = setTimeout(() => {
-                sub.unsubscribe()
-            }, MAX_TEST_TIME) // run for 60s or 6k messages
-            await sub.onDone()
-            clearTimeout(t)
-            validate(MAX_MEMORY_USAGE)
-        }, 120000)
+        describe('with realtime', () => {
+            const MAX_MEMORY_USAGE = 2e+8 // 200MB
+            // run for period or some number of messages, whichever comes first
+            const MAX_TEST_TIME = 360000
+            const MAX_MESSAGES = MAX_TEST_TIME / 10
 
-        test('resendSubscribe', async () => {
-            const MAX_MEMORY_USAGE = 2e+8 // 300MB
-            const MAX_MESSAGES = 6000
-            const MAX_TEST_TIME = 60000
-            sub = await client.subscribe({
-                stream: stream.id,
-                resend: {
-                    last: Math.floor(MAX_MESSAGES / 2),
-                }
-            }, onMessage(MAX_MESSAGES))
-            const t = setTimeout(() => {
-                sub.unsubscribe()
-            }, MAX_TEST_TIME) // run for 60s or 6k messages
-            await sub.onDone()
-            clearTimeout(t)
-            await sub.onDone()
-            validate(MAX_MEMORY_USAGE)
-        }, 120000)
+            test('just realtime', async () => {
+                sub = await client.subscribe({
+                    stream: stream.id,
+                }, onMessage(MAX_MESSAGES, MAX_MEMORY_USAGE))
+                const t = setTimeout(() => {
+                    sub.unsubscribe()
+                }, MAX_TEST_TIME)
+                afterFn(() => {
+                    clearTimeout(t)
+                })
+                await sub.onDone()
+                clearTimeout(t)
+                validate(MAX_MEMORY_USAGE)
+            }, MAX_TEST_TIME * 2)
+
+            test('resendSubscribe', async () => {
+                sub = await client.subscribe({
+                    stream: stream.id,
+                    resend: {
+                        last: Math.floor(MAX_MESSAGES / 2),
+                    }
+                }, onMessage(MAX_MESSAGES, MAX_MEMORY_USAGE))
+                const t = setTimeout(() => {
+                    sub.unsubscribe()
+                }, MAX_TEST_TIME)
+                afterFn(() => {
+                    clearTimeout(t)
+                })
+                await sub.onDone()
+                clearTimeout(t)
+                await sub.onDone()
+                validate(MAX_MEMORY_USAGE)
+            }, MAX_TEST_TIME * 2)
+        })
 
         test('resend', async () => {
             const MAX_MEMORY_USAGE = 5e+8 // 500MB
