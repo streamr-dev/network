@@ -31,6 +31,13 @@ on:
 # Be sure to update both workflow files if you edit any env or trigger config
 
 jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.8.0
+        with:
+          access_token: ${{ github.token }}
   lint:
     name: Run linter using Node 14.x
     runs-on: ubuntu-latest
