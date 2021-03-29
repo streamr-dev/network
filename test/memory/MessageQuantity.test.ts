@@ -1,4 +1,5 @@
 import { wait } from 'streamr-test-utils'
+import Debug from 'debug'
 import { StreamrClient } from '../../src/StreamrClient'
 import { MessageLayer } from 'streamr-client-protocol'
 import { Stream } from '../../src/stream'
@@ -25,7 +26,6 @@ describe('no memleaks when processing a high quantity of large messages', () => 
     let stream: Stream
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
-    let prevEnabled: boolean
 
     const createClient = (opts = {}) => new StreamrClient({
         autoConnect: false,
@@ -52,12 +52,11 @@ describe('no memleaks when processing a high quantity of large messages', () => 
 
     beforeEach(() => {
         client.debug('disabling logging for long tests')
-        prevEnabled = client.debug.enabled
-        client.debug.enabled = false
+        Debug.disable()
     })
 
     afterEach(() => {
-        client.debug.enabled = prevEnabled
+        Debug.enable(process.env.DEBUG)
     })
 
     afterEach(async () => {
