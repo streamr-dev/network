@@ -11,7 +11,6 @@ const WAIT = 20
 async function* generate(items = expected, waitTime = WAIT) {
     await wait(waitTime * 0.1)
     for await (const item of items) {
-        console.log('next', item)
         await wait(waitTime * 0.1)
         yield item
         await wait(waitTime * 0.1)
@@ -671,34 +670,29 @@ describe('Iterator Utils', () => {
         })
 
         it('can handle errs when queued next calls', async () => {
-            const done = Defer()
             const expectedError = new Error('expected')
-            try {
-                const itr = CancelableGenerator((async function* Gen() {
-                    yield* generate(expected, 1000)
-                }()), onFinally, {
-                    timeout: WAIT,
-                })
+            const itr = CancelableGenerator((async function* Gen() {
+                yield* generate(expected, 1000)
+            }()), onFinally, {
+                timeout: WAIT,
+            })
 
-                const tasks = expected.map(async () => itr.next())
-                await wait(100)
-                await itr.cancel(expectedError)
-                const result = Promise.allSettled(tasks)
-                // first is error
-                expect(result[0]).toEqual({ status: 'rejected', reason: expectedError })
-                // rest is undefined result
-                // not sure what good behaviour should be in this case
-                expect(result.slice(1)).toEqual(result.slice(1).map(() => ({
-                    status: 'fulfilled',
-                    value: {
-                        value: undefined,
-                        done: true
-                    }
-                })))
-                expect(itr.isCancelled()).toEqual(true)
-            } finally {
-                await done
-            }
+            const tasks = expected.map(async () => itr.next())
+            await wait(100)
+            await itr.cancel(expectedError)
+            const result = await Promise.allSettled(tasks)
+            // first is error
+            expect(result[0]).toEqual({ status: 'rejected', reason: expectedError })
+            // rest is undefined result
+            // not sure what good behaviour should be in this case
+            expect(result.slice(1)).toEqual(result.slice(1).map(() => ({
+                status: 'fulfilled',
+                value: {
+                    value: undefined,
+                    done: true
+                }
+            })))
+            expect(itr.isCancelled()).toEqual(true)
         }, 10000)
 
         it('can handle queued next calls resolving out of order', async () => {
