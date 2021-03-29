@@ -7,7 +7,7 @@
   Streamr JavaScript Client
 </h1>
 
-[![Build Status](https://travis-ci.com/streamr-dev/streamr-client-javascript.svg?branch=master&style=flat)](https://travis-ci.com/streamr-dev/streamr-client-javascript)
+![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/streamr-client-javascript/Test%20Build/master)
 [![GitHub release](https://img.shields.io/github/release/streamr-dev/streamr-client-javascript.svg?style=flat)](https://github.com/streamr-dev/streamr-client-javascript/releases/)
 [![GitHub stars](https://img.shields.io/github/stars/streamr-dev/streamr-client-javascript.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/streamr-client-javascript/)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
