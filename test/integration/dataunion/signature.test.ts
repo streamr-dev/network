@@ -1,4 +1,4 @@
-import { Contract, providers, Wallet } from 'ethers'
+import { BigNumber, Contract, providers, Wallet } from 'ethers'
 import { parseEther } from 'ethers/lib/utils'
 import debug from 'debug'
 
@@ -74,4 +74,21 @@ describe('DataUnion signature', () => {
         expect(isValid2).toBe(true)
         expect(isValid3).toBe(true)
     }, 100000)
+
+    it('create signature', async () => {
+        const client = new StreamrClient({
+            auth: {
+                privateKey: '0x1111111111111111111111111111111111111111111111111111111111111111'
+            }
+        })
+        const dataUnion = client.getDataUnion('0x2222222222222222222222222222222222222222')
+        const to = '0x3333333333333333333333333333333333333333'
+        const withdrawn = BigNumber.from('4000000000000000')
+        const amounts = [5000000000000000, '5000000000000000', BigNumber.from('5000000000000000')]
+        // eslint-disable-next-line no-underscore-dangle
+        const signaturePromises = amounts.map((amount) => dataUnion._createWithdrawSignature(amount, to, withdrawn, client.ethereum.getSigner()))
+        const actualSignatures = await Promise.all(signaturePromises)
+        const expectedSignature = '0x5325ae62cdfd7d7c15101c611adcb159439217a48193c4e1d87ca5de698ec5233b1a68fd1302fdbd5450618d40739904295c88e88cf79d4241cf8736c2ec75731b' // eslint-disable-line max-len
+        expect(actualSignatures.every((actual) => actual === expectedSignature))
+    })
 })

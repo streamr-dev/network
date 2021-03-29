@@ -2,7 +2,7 @@ import { getAddress } from '@ethersproject/address'
 import { BigNumber } from '@ethersproject/bignumber'
 import { arrayify, hexZeroPad } from '@ethersproject/bytes'
 import { Contract } from '@ethersproject/contracts'
-import { TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
+import { JsonRpcSigner, TransactionReceipt, TransactionResponse } from '@ethersproject/providers'
 import debug from 'debug'
 import { Contracts } from './Contracts'
 import { StreamrClient } from '../StreamrClient'
@@ -229,8 +229,20 @@ export class DataUnion {
         const memberData = await duSidechain.memberData(address)
         if (memberData[0] === '0') { throw new Error(`${address} is not a member in Data Union (sidechain address ${duSidechain.address})`) }
         const withdrawn = memberData[3]
-        // @ts-expect-error
-        const message = to + hexZeroPad(amountTokenWei, 32).slice(2) + duSidechain.address.slice(2) + hexZeroPad(withdrawn, 32).slice(2)
+        return this._createWithdrawSignature(amountTokenWei, to, withdrawn, signer)
+    }
+
+    /** @internal */
+    async _createWithdrawSignature(
+        amountTokenWei: BigNumber|number|string,
+        to: EthereumAddress,
+        withdrawn: BigNumber,
+        signer: JsonRpcSigner
+    ) {
+        const message = to
+            + hexZeroPad(BigNumber.from(amountTokenWei).toHexString(), 32).slice(2)
+            + this.getSidechainAddress().slice(2)
+            + hexZeroPad(withdrawn.toHexString(), 32).slice(2)
         const signature = await signer.signMessage(arrayify(message))
         return signature
     }
