@@ -26,6 +26,7 @@ describe('LongResend', () => {
     let stream: Stream
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
+    let prevEnabled: boolean
 
     const createClient = (opts = {}) => new StreamrClient({
         autoConnect: false,
@@ -40,11 +41,24 @@ describe('LongResend', () => {
             }
         })
         await client.connect()
+    })
+
+    beforeEach(async () => {
         expectErrors = 0
         onError = jest.fn()
         client.onError = jest.fn()
         client.on('error', onError)
         stream = await client.getStream(TRAM_DEMO_STREAM)
+    })
+
+    beforeEach(() => {
+        client.debug('disabling logging for long tests')
+        prevEnabled = client.debug.enabled
+        client.debug.enabled = false
+    })
+
+    afterEach(() => {
+        client.debug.enabled = prevEnabled
     })
 
     afterEach(async () => {
@@ -70,38 +84,40 @@ describe('LongResend', () => {
         }
     })
 
-    const RESEND_SIZES = [
-        1,
-        10,
-        20,
-        100,
-        1000,
-        10000,
-        25000, // will be ignored, max is 10,000
-    ]
+    describe('Resends of different sizes', () => {
+        const RESEND_SIZES = [
+            1,
+            10,
+            20,
+            100,
+            1000,
+            10000,
+            25000, // will be ignored, max is 10,000
+        ]
 
-    const MAX_RESEND_SIZE = 10000
+        const MAX_RESEND_SIZE = 10000
 
-    RESEND_SIZES.forEach((size) => {
-        test.only(`can get a resend of size ${size}`, async () => {
-            const id = `TEST ${size}`
-            let count = 0
-            const sub = await client.resend({
-                stream: stream.id,
-                resend: {
-                    last: size
-                },
-            }, () => {
-                count += 1
-            })
-            await sub.onDone()
-            client.debug(id, { count })
-            if (size < MAX_RESEND_SIZE) {
-                expect(count).toBe(size)
-            } else {
-                expect(count).toBe(10000)
-            }
-        }, Math.max(10000, size))
+        RESEND_SIZES.forEach((size) => {
+            test(`can get a resend of size ${size}`, async () => {
+                const id = `TEST ${size}`
+                let count = 0
+                const sub = await client.resend({
+                    stream: stream.id,
+                    resend: {
+                        last: size
+                    },
+                }, () => {
+                    count += 1
+                })
+                await sub.onDone()
+                client.debug(id, { count })
+                if (size < MAX_RESEND_SIZE) {
+                    expect(count).toBe(size)
+                } else {
+                    expect(count).toBe(10000)
+                }
+            }, Math.max(10000, size) * 2)
+        })
     })
 
     describe('large number of messages', () => {
