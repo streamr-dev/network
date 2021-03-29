@@ -1,3 +1,4 @@
+import Emitter from 'events'
 import pMemoize from 'p-memoize'
 
 import { Defer, pTimeout, allSettledValues, AggregatedError } from './index'
@@ -143,13 +144,11 @@ const endGeneratorTimeout = pMemoize(async (gtr, error, timeout = 250) => {
  */
 
 export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 250 } = {}) {
-    let started = false
     let cancelled = false
     let finalCalled = false
-    let pendingNextCount = 0
     let error
 
-    const onCancel = Defer()
+    const cancelSignal = new Emitter()
     const onDone = Defer()
 
     let iterator
@@ -179,15 +178,9 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
         }
 
         if (error) {
-            onCancel.reject(error)
-            if (!started) {
-                onCancel.catch(() => {})
-            }
+            cancelSignal.emit('cancel', error)
         } else {
-            onCancel.resolve({
-                value,
-                done: true,
-            })
+            cancelSignal.emit('cancel', value)
         }
     }
 
@@ -205,38 +198,49 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
         return onDone
     }
 
-    async function* CancelableGeneratorFn() {
-        started = true
+    let pendingNext = 0
 
+    async function* CancelableGeneratorFn() {
         // manually iterate
         iterator = iterable[Symbol.asyncIterator]()
 
-        // keep track of pending calls to next()
-        // so we can cancel early if nothing pending
-        async function next(...args) {
-            // use symbol instead of true so we can tell if called multiple times
-            // see === comparison below
-            pendingNextCount += 1
-            try {
-                return await iterator.next(...args)
-            } finally {
-                pendingNextCount = Math.max(0, pendingNextCount - 1) // eslint-disable-line require-atomic-updates
-            }
-        }
-
         try {
             yield* {
-                // here is the meat:
-                // each next() races against cancel promise
-                next: async (...args) => Promise.race([
-                    next(...args),
-                    onCancel,
-                ]),
+                // each next() races against cancel signal
+                next: async (...args) => {
+                    pendingNext += 1
+                    cancelSignal.setMaxListeners(pendingNext)
+                    // NOTE:
+                    // Very easy to create a memleak here.
+                    // Using a shared promise with Promise.race
+                    // between loop iterations prevents data from being GC'ed.
+                    // Create new per-loop promise and resolve using an event emitter.
+                    const cancelPromise = Defer()
+                    const onCancel = (v) => {
+                        if (v instanceof Error) {
+                            cancelPromise.reject(v)
+                        } else {
+                            cancelPromise.resolve({ value: undefined, done: true })
+                        }
+                    }
+
+                    cancelSignal.once('cancel', onCancel)
+                    return Promise.race([
+                        iterator.next(...args),
+                        cancelPromise,
+                    ]).finally(() => {
+                        pendingNext -= 1
+                        cancelSignal.setMaxListeners(pendingNext)
+                        cancelSignal.off('cancel', onCancel)
+                    })
+                },
                 async throw(err) {
+                    cancelSignal.removeAllListeners()
                     await endGeneratorTimeout(iterator, err, timeout)
                     throw err
                 },
                 async return(v) {
+                    cancelSignal.removeAllListeners()
                     await endGeneratorTimeout(iterator, error, timeout)
                     return {
                         value: v,
@@ -248,6 +252,7 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
                 },
             }
         } finally {
+            cancelSignal.removeAllListeners()
             // try end iterator
             if (iterator) {
                 await endGeneratorTimeout(iterator, error, timeout)

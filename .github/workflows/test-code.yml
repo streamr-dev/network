@@ -31,6 +31,13 @@ on:
 # Be sure to update both workflow files if you edit any env or trigger config
 
 jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.8.0
+        with:
+          access_token: ${{ github.token }}
   lint:
     name: Run linter using Node 14.x
     runs-on: ubuntu-latest
@@ -133,3 +140,25 @@ jobs:
           retry_on: error
           command: npm run test-flakey || echo "::warning::Flakey Tests Failed"
 
+  memory:
+    name:  Memory Tests using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [12.x, 14.x]
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: npm ci
+        run: npm ci
+      - uses: nick-invision/retry@v2
+        name: Run Test
+        with:
+          max_attempts: 2
+          timeout_minutes: 20
+          retry_on: error
+          command: npm run test-memory

@@ -1,4 +1,4 @@
-import { pOrderedResolve, Defer, pTimeout } from './index'
+import { Defer, pTimeout } from './index'
 
 async function endGenerator(gtr: AsyncGenerator, error?: Error) {
     return error
@@ -127,20 +127,11 @@ export default class PushQueue<T> {
     }
 
     static transform<TT, U>(src: AnyIterable<TT>, fn: (value: TT) => U, opts = {}) {
-        const buffer = new PushQueue<TT>([], opts)
-        const orderedFn = pOrderedResolve(fn) // push must be run in sequence
+        const buffer = new PushQueue<U>([], opts)
         ;(async () => { // eslint-disable-line semi-style
-            const tasks = []
             for await (const value of src) {
-                // run in parallel
-                const task = orderedFn(value).then(() => (
-                    buffer.push(value)
-                )).catch((err) => {
-                    buffer.throw(err)
-                })
-                tasks.push(task)
+                buffer.push(fn(value))
             }
-            await Promise.all(tasks)
             if (buffer.autoEnd) {
                 buffer.end()
             }
@@ -169,7 +160,7 @@ export default class PushQueue<T> {
         }
 
         if (end) {
-            await this.end()
+            this.end()
         }
 
         return Promise.resolve()
@@ -235,8 +226,6 @@ export default class PushQueue<T> {
             // for next()
             this.error = err
         }
-
-        await this._cleanup()
     }
 
     get length() {
@@ -245,18 +234,30 @@ export default class PushQueue<T> {
     }
 
     async _cleanup() {
+        // capture error and pending next promises
+        const { error, nextQueue } = this
         this.finished = true
-        const { error } = this
-        for (const p of this.nextQueue) {
+        this.error = undefined
+        this.pending = 0
+        // empty buffer then reassign
+        this.buffer.length = 0
+        this.buffer = []
+        // reassign nextQueue, emptying would mutate value we captured
+        this.nextQueue = []
+        const doneValue = { value: undefined, done: true }
+        // resolve all pending next promises
+        while (nextQueue.length) {
+            const p = nextQueue.shift()
+            if (!p) { continue }
+
             if (error) {
                 p.reject(error)
             } else {
-                p.resolve(undefined)
+                p.resolve(doneValue)
             }
         }
-        this.pending = 0
-        this.buffer.length = 0
-        return this.onEnd(this.error)
+
+        return this.onEnd(error)
     }
 
     push(...values: (T | null)[]) {
@@ -340,7 +341,6 @@ export default class PushQueue<T> {
 
                 const deferred = Defer<T>()
                 this.nextQueue.push(deferred)
-
                 deferred.catch(() => {}) // prevent unhandledrejection
                 const value = await deferred
 
@@ -389,6 +389,7 @@ export default class PushQueue<T> {
         try {
             yield* this.iterator
         } finally {
+            this._cleanup()
             this.finished = true
             if (this.signal) {
                 this.signal.removeEventListener('abort', this.onAbort)

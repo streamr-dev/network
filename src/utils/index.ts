@@ -220,13 +220,32 @@ export function CacheFn(fn: Parameters<typeof mem>[0], {
 type PromiseResolve = L.Compulsory<Parameters<Promise<any>['then']>>[0]
 type PromiseReject = L.Compulsory<Parameters<Promise<any>['then']>>[1]
 
-export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = () => {}) {
-    let resolve: PromiseResolve = () => {}
-    let reject: PromiseReject = () => {}
+const noop = () => {}
+
+export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => void = noop) {
+    let resolveFn: PromiseResolve | undefined
+    let rejectFn: PromiseResolve | undefined
+    const resolve: PromiseReject = (value) => {
+        if (resolveFn) {
+            const r = resolveFn
+            resolveFn = undefined
+            rejectFn = undefined
+            r(value)
+        }
+    }
+    const reject: PromiseReject = (error) => {
+        if (rejectFn) {
+            const r = rejectFn
+            resolveFn = undefined
+            rejectFn = undefined
+            r(error)
+        }
+    }
+
     // eslint-disable-next-line promise/param-names
     const p = new Promise((_resolve, _reject) => {
-        resolve = _resolve
-        reject = _reject
+        resolveFn = _resolve
+        rejectFn = _reject
         executor(resolve, reject)
     })
     p.catch(() => {}) // prevent unhandledrejection
@@ -295,21 +314,26 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
                     // clean up if no more active entries (if not cleared)
                     pending.delete(id)
                 }
-                queueOnEmptyTasks.delete(id)
+
+                if (queueOnEmptyTasks.has(id)) {
+                    queueOnEmptyTasks.get(id).resolve(undefined)
+                    queueOnEmptyTasks.delete(id)
+                }
+
                 onQueueEmpty.resolve()
             }
         }
     }
 
     f.getOnQueueEmpty = async (id: KeyType) => {
-        return queueOnEmptyTasks.get(id) || pending.set(id, Defer()).get(id)
+        return queueOnEmptyTasks.get(id) || queueOnEmptyTasks.set(id, Defer()).get(id)
     }
 
     f.clear = () => {
         // note: does not cancel promises
         pending.forEach((p) => p.clearQueue())
         pending.clear()
-        queueOnEmptyTasks.forEach((p) => p.resolve())
+        queueOnEmptyTasks.forEach((p) => p.resolve(undefined))
         queueOnEmptyTasks.clear()
     }
     return f

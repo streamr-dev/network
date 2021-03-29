@@ -41,7 +41,10 @@ export default function Validator(client, opts) {
         },
         verify: CacheAsyncFn(SigningUtil.verify.bind(SigningUtil), {
             ...client.options.cache,
-            cachePromiseRejection: false,
+            // forcibly use small cache otherwise keeps n serialized messages in memory
+            maxSize: 100,
+            maxAge: 10000,
+            cachePromiseRejection: true,
             cacheKey: (args) => args.join('|'),
         })
     })
