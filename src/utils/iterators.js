@@ -204,23 +204,31 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
 
         try {
             yield* {
-                // here is the meat:
                 // each next() races against cancel signal
                 next: async (...args) => {
                     cancelSignal.removeAllListeners()
-                    const p = Defer()
+                    // NOTE:
+                    // Very easy to create a memleak here.
+                    // Using a shared promise with Promise.race
+                    // between loop iterations prevents data from being GC'ed.
+                    // Create new per-loop promise and resolve using an event emitter.
+                    const cancelPromise = Defer()
                     const onCancel = (v) => {
                         if (v instanceof Error) {
-                            p.reject(v)
+                            cancelPromise.reject(v)
                         } else {
-                            p.resolve({ value: undefined, done: true })
+                            cancelPromise.resolve({ value: undefined, done: true })
                         }
                     }
 
                     cancelSignal.once('cancel', onCancel)
+                    const nextTask = iterator.next(...args)
+                    nextTask.finally(() => {
+                        cancelPromise.resolve()
+                    }).catch(() => {})
                     return Promise.race([
-                        iterator.next(...args),
-                        p,
+                        nextTask,
+                        cancelPromise,
                     ])
                 },
                 async throw(err) {
