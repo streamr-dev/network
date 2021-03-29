@@ -198,6 +198,8 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
         return onDone
     }
 
+    let pendingNext = 0
+
     async function* CancelableGeneratorFn() {
         // manually iterate
         iterator = iterable[Symbol.asyncIterator]()
@@ -206,7 +208,8 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
             yield* {
                 // each next() races against cancel signal
                 next: async (...args) => {
-                    cancelSignal.removeAllListeners()
+                    pendingNext += 1
+                    cancelSignal.setMaxListeners(pendingNext)
                     // NOTE:
                     // Very easy to create a memleak here.
                     // Using a shared promise with Promise.race
@@ -226,7 +229,9 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
                         iterator.next(...args),
                         cancelPromise,
                     ]).finally(() => {
-                        cancelPromise.resolve({ value: undefined, done: true })
+                        pendingNext -= 1
+                        cancelSignal.setMaxListeners(pendingNext)
+                        cancelSignal.off('cancel', onCancel)
                     })
                 },
                 async throw(err) {

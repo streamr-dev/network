@@ -234,14 +234,18 @@ export default class PushQueue<T> {
     }
 
     async _cleanup() {
+        // capture error and pending next promises
         const { error, nextQueue } = this
         this.finished = true
         this.error = undefined
         this.pending = 0
+        // empty buffer then reassign
         this.buffer.length = 0
         this.buffer = []
+        // reassign nextQueue, emptying would mutate value we captured
         this.nextQueue = []
         const doneValue = { value: undefined, done: true }
+        // resolve all pending next promises
         while (nextQueue.length) {
             const p = nextQueue.shift()
             if (!p) { continue }
