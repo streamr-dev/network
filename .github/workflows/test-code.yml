@@ -154,4 +154,4 @@ jobs:
           max_attempts: 2
           timeout_minutes: 20
           retry_on: error
-          command: DEBUG='' npm run test-memory
+          command: npm run test-memory
