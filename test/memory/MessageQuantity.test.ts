@@ -177,27 +177,36 @@ describe('no memleaks when processing a high quantity of large messages', () => 
             }
         })
 
-        test('realtime', async () => {
-            // might not work on weekends :/
+        test.only('realtime', async () => {
             const MAX_MEMORY_USAGE = 2e+8 // 300MB
-            const MAX_MESSAGES = 10000
+            const MAX_MESSAGES = 6000
+            const MAX_TEST_TIME = 60000
             sub = await client.subscribe({
                 stream: stream.id,
             }, onMessage(MAX_MESSAGES))
+            const t = setTimeout(() => {
+                sub.unsubscribe()
+            }, MAX_TEST_TIME) // run for 60s or 6k messages
             await sub.onDone()
+            clearTimeout(t)
             validate(MAX_MEMORY_USAGE)
         }, 120000)
 
         test('resendSubscribe', async () => {
-            // might not work on weekends :/
             const MAX_MEMORY_USAGE = 2e+8 // 300MB
-            const MAX_MESSAGES = 10000
+            const MAX_MESSAGES = 6000
+            const MAX_TEST_TIME = 60000
             sub = await client.subscribe({
                 stream: stream.id,
                 resend: {
                     last: Math.floor(MAX_MESSAGES / 2),
                 }
             }, onMessage(MAX_MESSAGES))
+            const t = setTimeout(() => {
+                sub.unsubscribe()
+            }, MAX_TEST_TIME) // run for 60s or 6k messages
+            await sub.onDone()
+            clearTimeout(t)
             await sub.onDone()
             validate(MAX_MEMORY_USAGE)
         }, 120000)
