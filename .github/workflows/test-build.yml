@@ -188,6 +188,6 @@ jobs:
         name: run-client-testing
         with:
           max_attempts: 2
-          timeout_minutes: 8
+          timeout_minutes: 15
           retry_on: error
           command: cd streamr-client-testing && java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
