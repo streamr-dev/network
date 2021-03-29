@@ -222,14 +222,12 @@ export function CancelableGenerator(iterable, onFinally = () => {}, { timeout = 
                     }
 
                     cancelSignal.once('cancel', onCancel)
-                    const nextTask = iterator.next(...args)
-                    nextTask.finally(() => {
-                        cancelPromise.resolve()
-                    }).catch(() => {})
                     return Promise.race([
-                        nextTask,
+                        iterator.next(...args),
                         cancelPromise,
-                    ])
+                    ]).finally(() => {
+                        cancelPromise.resolve({ value: undefined, done: true })
+                    })
                 },
                 async throw(err) {
                     cancelSignal.removeAllListeners()
