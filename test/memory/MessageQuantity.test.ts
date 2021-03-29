@@ -8,7 +8,6 @@ import Connection from '../../src/Connection'
 import prettyBytes from 'pretty-bytes'
 
 const TRAM_DEMO_STREAM = '7wa7APtlTq6EC5iTCBy6dw'
-/* eslint-disable require-atomic-updates, no-loop-func */
 
 function logMemory() {
     const res = process.memoryUsage()
@@ -21,7 +20,7 @@ function logMemory() {
     }
 }
 
-describe('LongResend', () => {
+describe('no memleaks when processing a high quantity of large messages', () => {
     let client: StreamrClient
     let stream: Stream
     let expectErrors = 0 // check no errors by default
@@ -84,7 +83,7 @@ describe('LongResend', () => {
         }
     })
 
-    describe('Resends of different sizes', () => {
+    describe('resends of different sizes', () => {
         const RESEND_SIZES = [
             1,
             10,
