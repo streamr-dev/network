@@ -54,12 +54,14 @@ describe('no memleaks when processing a high quantity of large messages', () => 
     })
 
     beforeEach(() => {
+        if (!process.env.DEBUG) { return }
         client.debug('disabling verbose client logging for long tests')
         Debug.disable()
         Debug.enable('MessageQuantityTest')
     })
 
     afterEach(() => {
+        if (!process.env.DEBUG) { return }
         Debug.enable(process.env.DEBUG)
     })
 
@@ -236,7 +238,7 @@ describe('no memleaks when processing a high quantity of large messages', () => 
                         timestamp: end,
                     }
                 },
-            }, onMessage(MAX_MESSAGES))
+            }, onMessage(MAX_MESSAGES, MAX_MEMORY_USAGE))
             await sub.onDone()
             validate(MAX_MEMORY_USAGE)
         }, 1000000)
