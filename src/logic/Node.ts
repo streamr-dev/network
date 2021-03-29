@@ -301,17 +301,21 @@ export class Node extends EventEmitter {
             this.streams.updateCounter(streamId, counter)
         }
 
-        this.prepareAndSendStreamStatus(streamId)
         // Log success / failures
         const subscribeNodeIds: string[] = []
         const unsubscribeNodeIds: string[] = []
+        let failedInstructions = false
         results.forEach((res) => {
             if (res.status === 'fulfilled') {
                 subscribeNodeIds.push(res.value)
             } else {
+                failedInstructions = true
                 this.logger.debug('failed to subscribe (or connect) to node, reason: %s', res.reason)
             }
         })
+        if (!reattempt || failedInstructions) {
+            this.prepareAndSendStreamStatus(streamId)
+        }
 
         this.logger.debug('subscribed to %j and unsubscribed from %j (streamId=%s, counter=%d)',
             subscribeNodeIds, unsubscribeNodeIds, streamId, counter)

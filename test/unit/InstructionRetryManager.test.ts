@@ -32,11 +32,11 @@ describe('InstructionRetryManager', () => {
         await wait(110)
 
         expect(handlerCb.mock.calls).toEqual([
-            [createInstruction('stream-1', 1), 'tracker-1', true],
-            [createInstruction('stream-2', 2), 'tracker-2', true],
-            [createInstruction('stream-3', 3), 'tracker-1', true],
-            [createInstruction('stream-4', 4), 'tracker-1', true],
-            [createInstruction('stream-5', 5), 'tracker-2', true],
+            [createInstruction('stream-1', 1), 'tracker-1', false],
+            [createInstruction('stream-2', 2), 'tracker-2', false],
+            [createInstruction('stream-3', 3), 'tracker-1', false],
+            [createInstruction('stream-4', 4), 'tracker-1', false],
+            [createInstruction('stream-5', 5), 'tracker-2', false],
         ])
     })
 
@@ -50,11 +50,11 @@ describe('InstructionRetryManager', () => {
         await wait(220)
 
         expect(handlerCb.mock.calls).toEqual([
-            [createInstruction('stream-1', 1), 'tracker-1', true],
-            [createInstruction('stream-2', 2), 'tracker-2', true],
-            [createInstruction('stream-3', 3), 'tracker-1', true],
-            [createInstruction('stream-4', 4), 'tracker-1', true],
-            [createInstruction('stream-5', 5), 'tracker-2', true],
+            [createInstruction('stream-1', 1), 'tracker-1', false],
+            [createInstruction('stream-2', 2), 'tracker-2', false],
+            [createInstruction('stream-3', 3), 'tracker-1', false],
+            [createInstruction('stream-4', 4), 'tracker-1', false],
+            [createInstruction('stream-5', 5), 'tracker-2', false],
             [createInstruction('stream-1', 1), 'tracker-1', true],
             [createInstruction('stream-2', 2), 'tracker-2', true],
             [createInstruction('stream-3', 3), 'tracker-1', true],
@@ -69,8 +69,8 @@ describe('InstructionRetryManager', () => {
         await wait(110)
 
         expect(handlerCb.mock.calls).toEqual([
-            [createInstruction('stream-1', 1), 'tracker-1', true],
-            [createInstruction('stream-2', 2), 'tracker-2', true],
+            [createInstruction('stream-1', 1), 'tracker-1', false],
+            [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
 
         instructionRetryManager.add(createInstruction('stream-1', 5), 'tracker-1')
@@ -79,10 +79,10 @@ describe('InstructionRetryManager', () => {
         await wait(110)
 
         expect(handlerCb.mock.calls).toEqual([
-            [createInstruction('stream-1', 1), 'tracker-1', true],
-            [createInstruction('stream-2', 2), 'tracker-2', true],
-            [createInstruction('stream-1', 5), 'tracker-1', true],
-            [createInstruction('stream-2', 8), 'tracker-2', true],
+            [createInstruction('stream-1', 1), 'tracker-1', false],
+            [createInstruction('stream-2', 2), 'tracker-2', false],
+            [createInstruction('stream-1', 5), 'tracker-1', false],
+            [createInstruction('stream-2', 8), 'tracker-2', false],
         ])
     })
     it('Instructions for streams can be deleted and timeouts are cleared', async () => {
@@ -91,15 +91,15 @@ describe('InstructionRetryManager', () => {
 
         await wait(110)
         expect(handlerCb.mock.calls).toEqual([
-            [createInstruction('stream-1', 1), 'tracker-1', true],
-            [createInstruction('stream-2', 2), 'tracker-2', true],
+            [createInstruction('stream-1', 1), 'tracker-1', false],
+            [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
 
         instructionRetryManager.removeStreamId('stream-1::0')
         await wait(110)
         expect(handlerCb.mock.calls).toEqual([
-            [createInstruction('stream-1', 1), 'tracker-1', true],
-            [createInstruction('stream-2', 2), 'tracker-2', true],
+            [createInstruction('stream-1', 1), 'tracker-1', false],
+            [createInstruction('stream-2', 2), 'tracker-2', false],
             [createInstruction('stream-2', 2), 'tracker-2', true],
         ])
     })
@@ -109,14 +109,14 @@ describe('InstructionRetryManager', () => {
 
         await wait(110)
         expect(handlerCb.mock.calls).toEqual([
-            [createInstruction('stream-1', 1), 'tracker-1', true],
-            [createInstruction('stream-2', 2), 'tracker-2', true],
+            [createInstruction('stream-1', 1), 'tracker-1', false],
+            [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
         instructionRetryManager.reset()
         await wait(220)
         expect(handlerCb.mock.calls).toEqual([
-            [createInstruction('stream-1', 1), 'tracker-1', true],
-            [createInstruction('stream-2', 2), 'tracker-2', true],
+            [createInstruction('stream-1', 1), 'tracker-1', false],
+            [createInstruction('stream-2', 2), 'tracker-2', false],
         ])
     })
 })
