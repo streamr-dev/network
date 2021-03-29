@@ -16,6 +16,7 @@ module.exports = {
         // valid types + descriptions
         // feel free to add more types as necessary
         'type-enum': [2, 'always', [
+            'release', // Release commits.
             'build', // Changes that affect the build system
             'ci', // Changes to our CI configuration files and scripts.
             'docs', // Documentation only changes
