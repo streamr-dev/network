@@ -389,7 +389,12 @@ export class Node extends EventEmitter {
                     await this.nodeToNode.sendData(subscriber, streamMessage)
                     this.consecutiveDeliveryFailures[subscriber] = 0
                 } catch (e) {
-                    this.logger.warn(`failed to propagateMessage ${streamMessage} to subscriber ${subscriber}, because of ${e}`)
+                    const serializedMsgId = streamMessage.getMessageID().serialize()
+                    this.logger.warn('failed to propagate %s (consecutiveFails=%d) to subscriber %s, reason: %s',
+                        serializedMsgId,
+                        this.consecutiveDeliveryFailures[subscriber] || 0,
+                        subscriber,
+                        e)
                     this.emit(Event.MESSAGE_PROPAGATION_FAILED, streamMessage.getMessageID(), subscriber, e)
 
                     // TODO: this is hack to get around the issue where `StreamStateManager` believes that we are
