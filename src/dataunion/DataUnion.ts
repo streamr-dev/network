@@ -143,7 +143,10 @@ export class DataUnion {
 
     /**
      * Withdraw all your earnings
-     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false, ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost), ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves, ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false
+     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
+     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
+     *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
     async withdrawAll(options?: DataUnionWithdrawOptions) {
         const recipientAddress = await this.client.getAddress()
@@ -177,7 +180,10 @@ export class DataUnion {
 
     /**
      * Withdraw earnings and "donate" them to the given address
-     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false, ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost), ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves, ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false
+     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
+     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
+     *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
     async withdrawAllTo(
         recipientAddress: EthereumAddress,
@@ -403,7 +409,10 @@ export class DataUnion {
      * Admin: withdraw earnings (pay gas) on behalf of a member
      * TODO: add test
      * @param memberAddress - the other member who gets their tokens out of the Data Union
-     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false, ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost), ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves, ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false
+     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
+     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
+     *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
     async withdrawAllToMember(
         memberAddress: EthereumAddress,
@@ -433,7 +442,10 @@ export class DataUnion {
      * @param memberAddress - the member whose earnings are sent out
      * @param recipientAddress - the address to receive the tokens in mainnet
      * @param signature - from member, produced using signWithdrawAllTo
-     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false, ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost), ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves, ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false
+     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
+     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
+     *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
     async withdrawAllToSigned(
         memberAddress: EthereumAddress,
@@ -565,7 +577,10 @@ export class DataUnion {
     /**
      * Template for withdraw functions
      * @private
-     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false, ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost), ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves, ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false
+     * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
+     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
+     *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
     private async _executeWithdraw(
         getWithdrawTxFunc: () => Promise<ContractTransaction>,
@@ -575,7 +590,8 @@ export class DataUnion {
         const {
             pollingIntervalMs = 1000,
             retryTimeoutMs = 60000,
-            transportSignatures = !this.client.options.dataUnion.freeWithdraw, // by default, transport the signatures if freeWithdraw isn't supported by the sidechain
+            // by default, transport the signatures if freeWithdraw isn't supported by the sidechain
+            transportSignatures = !this.client.options.dataUnion.freeWithdraw,
             waitUntilTransportIsComplete = true,
             sendToMainnet = true,
         } = options
@@ -595,9 +611,13 @@ export class DataUnion {
         log(`Got receipt, filtering UserRequestForSignature from ${tr.events!.length} events...`)
         const ambHashes = getMessageHashes(tr)
 
-        if (ambHashes.length < 1) { throw new Error("No UserRequestForSignature events emitted from withdraw transaction, can't transport withdraw to mainnet") }
+        if (ambHashes.length < 1) {
+            throw new Error("No UserRequestForSignature events emitted from withdraw transaction, can't transport withdraw to mainnet")
+        }
 
-        if (ambHashes.length > 1) { throw new Error('Expected only one UserRequestForSignature event') }
+        if (ambHashes.length > 1) {
+            throw new Error('Expected only one UserRequestForSignature event')
+        }
 
         const messageHash = ambHashes[0]
 

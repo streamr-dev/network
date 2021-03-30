@@ -1,6 +1,6 @@
 import { getCreate2Address, isAddress } from '@ethersproject/address'
 import { arrayify, hexZeroPad } from '@ethersproject/bytes'
-import { Contract, ContractReceipt } from '@ethersproject/contracts'
+import { Contract } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
 import { verifyMessage } from '@ethersproject/wallet'
