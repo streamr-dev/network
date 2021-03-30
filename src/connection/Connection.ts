@@ -342,7 +342,15 @@ export class Connection {
     }
 
     private attemptToFlushMessages(): void {
+        let numOfSuccessSends = 0
         while (!this.messageQueue.empty()) {
+            // Max 10 messages sent in busy-loop, then relinquish control for a moment, in case `dc.send` is blocking
+            // (is it?)
+            if (numOfSuccessSends >= 10) {
+                setImmediate(() => this.attemptToFlushMessages())
+                return
+            }
+
             const queueItem = this.messageQueue.peek()
             if (queueItem.isFailed()) {
                 this.messageQueue.pop()
@@ -366,6 +374,7 @@ export class Connection {
                     // Checking `this.open()` is left out on purpose. We want the message to be discarded if it was not
                     // sent after MAX_TRIES regardless of the reason.
                     sent = this.dataChannel!.sendMessage(queueItem.getMessage())
+                    numOfSuccessSends += 1
                 } catch (e) {
                     this.processFailedMessage(queueItem, e)
                     return // method rescheduled by `this.flushTimeoutRef`
