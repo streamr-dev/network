@@ -185,8 +185,9 @@ describe('no memleaks when processing a high quantity of large messages', () => 
         describe('with realtime', () => {
             const MAX_MEMORY_USAGE = 2e+8 // 200MB
             // run for period or some number of messages, whichever comes first
-            const MAX_TEST_TIME = 360000
+            const MAX_TEST_TIME = 300000 // 5min
             const MAX_MESSAGES = MAX_TEST_TIME / 10
+            const MIN_RECEIVED_MESSAGES = 5000 // needs at least this many messages to detect leak
 
             test('just realtime', async () => {
                 sub = await client.subscribe({
@@ -201,6 +202,7 @@ describe('no memleaks when processing a high quantity of large messages', () => 
                 await sub.onDone()
                 clearTimeout(t)
                 validate(MAX_MEMORY_USAGE)
+                expect(count).toBeGreaterThanOrEqual(MIN_RECEIVED_MESSAGES)
             }, MAX_TEST_TIME * 2)
 
             test('resendSubscribe', async () => {
@@ -220,6 +222,7 @@ describe('no memleaks when processing a high quantity of large messages', () => 
                 clearTimeout(t)
                 await sub.onDone()
                 validate(MAX_MEMORY_USAGE)
+                expect(count).toBeGreaterThanOrEqual(MIN_RECEIVED_MESSAGES)
             }, MAX_TEST_TIME * 2)
         })
 
@@ -227,6 +230,7 @@ describe('no memleaks when processing a high quantity of large messages', () => 
             const MAX_TEST_TIME = 300000 // 5min
             const MAX_MEMORY_USAGE = 5e+8 // 500MB
             const MAX_MESSAGES = 60000 // 60k
+            const MIN_RECEIVED_MESSAGES = 15000
 
             it('works', async () => {
                 const end = 1616509054932
@@ -251,6 +255,7 @@ describe('no memleaks when processing a high quantity of large messages', () => 
                 })
                 await sub.onDone()
                 validate(MAX_MEMORY_USAGE)
+                expect(count).toBeGreaterThanOrEqual(MIN_RECEIVED_MESSAGES)
             }, MAX_TEST_TIME * 2)
         })
     })
