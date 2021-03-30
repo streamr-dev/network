@@ -223,24 +223,35 @@ describe('no memleaks when processing a high quantity of large messages', () => 
             }, MAX_TEST_TIME * 2)
         })
 
-        test('just resend', async () => {
+        describe('just resend', () => {
+            const MAX_TEST_TIME = 300000 // 5min
             const MAX_MEMORY_USAGE = 5e+8 // 500MB
             const MAX_MESSAGES = 60000 // 60k
-            const end = 1616509054932
-            const start = end - (1 * 60 * 60 * 1000) // 1 hour
-            sub = await client.resend({
-                stream: stream.id,
-                resend: {
-                    from: {
-                        timestamp: start,
+
+            it('works', async () => {
+                const end = 1616509054932
+                const start = end - (1 * 60 * 60 * 1000) // 1 hour
+                sub = await client.resend({
+                    stream: stream.id,
+                    resend: {
+                        from: {
+                            timestamp: start,
+                        },
+                        to: {
+                            timestamp: end,
+                        }
                     },
-                    to: {
-                        timestamp: end,
-                    }
-                },
-            }, onMessage(MAX_MESSAGES, MAX_MEMORY_USAGE))
-            await sub.onDone()
-            validate(MAX_MEMORY_USAGE)
-        }, 1000000)
+                }, onMessage(MAX_MESSAGES, MAX_MEMORY_USAGE))
+
+                const t = setTimeout(() => {
+                    sub.unsubscribe()
+                }, MAX_TEST_TIME)
+                afterFn(() => {
+                    clearTimeout(t)
+                })
+                await sub.onDone()
+                validate(MAX_MEMORY_USAGE)
+            }, MAX_TEST_TIME * 2)
+        })
     })
 })
