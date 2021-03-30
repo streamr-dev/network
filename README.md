@@ -6,7 +6,7 @@
 
 # streamr-network
 
-[![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/network/nodejs/master)](https://github.com/streamr-dev/network/actions)
+[![Build Status](https://img.shields.io/github/workflow/status/streamr-dev/network/Eslint,%20Test%20and%20Publish/master)](https://github.com/streamr-dev/network/actions)
 [![npm release](https://img.shields.io/npm/v/streamr-network?style=flat)](https://www.npmjs.com/package/streamr-network)
 [![GitHub stars](https://img.shields.io/github/stars/streamr-dev/network.svg?style=flat&label=Star&maxAge=2592000)](https://github.com/streamr-dev/network/)
 [![Discord Chat](https://img.shields.io/discord/801574432350928907.svg?label=Discord&logo=Discord&colorB=7289da)](https://discord.gg/FVtAph9cvz)
