@@ -108,7 +108,7 @@ describeRepeats('PubSub with multiple clients', () => {
             // messages should arrive on both clients?
             expect(receivedMessagesMain).toEqual([message])
             expect(receivedMessagesOther).toEqual([message])
-        }, 30000)
+        }, 60000)
 
         describe('subscriber disconnects after each message', () => {
             test('single subscriber', async () => {
@@ -178,7 +178,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 await otherDone
 
                 expect(receivedMessagesOther).toEqual(published)
-            }, 30000)
+            }, 60000)
 
             test('publisher also subscriber', async () => {
                 const maxMessages = MAX_MESSAGES + Math.floor(Math.random() * MAX_MESSAGES * 0.25)
@@ -200,7 +200,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 await otherClient.subscribe({
                     stream: stream.id,
                 }, (msg) => {
-                    otherClient.debug('other', msg.value)
+                    otherClient.debug('other %d of %d', receivedMessagesOther.length, maxMessages, msg.value)
                     receivedMessagesOther.push(msg)
 
                     if (receivedMessagesOther.length === maxMessages) {
@@ -218,6 +218,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 })
 
                 const onConnectionMessage = jest.fn(() => {
+                    disconnect.clear()
                     // disconnect after every message
                     disconnect()
                 })
@@ -228,7 +229,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 await mainClient.subscribe({
                     stream: stream.id,
                 }, (msg) => {
-                    mainClient.debug('main', msg.value)
+                    mainClient.debug('main %d of %d', receivedMessagesOther.length, maxMessages, msg.value)
                     receivedMessagesMain.push(msg)
                     if (receivedMessagesMain.length === maxMessages) {
                         mainDone.resolve()
@@ -249,14 +250,16 @@ describeRepeats('PubSub with multiple clients', () => {
                     },
                 })
                 const published = await publishTestMessages(maxMessages)
-
-                await otherDone
+                mainClient.debug('publish done')
+                mainDone.then(() => mainClient.debug('done')).catch(() => {})
+                otherDone.then(() => otherClient.debug('done')).catch(() => {})
                 await mainDone
+                await otherDone
 
                 // messages should arrive on both clients?
                 expect(receivedMessagesMain).toEqual(published)
                 expect(receivedMessagesOther).toEqual(published)
-            }, 30000)
+            }, 60000)
         })
     })
 
@@ -355,7 +358,7 @@ describeRepeats('PubSub with multiple clients', () => {
 
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
-        }, 40000)
+        }, 60000)
 
         test('works with multiple publishers on one stream with late subscriber', async () => {
             // this creates two subscriber clients and multiple publisher clients
@@ -453,7 +456,7 @@ describeRepeats('PubSub with multiple clients', () => {
             }))
             checkMessages(published, receivedMessagesMain)
             checkMessages(published, receivedMessagesOther)
-        }, 60000)
+        }, 65000)
     })
 
     test('disconnecting one client does not disconnect the other', async () => {

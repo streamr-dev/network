@@ -345,13 +345,17 @@ export function LimitAsyncFnByKey<KeyType>(limit = 1) {
 
 export function pOrderedResolve(fn: F.Function) {
     const queue = pLimit(1)
-    return async (...args: Parameters<typeof fn>) => {
+    return Object.assign(async (...args: Parameters<typeof fn>) => {
         const d = Defer()
         const done = queue(() => d)
         // eslint-disable-next-line promise/catch-or-return
         await Promise.resolve(fn(...args)).then(d.resolve, d.reject)
         return done
-    }
+    }, {
+        clear() {
+            queue.clearQueue()
+        }
+    })
 }
 
 /**
@@ -360,7 +364,11 @@ export function pOrderedResolve(fn: F.Function) {
 
 export function pLimitFn(fn: F.Function, limit = 1) {
     const queue = pLimit(limit)
-    return (...args: unknown[]) => queue(() => fn(...args))
+    return Object.assign((...args: unknown[]) => queue(() => fn(...args)), {
+        clear() {
+            queue.clearQueue()
+        }
+    })
 }
 
 /**
