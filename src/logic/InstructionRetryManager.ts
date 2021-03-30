@@ -48,14 +48,17 @@ export class InstructionRetryManager {
         } catch (err) {
             this.logger.warn('instruction retry threw %s', err)
         }
-        if (this.instructionRetryIntervals[streamId].counter >= this.statusSendCounterLimit) {
-            this.instructionRetryIntervals[streamId].counter = 0
-        } else {
-            this.instructionRetryIntervals[streamId].counter += 1
+        // Check that stream has not been removed
+        if (this.instructionRetryIntervals[streamId]) {
+            if (this.instructionRetryIntervals[streamId].counter >= this.statusSendCounterLimit) {
+                this.instructionRetryIntervals[streamId].counter = 0
+            } else {
+                this.instructionRetryIntervals[streamId].counter += 1
+            }
+            this.instructionRetryIntervals[streamId].interval = setTimeout(() =>
+                this.retryFunction(instructionMessage, trackerId)
+            , this.intervalInMs)
         }
-        this.instructionRetryIntervals[streamId].interval = setTimeout(() =>
-            this.retryFunction(instructionMessage, trackerId)
-        , this.intervalInMs)
     }
 
     removeStreamId(streamId: StreamKey): void {
