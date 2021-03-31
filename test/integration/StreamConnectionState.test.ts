@@ -325,10 +325,9 @@ describeRepeats('Connection State', () => {
             }
             expect(received).toEqual([])
             client.connect() // no await, should be ok
-            await wait(1000)
             const sub2 = await subscriber.subscribe(stream.id)
-            subs.push(sub)
-            const published2 = await publishTestMessages(2)
+            subs.push(sub2)
+            await publishTestMessages(2)
             const received2 = []
             expect(subscriber.count(stream.id)).toBe(1)
             expect(client.getSubscriptions()).toHaveLength(1)
@@ -338,7 +337,7 @@ describeRepeats('Connection State', () => {
                     await client.disconnect()
                 }
             }
-            expect(received2).toEqual(published2.slice(0, 1))
+            expect(received2).toHaveLength(1)
             expect(subscriber.count(stream.id)).toBe(0)
             expect(client.getSubscriptions()).toEqual([])
         })
