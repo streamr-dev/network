@@ -181,10 +181,8 @@ export function getPublishTestMessages(client: StreamrClient, defaultOpts: any =
         const published: [ message: any, request: PublishRequest ][] = []
         /* eslint-disable no-await-in-loop, no-loop-func */
         for (let i = 0; i < n; i++) {
-            if (!client.connection.isConnectionValid()) { break }
             const message = createMessage()
             await beforeEach(message)
-            if (!client.connection.isConnectionValid()) { break }
             const request = await pTimeout(client.publish(
                 { streamId, streamPartition },
                 message,
