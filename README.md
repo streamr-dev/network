@@ -377,6 +377,7 @@ These DataUnion-specific options can be given to `new StreamrClient` options:
 | removeMembers(memberAddressList)  | Transaction receipt | Remove members from Data Union                                 |
 | withdrawAllToMember(memberAddress\[, [options](#withdraw-options)\])                              | Transaction receipt `*` | Send all withdrawable earnings to the member's address |
 | withdrawAllToSigned(memberAddress, recipientAddress, signature\[, [options](#withdraw-options)\]) | Transaction receipt `*` | Send all withdrawable earnings to the address signed off by the member (see [example below](#member-functions)) |
+
 `*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case. 
 
 Here's how to deploy a Data Union contract with 30% Admin fee and add some members:
@@ -408,7 +409,8 @@ const receipt = await dataUnion.addMembers([
 | withdrawAllTo(recipientAddress\[, [options](#withdraw-options)\])     | Transaction receipt `*`   | Donate/move your earnings to recipientAddress instead of your memberAddress |
 | signWithdrawAllTo(recipientAddress)                                   | Signature (string)        | Signature that can be used to withdraw all available tokens to given recipientAddress        |
 | signWithdrawAmountTo(recipientAddress, amountTokenWei)                | Signature (string)        | Signature that can be used to withdraw a specific amount of tokens to given recipientAddress |
-| transportMessage(messageHash[, pollingIntervalMs[, retryTimeoutMs]])  | Transaction receipt       | Send the mainnet transaction to withdraw tokens from the sidechain | 
+| transportMessage(messageHash[, pollingIntervalMs[, retryTimeoutMs]])  | Transaction receipt       | Send the mainnet transaction to withdraw tokens from the sidechain |
+
 `*` The return value type may vary depending on [the given options](#withdraw-options) that describe the use case.
 
 Here's an example on how to sign off on a withdraw to (any) recipientAddress (NOTE: this requires no gas!)
