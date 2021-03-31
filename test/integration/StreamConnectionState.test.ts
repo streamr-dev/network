@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import { ControlLayer } from 'streamr-client-protocol'
 
-import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages } from '../utils'
+import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages, addAfterFn } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { Defer, pLimitFn } from '../../src/utils'
 import Connection from '../../src/Connection'
@@ -21,6 +21,8 @@ describeRepeats('Connection State', () => {
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
+    
+    const addAfter = addAfterFn()
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -393,9 +395,14 @@ describeRepeats('Connection State', () => {
 
                 const disconnect = pLimitFn(async () => {
                     if (msgs.length === MAX_MESSAGES) { return }
+                    await wait(500) // some backend bug causes subs to stop working if we disconnect too quickly
                     otherClient.connection.socket.close()
                     // wait for reconnection before possibly disconnecting again
                     await otherClient.nextConnection()
+                })
+
+                addAfter(() => {
+                    disconnect.clear()
                 })
 
                 const onConnectionMessage = jest.fn(() => {
@@ -412,6 +419,10 @@ describeRepeats('Connection State', () => {
                 const onDisconnected = jest.fn()
                 otherClient.connection.on('connected', onConnected)
                 otherClient.connection.on('disconnected', onDisconnected)
+                addAfter(() => {
+                    otherClient.connection.off('connected', onConnected)
+                    otherClient.connection.off('disconnected', onDisconnected)
+                })
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
                     delay: 1000,
