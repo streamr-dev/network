@@ -938,12 +938,15 @@ describeRepeats('StreamrClient', () => {
                 it('should work', async () => {
                     const done = Defer()
                     const msgs: any[] = []
+                    let cancelled = false
+                    const localOtherClient = otherClient
 
                     await otherClient.subscribe(stream, (msg) => {
                         msgs.push(msg)
 
-                        otherClient.debug('got msg %d of %d', msgs.length, MAX_MESSAGES)
+                        localOtherClient.debug('got msg %d of %d', msgs.length, MAX_MESSAGES)
                         if (msgs.length === MAX_MESSAGES) {
+                            cancelled = true
                             disconnect.clear()
                             // should eventually get here
                             done.resolve(undefined)
@@ -951,16 +954,18 @@ describeRepeats('StreamrClient', () => {
                     })
 
                     const disconnect = pLimitFn(async () => {
-                        if (msgs.length === MAX_MESSAGES) { return }
+                        if (cancelled || msgs.length === MAX_MESSAGES) { return }
                         await wait(500) // some backend bug causes subs to stop working if we disconnect too quickly
-                        otherClient.debug('disconnecting...', msgs.length)
-                        otherClient.connection.socket.close()
+                        if (cancelled || msgs.length === MAX_MESSAGES || !localOtherClient.connection.socket) { return }
+                        localOtherClient.debug('disconnecting...', msgs.length)
+                        localOtherClient.connection.socket.close()
                         // wait for reconnection before possibly disconnecting again
                         await otherClient.nextConnection()
-                        otherClient.debug('reconnected...', msgs.length)
+                        localOtherClient.debug('reconnected...', msgs.length)
                     })
 
                     addAfter(() => {
+                        cancelled = true
                         disconnect.clear()
                     })
 

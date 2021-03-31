@@ -21,7 +21,7 @@ describeRepeats('Connection State', () => {
     let client: StreamrClient
     let stream: Stream
     let subscriber: Subscriber
-    
+
     const addAfter = addAfterFn()
 
     const createClient = (opts = {}) => {
@@ -383,22 +383,27 @@ describeRepeats('Connection State', () => {
                 const done = Defer()
 
                 const msgs: any[] = []
+                let cancelled = false
+                const localOtherClient = otherClient
 
-                await otherClient.subscribe(stream, (msg) => {
+                await client.subscribe(stream, (msg) => {
                     msgs.push(msg)
 
                     if (msgs.length === MAX_MESSAGES) {
+                        cancelled = true
+                        disconnect.clear()
                         // should eventually get here
                         done.resolve(undefined)
                     }
                 })
 
                 const disconnect = pLimitFn(async () => {
-                    if (msgs.length === MAX_MESSAGES) { return }
+                    if (cancelled || msgs.length === MAX_MESSAGES) { return }
                     await wait(500) // some backend bug causes subs to stop working if we disconnect too quickly
-                    otherClient.connection.socket.close()
+                    if (cancelled || msgs.length === MAX_MESSAGES || !localOtherClient.connection.socket) { return }
+                    localOtherClient.connection.socket.close()
                     // wait for reconnection before possibly disconnecting again
-                    await otherClient.nextConnection()
+                    await localOtherClient.nextConnection()
                 })
 
                 addAfter(() => {
