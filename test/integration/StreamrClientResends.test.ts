@@ -7,7 +7,7 @@ import Connection from '../../src/Connection'
 import config from './config'
 import { Stream } from '../../src/stream'
 
-describeRepeats('StreamrClientResends', () => {
+describeRepeats('StreamrClient Resend', () => {
     let expectErrors = 0 // check no errors by default
     let errors: any[] = []
 
@@ -117,76 +117,74 @@ describeRepeats('StreamrClientResends', () => {
             }
         })
 
-        describe('resend', () => {
-            let timestamps: number[] = []
-            let published: any[] = []
+        let timestamps: number[] = []
+        let published: any[] = []
 
-            beforeEach(async () => {
-                publishTestMessages = getPublishTestMessages(client, {
-                    stream,
-                    waitForLast: true,
-                    waitForLastTimeout: 9000,
-                })
-
-                const publishedRaw = await publishTestMessages.raw(5)
-                timestamps = publishedRaw.map(([, raw]: any) => raw.streamMessage.getTimestamp())
-                published = publishedRaw.map(([msg]: any) => msg)
+        beforeEach(async () => {
+            publishTestMessages = getPublishTestMessages(client, {
+                stream,
+                waitForLast: true,
+                waitForLastTimeout: 9000,
             })
 
-            it('resend last', async () => {
-                const sub = await client.resend({
-                    stream: stream.id,
-                    resend: {
-                        last: 3,
+            const publishedRaw = await publishTestMessages.raw(5)
+            timestamps = publishedRaw.map(([, raw]: any) => raw.streamMessage.getTimestamp())
+            published = publishedRaw.map(([msg]: any) => msg)
+        })
+
+        it('resend last', async () => {
+            const sub = await client.resend({
+                stream: stream.id,
+                resend: {
+                    last: 3,
+                },
+            })
+
+            expect(await sub.collect()).toEqual(published.slice(-3))
+        })
+
+        it('resend from', async () => {
+            const sub = await client.resend({
+                stream: stream.id,
+                resend: {
+                    from: {
+                        timestamp: timestamps[3],
                     },
-                })
-
-                expect(await sub.collect()).toEqual(published.slice(-3))
+                },
             })
 
-            it('resend from', async () => {
-                const sub = await client.resend({
-                    stream: stream.id,
-                    resend: {
-                        from: {
-                            timestamp: timestamps[3],
-                        },
+            expect(await sub.collect()).toEqual(published.slice(3))
+        })
+
+        it('resend range', async () => {
+            const sub = await client.resend({
+                stream: stream.id,
+                resend: {
+                    from: {
+                        timestamp: timestamps[0],
                     },
-                })
-
-                expect(await sub.collect()).toEqual(published.slice(3))
-            })
-
-            it('resend range', async () => {
-                const sub = await client.resend({
-                    stream: stream.id,
-                    resend: {
-                        from: {
-                            timestamp: timestamps[0],
-                        },
-                        to: {
-                            timestamp: timestamps[3] - 1,
-                        },
+                    to: {
+                        timestamp: timestamps[3] - 1,
                     },
-                })
-
-                expect(await sub.collect()).toEqual(published.slice(0, 3))
+                },
             })
 
-            it('works with message handler + resent event', async () => {
-                const messages: any[] = []
-                const sub = await client.resend({
-                    stream: stream.id,
-                    resend: {
-                        last: 3,
-                    },
-                }, (msg) => {
-                    messages.push(msg)
-                })
+            expect(await sub.collect()).toEqual(published.slice(0, 3))
+        })
 
-                await waitForEvent(sub, 'resent')
-                expect(messages).toEqual(published.slice(-3))
+        it('works with message handler + resent event', async () => {
+            const messages: any[] = []
+            const sub = await client.resend({
+                stream: stream.id,
+                resend: {
+                    last: 3,
+                },
+            }, (msg) => {
+                messages.push(msg)
             })
+
+            await waitForEvent(sub, 'resent')
+            expect(messages).toEqual(published.slice(-3))
         })
     })
 })
