@@ -110,6 +110,8 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge broker-node-no-storage-1 broker-node-no-storage-2 broker-node-storage-1 nginx smtp"
+      - name: Wait
+        run: sleep 180
       - name: Run Test
         run: npm run $TEST_NAME
 

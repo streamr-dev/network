@@ -171,7 +171,7 @@ describeRepeats('StreamrClient Connection', () => {
             expect(onError).toHaveBeenCalledTimes(1)
             expect(client.onError).toHaveBeenCalledTimes(1)
             expect(otherOnError).toHaveBeenCalledTimes(0)
-        }, 10000)
+        })
     })
 
     describe('bad config.restUrl', () => {
@@ -453,7 +453,7 @@ describeRepeats('StreamrClient Connection', () => {
 
             const msgs = await sub.collect()
 
-            await wait(2000)
+            await wait(1500)
             await client.connection.socket.close()
             await client.connection.nextConnection()
 
@@ -470,7 +470,7 @@ describeRepeats('StreamrClient Connection', () => {
             // key exchange stream subscription should not have been sent yet
             expect(connectionEventSpy.mock.calls.length).toEqual(1)
             await client.disconnect()
-        }, 10000)
+        })
 
         it('does not try to reconnect', async () => {
             client = createClient()
