@@ -5,9 +5,9 @@ import fetch from 'node-fetch'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import { wait, waitForEvent } from 'streamr-test-utils'
 
-import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg, addAfterFn } from '../utils'
+import { describeRepeats, uid, fakePrivateKey, getWaitForStorage, getPublishTestMessages, Msg } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer, pLimitFn } from '../../src/utils'
+import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
@@ -17,7 +17,7 @@ import { Subscription } from '../../src'
 const WebSocket = require('ws')
 
 const { StreamMessage } = MessageLayer
-const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest, ControlMessage } = ControlLayer
+const { SubscribeRequest, UnsubscribeRequest, ResendLastRequest } = ControlLayer
 
 const MAX_MESSAGES = 20
 
@@ -31,8 +31,6 @@ describeRepeats('StreamrClient', () => {
 
     let onError = jest.fn()
     let client: StreamrClient
-
-    const addAfter = addAfterFn()
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -906,102 +904,6 @@ describeRepeats('StreamrClient', () => {
                 const published = await publishTestMessages(MAX_MESSAGES)
                 await expect(async () => sub.collect(1)).rejects.toThrow('iterate')
                 expect(onMessageMsgs).toEqual(published)
-            })
-
-            describe('resubscribe on unexpected disconnection', () => {
-                let otherClient: StreamrClient
-
-                beforeEach(async () => {
-                    otherClient = createClient({
-                        auth: client.options.auth,
-                    })
-                    const tasks: Promise<any>[] = [
-                        client.connect(),
-                        client.session.getSessionToken(),
-                        otherClient.connect(),
-                        otherClient.session.getSessionToken(),
-                    ]
-                    await (Promise as any).allSettled(tasks)
-                    await Promise.all(tasks) // throw if there were an error
-                })
-
-                afterEach(async () => {
-                    otherClient.debug('disconnecting after test')
-                    const tasks = [
-                        otherClient.disconnect(),
-                        client.disconnect(),
-                    ]
-                    await (Promise as any).allSettled(tasks)
-                    await Promise.all(tasks) // throw if there were an error
-                })
-
-                it('should work', async () => {
-                    const done = Defer()
-                    const msgs: any[] = []
-                    let cancelled = false
-                    const localOtherClient = otherClient
-
-                    await otherClient.subscribe(stream, (msg) => {
-                        msgs.push(msg)
-
-                        localOtherClient.debug('got msg %d of %d', msgs.length, MAX_MESSAGES)
-                        if (msgs.length === MAX_MESSAGES) {
-                            cancelled = true
-                            disconnect.clear()
-                            // should eventually get here
-                            done.resolve(undefined)
-                        }
-                    })
-
-                    const disconnect = pLimitFn(async () => {
-                        if (cancelled || msgs.length === MAX_MESSAGES) { return }
-                        await wait(500) // some backend bug causes subs to stop working if we disconnect too quickly
-                        if (cancelled || msgs.length === MAX_MESSAGES || !localOtherClient.connection.socket) { return }
-                        localOtherClient.debug('disconnecting...', msgs.length)
-                        localOtherClient.connection.socket.close()
-                        // wait for reconnection before possibly disconnecting again
-                        await otherClient.nextConnection()
-                        localOtherClient.debug('reconnected...', msgs.length)
-                    })
-
-                    addAfter(() => {
-                        cancelled = true
-                        disconnect.clear()
-                    })
-
-                    const onConnectionMessage = jest.fn(() => {
-                        // disconnect after every message
-                        disconnect()
-                    })
-
-                    // @ts-expect-error
-                    otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
-                    // @ts-expect-error
-                    otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
-
-                    const onConnected = jest.fn()
-                    const onDisconnected = jest.fn()
-
-                    otherClient.connection.on('connected', onConnected)
-                    otherClient.connection.on('disconnected', onDisconnected)
-                    addAfter(() => {
-                        otherClient.connection.off('connected', onConnected)
-                        otherClient.connection.off('disconnected', onDisconnected)
-                    })
-
-                    const published = await publishTestMessages(MAX_MESSAGES, {
-                        delay: 600,
-                    })
-
-                    await done
-
-                    expect(msgs).toEqual(published)
-
-                    // check disconnect/connect actually happened
-                    expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
-                    expect(onConnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
-                    expect(onDisconnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
-                }, 30000)
             })
 
             it('publish and subscribe a sequence of messages', async () => {
