@@ -78,7 +78,7 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     return async (publishRequest: any, opts = {}) => {
         const {
             // @ts-expect-error
-            streamId, streamPartition = 0, interval = 500, timeout = 5000, count = 100, messageMatchFn = defaultMessageMatchFn
+            streamId, streamPartition = 0, interval = 500, timeout = 10000, count = 100, messageMatchFn = defaultMessageMatchFn
         } = validateOptions({
             ...defaultOpts,
             ...opts,
