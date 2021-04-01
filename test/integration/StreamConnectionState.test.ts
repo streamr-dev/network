@@ -1,9 +1,8 @@
 import { wait } from 'streamr-test-utils'
-import { ControlLayer } from 'streamr-client-protocol'
 
 import { uid, fakePrivateKey, describeRepeats, getPublishTestMessages, addAfterFn } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
-import { Defer, pLimitFn } from '../../src/utils'
+import { Defer } from '../../src/utils'
 import Connection from '../../src/Connection'
 
 import config from './config'
@@ -11,7 +10,6 @@ import { Stream } from '../../src/stream'
 import { Subscriber, Subscription } from '../../src/subscribe'
 import { StreamrClientOptions } from '../../src'
 
-const { ControlMessage } = ControlLayer
 const MAX_MESSAGES = 5
 
 describeRepeats('Connection State', () => {
@@ -200,6 +198,7 @@ describeRepeats('Connection State', () => {
                     if (msgs.length === MAX_MESSAGES) {
                         // should eventually get here
                         done.resolve(undefined)
+                        return
                     }
 
                     // disconnect after every message
@@ -384,41 +383,64 @@ describeRepeats('Connection State', () => {
 
                 const msgs: any[] = []
                 let cancelled = false
-
-                await otherClient.subscribe(stream, (msg) => {
-                    msgs.push(msg)
-
-                    if (msgs.length === MAX_MESSAGES) {
-                        cancelled = true
-                        disconnect.clear()
-                        // should eventually get here
-                        done.resolve(undefined)
-                    }
-                })
-
                 const localOtherClient = otherClient // capture so no chance of disconnecting wrong client
-                const disconnect = pLimitFn(async () => {
-                    if (cancelled || msgs.length === MAX_MESSAGES) { return }
+                let reconnected = Defer()
+                const disconnect = async () => {
+                    if (localOtherClient !== otherClient) {
+                        throw new Error('not equal')
+                    }
+
+                    if (cancelled || msgs.length === MAX_MESSAGES) {
+                        reconnected.resolve(undefined)
+                        return
+                    }
+
                     await wait(500) // some backend bug causes subs to stop working if we disconnect too quickly
-                    if (cancelled || msgs.length === MAX_MESSAGES || !localOtherClient.connection.socket) { return }
+                    if (cancelled || msgs.length === MAX_MESSAGES) {
+                        reconnected.resolve(undefined)
+                        return
+                    }
+
+                    if (localOtherClient !== otherClient) {
+                        throw new Error('not equal')
+                    }
+                    await localOtherClient.nextConnection()
+                    if (cancelled || msgs.length === MAX_MESSAGES) {
+                        reconnected.resolve(undefined)
+                        return
+                    }
+
+                    if (localOtherClient !== otherClient) {
+                        throw new Error('not equal')
+                    }
                     localOtherClient.connection.socket.close()
                     // wait for reconnection before possibly disconnecting again
                     await localOtherClient.nextConnection()
-                })
-
-                addAfter(() => {
-                    disconnect.clear()
-                })
+                    const p = reconnected
+                    p.resolve(undefined)
+                    reconnected = Defer()
+                }
 
                 const onConnectionMessage = jest.fn(() => {
                     // disconnect after every message
                     disconnect()
                 })
 
-                // @ts-expect-error
-                otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
-                // @ts-expect-error
-                otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
+                await otherClient.subscribe(stream, (msg) => {
+                    msgs.push(msg)
+                    onConnectionMessage()
+
+                    if (msgs.length === MAX_MESSAGES) {
+                        cancelled = true
+                        // should eventually get here
+                        done.resolve(undefined)
+                    }
+                })
+
+                // // @ts-expect-error
+                // otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
+                // // @ts-expect-error
+                // otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
 
                 const onConnected = jest.fn()
                 const onDisconnected = jest.fn()
@@ -430,19 +452,20 @@ describeRepeats('Connection State', () => {
                 })
 
                 const published = await publishTestMessages(MAX_MESSAGES, {
-                    delay: 1000,
+                    delay: 500,
+                    async afterEach() {
+                        // wait for reconnection or done
+                        await Promise.race([done, reconnected])
+                    }
                 })
 
                 await done
-                // wait for final re-connection after final message
-                await otherClient.connection.nextConnection()
-
                 expect(msgs).toEqual(published)
 
                 // check disconnect/connect actually happened
                 expect(onConnectionMessage.mock.calls.length).toBeGreaterThanOrEqual(published.length)
-                expect(onConnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
-                expect(onDisconnected.mock.calls.length).toBeGreaterThanOrEqual(published.length)
+                expect(onConnected.mock.calls.length).toBeGreaterThanOrEqual(published.length - 1)
+                expect(onDisconnected.mock.calls.length).toBeGreaterThanOrEqual(published.length - 1)
             }, 30000)
         })
     })
