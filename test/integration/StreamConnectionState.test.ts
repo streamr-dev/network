@@ -384,9 +384,8 @@ describeRepeats('Connection State', () => {
 
                 const msgs: any[] = []
                 let cancelled = false
-                const localOtherClient = otherClient
 
-                await client.subscribe(stream, (msg) => {
+                await otherClient.subscribe(stream, (msg) => {
                     msgs.push(msg)
 
                     if (msgs.length === MAX_MESSAGES) {
@@ -397,6 +396,7 @@ describeRepeats('Connection State', () => {
                     }
                 })
 
+                const localOtherClient = otherClient // capture so no chance of disconnecting wrong client
                 const disconnect = pLimitFn(async () => {
                     if (cancelled || msgs.length === MAX_MESSAGES) { return }
                     await wait(500) // some backend bug causes subs to stop working if we disconnect too quickly
