@@ -468,6 +468,21 @@ export class DataUnion {
     }
 
     /**
+     * Transfer amount to specific member in DataunionSidechain
+     * @param memberAddress - the other member who gets their tokens out of the Data Union
+     * @param amountTokenWei - the amount that want to add to the member
+     * @returns receipt once transfer transaction is confirmed
+     */
+    async transferToMemberInContract(
+        memberAddress: EthereumAddress,
+        amountTokenWei: BigNumber|number|string
+    ): Promise<TransactionResponse> {
+        const address = getAddress(memberAddress) // throws if bad address
+        const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
+        return duSidechain.transferToMemberInContract(address, amountTokenWei)
+    }
+
+    /**
      * Create a new DataUnionMainnet contract to mainnet with DataUnionFactoryMainnet
      * This triggers DataUnionSidechain contract creation in sidechain, over the bridge (AMB)
      * @return that resolves when the new DU is deployed over the bridge to side-chain

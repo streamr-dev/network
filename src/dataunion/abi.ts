@@ -125,6 +125,15 @@ export const dataUnionSidechainABI = [{
     ],
     anonymous: false,
     type: 'event'
+}, {
+    name: 'transferToMemberInContract',
+    inputs: [
+        { name: 'recipient', type: 'address', internalType: 'address' },
+        { name: 'amount', type: 'uint256', internalType: 'uint256' }
+    ],
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function'
 }]
 
 // Only the part of ABI that is needed by deployment (and address resolution)
