@@ -1,7 +1,7 @@
 import { ControlLayer } from 'streamr-client-protocol'
 import { wait } from 'streamr-test-utils'
 
-import { Msg, uid, collect, describeRepeats, fakePrivateKey, getWaitForStorage, getPublishTestMessages } from '../utils'
+import { Msg, uid, collect, describeRepeats, fakePrivateKey, getWaitForStorage, getPublishTestMessages, getTestSetTimeout } from '../utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import Connection from '../../src/Connection'
 import { Defer } from '../../src/utils'
@@ -27,6 +27,7 @@ describeRepeats('resends', () => {
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
     let subscriber: Subscriber
+    const testSetTimeout = getTestSetTimeout()
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -166,14 +167,17 @@ describeRepeats('resends', () => {
 
             const received = []
             let t!: ReturnType<typeof setTimeout>
-            for await (const m of sub) {
-                received.push(m.getParsedContent())
+            try {
+                for await (const m of sub) {
+                    received.push(m.getParsedContent())
+                    clearTimeout(t)
+                    t = testSetTimeout(() => {
+                        sub.cancel()
+                    }, 250)
+                }
+            } finally {
                 clearTimeout(t)
-                t = setTimeout(() => {
-                    sub.cancel()
-                }, 250)
             }
-            clearTimeout(t)
 
             expect(onResent).toHaveBeenCalledTimes(1)
             expect(received).toEqual([msg])
@@ -279,7 +283,7 @@ describeRepeats('resends', () => {
             expect(onResent).toHaveBeenCalledTimes(1)
         })
 
-        describe('resendSubscribe', () => {
+        describe.only('resendSubscribe', () => {
             it('sees resends and realtime', async () => {
                 const sub = await subscriber.resendSubscribe({
                     streamId: stream.id,
@@ -305,7 +309,7 @@ describeRepeats('resends', () => {
                     if (receivedMsgs.length === published.length) {
                         await sub.return()
                         clearTimeout(t)
-                        t = setTimeout(() => {
+                        t = testSetTimeout(() => {
                             // await wait() // give resent event a chance to fire
                             onResent.reject(new Error('resent never called'))
                         }, 250)
@@ -339,6 +343,10 @@ describeRepeats('resends', () => {
                 published.push(message)
                 publishedRequests.push(req)
                 const receivedMsgs = await collect(sub, async ({ received }) => {
+                    client.debug({
+                        received: received.length,
+                        published: published.length
+                    })
                     if (received.length === published.length) {
                         await sub.return()
                     }
@@ -456,7 +464,7 @@ describeRepeats('resends', () => {
                 try {
                     receivedMsgs = await collect(sub, async ({ received }) => {
                         if (received.length === published.length) {
-                            t = setTimeout(() => {
+                            t = testSetTimeout(() => {
                                 sub.cancel()
                             })
                         }

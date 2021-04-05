@@ -8,7 +8,8 @@ import { StorageNode } from './StorageNode'
 import { StreamrClient } from '../StreamrClient'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
-export type StreamPartDefinition = string | { streamId?: string, streamPartition?: number, id?: string, partition?: number, stream?: Stream|string }
+export type StreamPartDefinitionOptions = { streamId?: string, streamPartition?: number, id?: string, partition?: number, stream?: Stream|string }
+export type StreamPartDefinition = string | StreamPartDefinitionOptions
 
 export type ValidatedStreamPartDefinition = { streamId: string, streamPartition: number, key: string}
 

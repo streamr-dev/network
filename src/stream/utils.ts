@@ -20,7 +20,7 @@ export function StreamKey({ streamId, streamPartition = 0 }: Todo) {
     return `${streamId}::${streamPartition}`
 }
 
-export function validateOptions(optionsOrStreamId: StreamPartDefinition): ValidatedStreamPartDefinition {
+export function validateOptions<U>(optionsOrStreamId: StreamPartDefinition): ValidatedStreamPartDefinition & U {
     if (!optionsOrStreamId) {
         throw new Error('streamId is required!')
     }

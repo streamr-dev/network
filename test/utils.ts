@@ -2,7 +2,9 @@ import { inspect } from 'util'
 import { wait } from 'streamr-test-utils'
 import { providers, Wallet } from 'ethers'
 import { pTimeout, counterId, AggregatedError } from '../src/utils'
+import { MaybeAsync } from '../src/types'
 import { validateOptions } from '../src/stream/utils'
+import type { StreamPartDefinitionOptions } from '../src/stream'
 import { StreamrClient } from '../src/StreamrClient'
 import { PublishRequest } from 'streamr-client-protocol/dist/src/protocol/control_layer'
 
@@ -34,7 +36,7 @@ describeRepeats.only = (msg: any, fn: any) => {
     describeRepeats(msg, fn, describe.only)
 }
 
-export async function collect(iterator: any, fn: (item: any) => void = async () => {}) {
+export async function collect(iterator: any, fn: MaybeAsync<(item: any) => void> = async () => {}) {
     const received: any[] = []
     for await (const msg of iterator) {
         received.push(msg.getParsedContent())
@@ -44,6 +46,17 @@ export async function collect(iterator: any, fn: (item: any) => void = async () 
     }
 
     return received
+}
+
+export function getTestSetTimeout(): (...args: Parameters<typeof setTimeout>) => ReturnType<typeof setTimeout> {
+    const addAfter = addAfterFn()
+    return (...args: Parameters<typeof setTimeout>) => {
+        const t = setTimeout(...args)
+        addAfter(() => {
+            clearTimeout(t)
+        })
+        return t
+    }
 }
 
 export function addAfterFn() {
@@ -77,8 +90,12 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     /* eslint-disable no-await-in-loop */
     return async (publishRequest: any, opts = {}) => {
         const {
-            // @ts-expect-error
-            streamId, streamPartition = 0, interval = 500, timeout = 10000, count = 100, messageMatchFn = defaultMessageMatchFn
+            streamId,
+            streamPartition = 0,
+            interval = 500,
+            timeout = 10000,
+            count = 100,
+            messageMatchFn = defaultMessageMatchFn
         } = validateOptions({
             ...defaultOpts,
             ...opts,
@@ -132,40 +149,49 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
     /* eslint-enable no-await-in-loop */
 }
 
-export function getPublishTestMessages(client: StreamrClient, defaultOpts: any = {}) {
+type PublishOpts = {
+    testName: string,
+    delay: number
+    timeout: number
+    waitForLast: boolean
+    waitForLastCount: number
+    waitForLastTimeout: number
+    beforeEach: (m: any) => any
+    afterEach: (msg: any, request: any) => Promise<void> | void
+    timestamp: number | (() => number)
+    partitionKey: string
+    createMessage: () => Promise<any> | any
+}
+
+type PublishTestMessagesOpts = StreamPartDefinitionOptions & Partial<PublishOpts>
+
+export function getPublishTestMessages(client: StreamrClient, defaultOptsOrStreamId: string | PublishTestMessagesOpts = {}) {
     // second argument could also be streamId
+    let defaultOpts: PublishTestMessagesOpts
     if (typeof defaultOpts === 'string') {
         // eslint-disable-next-line no-param-reassign
         defaultOpts = {
-            streamId: defaultOpts,
+            streamId: defaultOptsOrStreamId as string,
         }
+    } else {
+        defaultOpts = defaultOptsOrStreamId as PublishTestMessagesOpts
     }
 
-    const publishTestMessagesRaw = async (n = 4, opts = {}) => {
-        const id = uid('test')
+    const publishTestMessagesRaw = async (n = 4, opts: PublishTestMessagesOpts = {}) => {
+        const id = 'testName' in opts ? opts.testName : uid('test')
         let msgCount = 0
         const {
             streamId,
             streamPartition = 0,
-            // @ts-expect-error
             delay = 100,
-            // @ts-expect-error
             timeout = 3500,
-            // @ts-expect-error
             waitForLast = false, // wait for message to hit storage
-            // @ts-expect-error
             waitForLastCount,
-            // @ts-expect-error
             waitForLastTimeout,
-            // @ts-expect-error
             beforeEach = (m: any) => m,
-            // @ts-expect-error
             afterEach = () => {},
-            // @ts-expect-error
             timestamp,
-            // @ts-expect-error
             partitionKey,
-            // @ts-expect-error
             createMessage = () => {
                 msgCount += 1
                 return {
@@ -173,7 +199,7 @@ export function getPublishTestMessages(client: StreamrClient, defaultOpts: any =
                     value: `${msgCount} of ${n}`
                 }
             },
-        } = validateOptions({
+        } = validateOptions<PublishTestMessagesOpts>({
             ...defaultOpts,
             ...opts,
         })
