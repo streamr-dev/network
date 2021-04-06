@@ -1,0 +1,59 @@
+name: CI
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  integration:
+    name: ${{ matrix.config-name }} ${{ matrix.test-name }}
+    runs-on: ubuntu-16.04
+    strategy:
+      fail-fast: false
+      matrix:
+        test-name:
+          - stream-cleartext-unsigned
+          - stream-cleartext-signed
+          - stream-encrypted-shared-signed
+          - stream-encrypted-shared-rotating-signed
+          - stream-encrypted-exchanged-rotating-signed
+        config-name:
+          - default
+          - js-only
+          - java-only
+          - realtime-only
+          - js-realtime-only
+          - java-realtime-only
+    env:
+      NUM_MESSAGES: 20
+      TEST_NAME: ${{ matrix.test-name }}
+      CONFIG_NAME: ${{ matrix.config-name }}
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - uses: actions/setup-node@v2.1.5
+        with:
+          node-version: '12'
+      - uses: actions/setup-java@v1.4.3
+        with:
+          java-version: '8'
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: 'redis mysql engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 broker-node-no-storage-1 nginx smtp'
+      - run: |
+          ## npm install is used because package-lock.json could be from a previous client version.
+          npm install
+          ./gradlew fatjar
+      - uses: nick-invision/retry@v2.4.0
+        name: run-client-testing
+        with:
+          max_attempts: 2
+          timeout_minutes: 8
+          retry_on: error
+          command: java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
+
