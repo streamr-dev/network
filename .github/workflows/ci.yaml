@@ -18,17 +18,17 @@ jobs:
       matrix:
         test-name:
           - stream-cleartext-unsigned
-#          - stream-cleartext-signed
-#          - stream-encrypted-shared-signed
-#          - stream-encrypted-shared-rotating-signed
-#          - stream-encrypted-exchanged-rotating-signed
+          - stream-cleartext-signed
+          - stream-encrypted-shared-signed
+          - stream-encrypted-shared-rotating-signed
+          - stream-encrypted-exchanged-rotating-signed
         config-name:
           - default
           - js-only
           - java-only
-#         - realtime-only
-#         - js-realtime-only
-#         - java-realtime-only
+          - realtime-only
+          - js-realtime-only
+          - java-realtime-only
     env:
       NUM_MESSAGES: 20
       TEST_NAME: ${{ matrix.test-name }}
