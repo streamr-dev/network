@@ -391,7 +391,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     /**
      * @category Important
      */
-    async unsubscribe(subscription: Subscription) {
+    async unsubscribe(subscription: Subscription | SubscribeOptions & StreamPartDefinition) {
         await this.subscriber.unsubscribe(subscription)
     }
 
