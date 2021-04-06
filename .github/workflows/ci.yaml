@@ -46,7 +46,8 @@ jobs:
         with:
           services-to-start: 'redis mysql engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 broker-node-no-storage-1 nginx smtp'
       - run: |
-          npm ci
+          ## npm install is used because package-lock.json could be from a previous client version.
+          npm install
           ./gradlew fatjar
       - uses: nick-invision/retry@v2.4.0
         name: run-client-testing
