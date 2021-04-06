@@ -13,11 +13,6 @@ jobs:
   integration:
     name: ${{ matrix.config-name }} ${{ matrix.test-name }}
     runs-on: ubuntu-16.04
-    services:
-      redis:
-        image: streamr/redis:latest
-        ports:
-          - '6379:6379'
     strategy:
       fail-fast: false
       matrix:
@@ -49,7 +44,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: 'mysql engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp'
+          services-to-start: 'redis mysql engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp'
       - run: |
           ## npm install is used because package-lock.json could be from a previous client version.
           npm install
