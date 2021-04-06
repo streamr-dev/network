@@ -58,6 +58,7 @@ export class Connection {
     private flushTimeoutRef: NodeJS.Timeout | null
     private connectionTimeoutRef: NodeJS.Timeout | null
     private pingTimeoutRef: NodeJS.Timeout | null
+    private flushRef: NodeJS.Immediate | null
     private pingAttempts = 0
     private rtt: number | null
     private respondedPong: boolean
@@ -107,6 +108,7 @@ export class Connection {
         this.flushTimeoutRef = null
         this.connectionTimeoutRef = null
         this.pingTimeoutRef = setTimeout(() => this.ping(), this.pingInterval)
+        this.flushRef = null
 
         this.rtt = null
         this.respondedPong = true
@@ -191,8 +193,17 @@ export class Connection {
     }
 
     send(message: string): Promise<void> {
-        setImmediate(() => this.attemptToFlushMessages())
+        this.setFlushRef()
         return this.messageQueue.add(message)
+    }
+
+    private setFlushRef() {
+        if (this.flushRef === null) {
+            this.flushRef = setImmediate(() => {
+                this.flushRef = null
+                this.attemptToFlushMessages()
+            })
+        }
     }
 
     close(err?: Error): void {
@@ -224,6 +235,7 @@ export class Connection {
         this.flushTimeoutRef = null
         this.connectionTimeoutRef = null
         this.pingTimeoutRef = null
+        this.flushRef = null
 
         if (err) {
             this.onError(err)
@@ -315,7 +327,7 @@ export class Connection {
         dataChannel.onBufferedAmountLow(() => {
             if (this.paused) {
                 this.paused = false
-                this.attemptToFlushMessages()
+                this.setFlushRef()
                 this.onBufferLow()
             }
         })
@@ -337,17 +349,17 @@ export class Connection {
             clearInterval(this.connectionTimeoutRef)
         }
         this.dataChannel = dataChannel
-        setImmediate(() => this.attemptToFlushMessages())
+        this.setFlushRef()
         this.onOpen()
     }
 
     private attemptToFlushMessages(): void {
         let numOfSuccessSends = 0
-        while (!this.messageQueue.empty()) {
+        while (!this.messageQueue.empty() && this.dataChannel != null) {
             // Max 10 messages sent in busy-loop, then relinquish control for a moment, in case `dc.send` is blocking
             // (is it?)
             if (numOfSuccessSends >= 10) {
-                setImmediate(() => this.attemptToFlushMessages())
+                this.setFlushRef()
                 return
             }
 
