@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'packages/broker/*'
+      - '.github/workflows/broker.yml'
 
 defaults:
   run:
