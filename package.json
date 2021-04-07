@@ -1,0 +1,12 @@
+{
+    "name": "streamr-monorepo",
+    "workspaces": [
+        "./packages/*"
+    ],
+    "scripts": {
+        "prepare": "husky install"
+    },
+    "dependencies": {
+        "husky": "^5.2.0"
+    }
+}

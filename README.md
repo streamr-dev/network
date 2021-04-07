@@ -1,0 +1,3 @@
+# streamr monorepo
+
+WIP
