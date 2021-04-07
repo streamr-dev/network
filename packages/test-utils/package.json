@@ -6,6 +6,7 @@
   "types": "./dist/utils.d.ts",
   "scripts": {
     "test": "jest",
+    "test-unit": "npm run test",
     "prepublish": "tsc",
     "build": "tsc"
   },

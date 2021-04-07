@@ -4,7 +4,8 @@
         "./packages/*"
     ],
     "scripts": {
-        "prepare": "husky install; npx workspaces-run --order-by-deps -- npm run prepublish --if-present"
+        "prepare": "husky install; npx workspaces-run --order-by-deps -- npm run prepublish --if-present",
+        "test-unit": "npx workspaces-run --order-by-deps -- npm run test-unit --if-present"
     },
     "dependencies": {
         "husky": "^5.2.0",

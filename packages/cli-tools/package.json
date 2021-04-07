@@ -12,9 +12,6 @@
     "streamr-subscribe": "bin/streamr-subscribe.js",
     "streamr-show": "bin/streamr-show.js"
   },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git@github.com:streamr-dev/cli-tools.git"
