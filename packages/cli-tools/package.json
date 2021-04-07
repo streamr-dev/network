@@ -1,0 +1,40 @@
+{
+  "name": "@streamr/cli-tools",
+  "version": "4.1.1",
+  "description": "Command line tools for Streamr.",
+  "bin": {
+    "streamr": "bin/streamr.js",
+    "streamr-create": "bin/streamr-create.js",
+    "streamr-generate": "bin/streamr-generate.js",
+    "streamr-list": "bin/streamr-list.js",
+    "streamr-publish": "bin/streamr-publish.js",
+    "streamr-resend": "bin/streamr-resend.js",
+    "streamr-subscribe": "bin/streamr-subscribe.js",
+    "streamr-show": "bin/streamr-show.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:streamr-dev/cli-tools.git"
+  },
+  "keywords": [
+    "streamr",
+    "cli",
+    "tool",
+    "utility"
+  ],
+  "author": "Streamr <contact@streamr.com>",
+  "license": "AGPL-3.0",
+  "bugs": {
+    "url": "https://github.com/streamr-dev/cli-tools/issues"
+  },
+  "homepage": "https://github.com/streamr-dev/cli-tools#readme",
+  "dependencies": {
+    "commander": "^6.1.0",
+    "easy-table": "^1.1.1",
+    "event-stream": "^4.0.1",
+    "streamr-client": "5.0.0-beta.6"
+  }
+}
