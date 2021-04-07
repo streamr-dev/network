@@ -38,9 +38,10 @@ jobs:
       - uses: actions/setup-node@v2.1.5
         with:
           node-version: '12'
-      - uses: actions/setup-java@v1.4.3
+      - uses: actions/setup-java@v2.0.0
         with:
           java-version: '8'
+          distribution: 'zulu'
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
