@@ -1,3 +1,5 @@
 node_modules/**
 stress-test/**
 coverage/**
+# symbolic link to bin/tracker.js
+/tracker.js
