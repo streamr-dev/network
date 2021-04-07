@@ -1,7 +1,7 @@
 name: Broker – Lint, Test and Publish
 
 on:
-  push:
+  pull_request:
     paths:
       - 'packages/broker/*'
 
