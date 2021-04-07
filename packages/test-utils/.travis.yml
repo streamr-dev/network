@@ -1,0 +1,22 @@
+language: node_js
+node_js:
+- 14.15.0
+sudo: true
+branches:
+  only:
+  - master
+  - "/^v\\d+\\.\\d+(\\.\\d+)?(-\\S*)?$/"
+before_install:
+- npm i -g npm@latest
+- npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+jobs:
+  include:
+  - stage: Tests
+    name: test
+    script: npm run test
+  - stage: publish
+    if: tag IS present
+    script: npm publish
+env:
+  global:
+  - secure: nnjL1svOWpBSRaI9Fn6ZWj+VJ+Yjk4Og0Et5WgP+8kkZJyvyM3CoPsIAQ+55Z2I50Ak9nAHA8cpruQedcZda2KxIXio8OiL2E2/O0e+lEB/vF8QEtx997vFRJ9YPqYsTYW9pzTVUyxaRm9fSbySdZKaVLXLhZCd123R/Kyv7QK3ZnwYrS5bK5TmlhbGLXbjwv9KsXeTBev3e8k9JcSzq4kHaXDBPtSmP1WhK7tkWmp92rE1+q6INiyZiQvoLnSl8dCivT/6pRdIXWzWTDS536qrn1tXlB2MlE1hiGhwYnvY/yasfNedXjJwO8YuD1wYU4PEyFrG6Zeyc+66Ve4aUplywiMd/Uztj2msUa8eNJT4mpH2vXkPeK+OWaGOnSAK9OwoE68cvDleejIQdwhE4eQc2YwGBA9g1yH+ig2/FzwjDIrsoqsvEzYfZL9Lx7jzEyCg7iMHyu9jZcILf3XlbDVbQfFlX7YQOojZJu2xyWuEX2qGI5XS6YXz4KJsCbrP5A9xT3cgNhm2+JYRgVkUT/zBKNS4Xc9XUxlfLtyQs6ueoM5N3dvuWlmCJ2mubyd9fV4bUsNgA6DpgCdZjxQzzOCS0NpEhVzIydOFq18px9tmBLyCEJayjB2OyCeLxIAe8OL28yuG8aRX6I400FUBI2zAwBzf/stLOjmTRME+XKT0=
