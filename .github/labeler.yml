@@ -1,0 +1,19 @@
+test:
+  - '*test*'
+ci:
+- '.github/*'
+docs:
+- '**.md'
+- '*.md'
+broker:
+- 'packages/broker/*'
+network:
+- 'packages/network/*'
+client:
+- 'packages/client/*'
+protocol:
+- 'packages/protocol/*'
+test-utils:
+- 'packages/test-utils/*'
+cli-tools:
+- 'packages/cli-tools/*'
