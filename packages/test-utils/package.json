@@ -6,7 +6,7 @@
   "types": "./dist/utils.d.ts",
   "scripts": {
     "test": "jest",
-    "prepare": "tsc",
+    "prepublish": "tsc",
     "build": "tsc"
   },
   "keywords": [

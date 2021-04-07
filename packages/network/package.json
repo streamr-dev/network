@@ -15,7 +15,7 @@
   "main": "dist/composition.js",
   "types": "dist/composition.d.ts",
   "scripts": {
-    "prepare": "tsc -p tsconfig-build.json",
+    "prepublish": "tsc -p tsconfig-build.json",
     "build": "tsc -p tsconfig-build.json",
     "tracker": "node $NODE_DEBUG_OPTION bin/tracker.js",
     "pub": "node $NODE_DEBUG_OPTION bin/publisher.js",

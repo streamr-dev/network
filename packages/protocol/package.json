@@ -14,7 +14,7 @@
     "clean": "rm -rf ./dist/* || true",
     "watch": "tsc --watch",
     "benchmark": "jest test/benchmarks --detectOpenHandles",
-    "prepare": "npm run build",
+    "prepublish": "npm run build",
     "eslint": "eslint '{src,test}/**/*.ts'",
     "test": "jest",
     "test-unit": "jest test/unit --detectOpenHandles",
