@@ -1,0 +1,5 @@
+.codedeploy
+.idea
+.travis.yml
+.npmrc
+coverage

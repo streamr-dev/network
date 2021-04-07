@@ -1,0 +1,370 @@
+{
+  "$id": "config.schema.json",
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Broker configuration format",
+  "type": "object",
+  "required": [
+    "adapters",
+    "cassandra",
+    "ethereumPrivateKey",
+    "network",
+    "reporting",
+    "streamrUrl"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "adapters": {
+      "type": "array",
+      "description": "Foreign protocol adapters to use",
+      "items": {
+        "$ref": "#/definitions/adapter"
+      }
+    },
+    "cassandra": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "Apache Cassandra configuration",
+      "required": [
+        "hosts",
+        "username",
+        "password",
+        "keyspace",
+        "datacenter"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "hostname"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "username": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "keyspace": {
+          "type": "string"
+        },
+        "datacenter": {
+          "type": "string"
+        }
+      }
+    },
+    "ethereumPrivateKey": {
+      "type": "string",
+      "description": "Ethereum private key to establish broker identity",
+      "pattern": "^0x[a-f0-9]{64}$"
+    },
+    "network": {
+      "type": "object",
+      "description": "Network node settings",
+      "required": [
+        "name",
+        "hostname",
+        "port",
+        "advertisedWsUrl",
+        "isStorageNode",
+        "trackers",
+        "location"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Human-readable name for network node"
+        },
+        "hostname": {
+          "type": "string",
+          "format": "hostname",
+          "description": "Hostname to start network node on"
+        },
+        "port": {
+          "$ref": "#/definitions/port",
+          "description": "Port to start network node on"
+        },
+        "advertisedWsUrl": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "Override WebSocket URL to advertise to tracker and other nodes (useful when behind NAT)"
+        },
+        "isStorageNode": {
+          "type": "boolean",
+          "description": "Whether to identify as storage node or not"
+        },
+        "trackers": {
+          "oneOf": [
+            {
+              "type": "array",
+              "description": "List of tracker WebSocket URLs to connect to",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "object",
+              "description": "Tracker registry smart contract to use for fetching tracker WebSocket URLs",
+              "required": [
+                "registryAddress",
+                "jsonRpcProvider"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "registryAddress": {
+                  "type": "string",
+                  "description": "Ethereum address of tracker registry smart contract",
+                  "pattern": "^0x[a-fA-F0-9]{40}$"
+                },
+                "jsonRpcProvider": {
+                  "type": "string",
+                  "description": "URL for JSON RPC Provider",
+                  "format": "uri"
+                }
+              }
+            }
+          ]
+        },
+        "location": {
+          "description": "Location of node",
+          "oneOf": [
+            {
+              "type": "null",
+              "description": "Location undefined"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "latitude",
+                "longitude",
+                "country",
+                "city"
+              ],
+              "properties": {
+                "latitude": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "longitude": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "country": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "city": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "reporting": {
+      "type": "object",
+      "description": "Configuration for reporting, metrics gathering, error gathering etc.",
+      "required": [
+        "intervalInSeconds",
+        "sentry",
+        "streamr",
+        "perNodeMetrics"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "intervalInSeconds": {
+          "type": "integer",
+          "description": "Interval (in seconds) in which to collect and report metrics (0 = disable)",
+          "minimum": 0
+        },
+        "sentry": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "URL for Sentry monitoring and error tracking",
+            "format": "uri"
+        },
+        "streamr": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Report metrics to Streamr stream",
+            "required": [
+              "streamId"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "streamId": {
+                "type": "string",
+                "description": "Stream identifier"
+              },
+              "apiKey": {
+                "type": "string",
+                "description": "API key for publishing to Stream"
+              }
+            }
+        },
+        "perNodeMetrics" : {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Specific configuration for the metrics on each node",
+          "required": [
+            "enabled",
+            "wsUrl",
+            "httpUrl"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "enabled" : {
+              "type" : "boolean"
+            },
+            "wsUrl" : {
+              "type" : [
+                "string",
+                "null"
+              ]
+            },
+            "httpUrl": {
+              "type" : [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "streamrUrl": {
+      "type": "string",
+      "description": "Base URL of Core (E&E) API to use",
+      "format": "uri"
+    }
+  },
+  "definitions": {
+    "adapter": {
+      "oneOf": [
+        {
+          "type": "object",
+          "description": "WebSocket adapter configuration",
+          "required": [
+            "name",
+            "port"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "const": "ws"
+            },
+            "port": {
+              "$ref": "#/definitions/port",
+              "description": "Port to start adapter on"
+            },
+            "pingInterval": {
+              "type": "integer",
+              "description": "How often to ping client connections (in milliseconds)",
+              "minimum": 0
+            },
+            "certFileName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Path of certificate file to use for SSL"
+            },
+            "privateKeyFileName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Path of private key file to use for SSL"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "HTTP adapter configuration",
+          "required": [
+            "name",
+            "port"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "const": "http"
+            },
+            "port": {
+              "$ref": "#/definitions/port",
+              "description": "Port to start adapter on"
+            },
+            "certFileName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Path of certificate file to use for SSL"
+            },
+            "privateKeyFileName": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "description": "Path of private key file to use for SSL"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "description": "MQTT adapter configuration",
+          "required": [
+            "name",
+            "port",
+            "streamsTimeout"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "const": "mqtt"
+            },
+            "port": {
+              "$ref": "#/definitions/port",
+              "description": "Port to start adapter on"
+            },
+            "streamsTimeout": {
+              "type": "integer",
+              "description": "MQTT connection timeout",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "port": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 65353
+    }
+  }
+}
