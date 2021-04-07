@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "lib": ["es2020"],
+    "allowJs": true,
+    "declaration": true,
+    "outDir": "dist",
+    "rootDirs": ["src", "test"],
+    "strict": true,
+    "esModuleInterop": true,
+    "noImplicitAny": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ]
+}

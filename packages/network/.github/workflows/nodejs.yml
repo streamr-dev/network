@@ -1,0 +1,77 @@
+name: Eslint, Test and Publish
+
+on:
+  push:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'typedoc.js'
+      - '.idea'
+
+jobs:
+  test:
+    name: Run eslint and test
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [ 14.x ]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Cache Node.js modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.OS }}-node-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.OS }}-node-${{ matrix.node-version }}
+            ${{ runner.OS }}-node-
+            ${{ runner.OS }}-
+      - run: npm ci
+      - run: npm run eslint
+      - run: npm run build --if-present
+      - run: npm test
+        env:
+          CI: true
+
+  publish:
+    needs: [test]
+    name: Publishing master using Node 14
+    runs-on: ubuntu-latest
+
+    # run job only for tags and skip for cron
+    if: startsWith(github.ref, 'refs/tags/') && github.event_name != 'schedule'
+    steps:
+      - name: Get the release version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - uses: actions/checkout@master
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14
+          registry-url: https://registry.npmjs.org/
+
+      - name: npm ci
+        run: |
+          npm ci
+          npm run build --if-present
+
+      - name: Publish beta ${{ steps.get_version.outputs.VERSION }}
+        # if tag includes beta keyword
+        if: contains(steps.get_version.outputs.VERSION, 'beta') == true
+        run: npm publish --tag beta
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish latest ${{ steps.get_version.outputs.VERSION }}
+        # if tag doesn't include beta keyword
+        if: contains(steps.get_version.outputs.VERSION, 'beta') == false
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

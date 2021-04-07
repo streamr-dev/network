@@ -1,0 +1,13 @@
+node_modules/
+dist/
+
+# IntelliJ IDEA
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/httpRequests
+.idea/git_toolbox_prj.xml
+bin/.idea
+
+.DS_Store
+docs

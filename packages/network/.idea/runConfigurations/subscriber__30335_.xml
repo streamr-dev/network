@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="subscriber (30335)" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="sub-1" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs>
+      <env name="DEBUG" value="streamr:*" />
+    </envs>
+    <method v="2" />
+  </configuration>
+</component>
