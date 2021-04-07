@@ -1,0 +1,25 @@
+{
+  "webdriver": {
+    "start_process": true,
+    "server_path": "node_modules/.bin/chromedriver",
+    "cli_args": [
+      "--verbose"
+    ],
+    "port": 9515
+  },
+
+  "test_settings" : {
+    "default" : {
+      "desiredCapabilities" : {
+        "browserName" : "chrome",
+        "chromeOptions": {
+          "args" : [
+            "--no-sandbox",
+            "--headless",
+            "--disable-dev-shm-usage"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "streamr-client-webpack-example",
+  "version": "0.0.0",
+  "description": "Example of how streamr-client can be included in webpack projects",
+  "scripts": {
+    "build": "NODE_ENV=production webpack --mode=production --progress",
+    "dev": "webpack --progress --colors --watch",
+    "build-with-parent": "cp -Rpfv ../../dist ./node_modules/streamr-client/ && rm node_modules/streamr-client/package.json; cp ../../package.json ./node_modules/streamr-client/package.json && npm run build"
+  },
+  "engines": {
+    "node": ">= 8"
+  },
+  "author": "Streamr",
+  "license": "AGPL-3.0-or-later",
+  "devDependencies": {
+    "@babel/cli": "^7.7.7",
+    "@babel/core": "^7.7.7",
+    "@babel/plugin-proposal-class-properties": "^7.7.4",
+    "@babel/plugin-transform-classes": "^7.7.4",
+    "@babel/plugin-transform-modules-commonjs": "^7.7.5",
+    "@babel/plugin-transform-runtime": "^7.7.6",
+    "babel-loader": "^8.0.6",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "core-js": "^2.6.11",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  },
+  "#": "Update core-js -> 3.6.2, after releasing new version of client",
+  "dependencies": {
+    "@babel/runtime": "^7.11.2",
+    "streamr-client": "^4.1.0"
+  }
+}

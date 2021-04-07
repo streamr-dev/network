@@ -1,0 +1,108 @@
+<html>
+<head>
+<title>Test StreamrClient in Chrome Browser</title>
+<script src="https://code.jquery.com/jquery-3.5.0.js" integrity="sha256-r/AaFHrszJtwpe+tHyNi/XCfMxYpbsRg2Uqn0x3s2zc=" crossorigin="anonymous"></script>
+<script src="/static/streamr-client.web.js"></script>
+<script>
+    const urlParams = new URLSearchParams(window.location.search)
+    const streamName = urlParams.get('streamName')
+    const url = urlParams.get('WEBSOCKET_URL') || 'ws://localhost/api/v1/ws'
+    const restUrl = urlParams.get('REST_URL') || 'http://localhost/api/v1'
+    const { privateKey } = StreamrClient.generateEthereumAccount()
+    console.info('Creating streamr client connecting to:', {
+        url,
+        restUrl,
+    })
+
+    const client = new StreamrClient({
+        auth: {
+            privateKey,
+        },
+        url,
+        restUrl,
+        autoConnect: false,
+        autoDisconnect: false
+    })
+</script>
+</head>
+<body>
+    <div id="result"></div>
+    <button id="connect">Connect</button>
+    <button id="create">Create</button>
+    <button id="subscribe">Subscribe</button>
+    <button id="publish">Publish</button>
+    <button id="resend">Resend</button>
+    <button id="disconnect">Disconnect</button>
+</body>
+<script>
+let stream
+let messages = []
+
+const resetResults = () => $('#result').html('')
+
+client.on('error', (err) => {
+    console.error(err)
+    $('#result').html('Error: ' + err)
+})
+
+$('#connect').on('click', async () => {
+    resetResults()
+    await client.connect()
+    $('#result').html(client.connection.getState())
+})
+
+$('#create').on('click', async () => {
+    resetResults()
+    stream = await client.createStream({
+        name: streamName,
+        requireEncryptedData: true,
+    })
+    $('#result').html(stream.name)
+})
+
+$('#subscribe').on('click', async () => {
+    resetResults()
+    await client.subscribe({
+        stream: stream.id
+    }, (message, metadata) => {
+        messages.push(message)
+    })
+    $('#result').html('subscribed')
+})
+
+$('#publish').on('click', async () => {
+    resetResults()
+    for (let i = 0; i < 10; i++) {
+        const msg = {
+            msg: i
+        }
+        await client.publish(stream.id, msg)
+    }
+
+    setTimeout(() => $('#result').html(JSON.stringify(messages)), 3000)
+})
+
+$('#resend').on('click', async () => {
+    resetResults()
+    messages = []
+
+    const sub = await client.resend({
+        stream: stream.id,
+        resend: {
+            last: 10,
+        },
+    }, (message) => {
+        messages.push(message)
+    })
+
+    sub.on('resent', () => {
+        $('#result').html('Resend: ' + JSON.stringify(messages))
+    })
+})
+
+$('#disconnect').on('click', async () => {
+    await client.disconnect()
+    $('#result').html(client.connection.getState())
+})
+</script>
+</html>

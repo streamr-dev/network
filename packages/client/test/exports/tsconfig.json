@@ -1,0 +1,15 @@
+{
+    "extends": "@tsconfig/node12/tsconfig.json",
+    "compilerOptions": {
+        "allowJs": true,
+        "declaration": true,
+        "outDir": "dist",
+        "strict": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "module": "commonjs"
+    },
+    "include": [
+        "tests/typescript.ts"
+    ]
+}

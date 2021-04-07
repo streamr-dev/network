@@ -1,0 +1,44 @@
+<html>
+<head>
+    <!-- For debug messages, include debug.js and set localStorage.debug = 'StreamrClient'. See from https://github.com/visionmedia/debug -->
+    <script src="../../dist/streamr-client.web.js"></script>
+    <!-- Or use unpkg, e.g. https://unpkg.com/browse/streamr-client@4.1.6/dist/streamr-client.web.js -->
+
+    <script>
+        const log = (msg) => {
+            var elem = document.createElement('p')
+            elem.innerHTML = msg
+            document.body.appendChild(elem)
+        }
+
+        // register and get from https://streamr.network/signup
+        const STREAM_ID = 'MY-STREAM-ID'
+
+        // Create the client and give the API key to use by default
+        const client = new StreamrClient({
+            auth: {
+                privateKey: 'your-private-key',
+            }
+        })
+
+        function publish() {
+            // Here is the event we'll be sending
+            const msg = {
+                hello: 'world',
+                random: Math.random()
+            }
+
+            // Publish the event to the Stream
+            client.publish(STREAM_ID, msg)
+                .then(() => console.log('Sent successfully: ', msg))
+                .catch((err) => log(err))
+        }
+    </script>
+</head>
+<body>
+    <button id="publish">Publish</button>
+    <script>
+        document.getElementById('publish').addEventListener('click', publish)
+    </script>
+</body>
+</html>

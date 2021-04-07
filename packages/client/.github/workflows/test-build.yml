@@ -1,0 +1,200 @@
+# Any tests that need the built code should go in here.
+name: Test Build
+
+# Be sure to update both workflow files if you edit any env or trigger config
+env:
+  CI: true
+  DEBUG_COLORS: true
+  DEBUG: "Streamr*"
+on:
+  push:
+    tags:
+      - "*"
+    branches:
+      - master
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.editorconfig'
+      - 'typedoc.js'
+  pull_request:
+    branches:
+      - "*"
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - '.editorconfig'
+      - 'typedoc.js'
+  schedule:
+    # run every day at 00:00
+    - cron: "0 0 * * *"
+# Be sure to update both workflow files if you edit any env or trigger config
+
+jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.8.0
+        with:
+          access_token: ${{ github.token }}
+  build:
+    name: Run build using Node 14.x
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_ANALYSIS: true
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - name: npm ci
+        run: npm ci
+      - name: npm run build
+        run: npm run build
+      - uses: actions/upload-artifact@v2
+        with:
+          name: build
+          path: dist
+
+  test-exports:
+    name: Test Exports using Node 14.x
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: dist
+      - name: npm ci
+        run: npm ci
+      - name: test-types
+        run: npm run test-types
+      - name: npm run test-exports
+        run: npm run test-exports
+
+  browser:
+    name: Test Browser using Node 14.x
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: dist
+      - name: npm ci
+        run: npm ci
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
+
+      - uses: nick-invision/retry@v2
+        name: Run Test
+        with:
+          max_attempts: 3
+          timeout_minutes: 3
+          retry_on: error
+          command: npm run test-browser
+
+  benchmarks:
+    name: Test Benchmark using Node ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    needs: build
+
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: dist
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
+      - name: npm ci
+        run: npm ci
+      - name: benchmarks
+        run: npm run benchmarks > benchmarks.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: benchmarks
+          path: benchmarks.txt
+
+  streamr-client-testing-tool:
+    name: ${{ matrix.config-name }} ${{ matrix.test-name }}
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        test-name:
+          - stream-cleartext-unsigned
+          - stream-cleartext-signed
+          - stream-encrypted-shared-signed
+          - stream-encrypted-shared-rotating-signed
+          - stream-encrypted-exchanged-rotating-signed
+        config-name:
+          - default
+          - js-only
+          - java-only
+          - realtime-only
+          - js-realtime-only
+          - java-realtime-only
+    env:
+      NUM_MESSAGES: 20
+      TEST_NAME: ${{ matrix.test-name }}
+      CONFIG_NAME: ${{ matrix.config-name }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js 14
+        uses: actions/setup-node@v2
+        with:
+          node-version: "14.x"
+      - uses: actions/download-artifact@v2
+        with:
+          name: build
+          path: dist
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "mysql redis engine-and-editor cassandra parity-node0 parity-sidechain-node0 bridge broker-node-storage-1 nginx smtp"
+      - name: npm ci
+        run: npm ci
+      - name: npm link
+        run: cd dist && npm link
+      - uses: actions/checkout@v2
+        with:
+          repository: streamr-dev/streamr-client-testing
+          path: streamr-client-testing
+      - uses: actions/setup-java@v1
+        with:
+          java-version: '8'
+      - name: setup-client-testing
+        working-directory: streamr-client-testing
+        run: |
+          ## npm install is used because package-lock.json could be from a previous client version.
+          npm install
+          npm link streamr-client
+          ./gradlew fatjar
+      - uses: nick-invision/retry@v2
+        name: run-client-testing
+        with:
+          max_attempts: 2
+          timeout_minutes: 15
+          retry_on: error
+          command: cd streamr-client-testing && DEBUG='' java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
