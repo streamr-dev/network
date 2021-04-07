@@ -1,5 +1,5 @@
 # Any tests that need the built code should go in here.
-name: Test Build
+name: Client – Test Build
 
 # Be sure to update both workflow files if you edit any env or trigger config
 env:
