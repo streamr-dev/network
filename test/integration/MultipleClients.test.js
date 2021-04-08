@@ -31,7 +31,7 @@ describeRepeats('PubSub with multiple clients', () => {
     let privateKey
     let errors = []
 
-    const runAfterTest = addAfterFn()
+    const addAfter = addAfterFn()
 
     const getOnError = (errs) => jest.fn((err) => {
         errs.push(err)
@@ -83,7 +83,7 @@ describeRepeats('PubSub with multiple clients', () => {
         })
         const publisherId = (await pubClient.getPublisherId()).toLowerCase()
 
-        runAfterTest(async () => {
+        addAfter(async () => {
             counterId.clear(publisherId) // prevent overflows in counter
             await pubClient.disconnect()
         })
@@ -109,7 +109,7 @@ describeRepeats('PubSub with multiple clients', () => {
             ...opts,
         })
 
-        runAfterTest(async () => (
+        addAfter(async () => (
             client.disconnect()
         ))
 
@@ -150,7 +150,6 @@ describeRepeats('PubSub with multiple clients', () => {
             const message = {
                 msg: uid('message'),
             }
-            await wait(5000)
             // publish message on main client
             await mainClient.publish(stream, message)
             await wait(5000)
@@ -172,30 +171,53 @@ describeRepeats('PubSub with multiple clients', () => {
                 await otherClient.subscribe({
                     stream: stream.id,
                 }, (msg) => {
-                    otherClient.debug('other', msg.value)
                     receivedMessagesOther.push(msg)
+                    onConnectionMessage()
 
                     if (receivedMessagesOther.length === maxMessages) {
-                        otherDone.resolve()
+                        cancelled = true
+                        otherDone.resolve(undefined)
                     }
                 })
 
-                let disconnecting = false
-                const disconnect = async () => {
-                    if (msgs.length === maxMessages) { return }
+                let cancelled = false
+                const localOtherClient = otherClient // capture so no chance of disconnecting wrong client
+                let reconnected = Defer()
 
-                    if (disconnecting) { return }
-                    disconnecting = true
-                    otherClient.debug('disconnecting...', msgs.length)
-                    otherClient.connection.socket.close()
-                    // wait for reconnection before possibly disconnecting again
-                    try {
-                        await otherClient.nextConnection()
-                        otherClient.debug('reconnected...', msgs.length)
-                    } finally {
-                        // eslint-disable-next-line require-atomic-updates
-                        disconnecting = false
+                const disconnect = async () => {
+                    if (localOtherClient !== otherClient) {
+                        throw new Error('not equal')
                     }
+
+                    if (cancelled || msgs.length === MAX_MESSAGES) {
+                        reconnected.resolve(undefined)
+                        return
+                    }
+
+                    await wait(500) // some backend bug causes subs to stop working if we disconnect too quickly
+                    if (cancelled || msgs.length === MAX_MESSAGES) {
+                        reconnected.resolve(undefined)
+                        return
+                    }
+
+                    if (localOtherClient !== otherClient) {
+                        throw new Error('not equal')
+                    }
+                    await localOtherClient.nextConnection()
+                    if (cancelled || msgs.length === MAX_MESSAGES) {
+                        reconnected.resolve(undefined)
+                        return
+                    }
+
+                    if (localOtherClient !== otherClient) {
+                        throw new Error('not equal')
+                    }
+                    localOtherClient.connection.socket.close()
+                    // wait for reconnection before possibly disconnecting again
+                    await localOtherClient.nextConnection()
+                    const p = reconnected
+                    p.resolve(undefined)
+                    reconnected = Defer()
                 }
 
                 const onConnectionMessage = jest.fn(() => {
@@ -203,8 +225,14 @@ describeRepeats('PubSub with multiple clients', () => {
                     disconnect()
                 })
 
-                otherClient.connection.on(ControlMessage.TYPES.BroadcastMessage, onConnectionMessage)
-                otherClient.connection.on(ControlMessage.TYPES.UnicastMessage, onConnectionMessage)
+                const onConnected = jest.fn()
+                const onDisconnected = jest.fn()
+                otherClient.connection.on('connected', onConnected)
+                otherClient.connection.on('disconnected', onDisconnected)
+                addAfter(() => {
+                    otherClient.connection.off('connected', onConnected)
+                    otherClient.connection.off('disconnected', onDisconnected)
+                })
                 let t = 0
                 const publishTestMessages = getPublishTestMessages(mainClient, {
                     stream,
@@ -341,7 +369,7 @@ describeRepeats('PubSub with multiple clients', () => {
             const published = {}
             await Promise.all(publishers.map(async (pubClient) => {
                 const publisherId = (await pubClient.getPublisherId()).toLowerCase()
-                runAfterTest(() => {
+                addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
                 const publishTestMessages = getPublishTestMessages(pubClient, {
@@ -417,7 +445,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 })
 
                 const publisherId = (await pubClient.getPublisherId()).toLowerCase()
-                runAfterTest(() => {
+                addAfter(() => {
                     counterId.clear(publisherId) // prevent overflows in counter
                 })
                 const publishTestMessages = getPublishTestMessages(pubClient, {
@@ -444,7 +472,7 @@ describeRepeats('PubSub with multiple clients', () => {
                         receivedMessagesOther[streamMessage.getPublisherId().toLowerCase()] = msgs
                     })
 
-                    runAfterTest(async () => {
+                    addAfter(async () => {
                         await lateSub.unsubscribe()
                     })
                 }
@@ -490,7 +518,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 privateKey
             }
         })
-        runAfterTest(() => otherClient.disconnect())
+        addAfter(() => otherClient.disconnect())
         const onConnectedOther = jest.fn()
         const onConnectedMain = jest.fn()
         const onDisconnectedOther = jest.fn()
@@ -521,7 +549,7 @@ describeRepeats('PubSub with multiple clients', () => {
                 privateKey
             }
         })
-        runAfterTest(() => otherClient.disconnect())
+        addAfter(() => otherClient.disconnect())
         const onConnectedOther = jest.fn()
         const onConnectedMain = jest.fn()
         const onDisconnectedOther = jest.fn()
