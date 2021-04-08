@@ -168,7 +168,7 @@ type PublishTestMessagesOpts = StreamPartDefinitionOptions & Partial<PublishOpts
 export function getPublishTestMessages(client: StreamrClient, defaultOptsOrStreamId: string | PublishTestMessagesOpts = {}) {
     // second argument could also be streamId
     let defaultOpts: PublishTestMessagesOpts
-    if (typeof defaultOpts === 'string') {
+    if (typeof defaultOptsOrStreamId === 'string') {
         // eslint-disable-next-line no-param-reassign
         defaultOpts = {
             streamId: defaultOptsOrStreamId as string,

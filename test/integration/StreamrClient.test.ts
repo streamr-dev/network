@@ -210,7 +210,6 @@ describeRepeats('StreamrClient', () => {
 
                 expect(client.getSubscriptions()).toHaveLength(1)
 
-                // @ts-expect-error
                 const unsubTask = client.unsubscribe(stream)
 
                 expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
@@ -229,15 +228,14 @@ describeRepeats('StreamrClient', () => {
                 }, () => {})
                 const subSession = client.subscriber.getSubscriptionSession(stream)
                 const events = attachSubListeners(subSession)
-                let unsubTask
+                let unsubTask!: ReturnType<typeof client.unsubscribe>
                 const startedSubscribing = Defer()
                 subSession.once('subscribing', startedSubscribing.wrap(() => {
-                    // @ts-expect-error
                     unsubTask = client.unsubscribe(stream)
                 }))
 
+                await startedSubscribing
                 await Promise.all([
-                    startedSubscribing,
                     unsubTask,
                     subTask,
                 ])
@@ -264,26 +262,18 @@ describeRepeats('StreamrClient', () => {
 
                     expect(client.getSubscriptions()).toHaveLength(1)
 
-                    // @ts-expect-error
                     const unsubTask = client.unsubscribe(stream)
 
                     expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
-                    console.log('unsub >>')
                     await unsubTask
-                    console.log('unsub <<')
-                    console.log('sub >>')
                     await subTask
-                    console.log('sub <<')
-                    console.log('wait >>')
                     await wait(WAIT_TIME * 2)
-                    console.log('wait <<')
                     expect(events.onResent).toHaveBeenCalledTimes(0)
                     expect(events.onSubscribed).toHaveBeenCalledTimes(0)
                     expect(events.onUnsubscribed).toHaveBeenCalledTimes(0)
                 }, TIMEOUT)
 
                 it('client.subscribe then unsubscribe ignores messages with resend', async () => {
-                    console.log('NEXT')
                     const onMessage = jest.fn()
                     const subTask = client.subscribe({
                         streamId: stream.id,
@@ -295,7 +285,6 @@ describeRepeats('StreamrClient', () => {
                     }, onMessage)
 
                     const events = attachSubListeners(client.subscriber.getSubscriptionSession(stream))
-                    // @ts-expect-error
                     const unsubTask = client.unsubscribe(stream)
                     expect(client.getSubscriptions()).toHaveLength(0) // lost subscription immediately
 
