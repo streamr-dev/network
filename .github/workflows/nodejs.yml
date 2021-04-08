@@ -47,7 +47,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: docker build -t $OWNER/$IMAGE_NAME:taggit .
-      - run: bash .ci_scripts/smoke_test.sh
       - uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USER }}
