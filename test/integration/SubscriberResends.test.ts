@@ -100,13 +100,6 @@ describeRepeats('resends', () => {
     })
 
     afterEach(async () => {
-        if (!client || !stream) { return }
-        await wait(3000)
-        await client.unsubscribe(stream)
-        await wait(3000)
-    })
-
-    afterAll(async () => {
         if (client) {
             client.debug('disconnecting after test')
             await client.disconnect()
@@ -274,7 +267,7 @@ describeRepeats('resends', () => {
             expect(onResent).toHaveBeenCalledTimes(1)
         })
 
-        it.skip('closes connection with autoDisconnect', async () => {
+        it('closes connection with autoDisconnect', async () => {
             addAfter(() => {
                 client.connection.enableAutoConnect(false)
                 client.connection.enableAutoDisconnect(false)
