@@ -250,7 +250,11 @@ export class Connection {
                 this.close(new Error('pong not received'))
             } else {
                 this.rttStart = Date.now()
-                this.dataChannel!.sendMessage('ping')
+                try {
+                    this.dataChannel!.sendMessage('ping')
+                } catch (e) {
+                    this.logger.warn(`failed to send ping to ${this.peerInfo.peerId} with error: ${e}`)
+                }
                 this.pingAttempts += 1
             }
         }
@@ -261,7 +265,11 @@ export class Connection {
     }
 
     pong(): void {
-        this.dataChannel!.sendMessage('pong')
+        try {
+            this.dataChannel!.sendMessage('pong')
+        } catch (e) {
+            this.logger.warn(`failed to send pong to ${this.peerInfo.peerId} with error: ${e}`)
+        }
     }
 
     setPeerInfo(peerInfo: PeerInfo): void {
