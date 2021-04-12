@@ -13,6 +13,7 @@ export interface ConstructorOptions {
     stunUrls: string[]
     bufferThresholdLow?: number
     bufferThresholdHigh?: number
+    maxMessageSize?: number
     newConnectionTimeout?: number
     maxPingPongAttempts?: number
     pingInterval?: number
@@ -35,6 +36,7 @@ export class Connection {
     private readonly stunUrls: string[]
     private readonly bufferThresholdHigh: number
     private readonly bufferThresholdLow: number
+    private readonly maxMessageSize: number
     private readonly newConnectionTimeout: number
     private readonly maxPingPongAttempts: number
     private readonly pingInterval: number
@@ -83,7 +85,8 @@ export class Connection {
         onClose,
         onError,
         onBufferLow,
-        onBufferHigh
+        onBufferHigh,
+        maxMessageSize = 1048576
     }: ConstructorOptions) {
         this.selfId = selfId
         this.peerInfo = PeerInfo.newUnknown(targetPeerId)
@@ -92,6 +95,7 @@ export class Connection {
         this.stunUrls = stunUrls
         this.bufferThresholdHigh = bufferThresholdHigh
         this.bufferThresholdLow = bufferThresholdLow
+        this.maxMessageSize = maxMessageSize
         this.newConnectionTimeout = newConnectionTimeout
         this.maxPingPongAttempts = maxPingPongAttempts
         this.pingInterval = pingInterval
@@ -126,7 +130,8 @@ export class Connection {
 
     connect(): void {
         this.connection = new nodeDataChannel.PeerConnection(this.selfId, {
-            iceServers: this.stunUrls
+            iceServers: this.stunUrls,
+            maxMessageSize: this.maxMessageSize
         })
         this.connection.onStateChange((state) => {
             this.lastState = state

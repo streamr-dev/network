@@ -127,10 +127,10 @@ describe('WebRtcEndpoint', () => {
     })
 
     it('cannot send too large of a payload', (done) => {
-        const payload = new Array(1024 * 1024).fill('X').join('')
+        const payload = new Array(2 ** 21).fill('X').join('')
         endpoint1.connect('node-2', 'tracker')
         endpoint1.send('node-2', payload).catch((err) => {
-            expect(err.message).toMatch(/Dropping message due to size 1048576 exceeding the limit of \d+/)
+            expect(err.message).toMatch(/Dropping message due to size 2097152 exceeding the limit of \d+/)
             done()
         })
     })
