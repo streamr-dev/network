@@ -113,8 +113,7 @@ function createResendRequest(resendOptions) {
         request = new ResendFromRequest({
             ...commonOpts,
             fromMsgRef: new MessageRef(from.timestamp, from.sequenceNumber),
-            publisherId,
-            msgChainId,
+            publisherId
         })
     } else if (from && to) {
         request = new ResendRangeRequest({
