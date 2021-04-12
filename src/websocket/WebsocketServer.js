@@ -446,8 +446,7 @@ module.exports = class WebsocketServer extends EventEmitter {
             uuidv4(),
             request.fromMsgRef.timestamp,
             request.fromMsgRef.sequenceNumber,
-            request.publisherId,
-            request.msgChainId,
+            request.publisherId
         ))
     }
 

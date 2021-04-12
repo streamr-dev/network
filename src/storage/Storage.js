@@ -165,15 +165,15 @@ class Storage extends EventEmitter {
         return resultStream
     }
 
-    requestFrom(streamId, partition, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
+    requestFrom(streamId, partition, fromTimestamp, fromSequenceNo, publisherId) {
         logger.debug(`requestFrom, streamId: "${streamId}", partition: "${partition}", fromTimestamp: "${fromTimestamp}", fromSequenceNo: `
-            + `"${fromSequenceNo}", publisherId: "${publisherId}", msgChainId: "${msgChainId}"`)
+            + `"${fromSequenceNo}", publisherId: "${publisherId}"`)
 
-        if (fromSequenceNo != null && publisherId != null && msgChainId != null) {
+        if (fromSequenceNo != null && publisherId != null) {
             return this._fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp,
-                fromSequenceNo, publisherId, msgChainId)
+                fromSequenceNo, publisherId)
         }
-        if ((fromSequenceNo == null || fromSequenceNo === 0) && publisherId == null && msgChainId == null) {
+        if ((fromSequenceNo == null || fromSequenceNo === 0) && publisherId == null) {
             return this._fetchFromTimestamp(streamId, partition, fromTimestamp)
         }
 
@@ -184,7 +184,7 @@ class Storage extends EventEmitter {
         logger.debug(`requestRange, streamId: "${streamId}", partition: "${partition}", fromTimestamp: "${fromTimestamp}", fromSequenceNo: "${fromSequenceNo}"`
             + `, toTimestamp: "${toTimestamp}", toSequenceNo: "${toSequenceNo}", publisherId: "${publisherId}", msgChainId: "${msgChainId}"`)
 
-        if (fromSequenceNo != null && toSequenceNo != null && publisherId != null && msgChainId != null) {
+        if (fromSequenceNo != null && toSequenceNo != null && publisherId != null) {
             return this._fetchBetweenMessageRefsForPublisher(streamId, partition, fromTimestamp,
                 fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId)
         }
@@ -284,8 +284,12 @@ class Storage extends EventEmitter {
 
             const bucketsForQuery = bucketsToIds(buckets)
 
-            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo, publisherId, msgChainId]
-            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, publisherId, msgChainId]
+            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo, publisherId]
+            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, publisherId]
+            if (msgChainId !== null) {
+                queryParams1.push(msgChainId)
+                queryParams2.push(msgChainId)
+            }
             const stream1 = this._queryWithStreamingResults(query1, queryParams1)
             const stream2 = this._queryWithStreamingResults(query2, queryParams2)
 
