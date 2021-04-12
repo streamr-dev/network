@@ -199,7 +199,7 @@ export class Storage extends EventEmitter {
         //TODO: msgChainId is always null, remove on NET-143
         if (publisherId != null && msgChainId != null) {
             return this._fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp,
-                fromSequenceNo, publisherId, msgChainId)
+                fromSequenceNo, publisherId)
         }
         if (publisherId == null && msgChainId == null) { // TODO should add fromSequenceNo to this call (NET-268)
             return this._fetchFromTimestamp(streamId, partition, fromTimestamp)
@@ -304,8 +304,12 @@ export class Storage extends EventEmitter {
 
             const bucketsForQuery = bucketsToIds(buckets)
 
-            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo, publisherId, msgChainId]
-            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, publisherId, msgChainId]
+            const queryParams1 = [streamId, partition, bucketsForQuery, fromTimestamp, fromSequenceNo, publisherId]
+            const queryParams2 = [streamId, partition, bucketsForQuery, fromTimestamp, publisherId]
+            if (msgChainId !== null) {
+                queryParams1.push(msgChainId)
+                queryParams2.push(msgChainId)
+            }
             const stream1 = this._queryWithStreamingResults(query1, queryParams1)
             const stream2 = this._queryWithStreamingResults(query2, queryParams2)
 
