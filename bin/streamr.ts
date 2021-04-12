@@ -1,8 +1,9 @@
-#!/usr/bin/env node
-const program = require('commander')
+#!/usr/bin/env node -r ts-node/register
+import { program } from 'commander'
+import pkg from '../package.json'
 
 program
-    .version(require('../package.json').version)
+    .version(pkg.version)
     .usage('<command> [<args>]')
     .description('command line tools for interacting with Streamr https://streamr.network')
     .command('generate', 'generate JSON data')

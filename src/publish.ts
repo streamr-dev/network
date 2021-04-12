@@ -1,13 +1,13 @@
-const Writable = require('stream').Writable
-const StreamrClient = require('streamr-client')
+import { Writable } from 'stream'
+import { StreamrClient, StreamrClientOptions } from 'streamr-client'
 
-module.exports = function publishStream(stream, partitionKey, streamrOptions) {
+export const publishStream = (stream: string, partitionKey: string|undefined, streamrOptions: StreamrClientOptions) => {
     const options = { ...streamrOptions }
 
     const client = new StreamrClient(options)
     const writable = new Writable({
         objectMode: true,
-        write: (data, _, done) => {
+        write: (data: any, _: any, done: any) => {
             let json = null
             // ignore newlines, etc
             if (!data || String(data).trim() === '') {
@@ -23,6 +23,7 @@ module.exports = function publishStream(stream, partitionKey, streamrOptions) {
                 return
             }
 
+            // @ts-expect-error
             client.publish(stream, json, Date.now(), json[partitionKey]).then(
                 () => done(),
                 (err) => done(err)

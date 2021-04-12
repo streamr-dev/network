@@ -3,14 +3,14 @@
   "version": "4.1.1",
   "description": "Command line tools for Streamr.",
   "bin": {
-    "streamr": "bin/streamr.js",
-    "streamr-create": "bin/streamr-create.js",
-    "streamr-generate": "bin/streamr-generate.js",
-    "streamr-list": "bin/streamr-list.js",
-    "streamr-publish": "bin/streamr-publish.js",
-    "streamr-resend": "bin/streamr-resend.js",
-    "streamr-subscribe": "bin/streamr-subscribe.js",
-    "streamr-show": "bin/streamr-show.js"
+    "streamr": "bin/streamr.ts",
+    "streamr-create": "bin/streamr-create.ts",
+    "streamr-generate": "bin/streamr-generate.ts",
+    "streamr-list": "bin/streamr-list.ts",
+    "streamr-publish": "bin/streamr-publish.ts",
+    "streamr-resend": "bin/streamr-resend.ts",
+    "streamr-subscribe": "bin/streamr-subscribe.ts",
+    "streamr-show": "bin/streamr-show.ts"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -35,6 +35,13 @@
     "commander": "^6.1.0",
     "easy-table": "^1.1.1",
     "event-stream": "^4.0.1",
-    "streamr-client": "5.0.0-beta.6"
+    "streamr-client": "^5.2.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.3"
+  },
+  "devDependencies": {
+    "@types/easy-table": "0.0.32",
+    "@types/event-stream": "^3.3.34",
+    "@types/node": "^14.14.37"
   }
 }

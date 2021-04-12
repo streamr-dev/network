@@ -1,8 +1,10 @@
-#!/usr/bin/env node
-const program = require('commander')
-const list = require('../src/list')
-const { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+#!/usr/bin/env node -r ts-node/register
+import { Command } from 'commander';
+import { list } from '../src/list'
+import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'
+import pkg from '../package.json'
 
+const program = new Command();
 program
     .description('fetch a list of streams that are accessible by the authenticated user')
     .option('-s, --search [term]', 'search for term in name or description')
@@ -11,12 +13,12 @@ program
     .option('--no-granted-access', 'exclude streams that user has directly granted permissions to')
 authOptions(program)
 envOptions(program)
-    .version(require('../package.json').version)
+    .version(pkg.version)
     .parse(process.argv)
 
 exitWithHelpIfArgsNotBetween(program, 0, 0)
 
-const query = {
+const query: any = {
     operation: program.operation,
     noConfig: true
 }
@@ -30,6 +32,7 @@ if ("grantedAccess" in program) {
     query.grantedAccess = program.grantedAccess
 }
 
+// @ts-expect-error
 const options = formStreamrOptionsWithEnv(program);
 list(query, options)
 

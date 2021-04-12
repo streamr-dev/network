@@ -1,9 +1,11 @@
-#!/usr/bin/env node
-const program = require('commander')
-const resend = require('../src/resend')
-const { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } = require('./common')
+#!/usr/bin/env node -r ts-node/register
+import { Command } from 'commander';
+import { StreamrClientOptions } from 'streamr-client';
+import { resend } from '../src/resend'
+import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'
+import pkg from '../package.json'
 
-function handlePublisherIdAndMsgChainId(cmd, resendOptions) {
+function handlePublisherIdAndMsgChainId(cmd: any, resendOptions: any) {
     if ('publisherId' in cmd && !('msgChainId' in cmd)) {
         console.error('option --publisher-id must be accompanied by option --msg-chain-id')
         process.exit(1)
@@ -20,6 +22,8 @@ function handlePublisherIdAndMsgChainId(cmd, resendOptions) {
     }
 }
 
+const program = new Command();
+
 program
     .usage('<command> [<args>]')
     .description('request resend of stream and print JSON messages to stdout line-by-line')
@@ -29,7 +33,8 @@ program
     .description('request last N messages')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-s, --subscribe', 'subscribe in addition to resend', false)
-    .action((n, streamId, cmd) => {
+    .action((n: string, streamId: string, cmd: Command) => {
+        // @ts-expect-error
         if (isNaN(n)) {
             console.error('argument n is not a number')
             process.exit(1)
@@ -37,7 +42,7 @@ program
         const resendOptions = {
             last: parseInt(n)
         }
-        const options = formStreamrOptionsWithEnv(cmd.parent)
+        const options: StreamrClientOptions & { subscribe?: boolean } = formStreamrOptionsWithEnv(cmd.parent)
         options.orderMessages = !cmd.disableOrdering
         options.subscribe = cmd.subscribe
         resend(streamId, resendOptions, options)
@@ -50,7 +55,7 @@ program
     .option('--msg-chain-id <string>', 'filter results by message chain')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
     .option('-s, --subscribe', 'subscribe in addition to resend', false)
-    .action((from, streamId, cmd) => {
+    .action((from: string, streamId: string, cmd: Command) => {
         const resendOptions = {
             from: {
                 timestamp: Date.parse(from),
@@ -58,7 +63,7 @@ program
             }
         }
         handlePublisherIdAndMsgChainId(cmd, resendOptions)
-        const options = formStreamrOptionsWithEnv(cmd.parent)
+        const options: StreamrClientOptions & { subscribe?: boolean } = formStreamrOptionsWithEnv(cmd.parent)
         options.orderMessages = !cmd.disableOrdering
         options.subscribe = cmd.subscribe
         resend(streamId, resendOptions, options)
@@ -70,7 +75,7 @@ program
     .option('--publisher-id <string>', 'filter results by publisher')
     .option('--msg-chain-id <string>', 'filter results by message chain')
     .option('-d, --disable-ordering', 'disable ordering of messages by OrderingUtil', false)
-    .action((from, to, streamId, cmd) => {
+    .action((from: string, to: string, streamId: string, cmd: Command) => {
         const resendOptions = {
             from: {
                 timestamp: Date.parse(from),
@@ -88,14 +93,14 @@ program
     })
 
 program
-    .on('command:*', (invalidCommand) => {
+    .on('command:*', (invalidCommand: any) => {
         console.error(`invalid command: ${invalidCommand}`)
         process.exit(1)
     })
 
 authOptions(program)
 envOptions(program)
-    .version(require('../package.json').version)
+    .version(pkg.version)
     .parse(process.argv)
 
 exitWithHelpIfArgsNotBetween(program, 1, Number.MAX_VALUE)
