@@ -9,8 +9,9 @@ program
     .description('generate and print semi-random JSON data to stdout')
     .option('-r, --rate <n>', 'rate in milliseconds', createFnParseInt('--rate'), 500)
     .version(pkg.version)
+    .action((options: any) => {
+        generate(options.rate)
+    })
     .parse(process.argv)
 
 exitWithHelpIfArgsNotBetween(program, 0, 0)
-
-generate(program.rate)

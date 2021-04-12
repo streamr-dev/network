@@ -6,17 +6,15 @@ import pkg from '../package.json'
 
 const program = new Command();
 program
-    .usage('<streamId>')
+    .arguments('<streamId>')
     .description('show detailed information about a stream')
     .option('--include-permissions', 'include list of permissions (requires SHARE permission)')
 authOptions(program)
 envOptions(program)
     .version(pkg.version)
+    .action((streamId: string, options: any) => {
+        show(streamId, options.includePermissions, formStreamrOptionsWithEnv(options))
+    })
     .parse(process.argv)
 
 exitWithHelpIfArgsNotBetween(program, 1, 1)
-
-// @ts-expect-error
-const options = formStreamrOptionsWithEnv(program);
-show(program.args[0], program.includePermissions, options)
-
