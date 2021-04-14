@@ -7,5 +7,6 @@ program
     .usage('<command> <subcommand> [<args>]')
     .description('command line tools for interacting with Streamr https://streamr.network')
     .command('stream', 'stream subcommands')
-    .command('mock-data', 'mock-data subcommands')
+    .command('storage-node', 'storage node subcommands')
+    .command('mock-data', 'mock data subcommands')
     .parse(process.argv)
