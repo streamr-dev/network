@@ -11,6 +11,7 @@ import com.streamr.client.options.StreamrClientOptions;
 import com.streamr.client.protocol.message_layer.StreamMessage;
 import com.streamr.client.rest.Permission;
 import com.streamr.client.rest.Stream;
+import com.streamr.client.rest.StorageNode;
 import com.streamr.client.subs.Subscription;
 import com.streamr.client.utils.Address;
 import com.streamr.client.utils.GroupKey;
@@ -32,6 +33,9 @@ public class StreamTester {
     private static final Random random = new Random();
     private static final int NETWORK_SETUP_DELAY = 5000;
     private static final int NETWORK_PROPAGATION_DELAY = 10000;
+    // "broker-node-storage-1" on Docker environment
+    private final static Address DEV_STORAGE_NODE_ADDRESS = new Address("0xde1112f631486CfC759A50196853011528bC5FA0");
+    private final static String DEV_STORAGE_NODE_URL = "http://10.200.10.1:8891";
 
     private final StreamrClient creator;
     private final Stream stream;
@@ -48,10 +52,13 @@ public class StreamTester {
     public StreamTester(String streamName, String restApiUrl, String websocketApiUrl, int minInterval, int maxInterval, int maxMessages, boolean testCorrectness) {
         StreamrClientOptions options = new StreamrClientOptions(new EthereumAuthenticationMethod(generatePrivateKey()),
                 SigningOptions.getDefault(), EncryptionOptions.getDefault(), websocketApiUrl, restApiUrl);
+        options.setStorageNodeAddress(DEV_STORAGE_NODE_ADDRESS);
+        options.setStorageNodeUrl(DEV_STORAGE_NODE_URL);
         this.creator = new StreamrClient(options);
         try {
             stream = creator.createStream(new Stream(streamName, ""));
-        } catch (IOException e) {
+            creator.addStreamToStorageNode(stream.getId(), new StorageNode(DEV_STORAGE_NODE_ADDRESS));
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
         this.minInterval = minInterval;
