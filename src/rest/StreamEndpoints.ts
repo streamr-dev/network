@@ -7,7 +7,7 @@ import debugFactory from 'debug'
 import { getEndpointUrl } from '../utils'
 import { validateOptions } from '../stream/utils'
 import { Stream, StreamOperation, StreamProperties } from '../stream'
-import StreamPart from '../stream/StreamPart'
+import { StreamPart } from '../stream/StreamPart'
 import { isKeyExchangeStream } from '../stream/KeyExchange'
 
 import authFetch, { ErrorCode, NotFoundError } from './authFetch'

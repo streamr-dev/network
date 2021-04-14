@@ -50,6 +50,7 @@ describeRepeats('PubSub with multiple clients', () => {
         stream = await mainClient.createStream({
             name: uid('stream')
         })
+        await stream.addToStorageNode(config.clientOptions.storageNode.address)
     })
 
     afterEach(async () => {

@@ -1,6 +1,6 @@
 import { EthereumAddress } from '../types'
 
-export default class StorageNode {
+export class StorageNode {
 
     private _address: EthereumAddress
 

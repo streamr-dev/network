@@ -106,6 +106,8 @@ describe('decryption', () => {
             requireEncryptedData: true,
         })
 
+        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+
         publishTestMessages = getPublishTestMessages(client, {
             stream
         })

@@ -72,6 +72,7 @@ describe('Subscription', () => {
         stream = await client.createStream({
             name: uid('stream')
         })
+        await stream.addToStorageNode(config.clientOptions.storageNode.address)
         await client.connect()
     })
 

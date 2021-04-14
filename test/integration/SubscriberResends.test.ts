@@ -59,6 +59,7 @@ describeRepeats('resends', () => {
         stream = await client.createStream({
             name: uid('stream')
         })
+        await stream.addToStorageNode(config.clientOptions.storageNode.address)
         client.debug('connecting before test <<')
 
         publishTestMessages = getPublishTestMessages(client, {
@@ -128,6 +129,7 @@ describeRepeats('resends', () => {
             emptyStream = await client.createStream({
                 name: uid('stream')
             })
+            await emptyStream.addToStorageNode(config.clientOptions.storageNode.address)
 
             const sub = await subscriber.resend({
                 streamId: emptyStream.id,
@@ -147,6 +149,7 @@ describeRepeats('resends', () => {
             emptyStream = await client.createStream({
                 name: uid('stream')
             })
+            await emptyStream.addToStorageNode(config.clientOptions.storageNode.address)
 
             const sub = await subscriber.resendSubscribe({
                 streamId: emptyStream.id,

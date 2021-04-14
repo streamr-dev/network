@@ -231,27 +231,29 @@ function TestStreamEndpoints(getName: () => string) {
 
     describe('Storage node assignment', () => {
         it('add', async () => {
-            const storageNodeAddress = ethers.Wallet.createRandom().address
+            const storageNodeAddress = client.options.storageNode.address
             const stream = await client.createStream()
             await stream.addToStorageNode(storageNodeAddress)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes.length).toBe(1)
             expect(storageNodes[0].getAddress()).toBe(storageNodeAddress)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            expect(storedStreamParts.length).toBe(1)
-            expect(storedStreamParts[0].getStreamId()).toBe(stream.id)
-            expect(storedStreamParts[0].getStreamPartition()).toBe(0)
+            expect(storedStreamParts.some(
+                (sp) => (sp.getStreamId() === stream.id) && (sp.getStreamPartition() === 0)
+            )).toBeTruthy()
         })
 
         it('remove', async () => {
-            const storageNodeAddress = ethers.Wallet.createRandom().address
+            const storageNodeAddress = client.options.storageNode.address
             const stream = await client.createStream()
             await stream.addToStorageNode(storageNodeAddress)
             await stream.removeFromStorageNode(storageNodeAddress)
             const storageNodes = await stream.getStorageNodes()
             expect(storageNodes).toHaveLength(0)
             const storedStreamParts = await client.getStreamPartsByStorageNode(storageNodeAddress)
-            expect(storedStreamParts).toHaveLength(0)
+            expect(storedStreamParts.some(
+                (sp) => (sp.getStreamId() === stream.id)
+            )).toBeFalsy()
         })
     })
 }

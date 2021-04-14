@@ -35,6 +35,8 @@ describe('resend/reconnect', () => {
             name: uid('resends')
         })
 
+        await stream.addToStorageNode(config.clientOptions.storageNode.address)
+
         publishTestMessages = getPublishTestMessages(client, {
             streamId: stream.id,
             waitForLast: true,
