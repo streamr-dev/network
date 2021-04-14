@@ -1,13 +1,12 @@
 FROM node:14-buster as build
 WORKDIR /usr/src/broker
 COPY . .
-#RUN apt-get update && apt-get install --assume-yes --no-install-recommends cmake \
-#	&& apt-get clean \
-#	&& rm -rf /var/lib/apt/lists/*
 RUN npm ci --only=production
 
 FROM node:14-buster-slim
-
+RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
 COPY --from=build /usr/src/broker /usr/src/broker
 WORKDIR /usr/src/broker
 
