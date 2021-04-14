@@ -2,15 +2,15 @@ const http = require('http')
 
 const { startTracker, startNetworkNode } = require('streamr-network')
 const { wait } = require('streamr-test-utils')
+const ethers = require('ethers')
 
-const { startBroker, createClient } = require('../utils')
+const { startBroker, createClient, addStreamToStorageNode } = require('../utils')
 
 const httpPort1 = 12371
 const wsPort1 = 12372
 const networkPort1 = 12373
 const networkPort2 = 12374
 const trackerPort = 12375
-const broker1Key = '0x504b3683018f7b01533fc26df830f791dd0947c7d7f9940cd5e3748950996d75'
 
 const httpGet = (url) => {
     return new Promise((resolve, reject) => {
@@ -29,11 +29,12 @@ const WAIT_TIME_TO_LAND_IN_STORAGE = 3000
 
 describe('DataMetadataEndpoints', () => {
     let tracker
-    let broker1
+    let storageNode
     let client1
     let publisherNode
     let freshStream
     let freshStreamId
+    const storageNodeAccount = ethers.Wallet.createRandom()
 
     beforeAll(async () => {
         tracker = await startTracker({
@@ -48,16 +49,15 @@ describe('DataMetadataEndpoints', () => {
             trackers: [tracker.getAddress()]
         })
         publisherNode.start()
-        broker1 = await startBroker({
-            name: 'broker1',
-            privateKey: broker1Key,
+        storageNode = await startBroker({
+            name: 'storageNode',
+            privateKey: storageNodeAccount.privateKey,
             networkPort: networkPort2,
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,
             trackers: [tracker.getAddress()]
-
         })
 
         client1 = createClient(wsPort1)
@@ -68,13 +68,15 @@ describe('DataMetadataEndpoints', () => {
             name: 'broker.test.js-' + Date.now()
         })
         freshStreamId = freshStream.id
+        await addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
+        await storageNode.refreshStorageConfig()
     })
 
     afterAll(async () => {
         await tracker.stop()
         await client1.ensureDisconnected()
         await publisherNode.stop()
-        await broker1.close()
+        await storageNode.close()
     })
 
     it('should fetch empty metadata from Cassandra', async () => {

@@ -1,11 +1,10 @@
 const { startTracker } = require('streamr-network')
-const fetch = require('node-fetch')
 const cassandra = require('cassandra-driver')
 const ethers = require('ethers')
 const { waitForCondition } = require('streamr-test-utils')
 const { StreamMessage } = require('streamr-network').Protocol.MessageLayer
 
-const { startBroker, createClient } = require('../../utils')
+const { startBroker, createClient, addStreamToStorageNode } = require('../../utils')
 
 const contactPoints = ['127.0.0.1']
 const localDataCenter = 'datacenter1'
@@ -18,20 +17,6 @@ const WS_PORT = 17770
 const TRACKER_PORT = 17771
 const STORAGE_NODE_PORT = 17772
 const BROKER_PORT = 17773
-
-const addStreamToStorageNode = async (streamId, storageNodeAddress, client) => {
-    await fetch(`${API_URL}/streams/${encodeURIComponent(streamId)}/storageNodes`, {
-        body: JSON.stringify({
-            address: storageNodeAddress
-        }),
-        headers: {
-            // eslint-disable-next-line quote-props
-            'Authorization': 'Bearer ' + await client.session.getSessionToken(),
-            'Content-Type': 'application/json',
-        },
-        method: 'POST'
-    })
-}
 
 describe('StorageConfig', () => {
     let cassandraClient

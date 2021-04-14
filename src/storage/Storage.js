@@ -17,7 +17,7 @@ const MAX_RESEND_LAST = 10000
 const bucketsToIds = (buckets) => buckets.map((bucket) => bucket.getId())
 
 class Storage extends EventEmitter {
-    constructor(cassandraClient, opts) {
+    constructor(cassandraClient, opts, messageFilter) {
         super()
 
         const defaultOptions = {
@@ -36,9 +36,13 @@ class Storage extends EventEmitter {
             useTtl: this.opts.useTtl
         })
         this.pendingStores = new Map()
+        this.messageFilter = messageFilter
     }
 
     store(streamMessage) {
+        if (this.messageFilter(streamMessage) === false) {
+            return Promise.resolve(undefined)
+        }
         const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
 
         return new Promise((resolve, reject) => {
@@ -568,7 +572,8 @@ const startCassandraStorage = async ({
     keyspace,
     username,
     password,
-    opts
+    opts,
+    storageConfig
 }) => {
     const authProvider = new cassandra.auth.PlainTextAuthProvider(username || '', password || '')
     const requestLogger = new cassandra.tracker.RequestLogger({
@@ -588,11 +593,18 @@ const startCassandraStorage = async ({
     const nbTrials = 20
     let retryCount = nbTrials
     let lastError = ''
+    const messageFilter = (storageConfig !== undefined) ? (message) => {
+        const stream = {
+            id: message.messageId.streamId,
+            partition: message.messageId.streamPartition
+        }
+        return storageConfig.hasStream(stream)
+    } : () => true
     while (retryCount > 0) {
         /* eslint-disable no-await-in-loop */
         try {
             await cassandraClient.connect().catch((err) => { throw err })
-            return new Storage(cassandraClient, opts || {})
+            return new Storage(cassandraClient, opts || {}, messageFilter)
         } catch (err) {
             console.log('Cassandra not responding yet...')
             retryCount -= 1

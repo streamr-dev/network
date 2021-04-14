@@ -1,8 +1,9 @@
 const { startTracker } = require('streamr-network')
 const fetch = require('node-fetch')
+const ethers = require('ethers')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const { startBroker, createClient } = require('../utils')
+const { startBroker, createClient, addStreamToStorageNode } = require('../utils')
 
 const httpPort1 = 12341
 const httpPort2 = 12342
@@ -14,15 +15,15 @@ const networkPort1 = 12361
 const networkPort2 = 12362
 const networkPort3 = 12363
 const trackerPort = 12370
-const broker1Key = '0x241b3f241b110ff7b3e6d52e74fea922006a83e33ff938e6e3cba8a460c02513'
-const broker2Key = '0x3816c1d1a81588cecf9ac271a4758ed08f208902c2dcda82ba1a2f458ac23a15'
-const broker3Key = '0xe8af31f5c61b64f44adcdab8c5c78a7bc0beea9dbf43af63f80544a1b84ec149'
 
 describe('broker: end-to-end', () => {
     let tracker
-    let broker1
-    let broker2
-    let broker3
+    let storageNode1
+    let storageNode2
+    let storageNode3
+    const storageNodeAccount1 = ethers.Wallet.createRandom()
+    const storageNodeAccount2 = ethers.Wallet.createRandom()
+    const storageNodeAccount3 = ethers.Wallet.createRandom()
     let client1
     let client2
     let client3
@@ -36,27 +37,27 @@ describe('broker: end-to-end', () => {
             port: trackerPort,
             id: 'tracker'
         })
-        broker1 = await startBroker({
-            name: 'broker1',
-            privateKey: broker1Key,
+        storageNode1 = await startBroker({
+            name: 'storageNode1',
+            privateKey: storageNodeAccount1.privateKey,
             networkPort: networkPort1,
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true
         })
-        broker2 = await startBroker({
-            name: 'broker2',
-            privateKey: broker2Key,
+        storageNode2 = await startBroker({
+            name: 'storageNode2',
+            privateKey: storageNodeAccount2.privateKey,
             networkPort: networkPort2,
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
             enableCassandra: true
         })
-        broker3 = await startBroker({
-            name: 'broker3',
-            privateKey: broker3Key,
+        storageNode3 = await startBroker({
+            name: 'storageNode3',
+            privateKey: storageNodeAccount3.privateKey,
             networkPort: networkPort3,
             trackerPort,
             httpPort: httpPort3,
@@ -84,6 +85,12 @@ describe('broker: end-to-end', () => {
             name: 'broker.test.js-' + Date.now()
         })
         freshStreamId = freshStream.id
+        await addStreamToStorageNode(freshStreamId, storageNodeAccount1.address, client1)
+        await addStreamToStorageNode(freshStreamId, storageNodeAccount2.address, client1)
+        await addStreamToStorageNode(freshStreamId, storageNodeAccount3.address, client1)
+        await storageNode1.refreshStorageConfig()
+        await storageNode2.refreshStorageConfig()
+        await storageNode3.refreshStorageConfig()
 
         await freshStream.grantPermission('stream_get', 'tester2@streamr.com')
         await freshStream.grantPermission('stream_subscribe', 'tester2@streamr.com')
@@ -98,9 +105,9 @@ describe('broker: end-to-end', () => {
         await client2.ensureDisconnected()
         await client3.ensureDisconnected()
         // await client4.ensureDisconnected()
-        await broker1.close()
-        await broker2.close()
-        await broker3.close()
+        await storageNode1.close()
+        await storageNode2.close()
+        await storageNode3.close()
     })
 
     it('happy-path: real-time websocket producing and websocket consuming (unsigned messages)', async () => {
@@ -355,7 +362,7 @@ describe('broker: end-to-end', () => {
             key: 4
         })
 
-        await wait(1500) // wait for propagation
+        await wait(3000) // wait for propagation
 
         const client1Messages = []
         const client2Messages = []

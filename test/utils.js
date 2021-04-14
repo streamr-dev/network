@@ -1,5 +1,6 @@
 const StreamrClient = require('streamr-client')
 const mqtt = require('async-mqtt')
+const fetch = require('node-fetch')
 
 const createBroker = require('../src/broker')
 
@@ -10,6 +11,7 @@ const DEFAULT_CLIENT_OPTIONS = {
 }
 
 const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
+const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
 function formConfig({
     name,
@@ -22,6 +24,7 @@ function formConfig({
     enableCassandra = false,
     privateKeyFileName = null,
     certFileName = null,
+    streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core`,
     reporting = false
 }) {
@@ -86,6 +89,7 @@ function formConfig({
             }
         },
         streamrUrl,
+        streamrAddress,
         adapters
     }
 }
@@ -119,6 +123,20 @@ function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1
     })
 }
 
+const addStreamToStorageNode = async (streamId, storageNodeAddress, client) => {
+    await fetch(`${API_URL}/streams/${encodeURIComponent(streamId)}/storageNodes`, {
+        body: JSON.stringify({
+            address: storageNodeAddress
+        }),
+        headers: {
+            // eslint-disable-next-line quote-props
+            'Authorization': 'Bearer ' + await client.session.getSessionToken(),
+            'Content-Type': 'application/json',
+        },
+        method: 'POST'
+    })
+}
+
 module.exports = {
     STREAMR_DOCKER_DEV_HOST,
     formConfig,
@@ -126,5 +144,6 @@ module.exports = {
     createClient,
     createMqttClient,
     getWsUrl,
+    addStreamToStorageNode,
     getWsUrlWithControlAndMessageLayerVersions
 }

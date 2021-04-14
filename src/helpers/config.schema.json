@@ -10,7 +10,8 @@
     "ethereumPrivateKey",
     "network",
     "reporting",
-    "streamrUrl"
+    "streamrUrl",
+    "streamrAddress"
   ],
   "additionalProperties": false,
   "properties": {
@@ -274,6 +275,11 @@
       "type": "string",
       "description": "Base URL of Core (E&E) API to use",
       "format": "uri"
+    },
+    "streamrAddress": {
+      "type": "string",
+      "description": "Ethereum address Core (E&E)",
+      "pattern": "^0x[a-fA-F0-9]{40}$"
     }
   },
   "definitions": {
