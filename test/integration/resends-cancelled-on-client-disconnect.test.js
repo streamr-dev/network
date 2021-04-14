@@ -10,6 +10,8 @@ const StreamFetcher = require('../../src/StreamFetcher')
 const Publisher = require('../../src/Publisher')
 const SubscriptionManager = require('../../src/SubscriptionManager')
 
+const { createMockStorageConfig } = require('./storage/MockStorageConfig')
+
 const { StreamMessage, MessageID } = Protocol.MessageLayer
 
 const trackerPort = 17750
@@ -26,6 +28,10 @@ describe('resend cancellation', () => {
     let timeoutCleared = false
 
     beforeEach(async () => {
+        client = createClient(wsPort)
+        freshStream = await client.createStream({
+            name: 'resends-cancelled-on-client-disconnect.test.js-' + Date.now()
+        })
         metricsContext = new MetricsContext(null)
         tracker = await startTracker({
             host: '127.0.0.1',
@@ -64,7 +70,11 @@ describe('resend cancellation', () => {
                     },
                     store: () => {}
                 }
-            ]
+            ],
+            storageConfig: createMockStorageConfig([{
+                id: freshStream.id,
+                partition: 0
+            }])
         })
         websocketServer = new WebsocketServer(
             ws.App(),
@@ -75,10 +85,6 @@ describe('resend cancellation', () => {
             metricsContext,
             new SubscriptionManager(networkNode)
         )
-        client = createClient(wsPort)
-        freshStream = await client.createStream({
-            name: 'resends-cancelled-on-client-disconnect.test.js-' + Date.now()
-        })
     })
 
     afterEach(async () => {

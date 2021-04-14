@@ -16,6 +16,7 @@ const SubscriptionManager = require('./SubscriptionManager')
 const MissingConfigError = require('./errors/MissingConfigError')
 const adapterRegistry = require('./adapterRegistry')
 const validateConfig = require('./helpers/validateConfig')
+const StorageConfig = require('./storage/StorageConfig')
 
 const { Utils } = Protocol
 
@@ -67,6 +68,13 @@ module.exports = async (config) => {
         trackers = config.network.trackers
     }
 
+    const createStorageConfig = async () => {
+        const pollInterval = (config.storageConfig && config.storageConfig.refreshInterval) || 10 * 60 * 1000
+        return StorageConfig.createInstance(brokerAddress, config.streamrUrl + '/api/v1', pollInterval)
+    }
+
+    const storageConfig = config.network.isStorageNode ? await createStorageConfig() : undefined
+
     // Start network node
     const startFn = config.network.isStorageNode ? startStorageNode : startNetworkNode
     const advertisedWsUrl = config.network.advertisedWsUrl !== 'auto'
@@ -79,6 +87,7 @@ module.exports = async (config) => {
         name: networkNodeName,
         trackers,
         storages,
+        storageConfig,
         advertisedWsUrl,
         location: config.network.location,
         metricsContext
@@ -218,11 +227,13 @@ module.exports = async (config) => {
     return {
         getNeighbors: () => networkNode.getNeighbors(),
         getStreams: () => networkNode.getStreams(),
+        refreshStorageConfig: () => storageConfig.refresh(),
         close: () => Promise.all([
             networkNode.stop(),
             ...closeAdapterFns.map((close) => close()),
             ...storages.map((storage) => storage.close()),
-            volumeLogger.close()
+            volumeLogger.close(),
+            (storageConfig !== undefined) ? storageConfig.cleanup() : undefined
         ])
     }
 }

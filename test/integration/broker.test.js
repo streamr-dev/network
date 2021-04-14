@@ -90,7 +90,7 @@ describe('broker: end-to-end', () => {
         // await freshStream.grantPermission('stream_get', ethereumAccount.address)
         // await freshStream.grantPermission('stream_subscribe', ethereumAccount.address)
         // await freshStream.grantPermission('stream_publish', ethereumAccount.address)
-    }, 10 * 1000)
+    }, 30 * 1000)
 
     afterAll(async () => {
         await tracker.stop()

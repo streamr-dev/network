@@ -74,6 +74,7 @@ function formConfig({
             password: '',
             keyspace: 'streamr_dev_v2',
         } : null,
+        storageConfig: null,
         reporting: reporting || {
             sentry: null,
             streamr: null,

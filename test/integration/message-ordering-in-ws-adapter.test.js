@@ -4,6 +4,8 @@ const { wait, waitForCondition } = require('streamr-test-utils')
 
 const { startBroker, createClient } = require('../utils')
 
+const { createMockStorageConfig } = require('./storage/MockStorageConfig')
+
 const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 
 const trackerPort = 11400
@@ -138,7 +140,11 @@ describe('message ordering and gap filling in websocket adapter', () => {
                         createStreamMessage(freshStreamId, 300, 200)
                     ])
                 }
-            }]
+            }],
+            storageConfig: createMockStorageConfig([{
+                id: freshStreamId,
+                partition: 0
+            }])
         })
         nodeWithMissingMessages.subscribe(freshStreamId, 0)
         nodeWithMissingMessages.start()

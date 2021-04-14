@@ -6,6 +6,7 @@
   "required": [
     "adapters",
     "cassandra",
+    "storageConfig",
     "ethereumPrivateKey",
     "network",
     "reporting",
@@ -57,6 +58,18 @@
           "type": "string"
         }
       }
+    },
+    "storageConfig": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "properties": {
+        "refreshInterval": {
+          "type": "integer"
+        }
+      },
+      "additionalProperties": false
     },
     "ethereumPrivateKey": {
       "type": "string",
