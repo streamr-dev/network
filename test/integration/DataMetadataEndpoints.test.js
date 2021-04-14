@@ -4,7 +4,7 @@ const { startTracker, startNetworkNode } = require('streamr-network')
 const { wait } = require('streamr-test-utils')
 const ethers = require('ethers')
 
-const { startBroker, createClient, addStreamToStorageNode } = require('../utils')
+const { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } = require('../utils')
 
 const httpPort1 = 12371
 const wsPort1 = 12372
@@ -35,8 +35,10 @@ describe('DataMetadataEndpoints', () => {
     let freshStream
     let freshStreamId
     const storageNodeAccount = ethers.Wallet.createRandom()
+    let assignmentEventManager
 
     beforeAll(async () => {
+        const engineAndEditorAccount = ethers.Wallet.createRandom()
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
@@ -57,10 +59,12 @@ describe('DataMetadataEndpoints', () => {
             httpPort: httpPort1,
             wsPort: wsPort1,
             enableCassandra: true,
+            streamrAddress: engineAndEditorAccount.address,
             trackers: [tracker.getAddress()]
         })
-
         client1 = createClient(wsPort1)
+        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
+        await assignmentEventManager.createStream()
     }, 10 * 1000)
 
     beforeEach(async () => {
@@ -68,8 +72,8 @@ describe('DataMetadataEndpoints', () => {
             name: 'broker.test.js-' + Date.now()
         })
         freshStreamId = freshStream.id
-        await addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
-        await storageNode.refreshStorageConfig()
+        await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount.address, client1)
+        await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort1)
     })
 
     afterAll(async () => {
@@ -77,6 +81,7 @@ describe('DataMetadataEndpoints', () => {
         await client1.ensureDisconnected()
         await publisherNode.stop()
         await storageNode.close()
+        await assignmentEventManager.close()
     })
 
     it('should fetch empty metadata from Cassandra', async () => {

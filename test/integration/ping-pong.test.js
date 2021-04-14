@@ -32,7 +32,7 @@ describe('ping-pong test between broker and clients', () => {
             host: '127.0.0.1',
             port: networkNodePort,
             id: 'networkNode',
-            trackers: [tracker.getAddress()],
+            trackers: [tracker.getAddress()]
         })
         networkNode.start()
         metricsContext = new MetricsContext(null)
@@ -91,6 +91,7 @@ describe('ping-pong test between broker and clients', () => {
         // eslint-disable-next-line no-underscore-dangle
         websocketServer._pingConnections()
         await waitForCondition(() => pings === 3)
+
         expect(pings).toEqual(3)
         expect(websocketServer.connections.size).toEqual(3)
         await waitForCondition(() => connections.every((connection) => (connection.respondedPong === true)))

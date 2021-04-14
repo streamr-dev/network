@@ -11,9 +11,10 @@ const dataQueryEndpoints = require('./DataQueryEndpoints')
 const dataProduceEndpoints = require('./DataProduceEndpoints')
 const volumeEndpoint = require('./VolumeEndpoint')
 const dataMetadataEndpoint = require('./DataMetadataEndpoints')
+const storageConfigEndpoints = require('./StorageConfigEndpoints')
 
 adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, {
-    networkNode, publisher, streamFetcher, metricsContext, cassandraStorage
+    networkNode, publisher, streamFetcher, metricsContext, cassandraStorage, storageConfig
 }) => {
     const app = express()
 
@@ -26,6 +27,7 @@ adapterRegistry.register('http', ({ port, privateKeyFileName, certFileName }, {
     app.use('/api/v1', volumeEndpoint(metricsContext))
 
     app.use('/api/v1', dataMetadataEndpoint(cassandraStorage))
+    app.use('/api/v1', storageConfigEndpoints(storageConfig))
 
     let httpServer
     if (privateKeyFileName && certFileName) {

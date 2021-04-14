@@ -26,7 +26,7 @@ const getKeysFromStream = (streamId, partitions) => {
     return keys
 }
 
-module.exports = class StorageConfig {
+class StorageConfig {
     // use createInstance method instead: it fetches the up-to-date config from API
     constructor(nodeId, apiUrl) {
         this.streamKeys = new Set()
@@ -112,7 +112,7 @@ module.exports = class StorageConfig {
     }
 
     startAssignmentEventListener(streamrAddress, networkNode) {
-        const assignmentStreamId = streamrAddress + '/storage-node-assignments'
+        const assignmentStreamId = streamrAddress + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
         networkNode.addMessageListener((msg) => {
             if (msg.messageId.streamId === assignmentStreamId) {
                 const content = msg.getParsedContent()
@@ -134,3 +134,6 @@ module.exports = class StorageConfig {
         }
     }
 }
+
+StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX = '/storage-node-assignments'
+module.exports = StorageConfig

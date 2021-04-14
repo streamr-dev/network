@@ -3,7 +3,7 @@ const fetch = require('node-fetch')
 const ethers = require('ethers')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const { startBroker, createClient, addStreamToStorageNode } = require('../utils')
+const { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } = require('../utils')
 
 const httpPort1 = 12341
 const httpPort2 = 12342
@@ -30,8 +30,10 @@ describe('broker: end-to-end', () => {
     // let client4
     let freshStream
     let freshStreamId
+    let assignmentEventManager
 
     beforeAll(async () => {
+        const engineAndEditorAccount = ethers.Wallet.createRandom()
         tracker = await startTracker({
             host: '127.0.0.1',
             port: trackerPort,
@@ -44,6 +46,7 @@ describe('broker: end-to-end', () => {
             trackerPort,
             httpPort: httpPort1,
             wsPort: wsPort1,
+            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true
         })
         storageNode2 = await startBroker({
@@ -53,6 +56,7 @@ describe('broker: end-to-end', () => {
             trackerPort,
             httpPort: httpPort2,
             wsPort: wsPort2,
+            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true
         })
         storageNode3 = await startBroker({
@@ -62,6 +66,7 @@ describe('broker: end-to-end', () => {
             trackerPort,
             httpPort: httpPort3,
             wsPort: wsPort3,
+            streamrAddress: engineAndEditorAccount.address,
             enableCassandra: true
         })
 
@@ -72,6 +77,8 @@ describe('broker: end-to-end', () => {
                 apiKey: 'tester2-api-key' // different api key
             }
         })
+        assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
+        await assignmentEventManager.createStream()
 
         // const ethereumAccount = StreamrClient.generateEthereumAccount()
         // client4 = createClient(wsPort1, {
@@ -85,12 +92,12 @@ describe('broker: end-to-end', () => {
             name: 'broker.test.js-' + Date.now()
         })
         freshStreamId = freshStream.id
-        await addStreamToStorageNode(freshStreamId, storageNodeAccount1.address, client1)
-        await addStreamToStorageNode(freshStreamId, storageNodeAccount2.address, client1)
-        await addStreamToStorageNode(freshStreamId, storageNodeAccount3.address, client1)
-        await storageNode1.refreshStorageConfig()
-        await storageNode2.refreshStorageConfig()
-        await storageNode3.refreshStorageConfig()
+        await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount1.address, client1)
+        await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount2.address, client1)
+        await assignmentEventManager.addStreamToStorageNode(freshStreamId, storageNodeAccount3.address, client1)
+        await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort1)
+        await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort2)
+        await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort3)
 
         await freshStream.grantPermission('stream_get', 'tester2@streamr.com')
         await freshStream.grantPermission('stream_subscribe', 'tester2@streamr.com')
@@ -108,6 +115,7 @@ describe('broker: end-to-end', () => {
         await storageNode1.close()
         await storageNode2.close()
         await storageNode3.close()
+        await assignmentEventManager.close()
     })
 
     it('happy-path: real-time websocket producing and websocket consuming (unsigned messages)', async () => {

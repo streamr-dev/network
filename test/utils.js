@@ -1,8 +1,10 @@
 const StreamrClient = require('streamr-client')
 const mqtt = require('async-mqtt')
 const fetch = require('node-fetch')
+const { waitForCondition } = require('streamr-test-utils')
 
 const createBroker = require('../src/broker')
+const StorageConfig = require('../src/storage/StorageConfig')
 
 const DEFAULT_CLIENT_OPTIONS = {
     auth: {
@@ -123,18 +125,58 @@ function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1
     })
 }
 
-const addStreamToStorageNode = async (streamId, storageNodeAddress, client) => {
-    await fetch(`${API_URL}/streams/${encodeURIComponent(streamId)}/storageNodes`, {
-        body: JSON.stringify({
-            address: storageNodeAddress
-        }),
-        headers: {
-            // eslint-disable-next-line quote-props
-            'Authorization': 'Bearer ' + await client.session.getSessionToken(),
-            'Content-Type': 'application/json',
-        },
-        method: 'POST'
-    })
+class StorageAssignmentEventManager {
+    constructor(wsPort, engineAndEditorAccount) {
+        this.engineAndEditorAccount = engineAndEditorAccount
+        this.client = createClient(wsPort, {
+            auth: {
+                privateKey: engineAndEditorAccount.privateKey
+            }
+        })
+    }
+
+    async createStream() {
+        this.eventStream = await this.client.createStream({
+            id: this.engineAndEditorAccount.address + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
+        })
+    }
+
+    async addStreamToStorageNode(streamId, storageNodeAddress, client) {
+        await fetch(`${API_URL}/streams/${encodeURIComponent(streamId)}/storageNodes`, {
+            body: JSON.stringify({
+                address: storageNodeAddress
+            }),
+            headers: {
+                // eslint-disable-next-line quote-props
+                'Authorization': 'Bearer ' + await client.session.getSessionToken(),
+                'Content-Type': 'application/json',
+            },
+            method: 'POST'
+        })
+        this.publishAddEvent(streamId)
+    }
+
+    publishAddEvent(streamId) {
+        this.eventStream.publish({
+            event: 'STREAM_ADDED',
+            stream: {
+                id: streamId,
+                partitions: 1
+            }
+        })
+    }
+
+    close() {
+        return this.client.ensureDisconnected()
+    }
+}
+
+const waitForStreamPersistedInStorageNode = async (streamId, partition, nodeHost, nodeHttpPort) => {
+    const isPersistent = async () => {
+        const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
+        return (response.status === 200)
+    }
+    await waitForCondition(() => isPersistent(), undefined, 1000)
 }
 
 module.exports = {
@@ -144,6 +186,7 @@ module.exports = {
     createClient,
     createMqttClient,
     getWsUrl,
-    addStreamToStorageNode,
+    StorageAssignmentEventManager,
+    waitForStreamPersistedInStorageNode,
     getWsUrlWithControlAndMessageLayerVersions
 }
