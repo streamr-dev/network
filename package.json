@@ -16,7 +16,6 @@
     "prepare": "tsc -p tsconfig-build.json",
     "test": "eslint . && jest",
     "build": "tsc -p tsconfig-build.json --incremental",
-    "install": "npm run build",
     "test-unit": "jest test/unit",
     "test-integration": "jest --forceExit test/integration",
     "eslint": "eslint ."
