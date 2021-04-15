@@ -47,6 +47,7 @@ describeRepeats('GapFill with resends', () => {
             requireSignedData: true,
             name: uid('stream')
         })
+        await stream.addToStorageNode(config.clientOptions.storageNode.address)
 
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, stream.id)

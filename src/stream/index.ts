@@ -1,7 +1,10 @@
+import fetch from 'node-fetch'
+import { getAddress } from '@ethersproject/address'
+import { waitForCondition } from 'streamr-test-utils'
 import { getEndpointUrl } from '../utils'
 import authFetch from '../rest/authFetch'
 
-import StorageNode from './StorageNode'
+import { StorageNode } from './StorageNode'
 import { StreamrClient } from '../StreamrClient'
 
 // TODO explicit types: e.g. we never provide both streamId and id, or both streamPartition and partition
@@ -221,6 +224,12 @@ export class Stream {
     }
 
     async addToStorageNode(address: string) {
+        // currently we support only one storage node
+        // -> we can validate that the given address is that address
+        // -> remove this comparison when we start to support multiple storage nodes
+        if (getAddress(address) !== this._client.options.storageNode.address) {
+            throw new Error('Unknown storage node: ' + address)
+        }
         await authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
             this._client.session,
@@ -231,6 +240,24 @@ export class Stream {
                 })
             },
         )
+        // wait for propagation: the storage node sees the database change in E&E and
+        // is ready to store the any stream data which we publish
+        const TIMEOUT = 30 * 1000
+        const POLL_INTERVAL = 500
+        await waitForCondition(() => this.isStreamStoredInStorageNode(this.id), TIMEOUT, POLL_INTERVAL,
+            () => `Propagation timeout when adding stream to a storage node: ${this.id}`)
+    }
+
+    private async isStreamStoredInStorageNode(streamId: string) {
+        const url = `${this._client.options.storageNode.url}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/0`
+        const response = await fetch(url)
+        if (response.status === 200) {
+            return true
+        }
+        if (response.status === 404) { // eslint-disable-line padding-line-between-statements
+            return false
+        }
+        throw new Error(`Unexpected response code ${response.status} when fetching stream storage status`)
     }
 
     async removeFromStorageNode(address: string) {

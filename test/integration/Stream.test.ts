@@ -25,6 +25,7 @@ describe('Stream', () => {
         stream = await client.createStream({
             name: uid('stream-integration-test')
         })
+        await stream.addToStorageNode(config.clientOptions.storageNode.address)
     })
 
     afterEach(async () => {

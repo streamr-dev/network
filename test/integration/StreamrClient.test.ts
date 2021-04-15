@@ -652,6 +652,7 @@ describeRepeats('StreamrClient', () => {
                 requireSignedData,
                 ...opts,
             })
+            await s.addToStorageNode(config.clientOptions.storageNode.address)
 
             expect(s.id).toBeTruthy()
             expect(s.name).toEqual(name)

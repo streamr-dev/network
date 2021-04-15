@@ -1,4 +1,4 @@
-export default class StreamPart {
+export class StreamPart {
 
     _streamId: string
     _streamPartition: number
