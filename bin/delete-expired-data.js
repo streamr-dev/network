@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 const program = require('commander')
 
-const DeleteExpiredCmd = require('../src/storage/DeleteExpiredCmd')
-const CURRENT_VERSION = require('../package.json').version
+const DeleteExpiredCmd = require('../dist/src/storage/DeleteExpiredCmd')
+const CURRENT_VERSION = require('../dist/package.json').version
 
 program
     .version(CURRENT_VERSION)

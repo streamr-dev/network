@@ -3,7 +3,11 @@ const WARN = 1
 const ERROR = 2
 
 module.exports = {
-    extends: 'streamr-nodejs',
+    parser: '@typescript-eslint/parser',
+    extends: [
+        'plugin:promise/recommended',
+        'plugin:@typescript-eslint/recommended'
+    ],
     env: {
         jest: true,
     },
@@ -15,5 +19,14 @@ module.exports = {
         'max-classes-per-file': DISABLED,
         'promise/always-return': WARN,
         'promise/catch-or-return': WARN,
-    }
+        '@typescript-eslint/no-empty-function': DISABLED,
+    },
+    'overrides': [
+        {
+            'files': ['*.js'],
+            'rules': {
+                '@typescript-eslint/no-var-requires': DISABLED
+            }
+        }
+    ]
 }

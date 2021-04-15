@@ -6,8 +6,8 @@ const Sentry = require('@sentry/node')
 const pino = require('pino')
 const ethers = require('ethers')
 
-const CURRENT_VERSION = require('../package.json').version
-const logger = require('../src/helpers/logger')('streamr:broker:tracker')
+const CURRENT_VERSION = require('../dist/package.json').version
+const logger = require('../dist/src/helpers/logger')('streamr:broker:tracker')
 
 program
     .version(CURRENT_VERSION)
