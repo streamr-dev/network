@@ -34,6 +34,7 @@ jobs:
             ${{ runner.OS }}-
       - run: npm ci
       - run: npm run eslint
+      - run: npm run test-types
       - run: npm run build --if-present
       - run: npm test
         env:

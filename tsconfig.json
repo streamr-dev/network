@@ -10,7 +10,8 @@
     "strict": true,
     "esModuleInterop": true,
     "noImplicitAny": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "incremental": true
   },
   "include": [
     "src/**/*",

@@ -28,6 +28,7 @@
     "test-unit": "jest test/unit",
     "coverage": "jest --coverage",
     "test-integration": "jest test/integration",
+    "test-types": "tsc --noEmit --project ./tsconfig.json ",
     "eslint": "eslint .",
     "network": "node $NODE_DEBUG_OPTION bin/network.js",
     "docs": "typedoc --options typedoc.js"

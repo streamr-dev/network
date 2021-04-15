@@ -10,3 +10,4 @@ src
 test
 .travis.yml
 tsconfig.json
+*.tsbuildinfo
