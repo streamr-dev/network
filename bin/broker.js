@@ -3,7 +3,7 @@ const fs = require('fs')
 
 const program = require('commander')
 
-const CURRENT_VERSION = require('../dist/package.json').version
+const CURRENT_VERSION = require('../package.json').version
 const startBroker = require('../dist/src/broker')
 
 program

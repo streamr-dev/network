@@ -25,6 +25,9 @@
   "dependencies": {
     "@pm2/io": "^4.3.5",
     "@sentry/node": "^6.2.3",
+    "@types/jest": "^26.0.22",
+    "@types/node-fetch": "^2.5.10",
+    "@types/ws": "^7.4.1",
     "@typescript-eslint/eslint-plugin": "^4.22.0",
     "@typescript-eslint/parser": "^4.22.0",
     "ajv": "^8.0.1",
@@ -57,9 +60,6 @@
     "ws": "^7.4.4"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.22",
-    "@types/node-fetch": "^2.5.10",
-    "@types/ws": "^7.4.1",
     "async-mqtt": "^2.6.1",
     "buffer-reader": "^0.1.0",
     "eslint": "^7.23.0",

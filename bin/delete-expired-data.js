@@ -2,7 +2,7 @@
 const program = require('commander')
 
 const DeleteExpiredCmd = require('../dist/src/storage/DeleteExpiredCmd')
-const CURRENT_VERSION = require('../dist/package.json').version
+const CURRENT_VERSION = require('../package.json').version
 
 program
     .version(CURRENT_VERSION)
