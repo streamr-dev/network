@@ -28,7 +28,10 @@ export interface ConstructorOptions {
     onBufferHigh: () => void
 }
 
+let ID = 0
+
 export class Connection {
+    public readonly id: string
     private readonly selfId: string
     private peerInfo: PeerInfo
     private readonly routerId: string
@@ -88,6 +91,8 @@ export class Connection {
         onBufferHigh,
         maxMessageSize = 1048576
     }: ConstructorOptions) {
+        ID += 1
+        this.id = `Connection${ID}`
         this.selfId = selfId
         this.peerInfo = PeerInfo.newUnknown(targetPeerId)
         this.routerId = routerId
@@ -100,7 +105,7 @@ export class Connection {
         this.maxPingPongAttempts = maxPingPongAttempts
         this.pingInterval = pingInterval
         this.flushRetryTimeout = flushRetryTimeout
-        this.logger = new Logger(['connection', 'Connection', `${this.selfId}-->${this.getPeerId()}`])
+        this.logger = new Logger(['connection', this.id, `${this.selfId}-->${this.getPeerId()}`])
 
         this.messageQueue = new MessageQueue<string>(this.logger)
         this.connection = null
