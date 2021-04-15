@@ -15,18 +15,18 @@ interface ConnectionFunctions {
 function onConnectPromise(functions: ConnectionFunctions) {
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line no-param-reassign
-        functions.onOpen = resolve
+        functions.onOpen = jest.fn(resolve)
         // eslint-disable-next-line no-param-reassign
-        functions.onError = reject
+        functions.onError = jest.fn(reject)
     })
 }
 
 function onClosePromise(functions: ConnectionFunctions) {
     return new Promise((resolve, reject) => {
         // eslint-disable-next-line no-param-reassign
-        functions.onClose = resolve
+        functions.onClose = jest.fn(resolve)
         // eslint-disable-next-line no-param-reassign
-        functions.onError = reject
+        functions.onError = jest.fn(reject)
     })
 }
 
@@ -209,6 +209,22 @@ describe('Connection', () => {
             expect(connectionOne.isOpen()).toEqual(false)
             done()
         }
+    })
+
+    it('connection does not timeout if connection succeeds', async () => {
+        // this test ensures failed connection timeout has been cleared
+        const TIMEOUT = 300
+        connectionOne.newConnectionTimeout = TIMEOUT
+        connectionTwo.newConnectionTimeout = TIMEOUT
+        connectionOne.connect()
+        connectionTwo.connect()
+        await Promise.all([
+            onConnectPromise(oneFunctions),
+            onConnectPromise(twoFunctions),
+            wait(TIMEOUT * 2), // give enough time to time out
+        ])
+        expect(oneFunctions.onError).not.toHaveBeenCalled()
+        expect(twoFunctions.onError).not.toHaveBeenCalled()
     })
 
     it('connection gets closed if other end does not respond to pings', async () => {

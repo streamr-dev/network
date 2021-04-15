@@ -266,7 +266,7 @@ export class Connection {
         if (this.pingTimeoutRef) {
             clearTimeout(this.pingTimeoutRef)
         }
-        setTimeout(() => this.ping(), this.pingInterval)
+        this.pingTimeoutRef = setTimeout(() => this.ping(), this.pingInterval)
     }
 
     pong(): void {
@@ -359,7 +359,7 @@ export class Connection {
 
     private openDataChannel(dataChannel: DataChannel): void {
         if (this.connectionTimeoutRef !== null) {
-            clearInterval(this.connectionTimeoutRef)
+            clearTimeout(this.connectionTimeoutRef)
         }
         this.dataChannel = dataChannel
         this.setFlushRef()
