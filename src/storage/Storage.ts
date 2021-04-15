@@ -196,8 +196,7 @@ export class Storage extends EventEmitter {
     requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId: string|null, msgChainId: string|null): Readable {
         logger.trace('requestFrom %o', { streamId, partition, fromTimestamp, fromSequenceNo, publisherId, msgChainId })
 
-        //TODO: msgChainId is always null, remove on NET-143
-        if (publisherId != null && msgChainId != null) {
+        if (publisherId != null) {
             return this._fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp,
                 fromSequenceNo, publisherId)
         }
@@ -292,10 +291,16 @@ export class Storage extends EventEmitter {
     _fetchFromMessageRefForPublisher(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number|null, publisherId?: string|null, msgChainId?: string|null) {
         const resultStream = this._createResultStream()
 
-        const query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
-            + 'AND msg_chain_id = ? ALLOW FILTERING'
-        const query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND publisher_id = ? '
-            + 'AND msg_chain_id = ? ALLOW FILTERING'
+        let query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
+        let query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
+
+        if (msgChainId !== null){
+            query1 += 'AND msg_chain_id = ?'
+            query2 += 'AND msg_chain_id = ?'
+        }
+
+        query1 +=  ' ALLOW FILTERING'
+        query2 +=  ' ALLOW FILTERING'
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
