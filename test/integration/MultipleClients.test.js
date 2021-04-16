@@ -158,7 +158,7 @@ describeRepeats('PubSub with multiple clients', () => {
             expect(receivedMessagesOther).toEqual([message])
         }, 60000)
 
-        describe('subscriber disconnects after each message', () => {
+        describe('subscriber disconnects after each message (uses resend)', () => {
             test('single subscriber', async () => {
                 const maxMessages = MAX_MESSAGES + Math.floor(Math.random() * MAX_MESSAGES * 0.25)
                 otherClient = await createSubscriber()
@@ -329,7 +329,7 @@ describeRepeats('PubSub with multiple clients', () => {
         })
     })
 
-    describe('multiple publishers', () => {
+    describe('multiple publishers (uses resend)', () => {
         test('works with multiple publishers on one stream', async () => {
             // this creates two subscriber clients and multiple publisher clients
             // all subscribing and publishing to same stream
