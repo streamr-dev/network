@@ -39,7 +39,7 @@ export interface JoinResponse {
 export interface DataUnionWithdrawOptions {
     pollingIntervalMs?: number
     retryTimeoutMs?: number
-    transportSignatures?: boolean
+    payForTransport?: boolean
     waitUntilTransportIsComplete?: boolean
     sendToMainnet?: boolean
 }
@@ -144,7 +144,7 @@ export class DataUnion {
     /**
      * Withdraw all your earnings
      * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
-     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the message hash IF called with payForTransport=false and waitUntilTransportIsComplete=false,
      *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
      *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
@@ -181,7 +181,7 @@ export class DataUnion {
     /**
      * Withdraw earnings and "donate" them to the given address
      * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
-     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the message hash IF called with payForTransport=false and waitUntilTransportIsComplete=false,
      *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
      *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
@@ -410,7 +410,7 @@ export class DataUnion {
      * TODO: add test
      * @param memberAddress - the other member who gets their tokens out of the Data Union
      * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
-     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the message hash IF called with payForTransport=false and waitUntilTransportIsComplete=false,
      *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
      *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
@@ -443,7 +443,7 @@ export class DataUnion {
      * @param recipientAddress - the address to receive the tokens in mainnet
      * @param signature - from member, produced using signWithdrawAllTo
      * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
-     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the message hash IF called with payForTransport=false and waitUntilTransportIsComplete=false,
      *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
      *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
@@ -578,7 +578,7 @@ export class DataUnion {
      * Template for withdraw functions
      * @private
      * @returns the sidechain withdraw transaction receipt IF called with sendToMainnet=false,
-     *          ELSE the message hash IF called with transportSignatures=false and waitUntilTransportIsComplete=false,
+     *          ELSE the message hash IF called with payForTransport=false and waitUntilTransportIsComplete=false,
      *          ELSE the mainnet AMB signature execution transaction receipt IF we did the transport ourselves,
      *          ELSE null IF transport to mainnet was done by someone else (in which case the receipt is lost)
      */
@@ -591,7 +591,7 @@ export class DataUnion {
             pollingIntervalMs = 1000,
             retryTimeoutMs = 60000,
             // by default, transport the signatures if freeWithdraw isn't supported by the sidechain
-            transportSignatures = !this.client.options.dataUnion.freeWithdraw,
+            payForTransport = !this.client.options.dataUnion.freeWithdraw,
             waitUntilTransportIsComplete = true,
             sendToMainnet = true,
         } = options
@@ -621,7 +621,7 @@ export class DataUnion {
 
         const messageHash = ambHashes[0]
 
-        if (!transportSignatures) {
+        if (!payForTransport) {
             // expect someone else to do the transport for us (corresponds to dataUnion.freeWithdraw=true)
             if (waitUntilTransportIsComplete) {
                 log(`Waiting for balance ${balanceBefore.toString()} to change`)

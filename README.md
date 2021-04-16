@@ -442,7 +442,7 @@ const receipt = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddr
 The `messageHash` argument to `transportMessage` will come from the withdraw function with the specific options. The following is equivalent to the above withdraw line:
 ```js
 const messageHash = await dataUnion.withdrawAllToSigned(memberAddress, recipientAddress, signature, {
-    transportSignatures: false,
+    payForTransport: false,
     waitUntilTransportIsComplete: false,
 }) // only pay for sidechain gas
 const receipt = await dataUnion.transportMessage(messageHash) // only pay for mainnet gas
@@ -477,7 +477,7 @@ The functions `withdrawAll`, `withdrawAllTo`, `withdrawAllToMember`, `withdrawAl
 | Name              | Default               | Description                                                                           |
 | :---------------- | :-------------------- | :----------------------------------------------------------------------------------   |
 | sendToMainnet     | true                  | Whether to send the withdrawn DATA tokens to mainnet address (or sidechain address)   |
-| transportSignatures | true                | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge |
+| payForTransport   | true                  | Whether to pay for the withdraw transaction signature transport to mainnet over the bridge |
 | waitUntilTransportIsComplete | true       | Whether to wait until the withdrawn DATA tokens are visible in mainnet                |
 | pollingIntervalMs | 1000 (1&nbsp;second)  | How often requests are sent to find out if the withdraw has completed                 |
 | retryTimeoutMs    | 60000 (1&nbsp;minute) | When to give up when waiting for the withdraw to complete                             |
