@@ -68,7 +68,7 @@ export default class Session extends EventEmitter {
                 this.options.unauthenticated = true
             }
             this.loginFunction = async () => {
-                throw new Error('Need either "privateKey", "ethereum", "apiKey", "username"+"password" or "sessionToken" to login.')
+                throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to login.')
             }
         }
     }

@@ -13,6 +13,7 @@ async function getUsername(client: StreamrClient) {
     return (
         username
         // edge case: if auth.apiKey is an anonymous key, userInfo.id is that anonymous key
+        // update: not sure if still needed now that apiKey auth has been disabled
         || id
     )
 }
@@ -48,5 +49,5 @@ export async function getUserId(client: StreamrClient) {
         return sha256(hexString)
     }
 
-    throw new Error('Need either "privateKey", "ethereum", "apiKey", "username"+"password" or "sessionToken" to derive the publisher Id.')
+    throw new Error('Need either "privateKey", "ethereum" or "sessionToken" to derive the publisher Id.')
 }
