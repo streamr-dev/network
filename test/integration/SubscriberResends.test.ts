@@ -110,6 +110,7 @@ describeRepeats('resends', () => {
             await Connection.closeOpen()
             throw new Error(`sockets not closed: ${openSockets}`)
         }
+        client.debug('\n\n\n\n')
     })
 
     describe('no data', () => {
@@ -201,11 +202,14 @@ describeRepeats('resends', () => {
         })
 
         beforeAll(async () => {
+            client.debug('BEFORE ALL >')
             const results = await publishTestMessages.raw(MAX_MESSAGES, {
                 waitForLast: true,
+                timestamp: 111111,
             })
             published = results.map(([msg]: any) => msg)
             publishedRequests = results.map(([, req]: any) => req)
+            client.debug('BEFORE ALL <')
         }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
         beforeEach(async () => {
@@ -213,7 +217,8 @@ describeRepeats('resends', () => {
             // ensure last message is in storage
             const lastRequest = publishedRequests[publishedRequests.length - 1]
             await waitForStorage(lastRequest)
-        }, WAIT_FOR_STORAGE_TIMEOUT * 1.2)
+            client.debug('was stored', lastRequest)
+        }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
         it('requests resend', async () => {
             const sub = await subscriber.resend({
@@ -298,7 +303,8 @@ describeRepeats('resends', () => {
         })
 
         describe('resendSubscribe', () => {
-            it('sees resends and realtime', async () => {
+            it.only('sees resends and realtime', async () => {
+                client.debug('sees resends and realtime >')
                 const sub = await subscriber.resendSubscribe({
                     streamId: stream.id,
                     last: published.length,
@@ -314,7 +320,7 @@ describeRepeats('resends', () => {
 
                 const newMessage = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                const req = await client.publish(stream.id, newMessage) // should be realtime
+                const req = await client.publish(stream.id, newMessage, 222222) // should be realtime
                 published.push(newMessage)
                 publishedRequests.push(req)
                 let t!: ReturnType<typeof setTimeout>
@@ -340,9 +346,11 @@ describeRepeats('resends', () => {
                 expect(sub.realtime.isWritable()).toBe(false)
                 expect(sub.resend.isReadable()).toBe(false)
                 expect(sub.resend.isWritable()).toBe(false)
+                client.debug('sees resends and realtime <')
             })
 
-            it('sees resends and realtime again', async () => {
+            it.only('sees resends and realtime again', async () => {
+                client.debug('sees resends and realtime again >')
                 const sub = await subscriber.resendSubscribe({
                     streamId: stream.id,
                     last: published.length,
@@ -353,9 +361,12 @@ describeRepeats('resends', () => {
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                const req = await client.publish(stream.id, message) // should be realtime
+                client.debug('PUBLISH >')
+                const req = await client.publish(stream.id, message, 333333) // should be realtime
+                client.debug('PUBLISH <')
                 published.push(message)
                 publishedRequests.push(req)
+                client.debug('COLLECT >')
                 const receivedMsgs = await collect(sub, async ({ received }) => {
                     client.debug({
                         received: received.length,
@@ -365,6 +376,7 @@ describeRepeats('resends', () => {
                         await sub.return()
                     }
                 })
+                client.debug('COLLECT <')
 
                 const msgs = receivedMsgs
                 expect(msgs).toHaveLength(published.length)
@@ -375,9 +387,11 @@ describeRepeats('resends', () => {
                 expect(sub.resend.isReadable()).toBe(false)
                 expect(sub.resend.isWritable()).toBe(false)
                 expect(onResent).toHaveBeenCalledTimes(1)
+                client.debug('sees resends and realtime again <')
             })
 
-            it('sees resends when no realtime', async () => {
+            it.only('sees resends when no realtime', async () => {
+                client.debug('sees resends when no realtime >')
                 const sub = await subscriber.resendSubscribe({
                     streamId: stream.id,
                     last: published.length,
@@ -407,6 +421,7 @@ describeRepeats('resends', () => {
                 expect(sub.realtime.isWritable()).toBe(false)
                 expect(sub.resend.isReadable()).toBe(false)
                 expect(sub.resend.isWritable()).toBe(false)
+                client.debug('sees resends when no realtime <')
             })
 
             it('ends resend if unsubscribed', async () => {
@@ -417,7 +432,7 @@ describeRepeats('resends', () => {
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                const req = await client.publish(stream.id, message) // should be realtime
+                const req = await client.publish(stream.id, message, 444444) // should be realtime
                 published.push(message)
                 publishedRequests.push(req)
                 const receivedMsgs = await collect(sub, async ({ received }) => {
@@ -447,7 +462,7 @@ describeRepeats('resends', () => {
 
                 await sub.return()
                 // eslint-disable-next-line no-await-in-loop
-                const req = await client.publish(stream.id, message) // should be realtime
+                const req = await client.publish(stream.id, message, 555555) // should be realtime
                 published.push(message)
                 publishedRequests.push(req)
                 const received = []
@@ -469,7 +484,7 @@ describeRepeats('resends', () => {
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                const req = await client.publish(stream.id, message) // should be realtime
+                const req = await client.publish(stream.id, message, 666666) // should be realtime
                 published.push(message)
                 publishedRequests.push(req)
 
@@ -508,7 +523,7 @@ describeRepeats('resends', () => {
 
                 const message = Msg()
                 // eslint-disable-next-line no-await-in-loop
-                const req = await client.publish(stream.id, message) // should be realtime
+                const req = await client.publish(stream.id, message, 777777) // should be realtime
                 published.push(message)
                 publishedRequests.push(req)
                 const END_AFTER = 3
