@@ -83,7 +83,6 @@ describe('LoginEndpoints', () => {
             const sessionToken = await client.loginWithApiKey('tester1-api-key')
             assert(sessionToken)
             assert(sessionToken.token)
-            // @ts-expect-error
             assert(sessionToken.expires)
         })
     })

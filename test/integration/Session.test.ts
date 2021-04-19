@@ -12,24 +12,13 @@ describe('Session', () => {
     })
 
     describe('Token retrievals', () => {
-        it('gets the token using api key', async () => {
+        it('fails if trying to use apiKey', async () => {
             expect.assertions(1)
-            await expect(createClient({
+            await expect(() => createClient({
                 auth: {
                     apiKey: 'tester1-api-key',
                 },
-            }).session.getSessionToken()).resolves.toBeTruthy()
-        })
-
-        it('fails when the used api key is invalid', async () => {
-            expect.assertions(1)
-            await expect(createClient({
-                auth: {
-                    apiKey: 'wrong-api-key',
-                },
-            }).session.getSessionToken()).rejects.toMatchObject({
-                body: expect.stringMatching(/invalid api key/i),
-            })
+            }).session.getSessionToken()).rejects.toThrow('no longer supported')
         })
 
         it('gets the token using private key', async () => {
