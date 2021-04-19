@@ -5,6 +5,7 @@ import { ethers } from 'ethers'
 import { StreamrClient } from '../../src/StreamrClient'
 
 import config from './config'
+import { fakePrivateKey } from '../utils'
 
 describe('LoginEndpoints', () => {
     let client: StreamrClient
@@ -12,7 +13,7 @@ describe('LoginEndpoints', () => {
     const createClient = (opts = {}) => new StreamrClient({
         ...config.clientOptions,
         auth: {
-            apiKey: 'tester1-api-key',
+            privateKey: fakePrivateKey()
         },
         autoConnect: false,
         autoDisconnect: false,
@@ -73,17 +74,10 @@ describe('LoginEndpoints', () => {
     })
 
     describe('API key login', () => {
-        it('should fail to get a session token', async () => {
+        it('should fail', async () => {
             await expect(async () => {
                 await client.loginWithApiKey('apikey')
             }).rejects.toThrow()
-        })
-
-        it('should get a session token', async () => {
-            const sessionToken = await client.loginWithApiKey('tester1-api-key')
-            assert(sessionToken)
-            assert(sessionToken.token)
-            assert(sessionToken.expires)
         })
     })
 
