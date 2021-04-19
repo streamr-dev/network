@@ -2,7 +2,7 @@ const { startTracker, startNetworkNode, startStorageNode, Protocol } = require('
 const intoStream = require('into-stream')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const { startBroker, createClient } = require('../utils')
+const { startBroker, createMockUser, createClient } = require('../utils')
 
 const { createMockStorageConfig } = require('./storage/MockStorageConfig')
 
@@ -54,10 +54,7 @@ describe('message ordering and gap filling in websocket adapter', () => {
             wsPort
         })
 
-        subscriber = createClient(wsPort, {
-            auth: {
-                apiKey: 'tester1-api-key'
-            },
+        subscriber = createClient(wsPort, createMockUser().privateKey, {
             orderMessages: false,
         })
         await subscriber.ensureConnected()

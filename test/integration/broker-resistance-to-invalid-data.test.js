@@ -12,6 +12,7 @@ describe('broker resistance to invalid data', () => {
     let tracker
     let broker
     let streamId
+    let sessionToken
 
     beforeEach(async () => {
         tracker = await startTracker({
@@ -34,6 +35,7 @@ describe('broker resistance to invalid data', () => {
         })
         streamId = freshStream.id
         await client.ensureDisconnected()
+        sessionToken = await client.session.getSessionToken()
     })
 
     afterEach(async () => {
@@ -50,7 +52,7 @@ describe('broker resistance to invalid data', () => {
             path: `/api/v1/streams/${streamId}/data`,
             method: 'POST',
             headers: {
-                Authorization: 'token tester1-api-key',
+                Authorization: 'Bearer ' + sessionToken,
                 'Content-Type': 'application/json',
                 'Content-Length': invalidData.length
             }

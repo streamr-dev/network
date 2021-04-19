@@ -69,7 +69,7 @@ describe('broker drops future messages', () => {
         await client.ensureDisconnected()
     })
 
-    test('pushing message with too future timestamp to HTTP adapter returns 400 error & does not crash broker', (done) => {
+    test('pushing message with too future timestamp to HTTP adapter returns 400 error & does not crash broker', async () => {
         const streamMessage = buildMsg(
             streamId, 10, Date.now() + (thresholdForFutureMessageSeconds + 5) * 1000,
             0, 'publisher', '1', {}
@@ -95,20 +95,19 @@ describe('broker drops future messages', () => {
             method: 'POST',
             body: streamMessage.serialize(),
             headers: {
-                Authorization: 'token tester1-api-key',
+                Authorization: 'Bearer ' + token,
                 Accept: 'application/json',
                 'Content-Type': 'application/json'
             }
         }
 
-        fetch(streamUrl, settings)
+        return fetch(streamUrl, settings)
             .then((res) => {
                 expect(res.status).toEqual(400)
                 return res.json()
             })
             .then((json) => {
                 expect(json.error).toContain('future timestamps are not allowed')
-                done()
             })
     })
 

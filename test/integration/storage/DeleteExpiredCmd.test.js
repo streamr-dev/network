@@ -2,7 +2,7 @@ const cassandra = require('cassandra-driver')
 const { TimeUuid } = require('cassandra-driver').types
 
 const DeleteExpiredCmd = require('../../../src/storage/DeleteExpiredCmd')
-const { createClient, STREAMR_DOCKER_DEV_HOST } = require('../../utils')
+const { createMockUser, createClient, STREAMR_DOCKER_DEV_HOST } = require('../../utils')
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -47,6 +47,7 @@ const checkDBCount = async (cassandraClient, streamId) => {
 }
 
 describe('DeleteExpiredCmd', () => {
+    let mockUser
     let client
     let cassandraClient
     let deleteExpiredCmd
@@ -57,10 +58,8 @@ describe('DeleteExpiredCmd', () => {
             localDataCenter,
             keyspace,
         })
-        client = createClient(9999, {
-            auth: {
-                apiKey: 'tester1-api-key'
-            },
+        mockUser = createMockUser()
+        client = createClient(9999, mockUser.privateKey, {
             orderMessages: false,
         })
         deleteExpiredCmd = new DeleteExpiredCmd({
@@ -81,7 +80,7 @@ describe('DeleteExpiredCmd', () => {
     const daysArray = [0, 1, 2, 3]
     daysArray.map(async (days) => {
         test(`keep in database ${days} days of data`, async () => {
-            const id = '0xadb88a496199365b69b2a12816b6b6bba27cc4c1/DeleteExpiredCmd.test.js-' + Date.now()
+            const id = mockUser.address + '/DeleteExpiredCmd.test.js-' + Date.now()
             const stream = await client.createStream({
                 id,
                 name: id,
@@ -109,7 +108,7 @@ describe('DeleteExpiredCmd', () => {
     })
 
     test('max message timestamp of bucket is taken into consideration', async () => {
-        const id = '0xadb88a496199365b69b2a12816b6b6bba27cc4c1/DeleteExpiredCmd.test.js-' + Date.now()
+        const id = mockUser.address + '/DeleteExpiredCmd.test.js-' + Date.now()
         const stream = await client.createStream({
             id,
             name: id,

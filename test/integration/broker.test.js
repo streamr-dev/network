@@ -3,7 +3,7 @@ const fetch = require('node-fetch')
 const ethers = require('ethers')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } = require('../utils')
+const { startBroker, createMockUser, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } = require('../utils')
 
 const httpPort1 = 12341
 const httpPort2 = 12342
@@ -70,13 +70,11 @@ describe('broker: end-to-end', () => {
             enableCassandra: true
         })
 
-        client1 = createClient(wsPort1)
-        client2 = createClient(wsPort2)
-        client3 = createClient(wsPort3, {
-            auth: {
-                apiKey: 'tester2-api-key' // different api key
-            }
-        })
+        const user1 = createMockUser()
+        const user2 = createMockUser()
+        client1 = createClient(wsPort1, user1.privateKey)
+        client2 = createClient(wsPort2, user1.privateKey)
+        client3 = createClient(wsPort3, user2.privateKey)
         assignmentEventManager = new StorageAssignmentEventManager(wsPort1, engineAndEditorAccount)
         await assignmentEventManager.createStream()
 
@@ -99,8 +97,8 @@ describe('broker: end-to-end', () => {
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort2)
         await waitForStreamPersistedInStorageNode(freshStreamId, 0, '127.0.0.1', httpPort3)
 
-        await freshStream.grantPermission('stream_get', 'tester2@streamr.com')
-        await freshStream.grantPermission('stream_subscribe', 'tester2@streamr.com')
+        await freshStream.grantPermission('stream_get', user2.address)
+        await freshStream.grantPermission('stream_subscribe', user2.address)
         // await freshStream.grantPermission('stream_get', ethereumAccount.address)
         // await freshStream.grantPermission('stream_subscribe', ethereumAccount.address)
         // await freshStream.grantPermission('stream_publish', ethereumAccount.address)
@@ -296,7 +294,7 @@ describe('broker: end-to-end', () => {
             await fetch(`http://localhost:${httpPort1}/api/v1/streams/${freshStreamId}/data`, {
                 method: 'post',
                 headers: {
-                    Authorization: 'token tester1-api-key'
+                    Authorization: 'Bearer ' + await client1.session.getSessionToken()
                 },
                 body: JSON.stringify({
                     key: i
@@ -690,7 +688,7 @@ describe('broker: end-to-end', () => {
             const response = await fetch(url, {
                 method: 'get',
                 headers: {
-                    Authorization: 'token tester1-api-key'
+                    Authorization: 'Bearer ' + await client1.session.getSessionToken()
                 },
             })
             const messagesAsObjects = await response.json()
@@ -744,7 +742,7 @@ describe('broker: end-to-end', () => {
         const response = await fetch(url, {
             method: 'get',
             headers: {
-                Authorization: 'token tester1-api-key'
+                Authorization: 'Bearer ' + await client1.session.getSessionToken()
             },
         })
         const messagesAsObjects = await response.json()
@@ -759,7 +757,7 @@ describe('broker: end-to-end', () => {
         const response = await fetch(url, {
             method: 'get',
             headers: {
-                Authorization: 'token tester1-api-key'
+                Authorization: 'Bearer ' + await client1.session.getSessionToken()
             },
         })
         const messagesAsObjects = await response.json()
@@ -805,7 +803,7 @@ describe('broker: end-to-end', () => {
             const response = await fetch(url, {
                 method: 'get',
                 headers: {
-                    Authorization: 'token tester1-api-key'
+                    Authorization: 'Bearer ' + await client1.session.getSessionToken()
                 },
             })
             const messagesAsObjects = await response.json()
@@ -892,7 +890,7 @@ describe('broker: end-to-end', () => {
             const response = await fetch(url, {
                 method: 'get',
                 headers: {
-                    Authorization: 'token tester1-api-key'
+                    Authorization: 'Bearer ' + await client1.session.getSessionToken()
                 },
             })
             const messagesAsObjects = await response.json()

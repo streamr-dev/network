@@ -1,7 +1,7 @@
 const { startTracker } = require('streamr-network')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const { startBroker, createClient, createMqttClient } = require('../utils')
+const { startBroker, createMockUser, createClient, createMqttClient } = require('../utils')
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -12,6 +12,8 @@ const mqttPort = 17751
 describe('local propagation', () => {
     let tracker
     let broker
+
+    const mockUser = createMockUser()
 
     let client1
     let client2
@@ -39,11 +41,11 @@ describe('local propagation', () => {
             mqttPort
         })
 
-        client1 = createClient(wsPort)
-        client2 = createClient(wsPort)
+        client1 = createClient(wsPort, mockUser.privateKey)
+        client2 = createClient(wsPort, mockUser.privateKey)
 
-        mqttClient1 = createMqttClient(mqttPort)
-        mqttClient2 = createMqttClient(mqttPort)
+        mqttClient1 = createMqttClient(mqttPort, 'localhost', mockUser.privateKey)
+        mqttClient2 = createMqttClient(mqttPort, 'localhost', mockUser.privateKey)
 
         freshStream = await client1.createStream({
             name: 'local-propagation.test.js-' + Date.now()

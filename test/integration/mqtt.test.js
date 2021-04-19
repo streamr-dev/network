@@ -1,7 +1,7 @@
 const { startTracker } = require('streamr-network')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const { startBroker, createClient, createMqttClient } = require('../utils')
+const { startBroker, createMockUser, createClient, createMqttClient } = require('../utils')
 
 const httpPort1 = 12381
 const httpPort2 = 12382
@@ -26,6 +26,8 @@ describe('mqtt: end-to-end', () => {
     let broker1
     let broker2
     let broker3
+
+    const mockUser = createMockUser()
 
     let client1
     let client2
@@ -71,13 +73,13 @@ describe('mqtt: end-to-end', () => {
             mqttPort: mqttPort3
         })
 
-        client1 = createClient(wsPort1)
-        client2 = createClient(wsPort2)
-        client3 = createClient(wsPort3)
+        client1 = createClient(wsPort1, mockUser.privateKey)
+        client2 = createClient(wsPort2, mockUser.privateKey)
+        client3 = createClient(wsPort3, mockUser.privateKey)
 
-        mqttClient1 = createMqttClient(mqttPort1)
-        mqttClient2 = createMqttClient(mqttPort2)
-        mqttClient3 = createMqttClient(mqttPort3)
+        mqttClient1 = createMqttClient(mqttPort1, 'localhost', mockUser.privateKey)
+        mqttClient2 = createMqttClient(mqttPort2, 'localhost', mockUser.privateKey)
+        mqttClient3 = createMqttClient(mqttPort3, 'localhost', mockUser.privateKey)
 
         freshStream1 = await client1.createStream({
             name: 'mqtt.test.js-' + Date.now()

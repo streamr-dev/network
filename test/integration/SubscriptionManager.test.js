@@ -1,7 +1,7 @@
 const { startTracker } = require('streamr-network')
 const { wait, waitForCondition } = require('streamr-test-utils')
 
-const { startBroker, createClient, createMqttClient } = require('../utils')
+const { startBroker, createMockUser, createClient, createMqttClient } = require('../utils')
 
 const httpPort1 = 13381
 const httpPort2 = 13382
@@ -18,6 +18,8 @@ describe('SubscriptionManager', () => {
 
     let broker1
     let broker2
+
+    const mockUser = createMockUser()
 
     let client1
     let client2
@@ -56,11 +58,11 @@ describe('SubscriptionManager', () => {
 
         await wait(2000)
 
-        client1 = createClient(wsPort1)
-        client2 = createClient(wsPort2)
+        client1 = createClient(wsPort1, mockUser.privateKey)
+        client2 = createClient(wsPort2, mockUser.privateKey)
 
-        mqttClient1 = createMqttClient(mqttPort1)
-        mqttClient2 = createMqttClient(mqttPort2)
+        mqttClient1 = createMqttClient(mqttPort1, 'localhost', mockUser.privateKey)
+        mqttClient2 = createMqttClient(mqttPort2, 'localhost', mockUser.privateKey)
 
         freshStream1 = await client1.createStream({
             name: 'SubscriptionManager.test.js-' + Date.now()

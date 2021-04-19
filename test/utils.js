@@ -1,18 +1,11 @@
 const StreamrClient = require('streamr-client')
 const mqtt = require('async-mqtt')
 const fetch = require('node-fetch')
+const ethers = require('ethers')
 const { waitForCondition } = require('streamr-test-utils')
 
 const createBroker = require('../src/broker')
 const StorageConfig = require('../src/storage/StorageConfig')
-
-const DEFAULT_CLIENT_OPTIONS = {
-    auth: {
-        apiKey: 'tester1-api-key'
-    }
-}
-
-const TESTER1_PRIVATE_KEY = '8b5e348b8e553c3b0491f68c50b203d02d3674d49abd1a95090d6c9cfcf64a08'
 
 const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
@@ -110,15 +103,20 @@ function getWsUrlWithControlAndMessageLayerVersions(port, ssl = false, controlLa
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`
 }
 
-function createClient(wsPort, clientOptions = DEFAULT_CLIENT_OPTIONS) {
+const createMockUser = () => ethers.Wallet.createRandom()
+
+function createClient(wsPort, privateKey = createMockUser().privateKey, clientOptions) {
     return new StreamrClient({
+        auth: {
+            privateKey
+        },
         url: getWsUrl(wsPort),
         restUrl: `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core/api/v1`,
         ...clientOptions,
     })
 }
 
-function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = TESTER1_PRIVATE_KEY) {
+function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = createMockUser().privateKey) {
     return mqtt.connect({
         hostname: host,
         port: mqttPort,
@@ -130,11 +128,7 @@ function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = TEST
 class StorageAssignmentEventManager {
     constructor(wsPort, engineAndEditorAccount) {
         this.engineAndEditorAccount = engineAndEditorAccount
-        this.client = createClient(wsPort, {
-            auth: {
-                privateKey: engineAndEditorAccount.privateKey
-            }
-        })
+        this.client = createClient(wsPort, engineAndEditorAccount.privateKey)
     }
 
     async createStream() {
@@ -185,6 +179,7 @@ module.exports = {
     STREAMR_DOCKER_DEV_HOST,
     formConfig,
     startBroker,
+    createMockUser,
     createClient,
     createMqttClient,
     getWsUrl,

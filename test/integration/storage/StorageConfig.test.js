@@ -74,11 +74,7 @@ describe('StorageConfig', () => {
             streamrUrl: STREAMR_URL,
             enableCassandra: false
         })
-        client = createClient(WS_PORT, {
-            auth: {
-                privateKey: publisherAccount.privateKey
-            }
-        })
+        client = createClient(WS_PORT, publisherAccount.privateKey)
         assignmentEventManager = new StorageAssignmentEventManager(WS_PORT, engineAndEditorAccount)
         await assignmentEventManager.createStream()
     })

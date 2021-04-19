@@ -104,7 +104,7 @@ describe('DataMetadataEndpoints', () => {
 
         const res = JSON.parse(json)
 
-        expect(res.totalBytes).toEqual(184)
+        expect(res.totalBytes).toEqual(290)
         expect(res.totalMessages).toEqual(1)
         expect(res.firstMessage).toEqual(res.lastMessage)
     })
@@ -129,7 +129,7 @@ describe('DataMetadataEndpoints', () => {
 
         const res = JSON.parse(json)
 
-        expect(res.totalBytes).toEqual(775)
+        expect(res.totalBytes).toEqual(1199)
         expect(res.totalMessages).toEqual(4)
         expect(
             new Date(res.firstMessage).getTime()
