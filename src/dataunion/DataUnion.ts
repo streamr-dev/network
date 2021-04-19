@@ -388,7 +388,7 @@ export class DataUnion {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.addMembers(members)
-        // TODO: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
+        // TODO ETH-93: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
         return tx.wait()
     }
 
@@ -401,7 +401,7 @@ export class DataUnion {
         const members = memberAddressList.map(getAddress) // throws if there are bad addresses
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
         const tx = await duSidechain.partMembers(members)
-        // TODO: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
+        // TODO ETH-93: wrap promise for better error reporting in case tx fails (parse reason, throw proper error)
         return tx.wait()
     }
 
@@ -499,7 +499,6 @@ export class DataUnion {
      * @internal
      */
     static async _deploy(options: DataUnionDeployOptions = {}, client: StreamrClient): Promise<DataUnion> {
-        const deployerAddress = await client.getAddress()
         const {
             owner,
             joinPartAgents,
@@ -510,6 +509,7 @@ export class DataUnion {
             confirmations = 1,
             gasPrice
         } = options
+        const deployerAddress = await client.getAddress()
 
         let duName = dataUnionName
         if (!duName) {
