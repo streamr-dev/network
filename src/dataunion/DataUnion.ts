@@ -648,15 +648,15 @@ export class DataUnion {
         const helper = this.getContracts()
         const sidechainAmb = await helper.getSidechainAmb()
         const mainnetAmb = await helper.getMainnetAmb()
-        const message = await sidechainAmb.message(messageHash)
 
+        log(`Waiting until sidechain AMB has collected required signatures for hash=${messageHash}...`)
+        await until(async () => helper.requiredSignaturesHaveBeenCollected(messageHash), pollingIntervalMs, retryTimeoutMs)
+
+        const message = await sidechainAmb.message(messageHash)
         if (message === '0x') {
             throw new Error(`Message with hash=${messageHash} not found`)
         }
         const messageId = '0x' + message.substr(2, 64)
-
-        log(`Waiting until sidechain AMB has collected required signatures for hash=${messageHash}...`)
-        await until(async () => helper.requiredSignaturesHaveBeenCollected(messageHash), pollingIntervalMs, retryTimeoutMs)
 
         log(`Checking mainnet AMB hasn't already processed messageId=${messageId}`)
         const alreadySent = await mainnetAmb.messageCallStatus(messageId)
