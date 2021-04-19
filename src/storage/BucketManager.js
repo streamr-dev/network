@@ -197,27 +197,41 @@ class BucketManager {
      * @returns {Promise<[]>}
      */
     async getBucketsByTimestamp(streamId, partition, fromTimestamp = undefined, toTimestamp = undefined) {
-        const GET_LAST_BUCKETS_RANGE_TIMESTAMP = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create >= ? AND date_create <= ? ORDER BY date_create DESC'
-        const GET_LAST_BUCKETS_FROM_TIMESTAMP = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create >= ? ORDER BY date_create DESC'
-        const GET_LAST_BUCKETS_TO_TIMESTAMP = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create <= ? ORDER BY date_create DESC'
-
-        let query
-        let params
-
-        if (fromTimestamp !== undefined && toTimestamp !== undefined) {
-            query = GET_LAST_BUCKETS_RANGE_TIMESTAMP
-            params = [streamId, partition, fromTimestamp, toTimestamp]
-        } else if (fromTimestamp !== undefined && toTimestamp === undefined) {
-            query = GET_LAST_BUCKETS_FROM_TIMESTAMP
-            params = [streamId, partition, fromTimestamp]
-        } else if (fromTimestamp === undefined && toTimestamp !== undefined) {
-            query = GET_LAST_BUCKETS_TO_TIMESTAMP
-            params = [streamId, partition, toTimestamp]
-        } else {
-            throw TypeError(`Not correct combination of fromTimestamp (${fromTimestamp}) and toTimestamp (${toTimestamp})`)
+        const getExplicitFirst = () => {
+            // if fromTimestamp is defined, the first data point are in a some earlier bucket
+            // (bucket.dateCreated<=fromTimestamp as data within one millisecond won't be divided to multiple buckets)
+            const QUERY = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create <= ? ORDER BY date_create DESC LIMIT 1'
+            const params = [streamId, partition, fromTimestamp]
+            return this._getBucketsFromDatabase(QUERY, params, streamId, partition)
         }
 
-        return this._getBucketsFromDatabase(query, params, streamId, partition)
+        const getRest = () => {
+            const GET_LAST_BUCKETS_RANGE_TIMESTAMP = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create > ? AND date_create <= ? ORDER BY date_create DESC'
+            const GET_LAST_BUCKETS_FROM_TIMESTAMP = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create > ? ORDER BY date_create DESC'
+            const GET_LAST_BUCKETS_TO_TIMESTAMP = 'SELECT * FROM bucket WHERE stream_id = ? and partition = ? AND date_create <= ? ORDER BY date_create DESC'
+            let query
+            let params
+            if (fromTimestamp !== undefined && toTimestamp !== undefined) {
+                query = GET_LAST_BUCKETS_RANGE_TIMESTAMP
+                params = [streamId, partition, fromTimestamp, toTimestamp]
+            } else if (fromTimestamp !== undefined && toTimestamp === undefined) {
+                query = GET_LAST_BUCKETS_FROM_TIMESTAMP
+                params = [streamId, partition, fromTimestamp]
+            } else if (fromTimestamp === undefined && toTimestamp !== undefined) {
+                query = GET_LAST_BUCKETS_TO_TIMESTAMP
+                params = [streamId, partition, toTimestamp]
+            } else {
+                throw TypeError(`Not correct combination of fromTimestamp (${fromTimestamp}) and toTimestamp (${toTimestamp})`)
+            }
+            return this._getBucketsFromDatabase(query, params, streamId, partition)
+        }
+
+        if (fromTimestamp !== undefined) {
+            return Promise.all([getExplicitFirst(), getRest()])
+                .then(([first, rest]) => rest.concat(first))
+        } else { // eslint-disable-line no-else-return
+            return getRest()
+        }
     }
 
     /**
