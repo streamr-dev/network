@@ -1,6 +1,6 @@
 import { getCreate2Address, isAddress } from '@ethersproject/address'
 import { arrayify, hexZeroPad } from '@ethersproject/bytes'
-import { Contract } from '@ethersproject/contracts'
+import { Contract, ContractReceipt } from '@ethersproject/contracts'
 import { keccak256 } from '@ethersproject/keccak256'
 import { defaultAbiCoder } from '@ethersproject/abi'
 import { verifyMessage } from '@ethersproject/wallet'
@@ -137,7 +137,7 @@ export class Contracts {
     }
 
     // move signatures from sidechain to mainnet
-    async transportSignaturesForMessage(messageHash: string) {
+    async transportSignaturesForMessage(messageHash: string): Promise<ContractReceipt | null> {
         const sidechainAmb = await this.getSidechainAmb()
         const message = await sidechainAmb.message(messageHash)
         const messageId = '0x' + message.substr(2, 64)
