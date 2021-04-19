@@ -89,9 +89,9 @@ describe('MQTT error handling', () => {
         })
     })
 
-    it('test not valid api key', (done) => {
+    it('test not valid private key', (done) => {
         setUpBroker(false).then(() => {
-            mqttClient = createMqttClient(mqttPort, 'localhost', 'NOT_VALID_KEY')
+            mqttClient = createMqttClient(mqttPort, 'localhost', 'NOT_VALID_PRIVATE_KEY')
             mqttClient.on('error', (err) => {
                 expect(err.message).toEqual('Connection refused: Bad username or password')
                 mqttClient.end(true)

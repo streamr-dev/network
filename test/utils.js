@@ -12,6 +12,8 @@ const DEFAULT_CLIENT_OPTIONS = {
     }
 }
 
+const TESTER1_PRIVATE_KEY = '8b5e348b8e553c3b0491f68c50b203d02d3674d49abd1a95090d6c9cfcf64a08'
+
 const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
@@ -116,12 +118,12 @@ function createClient(wsPort, clientOptions = DEFAULT_CLIENT_OPTIONS) {
     })
 }
 
-function createMqttClient(mqttPort = 9000, host = 'localhost', apiKey = 'tester1-api-key') {
+function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = TESTER1_PRIVATE_KEY) {
     return mqtt.connect({
         hostname: host,
         port: mqttPort,
         username: '',
-        password: apiKey
+        password: privateKey
     })
 }
 

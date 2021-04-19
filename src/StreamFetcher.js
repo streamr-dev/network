@@ -3,6 +3,8 @@ const memoize = require('memoizee')
 
 const logger = require('./helpers/logger')('streamr:StreamFetcher')
 const HttpError = require('./errors/HttpError')
+// TODO do all REST operations to E&E via StreamrClient
+const StreamrClient = require('streamr-client') 
 
 const MAX_AGE = 15 * 60 * 1000 // 15 minutes
 const MAX_AGE_MINUTE = 1000 // 1 minutes
@@ -37,8 +39,7 @@ async function handleNon2xxResponse(funcName, response, streamId, apiKey, sessio
 
 module.exports = class StreamFetcher {
     constructor(baseUrl) {
-        this.streamResourceUrl = `${baseUrl}/api/v1/streams`
-        this.loginUrl = `${baseUrl}/api/v1/login/apikey`
+        this.apiUrl = `${baseUrl}/api/v1`
         this.fetch = memoize(this._fetch, {
             maxAge: MAX_AGE,
             promise: true,
@@ -58,17 +59,15 @@ module.exports = class StreamFetcher {
             .then(() => this.fetch(streamId, apiKey, sessionToken))
     }
 
-    async getToken(apiKey) {
-        const response = await fetchWithErrorLogging(this.loginUrl, {
-            method: 'POST',
-            body: JSON.stringify({
-                apiKey
-            }),
-            headers: {
-                'Content-Type': 'application/json'
+    async getToken(privateKey) {
+        const client = new StreamrClient({
+            auth: {
+                privateKey
             },
+            restUrl: this.apiUrl,
+            autoConnect: false
         })
-        return response.json()
+        return await client.session.getSessionToken()
     }
 
     /**
@@ -81,7 +80,7 @@ module.exports = class StreamFetcher {
      * @private
      */
     async _fetch(streamId, apiKey, sessionToken) {
-        const url = `${this.streamResourceUrl}/${encodeURIComponent(streamId)}`
+        const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}`
         const headers = formHeaders(apiKey, sessionToken)
 
         const response = await fetchWithErrorLogging(url, {
@@ -111,7 +110,7 @@ module.exports = class StreamFetcher {
             throw new Error('streamId can not be null!')
         }
 
-        const url = `${this.streamResourceUrl}/${encodeURIComponent(streamId)}/permissions/me`
+        const url = `${this.apiUrl}/streams/${encodeURIComponent(streamId)}/permissions/me`
         const headers = formHeaders(apiKey, sessionToken)
 
         const response = await fetchWithErrorLogging(url, {

@@ -125,27 +125,21 @@ module.exports = class MqttServer extends events.EventEmitter {
                 return
             }
 
-            const apiKey = packet.password.toString()
+            const privateKey = packet.password.toString()
 
-            this.streamFetcher.getToken(apiKey)
-                .then((res) => {
-                    // got some error
-                    if (res.code) {
-                        connection.sendConnectionRefused()
-                        return
-                    }
-
-                    // got token
-                    if (res.token) {
-                        connection.sendConnectionAccepted()
-                        connection.setClientId(packet.clientId).setApiKey(apiKey).setToken(res.token)
-
-                        logger.debug('onNewClientConnection: mqtt "%s" connected', connection.id)
-                    }
+            this.streamFetcher.getToken(privateKey)
+                .then((sessionToken) => {
+                    connection.sendConnectionAccepted()
+                    connection.setClientId(packet.clientId).setToken(sessionToken)
+                    logger.debug('onNewClientConnection: mqtt "%s" connected', connection.id)
                 })
                 .catch((err) => {
                     logger.warn('onNewClientConnection: error fetching token %o', err)
-                    connection.sendConnectionRefusedServerUnavailable()
+                    if (err.code === 'INVALID_ARGUMENT') {
+                        connection.sendConnectionRefused()
+                    } else {
+                        connection.sendConnectionRefusedServerUnavailable()
+                    }
                 })
         })
     }
@@ -156,7 +150,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         const { topic, payload, qos } = packet
 
         try {
-            const streamObj = await this.streamFetcher.authenticate(topic, connection.apiKey, connection.token, 'stream_publish')
+            const streamObj = await this.streamFetcher.authenticate(topic, undefined, connection.token, 'stream_publish')
 
             // No way to define partition over MQTT, so choose a random partition
             const streamPartition = this.partitionFn(streamObj.partitions)
@@ -204,7 +198,7 @@ module.exports = class MqttServer extends events.EventEmitter {
         const { topic } = packet.subscriptions[0]
 
         try {
-            const streamObj = await this.streamFetcher.authenticate(topic, connection.apiKey, connection.token, 'stream_subscribe')
+            const streamObj = await this.streamFetcher.authenticate(topic, undefined, connection.token, 'stream_subscribe')
             const newOrExistingStream = this.streams.getOrCreate(streamObj.id, 0, streamObj.name)
 
             // Subscribe now if the stream is not already subscribed or subscribing
