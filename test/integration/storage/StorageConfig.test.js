@@ -4,14 +4,20 @@ const ethers = require('ethers')
 const { waitForCondition } = require('streamr-test-utils')
 const { StreamMessage } = require('streamr-network').Protocol.MessageLayer
 
-const { startBroker, createClient, StorageAssignmentEventManager, waitForStreamPersistedInStorageNode } = require('../../utils')
+const {
+    startBroker,
+    createClient,
+    StorageAssignmentEventManager,
+    waitForStreamPersistedInStorageNode,
+    STREAMR_DOCKER_DEV_HOST
+} = require('../../utils')
 
-const contactPoints = ['127.0.0.1']
+const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 const NODE_HOST = '127.0.0.1'
-const STREAMR_URL = 'http://127.0.0.1'
+const STREAMR_URL = `http://${STREAMR_DOCKER_DEV_HOST}`
 const HTTP_PORT = 17770
 const WS_PORT = 17771
 const TRACKER_PORT = 17772
