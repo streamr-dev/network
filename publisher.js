@@ -78,7 +78,12 @@ const publishMessage = async () => {
     await publishFunction(msg, counter)
 
     if (maxMessages && counter >= maxMessages - 1) {
-        console.log(`Done: All ${maxMessages} messages published.`)
+        console.log(`Done: All ${maxMessages} messages published. Quitting JS publisher.`)
+        // Disconnect gracefully so that this process will quit.
+        // Don't do it immediately to avoid messing up the last published message in any way.
+        await wait(10000 + (1000 * maxMessages))
+        await client.disconnect()
+        console.log(`Disconnected.`)
     } else {
         setTimeout(publishMessage, interval)
     }
