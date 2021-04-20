@@ -5,7 +5,7 @@ const bodyParser = require('body-parser')
 const uuid = require('uuid')
 
 const StreamFetcher = require('../../src/StreamFetcher')
-const HttpError = require('../../src/errors/HttpError')
+const { HttpError } = require('../../src/errors/HttpError')
 
 describe('StreamFetcher', () => {
     let streamFetcher

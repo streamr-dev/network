@@ -1,34 +1,35 @@
-const express = require('express')
-const request = require('supertest')
-const intoStream = require('into-stream')
-const { Protocol, MetricsContext } = require('streamr-network')
+import { NetworkNode, Protocol, MetricsContext } from 'streamr-network'
+import express from 'express'
+import request from 'supertest'
+import intoStream from 'into-stream'
+
+import { router as restEndpointRouter } from '../../../src/http/DataQueryEndpoints'
+import { HttpError } from '../../../src/errors/HttpError'
+import { Todo } from '../../../src/types'
 
 const { ControlLayer, MessageLayer } = Protocol
 const { StreamMessage, MessageID } = MessageLayer
 
-const restEndpointRouter = require('../../../src/http/DataQueryEndpoints')
-const HttpError = require('../../../src/errors/HttpError')
-
 describe('DataQueryEndpoints', () => {
-    let app
-    let networkNode
-    let streamFetcher
+    let app: Todo
+    let networkNode: NetworkNode
+    let streamFetcher: Todo
 
-    function testGetRequest(url, key = 'authKey') {
+    function testGetRequest(url: string, key = 'authKey') {
         return request(app)
             .get(url)
             .set('Accept', 'application/json')
             .set('Authorization', `Token ${key}`)
     }
 
-    function createStreamMessage(content) {
+    function createStreamMessage(content: any) {
         return new StreamMessage({
             messageId: new MessageID('streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', '1'),
             content,
         })
     }
 
-    function createUnicastMessage(streamMessage) {
+    function createUnicastMessage(streamMessage: Todo) {
         return new ControlLayer.UnicastMessage({
             requestId: 'requestId',
             streamMessage,
@@ -37,9 +38,10 @@ describe('DataQueryEndpoints', () => {
 
     beforeEach(() => {
         app = express()
+        // @ts-expect-error
         networkNode = {}
         streamFetcher = {
-            authenticate(streamId, authKey) {
+            authenticate(streamId: Todo, authKey: Todo) {
                 return new Promise(((resolve, reject) => {
                     if (authKey === 'authKey') {
                         resolve({})
@@ -49,11 +51,11 @@ describe('DataQueryEndpoints', () => {
                 }))
             },
         }
-        app.use('/api/v1', restEndpointRouter(networkNode, streamFetcher, new MetricsContext(null)))
+        app.use('/api/v1', restEndpointRouter(networkNode, streamFetcher, new MetricsContext(null as any)))
     })
 
     describe('Getting last events', () => {
-        let streamMessages
+        let streamMessages: Todo[]
 
         beforeEach(() => {
             streamMessages = [
@@ -122,6 +124,7 @@ describe('DataQueryEndpoints', () => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .then(() => {
                         expect(networkNode.requestResendLast).toHaveBeenCalledTimes(1)
+                        // @ts-expect-error
                         expect(networkNode.requestResendLast.mock.calls[0])
                             .toEqual(['streamId', 0, expect.stringMatching(/\w+/), 1])
                         done()
@@ -156,7 +159,7 @@ describe('DataQueryEndpoints', () => {
     })
 
     describe('From queries', () => {
-        let streamMessages
+        let streamMessages: Todo[]
 
         beforeEach(() => {
             streamMessages = [
@@ -304,7 +307,7 @@ describe('DataQueryEndpoints', () => {
         })
 
         describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909', () => {
-            let streamMessages
+            let streamMessages: Todo[]
             beforeEach(() => {
                 streamMessages = [
                     createStreamMessage([6, 6, 6]),
@@ -367,7 +370,7 @@ describe('DataQueryEndpoints', () => {
             // eslint-disable-next-line max-len
             const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId'
 
-            let streamMessages
+            let streamMessages: Todo[]
             beforeEach(() => {
                 streamMessages = [
                     createStreamMessage([6, 6, 6]),

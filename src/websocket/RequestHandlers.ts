@@ -2,7 +2,7 @@ import { Todo } from '../types'
 import { v4 as uuidv4 } from 'uuid'
 import { NetworkNode, Protocol } from 'streamr-network'
 const { ControlLayer, Utils } = Protocol
-import HttpError from '../errors/HttpError'
+import { HttpError } from '../errors/HttpError'
 import { FailedToPublishError } from '../errors/FailedToPublishError'
 import getLogger from '../helpers/logger'
 import StreamStateManager from '../StreamStateManager' 

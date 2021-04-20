@@ -1,20 +1,23 @@
 /**
  * Endpoints for RESTful data requests
  */
-const express = require('express')
+import express, { Request, Response } from 'express'
+import { MetricsContext, NetworkNode } from 'streamr-network'
+import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
+import getLogger from '../helpers/logger'
+import { Todo } from '../types'
+import authenticationMiddleware from './RequestAuthenticatorMiddleware'
 
-const logger = require('../helpers/logger')('streamr:http:DataQueryEndpoints')
+const logger = getLogger('streamr:http:DataQueryEndpoints')
 
-const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')
-
-const onStarted = (res) => {
+const onStarted = (res: Response) => {
     res.writeHead(200, {
         'Content-Type': 'application/json'
     })
     res.write('[')
 }
 
-const onRow = (res, unicastMessage, delimiter, format = 'object', version, metrics) => {
+const onRow = (res: Response, unicastMessage: Todo, delimiter: Todo, format = 'object', version: Todo, metrics: Metrics) => {
     const { streamMessage } = unicastMessage
     res.write(delimiter) // because can't have trailing comma in JSON array
     res.write(format === 'protocol' ? JSON.stringify(streamMessage.serialize(version)) : JSON.stringify(streamMessage.toObject()))
@@ -22,7 +25,7 @@ const onRow = (res, unicastMessage, delimiter, format = 'object', version, metri
     metrics.record('outMessages', 1)
 }
 
-const streamData = (res, stream, format, version, metrics) => {
+const streamData = (res: Response, stream: NodeJS.ReadableStream, format: string, version: Todo, metrics: Metrics) => {
     let delimiter = ''
     stream.on('data', (row) => {
         // first row
@@ -39,7 +42,7 @@ const streamData = (res, stream, format, version, metrics) => {
         res.write(']')
         res.end()
     })
-    stream.on('error', (err) => {
+    stream.on('error', (err: Todo) => {
         logger.error(err)
         res.status(500).send({
             error: 'Failed to fetch data!'
@@ -47,7 +50,7 @@ const streamData = (res, stream, format, version, metrics) => {
     })
 }
 
-function parseIntIfExists(x) {
+function parseIntIfExists(x: Todo) {
     return x === undefined ? undefined : parseInt(x)
 }
 
@@ -60,7 +63,7 @@ function generateSubId() {
     return result
 }
 
-module.exports = (networkNode, streamFetcher, metricsContext) => {
+export const router = (networkNode: NetworkNode, streamFetcher: Todo, metricsContext: MetricsContext) => {
     const router = express.Router()
     const metrics = metricsContext.create('broker/http')
         .addRecordedMetric('outBytes')
@@ -87,8 +90,9 @@ module.exports = (networkNode, streamFetcher, metricsContext) => {
         authenticationMiddleware(streamFetcher, 'stream_subscribe'),
     )
 
-    router.get('/streams/:id/data/partitions/:partition/last', (req, res) => {
+    router.get('/streams/:id/data/partitions/:partition/last', (req: Request, res: Response) => {
         const partition = parseInt(req.params.partition)
+        // @ts-expect-error
         const count = req.query.count === undefined ? 1 : parseInt(req.query.count)
         const version = parseIntIfExists(req.query.version)
         metrics.record('lastRequests', 1)
@@ -108,11 +112,12 @@ module.exports = (networkNode, streamFetcher, metricsContext) => {
                 count,
             )
 
+            // @ts-expect-error
             streamData(res, streamingData, req.query.format, version, metrics)
         }
     })
 
-    router.get('/streams/:id/data/partitions/:partition/from', (req, res) => {
+    router.get('/streams/:id/data/partitions/:partition/from', (req: Request, res: Response) => {
         const partition = parseInt(req.params.partition)
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
@@ -140,16 +145,18 @@ module.exports = (networkNode, streamFetcher, metricsContext) => {
                 partition,
                 generateSubId(),
                 fromTimestamp,
+                // @ts-expect-error
                 fromSequenceNumber,
                 publisherId || null,
                 null,
             )
 
+            // @ts-expect-error
             streamData(res, streamingData, req.query.format, version, metrics)
         }
     })
 
-    router.get('/streams/:id/data/partitions/:partition/range', (req, res) => {
+    router.get('/streams/:id/data/partitions/:partition/range', (req: Request, res: Response) => {
         const partition = parseInt(req.params.partition)
         const version = parseIntIfExists(req.query.version)
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
@@ -202,6 +209,7 @@ module.exports = (networkNode, streamFetcher, metricsContext) => {
                 partition,
                 generateSubId(),
                 fromTimestamp,
+                // @ts-expect-error
                 fromSequenceNumber,
                 toTimestamp,
                 toSequenceNumber,
@@ -209,6 +217,7 @@ module.exports = (networkNode, streamFetcher, metricsContext) => {
                 null,
             )
 
+            // @ts-expect-error
             streamData(res, streamingData, req.query.format, version, metrics)
         }
     })

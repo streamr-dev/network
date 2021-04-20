@@ -3,7 +3,7 @@ const assert = require('assert')
 const sinon = require('sinon')
 
 const authenticationMiddleware = require('../../../src/http/RequestAuthenticatorMiddleware')
-const HttpError = require('../../../src/errors/HttpError')
+const { HttpError } = require('../../../src/errors/HttpError')
 
 describe('AuthenticationMiddleware', () => {
     let request

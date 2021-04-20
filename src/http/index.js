@@ -7,7 +7,7 @@ const express = require('express')
 const logger = require('../helpers/logger')('streamr:httpAdapter')
 const adapterRegistry = require('../adapterRegistry')
 
-const dataQueryEndpoints = require('./DataQueryEndpoints')
+const { router: dataQueryEndpoints } = require('./DataQueryEndpoints')
 const dataProduceEndpoints = require('./DataProduceEndpoints')
 const volumeEndpoint = require('./VolumeEndpoint')
 const dataMetadataEndpoint = require('./DataMetadataEndpoints')

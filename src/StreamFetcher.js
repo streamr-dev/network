@@ -2,7 +2,7 @@ const fetch = require('node-fetch')
 const memoize = require('memoizee')
 
 const logger = require('./helpers/logger')('streamr:StreamFetcher')
-const HttpError = require('./errors/HttpError')
+const { HttpError } = require('./errors/HttpError')
 // TODO do all REST operations to E&E via StreamrClient
 const StreamrClient = require('streamr-client') 
 

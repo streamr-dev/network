@@ -1,4 +1,4 @@
-const HttpError = require('../errors/HttpError')
+const { HttpError } = require('../errors/HttpError')
 const logger = require('../helpers/logger')('streamr:http:RequestAuthenticatorMiddleware')
 
 /**
