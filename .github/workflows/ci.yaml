@@ -58,4 +58,14 @@ jobs:
           timeout_minutes: 8
           retry_on: error
           command: java -jar build/libs/client_testing-1.0-SNAPSHOT.jar -s $TEST_NAME -c config/$CONFIG_NAME.conf -n $NUM_MESSAGES
-
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v1
+        with:
+          dest: './logs'
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@master
+        with:
+          name: docker-logs-${{ github.job }}
+          path: ./logs
