@@ -13,6 +13,10 @@ const groupKey = opts.groupKey ? JSON.parse(opts.groupKey) : null
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+process.on('beforeExit', () => {
+    process.stderr.write(`Exiting.`)
+})
+
 const options = {
     restUrl: "http://localhost/api/v1",
     url: "ws://localhost/api/v1/ws",
