@@ -78,7 +78,7 @@ public class PublisherThreadJS extends PublisherThread {
                 try {
                     String err;
                     while ((err = stdError.readLine()) != null) {
-                        log.info(getPublisherId() + " " + err);
+                        log.warn(getPublisherId() + " " + err);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -117,7 +117,7 @@ public class PublisherThreadJS extends PublisherThread {
         } else if (s.startsWith("Rotating")) {
             log.debug(getPublisherId() + " " + s);
         } else if (s.startsWith("Done: ")) {
-            log.debug(getPublisherId() + " " + s);
+            log.info(getPublisherId() + " " + s);
         } else {
             log.debug(getPublisherId() + " " + s);
         }
