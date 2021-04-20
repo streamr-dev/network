@@ -1,13 +1,20 @@
-const FailedToPublishError = require('./errors/FailedToPublishError')
+import { Todo } from './types'
+
+import { FailedToPublishError } from './errors/FailedToPublishError'
 
 const THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS = 300 * 1000
 
-const isTimestampTooFarInTheFuture = (timestamp) => {
+const isTimestampTooFarInTheFuture = (timestamp: Todo) => {
     return timestamp > Date.now() + THRESHOLD_FOR_FUTURE_MESSAGES_IN_MS
 }
 
-module.exports = class Publisher {
-    constructor(networkNode, streamMessageValidator, metricsContext) {
+export class Publisher {
+
+    networkNode: Todo
+    streamMessageValidator: Todo
+    metrics: Todo
+
+    constructor(networkNode: Todo, streamMessageValidator: Todo, metricsContext: Todo) {
         if (!networkNode) {
             throw new Error('No networkNode defined!')
         }
@@ -24,7 +31,7 @@ module.exports = class Publisher {
             .addRecordedMetric('messages')
     }
 
-    async validateAndPublish(streamMessage) {
+    async validateAndPublish(streamMessage: Todo) {
         if (isTimestampTooFarInTheFuture(streamMessage.getTimestamp())) {
             throw new FailedToPublishError(
                 streamMessage.getStreamId(),

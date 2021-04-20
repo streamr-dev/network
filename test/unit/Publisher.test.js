@@ -2,7 +2,7 @@ const sinon = require('sinon')
 const { StreamMessage, MessageID } = require('streamr-network').Protocol.MessageLayer
 const { MetricsContext } = require('streamr-network')
 
-const Publisher = require('../../src/Publisher')
+const { Publisher } = require('../../src/Publisher')
 
 function formMessage(timestamp) {
     return new StreamMessage({

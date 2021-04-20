@@ -1,4 +1,4 @@
-const Connection = require('../../../src/websocket/Connection.js')
+const { Connection } = require('../../../src/websocket/Connection')
 const Stream = require('../../../src/Stream.js')
 
 let controlLayerVersion

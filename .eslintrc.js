@@ -20,6 +20,7 @@ module.exports = {
         'promise/always-return': WARN,
         'promise/catch-or-return': WARN,
         '@typescript-eslint/no-empty-function': DISABLED,
+        '@typescript-eslint/ban-ts-comment': DISABLED
     },
     'overrides': [
         {

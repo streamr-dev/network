@@ -5,8 +5,8 @@ const uWS = require('uWebSockets.js')
 const { createClient } = require('../utils')
 const StreamFetcher = require('../../src/StreamFetcher')
 const WebsocketServer = require('../../src/websocket/WebsocketServer')
-const Publisher = require('../../src/Publisher')
-const SubscriptionManager = require('../../src/SubscriptionManager')
+const { Publisher } = require('../../src/Publisher')
+const { SubscriptionManager } = require('../../src/SubscriptionManager')
 
 const trackerPort = 17370
 const wsPort = 17351

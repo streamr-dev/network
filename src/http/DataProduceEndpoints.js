@@ -6,7 +6,7 @@ const { StreamMessage, MessageID, MessageRef } = Protocol.MessageLayer
 const { InvalidJsonError, ValidationError } = Protocol.Errors
 
 const logger = require('../helpers/logger')('streamr:http:DataProduceEndpoints')
-const FailedToPublishError = require('../errors/FailedToPublishError')
+const { FailedToPublishError } = require('../errors/FailedToPublishError')
 const partition = require('../helpers/partition')
 
 const authenticationMiddleware = require('./RequestAuthenticatorMiddleware')

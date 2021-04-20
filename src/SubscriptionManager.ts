@@ -1,17 +1,24 @@
-module.exports = class SubscriptionManager {
-    constructor(networkNode) {
+import { NetworkNode } from 'streamr-network'
+import { Todo } from './types'
+
+export class SubscriptionManager {
+
+    networkNode: NetworkNode
+    streams: Map<Todo,Todo>
+
+    constructor(networkNode: NetworkNode) {
         this.networkNode = networkNode
         this.streams = new Map()
     }
 
-    subscribe(streamId, streamPartition = 0) {
+    subscribe(streamId: string, streamPartition = 0) {
         const key = `${streamId}::${streamPartition}`
         this.streams.set(key, (this.streams.get(key) || 0) + 1)
 
         this.networkNode.subscribe(streamId, streamPartition)
     }
 
-    unsubscribe(streamId, streamPartition = 0) {
+    unsubscribe(streamId: string, streamPartition = 0) {
         const key = `${streamId}::${streamPartition}`
         this.streams.set(key, (this.streams.get(key) || 0) - 1)
 

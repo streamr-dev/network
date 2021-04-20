@@ -1,6 +1,8 @@
-const { EventEmitter } = require('events')
+import { Todo } from '../types'
+import { EventEmitter } from 'events'
+import getLogger from '../helpers/logger'
 
-const logger = require('../helpers/logger')('streamr:WebsocketServer:Connection')
+const logger = getLogger('streamr:WebsocketServer:Connection')
 
 let nextId = 1
 
@@ -10,8 +12,21 @@ function generateId() {
     return id
 }
 
-class Connection extends EventEmitter {
-    constructor(socket, controlLayerVersion, messageLayerVersion) {
+export class Connection extends EventEmitter {
+
+    static LOW_BACK_PRESSURE = 1024 * 1024 // 1 megabytes
+    static HIGH_BACK_PRESSURE = 1024 * 1024 * 2 // 2 megabytes
+
+    id: string
+    socket: Todo
+    streams: Todo[] = []
+    ongoingResends: Set<Todo>
+    dead: boolean
+    controlLayerVersion: number
+    messageLayerVersion: number
+    highBackPressure: boolean
+
+    constructor(socket: Todo, controlLayerVersion: Todo, messageLayerVersion: Todo) {
         super()
         this.id = generateId()
         this.socket = socket
@@ -23,18 +38,18 @@ class Connection extends EventEmitter {
         this.highBackPressure = false
     }
 
-    addStream(stream) {
+    addStream(stream: Todo) {
         this.streams.push(stream)
     }
 
-    removeStream(streamId, streamPartition) {
-        const i = this.streams.findIndex((s) => s.id === streamId && s.partition === streamPartition)
+    removeStream(streamId: Todo, streamPartition: Todo) {
+        const i = this.streams.findIndex((s: Todo) => s.id === streamId && s.partition === streamPartition)
         if (i !== -1) {
             this.streams.splice(i, 1)
         }
     }
 
-    forEachStream(cb) {
+    forEachStream(cb: Todo) {
         this.getStreams().forEach(cb)
     }
 
@@ -43,14 +58,14 @@ class Connection extends EventEmitter {
     }
 
     streamsAsString() {
-        return this.streams.map((s) => s.toString())
+        return this.streams.map((s: Todo) => s.toString())
     }
 
-    addOngoingResend(resend) {
+    addOngoingResend(resend: Todo) {
         this.ongoingResends.add(resend)
     }
 
-    removeOngoingResend(resend) {
+    removeOngoingResend(resend: Todo) {
         this.ongoingResends.delete(resend)
     }
 
@@ -82,7 +97,7 @@ class Connection extends EventEmitter {
         this.socket.ping()
     }
 
-    send(msg) {
+    send(msg: Todo) {
         const serialized = msg.serialize(this.controlLayerVersion, this.messageLayerVersion)
         logger.debug('send: %s: %o', this.id, serialized)
         try {
@@ -93,8 +108,3 @@ class Connection extends EventEmitter {
         }
     }
 }
-
-Connection.LOW_BACK_PRESSURE = 1024 * 1024 // 1 megabytes
-Connection.HIGH_BACK_PRESSURE = 1024 * 1024 * 2 // 2 megabytes
-
-module.exports = Connection
