@@ -78,7 +78,7 @@ jobs:
         run: npm run test-exports
 
   browser-realtime:
-    name: Test Browser using Node 14.x
+    name: Test Browser Realtime
     runs-on: ubuntu-latest
     needs: build
     steps:
@@ -100,7 +100,7 @@ jobs:
         run: npm run test-browser-realtime
 
   browser-resend:
-    name: Test Browser using Node 14.x
+    name: Test Browser Realtime + Resend
     runs-on: ubuntu-latest
     needs: build
     steps:

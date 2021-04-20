@@ -25,7 +25,7 @@ describe('StreamrClient Realtime', () => {
             .click('button[id=subscribe]')
             .assert.containsText('#result', 'subscribed')
             .click('button[id=publish]')
-            .pause(3000)
+            .pause(6000)
             .verify.containsText('#result', '{"msg":0}')
             .verify.containsText('#result', '{"msg":1}')
             .verify.containsText('#result', '{"msg":2}')
