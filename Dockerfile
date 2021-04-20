@@ -2,6 +2,8 @@ FROM node:14-buster as build
 WORKDIR /usr/src/broker
 COPY . .
 RUN npm ci --only=production
+# Build TypeScript files ("npm ci" doesn't trigger the build automatically: https://github.com/npm/npm/issues/17346)
+RUN npm run build 
 
 FROM node:14-buster-slim
 RUN apt-get update && apt-get install --assume-yes --no-install-recommends curl \
