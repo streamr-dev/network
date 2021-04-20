@@ -67,5 +67,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@master
         with:
-          name: docker-logs-${{ github.job }}
+          name: docker-logs-${{ matrix.config-name }}-${{ matrix.test-name }}
           path: ./logs
