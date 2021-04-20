@@ -78,6 +78,7 @@ const publishMessage = async () => {
         // Don't do it immediately to avoid messing up the last published message in any way.
         await wait(10000 + (1000 * maxMessages))
         await client.disconnect()
+        console.log(`Disconnected.`)
     } else {
         setTimeout(publishMessage, interval)
     }
