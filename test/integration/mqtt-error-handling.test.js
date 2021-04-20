@@ -111,7 +111,7 @@ describe('MQTT error handling', () => {
         })
     })
 
-    it('test valid api key without permissions to stream', (done) => {
+    it('test valid authentication without permissions to stream', (done) => {
         setUpBroker(false).then(() => {
             mqttClient = createMqttClient(mqttPort)
             mqttClient.on('error', (err) => {

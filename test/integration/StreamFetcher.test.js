@@ -4,7 +4,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const uuid = require('uuid')
 
-const StreamFetcher = require('../../src/StreamFetcher')
+const { StreamFetcher } = require('../../src/StreamFetcher')
 const { HttpError } = require('../../src/errors/HttpError')
 
 describe('StreamFetcher', () => {
@@ -60,8 +60,7 @@ describe('StreamFetcher', () => {
                     res.sendStatus(500)
                 } else if (req.params.id !== streamId) {
                     res.sendStatus(404)
-                } else if (req.get('Authorization') !== 'token key'
-                        && req.get('Authorization') !== 'Bearer session-token') {
+                } else if (req.get('Authorization') !== 'Bearer session-token') {
                     res.sendStatus(403)
                 } else {
                     res.status(200).send(permissions)
@@ -73,8 +72,7 @@ describe('StreamFetcher', () => {
                     res.sendStatus(500)
                 } else if (req.params.id !== streamId) {
                     res.sendStatus(404)
-                } else if (req.get('Authorization') !== 'token key'
-                        && req.get('Authorization') !== 'Bearer session-token') {
+                } else if (req.get('Authorization') !== 'Bearer session-token') {
                     res.sendStatus(403)
                 } else {
                     res.status(200).send(streamJson)
@@ -113,54 +111,36 @@ describe('StreamFetcher', () => {
 
     describe('checkPermission', () => {
         it('returns Promise', async () => {
-            const promise = streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe')
+            const promise = streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe')
             assert(promise instanceof Promise)
             await promise
         })
 
         it('rejects with 404 if stream does not exist', (done) => {
-            streamFetcher.checkPermission('nonExistingStreamId', 'key', undefined, 'stream_subscribe').catch((err) => {
+            streamFetcher.checkPermission('nonExistingStreamId', 'session-token', 'stream_subscribe').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 404)
                 done()
             })
         })
-
-        it('rejects with 403 if key does not grant access to stream', (done) => {
-            streamFetcher.checkPermission(streamId, 'nonExistentKey', undefined, 'stream_subscribe').catch((err) => {
-                assert(err instanceof HttpError)
-                assert.equal(err.code, 403)
-                done()
-            })
-        })
-
         it('rejects with 403 if session token does not grant access to stream', (done) => {
-            streamFetcher.checkPermission(streamId, undefined, 'nonExistingSessionToken', 'stream_subscribe').catch((err) => {
+            streamFetcher.checkPermission(streamId, 'nonExistingSessionToken', 'stream_subscribe').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 403)
                 done()
             })
         })
 
-        it('rejects with 403 if key does not provides (desired level) privilege to stream', (done) => {
-            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_publish').catch((err) => {
+        it('rejects with 403 if session token does not provide (desired level) privilege to stream', (done) => {
+            streamFetcher.checkPermission(streamId, 'session-token', 'stream_publish').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 403)
                 done()
-            })
-        })
-
-        it('resolves with true if key provides privilege to stream', (done) => {
-            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe').then((response) => {
-                assert.deepEqual(response, true)
-                done()
-            }).catch((err) => {
-                done(err)
             })
         })
 
         it('resolves with true if session token provides privilege to stream', (done) => {
-            streamFetcher.checkPermission(streamId, undefined, 'session-token', 'stream_subscribe').then((response) => {
+            streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe').then((response) => {
                 assert.deepEqual(response, true)
                 done()
             }).catch((err) => {
@@ -179,7 +159,7 @@ describe('StreamFetcher', () => {
                     },
                 ])
             }
-            streamFetcher.checkPermission('publicStream', undefined, undefined, 'stream_subscribe').then((response) => {
+            streamFetcher.checkPermission('publicStream', undefined, 'stream_subscribe').then((response) => {
                 assert.deepEqual(response, true)
                 done()
             }).catch((err) => {
@@ -189,7 +169,7 @@ describe('StreamFetcher', () => {
 
         it('escapes any forward slashes ("/") in streamId', async () => {
             streamId = 'sandbox/stream/aaa'
-            await streamFetcher.checkPermission('sandbox/stream/aaa', 'key', undefined, 'stream_subscribe')
+            await streamFetcher.checkPermission('sandbox/stream/aaa', 'session-token', 'stream_subscribe')
             expect(numOfRequests).toEqual(1) // would not land at handler if "/" not escaped
         })
 
@@ -197,15 +177,15 @@ describe('StreamFetcher', () => {
             const streamId2 = getUniqueStreamId()
             const streamId3 = getUniqueStreamId()
 
-            Promise.all([streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
-                streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
-                streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
-                streamFetcher.checkPermission(streamId2, 'key', undefined, 'stream_subscribe'),
-                streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
-                streamFetcher.checkPermission(streamId2, 'key', undefined, 'stream_subscribe'),
-                streamFetcher.checkPermission(streamId3, 'key', undefined, 'stream_subscribe'),
-                streamFetcher.checkPermission(streamId2, 'key', undefined, 'stream_subscribe'),
-                streamFetcher.checkPermission(streamId3, 'key', undefined, 'stream_subscribe'),
+            Promise.all([streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId2, 'session-token', 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId2, 'session-token', 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId3, 'session-token', 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId2, 'session-token', 'stream_subscribe'),
+                streamFetcher.checkPermission(streamId3, 'session-token', 'stream_subscribe'),
             ]).catch(() => {
                 assert.equal(numOfRequests, 3)
                 done()
@@ -214,17 +194,17 @@ describe('StreamFetcher', () => {
 
         it('does not cache errors', (done) => {
             broken = true
-            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe').catch(() => {
-                streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe').catch(() => {
-                    streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe').catch(() => {
+            streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe').catch(() => {
+                streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe').catch(() => {
+                    streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe').catch(() => {
                         assert.equal(numOfRequests, 3)
                         broken = false
                         Promise.all([
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
-                            streamFetcher.checkPermission(streamId, 'key', undefined, 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
+                            streamFetcher.checkPermission(streamId, 'session-token', 'stream_subscribe'),
                         ]).then(() => {
                             assert.equal(numOfRequests, 3 + 1)
                             done()
@@ -237,23 +217,15 @@ describe('StreamFetcher', () => {
 
     describe('fetch', () => {
         it('returns Promise', async () => {
-            const promise = streamFetcher.fetch(streamId, 'key')
+            const promise = streamFetcher.fetch(streamId, 'session-token')
             assert(promise instanceof Promise)
             await promise
         })
 
         it('rejects with 404 if stream does not exist', (done) => {
-            streamFetcher.fetch('nonExistingStreamId', 'key').catch((err) => {
+            streamFetcher.fetch('nonExistingStreamId', 'session-token').catch((err) => {
                 assert(err instanceof HttpError)
                 assert.equal(err.code, 404)
-                done()
-            })
-        })
-
-        it('rejects with 403 if key does not grant access to stream', (done) => {
-            streamFetcher.fetch(streamId, 'nonExistantKey').catch((err) => {
-                assert(err instanceof HttpError)
-                assert.equal(err.code, 403)
                 done()
             })
         })
@@ -266,8 +238,8 @@ describe('StreamFetcher', () => {
             })
         })
 
-        it('resolves with stream if key provides privilege to stream', (done) => {
-            streamFetcher.fetch(streamId, 'key').then((stream) => {
+        it('resolves with stream if session token provides privilege to stream', (done) => {
+            streamFetcher.fetch(streamId, 'session-token').then((stream) => {
                 assert.deepEqual(stream, {
                     id: streamId,
                     partitions: 1,
@@ -291,7 +263,7 @@ describe('StreamFetcher', () => {
                 assert.equal(req.params.id, 'publicStream')
                 res.status(200).send(streamJson)
             }
-            streamFetcher.fetch('publicStream', undefined, 'stream_subscribe').then((response) => {
+            streamFetcher.fetch('publicStream', undefined).then((response) => {
                 assert.deepEqual(response, streamJson)
                 done()
             }).catch((err) => {
@@ -301,7 +273,7 @@ describe('StreamFetcher', () => {
 
         it('escapes any forward slashes ("/") in streamId', async () => {
             streamId = 'sandbox/stream/aaa'
-            await streamFetcher.fetch('sandbox/stream/aaa', 'key', undefined, 'stream_subscribe')
+            await streamFetcher.fetch('sandbox/stream/aaa', 'session-token')
             expect(numOfRequests).toEqual(1) // would not land at handler if "/" not escaped
         })
 
@@ -309,15 +281,15 @@ describe('StreamFetcher', () => {
             const streamId2 = getUniqueStreamId()
             const streamId3 = getUniqueStreamId()
 
-            Promise.all([streamFetcher.fetch(streamId, 'key'),
-                streamFetcher.fetch(streamId, 'key'),
-                streamFetcher.fetch(streamId, 'key'),
-                streamFetcher.fetch(streamId2, 'key'),
-                streamFetcher.fetch(streamId, 'key'),
-                streamFetcher.fetch(streamId2, 'key'),
-                streamFetcher.fetch(streamId3, 'key'),
-                streamFetcher.fetch(streamId2, 'key'),
-                streamFetcher.fetch(streamId3, 'key'),
+            Promise.all([streamFetcher.fetch(streamId, 'session-token'),
+                streamFetcher.fetch(streamId, 'session-token'),
+                streamFetcher.fetch(streamId, 'session-token'),
+                streamFetcher.fetch(streamId2, 'session-token'),
+                streamFetcher.fetch(streamId, 'session-token'),
+                streamFetcher.fetch(streamId2, 'session-token'),
+                streamFetcher.fetch(streamId3, 'session-token'),
+                streamFetcher.fetch(streamId2, 'session-token'),
+                streamFetcher.fetch(streamId3, 'session-token'),
             ]).catch(() => {
                 assert.equal(numOfRequests, 3)
                 done()
@@ -326,17 +298,17 @@ describe('StreamFetcher', () => {
 
         it('does not cache errors', (done) => {
             broken = true
-            streamFetcher.fetch(streamId, 'key').catch(() => {
-                streamFetcher.fetch(streamId, 'key').catch(() => {
-                    streamFetcher.fetch(streamId, 'key').catch(() => {
+            streamFetcher.fetch(streamId, 'session-token').catch(() => {
+                streamFetcher.fetch(streamId, 'session-token').catch(() => {
+                    streamFetcher.fetch(streamId, 'session-token').catch(() => {
                         assert.equal(numOfRequests, 3)
                         broken = false
                         Promise.all([
-                            streamFetcher.fetch(streamId, 'key'),
-                            streamFetcher.fetch(streamId, 'key'),
-                            streamFetcher.fetch(streamId, 'key'),
-                            streamFetcher.fetch(streamId, 'key'),
-                            streamFetcher.fetch(streamId, 'key'),
+                            streamFetcher.fetch(streamId, 'session-token'),
+                            streamFetcher.fetch(streamId, 'session-token'),
+                            streamFetcher.fetch(streamId, 'session-token'),
+                            streamFetcher.fetch(streamId, 'session-token'),
+                            streamFetcher.fetch(streamId, 'session-token'),
                         ]).then(() => {
                             assert.equal(numOfRequests, 3 + 1)
                             done()
@@ -359,7 +331,7 @@ describe('StreamFetcher', () => {
             ]
 
             // Should reject promise
-            streamFetcher.authenticate(streamId, undefined, 'session-token', 'stream_subscribe')
+            streamFetcher.authenticate(streamId, 'session-token', 'stream_subscribe')
                 .catch((err) => {
                     done()
                 })
@@ -372,7 +344,7 @@ describe('StreamFetcher', () => {
                 operation: 'stream_publish',
             })
 
-            streamFetcher.authenticate(streamId, undefined, 'session-token', 'stream_publish').then((json) => {
+            streamFetcher.authenticate(streamId, 'session-token', 'stream_publish').then((json) => {
                 assert.equal(numOfRequests, 2)
                 assert.deepEqual(json, streamJson)
                 done()
@@ -380,7 +352,7 @@ describe('StreamFetcher', () => {
         })
 
         it('fails with an invalid session token', (done) => {
-            streamFetcher.authenticate(streamId, undefined, 'nonExistingSessionToken', 'stream_subscribe').catch((err) => {
+            streamFetcher.authenticate(streamId, 'nonExistingSessionToken', 'stream_subscribe').catch((err) => {
                 assert.equal(numOfRequests, 1)
                 done()
             })
@@ -388,7 +360,7 @@ describe('StreamFetcher', () => {
 
         it('escapes any forward slashes ("/") in streamId', async () => {
             streamId = 'sandbox/stream/aaa'
-            await streamFetcher.authenticate('sandbox/stream/aaa', 'key', undefined, 'stream_subscribe')
+            await streamFetcher.authenticate('sandbox/stream/aaa', 'session-token', 'stream_subscribe')
             expect(numOfRequests).toEqual(2) // would not land at handlers if "/" not escaped
         })
 

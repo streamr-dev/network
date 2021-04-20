@@ -6,11 +6,11 @@ const dataMetadataEndpoint = require('../../../src/http/DataMetadataEndpoints')
 describe('DataMetadataEndpoints', () => {
     let app
 
-    function testGetRequest(url, key = 'authKey') {
+    function testGetRequest(url, sessionToken = 'mock-session-token') {
         return request(app)
             .get(url)
             .set('Accept', 'application/json')
-            .set('Authorization', `Token ${key}`)
+            .set('Authorization', `Bearer ${sessionToken}`)
     }
 
     it('should fail testGetRequest on uninitialized Cassandra broker', async () => {

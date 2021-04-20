@@ -19,7 +19,7 @@ describe('DataProduceEndpoints', () => {
         const opts = {
             streamId: 'streamId',
             body: '{}',
-            key: 'authKey',
+            key: 'mock-session-token',
             headers: {},
             query: {},
             ...overridingOptions
@@ -27,7 +27,7 @@ describe('DataProduceEndpoints', () => {
 
         const headers = {
             'Content-Type': 'application/json',
-            Authorization: `Token ${opts.key}`,
+            Authorization: `Bearer ${opts.sessionToken}`,
             ...opts.headers
         }
 

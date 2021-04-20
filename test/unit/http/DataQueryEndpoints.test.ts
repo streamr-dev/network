@@ -15,11 +15,11 @@ describe('DataQueryEndpoints', () => {
     let networkNode: NetworkNode
     let streamFetcher: Todo
 
-    function testGetRequest(url: string, key = 'authKey') {
+    function testGetRequest(url: string, sessionToken = 'mock-session-token') {
         return request(app)
             .get(url)
             .set('Accept', 'application/json')
-            .set('Authorization', `Token ${key}`)
+            .set('Authorization', `Bearer ${sessionToken}`)
     }
 
     function createStreamMessage(content: any) {
@@ -41,9 +41,9 @@ describe('DataQueryEndpoints', () => {
         // @ts-expect-error
         networkNode = {}
         streamFetcher = {
-            authenticate(streamId: Todo, authKey: Todo) {
+            authenticate(streamId: string, sessionToken: string|undefined) {
                 return new Promise(((resolve, reject) => {
-                    if (authKey === 'authKey') {
+                    if (sessionToken === 'mock-session-token') {
                         resolve({})
                     } else {
                         reject(new HttpError(403, 'GET', ''))
@@ -81,7 +81,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 403 and error message if not authorized', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last', 'wrongKey')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/last', 'wrong-session-token')
                     .expect('Content-Type', /json/)
                     .expect(403, {
                         error: 'Authentication failed.',
@@ -268,7 +268,7 @@ describe('DataQueryEndpoints', () => {
                     }, done)
             })
             it('responds 403 and error message if not authorized', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrongKey')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range', 'wrong-session-token')
                     .expect('Content-Type', /json/)
                     .expect(403, {
                         error: 'Authentication failed.',

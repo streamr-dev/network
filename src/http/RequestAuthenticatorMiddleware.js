@@ -10,10 +10,9 @@ module.exports = (streamFetcher, permission = 'stream_subscribe') => (req, res, 
 
     // Try to parse authorization header if defined
     if (req.headers.authorization !== undefined) {
-        const apiKeyHeaderValid = req.headers.authorization.toLowerCase().startsWith('token ')
-        const sessionTokenHeaderValid = req.headers.authorization.startsWith('Bearer ')
-        if (!(apiKeyHeaderValid || sessionTokenHeaderValid)) {
-            const errMsg = 'Authorization header malformed. Should be of form "[Bearer|token] authKey".'
+        const sessionTokenHeaderValid = req.headers.authorization.toLowerCase().startsWith('bearer ')
+        if (!sessionTokenHeaderValid) {
+            const errMsg = 'Authorization header malformed. Should be of form "Bearer session-token".'
             logger.error(errMsg)
 
             res.status(400).send({
@@ -21,18 +20,12 @@ module.exports = (streamFetcher, permission = 'stream_subscribe') => (req, res, 
             })
             return
         }
-        if (apiKeyHeaderValid) {
-            authKey = req.headers.authorization
-                .substring(6)
-                .trim()
-        } else {
-            sessionToken = req.headers.authorization
-                .substring(7)
-                .trim()
-        }
+        sessionToken = req.headers.authorization
+            .substring(7)
+            .trim()
     }
 
-    streamFetcher.authenticate(req.params.id, authKey, sessionToken, permission)
+    streamFetcher.authenticate(req.params.id, sessionToken, permission)
         .then((streamJson) => {
             req.stream = streamJson
             next()

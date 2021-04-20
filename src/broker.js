@@ -8,7 +8,7 @@ const ethers = require('ethers')
 const CURRENT_VERSION = require('../package.json').version
 
 const logger = require('./helpers/logger')('streamr:broker')
-const StreamFetcher = require('./StreamFetcher')
+const { StreamFetcher } = require('./StreamFetcher')
 const { startCassandraStorage } = require('./storage/Storage')
 const { Publisher } = require('./Publisher')
 const VolumeLogger = require('./VolumeLogger')

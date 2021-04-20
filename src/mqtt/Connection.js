@@ -3,13 +3,12 @@ const events = require('events')
 const logger = require('../helpers/logger')('streamr:MqttServer:Connection')
 
 module.exports = class Connection extends events.EventEmitter {
-    constructor(client, clientId = '', token = '', apiKey = '') {
+    constructor(client, clientId = '', token = '') {
         super()
 
         this.id = clientId
         this.client = client
         this.token = token
-        this.apiKey = apiKey
         this.streams = []
         this.dead = false
 
@@ -79,11 +78,6 @@ module.exports = class Connection extends events.EventEmitter {
 
     setToken(token) {
         this.token = token
-        return this
-    }
-
-    setApiKey(apiKey) {
-        this.apiKey = apiKey
         return this
     }
 
