@@ -9,7 +9,7 @@
         <Logger name="com.streamr.client" level="warn"/>
         <Logger name="com.streamr.client_testing" level="info" />
         <Logger name="com.streamr.client_testing.SubscriberJS" level="debug" />
-        <Logger name="com.streamr.client_testing.PublisherJS" level="debug" />
+        <Logger name="com.streamr.client_testing.PublisherThreadJS" level="debug" />
         <Root level="warn" additivity="false">
             <AppenderRef ref="Console" />
         </Root>
