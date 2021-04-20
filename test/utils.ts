@@ -119,7 +119,7 @@ export function getWaitForStorage(client: StreamrClient, defaultOpts = {}) {
                     publishRequest,
                     last: last!.map((l: any) => l.content),
                 })
-                const err: any = new Error(`timed out after ${duration}ms waiting for message`)
+                const err: any = new Error(`timed out after ${duration}ms waiting for message: ${inspect(publishRequest)}`)
                 err.publishRequest = publishRequest
                 throw err
             }
