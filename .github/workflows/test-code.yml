@@ -112,6 +112,17 @@ jobs:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge broker-node-no-storage-1 broker-node-no-storage-2 broker-node-storage-1 nginx smtp"
       - name: Run Test
         run: npm run $TEST_NAME
+      - name: Collect docker logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v1
+        with:
+          dest: './logs'
+      - name: Upload logs to GitHub
+        if: failure()
+        uses: actions/upload-artifact@master
+        with:
+          name: docker-logs-${{ github.job }}
+          path: ./logs
 
   flakey:
     name: Flakey Tests using Node ${{ matrix.node-version }}
