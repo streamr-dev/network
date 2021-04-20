@@ -137,7 +137,7 @@ const testWithdraw = async (
     log(`Balance before: ${balanceBefore}. Withdrawing tokens...`)
 
     let ret = await withdraw(dataUnion.getAddress(), memberClient, memberWallet, adminClient)
-    if (ret instanceof String) {
+    if (typeof ret === 'string') {
         log(`Transporting message "${ret}"`)
         ret = await dataUnion.transportMessage(String(ret))
     }
