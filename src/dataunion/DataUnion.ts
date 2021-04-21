@@ -626,6 +626,7 @@ export class DataUnion {
             if (waitUntilTransportIsComplete) {
                 log(`Waiting for balance ${balanceBefore.toString()} to change`)
                 await until(async () => !(await getBalanceFunc()).eq(balanceBefore), retryTimeoutMs, pollingIntervalMs)
+                    .catch((e) => { throw e.message.startsWith('Timeout') ? new Error(`Timeout: Bridge did not transport withdraw message as expected. Fix: DataUnion.transportMessage("${messageHash}")`) : e })
                 return null
             }
 
