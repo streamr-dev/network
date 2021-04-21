@@ -20,18 +20,21 @@ import { Subscriber } from '../../src/subscribe'
 
 const WAIT_FOR_STORAGE_TIMEOUT = process.env.CI ? 12000 : 6000
 const MAX_MESSAGES = 5
-const ITERATIONS = 3
+const ITERATIONS = 6
 
 describeRepeats('sequential resend subscribe', () => {
     let expectErrors = 0 // check no errors by default
     let onError = jest.fn()
+
     let client: StreamrClient
+    let subscriber: Subscriber
     let stream: Stream
-    let published: any[]
-    let publishedRequests: any[]
+
     let publishTestMessages: ReturnType<typeof getPublishTestMessages>
     let waitForStorage: (...args: any[]) => Promise<void>
-    let subscriber: Subscriber
+
+    let published: any[] // keeps track of stream message data so we can verify they were resent
+    let publishedRequests: any[] // tracks publish requests so we can pass them to waitForStorage
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -77,6 +80,8 @@ describeRepeats('sequential resend subscribe', () => {
         })
 
         await client.connect()
+        // initialize resend data by publishing some messages and waiting for
+        // them to land in storage
         const results = await publishTestMessages.raw(MAX_MESSAGES, {
             waitForLast: true,
             timestamp: 111111,
@@ -93,20 +98,20 @@ describeRepeats('sequential resend subscribe', () => {
     })
 
     afterEach(async () => {
+        await client.connect()
+        // ensure last message is in storage
+        const lastRequest = publishedRequests[publishedRequests.length - 1]
+        await waitForStorage(lastRequest)
+        client.debug('was stored', lastRequest)
+    })
+
+    afterEach(async () => {
         await wait(0)
         // ensure no unexpected errors
         expect(onError).toHaveBeenCalledTimes(expectErrors)
         if (client) {
             expect(client.onError).toHaveBeenCalledTimes(expectErrors)
         }
-    })
-
-    afterEach(async () => {
-        await client.connect()
-        // ensure last message is in storage
-        const lastRequest = publishedRequests[publishedRequests.length - 1]
-        await waitForStorage(lastRequest)
-        client.debug('was stored', lastRequest)
     })
 
     afterEach(async () => {
@@ -124,7 +129,11 @@ describeRepeats('sequential resend subscribe', () => {
     })
 
     for (let i = 0; i < ITERATIONS; i++) {
-        const id = (i + 1) * 111111
+        // keep track of which messages were published in previous tests
+        // so we can check that they exist in resends of subsequent tests
+        // publish messages with timestamps like 222222, 333333, etc so the
+        // sequencing is clearly visible in logs
+        const id = (i + 2) * 111111 // start at 222222
         // eslint-disable-next-line no-loop-func
         test(`test ${id}`, async () => {
             const debug = client.debug.extend(`check ${id}`)
@@ -142,6 +151,7 @@ describeRepeats('sequential resend subscribe', () => {
             debug('PUBLISH >')
             const req = await client.publish(stream.id, message, id) // should be realtime
             debug('PUBLISH <')
+            // keep track of published messages so we can check they are resent in next test(s)
             published.push(message)
             publishedRequests.push(req)
             debug('COLLECT >')
@@ -156,6 +166,6 @@ describeRepeats('sequential resend subscribe', () => {
             expect(msgs).toHaveLength(published.length)
             expect(msgs).toEqual(published)
             client.debug('check <')
-        }, 30000)
+        })
     }
 })
