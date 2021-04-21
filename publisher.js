@@ -63,7 +63,6 @@ if (publishFunctionName === 'default') {
 
 let Counter = 0
 const publishMessage = async () => {
-    await client.connect() // disable autoconnect/disconnect
     const counter = Counter++
     const msg = {
         "counter": counter,
@@ -89,4 +88,7 @@ const publishMessage = async () => {
     }
 }
 
-publishMessage()
+// disable autoconnect/disconnect
+client.connect().then(() => {
+    publishMessage()
+})
