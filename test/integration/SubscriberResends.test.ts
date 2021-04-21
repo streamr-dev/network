@@ -303,7 +303,7 @@ describeRepeats('resends', () => {
         })
 
         describe('resendSubscribe', () => {
-            it.only('sees resends and realtime', async () => {
+            it('sees resends and realtime', async () => {
                 client.debug('sees resends and realtime >')
                 const sub = await subscriber.resendSubscribe({
                     streamId: stream.id,
@@ -349,48 +349,7 @@ describeRepeats('resends', () => {
                 client.debug('sees resends and realtime <')
             })
 
-            it.only('sees resends and realtime again', async () => {
-                client.debug('sees resends and realtime again >')
-                const sub = await subscriber.resendSubscribe({
-                    streamId: stream.id,
-                    last: published.length,
-                })
-
-                const onResent = jest.fn()
-                sub.on('resent', onResent)
-
-                const message = Msg()
-                // eslint-disable-next-line no-await-in-loop
-                client.debug('PUBLISH >')
-                const req = await client.publish(stream.id, message, 333333) // should be realtime
-                client.debug('PUBLISH <')
-                published.push(message)
-                publishedRequests.push(req)
-                client.debug('COLLECT >')
-                const receivedMsgs = await collect(sub, async ({ received }) => {
-                    client.debug({
-                        received: received.length,
-                        published: published.length
-                    })
-                    if (received.length === published.length) {
-                        await sub.return()
-                    }
-                })
-                client.debug('COLLECT <')
-
-                const msgs = receivedMsgs
-                expect(msgs).toHaveLength(published.length)
-                expect(msgs).toEqual(published)
-                expect(subscriber.count(stream.id)).toBe(0)
-                expect(sub.realtime.isReadable()).toBe(false)
-                expect(sub.realtime.isWritable()).toBe(false)
-                expect(sub.resend.isReadable()).toBe(false)
-                expect(sub.resend.isWritable()).toBe(false)
-                expect(onResent).toHaveBeenCalledTimes(1)
-                client.debug('sees resends and realtime again <')
-            })
-
-            it.only('sees resends when no realtime', async () => {
+            it('sees resends when no realtime', async () => {
                 client.debug('sees resends when no realtime >')
                 const sub = await subscriber.resendSubscribe({
                     streamId: stream.id,
@@ -542,4 +501,70 @@ describeRepeats('resends', () => {
             })
         })
     })
+
+    it.only('sequential resendSubscribe', async () => {
+        await client.connect()
+        const results = await publishTestMessages.raw(MAX_MESSAGES, {
+            waitForLast: true,
+            timestamp: 111111,
+        })
+
+        published = results.map(([msg]: any) => msg)
+        publishedRequests = results.map(([, req]: any) => req)
+
+        async function waitForLastMessage() {
+            await client.connect()
+            // ensure last message is in storage
+            const lastRequest = publishedRequests[publishedRequests.length - 1]
+            await waitForStorage(lastRequest)
+            client.debug('was stored', lastRequest)
+        }
+
+        async function check(id: number) {
+            const debug = client.debug.extend(`check ${id}`)
+            debug('check >')
+            const sub = await subscriber.resendSubscribe({
+                streamId: stream.id,
+                last: published.length,
+            })
+
+            const onResent = jest.fn()
+            sub.on('resent', onResent)
+
+            const message = Msg()
+            // eslint-disable-next-line no-await-in-loop
+            debug('PUBLISH >')
+            const req = await client.publish(stream.id, message, id) // should be realtime
+            debug('PUBLISH <')
+            published.push(message)
+            publishedRequests.push(req)
+            debug('COLLECT >')
+            const receivedMsgs = await collect(sub, async ({ received }) => {
+                if (received.length === published.length) {
+                    await sub.return()
+                }
+            })
+            debug('COLLECT <')
+
+            const msgs = receivedMsgs
+            expect(msgs).toHaveLength(published.length)
+            expect(msgs).toEqual(published)
+            client.debug('check <')
+        }
+
+        await client.connect()
+        await check(111111)
+        await waitForLastMessage()
+        await client.disconnect()
+
+        await client.connect()
+        await check(222222)
+        await waitForLastMessage()
+        await client.disconnect()
+
+        await client.connect()
+        await check(333333)
+        await waitForLastMessage()
+        await client.disconnect()
+    }, 60000)
 })
