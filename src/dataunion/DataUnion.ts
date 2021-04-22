@@ -589,7 +589,7 @@ export class DataUnion {
     ): Promise<ContractReceipt | AmbMessageHash | null> {
         const {
             pollingIntervalMs = 1000,
-            retryTimeoutMs = 60000,
+            retryTimeoutMs = 300000,
             // by default, transport the signatures if freeWithdraw isn't supported by the sidechain
             payForTransport = !this.client.options.dataUnion.freeWithdraw,
             waitUntilTransportIsComplete = true,
@@ -642,10 +642,14 @@ export class DataUnion {
         return ambTr
     }
 
+    // TODO: this doesn't belong here. Transporting a message is NOT dataunion-specific and needs nothing from DataUnion.ts.
+    //       It shouldn't be required to create a DataUnion object to call this.
+    //       This belongs to the StreamrClient, and if the code is too DU-specific then please shove it back to Contracts.ts.
+    //       Division to transportMessage and Contracts.transportSignaturesForMessage is spurious, they should be one long function probably.
     /**
      * @returns null if message was already transported, ELSE the mainnet AMB signature execution transaction receipt
      */
-    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs?: number, retryTimeoutMs?: number) {
+    async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000) {
         const helper = this.getContracts()
         const sidechainAmb = await helper.getSidechainAmb()
         const mainnetAmb = await helper.getMainnetAmb()
