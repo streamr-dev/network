@@ -33,6 +33,8 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
  * within timeout. Otherwise rejected.
  */
 export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000): Promise<unknown[]> => {
+    // create error beforehand to capture more usable stack
+    const err = new Error(`Promise timed out after ${timeout} milliseconds`)
     return new Promise((resolve, reject) => {
         const eventListenerFn = (...args: unknown[]) => {
             clearTimeout(timeOut)
@@ -40,7 +42,7 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
         }
         const timeOut = setTimeout(() => {
             emitter.removeListener(event, eventListenerFn)
-            reject(new Error(`Promise timed out after ${timeout} milliseconds`))
+            reject(err)
         }, timeout)
         emitter.once(event, eventListenerFn)
     })
