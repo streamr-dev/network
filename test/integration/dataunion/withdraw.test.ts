@@ -190,13 +190,14 @@ describe('DataUnion withdraw', () => {
         // emulate the bridge-sponsored withdrawals
         beforeAll(() => {
             if (!payForTransport && waitUntilTransportIsComplete) {
-                const sidechainAmbAddress = '0xaFA0dc5Ad21796C9106a36D68f69aAD69994BB64'
+                // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData)
                 const signatureRequestEventSignature = '0x520d2afde79cbd5db58755ac9480f81bc658e5c517fcae7365a3d832590b0183'
+                const sidechainAmbAddress = '0xaFA0dc5Ad21796C9106a36D68f69aAD69994BB64'
                 providerSidechain.on({
                     address: sidechainAmbAddress,
                     topics: [signatureRequestEventSignature]
-                }, async (e) => {
-                    const message = defaultAbiCoder.decode(['bytes'], e.data)[0]
+                }, async (event) => {
+                    const message = defaultAbiCoder.decode(['bytes'], event.data)[0] // messageId is indexed so it's in topics, only encodedData is in data
                     const hash = keccak256(message)
                     const adminClient = new StreamrClient(config.clientOptions)
                     await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash)
