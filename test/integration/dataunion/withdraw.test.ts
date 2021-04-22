@@ -1,5 +1,8 @@
 import { BigNumber, Contract, providers, Wallet } from 'ethers'
-import { formatEther, parseEther } from 'ethers/lib/utils'
+import { formatEther, parseEther, defaultAbiCoder } from 'ethers/lib/utils'
+import { ContractReceipt } from '@ethersproject/contracts'
+import { keccak256 } from '@ethersproject/keccak256'
+
 import debug from 'debug'
 
 import { getEndpointUrl, until } from '../../../src/utils'
@@ -10,7 +13,6 @@ import config from '../config'
 import authFetch from '../../../src/rest/authFetch'
 import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
-import { ContractReceipt } from '@ethersproject/contracts'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
@@ -24,7 +26,7 @@ const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, 
 
 const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
-const testWithdraw = async (
+async function testWithdraw(
     getBalance: (memberWallet: Wallet) => Promise<BigNumber>,
     withdraw: (
         dataUnionAddress: string,
@@ -34,7 +36,7 @@ const testWithdraw = async (
     ) => Promise<ContractReceipt | AmbMessageHash | null>,
     requiresMainnetETH: boolean,
     options: DataUnionWithdrawOptions,
-) => {
+) {
     log(`Connecting to Ethereum networks, config = ${JSON.stringify(config)}`)
     const network = await providerMainnet.getNetwork()
     log('Connected to "mainnet" network: ', JSON.stringify(network))
@@ -45,7 +47,7 @@ const testWithdraw = async (
     const tx1 = await tokenMainnet.mint(adminWalletMainnet.address, parseEther('100'))
     await tx1.wait()
 
-    const adminClient = new StreamrClient(config.clientOptions as any)
+    const adminClient = new StreamrClient(config.clientOptions)
 
     const dataUnion = await adminClient.deployDataUnion()
     const secret = await dataUnion.createSecret('test secret')
@@ -168,7 +170,6 @@ describe('DataUnion withdraw', () => {
         providerSidechain.removeAllListeners()
     })
 
-    // TODO: add tests for just getting the hash and doing the transportMessage manually
     describe.each([
         [false, true, true], // sidechain withdraw
         [true, true, true], // self-service mainnet withdraw
@@ -176,11 +177,37 @@ describe('DataUnion withdraw', () => {
         [true, false, true], // bridge-sponsored mainnet withdraw
         [true, false, false], // other-sponsored mainnet withdraw
     ])('Withdrawing with sendToMainnet=%p, payForTransport=%p, wait=%p', (sendToMainnet, payForTransport, waitUntilTransportIsComplete) => {
+
+        // for test debugging: select only one case by uncommenting below, and comment out the above .each block
+        // const [sendToMainnet, payForTransport, waitUntilTransportIsComplete] = [true, false, true] // bridge-sponsored mainnet withdraw
+
         const options = { sendToMainnet, payForTransport, waitUntilTransportIsComplete }
 
-        const getTokenBalance = async (wallet: Wallet) => {
+        async function getTokenBalance(wallet: Wallet) {
             return sendToMainnet ? balanceClient.getTokenBalance(wallet.address) : balanceClient.getSidechainTokenBalance(wallet.address)
         }
+
+        // emulate the bridge-sponsored withdrawals
+        beforeAll(() => {
+            if (!payForTransport && waitUntilTransportIsComplete) {
+                const sidechainAmbAddress = '0xaFA0dc5Ad21796C9106a36D68f69aAD69994BB64'
+                const signatureRequestEventSignature = '0x520d2afde79cbd5db58755ac9480f81bc658e5c517fcae7365a3d832590b0183'
+                providerSidechain.on({
+                    address: sidechainAmbAddress,
+                    topics: [signatureRequestEventSignature]
+                }, async (e) => {
+                    const message = defaultAbiCoder.decode(['bytes'], e.data)[0]
+                    const hash = keccak256(message)
+                    const adminClient = new StreamrClient(config.clientOptions)
+                    await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash)
+                })
+            }
+        })
+        afterAll(() => {
+            if (!payForTransport && waitUntilTransportIsComplete) {
+                providerSidechain.removeAllListeners()
+            }
+        })
 
         describe('by member', () => {
 
