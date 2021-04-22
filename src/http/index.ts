@@ -1,0 +1,55 @@
+import fs from 'fs'
+import { Server as HttpServer } from 'http'
+import https, { Server as HttpsServer } from 'https'
+import { AddressInfo } from 'net'
+import cors from 'cors'
+import express from 'express'
+import getLogger from '../helpers/logger'
+import { register } from '../adapterRegistry'
+import { router as dataQueryEndpoints } from './DataQueryEndpoints'
+import dataProduceEndpoints from './DataProduceEndpoints'
+import volumeEndpoint from './VolumeEndpoint'
+import dataMetadataEndpoint from './DataMetadataEndpoints'
+import storageConfigEndpoints from './StorageConfigEndpoints'
+import { AdapterConfig } from '../Adapter'
+import { BrokerUtils } from '../types'
+
+const logger = getLogger('streamr:httpAdapter')
+
+register('http', (
+    { port, privateKeyFileName, certFileName }: AdapterConfig, 
+    { networkNode, publisher, streamFetcher, metricsContext, cassandraStorage, storageConfig}: BrokerUtils
+) => {
+    const app = express()
+
+    // Add CORS headers
+    app.use(cors())
+
+    // Rest endpoints
+    app.use('/api/v1', dataQueryEndpoints(networkNode, streamFetcher, metricsContext))
+    app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher))
+    app.use('/api/v1', volumeEndpoint(metricsContext))
+
+    app.use('/api/v1', dataMetadataEndpoint(cassandraStorage))
+    app.use('/api/v1', storageConfigEndpoints(storageConfig))
+
+    let httpServer: HttpServer|HttpsServer
+    if (privateKeyFileName && certFileName) {
+        httpServer = https.createServer({
+            cert: fs.readFileSync(certFileName),
+            key: fs.readFileSync(privateKeyFileName)
+        }, app).listen(port, () => logger.info(`HTTPS adapter listening on ${(httpServer.address() as AddressInfo).port}`))
+    } else {
+        httpServer = app.listen(port, () => logger.info(`HTTP adapter listening on ${(httpServer.address() as AddressInfo).port}`))
+    }
+    return () => new Promise((resolve, reject) => {
+        httpServer.close((err?: Error) => {
+            if (err) {
+                reject(err)
+            } else {
+                // @ts-expect-error
+                resolve()
+            }
+        })
+    })
+})

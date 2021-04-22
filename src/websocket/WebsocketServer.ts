@@ -16,7 +16,7 @@ import getLogger from '../helpers/logger'
 
 const logger = getLogger('streamr:WebsocketServer')
 
-module.exports = class WebsocketServer extends EventEmitter {
+export class WebsocketServer extends EventEmitter {
 
     wss: TemplatedApp
     _listenSocket: Todo

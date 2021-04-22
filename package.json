@@ -25,6 +25,7 @@
   "dependencies": {
     "@pm2/io": "^4.3.5",
     "@sentry/node": "^6.2.3",
+    "@types/cors": "^2.8.10",
     "@types/express": "^4.17.11",
     "@types/jest": "^26.0.22",
     "@types/memoizee": "^0.4.5",

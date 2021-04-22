@@ -4,7 +4,7 @@ const { startTracker, startStorageNode, Protocol, MetricsContext } = require('st
 const { waitForCondition } = require('streamr-test-utils')
 const ws = require('uWebSockets.js')
 
-const WebsocketServer = require('../../src/websocket/WebsocketServer')
+const { WebsocketServer } = require('../../src/websocket/WebsocketServer')
 const { createClient, STREAMR_DOCKER_DEV_HOST } = require('../utils')
 const { StreamFetcher } = require('../../src/StreamFetcher')
 const { Publisher } = require('../../src/Publisher')

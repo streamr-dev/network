@@ -1,15 +1,18 @@
-const net = require('net')
+import net from 'net'
+import MissingConfigError from '../errors/MissingConfigError'
+import { register } from '../adapterRegistry'
+import getLogger from '../helpers/logger'
+import MqttServer from './MqttServer'
+import { BrokerUtils } from '../types'
+import { AdapterConfig } from '../Adapter'
 
-const MissingConfigError = require('../errors/MissingConfigError')
-const adapterRegistry = require('../adapterRegistry')
-const logger = require('../helpers/logger')('streamr:mqttAdapter')
-
-const MqttServer = require('./MqttServer')
+const logger = getLogger('streamr:mqttAdapter')
 
 // eslint-disable-next-line max-len
-adapterRegistry.register('mqtt', ({ port, streamsTimeout }, {
-    networkNode, publisher, streamFetcher, metricsContext, subscriptionManager
-}) => {
+register('mqtt', (
+    { port, streamsTimeout }: AdapterConfig, 
+    { networkNode, publisher, streamFetcher, metricsContext, subscriptionManager}: BrokerUtils
+) => {
     if (port === undefined) {
         throw new MissingConfigError('port')
     }

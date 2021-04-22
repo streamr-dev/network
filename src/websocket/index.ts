@@ -1,13 +1,14 @@
-const ws = require('uWebSockets.js')
+import ws from "uWebSockets.js";
+import MissingConfigError from "../errors/MissingConfigError";
+import { register } from "../adapterRegistry";
+import { WebsocketServer } from "./WebsocketServer";
+import { AdapterConfig } from '../Adapter';
+import { BrokerUtils } from '../types'
 
-const MissingConfigError = require('../errors/MissingConfigError')
-const adapterRegistry = require('../adapterRegistry')
-
-const WebsocketServer = require('./WebsocketServer')
-
-adapterRegistry.register('ws', ({ port, privateKeyFileName, certFileName, pingInterval }, {
-    networkNode, publisher, streamFetcher, metricsContext, subscriptionManager
-}) => {
+register('ws', (
+    { port, privateKeyFileName, certFileName, pingInterval }: AdapterConfig, 
+    { networkNode, publisher, streamFetcher, metricsContext, subscriptionManager}: BrokerUtils
+) => {
     if (port === undefined) {
         throw new MissingConfigError('port')
     }

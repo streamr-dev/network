@@ -4,7 +4,7 @@ const uWS = require('uWebSockets.js')
 
 const { createClient } = require('../utils')
 const { StreamFetcher } = require('../../src/StreamFetcher')
-const WebsocketServer = require('../../src/websocket/WebsocketServer')
+const { WebsocketServer } = require('../../src/websocket/WebsocketServer')
 const { Publisher } = require('../../src/Publisher')
 const { SubscriptionManager } = require('../../src/SubscriptionManager')
 
