@@ -162,6 +162,7 @@ async function testWithdraw(
 }
 
 describe('DataUnion withdraw', () => {
+    jest.setTimeout(3600000) // TODO: remove when it's been figured out how long is really needed
 
     const balanceClient = createClient()
 
