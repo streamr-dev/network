@@ -1,5 +1,6 @@
 /* eslint-disable no-new */
-const Batch = require('../../../src/storage/Batch')
+import { Batch, State } from  '../../../src/storage/Batch'
+import { BucketId } from '../../storage/Bucket'
 
 const streamMessage = {
     serialize() {
@@ -10,23 +11,23 @@ const streamMessage = {
 describe('Batch', () => {
     it('should throw if constructor parameters are not correct', () => {
         expect(() => {
-            new Batch()
+            new Batch('', 123, 123, 123, 123)
         }).toThrow(new TypeError('bucketId must be not empty string'))
 
         expect(() => {
-            new Batch('bucketId')
+            new Batch('bucketId', 0, 123, 123, 123)
         }).toThrow(new TypeError('maxSize must be > 0'))
 
         expect(() => {
-            new Batch('bucketId', 1)
+            new Batch('bucketId', 1, 0, 123, 123)
         }).toThrow(new TypeError('maxRecords must be > 0'))
 
         expect(() => {
-            new Batch('bucketId', 1, 1)
+            new Batch('bucketId', 1, 1, 0, 123)
         }).toThrow(new TypeError('closeTimeout must be > 0'))
 
         expect(() => {
-            new Batch('bucketId', 1, 1, 1)
+            new Batch('bucketId', 1, 1, 1, 0)
         }).toThrow(new TypeError('maxRetries must be > 0'))
 
         expect(() => {
@@ -39,7 +40,7 @@ describe('Batch', () => {
 
         expect(batch.state).toEqual(Batch.states.OPENED)
 
-        batch.on('locked', (bucketId, id, state, size, numberOfRecords) => {
+        batch.on('locked', (_bucketId: BucketId, id: number, state: State, size: number, numberOfRecords: number) => {
             expect(id).toEqual(batch.getId())
             expect('bucketId').toEqual(batch.getBucketId())
             expect(state).toEqual(Batch.states.LOCKED)
@@ -52,11 +53,11 @@ describe('Batch', () => {
     it('filled batch should emit state after closeTimeout with not empty values', (done) => {
         const batch = new Batch('bucketId', 1, 1, 10, 1)
 
-        batch.push(streamMessage)
-        batch.push(streamMessage)
-        batch.push(streamMessage)
+        batch.push(streamMessage as any)
+        batch.push(streamMessage as any)
+        batch.push(streamMessage as any)
 
-        batch.on('locked', (bucketId, id, state, size, numberOfRecords) => {
+        batch.on('locked', (_bucketId: BucketId, id: number, state: State, size: number, numberOfRecords: number) => {
             expect(id).toEqual(batch.getId())
             expect(state).toEqual(Batch.states.LOCKED)
             expect(size).toEqual(9)
@@ -69,13 +70,13 @@ describe('Batch', () => {
         const batch = new Batch('bucketId', 9, 99999, 10, 1)
 
         expect(batch.isFull()).toEqual(false)
-        batch.push(streamMessage)
+        batch.push(streamMessage as any)
 
         expect(batch.isFull()).toEqual(false)
-        batch.push(streamMessage)
+        batch.push(streamMessage as any)
 
         expect(batch.isFull()).toEqual(false)
-        batch.push(streamMessage)
+        batch.push(streamMessage as any)
 
         expect(batch.isFull()).toEqual(true)
     })
@@ -84,29 +85,31 @@ describe('Batch', () => {
         const batch = new Batch('streamId', 99999, 3, 10, 1)
 
         expect(batch.isFull()).toEqual(false)
-        batch.push(streamMessage)
+        batch.push(streamMessage as any)
 
         expect(batch.isFull()).toEqual(false)
-        batch.push(streamMessage)
+        batch.push(streamMessage as any)
 
         expect(batch.isFull()).toEqual(false)
-        batch.push(streamMessage)
+        batch.push(streamMessage as any)
 
         expect(batch.isFull()).toEqual(true)
     })
 
     it('clear() clears timeout and messages', () => {
         const batch = new Batch('streamId', 3, 3, 10, 1)
-        batch.push(streamMessage)
+        batch.push(streamMessage as any)
 
         expect(batch.streamMessages.length).toEqual(1)
         // eslint-disable-next-line no-underscore-dangle
+        // @ts-expect-error
         expect(batch._timeout._idleTimeout).toEqual(10)
 
         batch.clear()
 
         expect(batch.streamMessages.length).toEqual(0)
         // eslint-disable-next-line no-underscore-dangle
+        // @ts-expect-error
         expect(batch._timeout._idleTimeout).toEqual(-1)
     })
 

@@ -1,12 +1,22 @@
-const fetch = require('node-fetch')
+import fetch from 'node-fetch';
+import { NetworkNode } from 'streamr-network';
+import getLogger from '../helpers/logger'
+import { StreamPart } from '../types';
 
-const logger = require('../helpers/logger')('streamr:storage:StorageConfig')
+const logger = getLogger('streamr:storage:StorageConfig')
+
+type StreamKey = string
+
+export interface StorageConfigListener {
+    onStreamAdded: (streamPart: StreamPart) => void
+    onStreamRemoved: (streamPart: StreamPart) => void
+}
 
 /*
  * Connects to Core API and queries the configuration there.
  * Refreshes the config at regular intervals.
  */
-const getStreamFromKey = (key) => {
+const getStreamFromKey = (key: StreamKey): StreamPart => {
     const [id, partitionStr] = key.split('::')
     return {
         id,
@@ -14,22 +24,32 @@ const getStreamFromKey = (key) => {
     }
 }
 
-const getKeyFromStream = (streamId, streamPartition) => {
+const getKeyFromStream = (streamId: string, streamPartition: number): StreamKey => {
     return `${streamId}::${streamPartition}`
 }
 
-const getKeysFromStream = (streamId, partitions) => {
-    const keys = new Set()
+const getKeysFromStream = (streamId: string, partitions: number) => {
+    const keys = new Set<StreamKey>()
     for (let i = 0; i < partitions; i++) {
         keys.add(getKeyFromStream(streamId, i))
     }
     return keys
 }
 
-class StorageConfig {
+export class StorageConfig {
+
+    static ASSIGNMENT_EVENT_STREAM_ID_SUFFIX = '/storage-node-assignments'
+
+    streamKeys: Set<StreamKey>
+    listeners: StorageConfigListener[]
+    nodeId: string
+    apiUrl: string
+    _poller?: NodeJS.Timeout
+    _stopPoller: boolean
+
     // use createInstance method instead: it fetches the up-to-date config from API
-    constructor(nodeId, apiUrl) {
-        this.streamKeys = new Set()
+    constructor(nodeId: string, apiUrl: string) {
+        this.streamKeys = new Set<StreamKey>()
         this.listeners = []
         this.nodeId = nodeId
         this.apiUrl = apiUrl
@@ -37,14 +57,14 @@ class StorageConfig {
         this._stopPoller = false
     }
 
-    static async createInstance(nodeId, apiUrl, pollInterval) {
+    static async createInstance(nodeId: string, apiUrl: string, pollInterval: number) {
         const instance = new StorageConfig(nodeId, apiUrl)
         // eslint-disable-next-line no-underscore-dangle
         await instance._poll(pollInterval)
         return instance
     }
 
-    async _poll(pollInterval) {
+    async _poll(pollInterval: number) {
         try {
             await this.refresh()
         } catch (e) {
@@ -56,7 +76,7 @@ class StorageConfig {
         }
     }
 
-    hasStream(stream) {
+    hasStream(stream: StreamPart) {
         const key = getKeyFromStream(stream.id, stream.partition)
         return this.streamKeys.has(key)
     }
@@ -65,7 +85,7 @@ class StorageConfig {
         return Array.from(this.streamKeys.values()).map((key) => getStreamFromKey(key))
     }
 
-    addChangeListener(listener) {
+    addChangeListener(listener: StorageConfigListener) {
         this.listeners.push(listener)
     }
 
@@ -73,8 +93,8 @@ class StorageConfig {
         return fetch(`${this.apiUrl}/storageNodes/${this.nodeId}/streams`)
             .then((res) => res.json())
             .then((json) => {
-                let streamKeys = new Set()
-                json.forEach((stream) => {
+                let streamKeys = new Set<StreamKey>()
+                json.forEach((stream: { id: string, partitions: number }) => {
                     streamKeys = new Set([...streamKeys, ...getKeysFromStream(stream.id, stream.partitions)])
                 })
                 this._setStreams(streamKeys)
@@ -82,7 +102,7 @@ class StorageConfig {
             })
     }
 
-    _setStreams(streamKeys) {
+    _setStreams(streamKeys: Set<StreamKey>) {
         const oldKeys = this.streamKeys
         const newKeys = streamKeys
         const added = new Set([...newKeys].filter((x) => !oldKeys.has(x)))
@@ -95,23 +115,23 @@ class StorageConfig {
         }
     }
 
-    _addStreams(streamKeys) {
+    _addStreams(streamKeys: Set<StreamKey>) {
         logger.info('Add stream to storage config: ' + Array.from(streamKeys).join())
         this.streamKeys = new Set([...this.streamKeys, ...streamKeys])
         this.listeners.forEach((listener) => {
-            streamKeys.forEach((key) => listener.onStreamAdded(getStreamFromKey(key)))
+            streamKeys.forEach((key: StreamKey) => listener.onStreamAdded(getStreamFromKey(key)))
         })
     }
 
-    _removeStreams(streamKeys) {
+    _removeStreams(streamKeys: Set<StreamKey>) {
         logger.info('Remove stream to storage config: ' + Array.from(streamKeys).join())
         this.streamKeys = new Set([...this.streamKeys].filter((x) => !streamKeys.has(x)))
         this.listeners.forEach((listener) => {
-            streamKeys.forEach((key) => listener.onStreamRemoved(getStreamFromKey(key)))
+            streamKeys.forEach((key: StreamKey) => listener.onStreamRemoved(getStreamFromKey(key)))
         })
     }
 
-    startAssignmentEventListener(streamrAddress, networkNode) {
+    startAssignmentEventListener(streamrAddress: string, networkNode: NetworkNode) {
         const assignmentStreamId = streamrAddress + StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX
         networkNode.addMessageListener((msg) => {
             if (msg.messageId.streamId === assignmentStreamId) {
@@ -134,6 +154,3 @@ class StorageConfig {
         }
     }
 }
-
-StorageConfig.ASSIGNMENT_EVENT_STREAM_ID_SUFFIX = '/storage-node-assignments'
-module.exports = StorageConfig

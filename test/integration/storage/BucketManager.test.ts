@@ -1,21 +1,21 @@
-const cassandra = require('cassandra-driver')
-const { waitForCondition } = require('streamr-test-utils')
-const { TimeUuid } = require('cassandra-driver').types
-
-const BucketManager = require('../../../src/storage/BucketManager')
-const { STREAMR_DOCKER_DEV_HOST } = require('../../utils')
+import { Client, types as cassandraTypes } from 'cassandra-driver'
+import { waitForCondition } from 'streamr-test-utils'
+import {  } from 'cassandra-driver'
+const { TimeUuid } = cassandraTypes
+import { BucketManager } from '../../../src/storage/BucketManager'
+import { STREAMR_DOCKER_DEV_HOST } from '../../utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 describe('BucketManager', () => {
-    let bucketManager
-    let streamId
-    let cassandraClient
+    let bucketManager: BucketManager
+    let streamId: string
+    let cassandraClient: Client
     let streamIdx = 1
 
-    const insertBuckets = async (startTimestamp) => {
+    const insertBuckets = async (startTimestamp: Date) => {
         for (let i = 0; i < 100; i++) {
             const currentTimestamp = new Date(startTimestamp.getTime() + i * 60 * 1000) // + "i" minutes
             // eslint-disable-next-line no-await-in-loop
@@ -31,7 +31,7 @@ describe('BucketManager', () => {
     }
 
     beforeEach(async () => {
-        cassandraClient = new cassandra.Client({
+        cassandraClient = new Client({
             contactPoints,
             localDataCenter,
             keyspace,
@@ -74,7 +74,7 @@ describe('BucketManager', () => {
         await waitForCondition(() => storeBucketsSpy.mock.calls.length === 2)
         expect(storeBucketsSpy).toHaveBeenCalled()
 
-        const foundBucketId = bucketManager.getBucketId(streamId, 0, timestamp)
+        const foundBucketId = bucketManager.getBucketId(streamId, 0, timestamp)!
         expect(foundBucketId).not.toBeUndefined()
         expect(bucketManager.buckets[foundBucketId].size).toEqual(0)
         expect(bucketManager.buckets[foundBucketId].records).toEqual(0)
@@ -122,12 +122,12 @@ describe('BucketManager', () => {
         // find or create bucketId for NOW timestamp
         expect(bucketManager.getBucketId(streamId, 0, timestamp)).toBeUndefined()
         await waitForCondition(() => bucketManager.getBucketId(streamId, 0, timestamp) !== undefined)
-        const lastBucketId = bucketManager.getBucketId(streamId, 0, timestamp)
+        const lastBucketId = bucketManager.getBucketId(streamId, 0, timestamp)!
 
         // find or create bucketId for NOW - 5 minutes timestamp
         expect(bucketManager.getBucketId(streamId, 0, timestamp5ago)).toBeUndefined()
         await waitForCondition(() => bucketManager.getBucketId(streamId, 0, timestamp5ago) !== undefined)
-        const bucketId5minAgo = bucketManager.getBucketId(streamId, 0, timestamp5ago)
+        const bucketId5minAgo = bucketManager.getBucketId(streamId, 0, timestamp5ago)!
 
         // bucketId is not latest
         expect(lastBucketId).not.toEqual(bucketId5minAgo)
@@ -207,7 +207,7 @@ describe('BucketManager', () => {
         // load latest bucket into memory
         const latestTimestamp = timestamp.getTime() + 100 * 60 * 1000
         await waitForCondition(() => bucketManager.getBucketId(streamId, 0, latestTimestamp) !== undefined)
-        const bucketId = bucketManager.getBucketId(streamId, 0, latestTimestamp)
+        const bucketId = bucketManager.getBucketId(streamId, 0, latestTimestamp)!
         const bucket = bucketManager.buckets[bucketId]
 
         // bucket got removed after 3 seconds

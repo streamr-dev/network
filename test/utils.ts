@@ -1,16 +1,16 @@
-const StreamrClient = require('streamr-client')
-const mqtt = require('async-mqtt')
-const fetch = require('node-fetch')
-const ethers = require('ethers')
-const { waitForCondition } = require('streamr-test-utils')
+import StreamrClient, { Stream, StreamrClientOptions } from 'streamr-client'
+import mqtt from 'async-mqtt'
+import fetch from 'node-fetch'
+import { Wallet } from 'ethers'
+import { waitForCondition } from 'streamr-test-utils'
+import createBroker from '../src/broker'
+import { StorageConfig } from '../src/storage/StorageConfig'
+import { Todo } from './types'
 
-const createBroker = require('../src/broker')
-const StorageConfig = require('../src/storage/StorageConfig')
-
-const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
+export const STREAMR_DOCKER_DEV_HOST = process.env.STREAMR_DOCKER_DEV_HOST || '127.0.0.1'
 const API_URL = `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`
 
-function formConfig({
+export function formConfig({
     name,
     networkPort,
     trackerPort,
@@ -24,7 +24,7 @@ function formConfig({
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
     streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core`,
     reporting = false
-}) {
+}: Todo) {
     const adapters = []
     if (httpPort) {
         adapters.push({
@@ -91,21 +91,22 @@ function formConfig({
     }
 }
 
-function startBroker(...args) {
+export function startBroker(...args: Todo[]) {
+    // @ts-expect-error
     return createBroker(formConfig(...args))
 }
 
-function getWsUrl(port, ssl = false) {
+export function getWsUrl(port: number, ssl = false) {
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws`
 }
 
-function getWsUrlWithControlAndMessageLayerVersions(port, ssl = false, controlLayerVersion = 2, messageLayerVersion = 32) {
+export function getWsUrlWithControlAndMessageLayerVersions(port: number, ssl = false, controlLayerVersion = 2, messageLayerVersion = 32) {
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`
 }
 
-const createMockUser = () => ethers.Wallet.createRandom()
+export const createMockUser = () => Wallet.createRandom()
 
-function createClient(wsPort, privateKey = createMockUser().privateKey, clientOptions) {
+export function createClient(wsPort: number, privateKey = createMockUser().privateKey, clientOptions?: StreamrClientOptions) {
     return new StreamrClient({
         auth: {
             privateKey
@@ -116,7 +117,7 @@ function createClient(wsPort, privateKey = createMockUser().privateKey, clientOp
     })
 }
 
-function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = createMockUser().privateKey) {
+export function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = createMockUser().privateKey) {
     return mqtt.connect({
         hostname: host,
         port: mqttPort,
@@ -125,8 +126,13 @@ function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = crea
     })
 }
 
-class StorageAssignmentEventManager {
-    constructor(wsPort, engineAndEditorAccount) {
+export class StorageAssignmentEventManager {
+
+    engineAndEditorAccount: Wallet
+    client: StreamrClient
+    eventStream?: Stream
+
+    constructor(wsPort: number, engineAndEditorAccount: Wallet) {
         this.engineAndEditorAccount = engineAndEditorAccount
         this.client = createClient(wsPort, engineAndEditorAccount.privateKey)
     }
@@ -137,12 +143,13 @@ class StorageAssignmentEventManager {
         })
     }
 
-    async addStreamToStorageNode(streamId, storageNodeAddress, client) {
+    async addStreamToStorageNode(streamId: string, storageNodeAddress: string, client: StreamrClient) {
         await fetch(`${API_URL}/streams/${encodeURIComponent(streamId)}/storageNodes`, {
             body: JSON.stringify({
                 address: storageNodeAddress
             }),
             headers: {
+                // @ts-expect-error
                 // eslint-disable-next-line quote-props
                 'Authorization': 'Bearer ' + await client.session.getSessionToken(),
                 'Content-Type': 'application/json',
@@ -152,8 +159,8 @@ class StorageAssignmentEventManager {
         this.publishAddEvent(streamId)
     }
 
-    publishAddEvent(streamId) {
-        this.eventStream.publish({
+    publishAddEvent(streamId: string) {
+        this.eventStream!.publish({
             event: 'STREAM_ADDED',
             stream: {
                 id: streamId,
@@ -167,23 +174,10 @@ class StorageAssignmentEventManager {
     }
 }
 
-const waitForStreamPersistedInStorageNode = async (streamId, partition, nodeHost, nodeHttpPort) => {
+export const waitForStreamPersistedInStorageNode = async (streamId: string, partition: number, nodeHost: string, nodeHttpPort: number) => {
     const isPersistent = async () => {
         const response = await fetch(`http://${nodeHost}:${nodeHttpPort}/api/v1/streams/${encodeURIComponent(streamId)}/storage/partitions/${partition}`)
         return (response.status === 200)
     }
     await waitForCondition(() => isPersistent(), undefined, 1000)
-}
-
-module.exports = {
-    STREAMR_DOCKER_DEV_HOST,
-    formConfig,
-    startBroker,
-    createMockUser,
-    createClient,
-    createMqttClient,
-    getWsUrl,
-    StorageAssignmentEventManager,
-    waitForStreamPersistedInStorageNode,
-    getWsUrlWithControlAndMessageLayerVersions
 }

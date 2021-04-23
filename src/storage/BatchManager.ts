@@ -1,8 +1,12 @@
-const EventEmitter = require('events')
+import { Client } from 'cassandra-driver'
+import { EventEmitter } from 'events'
+import { Protocol } from 'streamr-network'
+import getLogger from '../helpers/logger'
+import { Todo } from '../types'
+import { Batch, BatchId, DoneCallback } from './Batch'
+import { BucketId } from './Bucket'
 
-const logger = require('../helpers/logger')('streamr:storage:BatchManager')
-
-const Batch = require('./Batch')
+const logger = getLogger('streamr:storage:BatchManager')
 
 const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
@@ -12,8 +16,24 @@ const INSERT_STATEMENT_WITH_TTL = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
     + 'VALUES (?, ?, ?, ?, ?, ?, ?, ?) USING TTL 259200' // 3 days
 
-class BatchManager extends EventEmitter {
-    constructor(cassandraClient, opts = {}) {
+export interface BatchManagerOptions {
+    useTtl: boolean
+    logErrors: boolean
+    batchMaxSize: number
+    batchMaxRecords: number
+    batchCloseTimeout: number
+    batchMaxRetries: number
+}
+
+export class BatchManager extends EventEmitter {
+
+    opts: BatchManagerOptions
+    batches: Record<BucketId,Batch>
+    pendingBatches: Record<BatchId,Batch>
+    cassandraClient: Client
+    insertStatement: string
+
+    constructor(cassandraClient: Client, opts: Partial<BatchManagerOptions> = {}) {
         super()
 
         const defaultOptions = {
@@ -39,7 +59,7 @@ class BatchManager extends EventEmitter {
         this.insertStatement = this.opts.useTtl ? INSERT_STATEMENT_WITH_TTL : INSERT_STATEMENT
     }
 
-    store(bucketId, streamMessage, doneCb) {
+    store(bucketId: BucketId, streamMessage: Protocol.StreamMessage, doneCb?: DoneCallback) {
         const batch = this.batches[bucketId]
 
         if (batch && batch.isFull()) {
@@ -60,7 +80,7 @@ class BatchManager extends EventEmitter {
         this.batches[bucketId].push(streamMessage, doneCb)
     }
 
-    _moveFullBatch(bucketId, batch) {
+    _moveFullBatch(bucketId: BucketId, batch: Batch) {
         logger.debug('moving batch to pendingBatches')
 
         this.pendingBatches[batch.getId()] = batch
@@ -74,7 +94,7 @@ class BatchManager extends EventEmitter {
         Object.values(this.pendingBatches).forEach((batch) => batch.clear())
     }
 
-    async _insert(batchId) {
+    async _insert(batchId: BatchId) {
         const batch = this.pendingBatches[batchId]
 
         try {
@@ -155,5 +175,3 @@ class BatchManager extends EventEmitter {
         }
     }
 }
-
-module.exports = BatchManager

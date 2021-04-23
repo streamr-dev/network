@@ -1,39 +1,39 @@
-const cassandra = require('cassandra-driver')
-const { TimeUuid } = require('cassandra-driver').types
-const { StreamMessage, MessageIDStrict } = require('streamr-network').Protocol.MessageLayer
-const { waitForCondition } = require('streamr-test-utils')
-
-const { STREAMR_DOCKER_DEV_HOST } = require('../../utils')
-const BatchManager = require('../../../src/storage/BatchManager')
+import { Client, types as cassandraTypes } from 'cassandra-driver'
+import { Protocol } from 'streamr-network'
+import { BatchManager } from '../../../src/storage/BatchManager'
+import { BucketId } from '../../../src/storage/Bucket'
+import { waitForCondition } from 'streamr-test-utils'
+import { STREAMR_DOCKER_DEV_HOST } from '../../utils'
+const { TimeUuid } = cassandraTypes
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
 const keyspace = 'streamr_dev_v2'
 
 function buildMsg(
-    streamId,
-    streamPartition,
-    timestamp,
-    sequenceNumber,
+    streamId: string,
+    streamPartition: number,
+    timestamp: number,
+    sequenceNumber: number,
     publisherId = 'publisher',
     msgChainId = '1',
-    content = {}
+    content: any = {}
 ) {
-    return new StreamMessage({
-        messageId: new MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
+    return new Protocol.StreamMessage({
+        messageId: new Protocol.MessageIDStrict(streamId, streamPartition, timestamp, sequenceNumber, publisherId, msgChainId),
         content: JSON.stringify(content)
     })
 }
 
 describe('BatchManager', () => {
-    let batchManager
-    let streamId
-    let cassandraClient
+    let batchManager: BatchManager
+    let streamId: string
+    let cassandraClient: Client
     let streamIdx = 1
-    let bucketId
+    let bucketId: BucketId
 
     beforeEach(async () => {
-        cassandraClient = new cassandra.Client({
+        cassandraClient = new Client({
             contactPoints,
             localDataCenter,
             keyspace,

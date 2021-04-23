@@ -10,6 +10,7 @@ import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
 import { Publisher } from '../Publisher'
 import { SubscriptionManager } from '../SubscriptionManager'
 import { Connection } from './Connection'
+import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../http/DataQueryEndpoints'
 
 const logger = getLogger('streamr:RequestHandlers')
 type RequestHandler = (Connection: Todo, request: Todo) => void
@@ -195,7 +196,8 @@ export class RequestHandlers {
             request.streamPartition,
             uuidv4(),
             request.fromMsgRef.timestamp,
-            request.fromMsgRef.sequenceNumber,
+            // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
+            request.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,
             request.publisherId,
             request.msgChainId,
         ))
@@ -207,9 +209,10 @@ export class RequestHandlers {
             request.streamPartition,
             uuidv4(),
             request.fromMsgRef.timestamp,
-            request.fromMsgRef.sequenceNumber,
+            // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE&MAX_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
+            request.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,  
             request.toMsgRef.timestamp,
-            request.toMsgRef.sequenceNumber,
+            request.toMsgRef.sequenceNumber || MAX_SEQUENCE_NUMBER_VALUE,
             request.publisherId,
             request.msgChainId,
         ))

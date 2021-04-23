@@ -10,6 +10,10 @@ import authenticationMiddleware from './RequestAuthenticatorMiddleware'
 
 const logger = getLogger('streamr:http:DataQueryEndpoints')
 
+// TODO: move this to protocol-js
+export const MIN_SEQUENCE_NUMBER_VALUE = 0
+export const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
+
 const onStarted = (res: Response) => {
     res.writeHead(200, {
         'Content-Type': 'application/json'
@@ -120,7 +124,7 @@ export const router = (networkNode: NetworkNode, streamFetcher: Todo, metricsCon
     router.get('/streams/:id/data/partitions/:partition/from', (req: Request, res: Response) => {
         const partition = parseInt(req.params.partition)
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
-        const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
+        const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
         const { publisherId } = req.query
         const version = parseIntIfExists(req.query.version)
         metrics.record('fromRequests', 1)
@@ -145,8 +149,8 @@ export const router = (networkNode: NetworkNode, streamFetcher: Todo, metricsCon
                 partition,
                 generateSubId(),
                 fromTimestamp,
-                // @ts-expect-error
                 fromSequenceNumber,
+                // @ts-expect-error
                 publisherId || null,
                 null,
             )
@@ -161,8 +165,8 @@ export const router = (networkNode: NetworkNode, streamFetcher: Todo, metricsCon
         const version = parseIntIfExists(req.query.version)
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const toTimestamp = parseIntIfExists(req.query.toTimestamp)
-        const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber)
-        const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber)
+        const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
+        const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber) || MAX_SEQUENCE_NUMBER_VALUE
         const { publisherId } = req.query
         metrics.record('rangeRequests', 1)
 
@@ -209,10 +213,10 @@ export const router = (networkNode: NetworkNode, streamFetcher: Todo, metricsCon
                 partition,
                 generateSubId(),
                 fromTimestamp,
-                // @ts-expect-error
                 fromSequenceNumber,
                 toTimestamp,
                 toSequenceNumber,
+                // @ts-expect-error
                 publisherId || null,
                 null,
             )

@@ -3,7 +3,7 @@ import express from 'express'
 import request from 'supertest'
 import intoStream from 'into-stream'
 
-import { router as restEndpointRouter } from '../../../src/http/DataQueryEndpoints'
+import { router as restEndpointRouter, MIN_SEQUENCE_NUMBER_VALUE, MAX_SEQUENCE_NUMBER_VALUE } from '../../../src/http/DataQueryEndpoints'
 import { HttpError } from '../../../src/errors/HttpError'
 import { Todo } from '../../../src/types'
 
@@ -198,7 +198,7 @@ describe('DataQueryEndpoints', () => {
                     0,
                     expect.stringMatching(/\w+/),
                     1496408255672,
-                    undefined,
+                    MIN_SEQUENCE_NUMBER_VALUE,
                     null,
                     null,
                 )
@@ -345,9 +345,9 @@ describe('DataQueryEndpoints', () => {
                     0,
                     expect.stringMatching(/\w+/),
                     1496408255672,
-                    undefined,
+                    MIN_SEQUENCE_NUMBER_VALUE,
                     1496415670909,
-                    undefined,
+                    MAX_SEQUENCE_NUMBER_VALUE,
                     null,
                     null,
                 )

@@ -1,23 +1,46 @@
-const { Transform } = require('stream')
-const EventEmitter = require('events')
+import { auth, Client, tracker } from 'cassandra-driver'
+import { MetricsContext } from 'streamr-network'
+import { BatchManager } from './BatchManager'
+import { Readable, Transform } from 'stream'
+import { EventEmitter } from 'events'
+import pump from 'pump'
+import { v1 as uuidv1 } from 'uuid'
+import merge2 from 'merge2'
+import { Protocol } from 'streamr-network'
+import { BucketManager } from './BucketManager'
+import getLogger from '../helpers/logger'
+import { Todo } from '../types'
+import { Bucket, BucketId } from './Bucket'
+import { StorageConfig } from './StorageConfig'
 
-const pump = require('pump')
-const { v1: uuidv1 } = require('uuid')
-const merge2 = require('merge2')
-const cassandra = require('cassandra-driver')
-const { StreamMessage } = require('streamr-network').Protocol.MessageLayer
-
-const logger = require('../helpers/logger')('streamr:storage')
-
-const BatchManager = require('./BatchManager')
-const BucketManager = require('./BucketManager')
+const logger = getLogger('streamr:storage')
 
 const MAX_RESEND_LAST = 10000
 
-const bucketsToIds = (buckets) => buckets.map((bucket) => bucket.getId())
+export interface StartCassandraOptions {
+    contactPoints: string[]
+    localDataCenter: string
+    keyspace: string
+    username: string
+    password: string
+    opts: Todo
+    storageConfig: StorageConfig
+}
 
-class Storage extends EventEmitter {
-    constructor(cassandraClient, opts, messageFilter) {
+export type MessageFilter = (streamMessage: Protocol.StreamMessage) => boolean
+
+const bucketsToIds = (buckets: Bucket[]) => buckets.map((bucket: Bucket) => bucket.getId())
+
+export class Storage extends EventEmitter {
+
+    opts: Todo
+    cassandraClient: Client
+    bucketManager: BucketManager
+    batchManager: BatchManager
+    pendingStores: Map<string,NodeJS.Timeout>
+    messageFilter: MessageFilter
+
+    constructor(cassandraClient: Client, opts: Todo, messageFilter: MessageFilter) {
         super()
 
         const defaultOptions = {
@@ -39,7 +62,7 @@ class Storage extends EventEmitter {
         this.messageFilter = messageFilter
     }
 
-    store(streamMessage) {
+    store(streamMessage: Protocol.StreamMessage) {
         if (this.messageFilter(streamMessage) === false) {
             return Promise.resolve(undefined)
         }
@@ -50,11 +73,13 @@ class Storage extends EventEmitter {
                 logger.debug(`found bucketId: ${bucketId}`)
 
                 this.bucketManager.incrementBucket(bucketId, Buffer.from(streamMessage.serialize()).length)
-                setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err) => {
+                // @ts-expect-error
+                setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err: Todo) => {
                     if (err) {
                         reject(err)
                     } else {
                         this.emit('write', streamMessage)
+                        // @ts-expect-error
                         resolve()
                     }
                 }))
@@ -74,7 +99,7 @@ class Storage extends EventEmitter {
         })
     }
 
-    requestLast(streamId, partition, limit) {
+    requestLast(streamId: string, partition: number, limit: number): Readable {
         if (limit > MAX_RESEND_LAST) {
             // eslint-disable-next-line no-param-reassign
             limit = MAX_RESEND_LAST
@@ -96,35 +121,35 @@ class Storage extends EventEmitter {
 
         const resultStream = this._createResultStream()
 
-        const makeLastQuery = (bucketIds) => {
+        const makeLastQuery = (bucketIds: BucketId[]) => {
             const params = [streamId, partition, bucketIds, limit]
 
             this.cassandraClient.execute(GET_LAST_N_MESSAGES, params, {
                 prepare: true,
                 fetchSize: 0 // disable paging
-            }).then((resultSet) => {
-                resultSet.rows.reverse().forEach((r) => {
+            }).then((resultSet: Todo) => {
+                resultSet.rows.reverse().forEach((r: Todo) => {
                     resultStream.write(r)
                 })
                 resultStream.push(null)
-            }).catch((e) => {
+            }).catch((e: Todo) => {
                 logger.warn(e)
                 resultStream.push(null)
             })
         }
 
-        let bucketId
-        const bucketIds = []
+        let bucketId: BucketId
+        const bucketIds: BucketId[] = []
         /**
          * Process:
          * - get latest bucketId => count number of messages in this bucket
          * - if enough => get all messages and return
          * - if not => move to the next bucket and repeat cycle
          */
-        this.cassandraClient.eachRow(GET_BUCKETS, [streamId, partition], options, (n, row) => {
+        this.cassandraClient.eachRow(GET_BUCKETS, [streamId, partition], options, (n: Todo, row: Todo) => {
             bucketId = row.id
             bucketIds.push(bucketId)
-        }, (err, result) => {
+        }, (err: Todo, result: Todo) => {
             if (err) {
                 logger.error(err)
                 resultStream.push(null)
@@ -139,7 +164,7 @@ class Storage extends EventEmitter {
                 this.cassandraClient.execute(COUNT_MESSAGES, [streamId, partition, bucketId], {
                     prepare: true,
                     fetchSize: 0 // disable paging
-                }).then((resultSet) => {
+                }).then((resultSet: Todo) => {
                     const row = resultSet.first()
                     total += row.total.low
 
@@ -149,7 +174,7 @@ class Storage extends EventEmitter {
                     } else {
                         makeLastQuery(bucketIds)
                     }
-                }).catch((e) => {
+                }).catch((e: Todo) => {
                     logger.warn(e)
                     resultStream.push(null)
                 })
@@ -169,49 +194,49 @@ class Storage extends EventEmitter {
         return resultStream
     }
 
-    requestFrom(streamId, partition, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
+    requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId: string|null, msgChainId: string|null): Readable {
+        //TODO: msgChainId is always null, remove on NET-143
         logger.debug(`requestFrom, streamId: "${streamId}", partition: "${partition}", fromTimestamp: "${fromTimestamp}", fromSequenceNo: `
             + `"${fromSequenceNo}", publisherId: "${publisherId}", msgChainId: "${msgChainId}"`)
 
-        if (fromSequenceNo != null && publisherId != null && msgChainId != null) {
+        if (publisherId != null && msgChainId != null) {
             return this._fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp,
                 fromSequenceNo, publisherId, msgChainId)
-        }
-        if ((fromSequenceNo == null || fromSequenceNo === 0) && publisherId == null && msgChainId == null) {
+        } 
+        if (publisherId == null && msgChainId == null) { // TODO should add fromSequenceNo to this call (NET-268)
             return this._fetchFromTimestamp(streamId, partition, fromTimestamp)
         }
 
         throw new Error('Invalid combination of requestFrom arguments')
     }
 
-    requestRange(streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId) {
+    requestRange(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, toTimestamp: number, toSequenceNo: number, publisherId: string|null, msgChainId: string|null): Readable {
         logger.debug(`requestRange, streamId: "${streamId}", partition: "${partition}", fromTimestamp: "${fromTimestamp}", fromSequenceNo: "${fromSequenceNo}"`
             + `, toTimestamp: "${toTimestamp}", toSequenceNo: "${toSequenceNo}", publisherId: "${publisherId}", msgChainId: "${msgChainId}"`)
 
-        if (fromSequenceNo != null && toSequenceNo != null && publisherId != null && msgChainId != null) {
+        if (publisherId != null && msgChainId != null) {
             return this._fetchBetweenMessageRefsForPublisher(streamId, partition, fromTimestamp,
                 fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId)
         }
-        if ((fromSequenceNo == null || fromSequenceNo === 0) && (toSequenceNo == null || toSequenceNo === 0)
-            && publisherId == null && msgChainId == null) {
-            return this._fetchBetweenTimestamps(streamId, partition, fromTimestamp, toTimestamp)
+        if (publisherId == null && msgChainId == null) {  
+            return this._fetchBetweenTimestamps(streamId, partition, fromTimestamp, toTimestamp) // TODO should add fromSequenceNo and toSequenceNo to this call (NET-268)
         }
 
         throw new Error('Invalid combination of requestFrom arguments')
     }
 
-    enableMetrics(metricsContext) {
+    enableMetrics(metricsContext: MetricsContext) {
         const cassandraMetrics = metricsContext.create('broker/cassandra')
             .addRecordedMetric('readCount')
             .addRecordedMetric('readBytes')
             .addRecordedMetric('writeCount')
             .addRecordedMetric('writeBytes')
             .addQueriedMetric('batchManager', () => this.batchManager.metrics())
-        this.on('read', (streamMessage) => {
+        this.on('read', (streamMessage: Protocol.StreamMessage) => {
             cassandraMetrics.record('readCount', 1)
             cassandraMetrics.record('readBytes', streamMessage.getContent(false).length)
         })
-        this.on('write', (streamMessage) => {
+        this.on('write', (streamMessage: Protocol.StreamMessage) => {
             cassandraMetrics.record('writeCount', 1)
             cassandraMetrics.record('writeBytes', streamMessage.getContent(false).length)
         })
@@ -221,7 +246,7 @@ class Storage extends EventEmitter {
         const keys = [...this.pendingStores.keys()]
         keys.forEach((key) => {
             const timeout = this.pendingStores.get(key)
-            clearTimeout(timeout)
+            clearTimeout(timeout!)
             this.pendingStores.delete(key)
         })
 
@@ -230,13 +255,13 @@ class Storage extends EventEmitter {
         return this.cassandraClient.shutdown()
     }
 
-    _fetchFromTimestamp(streamId, partition, fromTimestamp) {
+    _fetchFromTimestamp(streamId: string, partition: number, fromTimestamp: number) {
         const resultStream = this._createResultStream()
 
         const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ?'
 
-        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets) => {
+        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
                 throw new Error('Failed to find buckets')
             }
@@ -247,9 +272,10 @@ class Storage extends EventEmitter {
             const cassandraStream = this._queryWithStreamingResults(query, queryParams)
 
             return pump(
+                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 cassandraStream,
                 resultStream,
-                (err) => {
+                (err?: Error) => {
                     if (err) {
                         logger.error('pump finished with error', err)
                         resultStream.push(null)
@@ -257,7 +283,7 @@ class Storage extends EventEmitter {
                 }
             )
         })
-            .catch((e) => {
+            .catch((e: Todo) => {
                 logger.warn(e)
                 resultStream.push(null)
             })
@@ -265,7 +291,7 @@ class Storage extends EventEmitter {
         return resultStream
     }
 
-    _fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp, fromSequenceNo, publisherId, msgChainId) {
+    _fetchFromMessageRefForPublisher(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number|null, publisherId?: string|null, msgChainId?: string|null) {
         const resultStream = this._createResultStream()
 
         const query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
@@ -273,7 +299,7 @@ class Storage extends EventEmitter {
         const query2 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts > ? AND publisher_id = ? '
             + 'AND msg_chain_id = ? ALLOW FILTERING'
 
-        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets) => {
+        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
                 throw new Error('Failed to find buckets')
             }
@@ -286,9 +312,10 @@ class Storage extends EventEmitter {
             const stream2 = this._queryWithStreamingResults(query2, queryParams2)
 
             return pump(
+                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 merge2(stream1, stream2),
                 resultStream,
-                (err) => {
+                (err: Todo) => {
                     if (err) {
                         logger.error('pump finished with error', err)
                         resultStream.push(null)
@@ -296,7 +323,7 @@ class Storage extends EventEmitter {
                 }
             )
         })
-            .catch((e) => {
+            .catch((e: Todo) => {
                 logger.warn(e)
                 resultStream.push(null)
             })
@@ -304,13 +331,13 @@ class Storage extends EventEmitter {
         return resultStream
     }
 
-    _fetchBetweenTimestamps(streamId, partition, fromTimestamp, toTimestamp) {
+    _fetchBetweenTimestamps(streamId: string, partition: number, fromTimestamp: number, toTimestamp: number) {
         const resultStream = this._createResultStream()
 
         const query = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? AND ts >= ? AND ts <= ?'
 
-        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets) => {
+        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
                 throw new Error('Failed to find buckets')
             }
@@ -321,9 +348,10 @@ class Storage extends EventEmitter {
             const cassandraStream = this._queryWithStreamingResults(query, queryParams)
 
             return pump(
+                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 cassandraStream,
                 resultStream,
-                (err) => {
+                (err: Todo) => {
                     if (err) {
                         logger.error('pump finished with error', err)
                         resultStream.push(null)
@@ -331,7 +359,7 @@ class Storage extends EventEmitter {
                 }
             )
         })
-            .catch((e) => {
+            .catch((e: Todo) => {
                 logger.warn(e)
                 resultStream.push(null)
             })
@@ -339,7 +367,7 @@ class Storage extends EventEmitter {
         return resultStream
     }
 
-    _fetchBetweenMessageRefsForPublisher(streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId) {
+    _fetchBetweenMessageRefsForPublisher(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number|null|undefined, toTimestamp: number, toSequenceNo: number|null|undefined, publisherId?: string|null, msgChainId?: string|null) {
         const resultStream = this._createResultStream()
 
         const query1 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no >= ? AND publisher_id = ? '
@@ -349,7 +377,7 @@ class Storage extends EventEmitter {
         const query3 = 'SELECT payload FROM stream_data WHERE stream_id = ? AND partition = ? AND bucket_id IN ? AND ts = ? AND sequence_no <= ? AND publisher_id = ? '
             + 'AND msg_chain_id = ? ALLOW FILTERING'
 
-        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets) => {
+        this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
                 throw new Error('Failed to find buckets')
             }
@@ -364,9 +392,10 @@ class Storage extends EventEmitter {
             const stream3 = this._queryWithStreamingResults(query3, queryParams3)
 
             return pump(
+                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 merge2(stream1, stream2, stream3),
                 resultStream,
-                (err) => {
+                (err: Todo) => {
                     if (err) {
                         logger.error('pump finished with error', err)
                         resultStream.push(null)
@@ -374,7 +403,7 @@ class Storage extends EventEmitter {
                 }
             )
         })
-            .catch((e) => {
+            .catch((e: Todo) => {
                 logger.warn(e)
                 resultStream.push(null)
             })
@@ -382,7 +411,7 @@ class Storage extends EventEmitter {
         return resultStream
     }
 
-    _queryWithStreamingResults(query, queryParams) {
+    _queryWithStreamingResults(query: string, queryParams: any[]) {
         const cassandraStream = this.cassandraClient.stream(query, queryParams, {
             prepare: true,
             autoPage: false
@@ -395,18 +424,20 @@ class Storage extends EventEmitter {
         cassandraStream.on('data', () => {
             resultCount += 1
             if (resultCount % 1000 === 0) {
+                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 cassandraStream.pause()
+                // @ts-expect-error TODO is cassandraStream EventEmitter or ReadableStream?
                 setImmediate(() => cassandraStream.resume())
             }
-        }).on('error', (err) => {
+        }).on('error', (err: Todo) => {
             logger.error(err)
         })
 
         return cassandraStream
     }
 
-    _parseRow(row) {
-        const streamMessage = StreamMessage.deserialize(row.payload.toString())
+    _parseRow(row: Todo) {
+        const streamMessage = Protocol.StreamMessage.deserialize(row.payload.toString())
         this.emit('read', streamMessage)
         return streamMessage
     }
@@ -414,13 +445,13 @@ class Storage extends EventEmitter {
     _createResultStream() {
         return new Transform({
             objectMode: true,
-            transform: (row, _, done) => {
+            transform: (row: Todo, _: Todo, done: Todo) => {
                 done(null, this._parseRow(row))
             }
         })
     }
 
-    async getFirstMessageTimestampInStream(streamId, partition) {
+    async getFirstMessageTimestampInStream(streamId: string, partition: number) {
         const bucketQuery = 'SELECT id FROM bucket WHERE stream_id=? AND partition =? ORDER BY date_create ASC LIMIT 1'
 
         const queryParams = [streamId, partition]
@@ -454,7 +485,7 @@ class Storage extends EventEmitter {
         return ts
     }
 
-    async getLastMessageTimestampInStream(streamId, partition) {
+    async getLastMessageTimestampInStream(streamId: string, partition: number) {
         const bucketQuery = 'SELECT id FROM bucket WHERE stream_id=? AND partition =? ORDER BY date_create DESC LIMIT 1'
 
         const queryParams = [streamId, partition]
@@ -488,7 +519,7 @@ class Storage extends EventEmitter {
         return ts
     }
 
-    async getNumberOfMessagesInStream(streamId, partition) {
+    async getNumberOfMessagesInStream(streamId: string, partition: number) {
         const query = 'SELECT SUM(records) as count FROM bucket WHERE stream_id=? AND partition=?'
         const queryParams = [
             streamId,
@@ -507,7 +538,7 @@ class Storage extends EventEmitter {
         return count
     }
 
-    async getTotalBytesInStream(streamId, partition) {
+    async getTotalBytesInStream(streamId: string, partition: number) {
         const query = 'SELECT SUM(size) as count FROM bucket WHERE stream_id=? AND partition=?'
         const queryParams = [
             streamId,
@@ -527,11 +558,11 @@ class Storage extends EventEmitter {
     }
 }
 
-function sleep(ms) {
+function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-const startCassandraStorage = async ({
+export const startCassandraStorage = async ({
     contactPoints,
     localDataCenter,
     keyspace,
@@ -539,17 +570,19 @@ const startCassandraStorage = async ({
     password,
     opts,
     storageConfig
-}) => {
-    const authProvider = new cassandra.auth.PlainTextAuthProvider(username || '', password || '')
-    const requestLogger = new cassandra.tracker.RequestLogger({
+}: StartCassandraOptions) => {
+    const authProvider = new auth.PlainTextAuthProvider(username || '', password || '')
+    const requestLogger = new tracker.RequestLogger({
         slowThreshold: 10 * 1000, // 10 secs
     })
-    requestLogger.emitter.on('slow', (message) => logger.warn(message))
-    const cassandraClient = new cassandra.Client({
+    // @ts-expect-error TODO there is no "emitter" in RequestLogger
+    requestLogger.emitter.on('slow', (message: Todo) => logger.warn(message))
+    const cassandraClient = new Client({
         contactPoints,
         localDataCenter,
         keyspace,
         authProvider,
+        // @ts-expect-error there is no "requestLogger" in DseClientOptions: TODO is this a bug?
         requestLogger,
         pooling: {
             maxRequestsPerConnection: 32768
@@ -558,7 +591,7 @@ const startCassandraStorage = async ({
     const nbTrials = 20
     let retryCount = nbTrials
     let lastError = ''
-    const messageFilter = (storageConfig !== undefined) ? (message) => {
+    const messageFilter = (storageConfig !== undefined) ? (message: Protocol.StreamMessage) => {
         const stream = {
             id: message.messageId.streamId,
             partition: message.messageId.streamPartition
@@ -568,7 +601,7 @@ const startCassandraStorage = async ({
     while (retryCount > 0) {
         /* eslint-disable no-await-in-loop */
         try {
-            await cassandraClient.connect().catch((err) => { throw err })
+            await cassandraClient.connect().catch((err: Todo) => { throw err })
             return new Storage(cassandraClient, opts || {}, messageFilter)
         } catch (err) {
             console.log('Cassandra not responding yet...')
@@ -579,9 +612,4 @@ const startCassandraStorage = async ({
         /* eslint-enable no-await-in-loop */
     }
     throw new Error(`Failed to connect to Cassandra after ${nbTrials} trials: ${lastError.toString()}`)
-}
-
-module.exports = {
-    Storage,
-    startCassandraStorage,
 }

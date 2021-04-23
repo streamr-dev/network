@@ -1,7 +1,24 @@
-const getLogger = require('../helpers/logger')
+import { Logger } from 'pino'
+import getLogger from '../helpers/logger'
 
-class Bucket {
-    constructor(id, streamId, partition, size, records, dateCreate, maxSize, maxRecords, keepAliveSeconds) {
+export type BucketId = string
+
+export class Bucket {
+
+    id: BucketId
+    streamId: string
+    partition: number
+    size: number
+    records: number
+    dateCreate: Date
+    _maxSize: number
+    _maxRecords: number
+    _keepAliveSeconds: number
+    ttl: Date
+    _stored: boolean
+    logger: Logger
+
+    constructor(id: BucketId, streamId: string, partition: number, size: number, records: number, dateCreate: Date, maxSize: number, maxRecords: number, keepAliveSeconds: number) {
         if (!id || !id.length) {
             throw new TypeError('id must be not empty string')
         }
@@ -10,15 +27,15 @@ class Bucket {
             throw new TypeError('streamId must be not empty string')
         }
 
-        if (!Number.isInteger(partition) || parseInt(partition) < 0) {
+        if (partition < 0) {
             throw new TypeError('partition must be >= 0')
         }
 
-        if (!Number.isInteger(size) || parseInt(size) < 0) {
+        if (size < 0) {
             throw new TypeError('size must be => 0')
         }
 
-        if (!Number.isInteger(records) || parseInt(records) < 0) {
+        if (records < 0) {
             throw new TypeError('records must be => 0')
         }
 
@@ -26,15 +43,15 @@ class Bucket {
             throw new TypeError('dateCreate must be instance of Date')
         }
 
-        if (!Number.isInteger(maxSize) || parseInt(maxSize) <= 0) {
+        if (maxSize <= 0) {
             throw new TypeError('maxSize must be > 0')
         }
 
-        if (!Number.isInteger(maxRecords) || parseInt(maxRecords) <= 0) {
+        if (maxRecords <= 0) {
             throw new TypeError('maxRecords must be > 0')
         }
 
-        if (!Number.isInteger(keepAliveSeconds) || parseInt(keepAliveSeconds) <= 0) {
+        if (keepAliveSeconds <= 0) {
             throw new Error('keepAliveSeconds must be > 0')
         }
 
@@ -81,7 +98,7 @@ class Bucket {
         return this.id
     }
 
-    incrementBucket(size) {
+    incrementBucket(size: number) {
         this.size += size
         this.records += 1
 
@@ -103,5 +120,3 @@ class Bucket {
         return this.ttl >= new Date()
     }
 }
-
-module.exports = Bucket

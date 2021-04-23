@@ -16,7 +16,7 @@ const { SubscriptionManager } = require('./SubscriptionManager')
 const MissingConfigError = require('./errors/MissingConfigError')
 const adapterRegistry = require('./adapterRegistry')
 const validateConfig = require('./helpers/validateConfig')
-const StorageConfig = require('./storage/StorageConfig')
+const { StorageConfig } = require('./storage/StorageConfig')
 
 const { Utils } = Protocol
 

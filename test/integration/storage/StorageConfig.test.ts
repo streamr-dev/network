@@ -1,16 +1,17 @@
-const { startTracker } = require('streamr-network')
-const cassandra = require('cassandra-driver')
-const ethers = require('ethers')
-const { waitForCondition } = require('streamr-test-utils')
-const { StreamMessage } = require('streamr-network').Protocol.MessageLayer
-
-const {
+import { Client } from 'cassandra-driver'
+import StreamrClient, { Stream } from 'streamr-client'
+import { Todo } from '../../types'
+import { Protocol, startTracker } from 'streamr-network'
+import cassandra from 'cassandra-driver'
+import { Wallet } from 'ethers'
+import { waitForCondition } from 'streamr-test-utils'
+import { 
     startBroker,
     createClient,
     StorageAssignmentEventManager,
-    waitForStreamPersistedInStorageNode,
+    waitForStreamPersistedInStorageNode, 
     STREAMR_DOCKER_DEV_HOST
-} = require('../../utils')
+} from '../../utils'
 
 const contactPoints = [STREAMR_DOCKER_DEV_HOST]
 const localDataCenter = 'datacenter1'
@@ -25,16 +26,16 @@ const STORAGE_NODE_PORT = 17773
 const BROKER_PORT = 17774
 
 describe('StorageConfig', () => {
-    let cassandraClient
-    let tracker
-    let storageNode
-    let broker
-    let client
-    let stream
-    let assignmentEventManager
-    const publisherAccount = ethers.Wallet.createRandom()
-    const storageNodeAccount = ethers.Wallet.createRandom()
-    const brokerAccount = ethers.Wallet.createRandom()
+    let cassandraClient: Client
+    let tracker: Todo
+    let storageNode: Todo
+    let broker: Todo
+    let client: StreamrClient
+    let stream: Stream
+    let assignmentEventManager: StorageAssignmentEventManager
+    const publisherAccount = Wallet.createRandom()
+    const storageNodeAccount = Wallet.createRandom()
+    const brokerAccount = Wallet.createRandom()
 
     beforeAll(async () => {
         cassandraClient = new cassandra.Client({
@@ -49,7 +50,7 @@ describe('StorageConfig', () => {
     })
 
     beforeEach(async () => {
-        const engineAndEditorAccount = ethers.Wallet.createRandom()
+        const engineAndEditorAccount = Wallet.createRandom()
         tracker = await startTracker({
             host: NODE_HOST,
             port: TRACKER_PORT,
@@ -98,7 +99,7 @@ describe('StorageConfig', () => {
             return (result.first().count > 0)
         })
         const result = await cassandraClient.execute('SELECT * FROM stream_data WHERE stream_id = ? ALLOW FILTERING', [stream.id])
-        const storeMessage = StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
+        const storeMessage = Protocol.StreamMessage.deserialize(JSON.parse(result.first().payload.toString()))
         expect(storeMessage.messageId).toEqual(publishMessage.streamMessage.messageId)
     }, 10000)
 })

@@ -1,42 +1,42 @@
 /* eslint-disable no-new */
-const Bucket = require('../../../src/storage/Bucket')
+import { Bucket } from '../../../src/storage/Bucket'
 
 describe('Bucket', () => {
     it('should throw if constructor parameters are not correct', () => {
         expect(() => {
-            new Bucket()
+            new Bucket('', '', 123, 123, 123, new Date('2019-07-19'), 123, 123, 123)
         }).toThrow(new TypeError('id must be not empty string'))
 
         expect(() => {
-            new Bucket('id')
+            new Bucket('id', '', 123, 123, 123, new Date('2019-07-19'), 123, 123, 123)
         }).toThrow(new TypeError('streamId must be not empty string'))
 
         expect(() => {
-            new Bucket('id', 'streamId')
+            new Bucket('id', 'streamId', -1, 123, 123, new Date('2019-07-19'), 123, 123, 123)
         }).toThrow(new TypeError('partition must be >= 0'))
 
         expect(() => {
-            new Bucket('id', 'streamId', 0)
+            new Bucket('id', 'streamId', 0, -1, 123, new Date('2019-07-19'), 123, 123, 123)
         }).toThrow(new TypeError('size must be => 0'))
 
         expect(() => {
-            new Bucket('id', 'streamId', 0, 0)
+            new Bucket('id', 'streamId', 0, 0, -1, new Date('2019-07-19'), 123, 123, 123)
         }).toThrow(new TypeError('records must be => 0'))
 
         expect(() => {
-            new Bucket('id', 'streamId', 0, 0, 0)
+            new Bucket('id', 'streamId', 0, 0, 0, undefined as any, 123, 123, 123)
         }).toThrow(new TypeError('dateCreate must be instance of Date'))
 
         expect(() => {
-            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'))
+            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 0, 123, 123)
         }).toThrow(new TypeError('maxSize must be > 0'))
 
         expect(() => {
-            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1)
+            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 0, 123)
         }).toThrow(new TypeError('maxRecords must be > 0'))
 
         expect(() => {
-            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 1)
+            new Bucket('id', 'streamId', 0, 0, 0, new Date('2019-07-19'), 1, 1, 0)
         }).toThrow(new TypeError('keepAliveSeconds must be > 0'))
 
         expect(() => {
@@ -72,6 +72,7 @@ describe('Bucket', () => {
         jest.advanceTimersByTime(1001)
 
         expect(bucket.isAlive()).toBeFalsy()
+        // @ts-expect-error
         bucket.incrementBucket(1, 3)
         expect(bucket.isAlive()).toBeTruthy()
     })
@@ -83,6 +84,7 @@ describe('Bucket', () => {
         bucket.setStored()
         expect(bucket.isStored()).toBeTruthy()
 
+        // @ts-expect-error
         bucket.incrementBucket(1, 1)
         expect(bucket.isStored()).toBeFalsy()
     })

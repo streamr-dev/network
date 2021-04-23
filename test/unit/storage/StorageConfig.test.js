@@ -1,5 +1,5 @@
 /* eslint-disable no-underscore-dangle, object-curly-newline */
-const StorageConfig = require('../../../src/storage/StorageConfig')
+const { StorageConfig } = require('../../../src/storage/StorageConfig')
 
 describe('StorageConfig', () => {
     let config

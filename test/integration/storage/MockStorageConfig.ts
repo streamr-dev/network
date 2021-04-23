@@ -1,6 +1,8 @@
-const createMockStorageConfig = (streams) => {
+import { StreamPart } from '../../types'
+
+export const createMockStorageConfig = (streams: StreamPart[]) => {
     return {
-        hasStream: (stream) => {
+        hasStream: (stream: StreamPart) => {
             return streams.some((s) => (s.id === stream.id) && (s.partition === stream.partition))
         },
         getStreams: () => {
@@ -8,7 +10,4 @@ const createMockStorageConfig = (streams) => {
         },
         addChangeListener: () => {}
     }
-}
-module.exports = {
-    createMockStorageConfig
 }
