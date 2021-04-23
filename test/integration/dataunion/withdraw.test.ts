@@ -189,6 +189,7 @@ describe('DataUnion withdraw', () => {
         // emulate the bridge-sponsored withdrawals
         beforeAll(() => {
             if (!payForTransport && waitUntilTransportIsComplete) {
+                log('Starting the simulated bridge-sponsored signature transport process')
                 // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData)
                 const signatureRequestEventSignature = '0x520d2afde79cbd5db58755ac9480f81bc658e5c517fcae7365a3d832590b0183'
                 const sidechainAmbAddress = '0xaFA0dc5Ad21796C9106a36D68f69aAD69994BB64'
@@ -196,15 +197,18 @@ describe('DataUnion withdraw', () => {
                     address: sidechainAmbAddress,
                     topics: [signatureRequestEventSignature]
                 }, async (event) => {
-                    const message = defaultAbiCoder.decode(['bytes'], event.data)[0] // messageId is indexed so it's in topics, only encodedData is in data
+                    log(`Observed signature request for message id=${event.topic[1]}`) // messageId is indexed so it's in topics...
+                    const message = defaultAbiCoder.decode(['bytes'], event.data)[0] // ...only encodedData is in data
                     const hash = keccak256(message)
                     const adminClient = new StreamrClient(config.clientOptions)
                     await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash)
+                    log(`Transported message hash=${hash}`)
                 })
             }
         })
         afterAll(() => {
             if (!payForTransport && waitUntilTransportIsComplete) {
+                log('Stopping the simulated bridge-sponsored signature transport process')
                 providerSidechain.removeAllListeners()
             }
         })

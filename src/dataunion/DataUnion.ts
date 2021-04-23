@@ -624,7 +624,7 @@ export class DataUnion {
         if (!payForTransport) {
             // expect someone else to do the transport for us (corresponds to dataUnion.freeWithdraw=true)
             if (waitUntilTransportIsComplete) {
-                log(`Waiting for balance ${balanceBefore.toString()} to change`)
+                log(`Waiting for balance ${balanceBefore.toString()} to change (poll every ${pollingIntervalMs}ms, timeout after ${retryTimeoutMs}ms)`)
                 await until(async () => !(await getBalanceFunc()).eq(balanceBefore), retryTimeoutMs, pollingIntervalMs)
                     .catch((e) => { throw e.message.startsWith('Timeout') ? new Error(`Timeout: Bridge did not transport withdraw message as expected. Fix: DataUnion.transportMessage("${messageHash}")`) : e })
                 return null

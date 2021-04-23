@@ -12,7 +12,7 @@ import { BigNumber } from '@ethersproject/bignumber'
 import StreamrEthereum from '../Ethereum'
 import { StreamrClient } from '../StreamrClient'
 
-const log = debug('StreamrClient::DataUnion')
+const log = debug('StreamrClient::Contracts')
 
 function validateAddress(name: string, address: EthereumAddress) {
     if (!isAddress(address)) {
@@ -149,7 +149,7 @@ export class Contracts {
 
         const [vArray, rArray, sArray]: Todo = [[], [], []]
         signatures.forEach((signature: string, i) => {
-            log(`  Signature ${i}: ${signature} (len=${signature.length}=${signature.length / 2 - 1} bytes)`)
+            log(`  Signature ${i}: ${signature} (len=${signature.length} = ${signature.length / 2 - 1} bytes)`)
             rArray.push(signature.substr(2, 64))
             sArray.push(signature.substr(66, 64))
             vArray.push(signature.substr(130, 2))
