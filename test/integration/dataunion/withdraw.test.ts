@@ -162,8 +162,6 @@ async function testWithdraw(
 }
 
 describe('DataUnion withdraw', () => {
-    jest.setTimeout(3600000) // TODO: remove when it's been figured out how long is really needed
-
     const balanceClient = createClient()
 
     afterAll(() => {
@@ -219,7 +217,7 @@ describe('DataUnion withdraw', () => {
                     memberClient.getDataUnion(dataUnionAddress).withdrawAll(options)
                 )
                 return testWithdraw(getBalance, withdraw, true, options)
-            }, 300000)
+            }, 3600000)
 
             it('to any address', () => {
                 const outsiderWallet = new Wallet(`0x100000000000000000000000000000000000000012300000002${Date.now()}`, providerSidechain)
@@ -228,7 +226,7 @@ describe('DataUnion withdraw', () => {
                     memberClient.getDataUnion(dataUnionAddress).withdrawAllTo(outsiderWallet.address, options)
                 )
                 return testWithdraw(getBalance, withdraw, true, options)
-            }, 300000)
+            }, 3600000)
 
         })
 
@@ -240,7 +238,7 @@ describe('DataUnion withdraw', () => {
                     adminClient.getDataUnion(dataUnionAddress).withdrawAllToMember(memberWallet.address, options)
                 )
                 return testWithdraw(getBalance, withdraw, false, options)
-            }, 300000)
+            }, 3600000)
 
             it("to anyone with member's signature", async () => {
                 const member2Wallet = new Wallet(`0x100000000000000000000000000040000000000012300000007${Date.now()}`, providerSidechain)
@@ -257,7 +255,7 @@ describe('DataUnion withdraw', () => {
                         .withdrawAllToSigned(memberWallet.address, member2Wallet.address, signature, options)
                 }
                 return testWithdraw(getBalance, withdraw, false, options)
-            }, 300000)
+            }, 3600000)
         })
     })
 
