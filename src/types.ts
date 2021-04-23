@@ -1,7 +1,7 @@
-import { MetricsContext, NetworkNode } from 'streamr-network';
-import { Publisher } from './Publisher';
-import { StreamFetcher } from './StreamFetcher';
-import { SubscriptionManager } from './SubscriptionManager';
+import { MetricsContext, NetworkNode } from 'streamr-network'
+import { Publisher } from './Publisher'
+import { StreamFetcher } from './StreamFetcher'
+import { SubscriptionManager } from './SubscriptionManager'
 
 export type Todo = any
 

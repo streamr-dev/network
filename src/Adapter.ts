@@ -1,4 +1,4 @@
-import { BrokerUtils } from './types';
+import { BrokerUtils } from './types'
 
 export interface AdapterConfig {
     port: number, 

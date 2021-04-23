@@ -5,7 +5,6 @@ import { AddressInfo } from 'net'
 import cors from 'cors'
 import express from 'express'
 import getLogger from '../helpers/logger'
-import { register } from '../adapterRegistry'
 import { router as dataQueryEndpoints } from './DataQueryEndpoints'
 import dataProduceEndpoints from './DataProduceEndpoints'
 import volumeEndpoint from './VolumeEndpoint'
@@ -16,7 +15,7 @@ import { BrokerUtils } from '../types'
 
 const logger = getLogger('streamr:httpAdapter')
 
-register('http', (
+export const start = (
     { port, privateKeyFileName, certFileName }: AdapterConfig, 
     { networkNode, publisher, streamFetcher, metricsContext, cassandraStorage, storageConfig}: BrokerUtils
 ) => {
@@ -52,4 +51,4 @@ register('http', (
             }
         })
     })
-})
+}

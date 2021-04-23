@@ -1,6 +1,5 @@
 import net from 'net'
 import MissingConfigError from '../errors/MissingConfigError'
-import { register } from '../adapterRegistry'
 import getLogger from '../helpers/logger'
 import MqttServer from './MqttServer'
 import { BrokerUtils } from '../types'
@@ -9,7 +8,7 @@ import { AdapterConfig } from '../Adapter'
 const logger = getLogger('streamr:mqttAdapter')
 
 // eslint-disable-next-line max-len
-register('mqtt', (
+export const start = (
     { port, streamsTimeout }: AdapterConfig, 
     { networkNode, publisher, streamFetcher, metricsContext, subscriptionManager}: BrokerUtils
 ) => {
@@ -32,4 +31,4 @@ register('mqtt', (
     )
 
     return () => mqttServer.close()
-})
+}

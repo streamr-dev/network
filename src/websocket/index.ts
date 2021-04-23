@@ -1,11 +1,10 @@
-import ws from "uWebSockets.js";
-import MissingConfigError from "../errors/MissingConfigError";
-import { register } from "../adapterRegistry";
-import { WebsocketServer } from "./WebsocketServer";
-import { AdapterConfig } from '../Adapter';
+import ws from 'uWebSockets.js'
+import MissingConfigError from '../errors/MissingConfigError'
+import { WebsocketServer } from './WebsocketServer'
+import { AdapterConfig } from '../Adapter'
 import { BrokerUtils } from '../types'
 
-register('ws', (
+export const start = (
     { port, privateKeyFileName, certFileName, pingInterval }: AdapterConfig, 
     { networkNode, publisher, streamFetcher, metricsContext, subscriptionManager}: BrokerUtils
 ) => {
@@ -35,4 +34,4 @@ register('ws', (
     return () => {
         websocketServer.close()
     }
-})
+}
