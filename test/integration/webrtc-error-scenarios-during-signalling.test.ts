@@ -55,20 +55,21 @@ describe('Signalling error scenarios', () => {
 
         // @ts-expect-error private field
         await waitForEvent(nodeTwo.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED)
+
+        // @ts-expect-error private field
+        nodeTwo.nodeToNode.endpoint.connections['node-1'].logger.debug('closing via test...')
         // @ts-expect-error private field
         nodeTwo.nodeToNode.endpoint.connections['node-1'].close()
-
-        nodeTwo.on(NodeEvent.NODE_CONNECTED, () => {
-            // @ts-expect-error private field
-            expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
-        })
-    })
+        await waitForEvent(nodeTwo, NodeEvent.NODE_CONNECTED, 30000)
+        // @ts-expect-error private field
+        expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
+    }, 60000)
 
     it('connection recovers after timeout if both endpoint close during signalling', async () => {
         nodeOne.subscribe(streamId, 0)
         nodeTwo.subscribe(streamId, 0)
 
-        await Promise.race([
+        await Promise.all([
             // @ts-expect-error private field
             waitForEvent(nodeTwo.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED),
             // @ts-expect-error private field
@@ -94,13 +95,13 @@ describe('Signalling error scenarios', () => {
         expect(Object.keys(nodeOne.nodeToNode.endpoint.connections)).toEqual(['node-2'])
         // @ts-expect-error private field
         expect(Object.keys(nodeTwo.nodeToNode.endpoint.connections)).toEqual(['node-1'])
-    })
+    }, 20000)
 
     it('nodes recover if both signaller connections fail during signalling', async () => {
         nodeOne.subscribe('stream-id', 0)
         nodeTwo.subscribe('stream-id', 0)
 
-        await Promise.race([
+        await Promise.all([
             // @ts-expect-error private field
             waitForEvent(nodeOne.trackerNode, TrackerNodeEvent.RELAY_MESSAGE_RECEIVED),
             // @ts-expect-error private field

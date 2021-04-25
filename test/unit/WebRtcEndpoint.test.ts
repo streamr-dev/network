@@ -3,7 +3,7 @@ import { startEndpoint } from '../../src/connection/WsEndpoint'
 import { TrackerNode } from '../../src/protocol/TrackerNode'
 import { Tracker, Event as TrackerEvent } from '../../src/logic/Tracker'
 import { PeerInfo } from '../../src/connection/PeerInfo'
-import { waitForCondition, waitForEvent } from 'streamr-test-utils'
+import { wait, waitForCondition, waitForEvent } from 'streamr-test-utils'
 import { Event as EndpointEvent, WebRtcEndpoint } from '../../src/connection/WebRtcEndpoint'
 import { RtcSignaller } from '../../src/logic/RtcSignaller'
 
@@ -134,4 +134,60 @@ describe('WebRtcEndpoint', () => {
             done()
         })
     })
+    it('can handle fast paced reconnects', async () => {
+        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
+        endpoint2.connect('node-1', 'tracker', false).catch(() => null)
+
+        await Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        ])
+
+        endpoint1.close('node-2', 'test')
+        endpoint1.connect('node-2', 'tracker', true)
+
+        await Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        ])
+    })
+
+    it('messages are delivered on temporary loss of connectivity', async () => {
+        const t = Promise.all([
+            waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
+            waitForEvent(endpoint2, EndpointEvent.PEER_CONNECTED)
+        ])
+
+        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
+        endpoint2.connect('node-1', 'tracker', false).catch(() => null)
+
+        await t
+
+        let ep2NumOfReceivedMessages = 0
+
+        endpoint2.on(EndpointEvent.MESSAGE_RECEIVED, () => {
+            ep2NumOfReceivedMessages += 1
+        })
+
+        const sendFrom1To2 = () => {
+            endpoint1.send('node-2', JSON.stringify({
+                hello: 'world'
+            }))
+        }
+
+        for (let i = 1; i <= 6; ++i) {
+            sendFrom1To2()
+            if (i === 3) {
+                // eslint-disable-next-line no-await-in-loop
+                await waitForCondition(() => ep2NumOfReceivedMessages === 3)
+                endpoint2.close('node-1', 'test')
+            }
+        }
+        await wait(50)
+        endpoint1.connect('node-2', 'tracker', true)
+
+        await waitForCondition(() => (
+            ep2NumOfReceivedMessages === 6
+        ), 10000, undefined, () => `ep2NumOfReceivedMessages = ${ep2NumOfReceivedMessages}`)
+    }, 15000)
 })

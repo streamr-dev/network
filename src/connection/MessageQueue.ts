@@ -95,4 +95,9 @@ export class MessageQueue<M> {
     empty(): boolean {
         return this.heap.empty()
     }
+
+    clear(): boolean {
+        // @ts-expect-error clear exists but isn't in typedef
+        return this.heap.clear()
+    }
 }

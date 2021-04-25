@@ -55,6 +55,8 @@ export class InstructionRetryManager {
             } else {
                 this.instructionRetryIntervals[streamId].counter += 1
             }
+
+            clearTimeout(this.instructionRetryIntervals[streamId].interval)
             this.instructionRetryIntervals[streamId].interval = setTimeout(() =>
                 this.retryFunction(instructionMessage, trackerId)
             , this.intervalInMs)

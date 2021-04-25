@@ -64,13 +64,17 @@ describe('storage node', () => {
             storages: [storage as Storage],
             storageConfig: config
         })
+
+        // @ts-expect-error private field
+        const t1 = waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         relayNode.start()
+        await t1
+
         // @ts-expect-error private field
-        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
+        const t2 = waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
         storageNode.start()
-        // @ts-expect-error private field
-        await waitForEvent(tracker.trackerServer, TrackerServerEvent.NODE_STATUS_RECEIVED)
-    })
+        await t2
+    }, 15000)
 
     afterEach(async () => {
         await tracker.stop()

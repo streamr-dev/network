@@ -1,4 +1,4 @@
-import { EventEmitter } from 'events'
+import { EventEmitter, once } from 'events'
 import nodeDataChannel, { DescriptionType } from 'node-datachannel'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
@@ -13,6 +13,8 @@ import {
     RtcSignaller
 } from '../logic/RtcSignaller'
 import { Rtts } from '../identifiers'
+
+import { MessageQueue } from './MessageQueue'
 
 export enum Event {
     PEER_CONNECTED = 'streamr:peer:connect',
@@ -44,6 +46,7 @@ export class WebRtcEndpoint extends EventEmitter {
     private readonly stunUrls: string[]
     private readonly rtcSignaller: RtcSignaller
     private connections: { [key: string]: Connection }
+    private messageQueues: { [key: string]: MessageQueue<string> }
     private readonly newConnectionTimeout: number
     private readonly pingInterval: number
     private readonly logger: Logger
@@ -51,32 +54,36 @@ export class WebRtcEndpoint extends EventEmitter {
     private stopped = false
     private readonly bufferThresholdLow: number
     private readonly bufferThresholdHigh: number
+    private maxMessageSize
 
     constructor(
         peerInfo: PeerInfo,
         stunUrls: string[],
         rtcSignaller: RtcSignaller,
         metricsContext: MetricsContext,
-        newConnectionTimeout = 5000,
+        newConnectionTimeout = 15000,
         pingInterval = 2 * 1000,
         webrtcDatachannelBufferThresholdLow = 2 ** 15,
-        webrtcDatachannelBufferThresholdHigh = 2 ** 17
+        webrtcDatachannelBufferThresholdHigh = 2 ** 17,
+        maxMessageSize = 1048576
     ) {
         super()
         this.peerInfo = peerInfo
         this.stunUrls = stunUrls
         this.rtcSignaller = rtcSignaller
         this.connections = {}
+        this.messageQueues = {}
         this.newConnectionTimeout = newConnectionTimeout
         this.pingInterval = pingInterval
         this.logger = new Logger(['connection', 'WebRtcEndpoint'], peerInfo)
         this.bufferThresholdLow = webrtcDatachannelBufferThresholdLow
         this.bufferThresholdHigh = webrtcDatachannelBufferThresholdHigh
+        this.maxMessageSize = maxMessageSize
 
         rtcSignaller.setOfferListener(async ({ routerId, originatorInfo, description } : OfferOptions) => {
             const { peerId } = originatorInfo
             this.connect(peerId, routerId).catch((err) => {
-                this.logger.warn('offerListener induced connection failed, reason %s', err)
+                this.logger.warn('offerListener induced connection from %s failed, reason %s', peerId, err)
             })
             const connection = this.connections[peerId]
             if (connection) {
@@ -92,7 +99,7 @@ export class WebRtcEndpoint extends EventEmitter {
                 connection.setPeerInfo(PeerInfo.fromObject(originatorInfo))
                 connection.setRemoteDescription(description, 'answer' as DescriptionType.Answer)
             } else {
-                this.logger.warn('unexpected rtcAnswer from %s: %s', originatorInfo, description)
+                this.logger.warn('unexpected rtcAnswer from %s: %s', peerId, description)
             }
         })
 
@@ -102,7 +109,7 @@ export class WebRtcEndpoint extends EventEmitter {
             if (connection) {
                 connection.addRemoteCandidate(candidate, mid)
             } else {
-                this.logger.warn('unexpected remoteCandidate from %s: [%s, %s]', originatorInfo, candidate, mid)
+                this.logger.warn('unexpected remoteCandidate from %s: [%s, %s]', peerId, candidate, mid)
             }
         })
 
@@ -110,13 +117,17 @@ export class WebRtcEndpoint extends EventEmitter {
             const { peerId } = originatorInfo
             const isOffering = force ? false : this.peerInfo.peerId < peerId
             this.connect(peerId, routerId, isOffering).catch((err) => {
-                this.logger.warn('connectListener induced connection failed, reason %s', err)
+                this.logger.warn('connectListener induced connection from %s failed, reason %s', peerId, err)
             })
         })
 
         rtcSignaller.setErrorListener(({ targetNode, errorCode }: ErrorOptions) => {
             const error = new WebRtcError(`RTC error ${errorCode} while attempting to signal with ${targetNode}`)
-            this.emit(`errored:${targetNode}`, error)
+            const connection = this.connections[targetNode]
+            // treat rtcSignaller errors as connection errors
+            if (connection) {
+                connection.close(error)
+            }
         })
 
         this.metrics = metricsContext.create('WebRtcEndpoint')
@@ -140,7 +151,7 @@ export class WebRtcEndpoint extends EventEmitter {
             })
     }
 
-    connect(
+    async connect(
         targetPeerId: string,
         routerId: string,
         isOffering = this.peerInfo.peerId < targetPeerId,
@@ -151,10 +162,26 @@ export class WebRtcEndpoint extends EventEmitter {
         if (this.stopped) {
             return Promise.reject(new WebRtcError('WebRtcEndpoint has been stopped'))
         }
+
         if (this.connections[targetPeerId]) {
-            return Promise.resolve(targetPeerId)
+            const connection = this.connections[targetPeerId]
+            const lastState = connection.getLastState()
+            this.logger.debug('Already connection for %s. state: %s', targetPeerId, lastState)
+            if (['connected', 'failed', 'closed'].includes(lastState as string)) {
+                return Promise.resolve(targetPeerId)
+            }
+
+            await Promise.race([
+                once(connection, 'open'),
+                once(connection, 'close').then(() => {
+                    throw new Error(`disconnected ${connection.getPeerId()}`)
+                }),
+            ])
+            return connection.getPeerId()
         }
+
         const offering = force ? true : isOffering
+        const messageQueue = this.messageQueues[targetPeerId] = this.messageQueues[targetPeerId] || new MessageQueue(this.logger, this.maxMessageSize)
         const connection = new Connection({
             selfId: this.peerInfo.peerId,
             targetPeerId,
@@ -163,75 +190,82 @@ export class WebRtcEndpoint extends EventEmitter {
             stunUrls: this.stunUrls,
             bufferThresholdHigh: this.bufferThresholdHigh,
             bufferThresholdLow: this.bufferThresholdLow,
+            messageQueue,
             newConnectionTimeout: this.newConnectionTimeout,
             pingInterval: this.pingInterval,
-            onLocalDescription: (type, description) => {
-                this.rtcSignaller.onLocalDescription(routerId, connection.getPeerId(), type, description)
-            },
-            onLocalCandidate: (candidate, mid) => {
-                this.rtcSignaller.onLocalCandidate(routerId, connection.getPeerId(), candidate, mid)
-            },
-            onOpen: () => {
-                this.emit(Event.PEER_CONNECTED, connection.getPeerInfo())
-                this.emit(`connected:${connection.getPeerId()}`, connection.getPeerId())
-                this.metrics.record('open', 1)
-            },
-            onMessage: (message) => {
-                this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
-                this.metrics.record('inSpeed', message.length)
-                this.metrics.record('msgSpeed', 1)
-                this.metrics.record('msgInSpeed', 1)
-            },
-            onClose: () => {
-                this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo())
-                const err = new Error(`disconnected ${connection.getPeerId()}`)
-                this.emit(`disconnected:${connection.getPeerId()}`, err)
-                this.metrics.record('close', 1)
-                delete this.connections[targetPeerId]
-            },
-            onError: (err) => {
-                this.emit(`errored:${connection.getPeerId()}`, err)
-            },
-            onBufferLow: () => {
-                this.emit(Event.LOW_BACK_PRESSURE, connection.getPeerInfo())
-            },
-            onBufferHigh: () => {
-                this.emit(Event.HIGH_BACK_PRESSURE, connection.getPeerInfo())
-            }
         })
+        connection.once('localDescription', (type, description) => {
+            this.rtcSignaller.onLocalDescription(routerId, connection.getPeerId(), type, description)
+        })
+        connection.once('localCandidate', (candidate, mid) => {
+            this.rtcSignaller.onLocalCandidate(routerId, connection.getPeerId(), candidate, mid)
+        })
+        connection.once('open', () => {
+            this.emit(Event.PEER_CONNECTED, connection.getPeerInfo())
+            this.metrics.record('open', 1)
+        })
+        connection.on('message', (message) => {
+            this.emit(Event.MESSAGE_RECEIVED, connection.getPeerInfo(), message)
+            this.metrics.record('inSpeed', message.length)
+            this.metrics.record('msgSpeed', 1)
+            this.metrics.record('msgInSpeed', 1)
+        })
+        connection.once('close', () => {
+            if (this.connections[targetPeerId] === connection) {
+                // if endpoint.close() was called, connection has already been
+                // removed and possibly replaced. This check avoids deleting new
+                // connection.
+                delete this.connections[targetPeerId]
+            }
+
+            this.emit(Event.PEER_DISCONNECTED, connection.getPeerInfo())
+            connection.removeAllListeners()
+            this.metrics.record('close', 1)
+        })
+        connection.on('bufferLow', () => {
+            this.emit(Event.LOW_BACK_PRESSURE, connection.getPeerInfo())
+        })
+        connection.on('bufferHigh', () => {
+            this.emit(Event.HIGH_BACK_PRESSURE, connection.getPeerInfo())
+        })
+
         this.connections[targetPeerId] = connection
         connection.connect()
         if (!trackerInstructed) {
             this.rtcSignaller.onConnectionNeeded(routerId, connection.getPeerId(), force)
         }
-        return new Promise((resolve, reject) => {
-            this.once(`connected:${connection.getPeerId()}`, resolve)
-            this.once(`errored:${connection.getPeerId()}`, reject)
-            this.once(`disconnected:${connection.getPeerId()}`, reject)
-        })
+
+        await Promise.race([
+            once(connection, 'open'),
+            once(connection, 'close').then(() => {
+                throw new Error(`disconnected ${connection.getPeerId()}`)
+            }),
+        ])
+        return connection.getPeerId()
     }
 
-    send(targetPeerId: string, message: string): Promise<void> {
+    async send(targetPeerId: string, message: string): Promise<void> {
         if (!this.connections[targetPeerId]) {
-            return Promise.reject(new WebRtcError(`Not connected to ${targetPeerId}.`))
+            throw new WebRtcError(`Not connected to ${targetPeerId}.`)
         }
-        return this.connections[targetPeerId].send(message)
-            .then(() => {
-                this.metrics.record('outSpeed', message.length)
-                this.metrics.record('msgSpeed', 1)
-                this.metrics.record('msgOutSpeed', 1)
-                return undefined
-            })
-            .catch((err) => {
-                this.metrics.record('sendFailed', 1)
-                throw err
-            })
+
+        try {
+            await this.connections[targetPeerId].send(message)
+        } catch (err) {
+            this.metrics.record('sendFailed', 1)
+            throw err
+        }
+
+        this.metrics.record('outSpeed', message.length)
+        this.metrics.record('msgSpeed', 1)
+        this.metrics.record('msgOutSpeed', 1)
     }
 
     close(receiverNodeId: string, reason: string): void {
         this.logger.debug('close connection to %s due to %s', receiverNodeId, reason)
         const connection = this.connections[receiverNodeId]
         if (connection) {
+            delete this.connections[receiverNodeId]
             connection.close()
         }
     }
@@ -260,14 +294,17 @@ export class WebRtcEndpoint extends EventEmitter {
 
     stop(): void {
         this.stopped = true
-        Object.values(this.connections).forEach((connection) => connection.close())
+        const { connections, messageQueues } = this
         this.connections = {}
+        this.messageQueues = {}
         this.rtcSignaller.setOfferListener(() => {})
         this.rtcSignaller.setAnswerListener(() => {})
         this.rtcSignaller.setRemoteCandidateListener(() => {})
         this.rtcSignaller.setErrorListener(() => {})
         this.rtcSignaller.setConnectListener(() => {})
         this.removeAllListeners()
+        Object.values(connections).forEach((connection) => connection.close())
+        Object.values(messageQueues).forEach((queue) => queue.clear())
         nodeDataChannel.cleanup()
     }
 }

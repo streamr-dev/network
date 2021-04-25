@@ -1,3 +1,5 @@
+import EventEmitter from 'events'
+import StrictEventEmitter from 'strict-event-emitter-types'
 import nodeDataChannel, { DataChannel, DescriptionType, LogLevel, PeerConnection } from 'node-datachannel'
 import { Logger } from '../helpers/Logger'
 import { PeerInfo } from './PeerInfo'
@@ -18,22 +20,93 @@ export interface ConstructorOptions {
     maxPingPongAttempts?: number
     pingInterval?: number
     flushRetryTimeout?: number
-    onLocalDescription: (type: DescriptionType, description: string) => void
-    onLocalCandidate: (candidate: string, mid: string) => void
-    onOpen: () => void
-    onMessage: (msg: string)  => void
-    onClose: (err?: Error) => void
-    onError: (err: Error) => void,
-    onBufferLow: () => void,
-    onBufferHigh: () => void
+    messageQueue: MessageQueue<string>
 }
 
 let ID = 0
 
-export class Connection {
+/**
+ * Parameters that would be passed to an event handler function
+ * e.g.
+ * HandlerParameters<SomeClass['onSomeEvent']> will map to the list of
+ * parameters that would be passed to `fn` in: `someClass.onSomeEvent(fn)`
+ */
+type HandlerParameters<T extends (...args: any[]) => any> = Parameters<Parameters<T>[0]>
+
+interface PeerConnectionEvents {
+    stateChange: (...args: HandlerParameters<PeerConnection['onStateChange']>) => void
+    gatheringStateChange: (...args: HandlerParameters<PeerConnection['onGatheringStateChange']>) => void
+    localDescription: (...args: HandlerParameters<PeerConnection['onLocalDescription']>) => void
+    localCandidate: (...args: HandlerParameters<PeerConnection['onLocalCandidate']>) => void
+    dataChannel: (...args: HandlerParameters<PeerConnection['onDataChannel']>) => void
+    error: (err: Error) => void
+}
+
+/**
+ * Create an EventEmitter that fires appropriate events for
+ * each peerConnection.onEvent handler.
+ *
+ * Wrapping allows us to trivially clear all event handlers.
+ * There's no way to reliably stop PeerConnection from running an event handler
+ * after you've passed it. Closing a connection doesn't prevent handlers from firing.
+ * Replacing handlers with noops doesn't work reliably, it can still fire the old handlers.
+ */
+function PeerConnectionEmitter(connection: PeerConnection) {
+    const emitter: StrictEventEmitter<EventEmitter, PeerConnectionEvents> = new EventEmitter()
+    emitter.on('error', () => {}) // noop to prevent unhandled error event
+    connection.onStateChange((...args: HandlerParameters<PeerConnection['onStateChange']>) => emitter.emit('stateChange', ...args))
+    connection.onGatheringStateChange((...args: HandlerParameters<PeerConnection['onGatheringStateChange']>) => (
+        emitter.emit('gatheringStateChange', ...args)
+    ))
+    connection.onLocalDescription((...args: HandlerParameters<PeerConnection['onLocalDescription']>) => emitter.emit('localDescription', ...args))
+    connection.onLocalCandidate((...args: HandlerParameters<PeerConnection['onLocalCandidate']>) => emitter.emit('localCandidate', ...args))
+    connection.onDataChannel((...args: HandlerParameters<PeerConnection['onDataChannel']>) => emitter.emit('dataChannel', ...args))
+    return emitter
+}
+
+interface DataChannelEvents {
+    open: (...args: HandlerParameters<DataChannel['onOpen']>) => void
+    closed: (...args: HandlerParameters<DataChannel['onClosed']>) => void
+    error: (...args: HandlerParameters<DataChannel['onError']>) => void
+    bufferedAmountLow: (...args: HandlerParameters<DataChannel['onBufferedAmountLow']>) => void
+    message: (...args: HandlerParameters<DataChannel['onMessage']>) => void
+}
+
+function DataChannelEmitter(dataChannel: DataChannel) {
+    const emitter: StrictEventEmitter<EventEmitter, DataChannelEvents> = new EventEmitter()
+    emitter.on('error', () => {}) // noop to prevent unhandled error event
+    dataChannel.onOpen((...args: HandlerParameters<DataChannel['onOpen']>) => emitter.emit('open', ...args))
+    dataChannel.onClosed((...args: HandlerParameters<DataChannel['onClosed']>) => emitter.emit('closed', ...args))
+    dataChannel.onError((...args: HandlerParameters<DataChannel['onError']>) => emitter.emit('error', ...args))
+    dataChannel.onBufferedAmountLow((...args: HandlerParameters<DataChannel['onBufferedAmountLow']>) => emitter.emit('bufferedAmountLow', ...args))
+    dataChannel.onMessage((...args: HandlerParameters<DataChannel['onMessage']>) => emitter.emit('message', ...args))
+    return emitter
+}
+
+/**
+ * Strict types for EventEmitter interface.
+ */
+interface Events {
+    localDescription: (type: DescriptionType, description: string) => void
+    localCandidate: (candidate: string, mid: string) => void
+    open: () => void
+    message: (msg: string)  => void
+    close: (err?: Error) => void
+    error: (err: Error) => void
+    bufferLow: () => void
+    bufferHigh: () => void
+}
+
+// reminder: only use Connection emitter for external handlers
+// to make it safe for consumers to call removeAllListeners
+// i.e. no this.on('event')
+export const ConnectionEmitter = EventEmitter as { new(): StrictEventEmitter<EventEmitter, Events> }
+
+export class Connection extends ConnectionEmitter {
     public readonly id: string
     private readonly selfId: string
     private peerInfo: PeerInfo
+    private isFinished: boolean
     private readonly routerId: string
     private readonly isOffering: boolean
     private readonly stunUrls: string[]
@@ -44,19 +117,13 @@ export class Connection {
     private readonly maxPingPongAttempts: number
     private readonly pingInterval: number
     private readonly flushRetryTimeout: number
-    private readonly onLocalDescription: (type: DescriptionType, description: string) => void
-    private readonly onLocalCandidate: (candidate: string, mid: string) => void
-    private readonly onOpen: () => void
-    private readonly onMessage: (msg: string)  => void
-    private readonly onClose: (err?: Error) => void
-    private readonly onError: (err: Error) => void
-    private readonly onBufferLow: () => void
-    private readonly onBufferHigh: () => void
     private readonly logger: Logger
     private readonly messageQueue: MessageQueue<string>
 
     private connection: PeerConnection | null
     private dataChannel: DataChannel | null
+    private dataChannelEmitter?: EventEmitter
+    private connectionEmitter?: EventEmitter
     private paused: boolean
     private lastState: string | null
     private lastGatheringState: string | null
@@ -66,7 +133,6 @@ export class Connection {
     private flushRef: NodeJS.Immediate | null
     private pingAttempts = 0
     private rtt: number | null
-    private respondedPong: boolean
     private rttStart: number | null
 
     constructor({
@@ -75,22 +141,16 @@ export class Connection {
         routerId,
         isOffering,
         stunUrls,
+        messageQueue,
         bufferThresholdHigh = 2 ** 17,
         bufferThresholdLow = 2 ** 15,
-        newConnectionTimeout = 8000,
+        newConnectionTimeout = 15000,
         maxPingPongAttempts = 5,
         pingInterval = 2 * 1000,
         flushRetryTimeout = 500,
-        onLocalDescription,
-        onLocalCandidate,
-        onOpen,
-        onMessage,
-        onClose,
-        onError,
-        onBufferLow,
-        onBufferHigh,
         maxMessageSize = 1048576
     }: ConstructorOptions) {
+        super()
         ID += 1
         this.id = `Connection${ID}`
         this.selfId = selfId
@@ -106,8 +166,9 @@ export class Connection {
         this.pingInterval = pingInterval
         this.flushRetryTimeout = flushRetryTimeout
         this.logger = new Logger(['connection', this.id, `${this.selfId}-->${this.getPeerId()}`])
+        this.isFinished = false
 
-        this.messageQueue = new MessageQueue<string>(this.logger)
+        this.messageQueue = messageQueue
         this.connection = null
         this.dataChannel = null
         this.paused = false
@@ -120,61 +181,47 @@ export class Connection {
         this.flushRef = null
 
         this.rtt = null
-        this.respondedPong = true
         this.rttStart = null
 
-        this.onLocalDescription = onLocalDescription
-        this.onLocalCandidate = onLocalCandidate
-        this.onClose = onClose
-        this.onMessage = onMessage
-        this.onOpen = onOpen
-        this.onError = onError
-        this.onBufferLow = onBufferLow
-        this.onBufferHigh = onBufferHigh
+        this.onStateChange = this.onStateChange.bind(this)
+        this.onLocalCandidate = this.onLocalCandidate.bind(this)
+        this.onLocalDescription = this.onLocalDescription.bind(this)
+        this.onStateChange = this.onStateChange.bind(this)
+        this.onGatheringStateChange = this.onGatheringStateChange.bind(this)
+        this.onDataChannel = this.onDataChannel.bind(this)
     }
 
     connect(): void {
+        this.logger.debug('connect()')
+        if (this.isFinished) {
+            throw new Error('Connection already closed.')
+        }
+
         this.connection = new nodeDataChannel.PeerConnection(this.selfId, {
             iceServers: this.stunUrls,
             maxMessageSize: this.maxMessageSize
         })
-        this.connection.onStateChange((state) => {
-            this.lastState = state
-            this.logger.debug('conn.onStateChange: %s', state)
-            if (state === 'disconnected' || state === 'closed') {
-                this.close()
-            } if (state === 'connecting' && !this.connectionTimeoutRef) {
-                this.connectionTimeoutRef = setTimeout(() => {
-                    this.logger.warn('connection timed out')
-                    this.close(new Error('timed out'))
-                }, this.newConnectionTimeout)
-            }
-        })
-        this.connection.onGatheringStateChange((state) => {
-            this.lastGatheringState = state
-            this.logger.debug('conn.onGatheringStateChange: %s', state)
-        })
-        this.connection.onLocalDescription((description, type: DescriptionType) => {
-            this.onLocalDescription(type, description)
-        })
-        this.connection.onLocalCandidate((candidate, mid) => {
-            this.onLocalCandidate(candidate, mid)
-        })
+
+        this.connectionEmitter = PeerConnectionEmitter(this.connection)
+
+        this.connectionEmitter.on('stateChange', this.onStateChange)
+        this.connectionEmitter.on('gatheringStateChange', this.onGatheringStateChange)
+        this.connectionEmitter.on('localDescription', this.onLocalDescription)
+        this.connectionEmitter.on('localCandidate', this.onLocalCandidate)
 
         if (this.isOffering) {
+            this.logger.debug('creating data channel')
             const dataChannel = this.connection.createDataChannel('streamrDataChannel')
             this.setupDataChannel(dataChannel)
         } else {
-            this.connection.onDataChannel((dataChannel) => {
-                this.setupDataChannel(dataChannel)
-                this.logger.debug('connection.onDataChannel')
-                this.openDataChannel(dataChannel)
-            })
+            this.logger.debug('waiting for data channel')
+            this.connectionEmitter.on('dataChannel', this.onDataChannel)
         }
 
         this.connectionTimeoutRef = setTimeout(() => {
-            this.logger.warn('connection timed out')
-            this.close(new Error('timed out'))
+            if (this.isFinished) { return }
+            this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
+            this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
         }, this.newConnectionTimeout)
     }
 
@@ -217,13 +264,27 @@ export class Connection {
     }
 
     close(err?: Error): void {
-        if (this.dataChannel) {
-            try {
-                this.dataChannel.close()
-            } catch (e) {
-                this.logger.warn('dc.close() errored: %s', e)
-            }
+        if (this.isFinished) {
+            // already closed, noop
+            return
         }
+
+        this.isFinished = true
+
+        if (err) {
+            this.logger.warn('conn.close(): %s', err)
+        } else {
+            this.logger.debug('conn.close()')
+        }
+
+        if (this.connectionEmitter) {
+            this.connectionEmitter.removeAllListeners()
+        }
+
+        if (this.dataChannelEmitter) {
+            this.dataChannelEmitter.removeAllListeners()
+        }
+
         if (this.connection) {
             try {
                 this.connection.close()
@@ -231,6 +292,15 @@ export class Connection {
                 this.logger.warn('conn.close() errored: %s', e)
             }
         }
+
+        if (this.dataChannel) {
+            try {
+                this.dataChannel.close()
+            } catch (e) {
+                this.logger.warn('dc.close() errored: %s', e)
+            }
+        }
+
         if (this.flushTimeoutRef) {
             clearTimeout(this.flushTimeoutRef)
         }
@@ -248,9 +318,9 @@ export class Connection {
         this.flushRef = null
 
         if (err) {
-            this.onError(err)
+            this.emit('error', err)
         }
-        this.onClose()
+        this.emit('close')
     }
 
     ping(): void {
@@ -298,6 +368,10 @@ export class Connection {
         return this.rtt
     }
 
+    getLastState(): string | null {
+        return this.lastState
+    }
+
     getBufferedAmount(): number {
         try {
             return this.dataChannel!.bufferedAmount().valueOf()
@@ -326,30 +400,72 @@ export class Connection {
         }
     }
 
+    private onStateChange(state: string): void {
+        this.logger.debug('conn.onStateChange: %s -> %s', this.lastState, state)
+
+        this.lastState = state
+
+        if (state === 'disconnected' || state === 'closed') {
+            this.close()
+        } else if (state === 'failed') {
+            this.close(new Error('connection failed'))
+        } else if (state === 'connecting') {
+            // reset timeout on connecting
+            clearTimeout(this.connectionTimeoutRef!)
+            this.connectionTimeoutRef = setTimeout(() => {
+                if (this.isFinished) { return }
+                this.logger.warn(`connection timed out after ${this.newConnectionTimeout}ms`)
+                this.close(new Error(`timed out after ${this.newConnectionTimeout}ms`))
+            }, this.newConnectionTimeout)
+        }
+    }
+
+    private onGatheringStateChange(state: string): void {
+        this.logger.debug('conn.onGatheringStateChange: %s -> %s', this.lastGatheringState, state)
+        this.lastGatheringState = state
+    }
+
+    private onDataChannel(dataChannel: DataChannel): void {
+        this.setupDataChannel(dataChannel)
+        this.logger.debug('connection.onDataChannel')
+        this.openDataChannel(dataChannel)
+    }
+
+    private onLocalDescription(description: string, type: DescriptionType): void {
+        this.emit('localDescription', type, description)
+    }
+
+    private onLocalCandidate(candidate: string, mid: string): void {
+        this.emit('localCandidate', candidate, mid)
+    }
+
     private setupDataChannel(dataChannel: DataChannel): void {
         this.paused = false
+        this.dataChannelEmitter = DataChannelEmitter(dataChannel)
         dataChannel.setBufferedAmountLowThreshold(this.bufferThresholdLow)
         if (this.isOffering) {
-            dataChannel.onOpen(() => {
+            this.dataChannelEmitter.on('open', () => {
                 this.logger.debug('dc.onOpen')
                 this.openDataChannel(dataChannel)
             })
         }
-        dataChannel.onClosed(() => {
+        this.dataChannelEmitter.on('closed', () => {
             this.logger.debug('dc.onClosed')
             this.close()
         })
-        dataChannel.onError((e) => {
-            this.logger.warn('dc.onError: %s', e)
+
+        this.dataChannelEmitter.on('error', (err) => {
+            this.logger.warn('dc.onError: %s', err)
         })
-        dataChannel.onBufferedAmountLow(() => {
-            if (this.paused) {
-                this.paused = false
-                this.setFlushRef()
-                this.onBufferLow()
-            }
+
+        this.dataChannelEmitter.on('bufferedAmountLow', () => {
+            if (!this.paused) { return }
+            this.paused = false
+            this.setFlushRef()
+            this.emit('bufferLow')
         })
-        dataChannel.onMessage((msg) => {
+
+        this.dataChannelEmitter.on('message', (msg) => {
             this.logger.debug('dc.onmessage')
             if (msg === 'ping') {
                 this.pong()
@@ -357,7 +473,7 @@ export class Connection {
                 this.pingAttempts = 0
                 this.rtt = Date.now() - this.rttStart!
             } else {
-                this.onMessage(msg.toString()) // TODO: what if we get binary?
+                this.emit('message', msg.toString()) // TODO: what if we get binary?
             }
         })
     }
@@ -368,12 +484,12 @@ export class Connection {
         }
         this.dataChannel = dataChannel
         this.setFlushRef()
-        this.onOpen()
+        this.emit('open')
     }
 
     private attemptToFlushMessages(): void {
         let numOfSuccessSends = 0
-        while (!this.messageQueue.empty() && this.dataChannel != null) {
+        while (!this.isFinished && !this.messageQueue.empty() && this.dataChannel != null) {
             // Max 10 messages sent in busy-loop, then relinquish control for a moment, in case `dc.send` is blocking
             // (is it?)
             if (numOfSuccessSends >= 10) {
@@ -395,7 +511,7 @@ export class Connection {
             } else if (this.paused || this.getBufferedAmount() >= this.bufferThresholdHigh) {
                 if (!this.paused) {
                     this.paused = true
-                    this.onBufferHigh()
+                    this.emit('bufferHigh')
                 }
                 return // method eventually re-scheduled by `onBufferedAmountLow`
             } else {
