@@ -45,25 +45,8 @@ export class RequestHandlers {
             [ControlLayer.ControlMessage.TYPES.ResendRangeRequest]: this.handleResendRangeRequest,
             [ControlLayer.ControlMessage.TYPES.PublishRequest]: this.handlePublishRequest,
         }
-        this.streams = new StreamStateManager(
-            this._broadcastMessage.bind(this),
-            (streamId: Todo, streamPartition: Todo, from: Todo, to: Todo, publisherId: Todo, msgChainId: Todo) => {
-                this.networkNode.requestResendRange(
-                    streamId,
-                    streamPartition,
-                    uuidv4(),
-                    from.timestamp,
-                    from.sequenceNumber,
-                    to.timestamp,
-                    to.sequenceNumber,
-                    publisherId,
-                    msgChainId
-                ).on('data', (unicastMessage: Todo) => {
-                    this._handleStreamMessage(unicastMessage.streamMessage)
-                })
-            }
-        )
-        this.networkNode.addMessageListener(this._handleStreamMessage.bind(this))
+        this.streams = new StreamStateManager()
+        this.networkNode.addMessageListener(this._broadcastMessage.bind(this))
     }
 
     getInstance(messageType: Todo): RequestHandler|undefined {
@@ -359,17 +342,6 @@ export class RequestHandlers {
             }
         } else {
             await this.streamFetcher.checkPermission(request.streamId, request.sessionToken, 'stream_subscribe')
-        }
-    }
-
-    _handleStreamMessage(streamMessage: Todo) {
-        const streamId = streamMessage.getStreamId()
-        const streamPartition = streamMessage.getStreamPartition()
-        const stream = this.streams.get(streamId, streamPartition)
-        if (stream) {
-            setImmediate(() => stream.passToOrderingUtil(streamMessage), 0)
-        } else {
-            logger.debug('_handleStreamMessage: stream "%s:%d" not found', streamId, streamPartition)
         }
     }
 

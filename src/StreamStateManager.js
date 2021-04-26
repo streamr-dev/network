@@ -6,11 +6,9 @@ function getStreamLookupKey(streamId, streamPartition) {
 }
 
 module.exports = class StreamStateManager {
-    constructor(msgHandler, gapHander) {
+    constructor() {
         this._streams = {}
         this._timeouts = {}
-        this.msgHandler = msgHandler
-        this.gapHandler = gapHander
     }
 
     getOrCreate(streamId, streamPartition, name = '') {
@@ -44,7 +42,7 @@ module.exports = class StreamStateManager {
             throw new Error(`stream already exists for ${key}`)
         }
 
-        const stream = new Stream(streamId, streamPartition, name, this.msgHandler, this.gapHandler)
+        const stream = new Stream(streamId, streamPartition, name)
         this._streams[key] = stream
 
         /*
@@ -85,9 +83,6 @@ module.exports = class StreamStateManager {
     }
 
     close() {
-        Object.values(this._streams).forEach((stream) => {
-            stream.clearOrderingUtil()
-        })
         Object.values(this._timeouts).forEach((timeout) => {
             clearTimeout(timeout)
         })
