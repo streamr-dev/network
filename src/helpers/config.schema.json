@@ -232,10 +232,6 @@
               "streamId": {
                 "type": "string",
                 "description": "Stream identifier"
-              },
-              "apiKey": {
-                "type": "string",
-                "description": "API key for publishing to Stream"
               }
             }
         },

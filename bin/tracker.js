@@ -16,11 +16,7 @@ program
     .option('--ip <ip>', 'ip', '0.0.0.0')
     .option('--maxNeighborsPerNode <maxNeighborsPerNode>', 'maxNeighborsPerNode', 4)
     .option('--attachHttpEndpoints', 'attach http endpoints')
-    .option('--apiKey <apiKey>', 'apiKey for StreamrClient', undefined)
-    .option('--streamId <streamId>', 'streamId for StreamrClient', undefined)
     .option('--sentryDns <sentryDns>', 'sentryDns', undefined)
-    .option('--metrics <metrics>', 'output metrics to console', false)
-    .option('--metricsInterval <metricsInterval>', 'metrics output interval (ms)', 5000)
     .option('--privateKeyFileName <privateKeyFileName>', 'private key filename', undefined)
     .option('--certFileName <certFileName>', 'cert filename', undefined)
     .description('Run tracker with reporting')
@@ -70,8 +66,8 @@ async function main() {
 
         const trackerObj = {}
         const fields = [
-            'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName', 'metrics',
-            'metricsInterval', 'apiKey', 'streamId', 'sentryDns', 'attachHttpEndpoints']
+            'ip', 'port', 'maxNeighborsPerNode', 'privateKeyFileName', 'certFileName',
+            'sentryDns', 'attachHttpEndpoints']
         fields.forEach((prop) => {
             trackerObj[prop] = program.opts()[prop]
         })
@@ -81,28 +77,6 @@ async function main() {
             name,
             ...trackerObj
         })
-
-        if (program.opts().metrics && program.opts().apiKey && program.opts().streamId) {
-            const client = new StreamrClient({
-                auth: {
-                    apiKey: program.opts().apiKey
-                },
-                autoConnect: false
-            })
-            setInterval(async () => {
-                const metrics = await tracker.getMetrics()
-
-                // send metrics to streamr.network
-                if (client) {
-                    client.publishHttp(program.opts().streamId, metrics)
-                }
-
-                // output to console
-                if (program.opts().metrics) {
-                    logger.info(JSON.stringify(metrics, null, 4))
-                }
-            }, program.opts().metricsInterval)
-        }
     } catch (err) {
         pino.final(logger).error(err, 'tracker bin catch')
         process.exit(1)
