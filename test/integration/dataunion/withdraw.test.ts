@@ -197,7 +197,7 @@ describe('DataUnion withdraw', () => {
                     address: sidechainAmbAddress,
                     topics: [signatureRequestEventSignature]
                 }, async (event) => {
-                    log(`Observed signature request for message id=${event.topic[1]}`) // messageId is indexed so it's in topics...
+                    log(`Observed signature request for message id=${event.topics[1]}`) // messageId is indexed so it's in topics...
                     const message = defaultAbiCoder.decode(['bytes'], event.data)[0] // ...only encodedData is in data
                     const hash = keccak256(message)
                     const adminClient = new StreamrClient(config.clientOptions)
