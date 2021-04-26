@@ -1,6 +1,6 @@
 import { AsyncMqttClient } from 'async-mqtt'
 import StreamrClient, { Stream } from 'streamr-client'
-import { startTracker } from 'streamr-network'
+import { startTracker, Tracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../types'
 import { startBroker, fastPrivateKey, createClient, createMqttClient } from '../utils'
@@ -12,7 +12,7 @@ const networkPort = 17701
 const mqttPort = 17751
 
 describe('local propagation', () => {
-    let tracker: Todo
+    let tracker: Tracker
     let broker: Todo
     const privateKey = fastPrivateKey()
     let client1: StreamrClient
@@ -44,7 +44,9 @@ describe('local propagation', () => {
 
         mqttClient1 = createMqttClient(mqttPort, 'localhost', privateKey)
         mqttClient2 = createMqttClient(mqttPort, 'localhost', privateKey)
+    })
 
+    beforeEach(async () => {
         freshStream = await client1.createStream({
             name: 'local-propagation.test.js-' + Date.now()
         })
@@ -68,19 +70,18 @@ describe('local propagation', () => {
         const client1Messages: Todo[] = []
         const client2Messages: Todo[] = []
 
-        client1.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client1Messages.push(message)
-        })
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client2Messages.push(message)
-        })
-
-        await wait(1000)
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client1Messages.push(message)
+            }),
+            client2.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client2Messages.push(message)
+            })
+        ])
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -127,16 +128,16 @@ describe('local propagation', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        await mqttClient1.subscribe(freshStreamId)
-        await mqttClient2.subscribe(freshStreamId)
-
-        mqttClient1.on('message', (topic, message) => {
+        mqttClient1.on('message', (_topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
         })
 
-        mqttClient2.on('message', (topic, message) => {
+        mqttClient2.on('message', (_topic, message) => {
             client2Messages.push(JSON.parse(message.toString()))
         })
+
+        await mqttClient1.subscribe(freshStreamId)
+        await mqttClient2.subscribe(freshStreamId)
 
         await mqttClient1.publish(freshStreamId, 'key: 1', {
             qos: 1
@@ -180,30 +181,29 @@ describe('local propagation', () => {
         await waitForCondition(() => mqttClient1.connected)
         await waitForCondition(() => mqttClient2.connected)
 
-        await mqttClient1.subscribe(freshStreamId)
-        await mqttClient2.subscribe(freshStreamId)
-
-        mqttClient1.on('message', (topic, message) => {
+        mqttClient1.on('message', (_topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
         })
 
-        mqttClient2.on('message', (topic, message) => {
+        mqttClient2.on('message', (_topic, message) => {
             client2Messages.push(JSON.parse(message.toString()))
         })
 
-        client1.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client3Messages.push(message)
-        })
+        await mqttClient1.subscribe(freshStreamId)
+        await mqttClient2.subscribe(freshStreamId)
 
-        client2.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client4Messages.push(message)
-        })
-
-        await wait(1000)
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client3Messages.push(message)
+            }),
+            client2.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client4Messages.push(message)
+            })
+        ])
 
         await mqttClient1.publish(freshStreamId, JSON.stringify({
             key: 1

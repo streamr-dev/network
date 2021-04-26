@@ -69,7 +69,9 @@ describe('mqtt: end-to-end', () => {
             wsPort: wsPort3,
             mqttPort: mqttPort3
         })
+    }, 15000)
 
+    beforeEach(async () => {
         client1 = createClient(wsPort1, privateKey)
         client2 = createClient(wsPort2, privateKey)
         client3 = createClient(wsPort3, privateKey)
@@ -86,17 +88,23 @@ describe('mqtt: end-to-end', () => {
     afterEach(async () => {
         await tracker.stop()
 
-        await client1.ensureDisconnected()
-        await client2.ensureDisconnected()
-        await client3.ensureDisconnected()
+        await Promise.all([
+            client1.ensureDisconnected(),
+            client2.ensureDisconnected(),
+            client3.ensureDisconnected(),
+        ])
 
-        await mqttClient1.end(true)
-        await mqttClient2.end(true)
-        await mqttClient3.end(true)
+        await Promise.all([
+            mqttClient1.end(true),
+            mqttClient2.end(true),
+            mqttClient3.end(true),
+        ])
 
-        await broker1.close()
-        await broker2.close()
-        await broker3.close()
+        await Promise.all([
+            broker1.close(),
+            broker2.close(),
+            broker3.close(),
+        ])
     }, 15000)
 
     it('happy-path: real-time mqtt plain text producing and consuming', async () => {
@@ -112,15 +120,15 @@ describe('mqtt: end-to-end', () => {
         await mqttClient2.subscribe(freshStream1.id)
         await mqttClient3.subscribe(freshStream1.id)
 
-        mqttClient1.on('message', (topic, message) => {
+        mqttClient1.on('message', (_topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
         })
 
-        mqttClient2.on('message', (topic, message) => {
+        mqttClient2.on('message', (_topic, message) => {
             client2Messages.push(JSON.parse(message.toString()))
         })
 
-        mqttClient3.on('message', (topic, message) => {
+        mqttClient3.on('message', (_topic, message) => {
             client3Messages.push(JSON.parse(message.toString()))
         })
 
@@ -132,7 +140,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client2Messages.length === 1)
         await waitForCondition(() => client3Messages.length === 1)
 
-        mqttClient2.publish(freshStream1.id, 'key: 2', {
+        await mqttClient2.publish(freshStream1.id, 'key: 2', {
             qos: 1
         })
 
@@ -140,7 +148,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client2Messages.length === 2)
         await waitForCondition(() => client3Messages.length === 2)
 
-        mqttClient3.publish(freshStream1.id, 'key: 3', {
+        await mqttClient3.publish(freshStream1.id, 'key: 3', {
             qos: 0
         })
 
@@ -195,11 +203,11 @@ describe('mqtt: end-to-end', () => {
         await mqttClient1.subscribe(freshStream1.id)
         await mqttClient2.subscribe(freshStream1.id)
 
-        mqttClient1.on('message', (topic, message) => {
+        mqttClient1.on('message', (_topic, message) => {
             client1Messages.push(JSON.parse(message.toString()))
         })
 
-        mqttClient2.on('message', (topic, message) => {
+        mqttClient2.on('message', (_topic, message) => {
             client2Messages.push(JSON.parse(message.toString()))
         })
 
@@ -212,7 +220,7 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => client1Messages.length === 1)
         await waitForCondition(() => client2Messages.length === 1)
 
-        mqttClient2.publish(freshStream1.id, JSON.stringify({
+        await mqttClient2.publish(freshStream1.id, JSON.stringify({
             key: 2
         }), {
             qos: 1
@@ -249,29 +257,28 @@ describe('mqtt: end-to-end', () => {
         await waitForCondition(() => mqttClient1.connected)
 
         await mqttClient1.subscribe(freshStream1.id)
-        mqttClient1.on('message', (topic, message) => {
+        mqttClient1.on('message', (_topic, message) => {
             client4Messages.push(JSON.parse(message.toString()))
         })
 
-        client1.subscribe({
-            stream: freshStream1.id
-        }, (message, metadata) => {
-            client1Messages.push(message)
-        })
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStream1.id
+            }, (message) => {
+                client1Messages.push(message)
+            }),
+            client2.subscribe({
+                stream: freshStream1.id
+            }, (message) => {
+                client2Messages.push(message)
+            }),
+            client3.subscribe({
+                stream: freshStream1.id
+            }, (message) => {
+                client3Messages.push(message)
+            })
+        ])
 
-        client2.subscribe({
-            stream: freshStream1.id
-        }, (message, metadata) => {
-            client2Messages.push(message)
-        })
-
-        client3.subscribe({
-            stream: freshStream1.id
-        }, (message, metadata) => {
-            client3Messages.push(message)
-        })
-
-        await wait(2000) // TODO: seems like this is needed for subscribes to go thru?
         await client1.publish(freshStream1.id, {
             key: 1
         })
@@ -283,7 +290,7 @@ describe('mqtt: end-to-end', () => {
         })
 
         await wait(100)
-        mqttClient1.publish(freshStream1.id, JSON.stringify({
+        await mqttClient1.publish(freshStream1.id, JSON.stringify({
             key: 4
         }), {
             qos: 1

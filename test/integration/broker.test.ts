@@ -124,25 +124,23 @@ describe('broker: end-to-end', () => {
         const client2Messages: Todo[] = []
         const client3Messages: Todo[] = []
 
-        client1.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client1Messages.push(message)
-        })
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client2Messages.push(message)
-        })
-
-        client3.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client3Messages.push(message)
-        })
-
-        await wait(1000)
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client1Messages.push(message)
+            }),
+            client2.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client2Messages.push(message)
+            }),
+            client3.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client3Messages.push(message)
+            })
+        ])
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -274,23 +272,23 @@ describe('broker: end-to-end', () => {
         const client2Messages: Todo[] = []
         const client3Messages: Todo[] = []
 
-        client1.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client1Messages.push(message)
-        })
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client2Messages.push(message)
-        })
-
-        client3.subscribe({
-            stream: freshStreamId
-        }, (message, metadata) => {
-            client3Messages.push(message)
-        })
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client1Messages.push(message)
+            }),
+            client2.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client2Messages.push(message)
+            }),
+            client3.subscribe({
+                stream: freshStreamId
+            }, (message) => {
+                client3Messages.push(message)
+            })
+        ])
 
         for (let i = 1; i <= 3; ++i) {
             // eslint-disable-next-line no-await-in-loop
@@ -347,17 +345,17 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: resend last request via websocket', async () => {
-        client1.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client3.subscribe({
-            stream: freshStreamId
-        }, () => {})
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client2.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client3.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+        ])
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -378,32 +376,32 @@ describe('broker: end-to-end', () => {
         const client2Messages: Todo[] = []
         const client3Messages: Todo[] = []
 
-        client1.resend({
-            stream: freshStreamId,
-            resend: {
-                last: 2
-            }
-        }, (message) => {
-            client1Messages.push(message)
-        })
-
-        client2.resend({
-            stream: freshStreamId,
-            resend: {
-                last: 2
-            }
-        }, (message) => {
-            client2Messages.push(message)
-        })
-
-        client3.resend({
-            stream: freshStreamId,
-            resend: {
-                last: 2
-            }
-        }, (message) => {
-            client3Messages.push(message)
-        })
+        await Promise.all([
+                client1.resend({
+                stream: freshStreamId,
+                resend: {
+                    last: 2
+                }
+            }, (message) => {
+                client1Messages.push(message)
+            }),
+            client2.resend({
+                stream: freshStreamId,
+                resend: {
+                    last: 2
+                }
+            }, (message) => {
+                client2Messages.push(message)
+            }),
+            client3.resend({
+                stream: freshStreamId,
+                resend: {
+                    last: 2
+                }
+            }, (message) => {
+                client3Messages.push(message)
+            })
+        ])
 
         await waitForCondition(() => client2Messages.length === 2 && client3Messages.length === 2)
         await waitForCondition(() => client1Messages.length === 2)
@@ -437,17 +435,17 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: resend from request via websocket', async () => {
-        client1.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client3.subscribe({
-            stream: freshStreamId
-        }, () => {})
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client2.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client3.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+        ])
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -472,39 +470,38 @@ describe('broker: end-to-end', () => {
         const client1Messages: Todo[] = []
         const client2Messages: Todo[] = []
         const client3Messages: Todo[] = []
-
-        client1.resend({
-            stream: freshStreamId,
-            resend: {
-                from: {
-                    timestamp: timeAfterFirstMessagePublished,
+        await Promise.all([
+            client1.resend({
+                stream: freshStreamId,
+                resend: {
+                    from: {
+                        timestamp: timeAfterFirstMessagePublished,
+                    }
                 }
-            }
-        }, (message) => {
-            client1Messages.push(message)
-        })
-
-        client2.resend({
-            stream: freshStreamId,
-            resend: {
-                from: {
-                    timestamp: timeAfterFirstMessagePublished,
+            }, (message) => {
+                client1Messages.push(message)
+            }),
+            client2.resend({
+                stream: freshStreamId,
+                resend: {
+                    from: {
+                        timestamp: timeAfterFirstMessagePublished,
+                    }
                 }
-            }
-        }, (message) => {
-            client2Messages.push(message)
-        })
-
-        client3.resend({
-            stream: freshStreamId,
-            resend: {
-                from: {
-                    timestamp: timeAfterFirstMessagePublished,
+            }, (message) => {
+                client2Messages.push(message)
+            }),
+            client3.resend({
+                stream: freshStreamId,
+                resend: {
+                    from: {
+                        timestamp: timeAfterFirstMessagePublished,
+                    }
                 }
-            }
-        }, (message) => {
-            client3Messages.push(message)
-        })
+            }, (message) => {
+                client3Messages.push(message)
+            })
+        ])
 
         await waitForCondition(() => client2Messages.length === 3 && client3Messages.length === 3)
         await waitForCondition(() => client1Messages.length === 3)
@@ -547,17 +544,17 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: resend range request via websocket', async () => {
-        client1.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client3.subscribe({
-            stream: freshStreamId
-        }, () => {})
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client2.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client3.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+        ])
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -586,47 +583,49 @@ describe('broker: end-to-end', () => {
         const client2Messages: Todo[] = []
         const client3Messages: Todo[] = []
 
-        client1.resend({
-            stream: freshStreamId,
-            resend: {
-                from: {
-                    timestamp: timeAfterFirstMessagePublished,
-                },
-                to: {
-                    timestamp: timeAfterThirdMessagePublished,
+        await Promise.all([
+            client1.resend({
+                stream: freshStreamId,
+                resend: {
+                    from: {
+                        timestamp: timeAfterFirstMessagePublished,
+                    },
+                    to: {
+                        timestamp: timeAfterThirdMessagePublished,
+                    }
                 }
-            }
-        }, (message) => {
-            client1Messages.push(message)
-        })
+            }, (message) => {
+                client1Messages.push(message)
+            }),
 
-        client2.resend({
-            stream: freshStreamId,
-            resend: {
-                from: {
-                    timestamp: timeAfterFirstMessagePublished,
-                },
-                to: {
-                    timestamp: timeAfterThirdMessagePublished,
+            client2.resend({
+                stream: freshStreamId,
+                resend: {
+                    from: {
+                        timestamp: timeAfterFirstMessagePublished,
+                    },
+                    to: {
+                        timestamp: timeAfterThirdMessagePublished,
+                    }
                 }
-            }
-        }, (message) => {
-            client2Messages.push(message)
-        })
+            }, (message) => {
+                client2Messages.push(message)
+            }),
 
-        client3.resend({
-            stream: freshStreamId,
-            resend: {
-                from: {
-                    timestamp: timeAfterFirstMessagePublished,
-                },
-                to: {
-                    timestamp: timeAfterThirdMessagePublished,
+            client3.resend({
+                stream: freshStreamId,
+                resend: {
+                    from: {
+                        timestamp: timeAfterFirstMessagePublished,
+                    },
+                    to: {
+                        timestamp: timeAfterThirdMessagePublished,
+                    }
                 }
-            }
-        }, (message) => {
-            client3Messages.push(message)
-        })
+            }, (message) => {
+                client3Messages.push(message)
+            })
+        ])
 
         await waitForCondition(() => client2Messages.length === 2 && client3Messages.length === 2)
         await waitForCondition(() => client1Messages.length === 2)
@@ -660,17 +659,17 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: resend last request via http', async () => {
-        client1.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client3.subscribe({
-            stream: freshStreamId
-        }, () => {})
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client2.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client3.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+        ])
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -772,17 +771,17 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: resend from request via http', async () => {
-        client1.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client3.subscribe({
-            stream: freshStreamId
-        }, () => {})
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client2.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client3.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+        ])
 
         await client1.publish(freshStreamId, {
             key: 1
@@ -856,17 +855,17 @@ describe('broker: end-to-end', () => {
     })
 
     it('happy-path: resend range request via http', async () => {
-        client1.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client2.subscribe({
-            stream: freshStreamId
-        }, () => {})
-
-        client3.subscribe({
-            stream: freshStreamId
-        }, () => {})
+        await Promise.all([
+            client1.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client2.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+            client3.subscribe({
+                stream: freshStreamId
+            }, () => {}),
+        ])
 
         await client1.publish(freshStreamId, {
             key: 1
