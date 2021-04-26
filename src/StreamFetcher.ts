@@ -1,6 +1,6 @@
 import fetch from 'node-fetch'
 import memoize from 'memoizee'
-import getLogger from './helpers/logger'
+import { getLogger } from './helpers/logger'
 import { HttpError } from './errors/HttpError'
 // TODO do all REST operations to E&E via StreamrClient
 import StreamrClient from 'streamr-client'

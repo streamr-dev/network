@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 import { NetworkNode } from 'streamr-network';
-import getLogger from '../helpers/logger'
+import { getLogger } from '../helpers/logger'
 import { StreamPart } from '../types';
 
 const logger = getLogger('streamr:storage:StorageConfig')

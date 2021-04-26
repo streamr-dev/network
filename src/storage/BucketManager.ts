@@ -2,7 +2,7 @@ import { Client } from 'cassandra-driver'
 import { Todo } from '../types'
 import Heap from 'heap'
 import { types as cassandraTypes } from 'cassandra-driver'
-import getLogger from '../helpers/logger'
+import { getLogger } from '../helpers/logger'
 import { Bucket, BucketId } from './Bucket'
 const { TimeUuid } = cassandraTypes
 

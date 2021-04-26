@@ -1,5 +1,5 @@
 import { Logger } from 'pino'
-import getLogger from '../helpers/logger'
+import { getLogger } from '../helpers/logger'
 
 export type BucketId = string
 

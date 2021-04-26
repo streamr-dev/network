@@ -1,6 +1,6 @@
 import { Todo } from '../types'
 import { EventEmitter } from 'events'
-import getLogger from '../helpers/logger'
+import { getLogger } from '../helpers/logger'
 
 const logger = getLogger('streamr:WebsocketServer:Connection')
 

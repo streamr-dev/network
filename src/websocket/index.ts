@@ -1,5 +1,5 @@
 import ws from 'uWebSockets.js'
-import MissingConfigError from '../errors/MissingConfigError'
+import { MissingConfigError } from '../errors/MissingConfigError'
 import { WebsocketServer } from './WebsocketServer'
 import { AdapterConfig } from '../Adapter'
 import { BrokerUtils } from '../types'

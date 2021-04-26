@@ -4,9 +4,9 @@
 import express, { Request, Response } from 'express'
 import { MetricsContext, NetworkNode } from 'streamr-network'
 import { Metrics } from 'streamr-network/dist/helpers/MetricsContext'
-import getLogger from '../helpers/logger'
+import { getLogger } from '../helpers/logger'
 import { Todo } from '../types'
-import authenticationMiddleware from './RequestAuthenticatorMiddleware'
+import { authenticator } from './RequestAuthenticatorMiddleware'
 
 const logger = getLogger('streamr:http:DataQueryEndpoints')
 
@@ -91,7 +91,7 @@ export const router = (networkNode: NetworkNode, streamFetcher: Todo, metricsCon
             }
         },
         // authentication
-        authenticationMiddleware(streamFetcher, 'stream_subscribe'),
+        authenticator(streamFetcher, 'stream_subscribe'),
     )
 
     router.get('/streams/:id/data/partitions/:partition/last', (req: Request, res: Response) => {

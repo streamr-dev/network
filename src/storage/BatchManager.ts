@@ -1,7 +1,7 @@
 import { Client } from 'cassandra-driver'
 import { EventEmitter } from 'events'
 import { Protocol } from 'streamr-network'
-import getLogger from '../helpers/logger'
+import { getLogger } from '../helpers/logger'
 import { Todo } from '../types'
 import { Batch, BatchId, DoneCallback } from './Batch'
 import { BucketId } from './Bucket'

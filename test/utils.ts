@@ -3,7 +3,7 @@ import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
-import createBroker from '../src/broker'
+import { startBroker as createBroker } from '../src/broker'
 import { StorageConfig } from '../src/storage/StorageConfig'
 import { Todo } from './types'
 
