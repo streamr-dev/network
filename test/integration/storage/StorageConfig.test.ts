@@ -5,11 +5,11 @@ import { Protocol, startTracker } from 'streamr-network'
 import cassandra from 'cassandra-driver'
 import { Wallet } from 'ethers'
 import { waitForCondition } from 'streamr-test-utils'
-import { 
+import {
     startBroker,
     createClient,
     StorageAssignmentEventManager,
-    waitForStreamPersistedInStorageNode, 
+    waitForStreamPersistedInStorageNode,
     STREAMR_DOCKER_DEV_HOST
 } from '../../utils'
 

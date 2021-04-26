@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../types'
-import { startBroker, createMockUser, createClient, createMqttClient } from '../utils'
+import { startBroker, fastPrivateKey, createClient, createMqttClient } from '../utils'
 
 const trackerPort = 17711
 const httpPort = 17712
@@ -14,7 +14,7 @@ const mqttPort = 17751
 describe('local propagation', () => {
     let tracker: Todo
     let broker: Todo
-    const mockUser = createMockUser()
+    const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream: Stream
@@ -39,11 +39,11 @@ describe('local propagation', () => {
             mqttPort
         })
 
-        client1 = createClient(wsPort, mockUser.privateKey)
-        client2 = createClient(wsPort, mockUser.privateKey)
+        client1 = createClient(wsPort, privateKey)
+        client2 = createClient(wsPort, privateKey)
 
-        mqttClient1 = createMqttClient(mqttPort, 'localhost', mockUser.privateKey)
-        mqttClient2 = createMqttClient(mqttPort, 'localhost', mockUser.privateKey)
+        mqttClient1 = createMqttClient(mqttPort, 'localhost', privateKey)
+        mqttClient2 = createMqttClient(mqttPort, 'localhost', privateKey)
 
         freshStream = await client1.createStream({
             name: 'local-propagation.test.js-' + Date.now()

@@ -14,10 +14,11 @@
   "main": "bin/broker.js",
   "scripts": {
     "prepare": "tsc -p tsconfig-build.json",
-    "test": "eslint . && jest",
+    "test": "eslint . && jest test/unit test/integration && npm run test-sequential",
     "build": "tsc -p tsconfig-build.json --incremental",
     "test-unit": "jest test/unit",
-    "test-integration": "jest --forceExit test/integration",
+    "test-sequential": "jest --maxWorkers=1 test/sequential # always run sequential tests with maxWorkers=1",
+    "test-integration": "jest --forceExit test/integration && npm run test-sequential",
     "eslint": "eslint ."
   },
   "author": "Streamr Network AG <contact@streamr.com>",

@@ -3,7 +3,7 @@ import StreamrClient, { Stream } from 'streamr-client'
 import { startTracker } from 'streamr-network'
 import { wait, waitForCondition } from 'streamr-test-utils'
 import { Todo } from '../types'
-import { startBroker, createMockUser, createClient, createMqttClient } from '../utils'
+import { startBroker, fastPrivateKey, createClient, createMqttClient } from '../utils'
 
 const httpPort1 = 13381
 const httpPort2 = 13382
@@ -19,7 +19,7 @@ describe('SubscriptionManager', () => {
     let tracker: Todo
     let broker1: Todo
     let broker2: Todo
-    const mockUser = createMockUser()
+    const privateKey = fastPrivateKey()
     let client1: StreamrClient
     let client2: StreamrClient
     let freshStream1: Stream
@@ -55,11 +55,11 @@ describe('SubscriptionManager', () => {
 
         await wait(2000)
 
-        client1 = createClient(wsPort1, mockUser.privateKey)
-        client2 = createClient(wsPort2, mockUser.privateKey)
+        client1 = createClient(wsPort1, privateKey)
+        client2 = createClient(wsPort2, privateKey)
 
-        mqttClient1 = createMqttClient(mqttPort1, 'localhost', mockUser.privateKey)
-        mqttClient2 = createMqttClient(mqttPort2, 'localhost', mockUser.privateKey)
+        mqttClient1 = createMqttClient(mqttPort1, 'localhost', privateKey)
+        mqttClient2 = createMqttClient(mqttPort2, 'localhost', privateKey)
 
         freshStream1 = await client1.createStream({
             name: 'SubscriptionManager.test.js-' + Date.now()

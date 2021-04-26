@@ -48,6 +48,8 @@ const checkDBCount = async (cassandraClient: Client, streamId: string) => {
     }
 }
 
+let counter = 0
+
 describe('DeleteExpiredCmd', () => {
     let mockUser: Wallet
     let client: StreamrClient
@@ -80,9 +82,10 @@ describe('DeleteExpiredCmd', () => {
     })
 
     const daysArray = [0, 1, 2, 3]
-    daysArray.map(async (days) => {
+    daysArray.map(async (days, index) => {
         test(`keep in database ${days} days of data`, async () => {
-            const id = mockUser.address + '/DeleteExpiredCmd.test.js-' + Date.now()
+            counter += 1
+            const id = mockUser.address + '/DeleteExpiredCmd.test.js-' + counter
             const stream = await client.createStream({
                 id,
                 name: id,
@@ -90,15 +93,17 @@ describe('DeleteExpiredCmd', () => {
             })
             const streamId = stream.id
 
-            const bucketId1 = await insertBucket(cassandraClient, streamId, Date.now() - 0 * DAY_IN_MS)
-            const bucketId2 = await insertBucket(cassandraClient, streamId, Date.now() - 1 * DAY_IN_MS)
-            const bucketId3 = await insertBucket(cassandraClient, streamId, Date.now() - 2 * DAY_IN_MS)
-            const bucketId4 = await insertBucket(cassandraClient, streamId, Date.now() - 3 * DAY_IN_MS)
+            const now = Date.now()
 
-            await insertData(cassandraClient, streamId, bucketId1, Date.now() - 0 * DAY_IN_MS)
-            await insertData(cassandraClient, streamId, bucketId2, Date.now() - 1 * DAY_IN_MS)
-            await insertData(cassandraClient, streamId, bucketId3, Date.now() - 2 * DAY_IN_MS)
-            await insertData(cassandraClient, streamId, bucketId4, Date.now() - 3 * DAY_IN_MS)
+            const bucketId1 = await insertBucket(cassandraClient, streamId, now - 0 * DAY_IN_MS)
+            const bucketId2 = await insertBucket(cassandraClient, streamId, now - 1 * DAY_IN_MS)
+            const bucketId3 = await insertBucket(cassandraClient, streamId, now - 2 * DAY_IN_MS)
+            const bucketId4 = await insertBucket(cassandraClient, streamId, now - 3 * DAY_IN_MS)
+
+            await insertData(cassandraClient, streamId, bucketId1, now - 0 * DAY_IN_MS)
+            await insertData(cassandraClient, streamId, bucketId2, now - 1 * DAY_IN_MS)
+            await insertData(cassandraClient, streamId, bucketId3, now - 2 * DAY_IN_MS)
+            await insertData(cassandraClient, streamId, bucketId4, now - 3 * DAY_IN_MS)
 
             await deleteExpiredCmd.run()
             // @ts-expect-error
@@ -111,19 +116,21 @@ describe('DeleteExpiredCmd', () => {
     })
 
     test('max message timestamp of bucket is taken into consideration', async () => {
-        const id = mockUser.address + '/DeleteExpiredCmd.test.js-' + Date.now()
+        counter += 1
+        const id = mockUser.address + '/DeleteExpiredCmd.test.js-' + counter
         const stream = await client.createStream({
             id,
             name: id,
             storageDays: 10
         })
         const streamId = stream.id
+        const now = Date.now()
 
-        const bucketId = await insertBucket(cassandraClient, streamId, Date.now() - 30 * DAY_IN_MS)
-        await insertData(cassandraClient, streamId, bucketId, Date.now() - 30 * DAY_IN_MS)
-        await insertData(cassandraClient, streamId, bucketId, Date.now() - 15 * DAY_IN_MS)
+        const bucketId = await insertBucket(cassandraClient, streamId, now - 30 * DAY_IN_MS)
+        await insertData(cassandraClient, streamId, bucketId, now - 30 * DAY_IN_MS)
+        await insertData(cassandraClient, streamId, bucketId, now - 15 * DAY_IN_MS)
         // prevents bucket from being deleted
-        await insertData(cassandraClient, streamId, bucketId, Date.now() - 3 * DAY_IN_MS)
+        await insertData(cassandraClient, streamId, bucketId, now - 3 * DAY_IN_MS)
 
         await deleteExpiredCmd.run()
         const counts = await checkDBCount(cassandraClient, streamId)

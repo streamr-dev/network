@@ -28,6 +28,9 @@ describe('ping-pong test between broker and clients', () => {
             port: trackerPort,
             id: 'tracker'
         })
+    })
+
+    beforeEach(async () => {
         networkNode = await startNetworkNode({
             host: '127.0.0.1',
             port: networkNodePort,
@@ -45,23 +48,30 @@ describe('ping-pong test between broker and clients', () => {
             metricsContext,
             new SubscriptionManager(networkNode)
         )
+    })
 
+    beforeEach(async () => {
         client1 = createClient(wsPort)
-        await client1.ensureConnected()
-
         client2 = createClient(wsPort)
-        await client2.ensureConnected()
-
         client3 = createClient(wsPort)
-        await client3.ensureConnected()
 
+        await Promise.all([
+            client1.ensureConnected(),
+            client2.ensureConnected(),
+            client3.ensureConnected()
+        ])
+    })
+
+    beforeEach(async () => {
         await waitForCondition(() => websocketServer.connections.size === 3)
     })
 
     afterEach(async () => {
-        await client1.ensureDisconnected()
-        await client2.ensureDisconnected()
-        await client3.ensureDisconnected()
+        await Promise.all([
+            client1.ensureDisconnected(),
+            client2.ensureDisconnected(),
+            client3.ensureDisconnected()
+        ])
 
         await tracker.stop()
         await networkNode.stop()

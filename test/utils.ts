@@ -1,3 +1,4 @@
+import crypto from 'crypto'
 import StreamrClient, { Stream, StreamrClientOptions } from 'streamr-client'
 import mqtt from 'async-mqtt'
 import fetch from 'node-fetch'
@@ -104,9 +105,17 @@ export function getWsUrlWithControlAndMessageLayerVersions(port: number, ssl = f
     return `${ssl ? 'wss' : 'ws'}://127.0.0.1:${port}/api/v1/ws?controlLayerVersion=${controlLayerVersion}&messageLayerVersion=${messageLayerVersion}`
 }
 
+// generates a private key
+// equivalent to Wallet.createRandom().privateKey but much faster
+// the slow part seems to be deriving the address from the key so if you can avoid this, just use
+// fastPrivateKey instead of createMockUser
+export function fastPrivateKey() {
+    return `0x${crypto.randomBytes(32).toString('hex')}`
+}
+
 export const createMockUser = () => Wallet.createRandom()
 
-export function createClient(wsPort: number, privateKey = createMockUser().privateKey, clientOptions?: StreamrClientOptions) {
+export function createClient(wsPort: number, privateKey = fastPrivateKey(), clientOptions?: StreamrClientOptions) {
     return new StreamrClient({
         auth: {
             privateKey
@@ -117,7 +126,7 @@ export function createClient(wsPort: number, privateKey = createMockUser().priva
     })
 }
 
-export function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = createMockUser().privateKey) {
+export function createMqttClient(mqttPort = 9000, host = 'localhost', privateKey = fastPrivateKey()) {
     return mqtt.connect({
         hostname: host,
         port: mqttPort,
