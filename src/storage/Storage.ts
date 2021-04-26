@@ -575,15 +575,14 @@ export const startCassandraStorage = async ({
     const requestLogger = new tracker.RequestLogger({
         slowThreshold: 10 * 1000, // 10 secs
     })
-    // @ts-expect-error TODO there is no "emitter" in RequestLogger
+    // @ts-expect-error 'emitter' field is missing in type definition file
     requestLogger.emitter.on('slow', (message: Todo) => logger.warn(message))
     const cassandraClient = new Client({
         contactPoints,
         localDataCenter,
         keyspace,
         authProvider,
-        // @ts-expect-error there is no "requestLogger" in DseClientOptions: TODO is this a bug?
-        requestLogger,
+        requestTracker: requestLogger,
         pooling: {
             maxRequestsPerConnection: 32768
         }
