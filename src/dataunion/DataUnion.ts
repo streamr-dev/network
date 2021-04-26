@@ -501,10 +501,11 @@ export class DataUnion {
     async transferToMemberInContract(
         memberAddress: EthereumAddress,
         amountTokenWei: BigNumber|number|string
-    ): Promise<TransactionResponse> {
+    ): Promise<ContractReceipt> {
         const address = getAddress(memberAddress) // throws if bad address
         const duSidechain = await this.getContracts().getSidechainContract(this.contractAddress)
-        return duSidechain.transferToMemberInContract(address, amountTokenWei)
+        const tx = duSidechain.transferToMemberInContract(address, amountTokenWei)
+        return tx.wait()
     }
 
     /**
