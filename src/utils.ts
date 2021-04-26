@@ -33,6 +33,8 @@ export const waitForStreamToEnd = (stream: Readable): Promise<unknown[]> => {
  * within timeout. Otherwise rejected.
  */
 export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000): Promise<unknown[]> => {
+    // create error beforehand to capture more usable stack
+    const err = new Error(`Promise timed out after ${timeout} milliseconds`)
     return new Promise((resolve, reject) => {
         const eventListenerFn = (...args: unknown[]) => {
             clearTimeout(timeOut)
@@ -40,7 +42,7 @@ export const waitForEvent = (emitter: EventEmitter, event: Event, timeout = 5000
         }
         const timeOut = setTimeout(() => {
             emitter.removeListener(event, eventListenerFn)
-            reject(new Error(`Promise timed out after ${timeout} milliseconds`))
+            reject(err)
         }, timeout)
         emitter.once(event, eventListenerFn)
     })
@@ -64,6 +66,8 @@ export const waitForCondition = async (
     retryInterval = 100,
     onTimeoutContext?: () => string
 ): Promise<void> => {
+    // create error beforehand to capture more usable stack
+    const err = new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`)
     return new Promise((resolve, reject) => {
         let poller: NodeJS.Timeout | undefined = undefined
         const clearPoller = () => {
@@ -87,9 +91,10 @@ export const waitForCondition = async (
                 }
             } else {
                 clearPoller()
-                reject(new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`
-                    + (onTimeoutContext ? ("\n" + onTimeoutContext()) : "")
-                ))
+                if (onTimeoutContext) {
+                    err.message += `\n${onTimeoutContext()}`
+                }
+                reject(err)
             }
         }
         setImmediate(poll)
