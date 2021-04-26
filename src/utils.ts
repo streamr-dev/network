@@ -66,6 +66,8 @@ export const waitForCondition = async (
     retryInterval = 100,
     onTimeoutContext?: () => string
 ): Promise<void> => {
+    // create error beforehand to capture more usable stack
+    const err = new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`)
     return new Promise((resolve, reject) => {
         let poller: NodeJS.Timeout | undefined = undefined
         const clearPoller = () => {
@@ -89,9 +91,10 @@ export const waitForCondition = async (
                 }
             } else {
                 clearPoller()
-                reject(new Error(`waitForCondition: timed out before "${conditionFn.toString()}" became true`
-                    + (onTimeoutContext ? ("\n" + onTimeoutContext()) : "")
-                ))
+                if (onTimeoutContext) {
+                    err.message += `\n${onTimeoutContext()}`
+                }
+                reject(err)
             }
         }
         setImmediate(poll)
