@@ -77,38 +77,17 @@ export class LoginEndpoints {
     }
 
     /** @internal */
-    async loginWithApiKey(apiKey: string) {
-        this.client.debug('loginWithApiKey %o', {
-            apiKey,
-        })
-        const url = getEndpointUrl(this.client.options.restUrl, 'login', 'apikey')
-        const props = {
-            apiKey,
-        }
-        return getSessionToken(url, props)
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
+    async loginWithApiKey(_apiKey: string): Promise<any> {
+        const message = 'apiKey auth is no longer supported. Please create an ethereum identity.'
+        throw new AuthFetchError(message)
     }
 
     /** @internal */
-    async loginWithUsernamePassword(username: string, password: string) {
-        this.client.debug('loginWithUsernamePassword %o', {
-            username,
-        })
-        const url = getEndpointUrl(this.client.options.restUrl, 'login', 'password')
-        const props = {
-            username,
-            password,
-        }
-        try {
-            return await getSessionToken(url, props)
-        } catch (err) {
-            if (err && err.response && err.response.status === 404) {
-                // this 404s if running against new backend with username/password support removed
-                // wrap with appropriate error message
-                const message = 'username/password auth is no longer supported. Please create an ethereum identity.'
-                throw new AuthFetchError(message, err.response, err.body)
-            }
-            throw err
-        }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, class-methods-use-this
+    async loginWithUsernamePassword(_username: string, _password: string): Promise<any> {
+        const message = 'username/password auth is no longer supported. Please create an ethereum identity.'
+        throw new AuthFetchError(message)
     }
 
     async getUserInfo() {
