@@ -34,11 +34,4 @@ describe('StorageConfigEndpoints', () => {
         app.use('/api/v1', router(storageConfig))
         await createRequest('foo', 'bar' as any, app).expect(400, 'Partition is not a number: bar')
     })
-
-    it('not storage node', async () => {
-        const app = express()
-        // @ts-expect-error
-        app.use('/api/v1', router(null))
-        await createRequest('foobar', 0, app).expect(501, 'Not a storage node')
-    })
 })

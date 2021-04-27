@@ -3,7 +3,7 @@ import pino from 'pino'
 import StreamrClient from 'streamr-client'
 import publicIp from 'public-ip'
 import Sentry from '@sentry/node'
-import ethers, { Wallet } from 'ethers'
+import { Wallet } from 'ethers'
 import { getLogger } from './helpers/logger'
 import { StreamFetcher } from './StreamFetcher'
 import { startCassandraStorage } from './storage/Storage'
@@ -208,6 +208,7 @@ export const startBroker = async (config: Todo) => {
         try {
             // @ts-expect-error
             return startAdapter(name, adapterConfig, {
+                config,
                 networkNode,
                 publisher,
                 streamFetcher,

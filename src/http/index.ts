@@ -17,7 +17,7 @@ const logger = getLogger('streamr:httpAdapter')
 
 export const start = (
     { port, privateKeyFileName, certFileName }: AdapterConfig, 
-    { networkNode, publisher, streamFetcher, metricsContext, cassandraStorage, storageConfig}: BrokerUtils
+    { config, networkNode, publisher, streamFetcher, metricsContext, cassandraStorage, storageConfig}: BrokerUtils
 ) => {
     const app = express()
 
@@ -25,12 +25,14 @@ export const start = (
     app.use(cors())
 
     // Rest endpoints
-    app.use('/api/v1', dataQueryEndpoints(networkNode, streamFetcher, metricsContext))
     app.use('/api/v1', dataProduceEndpoints(streamFetcher, publisher))
     app.use('/api/v1', volumeEndpoint(metricsContext))
 
-    app.use('/api/v1', dataMetadataEndpoint(cassandraStorage))
-    app.use('/api/v1', storageConfigEndpoints(storageConfig))
+    if (config.network.isStorageNode) {
+        app.use('/api/v1', dataQueryEndpoints(networkNode, streamFetcher, metricsContext))
+        app.use('/api/v1', dataMetadataEndpoint(cassandraStorage))
+        app.use('/api/v1', storageConfigEndpoints(storageConfig))    
+    }
 
     let httpServer: HttpServer|HttpsServer
     if (privateKeyFileName && certFileName) {

@@ -1,6 +1,5 @@
 import express, { Request, Response } from 'express'
 import { StorageConfig } from '../storage/StorageConfig'
-import { Todo } from '../types'
 
 const createHandler = (storageConfig: StorageConfig) => {
     return (req: Request, res: Response) => {
@@ -24,7 +23,7 @@ const createHandler = (storageConfig: StorageConfig) => {
 
 export const router = (storageConfig: StorageConfig) => {
     const router = express.Router()
-    const handler = (storageConfig !== null) ? createHandler(storageConfig) : (_: Todo, res: Todo) => res.status(501).send('Not a storage node')
+    const handler = createHandler(storageConfig)
     router.get('/streams/:id/storage/partitions/:partition', handler)
     return router
 }
