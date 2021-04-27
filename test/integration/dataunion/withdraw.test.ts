@@ -36,7 +36,7 @@ async function testWithdraw(
         memberWallet: Wallet,
         adminClient: StreamrClient
     ) => Promise<ContractReceipt | AmbMessageHash | null>,
-    recipientAddress: EthereumAddress | null, // null means memberClient itself
+    recipientAddress: EthereumAddress | null, // null means memberWallet.address
     requiresMainnetETH: boolean,
     options: DataUnionWithdrawOptions,
 ) {
@@ -59,6 +59,7 @@ async function testWithdraw(
 
     testWalletId += 1
     const memberWallet = new Wallet(`0x100000000000000000000000000000000000000012300000000000001${testWalletId}`, providerSidechain)
+    const recipient = recipientAddress || memberWallet.address
     const sendTx = await adminWalletSidechain.sendTransaction({ to: memberWallet.address, value: parseEther('0.1') })
     await sendTx.wait()
     log(`Sent 0.1 sidechain-ETH to ${memberWallet.address}`)
@@ -138,18 +139,19 @@ async function testWithdraw(
     const stats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
     log(`Stats: ${JSON.stringify(stats)}`)
 
-    const getRecipientBalance = async () => {
-        const a = recipientAddress || await memberClient.getAddress()
-        return options.sendToMainnet ? memberClient.getTokenBalance(a) : memberClient.getSidechainTokenBalance(a)
-    }
+    const getRecipientBalance = async () => (
+        options.sendToMainnet
+            ? memberClient.getTokenBalance(recipient)
+            : memberClient.getSidechainTokenBalance(recipient)
+    )
 
     const balanceBefore = await getRecipientBalance()
     log(`Balance before: ${balanceBefore}. Withdrawing tokens...`)
 
     // "bridge-sponsored mainnet withdraw" case
     if (!options.payForTransport && options.waitUntilTransportIsComplete) {
-        log(`Adding ${memberWallet.address} to bridge-sponsored withdraw whitelist`)
-        bridgeWhitelist.push(memberWallet.address)
+        log(`Adding ${recipient} to bridge-sponsored withdraw whitelist`)
+        bridgeWhitelist.push(recipient)
     }
 
     // test setup done, do the withdraw
