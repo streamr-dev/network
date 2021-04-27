@@ -1,10 +1,15 @@
 import express, { Request, Response } from 'express'
+import { Storage } from '../storage/Storage'
+
+const parseIntIfExists = (x: string|undefined) => {
+    return x === undefined ? undefined : parseInt(x)
+}
 
 export const router = (cassandraStorage: Storage) => {
     const router = express.Router()
     const handler = async (req: Request, res: Response) => {
         const streamId = req.params.id
-        const partition = req.params.partition || 0
+        const partition = parseIntIfExists(req.params.partition) || 0
 
         const out = {
             totalBytes: await cassandraStorage.getTotalBytesInStream(streamId, partition),

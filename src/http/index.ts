@@ -29,8 +29,8 @@ export const start = (
     app.use('/api/v1', volumeEndpoint(metricsContext))
 
     if (config.network.isStorageNode) {
-        app.use('/api/v1', dataQueryEndpoints(networkNode, streamFetcher, metricsContext))
-        app.use('/api/v1', dataMetadataEndpoint(cassandraStorage))
+        app.use('/api/v1', dataQueryEndpoints(cassandraStorage!, streamFetcher, metricsContext))
+        app.use('/api/v1', dataMetadataEndpoint(cassandraStorage!))
         app.use('/api/v1', storageConfigEndpoints(storageConfig))    
     }
 

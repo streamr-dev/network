@@ -1,8 +1,9 @@
-import { NetworkNode, Protocol, MetricsContext } from 'streamr-network'
+import { Protocol, MetricsContext } from 'streamr-network'
 import express from 'express'
 import request from 'supertest'
 import intoStream from 'into-stream'
 import { router as restEndpointRouter, MIN_SEQUENCE_NUMBER_VALUE, MAX_SEQUENCE_NUMBER_VALUE } from '../../../src/http/DataQueryEndpoints'
+import { Storage } from '../../../src/storage/Storage'
 import { HttpError } from '../../../src/errors/HttpError'
 import { Todo } from '../../../src/types'
 
@@ -11,7 +12,7 @@ const { StreamMessage, MessageID } = MessageLayer
 
 describe('DataQueryEndpoints', () => {
     let app: Todo
-    let networkNode: NetworkNode
+    let storage: Storage
     let streamFetcher: Todo
 
     function testGetRequest(url: string, sessionToken = 'mock-session-token') {
@@ -38,7 +39,7 @@ describe('DataQueryEndpoints', () => {
     beforeEach(() => {
         app = express()
         // @ts-expect-error
-        networkNode = {}
+        storage = {}
         streamFetcher = {
             authenticate(streamId: string, sessionToken: string|undefined) {
                 return new Promise(((resolve, reject) => {
@@ -50,7 +51,7 @@ describe('DataQueryEndpoints', () => {
                 }))
             },
         }
-        app.use('/api/v1', restEndpointRouter(networkNode, streamFetcher, new MetricsContext(null as any)))
+        app.use('/api/v1', restEndpointRouter(storage, streamFetcher, new MetricsContext(null as any)))
     })
 
     describe('Getting last events', () => {
@@ -65,9 +66,7 @@ describe('DataQueryEndpoints', () => {
                     world: 2,
                 }),
             ]
-            networkNode.requestResendLast = jest.fn().mockReturnValue(intoStream.object(
-                streamMessages.map((m) => createUnicastMessage(m))
-            ))
+            storage.requestLast = jest.fn().mockReturnValue(intoStream.object(streamMessages))
         })
 
         describe('user errors', () => {
@@ -122,17 +121,17 @@ describe('DataQueryEndpoints', () => {
             it('invokes networkNode#requestResendLast once with correct arguments', (done) => {
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .then(() => {
-                        expect(networkNode.requestResendLast).toHaveBeenCalledTimes(1)
+                        expect(storage.requestLast).toHaveBeenCalledTimes(1)
                         // @ts-expect-error
-                        expect(networkNode.requestResendLast.mock.calls[0])
-                            .toEqual(['streamId', 0, expect.stringMatching(/\w+/), 1])
+                        expect(storage.requestLast.mock.calls[0])
+                            .toEqual(['streamId', 0, 1])
                         done()
                     })
                     .catch(done)
             })
 
             it('responds 500 and error message if networkNode signals error', (done) => {
-                networkNode.requestResendLast = () => intoStream.object(Promise.reject(new Error('error')))
+                storage.requestLast = () => intoStream.object(Promise.reject(new Error('error')))
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/last')
                     .expect('Content-Type', /json/)
@@ -146,11 +145,10 @@ describe('DataQueryEndpoints', () => {
             it('passes count to networkNode#requestResendLast', async () => {
                 await testGetRequest('/api/v1/streams/streamId/data/partitions/0/last?count=666')
 
-                expect(networkNode.requestResendLast).toHaveBeenCalledTimes(1)
-                expect(networkNode.requestResendLast).toHaveBeenCalledWith(
+                expect(storage.requestLast).toHaveBeenCalledTimes(1)
+                expect(storage.requestLast).toHaveBeenCalledWith(
                     'streamId',
                     0,
-                    expect.stringMatching(/\w+/),
                     666,
                 )
             })
@@ -169,9 +167,7 @@ describe('DataQueryEndpoints', () => {
                     z: 'z',
                 }),
             ]
-            networkNode.requestResendFrom = () => intoStream.object(
-                streamMessages.map((m) => createUnicastMessage(m))
-            )
+            storage.requestFrom = () => intoStream.object(streamMessages)
         })
 
         describe('?fromTimestamp=1496408255672', () => {
@@ -187,15 +183,14 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('invokes networkNode#requestResendFrom once with correct arguments', async () => {
-                networkNode.requestResendFrom = jest.fn()
+                storage.requestFrom = jest.fn()
 
                 await testGetRequest('/api/v1/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
 
-                expect(networkNode.requestResendFrom).toHaveBeenCalledTimes(1)
-                expect(networkNode.requestResendFrom).toHaveBeenCalledWith(
+                expect(storage.requestFrom).toHaveBeenCalledTimes(1)
+                expect(storage.requestFrom).toHaveBeenCalledWith(
                     'streamId',
                     0,
-                    expect.stringMatching(/\w+/),
                     1496408255672,
                     MIN_SEQUENCE_NUMBER_VALUE,
                     null,
@@ -204,7 +199,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if networkNode signals error', (done) => {
-                networkNode.requestResendFrom = () => intoStream.object(Promise.reject(new Error('error')))
+                storage.requestFrom = () => intoStream.object(Promise.reject(new Error('error')))
 
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/from?fromTimestamp=1496408255672')
                     .expect('Content-Type', /json/)
@@ -229,15 +224,14 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('invokes networkNode#requestResendFrom once with correct arguments', async () => {
-                networkNode.requestResendFrom = jest.fn()
+                storage.requestFrom = jest.fn()
 
                 await testGetRequest(`/api/v1/streams/streamId/data/partitions/0/from?${query}`)
 
-                expect(networkNode.requestResendFrom).toHaveBeenCalledTimes(1)
-                expect(networkNode.requestResendFrom).toHaveBeenCalledWith(
+                expect(storage.requestFrom).toHaveBeenCalledTimes(1)
+                expect(storage.requestFrom).toHaveBeenCalledWith(
                     'streamId',
                     0,
-                    expect.stringMatching(/\w+/),
                     1496408255672,
                     1,
                     'publisherId',
@@ -246,7 +240,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if networkNode signals error', (done) => {
-                networkNode.requestResendFrom = () => intoStream.object(Promise.reject(new Error('error')))
+                storage.requestFrom = () => intoStream.object(Promise.reject(new Error('error')))
 
                 testGetRequest(`/api/v1/streams/streamId/data/partitions/0/from?${query}`)
                     .expect('Content-Type', /json/)
@@ -314,9 +308,7 @@ describe('DataQueryEndpoints', () => {
                         '6': '6',
                     }),
                 ]
-                networkNode.requestResendRange = () => intoStream.object(
-                    streamMessages.map((m) => createUnicastMessage(m))
-                )
+                storage.requestRange = () => intoStream.object(streamMessages)
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -333,16 +325,15 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('invokes networkNode#requestResendRange once with correct arguments', async () => {
-                networkNode.requestResendRange = jest.fn()
+                storage.requestRange = jest.fn()
 
                 // eslint-disable-next-line max-len
                 await testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
 
-                expect(networkNode.requestResendRange).toHaveBeenCalledTimes(1)
-                expect(networkNode.requestResendRange).toHaveBeenCalledWith(
+                expect(storage.requestRange).toHaveBeenCalledTimes(1)
+                expect(storage.requestRange).toHaveBeenCalledWith(
                     'streamId',
                     0,
-                    expect.stringMatching(/\w+/),
                     1496408255672,
                     MIN_SEQUENCE_NUMBER_VALUE,
                     1496415670909,
@@ -353,7 +344,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if networkNode signals error', (done) => {
-                networkNode.requestResendRange = () => intoStream.object(Promise.reject(new Error('error')))
+                storage.requestRange = () => intoStream.object(Promise.reject(new Error('error')))
 
                 // eslint-disable-next-line max-len
                 testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1496408255672&toTimestamp=1496415670909')
@@ -377,9 +368,7 @@ describe('DataQueryEndpoints', () => {
                         '6': '6',
                     }),
                 ]
-                networkNode.requestResendRange = () => intoStream.object(
-                    streamMessages.map((m) => createUnicastMessage(m))
-                )
+                storage.requestRange = () => intoStream.object(streamMessages)
             })
 
             it('responds 200 and Content-Type JSON', (done) => {
@@ -394,14 +383,13 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('invokes networkNode#requestResendRange once with correct arguments', async () => {
-                networkNode.requestResendRange = jest.fn()
+                storage.requestRange = jest.fn()
 
                 await testGetRequest(`/api/v1/streams/streamId/data/partitions/0/range?${query}`)
-                expect(networkNode.requestResendRange).toHaveBeenCalledTimes(1)
-                expect(networkNode.requestResendRange).toHaveBeenCalledWith(
+                expect(storage.requestRange).toHaveBeenCalledTimes(1)
+                expect(storage.requestRange).toHaveBeenCalledWith(
                     'streamId',
                     0,
-                    expect.stringMatching(/\w+/),
                     1496408255672,
                     1,
                     1496415670909,
@@ -412,7 +400,7 @@ describe('DataQueryEndpoints', () => {
             })
 
             it('responds 500 and error message if networkNode signals error', (done) => {
-                networkNode.requestResendRange = () => intoStream.object(Promise.reject(new Error('error')))
+                storage.requestRange = () => intoStream.object(Promise.reject(new Error('error')))
 
                 testGetRequest(`/api/v1/streams/streamId/data/partitions/0/range?${query}`)
                     .expect('Content-Type', /json/)
