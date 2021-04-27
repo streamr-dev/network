@@ -202,14 +202,12 @@ describeRepeats('resends', () => {
         })
 
         beforeAll(async () => {
-            client.debug('BEFORE ALL >')
             const results = await publishTestMessages.raw(MAX_MESSAGES, {
                 waitForLast: true,
                 timestamp: 111111,
             })
             published = results.map(([msg]: any) => msg)
             publishedRequests = results.map(([, req]: any) => req)
-            client.debug('BEFORE ALL <')
         }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
         beforeEach(async () => {
@@ -217,7 +215,6 @@ describeRepeats('resends', () => {
             // ensure last message is in storage
             const lastRequest = publishedRequests[publishedRequests.length - 1]
             await waitForStorage(lastRequest)
-            client.debug('was stored', lastRequest)
         }, WAIT_FOR_STORAGE_TIMEOUT * 2)
 
         it('requests resend', async () => {
@@ -304,7 +301,6 @@ describeRepeats('resends', () => {
 
         describe('resendSubscribe', () => {
             it('sees resends and realtime', async () => {
-                client.debug('sees resends and realtime >')
                 const sub = await subscriber.resendSubscribe({
                     streamId: stream.id,
                     last: published.length,
@@ -346,11 +342,9 @@ describeRepeats('resends', () => {
                 expect(sub.realtime.isWritable()).toBe(false)
                 expect(sub.resend.isReadable()).toBe(false)
                 expect(sub.resend.isWritable()).toBe(false)
-                client.debug('sees resends and realtime <')
             })
 
             it('sees resends when no realtime', async () => {
-                client.debug('sees resends when no realtime >')
                 const sub = await subscriber.resendSubscribe({
                     streamId: stream.id,
                     last: published.length,
@@ -380,7 +374,6 @@ describeRepeats('resends', () => {
                 expect(sub.realtime.isWritable()).toBe(false)
                 expect(sub.resend.isReadable()).toBe(false)
                 expect(sub.resend.isWritable()).toBe(false)
-                client.debug('sees resends when no realtime <')
             })
 
             it('ends resend if unsubscribed', async () => {

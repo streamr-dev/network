@@ -59,7 +59,6 @@ describeRepeats('sequential resend subscribe', () => {
         subscriber = client.subscriber
 
         // eslint-disable-next-line require-atomic-updates
-        client.debug('connecting before test >>')
         await Promise.all([
             client.connect(),
             client.session.getSessionToken(),
@@ -68,7 +67,6 @@ describeRepeats('sequential resend subscribe', () => {
             name: uid('stream')
         })
         await stream.addToStorageNode(config.clientOptions.storageNode.address)
-        client.debug('connecting before test <<')
 
         publishTestMessages = getPublishTestMessages(client, {
             stream,
@@ -102,7 +100,6 @@ describeRepeats('sequential resend subscribe', () => {
         // ensure last message is in storage
         const lastRequest = publishedRequests[publishedRequests.length - 1]
         await waitForStorage(lastRequest)
-        client.debug('was stored', lastRequest)
     })
 
     afterEach(async () => {
@@ -136,8 +133,6 @@ describeRepeats('sequential resend subscribe', () => {
         const id = (i + 2) * 111111 // start at 222222
         // eslint-disable-next-line no-loop-func
         test(`test ${id}`, async () => {
-            const debug = client.debug.extend(`check ${id}`)
-            debug('check >')
             const sub = await subscriber.resendSubscribe({
                 streamId: stream.id,
                 last: published.length,
@@ -148,24 +143,19 @@ describeRepeats('sequential resend subscribe', () => {
 
             const message = Msg()
             // eslint-disable-next-line no-await-in-loop
-            debug('PUBLISH >')
             const req = await client.publish(stream.id, message, id) // should be realtime
-            debug('PUBLISH <')
             // keep track of published messages so we can check they are resent in next test(s)
             published.push(message)
             publishedRequests.push(req)
-            debug('COLLECT >')
             const receivedMsgs = await collect(sub, async ({ received }) => {
                 if (received.length === published.length) {
                     await sub.return()
                 }
             })
-            debug('COLLECT <')
 
             const msgs = receivedMsgs
             expect(msgs).toHaveLength(published.length)
             expect(msgs).toEqual(published)
-            client.debug('check <')
         })
     }
 })
