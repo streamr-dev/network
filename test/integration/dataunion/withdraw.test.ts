@@ -137,16 +137,25 @@ async function testWithdraw(
     const stats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
     log(`Stats: ${JSON.stringify(stats)}`)
 
+    // "bridge-sponsored mainnet withdraw" case
+    if (!options.payForTransport && options.waitUntilTransportIsComplete) {
+        bridgeWhitelist.push(memberWallet.address)
+    }
+
     // test setup done, do the withdraw
     const balanceBefore = await getBalance(memberWallet)
     log(`Balance before: ${balanceBefore}. Withdrawing tokens...`)
-
     let ret = await withdraw(dataUnion.getAddress(), memberClient, memberWallet, adminClient)
+
+    // "other-sponsored mainnet withdraw" case
     if (typeof ret === 'string') {
         log(`Transporting message "${ret}"`)
         ret = await dataUnion.transportMessage(String(ret))
     }
     log(`Tokens withdrawn, return value: ${JSON.stringify(ret)}`)
+
+    // "skip waiting" or "without checking the recipient account" case
+    // we need to wait nevertheless, to be able to assert that balance in fact changed
     if (!options.waitUntilTransportIsComplete) {
         log(`Waiting until balance changes from ${balanceBefore.toString()}`)
         await until(async () => getBalance(memberWallet).then((b) => !b.eq(balanceBefore)))
@@ -163,6 +172,28 @@ async function testWithdraw(
     })
     expect(balanceIncrease.toString()).toBe(amount.toString())
 }
+
+log('Starting the simulated bridge-sponsored signature transport process')
+// event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData)
+const signatureRequestEventSignature = '0x520d2afde79cbd5db58755ac9480f81bc658e5c517fcae7365a3d832590b0183'
+const sidechainAmbAddress = '0xaFA0dc5Ad21796C9106a36D68f69aAD69994BB64'
+const bridgeWhitelist: string[] = []
+providerSidechain.on({
+    address: sidechainAmbAddress,
+    topics: [signatureRequestEventSignature]
+}, async (event) => {
+    log(`Observed signature request for message id=${event.topics[1]}`) // messageId is indexed so it's in topics...
+    const message = defaultAbiCoder.decode(['bytes'], event.data)[0] // ...only encodedData is in data
+    const recipient = '0x' + message.slice(200, 240)
+    if (bridgeWhitelist.find((address) => address.toLowerCase() === recipient)) {
+        log(`Recipient ${recipient} not whitelisted, ignoring`)
+        return
+    }
+    const hash = keccak256(message)
+    const adminClient = new StreamrClient(config.clientOptions)
+    await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash, 100, 120000)
+    log(`Transported message hash=${hash}`)
+})
 
 describe('DataUnion withdraw', () => {
     const balanceClient = createClient()
@@ -188,33 +219,6 @@ describe('DataUnion withdraw', () => {
         async function getTokenBalance(wallet: Wallet) {
             return sendToMainnet ? balanceClient.getTokenBalance(wallet.address) : balanceClient.getSidechainTokenBalance(wallet.address)
         }
-
-        // emulate the bridge-sponsored withdrawals
-        beforeAll(() => {
-            if (!payForTransport && waitUntilTransportIsComplete) {
-                log('Starting the simulated bridge-sponsored signature transport process')
-                // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData)
-                const signatureRequestEventSignature = '0x520d2afde79cbd5db58755ac9480f81bc658e5c517fcae7365a3d832590b0183'
-                const sidechainAmbAddress = '0xaFA0dc5Ad21796C9106a36D68f69aAD69994BB64'
-                providerSidechain.on({
-                    address: sidechainAmbAddress,
-                    topics: [signatureRequestEventSignature]
-                }, async (event) => {
-                    log(`Observed signature request for message id=${event.topics[1]}`) // messageId is indexed so it's in topics...
-                    const message = defaultAbiCoder.decode(['bytes'], event.data)[0] // ...only encodedData is in data
-                    const hash = keccak256(message)
-                    const adminClient = new StreamrClient(config.clientOptions)
-                    await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash)
-                    log(`Transported message hash=${hash}`)
-                })
-            }
-        })
-        afterAll(() => {
-            if (!payForTransport && waitUntilTransportIsComplete) {
-                log('Stopping the simulated bridge-sponsored signature transport process')
-                providerSidechain.removeAllListeners()
-            }
-        })
 
         describe('by member', () => {
 
