@@ -26,6 +26,8 @@ const tokenMainnet = new Contract(config.clientOptions.tokenAddress, Token.abi, 
 
 const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, Token.abi, adminWalletSidechain)
 
+let testWalletId = 1000000 // ensure fixed length as string
+
 async function testWithdraw(
     getBalance: (memberWallet: Wallet) => Promise<BigNumber>,
     withdraw: (
@@ -54,7 +56,8 @@ async function testWithdraw(
     log(`DataUnion ${dataUnion.getAddress()} is ready to roll`)
     // dataUnion = await adminClient.getDataUnionContract({dataUnion: "0xd778CfA9BB1d5F36E42526B2BAFD07B74b4066c0"})
 
-    const memberWallet = new Wallet(`0x100000000000000000000000000000000000000012300000001${Date.now()}`, providerSidechain)
+    testWalletId += 1
+    const memberWallet = new Wallet(`0x100000000000000000000000000000000000000012300000000000001${testWalletId}`, providerSidechain)
     const sendTx = await adminWalletSidechain.sendTransaction({ to: memberWallet.address, value: parseEther('0.1') })
     await sendTx.wait()
     log(`Sent 0.1 sidechain-ETH to ${memberWallet.address}`)
