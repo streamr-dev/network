@@ -13,6 +13,7 @@ import config from '../config'
 import authFetch from '../../../src/rest/authFetch'
 import { createClient, createMockAddress, expectInvalidAddress } from '../../utils'
 import { AmbMessageHash, DataUnionWithdrawOptions, MemberStatus } from '../../../src/dataunion/DataUnion'
+import { EthereumAddress } from '../../../src'
 
 const log = debug('StreamrClient::DataUnion::integration-test-withdraw')
 
@@ -29,13 +30,13 @@ const tokenSidechain = new Contract(config.clientOptions.tokenSidechainAddress, 
 let testWalletId = 1000000 // ensure fixed length as string
 
 async function testWithdraw(
-    getBalance: (memberWallet: Wallet) => Promise<BigNumber>,
     withdraw: (
-        dataUnionAddress: string,
+        dataUnionAddress: EthereumAddress,
         memberClient: StreamrClient,
         memberWallet: Wallet,
         adminClient: StreamrClient
     ) => Promise<ContractReceipt | AmbMessageHash | null>,
+    recipientAddress: EthereumAddress | null, // null means memberClient itself
     requiresMainnetETH: boolean,
     options: DataUnionWithdrawOptions,
 ) {
@@ -73,7 +74,7 @@ async function testWithdraw(
         auth: {
             privateKey: memberWallet.privateKey
         }
-    } as any)
+    })
 
     // product is needed for join requests to analyze the DU version
     const createProductUrl = getEndpointUrl(config.clientOptions.restUrl, 'products')
@@ -137,14 +138,21 @@ async function testWithdraw(
     const stats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
     log(`Stats: ${JSON.stringify(stats)}`)
 
+    const getRecipientBalance = async () => {
+        const a = recipientAddress || await memberClient.getAddress()
+        return options.sendToMainnet ? memberClient.getTokenBalance(a) : memberClient.getSidechainTokenBalance(a)
+    }
+
+    const balanceBefore = await getRecipientBalance()
+    log(`Balance before: ${balanceBefore}. Withdrawing tokens...`)
+
     // "bridge-sponsored mainnet withdraw" case
     if (!options.payForTransport && options.waitUntilTransportIsComplete) {
+        log(`Adding ${memberWallet.address} to bridge-sponsored withdraw whitelist`)
         bridgeWhitelist.push(memberWallet.address)
     }
 
     // test setup done, do the withdraw
-    const balanceBefore = await getBalance(memberWallet)
-    log(`Balance before: ${balanceBefore}. Withdrawing tokens...`)
     let ret = await withdraw(dataUnion.getAddress(), memberClient, memberWallet, adminClient)
 
     // "other-sponsored mainnet withdraw" case
@@ -158,10 +166,10 @@ async function testWithdraw(
     // we need to wait nevertheless, to be able to assert that balance in fact changed
     if (!options.waitUntilTransportIsComplete) {
         log(`Waiting until balance changes from ${balanceBefore.toString()}`)
-        await until(async () => getBalance(memberWallet).then((b) => !b.eq(balanceBefore)))
+        await until(async () => getRecipientBalance().then((b) => !b.eq(balanceBefore)))
     }
 
-    const balanceAfter = await getBalance(memberWallet)
+    const balanceAfter = await getRecipientBalance()
     const balanceIncrease = balanceAfter.sub(balanceBefore)
 
     expect(stats).toMatchObject({
@@ -177,7 +185,7 @@ log('Starting the simulated bridge-sponsored signature transport process')
 // event UserRequestForSignature(bytes32 indexed messageId, bytes encodedData)
 const signatureRequestEventSignature = '0x520d2afde79cbd5db58755ac9480f81bc658e5c517fcae7365a3d832590b0183'
 const sidechainAmbAddress = '0xaFA0dc5Ad21796C9106a36D68f69aAD69994BB64'
-const bridgeWhitelist: string[] = []
+const bridgeWhitelist: EthereumAddress[] = []
 providerSidechain.on({
     address: sidechainAmbAddress,
     topics: [signatureRequestEventSignature]
@@ -185,7 +193,7 @@ providerSidechain.on({
     log(`Observed signature request for message id=${event.topics[1]}`) // messageId is indexed so it's in topics...
     const message = defaultAbiCoder.decode(['bytes'], event.data)[0] // ...only encodedData is in data
     const recipient = '0x' + message.slice(200, 240)
-    if (bridgeWhitelist.find((address) => address.toLowerCase() === recipient)) {
+    if (!bridgeWhitelist.find((address) => address.toLowerCase() === recipient)) {
         log(`Recipient ${recipient} not whitelisted, ignoring`)
         return
     }
@@ -196,8 +204,6 @@ providerSidechain.on({
 })
 
 describe('DataUnion withdraw', () => {
-    const balanceClient = createClient()
-
     afterAll(() => {
         providerMainnet.removeAllListeners()
         providerSidechain.removeAllListeners()
@@ -216,27 +222,19 @@ describe('DataUnion withdraw', () => {
 
         const options = { sendToMainnet, payForTransport, waitUntilTransportIsComplete }
 
-        async function getTokenBalance(wallet: Wallet) {
-            return sendToMainnet ? balanceClient.getTokenBalance(wallet.address) : balanceClient.getSidechainTokenBalance(wallet.address)
-        }
-
         describe('by member', () => {
 
             it('to itself', () => {
-                const getBalance = async (memberWallet: Wallet) => getTokenBalance(memberWallet)
-                const withdraw = async (dataUnionAddress: string, memberClient: StreamrClient) => (
+                return testWithdraw(async (dataUnionAddress, memberClient) => (
                     memberClient.getDataUnion(dataUnionAddress).withdrawAll(options)
-                )
-                return testWithdraw(getBalance, withdraw, true, options)
+                ), null, true, options)
             }, 3600000)
 
             it('to any address', () => {
                 const outsiderWallet = new Wallet(`0x100000000000000000000000000000000000000012300000002${Date.now()}`, providerSidechain)
-                const getBalance = async () => getTokenBalance(outsiderWallet)
-                const withdraw = (dataUnionAddress: string, memberClient: StreamrClient) => (
+                return testWithdraw(async (dataUnionAddress, memberClient) => (
                     memberClient.getDataUnion(dataUnionAddress).withdrawAllTo(outsiderWallet.address, options)
-                )
-                return testWithdraw(getBalance, withdraw, true, options)
+                ), outsiderWallet.address, true, options)
             }, 3600000)
 
         })
@@ -244,28 +242,19 @@ describe('DataUnion withdraw', () => {
         describe('by admin', () => {
 
             it('to member without signature', async () => {
-                const getBalance = async (memberWallet: Wallet) => getTokenBalance(memberWallet)
-                const withdraw = (dataUnionAddress: string, _: StreamrClient, memberWallet: Wallet, adminClient: StreamrClient) => (
+                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => (
                     adminClient.getDataUnion(dataUnionAddress).withdrawAllToMember(memberWallet.address, options)
-                )
-                return testWithdraw(getBalance, withdraw, false, options)
+                ), null, false, options)
             }, 3600000)
 
             it("to anyone with member's signature", async () => {
                 const member2Wallet = new Wallet(`0x100000000000000000000000000040000000000012300000007${Date.now()}`, providerSidechain)
-                const getBalance = async () => getTokenBalance(member2Wallet)
-                const withdraw = async (
-                    dataUnionAddress: string,
-                    memberClient: StreamrClient,
-                    memberWallet: Wallet,
-                    adminClient: StreamrClient
-                ) => {
+                return testWithdraw(async (dataUnionAddress, memberClient, memberWallet, adminClient) => {
                     const signature = await memberClient.getDataUnion(dataUnionAddress).signWithdrawAllTo(member2Wallet.address)
                     return adminClient
                         .getDataUnion(dataUnionAddress)
                         .withdrawAllToSigned(memberWallet.address, member2Wallet.address, signature, options)
-                }
-                return testWithdraw(getBalance, withdraw, false, options)
+                }, member2Wallet.address, false, options)
             }, 3600000)
         })
     })
