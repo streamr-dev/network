@@ -53,10 +53,6 @@ describeRepeats('StreamrClient', () => {
         onError = getOnError(errors)
     })
 
-    beforeAll(async () => {
-        await checkConnection()
-    })
-
     afterEach(async () => {
         await wait(0)
         // ensure no unexpected errors
