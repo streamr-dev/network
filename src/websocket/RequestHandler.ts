@@ -11,49 +11,68 @@ import { Publisher } from '../Publisher'
 import { SubscriptionManager } from '../SubscriptionManager'
 import { Connection } from './Connection'
 import { MAX_SEQUENCE_NUMBER_VALUE, MIN_SEQUENCE_NUMBER_VALUE } from '../http/DataQueryEndpoints'
+import { StreamFetcher } from '../StreamFetcher'
 
-const logger = getLogger('streamr:RequestHandlers')
-type RequestHandler = (Connection: Todo, request: Todo) => void
+const logger = getLogger('streamr:RequestHandler')
 
-export class RequestHandlers {
+type SubscribeRequest = Protocol.ControlLayer.SubscribeRequest
+type UnsubscribeRequest = Protocol.ControlLayer.UnsubscribeRequest
+type ResendLastRequest = Protocol.ControlLayer.ResendLastRequest
+type ResendFromRequest = Protocol.ControlLayer.ResendFromRequest
+type ResendRangeRequest = Protocol.ControlLayer.ResendRangeRequest
+type PublishRequest = Protocol.ControlLayer.PublishRequest
+type UnicastMessage = Protocol.ControlLayer.UnicastMessage
+
+export class RequestHandler {
 
     networkNode: NetworkNode
-    streamFetcher: Todo
+    streamFetcher: StreamFetcher
     publisher: Publisher
-    streams: Todo
+    streams: StreamStateManager
     subscriptionManager: SubscriptionManager
     metrics: Metrics
-    requestHandlersByMessageType: Record<Todo,(connection: Connection, request: Todo) => Todo>
 
     constructor(   
         networkNode: NetworkNode,
-        streamFetcher: Todo,
+        streamFetcher: StreamFetcher,
         publisher: Publisher,
+        streams: StreamStateManager,
         subscriptionManager: SubscriptionManager,
-        metrics: Metrics
+        metrics: Metrics,
     ) {
         this.networkNode = networkNode
         this.streamFetcher = streamFetcher
         this.publisher = publisher
+        this.streams = streams
         this.subscriptionManager = subscriptionManager
         this.metrics = metrics
-        this.requestHandlersByMessageType = {
-            [ControlLayer.ControlMessage.TYPES.SubscribeRequest]: this.handleSubscribeRequest,
-            [ControlLayer.ControlMessage.TYPES.UnsubscribeRequest]: this.handleUnsubscribeRequest,
-            [ControlLayer.ControlMessage.TYPES.ResendLastRequest]: this.handleResendLastRequest,
-            [ControlLayer.ControlMessage.TYPES.ResendFromRequest]: this.handleResendFromRequest,
-            [ControlLayer.ControlMessage.TYPES.ResendRangeRequest]: this.handleResendRangeRequest,
-            [ControlLayer.ControlMessage.TYPES.PublishRequest]: this.handlePublishRequest,
+    }
+
+    handleRequest(connection: Connection, request: Todo): Promise<any> {
+        switch (request.type) {
+            case ControlLayer.ControlMessage.TYPES.SubscribeRequest: 
+                return this.subscribe(connection, request)
+            case ControlLayer.ControlMessage.TYPES.UnsubscribeRequest: 
+                return this.unsubscribe(connection, request)
+            case ControlLayer.ControlMessage.TYPES.PublishRequest: 
+                return this.publish(connection, request)
+            case ControlLayer.ControlMessage.TYPES.ResendLastRequest: 
+            case ControlLayer.ControlMessage.TYPES.ResendFromRequest: 
+            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest: 
+                return this.resend(connection, request)
+            default:
+                connection.send(new ControlLayer.ErrorResponse({
+                    version: request.version,
+                    requestId: request.requestId,
+                    errorMessage: `Unknown request type: ${request.type}`,
+                    // @ts-expect-error
+                    errorCode: 'INVALID_REQUEST',
+                }))
+                return Promise.resolve()
         }
-        this.streams = new StreamStateManager()
-        this.networkNode.addMessageListener(this._broadcastMessage.bind(this))
     }
 
-    getInstance(messageType: Todo): RequestHandler|undefined {
-        return this.requestHandlersByMessageType[messageType]
-    }
-
-    async handlePublishRequest(connection: Connection, request: Todo) {
+    private async publish(connection: Connection, request: PublishRequest) {
         const { streamMessage } = request
 
         try {
@@ -95,17 +114,67 @@ export class RequestHandlers {
         }
     }
 
-    // TODO: Extract resend stuff to class?
-    async handleResendRequest(connection: Connection, request: Todo, resendTypeHandler: Todo) {
-        let nothingToResend = true
-        let sentMessages = 0
+    private async resend(connection: Connection, request: ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
+        await this._validateSubscribeOrResendRequest(request)
+        const streamingStorageData = this.getStreamStorageData(request)
+        return this.sendResendResponse(connection, request, streamingStorageData)
+    }
 
-        const msgHandler = (unicastMessage: Todo) => {
-            if (nothingToResend) {
-                nothingToResend = false
+    private getStreamStorageData(request: ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
+        let r
+        switch (request.type) {
+            case ControlLayer.ControlMessage.TYPES.ResendLastRequest: 
+                r = request as ResendLastRequest
+                return this.networkNode.requestResendLast(
+                    r.streamId,
+                    r.streamPartition,
+                    uuidv4(),
+                    r.numberLast,
+                )
+            case ControlLayer.ControlMessage.TYPES.ResendFromRequest: 
+                r = request as ResendFromRequest
+                return this.networkNode.requestResendFrom(
+                    r.streamId,
+                    r.streamPartition,
+                    uuidv4(),
+                    r.fromMsgRef.timestamp,
+                    // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
+                    r.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,
+                    r.publisherId,
+                    // @ts-expect-error
+                    r.msgChainId,
+                )
+            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest: 
+                r = request as ResendRangeRequest
+                return this.networkNode.requestResendRange(
+                    r.streamId,
+                    r.streamPartition,
+                    uuidv4(),
+                    r.fromMsgRef.timestamp,
+                    // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE&MAX_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
+                    r.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,  
+                    r.toMsgRef.timestamp,
+                    r.toMsgRef.sequenceNumber || MAX_SEQUENCE_NUMBER_VALUE,
+                    r.publisherId,
+                    r.msgChainId,
+                )
+            default: 
+                throw new Error('Assertion failed: request.type=' + request.type)
+        }
+    }
+
+    private async sendResendResponse(
+        connection: Connection, 
+        request: ResendFromRequest|ResendLastRequest|ResendRangeRequest,
+        streamingStorageData: NodeJS.ReadableStream
+    ) {
+        let sentMessages = 0
+    
+        const msgHandler = (unicastMessage: UnicastMessage) => {
+            if (sentMessages === 0) {
                 connection.send(new ControlLayer.ResendResponseResending(request))
             }
-
+    
             const { streamMessage } = unicastMessage
             this.metrics.record('outBytes', streamMessage.getSerializedContent().length)
             this.metrics.record('outMessages', 1)
@@ -116,10 +185,10 @@ export class RequestHandlers {
                 streamMessage,
             }))
         }
-
+    
         const doneHandler = () => {
             logger.info('Finished resend %s for stream %s with a total of %d sent messages', request.requestId, request.streamId, sentMessages)
-            if (nothingToResend) {
+            if (sentMessages === 0) {
                 connection.send(new ControlLayer.ResendResponseNoResend({
                     version: request.version,
                     requestId: request.requestId,
@@ -135,13 +204,11 @@ export class RequestHandlers {
                 }))
             }
         }
-
+    
         try {
-            await this._validateSubscribeOrResendRequest(request)
             if (connection.isDead()) {
                 return
             }
-            const streamingStorageData = resendTypeHandler()
             const pauseHandler = () => streamingStorageData.pause()
             const resumeHandler = () => streamingStorageData.resume()
             connection.addOngoingResend(streamingStorageData)
@@ -164,64 +231,7 @@ export class RequestHandlers {
         }
     }
 
-    async handleResendLastRequest(connection: Connection, request: Todo) {
-        await this.handleResendRequest(connection, request, () => this.networkNode.requestResendLast(
-            request.streamId,
-            request.streamPartition,
-            uuidv4(),
-            request.numberLast,
-        ))
-    }
-
-    async handleResendFromRequest(connection: Connection, request: Todo) {
-        await this.handleResendRequest(connection, request, () => this.networkNode.requestResendFrom(
-            request.streamId,
-            request.streamPartition,
-            uuidv4(),
-            request.fromMsgRef.timestamp,
-            // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
-            request.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,
-            request.publisherId,
-            request.msgChainId,
-        ))
-    }
-
-    async handleResendRangeRequest(connection: Connection, request: Todo) {
-        await this.handleResendRequest(connection, request, () => this.networkNode.requestResendRange(
-            request.streamId,
-            request.streamPartition,
-            uuidv4(),
-            request.fromMsgRef.timestamp,
-            // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE&MAX_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
-            request.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,  
-            request.toMsgRef.timestamp,
-            request.toMsgRef.sequenceNumber || MAX_SEQUENCE_NUMBER_VALUE,
-            request.publisherId,
-            request.msgChainId,
-        ))
-    }
-
-    _broadcastMessage(streamMessage: Todo) {
-        const streamId = streamMessage.getStreamId()
-        const streamPartition = streamMessage.getStreamPartition()
-        const stream = this.streams.get(streamId, streamPartition)
-
-        if (stream) {
-            stream.forEachConnection((connection: Todo) => {
-                connection.send(new ControlLayer.BroadcastMessage({
-                    requestId: '', // TODO: can we have here the requestId of the original SubscribeRequest?
-                    streamMessage,
-                }))
-            })
-
-            this.metrics.record('outBytes', streamMessage.getSerializedContent().length * stream.getConnections().length)
-            this.metrics.record('outMessages', stream.getConnections().length)
-        } else {
-            logger.debug('broadcastMessage: stream "%s:%d" not found', streamId, streamPartition)
-        }
-    }
-
-    async handleSubscribeRequest(connection: Connection, request: Todo) {
+    private async subscribe(connection: Connection, request: SubscribeRequest) {
         try {
             await this._validateSubscribeOrResendRequest(request)
 
@@ -281,7 +291,7 @@ export class RequestHandlers {
         }
     }
 
-    handleUnsubscribeRequest(connection: Connection, request: Todo, noAck = false) {
+    async unsubscribe(connection: Connection, request: UnsubscribeRequest, noAck = false) {
         const stream = this.streams.get(request.streamId, request.streamPartition)
 
         if (stream) {
@@ -335,7 +345,7 @@ export class RequestHandlers {
         }
     }
 
-    async _validateSubscribeOrResendRequest(request: Todo) {
+    private async _validateSubscribeOrResendRequest(request: SubscribeRequest|ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
         if (Utils.StreamMessageValidator.isKeyExchangeStream(request.streamId)) {
             if (request.streamPartition !== 0) {
                 throw new Error(`Key exchange streams only have partition 0. Tried to subscribe to ${request.streamId}:${request.streamPartition}`)
