@@ -10,15 +10,20 @@ import { router as dataProduceEndpoints } from './DataProduceEndpoints'
 import { router as volumeEndpoint } from './VolumeEndpoint'
 import { router as dataMetadataEndpoint } from './DataMetadataEndpoints'
 import { router as storageConfigEndpoints } from './StorageConfigEndpoints'
-import { AdapterConfig } from '../Adapter'
+import { AdapterConfig, AdapterStartFn } from '../Adapter'
 import { BrokerUtils } from '../types'
 
 const logger = getLogger('streamr:httpAdapter')
 
-export const start = (
-    { port, privateKeyFileName, certFileName }: AdapterConfig, 
-    { config, networkNode, publisher, streamFetcher, metricsContext, cassandraStorage, storageConfig}: BrokerUtils
-) => {
+export interface HttpAdapterConfig extends AdapterConfig {
+    privateKeyFileName: string|null, 
+    certFileName: string|null
+}
+
+export const start: AdapterStartFn<HttpAdapterConfig> = (
+    { port, privateKeyFileName, certFileName }: HttpAdapterConfig, 
+    { config, publisher, streamFetcher, metricsContext, cassandraStorage, storageConfig}: BrokerUtils
+ ): () => Promise<any> => {
     const app = express()
 
     // Add CORS headers

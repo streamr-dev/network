@@ -4,20 +4,21 @@ import { start as startHttp } from './http/index'
 import { start as startWs } from './websocket/index'
 import { start as startMqtt } from './mqtt/index'
 
-const registry: Record<string,AdapterStartFn> = {}
+const registry: Record<string,AdapterStartFn<AdapterConfig>> = {}
 
-const register = (name: string, startFn: AdapterStartFn) => {
+const register = <T extends AdapterConfig> (name: string, startFn: AdapterStartFn<T>) => {
     if (name in registry) {
         throw new Error(`adapterRegistry already contains adapter ${name}`)
     }
+    // @ts-expect-error
     registry[name] = startFn
 }
 
-export const startAdapter = (name: string, adapterConfig: AdapterConfig, brokerUtils: BrokerUtils) => {
+export const startAdapter = <T extends AdapterConfig> (name: string, adapterConfig: T, brokerUtils: BrokerUtils) => {
     if (!(name in registry)) {
         throw new Error(`adapterRegistry does not contain adapter ${name}`)
     }
-    return registry[name](adapterConfig, brokerUtils)
+    return registry[name](adapterConfig as any, brokerUtils)
 }
 
 register('http', startHttp)

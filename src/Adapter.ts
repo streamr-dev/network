@@ -1,11 +1,8 @@
 import { BrokerUtils } from './types'
 
 export interface AdapterConfig {
-    port: number, 
-    privateKeyFileName?: string, 
-    certFileName?: string,
-    pingInterval?: number
-    streamsTimeout?: number
+    name: string
+    port: number
 }
 
-export type AdapterStartFn = (adapterConfig: AdapterConfig, brokerUtils: BrokerUtils) => void
+export type AdapterStartFn<T extends AdapterConfig> = (adapterConfig: T, brokerUtils: BrokerUtils) => () => Promise<any>

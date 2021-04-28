@@ -60,7 +60,9 @@ export class StorageConfig {
     static async createInstance(nodeId: string, apiUrl: string, pollInterval: number) {
         const instance = new StorageConfig(nodeId, apiUrl)
         // eslint-disable-next-line no-underscore-dangle
-        await instance._poll(pollInterval)
+        if (pollInterval !== 0) {
+            await instance._poll(pollInterval)
+        }
         return instance
     }
 
