@@ -129,6 +129,7 @@ describeRepeats('resends', () => {
             emptyStream = await client.createStream({
                 name: uid('stream')
             })
+            await emptyStream.addToStorageNode(config.clientOptions.storageNode.address)
             await expect(async () => {
                 await subscriber.resend({
                     streamId: emptyStream.id,

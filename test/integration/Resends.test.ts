@@ -336,8 +336,6 @@ describe('StreamrClient resends', () => {
                     name: uid('resends')
                 })
 
-                client.debug('CREATED')
-
                 await stream.addToStorageNode(config.clientOptions.storageNode.address)
 
                 publishTestMessages = getPublishTestMessages(client, {

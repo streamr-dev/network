@@ -57,6 +57,7 @@ $('#create').on('click', async () => {
         name: streamName,
         requireEncryptedData: true,
     })
+    await stream.addToStorageNode(config.clientOptions.storageNode.address)
     $('#result').html(stream.name)
 })
 
