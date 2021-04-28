@@ -84,7 +84,7 @@ describeRepeats('StreamrClient', () => {
             ])
         } catch (e) {
             if (e.errno === 'ENOTFOUND' || e.errno === 'ECONNREFUSED') {
-                throw new Error('Integration testing requires that engine-and-editor '
+                throw new Error('Integration testing requires that core-api '
                     + 'and data-api ("entire stack") are running in the background. '
                     + 'Instructions: https://github.com/streamr-dev/streamr-docker-dev#running')
             } else {

@@ -31,7 +31,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "engine-and-editor cassandra nginx"
+          services-to-start: "core-api cassandra nginx"
       - run: npm run test-integration
         env:
           CI: true
