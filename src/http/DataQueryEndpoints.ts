@@ -8,6 +8,7 @@ import { getLogger } from '../helpers/logger'
 import { Todo } from '../types'
 import { Storage } from '../storage/Storage'
 import { authenticator } from './RequestAuthenticatorMiddleware'
+import { Format, getFormat } from './DataQueryFormat'
 
 const logger = getLogger('streamr:http:DataQueryEndpoints')
 
@@ -15,35 +16,36 @@ const logger = getLogger('streamr:http:DataQueryEndpoints')
 export const MIN_SEQUENCE_NUMBER_VALUE = 0
 export const MAX_SEQUENCE_NUMBER_VALUE = 2147483647
 
-const onStarted = (res: Response) => {
+const onStarted = (res: Response, format: Format) => {
     res.writeHead(200, {
-        'Content-Type': 'application/json'
+        'Content-Type': format.contentType
     })
-    res.write('[')
+    res.write(format.header)
 }
 
-const onRow = (res: Response, streamMessage: Protocol.StreamMessage, delimiter: Todo, format = 'object', version: Todo, metrics: Metrics) => {
+const onRow = (res: Response, streamMessage: Protocol.StreamMessage, delimiter: Todo, format: Format, version: number|undefined, metrics: Metrics) => {
     res.write(delimiter) // because can't have trailing comma in JSON array
-    res.write(format === 'protocol' ? JSON.stringify(streamMessage.serialize(version)) : JSON.stringify(streamMessage.toObject()))
-    metrics.record('outBytes', streamMessage.getSerializedContent().length)
+    const messageAsString = format.getMessageAsString(streamMessage, version)
+    res.write(messageAsString)
+    metrics.record('outBytes', streamMessage.getSerializedContent().length) // TODO this should the actual byte count (messageAsString.length)?
     metrics.record('outMessages', 1)
 }
 
-const streamData = (res: Response, stream: NodeJS.ReadableStream, format: string, version: Todo, metrics: Metrics) => {
+const streamData = (res: Response, stream: NodeJS.ReadableStream, format: Format, version: Todo, metrics: Metrics) => {
     let delimiter = ''
     stream.on('data', (row) => {
         // first row
         if (delimiter === '') {
-            onStarted(res)
+            onStarted(res, format)
         }
         onRow(res, row, delimiter, format, version, metrics)
-        delimiter = ','
+        delimiter = format.delimiter
     })
     stream.on('end', () => {
         if (delimiter === '') {
-            onStarted(res)
+            onStarted(res, format)
         }
-        res.write(']')
+        res.write(format.footer)
         res.end()
     })
     stream.on('error', (err: Todo) => {
@@ -56,6 +58,24 @@ const streamData = (res: Response, stream: NodeJS.ReadableStream, format: string
 
 function parseIntIfExists(x: Todo) {
     return x === undefined ? undefined : parseInt(x)
+}
+
+const createEndpoint = (path: string, router: express.Router, callback: (req: Request, res: Response, streamId: string, partition: number, format: Format, version: number|undefined) => void) => {
+    router.get(path, (req: Request, res: Response) => {
+        const format = getFormat(req.query.format as string)
+        if (format === undefined) {
+            const errMsg = `Query parameter "format" is invalid: ${req.query.format}`
+            logger.error(errMsg)
+            res.status(400).send({
+                error: errMsg
+            })
+        } else {
+            const streamId = req.params.id
+            const partition = parseInt(req.params.partition)
+            const version = parseIntIfExists(req.query.version)
+            callback(req, res, streamId, partition, format, version)
+        }
+    })
 }
 
 export const router = (storage: Storage, streamFetcher: Todo, metricsContext: MetricsContext) => {
@@ -85,10 +105,8 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         authenticator(streamFetcher, 'stream_subscribe'),
     )
 
-    router.get('/streams/:id/data/partitions/:partition/last', (req: Request, res: Response) => {
-        const partition = parseInt(req.params.partition)
+    createEndpoint('/streams/:id/data/partitions/:partition/last', router, (req: Request, res: Response, streamId: string, partition: number, format: Format, version: number|undefined) => {
         const count = req.query.count === undefined ? 1 : parseInt(req.query.count as string)
-        const version = parseIntIfExists(req.query.version)
         metrics.record('lastRequests', 1)
 
         if (Number.isNaN(count)) {
@@ -100,21 +118,19 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
             })
         } else {
             const streamingData = storage.requestLast(
-                req.params.id,
+                streamId,
                 partition,
                 count,
             )
 
-            streamData(res, streamingData, (req.query.format as string), version, metrics)
+            streamData(res, streamingData, format, version, metrics)
         }
     })
 
-    router.get('/streams/:id/data/partitions/:partition/from', (req: Request, res: Response) => {
-        const partition = parseInt(req.params.partition)
+    createEndpoint('/streams/:id/data/partitions/:partition/from', router, (req: Request, res: Response, streamId: string, partition: number, format: Format, version: number|undefined) => {
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
         const { publisherId } = req.query
-        const version = parseIntIfExists(req.query.version)
         metrics.record('fromRequests', 1)
 
         if (fromTimestamp === undefined) {
@@ -133,7 +149,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
             })
         } else {
             const streamingData = storage.requestFrom(
-                req.params.id,
+                streamId,
                 partition,
                 fromTimestamp,
                 fromSequenceNumber,
@@ -141,13 +157,11 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
                 null,
             )
 
-            streamData(res, streamingData, (req.query.format as string), version, metrics)
+            streamData(res, streamingData, format, version, metrics)
         }
     })
 
-    router.get('/streams/:id/data/partitions/:partition/range', (req: Request, res: Response) => {
-        const partition = parseInt(req.params.partition)
-        const version = parseIntIfExists(req.query.version)
+    createEndpoint('/streams/:id/data/partitions/:partition/range', router, (req: Request, res: Response, streamId: string, partition: number, format: Format, version: number|undefined) => {
         const fromTimestamp = parseIntIfExists(req.query.fromTimestamp)
         const toTimestamp = parseIntIfExists(req.query.toTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
@@ -194,17 +208,18 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
             })
         } else {
             const streamingData = storage.requestRange(
-                req.params.id,
+                streamId,
                 partition,
                 fromTimestamp,
                 fromSequenceNumber,
                 toTimestamp,
                 toSequenceNumber,
                 (publisherId as string) || null,
+                // TODO should add query parameter for msgChainId? (NET-281)
                 null,
             )
 
-            streamData(res, streamingData, (req.query.format as string), version, metrics)
+            streamData(res, streamingData, format, version, metrics)
         }
     })
 
