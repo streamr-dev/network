@@ -170,9 +170,7 @@ export class StreamrClient extends EventEmitter { // eslint-disable-line no-rede
     id: string
     /** @internal */
     debug: Debug.Debugger
-    /** @internal */
     options: StrictStreamrClientOptions
-    /** @internal */
     session: Session
     /** @internal */
     connection: StreamrConnection
