@@ -121,6 +121,7 @@ describeRepeats('GapFill with resends', () => {
 
                 count += 1
                 if (count === 2) {
+                    client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
                     return null
                 }
 
@@ -130,7 +131,7 @@ describeRepeats('GapFill with resends', () => {
             expect(subscriber.count(stream.id)).toBe(1)
 
             const published = await publishTestMessages(MAX_MESSAGES, {
-                timestamp: 111111,
+                waitForLast: true,
             })
 
             const received = []
@@ -155,7 +156,8 @@ describeRepeats('GapFill with resends', () => {
                 }
 
                 count += 1
-                if (count > 1 && count < 5) {
+                if (count > 1 && count < 4) {
+                    client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
                     return null
                 }
 
@@ -164,7 +166,9 @@ describeRepeats('GapFill with resends', () => {
 
             expect(subscriber.count(stream.id)).toBe(1)
 
-            const published = await publishTestMessages(MAX_MESSAGES)
+            const published = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: true,
+            })
 
             const received = []
             for await (const m of sub) {
@@ -175,7 +179,7 @@ describeRepeats('GapFill with resends', () => {
             }
             expect(received).toEqual(published)
             expect(client.connection.getState()).toBe('connected')
-        }, 10000)
+        }, 20000)
 
         it('can fill multiple gaps', async () => {
             const sub = await client.subscribe(stream.id)
@@ -189,6 +193,7 @@ describeRepeats('GapFill with resends', () => {
 
                 count += 1
                 if (count === 3 || count === 4 || count === 7) {
+                    client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
                     return null
                 }
 
@@ -197,7 +202,9 @@ describeRepeats('GapFill with resends', () => {
 
             expect(subscriber.count(stream.id)).toBe(1)
 
-            const published = await publishTestMessages(MAX_MESSAGES)
+            const published = await publishTestMessages(MAX_MESSAGES, {
+                waitForLast: true,
+            })
 
             const received = []
             for await (const m of sub) {
@@ -221,6 +228,7 @@ describeRepeats('GapFill with resends', () => {
 
                 count += 1
                 if (count === 3 || count === 4 || count === 7) {
+                    client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
                     return null
                 }
 
@@ -228,7 +236,6 @@ describeRepeats('GapFill with resends', () => {
             }
 
             const published = await publishTestMessages(MAX_MESSAGES, {
-                timestamp: 111111,
                 waitForLast: true,
             })
 
@@ -260,10 +267,12 @@ describeRepeats('GapFill with resends', () => {
                     if (!droppedMsgRef) {
                         droppedMsgRef = msg.streamMessage.getMessageRef()
                     }
+                    client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
                     return null
                 }
 
                 if (droppedMsgRef && msg.streamMessage.getMessageRef().compareTo(droppedMsgRef) === 0) {
+                    client.debug('(%o) << Test Dropped Message %s: %o', client.connection.getState(), count, msg)
                     return null
                 }
 

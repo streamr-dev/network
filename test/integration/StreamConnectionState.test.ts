@@ -281,6 +281,7 @@ describeRepeats('Connection State', () => {
                 received.push(msg.getParsedContent())
                 if (received.length === 2) {
                     expect(received).toEqual(published)
+                    client.debug('test closing socket')
                     client.connection.socket.close()
                     // this will cause a gap fill
                     published.push(...(await publishTestMessages(2)))
@@ -304,6 +305,7 @@ describeRepeats('Connection State', () => {
                 received.push(msg.getParsedContent())
                 if (received.length === 1) {
                     expect(received).toEqual(published.slice(0, 1))
+                    client.debug('test disconnecting')
                     client.disconnect() // should trigger break
                     // no await, should be immediate
                 }
@@ -337,6 +339,7 @@ describeRepeats('Connection State', () => {
             for await (const msg of sub2) {
                 received2.push(msg.getParsedContent())
                 if (received2.length === 1) {
+                    client.debug('test disconnecting')
                     await client.disconnect()
                 }
             }
@@ -406,7 +409,9 @@ describeRepeats('Connection State', () => {
                     if (localOtherClient !== otherClient) {
                         throw new Error('not equal')
                     }
+
                     await localOtherClient.nextConnection()
+
                     if (cancelled || msgs.length === MAX_MESSAGES) {
                         reconnected.resolve(undefined)
                         return
@@ -415,6 +420,7 @@ describeRepeats('Connection State', () => {
                     if (localOtherClient !== otherClient) {
                         throw new Error('not equal')
                     }
+                    client.debug('test closing localOtherClient socket')
                     localOtherClient.connection.socket.close()
                     // wait for reconnection before possibly disconnecting again
                     await localOtherClient.nextConnection()
