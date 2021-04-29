@@ -81,7 +81,7 @@ describe('resend cancellation', () => {
             ws.App(),
             wsPort,
             networkNode,
-            new StreamFetcher(`http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core`),
+            new StreamFetcher(`http://${STREAMR_DOCKER_DEV_HOST}`),
             new Publisher(networkNode, {}, metricsContext),
             metricsContext,
             new SubscriptionManager(networkNode)

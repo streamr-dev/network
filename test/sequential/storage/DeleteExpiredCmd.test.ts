@@ -67,7 +67,7 @@ describe('DeleteExpiredCmd', () => {
             orderMessages: false,
         })
         deleteExpiredCmd = new DeleteExpiredCmd({
-            streamrBaseUrl: `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core`,
+            streamrBaseUrl: `http://${STREAMR_DOCKER_DEV_HOST}`,
             cassandraUsername: '',
             cassandraPassword: '',
             cassandraHosts: [STREAMR_DOCKER_DEV_HOST],

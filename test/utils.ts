@@ -23,7 +23,7 @@ export function formConfig({
     privateKeyFileName = null,
     certFileName = null,
     streamrAddress = '0xFCAd0B19bB29D4674531d6f115237E16AfCE377c',
-    streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core`,
+    streamrUrl = `http://${STREAMR_DOCKER_DEV_HOST}`,
     reporting = false
 }: Todo) {
     const adapters = []
@@ -123,7 +123,7 @@ export function createClient(wsPort: number, privateKey = fastPrivateKey(), clie
             privateKey
         },
         url: getWsUrl(wsPort),
-        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}:8081/streamr-core/api/v1`,
+        restUrl: `http://${STREAMR_DOCKER_DEV_HOST}/api/v1`,
         ...clientOptions,
     })
 }
