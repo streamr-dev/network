@@ -1,7 +1,6 @@
 import fetch from 'node-fetch'
 import { getAddress } from '@ethersproject/address'
-import { waitForCondition } from 'streamr-test-utils'
-import { getEndpointUrl } from '../utils'
+import { getEndpointUrl, until } from '../utils'
 import authFetch from '../rest/authFetch'
 
 import { StorageNode } from './StorageNode'
@@ -224,7 +223,7 @@ export class Stream {
         await this.update()
     }
 
-    async addToStorageNode(address: string) {
+    async addToStorageNode(address: string, { timeout = 30000 }: { timeout: number } = { timeout: 30000 }) {
         // currently we support only one storage node
         // -> we can validate that the given address is that address
         // -> remove this comparison when we start to support multiple storage nodes
@@ -233,8 +232,7 @@ export class Stream {
         }
         await authFetch(
             getEndpointUrl(this._client.options.restUrl, 'streams', this.id, 'storageNodes'),
-            this._client.session,
-            {
+            this._client.session, {
                 method: 'POST',
                 body: JSON.stringify({
                     address
@@ -243,9 +241,8 @@ export class Stream {
         )
         // wait for propagation: the storage node sees the database change in E&E and
         // is ready to store the any stream data which we publish
-        const TIMEOUT = 30 * 1000
         const POLL_INTERVAL = 500
-        await waitForCondition(() => this.isStreamStoredInStorageNode(this.id), TIMEOUT, POLL_INTERVAL,
+        await until(() => this.isStreamStoredInStorageNode(this.id), timeout, POLL_INTERVAL,
             () => `Propagation timeout when adding stream to a storage node: ${this.id}`)
     }
 

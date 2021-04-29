@@ -494,7 +494,8 @@ export async function sleep(ms: number = 0) {
  * @param timeOutMs - stop waiting after that many milliseconds, -1 for disable
  * @param pollingIntervalMs - check condition between so many milliseconds
  */
-export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100) {
+export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
+    const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
     let timeout = false
     if (timeOutMs > 0) {
         setTimeout(() => { timeout = true }, timeOutMs)
@@ -503,8 +504,12 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     // Promise wrapped condition function works for normal functions just the same as Promises
     while (!await Promise.resolve().then(condition)) { // eslint-disable-line no-await-in-loop
         if (timeout) {
-            throw new Error(`Timeout after ${timeOutMs} milliseconds`)
+            if (failedMsgFn) {
+                err.message += ` ${failedMsgFn()}`
+            }
+            throw err
         }
+
         await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
     }
     return condition()
