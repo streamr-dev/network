@@ -96,8 +96,13 @@ jobs:
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
           services-to-start: "mysql redis core-api cassandra parity-node0 parity-sidechain-node0 bridge broker-node-no-storage-1 broker-node-no-storage-2 broker-node-storage-1 nginx smtp"
-      - name: Run Realtime Test
-        run: npm run test-browser-realtime
+      - uses: nick-invision/retry@v2
+        name: Run Realtime Test
+        with:
+          max_attempts: 3
+          timeout_minutes: 3
+          retry_on: error
+          command: npm run test-browser-realtime
 
   browser-resend:
     name: Test Browser Realtime + Resend
