@@ -21,6 +21,7 @@ describe('StreamrClient Resend', () => {
             .click('button[id=connect]')
             .assert.containsText('#result', 'connected')
             .click('button[id=create]')
+            .pause(6000)
             .assert.containsText('#result', streamName)
             .click('button[id=subscribe]')
             .assert.containsText('#result', 'subscribed')
