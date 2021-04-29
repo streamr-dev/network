@@ -154,6 +154,7 @@ jobs:
   memory:
     name:  Memory Tests using Node ${{ matrix.node-version }}
     runs-on: ubuntu-latest
+    if: ${{ false }} # temporarily disable memory test until production resends are stable
     strategy:
       fail-fast: false
       matrix:
