@@ -36,14 +36,16 @@ describe('resend/reconnect', () => {
         })
 
         await stream.addToStorageNode(config.clientOptions.storageNode.address)
+    }, 10000)
 
+    beforeEach(async () => {
         publishTestMessages = getPublishTestMessages(client, {
             streamId: stream.id,
             waitForLast: true,
         })
 
         publishedMessages = await publishTestMessages(MAX_MESSAGES)
-    }, 10 * 1000)
+    }, 10000)
 
     afterEach(async () => {
         await client.disconnect()
@@ -53,6 +55,7 @@ describe('resend/reconnect', () => {
         let shouldDisconnect = false
         let sub: Subscription
         let messages: any[] = []
+
         beforeEach(async () => {
             const done = Defer()
             messages = []

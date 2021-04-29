@@ -77,7 +77,6 @@ describe('StreamrClient resends', () => {
                 })
 
                 await stream.addToStorageNode(config.clientOptions.storageNode.address)
-
             })
 
             beforeEach(async () => {
