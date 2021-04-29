@@ -166,6 +166,71 @@ describe('tracker endpoint', () => {
         })
     })
 
+    it('/topology-size/', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology-size/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual(
+            expect.arrayContaining([{
+                streamId: 'stream-1',
+                partition: 0,
+                nodeCount: 2
+            }, {
+                streamId: 'stream-2',
+                partition: 0,
+                nodeCount: 1
+            }, {
+                streamId: 'sandbox/test/stream-3',
+                partition: 0,
+                nodeCount: 1
+            }])
+        )
+    })
+    it('/topology-size/stream-1/', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology-size/stream-1/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual(
+            expect.arrayContaining([{
+                streamId: 'stream-1',
+                partition: 0,
+                nodeCount: 2
+            }])
+        )
+    })
+
+    it('/topology-size/stream-1/0', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology-size/stream-1/0/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual(
+            expect.arrayContaining([{
+                streamId: 'stream-1',
+                partition: 0,
+                nodeCount: 2
+            }])
+        )
+    })
+
+    it('/topology-size/stream-1/-1', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology-size/stream-1/-1/`)
+        expect(status).toEqual(422)
+        expect(jsonResult).toEqual({
+            errorMessage: 'partition must be a positive integer (was -1)'
+        })
+    })
+
+    it('/topology-size/%20/1/', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology-size/%20/1/`)
+        expect(status).toEqual(422)
+        expect(jsonResult).toEqual({
+            errorMessage: 'streamId cannot be empty'
+        })
+    })
+
+    it('/topology-size/non-existing-stream/0/', async () => {
+        const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/topology-size/non-existing-stream/0/`)
+        expect(status).toEqual(200)
+        expect(jsonResult).toEqual([])
+    })
+
     it('/node-connections/', async () => {
         const [status, jsonResult]: any = await getHttp(`http://127.0.0.1:${trackerPort}/node-connections/`)
         expect(status).toEqual(200)
