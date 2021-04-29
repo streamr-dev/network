@@ -24,7 +24,7 @@ describe('DataQueryEndpoints', () => {
 
     function createStreamMessage(content: any) {
         return new StreamMessage({
-            messageId: new MessageID('streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', '1'),
+            messageId: new MessageID('streamId', 0, new Date(2017, 3, 1, 12, 0, 0).getTime(), 0, 'publisherId', 'msgChainId'),
             content,
         })
     }
@@ -100,6 +100,18 @@ describe('DataQueryEndpoints', () => {
                     .expect(400, {
                         error: 'Query parameter "format" is invalid: foobar',
                     }, done)
+            })
+
+            it('responds 400 and error message if publisherId+msgChainId combination is invalid in range request', async () => {
+                const base = '/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
+                const suffixes = ['publisherId=foo', 'msgChainId=bar']
+                for (const suffix of suffixes) {
+                    await testGetRequest(`${base}&${suffix}`)
+                        .expect('Content-Type', /json/)
+                        .expect(400, {
+                            error: 'Invalid combination of "publisherId" and "msgChainId"',
+                        })
+                }
             })
         })
 
@@ -369,10 +381,32 @@ describe('DataQueryEndpoints', () => {
             })
         })
 
+        describe('?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2', () => {
+
+            const query = '?fromTimestamp=1000&toTimestamp=2000&fromSequenceNumber=1&toSequenceNumber=2'
+            it('invokes networkNode#requestResendRange once with correct arguments', async () => {
+                storage.requestRange = jest.fn()
+
+                await testGetRequest(`/api/v1/streams/streamId/data/partitions/0/range${query}`)
+                expect(storage.requestRange).toHaveBeenCalledTimes(1)
+                expect(storage.requestRange).toHaveBeenCalledWith(
+                    'streamId',
+                    0,
+                    1000,
+                    1,
+                    2000,
+                    2,
+                    null,
+                    null,
+                )
+            })
+
+        })
+
         // eslint-disable-next-line max-len
-        describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId', () => {
+        describe('?fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId&msgChainId=msgChainId', () => {
             // eslint-disable-next-line max-len
-            const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId'
+            const query = 'fromTimestamp=1496408255672&toTimestamp=1496415670909&fromSequenceNumber=1&toSequenceNumber=2&publisherId=publisherId&msgChainId=msgChainId'
 
             let streamMessages: Todo[]
             beforeEach(() => {
@@ -409,7 +443,7 @@ describe('DataQueryEndpoints', () => {
                     1496415670909,
                     2,
                     'publisherId',
-                    null,
+                    'msgChainId',
                 )
             })
 

@@ -166,7 +166,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
         const toTimestamp = parseIntIfExists(req.query.toTimestamp)
         const fromSequenceNumber = parseIntIfExists(req.query.fromSequenceNumber) || MIN_SEQUENCE_NUMBER_VALUE
         const toSequenceNumber = parseIntIfExists(req.query.toSequenceNumber) || MAX_SEQUENCE_NUMBER_VALUE
-        const { publisherId } = req.query
+        const { publisherId, msgChainId } = req.query
         metrics.record('rangeRequests', 1)
 
         if (req.query.fromOffset !== undefined || req.query.toOffset !== undefined) {
@@ -207,6 +207,12 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
                 error: errMsg
             })
         } else {
+            if ((publisherId && !msgChainId) || (!publisherId && msgChainId)) {
+                res.status(400).send({
+                    error: 'Invalid combination of "publisherId" and "msgChainId"'
+                })
+                return
+            }
             const streamingData = storage.requestRange(
                 streamId,
                 partition,
@@ -215,8 +221,7 @@ export const router = (storage: Storage, streamFetcher: Todo, metricsContext: Me
                 toTimestamp,
                 toSequenceNumber,
                 (publisherId as string) || null,
-                // TODO should add query parameter for msgChainId? (NET-281)
-                null,
+                (msgChainId as string) || null
             )
 
             streamData(res, streamingData, format, version, metrics)
