@@ -78,10 +78,12 @@ describe('StreamrClient resends', () => {
 
                 await stream.addToStorageNode(config.clientOptions.storageNode.address)
 
+            })
+
+            beforeEach(async () => {
                 publishTestMessages = getPublishTestMessages(client, {
                     stream
                 })
-
                 published = await publishTestMessages(MAX_MESSAGES, {
                     waitForLast: true,
                     waitForLastTimeout: WAIT_FOR_STORAGE_TIMEOUT,
@@ -341,7 +343,9 @@ describe('StreamrClient resends', () => {
                 publishTestMessages = getPublishTestMessages(client, {
                     stream
                 })
+            })
 
+            beforeEach(async () => {
                 client.debug(`Publishing ${LONG_RESEND} messages...`)
                 published = await publishTestMessages(LONG_RESEND, {
                     waitForLast: true,

@@ -63,16 +63,25 @@ describeRepeats('resends', () => {
         subscriber = client.subscriber
 
         // eslint-disable-next-line require-atomic-updates
-        client.debug('connecting before test >>')
+        client.debug('connecting before all tests >>')
         await Promise.all([
             client.connect(),
             client.session.getSessionToken(),
         ])
+        client.debug('connecting before all tests <<')
+        client.debug('createStream >>')
         stream = await client.createStream({
             name: uid('stream')
         })
-        await stream.addToStorageNode(config.clientOptions.storageNode.address)
-        client.debug('connecting before test <<')
+        client.debug('createStream <<')
+    })
+
+    beforeAll(async () => {
+        client.debug('addToStorageNode >>')
+        await stream.addToStorageNode(config.clientOptions.storageNode.address, {
+            timeout: WAIT_FOR_STORAGE_TIMEOUT * 2,
+        })
+        client.debug('addToStorageNode <<')
 
         publishTestMessages = getPublishTestMessages(client, {
             stream,
