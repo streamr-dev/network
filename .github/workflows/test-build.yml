@@ -185,6 +185,8 @@ jobs:
       NUM_MESSAGES: 20
       TEST_NAME: ${{ matrix.test-name }}
       CONFIG_NAME: ${{ matrix.config-name }}
+      LOG_LEVEL_JAVA_CLIENT: 'debug'
+      LOG_LEVEL_PUBLISHER_JS: 'debug'
     steps:
       - uses: actions/checkout@v2
       - name: Use Node.js 14
