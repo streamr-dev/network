@@ -235,5 +235,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@master
         with:
-          name: docker-logs-${{ github.job }}
+          name: docker-logs-${{ github.job }}-${{ github.run_number }}-${{ github.run_id }}
           path: ./logs

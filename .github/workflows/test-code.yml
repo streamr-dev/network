@@ -121,7 +121,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@master
         with:
-          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}
+          name: docker-logs-${{ matrix.test-name }}-${{ matrix.websocket-url.name }}-node${{ matrix.node-version }}--${{ github.run_number }}-${{ github.run_id }}
           path: ./logs
 
   flakey:
