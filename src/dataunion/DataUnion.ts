@@ -606,8 +606,8 @@ export class DataUnion {
         const {
             pollingIntervalMs = 1000,
             retryTimeoutMs = 300000,
-            // by default, transport the signatures if freeWithdraw isn't supported by the sidechain
-            payForTransport = !this.client.options.dataUnion.freeWithdraw,
+            // by default, transport the signatures if payForTransport=false isn't supported by the sidechain
+            payForTransport = this.client.options.dataUnion.payForTransport,
             waitUntilTransportIsComplete = true,
             sendToMainnet = true,
         } = options
@@ -637,8 +637,8 @@ export class DataUnion {
 
         const messageHash = ambHashes[0]
 
+        // expect someone else to do the transport for us
         if (!payForTransport) {
-            // expect someone else to do the transport for us (corresponds to dataUnion.freeWithdraw=true)
             if (waitUntilTransportIsComplete) {
                 log(`Waiting for balance=${balanceBefore.toString()} change (poll every ${pollingIntervalMs}ms, timeout after ${retryTimeoutMs}ms)`)
                 await until(async () => !(await getBalanceFunc()).eq(balanceBefore), retryTimeoutMs, pollingIntervalMs).catch((e) => {
@@ -648,7 +648,7 @@ export class DataUnion {
                 return null
             }
 
-            // instead of waiting, hand out the messageHash so that someone else might do the transport using it
+            // instead of waiting, hand out the messageHash so that we can pass it on to that who does the transportMessage(messageHash)
             return messageHash
         }
 

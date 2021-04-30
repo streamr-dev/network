@@ -360,11 +360,11 @@ const dataUnion = client.getDataUnion(dataUnionAddress)
 <!-- This stuff REALLY isn't for those who use our infrastructure, neither DU admins nor DU client devs. It's only relevant if you're setting up your own sidechain.
 These DataUnion-specific options can be given to `new StreamrClient` options:
 
-| Property                            | Default                                                | Description                                                                                                      |
-| :---------------------------------- | :----------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------- |
-| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge                          |
-| dataUnion.freeWithdraw              | false                                                  | true = someone else pays for the gas when transporting the withdraw tx to mainnet |
-|                                     |                                                        | false = client does the transport as self-service and pays the mainnet gas costs |
+| Property                            | Default                                                | Description                                                                                |
+| :---------------------------------- | :----------------------------------------------------- | :----------------------------------------------------------------------------------------- |
+| dataUnion.minimumWithdrawTokenWei   | 1000000                                                | Threshold value set in AMB configs, smallest token amount that can pass over the bridge    |
+| dataUnion.payForTransport           | true                                                   | true = client does the transport as self-service and pays the mainnet gas costs            |
+|                                     |                                                        | false = someone else pays for the gas when transporting the withdraw tx to mainnet         |
 -->
 
 ### Admin Functions
