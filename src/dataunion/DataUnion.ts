@@ -135,9 +135,9 @@ export class DataUnion {
     async isMember(memberAddress: EthereumAddress): Promise<boolean> {
         const address = getAddress(memberAddress)
         const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
-        const ACTIVE = 1 // memberData[0] is enum ActiveStatus {None, Active, Inactive}
         const memberData = await duSidechain.memberData(address)
         const state = memberData[0]
+        const ACTIVE = 1 // memberData[0] is enum ActiveStatus {None, Active, Inactive}
         return (state === ACTIVE)
     }
 
@@ -298,14 +298,16 @@ export class DataUnion {
         // TODO: use duSidechain.getMemberStats(address) once it's implemented, to ensure atomic read
         //        (so that memberData is from same block as getEarnings, otherwise withdrawable will be foobar)
         const duSidechain = await this.getContracts().getSidechainContractReadOnly(this.contractAddress)
-        const mdata = await duSidechain.memberData(address)
-        const total = await duSidechain.getEarnings(address).catch(() => BigNumber.from(0))
-        const withdrawnEarnings = mdata[3]
+        const [memberData, total] = await Promise.all([
+            duSidechain.memberData(address),
+            duSidechain.getEarnings(address).catch(() => BigNumber.from(0)),
+        ])
+        const withdrawnEarnings = memberData[3]
         const withdrawable = total ? total.sub(withdrawnEarnings) : BigNumber.from(0)
         const STATUSES = [MemberStatus.NONE, MemberStatus.ACTIVE, MemberStatus.INACTIVE]
         return {
-            status: STATUSES[mdata[0]],
-            earningsBeforeLastJoin: mdata[1],
+            status: STATUSES[memberData[0]],
+            earningsBeforeLastJoin: memberData[1],
             totalEarnings: total,
             withdrawableEarnings: withdrawable,
         }
@@ -669,8 +671,10 @@ export class DataUnion {
      */
     async transportMessage(messageHash: AmbMessageHash, pollingIntervalMs: number = 1000, retryTimeoutMs: number = 300000) {
         const helper = this.getContracts()
-        const sidechainAmb = await helper.getSidechainAmb()
-        const mainnetAmb = await helper.getMainnetAmb()
+        const [sidechainAmb, mainnetAmb] = await Promise.all([
+            helper.getSidechainAmb(),
+            helper.getMainnetAmb(),
+        ])
 
         log(`Waiting until sidechain AMB has collected required signatures for hash=${messageHash}...`)
         await until(async () => helper.requiredSignaturesHaveBeenCollected(messageHash), pollingIntervalMs, retryTimeoutMs)
@@ -682,8 +686,10 @@ export class DataUnion {
         const messageId = '0x' + message.substr(2, 64)
 
         log(`Checking mainnet AMB hasn't already processed messageId=${messageId}`)
-        const alreadySent = await mainnetAmb.messageCallStatus(messageId)
-        const failAddress = await mainnetAmb.failedMessageSender(messageId)
+        const [alreadySent, failAddress] = await Promise.all([
+            mainnetAmb.messageCallStatus(messageId),
+            mainnetAmb.failedMessageSender(messageId),
+        ])
 
         // zero address means no failed messages
         if (alreadySent || failAddress !== '0x0000000000000000000000000000000000000000') {
