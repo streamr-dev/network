@@ -122,8 +122,7 @@ describe('DataUnion transfer within contract', () => {
         await approve.wait()
         log(`Approve DU ${dataUnion.getSidechainAddress()} to access 1 token from ${adminWalletSidechain.address}`)
 
-        const tx = await dataUnion.transferToMemberInContract(memberWallet.address, parseEther('1'))
-        await tx.wait()
+        await dataUnion.transferToMemberInContract(memberWallet.address, parseEther('1'))
         log(`Transfer 1 token with transferWithinContract to ${memberWallet.address}`)
 
         const newStats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
