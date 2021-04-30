@@ -1,10 +1,11 @@
 import { NetworkNode } from '../../src/NetworkNode'
 import { Tracker } from '../../src/logic/Tracker'
 import { MessageLayer } from 'streamr-client-protocol'
-import { waitForCondition, waitForEvent, wait } from 'streamr-test-utils'
+import { waitForCondition, waitForEvent } from 'streamr-test-utils'
 
 import { startNetworkNode, startTracker } from '../../src/composition'
 import { Event as TrackerNodeEvent } from '../../src/protocol/TrackerNode'
+import { Event as NodeEvent } from "../../src/logic/Node"
 
 const { StreamMessage, MessageID } = MessageLayer
 
@@ -27,7 +28,8 @@ describe('duplicate message detection and avoidance', () => {
             host: '127.0.0.1',
             port: 30351,
             id: 'node-0',
-            trackers: [tracker.getAddress()]
+            trackers: [tracker.getAddress()],
+            stunUrls: []
         })
         contactNode.start()
 
@@ -36,31 +38,36 @@ describe('duplicate message detection and avoidance', () => {
                 host: '127.0.0.1',
                 port: 30352,
                 id: 'node-1',
-                trackers: [tracker.getAddress()]
+                trackers: [tracker.getAddress()],
+                stunUrls: []
             }),
             startNetworkNode({
                 host: '127.0.0.1',
                 port: 30353,
                 id: 'node-2',
-                trackers: [tracker.getAddress()]
+                trackers: [tracker.getAddress()],
+                stunUrls: []
             }),
             startNetworkNode({
                 host: '127.0.0.1',
                 port: 30354,
                 id: 'node-3',
-                trackers: [tracker.getAddress()]
+                trackers: [tracker.getAddress()],
+                stunUrls: []
             }),
             startNetworkNode({
                 host: '127.0.0.1',
                 port: 30355,
                 id: 'node-4',
-                trackers: [tracker.getAddress()]
+                trackers: [tracker.getAddress()],
+                stunUrls: []
             }),
             startNetworkNode({
                 host: '127.0.0.1',
                 port: 30356,
                 id: 'node-5',
-                trackers: [tracker.getAddress()]
+                trackers: [tracker.getAddress()],
+                stunUrls: []
             }),
         ])
 
@@ -71,11 +78,12 @@ describe('duplicate message detection and avoidance', () => {
         // eslint-disable-next-line no-restricted-syntax
         for (const node of otherNodes) {
             node.start()
-            // eslint-disable-next-line no-await-in-loop
-            await wait(100) // do some sleep to prevent test from hanging
         }
         await allNodesConnnectedToTrackerPromise
 
+        const allNodesSubscribed = Promise.all(otherNodes.map((node) => {
+            return waitForEvent(node, NodeEvent.NODE_SUBSCRIBED)
+        }))
         // Become subscribers (one-by-one, for well connected graph)
         otherNodes[0].subscribe('stream-id', 0)
         otherNodes[1].subscribe('stream-id', 0)
@@ -83,7 +91,7 @@ describe('duplicate message detection and avoidance', () => {
         otherNodes[3].subscribe('stream-id', 0)
         otherNodes[4].subscribe('stream-id', 0)
 
-        await wait(2000)
+        await allNodesSubscribed
 
         // Set up 1st test case
         let totalMessages = 0
