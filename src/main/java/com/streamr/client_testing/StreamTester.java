@@ -31,7 +31,7 @@ public class StreamTester {
 
     private static final SecureRandom secureRandom = new SecureRandom();
     private static final Random random = new Random();
-    private static final int NETWORK_SETUP_DELAY = 5000;
+    private static final int NETWORK_SETUP_DELAY = 15000;
     private static final int NETWORK_PROPAGATION_DELAY = 10000;
     // "broker-node-storage-1" on Docker environment
     private final static Address DEV_STORAGE_NODE_ADDRESS = new Address("0xde1112f631486CfC759A50196853011528bC5FA0");
