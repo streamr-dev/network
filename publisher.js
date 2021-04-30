@@ -62,12 +62,12 @@ if (publishFunctionName === 'default') {
 }
 
 let Counter = 0
-const publishMessage = async () => {
+const publishMessage = async (address) => {
     const counter = Counter++
     const msg = {
         "counter": counter,
         "client-implementation": "Javascript",
-        "publisher": client.getAddress(),
+        "publisher": address,
         "string-key": Math.random().toString(36).substr(2, 5),
         "integer-key": Math.floor(Math.random() * 100),
         "double-key": Math.random(),
@@ -84,11 +84,11 @@ const publishMessage = async () => {
         await client.disconnect()
         console.log(`Disconnected.`)
     } else {
-        setTimeout(publishMessage, interval)
+        setTimeout(() => publishMessage(address), interval)
     }
 }
 
 // disable autoconnect/disconnect
-client.connect().then(() => {
-    publishMessage()
+client.connect().then(async () => {
+    publishMessage(await client.getAddress())
 })
