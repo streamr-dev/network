@@ -80,7 +80,7 @@ const publishMessage = async (address) => {
         console.log(`Done: All ${maxMessages} messages published. Quitting JS publisher.`)
         // Disconnect gracefully so that this process will quit.
         // Don't do it immediately to avoid messing up the last published message in any way.
-        await wait(30000 + (1000 * maxMessages))
+        await wait(10000 + (500 * maxMessages))
         await client.disconnect()
         console.log(`Disconnected.`)
     } else {
