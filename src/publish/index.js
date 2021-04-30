@@ -194,7 +194,6 @@ function getCreateStreamMessage(client) {
         },
         clear() {
             computeStreamPartition.clear()
-            getMsgChainer.clear()
             queue.clear()
         }
     })

@@ -54,6 +54,7 @@ describeRepeats('Subscriber', () => {
         stream = await client.createStream({
             name: uid('stream')
         })
+        await stream.addToStorageNode(config.clientOptions.storageNode.address)
         client.debug('connecting before test <<')
         publishTestMessages = getPublishTestMessages(client, {
             stream

@@ -534,6 +534,8 @@ class Subscriptions {
     }
 }
 
+type StreamOptions = Subscription | StreamPartDefinition | { options: Subscription|StreamPartDefinition }
+
 /**
  * Top-level user-facing interface for creating/destroying subscriptions.
  */
@@ -568,7 +570,7 @@ export class Subscriber {
         return this.subscriptions.add(opts, onFinally)
     }
 
-    async unsubscribe(options: Subscription | StreamPartDefinition | { options: Subscription|StreamPartDefinition }): Promise<Todo> {
+    async unsubscribe(options: StreamOptions): Promise<Todo> {
         if (options instanceof Subscription) {
             const sub = options
             return sub.cancel()
