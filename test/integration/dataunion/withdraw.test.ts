@@ -40,13 +40,13 @@ async function testWithdraw(
     requiresMainnetETH: boolean,
     options: DataUnionWithdrawOptions,
 ) {
-    log(`Connecting to Ethereum networks, config = ${JSON.stringify(config)}`)
+    log('Connecting to Ethereum networks, config = %o', config)
     const network = await providerMainnet.getNetwork()
-    log('Connected to "mainnet" network: ', JSON.stringify(network))
+    log('Connected to "mainnet" network: %o', network)
     const network2 = await providerSidechain.getNetwork()
-    log('Connected to sidechain network: ', JSON.stringify(network2))
+    log('Connected to sidechain network: %o', network2)
 
-    log(`Minting 100 tokens to ${adminWalletMainnet.address}`)
+    log('Minting 100 tokens to %s', adminWalletMainnet.address)
     const tx1 = await tokenMainnet.mint(adminWalletMainnet.address, parseEther('100'))
     await tx1.wait()
 
@@ -54,7 +54,7 @@ async function testWithdraw(
 
     const dataUnion = await adminClient.deployDataUnion()
     const secret = await dataUnion.createSecret('test secret')
-    log(`DataUnion ${dataUnion.getAddress()} is ready to roll`)
+    log('DataUnion %s is ready to roll', dataUnion.getAddress())
     // dataUnion = await adminClient.getDataUnionContract({dataUnion: "0xd778CfA9BB1d5F36E42526B2BAFD07B74b4066c0"})
 
     testWalletId += 1
@@ -62,12 +62,12 @@ async function testWithdraw(
     const recipient = recipientAddress || memberWallet.address
     const sendTx = await adminWalletSidechain.sendTransaction({ to: memberWallet.address, value: parseEther('0.1') })
     await sendTx.wait()
-    log(`Sent 0.1 sidechain-ETH to ${memberWallet.address}`)
+    log('Sent 0.1 sidechain-ETH to %s', memberWallet.address)
 
     if (requiresMainnetETH) {
         const send2Tx = await adminWalletMainnet.sendTransaction({ to: memberWallet.address, value: parseEther('0.1') })
         await send2Tx.wait()
-        log(`Sent 0.1 mainnet-ETH to ${memberWallet.address}`)
+        log('Sent 0.1 mainnet-ETH to %s', memberWallet.address)
     }
 
     const memberClient = new StreamrClient({
@@ -89,55 +89,54 @@ async function testWithdraw(
     })
     const res = await memberClient.getDataUnion(dataUnion.getAddress()).join(secret)
     // await adminClient.addMembers([memberWallet.address], { dataUnion })
-    log(`Member joined data union: ${JSON.stringify(res)}`)
+    log('Member joined data union %o', res)
 
     // eslint-disable-next-line no-underscore-dangle
     const contract = await dataUnion._getContract()
     const tokenAddress = await contract.token()
-    log(`Token address: ${tokenAddress}`)
+    log('Token address: %s', tokenAddress)
     const adminTokenMainnet = new Contract(tokenAddress, Token.abi, adminWalletMainnet)
+    async function logBalance(owner: string, address: EthereumAddress) {
+        const balance = await adminTokenMainnet.balanceOf(address)
+        log('%s (%s) mainnet token balance: %s (%s)', owner, address, formatEther(balance), balance.toString())
+    }
 
     const amount = parseEther('1')
     const duSidechainEarningsBefore = await contract.sidechain.totalEarnings()
 
-    const duBalance1 = await adminTokenMainnet.balanceOf(dataUnion.getAddress())
-    log(`Token balance of ${dataUnion.getAddress()}: ${formatEther(duBalance1)} (${duBalance1.toString()})`)
-    const balance1 = await adminTokenMainnet.balanceOf(adminWalletMainnet.address)
-    log(`Token balance of ${adminWalletMainnet.address}: ${formatEther(balance1)} (${balance1.toString()})`)
+    await logBalance('Data union', dataUnion.getAddress())
+    await logBalance('Admin', adminWalletMainnet.address)
 
-    log(`Transferring ${amount} token-wei ${adminWalletMainnet.address}->${dataUnion.getAddress()}`)
+    log('Transferring %s token-wei %s->%s', amount, adminWalletMainnet.address, dataUnion.getAddress())
     const txTokenToDU = await adminTokenMainnet.transfer(dataUnion.getAddress(), amount)
     await txTokenToDU.wait()
 
-    const duBalance2 = await adminTokenMainnet.balanceOf(dataUnion.getAddress())
-    log(`Token balance of ${dataUnion.getAddress()}: ${formatEther(duBalance2)} (${duBalance2.toString()})`)
-    const balance2 = await adminTokenMainnet.balanceOf(adminWalletMainnet.address)
-    log(`Token balance of ${adminWalletMainnet.address}: ${formatEther(balance2)} (${balance2.toString()})`)
+    await logBalance('Data union', dataUnion.getAddress())
+    await logBalance('Admin', adminWalletMainnet.address)
 
-    log(`DU member count: ${await contract.sidechain.activeMemberCount()}`)
+    log('DU member count: %d', await contract.sidechain.activeMemberCount())
 
-    log(`Transferred ${formatEther(amount)} tokens, next sending to bridge`)
+    log('Transferred %s tokens, next sending to bridge', formatEther(amount))
     const tx2 = await contract.sendTokensToBridge()
-    await tx2.wait()
+    const tr2 = await tx2.wait()
+    log('sendTokensToBridge returned %o', tr2)
 
-    log(`Sent to bridge, waiting for the tokens to appear at ${contract.sidechain.address} in sidechain`)
+    log('Waiting for the tokens to appear at sidechain %s', contract.sidechain.address)
     await until(async () => !(await tokenSidechain.balanceOf(contract.sidechain.address)).eq('0'), 300000, 3000)
-    log(`Confirmed tokens arrived, DU balance: ${duSidechainEarningsBefore} -> ${await contract.sidechain.totalEarnings()}`)
+    log('Confirmed tokens arrived, DU balance: %s -> %s', duSidechainEarningsBefore, await contract.sidechain.totalEarnings())
 
     // make a "full" sidechain contract object that has all functions, not just those required by StreamrClient
     const sidechainContract = new Contract(contract.sidechain.address, DataUnionSidechain.abi, adminWalletSidechain)
     const tx3 = await sidechainContract.refreshRevenue()
     const tr3 = await tx3.wait()
-    log(`refreshRevenue returned ${JSON.stringify(tr3)}`)
-    log(`DU balance: ${await contract.sidechain.totalEarnings()}`)
+    log('refreshRevenue returned %o', tr3)
+    log('DU sidechain totalEarnings: %o', await contract.sidechain.totalEarnings())
 
-    const duBalance3 = await adminTokenMainnet.balanceOf(dataUnion.getAddress())
-    log(`Token balance of ${dataUnion.getAddress()}: ${formatEther(duBalance3)} (${duBalance3.toString()})`)
-    const balance3 = await adminTokenMainnet.balanceOf(adminWalletMainnet.address)
-    log(`Token balance of ${adminWalletMainnet.address}: ${formatEther(balance3)} (${balance3.toString()})`)
+    await logBalance('Data union', dataUnion.getAddress())
+    await logBalance('Admin', adminWalletMainnet.address)
 
     const stats = await memberClient.getDataUnion(dataUnion.getAddress()).getMemberStats(memberWallet.address)
-    log(`Stats: ${JSON.stringify(stats)}`)
+    log('Stats: %o', stats)
 
     const getRecipientBalance = async () => (
         options.sendToMainnet
@@ -146,11 +145,11 @@ async function testWithdraw(
     )
 
     const balanceBefore = await getRecipientBalance()
-    log(`Balance before: ${balanceBefore}. Withdrawing tokens...`)
+    log('Balance before: %s. Withdrawing tokens...', balanceBefore)
 
     // "bridge-sponsored mainnet withdraw" case
     if (!options.payForTransport && options.waitUntilTransportIsComplete) {
-        log(`Adding ${recipient} to bridge-sponsored withdraw whitelist`)
+        log('Adding %s to bridge-sponsored withdraw whitelist', recipient)
         bridgeWhitelist.push(recipient)
     }
 
@@ -159,15 +158,15 @@ async function testWithdraw(
 
     // "other-sponsored mainnet withdraw" case
     if (typeof ret === 'string') {
-        log(`Transporting message "${ret}"`)
+        log('Transporting message "%s"', ret)
         ret = await dataUnion.transportMessage(String(ret))
     }
-    log(`Tokens withdrawn, return value: ${JSON.stringify(ret)}`)
+    log('Tokens withdrawn, return value: %o', ret)
 
     // "skip waiting" or "without checking the recipient account" case
     // we need to wait nevertheless, to be able to assert that balance in fact changed
     if (!options.waitUntilTransportIsComplete) {
-        log(`Waiting until balance changes from ${balanceBefore.toString()}`)
+        log('Waiting until balance changes from %s', balanceBefore)
         await until(async () => getRecipientBalance().then((b) => !b.eq(balanceBefore)))
     }
 
@@ -192,17 +191,17 @@ providerSidechain.on({
     address: sidechainAmbAddress,
     topics: [signatureRequestEventSignature]
 }, async (event) => {
-    log(`Observed signature request for message id=${event.topics[1]}`) // messageId is indexed so it's in topics...
+    log('Observed signature request for message (id=%s)', event.topics[1]) // messageId is indexed so it's in topics...
     const message = defaultAbiCoder.decode(['bytes'], event.data)[0] // ...only encodedData is in data
     const recipient = '0x' + message.slice(200, 240)
     if (!bridgeWhitelist.find((address) => address.toLowerCase() === recipient)) {
-        log(`Recipient ${recipient} not whitelisted, ignoring`)
+        log('Recipient %s not whitelisted, ignoring', recipient)
         return
     }
     const hash = keccak256(message)
     const adminClient = new StreamrClient(config.clientOptions)
     await adminClient.getDataUnion('0x0000000000000000000000000000000000000000').transportMessage(hash, 100, 120000)
-    log(`Transported message hash=${hash}`)
+    log('Transported message (hash=%s)', hash)
 })
 
 describe('DataUnion withdraw', () => {
