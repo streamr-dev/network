@@ -1,3 +1,15 @@
+# [Unreleased](https://github.com/streamr-dev/streamr-client/compare/v5.3.0-beta.0...c98b04415cdf558b483f70a838e58b2a5321ffed) (2021-05-01)
+
+### Bug Fixes
+
+* Don't use waitForCondition outside test, doesn't wait for async, uses browser-incompatible setImmediate. ([c98b044](https://github.com/streamr-dev/streamr-client/commit/c98b04415cdf558b483f70a838e58b2a5321ffed))
+* **login:** Remove apiKey login support, no longer supported by core-api. ([f37bac5](https://github.com/streamr-dev/streamr-client/commit/f37bac53972ed9dc429ffdbd1567172d6e502801))
+
+### Features
+
+* Don't clear message chains on disconnect, allows continued publishing to same chain. ([df64089](https://github.com/streamr-dev/streamr-client/commit/df6408985d0001a88d118d9712c2cc92f595748d))
+
+
 ## [5.2.1](https://github.com/streamr-dev/streamr-client/compare/v5.1.0...v5.2.1) (2021-03-29)
 
 This release fixes a subtle but serious memleak in all previous 5.x
