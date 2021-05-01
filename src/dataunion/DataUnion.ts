@@ -677,7 +677,7 @@ export class DataUnion {
         ])
 
         log(`Waiting until sidechain AMB has collected required signatures for hash=${messageHash}...`)
-        await until(async () => helper.requiredSignaturesHaveBeenCollected(messageHash), pollingIntervalMs, retryTimeoutMs)
+        await until(async () => helper.requiredSignaturesHaveBeenCollected(messageHash), retryTimeoutMs, pollingIntervalMs)
 
         const message = await sidechainAmb.message(messageHash)
         if (message === '0x') {
