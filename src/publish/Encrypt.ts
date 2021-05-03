@@ -39,7 +39,6 @@ export default function Encrypt(client: StreamrClient) {
         if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return
         }
-
         const [groupKey, nextGroupKey] = await getPublisherKeyExchange().useGroupKey(stream.id)
         await EncryptionUtil.encryptStreamMessage(streamMessage, groupKey, nextGroupKey)
     }

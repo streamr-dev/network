@@ -1,16 +1,15 @@
-import { MessageLayer, Errors } from 'streamr-client-protocol'
+import {
+    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse, EncryptedGroupKey, Errors
+} from 'streamr-client-protocol'
 import mem from 'mem'
 
 import { uuid, Defer } from '../utils'
 import Scaffold from '../utils/Scaffold'
 
 import { validateOptions } from './utils'
-import EncryptionUtil, { GroupKey } from './Encryption'
-import PersistentStore from './PersistentStore'
-
-const {
-    StreamMessage, GroupKeyRequest, GroupKeyResponse, GroupKeyErrorResponse, EncryptedGroupKey
-} = MessageLayer
+import EncryptionUtil, { GroupKey, GroupKeyish, StreamMessageProcessingError } from './Encryption'
+import type { Subscription } from '../subscribe'
+import { StreamrClient } from '../StreamrClient'
 
 const KEY_EXCHANGE_STREAM_PREFIX = 'SYSTEM/keyexchange'
 
@@ -21,7 +20,8 @@ export function isKeyExchangeStream(id = '') {
 }
 
 class InvalidGroupKeyRequestError extends ValidationError {
-    constructor(...args) {
+    code: string
+    constructor(...args: ConstructorParameters<typeof ValidationError>) {
         super(...args)
         this.code = 'INVALID_GROUP_KEY_REQUEST'
         if (Error.captureStackTrace) {
@@ -52,36 +52,37 @@ class InvalidContentTypeError extends Error {
 }
 */
 
-export function getKeyExchangeStreamId(address) {
+type Address = string
+type GroupKeyId = string
+
+function getKeyExchangeStreamId(address: Address) {
     if (isKeyExchangeStream(address)) {
         return address // prevent ever double-handling
     }
     return `${KEY_EXCHANGE_STREAM_PREFIX}/${address.toLowerCase()}`
 }
 
-function GroupKeyStore({ id, groupKeys = new Map() }) {
-    if (!id) {
-        throw new Error('GroupKeyStore missing id')
-    }
+type GroupKeyStoreOptions = {
+    id: string,
+    groupKeys: [GroupKeyId, GroupKey][]
+}
 
-    const store = new PersistentStore(id)
-    groupKeys.forEach((value, key) => {
-        store.set(key, value)
-    })
+function GroupKeyStore({ groupKeys }: GroupKeyStoreOptions) {
+    const store = new Map<GroupKeyId, GroupKey>(groupKeys)
 
-    let currentGroupKeyId // current key id if any
-    const nextGroupKeys = [] // the keys to use next, disappears if not actually used. Max queue size 2
+    let currentGroupKeyId: GroupKeyId | undefined // current key id if any
+    const nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
 
     store.forEach((groupKey) => {
-        GroupKey.validate(GroupKey.from(groupKey))
+        GroupKey.validate(groupKey)
         // use last init key as current
         currentGroupKeyId = groupKey.id
     })
 
-    function storeKey(groupKey) {
+    function storeKey(groupKey: GroupKey) {
         GroupKey.validate(groupKey)
-        if (store.has(groupKey.id)) {
-            const existingKey = GroupKey.from(store.get(groupKey.id))
+        const existingKey = store.get(groupKey.id)
+        if (existingKey) {
             if (!existingKey.equals(groupKey)) {
                 throw new GroupKey.InvalidGroupKeyError(
                     `Trying to add groupKey ${groupKey.id} but key exists & is not equivalent to new GroupKey: ${groupKey}.`,
@@ -99,17 +100,17 @@ function GroupKeyStore({ id, groupKeys = new Map() }) {
     }
 
     return {
-        has(groupKeyId) {
-            if (currentGroupKeyId === groupKeyId) { return true }
+        has(id: GroupKeyId) {
+            if (currentGroupKeyId === id) { return true }
 
-            if (nextGroupKeys.some((nextKey) => nextKey.id === groupKeyId)) { return true }
+           if (nextGroupKeys.some((nextKey) => nextKey.id === id)) { return true }
 
-            return store.has(groupKeyId)
+            return store.has(id)
         },
         isEmpty() {
             return nextGroupKeys.length === 0 && store.size === 0
         },
-        useGroupKey() {
+        useGroupKey(): Promise<[GroupKey, GroupKey | undefined]>  {
             const nextGroupKey = nextGroupKeys.pop()
             switch (true) {
                 // First use of group key on this stream, no current key. Make next key current.
@@ -141,15 +142,13 @@ function GroupKeyStore({ id, groupKeys = new Map() }) {
                 }
                 // Generate & use new key if none already set.
                 default: {
-                    this.rotateGroupKey()
-                    return this.useGroupKey()
-                }
+                this.rotateGroupKey()
+                return this.useGroupKey()
             }
+        }
         },
-        get(groupKeyId) {
-            const groupKey = store.get(groupKeyId)
-            if (!groupKey) { return undefined }
-            return GroupKey.from(groupKey)
+        get(id: GroupKeyId) {
+            return store.get(id)
         },
         clear() {
             currentGroupKeyId = undefined
@@ -159,10 +158,10 @@ function GroupKeyStore({ id, groupKeys = new Map() }) {
         rotateGroupKey() {
             return this.setNextGroupKey(GroupKey.generate())
         },
-        add(groupKey) {
+        add(groupKey: GroupKey) {
             return storeKey(groupKey)
         },
-        setNextGroupKey(newKey) {
+        setNextGroupKey(newKey: GroupKey) {
             GroupKey.validate(newKey)
             nextGroupKeys.unshift(newKey)
             nextGroupKeys.length = Math.min(nextGroupKeys.length, 2)
@@ -176,16 +175,21 @@ function GroupKeyStore({ id, groupKeys = new Map() }) {
     }
 }
 
-function parseGroupKeys(groupKeys = {}) {
-    return new Map(Object.entries(groupKeys || {}).map(([key, value]) => {
+type GroupKeyStorage = ReturnType<typeof GroupKeyStore>
+type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
+
+function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKeyId, GroupKey> {
+    return new Map<GroupKeyId, GroupKey>(Object.entries(groupKeys || {}).map(([key, value]) => {
         if (!value || !key) { return null }
         return [key, GroupKey.from(value)]
-    }).filter(Boolean))
+    }).filter(Boolean) as [])
 }
 
-function waitForSubMessage(sub, matchFn) {
+type MessageMatch = (content: any, streamMessage: StreamMessage) => boolean
+
+function waitForSubMessage(sub: Subscription, matchFn: MessageMatch) {
     const task = Defer()
-    const onMessage = (content, streamMessage) => {
+    const onMessage = (content: any, streamMessage: StreamMessage) => {
         try {
             if (matchFn(content, streamMessage)) {
                 task.resolve(streamMessage)
@@ -199,13 +203,13 @@ function waitForSubMessage(sub, matchFn) {
     task.finally(() => {
         sub.off('message', onMessage)
         sub.off('error', task.reject)
-    }).catch(() => {}) // prevent unhandled rejection
+    }).catch(() => {}) // important: prevent unchained finally cleanup causing unhandled rejection
     return task
 }
 
-async function subscribeToKeyExchangeStream(client, onKeyExchangeMessage) {
+async function subscribeToKeyExchangeStream(client: StreamrClient, onKeyExchangeMessage: (msg: any, streamMessage: StreamMessage) => void) {
     const { options } = client
-    if ((!options.auth.privateKey && !options.auth.ethereum) || !options.keyExchange) {
+    if ((!options.auth!.privateKey && !options.auth!.ethereum) || !options.keyExchange) {
         return Promise.resolve()
     }
 
@@ -218,7 +222,7 @@ async function subscribeToKeyExchangeStream(client, onKeyExchangeMessage) {
     return sub
 }
 
-async function catchKeyExchangeError(client, streamMessage, fn) {
+async function catchKeyExchangeError(client: StreamrClient, streamMessage: StreamMessage, fn: (...args: any[]) => Promise<void>) {
     try {
         return await fn()
     } catch (error) {
@@ -235,8 +239,8 @@ async function catchKeyExchangeError(client, streamMessage, fn) {
     }
 }
 
-async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
-    async function onKeyExchangeMessage(_parsedContent, streamMessage) {
+async function PublisherKeyExhangeSubscription(client: StreamrClient, getGroupKeyStore: (streamId: string) => GroupKeyStorage) {
+    async function onKeyExchangeMessage(_parsedContent: any, streamMessage: StreamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
             if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
                 return Promise.resolve()
@@ -254,9 +258,9 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
                 if (!groupKey) {
                     return null // will be filtered out
                 }
-
-                return new EncryptedGroupKey(id, EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true))
-            }).filter(Boolean)
+                const key = EncryptionUtil.encryptWithPublicKey(groupKey.data, rsaPublicKey, true)
+                return new EncryptedGroupKey(id, key)
+            }).filter(Boolean) as EncryptedGroupKey[]
 
             client.debug('Publisher: Subscriber requested groupKeys: %d. Got: %d. %o', groupKeyIds.length, encryptedGroupKeys.length, {
                 subscriberId,
@@ -268,7 +272,6 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
                 streamId,
                 requestId,
                 encryptedGroupKeys,
-                encryptionType: StreamMessage.ENCRYPTION_TYPES.RSA,
             })
 
             // hack overriding toStreamMessage method to set correct encryption type
@@ -284,15 +287,15 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
     }
 
     const sub = await subscribeToKeyExchangeStream(client, onKeyExchangeMessage)
-    sub.on('error', (err) => {
-        if (!err.streamMessage) {
+    sub.on('error', (err: Error | StreamMessageProcessingError) => {
+        if (!('streamMessage' in err)) {
             return // do nothing
         }
 
         // wrap error and translate into ErrorResponse.
         catchKeyExchangeError(client, err.streamMessage, () => { // eslint-disable-line promise/no-promise-in-callback
             // rethrow so catchKeyExchangeError handles it
-            throw new InvalidGroupKeyRequestError(err.message, err.streamMessage)
+            throw new InvalidGroupKeyRequestError(err.message)
         }).catch((unexpectedError) => {
             sub.emit('error', unexpectedError)
         })
@@ -301,18 +304,22 @@ async function PublisherKeyExhangeSubscription(client, getGroupKeyStore) {
     return sub
 }
 
-export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
+type KeyExhangeOptions = {
+    groupKeys?: Record<string, GroupKeysSerialized>
+}
+
+export function PublisherKeyExhange(client: StreamrClient, { groupKeys = {} }: KeyExhangeOptions = {}) {
     let enabled = true
     const getGroupKeyStore = mem((streamId) => GroupKeyStore({
         id: `${client.id}:${streamId}`,
-        groupKeys: parseGroupKeys(groupKeys[streamId])
+        groupKeys: [...parseGroupKeys(groupKeys![streamId]).entries()],
     }), {
         cacheKey([maybeStreamId]) {
             const { streamId } = validateOptions(maybeStreamId)
             return streamId
         }
     })
-    let sub
+    let sub: Subscription | undefined
     const next = Scaffold([
         async () => {
             sub = await PublisherKeyExhangeSubscription(client, getGroupKeyStore)
@@ -323,22 +330,22 @@ export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
                 await cancelTask
             }
         }
-    ], () => enabled)
+    ], async () => enabled)
 
-    function rotateGroupKey(streamId) {
+    function rotateGroupKey(streamId: string) {
         if (!enabled) { return }
         const groupKeyStore = getGroupKeyStore(streamId)
         groupKeyStore.rotateGroupKey()
     }
 
-    function setNextGroupKey(streamId, groupKey) {
+    function setNextGroupKey(streamId: string, groupKey: GroupKey) {
         if (!enabled) { return }
         const groupKeyStore = getGroupKeyStore(streamId)
 
         groupKeyStore.setNextGroupKey(groupKey)
     }
 
-    async function useGroupKey(streamId) {
+    async function useGroupKey(streamId: string) {
         await next()
         if (!enabled) { return undefined }
         const groupKeyStore = getGroupKeyStore(streamId)
@@ -346,7 +353,7 @@ export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
         return groupKeyStore.useGroupKey()
     }
 
-    function hasAnyGroupKey(streamId) {
+    function hasAnyGroupKey(streamId: string) {
         const groupKeyStore = getGroupKeyStore(streamId)
         return !groupKeyStore.isEmpty()
     }
@@ -375,16 +382,20 @@ export function PublisherKeyExhange(client, { groupKeys = {} } = {}) {
     }
 }
 
-async function getGroupKeysFromStreamMessage(streamMessage, encryptionUtil) {
+async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encryptionUtil: EncryptionUtil) {
     const { encryptedGroupKeys } = GroupKeyResponse.fromArray(streamMessage.getParsedContent())
     return Promise.all(encryptedGroupKeys.map(async (encryptedGroupKey) => (
         new GroupKey(encryptedGroupKey.groupKeyId, await encryptionUtil.decryptWithPrivateKey(encryptedGroupKey.encryptedGroupKeyHex, true))
     )))
 }
 
-async function SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryptionUtil) {
-    let sub
-    async function onKeyExchangeMessage(_parsedContent, streamMessage) {
+async function SubscriberKeyExhangeSubscription(
+    client: StreamrClient,
+    getGroupKeyStore: (streamId: string) => GroupKeyStorage,
+    encryptionUtil: EncryptionUtil
+) {
+    let sub: Subscription
+    async function onKeyExchangeMessage(_parsedContent: any, streamMessage: StreamMessage) {
         try {
             const { messageType } = streamMessage
             const { MESSAGE_TYPES } = StreamMessage
@@ -407,12 +418,13 @@ async function SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryp
     return sub
 }
 
-export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
+export function SubscriberKeyExchange(client: StreamrClient, { groupKeys = {} }: KeyExhangeOptions = {}) {
     let enabled = true
     const encryptionUtil = new EncryptionUtil(client.options.keyExchange)
+
     const getGroupKeyStore = mem((streamId) => GroupKeyStore({
         id: client.id,
-        groupKeys: parseGroupKeys(groupKeys[streamId])
+        groupKeys: [...parseGroupKeys(groupKeys[streamId]).entries()]
     }), {
         cacheKey([maybeStreamId]) {
             const { streamId } = validateOptions(maybeStreamId)
@@ -420,19 +432,24 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
         }
     })
 
-    let sub
-
-    async function requestKeys({ streamId, publisherId, groupKeyIds }) {
+    let sub: Subscription | undefined
+    let requestKeysStep: () => Promise<void>
+    async function requestKeys({ streamId, publisherId, groupKeyIds }: {
+        streamId: string,
+        publisherId: string,
+        groupKeyIds: GroupKeyId[]
+    }) {
         let done = false
         const requestId = uuid('GroupKeyRequest')
         const rsaPublicKey = encryptionUtil.getPublicKey()
         const keyExchangeStreamId = getKeyExchangeStreamId(publisherId)
-        let responseTask
-        let cancelTask
-        let receivedGroupKeys = []
-        let response
+        let responseTask: ReturnType<typeof Defer>
+        let cancelTask: ReturnType<typeof Defer>
+        let receivedGroupKeys: GroupKey[] = []
+        let response: any
         const step = Scaffold([
             async () => {
+                if (!sub) { throw new Error('no subscription') }
                 cancelTask = Defer()
                 responseTask = waitForSubMessage(sub, (content, streamMessage) => {
                     const { messageType } = streamMessage
@@ -451,7 +468,7 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
 
                 cancelTask.then(responseTask.resolve).catch(responseTask.reject)
                 return () => {
-                    cancelTask.resolve()
+                    cancelTask.resolve(undefined)
                 }
             }, async () => {
                 const msg = new GroupKeyRequest({
@@ -473,16 +490,16 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
                     receivedGroupKeys = []
                 }
             },
-        ], () => enabled && !done, {
+        ], async () => enabled && !done, {
             id: `requestKeys.${requestId}`,
             onChange(isGoingUp) {
                 if (!isGoingUp && cancelTask) {
-                    cancelTask.resolve()
+                    cancelTask.resolve(undefined)
                 }
             }
         })
 
-        requestKeys.step = step
+        requestKeysStep = step
         await step()
         const keys = receivedGroupKeys.slice()
         done = true
@@ -491,10 +508,10 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
     }
 
     const pending = new Map()
-    const getBuffer = mem(() => [])
-    const timeouts = {}
+    const getBuffer = mem<(groupKeyId: GroupKeyId) => GroupKeyId[], [string]>(() => [])
+    const timeouts: Record<string, ReturnType<typeof setTimeout>> = Object.create(null)
 
-    async function getKey(streamMessage) {
+    async function getKey(streamMessage: StreamMessage) {
         const streamId = streamMessage.getStreamId()
         const publisherId = streamMessage.getPublisherId()
         const { groupKeyId } = streamMessage
@@ -569,17 +586,17 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
                 await cancelTask
             }
         }
-    ], () => enabled, {
+    ], async () => enabled, {
         id: `SubscriberKeyExhangeSubscription.${client.id}`,
         async onDone() {
             // clean up requestKey
-            if (requestKeys.step) {
-                await requestKeys.step()
+            if (requestKeysStep) {
+                await requestKeysStep()
             }
         }
     })
 
-    async function getGroupKey(streamMessage) {
+    async function getGroupKey(streamMessage: StreamMessage) {
         if (!streamMessage.groupKeyId) { return [] }
         await next()
         if (!enabled) { return [] }
@@ -592,11 +609,11 @@ export function SubscriberKeyExchange(client, { groupKeys = {} } = {}) {
             enabled = true
             return next()
         },
-        addNewKey(streamMessage) {
+        async addNewKey(streamMessage) {
             if (!streamMessage.newGroupKey) { return }
             const streamId = streamMessage.getStreamId()
-            const groupKeyStore = getGroupKeyStore(streamId)
-            groupKeyStore.add(streamMessage.newGroupKey)
+            const groupKeyStore = await getGroupKeyStore(streamId)
+            return groupKeyStore.add(streamMessage.newGroupKey)
         },
         async stop() {
             enabled = false
