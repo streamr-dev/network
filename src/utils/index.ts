@@ -488,11 +488,14 @@ export async function sleep(ms: number = 0) {
     })
 }
 
+// condition could as well return any instead of boolean, could be convenient sometimes if waiting until a value is returned. Maybe change if such use case emerges.
 /**
  * Wait until a condition is true
  * @param condition - wait until this callback function returns true
  * @param timeOutMs - stop waiting after that many milliseconds, -1 for disable
  * @param pollingIntervalMs - check condition between so many milliseconds
+ * @param failedMsgFn - append the string return value of this getter function to the error message, if given
+ * @return the (last) truthy value returned by the condition function
  */
 export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10000, pollingIntervalMs = 100, failedMsgFn?: () => string) {
     const err = new Error(`Timeout after ${timeOutMs} milliseconds`)
@@ -502,7 +505,8 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
     }
 
     // Promise wrapped condition function works for normal functions just the same as Promises
-    while (!await Promise.resolve().then(condition)) { // eslint-disable-line no-await-in-loop
+    let wasDone = await Promise.resolve().then(condition)
+    while (!wasDone) {
         if (timeout) {
             if (failedMsgFn) {
                 err.message += ` ${failedMsgFn()}`
@@ -511,6 +515,7 @@ export async function until(condition: MaybeAsync<() => boolean>, timeOutMs = 10
         }
 
         await sleep(pollingIntervalMs) // eslint-disable-line no-await-in-loop
+        wasDone = await Promise.resolve().then(condition) // eslint-disable-line no-await-in-loop
     }
-    return condition()
+    return wasDone
 }
