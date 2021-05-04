@@ -1,65 +1,121 @@
-import Conf from 'conf'
+import { once } from 'events'
+import envPaths from 'env-paths'
+import Level from 'level'
+// @ts-expect-error
+import LevelParty from 'level-party'
+import { dirname, join } from 'path'
+import fs from 'fs/promises'
 
-export interface PersistentStorage extends Map<string, any> {
-    id: string
-}
+import { GroupKey } from './Encryption'
+import { pOnce } from '../utils'
 
-export default class ServerStorage implements PersistentStorage {
-    id: string
-    config: Conf
+class ServerStorage {
+    readonly id: string
+    readonly dbFilePath: string
+    private readonly store: Level.LevelDB
+    private error?: Error
+
     constructor(id: string) {
-        this.id = id
-        this.config = new Conf({
-            projectName: 'streamr-client',
-            configName: id,
+        this.id = encodeURIComponent(id)
+        const paths = envPaths('streamr-client')
+        const dbFilePath = join(paths.data, `${id}.db`)
+        this.dbFilePath = dbFilePath
+        const Store = LevelParty as Level.Constructor
+        this.store = Store(dbFilePath, { valueEncoding: 'json' }, (err) => {
+            this.error = err
+        })
+
+        this.init = pOnce(this.init.bind(this))
+    }
+
+    async init() {
+        try {
+            await fs.mkdir(dirname(this.dbFilePath), { recursive: true })
+            await this.store.open()
+        } catch (err) {
+            if (!this.error) {
+                this.error = err
+            }
+        }
+
+        if (this.error) {
+            throw this.error
+        }
+    }
+
+    async get(key: string) {
+        await this.init()
+        const value = await this.store.get(key).catch((err) => {
+            if (err.notFound) { return }
+            throw err
+        })
+        return value
+    }
+
+    async set(key: string, value: any) {
+        await this.init()
+        return this.store.put(key, value)
+    }
+
+    async delete(key: string) {
+        await this.init()
+        return this.store.del(key).catch((err) => {
+            if (err.notFound) { return }
+            throw err
         })
     }
 
-    has(key: string) {
-        return this.config.has(key)
+    async clear() {
+        await this.init()
+        return this.store.clear()
     }
 
-    get(key: string) {
-        return this.config.get(key)
+    async size() {
+        await this.init()
+        let count = 0
+        const keyStream = this.store.createKeyStream({ keys: false, values: true }).on('data', () => {
+            count += 1
+        })
+        await once(keyStream, 'end')
+        return count
     }
 
-    keys() {
-        return Object.keys(this.config.store)[Symbol.iterator]()
+    get [Symbol.toStringTag]() {
+        return this.constructor.name
+    }
+}
+
+export default class GroupKeyStore {
+    store: ServerStorage
+    constructor({ clientId, streamId }: { clientId: string, streamId: string }) {
+        this.store = new ServerStorage(`${clientId}-${streamId}`)
     }
 
-    values() {
-        return Object.values(this.config.store)[Symbol.iterator]()
+    async has(groupKeyId: string) {
+        const value = await this.store.get(groupKeyId)
+        return value != null
     }
 
-    entries() {
-        return Object.entries(this.config.store)[Symbol.iterator]()
+    async size() {
+        return this.store.size()
     }
 
-    forEach(...args: Parameters<Map<string, unknown>['forEach']>) {
-        return new Map(Object.entries(this.config.store)).forEach(...args)
+    async get(groupKeyId: string) {
+        const value = await this.store.get(groupKeyId)
+        if (!value) { return undefined }
+        return GroupKey.from(value)
     }
 
-    set(key: string, value: any) {
-        this.config.set(key, value)
-        return this
+    async set(groupKeyId: string, value: GroupKey) {
+        return this.store.set(groupKeyId, value)
     }
 
-    delete(key: string) {
-        const had = this.config.has(key)
-        this.config.delete(key)
-        return had
+    async delete(groupKeyId: string) {
+        return this.store.delete(groupKeyId)
     }
 
-    clear() {
-        return this.config.clear()
-    }
-
-    get size() {
-        return this.config.size
-    }
-
-    [Symbol.iterator]() {
-        return new Map(Object.entries(this.config.store))[Symbol.iterator]()
+    async clear() {
+        return this.store.clear()
     }
 
     get [Symbol.toStringTag]() {

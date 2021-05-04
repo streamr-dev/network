@@ -28,9 +28,19 @@ export default function Encrypt(client: StreamrClient) {
             return
         }
 
+        const { messageType } = streamMessage
+        if (
+            messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_RESPONSE
+            || messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST
+            || messageType === StreamMessage.MESSAGE_TYPES.GROUP_KEY_ERROR_RESPONSE
+        ) {
+            // never encrypt
+            return
+        }
+
         if (
             !stream.requireEncryptedData
-            && !getPublisherKeyExchange().hasAnyGroupKey(stream.id)
+            && !(await (getPublisherKeyExchange().hasAnyGroupKey(stream.id)))
         ) {
             // not needed
             return
