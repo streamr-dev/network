@@ -6,8 +6,8 @@ describe('StorageConfig', () => {
     let listener: StorageConfigListener
 
     beforeEach(() => {
-        // @ts-expect-error
-        config = new StorageConfig()
+        config = new StorageConfig('nodeId', 'http://api-url.com/path')
+        // @ts-expect-error private
         config._setStreams(new Set(['existing1::0', 'existing2::0', 'existing2::1', 'existing3::0']))
         listener = {
             onStreamAdded: jest.fn(),
@@ -17,6 +17,7 @@ describe('StorageConfig', () => {
     })
 
     it('setStreams', () => {
+        // @ts-expect-error private
         config._setStreams(new Set(['existing2::0', 'existing3::0', 'new1::0', 'new2::0']))
         expect(listener.onStreamAdded).toBeCalledTimes(2)
         expect(listener.onStreamAdded).toHaveBeenCalledWith({ id: 'new1', partition: 0 })
@@ -30,6 +31,7 @@ describe('StorageConfig', () => {
     })
 
     it('addStream', () => {
+        // @ts-expect-error private
         config._addStreams(new Set(['loremipsum::0', 'foo::0', 'bar::0']))
         expect(listener.onStreamAdded).toBeCalledTimes(3)
         expect(listener.onStreamAdded).toHaveBeenCalledWith({ id: 'loremipsum', partition: 0 })
@@ -38,6 +40,7 @@ describe('StorageConfig', () => {
     })
 
     it('removeStreams', () => {
+        // @ts-expect-error private
         config._removeStreams(new Set(['existing2::0', 'existing2::1']))
         expect(listener.onStreamRemoved).toBeCalledTimes(2)
         expect(listener.onStreamRemoved).toHaveBeenCalledWith({ id: 'existing2', partition: 0 })

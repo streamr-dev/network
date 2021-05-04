@@ -7,7 +7,7 @@ import { BucketId } from './Bucket'
 
 export type BatchId = string
 export type State = string
-export type DoneCallback = () => void
+export type DoneCallback = (err?: Error) => void
 
 export class Batch extends EventEmitter {
 
@@ -20,20 +20,20 @@ export class Batch extends EventEmitter {
         INSERTED: 'inserted'
     })
 
-    _id: BatchId
-    _bucketId: BucketId
+    private _id: BatchId
+    private _bucketId: BucketId
+    logger: Logger
+    private _maxSize: number
+    private _maxRecords: number
+    private _maxRetries : number
+    private _closeTimeout: number
+    private _timeout: NodeJS.Timeout
     createdAt: number
     streamMessages: Protocol.StreamMessage[]
     size: number
     retries: number
     state: State
-    doneCbs: DoneCallback[]
-    logger: Logger
-    _maxSize: number
-    _maxRecords: number
-    _maxRetries : number
-    _closeTimeout: number
-    _timeout: NodeJS.Timeout
+    private doneCbs: DoneCallback[]
 
     constructor(bucketId: BucketId, maxSize: number, maxRecords: number, closeTimeout: number, maxRetries: number) {
         if (!bucketId || !bucketId.length) {
@@ -82,24 +82,24 @@ export class Batch extends EventEmitter {
         this.logger.debug('init new batch')
     }
 
-    reachedMaxRetries() {
+    reachedMaxRetries(): boolean {
         return this.retries === this._maxRetries
     }
 
-    getId() {
+    getId(): string {
         return this._id
     }
 
-    getBucketId() {
+    getBucketId(): string {
         return this._bucketId
     }
 
-    lock() {
+    lock(): void {
         clearTimeout(this._timeout)
         this._setState(Batch.states.LOCKED)
     }
 
-    scheduleInsert() {
+    scheduleInsert(): void {
         clearTimeout(this._timeout)
         this.logger.debug(`scheduleRetry. retries:${this.retries}`)
 
@@ -111,38 +111,38 @@ export class Batch extends EventEmitter {
         }, this._closeTimeout * this.retries)
     }
 
-    done() {
+    done(): void {
         this.doneCbs.forEach((doneCb) => doneCb())
         this.doneCbs = []
     }
 
-    clear() {
+    clear(): void {
         this.logger.debug('cleared')
         clearTimeout(this._timeout)
         this.streamMessages = []
         this._setState(Batch.states.INSERTED)
     }
 
-    push(streamMessage: Protocol.StreamMessage, doneCb?: DoneCallback) {
+    push(streamMessage: Protocol.StreamMessage, doneCb?: DoneCallback): void {
         this.streamMessages.push(streamMessage)
-        this.size += Buffer.from(streamMessage.serialize()).length
+        this.size += Buffer.byteLength(streamMessage.serialize())
         if (doneCb) {
             this.doneCbs.push(doneCb)
         }
     }
 
-    isFull() {
-        return this.size >= this._maxSize || this._getNumberOrMessages() >= this._maxRecords
+    isFull(): boolean {
+        return this.size >= this._maxSize || this._getNumberOfMessages() >= this._maxRecords
     }
 
-    _getNumberOrMessages() {
+    private _getNumberOfMessages(): number {
         return this.streamMessages.length
     }
 
-    _setState(state: State) {
+    _setState(state: State): void {
         this.state = state
         this.logger.debug(`emit state: ${this.state}`)
-        this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this._getNumberOrMessages())
+        this.emit(this.state, this.getBucketId(), this.getId(), this.state, this.size, this._getNumberOfMessages())
     }
 }
 

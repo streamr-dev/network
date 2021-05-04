@@ -301,10 +301,10 @@ describe('DataQueryEndpoints', () => {
                     }, done)
             })
             it('responds 400 and error message if param "fromTimestamp" not a number', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=endOfTime')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=notANumber')
                     .expect('Content-Type', /json/)
                     .expect(400, {
-                        error: 'Query parameter "fromTimestamp" not a number: endOfTime',
+                        error: 'Query parameter "fromTimestamp" not a number: notANumber',
                     }, done)
             })
             it('responds 400 and error message if param "toTimestamp" not given', (done) => {
@@ -317,10 +317,10 @@ describe('DataQueryEndpoints', () => {
                     }, done)
             })
             it('responds 400 and error message if optional param "toTimestamp" not a number', (done) => {
-                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1&toTimestamp=endOfLife')
+                testGetRequest('/api/v1/streams/streamId/data/partitions/0/range?fromTimestamp=1&toTimestamp=notANumber')
                     .expect('Content-Type', /json/)
                     .expect(400, {
-                        error: 'Query parameter "toTimestamp" not a number: endOfLife',
+                        error: 'Query parameter "toTimestamp" not a number: notANumber',
                     }, done)
             })
         })

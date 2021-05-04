@@ -11,14 +11,24 @@ export class Bucket {
     size: number
     records: number
     dateCreate: Date
-    _maxSize: number
-    _maxRecords: number
-    _keepAliveSeconds: number
+    private _maxSize: number
+    private _maxRecords: number
+    private _keepAliveSeconds: number
     ttl: Date
-    _stored: boolean
+    private _stored: boolean
     logger: Logger
 
-    constructor(id: BucketId, streamId: string, partition: number, size: number, records: number, dateCreate: Date, maxSize: number, maxRecords: number, keepAliveSeconds: number) {
+    constructor(
+        id: BucketId,
+        streamId: string,
+        partition: number,
+        size: number,
+        records: number,
+        dateCreate: Date,
+        maxSize: number,
+        maxRecords: number,
+        keepAliveSeconds: number
+    ) {
         if (!id || !id.length) {
             throw new TypeError('id must be not empty string')
         }
@@ -74,31 +84,34 @@ export class Bucket {
         this._updateTTL()
     }
 
-    isStored() {
+    isStored(): boolean {
         return this._stored
     }
 
-    setStored() {
+    setStored(): void {
         this._stored = true
     }
 
-    _checkSize(percentDeduction = 0) {
+    private _checkSize(percentDeduction = 0): boolean {
         const maxPercentSize = (this._maxSize * (100 - percentDeduction)) / 100
         const maxRecords = (this._maxRecords * (100 - percentDeduction)) / 100
-        this.logger.debug(`_checkSize: ${this.size >= maxPercentSize || this.records >= maxRecords} => ${this.size} >= ${maxPercentSize} || ${this.records} >= ${maxRecords}`)
+        const { size, records } = this
+        this.logger.debug(
+            `_checkSize: ${size >= maxPercentSize || records >= maxRecords} => ${size} >= ${maxPercentSize} || ${records} >= ${maxRecords}`
+        )
 
         return this.size >= maxPercentSize || this.records >= maxRecords
     }
 
-    isAlmostFull(percentDeduction = 30) {
+    isAlmostFull(percentDeduction = 30): boolean {
         return this._checkSize(percentDeduction)
     }
 
-    getId() {
+    getId(): string {
         return this.id
     }
 
-    incrementBucket(size: number) {
+    incrementBucket(size: number): void {
         this.size += size
         this.records += 1
 
@@ -108,15 +121,16 @@ export class Bucket {
         this._updateTTL()
     }
 
-    _updateTTL() {
+    private _updateTTL(): void {
         this.ttl = new Date()
         this.ttl.setSeconds(this.ttl.getSeconds() + this._keepAliveSeconds)
         this.logger.debug(`new ttl: ${this.ttl}`)
     }
 
-    isAlive() {
-        const isAlive = this.ttl >= new Date()
-        this.logger.debug(`isAlive: ${isAlive}, ${this.ttl} >= ${new Date()}`)
-        return this.ttl >= new Date()
+    isAlive(): boolean {
+        const now = new Date()
+        const isAlive = this.ttl >= now
+        this.logger.debug(`isAlive: ${isAlive}, ${this.ttl} >= ${now}`)
+        return this.ttl >= now
     }
 }

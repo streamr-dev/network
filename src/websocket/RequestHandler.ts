@@ -50,15 +50,15 @@ export class RequestHandler {
 
     handleRequest(connection: Connection, request: Todo): Promise<any> {
         switch (request.type) {
-            case ControlLayer.ControlMessage.TYPES.SubscribeRequest: 
+            case ControlLayer.ControlMessage.TYPES.SubscribeRequest:
                 return this.subscribe(connection, request)
-            case ControlLayer.ControlMessage.TYPES.UnsubscribeRequest: 
+            case ControlLayer.ControlMessage.TYPES.UnsubscribeRequest:
                 return this.unsubscribe(connection, request)
-            case ControlLayer.ControlMessage.TYPES.PublishRequest: 
+            case ControlLayer.ControlMessage.TYPES.PublishRequest:
                 return this.publish(connection, request)
-            case ControlLayer.ControlMessage.TYPES.ResendLastRequest: 
-            case ControlLayer.ControlMessage.TYPES.ResendFromRequest: 
-            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest: 
+            case ControlLayer.ControlMessage.TYPES.ResendLastRequest:
+            case ControlLayer.ControlMessage.TYPES.ResendFromRequest:
+            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest:
                 return this.resend(connection, request)
             default:
                 connection.send(new ControlLayer.ErrorResponse({
@@ -123,7 +123,7 @@ export class RequestHandler {
     private getStreamStorageData(request: ResendFromRequest|ResendLastRequest|ResendRangeRequest) {
         let r
         switch (request.type) {
-            case ControlLayer.ControlMessage.TYPES.ResendLastRequest: 
+            case ControlLayer.ControlMessage.TYPES.ResendLastRequest:
                 r = request as ResendLastRequest
                 return this.networkNode.requestResendLast(
                     r.streamId,
@@ -131,7 +131,7 @@ export class RequestHandler {
                     uuidv4(),
                     r.numberLast,
                 )
-            case ControlLayer.ControlMessage.TYPES.ResendFromRequest: 
+            case ControlLayer.ControlMessage.TYPES.ResendFromRequest:
                 r = request as ResendFromRequest
                 return this.networkNode.requestResendFrom(
                     r.streamId,
@@ -144,7 +144,7 @@ export class RequestHandler {
                     // @ts-expect-error
                     r.msgChainId,
                 )
-            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest: 
+            case ControlLayer.ControlMessage.TYPES.ResendRangeRequest:
                 r = request as ResendRangeRequest
                 return this.networkNode.requestResendRange(
                     r.streamId,
@@ -152,7 +152,7 @@ export class RequestHandler {
                     uuidv4(),
                     r.fromMsgRef.timestamp,
                     // TODO client should provide sequenceNumber, remove MIN_SEQUENCE_NUMBER_VALUE&MAX_SEQUENCE_NUMBER_VALUE defaults when NET-267 have been implemented
-                    r.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,  
+                    r.fromMsgRef.sequenceNumber || MIN_SEQUENCE_NUMBER_VALUE,
                     r.toMsgRef.timestamp,
                     r.toMsgRef.sequenceNumber || MAX_SEQUENCE_NUMBER_VALUE,
                     r.publisherId,

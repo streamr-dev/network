@@ -62,25 +62,24 @@ export class Storage extends EventEmitter {
         this.messageFilter = messageFilter
     }
 
-    store(streamMessage: Protocol.StreamMessage) {
+    async store(streamMessage: Protocol.StreamMessage): Promise<boolean> {
         if (this.messageFilter(streamMessage) === false) {
-            return Promise.resolve(undefined)
+            return false
         }
+
         const bucketId = this.bucketManager.getBucketId(streamMessage.getStreamId(), streamMessage.getStreamPartition(), streamMessage.getTimestamp())
 
         return new Promise((resolve, reject) => {
             if (bucketId) {
                 logger.debug(`found bucketId: ${bucketId}`)
 
-                this.bucketManager.incrementBucket(bucketId, Buffer.from(streamMessage.serialize()).length)
-                // @ts-expect-error
-                setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err: Todo) => {
+                this.bucketManager.incrementBucket(bucketId, Buffer.byteLength(streamMessage.serialize()))
+                setImmediate(() => this.batchManager.store(bucketId, streamMessage, (err?: Error) => {
                     if (err) {
                         reject(err)
                     } else {
                         this.emit('write', streamMessage)
-                        // @ts-expect-error
-                        resolve()
+                        resolve(true)
                     }
                 }))
             } else {
@@ -90,9 +89,8 @@ export class Storage extends EventEmitter {
                 const uuid = uuidv1()
                 const timeout = setTimeout(() => {
                     this.pendingStores.delete(uuid)
-                    this.store(streamMessage)
-                        .then(resolve)
-                        .catch(reject)
+                    // eslint-disable-next-line promise/catch-or-return
+                    this.store(streamMessage).then(resolve, reject)
                 }, this.opts.retriesIntervalMilliseconds)
                 this.pendingStores.set(uuid, timeout)
             }
@@ -105,7 +103,7 @@ export class Storage extends EventEmitter {
             limit = MAX_RESEND_LAST
         }
 
-        logger.debug(`requestLast, streamId: "${streamId}", partition: "${partition}", limit: "${limit}"`)
+        logger.debug('requestLast %o', { streamId, partition, limit })
 
         const GET_LAST_N_MESSAGES = 'SELECT payload FROM stream_data WHERE '
             + 'stream_id = ? AND partition = ? AND bucket_id IN ? '
@@ -195,14 +193,13 @@ export class Storage extends EventEmitter {
     }
 
     requestFrom(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, publisherId: string|null, msgChainId: string|null): Readable {
-        //TODO: msgChainId is always null, remove on NET-143
-        logger.debug(`requestFrom, streamId: "${streamId}", partition: "${partition}", fromTimestamp: "${fromTimestamp}", fromSequenceNo: `
-            + `"${fromSequenceNo}", publisherId: "${publisherId}", msgChainId: "${msgChainId}"`)
+        logger.debug('requestFrom %o', { streamId, partition, fromTimestamp, fromSequenceNo, publisherId, msgChainId })
 
+        //TODO: msgChainId is always null, remove on NET-143
         if (publisherId != null && msgChainId != null) {
             return this._fetchFromMessageRefForPublisher(streamId, partition, fromTimestamp,
                 fromSequenceNo, publisherId, msgChainId)
-        } 
+        }
         if (publisherId == null && msgChainId == null) { // TODO should add fromSequenceNo to this call (NET-268)
             return this._fetchFromTimestamp(streamId, partition, fromTimestamp)
         }
@@ -211,14 +208,14 @@ export class Storage extends EventEmitter {
     }
 
     requestRange(streamId: string, partition: number, fromTimestamp: number, fromSequenceNo: number, toTimestamp: number, toSequenceNo: number, publisherId: string|null, msgChainId: string|null): Readable {
-        logger.debug(`requestRange, streamId: "${streamId}", partition: "${partition}", fromTimestamp: "${fromTimestamp}", fromSequenceNo: "${fromSequenceNo}"`
-            + `, toTimestamp: "${toTimestamp}", toSequenceNo: "${toSequenceNo}", publisherId: "${publisherId}", msgChainId: "${msgChainId}"`)
+        logger.debug('requestRange %o', { streamId, partition, fromTimestamp, fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId })
 
         if (publisherId != null && msgChainId != null) {
             return this._fetchBetweenMessageRefsForPublisher(streamId, partition, fromTimestamp,
                 fromSequenceNo, toTimestamp, toSequenceNo, publisherId, msgChainId)
         }
-        if (publisherId == null && msgChainId == null) {  
+
+        if (publisherId == null && msgChainId == null) {
             return this._fetchBetweenTimestamps(streamId, partition, fromTimestamp, toTimestamp) // TODO should add fromSequenceNo and toSequenceNo to this call (NET-268)
         }
 
@@ -263,7 +260,7 @@ export class Storage extends EventEmitter {
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
-                throw new Error('Failed to find buckets')
+                throw new Error(`_fetchFromTimestamp: Failed to find buckets: ${streamId} ${partition}`)
             }
 
             const bucketsForQuery = bucketsToIds(buckets)
@@ -301,7 +298,7 @@ export class Storage extends EventEmitter {
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
-                throw new Error('Failed to find buckets')
+                throw new Error(`_fetchFromMessageRefForPublisher: Failed to find buckets: ${streamId} ${partition}`)
             }
 
             const bucketsForQuery = bucketsToIds(buckets)
@@ -339,7 +336,7 @@ export class Storage extends EventEmitter {
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
-                throw new Error('Failed to find buckets')
+                throw new Error(`_fetchBetweenTimestamps: Failed to find buckets: ${streamId} ${partition}`)
             }
 
             const bucketsForQuery = bucketsToIds(buckets)
@@ -379,7 +376,7 @@ export class Storage extends EventEmitter {
 
         this.bucketManager.getBucketsByTimestamp(streamId, partition, fromTimestamp, toTimestamp).then((buckets: Bucket[]) => {
             if (buckets.length === 0) { // TODO not an error as there is no data: do not throw
-                throw new Error('Failed to find buckets')
+                throw new Error(`_fetchBetweenMessageRefsForPublisher: Failed to find buckets: ${streamId} ${partition}`)
             }
 
             const bucketsForQuery = bucketsToIds(buckets)

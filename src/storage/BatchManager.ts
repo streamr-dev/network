@@ -2,11 +2,8 @@ import { Client } from 'cassandra-driver'
 import { EventEmitter } from 'events'
 import { Protocol } from 'streamr-network'
 import { getLogger } from '../helpers/logger'
-import { Todo } from '../types'
 import { Batch, BatchId, DoneCallback } from './Batch'
 import { BucketId } from './Bucket'
-
-const logger = getLogger('streamr:storage:BatchManager')
 
 const INSERT_STATEMENT = 'INSERT INTO stream_data '
     + '(stream_id, partition, bucket_id, ts, sequence_no, publisher_id, msg_chain_id, payload) '
@@ -25,6 +22,8 @@ export interface BatchManagerOptions {
     batchMaxRetries: number
 }
 
+let ID = 0
+
 export class BatchManager extends EventEmitter {
 
     opts: BatchManagerOptions
@@ -32,9 +31,13 @@ export class BatchManager extends EventEmitter {
     pendingBatches: Record<BatchId,Batch>
     cassandraClient: Client
     insertStatement: string
+    logger
 
     constructor(cassandraClient: Client, opts: Partial<BatchManagerOptions> = {}) {
         super()
+        ID += 1
+        const id = `${this.constructor.name}${ID}`
+        this.logger = getLogger(`streamr:storage:${id}`)
 
         const defaultOptions = {
             useTtl: false,
@@ -51,15 +54,16 @@ export class BatchManager extends EventEmitter {
         }
 
         // bucketId => batch
-        this.batches = {}
+        this.batches = Object.create(null)
         // batchId => batch
-        this.pendingBatches = {}
+        this.pendingBatches = Object.create(null)
 
         this.cassandraClient = cassandraClient
         this.insertStatement = this.opts.useTtl ? INSERT_STATEMENT_WITH_TTL : INSERT_STATEMENT
+        this.logger.debug('create %o', this.opts)
     }
 
-    store(bucketId: BucketId, streamMessage: Protocol.StreamMessage, doneCb?: DoneCallback) {
+    store(bucketId: BucketId, streamMessage: Protocol.StreamMessage, doneCb?: DoneCallback): void {
         const batch = this.batches[bucketId]
 
         if (batch && batch.isFull()) {
@@ -67,9 +71,15 @@ export class BatchManager extends EventEmitter {
         }
 
         if (this.batches[bucketId] === undefined) {
-            logger.debug('creating new batch')
+            this.logger.debug('creating new batch')
 
-            const newBatch = new Batch(bucketId, this.opts.batchMaxSize, this.opts.batchMaxRecords, this.opts.batchCloseTimeout, this.opts.batchMaxRetries)
+            const newBatch = new Batch(
+                bucketId,
+                this.opts.batchMaxSize,
+                this.opts.batchMaxRecords,
+                this.opts.batchCloseTimeout,
+                this.opts.batchMaxRetries
+            )
 
             newBatch.on('locked', () => this._moveFullBatch(bucketId, newBatch))
             newBatch.on('pending', () => this._insert(newBatch.getId()))
@@ -80,21 +90,24 @@ export class BatchManager extends EventEmitter {
         this.batches[bucketId].push(streamMessage, doneCb)
     }
 
-    _moveFullBatch(bucketId: BucketId, batch: Batch) {
-        logger.debug('moving batch to pendingBatches')
+    stop(): void {
+        const { batches, pendingBatches } = this
+        this.batches = Object.create(null)
+        this.pendingBatches = Object.create(null)
+        Object.values(batches).forEach((batch) => batch.clear())
+        Object.values(pendingBatches).forEach((batch) => batch.clear())
+    }
 
-        this.pendingBatches[batch.getId()] = batch
-        this.pendingBatches[batch.getId()].scheduleInsert()
+    private _moveFullBatch(bucketId: BucketId, batch: Batch): void {
+        this.logger.debug('moving batch to pendingBatches')
+        const batchId = batch.getId()
+        this.pendingBatches[batchId] = batch
+        batch.scheduleInsert()
 
         delete this.batches[bucketId]
     }
 
-    stop() {
-        Object.values(this.batches).forEach((batch) => batch.clear())
-        Object.values(this.pendingBatches).forEach((batch) => batch.clear())
-    }
-
-    async _insert(batchId: BatchId) {
+    private async _insert(batchId: BatchId): Promise<void> {
         const batch = this.pendingBatches[batchId]
 
         try {
@@ -118,42 +131,56 @@ export class BatchManager extends EventEmitter {
                 prepare: true
             })
 
-            logger.debug(`inserted batch id:${batch.getId()}`)
+            this.logger.debug(`inserted batch id:${batch.getId()}`)
             batch.done()
             batch.clear()
             delete this.pendingBatches[batch.getId()]
-        } catch (e) {
-            logger.debug(`failed to insert batch, error ${e}`)
+        } catch (err) {
+            this.logger.debug(`failed to insert batch, error ${err}`)
             if (this.opts.logErrors) {
-                logger.error(`Failed to insert batchId: (${batchId})`)
-                logger.error(e)
+                this.logger.error(`Failed to insert batchId: (${batchId})`)
+                this.logger.error(err)
             }
 
+            // stop if reached max retries
+            // TODO: This probably belongs in Batch
             if (batch.reachedMaxRetries()) {
                 if (this.opts.logErrors) {
-                    logger.error(`Batch ${batchId} reached max retries, dropping batch`)
+                    this.logger.error(`Batch %s reached max retries %s, dropping batch`, batch.getId(), batch.retries)
                 }
                 batch.clear()
                 delete this.pendingBatches[batch.getId()]
                 return
             }
+
             batch.scheduleInsert()
         }
     }
 
-    metrics() {
+    metrics(): {
+        totalBatches: number,
+        meanBatchAge: number,
+        meanBatchRetries: number,
+        batchesWithFiveOrMoreRetries: number,
+        batchesWithTenOrMoreRetries: number,
+        batchesWithHundredOrMoreRetries: number,
+    } {
         const now = Date.now()
-        const totalBatches = Object.values(this.batches).length + Object.values(this.pendingBatches).length
+        const { batches, pendingBatches } = this
+        const totalBatches = Object.values(batches).length + Object.values(pendingBatches).length
         const meanBatchAge = totalBatches === 0 ? 0
-            : [...Object.values(this.batches), ...Object.values(this.pendingBatches)].reduce((acc, batch) => acc + (now - batch.createdAt), 0) / totalBatches
+            : [
+                ...Object.values(batches),
+                ...Object.values(pendingBatches)
+            ].reduce((acc, batch) => acc + (now - batch.createdAt), 0) / totalBatches
         const meanBatchRetries = totalBatches === 0 ? 0
-            : Object.values(this.pendingBatches).reduce((acc, batch) => acc + batch.retries, 0) / totalBatches
+            : Object.values(pendingBatches).reduce((acc, batch) => acc + batch.retries, 0) / totalBatches
 
         let batchesWithFiveOrMoreRetries = 0
         let batchesWithTenOrMoreRetries = 0
         let batchesWithHundredOrMoreRetries = 0
 
-        Object.values(this.pendingBatches).forEach((batch) => {
+        Object.values(pendingBatches).forEach((batch) => {
             if (batch.retries >= 5) {
                 batchesWithFiveOrMoreRetries += 1
                 if (batch.retries >= 10) {
@@ -171,7 +198,7 @@ export class BatchManager extends EventEmitter {
             meanBatchRetries,
             batchesWithFiveOrMoreRetries,
             batchesWithTenOrMoreRetries,
-            batchesWithHundredOrMoreRetries
+            batchesWithHundredOrMoreRetries,
         }
     }
 }

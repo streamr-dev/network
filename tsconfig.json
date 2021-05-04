@@ -11,7 +11,9 @@
     "esModuleInterop": true,
     "noImplicitAny": true,
     "resolveJsonModule": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "incremental": true,
+    "sourceMap": true
   },
   "include": [
     "src/**/*",

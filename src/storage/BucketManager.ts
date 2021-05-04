@@ -57,8 +57,8 @@ export class BucketManager {
             ...opts
         }
 
-        this.streams = {}
-        this.buckets = {}
+        this.streams = Object.create(null)
+        this.buckets = Object.create(null)
 
         this.cassandraClient = cassandraClient
 

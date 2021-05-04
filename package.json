@@ -15,7 +15,7 @@
   "scripts": {
     "prepare": "tsc -p tsconfig-build.json",
     "test": "eslint . && jest test/unit test/integration && npm run test-sequential",
-    "build": "tsc -p tsconfig-build.json --incremental",
+    "build": "tsc -p tsconfig-build.json",
     "test-unit": "jest test/unit",
     "test-sequential": "jest --maxWorkers=1 test/sequential # always run sequential tests with maxWorkers=1",
     "test-integration": "jest --forceExit test/integration && npm run test-sequential",
