@@ -247,29 +247,6 @@ describe('delivery of messages in protocol layer', () => {
         })
     })
 
-    test('sendStorageNodesRequest is delivered', async () => {
-        trackerNode.sendStorageNodesRequest('trackerServer', new StreamIdAndPartition('stream', 10))
-        const [msg, source]: any = await waitForEvent(trackerServer, TrackerServerEvent.STORAGE_NODES_REQUEST)
-
-        expect(msg).toBeInstanceOf(TrackerLayer.StorageNodesRequest)
-        expect(source).toEqual('trackerNode')
-        expect(msg.requestId).toMatch(UUID_REGEX)
-        expect(msg.streamId).toEqual('stream')
-        expect(msg.streamPartition).toEqual(10)
-    })
-
-    test('sendStorageNodes is delivered', async () => {
-        trackerServer.sendStorageNodesResponse('trackerNode', new StreamIdAndPartition('stream', 10), ['trackerNode'])
-        const [msg, source]: any = await waitForEvent(trackerNode, TrackerNodeEvent.STORAGE_NODES_RESPONSE_RECEIVED)
-
-        expect(msg).toBeInstanceOf(TrackerLayer.StorageNodesResponse)
-        expect(source).toEqual('trackerServer')
-        expect(msg.requestId).toMatch('')
-        expect(msg.streamId).toEqual('stream')
-        expect(msg.streamPartition).toEqual(10)
-        expect(msg.nodeIds).toEqual(['trackerNode'])
-    })
-
     test('sendUnknownPeerRtcError is delivered', async () => {
         trackerServer.sendUnknownPeerRtcError('trackerNode', 'requestId', 'unknownTargetNode')
         const [msg, source]: any = await waitForEvent(trackerNode, TrackerNodeEvent.RTC_ERROR_RECEIVED)

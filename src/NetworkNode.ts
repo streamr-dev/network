@@ -1,5 +1,5 @@
 import { Node, Event as NodeEvent, NodeOptions } from './logic/Node'
-import { ForeignResendStrategy, LocalResendStrategy } from './resend/resendStrategies'
+import { LocalResendStrategy } from './resend/resendStrategies'
 import { StreamIdAndPartition } from './identifiers'
 import { ControlLayer, MessageLayer } from 'streamr-client-protocol'
 import ReadableStream = NodeJS.ReadableStream
@@ -17,13 +17,7 @@ export class NetworkNode extends Node {
         const networkOpts = {
             ...opts,
             resendStrategies: [
-                ...opts.storages.map((storage) => new LocalResendStrategy(storage)),
-                new ForeignResendStrategy(
-                    opts.protocols.trackerNode,
-                    opts.protocols.nodeToNode,
-                    (streamIdAndPartition) => this.getTrackerId(streamIdAndPartition),
-                    (node) => this.isNodePresent(node)
-                )
+                ...opts.storages.map((storage) => new LocalResendStrategy(storage))
             ]
         }
         super(networkOpts)
