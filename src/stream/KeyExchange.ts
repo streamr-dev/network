@@ -536,8 +536,13 @@ export function SubscriberKeyExchange(client: StreamrClient, { groupKeys = {} }:
             return Promise.resolve()
         }
         const groupKeyStore = await getGroupKeyStore(streamId)
-        if (await groupKeyStore.has(groupKeyId)) {
-            return groupKeyStore.get(groupKeyId)
+
+        if (!enabled) { return Promise.resolve() }
+        const existingGroupKey = await groupKeyStore.get(groupKeyId)
+        if (!enabled) { return Promise.resolve() }
+
+        if (existingGroupKey) {
+            return existingGroupKey
         }
 
         if (pending.has(groupKeyId)) {
@@ -550,6 +555,7 @@ export function SubscriberKeyExchange(client: StreamrClient, { groupKeys = {} }:
         pending.set(groupKeyId, Defer())
 
         async function processBuffer() {
+            if (!enabled) { return }
             const currentBuffer = getBuffer(key)
             const groupKeyIds = currentBuffer.slice()
             currentBuffer.length = 0
@@ -559,9 +565,11 @@ export function SubscriberKeyExchange(client: StreamrClient, { groupKeys = {} }:
                     publisherId,
                     groupKeyIds,
                 })
+                if (!enabled) { return }
                 await Promise.all(receivedGroupKeys.map(async (groupKey) => (
                     groupKeyStore.add(groupKey)
                 )))
+                if (!enabled) { return }
                 await Promise.all(groupKeyIds.map(async (id) => {
                     if (!pending.has(id)) { return }
                     const groupKeyTask = groupKeyStore.get(id)
@@ -590,14 +598,26 @@ export function SubscriberKeyExchange(client: StreamrClient, { groupKeys = {} }:
         return pending.get(groupKeyId)
     }
 
+    function cleanupPending() {
+        Array.from(Object.entries(timeouts)).forEach(([key, value]) => {
+            clearTimeout(value)
+            delete timeouts[key]
+        })
+        const pendingValues = Array.from(pending.values())
+        pending.clear()
+        pendingValues.forEach((value) => {
+            value.resolve(undefined)
+        })
+        pMemoize.clear(getGroupKeyStore)
+    }
+
     const next = Scaffold([
         async () => {
-            return encryptionUtil.onReady()
+            await encryptionUtil.onReady()
         },
         async () => {
             sub = await SubscriberKeyExhangeSubscription(client, getGroupKeyStore, encryptionUtil)
             return async () => {
-                pMemoize.clear(getGroupKeyStore)
                 if (!sub) { return }
                 const cancelTask = sub.cancel()
                 sub = undefined
@@ -606,6 +626,11 @@ export function SubscriberKeyExchange(client: StreamrClient, { groupKeys = {} }:
         }
     ], async () => enabled, {
         id: `SubscriberKeyExhangeSubscription.${client.id}`,
+        onChange(shouldUp) {
+            if (!shouldUp) {
+                cleanupPending()
+            }
+        },
         async onDone() {
             // clean up requestKey
             if (requestKeysStep) {

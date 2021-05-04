@@ -56,7 +56,7 @@ export default function Decrypt(client, options = {}) {
     }
 
     return Object.assign(decrypt, {
-        stop() {
+        async stop() {
             return requestKey.stop()
         }
     })
