@@ -1,7 +1,7 @@
 import { wait } from 'streamr-test-utils'
 import { MessageLayer } from 'streamr-client-protocol'
 
-import { fakePrivateKey, uid, Msg, getPublishTestMessages } from '../utils'
+import { describeRepeats, fakePrivateKey, uid, Msg, getPublishTestMessages } from '../utils'
 import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
 import { GroupKey } from '../../src/stream/Encryption'
@@ -10,11 +10,11 @@ import { StorageNode } from '../../src/stream/StorageNode'
 
 import config from './config'
 
-const TIMEOUT = 30 * 1000
+const TIMEOUT = 10 * 1000
 
 const { StreamMessage } = MessageLayer
 
-describe('decryption', () => {
+describeRepeats('decryption', () => {
     let publishTestMessages
     let expectErrors = 0 // check no errors by default
     let errors = []
@@ -178,7 +178,7 @@ describe('decryption', () => {
         await onEncryptionMessageErr
         // All good, unsubscribe
         await client.unsubscribe(sub)
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('changing group key injects group key into next stream message', async () => {
         const done = Defer()
@@ -242,7 +242,7 @@ describe('decryption', () => {
         await onEncryptionMessageErr
         // All good, unsubscribe
         await client.unsubscribe(sub)
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('errors if rotating group key for no stream', async () => {
         expect(async () => (
@@ -306,7 +306,7 @@ describe('decryption', () => {
                 await otherClient.logout()
             }
         }
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('does not encrypt messages in stream without groupkey', async () => {
         const name = uid('stream')
@@ -379,7 +379,7 @@ describe('decryption', () => {
         onEncryptionMessageErr.resolve() // will be ignored if errored
         await onEncryptionMessageErr
         expect(didFindStream2).toBeTruthy()
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('sets group key per-stream', async () => {
         const name = uid('stream')
@@ -452,7 +452,7 @@ describe('decryption', () => {
         ])
         onEncryptionMessageErr.resolve() // will be ignored if errored
         await onEncryptionMessageErr
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('client.subscribe can get the group key and decrypt multiple encrypted messages using an RSA key pair', async () => {
         // subscribe without knowing the group key to decrypt stream messages
@@ -476,7 +476,7 @@ describe('decryption', () => {
 
         // All good, unsubscribe
         await client.unsubscribe(sub)
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('subscribe with changing group key', async () => {
         // subscribe without knowing the group key to decrypt stream messages
@@ -502,7 +502,7 @@ describe('decryption', () => {
 
         // All good, unsubscribe
         await client.unsubscribe(sub)
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('client.resend last can get the historical keys for previous encrypted messages', async () => {
         // Publish encrypted messages with different keys
@@ -525,7 +525,7 @@ describe('decryption', () => {
 
         expect(received).toEqual(published.slice(-2))
         await client.unsubscribe(sub)
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('client.subscribe with resend last can get the historical keys for previous encrypted messages', async () => {
         // Publish encrypted messages with different keys
@@ -554,7 +554,7 @@ describe('decryption', () => {
 
         expect(received).toEqual(published.slice(-2))
         await client.unsubscribe(sub)
-    }, 2 * TIMEOUT)
+    }, TIMEOUT)
 
     it('fails gracefully if cannot decrypt', async () => {
         const MAX_MESSAGES = 10
