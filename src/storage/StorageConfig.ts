@@ -118,7 +118,7 @@ export class StorageConfig {
     }
 
     private _addStreams(streamKeys: Set<StreamKey>): void {
-        logger.info('Add streams to storage config: %o', streamKeys)
+        logger.info('Add %d streams to storage config: %o', streamKeys.size, Array.from(streamKeys))
         this.streamKeys = new Set([...this.streamKeys, ...streamKeys])
         this.listeners.forEach((listener) => {
             streamKeys.forEach((key: StreamKey) => listener.onStreamAdded(getStreamFromKey(key)))
