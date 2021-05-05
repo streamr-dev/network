@@ -49,7 +49,12 @@ export default function Encrypt(client: StreamrClient) {
         if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.MESSAGE) {
             return
         }
+
         const [groupKey, nextGroupKey] = await getPublisherKeyExchange().useGroupKey(stream.id)
+        if (!groupKey) {
+            throw new Error(`Tried to use group key but no group key found for stream: ${stream.id}`)
+        }
+
         await EncryptionUtil.encryptStreamMessage(streamMessage, groupKey, nextGroupKey)
     }
 

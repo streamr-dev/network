@@ -1,29 +1,28 @@
 import { wait } from 'streamr-test-utils'
 
 import { describeRepeats, fakePrivateKey, uid, getPublishTestMessages, addAfterFn } from '../utils'
-// import { Defer } from '../../src/utils'
 import { StreamrClient } from '../../src/StreamrClient'
+import { Stream, StreamOperation } from '../../src/stream'
 import { GroupKey } from '../../src/stream/Encryption'
 import Connection from '../../src/Connection'
 
 import config from './config'
 
-const TIMEOUT = 30 * 1000
+const TIMEOUT = 10 * 1000
 
 describeRepeats('decryption', () => {
-    let publishTestMessages
     let expectErrors = 0 // check no errors by default
-    let errors = []
-    let subscriber
-    const addAfter = addAfterFn()
-
-    const getOnError = (errs) => jest.fn((err) => {
+    let errors: Error[] = []
+    let onError = jest.fn()
+    const getOnError = (errs: Error[]) => jest.fn((err) => {
         errs.push(err)
     })
 
-    let onError = jest.fn()
-    let publisher
-    let stream
+    let publisher: StreamrClient
+    let subscriber: StreamrClient
+    let stream: Stream
+    let publishTestMessages: ReturnType<typeof getPublishTestMessages>
+    const addAfter = addAfterFn()
 
     const createClient = (opts = {}) => {
         const c = new StreamrClient({
@@ -122,8 +121,8 @@ describeRepeats('decryption', () => {
             }
         })
         const otherUser = await subscriber.getUserInfo()
-        await stream.grantPermission('stream_get', otherUser.username)
-        await stream.grantPermission('stream_subscribe', otherUser.username)
+        await stream.grantPermission(StreamOperation.STREAM_GET, otherUser.username)
+        await stream.grantPermission(StreamOperation.STREAM_SUBSCRIBE, otherUser.username)
         const groupKey = GroupKey.generate()
         await publisher.setNextGroupKey(stream.id, groupKey)
     })
@@ -277,4 +276,3 @@ describeRepeats('decryption', () => {
         expect(received2).toEqual(published2)
     }, 2 * TIMEOUT)
 })
-
