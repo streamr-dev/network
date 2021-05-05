@@ -144,7 +144,7 @@ describe('WebRtcEndpoint', () => {
         ])
 
         endpoint1.close('node-2', 'test')
-        endpoint1.connect('node-2', 'tracker', true)
+        endpoint1.connect('node-2', 'tracker', true).catch(() => null)
 
         await Promise.all([
             waitForEvent(endpoint1, EndpointEvent.PEER_CONNECTED),
