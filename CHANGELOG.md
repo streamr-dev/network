@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [5.0.0] - 2021-05-05
+### Added
+- Add storage node commands under `streamr storage-node`
+
+### Changed
 - (Breaking) Commands are divided to subcommands: most of the existing command are under `streamr stream`, and `generate` command under `streamr mock-data`
   - `streamr subscribe` is now `streamr stream subscribe`
   - `streamr publish` is now `streamr stream publish`
@@ -13,9 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `streamr create` is now `streamr stream create`
   - `streamr resend` is now `streamr stream resend`
   - `streamr generate` is now `streamr mock-data generate`
-- Add storage node commands under `streamr storage-node`
-- Fixed usage of private-key in README examples
-- Implementation was converted to TypeScript
+- Fixed examples of --private-key in README
+- Internal implementation was converted to TypeScript
 - Bump dependency streamr-client to 5.2.1
 - Bump dependency commander to 7.2.0
 
@@ -35,7 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ethereum authentication with `--privateKey <key>`. This also enables message signing when publishing messages.
 
 ### Changed
--  (Breaking) Rename command `listen` to `subscribe`.
+- (Breaking) Rename command `listen` to `subscribe`.
 - (Breaking) API key is now given with `--apiKey <key>`. API keys are deprecated. Option `--privateKey` should be preferred.
 
 ## [3.1.1] - 2020-04-16
@@ -61,7 +66,8 @@ ordering and gap filling.
 - Bump dependency commander to ^4.0.1.
 - Re-organize README.md and a few touches to Developing section paragraphs.
 
-[Unreleased]: https://github.com/streamr-dev/cli-tools/compare/v4.1.1...HEAD
+[Unreleased]: https://github.com/streamr-dev/cli-tools/compare/v5.0.0...HEAD
+[5.0.0]: https://github.com/streamr-dev/cli-tools/compare/v4.1.1...v5.0.0
 [4.1.1]: https://github.com/streamr-dev/cli-tools/compare/v4.1.0...v4.1.1
 [4.1.0]: https://github.com/streamr-dev/cli-tools/compare/v4.0.0...v4.1.0
 [4.0.0]: https://github.com/streamr-dev/cli-tools/compare/v3.1.1...v4.0.0
