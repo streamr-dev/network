@@ -64,11 +64,13 @@ class ServerStorage {
 
     async set(key: string, value: string) {
         await this.init()
-        return this.store!.run('INSERT INTO GroupKeys VALUES ($id, $groupKey, $streamId) ON CONFLICT DO NOTHING', {
+        const result = await this.store!.run('INSERT INTO GroupKeys VALUES ($id, $groupKey, $streamId) ON CONFLICT DO NOTHING', {
             $id: key,
             $groupKey: value,
             $streamId: this.streamId,
         })
+
+        return !!result?.changes
     }
 
     async delete(key: string) {

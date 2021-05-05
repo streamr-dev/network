@@ -140,7 +140,7 @@ describeRepeats('decryption', () => {
         }))
 
         client.once('error', done.reject)
-        client.setNextGroupKey(stream.id, groupKey)
+        await client.setNextGroupKey(stream.id, groupKey)
         // Publish after subscribed
         await Promise.all([
             client.publish(stream.id, msg),

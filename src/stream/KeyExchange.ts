@@ -70,24 +70,27 @@ type GroupKeyStoreOptions = {
     groupKeys: [GroupKeyId, GroupKey][]
 }
 
-function GroupKeyStore({ clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
-    const store = new PersistentStore({ clientId, streamId })
+export class GroupKeyStore {
+    store
+    currentGroupKeyId: GroupKeyId | undefined // current key id if any
+    nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
 
-    let currentGroupKeyId: GroupKeyId | undefined // current key id if any
-    const nextGroupKeys: GroupKey[] = [] // the keys to use next, disappears if not actually used. Max queue size 2
+    constructor({ clientId, streamId, groupKeys }: GroupKeyStoreOptions) {
+        this.store = new PersistentStore({ clientId, streamId })
 
-    groupKeys.forEach(([groupKeyId, groupKey]) => {
+        groupKeys.forEach(([groupKeyId, groupKey]) => {
+            GroupKey.validate(groupKey)
+            if (groupKeyId !== groupKey.id) {
+                throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
+            }
+            // use last init key as current
+            this.currentGroupKeyId = groupKey.id
+        })
+    }
+
+    private async storeKey(groupKey: GroupKey) {
         GroupKey.validate(groupKey)
-        if (groupKeyId !== groupKey.id) {
-            throw new Error(`Ids must match: groupKey.id: ${groupKey.id}, groupKeyId: ${groupKeyId}`)
-        }
-        // use last init key as current
-        currentGroupKeyId = groupKey.id
-    })
-
-    async function storeKey(groupKey: GroupKey) {
-        GroupKey.validate(groupKey)
-        const existingKey = await store.get(groupKey.id)
+        const existingKey = await this.store.get(groupKey.id)
         if (existingKey) {
             if (!existingKey.equals(groupKey)) {
                 throw new GroupKey.InvalidGroupKeyError(
@@ -96,90 +99,95 @@ function GroupKeyStore({ clientId, streamId, groupKeys }: GroupKeyStoreOptions) 
                 )
             }
 
-            await store.set(groupKey.id, existingKey)
+            await this.store.set(groupKey.id, existingKey)
             return existingKey
         }
 
-        await store.set(groupKey.id, groupKey)
+        await this.store.set(groupKey.id, groupKey)
         return groupKey
     }
 
-    return {
-        async has(id: GroupKeyId) {
-            if (currentGroupKeyId === id) { return true }
+    async has(id: GroupKeyId) {
+        if (this.currentGroupKeyId === id) { return true }
 
-            if (nextGroupKeys.some((nextKey) => nextKey.id === id)) { return true }
+        if (this.nextGroupKeys.some((nextKey) => nextKey.id === id)) { return true }
 
-            return store.has(id)
-        },
-        async isEmpty() {
-            return !nextGroupKeys.length && await store.size() === 0
-        },
-        async useGroupKey(): Promise<[GroupKey | undefined, GroupKey | undefined]> {
-            const nextGroupKey = nextGroupKeys.pop()
-            // First use of group key on this stream, no current key. Make next key current.
-            if (!currentGroupKeyId && nextGroupKey) {
-                await storeKey(nextGroupKey)
-                currentGroupKeyId = nextGroupKey.id
-                return [
-                    await this.get(currentGroupKeyId),
-                    undefined,
-                ]
-            }
+        return this.store.has(id)
+    }
 
-            // Keep using current key (empty next)
-            if (currentGroupKeyId != null && !nextGroupKey) {
-                return [
-                    await this.get(currentGroupKeyId),
-                    undefined
-                ]
-            }
+    async isEmpty() {
+        return !this.nextGroupKeys.length && await this.store.size() === 0
+    }
 
-            // Key changed (non-empty next). return current + next. Make next key current.
-            if (currentGroupKeyId != null && nextGroupKey != null) {
-                await storeKey(nextGroupKey)
-                const prevGroupKey = await this.get(currentGroupKeyId)
-                currentGroupKeyId = nextGroupKey.id
-                // use current key one more time
-                return [
-                    prevGroupKey,
-                    nextGroupKey,
-                ]
-            }
-
-            // Generate & use new key if none already set.
-            await this.rotateGroupKey()
-            return this.useGroupKey()
-        },
-        async get(id: GroupKeyId) {
-            return store.get(id)
-        },
-        async clear() {
-            currentGroupKeyId = undefined
-            nextGroupKeys.length = 0
-            return store.clear()
-        },
-        async rotateGroupKey() {
-            return this.setNextGroupKey(GroupKey.generate())
-        },
-        async add(groupKey: GroupKey) {
-            return storeKey(groupKey)
-        },
-        async setNextGroupKey(newKey: GroupKey) {
-            GroupKey.validate(newKey)
-            nextGroupKeys.unshift(newKey)
-            nextGroupKeys.length = Math.min(nextGroupKeys.length, 2)
-        },
-        async rekey() {
-            const newKey = GroupKey.generate()
-            await storeKey(newKey)
-            currentGroupKeyId = newKey.id
-            nextGroupKeys.length = 0
+    async useGroupKey(): Promise<[GroupKey | undefined, GroupKey | undefined]> {
+        const nextGroupKey = this.nextGroupKeys.pop()
+        // First use of group key on this stream, no current key. Make next key current.
+        if (!this.currentGroupKeyId && nextGroupKey) {
+            this.currentGroupKeyId = nextGroupKey.id
+            return [
+                await this.get(this.currentGroupKeyId),
+                undefined,
+            ]
         }
+
+        // Keep using current key (empty next)
+        if (this.currentGroupKeyId != null && !nextGroupKey) {
+            return [
+                await this.get(this.currentGroupKeyId),
+                undefined
+            ]
+        }
+
+        // Key changed (non-empty next). return current + next. Make next key current.
+        if (this.currentGroupKeyId != null && nextGroupKey != null) {
+            const prevId = this.currentGroupKeyId
+            this.currentGroupKeyId = nextGroupKey.id
+            const prevGroupKey = await this.get(prevId)
+            // use current key one more time
+            return [
+                prevGroupKey,
+                nextGroupKey,
+            ]
+        }
+
+        // Generate & use new key if none already set.
+        await this.rotateGroupKey()
+        return this.useGroupKey()
+    }
+
+    async get(id: GroupKeyId) {
+        return this.store.get(id)
+    }
+
+    async clear() {
+        this.currentGroupKeyId = undefined
+        this.nextGroupKeys.length = 0
+        return this.store.clear()
+    }
+
+    async rotateGroupKey() {
+        return this.setNextGroupKey(GroupKey.generate())
+    }
+
+    async add(groupKey: GroupKey) {
+        return this.storeKey(groupKey)
+    }
+
+    async setNextGroupKey(newKey: GroupKey) {
+        GroupKey.validate(newKey)
+        this.nextGroupKeys.unshift(newKey)
+        this.nextGroupKeys.length = Math.min(this.nextGroupKeys.length, 2)
+        await this.storeKey(newKey)
+    }
+
+    async rekey() {
+        const newKey = GroupKey.generate()
+        await this.storeKey(newKey)
+        this.currentGroupKeyId = newKey.id
+        this.nextGroupKeys.length = 0
     }
 }
 
-type GroupKeyStorage = ReturnType<typeof GroupKeyStore>
 type GroupKeysSerialized = Record<GroupKeyId, GroupKeyish>
 
 function parseGroupKeys(groupKeys: GroupKeysSerialized = {}): Map<GroupKeyId, GroupKey> {
@@ -243,7 +251,7 @@ async function catchKeyExchangeError(client: StreamrClient, streamMessage: Strea
     }
 }
 
-async function PublisherKeyExhangeSubscription(client: StreamrClient, getGroupKeyStore: (streamId: string) => Promise<GroupKeyStorage>) {
+async function PublisherKeyExhangeSubscription(client: StreamrClient, getGroupKeyStore: (streamId: string) => Promise<GroupKeyStore>) {
     async function onKeyExchangeMessage(_parsedContent: any, streamMessage: StreamMessage) {
         return catchKeyExchangeError(client, streamMessage, async () => {
             if (streamMessage.messageType !== StreamMessage.MESSAGE_TYPES.GROUP_KEY_REQUEST) {
@@ -316,7 +324,7 @@ export function PublisherKeyExhange(client: StreamrClient, { groupKeys = {} }: K
     let enabled = true
     const getGroupKeyStore = pMemoize(async (streamId) => {
         const clientId = await client.getAddress()
-        return GroupKeyStore({
+        return new GroupKeyStore({
             clientId,
             streamId,
             groupKeys: [...parseGroupKeys(groupKeys[streamId]).entries()]
@@ -403,7 +411,7 @@ async function getGroupKeysFromStreamMessage(streamMessage: StreamMessage, encry
 
 async function SubscriberKeyExhangeSubscription(
     client: StreamrClient,
-    getGroupKeyStore: (streamId: string) => Promise<GroupKeyStorage>,
+    getGroupKeyStore: (streamId: string) => Promise<GroupKeyStore>,
     encryptionUtil: EncryptionUtil
 ) {
     let sub: Subscription
@@ -436,7 +444,7 @@ export function SubscriberKeyExchange(client: StreamrClient, { groupKeys = {} }:
 
     const getGroupKeyStore = pMemoize(async (streamId) => {
         const clientId = await client.getAddress()
-        return GroupKeyStore({
+        return new GroupKeyStore({
             clientId,
             streamId,
             groupKeys: [...parseGroupKeys(groupKeys[streamId]).entries()]

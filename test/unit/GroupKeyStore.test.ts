@@ -1,19 +1,72 @@
 import crypto from 'crypto'
 import { GroupKey } from '../../src/stream/Encryption'
-import GroupKeyStore from '../../src/stream/PersistentStore'
-import { uid, addAfterFn } from '../utils'
+import PersistentStore from '../../src/stream/PersistentStore'
+import { GroupKeyStore } from '../../src/stream/KeyExchange'
+import { uid, addAfterFn, describeRepeats } from '../utils'
 
-describe('GroupKeyStore', () => {
+describeRepeats('GroupKeyStore', () => {
     let clientId: string
     let streamId: string
     let store: GroupKeyStore
+
+    beforeEach(() => {
+        clientId = `0x${crypto.randomBytes(20).toString('hex')}`
+        streamId = uid('stream')
+        store = new GroupKeyStore({
+            clientId,
+            streamId,
+            groupKeys: [],
+        })
+    })
+
+    afterEach(async () => {
+        if (!store) { return }
+        await store.clear()
+    })
+
+    it('can get set and delete', async () => {
+        const groupKey = GroupKey.generate()
+        expect(await store.get(groupKey.id)).toBeFalsy()
+        expect(await store.add(groupKey)).toBeTruthy()
+        expect(await store.get(groupKey.id)).toEqual(groupKey)
+        expect(await store.clear()).toBeTruthy()
+        expect(await store.clear()).toBeFalsy()
+        expect(await store.get(groupKey.id)).toBeFalsy()
+    })
+
+    it('can set next and use', async () => {
+        const groupKey = GroupKey.generate()
+        await store.setNextGroupKey(groupKey)
+        expect(await store.useGroupKey()).toEqual([groupKey, undefined])
+        expect(await store.useGroupKey()).toEqual([groupKey, undefined])
+        const groupKey2 = GroupKey.generate()
+        await store.setNextGroupKey(groupKey2)
+        expect(await store.useGroupKey()).toEqual([groupKey, groupKey2])
+        expect(await store.useGroupKey()).toEqual([groupKey2, undefined])
+    })
+
+    it('can set next in parallel and use', async () => {
+        const groupKey = GroupKey.generate()
+        const groupKey2 = GroupKey.generate()
+        await Promise.all([
+            store.setNextGroupKey(groupKey),
+            store.setNextGroupKey(groupKey2),
+        ])
+        expect(await store.useGroupKey()).toEqual([groupKey, undefined])
+    })
+})
+
+describeRepeats('PersistentStore', () => {
+    let clientId: string
+    let streamId: string
+    let store: PersistentStore
 
     const addAfter = addAfterFn()
 
     beforeEach(() => {
         clientId = `0x${crypto.randomBytes(20).toString('hex')}`
         streamId = uid('stream')
-        store = new GroupKeyStore({
+        store = new PersistentStore({
             clientId,
             streamId,
         })
@@ -51,7 +104,7 @@ describe('GroupKeyStore', () => {
     })
 
     it('can get set and delete in parallel', async () => {
-        const store2 = new GroupKeyStore({
+        const store2 = new PersistentStore({
             clientId,
             streamId,
         })
@@ -87,7 +140,7 @@ describe('GroupKeyStore', () => {
 
     it('does not conflict with other streamIds', async () => {
         const streamId2 = uid('stream')
-        const store2 = new GroupKeyStore({
+        const store2 = new PersistentStore({
             clientId,
             streamId: streamId2,
         })
@@ -107,7 +160,7 @@ describe('GroupKeyStore', () => {
 
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = new GroupKeyStore({
+        const store2 = new PersistentStore({
             clientId: clientId2,
             streamId,
         })
@@ -127,7 +180,7 @@ describe('GroupKeyStore', () => {
 
     it('does not conflict with other clientIds', async () => {
         const clientId2 = `0x${crypto.randomBytes(20).toString('hex')}`
-        const store2 = new GroupKeyStore({
+        const store2 = new PersistentStore({
             clientId: clientId2,
             streamId,
         })
