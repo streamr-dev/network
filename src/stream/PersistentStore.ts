@@ -1,29 +1,25 @@
-import { once } from 'events'
 import envPaths from 'env-paths'
-import Level from 'level'
-// @ts-expect-error
-import LevelParty from 'level-party'
 import { dirname, join } from 'path'
 import fs from 'fs/promises'
+import { open, Database } from 'sqlite'
+import sqlite3 from 'sqlite3'
 
 import { GroupKey } from './Encryption'
 import { pOnce } from '../utils'
 
 class ServerStorage {
-    readonly id: string
+    readonly clientId: string
+    readonly streamId: string
     readonly dbFilePath: string
-    private readonly store: Level.LevelDB
+    private store?: Database
     private error?: Error
 
-    constructor(id: string) {
-        this.id = encodeURIComponent(id)
+    constructor({ clientId, streamId }: { clientId: string, streamId: string }) {
+        this.streamId = encodeURIComponent(streamId)
+        this.clientId = encodeURIComponent(clientId)
         const paths = envPaths('streamr-client')
-        const dbFilePath = join(paths.data, `${id}.db`)
+        const dbFilePath = join(paths.data, clientId, 'GroupKeys.db')
         this.dbFilePath = dbFilePath
-        const Store = LevelParty as Level.Constructor
-        this.store = Store(dbFilePath, { valueEncoding: 'json' }, (err) => {
-            this.error = err
-        })
 
         this.init = pOnce(this.init.bind(this))
     }
@@ -31,7 +27,18 @@ class ServerStorage {
     async init() {
         try {
             await fs.mkdir(dirname(this.dbFilePath), { recursive: true })
-            await this.store.open()
+            // open the database
+            const store = await open({
+                filename: this.dbFilePath,
+                driver: sqlite3.Database
+            })
+            await store.exec(`CREATE TABLE IF NOT EXISTS GroupKeys (
+                id TEXT,
+                groupKey TEXT,
+                streamId TEXT
+            )`)
+            await store.exec('CREATE UNIQUE INDEX IF NOT EXISTS name ON GroupKeys (id)')
+            this.store = store
         } catch (err) {
             if (!this.error) {
                 this.error = err
@@ -45,39 +52,41 @@ class ServerStorage {
 
     async get(key: string) {
         await this.init()
-        const value = await this.store.get(key).catch((err) => {
-            if (err.notFound) { return }
-            throw err
-        })
-        return value
+        const value = await this.store!.get('SELECT groupKey FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
+        return value?.groupKey
     }
 
-    async set(key: string, value: any) {
+    async has(key: string) {
         await this.init()
-        return this.store.put(key, value)
+        const value = await this.store!.get('SELECT COUNT(*) FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
+        return value && value['COUNT(*)'] != null && value['COUNT(*)'] !== 0
+    }
+
+    async set(key: string, value: string) {
+        await this.init()
+        return this.store!.run('INSERT INTO GroupKeys VALUES ($id, $groupKey, $streamId) ON CONFLICT DO NOTHING', {
+            $id: key,
+            $groupKey: value,
+            $streamId: this.streamId,
+        })
     }
 
     async delete(key: string) {
         await this.init()
-        return this.store.del(key).catch((err) => {
-            if (err.notFound) { return }
-            throw err
-        })
+        const result = await this.store!.run('DELETE FROM GroupKeys WHERE id = ? AND streamId = ?', key, this.streamId)
+        return !!result?.changes
     }
 
     async clear() {
         await this.init()
-        return this.store.clear()
+        const result = await this.store!.run('DELETE FROM GroupKeys WHERE streamId = ?', this.streamId)
+        return !!result?.changes
     }
 
     async size() {
         await this.init()
-        let count = 0
-        const keyStream = this.store.createKeyStream({ keys: false, values: true }).on('data', () => {
-            count += 1
-        })
-        await once(keyStream, 'end')
-        return count
+        const size = await this.store!.get('SELECT COUNT(*) FROM GroupKeys WHERE streamId = ?;', this.streamId)
+        return size && size['COUNT(*)']
     }
 
     get [Symbol.toStringTag]() {
@@ -88,12 +97,11 @@ class ServerStorage {
 export default class GroupKeyStore {
     store: ServerStorage
     constructor({ clientId, streamId }: { clientId: string, streamId: string }) {
-        this.store = new ServerStorage(`${clientId}-${streamId}`)
+        this.store = new ServerStorage({ clientId, streamId })
     }
 
     async has(groupKeyId: string) {
-        const value = await this.store.get(groupKeyId)
-        return value != null
+        return this.store.has(groupKeyId)
     }
 
     async size() {
@@ -103,11 +111,16 @@ export default class GroupKeyStore {
     async get(groupKeyId: string) {
         const value = await this.store.get(groupKeyId)
         if (!value) { return undefined }
-        return GroupKey.from(value)
+        return GroupKey.from([groupKeyId, value])
+    }
+
+    async add(groupKey: GroupKey) {
+        return this.set(groupKey.id, groupKey)
     }
 
     async set(groupKeyId: string, value: GroupKey) {
-        return this.store.set(groupKeyId, value)
+        GroupKey.validate(value)
+        return this.store.set(groupKeyId, value.hex)
     }
 
     async delete(groupKeyId: string) {
