@@ -1,4 +1,4 @@
-#!/usr/bin/env node -r ts-node/register
+#!/usr/bin/env node
 import { Command, Option } from 'commander';
 import { list } from '../src/list'
 import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv } from './common'

@@ -1,4 +1,4 @@
-#!/usr/bin/env node -r ts-node/register
+#!/usr/bin/env node
 import { Command } from 'commander';
 import { subscribe } from '../src/subscribe'
 import { envOptions, authOptions, exitWithHelpIfArgsNotBetween, formStreamrOptionsWithEnv, createFnParseInt } from './common'

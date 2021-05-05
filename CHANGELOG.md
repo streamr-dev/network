@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `streamr resend` is now `streamr stream resend`
   - `streamr generate` is now `streamr mock-data generate`
 - Add storage node commands under `streamr storage-node`
+- Fixed usage of private-key in README examples
 - Implementation was converted to TypeScript
 - Bump dependency streamr-client to 5.2.1
 - Bump dependency commander to 7.2.0

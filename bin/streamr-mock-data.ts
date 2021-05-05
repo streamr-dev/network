@@ -1,4 +1,4 @@
-#!/usr/bin/env node -r ts-node/register
+#!/usr/bin/env node
 import { program } from 'commander'
 import pkg from '../package.json'
 

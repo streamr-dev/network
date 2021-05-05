@@ -3,16 +3,11 @@
   "version": "4.1.1",
   "description": "Command line tools for Streamr.",
   "bin": {
-    "streamr": "bin/streamr.ts",
-    "streamr-create": "bin/streamr-create.ts",
-    "streamr-generate": "bin/streamr-generate.ts",
-    "streamr-list": "bin/streamr-list.ts",
-    "streamr-publish": "bin/streamr-publish.ts",
-    "streamr-resend": "bin/streamr-resend.ts",
-    "streamr-subscribe": "bin/streamr-subscribe.ts",
-    "streamr-show": "bin/streamr-show.ts"
+    "streamr": "dist/bin/streamr.js"
   },
   "scripts": {
+    "prepare": "tsc",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

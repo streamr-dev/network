@@ -1,4 +1,4 @@
-#!/usr/bin/env node -r ts-node/register
+#!/usr/bin/env node
 import { Command } from 'commander';
 import { generate } from '../src/generate'
 import { exitWithHelpIfArgsNotBetween, createFnParseInt } from './common'

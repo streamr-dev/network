@@ -1,4 +1,4 @@
-#!/usr/bin/env node -r ts-node/register
+#!/usr/bin/env node
 import { Command } from 'commander';
 import { StreamrClient, StreamPart } from 'streamr-client'
 import {
