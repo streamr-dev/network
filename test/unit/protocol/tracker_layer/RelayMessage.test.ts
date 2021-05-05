@@ -13,6 +13,8 @@ describe('RelayMessage', () => {
                     peerId: 'peerId',
                     peerName: 'peerName',
                     peerType: 'node',
+                    controlLayerVersions: [2],
+                    messageLayerVersions: [32],
                     location: null
                 },
                 targetNode: 'targetNode',
@@ -27,6 +29,8 @@ describe('RelayMessage', () => {
                     peerId: 'peerId',
                     peerName: 'peerName',
                     peerType: 'node',
+                    controlLayerVersions: [2],
+                    messageLayerVersions: [32],
                     location: null
                 },
                 targetNode: 'targetNode',
@@ -43,6 +47,8 @@ describe('RelayMessage', () => {
                     peerId: 'peerId',
                     peerName: 'peerName',
                     peerType: 'node',
+                    controlLayerVersions: [2],
+                    messageLayerVersions: [32],
                     location: null
                 },
                 targetNode: null as any,
@@ -70,6 +76,8 @@ describe('RelayMessage', () => {
                     peerId: 'peerId',
                     peerName: 'peerName',
                     peerType: 'node',
+                    controlLayerVersions: [2],
+                    messageLayerVersions: [32],
                     location: null
                 },
                 targetNode: 'targetNode',
@@ -86,6 +94,8 @@ describe('RelayMessage', () => {
                     peerId: 'peerId',
                     peerName: 'peerName',
                     peerType: 'node',
+                    controlLayerVersions: [2],
+                    messageLayerVersions: [32],
                     location: null
                 },
                 targetNode: 'targetNode',
@@ -101,6 +111,8 @@ describe('RelayMessage', () => {
                 peerId: 'peerId',
                 peerName: 'peerName',
                 peerType: 'node',
+                controlLayerVersions: [2],
+                messageLayerVersions: [32],
                 location: null
             })
             assert.strictEqual(msg.targetNode, 'targetNode')
