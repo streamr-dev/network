@@ -1,6 +1,6 @@
 import envPaths from 'env-paths'
 import { dirname, join } from 'path'
-import fs from 'fs/promises'
+import { promises as fs } from 'fs'
 import { open, Database } from 'sqlite'
 import sqlite3 from 'sqlite3'
 
