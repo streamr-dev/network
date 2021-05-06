@@ -243,7 +243,7 @@ export function Defer<T>(executor: (...args: Parameters<Promise<T>['then']>) => 
     }
 
     // eslint-disable-next-line promise/param-names
-    const p = new Promise((_resolve, _reject) => {
+    const p: Promise<T> = new Promise((_resolve, _reject) => {
         resolveFn = _resolve
         rejectFn = _reject
         executor(resolve, reject)
